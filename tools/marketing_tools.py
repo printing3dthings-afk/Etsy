@@ -2,6 +2,7 @@
 
 import json
 from tools.data_store import DataStore
+from tools import etsy_api
 
 TOOL_DEFINITIONS = [
     {
@@ -66,6 +67,24 @@ TOOL_DEFINITIONS = [
             "required": [],
         },
     },
+    {
+        "name": "search_competitor_prices",
+        "description": "Search live Etsy listings to find real competitor prices for a given product keyword. Uses the Etsy API if configured, otherwise returns guidance.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "keywords": {
+                    "type": "string",
+                    "description": "Product keywords to search on Etsy, e.g. '3D printed crystal glow lamp'",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Number of competitor listings to fetch (max 25)",
+                },
+            },
+            "required": ["keywords"],
+        },
+    },
 ]
 
 
@@ -82,6 +101,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _get_promotion_suggestions(store)
     if tool_name == "get_top_search_terms":
         return _get_top_search_terms(store)
+    if tool_name == "search_competitor_prices":
+        return _search_competitor_prices(tool_input["keywords"], tool_input.get("limit", 10), store)
     return f"Unknown marketing tool: {tool_name}"
 
 
@@ -218,3 +239,53 @@ def _get_top_search_terms(store: DataStore) -> str:
         },
         indent=2,
     )
+
+
+def _search_competitor_prices(keywords: str, limit: int, store: DataStore) -> str:
+    if not etsy_api.is_configured():
+        return json.dumps({
+            "status": "api_key_required",
+            "message": "Etsy API key not configured. To enable live competitor pricing: "
+                       "1) Go to https://www.etsy.com/developers/ "
+                       "2) Create an app and copy your Keystring "
+                       "3) Add ETSY_API_KEY=<your_key> to your .env file. "
+                       "Then re-run this search for live competitor prices.",
+            "keywords": keywords,
+        }, indent=2)
+
+    try:
+        client = etsy_api.get_client()
+        results = client.search_listings(keywords=keywords, limit=min(limit, 25))
+        listings = results.get("results", [])
+
+        if not listings:
+            return json.dumps({"keywords": keywords, "results": [], "message": "No listings found."}, indent=2)
+
+        prices = []
+        for listing in listings:
+            price_data = listing.get("price", {})
+            amount = float(price_data.get("amount", 0)) / max(price_data.get("divisor", 100), 1)
+            prices.append({
+                "title": listing.get("title", "")[:80],
+                "price": round(amount, 2),
+                "currency": price_data.get("currency_code", "USD"),
+                "shop_id": listing.get("shop_id"),
+                "listing_id": listing.get("listing_id"),
+                "url": f"https://www.etsy.com/listing/{listing.get('listing_id', '')}",
+            })
+
+        prices.sort(key=lambda x: x["price"])
+        price_values = [p["price"] for p in prices]
+        avg = round(sum(price_values) / len(price_values), 2) if price_values else 0
+        low = min(price_values) if price_values else 0
+        high = max(price_values) if price_values else 0
+
+        return json.dumps({
+            "keywords": keywords,
+            "competitor_count": len(prices),
+            "price_summary": {"min": low, "max": high, "average": avg},
+            "listings": prices,
+        }, indent=2)
+
+    except etsy_api.EtsyAPIError as e:
+        return json.dumps({"error": str(e), "keywords": keywords}, indent=2)

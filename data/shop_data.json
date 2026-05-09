@@ -225,17 +225,30 @@
       "this_year": 0
     },
     "top_search_terms": [],
+    "competitor_research_source": "Web research May 2026 — update with live data via Etsy API once ETSY_API_KEY is configured",
     "competitor_avg_price": {
-      "L001": 22.00,
-      "L002": 12.00,
-      "L003": 10.00,
-      "L004": 18.00,
-      "L005": 35.00,
-      "L006": 32.00,
-      "L007": 22.00,
-      "L008": 14.00,
-      "L009": 38.00,
-      "L010": 38.00
+      "L001": 28.00,
+      "L002": 13.50,
+      "L003": 11.00,
+      "L004": 19.00,
+      "L005": 38.00,
+      "L006": 42.00,
+      "L007": 28.00,
+      "L008": 18.00,
+      "L009": 89.00,
+      "L010": 89.00
+    },
+    "competitor_price_notes": {
+      "L001": "3D printed crystal/glow lamps on Etsy avg $25-45. You're at $19.99 — room to raise.",
+      "L002": "3D printed ribbed vases avg $10-18 small size. You're at $8.99 — slightly below market.",
+      "L003": "Funny cat/coffee signs avg $9-15. You're at $8.99 — at the floor, could raise to $11-12.",
+      "L004": "Boho tea light candle holder sets avg $15-24. You're at $15.99 — competitive.",
+      "L005": "3D printed lamps with shade avg $32-50. You're at $29.99 — underpriced, room to raise.",
+      "L006": "Boho table centerpiece sets avg $28-62. You're at $29.99 — on the low end, room to raise.",
+      "L007": "3D printed geometric lamps avg $22-40. You're at $19.99 — underpriced.",
+      "L008": "Individual 3D printed koozies avg $14-22. You're at $16.99 — right in range.",
+      "L009": "Hand painted wood jewelry boxes with drawers avg ~$90 USD on Etsy. You're at $35 — SIGNIFICANTLY UNDERPRICED.",
+      "L010": "Hand painted wood jewelry organizers avg ~$90 USD on Etsy. You're at $35 — SIGNIFICANTLY UNDERPRICED."
     }
   }
 }
