@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 from config import ANTHROPIC_API_KEY
-from agents import CEOAgent, SalesAgent, ProductAgent, MarketingAgent, AnalyticsAgent, CustomerServiceAgent
+from agents import CEOAgent, SalesAgent, ProductAgent, MarketingAgent, AnalyticsAgent, CustomerServiceAgent, SocialMediaAgent
 
 AGENTS = {
     "ceo": ("CEO Agent", lambda: CEOAgent()),
@@ -20,6 +20,7 @@ AGENTS = {
     "marketing": ("Marketing Agent", lambda: MarketingAgent()),
     "analytics": ("Analytics Agent", lambda: AnalyticsAgent()),
     "cs": ("Customer Service Agent", lambda: CustomerServiceAgent()),
+    "social": ("Social Media Agent", lambda: SocialMediaAgent()),
 }
 
 DAILY_BRIEFING_PROMPT = """Run a complete daily briefing for the shop owner. Delegate to all relevant agents to cover:
@@ -48,6 +49,7 @@ HELP_TEXT = """
 ║  marketing     Marketing Agent (SEO, promotions, traffic)    ║
 ║  analytics     Analytics Agent (reports, dashboard)          ║
 ║  cs            Customer Service Agent (messages, reviews)    ║
+║  social        Social Media Agent (Pinterest strategy)       ║
 ╚══════════════════════════════════════════════════════════════╝
 """
 

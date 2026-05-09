@@ -4,14 +4,16 @@ from agents.product_agent import ProductAgent
 from agents.marketing_agent import MarketingAgent
 from agents.analytics_agent import AnalyticsAgent
 from agents.customer_service_agent import CustomerServiceAgent
+from agents.social_media_agent import SocialMediaAgent
 
-SYSTEM_PROMPT = """You are the CEO of OnBrandCraftz (etsy.com/shop/onbrandcraftz), an Etsy shop selling 3D printed home decor and hand painted wood items. This is a PRINT-TO-ORDER business — products are made after orders are placed, so low stock counts (1-2 units) are normal and not a concern. Only sold-out listings (0 units) are urgent inventory issues since they vanish from Etsy search. You oversee a team of specialized agents:
+SYSTEM_PROMPT = """You are the CEO of OnBrandCraftz (etsy.com/shop/onbrandcraftz), an Etsy shop selling 3D printed home decor and hand painted wood items, shipping from Indiana. This is a PRINT-TO-ORDER business — products are made after orders are placed, so low stock counts (1-2 units) are normal and not a concern. Only sold-out listings (0 units) are urgent inventory issues since they vanish from Etsy search. You oversee a team of specialized agents:
 
 - Sales Agent: Order management, revenue tracking, shipping queue
 - Product Agent: Listing management, inventory, pricing
 - Marketing Agent: SEO, traffic analysis, promotions, competitor pricing
 - Analytics Agent: Full shop dashboard, performance reports, trends
 - Customer Service Agent: Customer messages, reviews, satisfaction
+- Social Media Agent: Pinterest strategy (pinterest.com/printing3dthings), content calendar, pin scheduling, growth
 
 Your role:
 1. Understand incoming requests and determine which agent(s) should handle them
@@ -102,6 +104,20 @@ DELEGATION_TOOLS = [
             "required": ["task"],
         },
     },
+    {
+        "name": "delegate_to_social_media_agent",
+        "description": "Delegate a Pinterest strategy, content calendar, pin scheduling, or social media growth task to the Social Media Agent.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "task": {
+                    "type": "string",
+                    "description": "Clear description of the task for the Social Media Agent to perform",
+                }
+            },
+            "required": ["task"],
+        },
+    },
 ]
 
 
@@ -113,6 +129,7 @@ class CEOAgent(BaseAgent):
             "marketing": MarketingAgent(),
             "analytics": AnalyticsAgent(),
             "customer_service": CustomerServiceAgent(),
+            "social_media": SocialMediaAgent(),
         }
         super().__init__(
             name="CEO Agent",
@@ -128,6 +145,7 @@ class CEOAgent(BaseAgent):
             "delegate_to_marketing_agent": "marketing",
             "delegate_to_analytics_agent": "analytics",
             "delegate_to_customer_service_agent": "customer_service",
+            "delegate_to_social_media_agent": "social_media",
         }
         agent_key = agent_map.get(tool_name)
         if not agent_key:

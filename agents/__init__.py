@@ -4,6 +4,7 @@ from .product_agent import ProductAgent
 from .marketing_agent import MarketingAgent
 from .analytics_agent import AnalyticsAgent
 from .customer_service_agent import CustomerServiceAgent
+from .social_media_agent import SocialMediaAgent
 from .ceo_agent import CEOAgent
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "MarketingAgent",
     "AnalyticsAgent",
     "CustomerServiceAgent",
+    "SocialMediaAgent",
     "CEOAgent",
 ]
