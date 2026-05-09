@@ -1,0 +1,323 @@
+{
+  "shop": {
+    "name": "CraftedWithLove",
+    "owner": "Shop Owner",
+    "currency": "USD",
+    "currency_symbol": "$",
+    "location": "United States",
+    "since": "2021",
+    "total_sales": 847,
+    "total_revenue": 21175.50,
+    "rating": 4.9,
+    "review_count": 312
+  },
+  "listings": [
+    {
+      "id": "L001",
+      "title": "Handmade Ceramic Coffee Mug - Rustic Blue Glaze",
+      "price": 28.00,
+      "quantity": 12,
+      "views": 1420,
+      "favorites": 89,
+      "sales": 134,
+      "tags": ["ceramic", "handmade", "mug", "coffee", "rustic", "blue", "pottery", "kitchen"],
+      "category": "Home & Living > Kitchen & Dining > Mugs",
+      "status": "active",
+      "processing_days": 3,
+      "description": "Beautiful handcrafted ceramic mug with rustic blue glaze. Holds 12oz. Dishwasher safe.",
+      "images": 5
+    },
+    {
+      "id": "L002",
+      "title": "Custom Name Cutting Board - Personalized Wedding Gift",
+      "price": 45.00,
+      "quantity": 8,
+      "views": 3210,
+      "favorites": 201,
+      "sales": 287,
+      "tags": ["cutting board", "personalized", "wedding gift", "custom", "engraved", "kitchen", "wood"],
+      "category": "Home & Living > Kitchen & Dining > Cutting Boards",
+      "status": "active",
+      "processing_days": 5,
+      "description": "Personalized bamboo cutting board with laser engraving. Perfect wedding or housewarming gift.",
+      "images": 7
+    },
+    {
+      "id": "L003",
+      "title": "Macrame Wall Hanging - Boho Home Decor",
+      "price": 55.00,
+      "quantity": 5,
+      "views": 890,
+      "favorites": 67,
+      "sales": 42,
+      "tags": ["macrame", "wall hanging", "boho", "home decor", "handmade", "cotton", "woven"],
+      "category": "Home & Living > Home Decor > Wall Hangings",
+      "status": "active",
+      "processing_days": 4,
+      "description": "Hand-knotted macrame wall hanging made from natural cotton rope. 24 inches wide.",
+      "images": 6
+    },
+    {
+      "id": "L004",
+      "title": "Beeswax Candle Set - Honey Scented Pillar Candles",
+      "price": 32.00,
+      "quantity": 2,
+      "views": 654,
+      "favorites": 44,
+      "sales": 89,
+      "tags": ["beeswax", "candle", "honey", "scented", "handmade", "natural", "pillar", "gift"],
+      "category": "Home & Living > Candles & Holders",
+      "status": "active",
+      "processing_days": 2,
+      "description": "Set of 3 pure beeswax pillar candles with natural honey scent. Burns 30+ hours each.",
+      "images": 4
+    },
+    {
+      "id": "L005",
+      "title": "Pressed Flower Bookmark Set - Botanical Art",
+      "price": 14.00,
+      "quantity": 25,
+      "views": 445,
+      "favorites": 38,
+      "sales": 61,
+      "tags": ["bookmark", "pressed flower", "botanical", "gift", "book lover", "handmade", "floral"],
+      "category": "Books, Film & Music > Accessories > Bookmarks",
+      "status": "active",
+      "processing_days": 2,
+      "description": "Set of 4 laminated bookmarks with real pressed wildflowers. Unique and elegant.",
+      "images": 5
+    },
+    {
+      "id": "L006",
+      "title": "Knitted Winter Hat - Chunky Wool Beanie",
+      "price": 38.00,
+      "quantity": 0,
+      "views": 320,
+      "favorites": 29,
+      "sales": 47,
+      "tags": ["hat", "beanie", "knitted", "wool", "winter", "chunky", "handmade", "warm"],
+      "category": "Clothing > Accessories > Hats",
+      "status": "sold_out",
+      "processing_days": 5,
+      "description": "Hand-knitted chunky wool beanie. One size fits most. Available in 6 colors.",
+      "images": 8
+    },
+    {
+      "id": "L007",
+      "title": "Resin Art Coaster Set - Ocean Wave Design",
+      "price": 42.00,
+      "quantity": 7,
+      "views": 1105,
+      "favorites": 93,
+      "sales": 78,
+      "tags": ["resin", "coaster", "ocean", "wave", "art", "handmade", "set", "home decor"],
+      "category": "Home & Living > Kitchen & Dining > Coasters",
+      "status": "active",
+      "processing_days": 3,
+      "description": "Set of 4 handcrafted epoxy resin coasters with ocean wave design. Cork-backed.",
+      "images": 6
+    }
+  ],
+  "orders": [
+    {
+      "id": "O10045",
+      "listing_id": "L002",
+      "listing_title": "Custom Name Cutting Board",
+      "buyer": "sarah_m",
+      "buyer_name": "Sarah Miller",
+      "amount": 45.00,
+      "status": "payment_complete",
+      "date": "2026-05-09",
+      "ship_by": "2026-05-14",
+      "customization": "Names: John & Sarah, Date: June 14 2026",
+      "shipping_address": "123 Oak St, Portland, OR 97201"
+    },
+    {
+      "id": "O10044",
+      "listing_id": "L001",
+      "listing_title": "Handmade Ceramic Coffee Mug",
+      "buyer": "coffee_lover_dave",
+      "buyer_name": "Dave Thompson",
+      "amount": 28.00,
+      "status": "payment_complete",
+      "date": "2026-05-09",
+      "ship_by": "2026-05-12",
+      "customization": null,
+      "shipping_address": "456 Maple Ave, Austin, TX 78701"
+    },
+    {
+      "id": "O10043",
+      "listing_id": "L007",
+      "listing_title": "Resin Art Coaster Set",
+      "buyer": "home_decor_emily",
+      "buyer_name": "Emily Chen",
+      "amount": 42.00,
+      "status": "shipped",
+      "date": "2026-05-08",
+      "ship_by": "2026-05-11",
+      "tracking": "9400111899223456789012",
+      "shipping_address": "789 Pine Rd, Seattle, WA 98101"
+    },
+    {
+      "id": "O10042",
+      "listing_id": "L004",
+      "listing_title": "Beeswax Candle Set",
+      "buyer": "naturalgifts_lisa",
+      "buyer_name": "Lisa Johnson",
+      "amount": 32.00,
+      "status": "shipped",
+      "date": "2026-05-07",
+      "ship_by": "2026-05-09",
+      "tracking": "9400111899223456789098",
+      "shipping_address": "321 Elm St, Chicago, IL 60601"
+    },
+    {
+      "id": "O10041",
+      "listing_id": "L002",
+      "listing_title": "Custom Name Cutting Board",
+      "buyer": "gift_buyer_tom",
+      "buyer_name": "Tom Wilson",
+      "amount": 45.00,
+      "status": "complete",
+      "date": "2026-05-05",
+      "ship_by": "2026-05-10",
+      "tracking": "9400111899223456789076",
+      "shipping_address": "654 Birch Blvd, Denver, CO 80201"
+    },
+    {
+      "id": "O10040",
+      "listing_id": "L005",
+      "listing_title": "Pressed Flower Bookmark Set",
+      "buyer": "bookworm_anna",
+      "buyer_name": "Anna Rose",
+      "amount": 14.00,
+      "status": "complete",
+      "date": "2026-05-04",
+      "ship_by": "2026-05-06",
+      "tracking": "9400111899223456789054",
+      "shipping_address": "987 Spruce Ln, Nashville, TN 37201"
+    }
+  ],
+  "messages": [
+    {
+      "id": "M201",
+      "from": "gift_buyer_jen",
+      "buyer_name": "Jennifer Adams",
+      "date": "2026-05-09",
+      "subject": "Custom cutting board question",
+      "message": "Hi! I love your cutting boards! Can you do a board with 3 names instead of 2? It would be for a family gift. Also, what font options do you have?",
+      "status": "unread",
+      "listing_id": "L002"
+    },
+    {
+      "id": "M200",
+      "from": "mug_collector_pat",
+      "buyer_name": "Patrick O'Brien",
+      "date": "2026-05-09",
+      "subject": "Mug colors available?",
+      "message": "Hello! Do you have the ceramic mug in any other colors besides blue? Looking for something in earthy tones like terracotta or sage green.",
+      "status": "unread",
+      "listing_id": "L001"
+    },
+    {
+      "id": "M199",
+      "from": "order_10042_buyer",
+      "buyer_name": "Lisa Johnson",
+      "date": "2026-05-08",
+      "subject": "Order status",
+      "message": "Just wanted to check if my candle order has shipped yet? Looking forward to them!",
+      "status": "replied",
+      "listing_id": "L004",
+      "order_id": "O10042"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "R301",
+      "order_id": "O10041",
+      "listing_id": "L002",
+      "buyer_name": "Tom Wilson",
+      "rating": 5,
+      "title": "Perfect wedding gift!",
+      "review": "Absolutely stunning cutting board! The engraving is clean and beautiful. The quality is excellent — solid and heavy. Arrived well-packaged and faster than expected. Already bought another one as a gift!",
+      "date": "2026-05-09",
+      "responded": false
+    },
+    {
+      "id": "R300",
+      "order_id": "O10040",
+      "listing_id": "L005",
+      "buyer_name": "Anna Rose",
+      "rating": 5,
+      "title": "Beautiful and unique",
+      "review": "These bookmarks are gorgeous! The flowers look so delicate and real. Great quality lamination. I gave them as gifts and everyone loved them. Will definitely order again!",
+      "date": "2026-05-08",
+      "responded": true,
+      "shop_response": "Thank you so much Anna! So glad everyone loved them. Hope to see you again soon!"
+    },
+    {
+      "id": "R299",
+      "order_id": "O10038",
+      "listing_id": "L003",
+      "buyer_name": "Rebecca S.",
+      "rating": 4,
+      "title": "Lovely but took a while",
+      "review": "The macrame wall hanging is beautiful and exactly as described. Only reason for 4 stars is shipping took longer than expected. The product itself is 5 stars!",
+      "date": "2026-05-06",
+      "responded": false
+    }
+  ],
+  "analytics": {
+    "traffic": {
+      "this_week": {
+        "views": 892,
+        "visits": 445,
+        "direct": 120,
+        "etsy_search": 298,
+        "social_media": 27
+      },
+      "last_week": {
+        "views": 743,
+        "visits": 389,
+        "direct": 98,
+        "etsy_search": 271,
+        "social_media": 20
+      },
+      "this_month": {
+        "views": 3841,
+        "visits": 1920,
+        "direct": 498,
+        "etsy_search": 1289,
+        "social_media": 133
+      }
+    },
+    "conversions": {
+      "this_week": 0.034,
+      "last_week": 0.029,
+      "this_month": 0.031
+    },
+    "revenue": {
+      "today": 73.00,
+      "this_week": 327.00,
+      "last_week": 284.00,
+      "this_month": 1241.50,
+      "last_month": 1089.00,
+      "this_year": 8432.00
+    },
+    "top_search_terms": [
+      "personalized cutting board",
+      "handmade ceramic mug",
+      "wedding gift custom",
+      "resin coaster set",
+      "macrame wall hanging"
+    ],
+    "competitor_avg_price": {
+      "L001": 24.50,
+      "L002": 42.00,
+      "L003": 58.00,
+      "L004": 29.00,
+      "L005": 12.00,
+      "L007": 38.00
+    }
+  }
+}
