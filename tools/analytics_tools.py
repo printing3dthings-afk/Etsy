@@ -204,9 +204,10 @@ def _get_full_dashboard(store: DataStore) -> str:
             "conversion_rate": f"{conversions.get('this_week', 0) * 100:.2f}%",
         },
         "inventory": {
+            "fulfillment_model": store.shop.get("fulfillment_model", "standard"),
             "active_listings": len(active_listings),
             "sold_out_listings": len(sold_out),
-            "low_stock_listings": len([l for l in store.listings if 0 < l["quantity"] <= 5]),
+            "note": "Print-to-order shop: low quantity is normal. Only sold_out (0 units) needs action.",
         },
         "alerts": _build_alerts(store),
     }
@@ -215,11 +216,18 @@ def _get_full_dashboard(store: DataStore) -> str:
 
 def _build_alerts(store: DataStore) -> list[dict]:
     alerts = []
+    is_print_to_order = store.shop.get("fulfillment_model") == "print_to_order"
+
     for listing in store.listings:
-        if listing["status"] == "sold_out":
-            alerts.append({"level": "warning", "message": f"'{listing['title']}' is sold out."})
-        elif listing["quantity"] <= 3:
-            alerts.append({"level": "info", "message": f"'{listing['title']}' has only {listing['quantity']} units left."})
+        if listing["status"] == "sold_out" or listing["quantity"] == 0:
+            # Sold out is always critical — listing vanishes from Etsy search
+            alerts.append({
+                "level": "critical",
+                "message": f"'{listing['title']}' is SOLD OUT (quantity=0). Listing is invisible in Etsy search. Add at least 1 unit immediately.",
+            })
+        elif not is_print_to_order and listing["quantity"] <= 3:
+            # Low stock only matters for shops with physical inventory
+            alerts.append({"level": "info", "message": f"'{listing['title']}' has only {listing['quantity']} units listed."})
 
     unread = [m for m in store.messages if m["status"] == "unread"]
     if unread:
@@ -228,5 +236,11 @@ def _build_alerts(store: DataStore) -> list[dict]:
     unresponded = [r for r in store.reviews if not r.get("responded")]
     if unresponded:
         alerts.append({"level": "info", "message": f"{len(unresponded)} review(s) haven't been responded to yet."})
+
+    if is_print_to_order:
+        alerts.append({
+            "level": "info",
+            "message": "Print-to-order shop: low stock counts (1-2) are normal. Only act when a listing hits 0 and goes sold out.",
+        })
 
     return alerts

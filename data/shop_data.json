@@ -6,6 +6,7 @@
     "currency": "USD",
     "currency_symbol": "$",
     "location": "United States",
+    "fulfillment_model": "print_to_order",
     "total_sales": 0,
     "total_revenue": 0.00,
     "rating": 0,

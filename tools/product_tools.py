@@ -178,13 +178,20 @@ def _update_inventory(listing_id: str, quantity: int, store: DataStore) -> str:
 
 
 def _get_low_stock_items(threshold: int, store: DataStore) -> str:
-    low = [l for l in store.listings if l["quantity"] <= threshold]
+    is_print_to_order = store.shop.get("fulfillment_model") == "print_to_order"
+    if is_print_to_order:
+        # For print-to-order, only sold-out listings (quantity=0) are truly urgent
+        low = [l for l in store.listings if l["quantity"] == 0]
+        note = "Print-to-order shop: only sold-out listings (0 units) require action. Low counts like 1-2 are normal."
+    else:
+        low = [l for l in store.listings if l["quantity"] <= threshold]
+        note = f"Listings at or below {threshold} units."
     low.sort(key=lambda l: l["quantity"])
     result = [
         {"id": l["id"], "title": l["title"], "quantity": l["quantity"], "status": l["status"], "price": l["price"]}
         for l in low
     ]
-    return json.dumps({"low_stock_items": result, "count": len(result), "threshold": threshold}, indent=2)
+    return json.dumps({"low_stock_items": result, "count": len(result), "fulfillment_model": store.shop.get("fulfillment_model", "standard"), "note": note}, indent=2)
 
 
 def _create_listing(data: dict, store: DataStore) -> str:

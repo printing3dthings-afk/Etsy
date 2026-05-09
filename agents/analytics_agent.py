@@ -2,7 +2,7 @@ from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import analytics_tools
 
-SYSTEM_PROMPT = """You are the Analytics Agent for an Etsy shop called CraftedWithLove. Your responsibilities are:
+SYSTEM_PROMPT = """You are the Analytics Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz), a print-to-order Etsy shop. Low stock counts are normal — only sold-out listings (0 units) need flagging. Your responsibilities are:
 
 - Generate comprehensive performance reports across all shop metrics
 - Track traffic, conversion rates, revenue trends, and top performers
