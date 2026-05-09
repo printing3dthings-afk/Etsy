@@ -3,6 +3,7 @@
 import json
 from datetime import date, timedelta
 from tools.data_store import DataStore
+from tools import pinterest_api
 
 TOOL_DEFINITIONS = [
     {
@@ -77,6 +78,45 @@ TOOL_DEFINITIONS = [
                 "total_pins": {"type": "integer"},
             },
             "required": [],
+        },
+    },
+    {
+        "name": "get_pinterest_boards",
+        "description": "Fetch all Pinterest boards and their IDs from the live Pinterest account. Requires Pinterest OAuth.",
+        "input_schema": {"type": "object", "properties": {}, "required": []},
+    },
+    {
+        "name": "post_pin",
+        "description": "Post a pin directly to Pinterest. Requires Pinterest OAuth and an image URL.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {
+                    "type": "string",
+                    "description": "The shop listing ID (e.g. L001). Used to get the pre-written title and description.",
+                },
+                "board_name": {
+                    "type": "string",
+                    "description": "The exact Pinterest board name to post to.",
+                },
+                "image_url": {
+                    "type": "string",
+                    "description": "Direct URL to the product image (must be publicly accessible).",
+                },
+                "custom_title": {
+                    "type": "string",
+                    "description": "Optional: override the default pin title.",
+                },
+                "custom_description": {
+                    "type": "string",
+                    "description": "Optional: override the default pin description.",
+                },
+                "link": {
+                    "type": "string",
+                    "description": "Destination URL (defaults to Etsy shop). Use specific listing URL for best results.",
+                },
+            },
+            "required": ["listing_id", "board_name", "image_url"],
         },
     },
 ]
@@ -169,6 +209,10 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _get_growth_recommendations(store)
     if tool_name == "update_pinterest_stats":
         return _update_pinterest_stats(tool_input, store)
+    if tool_name == "get_pinterest_boards":
+        return _get_pinterest_boards()
+    if tool_name == "post_pin":
+        return _post_pin(tool_input, store)
     return f"Unknown social media tool: {tool_name}"
 
 
@@ -374,3 +418,84 @@ def _update_pinterest_stats(data: dict, store: DataStore) -> str:
     store.set(social, "social_media")
     store.save()
     return json.dumps({"success": True, "pinterest": pinterest}, indent=2)
+
+
+def _get_pinterest_boards() -> str:
+    if not pinterest_api.is_configured():
+        return json.dumps({
+            "status": "oauth_required",
+            "message": "Pinterest not connected yet. To enable direct posting: "
+                       "1) Go to https://developers.pinterest.com/ "
+                       "2) Create an app, copy App ID and App Secret "
+                       "3) Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env "
+                       "4) Run: python tools/pinterest_oauth.py",
+            "your_boards": [b["name"] for b in BOARDS],
+        }, indent=2)
+
+    try:
+        client = pinterest_api.get_client()
+        boards = client.get_boards()
+        return json.dumps({
+            "boards": [{"id": b["id"], "name": b["name"], "pin_count": b.get("pin_count", 0)} for b in boards],
+            "total": len(boards),
+        }, indent=2)
+    except pinterest_api.PinterestAPIError as e:
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+def _post_pin(tool_input: dict, store: DataStore) -> str:
+    if not pinterest_api.is_configured():
+        return json.dumps({
+            "status": "oauth_required",
+            "message": "Pinterest not connected. Run 'python tools/pinterest_oauth.py' first.",
+            "setup_steps": [
+                "1. Go to https://developers.pinterest.com/",
+                "2. Create an app → copy App ID and App Secret",
+                "3. Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env",
+                "4. Run: python tools/pinterest_oauth.py",
+                "5. Re-run this post command",
+            ],
+        }, indent=2)
+
+    listing_id = tool_input["listing_id"]
+    board_name = tool_input["board_name"]
+    image_url = tool_input["image_url"]
+    link = tool_input.get("link", "https://www.etsy.com/shop/onbrandcraftz")
+
+    listing = store.find_listing(listing_id)
+    if not listing:
+        return json.dumps({"error": f"Listing {listing_id} not found"})
+
+    pin_data = PIN_DESCRIPTIONS.get(listing_id, {})
+    title = tool_input.get("custom_title") or pin_data.get("title", listing["title"])
+    description = tool_input.get("custom_description") or pin_data.get("description", listing["title"])
+
+    try:
+        client = pinterest_api.get_client()
+        board_id = client.get_board_id(board_name)
+        if not board_id:
+            boards = client.get_boards()
+            available = [b["name"] for b in boards]
+            return json.dumps({
+                "error": f"Board '{board_name}' not found.",
+                "available_boards": available,
+            }, indent=2)
+
+        result = client.create_pin(
+            board_id=board_id,
+            title=title,
+            description=description,
+            image_url=image_url,
+            link=link,
+        )
+        return json.dumps({
+            "success": True,
+            "pin_id": result.get("id"),
+            "title": title,
+            "board": board_name,
+            "link": link,
+            "pinterest_url": f"https://www.pinterest.com/pin/{result.get('id', '')}",
+        }, indent=2)
+
+    except pinterest_api.PinterestAPIError as e:
+        return json.dumps({"error": str(e), "listing_id": listing_id}, indent=2)
