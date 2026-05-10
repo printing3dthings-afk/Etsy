@@ -3,7 +3,6 @@ import os
 import json
 import queue
 import threading
-import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -14,13 +13,13 @@ app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False
 
 AGENT_INFO = {
-    "ceo":      {"label": "CEO",            "desc": "Orchestrates all agents — ask anything about your shop", "icon": "👑"},
-    "sales":    {"label": "Sales",          "desc": "Orders, revenue, shipping queue",                        "icon": "💰"},
-    "product":  {"label": "Product",        "desc": "Listings, inventory, pricing",                           "icon": "📦"},
-    "marketing":{"label": "Marketing",      "desc": "SEO, competitor pricing, promotions",                    "icon": "📣"},
-    "analytics":{"label": "Analytics",      "desc": "Dashboard, traffic reports, trends",                     "icon": "📊"},
-    "cs":       {"label": "Customer Service","desc": "Messages, reviews, satisfaction",                       "icon": "💬"},
-    "social":   {"label": "Social Media",   "desc": "Pinterest strategy, pin scheduling, content calendar",   "icon": "📌"},
+    "ceo":      {"label": "CEO",             "desc": "Orchestrates all agents — ask anything about your shop", "icon": "\U0001f451"},
+    "sales":    {"label": "Sales",           "desc": "Orders, revenue, shipping queue",                          "icon": "\U0001f4b0"},
+    "product":  {"label": "Product",         "desc": "Listings, inventory, pricing",                            "icon": "\U0001f4e6"},
+    "marketing":{"label": "Marketing",       "desc": "SEO, competitor pricing, promotions",                     "icon": "\U0001f4e3"},
+    "analytics":{"label": "Analytics",       "desc": "Dashboard, traffic reports, trends",                      "icon": "\U0001f4ca"},
+    "cs":       {"label": "Customer Service", "desc": "Messages, reviews, satisfaction",                        "icon": "\U0001f4ac"},
+    "social":   {"label": "Social Media",    "desc": "Pinterest strategy, pin scheduling, content calendar",    "icon": "\U0001f4cc"},
 }
 
 _agent_cache: dict = {}
@@ -41,8 +40,6 @@ def _get_agent(name: str):
     return _agent_cache.get(name)
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
-
 @app.route("/")
 def index():
     return render_template("index.html", agents=AGENT_INFO)
@@ -60,18 +57,13 @@ def api_dashboard():
         pending_orders = [o for o in store.orders if o["status"] == "payment_complete"]
         unread_msgs    = [m for m in store.messages if m["status"] == "unread"]
         unread_reviews = [r for r in store.reviews if not r.get("responded")]
-        sold_out       = [l for l in store.listings if l["quantity"] == 0]
         return jsonify({
-            "shop_name":        store.shop.get("name", "OnBrandCraftz"),
-            "total_listings":   len(store.listings),
-            "active_listings":  len([l for l in store.listings if l["status"] == "active"]),
-            "sold_out":         len(sold_out),
-            "pending_orders":   len(pending_orders),
-            "unread_messages":  len(unread_msgs),
-            "unread_reviews":   len(unread_reviews),
-            "revenue_today":    store.analytics.get("revenue", {}).get("today", 0),
-            "revenue_week":     store.analytics.get("revenue", {}).get("this_week", 0),
-            "rating":           store.shop.get("rating", 0),
+            "shop_name":      store.shop.get("name", "OnBrandCraftz"),
+            "total_listings": len(store.listings),
+            "pending_orders": len(pending_orders),
+            "unread_messages":len(unread_msgs),
+            "unread_reviews": len(unread_reviews),
+            "revenue_week":   store.analytics.get("revenue", {}).get("this_week", 0),
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -82,7 +74,6 @@ def api_chat():
     data       = request.get_json(force=True)
     agent_name = data.get("agent", "ceo")
     message    = data.get("message", "").strip()
-
     if not message:
         return jsonify({"error": "Empty message"}), 400
 
@@ -96,24 +87,22 @@ def api_chat():
 
     def run():
         try:
-            # Patch print so CEO delegation notices show in stream
-            original_print = __builtins__["print"] if isinstance(__builtins__, dict) else print
             import builtins
-            def patched_print(*args, **kwargs):
+            original = builtins.print
+            def patched(*args, **kwargs):
                 msg = " ".join(str(a) for a in args)
                 if "[CEO]" in msg:
                     q.put({"type": "status", "text": msg.strip()})
-            builtins.print = patched_print
+            builtins.print = patched
             try:
                 result = agent.run(message)
             finally:
-                builtins.print = original_print
+                builtins.print = original
             q.put({"type": "done", "text": result})
         except Exception as exc:
             q.put({"type": "error", "text": str(exc)})
 
-    thread = threading.Thread(target=run, daemon=True)
-    thread.start()
+    threading.Thread(target=run, daemon=True).start()
     return jsonify({"session_id": session_id, "status": "running"})
 
 
