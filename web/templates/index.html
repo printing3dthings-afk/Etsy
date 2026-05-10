@@ -9,7 +9,6 @@
 </head>
 <body>
 
-<!-- ── Sidebar ──────────────────────────────────────────────────────────── -->
 <aside id="sidebar">
   <div id="logo">
     <h1>⚡ OnBrandCraftz</h1>
@@ -30,7 +29,6 @@
 
   <div id="sidebar-stats">
     <h3>Shop Stats</h3>
-
     <div class="stat-row">
       <span>Listings</span>
       <strong id="stat-listings">—</strong>
@@ -51,12 +49,10 @@
       <span>Revenue (Week)</span>
       <strong id="stat-revenue">—</strong>
     </div>
-
     <button id="briefing-btn">☀️ Daily Briefing</button>
   </div>
 </aside>
 
-<!-- ── Main chat ─────────────────────────────────────────────────────────── -->
 <main id="main">
   <header id="chat-header">
     <div id="header-left">
@@ -70,7 +66,6 @@
   </header>
 
   <div id="messages">
-    <!-- Welcome / empty state -->
     <div id="welcome">
       <div style="font-size:2.5rem">⚡</div>
       <h2>OnBrandCraftz Agent Hub</h2>
@@ -85,11 +80,8 @@
       </div>
     </div>
 
-    <!-- Thinking indicator -->
     <div id="thinking">
-      <div class="dots">
-        <span></span><span></span><span></span>
-      </div>
+      <div class="dots"><span></span><span></span><span></span></div>
       <span class="thinking-text">Thinking…</span>
     </div>
   </div>
@@ -104,7 +96,6 @@
 </main>
 
 <script>
-  // Pass agent data from Flask to JS
   window.AGENTS = {{ agents | tojson }};
 </script>
 <script src="/static/app.js"></script>
