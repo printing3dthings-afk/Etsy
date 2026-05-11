@@ -24,7 +24,9 @@ class BaseAgent:
 
             if response.stop_reason == "tool_use":
                 tool_results = self._process_tool_calls(response)
-                messages.append({"role": "assistant", "content": response.content})
+                # Strip empty text blocks — the API rejects them on the next turn
+                content = [b for b in response.content if not (hasattr(b, "text") and b.text == "")]
+                messages.append({"role": "assistant", "content": content})
                 messages.append({"role": "user", "content": tool_results})
                 continue
 
