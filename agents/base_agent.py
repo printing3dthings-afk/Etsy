@@ -24,9 +24,7 @@ class BaseAgent:
 
             if response.stop_reason == "tool_use":
                 tool_results = self._process_tool_calls(response)
-                # Strip empty text blocks — the API rejects them on the next turn
-                content = [b for b in response.content if not (hasattr(b, "text") and b.text == "")]
-                messages.append({"role": "assistant", "content": content})
+                messages.append({"role": "assistant", "content": self._content_to_dicts(response.content)})
                 messages.append({"role": "user", "content": tool_results})
                 continue
 
@@ -59,6 +57,17 @@ class BaseAgent:
                 parts.append(block.text)
         return "\n".join(parts).strip()
 
+    def _content_to_dicts(self, content) -> list[dict]:
+        """Convert response content blocks to plain dicts, dropping empty text blocks."""
+        result = []
+        for block in content:
+            if block.type == "text":
+                if block.text:
+                    result.append({"type": "text", "text": block.text})
+            elif block.type == "tool_use":
+                result.append({"type": "tool_use", "id": block.id, "name": block.name, "input": block.input})
+        return result
+
     def _process_tool_calls(self, response: anthropic.types.Message) -> list[dict]:
         results = []
         for block in response.content:
@@ -67,13 +76,8 @@ class BaseAgent:
                     output = self.execute_tool(block.name, block.input)
                 except Exception as exc:
                     output = f"Tool error: {exc}"
-                results.append(
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": str(output),
-                    }
-                )
+                content = str(output) or "(no output)"
+                results.append({"type": "tool_result", "tool_use_id": block.id, "content": content})
         return results
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> Any:
