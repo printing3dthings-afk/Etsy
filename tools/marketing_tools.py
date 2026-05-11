@@ -1,6 +1,7 @@
 """Tool definitions and implementations for the Marketing Agent."""
 
 import json
+from datetime import date
 from tools.data_store import DataStore
 from tools import etsy_api
 
@@ -218,13 +219,45 @@ def _get_promotion_suggestions(store: DataStore) -> str:
         suggestions.append(
             {"type": "conversion", "suggestion": f"'{high_view_low_sale[0]['title']}' has high views but low sales. Consider improving photos or adjusting price."}
         )
-    suggestions.append(
-        {"type": "seasonal", "suggestion": "May: promote Mother's Day gifts, personalized items, and spring home decor."}
-    )
-    suggestions.append(
-        {"type": "seo", "suggestion": "Add long-tail tags like 'gift for mom 2026' and 'personalized Mother's Day gift' to listings."}
-    )
+    suggestions.extend(_seasonal_suggestions())
     return json.dumps({"promotion_suggestions": suggestions}, indent=2)
+
+
+_SEASONAL = {
+    1:  ("January: promote home refresh and New Year's decor.",
+         "Add long-tail tags like 'new year home decor' and 'home organization gift'."),
+    2:  ("February: promote Valentine's Day gifts and romantic home decor.",
+         "Add long-tail tags like 'valentine gift for her' and 'romantic home decor'."),
+    3:  ("March: promote spring home refresh and unique housewarming gifts.",
+         "Add long-tail tags like 'spring home decor' and 'housewarming gift idea'."),
+    4:  ("April: promote Easter gifts and spring decor.",
+         "Add long-tail tags like 'easter gift' and 'spring home decor'."),
+    5:  ("May: promote Mother's Day gifts, personalized items, and spring home decor.",
+         "Add long-tail tags like 'gift for mom {year}' and 'personalized Mother's Day gift'."),
+    6:  ("June: promote graduation gifts and Father's Day items.",
+         "Add long-tail tags like 'graduation gift {year}' and 'gift for dad'."),
+    7:  ("July: promote summer home decor and unique gift ideas.",
+         "Add long-tail tags like 'summer home decor' and 'unique gift idea {year}'."),
+    8:  ("August: promote back-to-school gifts and dorm room decor.",
+         "Add long-tail tags like 'dorm room decor' and 'college student gift'."),
+    9:  ("September: promote fall home decor and cozy home gifts.",
+         "Add long-tail tags like 'fall home decor {year}' and 'autumn decor'."),
+    10: ("October: promote Halloween decor and cozy fall items.",
+         "Add long-tail tags like 'halloween decor' and 'fall gift {year}'."),
+    11: ("November: start promoting Christmas/holiday gifts and Black Friday deals.",
+         "Add long-tail tags like 'christmas gift {year}' and 'holiday home decor'."),
+    12: ("December: push holiday gifts and last-minute Christmas ideas.",
+         "Add long-tail tags like 'christmas gift idea' and 'holiday decor {year}'."),
+}
+
+
+def _seasonal_suggestions() -> list[dict]:
+    today = date.today()
+    seasonal_text, seo_text = _SEASONAL[today.month]
+    return [
+        {"type": "seasonal", "suggestion": seasonal_text.replace("{year}", str(today.year))},
+        {"type": "seo",      "suggestion": seo_text.replace("{year}", str(today.year))},
+    ]
 
 
 def _get_top_search_terms(store: DataStore) -> str:
