@@ -15,27 +15,42 @@ from agents import (
     AnalyticsAgent, CustomerServiceAgent, SocialMediaAgent,
     ArtCreationAgent, QualityCheckAgent, EtsyListingAgent,
     StoreManagerAgent, SalesProcessorAgent, BrandDesignAgent,
+    FinancialAgent, PrintProductionAgent, EtsyAdsAgent,
+    CompetitorIntelAgent, PromotionsAgent, TaxComplianceAgent,
+    ReturnsAgent, SupplyChainAgent, EmailMarketingAgent, ABTestingAgent,
 )
 
 AGENTS = {
     # ── Orchestrator ────────────────────────────────────────────────────────
-    "ceo": ("CEO Agent", lambda: CEOAgent()),
+    "ceo":       ("CEO Agent",                lambda: CEOAgent()),
 
     # ── Digital Product Pipeline ─────────────────────────────────────────────
-    "brand": ("Brand Design Agent", lambda: BrandDesignAgent()),
-    "art": ("Art Creation Agent", lambda: ArtCreationAgent()),
-    "qc": ("Quality Check Agent", lambda: QualityCheckAgent()),
-    "listing": ("Etsy Listing Agent", lambda: EtsyListingAgent()),
-    "store": ("Store Manager Agent", lambda: StoreManagerAgent()),
-    "delivery": ("Sales Processor Agent", lambda: SalesProcessorAgent()),
+    "brand":     ("Brand Design Agent",       lambda: BrandDesignAgent()),
+    "art":       ("Art Creation Agent",       lambda: ArtCreationAgent()),
+    "qc":        ("Quality Check Agent",      lambda: QualityCheckAgent()),
+    "listing":   ("Etsy Listing Agent",       lambda: EtsyListingAgent()),
+    "store":     ("Store Manager Agent",      lambda: StoreManagerAgent()),
+    "delivery":  ("Sales Processor Agent",    lambda: SalesProcessorAgent()),
 
     # ── Shop Operations ──────────────────────────────────────────────────────
-    "sales": ("Sales Agent", lambda: SalesAgent()),
-    "product": ("Product Agent", lambda: ProductAgent()),
-    "marketing": ("Marketing Agent", lambda: MarketingAgent()),
-    "analytics": ("Analytics Agent", lambda: AnalyticsAgent()),
-    "cs": ("Customer Service Agent", lambda: CustomerServiceAgent()),
-    "social": ("Social Media Agent", lambda: SocialMediaAgent()),
+    "sales":     ("Sales Agent",              lambda: SalesAgent()),
+    "product":   ("Product Agent",            lambda: ProductAgent()),
+    "marketing": ("Marketing Agent",          lambda: MarketingAgent()),
+    "analytics": ("Analytics Agent",          lambda: AnalyticsAgent()),
+    "cs":        ("Customer Service Agent",   lambda: CustomerServiceAgent()),
+    "social":    ("Social Media Agent",       lambda: SocialMediaAgent()),
+
+    # ── Business Infrastructure ──────────────────────────────────────────────
+    "finance":   ("Financial Agent",          lambda: FinancialAgent()),
+    "print":     ("Print Production Agent",   lambda: PrintProductionAgent()),
+    "ads":       ("Etsy Ads Agent",           lambda: EtsyAdsAgent()),
+    "intel":     ("Competitor Intel Agent",   lambda: CompetitorIntelAgent()),
+    "promos":    ("Promotions Agent",         lambda: PromotionsAgent()),
+    "tax":       ("Tax Compliance Agent",     lambda: TaxComplianceAgent()),
+    "returns":   ("Returns & Disputes Agent", lambda: ReturnsAgent()),
+    "supply":    ("Supply Chain Agent",       lambda: SupplyChainAgent()),
+    "email":     ("Email Marketing Agent",    lambda: EmailMarketingAgent()),
+    "abt":       ("A/B Testing Agent",        lambda: ABTestingAgent()),
 }
 
 DAILY_BRIEFING_PROMPT = """Run a complete daily briefing for the shop owner. Delegate to all relevant agents:
@@ -50,39 +65,58 @@ OPERATIONS:
 5. Sales Processor Agent — any unfulfilled digital orders needing email delivery?
 6. Sales Agent — today's revenue and pending physical orders
 7. Customer Service Agent — unread messages and unresponded reviews
-8. Analytics Agent — this week's traffic and top performers
-9. Marketing Agent — one key marketing opportunity for today
+8. Returns & Disputes Agent — any open cases needing urgent response?
+9. Analytics Agent — this week's traffic and top performers
+10. Marketing Agent — one key marketing opportunity for today
+
+INFRASTRUCTURE:
+11. Supply Chain Agent — any materials running low?
+12. Print Production Agent — print queue status and machine health
 
 Synthesize everything into an executive daily briefing. Lead with the most urgent items first."""
 
 HELP_TEXT = """
-╔══════════════════════════════════════════════════════════════════════╗
-║          OnBrandCraftz — Etsy Agent Hub                             ║
-╠══════════════════════════════════════════════════════════════════════╣
-║  COMMANDS                                                            ║
-║  help          Show this help menu                                   ║
-║  brief         Run daily briefing (all agents)                      ║
-║  pipeline      Show digital product pipeline status                  ║
-║  agent <name>  Switch to a specific agent                            ║
-║  quit / exit   Exit the hub                                          ║
-║                                                                      ║
-║  AGENTS — Digital Product Pipeline                                   ║
-║  ceo           CEO Agent (orchestrates all agents)                   ║
-║  brand         Brand Design Agent (logo, banner, brand identity)     ║
-║  art           Art Creation Agent (digital art + planners)           ║
-║  qc            Quality Check Agent (file review + approval)          ║
-║  listing       Etsy Listing Agent (SEO + publish to Etsy)           ║
-║  store         Store Manager Agent (shop health + announcements)     ║
-║  delivery      Sales Processor Agent (email digital files)           ║
-║                                                                      ║
-║  AGENTS — Shop Operations                                            ║
-║  sales         Sales Agent (physical orders, revenue, shipping)      ║
-║  product       Product Agent (physical listings, inventory)          ║
-║  marketing     Marketing Agent (SEO, promotions, traffic)            ║
-║  analytics     Analytics Agent (reports, dashboard)                  ║
-║  cs            Customer Service Agent (messages, reviews)            ║
-║  social        Social Media Agent (Pinterest strategy)               ║
-╚══════════════════════════════════════════════════════════════════════╝
+╔═════════════════════════════════════════════════════════════════════════╗
+║            OnBrandCraftz — Etsy Agent Hub                               ║
+╠═════════════════════════════════════════════════════════════════════════╣
+║  COMMANDS                                                                ║
+║  help          Show this help menu                                       ║
+║  brief         Run daily briefing (all agents)                           ║
+║  pipeline      Show digital product pipeline status                      ║
+║  agent <name>  Switch to a specific agent                                ║
+║  quit / exit   Exit the hub                                              ║
+║                                                                          ║
+║  AGENTS — Orchestrator                                                   ║
+║  ceo           CEO Agent (orchestrates all 22 agents)                    ║
+║                                                                          ║
+║  AGENTS — Digital Product Pipeline                                       ║
+║  brand         Brand Design Agent (logo, banner, brand identity)         ║
+║  art           Art Creation Agent (digital art + planners)               ║
+║  qc            Quality Check Agent (file review + approval)              ║
+║  listing       Etsy Listing Agent (SEO + publish to Etsy)               ║
+║  store         Store Manager Agent (shop health + announcements)         ║
+║  delivery      Sales Processor Agent (email digital files)               ║
+║                                                                          ║
+║  AGENTS — Shop Operations                                                ║
+║  sales         Sales Agent (physical orders, revenue, shipping)          ║
+║  product       Product Agent (physical listings, inventory)              ║
+║  marketing     Marketing Agent (SEO, promotions, traffic)                ║
+║  analytics     Analytics Agent (reports, dashboard)                      ║
+║  cs            Customer Service Agent (messages, reviews)                ║
+║  social        Social Media Agent (Pinterest strategy)                   ║
+║                                                                          ║
+║  AGENTS — Business Infrastructure                                        ║
+║  finance       Financial Agent (profit, fees, COGS, cash flow)          ║
+║  print         Print Production Agent (print queue, machines, filament)  ║
+║  ads           Etsy Ads Agent (budget, ROAS, promoted listings)          ║
+║  intel         Competitor Intel Agent (research, gaps, trends)           ║
+║  promos        Promotions Agent (sales events, coupons, discounts)       ║
+║  tax           Tax Compliance Agent (taxes, deductions, copyright)       ║
+║  returns       Returns & Disputes Agent (refunds, Etsy cases)            ║
+║  supply        Supply Chain Agent (materials, suppliers, orders)         ║
+║  email         Email Marketing Agent (newsletters, receipt messages)     ║
+║  abt           A/B Testing Agent (listing experiments, CTR/conversion)   ║
+╚═════════════════════════════════════════════════════════════════════════╝
 """
 
 PIPELINE_PROMPT = """Check the complete digital product pipeline status. Ask:
@@ -103,10 +137,10 @@ def check_env() -> bool:
 
 
 def print_banner():
-    print("\n" + "=" * 68)
+    print("\n" + "=" * 70)
     print("   OnBrandCraftz — Etsy Agent Hub")
-    print("   Powered by Claude AI  |  12 Specialized Agents")
-    print("=" * 68)
+    print("   Powered by Claude AI  |  22 Specialized Agents")
+    print("=" * 70)
     print("Type 'help' for commands, 'brief' for daily briefing,")
     print("'pipeline' for digital product status, or ask anything.\n")
 

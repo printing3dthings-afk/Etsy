@@ -360,5 +360,36 @@
       "L009": "Hand painted wood jewelry boxes with drawers avg ~$90 USD on Etsy. You're at $35 \u2014 SIGNIFICANTLY UNDERPRICED.",
       "L010": "Hand painted wood jewelry organizers avg ~$90 USD on Etsy. You're at $35 \u2014 SIGNIFICANTLY UNDERPRICED."
     }
-  }
+  },
+  "financial_data": {
+    "expenses": [],
+    "cogs_rates": {
+      "filament_per_gram": 0.02,
+      "electricity_per_hour": 0.12,
+      "labour_per_hour": 15.0,
+      "packaging_per_order": 0.50
+    }
+  },
+  "print_queue": [],
+  "filament_inventory": [],
+  "machines": [],
+  "print_failures": [],
+  "etsy_ads": {
+    "daily_budget_usd": 0,
+    "spend_log": [],
+    "listing_ads": {}
+  },
+  "competitor_watchlist": [],
+  "market_snapshots": [],
+  "promotions": [],
+  "tax_deductions": [],
+  "cases": [],
+  "materials_inventory": [],
+  "supplier_contacts": [],
+  "purchase_orders": [],
+  "receipt_message": "",
+  "message_templates": [],
+  "email_subscribers": [],
+  "newsletter_drafts": [],
+  "ab_tests": []
 }

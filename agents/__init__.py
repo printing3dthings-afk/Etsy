@@ -11,6 +11,16 @@ from .etsy_listing_agent import EtsyListingAgent
 from .store_manager_agent import StoreManagerAgent
 from .sales_processor_agent import SalesProcessorAgent
 from .brand_design_agent import BrandDesignAgent
+from .financial_agent import FinancialAgent
+from .print_production_agent import PrintProductionAgent
+from .etsy_ads_agent import EtsyAdsAgent
+from .competitor_intel_agent import CompetitorIntelAgent
+from .promotions_agent import PromotionsAgent
+from .tax_compliance_agent import TaxComplianceAgent
+from .returns_agent import ReturnsAgent
+from .supply_chain_agent import SupplyChainAgent
+from .email_marketing_agent import EmailMarketingAgent
+from .ab_testing_agent import ABTestingAgent
 from .ceo_agent import CEOAgent
 
 __all__ = [
@@ -27,5 +37,15 @@ __all__ = [
     "StoreManagerAgent",
     "SalesProcessorAgent",
     "BrandDesignAgent",
+    "FinancialAgent",
+    "PrintProductionAgent",
+    "EtsyAdsAgent",
+    "CompetitorIntelAgent",
+    "PromotionsAgent",
+    "TaxComplianceAgent",
+    "ReturnsAgent",
+    "SupplyChainAgent",
+    "EmailMarketingAgent",
+    "ABTestingAgent",
     "CEOAgent",
 ]
