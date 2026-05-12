@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OnBrandCraftz Town</title>
+<style>
+/* ─────────────────── RESET & BASE ─────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117; color: #e6edf3; overflow: hidden; }
+
+/* ─────────────────── LAYOUT ─────────────────── */
+.app { display: grid; grid-template-rows: 52px 1fr 64px; height: 100vh; }
+
+/* ─────────────────── HEADER ─────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; background: #161b22; border-bottom: 1px solid #30363d;
+  z-index: 10;
+}
+.header-title { font-size: 1.2rem; font-weight: 700; color: #f0f6fc; letter-spacing: 0.5px; }
+.header-title span { font-size: 1.3rem; margin-right: 6px; }
+.header-stats { display: flex; gap: 16px; align-items: center; font-size: 0.82rem; }
+.stat { display: flex; align-items: center; gap: 5px; color: #8b949e; }
+.stat-val { color: #f0f6fc; font-weight: 600; }
+.stat-active .stat-val { color: #3fb950; }
+.stat-dot { width: 8px; height: 8px; border-radius: 50%; background: #30363d; }
+.stat-dot.live { background: #3fb950; animation: blink 1.5s ease-in-out infinite; }
+#clock { color: #58a6ff; font-weight: 600; font-size: 0.85rem; }
+
+/* ─────────────────── MAIN CONTENT ─────────────────── */
+.main { display: grid; grid-template-columns: 1fr 320px; overflow: hidden; }
+
+/* ─────────────────── TOWN SCENE ─────────────────── */
+.town-scroll { overflow-y: auto; overflow-x: hidden; }
+.town-scroll::-webkit-scrollbar { width: 6px; }
+.town-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+.town-scene {
+  min-height: 100%;
+  background: linear-gradient(180deg, #1a3a5c 0%, #2d6a9f 18%, #87CEEB 38%, #b0ddf5 52%, #7db87d 52%, #5a9e5a 100%);
+  padding: 0 0 30px;
+  position: relative;
+}
+
+/* ─────────────────── SKY ─────────────────── */
+.sky {
+  position: relative; height: 120px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.sky-title {
+  font-size: 1.4rem; font-weight: 800; color: #fff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.4); z-index: 2; letter-spacing: 1px;
+}
+.sun {
+  position: absolute; right: 60px; top: 20px;
+  width: 50px; height: 50px; border-radius: 50%;
+  background: radial-gradient(circle, #FFE08A, #FFB300);
+  box-shadow: 0 0 30px 10px rgba(255,200,50,0.4);
+  animation: sun-pulse 4s ease-in-out infinite;
+}
+.cloud {
+  position: absolute; border-radius: 50px; background: rgba(255,255,255,0.85);
+  animation: cloud-drift linear infinite;
+}
+.cloud::before, .cloud::after {
+  content: ''; position: absolute; background: inherit; border-radius: 50%;
+}
+.c1 { width: 100px; height: 36px; top: 25px; left: -120px; animation-duration: 35s; animation-delay: 0s; }
+.c1::before { width: 52px; height: 52px; top: -20px; left: 14px; }
+.c1::after  { width: 38px; height: 38px; top: -12px; right: 14px; }
+.c2 { width: 80px; height: 28px; top: 55px; left: -100px; animation-duration: 50s; animation-delay: -15s; opacity: 0.7; }
+.c2::before { width: 40px; height: 40px; top: -16px; left: 10px; }
+.c3 { width: 120px; height: 40px; top: 10px; left: -140px; animation-duration: 45s; animation-delay: -30s; opacity: 0.6; }
+.c3::before { width: 60px; height: 60px; top: -24px; left: 20px; }
+.c3::after  { width: 44px; height: 44px; top: -16px; right: 16px; }
+
+/* ─────────────────── DISTRICTS ─────────────────── */
+.district {
+  margin: 10px 14px;
+  background: rgba(255,255,255,0.18);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 14px;
+  padding: 10px 12px 14px;
+  backdrop-filter: blur(4px);
+}
+.district.ceo-district { background: rgba(100,60,160,0.22); border-color: rgba(150,100,220,0.5); }
+.district.creative-district { background: rgba(255,220,100,0.18); border-color: rgba(255,180,50,0.4); }
+.district.market-district { background: rgba(100,200,120,0.18); border-color: rgba(60,160,80,0.4); }
+.district.business-district { background: rgba(80,140,220,0.18); border-color: rgba(60,110,200,0.4); }
+
+.district-label {
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.5px; color: rgba(255,255,255,0.9);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  margin-bottom: 10px; padding: 3px 8px;
+  background: rgba(0,0,0,0.2); border-radius: 20px;
+  display: inline-block;
+}
+
+.twin-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 14px; }
+
+/* Road separator */
+.road {
+  height: 18px;
+  background: repeating-linear-gradient(90deg,
+    #555 0px, #555 30px, transparent 30px, transparent 40px,
+    #555 40px, #555 70px);
+  background-color: #3a3a3a;
+  margin: 4px 0;
+  border-top: 2px solid #222;
+  border-bottom: 2px solid #222;
+  position: relative;
+}
+.road::after {
+  content: ''; position: absolute; left: 0; right: 0;
+  top: 50%; height: 2px;
+  background: repeating-linear-gradient(90deg, #FFD700 0 20px, transparent 20px 40px);
+  transform: translateY(-50%);
+}
+
+/* ─────────────────── BUILDINGS GRID ─────────────────── */
+.buildings-row {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  justify-content: center; align-items: flex-end;
+}
+.buildings-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; justify-items: center;
+}
+.buildings-row-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; justify-items: center; }
+
+/* ─────────────────── BUILDING ─────────────────── */
+.building {
+  display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; user-select: none;
+  position: relative;
+  transition: transform 0.15s;
+}
+.building:hover { transform: translateY(-4px) scale(1.04); }
+.building:hover .b-wrap { filter: brightness(1.1); }
+.building.selected .b-wrap { filter: drop-shadow(0 0 8px #58a6ff) brightness(1.08); }
+
+/* Building structure */
+.b-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
+
+/* Chimney */
+.b-chimney {
+  width: 7px; height: 12px;
+  background: #888; border-radius: 2px 2px 0 0;
+  position: absolute; top: -6px; right: 14px;
+  z-index: 3;
+}
+.building-lg .b-chimney { width: 9px; height: 16px; right: 22px; top: -8px; }
+
+/* Smoke particles */
+.b-smoke {
+  position: absolute; border-radius: 50%;
+  background: rgba(210,210,210,0.7);
+  opacity: 0; z-index: 4;
+  right: 13px;
+}
+.b-smoke.s1 { width: 8px; height: 8px; top: -14px; right: 12px; }
+.b-smoke.s2 { width: 11px; height: 11px; top: -22px; right: 10px; }
+.b-smoke.s3 { width: 13px; height: 13px; top: -32px; right: 8px; }
+.building.running .b-smoke.s1 { animation: smoke 2s ease-out infinite 0s; }
+.building.running .b-smoke.s2 { animation: smoke 2s ease-out infinite 0.5s; }
+.building.running .b-smoke.s3 { animation: smoke 2s ease-out infinite 1s; }
+.building.thinking .b-smoke.s1 { animation: smoke 3s ease-out infinite 0s; opacity-target: 0.4; }
+
+/* Roof */
+.b-roof {
+  width: 0; height: 0;
+  border-left: 46px solid transparent;
+  border-right: 46px solid transparent;
+  border-bottom: 32px solid #E53935;
+  position: relative; z-index: 2;
+  filter: drop-shadow(0 -2px 4px rgba(0,0,0,0.2));
+}
+.building-lg .b-roof {
+  border-left-width: 70px; border-right-width: 70px;
+  border-bottom-width: 50px;
+}
+
+/* Body */
+.b-body {
+  width: 84px; height: 64px;
+  background: #FFF8E1;
+  border-radius: 0 0 5px 5px;
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: space-between;
+  padding: 6px 4px 0;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-top: none;
+}
+.building-lg .b-body { width: 132px; height: 96px; padding: 8px 8px 0; }
+
+/* Windows */
+.b-windows { display: flex; gap: 10px; margin-bottom: 2px; }
+.b-win {
+  width: 18px; height: 16px;
+  background: #BBDEFB;
+  border: 1px solid #90CAF9;
+  border-radius: 3px 3px 0 0;
+  transition: background 0.3s, box-shadow 0.3s;
+  position: relative;
+}
+.b-win::before, .b-win::after {
+  content: ''; position: absolute;
+  background: rgba(144,202,249,0.6);
+}
+.b-win::before { width: 1px; height: 100%; left: 50%; top: 0; }
+.b-win::after  { width: 100%; height: 1px; left: 0; top: 50%; }
+.building-lg .b-win { width: 26px; height: 24px; }
+
+/* Door */
+.b-door {
+  width: 26px; height: 30px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 13px 13px 0 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-bottom: none; margin-top: auto;
+}
+.building-lg .b-door { width: 40px; height: 46px; }
+.b-icon { font-size: 14px; line-height: 1; }
+.building-lg .b-icon { font-size: 22px; }
+
+/* Label */
+.b-name {
+  font-size: 0.62rem; font-weight: 600; margin-top: 4px;
+  color: rgba(255,255,255,0.92); text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6); max-width: 90px;
+  line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.building-lg .b-name { font-size: 0.75rem; max-width: 140px; }
+
+/* Status badge */
+.b-badge {
+  font-size: 0.55rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 1px 5px; border-radius: 8px;
+  background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.6);
+  margin-top: 2px; transition: all 0.3s;
+}
+
+/* Activity speech bubble */
+.b-bubble {
+  position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: rgba(22,27,34,0.95); color: #e6edf3;
+  font-size: 0.6rem; padding: 4px 8px; border-radius: 8px;
+  white-space: nowrap; max-width: 160px; overflow: hidden;
+  text-overflow: ellipsis; pointer-events: none;
+  opacity: 0; transition: opacity 0.2s, transform 0.2s;
+  border: 1px solid #30363d; z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+.b-bubble::after {
+  content: ''; position: absolute; top: 100%; left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(22,27,34,0.95);
+}
+.b-bubble.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ─────────────────── BUILDING STATE ANIMATIONS ─────────────────── */
+/* Running */
+.building.running .b-win {
+  background: #FFD54F !important;
+  box-shadow: 0 0 8px 3px rgba(255,200,0,0.7);
+  animation: win-flicker 1.5s ease-in-out infinite;
+}
+.building.running .b-body {
+  box-shadow: 0 0 18px 4px rgba(255,180,0,0.35);
+}
+.building.running .b-wrap {
+  animation: bob 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255,165,0,0.6));
+}
+.building.running .b-badge {
+  background: rgba(63,185,80,0.3); color: #3fb950;
+  border: 1px solid rgba(63,185,80,0.4);
+}
+.building.running .b-roof {
+  filter: drop-shadow(0 0 6px rgba(255,165,0,0.5));
+}
+
+/* Thinking */
+.building.thinking .b-win {
+  background: #CE93D8 !important;
+  box-shadow: 0 0 8px 3px rgba(180,0,255,0.4);
+  animation: win-think 2s ease-in-out infinite;
+}
+.building.thinking .b-wrap { animation: bob 3s ease-in-out infinite; }
+.building.thinking .b-badge { background: rgba(150,0,230,0.3); color: #d0a0ff; }
+
+/* Done */
+.building.done .b-win { background: #81C784 !important; box-shadow: 0 0 10px 4px rgba(100,220,100,0.6); }
+.building.done .b-wrap { animation: done-bounce 0.5s ease-out; }
+.building.done .b-badge { background: rgba(63,185,80,0.3); color: #3fb950; }
+
+/* Error */
+.building.error .b-win { background: #EF9A9A !important; box-shadow: 0 0 8px 3px rgba(220,0,0,0.5); }
+.building.error .b-wrap { animation: error-shake 0.4s ease-out; }
+.building.error .b-badge { background: rgba(220,50,50,0.3); color: #f85149; }
+
+/* ─────────────────── KEYFRAMES ─────────────────── */
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes sun-pulse { 0%,100%{box-shadow:0 0 30px 10px rgba(255,200,50,0.4)} 50%{box-shadow:0 0 50px 20px rgba(255,200,50,0.6)} }
+@keyframes cloud-drift { from{transform:translateX(0)} to{transform:translateX(calc(100vw + 200px))} }
+@keyframes smoke {
+  0%   { opacity: 0.7; transform: translateY(0) scale(1); }
+  100% { opacity: 0;   transform: translateY(-28px) scale(1.8); }
+}
+@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+@keyframes win-flicker { 0%,100%{opacity:1} 50%{opacity:0.7} }
+@keyframes win-think { 0%,100%{opacity:1} 33%{opacity:0.5} 66%{opacity:0.8} }
+@keyframes done-bounce {
+  0%  { transform: scale(1) translateY(0); }
+  30% { transform: scale(1.08) translateY(-6px); }
+  60% { transform: scale(0.96) translateY(2px); }
+  100%{ transform: scale(1) translateY(0); }
+}
+@keyframes error-shake {
+  0%,100%{ transform: translateX(0); }
+  20%    { transform: translateX(-5px); }
+  40%    { transform: translateX(5px); }
+  60%    { transform: translateX(-3px); }
+  80%    { transform: translateX(3px); }
+}
+
+/* ─────────────────── RIGHT PANEL ─────────────────── */
+.right-panel {
+  display: grid; grid-template-rows: 1fr 1fr;
+  background: #161b22; border-left: 1px solid #30363d;
+  overflow: hidden;
+}
+.panel-section { display: flex; flex-direction: column; overflow: hidden; border-bottom: 1px solid #30363d; }
+.panel-header {
+  padding: 10px 14px; font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px;
+  background: #0d1117; color: #8b949e; border-bottom: 1px solid #21262d;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.panel-header span { color: #3fb950; font-size: 0.7rem; }
+
+/* Activity Log */
+.log-scroll { overflow-y: auto; flex: 1; padding: 6px; }
+.log-scroll::-webkit-scrollbar { width: 4px; }
+.log-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+.log-entry {
+  display: grid; grid-template-columns: 48px 72px 1fr;
+  gap: 4px; align-items: start;
+  padding: 3px 4px; border-radius: 4px;
+  font-size: 0.68rem; line-height: 1.4; margin-bottom: 1px;
+  border-left: 2px solid transparent;
+}
+.log-entry:hover { background: rgba(255,255,255,0.04); }
+.log-time { color: #484f58; font-size: 0.62rem; padding-top: 1px; }
+.log-agent-name {
+  font-weight: 600; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; font-size: 0.65rem;
+}
+.log-msg { color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.log-start    { border-left-color: #f0883e; }
+.log-thinking { border-left-color: #d2a8ff; }
+.log-planning { border-left-color: #58a6ff; }
+.log-tool_call{ border-left-color: #79c0ff; }
+.log-tool_result{ border-left-color: #3fb950; }
+.log-done     { border-left-color: #3fb950; }
+.log-error    { border-left-color: #f85149; }
+.log-start    .log-msg { color: #f0883e; }
+.log-done     .log-msg { color: #3fb950; }
+.log-error    .log-msg { color: #f85149; }
+.log-thinking .log-msg { color: #d2a8ff; }
+.log-planning .log-msg { color: #79c0ff; }
+
+/* Agent Output */
+.output-scroll {
+  overflow-y: auto; flex: 1; padding: 10px 14px;
+  font-size: 0.72rem; line-height: 1.6; color: #8b949e;
+}
+.output-scroll::-webkit-scrollbar { width: 4px; }
+.output-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+.output-agent-header {
+  font-size: 0.78rem; font-weight: 700; color: #f0f6fc;
+  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+}
+.output-content { color: #c9d1d9; white-space: pre-wrap; word-break: break-word; }
+.output-placeholder { color: #484f58; font-style: italic; padding: 20px 0; text-align: center; }
+
+/* ─────────────────── TASK BAR ─────────────────── */
+.task-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 16px;
+  background: #161b22; border-top: 1px solid #30363d;
+  z-index: 10;
+}
+.selected-label {
+  font-size: 0.78rem; font-weight: 600; color: #58a6ff;
+  white-space: nowrap; min-width: 140px;
+}
+.selected-icon { font-size: 1.1rem; }
+#task-input {
+  flex: 1; padding: 8px 14px;
+  background: #0d1117; border: 1px solid #30363d;
+  border-radius: 20px; color: #e6edf3;
+  font-size: 0.85rem; outline: none;
+  transition: border-color 0.2s;
+}
+#task-input:focus { border-color: #58a6ff; }
+#task-input::placeholder { color: #484f58; }
+.run-btn {
+  padding: 8px 20px; border-radius: 20px;
+  background: #238636; color: #fff;
+  border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem;
+  transition: background 0.2s, transform 0.1s;
+  white-space: nowrap;
+}
+.run-btn:hover { background: #2ea043; }
+.run-btn:active { transform: scale(0.97); }
+.run-btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+
+/* Quick task chips */
+.quick-chips { display: flex; gap: 6px; align-items: center; }
+.chip {
+  padding: 4px 10px; border-radius: 12px;
+  background: #21262d; color: #8b949e;
+  border: 1px solid #30363d; cursor: pointer;
+  font-size: 0.7rem; white-space: nowrap;
+  transition: all 0.15s;
+}
+.chip:hover { background: #30363d; color: #e6edf3; border-color: #58a6ff; }
+
+/* ─────────────────── WS STATUS ─────────────────── */
+.ws-status {
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
+  background: rgba(63,185,80,0.15); color: #3fb950;
+  border: 1px solid rgba(63,185,80,0.3);
+}
+.ws-status.disconnected { background: rgba(248,81,73,0.15); color: #f85149; border-color: rgba(248,81,73,0.3); }
+
+/* ─────────────────── TOOLTIP ─────────────────── */
+.tooltip {
+  position: fixed; background: rgba(22,27,34,0.97);
+  color: #e6edf3; font-size: 0.72rem; padding: 6px 10px;
+  border-radius: 6px; border: 1px solid #30363d;
+  pointer-events: none; z-index: 999; display: none;
+  max-width: 200px; line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── HEADER ── -->
+  <header class="header">
+    <div class="header-title"><span>🏙️</span> OnBrandCraftz Town</div>
+    <div class="header-stats">
+      <div class="stat stat-active">
+        <div class="stat-dot live" id="ws-dot"></div>
+        <span id="active-count" class="stat-val">0</span>
+        <span>active</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">22</span>
+        <span>agents</span>
+      </div>
+      <div class="ws-status" id="ws-status">● connecting</div>
+      <div id="clock"></div>
+    </div>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <div class="main">
+
+    <!-- ── TOWN SCENE ── -->
+    <div class="town-scroll">
+      <div class="town-scene">
+
+        <!-- Sky -->
+        <div class="sky">
+          <div class="sun"></div>
+          <div class="cloud c1"></div>
+          <div class="cloud c2"></div>
+          <div class="cloud c3"></div>
+          <div class="sky-title">🏙️ OnBrandCraftz Town</div>
+        </div>
+
+        <!-- CEO Headquarters -->
+        <div class="district ceo-district">
+          <div class="district-label">🏛️ CEO Headquarters</div>
+          <div class="buildings-row" id="dist-ceo"></div>
+        </div>
+
+        <div class="road"></div>
+
+        <!-- Twin districts -->
+        <div class="twin-row">
+          <div class="district creative-district">
+            <div class="district-label">🎨 Creative Quarter</div>
+            <div class="buildings-grid" id="dist-creative"></div>
+          </div>
+          <div class="district market-district">
+            <div class="district-label">🛍️ Market Square</div>
+            <div class="buildings-grid" id="dist-market"></div>
+          </div>
+        </div>
+
+        <div class="road"></div>
+
+        <!-- Business District -->
+        <div class="district business-district">
+          <div class="district-label">🏭 Business District</div>
+          <div class="buildings-row-5" id="dist-business"></div>
+        </div>
+
+      </div><!-- /town-scene -->
+    </div><!-- /town-scroll -->
+
+    <!-- ── RIGHT PANEL ── -->
+    <div class="right-panel">
+
+      <!-- Activity Log -->
+      <div class="panel-section">
+        <div class="panel-header">
+          📋 Activity Log
+          <span id="log-count">0 events</span>
+        </div>
+        <div class="log-scroll" id="log-scroll"></div>
+      </div>
+
+      <!-- Agent Output -->
+      <div class="panel-section">
+        <div class="panel-header">
+          💬 Agent Output
+          <span id="output-label">none selected</span>
+        </div>
+        <div class="output-scroll" id="output-panel">
+          <div class="output-placeholder">Click a building to select an agent, then run a task.</div>
+        </div>
+      </div>
+
+    </div><!-- /right-panel -->
+  </div><!-- /main -->
+
+  <!-- ── TASK BAR ── -->
+  <div class="task-bar">
+    <div class="selected-label">
+      <span class="selected-icon" id="sel-icon">🏙️</span>
+      <span id="sel-name">Select a building…</span>
+    </div>
+    <input type="text" id="task-input" placeholder="Enter a task for the selected agent…" disabled>
+    <div class="quick-chips" id="quick-chips"></div>
+    <button class="run-btn" id="run-btn" disabled onclick="runTask()">Run ▶</button>
+  </div>
+
+</div><!-- /app -->
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ─────────────────── AGENT DEFINITIONS ───────────────────
+const AGENTS = [
+  { key:'ceo',      name:'CEO Agent',              display:'CEO',              icon:'🏛️', roof:'#4A148C', wall:'#EDE7F6', dist:'ceo',      large:true,  quick:['Run daily briefing','What should we focus on this week?','Analyse the shop performance'] },
+  { key:'brand',    name:'Brand Design Agent',      display:'Brand Design',     icon:'🎨', roof:'#AD1457', wall:'#FCE4EC', dist:'creative',  large:false, quick:['Generate a shop banner concept','Review brand guidelines'] },
+  { key:'art',      name:'Art Creation Agent',      display:'Art Creation',     icon:'🖼️', roof:'#6A1B9A', wall:'#F3E5F5', dist:'creative',  large:false, quick:['Create a new digital wall art concept','List all digital products'] },
+  { key:'qc',       name:'Quality Check Agent',     display:'Quality Check',    icon:'🔍', roof:'#1565C0', wall:'#E3F2FD', dist:'creative',  large:false, quick:['Get QC summary','List pending reviews'] },
+  { key:'listing',  name:'Etsy Listing Agent',      display:'Etsy Listing',     icon:'🏪', roof:'#E65100', wall:'#FFF3E0', dist:'creative',  large:false, quick:['Get all listings','Draft an SEO title for a new product'] },
+  { key:'store',    name:'Store Manager Agent',     display:'Store Manager',    icon:'🏬', roof:'#2E7D32', wall:'#E8F5E9', dist:'creative',  large:false, quick:['Get shop health report','Check renewal alerts'] },
+  { key:'delivery', name:'Sales Processor Agent',   display:'Sales Processor',  icon:'📧', roof:'#00838F', wall:'#E0F7FA', dist:'creative',  large:false, quick:['Check pending digital deliveries','Get delivery stats'] },
+  { key:'sales',    name:'Sales Agent',             display:'Sales',            icon:'💰', roof:'#B71C1C', wall:'#FFEBEE', dist:'market',    large:false, quick:["Show today's revenue","List pending orders"] },
+  { key:'product',  name:'Product Agent',           display:'Product',          icon:'📦', roof:'#4527A0', wall:'#EDE7F6', dist:'market',    large:false, quick:['Show all listings','Find underpriced listings'] },
+  { key:'marketing',name:'Marketing Agent',         display:'Marketing',        icon:'📈', roof:'#E65100', wall:'#FFF3E0', dist:'market',    large:false, quick:['Top marketing opportunities','SEO improvements'] },
+  { key:'analytics',name:'Analytics Agent',         display:'Analytics',        icon:'📊', roof:'#1A237E', wall:'#E8EAF6', dist:'market',    large:false, quick:['Weekly performance report','Top selling products'] },
+  { key:'cs',       name:'Customer Service Agent',  display:'Customer Svc',     icon:'💬', roof:'#004D40', wall:'#E0F2F1', dist:'market',    large:false, quick:['Any unread messages?','Pending review responses?'] },
+  { key:'social',   name:'Social Media Agent',      display:'Social Media',     icon:'📌', roof:'#880E4F', wall:'#FCE4EC', dist:'market',    large:false, quick:['Pinterest strategy ideas','Create a content calendar'] },
+  { key:'finance',  name:'Financial Agent',         display:'Financial',        icon:'💵', roof:'#F9A825', wall:'#FFFDE7', dist:'business',  large:false, quick:['Monthly profit report','Calculate Etsy fees on $25 sale'] },
+  { key:'print',    name:'Print Production Agent',  display:'Print Production', icon:'🖨️', roof:'#37474F', wall:'#ECEFF1', dist:'business',  large:false, quick:['Print queue status','Machine health check'] },
+  { key:'ads',      name:'Etsy Ads Agent',          display:'Etsy Ads',         icon:'📣', roof:'#BF360C', wall:'#FBE9E7', dist:'business',  large:false, quick:['Ad performance report','Recommend ad strategy'] },
+  { key:'intel',    name:'Competitor Intel Agent',  display:'Competitor Intel', icon:'🔭', roof:'#1B5E20', wall:'#F1F8E9', dist:'business',  large:false, quick:['Find market gaps','Seasonal opportunities'] },
+  { key:'promos',   name:'Promotions Agent',        display:'Promotions',       icon:'🏷️', roof:'#F57F17', wall:'#FFFDE7', dist:'business',  large:false, quick:['Active promotions','Best coupon strategy for new customers'] },
+  { key:'tax',      name:'Tax Compliance Agent',    display:'Tax Compliance',   icon:'📋', roof:'#212121', wall:'#F5F5F5', dist:'business',  large:false, quick:['Quarterly tax estimate','Log a business expense'] },
+  { key:'returns',  name:'Returns & Disputes Agent',display:'Returns',          icon:'↩️', roof:'#C62828', wall:'#FFEBEE', dist:'business',  large:false, quick:['Any open cases?','Draft a response to a not-as-described claim'] },
+  { key:'supply',   name:'Supply Chain Agent',      display:'Supply Chain',     icon:'⛏️', roof:'#3E2723', wall:'#EFEBE9', dist:'business',  large:false, quick:['Materials reorder alerts','Filament inventory'] },
+  { key:'email',    name:'Email Marketing Agent',   display:'Email Marketing',  icon:'📬', roof:'#0277BD', wall:'#E1F5FE', dist:'business',  large:false, quick:['Get receipt message','Draft a newsletter'] },
+  { key:'abt',      name:'A/B Testing Agent',       display:'A/B Testing',      icon:'🧪', roof:'#00695C', wall:'#E0F2F1', dist:'business',  large:false, quick:['Generate test ideas','Active tests status'] },
+];
+
+const AGENT_MAP = Object.fromEntries(AGENTS.map(a => [a.key, a]));
+const STATE_LABELS = { idle:'idle', running:'working…', thinking:'thinking…', done:'done ✓', error:'error!' };
+let selectedAgent = null;
+let logCount = 0;
+let activeAgents = new Set();
+
+// ─────────────────── BUILD TOWN ───────────────────
+function mkBuilding(agent) {
+  const lg = agent.large;
+  const d = document.createElement('div');
+  d.className = `building${lg ? ' building-lg' : ''}`;
+  d.dataset.key = agent.key;
+  d.title = agent.name;
+
+  const roofW = lg ? 70 : 46;
+  const doorW = lg ? 38 : 26;
+
+  d.innerHTML = `
+    <div class="b-bubble" id="bubble-${agent.key}"></div>
+    <div class="b-wrap">
+      <div class="b-chimney"></div>
+      <div class="b-smoke s1"></div>
+      <div class="b-smoke s2"></div>
+      <div class="b-smoke s3"></div>
+      <div class="b-roof" style="border-left-width:${roofW}px;border-right-width:${roofW}px;border-bottom-color:${agent.roof}"></div>
+      <div class="b-body" style="background:${agent.wall}">
+        <div class="b-windows">
+          <div class="b-win"></div>
+          <div class="b-win"></div>
+          ${lg ? '<div class="b-win"></div>' : ''}
+        </div>
+        <div class="b-door" style="width:${doorW}px;border-radius:${doorW/2}px ${doorW/2}px 0 0;background:${agent.roof}22;border-color:${agent.roof}44">
+          <span class="b-icon">${agent.icon}</span>
+        </div>
+      </div>
+    </div>
+    <div class="b-name">${agent.display}</div>
+    <div class="b-badge" id="badge-${agent.key}">idle</div>
+  `;
+
+  d.addEventListener('click', () => selectAgent(agent.key));
+
+  // Tooltip
+  d.addEventListener('mouseenter', e => showTooltip(e, agent.name));
+  d.addEventListener('mouseleave', hideTooltip);
+  d.addEventListener('mousemove', e => moveTooltip(e));
+
+  return d;
+}
+
+function initTown() {
+  AGENTS.forEach(agent => {
+    const container = document.getElementById(`dist-${agent.dist}`);
+    if (container) container.appendChild(mkBuilding(agent));
+  });
+}
+
+// ─────────────────── AGENT SELECTION ───────────────────
+function selectAgent(key) {
+  // Deselect previous
+  if (selectedAgent) {
+    document.querySelector(`[data-key="${selectedAgent}"]`)?.classList.remove('selected');
+  }
+
+  selectedAgent = key;
+  const agent = AGENT_MAP[key];
+  document.querySelector(`[data-key="${key}"]`)?.classList.add('selected');
+
+  // Update task bar
+  document.getElementById('sel-icon').textContent = agent.icon;
+  document.getElementById('sel-name').textContent = agent.name;
+  document.getElementById('task-input').disabled = false;
+  document.getElementById('task-input').placeholder = `Task for ${agent.display}…`;
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('output-label').textContent = agent.display;
+
+  // Quick chips
+  const chips = document.getElementById('quick-chips');
+  chips.innerHTML = '';
+  (agent.quick || []).slice(0, 3).forEach(q => {
+    const c = document.createElement('button');
+    c.className = 'chip';
+    c.textContent = q;
+    c.onclick = () => {
+      document.getElementById('task-input').value = q;
+      runTask();
+    };
+    chips.appendChild(c);
+  });
+
+  // Focus input
+  setTimeout(() => document.getElementById('task-input').focus(), 50);
+}
+
+// ─────────────────── BUILDING STATE ───────────────────
+function setBuildingState(key, state) {
+  const el = document.querySelector(`[data-key="${key}"]`);
+  if (!el) return;
+  el.classList.remove('idle', 'running', 'thinking', 'done', 'error');
+  el.classList.add(state || 'idle');
+  const badge = document.getElementById(`badge-${key}`);
+  if (badge) badge.textContent = STATE_LABELS[state] || state;
+}
+
+function showBubble(key, text) {
+  const bubble = document.getElementById(`bubble-${key}`);
+  if (!bubble) return;
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  clearTimeout(bubble._timer);
+  bubble._timer = setTimeout(() => bubble.classList.remove('show'), 4000);
+}
+
+// ─────────────────── WEBSOCKET ───────────────────
+let ws;
+let wsReconnectTimer;
+
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${proto}//${location.host}/ws`);
+
+  ws.onopen = () => {
+    setWsStatus(true);
+    clearTimeout(wsReconnectTimer);
+  };
+
+  ws.onclose = () => {
+    setWsStatus(false);
+    wsReconnectTimer = setTimeout(connectWS, 3000);
+  };
+
+  ws.onerror = () => {
+    setWsStatus(false);
+  };
+
+  ws.onmessage = e => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'init') {
+      // Restore any in-progress states
+      Object.entries(msg.states || {}).forEach(([k, s]) => {
+        setBuildingState(k, s.status === 'running' ? 'running' : 'idle');
+      });
+    } else if (msg.type === 'agent_event') {
+      handleEvent(msg);
+    }
+  };
+}
+
+function setWsStatus(connected) {
+  const el = document.getElementById('ws-status');
+  const dot = document.getElementById('ws-dot');
+  if (connected) {
+    el.textContent = '● connected';
+    el.className = 'ws-status';
+    dot.className = 'stat-dot live';
+  } else {
+    el.textContent = '● disconnected';
+    el.className = 'ws-status disconnected';
+    dot.className = 'stat-dot';
+  }
+}
+
+// ─────────────────── EVENT HANDLER ───────────────────
+function handleEvent(msg) {
+  const { agent: key, event, message, ts, data } = msg;
+
+  // Update building state
+  switch (event) {
+    case 'start':
+      setBuildingState(key, 'running');
+      activeAgents.add(key);
+      showBubble(key, message);
+      break;
+    case 'thinking':
+      setBuildingState(key, 'thinking');
+      showBubble(key, '💭 thinking…');
+      break;
+    case 'planning':
+      setBuildingState(key, 'running');
+      showBubble(key, message);
+      break;
+    case 'tool_call':
+      setBuildingState(key, 'running');
+      showBubble(key, message);
+      break;
+    case 'tool_result':
+      showBubble(key, message);
+      break;
+    case 'done':
+      setBuildingState(key, 'done');
+      activeAgents.delete(key);
+      showBubble(key, '✓ done');
+      setTimeout(() => setBuildingState(key, 'idle'), 3000);
+      if (data?.result) showOutput(key, data.result);
+      break;
+    case 'error':
+      setBuildingState(key, 'error');
+      activeAgents.delete(key);
+      showBubble(key, '⚠ error');
+      setTimeout(() => setBuildingState(key, 'idle'), 5000);
+      showOutput(key, `ERROR: ${message}`);
+      break;
+  }
+
+  // Update active count
+  document.getElementById('active-count').textContent = activeAgents.size;
+
+  // Add log entry
+  addLog(key, event, message, ts);
+}
+
+// ─────────────────── ACTIVITY LOG ───────────────────
+function addLog(key, event, message, ts) {
+  const agent = AGENT_MAP[key];
+  const scroll = document.getElementById('log-scroll');
+
+  const entry = document.createElement('div');
+  entry.className = `log-entry log-${event}`;
+  entry.innerHTML = `
+    <span class="log-time">${ts}</span>
+    <span class="log-agent-name" style="color:${agent?.roof || '#8b949e'}">${agent?.icon || ''} ${agent?.display || key}</span>
+    <span class="log-msg" title="${message}">${message}</span>
+  `;
+
+  scroll.insertBefore(entry, scroll.firstChild);
+
+  // Keep max 150 entries
+  while (scroll.children.length > 150) scroll.removeChild(scroll.lastChild);
+
+  logCount++;
+  document.getElementById('log-count').textContent = `${logCount} events`;
+}
+
+// ─────────────────── OUTPUT PANEL ───────────────────
+function showOutput(key, text) {
+  const agent = AGENT_MAP[key];
+  const panel = document.getElementById('output-panel');
+  panel.innerHTML = `
+    <div class="output-agent-header">
+      <span>${agent?.icon || ''}</span>
+      <span>${agent?.name || key}</span>
+    </div>
+    <div class="output-content">${escHtml(text)}</div>
+  `;
+  document.getElementById('output-label').textContent = agent?.display || key;
+}
+
+function escHtml(str) {
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ─────────────────── RUN TASK ───────────────────
+function runTask() {
+  if (!selectedAgent) return;
+  const input = document.getElementById('task-input');
+  const task = input.value.trim();
+  if (!task) return;
+
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    alert('Not connected to server. Please wait and try again.');
+    return;
+  }
+
+  ws.send(JSON.stringify({ type: 'run', agent: selectedAgent, task }));
+  input.value = '';
+
+  // Optimistic UI update
+  setBuildingState(selectedAgent, 'running');
+  activeAgents.add(selectedAgent);
+  document.getElementById('active-count').textContent = activeAgents.size;
+  showBubble(selectedAgent, task.slice(0, 50));
+
+  // Show working state in output panel
+  const agent = AGENT_MAP[selectedAgent];
+  document.getElementById('output-panel').innerHTML = `
+    <div class="output-agent-header">
+      <span>${agent?.icon || ''}</span>
+      <span>${agent?.name || selectedAgent}</span>
+    </div>
+    <div class="output-content" style="color:#8b949e;font-style:italic">Working on: ${escHtml(task.slice(0, 100))}…</div>
+  `;
+}
+
+// Enter key submits
+document.getElementById('task-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runTask();
+});
+
+// ─────────────────── TOOLTIP ───────────────────
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e, text) {
+  tooltip.textContent = text;
+  tooltip.style.display = 'block';
+  moveTooltip(e);
+}
+function moveTooltip(e) {
+  tooltip.style.left = (e.clientX + 12) + 'px';
+  tooltip.style.top  = (e.clientY - 30) + 'px';
+}
+function hideTooltip() { tooltip.style.display = 'none'; }
+
+// ─────────────────── CLOCK ───────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─────────────────── INIT ───────────────────
+initTown();
+connectWS();
+</script>
+</body>
+</html>
