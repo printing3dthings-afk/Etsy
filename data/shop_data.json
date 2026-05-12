@@ -8,7 +8,7 @@
     "location": "United States",
     "fulfillment_model": "print_to_order",
     "total_sales": 0,
-    "total_revenue": 0.00,
+    "total_revenue": 0.0,
     "rating": 0,
     "review_count": 0
   },
@@ -22,7 +22,16 @@
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["3d printed", "crystal lamp", "glow lamp", "geometric", "table lamp", "night light", "home decor", "modern"],
+      "tags": [
+        "3d printed",
+        "crystal lamp",
+        "glow lamp",
+        "geometric",
+        "table lamp",
+        "night light",
+        "home decor",
+        "modern"
+      ],
       "category": "Home & Living > Lighting > Table Lamps",
       "status": "active",
       "processing_days": 3,
@@ -39,7 +48,16 @@
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["3d printed", "ribbed vase", "dried flowers", "matte black", "minimalist", "modern vase", "home decor", "boho"],
+      "tags": [
+        "3d printed",
+        "ribbed vase",
+        "dried flowers",
+        "matte black",
+        "minimalist",
+        "modern vase",
+        "home decor",
+        "boho"
+      ],
       "category": "Home & Living > Home Decor > Vases",
       "status": "active",
       "processing_days": 3,
@@ -56,7 +74,16 @@
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["3d printed", "coffee bar sign", "funny cat", "kitchen decor", "coffee decor", "cat lover gift", "coffee sign", "ready to brew"],
+      "tags": [
+        "3d printed",
+        "coffee bar sign",
+        "funny cat",
+        "kitchen decor",
+        "coffee decor",
+        "cat lover gift",
+        "coffee sign",
+        "ready to brew"
+      ],
       "category": "Home & Living > Home Decor > Signs",
       "status": "active",
       "processing_days": 3,
@@ -73,7 +100,16 @@
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["3d printed", "candle holder", "tea light", "boho", "minimalist", "set of 3", "home decor", "candle"],
+      "tags": [
+        "3d printed",
+        "candle holder",
+        "tea light",
+        "boho",
+        "minimalist",
+        "set of 3",
+        "home decor",
+        "candle"
+      ],
       "category": "Home & Living > Candles & Holders",
       "status": "active",
       "processing_days": 3,
@@ -90,7 +126,16 @@
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["3d printed", "mesh lamp", "table lamp", "geometric", "bedside lamp", "modern", "home decor", "night light"],
+      "tags": [
+        "3d printed",
+        "mesh lamp",
+        "table lamp",
+        "geometric",
+        "bedside lamp",
+        "modern",
+        "home decor",
+        "night light"
+      ],
       "category": "Home & Living > Lighting > Table Lamps",
       "status": "active",
       "processing_days": 3,
@@ -107,7 +152,16 @@
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["3d printed", "table centerpiece", "boho", "dining decor", "modern", "home decor", "centerpiece", "boho decor"],
+      "tags": [
+        "3d printed",
+        "table centerpiece",
+        "boho",
+        "dining decor",
+        "modern",
+        "home decor",
+        "centerpiece",
+        "boho decor"
+      ],
       "category": "Home & Living > Home Decor > Decorative Objects",
       "status": "active",
       "processing_days": 3,
@@ -124,7 +178,16 @@
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["3d printed", "geometric lamp", "table lamp", "modern", "bedside lamp", "home decor", "unique lamp", "night light"],
+      "tags": [
+        "3d printed",
+        "geometric lamp",
+        "table lamp",
+        "modern",
+        "bedside lamp",
+        "home decor",
+        "unique lamp",
+        "night light"
+      ],
       "category": "Home & Living > Lighting > Table Lamps",
       "status": "active",
       "processing_days": 3,
@@ -141,7 +204,16 @@
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["3d printed", "can koozie", "beer koozie", "slim can", "cooler", "race day", "funny gift", "party"],
+      "tags": [
+        "3d printed",
+        "can koozie",
+        "beer koozie",
+        "slim can",
+        "cooler",
+        "race day",
+        "funny gift",
+        "party"
+      ],
       "category": "Food & Drink > Barware > Koozies",
       "status": "active",
       "processing_days": 3,
@@ -153,12 +225,21 @@
       "id": "L009",
       "sku": null,
       "title": "Hand Painted Wood Jewelry Box | Decorative Wooden Storage Box with Drawers",
-      "price": 35.00,
+      "price": 35.0,
       "quantity": 1,
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["jewelry box", "hand painted", "wood", "wooden", "storage box", "drawers", "decorative", "gift for her"],
+      "tags": [
+        "jewelry box",
+        "hand painted",
+        "wood",
+        "wooden",
+        "storage box",
+        "drawers",
+        "decorative",
+        "gift for her"
+      ],
       "category": "Jewelry > Jewelry Storage > Jewelry Boxes",
       "status": "active",
       "processing_days": 5,
@@ -170,12 +251,21 @@
       "id": "L010",
       "sku": null,
       "title": "Hand Painted Wood Jewelry Organizer | Boho Wooden Jewelry Storage with Drawers",
-      "price": 35.00,
+      "price": 35.0,
       "quantity": 1,
       "views": 0,
       "favorites": 0,
       "sales": 0,
-      "tags": ["jewelry organizer", "hand painted", "wood", "boho", "wooden", "storage", "drawers", "gift for her"],
+      "tags": [
+        "jewelry organizer",
+        "hand painted",
+        "wood",
+        "boho",
+        "wooden",
+        "storage",
+        "drawers",
+        "gift for her"
+      ],
       "category": "Jewelry > Jewelry Storage > Jewelry Organizers",
       "status": "active",
       "processing_days": 5,
@@ -187,6 +277,26 @@
   "orders": [],
   "messages": [],
   "reviews": [],
+  "digital_products": [],
+  "digital_deliveries": [],
+  "shop_sections": [
+    {
+      "name": "3D Printed Decor",
+      "listing_count": 8
+    },
+    {
+      "name": "Hand Painted Wood",
+      "listing_count": 2
+    },
+    {
+      "name": "Digital Planners",
+      "listing_count": 0
+    },
+    {
+      "name": "Digital Art & Prints",
+      "listing_count": 0
+    }
+  ],
   "analytics": {
     "traffic": {
       "this_week": {
@@ -225,30 +335,30 @@
       "this_year": 0
     },
     "top_search_terms": [],
-    "competitor_research_source": "Web research May 2026 — update with live data via Etsy API once ETSY_API_KEY is configured",
+    "competitor_research_source": "Web research May 2026 \u2014 update with live data via Etsy API once ETSY_API_KEY is configured",
     "competitor_avg_price": {
-      "L001": 28.00,
-      "L002": 13.50,
-      "L003": 11.00,
-      "L004": 19.00,
-      "L005": 38.00,
-      "L006": 42.00,
-      "L007": 28.00,
-      "L008": 18.00,
-      "L009": 89.00,
-      "L010": 89.00
+      "L001": 28.0,
+      "L002": 13.5,
+      "L003": 11.0,
+      "L004": 19.0,
+      "L005": 38.0,
+      "L006": 42.0,
+      "L007": 28.0,
+      "L008": 18.0,
+      "L009": 89.0,
+      "L010": 89.0
     },
     "competitor_price_notes": {
-      "L001": "3D printed crystal/glow lamps on Etsy avg $25-45. You're at $19.99 — room to raise.",
-      "L002": "3D printed ribbed vases avg $10-18 small size. You're at $8.99 — slightly below market.",
-      "L003": "Funny cat/coffee signs avg $9-15. You're at $8.99 — at the floor, could raise to $11-12.",
-      "L004": "Boho tea light candle holder sets avg $15-24. You're at $15.99 — competitive.",
-      "L005": "3D printed lamps with shade avg $32-50. You're at $29.99 — underpriced, room to raise.",
-      "L006": "Boho table centerpiece sets avg $28-62. You're at $29.99 — on the low end, room to raise.",
-      "L007": "3D printed geometric lamps avg $22-40. You're at $19.99 — underpriced.",
-      "L008": "Individual 3D printed koozies avg $14-22. You're at $16.99 — right in range.",
-      "L009": "Hand painted wood jewelry boxes with drawers avg ~$90 USD on Etsy. You're at $35 — SIGNIFICANTLY UNDERPRICED.",
-      "L010": "Hand painted wood jewelry organizers avg ~$90 USD on Etsy. You're at $35 — SIGNIFICANTLY UNDERPRICED."
+      "L001": "3D printed crystal/glow lamps on Etsy avg $25-45. You're at $19.99 \u2014 room to raise.",
+      "L002": "3D printed ribbed vases avg $10-18 small size. You're at $8.99 \u2014 slightly below market.",
+      "L003": "Funny cat/coffee signs avg $9-15. You're at $8.99 \u2014 at the floor, could raise to $11-12.",
+      "L004": "Boho tea light candle holder sets avg $15-24. You're at $15.99 \u2014 competitive.",
+      "L005": "3D printed lamps with shade avg $32-50. You're at $29.99 \u2014 underpriced, room to raise.",
+      "L006": "Boho table centerpiece sets avg $28-62. You're at $29.99 \u2014 on the low end, room to raise.",
+      "L007": "3D printed geometric lamps avg $22-40. You're at $19.99 \u2014 underpriced.",
+      "L008": "Individual 3D printed koozies avg $14-22. You're at $16.99 \u2014 right in range.",
+      "L009": "Hand painted wood jewelry boxes with drawers avg ~$90 USD on Etsy. You're at $35 \u2014 SIGNIFICANTLY UNDERPRICED.",
+      "L010": "Hand painted wood jewelry organizers avg ~$90 USD on Etsy. You're at $35 \u2014 SIGNIFICANTLY UNDERPRICED."
     }
   }
 }

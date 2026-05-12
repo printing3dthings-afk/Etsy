@@ -1,20 +1,35 @@
 #!/usr/bin/env python3
 """
-CraftedWithLove - Etsy Agent Hub
+OnBrandCraftz — Etsy Agent Hub
 Central command interface for managing your Etsy shop via AI agents.
 """
 
 import sys
 import os
 
-# Ensure project root is on the path
 sys.path.insert(0, os.path.dirname(__file__))
 
 from config import ANTHROPIC_API_KEY
-from agents import CEOAgent, SalesAgent, ProductAgent, MarketingAgent, AnalyticsAgent, CustomerServiceAgent, SocialMediaAgent
+from agents import (
+    CEOAgent, SalesAgent, ProductAgent, MarketingAgent,
+    AnalyticsAgent, CustomerServiceAgent, SocialMediaAgent,
+    ArtCreationAgent, QualityCheckAgent, EtsyListingAgent,
+    StoreManagerAgent, SalesProcessorAgent, BrandDesignAgent,
+)
 
 AGENTS = {
+    # ── Orchestrator ────────────────────────────────────────────────────────
     "ceo": ("CEO Agent", lambda: CEOAgent()),
+
+    # ── Digital Product Pipeline ─────────────────────────────────────────────
+    "brand": ("Brand Design Agent", lambda: BrandDesignAgent()),
+    "art": ("Art Creation Agent", lambda: ArtCreationAgent()),
+    "qc": ("Quality Check Agent", lambda: QualityCheckAgent()),
+    "listing": ("Etsy Listing Agent", lambda: EtsyListingAgent()),
+    "store": ("Store Manager Agent", lambda: StoreManagerAgent()),
+    "delivery": ("Sales Processor Agent", lambda: SalesProcessorAgent()),
+
+    # ── Shop Operations ──────────────────────────────────────────────────────
     "sales": ("Sales Agent", lambda: SalesAgent()),
     "product": ("Product Agent", lambda: ProductAgent()),
     "marketing": ("Marketing Agent", lambda: MarketingAgent()),
@@ -23,35 +38,60 @@ AGENTS = {
     "social": ("Social Media Agent", lambda: SocialMediaAgent()),
 }
 
-DAILY_BRIEFING_PROMPT = """Run a complete daily briefing for the shop owner. Delegate to all relevant agents to cover:
-1. Today's revenue and pending orders (Sales Agent)
-2. Any low stock or inventory alerts (Product Agent)
-3. Unread customer messages and unresponded reviews (Customer Service Agent)
-4. This week's traffic and top-performing listings (Analytics Agent)
-5. One key marketing opportunity for today (Marketing Agent)
+DAILY_BRIEFING_PROMPT = """Run a complete daily briefing for the shop owner. Delegate to all relevant agents:
 
-Synthesize everything into an executive daily briefing. Lead with the most urgent items."""
+DIGITAL PIPELINE:
+1. Brand Design Agent — check if brand assets and guidelines are complete
+2. Art Creation Agent — any new products in the pipeline?
+3. Quality Check Agent — any files pending review?
+4. Store Manager Agent — shop health: sold-out items, renewal alerts, listing performance
+
+OPERATIONS:
+5. Sales Processor Agent — any unfulfilled digital orders needing email delivery?
+6. Sales Agent — today's revenue and pending physical orders
+7. Customer Service Agent — unread messages and unresponded reviews
+8. Analytics Agent — this week's traffic and top performers
+9. Marketing Agent — one key marketing opportunity for today
+
+Synthesize everything into an executive daily briefing. Lead with the most urgent items first."""
 
 HELP_TEXT = """
-╔══════════════════════════════════════════════════════════════╗
-║          CraftedWithLove — Etsy Agent Hub                    ║
-╠══════════════════════════════════════════════════════════════╣
-║  COMMANDS                                                    ║
-║  help          Show this help menu                           ║
-║  brief         Run daily briefing (all agents)              ║
-║  agent <name>  Switch to a specific agent                    ║
-║  quit / exit   Exit the hub                                  ║
-║                                                              ║
-║  AGENTS                                                      ║
-║  ceo           CEO Agent (orchestrates all others)           ║
-║  sales         Sales Agent (orders, revenue, shipping)       ║
-║  product       Product Agent (listings, inventory)           ║
-║  marketing     Marketing Agent (SEO, promotions, traffic)    ║
-║  analytics     Analytics Agent (reports, dashboard)          ║
-║  cs            Customer Service Agent (messages, reviews)    ║
-║  social        Social Media Agent (Pinterest strategy)       ║
-╚══════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════╗
+║          OnBrandCraftz — Etsy Agent Hub                             ║
+╠══════════════════════════════════════════════════════════════════════╣
+║  COMMANDS                                                            ║
+║  help          Show this help menu                                   ║
+║  brief         Run daily briefing (all agents)                      ║
+║  pipeline      Show digital product pipeline status                  ║
+║  agent <name>  Switch to a specific agent                            ║
+║  quit / exit   Exit the hub                                          ║
+║                                                                      ║
+║  AGENTS — Digital Product Pipeline                                   ║
+║  ceo           CEO Agent (orchestrates all agents)                   ║
+║  brand         Brand Design Agent (logo, banner, brand identity)     ║
+║  art           Art Creation Agent (digital art + planners)           ║
+║  qc            Quality Check Agent (file review + approval)          ║
+║  listing       Etsy Listing Agent (SEO + publish to Etsy)           ║
+║  store         Store Manager Agent (shop health + announcements)     ║
+║  delivery      Sales Processor Agent (email digital files)           ║
+║                                                                      ║
+║  AGENTS — Shop Operations                                            ║
+║  sales         Sales Agent (physical orders, revenue, shipping)      ║
+║  product       Product Agent (physical listings, inventory)          ║
+║  marketing     Marketing Agent (SEO, promotions, traffic)            ║
+║  analytics     Analytics Agent (reports, dashboard)                  ║
+║  cs            Customer Service Agent (messages, reviews)            ║
+║  social        Social Media Agent (Pinterest strategy)               ║
+╚══════════════════════════════════════════════════════════════════════╝
 """
+
+PIPELINE_PROMPT = """Check the complete digital product pipeline status. Ask:
+1. Art Creation Agent: list all digital products and their statuses
+2. Quality Check Agent: get QC summary (approved/rejected/pending counts)
+3. Etsy Listing Agent: list digital listings showing which are live vs pending
+4. Sales Processor Agent: any unfulfilled digital orders?
+
+Give a clear pipeline report: what's in progress, what's blocked, what's ready to go live."""
 
 
 def check_env() -> bool:
@@ -63,12 +103,12 @@ def check_env() -> bool:
 
 
 def print_banner():
-    print("\n" + "=" * 62)
-    print("   CraftedWithLove — Etsy Agent Hub")
-    print("   Powered by Claude AI Agents")
-    print("=" * 62)
+    print("\n" + "=" * 68)
+    print("   OnBrandCraftz — Etsy Agent Hub")
+    print("   Powered by Claude AI  |  12 Specialized Agents")
+    print("=" * 68)
     print("Type 'help' for commands, 'brief' for daily briefing,")
-    print("or just ask anything about your shop.\n")
+    print("'pipeline' for digital product status, or ask anything.\n")
 
 
 def run_agent(agent_name: str, agent_instance, interactive: bool = True):
@@ -100,8 +140,6 @@ def main():
     print_banner()
 
     ceo = CEOAgent()
-    current_agent_key = "ceo"
-    current_agent = ceo
 
     while True:
         try:
@@ -130,6 +168,13 @@ def main():
             print("=" * 60)
             continue
 
+        if cmd == "pipeline":
+            print("\n[CEO] Checking digital product pipeline...\n")
+            result = ceo.run(PIPELINE_PROMPT)
+            print(f"\n{result}\n")
+            print("=" * 60)
+            continue
+
         if cmd.startswith("agent "):
             target = cmd.split(" ", 1)[1].strip()
             if target not in AGENTS:
@@ -140,9 +185,9 @@ def main():
             run_agent(target, agent_instance)
             continue
 
-        # Default: route to current agent (CEO)
+        # Default: route to CEO
         print(f"\n[CEO] Processing...\n")
-        result = current_agent.run(user_input)
+        result = ceo.run(user_input)
         print(f"\n{result}\n")
         print("-" * 60)
 

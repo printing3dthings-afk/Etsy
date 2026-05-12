@@ -13,3 +13,5 @@ MAX_ITERATIONS = 15
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 SHOP_DATA_FILE = os.path.join(DATA_DIR, "shop_data.json")
+DIGITAL_PRODUCTS_DIR = os.path.join(DATA_DIR, "digital_products")
+BRAND_DIR = os.path.join(DATA_DIR, "brand")
