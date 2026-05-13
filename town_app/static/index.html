@@ -407,12 +407,23 @@ html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; backg
     <h2>⚙️ Setup & Connections</h2>
     <div id="config-rows"></div>
     <div class="setup-instruction" id="etsy-instructions" style="display:none">
-      <strong>To connect your Etsy shop:</strong><br>
-      1. Open PowerShell in your ETSY folder<br>
-      2. Run: <code>python tools\etsy_oauth.py</code><br>
-      3. A browser window opens — log in and authorize<br>
-      4. Tokens are saved to <code>.env</code> automatically<br>
-      5. Restart the town app
+      <strong>🛒 Connect Your Etsy Shop</strong><br><br>
+      1. Open a new PowerShell window<br>
+      2. Type: <code>cd C:\path\to\your\Etsy-folder</code><br>
+      3. Run: <code>python tools\etsy_oauth.py</code><br>
+      4. A browser window opens — log into Etsy and click <em>Allow</em><br>
+      5. Tokens are saved to <code>.env</code> automatically<br>
+      6. Restart the town app (close &amp; re-run <strong>Start Town.bat</strong>)<br><br>
+      <em>Need an Etsy API key?</em> Visit <strong>etsy.com/developers</strong> → create an app → copy the API key into your <code>.env</code> file as <code>ETSY_API_KEY=</code>
+    </div>
+    <div class="setup-instruction" id="openai-instructions" style="display:none">
+      <strong>🎨 Enable AI Art Generation (DALL-E 3)</strong><br><br>
+      Without an OpenAI key, the Art Agent creates <em>concept card</em> images as placeholders.<br>
+      To generate real AI art:<br>
+      1. Go to <strong>platform.openai.com</strong> → API keys → Create key<br>
+      2. Open your <code>.env</code> file (in the Etsy folder)<br>
+      3. Add a line: <code>OPENAI_API_KEY=sk-...</code><br>
+      4. Save and restart Start Town.bat
     </div>
     <button class="modal-close" onclick="closeSetup()">Close</button>
   </div>
@@ -875,8 +886,8 @@ function openSetup() {
         </div>
         <span class="cfg-status ${cfg[r.key]?'cfg-ok':'cfg-miss'}">${cfg[r.key]?'✓ Connected':'✗ Missing'}</span>
       </div>`).join('');
-    const needEtsy = !cfg.etsy_oauth;
-    document.getElementById('etsy-instructions').style.display = needEtsy ? 'block' : 'none';
+    document.getElementById('etsy-instructions').style.display = !cfg.etsy_oauth ? 'block' : 'none';
+    document.getElementById('openai-instructions').style.display = !cfg.openai ? 'block' : 'none';
     document.getElementById('setup-modal').classList.add('open');
   });
 }

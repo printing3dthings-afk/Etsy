@@ -238,6 +238,125 @@ def _create_art_concept(data: dict, store: DataStore) -> str:
     }, indent=2)
 
 
+def _generate_placeholder_art(data: dict, product: dict, store: DataStore) -> str:
+    """Generate a styled PNG concept card using Pillow when no OpenAI key is set."""
+    product_id = product["id"]
+    file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.png")
+    prompt = data["dalle_prompt"]
+    title = product.get("title", product_id)
+
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+        import textwrap
+
+        W, H = 1024, 1024
+        # Build a gradient background by drawing rows
+        img = Image.new("RGB", (W, H))
+        draw = ImageDraw.Draw(img)
+
+        # Soft purple-to-teal gradient
+        for y in range(H):
+            t = y / H
+            r = int(80  + (30  - 80)  * t)
+            g = int(60  + (140 - 60)  * t)
+            b = int(140 + (160 - 140) * t)
+            draw.line([(0, y), (W, y)], fill=(r, g, b))
+
+        # Decorative circles
+        for cx, cy, cr, alpha in [(150,150,200,40),(874,874,180,30),(512,200,120,25)]:
+            overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+            od = ImageDraw.Draw(overlay)
+            od.ellipse([cx-cr, cy-cr, cx+cr, cy+cr], fill=(255,255,255,alpha))
+            img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
+            draw = ImageDraw.Draw(img)
+
+        # Card background
+        margin = 60
+        draw.rounded_rectangle([margin, margin, W-margin, H-margin],
+                                radius=32, fill=(255, 255, 255, 0))
+        card = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        cd = ImageDraw.Draw(card)
+        cd.rounded_rectangle([margin, margin, W-margin, H-margin],
+                              radius=32, fill=(20, 20, 40, 180))
+        img = Image.alpha_composite(img.convert("RGBA"), card).convert("RGB")
+        draw = ImageDraw.Draw(img)
+
+        # Try to load a font, fall back to default
+        try:
+            font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 38)
+            font_body  = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 22)
+            font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
+        except Exception:
+            font_title = ImageFont.load_default()
+            font_body  = font_title
+            font_small = font_title
+
+        # Badge
+        badge_text = "CONCEPT — AI ART PENDING"
+        draw.rounded_rectangle([margin+20, margin+20, margin+320, margin+50],
+                                radius=14, fill=(255, 180, 0))
+        draw.text((margin+30, margin+24), badge_text, fill=(20,20,20), font=font_small)
+
+        # Title
+        y = margin + 75
+        for line in textwrap.wrap(title, 28):
+            draw.text((margin+30, y), line, fill=(255,255,255), font=font_title)
+            y += 48
+
+        # Divider
+        y += 10
+        draw.line([(margin+30, y), (W-margin-30, y)], fill=(255,200,100), width=2)
+        y += 20
+
+        # Prompt text
+        draw.text((margin+30, y), "Design Concept:", fill=(180,220,255), font=font_small)
+        y += 28
+        for line in textwrap.wrap(prompt, 52)[:12]:
+            draw.text((margin+30, y), line, fill=(220,220,220), font=font_body)
+            y += 30
+
+        # Footer
+        draw.text((margin+30, H-margin-40),
+                  f"OnBrandCraftz  •  {product_id}  •  Add OPENAI_API_KEY to generate real art",
+                  fill=(150, 150, 180), font=font_small)
+
+        img.save(file_path, "PNG")
+        file_size_kb = os.path.getsize(file_path) // 1024
+
+    except ImportError:
+        # Pillow not available — write minimal 1×1 white PNG
+        import struct, zlib
+        def _png1x1():
+            sig = b'\x89PNG\r\n\x1a\n'
+            def chunk(name, data):
+                c = zlib.crc32(name + data) & 0xffffffff
+                return struct.pack('>I', len(data)) + name + data + struct.pack('>I', c)
+            ihdr = struct.pack('>IIBBBBB', 1, 1, 8, 2, 0, 0, 0)
+            idat = zlib.compress(b'\x00\xff\xff\xff')
+            return sig + chunk(b'IHDR', ihdr) + chunk(b'IDAT', idat) + chunk(b'IEND', b'')
+        with open(file_path, "wb") as f:
+            f.write(_png1x1())
+        file_size_kb = 1
+
+    product["file_path"] = file_path
+    product["file_format"] = "PNG"
+    product["file_size_kb"] = file_size_kb
+    product["status"] = "qc_pending"
+    product["updated_at"] = str(date.today())
+    _save_product(product, store)
+
+    return json.dumps({
+        "success": True,
+        "product_id": product_id,
+        "file_path": file_path,
+        "file_size_kb": file_size_kb,
+        "mode": "concept_card",
+        "note": "Concept card created with Pillow. Add OPENAI_API_KEY to generate real AI art.",
+        "status": "qc_pending",
+        "next_step": "Send to Quality Check Agent for review. Add OPENAI_API_KEY for real art.",
+    }, indent=2)
+
+
 def _generate_digital_art(data: dict, store: DataStore) -> str:
     _ensure_dirs()
     product_id = data["product_id"]
@@ -247,20 +366,7 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
 
     api_key = os.getenv("OPENAI_API_KEY", "")
     if not api_key:
-        # Save the prompt as a design brief file for manual generation
-        brief_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_brief.txt")
-        with open(brief_path, "w") as f:
-            f.write(f"DALL-E 3 Prompt for {product_id}:\n\n{data['dalle_prompt']}\n\n")
-            f.write(f"Settings: size={data.get('image_size','1024x1024')}, quality={data.get('quality','hd')}\n")
-        product["file_path"] = brief_path
-        product["status"] = "concept"
-        product["updated_at"] = str(date.today())
-        _save_product(product, store)
-        return json.dumps({
-            "warning": "OPENAI_API_KEY not set. Design brief saved instead.",
-            "brief_path": brief_path,
-            "action_needed": "Add OPENAI_API_KEY to .env to enable AI art generation, then run this tool again.",
-        }, indent=2)
+        return _generate_placeholder_art(data, product, store)
 
     try:
         request_body = json.dumps({

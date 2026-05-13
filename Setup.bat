@@ -70,7 +70,14 @@ echo  API key saved.
 echo.
 echo  ================================================
 echo    Setup complete!
-echo    Double-click "Start Town.bat" to launch.
+echo.
+echo    OPTIONAL — open your .env file to add:
+echo      OPENAI_API_KEY  — enables AI art generation
+echo      ETSY_API_KEY    — connect your Etsy shop
+echo      SMTP_PASSWORD   — email digital files
+echo.
+echo    Then double-click "Start Town.bat" to launch.
+echo    The Setup button in the app shows what's missing.
 echo  ================================================
 echo.
 pause
