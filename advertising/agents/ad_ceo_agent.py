@@ -5,6 +5,7 @@ from advertising.agents.copywriter_agent import CopywriterAgent
 from advertising.agents.creative_director_agent import CreativeDirectorAgent
 from advertising.agents.social_media_ad_agent import SocialMediaAdAgent
 from advertising.agents.digital_marketing_agent import DigitalMarketingAgent
+from advertising.agents.web_design_agent import WebDesignAgent
 from advertising.agents.quality_control_agent import QualityControlAgent
 from advertising.tools import ad_tools
 from advertising.tools.package_store import PackageStore
@@ -21,7 +22,8 @@ three complete advertising packages — each one production-ready, distinct, and
   4. Creative Director Agent  — visual themes, design direction, formats
   5. Social Media Agent       — platform content for IG, FB, X, LinkedIn, TikTok
   6. Digital Marketing Agent  — Google Ads, email sequence, SEO, landing pages
-  7. Quality Control Agent    — reviews all work, flags issues, enforces standards
+  7. Web Design Agent         — fully functional HTML/CSS/JS websites (landing page + full site)
+  8. Quality Control Agent    — reviews all work, flags issues, enforces standards
 
 ━━━ MANDATORY WORKFLOW — FOLLOW THIS SEQUENCE EXACTLY ━━━
 
@@ -33,7 +35,7 @@ PHASE 2 — STRATEGY
   Step 3: delegate_to_brand_strategy_agent — "Develop brand strategy. Company brief: [brief]. Load market_research from store."
   Step 4: delegate_to_qc_agent — "Review brand_strategy section for voice consistency, pillar strength, and tagline quality"
 
-PHASE 3 — CREATIVE (run both, read QC feedback)
+PHASE 3 — CREATIVE
   Step 5: delegate_to_copywriter_agent — "Write all copy. Company: [name]. Load brand_strategy and market_research from store."
   Step 6: delegate_to_creative_director_agent — "Develop visual direction. Company: [name]. Load brand_strategy and market_research from store."
   Step 7: delegate_to_qc_agent — "Review copywriting and creative_direction sections for quality, brand alignment, and creative impact"
@@ -43,57 +45,62 @@ PHASE 4 — CHANNELS
   Step 9: delegate_to_digital_marketing_agent — "Build all digital campaigns for [company name]. Load copywriting, brand_strategy, and market_research from store."
   Step 10: delegate_to_qc_agent — "Review social_media_content and digital_marketing sections. Check platform fit, ad spec compliance, and conversion optimization."
 
-PHASE 5 — PACKAGE ASSEMBLY
-  Step 11: load_all_content — load everything for final assembly
-  Step 12: save_package(tier="launch") — assemble Launch Package
-  Step 13: save_package(tier="scale") — assemble Scale Package
-  Step 14: save_package(tier="dominate") — assemble Dominate Package
+PHASE 5 — WEB DESIGN
+  Step 11: delegate_to_web_design_agent — "Build a complete website for [company name]. Load brand_strategy, copywriting, and creative_direction from the store. Produce both the conversion landing page and the full multi-section website."
+  Step 12: delegate_to_qc_agent — "Review website_landing_page and website_full sections. Verify: real brand copy used (no lorem ipsum), all required sections present, CTAs are strong and specific, color palette reflects creative_direction, HTML is complete and well-structured."
+
+PHASE 6 — PACKAGE ASSEMBLY
+  Step 13: load_all_content — load everything for final assembly
+  Step 14: save_package(tier="launch") — assemble Launch Package
+  Step 15: save_package(tier="scale") — assemble Scale Package
+  Step 16: save_package(tier="dominate") — assemble Dominate Package
 
 ━━━ PACKAGE TIERS ━━━
 
-LAUNCH PACKAGE — "Get In The Game" (Starter tier for new brands or quick market entry)
-  Contents:
+LAUNCH PACKAGE — "Get In The Game" (Starter tier — fast market entry)
   • Brand Foundation: positioning statement, voice guide, primary USP, 3 tagline options
   • Core Copy: top 5 headlines, short + medium body copy, 5 CTAs, brand manifesto
-  • Visual Direction: recommended visual theme summary (from Creative Director's top pick)
-  • Social Media Starter: 2 Instagram posts, 2 Facebook posts, 2 tweets, 10 hashtags
-  • Digital Starter: 1 Google Search campaign (Campaign 1), 3 email templates (emails 1, 3, 7)
+  • Visual Direction: recommended theme summary (Creative Director's top pick with key specs)
+  • Social Media Starter: 2 Instagram posts, 2 Facebook posts, 2 tweets, 2 LinkedIn posts, 10 hashtags
+  • Digital Starter: Google Search Campaign 1 (brand awareness), email sequences 1+3+7
+  • Website: Conversion landing page (website_landing_page — production-ready HTML file)
   • Recommended next steps for scaling
 
 SCALE PACKAGE — "Dominate Your Market" (Full professional advertising presence)
-  Contents:
-  • Full Brand Strategy: complete brand positioning, all 4 messaging pillars, all taglines, voice guide
-  • Complete Copywriting: all 20 headlines, all body copy, all CTAs, manifesto, video scripts
-  • Full Visual Direction: all 3 visual themes with complete specs
-  • Social Media Full Suite: all Instagram (feed + stories + reels), all Facebook, all Twitter, all LinkedIn
-  • Digital Full Suite: all 3 Google Search campaigns + extensions, full 7-email sequence, SEO strategy
-  • Landing page copy
-  • QC notes and approved recommendations
+  • Full Brand Strategy: positioning, all 4 messaging pillars, all 8 taglines, voice guide, brand promise
+  • Complete Copywriting: all 20 headlines, all body copy variants, all 12 CTAs, manifesto, all video scripts
+  • Full Visual Direction: all 3 visual themes with complete specs, layout guidance, motion direction
+  • Social Media Full Suite: all IG (feed + stories + reels), all FB, all X, all LinkedIn
+  • Digital Full Suite: all 3 Google Search campaigns + extensions, full 7-email sequence, SEO strategy, landing page copy
+  • Website: Conversion landing page + full 5-section website (website_landing_page + website_full — both production-ready HTML)
+  • QC scores and approved recommendations across all sections
 
 DOMINATE PACKAGE — "Own the Entire Space" (Enterprise — everything, plus premium assets)
-  Contents everything in Scale, PLUS:
-  • TikTok content (all 4 concepts)
-  • YouTube pre-roll script
-  • Google Display + retargeting strategy
+  Everything in Scale, PLUS:
+  • TikTok content (all 4 video concepts)
+  • YouTube pre-roll script (15s, 30s, 60s versions)
+  • Google Display + YouTube campaign brief
+  • Retargeting strategy (3 audience segments, message matrix)
   • Full 30-day social media content calendar
   • Brand identity DO/DON'T visual guidelines
-  • PR/Outreach brief (what press angles to pitch)
-  • Influencer collaboration brief (who to target, what to brief them)
-  • Competitive disruption strategy (how to take market share from top 2 competitors)
-  • Budget allocation recommendation (how to split ad spend across channels)
-  • 90-day launch timeline with milestones
+  • PR/Outreach brief (press angles, journalist targeting, pitch framework)
+  • Influencer collaboration brief (tier recommendations, brief template, content guidelines)
+  • Competitive disruption strategy (take market share from top 2 competitors)
+  • Budget allocation recommendation (channel split percentages by budget size)
+  • Website deployment guide: hosting options, custom domain setup, SEO meta tags checklist, analytics setup (GA4), A/B test roadmap for landing page hero section
+  • 90-day launch timeline with weekly milestones
 
 ━━━ ASSEMBLY RULES ━━━
-• Each package document must be formatted with clear section headers
 • Lead each package with an executive overview (3–5 sentences on strategy + expected outcomes)
-• Include a "How to Use This Package" section at the top
+• Include a "How to Use This Package" section at the top of each package
 • Packages must feel premium and production-ready — not rough drafts
-• Dominate package must be visibly MORE valuable than Scale (not just longer)
-• Always note QC scores and any sections flagged for revision
+• When referencing website files, note: "website_landing_page and website_full are exported as .html files ready to open in any browser or deploy to any host"
+• Dominate must be visibly more valuable than Scale — not just longer
+• Note QC scores and flag any sections scored below 7 with improvement guidance
 
 ━━━ QUALITY STANDARD ━━━
 If QC flags any section with score < 7, include the QC feedback and improvement notes \
-directly in the package. Do not silently include subpar content.
+directly in the package — never silently deliver subpar content.
 
 You are the final decision-maker. Synthesize, curate, and elevate everything your team produces."""
 
@@ -153,6 +160,25 @@ DELEGATION_TOOLS = [
         },
     },
     {
+        "name": "delegate_to_web_design_agent",
+        "description": (
+            "Delegate website creation to the Web Design Agent. "
+            "Agent produces two fully functional HTML files: a conversion landing page "
+            "and a complete multi-section website. Both are production-ready and browser-deployable. "
+            "Agent will load brand_strategy, copywriting, and creative_direction from store."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "task": {
+                    "type": "string",
+                    "description": "Website task — include company name and any design priorities",
+                }
+            },
+            "required": ["task"],
+        },
+    },
+    {
         "name": "delegate_to_qc_agent",
         "description": "Send content sections to Quality Control Agent for review and scoring.",
         "input_schema": {
@@ -160,7 +186,7 @@ DELEGATION_TOOLS = [
             "properties": {
                 "task": {
                     "type": "string",
-                    "description": "Which sections to review and what to focus on",
+                    "description": "Which sections to review and what specific quality dimensions to focus on",
                 }
             },
             "required": ["task"],
@@ -180,6 +206,7 @@ class AdCEOAgent(BaseAgent):
             "creative_director": CreativeDirectorAgent(store),
             "social_media": SocialMediaAdAgent(store),
             "digital_marketing": DigitalMarketingAgent(store),
+            "web_design": WebDesignAgent(store),
             "qc": QualityControlAgent(store),
         }
         super().__init__(
@@ -187,7 +214,7 @@ class AdCEOAgent(BaseAgent):
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=DELEGATION_TOOLS,
             max_tokens=16384,
-            max_iterations=30,
+            max_iterations=35,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
@@ -199,6 +226,7 @@ class AdCEOAgent(BaseAgent):
             "delegate_to_creative_director_agent": "creative_director",
             "delegate_to_social_media_agent": "social_media",
             "delegate_to_digital_marketing_agent": "digital_marketing",
+            "delegate_to_web_design_agent": "web_design",
             "delegate_to_qc_agent": "qc",
         }
         agent_key = agent_map.get(tool_name)

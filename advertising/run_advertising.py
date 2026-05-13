@@ -123,7 +123,8 @@ def run_agency(brief: CompanyBrief, output_dir: str | None = None) -> PackageSto
     print("  CEO is coordinating the full team...\n")
     print("  Phase sequence:")
     print("    1 → Market Research   2 → Brand Strategy   3 → Copy + Creative")
-    print("    4 → Social + Digital  5 → QC Reviews       6 → Package Assembly\n")
+    print("    4 → Social + Digital  5 → Web Design       6 → QC Reviews")
+    print("    7 → Package Assembly\n")
 
     start = time.time()
     result = ceo.run(master_task)
@@ -187,7 +188,31 @@ def _export_packages(store: PackageStore, brief: CompanyBrief, output_dir: str) 
         os.path.join(company_dir, "06_digital_marketing.txt"),
     )
 
+    # Export website HTML files — open directly in any browser
+    for section_key, filename in (
+        ("website_landing_page", "website_landing_page.html"),
+        ("website_full", "website_full.html"),
+    ):
+        content = store.load(section_key)
+        if not content.startswith("[Section"):
+            store.export_section(section_key, os.path.join(company_dir, filename))
+
     print(f"\n  Output saved to: {company_dir}/")
+    _print_file_tree(company_dir)
+
+
+def _print_file_tree(company_dir: str) -> None:
+    print(f"\n  Files generated:")
+    try:
+        for fname in sorted(os.listdir(company_dir)):
+            fpath = os.path.join(company_dir, fname)
+            size = os.path.getsize(fpath)
+            unit = "KB" if size >= 1024 else "B"
+            display_size = f"{size // 1024}{unit}" if size >= 1024 else f"{size}{unit}"
+            icon = "🌐" if fname.endswith(".html") else "📄"
+            print(f"    {icon}  {fname:<40} {display_size}")
+    except OSError:
+        pass
 
 
 def _print_packages(store: PackageStore, brief: CompanyBrief) -> None:

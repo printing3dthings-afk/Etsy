@@ -12,6 +12,8 @@ class PackageStore:
     CREATIVE_DIRECTION = "creative_direction"
     SOCIAL_MEDIA_CONTENT = "social_media_content"
     DIGITAL_MARKETING = "digital_marketing"
+    WEBSITE_LANDING_PAGE = "website_landing_page"
+    WEBSITE_FULL = "website_full"
     PACKAGE_LAUNCH = "package_launch"
     PACKAGE_SCALE = "package_scale"
     PACKAGE_DOMINATE = "package_dominate"
