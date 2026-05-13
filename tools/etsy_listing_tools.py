@@ -101,6 +101,50 @@ TOOL_DEFINITIONS: list[dict] = [
             "required": ["search_query"],
         },
     },
+    {
+        "name": "audit_listing_seo",
+        "description": (
+            "Score a single digital product listing on Etsy SEO best practices. "
+            "Returns a score 0–100 with per-criterion breakdown and specific improvement suggestions."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "The digital product ID to audit"},
+            },
+            "required": ["product_id"],
+        },
+    },
+    {
+        "name": "optimize_listing_content",
+        "description": (
+            "Generate optimized title, tags, and description improvements for an existing listing "
+            "based on SEO audit results and best practices. Returns exact replacement content ready to apply."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "Product ID to generate optimized content for"},
+                "focus_keyword": {
+                    "type": "string",
+                    "description": "Primary search keyword to optimize around (e.g. 'digital planner 2026')",
+                },
+                "style_descriptor": {
+                    "type": "string",
+                    "description": "Style/aesthetic descriptor (e.g. 'minimalist', 'boho', 'farmhouse')",
+                },
+            },
+            "required": ["product_id"],
+        },
+    },
+    {
+        "name": "bulk_seo_audit",
+        "description": (
+            "Run SEO audit across ALL active digital product listings. "
+            "Returns a ranked list from worst to best performing, with scores and top improvement action per listing."
+        ),
+        "input_schema": {"type": "object", "properties": {}, "required": []},
+    },
 ]
 
 
@@ -117,6 +161,12 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _get_seo_tips(tool_input["product_type"])
     if tool_name == "check_competitor_pricing":
         return _check_competitor_pricing(tool_input, store)
+    if tool_name == "audit_listing_seo":
+        return _audit_listing_seo(tool_input["product_id"], store)
+    if tool_name == "optimize_listing_content":
+        return _optimize_listing_content(tool_input, store)
+    if tool_name == "bulk_seo_audit":
+        return _bulk_seo_audit(store)
     return f"Unknown Etsy listing tool: {tool_name}"
 
 
@@ -410,6 +460,288 @@ def _check_competitor_pricing(data: dict, store: DataStore) -> str:
         }, indent=2)
     except EtsyAPIError as e:
         return json.dumps({"error": str(e)})
+
+
+def _audit_listing_seo(product_id: str, store: DataStore) -> str:
+    product = _find_product(product_id, store)
+    if not product:
+        return json.dumps({"error": f"Product {product_id} not found"})
+
+    draft = product.get("listing_draft", {})
+    title = draft.get("title", product.get("title", ""))
+    tags = draft.get("tags", [])
+    description = draft.get("description", "")
+    price = draft.get("price", product.get("price", 0))
+    product_type = product.get("product_type", "digital_art")
+
+    score = 0
+    breakdown = {}
+    suggestions = []
+
+    # Title: first 40 chars contain primary keyword (+20)
+    if len(title) >= 40:
+        first_40 = title[:40].lower()
+        keyword_hints = ["digital", "planner", "art", "printable", "wall", "clipart", "download", "pdf"]
+        if any(k in first_40 for k in keyword_hints):
+            score += 20
+            breakdown["title_keyword_first_40"] = "PASS (+20)"
+        else:
+            breakdown["title_keyword_first_40"] = "FAIL (0) — primary keyword not in first 40 chars"
+            suggestions.append("Move your primary keyword to the very beginning of your title")
+    else:
+        breakdown["title_keyword_first_40"] = "FAIL (0) — title too short"
+        suggestions.append("Expand title to lead with primary keyword in first 40 chars")
+
+    # Title length 130–140 chars (+10)
+    tlen = len(title)
+    if 130 <= tlen <= 140:
+        score += 10
+        breakdown["title_length"] = f"PASS (+10) — {tlen} chars"
+    elif 100 <= tlen < 130:
+        score += 5
+        breakdown["title_length"] = f"PARTIAL (+5) — {tlen} chars (aim for 130–140)"
+        suggestions.append(f"Title is {tlen} chars — expand to 130–140 to maximize keyword coverage")
+    else:
+        breakdown["title_length"] = f"FAIL (0) — {tlen} chars"
+        suggestions.append(f"Title is only {tlen} chars — expand to 130–140 for maximum SEO coverage")
+
+    # All 13 tags used (+15)
+    tag_count = len(tags)
+    if tag_count == 13:
+        score += 15
+        breakdown["tag_count"] = "PASS (+15) — all 13 tags used"
+    elif tag_count >= 10:
+        score += 8
+        breakdown["tag_count"] = f"PARTIAL (+8) — {tag_count}/13 tags used"
+        suggestions.append(f"Add {13 - tag_count} more tags to fill all 13 slots")
+    else:
+        breakdown["tag_count"] = f"FAIL (0) — only {tag_count}/13 tags used"
+        suggestions.append(f"Only {tag_count} tags — fill all 13 slots with multi-word buyer-intent phrases")
+
+    # Tags are multi-word (+10)
+    if tags:
+        multi_word = sum(1 for t in tags if " " in t.strip())
+        ratio = multi_word / len(tags)
+        if ratio >= 0.85:
+            score += 10
+            breakdown["tags_multiword"] = f"PASS (+10) — {multi_word}/{len(tags)} tags are multi-word"
+        elif ratio >= 0.6:
+            score += 5
+            breakdown["tags_multiword"] = f"PARTIAL (+5) — {multi_word}/{len(tags)} tags multi-word"
+            suggestions.append("Convert single-word tags to 2–4 word buyer-intent phrases")
+        else:
+            breakdown["tags_multiword"] = f"FAIL (0) — {multi_word}/{len(tags)} tags multi-word"
+            suggestions.append("Most tags are single words — replace all with multi-word phrases (e.g., 'digital planner' not 'planner')")
+    else:
+        breakdown["tags_multiword"] = "FAIL (0) — no tags"
+        suggestions.append("Add 13 multi-word tags")
+
+    # No tag duplicates title verbatim (+10)
+    title_lower = title.lower()
+    verbatim_dupes = [t for t in tags if t.lower() in title_lower and len(t) > 5]
+    if not verbatim_dupes:
+        score += 10
+        breakdown["no_tag_title_dupes"] = "PASS (+10) — tags complement title without verbatim overlap"
+    else:
+        score += 5
+        breakdown["no_tag_title_dupes"] = f"PARTIAL (+5) — {len(verbatim_dupes)} tag(s) duplicate title phrases"
+        suggestions.append(f"Tags {verbatim_dupes[:3]} repeat title phrases — replace with synonym variations")
+
+    # Description has hook in first 2 lines (+15)
+    if description:
+        first_lines = description[:200].strip()
+        hook_words = ["transform", "beautiful", "perfect", "instant", "download", "stunning", "premium", "elevate", "create", "discover"]
+        if any(w in first_lines.lower() for w in hook_words) and len(first_lines) > 40:
+            score += 15
+            breakdown["description_hook"] = "PASS (+15) — strong opening hook detected"
+        elif len(first_lines) > 20:
+            score += 7
+            breakdown["description_hook"] = "PARTIAL (+7) — description exists but hook is weak"
+            suggestions.append("Open description with a compelling benefit statement (what does this give the buyer?)")
+        else:
+            breakdown["description_hook"] = "FAIL (0) — description too short or missing hook"
+            suggestions.append("Write a compelling first 2 lines: the emotional or practical benefit the buyer gets")
+    else:
+        breakdown["description_hook"] = "FAIL (0) — no description"
+        suggestions.append("Add a full description with hook, what's included, how to use it, and FAQ")
+
+    # Description mentions file format (+10)
+    format_words = ["pdf", "png", "jpeg", "jpg", "zip", "300 dpi", "dpi", "high resolution", "file format", "instant download"]
+    if description and any(w in description.lower() for w in format_words):
+        score += 10
+        breakdown["description_format_info"] = "PASS (+10) — file format/specs mentioned"
+    else:
+        breakdown["description_format_info"] = "FAIL (0) — file format not mentioned in description"
+        suggestions.append("State the file format (PDF, PNG), resolution (300 DPI), and what's included in the description")
+
+    # Price at or above market for type (+10)
+    price_floors = {
+        "planner": 6.0, "digital_planner": 6.0,
+        "wall_art": 4.0, "digital_art": 4.0,
+        "clipart": 4.0, "printable": 3.0,
+    }
+    floor = price_floors.get(product_type, 3.5)
+    if price >= floor * 1.1:
+        score += 10
+        breakdown["price_positioning"] = f"PASS (+10) — ${price:.2f} is at or above market floor (${floor:.2f})"
+    elif price >= floor:
+        score += 5
+        breakdown["price_positioning"] = f"PARTIAL (+5) — ${price:.2f} is at market floor, consider raising to signal premium quality"
+        suggestions.append(f"Price ${price:.2f} is at minimum — consider raising to ${floor * 1.3:.2f} to signal quality")
+    else:
+        breakdown["price_positioning"] = f"FAIL (0) — ${price:.2f} is below recommended floor (${floor:.2f})"
+        suggestions.append(f"Price ${price:.2f} is below the {product_type} market floor of ${floor:.2f} — raise it")
+
+    grade = "A" if score >= 90 else "B" if score >= 80 else "C" if score >= 65 else "D" if score >= 50 else "F"
+
+    return json.dumps({
+        "product_id": product_id,
+        "title": title[:60] + "..." if len(title) > 60 else title,
+        "seo_score": score,
+        "grade": grade,
+        "needs_improvement": score < 80,
+        "score_breakdown": breakdown,
+        "suggestions": suggestions,
+        "next_step": (
+            "Use optimize_listing_content to generate improved title, tags, and description."
+            if score < 80 else "Listing is well-optimized. Monitor performance."
+        ),
+    }, indent=2)
+
+
+def _optimize_listing_content(data: dict, store: DataStore) -> str:
+    product = _find_product(data["product_id"], store)
+    if not product:
+        return json.dumps({"error": f"Product {data['product_id']} not found"})
+
+    product_type = product.get("product_type", "digital_art")
+    title_base = product.get("title", "Digital Download")
+    focus_kw = data.get("focus_keyword", "")
+    style = data.get("style_descriptor", "minimalist")
+
+    type_map = {
+        "planner": {
+            "primary_kw": focus_kw or "Digital Planner 2026 PDF",
+            "secondary": ["Printable Weekly Planner", "Undated PDF Planner", "Instant Download Planner"],
+            "tags": ["digital planner", "printable planner", "pdf planner", "weekly planner",
+                     "undated planner", "daily planner", "goodnotes planner", "instant download",
+                     "printable organizer", "planner insert", "yearly planner", "habit tracker", "goal planner"],
+            "price_rec": 8.00,
+            "hook": "Stay organized all year with this beautifully designed",
+        },
+        "wall_art": {
+            "primary_kw": focus_kw or "Printable Wall Art",
+            "secondary": ["Digital Art Print", "Instant Download Art", "Home Decor Print"],
+            "tags": ["printable wall art", "digital download", "instant download", "home decor print",
+                     "wall art print", "digital art print", "gallery wall art", "boho wall decor",
+                     "minimalist art", "art print download", "printable home decor", "bedroom wall art", "living room art"],
+            "price_rec": 5.00,
+            "hook": "Transform your walls with this stunning",
+        },
+        "clipart": {
+            "primary_kw": focus_kw or "Digital Clipart PNG",
+            "secondary": ["Transparent Background PNG", "Commercial Use Clipart", "Instant Download Clipart"],
+            "tags": ["digital clipart", "png clipart", "transparent clipart", "commercial use",
+                     "instant download", "clipart bundle", "watercolor clipart", "hand drawn clipart",
+                     "printable clipart", "scrapbook clipart", "clipart set", "digital graphics", "craft clipart"],
+            "price_rec": 6.00,
+            "hook": "Create beautiful projects with this premium",
+        },
+    }
+
+    config = type_map.get(product_type, type_map["wall_art"])
+    primary_kw = config["primary_kw"]
+    style_cap = style.capitalize()
+
+    # Build optimized title (target: 130–140 chars)
+    title_parts = [primary_kw, f"{style_cap} {title_base.split()[-1] if title_base else 'Design'}", "Instant Download"]
+    opt_title = " | ".join(title_parts)
+    if len(opt_title) < 120:
+        opt_title += " | Digital File"
+    opt_title = opt_title[:140]
+
+    # Ensure all tags ≤ 20 chars
+    raw_tags = config["tags"]
+    clean_tags = [t[:20] for t in raw_tags][:13]
+
+    # Build description
+    hook = config["hook"]
+    description = (
+        f"{hook} {style} {primary_kw.lower()}. Download instantly and start using it today!\n\n"
+        f"✅ WHAT'S INCLUDED:\n"
+        f"• High-resolution file (300 DPI, print-ready)\n"
+        f"• Instant digital download — no waiting, no shipping\n"
+        f"• Personal use license included\n\n"
+        f"✅ HOW TO USE:\n"
+        f"• Download immediately after purchase\n"
+        f"• Print at home or at your local print shop\n"
+        f"• Compatible with PDF readers, GoodNotes, Notability, and Canva\n\n"
+        f"✅ WHY YOU'LL LOVE IT:\n"
+        f"• Premium {style} design crafted with care\n"
+        f"• Clean, professional look that elevates any space or workflow\n"
+        f"• Designed to the quality standard of top Etsy sellers\n\n"
+        f"❓ FAQ:\n"
+        f"Q: When will I receive my file? A: Immediately after purchase — it's a digital download.\n"
+        f"Q: What sizes can I print this? A: Any size — 300 DPI ensures crisp results at 5x7 through 24x36.\n"
+        f"Q: Is commercial use allowed? A: Personal use only. Message us for commercial licensing.\n\n"
+        f"All files are for PERSONAL USE ONLY. © OnBrandCraftz"
+    )
+
+    return json.dumps({
+        "product_id": data["product_id"],
+        "optimized_title": opt_title,
+        "title_length": len(opt_title),
+        "optimized_tags": clean_tags,
+        "tag_count": len(clean_tags),
+        "optimized_description": description,
+        "recommended_price": config["price_rec"],
+        "ready_to_apply": True,
+        "next_step": "Review content then call generate_listing_content with these values to save, then publish_digital_listing to go live.",
+    }, indent=2)
+
+
+def _bulk_seo_audit(store: DataStore) -> str:
+    products = store.get("digital_products", default=[])
+    active = [p for p in products if p.get("status") in ("approved", "listed")]
+
+    if not active:
+        return json.dumps({"message": "No active or approved products to audit.", "count": 0})
+
+    results = []
+    for product in active:
+        audit_raw = _audit_listing_seo(product["id"], store)
+        audit = json.loads(audit_raw)
+        results.append({
+            "product_id": product["id"],
+            "title": (product.get("title", "Untitled"))[:50],
+            "status": product.get("status"),
+            "seo_score": audit.get("seo_score", 0),
+            "grade": audit.get("grade", "F"),
+            "top_suggestion": audit.get("suggestions", ["No suggestions"])[0] if audit.get("suggestions") else "Well optimized",
+            "needs_improvement": audit.get("needs_improvement", True),
+        })
+
+    results.sort(key=lambda r: r["seo_score"])
+
+    critical = [r for r in results if r["seo_score"] < 50]
+    needs_work = [r for r in results if 50 <= r["seo_score"] < 80]
+    good = [r for r in results if r["seo_score"] >= 80]
+
+    return json.dumps({
+        "total_audited": len(results),
+        "summary": {
+            "critical_f_grade": len(critical),
+            "needs_improvement_c_d": len(needs_work),
+            "good_a_b": len(good),
+        },
+        "action_required": critical + needs_work,
+        "performing_well": good,
+        "next_step": (
+            f"{len(critical + needs_work)} listings need SEO improvement. "
+            "Run optimize_listing_content on each flagged product_id."
+            if critical or needs_work else "All listings are well-optimized!"
+        ),
+    }, indent=2)
 
 
 def _add_to_main_listings(product: dict, draft: dict, etsy_listing_id: str, store: DataStore) -> None:
