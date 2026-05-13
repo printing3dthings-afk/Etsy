@@ -6,13 +6,24 @@ from config import MODEL, MAX_TOKENS, MAX_ITERATIONS
 class BaseAgent:
     """Base class for all Etsy hub agents."""
 
-    def __init__(self, name: str, system_prompt: str, tool_definitions: list[dict]):
+    def __init__(
+        self,
+        name: str,
+        system_prompt: str,
+        tool_definitions: list[dict],
+        max_tokens: int = MAX_TOKENS,
+        max_iterations: int = MAX_ITERATIONS,
+    ):
         self.name = name
         self.system_prompt = system_prompt
         self.tool_definitions = tool_definitions
+        self.max_tokens = max_tokens
+        self.max_iterations = max_iterations
         self.client = anthropic.Anthropic()
 
-    def run(self, task: str, max_iterations: int = MAX_ITERATIONS) -> str:
+    def run(self, task: str, max_iterations: int | None = None) -> str:
+        if max_iterations is None:
+            max_iterations = self.max_iterations
         """Run the agent on a task, handling the full tool-use loop."""
         messages: list[dict] = [{"role": "user", "content": task}]
 
@@ -36,7 +47,7 @@ class BaseAgent:
     def _call_api(self, messages: list[dict]) -> anthropic.types.Message:
         kwargs: dict[str, Any] = {
             "model": MODEL,
-            "max_tokens": MAX_TOKENS,
+            "max_tokens": self.max_tokens,
             "system": [
                 {
                     "type": "text",
