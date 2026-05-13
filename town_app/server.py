@@ -18,11 +18,20 @@ from typing import Set
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI(title="OnBrandCraftz Town")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global _event_loop
+    _event_loop = asyncio.get_running_loop()
+    yield
+
+
+app = FastAPI(title="OnBrandCraftz Town", lifespan=lifespan)
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -171,12 +180,6 @@ def _run_task(key: str, task: str):
 
 
 # ── FastAPI routes ─────────────────────────────────────────────────────────────
-
-@app.on_event("startup")
-async def startup():
-    global _event_loop
-    _event_loop = asyncio.get_running_loop()
-
 
 @app.get("/")
 async def root():
