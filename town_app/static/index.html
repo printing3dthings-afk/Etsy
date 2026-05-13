@@ -5,907 +5,902 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OnBrandCraftz Town</title>
 <style>
-/* ─────────────────── RESET & BASE ─────────────────── */
+/* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117; color: #e6edf3; overflow: hidden; }
 
-/* ─────────────────── LAYOUT ─────────────────── */
-.app { display: grid; grid-template-rows: 52px 1fr 64px; height: 100vh; }
+/* ── APP GRID ── */
+.app { display: grid; grid-template-rows: 52px 1fr 66px; height: 100vh; }
 
-/* ─────────────────── HEADER ─────────────────── */
+/* ── HEADER ── */
 .header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 20px; background: #161b22; border-bottom: 1px solid #30363d;
-  z-index: 10;
+  padding: 0 16px; background: #161b22; border-bottom: 1px solid #30363d; z-index: 20;
 }
-.header-title { font-size: 1.2rem; font-weight: 700; color: #f0f6fc; letter-spacing: 0.5px; }
-.header-title span { font-size: 1.3rem; margin-right: 6px; }
-.header-stats { display: flex; gap: 16px; align-items: center; font-size: 0.82rem; }
-.stat { display: flex; align-items: center; gap: 5px; color: #8b949e; }
-.stat-val { color: #f0f6fc; font-weight: 600; }
-.stat-active .stat-val { color: #3fb950; }
-.stat-dot { width: 8px; height: 8px; border-radius: 50%; background: #30363d; }
-.stat-dot.live { background: #3fb950; animation: blink 1.5s ease-in-out infinite; }
-#clock { color: #58a6ff; font-weight: 600; font-size: 0.85rem; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-title { font-size: 1.1rem; font-weight: 700; color: #f0f6fc; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.hbtn {
+  padding: 5px 12px; border-radius: 6px; border: 1px solid #30363d;
+  background: #21262d; color: #c9d1d9; cursor: pointer; font-size: 0.78rem;
+  transition: all 0.15s;
+}
+.hbtn:hover { background: #30363d; color: #f0f6fc; border-color: #58a6ff; }
+.ws-dot { width: 8px; height: 8px; border-radius: 50%; background: #3fb950; animation: blink 1.5s infinite; }
+.ws-dot.off { background: #f85149; animation: none; }
+#clock { color: #58a6ff; font-size: 0.82rem; font-weight: 600; min-width: 70px; text-align: right; }
 
-/* ─────────────────── MAIN CONTENT ─────────────────── */
-.main { display: grid; grid-template-columns: 1fr 320px; overflow: hidden; }
+/* ── MAIN ── */
+.main { display: grid; grid-template-columns: 1fr 340px; overflow: hidden; }
 
-/* ─────────────────── TOWN SCENE ─────────────────── */
-.town-scroll { overflow-y: auto; overflow-x: hidden; }
-.town-scroll::-webkit-scrollbar { width: 6px; }
+/* ── TOWN ── */
+.town-scroll { overflow-y: auto; overflow-x: hidden; position: relative; }
+.town-scroll::-webkit-scrollbar { width: 5px; }
 .town-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
 
 .town-scene {
-  min-height: 100%;
-  background: linear-gradient(180deg, #1a3a5c 0%, #2d6a9f 18%, #87CEEB 38%, #b0ddf5 52%, #7db87d 52%, #5a9e5a 100%);
-  padding: 0 0 30px;
-  position: relative;
+  min-height: 100%; position: relative;
+  background: linear-gradient(180deg,#0a1628 0%,#1a3a5c 12%,#2d6a9f 28%,#87CEEB 42%,#b0ddf5 52%,#7db87d 52.1%,#5a9e5a 100%);
+  padding-bottom: 30px;
 }
 
-/* ─────────────────── SKY ─────────────────── */
-.sky {
-  position: relative; height: 120px; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-}
-.sky-title {
-  font-size: 1.4rem; font-weight: 800; color: #fff;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.4); z-index: 2; letter-spacing: 1px;
-}
-.sun {
-  position: absolute; right: 60px; top: 20px;
-  width: 50px; height: 50px; border-radius: 50%;
-  background: radial-gradient(circle, #FFE08A, #FFB300);
-  box-shadow: 0 0 30px 10px rgba(255,200,50,0.4);
-  animation: sun-pulse 4s ease-in-out infinite;
-}
-.cloud {
-  position: absolute; border-radius: 50px; background: rgba(255,255,255,0.85);
-  animation: cloud-drift linear infinite;
-}
-.cloud::before, .cloud::after {
-  content: ''; position: absolute; background: inherit; border-radius: 50%;
-}
-.c1 { width: 100px; height: 36px; top: 25px; left: -120px; animation-duration: 35s; animation-delay: 0s; }
-.c1::before { width: 52px; height: 52px; top: -20px; left: 14px; }
-.c1::after  { width: 38px; height: 38px; top: -12px; right: 14px; }
-.c2 { width: 80px; height: 28px; top: 55px; left: -100px; animation-duration: 50s; animation-delay: -15s; opacity: 0.7; }
-.c2::before { width: 40px; height: 40px; top: -16px; left: 10px; }
-.c3 { width: 120px; height: 40px; top: 10px; left: -140px; animation-duration: 45s; animation-delay: -30s; opacity: 0.6; }
-.c3::before { width: 60px; height: 60px; top: -24px; left: 20px; }
-.c3::after  { width: 44px; height: 44px; top: -16px; right: 16px; }
+/* ── SKY ── */
+.sky { position: relative; height: 110px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.sky-title { font-size: 1.3rem; font-weight: 800; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,0.5); z-index: 2; letter-spacing: 1px; }
+.sun { position: absolute; right: 70px; top: 18px; width: 48px; height: 48px; border-radius: 50%; background: radial-gradient(circle,#FFE08A,#FFB300); box-shadow: 0 0 40px 12px rgba(255,200,50,0.45); animation: sun-pulse 4s ease-in-out infinite; }
+.cloud { position: absolute; border-radius: 50px; background: rgba(255,255,255,0.82); animation: cloud-drift linear infinite; }
+.cloud::before,.cloud::after { content:''; position:absolute; background:inherit; border-radius:50%; }
+.c1 { width:90px;height:32px;top:20px;left:-120px;animation-duration:38s; }
+.c1::before { width:48px;height:48px;top:-18px;left:12px; }
+.c1::after  { width:34px;height:34px;top:-10px;right:12px; }
+.c2 { width:70px;height:26px;top:52px;left:-100px;animation-duration:54s;animation-delay:-18s;opacity:.7; }
+.c2::before { width:36px;height:36px;top:-14px;left:8px; }
+.c3 { width:110px;height:38px;top:8px;left:-130px;animation-duration:47s;animation-delay:-32s;opacity:.55; }
+.c3::before { width:54px;height:54px;top:-22px;left:18px; }
+.c3::after  { width:40px;height:40px;top:-14px;right:14px; }
 
-/* ─────────────────── DISTRICTS ─────────────────── */
-.district {
-  margin: 10px 14px;
-  background: rgba(255,255,255,0.18);
-  border: 2px solid rgba(255,255,255,0.3);
-  border-radius: 14px;
-  padding: 10px 12px 14px;
-  backdrop-filter: blur(4px);
-}
-.district.ceo-district { background: rgba(100,60,160,0.22); border-color: rgba(150,100,220,0.5); }
-.district.creative-district { background: rgba(255,220,100,0.18); border-color: rgba(255,180,50,0.4); }
-.district.market-district { background: rgba(100,200,120,0.18); border-color: rgba(60,160,80,0.4); }
-.district.business-district { background: rgba(80,140,220,0.18); border-color: rgba(60,110,200,0.4); }
+/* ── DISTRICTS ── */
+.district { margin: 8px 12px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.25); border-radius: 14px; padding: 9px 10px 12px; backdrop-filter: blur(3px); }
+.district.ceo-d       { background:rgba(100,60,160,0.22); border-color:rgba(150,100,220,0.5); }
+.district.creative-d  { background:rgba(255,220,100,0.16); border-color:rgba(255,180,50,0.38); }
+.district.market-d    { background:rgba(100,200,120,0.16); border-color:rgba(60,160,80,0.38); }
+.district.business-d  { background:rgba(80,140,220,0.16); border-color:rgba(60,110,200,0.38); }
+.d-label { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:rgba(255,255,255,0.9); text-shadow:0 1px 4px rgba(0,0,0,0.3); margin-bottom:9px; padding:2px 8px; background:rgba(0,0,0,0.2); border-radius:20px; display:inline-block; }
+.twin-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 12px 0; }
+.road { height:16px; background:repeating-linear-gradient(90deg,#555 0 28px,transparent 28px 38px,#555 38px 66px) #3a3a3a; margin:3px 0; border-top:2px solid #222; border-bottom:2px solid #222; position:relative; }
+.road::after { content:''; position:absolute; left:0;right:0;top:50%;height:2px; background:repeating-linear-gradient(90deg,#FFD700 0 18px,transparent 18px 36px); transform:translateY(-50%); }
+.brow   { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; align-items:flex-end; }
+.bgrid  { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; justify-items:center; }
+.brow5  { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; justify-items:center; }
 
-.district-label {
-  font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 1.5px; color: rgba(255,255,255,0.9);
-  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  margin-bottom: 10px; padding: 3px 8px;
-  background: rgba(0,0,0,0.2); border-radius: 20px;
-  display: inline-block;
-}
+/* ── BUILDING ── */
+.building { display:flex; flex-direction:column; align-items:center; cursor:pointer; user-select:none; position:relative; transition:transform .15s; }
+.building:hover { transform:translateY(-4px) scale(1.05); }
+.building.selected .b-wrap { filter:drop-shadow(0 0 10px #58a6ff) brightness(1.1); }
 
-.twin-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 14px; }
-
-/* Road separator */
-.road {
-  height: 18px;
-  background: repeating-linear-gradient(90deg,
-    #555 0px, #555 30px, transparent 30px, transparent 40px,
-    #555 40px, #555 70px);
-  background-color: #3a3a3a;
-  margin: 4px 0;
-  border-top: 2px solid #222;
-  border-bottom: 2px solid #222;
-  position: relative;
-}
-.road::after {
-  content: ''; position: absolute; left: 0; right: 0;
-  top: 50%; height: 2px;
-  background: repeating-linear-gradient(90deg, #FFD700 0 20px, transparent 20px 40px);
-  transform: translateY(-50%);
-}
-
-/* ─────────────────── BUILDINGS GRID ─────────────────── */
-.buildings-row {
-  display: flex; flex-wrap: wrap; gap: 10px;
-  justify-content: center; align-items: flex-end;
-}
-.buildings-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 10px; justify-items: center;
-}
-.buildings-row-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; justify-items: center; }
-
-/* ─────────────────── BUILDING ─────────────────── */
-.building {
-  display: flex; flex-direction: column; align-items: center;
-  cursor: pointer; user-select: none;
-  position: relative;
-  transition: transform 0.15s;
-}
-.building:hover { transform: translateY(-4px) scale(1.04); }
-.building:hover .b-wrap { filter: brightness(1.1); }
-.building.selected .b-wrap { filter: drop-shadow(0 0 8px #58a6ff) brightness(1.08); }
-
-/* Building structure */
-.b-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
+.b-wrap { position:relative; display:flex; flex-direction:column; align-items:center; }
 
 /* Chimney */
-.b-chimney {
-  width: 7px; height: 12px;
-  background: #888; border-radius: 2px 2px 0 0;
-  position: absolute; top: -6px; right: 14px;
-  z-index: 3;
-}
-.building-lg .b-chimney { width: 9px; height: 16px; right: 22px; top: -8px; }
+.b-chim { width:7px;height:12px;background:#888;border-radius:2px 2px 0 0;position:absolute;top:-6px;right:13px;z-index:3; }
+.building-lg .b-chim { width:9px;height:16px;right:20px;top:-8px; }
 
-/* Smoke particles */
-.b-smoke {
-  position: absolute; border-radius: 50%;
-  background: rgba(210,210,210,0.7);
-  opacity: 0; z-index: 4;
-  right: 13px;
-}
-.b-smoke.s1 { width: 8px; height: 8px; top: -14px; right: 12px; }
-.b-smoke.s2 { width: 11px; height: 11px; top: -22px; right: 10px; }
-.b-smoke.s3 { width: 13px; height: 13px; top: -32px; right: 8px; }
-.building.running .b-smoke.s1 { animation: smoke 2s ease-out infinite 0s; }
-.building.running .b-smoke.s2 { animation: smoke 2s ease-out infinite 0.5s; }
-.building.running .b-smoke.s3 { animation: smoke 2s ease-out infinite 1s; }
-.building.thinking .b-smoke.s1 { animation: smoke 3s ease-out infinite 0s; opacity-target: 0.4; }
+/* Smoke */
+.b-sm { position:absolute;border-radius:50%;background:rgba(210,210,210,.7);opacity:0;z-index:4; }
+.b-sm.s1{width:8px;height:8px;top:-13px;right:11px;}
+.b-sm.s2{width:11px;height:11px;top:-21px;right:9px;}
+.b-sm.s3{width:13px;height:13px;top:-31px;right:7px;}
+.building.running .b-sm.s1{animation:smoke 2s ease-out infinite 0s;}
+.building.running .b-sm.s2{animation:smoke 2s ease-out infinite .5s;}
+.building.running .b-sm.s3{animation:smoke 2s ease-out infinite 1s;}
+.building.thinking .b-sm.s1{animation:smoke 3s ease-out infinite 0s;}
 
 /* Roof */
-.b-roof {
-  width: 0; height: 0;
-  border-left: 46px solid transparent;
-  border-right: 46px solid transparent;
-  border-bottom: 32px solid #E53935;
-  position: relative; z-index: 2;
-  filter: drop-shadow(0 -2px 4px rgba(0,0,0,0.2));
-}
-.building-lg .b-roof {
-  border-left-width: 70px; border-right-width: 70px;
-  border-bottom-width: 50px;
-}
+.b-roof { width:0;height:0;border-left:46px solid transparent;border-right:46px solid transparent;border-bottom:32px solid #E53935;position:relative;z-index:2;filter:drop-shadow(0 -2px 4px rgba(0,0,0,.2)); }
+.building-lg .b-roof { border-left-width:68px;border-right-width:68px;border-bottom-width:48px; }
 
 /* Body */
-.b-body {
-  width: 84px; height: 64px;
-  background: #FFF8E1;
-  border-radius: 0 0 5px 5px;
-  position: relative; z-index: 1;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: space-between;
-  padding: 6px 4px 0;
-  border: 1px solid rgba(0,0,0,0.1);
-  border-top: none;
-}
-.building-lg .b-body { width: 132px; height: 96px; padding: 8px 8px 0; }
+.b-body { width:84px;height:64px;background:#FFF8E1;border-radius:0 0 5px 5px;position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 4px 0;border:1px solid rgba(0,0,0,.1);border-top:none; }
+.building-lg .b-body { width:128px;height:94px;padding:8px 8px 0; }
 
 /* Windows */
-.b-windows { display: flex; gap: 10px; margin-bottom: 2px; }
-.b-win {
-  width: 18px; height: 16px;
-  background: #BBDEFB;
-  border: 1px solid #90CAF9;
-  border-radius: 3px 3px 0 0;
-  transition: background 0.3s, box-shadow 0.3s;
-  position: relative;
-}
-.b-win::before, .b-win::after {
-  content: ''; position: absolute;
-  background: rgba(144,202,249,0.6);
-}
-.b-win::before { width: 1px; height: 100%; left: 50%; top: 0; }
-.b-win::after  { width: 100%; height: 1px; left: 0; top: 50%; }
-.building-lg .b-win { width: 26px; height: 24px; }
+.b-wins { display:flex;gap:9px;margin-bottom:2px; }
+.b-win { width:18px;height:16px;background:#BBDEFB;border:1px solid #90CAF9;border-radius:3px 3px 0 0;transition:background .3s,box-shadow .3s;position:relative; }
+.b-win::before { content:'';position:absolute;width:1px;height:100%;left:50%;top:0;background:rgba(144,202,249,.6); }
+.b-win::after  { content:'';position:absolute;width:100%;height:1px;left:0;top:50%;background:rgba(144,202,249,.6); }
+.building-lg .b-win { width:25px;height:23px; }
 
 /* Door */
-.b-door {
-  width: 26px; height: 30px;
-  background: rgba(0,0,0,0.15);
-  border-radius: 13px 13px 0 0;
-  display: flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(0,0,0,0.15);
-  border-bottom: none; margin-top: auto;
-}
-.building-lg .b-door { width: 40px; height: 46px; }
-.b-icon { font-size: 14px; line-height: 1; }
-.building-lg .b-icon { font-size: 22px; }
+.b-door { width:26px;height:30px;background:rgba(0,0,0,.12);border-radius:13px 13px 0 0;display:flex;align-items:center;justify-content:center;border:1px solid rgba(0,0,0,.12);border-bottom:none;margin-top:auto; }
+.building-lg .b-door { width:40px;height:44px; }
+.b-icon { font-size:14px;line-height:1; }
+.building-lg .b-icon { font-size:22px; }
 
-/* Label */
-.b-name {
-  font-size: 0.62rem; font-weight: 600; margin-top: 4px;
-  color: rgba(255,255,255,0.92); text-align: center;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.6); max-width: 90px;
-  line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.building-lg .b-name { font-size: 0.75rem; max-width: 140px; }
+.b-name { font-size:.6rem;font-weight:600;margin-top:3px;color:rgba(255,255,255,.9);text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.6);max-width:90px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.building-lg .b-name { font-size:.72rem;max-width:140px; }
+.b-badge { font-size:.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:1px 5px;border-radius:8px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.5);margin-top:1px;transition:all .3s; }
 
-/* Status badge */
-.b-badge {
-  font-size: 0.55rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.5px; padding: 1px 5px; border-radius: 8px;
-  background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.6);
-  margin-top: 2px; transition: all 0.3s;
-}
+/* Speech bubble */
+.b-bubble { position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:rgba(22,27,34,.96);color:#e6edf3;font-size:.58rem;padding:4px 8px;border-radius:8px;white-space:nowrap;max-width:170px;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;border:1px solid #30363d;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.5); }
+.b-bubble::after { content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:rgba(22,27,34,.96); }
+.b-bubble.show { opacity:1;transform:translateX(-50%) translateY(0); }
 
-/* Activity speech bubble */
-.b-bubble {
-  position: absolute; bottom: calc(100% + 8px); left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  background: rgba(22,27,34,0.95); color: #e6edf3;
-  font-size: 0.6rem; padding: 4px 8px; border-radius: 8px;
-  white-space: nowrap; max-width: 160px; overflow: hidden;
-  text-overflow: ellipsis; pointer-events: none;
-  opacity: 0; transition: opacity 0.2s, transform 0.2s;
-  border: 1px solid #30363d; z-index: 100;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-.b-bubble::after {
-  content: ''; position: absolute; top: 100%; left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: rgba(22,27,34,0.95);
-}
-.b-bubble.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* ── BUILDING STATES ── */
+.building.running .b-win { background:#FFD54F!important;box-shadow:0 0 8px 3px rgba(255,200,0,.7);animation:wflick 1.5s ease-in-out infinite; }
+.building.running .b-body { box-shadow:0 0 18px 4px rgba(255,180,0,.35); }
+.building.running .b-wrap { animation:bob 2s ease-in-out infinite;filter:drop-shadow(0 0 10px rgba(255,165,0,.6)); }
+.building.running .b-badge { background:rgba(63,185,80,.3);color:#3fb950;border:1px solid rgba(63,185,80,.4); }
+.building.thinking .b-win { background:#CE93D8!important;box-shadow:0 0 8px 3px rgba(180,0,255,.4);animation:wthink 2s ease-in-out infinite; }
+.building.thinking .b-wrap { animation:bob 3s ease-in-out infinite; }
+.building.thinking .b-badge { background:rgba(150,0,230,.3);color:#d2a8ff; }
+.building.done .b-win { background:#81C784!important;box-shadow:0 0 10px 4px rgba(100,220,100,.6); }
+.building.done .b-wrap { animation:done-b .5s ease-out; }
+.building.done .b-badge { background:rgba(63,185,80,.3);color:#3fb950; }
+.building.error .b-win { background:#EF9A9A!important; }
+.building.error .b-wrap { animation:eshake .4s ease-out; }
+.building.error .b-badge { background:rgba(220,50,50,.3);color:#f85149; }
 
-/* ─────────────────── BUILDING STATE ANIMATIONS ─────────────────── */
-/* Running */
-.building.running .b-win {
-  background: #FFD54F !important;
-  box-shadow: 0 0 8px 3px rgba(255,200,0,0.7);
-  animation: win-flicker 1.5s ease-in-out infinite;
-}
-.building.running .b-body {
-  box-shadow: 0 0 18px 4px rgba(255,180,0,0.35);
-}
-.building.running .b-wrap {
-  animation: bob 2s ease-in-out infinite;
-  filter: drop-shadow(0 0 10px rgba(255,165,0,0.6));
-}
-.building.running .b-badge {
-  background: rgba(63,185,80,0.3); color: #3fb950;
-  border: 1px solid rgba(63,185,80,0.4);
-}
-.building.running .b-roof {
-  filter: drop-shadow(0 0 6px rgba(255,165,0,0.5));
-}
+/* ── WALKERS ── */
+#walker-layer { position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:30;overflow:hidden; }
+.walker { position:absolute;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:31;transition:left .9s cubic-bezier(.4,0,.2,1),top .9s cubic-bezier(.4,0,.2,1); }
+.walker-figure { position:relative;display:flex;flex-direction:column;align-items:center; }
+.w-head { width:13px;height:13px;border-radius:50%;border:2px solid rgba(0,0,0,.25); }
+.w-body { width:9px;height:12px;border-radius:3px;margin-top:1px; }
+.w-legs { display:flex;gap:1px;margin-top:1px; }
+.w-leg  { width:4px;height:9px;border-radius:2px; }
+.w-shadow { width:12px;height:4px;background:rgba(0,0,0,.2);border-radius:50%;margin-top:2px; }
+.walker-label { font-size:.5rem;font-weight:700;margin-top:2px;white-space:nowrap;background:rgba(0,0,0,.5);padding:1px 4px;border-radius:4px;color:#fff; }
 
-/* Thinking */
-.building.thinking .b-win {
-  background: #CE93D8 !important;
-  box-shadow: 0 0 8px 3px rgba(180,0,255,0.4);
-  animation: win-think 2s ease-in-out infinite;
+@keyframes walk-legs {
+  0%,100% { transform: rotate(-20deg); }
+  50% { transform: rotate(20deg); }
 }
-.building.thinking .b-wrap { animation: bob 3s ease-in-out infinite; }
-.building.thinking .b-badge { background: rgba(150,0,230,0.3); color: #d0a0ff; }
+.walker.walking .w-leg:first-child { animation: walk-legs .35s ease-in-out infinite; }
+.walker.walking .w-leg:last-child  { animation: walk-legs .35s ease-in-out infinite reverse; }
+@keyframes work-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+.walker.working { animation: work-bounce .6s ease-in-out infinite; }
 
-/* Done */
-.building.done .b-win { background: #81C784 !important; box-shadow: 0 0 10px 4px rgba(100,220,100,0.6); }
-.building.done .b-wrap { animation: done-bounce 0.5s ease-out; }
-.building.done .b-badge { background: rgba(63,185,80,0.3); color: #3fb950; }
+/* ── RIGHT PANEL ── */
+.right-panel { display:flex;flex-direction:column;background:#161b22;border-left:1px solid #30363d;overflow:hidden; }
 
-/* Error */
-.building.error .b-win { background: #EF9A9A !important; box-shadow: 0 0 8px 3px rgba(220,0,0,0.5); }
-.building.error .b-wrap { animation: error-shake 0.4s ease-out; }
-.building.error .b-badge { background: rgba(220,50,50,0.3); color: #f85149; }
+/* Active agents row */
+.active-bar { display:flex;align-items:center;gap:6px;padding:6px 10px;background:#0d1117;border-bottom:1px solid #21262d;flex-shrink:0;flex-wrap:wrap;min-height:34px; }
+.active-bar-label { font-size:.65rem;color:#484f58;font-weight:600;text-transform:uppercase;letter-spacing:.8px; }
+.agent-chip { display:flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:.62rem;font-weight:600;border:1px solid transparent;animation:chip-pop .2s ease-out; }
+@keyframes chip-pop { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
 
-/* ─────────────────── KEYFRAMES ─────────────────── */
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-@keyframes sun-pulse { 0%,100%{box-shadow:0 0 30px 10px rgba(255,200,50,0.4)} 50%{box-shadow:0 0 50px 20px rgba(255,200,50,0.6)} }
-@keyframes cloud-drift { from{transform:translateX(0)} to{transform:translateX(calc(100vw + 200px))} }
-@keyframes smoke {
-  0%   { opacity: 0.7; transform: translateY(0) scale(1); }
-  100% { opacity: 0;   transform: translateY(-28px) scale(1.8); }
-}
-@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-@keyframes win-flicker { 0%,100%{opacity:1} 50%{opacity:0.7} }
-@keyframes win-think { 0%,100%{opacity:1} 33%{opacity:0.5} 66%{opacity:0.8} }
-@keyframes done-bounce {
-  0%  { transform: scale(1) translateY(0); }
-  30% { transform: scale(1.08) translateY(-6px); }
-  60% { transform: scale(0.96) translateY(2px); }
-  100%{ transform: scale(1) translateY(0); }
-}
-@keyframes error-shake {
-  0%,100%{ transform: translateX(0); }
-  20%    { transform: translateX(-5px); }
-  40%    { transform: translateX(5px); }
-  60%    { transform: translateX(-3px); }
-  80%    { transform: translateX(3px); }
-}
+/* Tabs */
+.panel-tabs { display:flex;border-bottom:1px solid #21262d;flex-shrink:0;background:#0d1117; }
+.p-tab { flex:1;padding:8px 4px;font-size:.72rem;font-weight:600;text-align:center;color:#484f58;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-left:none;border-top:none;border-right:none; }
+.p-tab:hover { color:#8b949e; }
+.p-tab.active { color:#58a6ff;border-bottom-color:#58a6ff; }
 
-/* ─────────────────── RIGHT PANEL ─────────────────── */
-.right-panel {
-  display: grid; grid-template-rows: 1fr 1fr;
-  background: #161b22; border-left: 1px solid #30363d;
-  overflow: hidden;
-}
-.panel-section { display: flex; flex-direction: column; overflow: hidden; border-bottom: 1px solid #30363d; }
-.panel-header {
-  padding: 10px 14px; font-size: 0.78rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 1px;
-  background: #0d1117; color: #8b949e; border-bottom: 1px solid #21262d;
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
-}
-.panel-header span { color: #3fb950; font-size: 0.7rem; }
+/* Tab content */
+.tab-pane { display:none;flex:1;overflow:hidden;flex-direction:column; }
+.tab-pane.active { display:flex; }
 
-/* Activity Log */
-.log-scroll { overflow-y: auto; flex: 1; padding: 6px; }
-.log-scroll::-webkit-scrollbar { width: 4px; }
-.log-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
-.log-entry {
-  display: grid; grid-template-columns: 48px 72px 1fr;
-  gap: 4px; align-items: start;
-  padding: 3px 4px; border-radius: 4px;
-  font-size: 0.68rem; line-height: 1.4; margin-bottom: 1px;
-  border-left: 2px solid transparent;
-}
-.log-entry:hover { background: rgba(255,255,255,0.04); }
-.log-time { color: #484f58; font-size: 0.62rem; padding-top: 1px; }
-.log-agent-name {
-  font-weight: 600; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; font-size: 0.65rem;
-}
-.log-msg { color: #8b949e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Live Feed tab */
+.feed-scroll { overflow-y:auto;flex:1;padding:4px; }
+.feed-scroll::-webkit-scrollbar { width:3px; }
+.feed-scroll::-webkit-scrollbar-thumb { background:#30363d; }
+.feed-entry { display:grid;grid-template-columns:44px 70px 1fr;gap:3px;align-items:start;padding:3px 4px;border-radius:4px;font-size:.66rem;line-height:1.4;margin-bottom:1px;border-left:2px solid transparent; }
+.feed-entry:hover { background:rgba(255,255,255,.04); }
+.fe-time  { color:#484f58;font-size:.58rem;padding-top:1px; }
+.fe-agent { font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.62rem; }
+.fe-msg   { color:#8b949e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.feed-entry.ev-start     { border-left-color:#f0883e; } .feed-entry.ev-start .fe-msg     { color:#f0883e; }
+.feed-entry.ev-thinking  { border-left-color:#d2a8ff; } .feed-entry.ev-thinking .fe-msg  { color:#d2a8ff; }
+.feed-entry.ev-planning  { border-left-color:#79c0ff; } .feed-entry.ev-planning .fe-msg  { color:#79c0ff; }
+.feed-entry.ev-tool_call { border-left-color:#56d364; }
+.feed-entry.ev-tool_result { border-left-color:#3fb950; }
+.feed-entry.ev-done      { border-left-color:#3fb950; } .feed-entry.ev-done .fe-msg      { color:#3fb950; }
+.feed-entry.ev-error     { border-left-color:#f85149; } .feed-entry.ev-error .fe-msg     { color:#f85149; }
+.feed-entry.ev-delegation { border-left-color:#ffa657; } .feed-entry.ev-delegation .fe-msg { color:#ffa657; }
 
-.log-start    { border-left-color: #f0883e; }
-.log-thinking { border-left-color: #d2a8ff; }
-.log-planning { border-left-color: #58a6ff; }
-.log-tool_call{ border-left-color: #79c0ff; }
-.log-tool_result{ border-left-color: #3fb950; }
-.log-done     { border-left-color: #3fb950; }
-.log-error    { border-left-color: #f85149; }
-.log-start    .log-msg { color: #f0883e; }
-.log-done     .log-msg { color: #3fb950; }
-.log-error    .log-msg { color: #f85149; }
-.log-thinking .log-msg { color: #d2a8ff; }
-.log-planning .log-msg { color: #79c0ff; }
+/* Tasks tab */
+.tasks-scroll { overflow-y:auto;flex:1;padding:8px; }
+.tasks-scroll::-webkit-scrollbar { width:3px; }
+.task-card { background:#21262d;border:1px solid #30363d;border-radius:8px;padding:10px;margin-bottom:8px; }
+.task-card-header { display:flex;align-items:center;gap:6px;margin-bottom:6px; }
+.task-agent-icon { font-size:1.1rem; }
+.task-agent-name { font-size:.75rem;font-weight:700;color:#f0f6fc; }
+.task-status { margin-left:auto;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:8px; }
+.ts-running { background:rgba(63,185,80,.2);color:#3fb950; }
+.ts-done    { background:rgba(88,166,255,.2);color:#58a6ff; }
+.ts-error   { background:rgba(248,81,73,.2);color:#f85149; }
+.task-text  { font-size:.68rem;color:#8b949e;line-height:1.4;margin-bottom:6px; }
+.task-steps { display:flex;flex-direction:column;gap:2px; }
+.task-step  { font-size:.62rem;padding:2px 6px;border-radius:4px;color:#8b949e;background:rgba(255,255,255,.04); }
+.task-step.step-done { color:#3fb950; }
+.task-step.step-active { color:#ffa657;background:rgba(255,166,87,.08); }
 
-/* Agent Output */
-.output-scroll {
-  overflow-y: auto; flex: 1; padding: 10px 14px;
-  font-size: 0.72rem; line-height: 1.6; color: #8b949e;
-}
-.output-scroll::-webkit-scrollbar { width: 4px; }
-.output-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
-.output-agent-header {
-  font-size: 0.78rem; font-weight: 700; color: #f0f6fc;
-  margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
-}
-.output-content { color: #c9d1d9; white-space: pre-wrap; word-break: break-word; }
-.output-placeholder { color: #484f58; font-style: italic; padding: 20px 0; text-align: center; }
+/* Output tab */
+.output-scroll { overflow-y:auto;flex:1;padding:10px; }
+.output-scroll::-webkit-scrollbar { width:3px; }
+.out-agent-hdr { display:flex;align-items:center;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #21262d; }
+.out-icon  { font-size:1.3rem; }
+.out-name  { font-size:.85rem;font-weight:700;color:#f0f6fc; }
+.out-time  { margin-left:auto;font-size:.65rem;color:#484f58; }
+.out-text  { font-size:.72rem;line-height:1.7;color:#c9d1d9;white-space:pre-wrap;word-break:break-word; }
+.out-image { margin-top:10px;border-radius:8px;overflow:hidden;border:1px solid #30363d; }
+.out-image img { width:100%;display:block;cursor:pointer; }
+.out-image-label { font-size:.62rem;color:#484f58;padding:4px 8px;background:#0d1117;text-align:center; }
+.out-placeholder { color:#484f58;font-style:italic;padding:30px 10px;text-align:center;font-size:.78rem; }
 
-/* ─────────────────── TASK BAR ─────────────────── */
-.task-bar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 0 16px;
-  background: #161b22; border-top: 1px solid #30363d;
-  z-index: 10;
-}
-.selected-label {
-  font-size: 0.78rem; font-weight: 600; color: #58a6ff;
-  white-space: nowrap; min-width: 140px;
-}
-.selected-icon { font-size: 1.1rem; }
-#task-input {
-  flex: 1; padding: 8px 14px;
-  background: #0d1117; border: 1px solid #30363d;
-  border-radius: 20px; color: #e6edf3;
-  font-size: 0.85rem; outline: none;
-  transition: border-color 0.2s;
-}
-#task-input:focus { border-color: #58a6ff; }
-#task-input::placeholder { color: #484f58; }
-.run-btn {
-  padding: 8px 20px; border-radius: 20px;
-  background: #238636; color: #fff;
-  border: none; cursor: pointer; font-weight: 600; font-size: 0.85rem;
-  transition: background 0.2s, transform 0.1s;
-  white-space: nowrap;
-}
-.run-btn:hover { background: #2ea043; }
-.run-btn:active { transform: scale(0.97); }
-.run-btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+/* Files panel in output */
+.files-section { margin-top:14px;border-top:1px solid #21262d;padding-top:10px; }
+.files-title { font-size:.68rem;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px; }
+.file-item { display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;background:rgba(255,255,255,.04);margin-bottom:4px;cursor:pointer;transition:background .15s; }
+.file-item:hover { background:rgba(255,255,255,.08); }
+.file-icon { font-size:1rem; }
+.file-name { font-size:.68rem;color:#c9d1d9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1; }
+.file-size { font-size:.6rem;color:#484f58; }
 
-/* Quick task chips */
-.quick-chips { display: flex; gap: 6px; align-items: center; }
-.chip {
-  padding: 4px 10px; border-radius: 12px;
-  background: #21262d; color: #8b949e;
-  border: 1px solid #30363d; cursor: pointer;
-  font-size: 0.7rem; white-space: nowrap;
-  transition: all 0.15s;
-}
-.chip:hover { background: #30363d; color: #e6edf3; border-color: #58a6ff; }
+/* ── SETUP MODAL ── */
+.modal-overlay { position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:none;align-items:center;justify-content:center; }
+.modal-overlay.open { display:flex; }
+.modal { background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;max-width:480px;width:90%;max-height:80vh;overflow-y:auto; }
+.modal h2 { font-size:1rem;margin-bottom:16px;color:#f0f6fc; }
+.config-row { display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #21262d; }
+.config-row:last-child { border-bottom:none; }
+.cfg-icon  { font-size:1.1rem; }
+.cfg-name  { flex:1;font-size:.8rem;font-weight:600;color:#c9d1d9; }
+.cfg-status { font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:8px; }
+.cfg-ok   { background:rgba(63,185,80,.2);color:#3fb950; }
+.cfg-miss { background:rgba(248,81,73,.2);color:#f85149; }
+.cfg-desc { font-size:.65rem;color:#484f58;margin-top:2px; }
+.modal-close { margin-top:16px;width:100%;padding:8px;background:#21262d;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;cursor:pointer;font-size:.82rem; }
+.modal-close:hover { background:#30363d; }
+.setup-instruction { background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;margin-top:12px;font-size:.72rem;color:#8b949e;line-height:1.6; }
+.setup-instruction strong { color:#c9d1d9; }
+.setup-instruction code { background:#21262d;padding:1px 5px;border-radius:4px;font-family:monospace;color:#79c0ff; }
 
-/* ─────────────────── WS STATUS ─────────────────── */
-.ws-status {
-  font-size: 0.7rem; padding: 2px 8px; border-radius: 10px;
-  background: rgba(63,185,80,0.15); color: #3fb950;
-  border: 1px solid rgba(63,185,80,0.3);
-}
-.ws-status.disconnected { background: rgba(248,81,73,0.15); color: #f85149; border-color: rgba(248,81,73,0.3); }
+/* ── IMAGE LIGHTBOX ── */
+.lightbox { position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:300;display:none;align-items:center;justify-content:center;cursor:zoom-out; }
+.lightbox.open { display:flex; }
+.lightbox img { max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain; }
 
-/* ─────────────────── TOOLTIP ─────────────────── */
-.tooltip {
-  position: fixed; background: rgba(22,27,34,0.97);
-  color: #e6edf3; font-size: 0.72rem; padding: 6px 10px;
-  border-radius: 6px; border: 1px solid #30363d;
-  pointer-events: none; z-index: 999; display: none;
-  max-width: 200px; line-height: 1.4;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-}
+/* ── TASK BAR ── */
+.task-bar { display:flex;align-items:center;gap:8px;padding:0 14px;background:#161b22;border-top:1px solid #30363d;z-index:10; }
+.sel-label { display:flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600;color:#58a6ff;white-space:nowrap;min-width:130px; }
+.sel-icon { font-size:1.1rem; }
+#task-input { flex:1;padding:8px 14px;background:#0d1117;border:1px solid #30363d;border-radius:20px;color:#e6edf3;font-size:.83rem;outline:none;transition:border-color .2s; }
+#task-input:focus { border-color:#58a6ff; }
+#task-input::placeholder { color:#484f58; }
+#task-input:disabled { opacity:.5;cursor:not-allowed; }
+.chips { display:flex;gap:5px;align-items:center; }
+.chip { padding:4px 9px;border-radius:11px;background:#21262d;color:#8b949e;border:1px solid #30363d;cursor:pointer;font-size:.65rem;white-space:nowrap;transition:all .15s; }
+.chip:hover { background:#30363d;color:#f0f6fc;border-color:#58a6ff; }
+.run-btn { padding:8px 18px;border-radius:20px;background:#238636;color:#fff;border:none;cursor:pointer;font-weight:700;font-size:.82rem;transition:background .2s,transform .1s;white-space:nowrap; }
+.run-btn:hover { background:#2ea043; }
+.run-btn:active { transform:scale(.97); }
+.run-btn:disabled { background:#21262d;color:#484f58;cursor:not-allowed; }
+
+/* ── KEYFRAMES ── */
+@keyframes blink       { 0%,100%{opacity:1}50%{opacity:.3} }
+@keyframes sun-pulse   { 0%,100%{box-shadow:0 0 30px 10px rgba(255,200,50,.4)}50%{box-shadow:0 0 50px 20px rgba(255,200,50,.6)} }
+@keyframes cloud-drift { from{transform:translateX(0)}to{transform:translateX(calc(100vw + 220px))} }
+@keyframes smoke       { 0%{opacity:.7;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-28px) scale(1.8)} }
+@keyframes bob         { 0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)} }
+@keyframes wflick      { 0%,100%{opacity:1}50%{opacity:.65} }
+@keyframes wthink      { 0%,100%{opacity:1}33%{opacity:.4}66%{opacity:.8} }
+@keyframes done-b      { 0%{transform:scale(1) translateY(0)}30%{transform:scale(1.08) translateY(-6px)}60%{transform:scale(.96) translateY(2px)}100%{transform:scale(1) translateY(0)} }
+@keyframes eshake      { 0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)} }
+
+/* ── TOOLTIP ── */
+.tooltip { position:fixed;background:rgba(22,27,34,.97);color:#e6edf3;font-size:.7rem;padding:5px 9px;border-radius:6px;border:1px solid #30363d;pointer-events:none;z-index:999;display:none;max-width:190px;box-shadow:0 4px 12px rgba(0,0,0,.5); }
 </style>
 </head>
 <body>
 
 <div class="app">
-
-  <!-- ── HEADER ── -->
+  <!-- HEADER -->
   <header class="header">
-    <div class="header-title"><span>🏙️</span> OnBrandCraftz Town</div>
-    <div class="header-stats">
-      <div class="stat stat-active">
-        <div class="stat-dot live" id="ws-dot"></div>
-        <span id="active-count" class="stat-val">0</span>
-        <span>active</span>
-      </div>
-      <div class="stat">
-        <span class="stat-val">22</span>
-        <span>agents</span>
-      </div>
-      <div class="ws-status" id="ws-status">● connecting</div>
+    <div class="header-left">
+      <div class="ws-dot" id="ws-dot"></div>
+      <div class="header-title">🏙️ OnBrandCraftz Town</div>
+    </div>
+    <div class="header-right">
+      <button class="hbtn" onclick="openSetup()">⚙️ Setup</button>
+      <button class="hbtn" onclick="refreshFiles()">🖼️ Files</button>
       <div id="clock"></div>
     </div>
   </header>
 
-  <!-- ── MAIN ── -->
+  <!-- MAIN -->
   <div class="main">
 
-    <!-- ── TOWN SCENE ── -->
-    <div class="town-scroll">
-      <div class="town-scene">
+    <!-- TOWN SCENE -->
+    <div class="town-scroll" id="town-scroll">
+      <div class="town-scene" id="town-scene">
+        <div id="walker-layer"></div>
 
         <!-- Sky -->
         <div class="sky">
           <div class="sun"></div>
-          <div class="cloud c1"></div>
-          <div class="cloud c2"></div>
-          <div class="cloud c3"></div>
+          <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
           <div class="sky-title">🏙️ OnBrandCraftz Town</div>
         </div>
 
-        <!-- CEO Headquarters -->
-        <div class="district ceo-district">
-          <div class="district-label">🏛️ CEO Headquarters</div>
-          <div class="buildings-row" id="dist-ceo"></div>
+        <!-- CEO HQ -->
+        <div class="district ceo-d">
+          <div class="d-label">🏛️ CEO Headquarters</div>
+          <div class="brow" id="d-ceo"></div>
         </div>
 
         <div class="road"></div>
 
         <!-- Twin districts -->
         <div class="twin-row">
-          <div class="district creative-district">
-            <div class="district-label">🎨 Creative Quarter</div>
-            <div class="buildings-grid" id="dist-creative"></div>
+          <div class="district creative-d">
+            <div class="d-label">🎨 Creative Quarter</div>
+            <div class="bgrid" id="d-creative"></div>
           </div>
-          <div class="district market-district">
-            <div class="district-label">🛍️ Market Square</div>
-            <div class="buildings-grid" id="dist-market"></div>
+          <div class="district market-d">
+            <div class="d-label">🛍️ Market Square</div>
+            <div class="bgrid" id="d-market"></div>
           </div>
         </div>
 
         <div class="road"></div>
 
         <!-- Business District -->
-        <div class="district business-district">
-          <div class="district-label">🏭 Business District</div>
-          <div class="buildings-row-5" id="dist-business"></div>
+        <div class="district business-d">
+          <div class="d-label">🏭 Business District</div>
+          <div class="brow5" id="d-business"></div>
         </div>
-
-      </div><!-- /town-scene -->
+      </div>
     </div><!-- /town-scroll -->
 
-    <!-- ── RIGHT PANEL ── -->
+    <!-- RIGHT PANEL -->
     <div class="right-panel">
 
-      <!-- Activity Log -->
-      <div class="panel-section">
-        <div class="panel-header">
-          📋 Activity Log
-          <span id="log-count">0 events</span>
-        </div>
-        <div class="log-scroll" id="log-scroll"></div>
+      <!-- Active agents row -->
+      <div class="active-bar">
+        <span class="active-bar-label">Active</span>
+        <div id="active-chips"></div>
       </div>
 
-      <!-- Agent Output -->
-      <div class="panel-section">
-        <div class="panel-header">
-          💬 Agent Output
-          <span id="output-label">none selected</span>
+      <!-- Tabs -->
+      <div class="panel-tabs">
+        <button class="p-tab active" data-tab="feed"   onclick="switchTab('feed')">📋 Live Feed</button>
+        <button class="p-tab"        data-tab="tasks"  onclick="switchTab('tasks')">⚡ Tasks</button>
+        <button class="p-tab"        data-tab="output" onclick="switchTab('output')">💬 Output</button>
+      </div>
+
+      <!-- Live Feed -->
+      <div class="tab-pane active" id="tab-feed">
+        <div class="feed-scroll" id="feed-scroll"></div>
+      </div>
+
+      <!-- Tasks -->
+      <div class="tab-pane" id="tab-tasks">
+        <div class="tasks-scroll" id="tasks-scroll">
+          <div style="color:#484f58;font-size:.75rem;padding:20px;text-align:center;">No active tasks yet.<br>Click a building and run a task.</div>
         </div>
-        <div class="output-scroll" id="output-panel">
-          <div class="output-placeholder">Click a building to select an agent, then run a task.</div>
+      </div>
+
+      <!-- Output -->
+      <div class="tab-pane" id="tab-output">
+        <div class="output-scroll" id="output-scroll">
+          <div class="out-placeholder">Click a building to select an agent, run a task, and see results here.</div>
         </div>
       </div>
 
     </div><!-- /right-panel -->
   </div><!-- /main -->
 
-  <!-- ── TASK BAR ── -->
+  <!-- TASK BAR -->
   <div class="task-bar">
-    <div class="selected-label">
-      <span class="selected-icon" id="sel-icon">🏙️</span>
+    <div class="sel-label">
+      <span class="sel-icon" id="sel-icon">🏙️</span>
       <span id="sel-name">Select a building…</span>
     </div>
-    <input type="text" id="task-input" placeholder="Enter a task for the selected agent…" disabled>
-    <div class="quick-chips" id="quick-chips"></div>
+    <input type="text" id="task-input" placeholder="Select a building first…" disabled>
+    <div class="chips" id="chips"></div>
     <button class="run-btn" id="run-btn" disabled onclick="runTask()">Run ▶</button>
   </div>
-
 </div><!-- /app -->
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="setup-modal">
+  <div class="modal">
+    <h2>⚙️ Setup & Connections</h2>
+    <div id="config-rows"></div>
+    <div class="setup-instruction" id="etsy-instructions" style="display:none">
+      <strong>To connect your Etsy shop:</strong><br>
+      1. Open PowerShell in your ETSY folder<br>
+      2. Run: <code>python tools\etsy_oauth.py</code><br>
+      3. A browser window opens — log in and authorize<br>
+      4. Tokens are saved to <code>.env</code> automatically<br>
+      5. Restart the town app
+    </div>
+    <button class="modal-close" onclick="closeSetup()">Close</button>
+  </div>
+</div>
+
+<!-- IMAGE LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
 
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-// ─────────────────── AGENT DEFINITIONS ───────────────────
+// ─── AGENT DATA ───────────────────────────────────────────────────────────────
 const AGENTS = [
-  { key:'ceo',      name:'CEO Agent',              display:'CEO',              icon:'🏛️', roof:'#4A148C', wall:'#EDE7F6', dist:'ceo',      large:true,  quick:['Run daily briefing','What should we focus on this week?','Analyse the shop performance'] },
-  { key:'brand',    name:'Brand Design Agent',      display:'Brand Design',     icon:'🎨', roof:'#AD1457', wall:'#FCE4EC', dist:'creative',  large:false, quick:['Generate a shop banner concept','Review brand guidelines'] },
-  { key:'art',      name:'Art Creation Agent',      display:'Art Creation',     icon:'🖼️', roof:'#6A1B9A', wall:'#F3E5F5', dist:'creative',  large:false, quick:['Create a new digital wall art concept','List all digital products'] },
-  { key:'qc',       name:'Quality Check Agent',     display:'Quality Check',    icon:'🔍', roof:'#1565C0', wall:'#E3F2FD', dist:'creative',  large:false, quick:['Get QC summary','List pending reviews'] },
-  { key:'listing',  name:'Etsy Listing Agent',      display:'Etsy Listing',     icon:'🏪', roof:'#E65100', wall:'#FFF3E0', dist:'creative',  large:false, quick:['Get all listings','Draft an SEO title for a new product'] },
-  { key:'store',    name:'Store Manager Agent',     display:'Store Manager',    icon:'🏬', roof:'#2E7D32', wall:'#E8F5E9', dist:'creative',  large:false, quick:['Get shop health report','Check renewal alerts'] },
-  { key:'delivery', name:'Sales Processor Agent',   display:'Sales Processor',  icon:'📧', roof:'#00838F', wall:'#E0F7FA', dist:'creative',  large:false, quick:['Check pending digital deliveries','Get delivery stats'] },
-  { key:'sales',    name:'Sales Agent',             display:'Sales',            icon:'💰', roof:'#B71C1C', wall:'#FFEBEE', dist:'market',    large:false, quick:["Show today's revenue","List pending orders"] },
-  { key:'product',  name:'Product Agent',           display:'Product',          icon:'📦', roof:'#4527A0', wall:'#EDE7F6', dist:'market',    large:false, quick:['Show all listings','Find underpriced listings'] },
-  { key:'marketing',name:'Marketing Agent',         display:'Marketing',        icon:'📈', roof:'#E65100', wall:'#FFF3E0', dist:'market',    large:false, quick:['Top marketing opportunities','SEO improvements'] },
-  { key:'analytics',name:'Analytics Agent',         display:'Analytics',        icon:'📊', roof:'#1A237E', wall:'#E8EAF6', dist:'market',    large:false, quick:['Weekly performance report','Top selling products'] },
-  { key:'cs',       name:'Customer Service Agent',  display:'Customer Svc',     icon:'💬', roof:'#004D40', wall:'#E0F2F1', dist:'market',    large:false, quick:['Any unread messages?','Pending review responses?'] },
-  { key:'social',   name:'Social Media Agent',      display:'Social Media',     icon:'📌', roof:'#880E4F', wall:'#FCE4EC', dist:'market',    large:false, quick:['Pinterest strategy ideas','Create a content calendar'] },
-  { key:'finance',  name:'Financial Agent',         display:'Financial',        icon:'💵', roof:'#F9A825', wall:'#FFFDE7', dist:'business',  large:false, quick:['Monthly profit report','Calculate Etsy fees on $25 sale'] },
-  { key:'print',    name:'Print Production Agent',  display:'Print Production', icon:'🖨️', roof:'#37474F', wall:'#ECEFF1', dist:'business',  large:false, quick:['Print queue status','Machine health check'] },
-  { key:'ads',      name:'Etsy Ads Agent',          display:'Etsy Ads',         icon:'📣', roof:'#BF360C', wall:'#FBE9E7', dist:'business',  large:false, quick:['Ad performance report','Recommend ad strategy'] },
-  { key:'intel',    name:'Competitor Intel Agent',  display:'Competitor Intel', icon:'🔭', roof:'#1B5E20', wall:'#F1F8E9', dist:'business',  large:false, quick:['Find market gaps','Seasonal opportunities'] },
-  { key:'promos',   name:'Promotions Agent',        display:'Promotions',       icon:'🏷️', roof:'#F57F17', wall:'#FFFDE7', dist:'business',  large:false, quick:['Active promotions','Best coupon strategy for new customers'] },
-  { key:'tax',      name:'Tax Compliance Agent',    display:'Tax Compliance',   icon:'📋', roof:'#212121', wall:'#F5F5F5', dist:'business',  large:false, quick:['Quarterly tax estimate','Log a business expense'] },
-  { key:'returns',  name:'Returns & Disputes Agent',display:'Returns',          icon:'↩️', roof:'#C62828', wall:'#FFEBEE', dist:'business',  large:false, quick:['Any open cases?','Draft a response to a not-as-described claim'] },
-  { key:'supply',   name:'Supply Chain Agent',      display:'Supply Chain',     icon:'⛏️', roof:'#3E2723', wall:'#EFEBE9', dist:'business',  large:false, quick:['Materials reorder alerts','Filament inventory'] },
-  { key:'email',    name:'Email Marketing Agent',   display:'Email Marketing',  icon:'📬', roof:'#0277BD', wall:'#E1F5FE', dist:'business',  large:false, quick:['Get receipt message','Draft a newsletter'] },
-  { key:'abt',      name:'A/B Testing Agent',       display:'A/B Testing',      icon:'🧪', roof:'#00695C', wall:'#E0F2F1', dist:'business',  large:false, quick:['Generate test ideas','Active tests status'] },
+  {key:'ceo',     name:'CEO Agent',             display:'CEO',            icon:'🏛️',roof:'#4A148C',wall:'#EDE7F6',dist:'ceo',     large:true,  quick:['Run daily briefing','What should we focus on this week?','Full shop status report']},
+  {key:'brand',   name:'Brand Design Agent',    display:'Brand Design',   icon:'🎨',roof:'#AD1457',wall:'#FCE4EC',dist:'creative',large:false, quick:['Create a shop banner concept','Review brand guidelines','Generate logo brief']},
+  {key:'art',     name:'Art Creation Agent',    display:'Art Creation',   icon:'🖼️',roof:'#6A1B9A',wall:'#F3E5F5',dist:'creative',large:false, quick:['Create boho botanical wall art for Etsy','Create a daily planner PDF','List all digital products']},
+  {key:'qc',      name:'Quality Check Agent',   display:'Quality Check',  icon:'🔍',roof:'#1565C0',wall:'#E3F2FD',dist:'creative',large:false, quick:['Review all pending products','Get QC summary','Approve all pending products']},
+  {key:'listing', name:'Etsy Listing Agent',    display:'Etsy Listing',   icon:'🏪',roof:'#E65100',wall:'#FFF3E0',dist:'creative',large:false, quick:['Get all listings','Create SEO title for a 3D printed shelf','Publish approved digital products']},
+  {key:'store',   name:'Store Manager Agent',   display:'Store Manager',  icon:'🏬',roof:'#2E7D32',wall:'#E8F5E9',dist:'creative',large:false, quick:['Shop health report','Check renewal alerts','Update shop announcement']},
+  {key:'delivery',name:'Sales Processor Agent', display:'Sales Processor',icon:'📧',roof:'#00838F',wall:'#E0F7FA',dist:'creative',large:false, quick:['Check pending deliveries','Delivery statistics','Process all pending orders']},
+  {key:'sales',   name:'Sales Agent',           display:'Sales',          icon:'💰',roof:'#B71C1C',wall:'#FFEBEE',dist:'market', large:false, quick:["Today's revenue summary","Pending orders list","Monthly sales report"]},
+  {key:'product', name:'Product Agent',         display:'Product',        icon:'📦',roof:'#4527A0',wall:'#EDE7F6',dist:'market', large:false, quick:['All listings overview','Find underpriced listings','Inventory status']},
+  {key:'marketing',name:'Marketing Agent',      display:'Marketing',      icon:'📈',roof:'#E65100',wall:'#FFF3E0',dist:'market', large:false, quick:['Top marketing opportunities','SEO improvement suggestions','Traffic analysis']},
+  {key:'analytics',name:'Analytics Agent',      display:'Analytics',      icon:'📊',roof:'#1A237E',wall:'#E8EAF6',dist:'market', large:false, quick:['Weekly performance report','Top selling products','Revenue trends']},
+  {key:'cs',      name:'Customer Service Agent',display:'Customer Svc',   icon:'💬',roof:'#004D40',wall:'#E0F2F1',dist:'market', large:false, quick:['Unread messages','Pending reviews','Draft a 5-star review response']},
+  {key:'social',  name:'Social Media Agent',    display:'Social Media',   icon:'📌',roof:'#880E4F',wall:'#FCE4EC',dist:'market', large:false, quick:['Pinterest strategy for 3D prints','Content calendar this month','Best pins to create now']},
+  {key:'finance', name:'Financial Agent',       display:'Financial',      icon:'💵',roof:'#F9A825',wall:'#FFFDE7',dist:'business',large:false, quick:['Monthly profit report','Calculate fees on a $25 sale','Cash flow summary']},
+  {key:'print',   name:'Print Production Agent',display:'Print Prod.',    icon:'🖨️',roof:'#37474F',wall:'#ECEFF1',dist:'business',large:false, quick:['Print queue status','Machine health check','Add a print job for order #001']},
+  {key:'ads',     name:'Etsy Ads Agent',        display:'Etsy Ads',       icon:'📣',roof:'#BF360C',wall:'#FBE9E7',dist:'business',large:false, quick:['Ad performance report','Recommend ad strategy','Best listings to promote']},
+  {key:'intel',   name:'Competitor Intel Agent',display:'Comp. Intel',    icon:'🔭',roof:'#1B5E20',wall:'#F1F8E9',dist:'business',large:false, quick:['Find market gaps for 3D prints','Seasonal opportunities','Competitor pricing analysis']},
+  {key:'promos',  name:'Promotions Agent',      display:'Promotions',     icon:'🏷️',roof:'#F57F17',wall:'#FFFDE7',dist:'business',large:false, quick:['Active promotions','Best coupon for new customers','Plan a summer sale']},
+  {key:'tax',     name:'Tax Compliance Agent',  display:'Tax',            icon:'📋',roof:'#212121',wall:'#F5F5F5',dist:'business',large:false, quick:['Quarterly tax estimate','Log $45 packaging expense','Copyright check for my new design']},
+  {key:'returns', name:'Returns & Disputes',    display:'Returns',        icon:'↩️',roof:'#C62828',wall:'#FFEBEE',dist:'business',large:false, quick:['Open cases','Draft response to not-as-described claim','Return analytics']},
+  {key:'supply',  name:'Supply Chain Agent',    display:'Supply Chain',   icon:'⛏️',roof:'#3E2723',wall:'#EFEBE9',dist:'business',large:false, quick:['Reorder alerts','Add Matte Black PLA 2000g at $0.02/g','Filament inventory']},
+  {key:'email',   name:'Email Marketing Agent', display:'Email Mktg',     icon:'📬',roof:'#0277BD',wall:'#E1F5FE',dist:'business',large:false, quick:['Get receipt message','Draft a new subscriber newsletter','Create package insert copy']},
+  {key:'abt',     name:'A/B Testing Agent',     display:'A/B Testing',    icon:'🧪',roof:'#00695C',wall:'#E0F2F1',dist:'business',large:false, quick:['Active tests','Generate test ideas for listing L001','Testing calendar']},
 ];
+const AM = Object.fromEntries(AGENTS.map(a=>[a.key,a]));
+const STATE_LABELS = {idle:'idle',running:'working…',thinking:'thinking…',done:'done ✓',error:'error!'};
 
-const AGENT_MAP = Object.fromEntries(AGENTS.map(a => [a.key, a]));
-const STATE_LABELS = { idle:'idle', running:'working…', thinking:'thinking…', done:'done ✓', error:'error!' };
-let selectedAgent = null;
-let logCount = 0;
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let selectedKey = null;
+let feedCount   = 0;
+let taskCards   = {};   // key → {steps, status, task}
+let walkers     = {};   // key → DOM element
+let bpositions  = {};   // key → {x, y}  (center of building relative to town-scene)
 let activeAgents = new Set();
 
-// ─────────────────── BUILD TOWN ───────────────────
-function mkBuilding(agent) {
-  const lg = agent.large;
-  const d = document.createElement('div');
+// ─── BUILD TOWN ───────────────────────────────────────────────────────────────
+function mkBuilding(a) {
+  const lg = a.large;
+  const d  = document.createElement('div');
   d.className = `building${lg ? ' building-lg' : ''}`;
-  d.dataset.key = agent.key;
-  d.title = agent.name;
-
-  const roofW = lg ? 70 : 46;
-  const doorW = lg ? 38 : 26;
-
+  d.dataset.key = a.key;
+  d.title = a.name;
+  const rw = lg ? 68 : 46;
   d.innerHTML = `
-    <div class="b-bubble" id="bubble-${agent.key}"></div>
+    <div class="b-bubble" id="bub-${a.key}"></div>
     <div class="b-wrap">
-      <div class="b-chimney"></div>
-      <div class="b-smoke s1"></div>
-      <div class="b-smoke s2"></div>
-      <div class="b-smoke s3"></div>
-      <div class="b-roof" style="border-left-width:${roofW}px;border-right-width:${roofW}px;border-bottom-color:${agent.roof}"></div>
-      <div class="b-body" style="background:${agent.wall}">
-        <div class="b-windows">
-          <div class="b-win"></div>
-          <div class="b-win"></div>
-          ${lg ? '<div class="b-win"></div>' : ''}
+      <div class="b-chim"></div>
+      <div class="b-sm s1"></div><div class="b-sm s2"></div><div class="b-sm s3"></div>
+      <div class="b-roof" style="border-left-width:${rw}px;border-right-width:${rw}px;border-bottom-color:${a.roof}"></div>
+      <div class="b-body" style="background:${a.wall}">
+        <div class="b-wins">
+          <div class="b-win"></div><div class="b-win"></div>${lg?'<div class="b-win"></div>':''}
         </div>
-        <div class="b-door" style="width:${doorW}px;border-radius:${doorW/2}px ${doorW/2}px 0 0;background:${agent.roof}22;border-color:${agent.roof}44">
-          <span class="b-icon">${agent.icon}</span>
+        <div class="b-door" style="border-radius:${lg?20:13}px ${lg?20:13}px 0 0;background:${a.roof}1a;border-color:${a.roof}33">
+          <span class="b-icon">${a.icon}</span>
         </div>
       </div>
     </div>
-    <div class="b-name">${agent.display}</div>
-    <div class="b-badge" id="badge-${agent.key}">idle</div>
-  `;
-
-  d.addEventListener('click', () => selectAgent(agent.key));
-
-  // Tooltip
-  d.addEventListener('mouseenter', e => showTooltip(e, agent.name));
-  d.addEventListener('mouseleave', hideTooltip);
-  d.addEventListener('mousemove', e => moveTooltip(e));
-
+    <div class="b-name">${a.display}</div>
+    <div class="b-badge" id="bdg-${a.key}">idle</div>`;
+  d.addEventListener('click', ()=>selectAgent(a.key));
+  d.addEventListener('mouseenter', e=>showTip(e, a.name));
+  d.addEventListener('mouseleave', hideTip);
+  d.addEventListener('mousemove', moveTip);
   return d;
 }
 
 function initTown() {
-  AGENTS.forEach(agent => {
-    const container = document.getElementById(`dist-${agent.dist}`);
-    if (container) container.appendChild(mkBuilding(agent));
+  AGENTS.forEach(a => {
+    const c = document.getElementById(`d-${a.dist}`);
+    if (c) c.appendChild(mkBuilding(a));
   });
+  setTimeout(calcPositions, 300);
 }
 
-// ─────────────────── AGENT SELECTION ───────────────────
+function calcPositions() {
+  const scene = document.getElementById('town-scene');
+  const sr = scene.getBoundingClientRect();
+  const scroll = document.getElementById('town-scroll');
+  AGENTS.forEach(a => {
+    const el = document.querySelector(`[data-key="${a.key}"]`);
+    if (!el) return;
+    const er = el.getBoundingClientRect();
+    bpositions[a.key] = {
+      x: er.left - sr.left + er.width / 2,
+      y: er.top  - sr.top  + scroll.scrollTop + er.height * 0.3,
+    };
+  });
+}
+window.addEventListener('resize', ()=>setTimeout(calcPositions, 100));
+
+// ─── WALKER SYSTEM ────────────────────────────────────────────────────────────
+function mkWalker(agentKey, color) {
+  const w = document.createElement('div');
+  w.className = 'walker walking';
+  w.id = `walker-${agentKey}`;
+  w.innerHTML = `
+    <div class="walker-figure">
+      <div class="w-head"  style="background:${color}"></div>
+      <div class="w-body"  style="background:${color}"></div>
+      <div class="w-legs">
+        <div class="w-leg" style="background:${color}"></div>
+        <div class="w-leg" style="background:${color}"></div>
+      </div>
+    </div>
+    <div class="w-shadow"></div>
+    <div class="walker-label">${AM[agentKey]?.display || agentKey}</div>`;
+  return w;
+}
+
+function spawnWalker(fromKey, toKey) {
+  const color = AM[toKey]?.roof || '#58a6ff';
+  const layer = document.getElementById('walker-layer');
+  const wid   = `walker-${toKey}`;
+
+  // Remove existing walker for this agent
+  document.getElementById(wid)?.remove();
+
+  const from = bpositions[fromKey];
+  const to   = bpositions[toKey];
+  if (!from || !to) return;
+
+  const w = mkWalker(toKey, color);
+  w.style.left = (from.x - 12) + 'px';
+  w.style.top  = (from.y - 20) + 'px';
+  layer.appendChild(w);
+
+  // Face direction
+  const goingLeft = to.x < from.x;
+  w.style.transform = goingLeft ? 'scaleX(-1)' : 'scaleX(1)';
+
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      w.style.left = (to.x - 12) + 'px';
+      w.style.top  = (to.y - 20) + 'px';
+    });
+  });
+
+  // Switch to working state on arrival
+  setTimeout(()=>{
+    w.classList.remove('walking');
+    w.classList.add('working');
+  }, 950);
+}
+
+function removeWalker(agentKey) {
+  const w = document.getElementById(`walker-${agentKey}`);
+  if (!w) return;
+  w.style.opacity = '0';
+  w.style.transition += ', opacity 0.5s';
+  setTimeout(()=>w.remove(), 500);
+}
+
+// ─── AGENT SELECTION ──────────────────────────────────────────────────────────
 function selectAgent(key) {
-  // Deselect previous
-  if (selectedAgent) {
-    document.querySelector(`[data-key="${selectedAgent}"]`)?.classList.remove('selected');
-  }
-
-  selectedAgent = key;
-  const agent = AGENT_MAP[key];
+  if (selectedKey) document.querySelector(`[data-key="${selectedKey}"]`)?.classList.remove('selected');
+  selectedKey = key;
+  const a = AM[key];
   document.querySelector(`[data-key="${key}"]`)?.classList.add('selected');
-
-  // Update task bar
-  document.getElementById('sel-icon').textContent = agent.icon;
-  document.getElementById('sel-name').textContent = agent.name;
-  document.getElementById('task-input').disabled = false;
-  document.getElementById('task-input').placeholder = `Task for ${agent.display}…`;
+  document.getElementById('sel-icon').textContent = a.icon;
+  document.getElementById('sel-name').textContent = a.name;
+  const inp = document.getElementById('task-input');
+  inp.disabled = false;
+  inp.placeholder = `Task for ${a.display}…`;
   document.getElementById('run-btn').disabled = false;
-  document.getElementById('output-label').textContent = agent.display;
 
   // Quick chips
-  const chips = document.getElementById('quick-chips');
+  const chips = document.getElementById('chips');
   chips.innerHTML = '';
-  (agent.quick || []).slice(0, 3).forEach(q => {
+  (a.quick||[]).slice(0,3).forEach(q=>{
     const c = document.createElement('button');
-    c.className = 'chip';
-    c.textContent = q;
-    c.onclick = () => {
-      document.getElementById('task-input').value = q;
-      runTask();
-    };
+    c.className = 'chip'; c.textContent = q;
+    c.onclick = ()=>{ inp.value = q; runTask(); };
     chips.appendChild(c);
   });
-
-  // Focus input
-  setTimeout(() => document.getElementById('task-input').focus(), 50);
+  setTimeout(()=>inp.focus(), 50);
 }
 
-// ─────────────────── BUILDING STATE ───────────────────
-function setBuildingState(key, state) {
+// ─── BUILDING STATE ───────────────────────────────────────────────────────────
+function setBS(key, state) {
   const el = document.querySelector(`[data-key="${key}"]`);
   if (!el) return;
-  el.classList.remove('idle', 'running', 'thinking', 'done', 'error');
-  el.classList.add(state || 'idle');
-  const badge = document.getElementById(`badge-${key}`);
-  if (badge) badge.textContent = STATE_LABELS[state] || state;
+  el.classList.remove('idle','running','thinking','done','error');
+  el.classList.add(state||'idle');
+  const bdg = document.getElementById(`bdg-${key}`);
+  if (bdg) bdg.textContent = STATE_LABELS[state]||state;
 }
 
 function showBubble(key, text) {
-  const bubble = document.getElementById(`bubble-${key}`);
-  if (!bubble) return;
-  bubble.textContent = text;
-  bubble.classList.add('show');
-  clearTimeout(bubble._timer);
-  bubble._timer = setTimeout(() => bubble.classList.remove('show'), 4000);
+  const b = document.getElementById(`bub-${key}`);
+  if (!b) return;
+  b.textContent = text;
+  b.classList.add('show');
+  clearTimeout(b._t);
+  b._t = setTimeout(()=>b.classList.remove('show'), 4000);
 }
 
-// ─────────────────── WEBSOCKET ───────────────────
-let ws;
-let wsReconnectTimer;
+// ─── ACTIVE AGENTS BAR ────────────────────────────────────────────────────────
+function updateActiveBar() {
+  const bar = document.getElementById('active-chips');
+  bar.innerHTML = '';
+  activeAgents.forEach(k=>{
+    const a = AM[k];
+    if (!a) return;
+    const c = document.createElement('div');
+    c.className = 'agent-chip';
+    c.style.background = a.roof+'22';
+    c.style.borderColor = a.roof+'66';
+    c.style.color = a.roof;
+    c.innerHTML = `${a.icon} ${a.display}`;
+    bar.appendChild(c);
+  });
+}
 
+// ─── TASK CARDS ───────────────────────────────────────────────────────────────
+function upsertTaskCard(key, status, task) {
+  const panel = document.getElementById('tasks-scroll');
+  let card = document.getElementById(`tc-${key}`);
+  if (!card) {
+    panel.innerHTML = panel.innerHTML.replace(/<div[^>]*color:#484f58[^>]*>.*?<\/div>/s,'');
+    card = document.createElement('div');
+    card.className = 'task-card';
+    card.id = `tc-${key}`;
+    panel.prepend(card);
+  }
+  const a = AM[key];
+  const sc = {running:'ts-running',done:'ts-done',error:'ts-error'}[status]||'ts-running';
+  const sl = {running:'Working…',done:'Done ✓',error:'Error'}[status]||status;
+  const steps = (taskCards[key]?.steps || []);
+  const stepsHtml = steps.slice(-5).map((s,i,arr)=>`
+    <div class="task-step ${i===arr.length-1&&status==='running'?'step-active':'step-done'}">${s}</div>`).join('');
+  card.innerHTML = `
+    <div class="task-card-header">
+      <span class="task-agent-icon">${a?.icon||''}</span>
+      <span class="task-agent-name">${a?.name||key}</span>
+      <span class="task-status ${sc}">${sl}</span>
+    </div>
+    <div class="task-text">${esc(task||'').slice(0,120)}</div>
+    <div class="task-steps">${stepsHtml}</div>`;
+  if (!taskCards[key]) taskCards[key] = {steps:[], task, status};
+  taskCards[key].status = status;
+  taskCards[key].task = task||taskCards[key].task;
+}
+
+function addTaskStep(key, msg) {
+  if (!taskCards[key]) taskCards[key] = {steps:[], task:'', status:'running'};
+  taskCards[key].steps.push(msg);
+  upsertTaskCard(key, taskCards[key].status, taskCards[key].task);
+}
+
+// ─── OUTPUT PANEL ─────────────────────────────────────────────────────────────
+function showOutput(key, text, filePath) {
+  const a = AM[key];
+  const panel = document.getElementById('output-scroll');
+  const imgHtml = filePath ? `
+    <div class="out-image" onclick="openLightbox('/data/${filePath.replace(/^data\//,'')}')">
+      <img src="/data/${filePath.replace(/^data\//,'')}" alt="Generated file" onerror="this.parentElement.style.display='none'">
+      <div class="out-image-label">📁 ${filePath.split('/').pop()} — click to enlarge</div>
+    </div>` : '';
+  panel.innerHTML = `
+    <div class="out-agent-hdr">
+      <span class="out-icon">${a?.icon||''}</span>
+      <span class="out-name">${a?.name||key}</span>
+      <span class="out-time">${new Date().toLocaleTimeString()}</span>
+    </div>
+    ${imgHtml}
+    <div class="out-text">${esc(text)}</div>`;
+  switchTab('output');
+}
+
+function refreshFiles() {
+  fetch('/api/files').then(r=>r.json()).then(data=>{
+    if (!data.files?.length) return;
+    const panel = document.getElementById('output-scroll');
+    const existing = panel.querySelector('.files-section');
+    if (existing) existing.remove();
+    const fs = document.createElement('div');
+    fs.className = 'files-section';
+    fs.innerHTML = `<div class="files-title">📁 Created Files (${data.files.length})</div>` +
+      data.files.map(f=>`
+        <div class="file-item" onclick="openLightbox('/${f.path}')">
+          <span class="file-icon">${f.type==='image'?'🖼️':f.type==='pdf'?'📄':'📁'}</span>
+          <span class="file-name">${f.name}</span>
+          <span class="file-size">${f.size_kb}KB</span>
+        </div>`).join('');
+    panel.appendChild(fs);
+    switchTab('output');
+  });
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.p-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active', p.id===`tab-${name}`));
+}
+
+// ─── LIVE FEED ────────────────────────────────────────────────────────────────
+function addFeed(key, event, msg, ts) {
+  const a = AM[key];
+  const scroll = document.getElementById('feed-scroll');
+  const e = document.createElement('div');
+  e.className = `feed-entry ev-${event}`;
+  e.innerHTML = `
+    <span class="fe-time">${ts}</span>
+    <span class="fe-agent" style="color:${a?.roof||'#8b949e'}">${a?.icon||''} ${a?.display||key}</span>
+    <span class="fe-msg" title="${esc(msg)}">${esc(msg)}</span>`;
+  scroll.insertBefore(e, scroll.firstChild);
+  while (scroll.children.length > 200) scroll.removeChild(scroll.lastChild);
+  feedCount++;
+}
+
+// ─── WEBSOCKET EVENTS ─────────────────────────────────────────────────────────
+function handleEvent(msg) {
+  const {agent:key, event, message, ts, data} = msg;
+
+  switch (event) {
+    case 'start':
+      setBS(key, 'running');
+      activeAgents.add(key);
+      showBubble(key, message.slice(0,60));
+      upsertTaskCard(key, 'running', message);
+      // Walker appears at the building
+      if (bpositions[key]) {
+        const color = AM[key]?.roof || '#58a6ff';
+        const layer = document.getElementById('walker-layer');
+        document.getElementById(`walker-${key}`)?.remove();
+        const w = mkWalker(key, color);
+        w.classList.remove('walking');
+        w.classList.add('working');
+        w.style.left = (bpositions[key].x - 12) + 'px';
+        w.style.top  = (bpositions[key].y - 20) + 'px';
+        layer.appendChild(w);
+      }
+      break;
+    case 'thinking':
+      setBS(key, 'thinking');
+      showBubble(key, '💭 thinking…');
+      addTaskStep(key, '💭 Thinking…');
+      break;
+    case 'planning':
+      setBS(key, 'running');
+      showBubble(key, message.slice(0,60));
+      addTaskStep(key, '📋 ' + message.slice(0,80));
+      break;
+    case 'delegation':
+      const toKey = data?.to;
+      if (toKey && bpositions[key] && bpositions[toKey]) {
+        spawnWalker(key, toKey);
+      }
+      addTaskStep(key, '→ Sending to ' + (AM[toKey]?.display||toKey));
+      showBubble(key, '→ ' + (AM[toKey]?.display||toKey));
+      break;
+    case 'tool_call':
+      setBS(key, 'running');
+      showBubble(key, message);
+      addTaskStep(key, message.slice(0,80));
+      break;
+    case 'tool_result':
+      showBubble(key, message.slice(0,60));
+      addTaskStep(key, '✓ ' + message.slice(0,70));
+      // Check for file creation
+      if (data?.file) showOutput(key, 'File created: ' + data.file, data.file);
+      break;
+    case 'done':
+      setBS(key, 'done');
+      activeAgents.delete(key);
+      showBubble(key, '✓ done');
+      setTimeout(()=>setBS(key,'idle'), 3000);
+      removeWalker(key);
+      upsertTaskCard(key, 'done', null);
+      if (data?.result) showOutput(key, data.result);
+      break;
+    case 'error':
+      setBS(key, 'error');
+      activeAgents.delete(key);
+      showBubble(key, '⚠ error');
+      setTimeout(()=>setBS(key,'idle'), 5000);
+      removeWalker(key);
+      upsertTaskCard(key, 'error', null);
+      showOutput(key, 'ERROR: ' + message);
+      break;
+  }
+
+  updateActiveBar();
+  addFeed(key, event, message, ts);
+}
+
+// ─── WEBSOCKET ────────────────────────────────────────────────────────────────
+let ws, wsRecon;
 function connectWS() {
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const proto = location.protocol==='https:'?'wss:':'ws:';
   ws = new WebSocket(`${proto}//${location.host}/ws`);
-
-  ws.onopen = () => {
-    setWsStatus(true);
-    clearTimeout(wsReconnectTimer);
-  };
-
-  ws.onclose = () => {
-    setWsStatus(false);
-    wsReconnectTimer = setTimeout(connectWS, 3000);
-  };
-
-  ws.onerror = () => {
-    setWsStatus(false);
-  };
-
-  ws.onmessage = e => {
+  ws.onopen  = ()=>{ setWsDot(true);  clearTimeout(wsRecon); };
+  ws.onclose = ()=>{ setWsDot(false); wsRecon=setTimeout(connectWS,3000); };
+  ws.onerror = ()=>  setWsDot(false);
+  ws.onmessage = e=>{
     const msg = JSON.parse(e.data);
-    if (msg.type === 'init') {
-      // Restore any in-progress states
-      Object.entries(msg.states || {}).forEach(([k, s]) => {
-        setBuildingState(k, s.status === 'running' ? 'running' : 'idle');
-      });
-    } else if (msg.type === 'agent_event') {
+    if (msg.type==='init') {
+      Object.entries(msg.states||{}).forEach(([k,s])=>setBS(k, s.status==='running'?'running':'idle'));
+    } else if (msg.type==='agent_event') {
       handleEvent(msg);
     }
   };
 }
-
-function setWsStatus(connected) {
-  const el = document.getElementById('ws-status');
-  const dot = document.getElementById('ws-dot');
-  if (connected) {
-    el.textContent = '● connected';
-    el.className = 'ws-status';
-    dot.className = 'stat-dot live';
-  } else {
-    el.textContent = '● disconnected';
-    el.className = 'ws-status disconnected';
-    dot.className = 'stat-dot';
-  }
+function setWsDot(ok) {
+  document.getElementById('ws-dot').className = 'ws-dot' + (ok?'':' off');
 }
 
-// ─────────────────── EVENT HANDLER ───────────────────
-function handleEvent(msg) {
-  const { agent: key, event, message, ts, data } = msg;
-
-  // Update building state
-  switch (event) {
-    case 'start':
-      setBuildingState(key, 'running');
-      activeAgents.add(key);
-      showBubble(key, message);
-      break;
-    case 'thinking':
-      setBuildingState(key, 'thinking');
-      showBubble(key, '💭 thinking…');
-      break;
-    case 'planning':
-      setBuildingState(key, 'running');
-      showBubble(key, message);
-      break;
-    case 'tool_call':
-      setBuildingState(key, 'running');
-      showBubble(key, message);
-      break;
-    case 'tool_result':
-      showBubble(key, message);
-      break;
-    case 'done':
-      setBuildingState(key, 'done');
-      activeAgents.delete(key);
-      showBubble(key, '✓ done');
-      setTimeout(() => setBuildingState(key, 'idle'), 3000);
-      if (data?.result) showOutput(key, data.result);
-      break;
-    case 'error':
-      setBuildingState(key, 'error');
-      activeAgents.delete(key);
-      showBubble(key, '⚠ error');
-      setTimeout(() => setBuildingState(key, 'idle'), 5000);
-      showOutput(key, `ERROR: ${message}`);
-      break;
-  }
-
-  // Update active count
-  document.getElementById('active-count').textContent = activeAgents.size;
-
-  // Add log entry
-  addLog(key, event, message, ts);
-}
-
-// ─────────────────── ACTIVITY LOG ───────────────────
-function addLog(key, event, message, ts) {
-  const agent = AGENT_MAP[key];
-  const scroll = document.getElementById('log-scroll');
-
-  const entry = document.createElement('div');
-  entry.className = `log-entry log-${event}`;
-  entry.innerHTML = `
-    <span class="log-time">${ts}</span>
-    <span class="log-agent-name" style="color:${agent?.roof || '#8b949e'}">${agent?.icon || ''} ${agent?.display || key}</span>
-    <span class="log-msg" title="${message}">${message}</span>
-  `;
-
-  scroll.insertBefore(entry, scroll.firstChild);
-
-  // Keep max 150 entries
-  while (scroll.children.length > 150) scroll.removeChild(scroll.lastChild);
-
-  logCount++;
-  document.getElementById('log-count').textContent = `${logCount} events`;
-}
-
-// ─────────────────── OUTPUT PANEL ───────────────────
-function showOutput(key, text) {
-  const agent = AGENT_MAP[key];
-  const panel = document.getElementById('output-panel');
-  panel.innerHTML = `
-    <div class="output-agent-header">
-      <span>${agent?.icon || ''}</span>
-      <span>${agent?.name || key}</span>
-    </div>
-    <div class="output-content">${escHtml(text)}</div>
-  `;
-  document.getElementById('output-label').textContent = agent?.display || key;
-}
-
-function escHtml(str) {
-  return str
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-// ─────────────────── RUN TASK ───────────────────
+// ─── RUN TASK ─────────────────────────────────────────────────────────────────
 function runTask() {
-  if (!selectedAgent) return;
-  const input = document.getElementById('task-input');
-  const task = input.value.trim();
+  if (!selectedKey) return;
+  const inp  = document.getElementById('task-input');
+  const task = inp.value.trim();
   if (!task) return;
-
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    alert('Not connected to server. Please wait and try again.');
-    return;
-  }
-
-  ws.send(JSON.stringify({ type: 'run', agent: selectedAgent, task }));
-  input.value = '';
-
-  // Optimistic UI update
-  setBuildingState(selectedAgent, 'running');
-  activeAgents.add(selectedAgent);
-  document.getElementById('active-count').textContent = activeAgents.size;
-  showBubble(selectedAgent, task.slice(0, 50));
-
-  // Show working state in output panel
-  const agent = AGENT_MAP[selectedAgent];
-  document.getElementById('output-panel').innerHTML = `
-    <div class="output-agent-header">
-      <span>${agent?.icon || ''}</span>
-      <span>${agent?.name || selectedAgent}</span>
-    </div>
-    <div class="output-content" style="color:#8b949e;font-style:italic">Working on: ${escHtml(task.slice(0, 100))}…</div>
-  `;
+  if (!ws||ws.readyState!==WebSocket.OPEN) { alert('Not connected. Please wait.'); return; }
+  ws.send(JSON.stringify({type:'run', agent:selectedKey, task}));
+  inp.value = '';
+  setBS(selectedKey,'running');
+  activeAgents.add(selectedKey);
+  updateActiveBar();
+  showBubble(selectedKey, task.slice(0,50));
+  upsertTaskCard(selectedKey,'running',task);
+  taskCards[selectedKey] = {steps:[], task, status:'running'};
+  switchTab('tasks');
 }
+document.getElementById('task-input').addEventListener('keydown', e=>{ if(e.key==='Enter') runTask(); });
 
-// Enter key submits
-document.getElementById('task-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') runTask();
-});
-
-// ─────────────────── TOOLTIP ───────────────────
-const tooltip = document.getElementById('tooltip');
-function showTooltip(e, text) {
-  tooltip.textContent = text;
-  tooltip.style.display = 'block';
-  moveTooltip(e);
+// ─── SETUP MODAL ─────────────────────────────────────────────────────────────
+function openSetup() {
+  fetch('/api/config').then(r=>r.json()).then(cfg=>{
+    const rows = [
+      {icon:'🤖', name:'Anthropic API',    key:'anthropic', desc:'Required — powers all agents'},
+      {icon:'🎨', name:'OpenAI / DALL-E 3',key:'openai',    desc:'Art Creation Agent image generation'},
+      {icon:'📬', name:'Email (SMTP)',      key:'smtp',      desc:'Send digital files to customers'},
+      {icon:'🛒', name:'Etsy API Key',      key:'etsy_api',  desc:'Read shop data, competitor research'},
+      {icon:'🔑', name:'Etsy OAuth',        key:'etsy_oauth',desc:'Create/edit listings, manage orders'},
+      {icon:'📌', name:'Pinterest',         key:'pinterest', desc:'Post pins automatically'},
+    ];
+    document.getElementById('config-rows').innerHTML = rows.map(r=>`
+      <div class="config-row">
+        <span class="cfg-icon">${r.icon}</span>
+        <div style="flex:1">
+          <div class="cfg-name">${r.name}</div>
+          <div class="cfg-desc">${r.desc}</div>
+        </div>
+        <span class="cfg-status ${cfg[r.key]?'cfg-ok':'cfg-miss'}">${cfg[r.key]?'✓ Connected':'✗ Missing'}</span>
+      </div>`).join('');
+    const needEtsy = !cfg.etsy_oauth;
+    document.getElementById('etsy-instructions').style.display = needEtsy ? 'block' : 'none';
+    document.getElementById('setup-modal').classList.add('open');
+  });
 }
-function moveTooltip(e) {
-  tooltip.style.left = (e.clientX + 12) + 'px';
-  tooltip.style.top  = (e.clientY - 30) + 'px';
-}
-function hideTooltip() { tooltip.style.display = 'none'; }
+function closeSetup() { document.getElementById('setup-modal').classList.remove('open'); }
+document.getElementById('setup-modal').addEventListener('click', e=>{ if(e.target===e.currentTarget) closeSetup(); });
 
-// ─────────────────── CLOCK ───────────────────
-function updateClock() {
-  document.getElementById('clock').textContent =
-    new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+// ─── LIGHTBOX ─────────────────────────────────────────────────────────────────
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
 }
-setInterval(updateClock, 1000);
-updateClock();
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
 
-// ─────────────────── INIT ───────────────────
+// ─── TOOLTIP ─────────────────────────────────────────────────────────────────
+const tip = document.getElementById('tooltip');
+function showTip(e,t){ tip.textContent=t; tip.style.display='block'; moveTip(e); }
+function moveTip(e)  { tip.style.left=(e.clientX+12)+'px'; tip.style.top=(e.clientY-30)+'px'; }
+function hideTip()   { tip.style.display='none'; }
+
+// ─── CLOCK ───────────────────────────────────────────────────────────────────
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+setInterval(()=>{ document.getElementById('clock').textContent=new Date().toLocaleTimeString(); }, 1000);
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 initTown();
 connectWS();
 </script>
