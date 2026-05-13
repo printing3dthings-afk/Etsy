@@ -49,11 +49,8 @@ echo  Sign in - click API Keys - Create Key - copy it
 echo.
 
 REM Check if key already set
-python -c "from dotenv import dotenv_values; v=dotenv_values('.env'); print('SET' if str(v.get('ANTHROPIC_API_KEY','')).startswith('sk-') else 'MISSING')" 2>nul > .keycheck.tmp
-set /p KEYCHECK=<.keycheck.tmp
-del .keycheck.tmp >nul 2>&1
-
-if "%KEYCHECK%"=="SET" (
+powershell -Command "if ((Get-Content .env | Select-String 'ANTHROPIC_API_KEY=sk-').Count -gt 0) { exit 0 } else { exit 1 }" >nul 2>&1
+if not errorlevel 1 (
     echo  API key already saved - skipping.
     goto DONE
 )
@@ -62,21 +59,12 @@ echo.
 set /p APIKEY="  Paste your API key and press Enter: "
 
 if "%APIKEY%"=="" (
-    echo.
     echo  No key entered. Re-run Setup.bat to add it later.
     goto DONE
 )
 
-python -c "
-import re, sys
-key = sys.argv[1]
-with open('.env', 'r') as f:
-    content = f.read()
-content = re.sub(r'ANTHROPIC_API_KEY=.*', 'ANTHROPIC_API_KEY=' + key, content)
-with open('.env', 'w') as f:
-    f.write(content)
-print('  API key saved.')
-" "%APIKEY%"
+powershell -Command "(Get-Content .env) -replace 'ANTHROPIC_API_KEY=.*', ('ANTHROPIC_API_KEY=' + '%APIKEY%') | Set-Content .env"
+echo  API key saved.
 
 :DONE
 echo.

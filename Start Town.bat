@@ -24,7 +24,7 @@ if not exist ".env" (
 )
 
 REM ── Check API key is set ──────────────────────────
-python -c "from dotenv import dotenv_values; v=dotenv_values('.env'); exit(0 if str(v.get('ANTHROPIC_API_KEY','')).startswith('sk-') else 1)" 2>nul
+powershell -Command "if ((Get-Content .env | Select-String 'ANTHROPIC_API_KEY=sk-').Count -gt 0) { exit 0 } else { exit 1 }" >nul 2>&1
 if errorlevel 1 (
     echo  ERROR: ANTHROPIC_API_KEY not set in .env
     echo  Run Setup.bat to add your API key.
