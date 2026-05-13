@@ -277,7 +277,26 @@
   "orders": [],
   "messages": [],
   "reviews": [],
-  "digital_products": [],
+  "digital_products": [
+    {
+      "id": "DP999",
+      "title": "Boho Botanical 2026 Planner",
+      "product_type": "planner",
+      "concept": "Test planner",
+      "target_audience": "planners",
+      "dimensions": "A4 PDF",
+      "price": 9.99,
+      "status": "qc_pending",
+      "file_path": "/home/user/Etsy/tools/../data/digital_products/product_files/DP999.pdf",
+      "file_format": "PDF",
+      "file_size_kb": 574,
+      "qc_status": null,
+      "qc_notes": null,
+      "etsy_listing_id": null,
+      "created_at": "2026-01-01",
+      "updated_at": "2026-05-13"
+    }
+  ],
   "digital_deliveries": [],
   "shop_sections": [
     {
@@ -367,7 +386,7 @@
       "filament_per_gram": 0.02,
       "electricity_per_hour": 0.12,
       "labour_per_hour": 15.0,
-      "packaging_per_order": 0.50
+      "packaging_per_order": 0.5
     }
   },
   "print_queue": [],
