@@ -17,6 +17,10 @@ from typing import Set
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Load .env before anything else so all os.getenv() calls see the keys
+from dotenv import load_dotenv
+load_dotenv(Path(__file__).parent.parent / ".env")
+
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect

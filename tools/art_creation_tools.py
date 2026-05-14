@@ -397,12 +397,14 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
         return _generate_placeholder_art(data, product, store)
 
     try:
+        import base64
         request_body = json.dumps({
-            "model": "dall-e-3",
+            "model": "gpt-image-1",
             "prompt": data["dalle_prompt"],
-            "size": data.get("image_size", "1024x1024"),
-            "quality": data.get("quality", "hd"),
+            "size": "1024x1024",
+            "quality": "high",
             "n": 1,
+            "output_format": "png",
         }).encode()
 
         req = urllib.request.Request(
@@ -411,15 +413,17 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=120) as resp:
+        with urllib.request.urlopen(req, timeout=180) as resp:
             result = json.loads(resp.read())
 
-        image_url = result["data"][0]["url"]
-        revised_prompt = result["data"][0].get("revised_prompt", data["dalle_prompt"])
-
-        # Download raw image
+        img_data = result["data"][0].get("b64_json") or result["data"][0].get("url")
         raw_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_raw.png")
-        urllib.request.urlretrieve(image_url, raw_path)
+
+        if result["data"][0].get("b64_json"):
+            with open(raw_path, "wb") as f:
+                f.write(base64.b64decode(img_data))
+        else:
+            urllib.request.urlretrieve(img_data, raw_path)
 
         # Upscale + sharpen for print quality
         file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.png")
@@ -431,7 +435,6 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
         product["file_format"] = "PNG"
         product["file_size_kb"] = file_size_kb
         product["status"] = "qc_pending"
-        product["dalle_revised_prompt"] = revised_prompt
         product["updated_at"] = str(date.today())
         _save_product(product, store)
 
@@ -440,15 +443,14 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
             "product_id": product_id,
             "file_path": file_path,
             "file_size_kb": file_size_kb,
-            "dimensions": "3000x3000px (upscaled from 1024px for print quality)",
-            "revised_prompt": revised_prompt,
+            "dimensions": "3000x3000px (upscaled for print quality)",
             "status": "qc_pending",
             "next_step": "Send to Quality Check Agent for review.",
         }, indent=2)
 
     except urllib.error.HTTPError as e:
         error_body = e.read().decode()
-        return json.dumps({"error": f"DALL-E 3 API error {e.code}: {error_body}"})
+        return json.dumps({"error": f"Image API error {e.code}: {error_body}"})
     except Exception as exc:
         return json.dumps({"error": str(exc)})
 

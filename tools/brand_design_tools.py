@@ -265,12 +265,16 @@ def _generate_brand_asset(data: dict, asset_type: str) -> str:
         }, indent=2)
 
     try:
+        import base64
+        # gpt-image-1 only supports 1024x1024, 1536x1024, 1024x1536
+        safe_size = "1536x1024" if image_size == "1792x1024" else "1024x1024"
         request_body = json.dumps({
-            "model": "dall-e-3",
+            "model": "gpt-image-1",
             "prompt": dalle_prompt,
-            "size": image_size,
-            "quality": "hd",
+            "size": safe_size,
+            "quality": "high",
             "n": 1,
+            "output_format": "png",
         }).encode()
 
         req = urllib.request.Request(
@@ -279,12 +283,17 @@ def _generate_brand_asset(data: dict, asset_type: str) -> str:
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=120) as resp:
+        with urllib.request.urlopen(req, timeout=180) as resp:
             result = json.loads(resp.read())
 
-        image_url = result["data"][0]["url"]
+        img_data = result["data"][0].get("b64_json") or result["data"][0].get("url")
         file_path = os.path.join(BRAND_ASSETS_DIR, f"{asset_name}.png")
-        urllib.request.urlretrieve(image_url, file_path)
+        if result["data"][0].get("b64_json"):
+            with open(file_path, "wb") as f:
+                f.write(base64.b64decode(img_data))
+        else:
+            import urllib.request as _ur
+            _ur.urlretrieve(img_data, file_path)
         file_size_kb = os.path.getsize(file_path) // 1024
 
         # Save asset record
