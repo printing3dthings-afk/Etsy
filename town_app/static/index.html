@@ -107,6 +107,75 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* shrub */
 .shrub{position:absolute;width:28px;height:20px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#4caf50,#2e7d32);border:2px solid rgba(0,0,0,.15);pointer-events:none;z-index:3}
 
+/* ── FOUNTAIN ── */
+.fountain{position:absolute;pointer-events:none;z-index:5}
+/* outer basin */
+.f-basin{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:94px;height:22px;
+  background:linear-gradient(180deg,#9fc8d8 0%,#4a8aaa 60%,#2a6080 100%);
+  border-radius:50%;
+  border:3px solid #b8d8e8;
+  box-shadow:0 5px 14px rgba(0,0,0,.5),inset 0 3px 8px rgba(255,255,255,.22),0 0 24px rgba(100,200,255,.18)}
+/* water surface */
+.f-water{position:absolute;inset:4px 5px 3px;border-radius:50%;
+  background:radial-gradient(ellipse at 38% 38%,rgba(180,235,255,.88),rgba(60,150,210,.7));
+  animation:f-shimmer 2.8s ease-in-out infinite alternate}
+/* ripple rings on water */
+.f-ripple{position:absolute;border-radius:50%;border:1.5px solid rgba(140,215,255,.55);
+  bottom:3px;left:50%;animation:f-ripple 2.6s ease-out infinite;transform-origin:center}
+.f-ripple:nth-child(1){width:18px;height:9px; margin-left:-9px; animation-delay:0s}
+.f-ripple:nth-child(2){width:42px;height:20px;margin-left:-21px;animation-delay:.85s}
+.f-ripple:nth-child(3){width:70px;height:32px;margin-left:-35px;animation-delay:1.7s}
+@keyframes f-ripple{0%{opacity:.9;transform:scale(.15)}100%{opacity:0;transform:scale(1.1)}}
+@keyframes f-shimmer{from{opacity:.72}to{opacity:1}}
+/* pedestal / column */
+.f-pedestal{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
+  width:13px;height:30px;
+  background:linear-gradient(90deg,#e0c888 0%,#b89850 40%,#e0c888 100%);
+  border-radius:3px 3px 1px 1px;
+  box-shadow:2px 3px 8px rgba(0,0,0,.45)}
+/* pedestal base flare */
+.f-pedestal::before{content:'';position:absolute;bottom:-1px;left:-8px;right:-8px;height:8px;
+  background:linear-gradient(180deg,#d4b870,#a88840);border-radius:4px 4px 0 0}
+/* pedestal top cap */
+.f-pedestal::after{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%);
+  width:20px;height:7px;
+  background:linear-gradient(180deg,#dcc078,#b09850);
+  border-radius:50%;border:1.5px solid rgba(0,0,0,.18)}
+/* jet container — centered over pedestal top */
+.f-jets{position:absolute;width:0;height:0;left:50%;bottom:52px}
+/* individual water jets */
+.f-jet{position:absolute;bottom:0;left:-1px;
+  width:2.5px;border-radius:1.5px 1.5px 0 0;
+  background:linear-gradient(180deg,rgba(220,245,255,.95) 0%,rgba(100,190,255,.5) 60%,transparent 100%);
+  transform-origin:bottom center;
+  animation:f-jet 1.15s ease-in-out infinite}
+.f-jet:nth-child(1){height:24px;transform:rotate(-42deg);animation-delay:.00s}
+.f-jet:nth-child(2){height:30px;transform:rotate(-22deg);animation-delay:.10s}
+.f-jet:nth-child(3){height:33px;transform:rotate(  0deg);animation-delay:.05s}
+.f-jet:nth-child(4){height:30px;transform:rotate( 22deg);animation-delay:.15s}
+.f-jet:nth-child(5){height:24px;transform:rotate( 42deg);animation-delay:.08s}
+.f-jet:nth-child(6){height:18px;transform:rotate(-64deg);animation-delay:.20s}
+.f-jet:nth-child(7){height:18px;transform:rotate( 64deg);animation-delay:.25s}
+@keyframes f-jet{
+  0%  {opacity:.15;filter:blur(.4px)}
+  25% {opacity:.95;filter:blur(0)}
+  70% {opacity:.6}
+  100%{opacity:.1; filter:blur(.6px)}}
+/* ambient water glow */
+.f-glow{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);
+  width:80px;height:55px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(130,215,255,.28) 0%,transparent 68%);
+  animation:f-shimmer 2.2s ease-in-out infinite alternate;pointer-events:none}
+/* decorative stone surround ring */
+.f-surround{position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+  width:110px;height:14px;border-radius:50%;
+  background:linear-gradient(180deg,#c8b890 0%,#a89860 100%);
+  border:2px solid rgba(0,0,0,.25);
+  box-shadow:0 4px 10px rgba(0,0,0,.45)}
+.f-surround::before{content:'';position:absolute;inset:3px;border-radius:50%;
+  background:linear-gradient(180deg,#d8c8a0,#b8a870);}
+
 /* ── BUILDINGS ── */
 .bld{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;
   transition:filter .25s,transform .22s;filter:drop-shadow(0 8px 18px rgba(0,0,0,.55));z-index:5}
@@ -834,6 +903,34 @@ function buildDecos(){
     d.className='shrub'; d.style.cssText=`left:${x}px;top:${y}px`;
     c.appendChild(d);
   });
+  // Fountain in front of CEO building (CEO: x:1350, w:240 → center x:1470; bottom y:610)
+  mkFountain(c, 1425, 597);
+}
+
+function mkFountain(parent, x, y){
+  const f=document.createElement('div');
+  f.className='fountain';
+  f.style.cssText=`left:${x}px;top:${y}px;width:90px;height:72px`;
+  f.innerHTML=`
+    <div class="f-glow"></div>
+    <div class="f-jets">
+      <div class="f-jet"></div>
+      <div class="f-jet"></div>
+      <div class="f-jet"></div>
+      <div class="f-jet"></div>
+      <div class="f-jet"></div>
+      <div class="f-jet"></div>
+      <div class="f-jet"></div>
+    </div>
+    <div class="f-pedestal"></div>
+    <div class="f-surround"></div>
+    <div class="f-basin">
+      <div class="f-water"></div>
+      <div class="f-ripple"></div>
+      <div class="f-ripple"></div>
+      <div class="f-ripple"></div>
+    </div>`;
+  parent.appendChild(f);
 }
 
 function mkLamp(parent,x,y,h){
