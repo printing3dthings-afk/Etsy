@@ -54,9 +54,41 @@ pip install -r requirements.txt --quiet
 echo  Packages OK.
 echo.
 
-echo  All checks passed.
-echo  Opening browser to http://localhost:8080
-echo  Keep this window open. Press Ctrl+C to stop.
+REM ── Open firewall port 8080 (requires admin — skips silently if denied) ───
+netsh advfirewall firewall show rule name="OnBrandCraftz Town" >nul 2>&1
+if errorlevel 1 (
+    echo  Adding firewall rule for port 8080...
+    netsh advfirewall firewall add rule name="OnBrandCraftz Town" dir=in action=allow protocol=TCP localport=8080 >nul 2>&1
+    if not errorlevel 1 (
+        echo  Firewall rule added.
+    ) else (
+        echo  Could not add firewall rule (run as admin to fix).
+    )
+)
+echo.
+
+REM ── Get local IP address ──────────────────────────
+for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /i "IPv4" ^| findstr /v "127.0.0.1" ^| findstr /v "Tunnel"') do (
+    set LOCAL_IP=%%A
+    goto :GOT_IP
+)
+:GOT_IP
+set LOCAL_IP=%LOCAL_IP: =%
+
+echo  ================================================
+echo.
+echo    This PC:   http://localhost:8080
+if defined LOCAL_IP (
+    echo    Phone/TV:  http://%LOCAL_IP%:8080
+    echo.
+    echo    Make sure your phone is on the same WiFi.
+) else (
+    echo    Phone/TV:  connect to same WiFi then visit
+    echo               http://YOUR-PC-IP:8080
+)
+echo.
+echo    Keep this window open. Ctrl+C to stop.
+echo  ================================================
 echo.
 
 start "" http://localhost:8080
