@@ -500,6 +500,11 @@ async def root():
     return FileResponse(STATIC_DIR / "index.html")
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(STATIC_DIR / "favicon.png", media_type="image/png")
+
+
 @app.get("/api/agents")
 async def list_agents():
     return JSONResponse({"agents": list(AGENT_CLASSES.keys()), "states": agent_states})
