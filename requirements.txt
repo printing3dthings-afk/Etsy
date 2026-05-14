@@ -6,3 +6,6 @@ reportlab>=4.0.0
 openai>=1.0.0
 fastapi>=0.110.0
 uvicorn>=0.29.0
+apscheduler>=3.10.0
+vtracer>=0.6.0
+python-multipart>=0.0.9
