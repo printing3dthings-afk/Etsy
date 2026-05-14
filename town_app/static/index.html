@@ -451,10 +451,24 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* thinking: sway faster */
 .resident.thinking{animation:res-think 1.2s ease-in-out infinite alternate}
 @keyframes res-think{from{transform:translateX(-3px)}to{transform:translateX(3px)}}
+/* researching: pulse glow */
+.resident.researching{animation:res-research 1s ease-in-out infinite alternate}
+@keyframes res-research{from{transform:scale(1) rotate(-1deg);filter:drop-shadow(0 0 4px #58a6ff)}to{transform:scale(1.06) rotate(1deg);filter:drop-shadow(0 0 10px #79c0ff)}}
+.resident.researching .r-head::after{content:'🔍';position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:8px;animation:res-search-icon .6s ease-in-out infinite alternate}
+@keyframes res-search-icon{from{top:-14px}to{top:-18px}}
+/* learning: brain pulse */
+.resident.learning{animation:res-learn 1.4s ease-in-out infinite alternate}
+@keyframes res-learn{from{transform:translateY(0);filter:drop-shadow(0 0 3px #d29922)}to{transform:translateY(-5px);filter:drop-shadow(0 0 12px #f0c030)}}
 /* walking */
 .resident.walking .r-leg:nth-child(1){animation:wlk .38s ease-in-out infinite}
 .resident.walking .r-leg:nth-child(2){animation:wlk .38s ease-in-out infinite reverse}
 .resident.walking{animation:none}
+/* research overlay badge on buildings */
+.b-research-badge{position:absolute;top:4px;right:4px;background:rgba(88,166,255,.18);
+  border:1px solid #58a6ff;border-radius:4px;font-size:.45rem;color:#79c0ff;
+  padding:1px 4px;pointer-events:none;z-index:50;white-space:nowrap;
+  animation:badge-pulse 1.5s ease-in-out infinite alternate}
+@keyframes badge-pulse{from{opacity:.7}to{opacity:1;box-shadow:0 0 6px rgba(88,166,255,.5)}}
 
 /* ── MEETING HALL ── */
 .bld-hall .broof{filter:none!important;background:linear-gradient(180deg,#5a3a00,#3a2000)!important;--rc:#5a3a00}
@@ -1102,7 +1116,7 @@ function repositionResidents(){
 
 function setResidentState(key, state){
   const r=document.getElementById(`res-${key}`); if(!r) return;
-  r.classList.remove('idle','working','thinking','walking');
+  r.classList.remove('idle','working','thinking','walking','researching','learning');
   r.classList.add(state||'idle');
   if(state==='idle'){
     const hp=homePos[key]; if(hp){ r.style.left=hp.x+'px'; r.style.top=hp.y+'px'; }
@@ -1162,29 +1176,114 @@ document.getElementById('hall-modal').addEventListener('click',e=>{ if(e.target=
 
 // ── AUTONOMOUS IDLE BEHAVIOR ──────────────────────────────────────────────────
 const IDLE_THOUGHTS={
-  brand: ['Checking brand consistency...','Reviewing color palette trends...','Sketching banner idea...','Font pairing research...'],
-  art:   ['Browsing design inspiration...','Drafting new art concept...','Color theory study...','Exploring trending styles...'],
-  qc:    ['Reviewing QC criteria...','Checking quality standards...','Calibrating benchmarks...','Auditing recent approvals...'],
-  listing:['Auditing listing SEO scores...','Checking tag opportunities...','Title optimization review...','Monitoring search trends...'],
-  store: ['Running shop health check...','Checking listing renewals...','Reviewing performance metrics...','Shop organization audit...'],
-  delivery:['Monitoring delivery queue...','Checking file download links...','Order processing review...'],
-  sales: ['Reviewing revenue trends...','Checking order pipeline...','Sales forecasting...','Monitoring conversion rates...'],
-  product:['Reviewing inventory levels...','Pricing competitiveness check...','Product portfolio analysis...'],
-  marketing:['Keyword gap analysis...','Competitor listing review...','Traffic opportunity scan...','SEO improvement ideas...'],
-  analytics:['Crunching performance data...','Trend analysis running...','Building insights report...','Metric benchmarking...'],
-  cs:    ['Reviewing customer feedback...','Drafting review responses...','Satisfaction trend check...'],
-  social:['Pinterest strategy review...','Content ideas brainstorm...','Engagement analysis...','Pin performance check...'],
-  finance:['Margin analysis running...','Fee calculation check...','P&L projections...','Profit optimization ideas...'],
-  print:  ['Checking print queue...','Machine status review...','Filament cost analysis...','Job scheduling...'],
-  ads:    ['ROAS analysis running...','Ad budget optimization...','Promoted listing review...','Campaign strategy ideas...'],
-  intel:  ['Scanning market trends...','Competitor watch active...','Gap opportunity analysis...','Pricing intelligence check...'],
-  promos: ['Planning next promotion...','Coupon strategy review...','Bundle pricing ideas...','Sale calendar planning...'],
-  tax:    ['Expense tracking review...','Deduction opportunity scan...','Quarterly estimate prep...'],
-  returns:['Reviewing open cases...','Dispute pattern analysis...','Policy compliance check...'],
-  supply: ['Inventory level check...','Supplier price comparison...','Reorder point analysis...','Stock forecasting...'],
-  email:  ['Drafting follow-up copy...','Template optimization...','Newsletter content ideas...','Engagement rate check...'],
-  abt:    ['Designing new A/B test...','Analyzing test results...','CTR improvement ideas...','Conversion experiment ideas...'],
+  brand: [
+    'Researching Etsy design trends...','Saving color palette insight...','Studying top-seller thumbnails...',
+    'Learning: Japandi = peak trend','Found a rising style: Dark Academia','Checking design knowledge base...',
+    'Sketching brand-aligned mockup...','Font pairing research done ✓','Competitor thumbnail analysis...',
+  ],
+  art:   [
+    'Researching trending art styles...','Studying what sold this week...','Learning: boho prints are peaking',
+    'Saving design discovery...','Fetching Etsy top sellers...','Found gap: botanical line art!',
+    'Color trend research done ✓','Drafting new DALL-E prompt...','Analyzing competitor art...',
+  ],
+  qc:    [
+    'Researching Etsy quality standards...','Checking competitor file quality...','Logging QC criteria update...',
+    'Calibrating benchmark: 300 DPI min','Reviewing approval knowledge base...','Auditing recent passes...',
+  ],
+  listing:[
+    'Live keyword research running...','Fetching competitor titles...','Logging keyword performance...',
+    'Found: "instant download" = +23% CTR','Title formula research done ✓','Saving SEO insight to KB...',
+    'Tag research: 13 slots = max rank','Checking what top sellers title...','Auditing listing SEO scores...',
+  ],
+  store: [
+    'Running shop health check...','Researching Etsy policy updates...','Logging performance metrics...',
+    'Checking listing renewal alerts...','Shop optimization research done ✓','Saving store insight...',
+  ],
+  delivery:['Monitoring delivery queue...','Researching delivery best practices...','Order processing review...'],
+  sales: [
+    'Researching pricing benchmarks...','Logging revenue trend data...','Sales forecast updated...',
+    'Found: digital products = 74% margin','Saving profit insight...','Monitoring conversion rates...',
+  ],
+  product:[
+    'Researching competitor pricing...','Logging product performance...','Price gap analysis running...',
+    'Found underpriced listing!','Saving pricing insight...','Product market research done ✓',
+  ],
+  marketing:[
+    'Live Etsy keyword research...','Logging keyword performance data...','Found trending search term!',
+    'Saving keyword insight to KB...','Competitor listing analysis done ✓','Tag opportunity scan running...',
+    'Research: "printable" leads CTR','Long-tail keyword discovered...','SEO knowledge base updated ✓',
+  ],
+  analytics:[
+    'Logging product performance...','Trend analysis vs 30-day target...','Revenue gap identified!',
+    'Saving performance insight...','Day-7 target: tracking on pace ✓','Metric benchmarking done...',
+    'Conversion rate below 2% — flagged','Top performer data logged ✓','Building weekly insight report...',
+  ],
+  cs:    [
+    'Reviewing customer feedback...','Logging buyer behavior insight...','Satisfaction trend: improving ✓',
+    'Researching review best practices...','Saving customer insight...','Star Seller criteria checked...',
+  ],
+  social:[
+    'Researching Pinterest trends...','Logging pin performance data...','Found viral aesthetic: Japandi!',
+    'Saving social insight to KB...','Pinterest keyword research done ✓','Content trend analysis running...',
+  ],
+  finance:[
+    'Running live margin analysis...','Logging profit data...','Found listing below 50% margin!',
+    'Saving pricing insight...','Fee calculator updated ✓','P&L projection: on track for Day 14',
+    'Digital margin avg: 72% ✓','Flagging underpriced listing...','Profit knowledge base updated...',
+  ],
+  print:  [
+    'Checking print queue...','Logging filament cost data...','Machine status: optimal ✓',
+    'Researching material cost trends...','Saving production insight...','Job scheduling optimized...',
+  ],
+  ads:    [
+    'ROAS analysis: top ad at 3.2x ✓','Researching ad bidding strategies...','Logging ad performance...',
+    'Saving ROAS insight...','Found: title keywords boost ad rank','Pausing low-ROAS campaigns...',
+    'Etsy Ads best-practice research ✓','Ad budget reallocation planned...','Campaign data logged to KB...',
+  ],
+  intel:  [
+    'Live competitor scan running...','Found market gap: mushroom art!','Logging competitor insight...',
+    'Saving gap opportunity to KB...','Price intelligence update ✓','Trend forecast: cottagecore rising',
+    'Researching new Etsy niche...','Competitor title patterns saved...','Gap analysis done ✓',
+  ],
+  promos: [
+    'Planning data-driven promotion...','Researching sale event timing...','Logging promo performance...',
+    'Saving bundle pricing insight...','Best promo timing: Fri-Sun ✓','Coupon strategy research done...',
+  ],
+  tax:    ['Expense tracking review...','Logging deductible expense...','Quarterly estimate prep running...'],
+  returns:['Reviewing open cases...','Logging dispute pattern...','Policy compliance: all clear ✓'],
+  supply: [
+    'Inventory level check...','Researching supplier prices...','Logging material cost data...',
+    'Saving cost insight...','Reorder point analysis done ✓','Stock forecast: 14 days buffer ✓',
+  ],
+  email:  [
+    'Researching email open rate best practice...','Logging campaign performance...','Saving email insight...',
+    'Drafting research-backed subject line...','Template A/B test planned ✓','Engagement data logged...',
+  ],
+  abt:    [
+    'Designing data-driven A/B test...','Logging test result to KB...','Thumbnail test: variant B wins!',
+    'Saving winning strategy...','CTR improvement: +31% recorded ✓','New experiment hypothesis saved...',
+    'Researching conversion best practices...','Test result insight saved ✓','Next experiment queued...',
+  ],
 };
+
+// Research thoughts trigger the researching animation state
+const RESEARCH_THOUGHTS = new Set([
+  'Live Etsy keyword research...','Live competitor scan running...','Live keyword research running...',
+  'Fetching competitor titles...','Fetching Etsy top sellers...','Researching Etsy design trends...',
+  'Researching trending art styles...','Researching pricing benchmarks...','Researching competitor pricing...',
+  'ROAS analysis: top ad at 3.2x ✓','Researching ad bidding strategies...','Pinterest keyword research done ✓',
+  'Researching Pinterest trends...','Competitor listing analysis done ✓','Researching Etsy quality standards...',
+]);
+// Learning thoughts trigger the learning animation state
+const LEARNING_THOUGHTS = new Set([
+  'Saving color palette insight...','Saving design discovery...','Saving SEO insight to KB...',
+  'Saving keyword insight to KB...','Saving profit insight...','Saving performance insight...',
+  'Saving pricing insight...','Saving ROAS insight...','Saving social insight to KB...',
+  'Saving gap opportunity to KB...','Saving production insight...','Saving store insight...',
+  'Saving bundle pricing insight...','Saving email insight...','Saving winning strategy...',
+  'SEO knowledge base updated ✓','Logging keyword performance data...','Logging product performance...',
+  'Logging revenue trend data...','Logging competitor insight...','Tag result insight saved ✓',
+]);
 
 let _idleTimer;
 function tickIdle(){
@@ -1194,16 +1293,28 @@ function tickIdle(){
     const thoughts=IDLE_THOUGHTS[key]||['Reviewing tasks...','Analyzing data...','Planning improvements...'];
     const thought=thoughts[Math.floor(Math.random()*thoughts.length)];
     showBubble(key, thought);
-    setResidentState(key,'thinking');
+    // Pick animation state based on thought type
+    let animState = 'thinking';
+    if(RESEARCH_THOUGHTS.has(thought)) animState = 'researching';
+    else if(LEARNING_THOUGHTS.has(thought)) animState = 'learning';
+    setResidentState(key, animState);
     document.getElementById(`bidle-${key}`)?.classList.add('working');
+    // Show research badge on building during research
+    const bel = document.getElementById(`bld-${key}`);
+    if(animState==='researching' && bel){
+      let badge = bel.querySelector('.b-research-badge');
+      if(!badge){ badge=document.createElement('div'); badge.className='b-research-badge'; bel.appendChild(badge); }
+      badge.textContent='🔍 Researching...';
+    }
     setTimeout(()=>{
       if(!activeAgents.has(key)){
         setResidentState(key,'idle');
         document.getElementById(`bidle-${key}`)?.classList.remove('working');
+        bel?.querySelector('.b-research-badge')?.remove();
       }
-    }, 3800);
+    }, 4200);
   }
-  const next=8000+Math.random()*14000;
+  const next=7000+Math.random()*12000;
   _idleTimer=setTimeout(tickIdle,next);
 }
 setTimeout(tickIdle,5000);
