@@ -132,11 +132,75 @@ def _build_agent(key: str):
     cls = getattr(ag, AGENT_CLASSES.get(key, ""), None)
     return cls() if cls else None
 
+# ── Pipeline routing ───────────────────────────────────────────────────────────
+# Agents that are part of multi-step product pipelines.
+# Direct tasks to these agents are rerouted through CEO if they look like
+# product creation / launch tasks rather than simple queries.
+_PIPELINE_AGENTS = {"brand", "art", "qc", "listing", "store", "marketing", "finance", "analytics"}
+
+# Keywords that indicate a task needs full pipeline orchestration
+_PIPELINE_KEYWORDS = {
+    "create", "launch", "new product", "new listing", "design a", "design the",
+    "make a", "make the", "build a", "generate a", "generate the", "produce a",
+    "develop a", "write a listing", "publish", "add to etsy", "add a listing",
+    "start a new", "plan a new", "full pipeline", "full process",
+}
+
+# First words that indicate a simple query (should NOT be rerouted)
+_QUERY_PREFIXES = {
+    "get", "list", "show", "check", "what", "how", "report", "status",
+    "summary", "analyze", "review", "audit", "find", "search", "give",
+    "tell", "explain", "describe", "calculate", "run", "pull",
+}
+
+
+def _should_route_to_ceo(agent_key: str, task: str) -> bool:
+    """Return True if this task should be orchestrated by CEO instead of running directly."""
+    if agent_key in ("ceo", "hall"):
+        return False
+    if agent_key not in _PIPELINE_AGENTS:
+        return False
+    first_word = task.strip().lower().split()[0] if task.strip() else ""
+    if first_word in _QUERY_PREFIXES:
+        return False
+    task_lower = task.lower()
+    return any(kw in task_lower for kw in _PIPELINE_KEYWORDS)
+
+
+# ── Sub-agent runner (used by CEO delegation) ──────────────────────────────────
+
+def _run_sub_agent_observable(target_key: str, task: str) -> str:
+    """Build a fresh observable sub-agent, run it, and return its result.
+
+    Called by the CEO's patched_execute_tool when it detects a delegation
+    tool call.  This ensures every sub-agent gets its own WebSocket events
+    (thinking, tool_call, done) so the town UI shows the correct agent
+    working, not just the CEO.
+    """
+    agent_states[target_key] = {"status": "running", "task": task, "started": datetime.now().isoformat()}
+    _emit(target_key, "start", task[:80])
+    try:
+        sub = _build_agent(target_key)
+        if sub is None:
+            return f"Error: no agent registered for key '{target_key}'"
+        sub = _make_observable(sub, target_key)
+        result = sub.run(task)
+        agent_states[target_key] = {"status": "idle", "task": task, "last_result": result}
+        _emit(target_key, "done", "Complete ✓", {"result": result[:2000]})
+        return result
+    except Exception as exc:
+        agent_states[target_key] = {"status": "error", "task": task, "error": str(exc)}
+        _emit(target_key, "error", f"Error: {str(exc)[:200]}")
+        return f"[{target_key} error] {exc}"
+
+
 # ── Observable wrapper ─────────────────────────────────────────────────────────
 
 def _make_observable(agent, key: str):
-    original_call_api    = agent._call_api
-    original_execute_tool = agent.execute_tool
+    original_call_api = agent._call_api
+    # Patch _dispatch_tool so we intercept every tool call, including
+    # universal web-research and learning tools, not just execute_tool.
+    original_dispatch = agent._dispatch_tool
 
     def patched_call_api(messages):
         _emit(key, "thinking", "Thinking…")
@@ -144,26 +208,29 @@ def _make_observable(agent, key: str):
         tool_blocks = [b for b in response.content if getattr(b, "type", "") == "tool_use"]
         if tool_blocks:
             names = ", ".join(b.name for b in tool_blocks)
-            _emit(key, "planning", f"Planning: {names}")
+            _emit(key, "planning", f"Using: {names}")
         return response
 
-    def patched_execute_tool(tool_name, tool_input):
-        # Detect delegation and emit walker event
+    def patched_dispatch(tool_name, tool_input):
         target_key = DELEGATION_MAP.get(tool_name)
         if target_key:
-            _emit(key, "delegation", f"Sending task to {target_key}", {"to": target_key, "from": key})
+            # CEO is delegating — run the sub-agent observably so the town
+            # shows that agent as active with its own events, not just CEO.
+            task = tool_input.get("task", "")
+            _emit(key, "delegation", f"Delegating → {target_key}", {"to": target_key, "from": key})
+            return _run_sub_agent_observable(target_key, task)
 
+        # Emit tool call for visibility in the right panel
         _emit(key, "tool_call", f"→ {tool_name}")
-        result = original_execute_tool(tool_name, tool_input)
+        result = original_dispatch(tool_name, tool_input)
 
-        # Check if a file was created and include path for image preview
+        # Detect created files for image preview
         result_str = str(result)
         file_path = None
         for ext in (".png", ".jpg", ".jpeg", ".pdf"):
             for part in result_str.split('"'):
                 if part.endswith(ext) and ("digital_products" in part or "brand" in part):
                     rel = part.replace("\\", "/")
-                    # Make it relative to data dir
                     if "data/" in rel:
                         rel = rel[rel.index("data/"):]
                     file_path = rel
@@ -174,13 +241,27 @@ def _make_observable(agent, key: str):
               {"file": file_path} if file_path else None)
         return result
 
-    agent._call_api       = patched_call_api
-    agent.execute_tool    = patched_execute_tool
+    agent._call_api    = patched_call_api
+    agent._dispatch_tool = patched_dispatch
     return agent
 
 # ── Task runner ────────────────────────────────────────────────────────────────
 
 def _run_task(key: str, task: str):
+    # If a pipeline agent receives a creation/launch task, route it through
+    # CEO so the full ordered pipeline fires with correct delegation.
+    if _should_route_to_ceo(key, task):
+        _emit(key, "routed", f"Routing to CEO for full pipeline…", {"to": "ceo", "from": key})
+        agent_name = AGENT_CLASSES.get(key, key)
+        ceo_task = (
+            f"Task submitted directly to {agent_name}: \"{task}\"\n\n"
+            f"Orchestrate the appropriate agents in the correct order to complete this. "
+            f"Follow the full pre-listing pipeline (Art → QC → Brand → Marketing → "
+            f"Financial → Listing → CEO approval) as required."
+        )
+        key  = "ceo"
+        task = ceo_task
+
     agent_states[key] = {"status": "running", "task": task, "started": datetime.now().isoformat()}
     _emit(key, "start", task[:80])
     try:
