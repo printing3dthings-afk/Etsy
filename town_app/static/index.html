@@ -22,11 +22,11 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* ── TOWN VIEWPORT ── */
 #vp{overflow:hidden;position:relative;background:#0a1628;cursor:grab;user-select:none}
 #vp.grabbing{cursor:grabbing}
-#world{position:absolute;width:3200px;height:2100px;transform-origin:0 0}
+#world{position:absolute;width:5000px;height:2700px;transform-origin:0 0}
 
 /* ── SKY ── */
-#sky{position:absolute;top:0;left:0;width:100%;height:660px;
-  background:linear-gradient(180deg,#071020 0%,#0d2040 20%,#163560 45%,#1e5080 65%,#3a7aaa 82%,#6aaed0 93%,#9fcfe8 100%);
+#sky{position:absolute;top:0;left:0;width:100%;height:720px;
+  background:linear-gradient(180deg,#001428 0%,#0a2448 18%,#1a4880 38%,#2d6aaa 58%,#4e92cc 76%,#7ab8e0 90%,#a8d8f0 100%);
   overflow:hidden}
 .stars{position:absolute;inset:0;height:55%;
   background-image:
@@ -43,9 +43,9 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
     radial-gradient(1px 1px at 42% 32%,rgba(255,255,255,.4) 0%,transparent 100%),
     radial-gradient(1px 1px at 72% 28%,rgba(255,255,255,.3) 0%,transparent 100%),
     radial-gradient(1px 1px at 94% 35%,rgba(255,255,255,.4) 0%,transparent 100%)}
-.sun{position:absolute;top:55px;right:520px;width:90px;height:90px;border-radius:50%;
-  background:radial-gradient(circle,#fffde7 0%,#fff176 30%,#ffd54f 60%,rgba(255,200,0,0) 100%);
-  box-shadow:0 0 50px 18px rgba(255,220,50,.4),0 0 100px 40px rgba(255,150,0,.18);
+.sun{position:absolute;top:60px;right:520px;width:110px;height:110px;border-radius:50%;
+  background:radial-gradient(circle,#ffffff 0%,#fffde7 20%,#fff176 45%,#ffd54f 70%,rgba(255,200,0,0) 100%);
+  box-shadow:0 0 60px 24px rgba(255,230,60,.5),0 0 120px 55px rgba(255,160,10,.22);
   animation:sun-pulse 5s ease-in-out infinite alternate}
 @keyframes sun-pulse{
   from{box-shadow:0 0 50px 18px rgba(255,220,50,.4),0 0 100px 40px rgba(255,150,0,.18)}
@@ -65,19 +65,24 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 @keyframes cloud-drift{from{transform:translateX(0)}to{transform:translateX(3450px)}}
 
 /* ── HILLS ── */
-#hills{position:absolute;top:490px;left:0;width:100%;height:220px;pointer-events:none}
+#hills{position:absolute;top:530px;left:0;width:100%;height:240px;pointer-events:none}
 .hh{position:absolute;bottom:0;border-radius:50%}
-.hh1{width:950px;height:380px;left:-80px;background:linear-gradient(180deg,#2a5a22,#172e10)}
-.hh2{width:720px;height:310px;left:520px;background:linear-gradient(180deg,#356f2c,#1e4018);opacity:.88}
-.hh3{width:820px;height:330px;left:1620px;background:linear-gradient(180deg,#2e6526,#193814)}
-.hh4{width:1050px;height:410px;left:2180px;background:linear-gradient(180deg,#285222,#162e10);opacity:.92}
+.hh1{width:1100px;height:400px;left:-80px;background:linear-gradient(180deg,#3a7530,#1e3a10)}
+.hh2{width:850px;height:340px;left:580px;background:linear-gradient(180deg,#448030,#244820);opacity:.9}
+.hh3{width:980px;height:360px;left:1700px;background:linear-gradient(180deg,#3c7830,#20400e)}
+.hh4{width:1200px;height:430px;left:2400px;background:linear-gradient(180deg,#367028,#1c3810);opacity:.93}
+.hh5{width:900px;height:320px;left:3800px;background:linear-gradient(180deg,#3e7a30,#224012);opacity:.88}
+.hh6{width:700px;height:290px;left:4400px;background:linear-gradient(180deg,#3a7028,#1e3a10);opacity:.85}
 
 /* ── GROUND ── */
-#ground{position:absolute;top:610px;left:0;width:100%;height:1520px;
-  background:linear-gradient(180deg,#3d9a30 0%,#308520 6%,#4aaa38 14%,#3d8830 28%,#357028 55%,#2a5820 100%)}
+#ground{position:absolute;top:650px;left:0;width:100%;height:2100px;
+  background:linear-gradient(180deg,#55c43a 0%,#44b02a 4%,#52c038 10%,#48b032 22%,#42a82c 50%,#388a22 100%)}
 #ground::before{content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(0deg,transparent 0,transparent 38px,rgba(0,0,0,.04) 38px,rgba(0,0,0,.04) 39px),
-             repeating-linear-gradient(90deg,transparent 0,transparent 55px,rgba(0,0,0,.025) 55px,rgba(0,0,0,.025) 56px)}
+  background:
+    repeating-linear-gradient(0deg,transparent 0,transparent 34px,rgba(0,0,0,.03) 34px,rgba(0,0,0,.03) 35px),
+    repeating-linear-gradient(90deg,transparent 0,transparent 50px,rgba(0,0,0,.02) 50px,rgba(0,0,0,.02) 51px)}
+#ground::after{content:'';position:absolute;top:0;left:0;right:0;height:80px;
+  background:linear-gradient(180deg,rgba(80,200,60,.4),transparent)}
 
 /* ── ROADS ── */
 .rh{position:absolute;left:0;right:0;background:#3c3c3c;border-top:3px solid #4e4e4e;border-bottom:3px solid #282828}
@@ -178,12 +183,16 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 
 /* ── BUILDINGS ── */
 .bld{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;
-  transition:filter .25s,transform .22s;filter:drop-shadow(0 8px 18px rgba(0,0,0,.55));z-index:5}
-.bld:hover{filter:drop-shadow(0 10px 28px rgba(88,166,255,.65)) drop-shadow(0 4px 10px rgba(0,0,0,.5));z-index:6;transform:translateY(-5px)}
-.bld.selected{filter:drop-shadow(0 0 28px rgba(88,166,255,.95)) drop-shadow(0 6px 14px rgba(0,0,0,.5));z-index:7;transform:translateY(-7px)}
+  transition:filter .25s,transform .22s;
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,.65)) drop-shadow(0 3px 6px rgba(0,0,0,.4));
+  z-index:5}
+.bld:hover{filter:drop-shadow(0 14px 34px rgba(88,166,255,.8)) drop-shadow(0 5px 12px rgba(0,0,0,.55));
+  z-index:6;transform:translateY(-6px) scale(1.015)}
+.bld.selected{filter:drop-shadow(0 0 32px rgba(88,166,255,.98)) drop-shadow(0 8px 18px rgba(0,0,0,.55));
+  z-index:7;transform:translateY(-8px) scale(1.02)}
 .bld.running .bwin{animation:wlit .85s ease-in-out infinite alternate}
-.bld.done{filter:drop-shadow(0 0 20px rgba(63,185,80,.75)) drop-shadow(0 6px 14px rgba(0,0,0,.45))}
-.bld.error{filter:drop-shadow(0 0 20px rgba(248,81,73,.75)) drop-shadow(0 6px 14px rgba(0,0,0,.45))}
+.bld.done{filter:drop-shadow(0 0 24px rgba(63,185,80,.9)) drop-shadow(0 8px 18px rgba(0,0,0,.5))}
+.bld.error{filter:drop-shadow(0 0 24px rgba(248,81,73,.9)) drop-shadow(0 8px 18px rgba(0,0,0,.5))}
 
 .bub{position:absolute;top:-62px;left:50%;transform:translateX(-50%) translateY(8px);
   background:rgba(255,255,255,.98);color:#1a1a1a;font-size:.72rem;font-weight:600;
@@ -194,40 +203,62 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .bub.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 .broof{position:relative;z-index:2;margin-bottom:-2px;
-  height:var(--rh,58px);width:calc(var(--bw,155px) + 22px);
+  height:var(--rh,62px);width:calc(var(--bw,155px) + 24px);
   background:var(--rc,#555);
-  clip-path:polygon(10px 100%,50% 3px,calc(100% - 10px) 100%);
-  filter:brightness(.82) saturate(.9)}
+  clip-path:polygon(10px 100%,50% 2px,calc(100% - 10px) 100%);
+  filter:brightness(.78) saturate(1.1)}
+/* Roof shingle tiles */
+.broof::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(90deg,transparent 0,transparent 13px,rgba(0,0,0,.14) 13px,rgba(0,0,0,.14) 14px),
+    repeating-linear-gradient(0deg, transparent 0,transparent 7px, rgba(255,255,255,.08) 7px, rgba(255,255,255,.08) 8px)}
+/* Roof ridge highlight */
+.broof::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:4px;height:100%;background:linear-gradient(0deg,rgba(255,255,255,.25),transparent);pointer-events:none}
 
 .bbody{position:relative;width:var(--bw,155px);height:var(--bh,185px);
-  background:var(--wc,#e8e8f0);border-radius:3px 3px 0 0;
-  outline:3px solid rgba(0,0,0,.38);overflow:hidden;
-  display:flex;flex-direction:column;align-items:center}
-/* brick texture */
+  background:var(--wc,#e8e8f0);border-radius:4px 4px 0 0;
+  outline:3px solid rgba(0,0,0,.42);overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
+/* brick/plaster texture */
 .bbody::before{content:'';position:absolute;inset:0;pointer-events:none;
-  background:repeating-linear-gradient(0deg,transparent 0,transparent 13px,rgba(0,0,0,.04) 13px,rgba(0,0,0,.04) 14px),
-             repeating-linear-gradient(90deg,transparent 0,transparent 18px,rgba(0,0,0,.03) 18px,rgba(0,0,0,.03) 19px)}
-/* vertical highlight stripe */
-.bbody::after{content:'';position:absolute;top:0;left:0;width:8px;height:100%;
-  background:linear-gradient(90deg,rgba(255,255,255,.15),transparent);pointer-events:none}
+  background:
+    repeating-linear-gradient(0deg,transparent 0,transparent 12px,rgba(0,0,0,.05) 12px,rgba(0,0,0,.05) 13px),
+    repeating-linear-gradient(90deg,transparent 0,transparent 17px,rgba(0,0,0,.03) 17px,rgba(0,0,0,.03) 18px)}
+/* Left highlight + right shadow — gives 3D depth */
+.bbody::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(255,255,255,.18) 0%,transparent 18%,transparent 82%,rgba(0,0,0,.1) 100%)}
 
-.bsign{margin:6px 4px 2px;background:rgba(0,0,0,.58);color:#fff;font-size:.5rem;font-weight:700;
-  padding:2px 6px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-width:calc(var(--bw,155px) - 10px);border:1px solid rgba(255,255,255,.14);letter-spacing:.05em;text-align:center}
+.bsign{margin:5px 4px 2px;background:rgba(20,10,0,.72);color:#fff;font-size:.5rem;font-weight:700;
+  padding:3px 7px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:calc(var(--bw,155px) - 10px);border:1px solid rgba(255,255,255,.2);letter-spacing:.06em;text-align:center;
+  box-shadow:0 2px 4px rgba(0,0,0,.4)}
 
-.bwins{display:flex;gap:8px;justify-content:center;padding:5px 8px 0;flex-wrap:wrap}
-.bwin{width:20px;height:26px;background:linear-gradient(135deg,#b3e5fc 22%,#4fc3f7 100%);
-  border-radius:3px 3px 0 0;border:2px solid rgba(0,0,0,.3);
-  box-shadow:inset 1px 1px 3px rgba(255,255,255,.45);position:relative;flex-shrink:0}
-.bwin::before{content:'';position:absolute;top:2px;left:50%;width:1px;height:74%;background:rgba(0,0,0,.14);transform:translateX(-50%)}
-.bwin::after{content:'';position:absolute;left:2px;top:48%;width:74%;height:1px;background:rgba(0,0,0,.14)}
+.bwins{display:flex;gap:9px;justify-content:center;padding:6px 8px 2px;flex-wrap:wrap}
+/* Sims-style windows: wider, with frame and sill */
+.bwin{width:24px;height:30px;background:linear-gradient(135deg,#e3f4fd 10%,#bde8f8 50%,#7ec8ef 100%);
+  border-radius:4px 4px 0 0;border:3px solid rgba(0,0,0,.38);
+  box-shadow:inset 1px 1px 4px rgba(255,255,255,.6),0 2px 4px rgba(0,0,0,.25);
+  position:relative;flex-shrink:0}
+/* window cross bars */
+.bwin::before{content:'';position:absolute;top:3px;left:50%;width:1.5px;height:76%;
+  background:rgba(0,0,0,.18);transform:translateX(-50%)}
+.bwin::after{content:'';position:absolute;left:3px;top:45%;width:76%;height:1.5px;
+  background:rgba(0,0,0,.18)}
 @keyframes wlit{
   from{background:linear-gradient(135deg,#b3e5fc 22%,#4fc3f7 100%);box-shadow:inset 1px 1px 3px rgba(255,255,255,.45)}
   to  {background:linear-gradient(135deg,#fff176 22%,#ffd54f 100%);box-shadow:inset 0 0 12px rgba(255,220,50,.7),0 0 10px rgba(255,200,50,.35)}}
 
-.bdoor{width:28px;height:38px;border-radius:12px 12px 0 0;border:3px solid rgba(0,0,0,.25);
-  margin-top:auto;flex-shrink:0;position:relative;background:var(--rc,#555);filter:brightness(.68)}
-.bdoor::after{content:'●';position:absolute;right:4px;top:52%;transform:translateY(-50%);font-size:5px;color:rgba(255,210,80,.9)}
+.bdoor{width:30px;height:42px;border-radius:14px 14px 0 0;border:3px solid rgba(0,0,0,.32);
+  margin-top:auto;flex-shrink:0;position:relative;background:var(--rc,#555);filter:brightness(.6)}
+/* door knob */
+.bdoor::after{content:'';position:absolute;right:5px;top:50%;transform:translateY(-50%);
+  width:5px;height:5px;border-radius:50%;background:rgba(255,210,80,.95);
+  box-shadow:0 0 3px rgba(255,210,80,.6)}
+/* door step */
+.bdoor::before{content:'';position:absolute;bottom:-5px;left:-6px;right:-6px;height:5px;
+  background:rgba(0,0,0,.25);border-radius:0 0 3px 3px}
 
 .bchim{position:absolute;top:-8px;right:16px;width:12px;height:24px;background:#484848;border-radius:2px;border:2px solid #333;z-index:3}
 .bchim::after{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;
@@ -629,59 +660,63 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 
 <script>
 // ── AGENT DATA ──────────────────────────────────────────────────────────────
+// Row y-positions (all buildings now below their road)
+// Road 1 at y:700-752 → Row A starts at y:768
+// Road 2 at y:1018-1064 → Row B starts at y:1080
+// Road 3 at y:1330-1374 → Row C starts at y:1390
 const AGENTS = [
   // key, name, display, icon, roof, wall, x, y, w, h, wins, chimney, quick[]
-  {key:'ceo',      name:'CEO Agent',             display:'CEO HQ',         icon:'🏛️', roof:'#4A148C',wall:'#EDE7F6', x:1350,y:320, w:240,h:290, wins:3,chimney:false,large:true,
+  {key:'ceo',      name:'CEO Agent',             display:'CEO HQ',         icon:'🏛️', roof:'#4A148C',wall:'#EDE7F6', x:1370,y:330, w:240,h:290, wins:3,chimney:false,large:true,
    quick:['Run daily briefing','What should we focus on this week?','Full shop status report']},
-  // Creative district
-  {key:'brand',    name:'Brand Design Agent',    display:'Brand Design',   icon:'🎨', roof:'#AD1457',wall:'#FCE4EC', x:60,  y:740, w:155,h:185, wins:2,chimney:false,
+  // ── Creative district ──────────────────────────────────────────────────────
+  {key:'brand',    name:'Brand Design Agent',    display:'Brand Design',   icon:'🎨', roof:'#AD1457',wall:'#FCE4EC', x:60,  y:768, w:155,h:185, wins:2,chimney:false,
    quick:['Create a shop banner concept','Review brand guidelines','Generate logo brief']},
-  {key:'art',      name:'Art Creation Agent',    display:'Art Creation',   icon:'🖼️', roof:'#6A1B9A',wall:'#F3E5F5', x:275, y:710, w:175,h:215, wins:2,chimney:false,
+  {key:'art',      name:'Art Creation Agent',    display:'Art Creation',   icon:'🖼️', roof:'#6A1B9A',wall:'#F3E5F5', x:275, y:762, w:175,h:210, wins:2,chimney:false,
    quick:['Create boho botanical wall art for Etsy','Create a daily planner PDF','List all digital products']},
-  {key:'qc',       name:'Quality Check Agent',   display:'Quality Check',  icon:'🔍', roof:'#1565C0',wall:'#E3F2FD', x:60,  y:990, w:150,h:180, wins:2,chimney:false,
+  {key:'qc',       name:'Quality Check Agent',   display:'Quality Check',  icon:'🔍', roof:'#1565C0',wall:'#E3F2FD', x:60,  y:1080,w:150,h:178, wins:2,chimney:false,
    quick:['Review all pending products','Get QC summary','Approve all pending products']},
-  {key:'listing',  name:'Etsy Listing Agent',    display:'Etsy Listing',   icon:'🏪', roof:'#E65100',wall:'#FFF3E0', x:270, y:990, w:160,h:190, wins:2,chimney:false,
+  {key:'listing',  name:'Etsy Listing Agent',    display:'Etsy Listing',   icon:'🏪', roof:'#E65100',wall:'#FFF3E0', x:270, y:1080,w:160,h:188, wins:2,chimney:false,
    quick:['Get all listings','Create SEO title for a 3D printed shelf','Publish approved digital products']},
-  {key:'store',    name:'Store Manager Agent',   display:'Store Manager',  icon:'🏬', roof:'#2E7D32',wall:'#E8F5E9', x:60,  y:1240,w:150,h:185, wins:2,chimney:true,
+  {key:'store',    name:'Store Manager Agent',   display:'Store Manager',  icon:'🏬', roof:'#2E7D32',wall:'#E8F5E9', x:60,  y:1390,w:150,h:182, wins:2,chimney:true,
    quick:['Shop health report','Check renewal alerts','Update shop announcement']},
-  {key:'delivery', name:'Sales Processor Agent', display:'Sales Processor',icon:'📧', roof:'#00838F',wall:'#E0F7FA', x:270, y:1240,w:150,h:180, wins:2,chimney:false,
+  {key:'delivery', name:'Sales Processor Agent', display:'Sales Processor',icon:'📧', roof:'#00838F',wall:'#E0F7FA', x:270, y:1390,w:150,h:178, wins:2,chimney:false,
    quick:['Check pending deliveries','Delivery statistics','Process all pending orders']},
-  // Market district
-  {key:'sales',    name:'Sales Agent',           display:'Sales',          icon:'💰', roof:'#B71C1C',wall:'#FFEBEE', x:840, y:740, w:165,h:200, wins:2,chimney:false,
+  // ── Market district ────────────────────────────────────────────────────────
+  {key:'sales',    name:'Sales Agent',           display:'Sales',          icon:'💰', roof:'#B71C1C',wall:'#FFEBEE', x:855, y:768, w:165,h:195, wins:2,chimney:false,
    quick:["Today's revenue summary","Pending orders list","Monthly sales report"]},
-  {key:'product',  name:'Product Agent',         display:'Product',        icon:'📦', roof:'#4527A0',wall:'#EDE7F6', x:1065,y:740, w:155,h:190, wins:2,chimney:false,
+  {key:'product',  name:'Product Agent',         display:'Product',        icon:'📦', roof:'#4527A0',wall:'#EDE7F6', x:1080,y:768, w:155,h:188, wins:2,chimney:false,
    quick:['All listings overview','Find underpriced listings','Inventory status']},
-  {key:'marketing',name:'Marketing Agent',       display:'Marketing',      icon:'📈', roof:'#E65100',wall:'#FFF3E0', x:1280,y:740, w:160,h:195, wins:2,chimney:false,
+  {key:'marketing',name:'Marketing Agent',       display:'Marketing',      icon:'📈', roof:'#E65100',wall:'#FFF3E0', x:1295,y:768, w:160,h:192, wins:2,chimney:false,
    quick:['Top marketing opportunities','SEO improvement suggestions','Traffic analysis']},
-  {key:'analytics',name:'Analytics Agent',       display:'Analytics',      icon:'📊', roof:'#1A237E',wall:'#E8EAF6', x:840, y:990, w:170,h:205, wins:3,chimney:false,
+  {key:'analytics',name:'Analytics Agent',       display:'Analytics',      icon:'📊', roof:'#1A237E',wall:'#E8EAF6', x:855, y:1080,w:170,h:200, wins:3,chimney:false,
    quick:['Weekly performance report','Top selling products','Revenue trends']},
-  {key:'cs',       name:'Customer Service Agent',display:'Customer Svc',   icon:'💬', roof:'#004D40',wall:'#E0F2F1', x:1065,y:990, w:155,h:190, wins:2,chimney:false,
+  {key:'cs',       name:'Customer Service Agent',display:'Customer Svc',   icon:'💬', roof:'#004D40',wall:'#E0F2F1', x:1080,y:1080,w:155,h:188, wins:2,chimney:false,
    quick:['Unread messages','Pending reviews','Draft a 5-star review response']},
-  {key:'social',   name:'Social Media Agent',    display:'Social Media',   icon:'📌', roof:'#880E4F',wall:'#FCE4EC', x:1280,y:990, w:160,h:195, wins:2,chimney:false,
+  {key:'social',   name:'Social Media Agent',    display:'Social Media',   icon:'📌', roof:'#880E4F',wall:'#FCE4EC', x:1295,y:1080,w:160,h:192, wins:2,chimney:false,
    quick:['Pinterest strategy for 3D prints','Content calendar this month','Best pins to create now']},
-  // Business district
-  {key:'finance',  name:'Financial Agent',       display:'Financial',      icon:'💵', roof:'#F57F17',wall:'#FFFDE7', x:1680,y:740, w:165,h:200, wins:2,chimney:false,
+  // ── Business district ──────────────────────────────────────────────────────
+  {key:'finance',  name:'Financial Agent',       display:'Financial',      icon:'💵', roof:'#F57F17',wall:'#FFFDE7', x:1700,y:768, w:165,h:195, wins:2,chimney:false,
    quick:['Monthly profit report','Calculate fees on a $25 sale','Cash flow summary']},
-  {key:'print',    name:'Print Production Agent',display:'Print Prod.',    icon:'🖨️', roof:'#37474F',wall:'#ECEFF1', x:1905,y:740, w:155,h:190, wins:2,chimney:true,
+  {key:'print',    name:'Print Production Agent',display:'Print Prod.',    icon:'🖨️', roof:'#37474F',wall:'#ECEFF1', x:1925,y:768, w:155,h:188, wins:2,chimney:true,
    quick:['Print queue status','Machine health check','Add a print job for order #001']},
-  {key:'ads',      name:'Etsy Ads Agent',        display:'Etsy Ads',       icon:'📣', roof:'#BF360C',wall:'#FBE9E7', x:2115,y:740, w:160,h:195, wins:2,chimney:false,
+  {key:'ads',      name:'Etsy Ads Agent',        display:'Etsy Ads',       icon:'📣', roof:'#BF360C',wall:'#FBE9E7', x:2140,y:768, w:160,h:192, wins:2,chimney:false,
    quick:['Ad performance report','Recommend ad strategy','Best listings to promote']},
-  {key:'intel',    name:'Competitor Intel Agent',display:'Comp. Intel',    icon:'🔭', roof:'#1B5E20',wall:'#F1F8E9', x:1680,y:990, w:155,h:190, wins:2,chimney:false,
+  {key:'intel',    name:'Competitor Intel Agent',display:'Comp. Intel',    icon:'🔭', roof:'#1B5E20',wall:'#F1F8E9', x:1700,y:1080,w:155,h:188, wins:2,chimney:false,
    quick:['Find market gaps for 3D prints','Seasonal opportunities','Competitor pricing analysis']},
-  {key:'promos',   name:'Promotions Agent',      display:'Promotions',     icon:'🏷️', roof:'#F57F17',wall:'#FFFDE7', x:1905,y:990, w:165,h:200, wins:2,chimney:false,
+  {key:'promos',   name:'Promotions Agent',      display:'Promotions',     icon:'🏷️', roof:'#F57F17',wall:'#FFFDE7', x:1925,y:1080,w:165,h:195, wins:2,chimney:false,
    quick:['Active promotions','Best coupon for new customers','Plan a summer sale']},
-  {key:'tax',      name:'Tax Compliance Agent',  display:'Tax',            icon:'📋', roof:'#212121',wall:'#F5F5F5', x:2115,y:990, w:155,h:185, wins:2,chimney:false,
+  {key:'tax',      name:'Tax Compliance Agent',  display:'Tax',            icon:'📋', roof:'#212121',wall:'#F5F5F5', x:2140,y:1080,w:155,h:182, wins:2,chimney:false,
    quick:['Quarterly tax estimate','Log $45 packaging expense','Copyright check for my new design']},
-  {key:'returns',  name:'Returns & Disputes',    display:'Returns',        icon:'↩️', roof:'#C62828',wall:'#FFEBEE', x:1680,y:1240,w:150,h:185, wins:2,chimney:false,
+  {key:'returns',  name:'Returns & Disputes',    display:'Returns',        icon:'↩️', roof:'#C62828',wall:'#FFEBEE', x:1700,y:1390,w:150,h:182, wins:2,chimney:false,
    quick:['Open cases','Draft response to not-as-described claim','Return analytics']},
-  {key:'supply',   name:'Supply Chain Agent',    display:'Supply Chain',   icon:'⛏️', roof:'#3E2723',wall:'#EFEBE9', x:1905,y:1240,w:165,h:200, wins:2,chimney:true,
+  {key:'supply',   name:'Supply Chain Agent',    display:'Supply Chain',   icon:'⛏️', roof:'#3E2723',wall:'#EFEBE9', x:1925,y:1390,w:165,h:195, wins:2,chimney:true,
    quick:['Reorder alerts','Add Matte Black PLA 2000g at $0.02/g','Filament inventory']},
-  {key:'email',    name:'Email Marketing Agent', display:'Email Mktg',     icon:'📬', roof:'#0277BD',wall:'#E1F5FE', x:2115,y:1240,w:155,h:190, wins:2,chimney:false,
+  {key:'email',    name:'Email Marketing Agent', display:'Email Mktg',     icon:'📬', roof:'#0277BD',wall:'#E1F5FE', x:2140,y:1390,w:155,h:188, wins:2,chimney:false,
    quick:['Get receipt message','Draft a new subscriber newsletter','Create package insert copy']},
-  {key:'abt',      name:'A/B Testing Agent',     display:'A/B Testing',    icon:'🧪', roof:'#00695C',wall:'#E0F2F1', x:2335,y:1240,w:155,h:185, wins:2,chimney:false,
+  {key:'abt',      name:'A/B Testing Agent',     display:'A/B Testing',    icon:'🧪', roof:'#00695C',wall:'#E0F2F1', x:2365,y:1390,w:155,h:182, wins:2,chimney:false,
    quick:['Active tests','Generate test ideas for listing L001','Testing calendar']},
   // ── MEETING HALL (not an agent — opens idea board) ──
-  {key:'hall',     name:'Meeting Hall',           display:'Meeting Hall',   icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:780, y:235, w:240,h:275, wins:4,chimney:false,type:'hall',
+  {key:'hall',     name:'Meeting Hall',           display:'Meeting Hall',   icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:800, y:240, w:240,h:275, wins:4,chimney:false,type:'hall',
    quick:[]},
 ];
 const AM = Object.fromEntries(AGENTS.map(a=>[a.key,a]));
@@ -761,8 +796,8 @@ function doZoom(f){
 }
 function resetView(){
   const r=vp.getBoundingClientRect();
-  zoom=Math.min((r.width-20)/3200,(r.height-20)/2100)*.92;
-  panX=(r.width-3200*zoom)/2; panY=Math.max(0,(r.height-2100*zoom)/2);
+  zoom=Math.min((r.width-20)/5000,(r.height-20)/2700)*.9;
+  panX=(r.width-5000*zoom)/2; panY=Math.max(0,(r.height-2700*zoom)/2);
   applyTransform();
 }
 
@@ -823,23 +858,28 @@ function mkBuilding(a){
 
 function buildRoads(){
   const r=document.getElementById('roads');
-  // Horizontal main roads
+  // Horizontal main roads — now properly above each building row
   const roads=[
-    {cls:'rh',style:'top:670px;height:50px'},
-    {cls:'rh',style:'top:955px;height:40px'},
-    {cls:'rh',style:'top:1205px;height:40px'},
-    // Center lines
-    {cls:'rcl',style:'top:694px'},
-    {cls:'rcl',style:'top:973px'},
-    // Vertical connectors
-    {cls:'rv',style:'left:193px;top:665px;width:36px;height:600px'},
-    {cls:'rv',style:'left:458px;top:665px;width:36px;height:600px'},
-    {cls:'rv',style:'left:1455px;top:605px;width:36px;height:320px'},
-    {cls:'rv',style:'left:1030px;top:665px;width:36px;height:600px'},
-    {cls:'rv',style:'left:1245px;top:665px;width:36px;height:600px'},
-    {cls:'rv',style:'left:1830px;top:665px;width:36px;height:610px'},
-    {cls:'rv',style:'left:2045px;top:665px;width:36px;height:610px'},
-    {cls:'rv',style:'left:2265px;top:665px;width:36px;height:610px'},
+    {cls:'rh',style:'top:700px;height:52px'},   // above Row A (y:768)
+    {cls:'rh',style:'top:1018px;height:46px'},  // above Row B (y:1080)
+    {cls:'rh',style:'top:1330px;height:44px'},  // above Row C (y:1390)
+    // Center dashed lines
+    {cls:'rcl',style:'top:725px'},
+    {cls:'rcl',style:'top:1040px'},
+    {cls:'rcl',style:'top:1351px'},
+    // Vertical connectors (from road 1 top to road 3 bottom, ~680px span)
+    {cls:'rv',style:'left:193px;top:698px;width:36px;height:678px'},
+    {cls:'rv',style:'left:458px;top:698px;width:36px;height:678px'},
+    {cls:'rv',style:'left:1475px;top:600px;width:36px;height:776px'},  // CEO connector
+    {cls:'rv',style:'left:1055px;top:698px;width:36px;height:678px'},
+    {cls:'rv',style:'left:1268px;top:698px;width:36px;height:678px'},
+    {cls:'rv',style:'left:1848px;top:698px;width:36px;height:678px'},
+    {cls:'rv',style:'left:2068px;top:698px;width:36px;height:678px'},
+    {cls:'rv',style:'left:2290px;top:698px;width:36px;height:678px'},
+    // Sidewalk strips between road and buildings
+    {cls:'swk',style:'top:752px;left:0;right:0;height:16px;background:#d4c8a0;border:none'},
+    {cls:'swk',style:'top:1064px;left:0;right:0;height:16px;background:#d4c8a0;border:none'},
+    {cls:'swk',style:'top:1374px;left:0;right:0;height:16px;background:#d4c8a0;border:none'},
   ];
   roads.forEach(({cls,style})=>{
     const d=document.createElement('div');
@@ -847,9 +887,9 @@ function buildRoads(){
   });
   // District labels
   const labels=[
-    {text:'Creative District',x:65,y:650},
-    {text:'Market District',x:840,y:650},
-    {text:'Business District',x:1680,y:650},
+    {text:'Creative District',x:65,y:672},
+    {text:'Market District',x:855,y:672},
+    {text:'Business District',x:1700,y:672},
   ];
   labels.forEach(({text,x,y})=>{
     const d=document.createElement('div');
@@ -860,51 +900,105 @@ function buildRoads(){
 
 function buildDecos(){
   const c=document.getElementById('decos');
-  // Lamp posts along main road
-  for(let x=120;x<3150;x+=230){
-    mkLamp(c,x,638,42);
-  }
-  // Lamp posts along secondary road
-  for(let x=220;x<3100;x+=280){
-    mkLamp(c,x,928,36);
-  }
-  // Trees scattered throughout
+  // Lamp posts along road 1 (y:700)
+  for(let x=120;x<4900;x+=230){ mkLamp(c,x,668,42); }
+  // Lamp posts along road 2 (y:1018)
+  for(let x=220;x<4800;x+=280){ mkLamp(c,x,985,36); }
+  // Lamp posts along road 3 (y:1330)
+  for(let x=150;x<4800;x+=300){ mkLamp(c,x,1297,33); }
+
+  // Trees throughout town and extended world
   const trees=[
-    // Between CEO and creative
-    {t:'t-md',x:520,y:780},{t:'t-sm',x:570,y:820},{t:'t-lg',x:500,y:870},
-    // Between creative and market
-    {t:'t-pine',x:680,y:760},{t:'t-md',x:720,y:810},{t:'t-sm',x:700,y:1010},
-    {t:'t-md',x:740,y:1050},{t:'t-pine',x:685,y:1260},{t:'t-sm',x:730,y:1300},
+    // Creative ↔ CEO gap
+    {t:'t-md', x:530, y:800},{t:'t-sm',x:580,y:845},{t:'t-lg',x:510,y:900},
+    // Creative ↔ Market gap
+    {t:'t-pine',x:695,y:785},{t:'t-md',x:735,y:835},{t:'t-sm',x:715,y:1100},
+    {t:'t-md', x:755,y:1145},{t:'t-pine',x:700,y:1410},{t:'t-sm',x:740,y:1455},
     // Around CEO
-    {t:'t-lg',x:1300,y:660},{t:'t-md',x:1620,y:660},{t:'t-pine',x:1260,y:700},
-    {t:'t-pine',x:1655,y:705},
-    // Between market and business
-    {t:'t-md',x:1550,y:770},{t:'t-sm',x:1590,y:820},{t:'t-md',x:1560,y:1010},
-    {t:'t-pine',x:1575,y:1060},{t:'t-md',x:1555,y:1260},{t:'t-sm',x:1595,y:1300},
-    // Right side of business
-    {t:'t-lg',x:2560,y:780},{t:'t-md',x:2600,y:830},{t:'t-pine',x:2545,y:1010},
-    {t:'t-sm',x:2580,y:1060},{t:'t-md',x:2560,y:1260},{t:'t-pine',x:2590,y:1310},
-    // Far right
-    {t:'t-lg',x:2800,y:760},{t:'t-md',x:2860,y:830},{t:'t-lg',x:2950,y:780},
-    {t:'t-pine',x:3050,y:820},{t:'t-md',x:3100,y:770},
-    // Far left
-    {t:'t-lg',x:0,  y:770},{t:'t-md',x:40, y:840},{t:'t-pine',x:-10,y:830},
-    // Bottom row
-    {t:'t-lg',x:400,y:1480},{t:'t-md',x:800,y:1500},{t:'t-pine',x:1200,y:1480},
-    {t:'t-lg',x:1600,y:1490},{t:'t-md',x:2000,y:1480},{t:'t-lg',x:2400,y:1490},
-    {t:'t-pine',x:2800,y:1480},{t:'t-md',x:3100,y:1500},
+    {t:'t-lg', x:1310,y:665},{t:'t-md',x:1640,y:665},{t:'t-pine',x:1270,y:710},
+    {t:'t-pine',x:1670,y:715},
+    // Market ↔ Business gap
+    {t:'t-md', x:1560,y:800},{t:'t-sm',x:1600,y:855},{t:'t-md',x:1570,y:1100},
+    {t:'t-pine',x:1585,y:1155},{t:'t-md',x:1565,y:1415},{t:'t-sm',x:1605,y:1460},
+    // Right of business district
+    {t:'t-lg', x:2580,y:800},{t:'t-md',x:2625,y:858},{t:'t-pine',x:2565,y:1100},
+    {t:'t-sm', x:2600,y:1158},{t:'t-md',x:2580,y:1415},{t:'t-pine',x:2610,y:1465},
+    // Far left edge
+    {t:'t-lg',x:-5,y:800},{t:'t-md',x:38,y:870},{t:'t-pine',x:-12,y:860},
+    // Bottom row (behind row C)
+    {t:'t-lg', x:400, y:1620},{t:'t-md',x:800, y:1640},{t:'t-pine',x:1200,y:1625},
+    {t:'t-lg', x:1600,y:1635},{t:'t-md',x:2000,y:1625},{t:'t-lg',x:2400,y:1640},
+    {t:'t-pine',x:2800,y:1625},{t:'t-md',x:3100,y:1640},
+    // ── Extended world: Park district (x:2700-4800) ──────────────────────────
+    {t:'t-lg', x:2800,y:790},{t:'t-md',x:2870,y:860},{t:'t-lg',x:2960,y:808},
+    {t:'t-pine',x:3060,y:840},{t:'t-md',x:3140,y:790},{t:'t-lg',x:3220,y:850},
+    {t:'t-pine',x:3020,y:900},{t:'t-sm',x:3080,y:950},{t:'t-md',x:3180,y:920},
+    {t:'t-lg', x:3300,y:800},{t:'t-md',x:3380,y:870},{t:'t-lg',x:3450,y:820},
+    {t:'t-pine',x:3500,y:780},{t:'t-sm',x:3560,y:860},{t:'t-md',x:3620,y:820},
+    {t:'t-lg', x:3700,y:790},{t:'t-pine',x:3780,y:850},{t:'t-lg',x:3860,y:800},
+    {t:'t-md', x:3940,y:870},{t:'t-pine',x:4020,y:825},{t:'t-lg',x:4100,y:800},
+    {t:'t-sm', x:4160,y:860},{t:'t-md',x:4240,y:820},{t:'t-lg',x:4320,y:790},
+    {t:'t-pine',x:4400,y:860},{t:'t-lg',x:4480,y:800},{t:'t-md',x:4560,y:845},
+    {t:'t-pine',x:4640,y:800},{t:'t-lg',x:4720,y:850},{t:'t-md',x:4800,y:810},
+    // Park mid-level trees
+    {t:'t-md', x:2900,y:1120},{t:'t-lg',x:3000,y:1090},{t:'t-pine',x:3100,y:1130},
+    {t:'t-md', x:3200,y:1100},{t:'t-lg',x:3300,y:1080},{t:'t-pine',x:3400,y:1120},
+    {t:'t-md', x:3500,y:1090},{t:'t-lg',x:3600,y:1100},{t:'t-pine',x:3700,y:1080},
+    {t:'t-md', x:3800,y:1120},{t:'t-lg',x:3900,y:1090},{t:'t-pine',x:4000,y:1100},
+    {t:'t-md', x:4100,y:1080},{t:'t-lg',x:4200,y:1120},{t:'t-pine',x:4300,y:1090},
+    {t:'t-md', x:4400,y:1110},{t:'t-lg',x:4500,y:1080},{t:'t-pine',x:4600,y:1100},
+    {t:'t-md', x:4700,y:1090},{t:'t-lg',x:4800,y:1120},
+    // Park bottom
+    {t:'t-lg', x:2850,y:1420},{t:'t-md',x:3050,y:1450},{t:'t-pine',x:3250,y:1430},
+    {t:'t-lg', x:3450,y:1415},{t:'t-md',x:3650,y:1445},{t:'t-pine',x:3850,y:1425},
+    {t:'t-lg', x:4050,y:1440},{t:'t-md',x:4250,y:1415},{t:'t-pine',x:4450,y:1430},
+    {t:'t-lg', x:4650,y:1420},{t:'t-md',x:4850,y:1455},
+    // Very bottom of world
+    {t:'t-lg', x:500, y:1850},{t:'t-md',x:1000,y:1880},{t:'t-pine',x:1500,y:1860},
+    {t:'t-lg', x:2000,y:1870},{t:'t-md',x:2500,y:1855},{t:'t-lg',x:3000,y:1880},
+    {t:'t-pine',x:3500,y:1860},{t:'t-md',x:4000,y:1870},{t:'t-lg',x:4500,y:1850},
   ];
   trees.forEach(({t,x,y})=>mkTree(c,t,x,y));
-  // Shrubs near buildings
-  const shrubs=[[110,924],[320,924],[890,924],[1115,924],[1330,924],[1730,924],[1955,924],[2165,924],
-                [110,1175],[320,1175],[1730,1175],[1955,1175],[2165,1175],[2380,1175]];
+
+  // Shrubs near buildings (updated for new y positions)
+  const shrubs=[
+    // Row A bottom shrubs
+    [115,965],[330,965],[875,965],[1100,965],[1315,965],[1720,965],[1945,965],[2160,965],
+    // Row B bottom shrubs
+    [115,1275],[330,1275],[875,1275],[1100,1275],[1315,1275],[1720,1275],[1945,1275],[2165,1275],
+    // Row C bottom shrubs
+    [115,1582],[330,1582],[1720,1582],[1945,1582],[2165,1582],[2390,1582],
+    // Park area shrubs
+    [2700,900],[2780,980],[2850,1200],[3000,1300],[3500,900],[4000,1000],[4500,900],
+  ];
   shrubs.forEach(([x,y])=>{
     const d=document.createElement('div');
     d.className='shrub'; d.style.cssText=`left:${x}px;top:${y}px`;
     c.appendChild(d);
   });
-  // Fountain in front of CEO building (CEO: x:1350, w:240 → center x:1470; bottom y:610)
-  mkFountain(c, 1425, 597);
+
+  // Park benches in extended world (simple CSS rectangles)
+  [[2900,1050],[3300,1050],[3700,1050],[4100,1050],[4500,1050],
+   [2900,1350],[3300,1350],[3700,1350],[4100,1350],[4500,1350]].forEach(([x,y])=>{
+    const b=document.createElement('div');
+    b.style.cssText=`position:absolute;left:${x}px;top:${y}px;width:36px;height:12px;
+      background:linear-gradient(180deg,#c8a050,#8a6020);border-radius:3px;
+      border:2px solid rgba(0,0,0,.35);z-index:3;
+      box-shadow:0 2px 4px rgba(0,0,0,.3)`;
+    c.appendChild(b);
+  });
+
+  // Park pond (extended world)
+  const pond=document.createElement('div');
+  pond.style.cssText=`position:absolute;left:3300px;top:1150px;width:260px;height:140px;
+    background:radial-gradient(ellipse at 40% 38%,rgba(130,200,255,.88),rgba(40,120,200,.7));
+    border-radius:50%;border:4px solid #7ab8d8;
+    box-shadow:0 6px 20px rgba(0,0,0,.4),inset 0 4px 12px rgba(255,255,255,.2);
+    z-index:3;animation:f-shimmer 3.5s ease-in-out infinite alternate`;
+  c.appendChild(pond);
+
+  // Fountain in front of CEO building (CEO: x:1370, w:240 → center x:1490; bottom y:620)
+  mkFountain(c, 1448, 607);
 }
 
 function mkFountain(parent, x, y){
