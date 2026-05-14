@@ -462,6 +462,16 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .fb-card-date{font-size:.52rem;color:#484f58}
 .fb-card-dl{font-size:.52rem;color:var(--accent);text-decoration:none;padding:1px 5px;border:1px solid var(--accent)33;border-radius:4px;transition:all .15s}
 .fb-card-dl:hover{background:var(--accent)22}
+/* ── SVG CONVERT PANEL ── */
+.cvt-title{font-size:.65rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.cvt-drop{border:1.5px dashed var(--border);border-radius:8px;padding:10px 8px;text-align:center;cursor:pointer;transition:all .15s;background:#0d1117}
+.cvt-drop:hover,.cvt-drag{border-color:var(--accent);background:#0d1525}
+#cvt-drop-label{font-size:.6rem;color:#484f58}
+.cvt-opts{display:flex;gap:10px;margin-top:7px}
+.cvt-lbl{font-size:.58rem;color:#8b949e;display:flex;flex-direction:column;gap:2px}
+.cvt-sel{background:#0d1117;border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:.6rem;padding:2px 5px;outline:none;cursor:pointer}
+.cvt-run{padding:5px 12px;border-radius:6px;border:none;background:var(--green);color:#000;font-size:.65rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+.cvt-run:disabled{opacity:.35;cursor:not-allowed}
 /* ── TASK TIMER ── */
 .task-timer{font-size:.56rem;color:#484f58;margin-top:3px;display:flex;align-items:center;gap:6px}
 .task-progress{flex:1;height:3px;background:#21262d;border-radius:2px;overflow:hidden}
@@ -869,6 +879,47 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
       <span class="fb-title">📁 Etsy Product Files</span>
       <span class="fb-total" id="fb-total">Loading…</span>
       <button class="fb-refresh" onclick="loadFileBrowser()">↻ Refresh</button>
+      <button class="fb-refresh" onclick="toggleConvertPanel()" style="border-color:#3fb950;color:#3fb950">✂️ SVG</button>
+    </div>
+    <!-- SVG Convert Panel -->
+    <div id="svg-convert-panel" style="display:none;flex-shrink:0;padding:8px;background:#0a0f16;border-bottom:1px solid var(--border)">
+      <div class="cvt-title">🖼️ → ✂️ Convert Image to SVG</div>
+      <div id="cvt-dropzone" class="cvt-drop"
+           ondragover="event.preventDefault();this.classList.add('cvt-drag')"
+           ondragleave="this.classList.remove('cvt-drag')"
+           ondrop="handleCvtDrop(event)"
+           onclick="document.getElementById('cvt-file-input').click()">
+        <div id="cvt-drop-label">📂 Drop image here or click to choose</div>
+        <img id="cvt-preview" style="display:none;max-width:100%;max-height:80px;border-radius:5px;margin-top:6px">
+        <input type="file" id="cvt-file-input" accept="image/*" style="display:none" onchange="handleCvtFileSelect(this.files[0])">
+      </div>
+      <div class="cvt-opts">
+        <label class="cvt-lbl">Mode
+          <select id="cvt-colormode" class="cvt-sel">
+            <option value="color">Color</option>
+            <option value="binary">Black &amp; White</option>
+          </select>
+        </label>
+        <label class="cvt-lbl">Detail
+          <select id="cvt-detail" class="cvt-sel">
+            <option value="low">Fast (low)</option>
+            <option value="med" selected>Balanced</option>
+            <option value="high">High detail</option>
+          </select>
+        </label>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+        <button id="cvt-btn" class="cvt-run" onclick="runConvertSVG()" disabled>Convert to SVG</button>
+        <span id="cvt-status" style="font-size:.58rem;color:#8b949e"></span>
+      </div>
+      <div id="cvt-result" style="display:none;margin-top:8px;padding:6px;background:#0d1117;border-radius:6px;border:1px solid var(--green)">
+        <div style="font-size:.6rem;color:var(--green);font-weight:600">✓ SVG created!</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <span id="cvt-result-name" style="font-size:.6rem;flex:1;overflow:hidden;text-overflow:ellipsis"></span>
+          <a id="cvt-result-dl" class="fb-card-dl" href="#" download>⬇ Download</a>
+          <button class="fb-refresh" onclick="openLightbox(document.getElementById('cvt-result-dl').href)">🔍 View</button>
+        </div>
+      </div>
     </div>
     <div class="fb-scroll" id="fb-scroll">
       <div style="font-size:.6rem;color:#484f58;padding:12px;font-style:italic;text-align:center">Click ↻ Refresh to load files</div>
@@ -1885,6 +1936,71 @@ function toggleFolder(key){
   document.getElementById(`fb-${key}`)?.classList.toggle('open');
 }
 function refreshFiles(){ switchTab('files'); }  // legacy alias
+
+// ── SVG CONVERTER ────────────────────────────────────────────────────────────
+let _cvtFile=null;
+function toggleConvertPanel(){
+  const p=document.getElementById('svg-convert-panel');
+  p.style.display=p.style.display==='none'?'block':'none';
+}
+function handleCvtDrop(e){
+  e.preventDefault();
+  document.getElementById('cvt-dropzone').classList.remove('cvt-drag');
+  const f=e.dataTransfer.files[0];
+  if(f) setCvtFile(f);
+}
+function handleCvtFileSelect(f){ if(f) setCvtFile(f); }
+function setCvtFile(f){
+  _cvtFile=f;
+  const label=document.getElementById('cvt-drop-label');
+  const preview=document.getElementById('cvt-preview');
+  label.textContent=f.name;
+  if(f.type.startsWith('image/')){
+    preview.src=URL.createObjectURL(f);
+    preview.style.display='block';
+  }
+  document.getElementById('cvt-btn').disabled=false;
+  document.getElementById('cvt-result').style.display='none';
+  document.getElementById('cvt-status').textContent='';
+}
+function runConvertSVG(){
+  if(!_cvtFile) return;
+  const btn=document.getElementById('cvt-btn');
+  const status=document.getElementById('cvt-status');
+  const result=document.getElementById('cvt-result');
+  btn.disabled=true; btn.textContent='Converting…';
+  status.textContent='Tracing vectors…';
+  result.style.display='none';
+
+  const detail=document.getElementById('cvt-detail').value;
+  const detailMap={low:{filter_speckle:8,color_precision:4,layer_difference:24,path_precision:6},
+                   med:{filter_speckle:4,color_precision:6,layer_difference:16,path_precision:8},
+                   high:{filter_speckle:2,color_precision:8,layer_difference:8,path_precision:10}};
+  const d=detailMap[detail]||detailMap.med;
+  const colormode=document.getElementById('cvt-colormode').value;
+
+  const form=new FormData();
+  form.append('file',_cvtFile);
+  form.append('colormode',colormode);
+  form.append('filter_speckle',d.filter_speckle);
+  form.append('color_precision',d.color_precision);
+  form.append('layer_difference',d.layer_difference);
+  form.append('path_precision',d.path_precision);
+
+  fetch('/api/convert-svg',{method:'POST',body:form})
+    .then(r=>r.json())
+    .then(data=>{
+      btn.disabled=false; btn.textContent='Convert to SVG';
+      if(data.error){ status.textContent='Error: '+data.error; return; }
+      status.textContent=`${data.size_kb}KB SVG saved`;
+      document.getElementById('cvt-result-name').textContent=data.filename;
+      const dl=document.getElementById('cvt-result-dl');
+      dl.href='/'+data.path; dl.download=data.filename;
+      result.style.display='block';
+      if(_fbLoaded) loadFileBrowser();
+    })
+    .catch(err=>{ btn.disabled=false; btn.textContent='Convert to SVG'; status.textContent='Network error'; });
+}
 
 // ── TABS ────────────────────────────────────────────────────────────────────
 function switchTab(name){

@@ -14,7 +14,10 @@ from typing import Set
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+import shutil
+import tempfile
+
+from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -366,6 +369,69 @@ async def list_files():
             "files": files,
         })
     return JSONResponse({"folders": folders, "total": total})
+
+
+_ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/bmp"}
+_ALLOWED_IMAGE_EXTS  = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
+
+
+@app.post("/api/convert-svg")
+async def convert_to_svg(
+    file: UploadFile = File(...),
+    colormode:       str = "color",
+    filter_speckle:  int = 4,
+    color_precision: int = 6,
+    layer_difference:int = 16,
+    path_precision:  int = 8,
+):
+    """Upload an image and convert it to SVG using vtracer."""
+    import vtracer
+
+    # Validate
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in _ALLOWED_IMAGE_EXTS:
+        return JSONResponse({"error": f"Unsupported file type: {ext}"}, status_code=400)
+    if file.content_type and file.content_type not in _ALLOWED_IMAGE_TYPES:
+        return JSONResponse({"error": f"Unsupported content type: {file.content_type}"}, status_code=400)
+
+    stem = Path(file.filename).stem
+    out_dir = DATA_DIR / "digital_products" / "svg_files"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Deduplicate filename
+    base_name = f"{stem}.svg"
+    out_path = out_dir / base_name
+    counter = 1
+    while out_path.exists():
+        out_path = out_dir / f"{stem}_{counter}.svg"
+        counter += 1
+
+    # Write upload to temp file then convert
+    with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        tmp_path = tmp.name
+
+    try:
+        vtracer.convert_image_to_svg_py(
+            image_path    = tmp_path,
+            out_path      = str(out_path),
+            colormode     = colormode,
+            filter_speckle= filter_speckle,
+            color_precision= color_precision,
+            layer_difference= layer_difference,
+            path_precision = path_precision,
+        )
+    finally:
+        os.unlink(tmp_path)
+
+    rel = f"data/digital_products/svg_files/{out_path.name}"
+    size_kb = round(out_path.stat().st_size / 1024, 1)
+    return JSONResponse({
+        "status":   "ok",
+        "filename": out_path.name,
+        "path":     rel,
+        "size_kb":  size_kb,
+    })
 
 
 @app.post("/api/run/{agent_key}")
