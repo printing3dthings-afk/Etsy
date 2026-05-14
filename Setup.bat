@@ -25,7 +25,7 @@ echo.
 
 REM ── Install packages ──────────────────────────────
 echo  [2/3] Installing required packages...
-pip install anthropic python-dotenv flask Pillow reportlab openai fastapi "uvicorn[standard]" --quiet
+pip install -r requirements.txt --quiet
 echo  Packages installed.
 echo.
 

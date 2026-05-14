@@ -8,6 +8,22 @@ echo    OnBrandCraftz Town - Starting...
 echo  ================================================
 echo.
 
+REM ── Pull latest code from git ─────────────────────
+git --version >nul 2>&1
+if not errorlevel 1 (
+    echo  Checking for updates...
+    git pull --ff-only >nul 2>&1
+    if not errorlevel 1 (
+        echo  Code is up to date.
+    ) else (
+        echo  Could not auto-update (local changes present or no network).
+        echo  Continuing with current version...
+    )
+) else (
+    echo  Git not found - skipping update check.
+)
+echo.
+
 REM ── Check Python ──────────────────────────────────
 python --version >nul 2>&1
 if errorlevel 1 (
@@ -32,18 +48,18 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM ── Check fastapi/uvicorn installed ───────────────
-python -c "import fastapi, uvicorn" >nul 2>&1
-if errorlevel 1 (
-    echo  Installing missing packages...
-    pip install fastapi "uvicorn[standard]" --quiet
-)
+REM ── Install / update packages ─────────────────────
+echo  Installing/updating packages from requirements.txt...
+pip install -r requirements.txt --quiet
+echo  Packages OK.
+echo.
 
 echo  All checks passed.
-echo  Your browser will open automatically.
+echo  Opening browser to http://localhost:8080
 echo  Keep this window open. Press Ctrl+C to stop.
 echo.
 
+start "" http://localhost:8080
 python town_app\server.py
 
 pause
