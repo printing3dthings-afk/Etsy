@@ -315,23 +315,57 @@ async def serve_data_file(path: str):
     return JSONResponse({"error": "not found"}, status_code=404)
 
 
+PRODUCT_FOLDERS = [
+    {"key": "art_prints",    "name": "Art Prints",    "icon": "🖼️", "path": "digital_products/art_prints"},
+    {"key": "wall_art",      "name": "Wall Art",      "icon": "🎨", "path": "digital_products/wall_art"},
+    {"key": "planners",      "name": "Planners",      "icon": "📋", "path": "digital_products/planners"},
+    {"key": "svg_files",     "name": "SVG / Clipart", "icon": "✂️", "path": "digital_products/svg_files"},
+    {"key": "clipart",       "name": "Clipart Packs", "icon": "🎭", "path": "digital_products/clipart"},
+    {"key": "bundles",       "name": "Bundles",       "icon": "📦", "path": "digital_products/bundles"},
+    {"key": "product_files", "name": "Other Products","icon": "📁", "path": "digital_products/product_files"},
+    {"key": "brand_assets",  "name": "Brand Assets",  "icon": "💎", "path": "brand/assets"},
+    {"key": "logos",         "name": "Logos",         "icon": "🏷️", "path": "brand/logos"},
+    {"key": "mockups",       "name": "Mockups",       "icon": "🖼️", "path": "brand/mockups"},
+]
+
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+
+
+def _scan_folder(rel_path: str) -> list:
+    d = DATA_DIR / rel_path
+    if not d.exists():
+        return []
+    files = []
+    for f in sorted(d.iterdir()):
+        if f.is_file() and f.name != ".gitkeep":
+            stat = f.stat()
+            ext  = f.suffix.lower()
+            files.append({
+                "name":    f.name,
+                "path":    f"data/{rel_path}/{f.name}",
+                "size_kb": round(stat.st_size / 1024, 1),
+                "type":    "image" if ext in _IMAGE_EXTS else "pdf" if ext == ".pdf" else "file",
+                "created": datetime.fromtimestamp(stat.st_ctime).strftime("%Y-%m-%d %H:%M"),
+            })
+    return files
+
+
 @app.get("/api/files")
 async def list_files():
-    """List all files created by agents."""
-    files = []
-    for folder in ["digital_products/product_files", "brand/assets"]:
-        d = DATA_DIR / folder
-        if d.exists():
-            for f in d.iterdir():
-                if f.is_file():
-                    files.append({
-                        "name": f.name,
-                        "path": f"data/{folder}/{f.name}",
-                        "size_kb": round(f.stat().st_size / 1024, 1),
-                        "type": "image" if f.suffix.lower() in (".png",".jpg",".jpeg") else
-                                "pdf" if f.suffix.lower() == ".pdf" else "file",
-                    })
-    return JSONResponse({"files": files})
+    """List all agent-created files, organized by product folder."""
+    folders = []
+    total   = 0
+    for fd in PRODUCT_FOLDERS:
+        files = _scan_folder(fd["path"])
+        total += len(files)
+        folders.append({
+            "key":   fd["key"],
+            "name":  fd["name"],
+            "icon":  fd["icon"],
+            "path":  fd["path"],
+            "files": files,
+        })
+    return JSONResponse({"folders": folders, "total": total})
 
 
 @app.post("/api/run/{agent_key}")

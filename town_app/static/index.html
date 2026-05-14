@@ -429,6 +429,45 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .out-image{margin:8px 0;cursor:pointer;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
 .out-image img{width:100%;display:block;max-height:200px;object-fit:cover}
 .out-image-label{font-size:.58rem;padding:4px 8px;background:#0d1117;color:#8b949e}
+/* ── FILE BROWSER ── */
+#tab-files{padding:0;flex-direction:column}
+.fb-toolbar{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+.fb-title{font-size:.68rem;font-weight:700;flex:1}
+.fb-total{font-size:.58rem;color:#484f58}
+.fb-refresh{background:transparent;border:1px solid var(--border);border-radius:5px;color:#8b949e;font-size:.6rem;padding:3px 8px;cursor:pointer;transition:all .15s}
+.fb-refresh:hover{background:#21262d;color:var(--text)}
+.fb-scroll{flex:1;overflow-y:auto;padding:6px 8px}
+.fb-scroll::-webkit-scrollbar{width:4px}
+.fb-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.fb-folder{margin-bottom:8px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.fb-folder-hdr{display:flex;align-items:center;gap:7px;padding:7px 10px;cursor:pointer;background:#0d1117;transition:background .15s;user-select:none}
+.fb-folder-hdr:hover{background:#161b22}
+.fb-folder-icon{font-size:.95rem;flex-shrink:0}
+.fb-folder-name{font-size:.66rem;font-weight:600;flex:1}
+.fb-folder-count{font-size:.58rem;color:#484f58;background:#21262d;padding:1px 6px;border-radius:8px}
+.fb-folder-arrow{font-size:.55rem;color:#484f58;transition:transform .2s}
+.fb-folder.open .fb-folder-arrow{transform:rotate(90deg)}
+.fb-files{display:none;padding:6px 8px;background:#0a0f16;border-top:1px solid var(--border)}
+.fb-folder.open .fb-files{display:block}
+.fb-empty{font-size:.58rem;color:#484f58;font-style:italic;padding:4px 0}
+.fb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}
+.fb-card{background:#0d1117;border:1px solid var(--border);border-radius:6px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.fb-card:hover{border-color:var(--accent)}
+.fb-thumb{width:100%;height:72px;object-fit:cover;display:block;background:#161b22}
+.fb-thumb-icon{width:100%;height:72px;display:flex;align-items:center;justify-content:center;background:#161b22;font-size:2rem}
+.fb-card-info{padding:5px 6px}
+.fb-card-name{font-size:.56rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);margin-bottom:2px}
+.fb-card-meta{display:flex;justify-content:space-between;align-items:center}
+.fb-card-size{font-size:.52rem;color:#484f58}
+.fb-card-date{font-size:.52rem;color:#484f58}
+.fb-card-dl{font-size:.52rem;color:var(--accent);text-decoration:none;padding:1px 5px;border:1px solid var(--accent)33;border-radius:4px;transition:all .15s}
+.fb-card-dl:hover{background:var(--accent)22}
+/* ── TASK TIMER ── */
+.task-timer{font-size:.56rem;color:#484f58;margin-top:3px;display:flex;align-items:center;gap:6px}
+.task-progress{flex:1;height:3px;background:#21262d;border-radius:2px;overflow:hidden}
+.task-progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width 1s linear}
+.task-eta{white-space:nowrap;font-size:.52rem}
+/* legacy flat list kept for output panel */
 .files-section{margin-top:8px}
 .files-title{font-size:.65rem;font-weight:600;color:var(--text);margin-bottom:6px}
 .file-item{display:flex;align-items:center;gap:6px;padding:5px 6px;border-radius:5px;cursor:pointer;transition:background .15s;border:1px solid var(--border);margin-bottom:4px}
@@ -760,7 +799,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 <header id="hdr">
   <h1>🏘️ OnBrandCraftz Town</h1>
   <button class="hbtn" onclick="openSetup()">⚙️ Setup</button>
-  <button class="hbtn" onclick="refreshFiles()">🖼️ Files</button>
+  <button class="hbtn" onclick="switchTab('files')">📁 Files</button>
   <button class="hbtn" onclick="switchTab('feed')">📋 Feed</button>
   <span class="hsp"></span>
   <div class="ws-dot off" id="ws-dot"></div>
@@ -807,9 +846,10 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
     </div>
   </div>
   <div class="panel-tabs">
-    <button class="p-tab active" data-tab="feed"   onclick="switchTab('feed')">📋 Live Feed</button>
+    <button class="p-tab active" data-tab="feed"   onclick="switchTab('feed')">📋 Feed</button>
     <button class="p-tab"        data-tab="tasks"  onclick="switchTab('tasks')">⚡ Tasks</button>
     <button class="p-tab"        data-tab="output" onclick="switchTab('output')">💬 Output</button>
+    <button class="p-tab"        data-tab="files"  onclick="switchTab('files')">📁 Files</button>
   </div>
   <div class="tab-pane active" id="tab-feed">
     <div id="feed-scroll"></div>
@@ -822,6 +862,16 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   <div class="tab-pane" id="tab-output">
     <div id="output-scroll">
       <div style="font-size:.6rem;color:#484f58;padding:8px;font-style:italic">Task results and created files appear here.</div>
+    </div>
+  </div>
+  <div class="tab-pane" id="tab-files">
+    <div class="fb-toolbar">
+      <span class="fb-title">📁 Etsy Product Files</span>
+      <span class="fb-total" id="fb-total">Loading…</span>
+      <button class="fb-refresh" onclick="loadFileBrowser()">↻ Refresh</button>
+    </div>
+    <div class="fb-scroll" id="fb-scroll">
+      <div style="font-size:.6rem;color:#484f58;padding:12px;font-style:italic;text-align:center">Click ↻ Refresh to load files</div>
     </div>
   </div>
   <div class="task-input-area">
@@ -1689,7 +1739,39 @@ function updateActiveBar(){
   });
 }
 
-// ── TASK CARDS ──────────────────────────────────────────────────────────────
+// ── TASK CARDS + TIMER ───────────────────────────────────────────────────────
+// Estimated pipeline steps: CEO delegates 6–8 sub-agents × ~40s each = ~280–320s
+// Simple agent task: ~60s
+const PIPELINE_AGENTS_SET=new Set(['ceo','brand','art','qc','listing','store','marketing','finance','analytics']);
+function _estDuration(key){ return PIPELINE_AGENTS_SET.has(key)?300:70; }
+
+function _fmtElapsed(sec){
+  if(sec<60) return `${sec}s`;
+  return `${Math.floor(sec/60)}m ${sec%60}s`;
+}
+
+let _timerInterval=null;
+function _startTimerTick(){
+  if(_timerInterval) return;
+  _timerInterval=setInterval(()=>{
+    const now=Date.now();
+    Object.keys(taskCards).forEach(key=>{
+      const tc=taskCards[key];
+      if(tc.status!=='running'||!tc.startedAt) return;
+      const elapsed=Math.floor((now-tc.startedAt)/1000);
+      const est=tc.estDuration||_estDuration(key);
+      const pct=Math.min(99,Math.round((elapsed/est)*100));
+      const remaining=Math.max(0,est-elapsed);
+      const elDiv=document.getElementById(`tc-elapsed-${key}`);
+      const barEl=document.getElementById(`tc-bar-${key}`);
+      const etaEl=document.getElementById(`tc-eta-${key}`);
+      if(elDiv) elDiv.textContent=`⏱ ${_fmtElapsed(elapsed)}`;
+      if(barEl) barEl.style.width=`${pct}%`;
+      if(etaEl) etaEl.textContent=remaining>0?`~${_fmtElapsed(remaining)} left`:'Almost done…';
+    });
+  },1000);
+}
+
 function upsertTaskCard(key,status,task){
   const panel=document.getElementById('tasks-scroll');
   let card=document.getElementById(`tc-${key}`);
@@ -1703,6 +1785,13 @@ function upsertTaskCard(key,status,task){
   const steps=taskCards[key]?.steps||[];
   const stepsHtml=steps.slice(-6).map((s,i,arr)=>`
     <div class="task-step ${i===arr.length-1&&status==='running'?'step-active':'step-done'}">${esc(s)}</div>`).join('');
+  const tc=taskCards[key]||{};
+  const timerHtml=status==='running'?`
+    <div class="task-timer">
+      <span id="tc-elapsed-${key}">⏱ 0s</span>
+      <div class="task-progress"><div class="task-progress-bar" id="tc-bar-${key}" style="width:0%"></div></div>
+      <span class="task-eta" id="tc-eta-${key}">~${_fmtElapsed(_estDuration(key))} est.</span>
+    </div>`:'';
   card.innerHTML=`
     <div class="task-card-header">
       <span class="task-agent-icon">${a?.icon||''}</span>
@@ -1710,13 +1799,18 @@ function upsertTaskCard(key,status,task){
       <span class="task-status ${sc}">${sl}</span>
     </div>
     <div class="task-text">${esc((task||'').slice(0,120))}</div>
+    ${timerHtml}
     <div class="task-steps">${stepsHtml}</div>`;
-  if(!taskCards[key]) taskCards[key]={steps:[],task,status};
+  if(!taskCards[key]) taskCards[key]={steps:[],task,status,startedAt:Date.now(),estDuration:_estDuration(key)};
   taskCards[key].status=status;
   if(task) taskCards[key].task=task;
+  if(status==='running'){
+    if(!taskCards[key].startedAt) taskCards[key].startedAt=Date.now();
+    _startTimerTick();
+  }
 }
 function addTaskStep(key,msg){
-  if(!taskCards[key]) taskCards[key]={steps:[],task:'',status:'running'};
+  if(!taskCards[key]) taskCards[key]={steps:[],task:'',status:'running',startedAt:Date.now(),estDuration:_estDuration(key)};
   taskCards[key].steps.push(msg);
   upsertTaskCard(key,taskCards[key].status,taskCards[key].task);
 }
@@ -1740,27 +1834,63 @@ function showOutput(key,text,filePath){
     <div class="out-text">${esc(text)}</div>`;
   switchTab('output');
 }
-function refreshFiles(){
+// ── FILE BROWSER ─────────────────────────────────────────────────────────────
+let _fbLoaded=false;
+function loadFileBrowser(){
+  document.getElementById('fb-total').textContent='Loading…';
   fetch('/api/files').then(r=>r.json()).then(data=>{
-    if(!data.files?.length){ alert('No files created yet.'); return; }
-    const panel=document.getElementById('output-scroll');
-    panel.querySelector('.files-section')?.remove();
-    const fs=document.createElement('div'); fs.className='files-section';
-    fs.innerHTML=`<div class="files-title">📁 Created Files (${data.files.length})</div>`+
-      data.files.map(f=>`
-        <div class="file-item" onclick="openLightbox('/${f.path}')">
-          <span class="file-icon">${f.type==='image'?'🖼️':f.type==='pdf'?'📄':'📁'}</span>
-          <span class="file-name">${f.name}</span>
-          <span class="file-size">${f.size_kb}KB</span>
-        </div>`).join('');
-    panel.appendChild(fs); switchTab('output');
-  });
+    _fbLoaded=true;
+    const scroll=document.getElementById('fb-scroll');
+    const total=data.total||0;
+    document.getElementById('fb-total').textContent=total===0?'No files yet':`${total} file${total!==1?'s':''}`;
+    scroll.innerHTML='';
+    (data.folders||[]).forEach(fd=>{
+      const div=document.createElement('div'); div.className='fb-folder'; div.id=`fb-${fd.key}`;
+      const countHtml=fd.files.length?`<span class="fb-folder-count">${fd.files.length}</span>`:'';
+      let filesHtml='';
+      if(!fd.files.length){
+        filesHtml=`<div class="fb-empty">No files yet — agents will save here automatically.</div>`;
+      } else {
+        filesHtml=`<div class="fb-grid">`+fd.files.map(f=>{
+          const thumb=f.type==='image'
+            ?`<img class="fb-thumb" src="/${f.path}" loading="lazy" onerror="this.style.display='none'">`
+            :`<div class="fb-thumb-icon">${f.type==='pdf'?'📄':'📁'}</div>`;
+          return `<div class="fb-card" onclick="openLightbox('/${f.path}')">
+            ${thumb}
+            <div class="fb-card-info">
+              <div class="fb-card-name" title="${esc(f.name)}">${esc(f.name)}</div>
+              <div class="fb-card-meta">
+                <span class="fb-card-size">${f.size_kb}KB</span>
+                <a class="fb-card-dl" href="/${f.path}" download="${esc(f.name)}" onclick="event.stopPropagation()">⬇</a>
+              </div>
+              <div class="fb-card-date">${f.created}</div>
+            </div>
+          </div>`;
+        }).join('')+`</div>`;
+      }
+      div.innerHTML=`
+        <div class="fb-folder-hdr" onclick="toggleFolder('${fd.key}')">
+          <span class="fb-folder-icon">${fd.icon}</span>
+          <span class="fb-folder-name">${fd.name}</span>
+          ${countHtml}
+          <span class="fb-folder-arrow">▶</span>
+        </div>
+        <div class="fb-files">${filesHtml}</div>`;
+      if(fd.files.length) div.classList.add('open');
+      scroll.appendChild(div);
+    });
+  }).catch(()=>{ document.getElementById('fb-total').textContent='Error loading'; });
 }
+function toggleFolder(key){
+  document.getElementById(`fb-${key}`)?.classList.toggle('open');
+}
+function refreshFiles(){ switchTab('files'); }  // legacy alias
 
 // ── TABS ────────────────────────────────────────────────────────────────────
 function switchTab(name){
   document.querySelectorAll('.p-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.toggle('active',p.id===`tab-${name}`));
+  if(name==='files' && !_fbLoaded) loadFileBrowser();
 }
 
 // ── LIVE FEED ────────────────────────────────────────────────────────────────
@@ -1816,6 +1946,7 @@ function handleEvent(msg){
       setTimeout(()=>{ setBS(key,'idle'); setResidentState(key,'idle'); document.getElementById(`bidle-${key}`)?.classList.remove('working'); },3500);
       removeWalker(key); upsertTaskCard(key,'done',null);
       if(data?.result) showOutput(key,data.result);
+      if(_fbLoaded) loadFileBrowser();
       updateHallBoard(); break;
     case 'error':
       setBS(key,'error'); activeAgents.delete(key); showBubble(key,'⚠ error');
@@ -1855,7 +1986,7 @@ function runTask(){
   inp.value='';
   setBS(selectedKey,'running'); activeAgents.add(selectedKey); updateActiveBar();
   showBubble(selectedKey,task.slice(0,50));
-  taskCards[selectedKey]={steps:[],task,status:'running'};
+  taskCards[selectedKey]={steps:[],task,status:'running',startedAt:Date.now(),estDuration:_estDuration(selectedKey)};
   upsertTaskCard(selectedKey,'running',task);
   switchTab('tasks');
 }
