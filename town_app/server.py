@@ -91,6 +91,7 @@ DELEGATION_MAP: dict[str, str] = {
     "delegate_to_supply_chain_agent":    "supply",
     "delegate_to_email_marketing_agent": "email",
     "delegate_to_ab_testing_agent":      "abt",
+    "delegate_to_api_connections_agent": "api",
 }
 
 # ── Event emission ─────────────────────────────────────────────────────────────
@@ -122,6 +123,7 @@ AGENT_CLASSES: dict[str, str] = {
     "tax": "TaxComplianceAgent", "returns": "ReturnsAgent",
     "supply": "SupplyChainAgent", "email": "EmailMarketingAgent",
     "abt": "ABTestingAgent",
+    "api": "APIConnectionsAgent",
 }
 
 

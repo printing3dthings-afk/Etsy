@@ -21,6 +21,7 @@ from .returns_agent import ReturnsAgent
 from .supply_chain_agent import SupplyChainAgent
 from .email_marketing_agent import EmailMarketingAgent
 from .ab_testing_agent import ABTestingAgent
+from .api_connections_agent import APIConnectionsAgent
 from .ceo_agent import CEOAgent
 
 __all__ = [
@@ -47,5 +48,6 @@ __all__ = [
     "SupplyChainAgent",
     "EmailMarketingAgent",
     "ABTestingAgent",
+    "APIConnectionsAgent",
     "CEOAgent",
 ]

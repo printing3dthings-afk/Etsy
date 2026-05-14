@@ -292,19 +292,89 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 #walker-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:40}
 .walker{position:absolute;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:41;
   transition:left 1.35s cubic-bezier(.4,0,.2,1),top 1.35s cubic-bezier(.4,0,.2,1)}
-.w-shadow{width:18px;height:5px;background:rgba(0,0,0,.22);border-radius:50%;margin-top:-1px}
+/* Figure wrapper — receives the bob animation so shadow stays on ground */
+.w-figure{display:flex;flex-direction:column;align-items:center}
+/* Shadow stays OUTSIDE .w-figure so it doesn't bob with the body */
+.w-shadow{width:20px;height:5px;background:rgba(0,0,0,.26);border-radius:50%;margin-top:0px;flex-shrink:0}
+/* Head */
 .w-head{width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(0,0,0,.32);
-  box-shadow:0 2px 5px rgba(0,0,0,.35);position:relative}
+  box-shadow:0 2px 5px rgba(0,0,0,.35);position:relative;flex-shrink:0}
 .w-head::before{content:'';position:absolute;top:3px;left:3px;width:5px;height:5px;background:rgba(0,0,0,.22);border-radius:50%}
-.w-torso{width:13px;height:18px;border-radius:3px;border:2px solid rgba(0,0,0,.26);margin-top:-1px}
-.w-legs{display:flex;gap:3px;margin-top:-2px}
-.w-leg{width:5px;height:14px;border-radius:0 0 3px 3px;background:#444;border:1px solid rgba(0,0,0,.3);transform-origin:top center}
-.walker.walking .w-leg:nth-child(1){animation:wlk .38s ease-in-out infinite}
-.walker.walking .w-leg:nth-child(2){animation:wlk .38s ease-in-out infinite reverse}
-@keyframes wlk{0%{transform:rotate(-22deg)}50%{transform:rotate(22deg)}100%{transform:rotate(-22deg)}}
+/* Neck */
+.w-neck{width:5px;height:3px;background:rgba(0,0,0,.18);margin-top:-1px;flex-shrink:0}
+/* Upper body row: left arm + torso + right arm */
+.w-upper{display:flex;align-items:flex-start;gap:0;margin-top:0}
+.w-torso{width:13px;height:16px;border-radius:3px 3px 2px 2px;border:2px solid rgba(0,0,0,.26);flex-shrink:0}
+.w-arm{width:4px;height:13px;border-radius:2px;background:#555;border:1px solid rgba(0,0,0,.28);
+  transform-origin:top center;flex-shrink:0;margin-top:1px}
+/* Legs */
+.w-legs{display:flex;gap:2px;margin-top:-1px}
+.w-leg{width:5px;height:11px;border-radius:0 0 2px 2px;background:#3a3a3a;
+  border:1px solid rgba(0,0,0,.3);transform-origin:top center;position:relative;flex-shrink:0}
+/* Shoe/foot */
+.w-leg::after{content:'';position:absolute;bottom:-3px;left:-1px;width:7px;height:3px;
+  background:#222;border-radius:1px 2px 2px 1px}
+
+/* ── WALKING (ground contact, no floating) ── */
+@keyframes w-bob{
+  0%  {transform:translateY(0)}
+  20% {transform:translateY(-3px)}   /* push-off */
+  50% {transform:translateY(1px)}    /* foot-strike compression */
+  70% {transform:translateY(-3px)}   /* push-off other side */
+  100%{transform:translateY(0)}
+}
+@keyframes w-step{
+  0%  {transform:rotate(-26deg)}
+  50% {transform:rotate(26deg)}
+  100%{transform:rotate(-26deg)}
+}
+@keyframes w-arm-swing{
+  0%  {transform:rotate(20deg)}
+  50% {transform:rotate(-20deg)}
+  100%{transform:rotate(20deg)}
+}
+@keyframes w-shadow-walk{
+  0%,100%{transform:scaleX(1);opacity:.26}
+  50%    {transform:scaleX(.82);opacity:.16}
+}
+.walker.walking .w-figure{animation:w-bob .44s ease-in-out infinite}
+.walker.walking .w-leg:nth-child(1){animation:w-step .44s ease-in-out infinite}
+.walker.walking .w-leg:nth-child(2){animation:w-step .44s ease-in-out infinite reverse}
+.walker.walking .w-arm:nth-child(1){animation:w-arm-swing .44s ease-in-out infinite reverse}
+.walker.walking .w-arm:nth-child(3){animation:w-arm-swing .44s ease-in-out infinite}
+.walker.walking .w-shadow{animation:w-shadow-walk .44s ease-in-out infinite}
+
+/* ── RUNNING ── */
+@keyframes w-run{
+  0%  {transform:rotate(-40deg)}
+  50% {transform:rotate(40deg)}
+  100%{transform:rotate(-40deg)}
+}
+@keyframes w-run-bob{
+  0%  {transform:translateY(0)}
+  25% {transform:translateY(-6px)}
+  50% {transform:translateY(0)}
+  75% {transform:translateY(-6px)}
+  100%{transform:translateY(0)}
+}
+@keyframes w-run-arm{
+  0%  {transform:rotate(35deg)}
+  50% {transform:rotate(-35deg)}
+  100%{transform:rotate(35deg)}
+}
+.walker.running .w-figure{animation:w-run-bob .26s ease-in-out infinite}
+.walker.running .w-leg:nth-child(1){animation:w-run .26s ease-in-out infinite}
+.walker.running .w-leg:nth-child(2){animation:w-run .26s ease-in-out infinite reverse}
+.walker.running .w-arm:nth-child(1){animation:w-run-arm .26s ease-in-out infinite reverse}
+.walker.running .w-arm:nth-child(3){animation:w-run-arm .26s ease-in-out infinite}
+.walker.running .w-shadow{animation:w-shadow-walk .26s ease-in-out infinite}
+/* Lean forward while running */
+.walker.running .w-figure{transform-origin:bottom center}
+
+/* Working (at desk) */
 .walker.working{animation:wbob .55s ease-in-out infinite alternate}
-@keyframes wbob{from{transform:translateY(0)}to{transform:translateY(-7px)}}
-.walker-label{font-size:.44rem;font-weight:700;margin-top:2px;white-space:nowrap;
+@keyframes wbob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+.walker-label{font-size:.44rem;font-weight:700;margin-top:3px;white-space:nowrap;
   background:rgba(0,0,0,.7);padding:1px 5px;border-radius:3px;color:#fff;border:1px solid rgba(255,255,255,.1)}
 
 /* ── ZOOM HUD ── */
@@ -400,34 +470,176 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .tooltip{position:fixed;background:rgba(13,17,23,.95);color:var(--text);font-size:.65rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;z-index:5000;display:none;white-space:nowrap}
 
 /* ── BUILDING INTERIOR (hover/select reveal) ── */
+/* ── BUILDING INTERIOR ── */
 .binterior{position:absolute;left:1px;right:1px;bottom:38px;top:36px;
-  background:linear-gradient(180deg,#fdf0d0 0%,#f5e0a0 100%);
-  opacity:0;transition:opacity .3s;pointer-events:none;display:flex;
-  flex-direction:column;align-items:center;justify-content:flex-end;
-  padding-bottom:5px;gap:2px;overflow:hidden}
+  background:linear-gradient(180deg,#e8d8b0 0%,#f5e8c0 30%,#f8eec8 100%);
+  opacity:0;transition:opacity .35s;pointer-events:none;overflow:hidden}
 .bld:hover .binterior,.bld.selected .binterior{opacity:1}
-.binterior::before{content:'';position:absolute;inset:0;
-  background:repeating-linear-gradient(0deg,transparent 0,transparent 14px,rgba(160,100,30,.1) 14px,rgba(160,100,30,.1) 15px),
-             repeating-linear-gradient(90deg,transparent 0,transparent 22px,rgba(160,100,30,.06) 22px,rgba(160,100,30,.06) 23px)}
-.bshelf{position:absolute;top:8px;left:6px;right:6px;height:5px;background:#b87820;border-radius:1px;z-index:1}
-.bshelf::before,.bshelf::after{content:'';position:absolute;top:-7px;width:7px;height:7px;border-radius:2px;background:#8a5a10}
-.bshelf::before{left:3px}.bshelf::after{right:3px}
-.bdesk{position:relative;width:64%;height:7px;background:linear-gradient(180deg,#c89030,#8a5e10);border-radius:2px;flex-shrink:0;z-index:2}
-.bdesk::before{content:'';position:absolute;bottom:-13px;left:5px;width:5px;height:13px;background:#6e480a;border-radius:0 0 2px 2px}
-.bdesk::after{content:'';position:absolute;bottom:-13px;right:5px;width:5px;height:13px;background:#6e480a;border-radius:0 0 2px 2px}
-.bmonitor{width:20px;height:15px;background:#111;border-radius:2px;border:2px solid #444;
-  margin-bottom:2px;position:relative;flex-shrink:0;z-index:2}
-.bmonitor::before{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:8px;height:4px;background:#333;border-radius:1px}
-.bmonitor-screen{position:absolute;inset:2px;border-radius:1px;
-  background:linear-gradient(135deg,#1a3a6c,#0d2a50);animation:scr 3.8s ease-in-out infinite}
-@keyframes scr{0%,100%{opacity:.9}45%{opacity:.65}47%{opacity:1}}
-.bidler{position:absolute;bottom:18px;left:50%;transform:translateX(-54%);
-  display:flex;flex-direction:column;align-items:center;z-index:3}
+/* Wall texture (subtle horizontal banding) */
+.binterior::before{content:'';position:absolute;inset:0;z-index:0;
+  background:repeating-linear-gradient(180deg,transparent 0,transparent 18px,rgba(140,90,20,.07) 18px,rgba(140,90,20,.07) 19px),
+             repeating-linear-gradient(90deg,transparent 0,transparent 28px,rgba(140,90,20,.04) 28px,rgba(140,90,20,.04) 29px)}
+/* Wood floor strip */
+.bi-floor{position:absolute;bottom:0;left:0;right:0;height:14px;z-index:4;
+  background:repeating-linear-gradient(90deg,#7a4a10 0,#7a4a10 18px,#9a6018 18px,#9a6018 19px,#8a5214 19px,#8a5214 36px,#6e400c 36px,#6e400c 37px);
+  border-top:2px solid #5a3008}
+/* Ceiling lamp */
+.bi-lamp{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:3;
+  width:24px;height:6px;background:linear-gradient(180deg,#c0a060,#a07030);
+  border-radius:0 0 4px 4px}
+.bi-lamp::after{content:'';position:absolute;top:6px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;
+  border-top:28px solid rgba(255,240,160,.18)}
+/* Ceiling strip */
+.bi-ceil{position:absolute;top:0;left:0;right:0;height:7px;z-index:2;
+  background:linear-gradient(180deg,#d4b870,#c0a050)}
+/* ── Desk (common to all) ── */
+.bdesk{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  width:66%;height:8px;background:linear-gradient(180deg,#d09838,#8a5e10);
+  border-radius:3px;z-index:5;min-width:36px;flex-shrink:0}
+.bdesk::before{content:'';position:absolute;bottom:-12px;left:6px;width:5px;height:12px;background:#6e480a;border-radius:0 0 2px 2px}
+.bdesk::after {content:'';position:absolute;bottom:-12px;right:6px;width:5px;height:12px;background:#6e480a;border-radius:0 0 2px 2px}
+/* Desk surface items (mug, paper) */
+.bdesk-mug{position:absolute;top:-9px;right:4px;width:5px;height:7px;
+  background:#e8b0a0;border-radius:2px 2px 1px 1px;border:1px solid rgba(0,0,0,.2)}
+.bdesk-paper{position:absolute;top:-6px;left:4px;width:10px;height:5px;
+  background:#f8f0e0;border-radius:1px;border:1px solid rgba(0,0,0,.1);
+  box-shadow:1px 1px 0 rgba(0,0,0,.08)}
+/* ── Monitor ── */
+.bmonitor{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+  width:24px;height:17px;background:#111;border-radius:2px;border:2px solid #555;z-index:6}
+.bmonitor::before{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+  width:9px;height:5px;background:#3a3a3a;border-radius:1px}
+.bmonitor-screen{position:absolute;inset:2px;border-radius:1px;animation:scr 3.8s ease-in-out infinite}
+@keyframes scr{0%,100%{opacity:.95}47%{opacity:.6}49%{opacity:1}}
+/* Monitor screen color variants */
+.scr-blue  {background:linear-gradient(135deg,#0d2050,#1a4a8a,#0d2050)}
+.scr-green {background:linear-gradient(135deg,#0a2010,#1a5020,#0a2010)}
+.scr-purple{background:linear-gradient(135deg,#200830,#4a1a6a,#200830)}
+.scr-orange{background:linear-gradient(135deg,#301000,#6a3200,#301000)}
+.scr-teal  {background:linear-gradient(135deg,#002020,#005050,#002020)}
+.scr-red   {background:linear-gradient(135deg,#300808,#6a1010,#300808)}
+.scr-gold  {background:linear-gradient(135deg,#201000,#504010,#201000)}
+.scr-gray  {background:linear-gradient(135deg,#101010,#303030,#101010)}
+/* Screen content: tiny data bars */
+.bmonitor-screen::before{content:'';position:absolute;bottom:2px;left:2px;
+  width:4px;height:5px;background:currentColor;opacity:.5;
+  box-shadow:5px 0 0 currentColor, 10px -2px 0 currentColor, 15px 1px 0 currentColor}
+/* ── Interior agent figure ── */
+.bidler{position:absolute;bottom:22px;z-index:7;
+  left:calc(50% + 12px);display:flex;flex-direction:column;align-items:center}
 .bidler.working{animation:bi-work .55s ease-in-out infinite alternate}
-@keyframes bi-work{from{transform:translateX(-54%) translateY(0)}to{transform:translateX(-54%) translateY(-4px)}}
-.bi-head{width:10px;height:10px;border-radius:50%;border:2px solid rgba(0,0,0,.28)}
-.bi-body{width:8px;height:8px;border-radius:2px;margin-top:-1px;border:1.5px solid rgba(0,0,0,.22)}
-.bi-legs{width:10px;height:5px;background:rgba(0,0,0,.22);border-radius:0 0 3px 3px;margin-top:-1px}
+@keyframes bi-work{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+.bi-head{width:10px;height:10px;border-radius:50%;border:2px solid rgba(0,0,0,.3);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.bi-body{width:9px;height:9px;border-radius:2px;margin-top:-1px;border:1.5px solid rgba(0,0,0,.22)}
+.bi-legs{width:11px;height:6px;background:rgba(60,40,10,.35);border-radius:0 0 3px 3px;margin-top:-1px}
+/* ── UNIQUE ROOM ITEMS ── */
+/* Bookcase */
+.bi-bookcase{position:absolute;right:3px;top:8px;width:18px;bottom:14px;
+  background:#8a5820;border:1px solid #5a3808;border-radius:1px;z-index:2}
+.bi-bookcase::before{content:'';position:absolute;top:3px;left:2px;right:2px;height:5px;
+  background:#c44;box-shadow:0 7px 0 #44c, 0 14px 0 #4a4, 0 21px 0 #ca4, 0 28px 0 #c44, 0 35px 0 #c4a, 0 42px 0 #44c, 0 49px 0 #4a4}
+.bi-bookcase::after{content:'';position:absolute;top:4px;left:0;right:0;height:1px;
+  background:rgba(0,0,0,.2);box-shadow:0 7px 0 rgba(0,0,0,.2),0 14px 0 rgba(0,0,0,.2),0 21px 0 rgba(0,0,0,.2),0 28px 0 rgba(0,0,0,.2),0 35px 0 rgba(0,0,0,.2),0 42px 0 rgba(0,0,0,.2),0 49px 0 rgba(0,0,0,.2)}
+/* Cork board with pins */
+.bi-corkboard{position:absolute;left:3px;top:8px;width:32px;height:28px;
+  background:#c4882a;border:2px solid #8a5a10;border-radius:1px;z-index:2}
+.bi-corkboard::before{content:'';position:absolute;top:3px;left:3px;width:6px;height:6px;
+  background:#e53935;border-radius:50%;box-shadow:9px 0 0 #43a047, 18px 0 0 #1e88e5, 0 10px 0 #fb8c00, 9px 10px 0 #e53935}
+.bi-corkboard::after{content:'';position:absolute;top:5px;left:4px;width:20px;height:2px;
+  background:rgba(255,255,255,.65);box-shadow:0 5px 0 rgba(255,255,255,.5), 0 10px 0 rgba(255,255,255,.55), 0 15px 0 rgba(255,255,255,.4)}
+/* Easel with canvas */
+.bi-easel{position:absolute;right:3px;top:12px;width:22px;height:32px;z-index:2}
+.bi-easel::before{content:'';position:absolute;top:0;left:2px;width:18px;height:20px;
+  background:linear-gradient(135deg,#ffe0b2,#f5f0e8);border:2px solid #a07030;border-radius:1px}
+.bi-easel::after{content:'';position:absolute;bottom:0;left:0;width:10px;height:12px;
+  background:transparent;border-left:2px solid #8a5a10;border-right:2px solid #8a5a10;
+  transform:skewX(-8deg);border-bottom:2px solid #8a5a10}
+/* Color swatches strip */
+.bi-swatches{position:absolute;left:3px;top:9px;width:28px;height:8px;z-index:2;
+  background:linear-gradient(90deg,#c44 0,#c44 14%,#e94 14%,#e94 28%,#ea4 28%,#ea4 42%,#4a4 42%,#4a4 56%,#49c 56%,#49c 70%,#84a 70%,#84a 84%,#c4a 84%,#c4a 100%);
+  border:1px solid rgba(0,0,0,.2);border-radius:1px}
+/* Safe */
+.bi-safe{position:absolute;right:3px;bottom:22px;width:20px;height:22px;
+  background:linear-gradient(135deg,#303030,#4a4a4a);border:2px solid #1a1a1a;border-radius:2px;z-index:2}
+.bi-safe::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:9px;height:9px;background:#666;border-radius:50%;border:2px solid #444}
+.bi-safe::after{content:'';position:absolute;top:3px;right:3px;width:4px;height:4px;
+  background:#4caf50;border-radius:50%;animation:safe-blink 2.2s ease-in-out infinite alternate}
+@keyframes safe-blink{from{opacity:1;background:#4caf50}to{opacity:.3;background:#8bc34a}}
+/* 3D Printer */
+.bi-printer3d{position:absolute;right:3px;bottom:22px;width:24px;height:26px;
+  background:linear-gradient(180deg,#e8e8e8,#bdbdbd);border:1px solid #9e9e9e;border-radius:2px;z-index:2}
+.bi-printer3d::before{content:'';position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  width:3px;height:3px;background:#ff9800;border-radius:50%;
+  box-shadow:-6px 0 0 #4caf50;animation:printer-head 1.8s linear infinite alternate}
+@keyframes printer-head{from{left:4px}to{left:calc(100% - 4px)}}
+.bi-printer3d::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);
+  width:10px;height:8px;background:rgba(33,150,243,.6);border-radius:1px}
+/* Server rack */
+.bi-server{position:absolute;right:3px;top:8px;width:20px;height:38px;
+  background:#121212;border:1px solid #3a3a3a;border-radius:2px;z-index:2;padding:2px}
+.bi-server::before{content:'';position:absolute;top:4px;left:2px;right:2px;height:4px;
+  background:#1e1e1e;border-radius:1px;
+  box-shadow:0 7px 0 #1e1e1e, 0 14px 0 #1e1e1e, 0 21px 0 #1e1e1e, 0 28px 0 #1e1e1e}
+.bi-server::after{content:'';position:absolute;top:5px;right:3px;width:3px;height:3px;
+  background:#00e676;border-radius:50%;animation:srv-blink 1.3s ease-in-out infinite alternate;
+  box-shadow:0 7px 0 #00e676, 0 14px 0 #ff9800, 0 21px 0 #00e676, 0 28px 0 #00e676}
+@keyframes srv-blink{from{opacity:1}to{opacity:.25}}
+/* Bar chart on wall */
+.bi-chart{position:absolute;left:3px;top:9px;width:28px;height:24px;
+  background:#f8f0e0;border:1px solid #c8a870;border-radius:1px;overflow:hidden;z-index:2}
+.bi-chart::before{content:'';position:absolute;bottom:2px;left:2px;width:4px;height:8px;
+  background:#43a047;box-shadow:6px 0 0 #1e88e5, 12px -3px 0 #e53935, 18px 2px 0 #fb8c00}
+.bi-chart::after{content:'';position:absolute;top:4px;left:2px;right:2px;height:1px;
+  background:#ddd;box-shadow:0 5px 0 #ddd, 0 10px 0 #ddd, 0 15px 0 #ddd}
+/* Line art chart (trend line) */
+.bi-linechart{position:absolute;left:3px;top:9px;width:28px;height:22px;
+  background:#1a1a2e;border:1px solid #444;border-radius:1px;overflow:hidden;z-index:2}
+.bi-linechart::before{content:'';position:absolute;bottom:4px;left:1px;
+  width:26px;height:2px;
+  background:linear-gradient(90deg,#1e88e5 0%,#43a047 30%,#fb8c00 55%,#e53935 75%,#fff 100%);
+  clip-path:polygon(0 100%,15% 60%,30% 80%,45% 30%,60% 50%,75% 20%,90% 40%,100% 10%,100% 100%)}
+/* Telescope */
+.bi-telescope{position:absolute;right:3px;bottom:26px;width:26px;height:7px;
+  background:#7a5010;border-radius:3px;transform:rotate(-20deg);transform-origin:left center;z-index:2}
+.bi-telescope::after{content:'';position:absolute;right:-2px;top:-3px;width:8px;height:13px;
+  background:#9a6818;border-radius:0 4px 4px 0}
+/* Plant */
+.bi-plant{position:absolute;left:3px;bottom:14px;width:12px;height:20px;z-index:2}
+.bi-plant::before{content:'';position:absolute;bottom:0;left:1px;width:10px;height:8px;
+  background:linear-gradient(180deg,#c08020,#8a5a10);border-radius:3px 3px 1px 1px}
+.bi-plant::after{content:'';position:absolute;bottom:8px;left:-2px;width:16px;height:14px;
+  background:radial-gradient(ellipse at 50% 70%,#4a8a3a 40%,#2d5a20 100%);border-radius:50%}
+/* Network diagram screen */
+.bi-netscreen{position:absolute;inset:2px;border-radius:1px;
+  background:#001428;animation:scr 3.8s ease-in-out infinite}
+.bi-netscreen::before{content:'';position:absolute;top:2px;left:2px;width:3px;height:3px;
+  background:#00e676;border-radius:50%;
+  box-shadow:6px 2px 0 #ff9800, 12px 0 0 #2196f3, 4px 6px 0 #ff9800, 10px 7px 0 #00e676}
+.bi-netscreen::after{content:'';position:absolute;top:3px;left:4px;width:7px;height:1px;
+  background:rgba(0,230,118,.5);box-shadow:2px 3px 0 rgba(255,152,0,.4), -2px 6px 0 rgba(33,150,243,.4), 6px 6px 0 rgba(0,230,118,.3)}
+/* Filing cabinet */
+.bi-cabinet{position:absolute;right:3px;bottom:14px;width:18px;height:30px;
+  background:linear-gradient(135deg,#bdbdbd,#9e9e9e);border:1px solid #757575;border-radius:2px;z-index:2}
+.bi-cabinet::before{content:'';position:absolute;top:6px;left:2px;right:2px;height:3px;
+  background:#757575;border-radius:1px;box-shadow:0 8px 0 #757575, 0 16px 0 #757575}
+.bi-cabinet::after{content:'';position:absolute;top:7px;left:50%;transform:translateX(-50%);
+  width:6px;height:1px;background:#9e9e9e;box-shadow:0 8px 0 #9e9e9e, 0 16px 0 #9e9e9e}
+/* Dual monitor setup */
+.bi-dual-mon{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+  display:flex;gap:2px;z-index:6}
+.bi-dual-mon .bmonitor{position:static;transform:none;width:20px;height:14px}
+/* Star/award on wall */
+.bi-award{position:absolute;right:5px;top:10px;width:16px;height:16px;z-index:2;
+  color:#f5c518;font-size:14px;text-align:center;line-height:16px}
+/* Headset icon */
+.bi-headset{position:absolute;left:3px;top:8px;width:18px;height:18px;z-index:2;
+  border:3px solid #5a3a10;border-radius:50%;border-bottom-color:transparent}
+.bi-headset::before{content:'';position:absolute;left:-5px;top:6px;width:5px;height:7px;
+  background:#5a3a10;border-radius:3px 0 0 3px}
+.bi-headset::after{content:'';position:absolute;right:-5px;top:6px;width:5px;height:7px;
+  background:#5a3a10;border-radius:0 3px 3px 0}
 
 /* ── RESIDENTS (always visible outdoor figures) ── */
 .resident{position:absolute;display:flex;flex-direction:column;align-items:center;
@@ -729,6 +941,9 @@ const AGENTS = [
    quick:['Get receipt message','Draft a new subscriber newsletter','Create package insert copy']},
   {key:'abt',      name:'A/B Testing Agent',     display:'A/B Testing',    icon:'🧪', roof:'#00695C',wall:'#E0F2F1', x:2365,y:1390,w:155,h:182, wins:2,chimney:false,
    quick:['Active tests','Generate test ideas for listing L001','Testing calendar']},
+  // ── Infrastructure district ────────────────────────────────────────────────
+  {key:'api',      name:'API Connections Agent',  display:'API Connections', icon:'🔌', roof:'#0D47A1',wall:'#E3F2FD', x:2600,y:768, w:165,h:195, wins:2,chimney:false,
+   quick:['Connection health report','List all API keys status','Set up Pinterest API connection']},
   // ── MEETING HALL (not an agent — opens idea board) ──
   {key:'hall',     name:'Meeting Hall',           display:'Meeting Hall',   icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:800, y:240, w:240,h:275, wins:4,chimney:false,type:'hall',
    quick:[]},
@@ -816,6 +1031,47 @@ function resetView(){
 }
 
 // ── BUILD TOWN ─────────────────────────────────────────────────────────────
+
+// Unique interior extras per agent key
+const INTERIOR_EXTRAS = {
+  ceo:      `<div class="bi-bookcase"></div><div class="bi-award">🏆</div><div class="bi-plant"></div>`,
+  brand:    `<div class="bi-swatches"></div><div class="bi-easel"></div><div class="bi-plant"></div>`,
+  art:      `<div class="bi-easel"></div><div class="bi-chart" style="left:3px;top:9px;background:#f5e0c0"></div><div class="bi-plant"></div>`,
+  qc:       `<div class="bi-corkboard"></div><div class="bi-bookcase" style="width:14px"></div>`,
+  listing:  `<div class="bi-corkboard"></div><div class="bi-bookcase" style="width:14px;right:3px"></div>`,
+  store:    `<div class="bi-chart"></div><div class="bi-bookcase" style="width:14px"></div><div class="bi-plant"></div>`,
+  delivery: `<div class="bi-printer3d" style="width:20px;height:18px;right:3px;bottom:22px"></div><div class="bi-chart" style="left:3px"></div>`,
+  sales:    `<div class="bi-linechart"></div><div class="bi-bookcase" style="width:14px"></div><div class="bi-plant"></div>`,
+  product:  `<div class="bi-chart"></div><div class="bi-bookcase" style="width:14px"></div>`,
+  marketing:`<div class="bi-corkboard"></div><div class="bi-linechart" style="top:40px"></div>`,
+  analytics:`<div class="bi-linechart"></div><div class="bi-chart" style="left:35px;top:9px"></div><div class="bi-bookcase" style="width:12px"></div>`,
+  cs:       `<div class="bi-headset"></div><div class="bi-chart" style="left:24px;top:9px"></div><div class="bi-plant"></div>`,
+  social:   `<div class="bi-corkboard"></div><div class="bi-plant"></div>`,
+  finance:  `<div class="bi-safe"></div><div class="bi-bookcase"></div><div class="bi-linechart" style="left:3px"></div>`,
+  print:    `<div class="bi-printer3d"></div><div class="bi-bookcase" style="width:12px"></div>`,
+  ads:      `<div class="bi-linechart"></div><div class="bi-chart" style="left:32px;top:9px"></div>`,
+  intel:    `<div class="bi-telescope"></div><div class="bi-corkboard" style="top:36px;left:3px;height:20px"></div>`,
+  promos:   `<div class="bi-chart"></div><div class="bi-bookcase" style="width:12px"></div>`,
+  tax:      `<div class="bi-cabinet"></div><div class="bi-bookcase" style="width:14px"></div>`,
+  returns:  `<div class="bi-cabinet" style="width:14px;height:24px"></div><div class="bi-chart"></div>`,
+  supply:   `<div class="bi-bookcase"></div><div class="bi-plant"></div>`,
+  email:    `<div class="bi-corkboard" style="height:20px"></div><div class="bi-bookcase" style="width:12px"></div>`,
+  abt:      `<div class="bi-chart"></div><div class="bi-linechart" style="left:32px;top:9px;width:24px"></div>`,
+  api:      `<div class="bi-server"></div><div class="bi-chart" style="left:3px"></div>`,
+};
+
+// Screen color per agent role
+const SCREEN_COLORS = {
+  ceo:'scr-purple', brand:'scr-red', art:'scr-purple', qc:'scr-blue',
+  listing:'scr-orange', store:'scr-green', delivery:'scr-teal',
+  sales:'scr-red', product:'scr-blue', marketing:'scr-orange',
+  analytics:'scr-green', cs:'scr-teal', social:'scr-red',
+  finance:'scr-gold', print:'scr-gray', ads:'scr-orange',
+  intel:'scr-green', promos:'scr-orange', tax:'scr-gray',
+  returns:'scr-red', supply:'scr-gray', email:'scr-blue',
+  abt:'scr-teal', api:'scr-blue',
+};
+
 function mkBuilding(a){
   const el=document.createElement('div');
   el.id=`b-${a.key}`; el.dataset.key=a.key;
@@ -825,6 +1081,8 @@ function mkBuilding(a){
   el.style.cssText=`left:${a.x}px;top:${a.y}px;--bw:${a.w}px;--bh:${a.h}px;--rc:${a.roof};--wc:${a.wall}`;
   const rw=a.w+(isCeo?0:22);
   const winsHtml=Array(a.wins||2).fill('<div class="bwin"></div>').join('');
+  const scrCls = SCREEN_COLORS[a.key]||'scr-blue';
+  const extras = INTERIOR_EXTRAS[a.key]||'<div class="bi-bookcase" style="width:14px"></div>';
 
   const interior = isHall
     ? `<div class="binterior" style="opacity:0">
@@ -833,14 +1091,20 @@ function mkBuilding(a){
          }</div>
        </div>`
     : `<div class="binterior">
-         <div class="bshelf"></div>
+         <div class="bi-ceil"></div>
+         <div class="bi-lamp"></div>
+         ${extras}
          <div class="bidler" id="bidle-${a.key}">
            <div class="bi-head" style="background:${a.roof}"></div>
            <div class="bi-body" style="background:${a.roof}bb"></div>
            <div class="bi-legs"></div>
          </div>
-         <div class="bmonitor"><div class="bmonitor-screen"></div></div>
-         <div class="bdesk"></div>
+         <div class="bmonitor"><div class="bmonitor-screen ${scrCls}"></div></div>
+         <div class="bdesk">
+           <div class="bdesk-mug"></div>
+           <div class="bdesk-paper"></div>
+         </div>
+         <div class="bi-floor"></div>
        </div>`;
 
   const hallExtras = isHall
@@ -1264,6 +1528,12 @@ const IDLE_THOUGHTS={
     'Saving winning strategy...','CTR improvement: +31% recorded ✓','New experiment hypothesis saved...',
     'Researching conversion best practices...','Test result insight saved ✓','Next experiment queued...',
   ],
+  api:    [
+    'Testing all API connections...','Fetching Pinterest OAuth docs...','Researching Etsy API endpoints...',
+    'Connection health: all systems ✓','Found missing: OpenAI key — flagging','Scanning codebase for API refs...',
+    'Saving integration guide to KB...','Pinterest API: guide ready ✓','Rate limit monitor: nominal...',
+    'Checking API key rotation schedule...','Mailchimp integration research done ✓','API health report generated...',
+  ],
 };
 
 // Research thoughts trigger the researching animation state
@@ -1300,7 +1570,7 @@ function tickIdle(){
     setResidentState(key, animState);
     document.getElementById(`bidle-${key}`)?.classList.add('working');
     // Show research badge on building during research
-    const bel = document.getElementById(`bld-${key}`);
+    const bel = document.getElementById(`b-${key}`);
     if(animState==='researching' && bel){
       let badge = bel.querySelector('.b-research-badge');
       if(!badge){ badge=document.createElement('div'); badge.className='b-research-badge'; bel.appendChild(badge); }
@@ -1320,14 +1590,23 @@ function tickIdle(){
 setTimeout(tickIdle,5000);
 
 // ── WALKER SYSTEM ───────────────────────────────────────────────────────────
-function mkWalker(key,color){
+function mkWalker(key,color,run=false){
   const w=document.createElement('div');
-  w.className='walker walking'; w.id=`walker-${key}`;
+  w.className='walker '+(run?'running':'walking'); w.id=`walker-${key}`;
+  // Skin tone: slightly lighter than roof color for face highlight
   w.innerHTML=`
-    <div class="w-head" style="background:${color}"></div>
-    <div class="w-torso" style="background:${color}"></div>
-    <div class="w-legs">
-      <div class="w-leg"></div><div class="w-leg"></div>
+    <div class="w-figure">
+      <div class="w-head" style="background:${color}"></div>
+      <div class="w-neck" style="background:${color}cc"></div>
+      <div class="w-upper">
+        <div class="w-arm" style="background:${color}dd"></div>
+        <div class="w-torso" style="background:${color}"></div>
+        <div class="w-arm" style="background:${color}dd"></div>
+      </div>
+      <div class="w-legs">
+        <div class="w-leg" style="background:${color}88"></div>
+        <div class="w-leg" style="background:${color}88"></div>
+      </div>
     </div>
     <div class="w-shadow"></div>
     <div class="walker-label">${AM[key]?.display||key}</div>`;

@@ -21,6 +21,7 @@ from agents.returns_agent import ReturnsAgent
 from agents.supply_chain_agent import SupplyChainAgent
 from agents.email_marketing_agent import EmailMarketingAgent
 from agents.ab_testing_agent import ABTestingAgent
+from agents.api_connections_agent import APIConnectionsAgent
 
 SYSTEM_PROMPT = """You are the CEO of OnBrandCraftz (etsy.com/shop/onbrandcraftz) — an Etsy shop selling 3D printed home decor, hand painted wood items, AND digital products (planners, wall art, printables). Your single overriding objective is: profitable business within 30 days. Every decision is measured in dollars of net profit.
 
@@ -412,6 +413,15 @@ DELEGATION_TOOLS = [
             "required": ["task"],
         },
     },
+    {
+        "name": "delegate_to_api_connections_agent",
+        "description": "Delegate API key management, integration setup, connection health checks, or new API research to the API Connections Agent.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"task": {"type": "string"}},
+            "required": ["task"],
+        },
+    },
 ]
 
 
@@ -443,6 +453,7 @@ class CEOAgent(BaseAgent):
             "supply_chain": SupplyChainAgent(),
             "email_marketing": EmailMarketingAgent(),
             "ab_testing": ABTestingAgent(),
+            "api_connections": APIConnectionsAgent(),
         }
         super().__init__(
             name="CEO Agent",
@@ -475,6 +486,7 @@ class CEOAgent(BaseAgent):
             "delegate_to_supply_chain_agent": "supply_chain",
             "delegate_to_email_marketing_agent": "email_marketing",
             "delegate_to_ab_testing_agent": "ab_testing",
+            "delegate_to_api_connections_agent": "api_connections",
         }
         agent_key = agent_map.get(tool_name)
         if not agent_key:
