@@ -116,12 +116,12 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .bld.done{filter:drop-shadow(0 0 20px rgba(63,185,80,.75)) drop-shadow(0 6px 14px rgba(0,0,0,.45))}
 .bld.error{filter:drop-shadow(0 0 20px rgba(248,81,73,.75)) drop-shadow(0 6px 14px rgba(0,0,0,.45))}
 
-.bub{position:absolute;top:-36px;left:50%;transform:translateX(-50%) translateY(8px);
-  background:rgba(255,255,255,.96);color:#222;font-size:.5rem;font-weight:600;
-  padding:3px 8px;border-radius:8px;white-space:nowrap;max-width:150px;overflow:hidden;text-overflow:ellipsis;
-  box-shadow:0 2px 10px rgba(0,0,0,.35);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:20}
-.bub::after{content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
-  border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid rgba(255,255,255,.96)}
+.bub{position:absolute;top:-62px;left:50%;transform:translateX(-50%) translateY(8px);
+  background:rgba(255,255,255,.98);color:#1a1a1a;font-size:.72rem;font-weight:600;
+  padding:7px 16px;border-radius:12px;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis;
+  box-shadow:0 4px 18px rgba(0,0,0,.5);opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:20;line-height:1.4}
+.bub::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+  border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid rgba(255,255,255,.98)}
 .bub.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 .broof{position:relative;z-index:2;margin-bottom:-2px;
@@ -298,6 +298,133 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 
 /* ── TOOLTIP ── */
 .tooltip{position:fixed;background:rgba(13,17,23,.95);color:var(--text);font-size:.65rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);pointer-events:none;z-index:5000;display:none;white-space:nowrap}
+
+/* ── BUILDING INTERIOR (hover/select reveal) ── */
+.binterior{position:absolute;left:1px;right:1px;bottom:38px;top:36px;
+  background:linear-gradient(180deg,#fdf0d0 0%,#f5e0a0 100%);
+  opacity:0;transition:opacity .3s;pointer-events:none;display:flex;
+  flex-direction:column;align-items:center;justify-content:flex-end;
+  padding-bottom:5px;gap:2px;overflow:hidden}
+.bld:hover .binterior,.bld.selected .binterior{opacity:1}
+.binterior::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent 0,transparent 14px,rgba(160,100,30,.1) 14px,rgba(160,100,30,.1) 15px),
+             repeating-linear-gradient(90deg,transparent 0,transparent 22px,rgba(160,100,30,.06) 22px,rgba(160,100,30,.06) 23px)}
+.bshelf{position:absolute;top:8px;left:6px;right:6px;height:5px;background:#b87820;border-radius:1px;z-index:1}
+.bshelf::before,.bshelf::after{content:'';position:absolute;top:-7px;width:7px;height:7px;border-radius:2px;background:#8a5a10}
+.bshelf::before{left:3px}.bshelf::after{right:3px}
+.bdesk{position:relative;width:64%;height:7px;background:linear-gradient(180deg,#c89030,#8a5e10);border-radius:2px;flex-shrink:0;z-index:2}
+.bdesk::before{content:'';position:absolute;bottom:-13px;left:5px;width:5px;height:13px;background:#6e480a;border-radius:0 0 2px 2px}
+.bdesk::after{content:'';position:absolute;bottom:-13px;right:5px;width:5px;height:13px;background:#6e480a;border-radius:0 0 2px 2px}
+.bmonitor{width:20px;height:15px;background:#111;border-radius:2px;border:2px solid #444;
+  margin-bottom:2px;position:relative;flex-shrink:0;z-index:2}
+.bmonitor::before{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:8px;height:4px;background:#333;border-radius:1px}
+.bmonitor-screen{position:absolute;inset:2px;border-radius:1px;
+  background:linear-gradient(135deg,#1a3a6c,#0d2a50);animation:scr 3.8s ease-in-out infinite}
+@keyframes scr{0%,100%{opacity:.9}45%{opacity:.65}47%{opacity:1}}
+.bidler{position:absolute;bottom:18px;left:50%;transform:translateX(-54%);
+  display:flex;flex-direction:column;align-items:center;z-index:3}
+.bidler.working{animation:bi-work .55s ease-in-out infinite alternate}
+@keyframes bi-work{from{transform:translateX(-54%) translateY(0)}to{transform:translateX(-54%) translateY(-4px)}}
+.bi-head{width:10px;height:10px;border-radius:50%;border:2px solid rgba(0,0,0,.28)}
+.bi-body{width:8px;height:8px;border-radius:2px;margin-top:-1px;border:1.5px solid rgba(0,0,0,.22)}
+.bi-legs{width:10px;height:5px;background:rgba(0,0,0,.22);border-radius:0 0 3px 3px;margin-top:-1px}
+
+/* ── RESIDENTS (always visible outdoor figures) ── */
+.resident{position:absolute;display:flex;flex-direction:column;align-items:center;
+  transition:left 1.35s cubic-bezier(.4,0,.2,1),top 1.35s cubic-bezier(.4,0,.2,1);
+  z-index:41;pointer-events:none}
+.r-head{width:13px;height:13px;border-radius:50%;border:2.5px solid rgba(0,0,0,.32);box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.r-torso{width:10px;height:14px;border-radius:3px;border:2px solid rgba(0,0,0,.26);margin-top:-1px}
+.r-legs{display:flex;gap:3px;margin-top:-2px}
+.r-leg{width:4px;height:12px;background:#444;border-radius:0 0 3px 3px;border:1px solid rgba(0,0,0,.28);transform-origin:top center}
+.r-shadow{width:15px;height:4px;background:rgba(0,0,0,.22);border-radius:50%;margin-top:-1px}
+.r-label{font-size:.38rem;font-weight:700;margin-top:2px;white-space:nowrap;
+  background:rgba(0,0,0,.72);padding:1px 4px;border-radius:3px;color:#fff;border:1px solid rgba(255,255,255,.08)}
+/* idle: gentle sway */
+.resident.idle{animation:res-idle 4s ease-in-out infinite alternate}
+@keyframes res-idle{from{transform:rotate(-1deg)}to{transform:rotate(1deg)}}
+/* working: bounce */
+.resident.working .r-leg:nth-child(1){animation:none}
+.resident.working .r-leg:nth-child(2){animation:none}
+.resident.working{animation:res-work .5s ease-in-out infinite alternate}
+@keyframes res-work{from{transform:translateY(0) rotate(0)}to{transform:translateY(-7px) rotate(0)}}
+/* thinking: sway faster */
+.resident.thinking{animation:res-think 1.2s ease-in-out infinite alternate}
+@keyframes res-think{from{transform:translateX(-3px)}to{transform:translateX(3px)}}
+/* walking */
+.resident.walking .r-leg:nth-child(1){animation:wlk .38s ease-in-out infinite}
+.resident.walking .r-leg:nth-child(2){animation:wlk .38s ease-in-out infinite reverse}
+.resident.walking{animation:none}
+
+/* ── MEETING HALL ── */
+.bld-hall .broof{filter:none!important;background:linear-gradient(180deg,#5a3a00,#3a2000)!important;--rc:#5a3a00}
+.bld-hall .bbody{background:linear-gradient(180deg,#f0d898,#d4b86a)!important;outline:3px solid rgba(0,0,0,.5)!important}
+.hall-flag-pole{position:absolute;top:-56px;left:50%;width:4px;height:56px;
+  background:linear-gradient(180deg,#a08020,#5a3a00);transform:translateX(-50%);z-index:4}
+.hall-flag{position:absolute;top:-56px;left:calc(50% + 2px);width:28px;height:20px;
+  background:linear-gradient(135deg,#c0392b 50%,#e74c3c 100%);
+  clip-path:polygon(0 0,100% 15%,100% 85%,0 100%);
+  transform-origin:left center;animation:flag-wave 1s ease-in-out infinite alternate;z-index:4}
+@keyframes flag-wave{from{skewY(-4deg) scaleX(.9)}to{skewY(4deg) scaleX(1.06)}}
+.hall-cols{position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent 26px,rgba(0,0,0,.14) 26px,rgba(0,0,0,.18) 30px,transparent 30px)}
+.hall-pediment{position:absolute;bottom:0;left:0;right:0;height:8px;background:rgba(0,0,0,.2)}
+.hall-plate{position:absolute;bottom:45px;left:50%;transform:translateX(-50%);
+  background:rgba(20,10,0,.85);color:#f5c842;font-size:.44rem;font-weight:700;
+  padding:3px 10px;border-radius:2px;border:1px solid rgba(200,160,50,.4);
+  white-space:nowrap;letter-spacing:.14em}
+/* mini board preview inside hall on hover */
+.hall-mini-board{position:absolute;inset:6px 6px 42px 6px;
+  background:rgba(60,30,0,.55);border:1px solid rgba(200,160,50,.25);border-radius:4px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:3px;padding:4px;overflow:hidden}
+.mini-note{border-radius:1px;background:#fef9c3;min-height:14px;position:relative}
+.mini-note::before{content:'';position:absolute;inset:2px 2px 2px 4px;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.1) 0,rgba(0,0,0,.1) 1px,transparent 1px,transparent 4px)}
+
+/* ── MEETING HALL MODAL ── */
+#hall-modal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;
+  justify-content:center;z-index:2000;opacity:0;pointer-events:none;transition:opacity .25s}
+#hall-modal.open{opacity:1;pointer-events:all}
+.hall-inner{background:#2a1600;border:2px solid #8B6914;border-radius:14px;
+  width:min(1180px,96vw);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 24px 64px rgba(0,0,0,.95)}
+.hall-hdr{display:flex;align-items:center;gap:12px;padding:14px 20px;
+  border-bottom:2px solid #5a3a00;background:linear-gradient(90deg,#1a0a00,#2a1600)}
+.hall-hdr h2{font-size:1rem;font-weight:700;color:#f5c842;flex:1;letter-spacing:.06em}
+.hall-hdr-sub{font-size:.62rem;color:#8b6914;margin-right:10px}
+.hall-close{background:transparent;border:1px solid #5a3a00;border-radius:6px;
+  color:#8b949e;font-size:.75rem;padding:5px 14px;cursor:pointer;transition:background .15s,color .15s}
+.hall-close:hover{background:#3d2000;color:#f5c842}
+.hall-board{flex:1;overflow-y:auto;display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:16px;padding:20px;
+  background:#1a0a00;
+  background-image:repeating-linear-gradient(0deg,transparent 0,transparent 26px,rgba(255,200,50,.04) 26px,rgba(255,200,50,.04) 27px),
+                   repeating-linear-gradient(90deg,transparent 0,transparent 26px,rgba(255,200,50,.03) 26px,rgba(255,200,50,.03) 27px)}
+.hall-board::-webkit-scrollbar{width:5px}
+.hall-board::-webkit-scrollbar-thumb{background:#5a3a00;border-radius:2px}
+.idea-card{background:#fef9c3;border-radius:3px 8px 8px 3px;padding:10px 10px 10px 13px;
+  min-height:130px;position:relative;transition:transform .2s,box-shadow .2s;
+  box-shadow:3px 5px 12px rgba(0,0,0,.6),inset 0 0 0 1px rgba(0,0,0,.06);cursor:pointer}
+.idea-card:hover{transform:translateY(-4px) rotate(.5deg) scale(1.02);
+  box-shadow:5px 12px 24px rgba(0,0,0,.75)}
+.idea-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:2px 0 0 2px}
+.idea-pin{position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  width:13px;height:13px;border-radius:50%;border:2.5px solid rgba(0,0,0,.3);z-index:2;
+  box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.idea-card-hdr{display:flex;align-items:center;gap:5px;margin-bottom:6px}
+.idea-icon{font-size:.92rem;flex-shrink:0}
+.idea-name{font-size:.58rem;font-weight:700;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.idea-status{font-size:.5rem;font-weight:700;padding:2px 6px;border-radius:5px;flex-shrink:0;margin-left:auto}
+.ist-idle{background:#e8e8e8;color:#555}
+.ist-running{background:#c8e6c9;color:#1b5e20}
+.ist-done{background:#bbdefb;color:#0d47a1}
+.ist-error{background:#ffcdd2;color:#b71c1c}
+.ist-thinking{background:#e8d5f5;color:#6a1b9a}
+.idea-task{font-size:.6rem;color:#444;line-height:1.55;margin-bottom:6px;min-height:38px}
+.idea-steps{font-size:.52rem;color:#777;line-height:1.6;border-top:1px dashed #ddd;padding-top:4px}
+.hall-footer{padding:10px 18px;font-size:.6rem;color:#8b6914;border-top:1px solid #5a3a00;
+  background:#150800;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.hl-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
 </style>
 </head>
 <body>
@@ -410,6 +537,27 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 </div>
 <div class="tooltip" id="tooltip"></div>
 
+<!-- MEETING HALL MODAL -->
+<div id="hall-modal">
+  <div class="hall-inner">
+    <div class="hall-hdr">
+      <span style="font-size:1.3rem">🏛️</span>
+      <h2>OnBrandCraftz — Meeting Hall</h2>
+      <span class="hall-hdr-sub" id="hall-subtitle">All Agent Status Board</span>
+      <button class="hall-close" onclick="closeHall()">✕ Close</button>
+    </div>
+    <div class="hall-board" id="hall-board"></div>
+    <div class="hall-footer">
+      <span><span class="hl-dot" style="background:#c8e6c9;border:1px solid #2e7d32"></span>Running</span>
+      <span><span class="hl-dot" style="background:#e8d5f5;border:1px solid #6a1b9a"></span>Thinking</span>
+      <span><span class="hl-dot" style="background:#bbdefb;border:1px solid #1565c0"></span>Done</span>
+      <span><span class="hl-dot" style="background:#e8e8e8;border:1px solid #777"></span>Idle</span>
+      <span><span class="hl-dot" style="background:#ffcdd2;border:1px solid #b71c1c"></span>Error</span>
+      <span style="margin-left:auto;color:#5a3a00">Click any card to select that agent</span>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── AGENT DATA ──────────────────────────────────────────────────────────────
 const AGENTS = [
@@ -463,11 +611,14 @@ const AGENTS = [
    quick:['Get receipt message','Draft a new subscriber newsletter','Create package insert copy']},
   {key:'abt',      name:'A/B Testing Agent',     display:'A/B Testing',    icon:'🧪', roof:'#00695C',wall:'#E0F2F1', x:2335,y:1240,w:155,h:185, wins:2,chimney:false,
    quick:['Active tests','Generate test ideas for listing L001','Testing calendar']},
+  // ── MEETING HALL (not an agent — opens idea board) ──
+  {key:'hall',     name:'Meeting Hall',           display:'Meeting Hall',   icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:780, y:235, w:240,h:275, wins:4,chimney:false,type:'hall',
+   quick:[]},
 ];
 const AM = Object.fromEntries(AGENTS.map(a=>[a.key,a]));
 
 // ── STATE ───────────────────────────────────────────────────────────────────
-let selectedKey=null, feedCount=0, taskCards={}, bpositions={};
+let selectedKey=null, feedCount=0, taskCards={}, bpositions={}, homePos={};
 let activeAgents=new Set();
 
 // ── ZOOM / PAN ──────────────────────────────────────────────────────────────
@@ -550,23 +701,52 @@ function resetView(){
 function mkBuilding(a){
   const el=document.createElement('div');
   el.id=`b-${a.key}`; el.dataset.key=a.key;
-  el.className='bld'+(a.large?' bld-ceo':'');
+  const isHall = a.type==='hall';
+  const isCeo  = a.large;
+  el.className='bld'+(isCeo?' bld-ceo':isHall?' bld-hall':'');
   el.style.cssText=`left:${a.x}px;top:${a.y}px;--bw:${a.w}px;--bh:${a.h}px;--rc:${a.roof};--wc:${a.wall}`;
-  const rw=a.w+(a.large?0:22);
+  const rw=a.w+(isCeo?0:22);
   const winsHtml=Array(a.wins||2).fill('<div class="bwin"></div>').join('');
+
+  const interior = isHall
+    ? `<div class="binterior" style="opacity:0">
+         <div class="hall-mini-board" id="hall-mini">${
+           AGENTS.filter(x=>x.type!=='hall').slice(0,9).map(()=>'<div class="mini-note"></div>').join('')
+         }</div>
+       </div>`
+    : `<div class="binterior">
+         <div class="bshelf"></div>
+         <div class="bidler" id="bidle-${a.key}">
+           <div class="bi-head" style="background:${a.roof}"></div>
+           <div class="bi-body" style="background:${a.roof}bb"></div>
+           <div class="bi-legs"></div>
+         </div>
+         <div class="bmonitor"><div class="bmonitor-screen"></div></div>
+         <div class="bdesk"></div>
+       </div>`;
+
+  const hallExtras = isHall
+    ? `<div class="hall-flag-pole"></div><div class="hall-flag"></div>`
+    : '';
+  const hallBody = isHall
+    ? `<div class="hall-cols"></div><div class="hall-plate">MEETING HALL</div>` : '';
+
   el.innerHTML=`
+    ${hallExtras}
     <div class="bub" id="bub-${a.key}"></div>
     <div class="broof" style="width:${rw}px"></div>
     <div class="bbody">
+      ${hallBody}
       <div class="bsign">${a.icon} ${a.display}</div>
       <div class="bwins">${winsHtml}</div>
+      ${interior}
       <div class="bdoor"></div>
       ${a.chimney?'<div class="bchim"></div>':''}
     </div>
-    <div class="bbadge" id="bdg-${a.key}">idle</div>
+    <div class="bbadge" id="bdg-${a.key}">${isHall?'📋 view board':'idle'}</div>
     <div class="blabel">${a.display}</div>`;
-  el.onclick=()=>selectAgent(a.key);
-  el.onmouseenter=e=>showTip(e,a.name);
+  el.onclick=()=>isHall?openHall():selectAgent(a.key);
+  el.onmouseenter=e=>{ showTip(e,isHall?'Meeting Hall — click to view all agent tasks':a.name); if(isHall) updateMiniBoard(); };
   el.onmouseleave=hideTip;
   el.onmousemove=moveTip;
   return el;
@@ -675,7 +855,7 @@ function initTown(){
   buildDecos();
   const container=document.getElementById('buildings');
   AGENTS.forEach(a=>container.appendChild(mkBuilding(a)));
-  setTimeout(calcPositions,400);
+  setTimeout(()=>{ calcPositions(); spawnAllResidents(); },420);
 }
 
 function calcPositions(){
@@ -686,9 +866,156 @@ function calcPositions(){
       x: el.offsetLeft + el.offsetWidth/2,
       y: el.offsetTop  + el.offsetHeight*.38,
     };
+    homePos[a.key]={
+      x: el.offsetLeft + el.offsetWidth/2 - 8,
+      y: el.offsetTop  + el.offsetHeight - 10,
+    };
   });
 }
-window.addEventListener('resize',()=>{ setTimeout(calcPositions,100); resetView(); });
+window.addEventListener('resize',()=>{ setTimeout(()=>{ calcPositions(); repositionResidents(); },120); resetView(); });
+
+// ── RESIDENTS (always-visible figures) ───────────────────────────────────────
+function mkResident(a){
+  const color = a.roof||'#58a6ff';
+  const d=document.createElement('div');
+  d.className='resident idle'; d.id=`res-${a.key}`;
+  d.innerHTML=`
+    <div class="r-head" style="background:${color}"></div>
+    <div class="r-torso" style="background:${color}cc"></div>
+    <div class="r-legs"><div class="r-leg"></div><div class="r-leg"></div></div>
+    <div class="r-shadow"></div>
+    <div class="r-label">${a.display}</div>`;
+  return d;
+}
+
+function spawnAllResidents(){
+  const layer=document.getElementById('walker-layer');
+  AGENTS.forEach(a=>{
+    if(a.type==='hall') return;
+    const hp=homePos[a.key]; if(!hp) return;
+    document.getElementById(`res-${a.key}`)?.remove();
+    const r=mkResident(a);
+    r.style.left=hp.x+'px'; r.style.top=hp.y+'px';
+    layer.appendChild(r);
+  });
+}
+
+function repositionResidents(){
+  AGENTS.forEach(a=>{
+    if(a.type==='hall') return;
+    const hp=homePos[a.key]; if(!hp) return;
+    const r=document.getElementById(`res-${a.key}`); if(!r) return;
+    if(r.classList.contains('idle')){ r.style.left=hp.x+'px'; r.style.top=hp.y+'px'; }
+  });
+}
+
+function setResidentState(key, state){
+  const r=document.getElementById(`res-${key}`); if(!r) return;
+  r.classList.remove('idle','working','thinking','walking');
+  r.classList.add(state||'idle');
+  if(state==='idle'){
+    const hp=homePos[key]; if(hp){ r.style.left=hp.x+'px'; r.style.top=hp.y+'px'; }
+  }
+}
+
+// ── MEETING HALL BOARD ───────────────────────────────────────────────────────
+const PIN_COLORS=['#e74c3c','#f39c12','#27ae60','#2980b9','#8e44ad','#16a085','#d35400','#c0392b'];
+function buildIdeaCard(a){
+  const tc=taskCards[a.key]||{};
+  const status=activeAgents.has(a.key)?'running':(tc.status||'idle');
+  const statusMap={running:'ist-running',done:'ist-done',error:'ist-error',thinking:'ist-thinking',idle:'ist-idle'};
+  const sLabel={running:'Working',done:'Done',error:'Error',thinking:'Thinking',idle:'Idle'};
+  const sc=statusMap[status]||'ist-idle';
+  const task=tc.task||'No active task';
+  const lastSteps=(tc.steps||[]).slice(-3).join('\n');
+  const pinIdx=AGENTS.findIndex(x=>x.key===a.key)%PIN_COLORS.length;
+  const pinColor=PIN_COLORS[pinIdx];
+  const stripColor=a.roof;
+  return `<div class="idea-card" onclick="closeHall();selectAgent('${a.key}')" title="Click to select ${a.name}">
+    <div class="idea-pin" style="background:${pinColor}"></div>
+    <div style="position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:2px 0 0 2px;background:${stripColor}"></div>
+    <div class="idea-card-hdr">
+      <span class="idea-icon">${a.icon}</span>
+      <span class="idea-name">${a.display}</span>
+      <span class="idea-status ${sc}">${sLabel[status]||status}</span>
+    </div>
+    <div class="idea-task">${esc(task.slice(0,90))}</div>
+    ${lastSteps?`<div class="idea-steps">${esc(lastSteps)}</div>`:''}
+  </div>`;
+}
+
+function updateHallBoard(){
+  const board=document.getElementById('hall-board'); if(!board) return;
+  board.innerHTML=AGENTS.filter(a=>a.type!=='hall').map(a=>buildIdeaCard(a)).join('');
+  const sub=document.getElementById('hall-subtitle'); if(!sub) return;
+  const running=[...activeAgents].length;
+  sub.textContent=running?`${running} agent${running>1?'s':''} currently working`:'All agents idle';
+}
+
+function updateMiniBoard(){
+  const mini=document.getElementById('hall-mini'); if(!mini) return;
+  const notes=mini.querySelectorAll('.mini-note');
+  AGENTS.filter(a=>a.type!=='hall').slice(0,notes.length).forEach((a,i)=>{
+    const working=activeAgents.has(a.key);
+    notes[i].style.background=working?'#c8f5c8':'#fef9c3';
+    notes[i].title=a.display+(working?' — working':'— idle');
+  });
+}
+
+function openHall(){
+  updateHallBoard();
+  document.getElementById('hall-modal').classList.add('open');
+}
+function closeHall(){ document.getElementById('hall-modal').classList.remove('open'); }
+document.getElementById('hall-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeHall(); });
+
+// ── AUTONOMOUS IDLE BEHAVIOR ──────────────────────────────────────────────────
+const IDLE_THOUGHTS={
+  brand: ['Checking brand consistency...','Reviewing color palette trends...','Sketching banner idea...','Font pairing research...'],
+  art:   ['Browsing design inspiration...','Drafting new art concept...','Color theory study...','Exploring trending styles...'],
+  qc:    ['Reviewing QC criteria...','Checking quality standards...','Calibrating benchmarks...','Auditing recent approvals...'],
+  listing:['Auditing listing SEO scores...','Checking tag opportunities...','Title optimization review...','Monitoring search trends...'],
+  store: ['Running shop health check...','Checking listing renewals...','Reviewing performance metrics...','Shop organization audit...'],
+  delivery:['Monitoring delivery queue...','Checking file download links...','Order processing review...'],
+  sales: ['Reviewing revenue trends...','Checking order pipeline...','Sales forecasting...','Monitoring conversion rates...'],
+  product:['Reviewing inventory levels...','Pricing competitiveness check...','Product portfolio analysis...'],
+  marketing:['Keyword gap analysis...','Competitor listing review...','Traffic opportunity scan...','SEO improvement ideas...'],
+  analytics:['Crunching performance data...','Trend analysis running...','Building insights report...','Metric benchmarking...'],
+  cs:    ['Reviewing customer feedback...','Drafting review responses...','Satisfaction trend check...'],
+  social:['Pinterest strategy review...','Content ideas brainstorm...','Engagement analysis...','Pin performance check...'],
+  finance:['Margin analysis running...','Fee calculation check...','P&L projections...','Profit optimization ideas...'],
+  print:  ['Checking print queue...','Machine status review...','Filament cost analysis...','Job scheduling...'],
+  ads:    ['ROAS analysis running...','Ad budget optimization...','Promoted listing review...','Campaign strategy ideas...'],
+  intel:  ['Scanning market trends...','Competitor watch active...','Gap opportunity analysis...','Pricing intelligence check...'],
+  promos: ['Planning next promotion...','Coupon strategy review...','Bundle pricing ideas...','Sale calendar planning...'],
+  tax:    ['Expense tracking review...','Deduction opportunity scan...','Quarterly estimate prep...'],
+  returns:['Reviewing open cases...','Dispute pattern analysis...','Policy compliance check...'],
+  supply: ['Inventory level check...','Supplier price comparison...','Reorder point analysis...','Stock forecasting...'],
+  email:  ['Drafting follow-up copy...','Template optimization...','Newsletter content ideas...','Engagement rate check...'],
+  abt:    ['Designing new A/B test...','Analyzing test results...','CTR improvement ideas...','Conversion experiment ideas...'],
+};
+
+let _idleTimer;
+function tickIdle(){
+  const idleKeys=AGENTS.filter(a=>a.type!=='hall'&&!activeAgents.has(a.key)).map(a=>a.key);
+  if(idleKeys.length>0){
+    const key=idleKeys[Math.floor(Math.random()*idleKeys.length)];
+    const thoughts=IDLE_THOUGHTS[key]||['Reviewing tasks...','Analyzing data...','Planning improvements...'];
+    const thought=thoughts[Math.floor(Math.random()*thoughts.length)];
+    showBubble(key, thought);
+    setResidentState(key,'thinking');
+    document.getElementById(`bidle-${key}`)?.classList.add('working');
+    setTimeout(()=>{
+      if(!activeAgents.has(key)){
+        setResidentState(key,'idle');
+        document.getElementById(`bidle-${key}`)?.classList.remove('working');
+      }
+    }, 3800);
+  }
+  const next=8000+Math.random()*14000;
+  _idleTimer=setTimeout(tickIdle,next);
+}
+setTimeout(tickIdle,5000);
 
 // ── WALKER SYSTEM ───────────────────────────────────────────────────────────
 function mkWalker(key,color){
@@ -730,6 +1057,7 @@ function removeWalker(key){
 
 // ── AGENT SELECTION ─────────────────────────────────────────────────────────
 function selectAgent(key){
+  if(AM[key]?.type==='hall'){ openHall(); return; }
   if(selectedKey) document.getElementById(`b-${selectedKey}`)?.classList.remove('selected');
   selectedKey=key;
   document.getElementById(`b-${key}`)?.classList.add('selected');
@@ -761,8 +1089,8 @@ function setBS(key,state){
 function showBubble(key,text){
   const b=document.getElementById(`bub-${key}`);
   if(!b) return;
-  b.textContent=text.slice(0,55); b.classList.add('show');
-  clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('show'),4200);
+  b.textContent=text.slice(0,80); b.classList.add('show');
+  clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('show'),5000);
 }
 
 // ── ACTIVE AGENTS BAR ───────────────────────────────────────────────────────
@@ -874,43 +1202,47 @@ function handleEvent(msg){
   switch(event){
     case 'start':
       setBS(key,'running'); activeAgents.add(key);
-      showBubble(key,message.slice(0,55));
+      showBubble(key,message.slice(0,80));
       upsertTaskCard(key,'running',message);
-      if(bpositions[key]){
-        document.getElementById(`walker-${key}`)?.remove();
-        const w=mkWalker(key,AM[key]?.roof||'#58a6ff');
-        w.classList.remove('walking'); w.classList.add('working');
-        w.style.cssText=`left:${bpositions[key].x-10}px;top:${bpositions[key].y-32}px`;
-        document.getElementById('walker-layer').appendChild(w);
-      }
+      setResidentState(key,'working');
+      document.getElementById(`bidle-${key}`)?.classList.add('working');
       break;
     case 'thinking':
-      setBS(key,'thinking'); showBubble(key,'💭 thinking…'); addTaskStep(key,'💭 Thinking…'); break;
+      setBS(key,'thinking'); showBubble(key,'💭 thinking…');
+      addTaskStep(key,'💭 Thinking…');
+      setResidentState(key,'thinking');
+      break;
     case 'planning':
-      setBS(key,'running'); showBubble(key,message.slice(0,55)); addTaskStep(key,'📋 '+message.slice(0,80)); break;
+      setBS(key,'running'); showBubble(key,message.slice(0,80));
+      addTaskStep(key,'📋 '+message.slice(0,80));
+      setResidentState(key,'working');
+      break;
     case 'delegation':{
       const toKey=data?.to;
-      if(toKey) spawnWalker(key,toKey);
+      if(toKey){ spawnWalker(key,toKey); setResidentState(toKey,'working'); document.getElementById(`bidle-${toKey}`)?.classList.add('working'); }
       addTaskStep(key,'→ Sending to '+(AM[toKey]?.display||toKey));
       showBubble(key,'→ '+(AM[toKey]?.display||toKey)); break;
     }
     case 'tool_call':
-      setBS(key,'running'); showBubble(key,message); addTaskStep(key,message.slice(0,80)); break;
+      setBS(key,'running'); showBubble(key,message); addTaskStep(key,message.slice(0,80));
+      setResidentState(key,'working');
+      break;
     case 'tool_result':
-      showBubble(key,message.slice(0,55)); addTaskStep(key,'✓ '+message.slice(0,70));
+      showBubble(key,message.slice(0,80)); addTaskStep(key,'✓ '+message.slice(0,70));
       if(data?.file) showOutput(key,'File created: '+data.file,data.file); break;
     case 'done':
-      setBS(key,'done'); activeAgents.delete(key); showBubble(key,'✓ done');
-      setTimeout(()=>setBS(key,'idle'),3500);
+      setBS(key,'done'); activeAgents.delete(key); showBubble(key,'✓ Done!');
+      setTimeout(()=>{ setBS(key,'idle'); setResidentState(key,'idle'); document.getElementById(`bidle-${key}`)?.classList.remove('working'); },3500);
       removeWalker(key); upsertTaskCard(key,'done',null);
-      if(data?.result) showOutput(key,data.result); break;
+      if(data?.result) showOutput(key,data.result);
+      updateHallBoard(); break;
     case 'error':
       setBS(key,'error'); activeAgents.delete(key); showBubble(key,'⚠ error');
-      setTimeout(()=>setBS(key,'idle'),5500);
+      setTimeout(()=>{ setBS(key,'idle'); setResidentState(key,'idle'); document.getElementById(`bidle-${key}`)?.classList.remove('working'); },5500);
       removeWalker(key); upsertTaskCard(key,'error',null);
       showOutput(key,'ERROR: '+message); break;
   }
-  updateActiveBar(); addFeed(key,event,message,ts);
+  updateActiveBar(); addFeed(key,event,message,ts); updateHallBoard();
 }
 
 // ── WEBSOCKET ────────────────────────────────────────────────────────────────
