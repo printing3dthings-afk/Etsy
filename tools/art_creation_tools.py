@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any
 
 from tools.data_store import DataStore
+from tools.idea_tools import SUBMIT_IDEA_DEFINITION, handle_submit_idea
 
 DIGITAL_PRODUCTS_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "digital_products")
 PRODUCT_FILES_DIR = os.path.join(DIGITAL_PRODUCTS_DIR, "product_files")
@@ -208,6 +209,7 @@ TOOL_DEFINITIONS: list[dict] = [
             "required": []
         }
     },
+    SUBMIT_IDEA_DEFINITION,
 ]
 
 
@@ -228,6 +230,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _update_product_status(tool_input, store)
     elif tool_name == "get_design_references":
         return _get_design_references(tool_input)
+    if tool_name == "submit_idea":
+        return handle_submit_idea(tool_input)
     return f"Unknown art creation tool: {tool_name}"
 
 

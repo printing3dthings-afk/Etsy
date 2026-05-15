@@ -8,6 +8,7 @@ Flags high-confidence trends to the Art Creation Agent via the art_queue data st
 import json
 from datetime import date
 from tools.data_store import DataStore
+from tools.idea_tools import SUBMIT_IDEA_DEFINITION, handle_submit_idea
 
 TOOL_DEFINITIONS: list[dict] = [
     {
@@ -102,6 +103,7 @@ TOOL_DEFINITIONS: list[dict] = [
         ),
         "input_schema": {"type": "object", "properties": {}, "required": []},
     },
+    SUBMIT_IDEA_DEFINITION,
 ]
 
 TOOL_NAMES: set[str] = {t["name"] for t in TOOL_DEFINITIONS}
@@ -120,6 +122,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _flag_trend_for_art_agent(tool_input, store)
     if tool_name == "get_art_queue":
         return _get_art_queue(store)
+    if tool_name == "submit_idea":
+        return handle_submit_idea(tool_input)
     return f"Unknown trend forecasting tool: {tool_name}"
 
 

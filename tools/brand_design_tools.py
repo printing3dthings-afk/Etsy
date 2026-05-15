@@ -17,6 +17,7 @@ from datetime import date
 from typing import Any
 
 from tools.data_store import DataStore
+from tools.idea_tools import SUBMIT_IDEA_DEFINITION, handle_submit_idea
 
 BRAND_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "brand")
 BRAND_ASSETS_DIR = os.path.join(BRAND_DIR, "assets")
@@ -147,6 +148,7 @@ TOOL_DEFINITIONS: list[dict] = [
             "required": ["product_type", "setting"],
         },
     },
+    SUBMIT_IDEA_DEFINITION,
 ]
 
 
@@ -165,6 +167,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _get_etsy_branding_checklist(store)
     if tool_name == "generate_product_mockup_prompt":
         return _generate_mockup_prompt(tool_input)
+    if tool_name == "submit_idea":
+        return handle_submit_idea(tool_input)
     return f"Unknown brand design tool: {tool_name}"
 
 

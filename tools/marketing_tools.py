@@ -3,6 +3,7 @@
 import json
 from tools.data_store import DataStore
 from tools import etsy_api
+from tools.idea_tools import SUBMIT_IDEA_DEFINITION, handle_submit_idea
 
 TOOL_DEFINITIONS = [
     {
@@ -85,6 +86,7 @@ TOOL_DEFINITIONS = [
             "required": ["keywords"],
         },
     },
+    SUBMIT_IDEA_DEFINITION,
 ]
 
 
@@ -103,6 +105,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _get_top_search_terms(store)
     if tool_name == "search_competitor_prices":
         return _search_competitor_prices(tool_input["keywords"], tool_input.get("limit", 10), store)
+    if tool_name == "submit_idea":
+        return handle_submit_idea(tool_input)
     return f"Unknown marketing tool: {tool_name}"
 
 

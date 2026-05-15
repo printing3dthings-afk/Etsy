@@ -37,6 +37,7 @@ HISTORY_FILE = DATA_DIR / "task_history.json"
 SCHEDULE_FILE= DATA_DIR / "schedule.json"
 REFS_DIR     = DATA_DIR / "design_references"
 REFS_META    = DATA_DIR / "design_refs_meta.json"
+IDEAS_FILE   = DATA_DIR / "ideas.json"
 
 # ── Auto-update state ──────────────────────────────────────────────────────────
 _update_lock   = threading.Lock()
@@ -957,6 +958,78 @@ async def serve_design_reference(filename: str):
     if not path.exists():
         return JSONResponse({"error": "Not found"}, status_code=404)
     return FileResponse(str(path))
+
+
+# ── Ideas Board ────────────────────────────────────────────────────────────────
+
+def _load_ideas() -> list:
+    try:
+        if IDEAS_FILE.exists():
+            return json.loads(IDEAS_FILE.read_text())
+    except Exception:
+        pass
+    return []
+
+def _save_ideas(ideas: list):
+    IDEAS_FILE.write_text(json.dumps(ideas, indent=2))
+
+
+@app.post("/api/ideas")
+async def submit_idea(body: dict):
+    ideas = _load_ideas()
+    idea_id = f"idea_{int(datetime.utcnow().timestamp() * 1000)}"
+    entry = {
+        "id": idea_id,
+        "agent": (body.get("agent") or "unknown")[:40],
+        "title": (body.get("title") or "Untitled Idea")[:120],
+        "description": (body.get("description") or "")[:800],
+        "category": (body.get("category") or "general")[:40],
+        "submitted_at": datetime.utcnow().isoformat() + "Z",
+        "status": "pending",
+    }
+    ideas.append(entry)
+    _save_ideas(ideas)
+    await manager.broadcast(json.dumps({"type": "new_idea", "idea": entry}))
+    return JSONResponse(entry, status_code=201)
+
+
+@app.get("/api/ideas")
+async def list_ideas():
+    return JSONResponse(_load_ideas())
+
+
+@app.delete("/api/ideas/{idea_id}")
+async def delete_idea(idea_id: str):
+    ideas = _load_ideas()
+    if not any(i["id"] == idea_id for i in ideas):
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    _save_ideas([i for i in ideas if i["id"] != idea_id])
+    return JSONResponse({"deleted": True, "id": idea_id})
+
+
+@app.post("/api/ideas/brainstorm")
+async def start_brainstorm():
+    ideas = _load_ideas()
+    pending = [i for i in ideas if i.get("status") == "pending"]
+    if not pending:
+        return JSONResponse({"error": "No pending ideas to brainstorm"}, status_code=400)
+    lines = []
+    for idx, idea in enumerate(pending, 1):
+        agent_label = idea["agent"].replace("_", " ").title()
+        lines.append(f"{idx}. [{agent_label}] {idea['title']}\n   {idea['description']}")
+    task = (
+        "BRAINSTORM MEETING — The team has submitted the following ideas for strategic review. "
+        "Analyse each one: assess its potential impact, feasibility, and priority. "
+        "Give a concrete recommendation (pursue / park / refine) and one next action step.\n\n"
+        + "\n\n".join(lines)
+    )
+    _enqueue_task("ceo", task)
+    # Mark all as 'discussed'
+    for idea in ideas:
+        if idea.get("status") == "pending":
+            idea["status"] = "discussed"
+    _save_ideas(ideas)
+    return JSONResponse({"status": "started", "idea_count": len(pending), "agent": "ceo"})
 
 
 @app.get("/api/update-status")

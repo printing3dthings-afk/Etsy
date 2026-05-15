@@ -3,7 +3,22 @@
 import json
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from tools.data_store import DataStore
+
+_IDEAS_FILE = Path(__file__).parent.parent / "data" / "ideas.json"
+
+def _read_ideas() -> list:
+    try:
+        if _IDEAS_FILE.exists():
+            return json.loads(_IDEAS_FILE.read_text())
+    except Exception:
+        pass
+    return []
+
+def _write_ideas(ideas: list):
+    _IDEAS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _IDEAS_FILE.write_text(json.dumps(ideas, indent=2))
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -156,6 +171,36 @@ TOOL_DEFINITIONS = [
             "required": ["tasks"],
         },
     },
+    {
+        "name": "submit_idea",
+        "description": (
+            "Submit an idea to the shared Ideas Board so it can be reviewed in the next brainstorm meeting. "
+            "Use this whenever you spot an opportunity, improvement, or new product concept worth discussing."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Short title for the idea (max 120 chars)",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Detailed explanation of the idea, why it matters, and rough next steps (max 800 chars)",
+                },
+                "category": {
+                    "type": "string",
+                    "enum": ["product", "marketing", "operations", "design", "pricing", "general"],
+                    "description": "Category that best fits the idea",
+                },
+                "agent": {
+                    "type": "string",
+                    "description": "Your agent key (e.g. 'analytics', 'trend', 'art')",
+                },
+            },
+            "required": ["title", "description", "agent"],
+        },
+    },
 ]
 
 TOOL_NAMES = {t["name"] for t in TOOL_DEFINITIONS}
@@ -184,6 +229,13 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _get_daily_ops_summary(store)
     if tool_name == "prioritize_task_queue":
         return _prioritize_task_queue(tool_input["tasks"])
+    if tool_name == "submit_idea":
+        return _submit_idea(
+            agent=tool_input.get("agent", "unknown"),
+            title=tool_input["title"],
+            description=tool_input["description"],
+            category=tool_input.get("category", "general"),
+        )
     return f"Unknown workflow coordinator tool: {tool_name}"
 
 
@@ -540,3 +592,20 @@ def _prioritize_task_queue(tasks: list) -> str:
         ],
     }
     return json.dumps(result, indent=2)
+
+
+def _submit_idea(agent: str, title: str, description: str, category: str = "general") -> str:
+    ideas = _read_ideas()
+    idea_id = f"idea_{int(datetime.now(timezone.utc).timestamp() * 1000)}"
+    entry = {
+        "id": idea_id,
+        "agent": agent[:40],
+        "title": title[:120],
+        "description": description[:800],
+        "category": category[:40],
+        "submitted_at": _now_iso(),
+        "status": "pending",
+    }
+    ideas.append(entry)
+    _write_ideas(ideas)
+    return json.dumps({"submitted": True, "id": idea_id, "title": entry["title"]})
