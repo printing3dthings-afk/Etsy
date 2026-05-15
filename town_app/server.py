@@ -37,7 +37,35 @@ HISTORY_FILE = DATA_DIR / "task_history.json"
 SCHEDULE_FILE= DATA_DIR / "schedule.json"
 REFS_DIR     = DATA_DIR / "design_references"
 REFS_META    = DATA_DIR / "design_refs_meta.json"
-IDEAS_FILE   = DATA_DIR / "ideas.json"
+IDEAS_FILE          = DATA_DIR / "ideas.json"
+PIPELINE_BOARD_FILE = DATA_DIR / "product_pipeline.json"
+CHAINS_FILE         = DATA_DIR / "automation_chains.json"
+ORDERS_SEEN_FILE    = DATA_DIR / "orders_seen.json"
+
+# ── Notification system ────────────────────────────────────────────────────────
+_notifications: list = []
+_notif_lock = threading.Lock()
+
+def _add_notification(notif_type: str, title: str, body: str = "", icon: str = "🔔"):
+    with _notif_lock:
+        entry = {
+            "id": f"notif_{int(datetime.utcnow().timestamp()*1000)}",
+            "type": notif_type,
+            "title": title,
+            "body": body,
+            "icon": icon,
+            "ts": datetime.utcnow().isoformat() + "Z",
+            "read": False,
+        }
+        _notifications.insert(0, entry)
+        _notifications[:] = _notifications[:100]
+    try:
+        asyncio.run_coroutine_threadsafe(
+            manager.broadcast(json.dumps({"type": "notification", "notif": entry})),
+            _event_loop,
+        )
+    except Exception:
+        pass
 
 # ── Auto-update state ──────────────────────────────────────────────────────────
 _update_lock   = threading.Lock()
@@ -84,6 +112,60 @@ def _git_pull() -> dict:
 def _git_pull_job():
     _git_pull()
 
+def _poll_orders():
+    """Poll Etsy for new unshipped paid orders every 2 min. Auto-trigger delivery agent."""
+    access_token = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
+    shop_id      = os.getenv("ETSY_SHOP_ID", "").strip()
+    client_id    = os.getenv("ETSY_CLIENT_ID", "").strip()
+    if not access_token or not shop_id:
+        return
+    try:
+        import urllib.request as _ur
+        url = (
+            f"https://openapi.etsy.com/v3/application/shops/{shop_id}/receipts"
+            f"?was_paid=true&was_shipped=false&limit=25"
+        )
+        req = _ur.Request(url, headers={
+            "x-api-key": client_id,
+            "Authorization": f"Bearer {access_token}",
+        })
+        with _ur.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read())
+        orders = data.get("results", [])
+        seen: set = set()
+        try:
+            if ORDERS_SEEN_FILE.exists():
+                seen = set(json.loads(ORDERS_SEEN_FILE.read_text()))
+        except Exception:
+            pass
+        new_orders = [o for o in orders if str(o.get("receipt_id", "")) not in seen]
+        if new_orders:
+            for order in new_orders:
+                oid   = str(order.get("receipt_id", ""))
+                buyer = order.get("name", "Customer")
+                cents = order.get("grandtotal", {}).get("amount", 0)
+                total = cents / 100.0
+                seen.add(oid)
+                task  = (
+                    f"Process new Etsy order #{oid} from {buyer} (${total:.2f}). "
+                    f"Send any digital files, confirm payment, update order status."
+                )
+                _enqueue_task("delivery", task, f"Auto: Order #{oid}")
+                try:
+                    asyncio.run_coroutine_threadsafe(
+                        manager.broadcast(json.dumps({
+                            "type": "new_order",
+                            "order": {"id": oid, "buyer": buyer, "total": total},
+                        })),
+                        _event_loop,
+                    )
+                except Exception:
+                    pass
+                _add_notification("new_order", f"New Order #{oid}", f"{buyer} — ${total:.2f}", "🛒")
+            ORDERS_SEEN_FILE.write_text(json.dumps(list(seen)))
+    except Exception:
+        pass
+
 # ── Task history ───────────────────────────────────────────────────────────────
 
 _history_lock = threading.Lock()
@@ -128,6 +210,63 @@ def _enqueue_task(key: str, task: str, scheduled_label: str = ""):
     _task_queue.put((key, task, scheduled_label))
 
 # ── Scheduler ──────────────────────────────────────────────────────────────────
+
+# ── Automation chains ─────────────────────────────────────────────────────────
+
+DEFAULT_CHAINS = [
+    {
+        "id": "art_to_qc",
+        "label": "Art → QC Review",
+        "enabled": True,
+        "trigger_agent": "art",
+        "trigger_status": "done",
+        "action_agent": "qc",
+        "action_task": "Review the most recently created digital product from the art agent. Check image quality, dimensions, title and description. Approve or reject with detailed feedback.",
+    },
+    {
+        "id": "listing_to_social",
+        "label": "Listing → Pinterest Pin",
+        "enabled": True,
+        "trigger_agent": "listing",
+        "trigger_status": "done",
+        "action_agent": "social",
+        "action_task": "Create and schedule a Pinterest pin for the most recently published Etsy listing. Use the product title and keywords from the listing for the pin description and board selection.",
+    },
+    {
+        "id": "qc_to_listing",
+        "label": "QC Approved → Auto-List",
+        "enabled": False,
+        "trigger_agent": "qc",
+        "trigger_status": "done",
+        "action_agent": "listing",
+        "action_task": "Create an optimized Etsy listing for the most recently QC-approved digital product. Apply full SEO: optimized title, 13 tags, detailed description.",
+    },
+    {
+        "id": "analytics_to_ideas",
+        "label": "Analytics → Idea Suggestions",
+        "enabled": True,
+        "trigger_agent": "analytics",
+        "trigger_status": "done",
+        "action_agent": "trend",
+        "action_task": "Based on the latest analytics report, identify 2-3 product or marketing ideas that could improve performance. Submit the best one using the submit_idea tool.",
+    },
+]
+
+def _load_chains() -> list:
+    try:
+        if CHAINS_FILE.exists():
+            return json.loads(CHAINS_FILE.read_text())
+    except Exception:
+        pass
+    CHAINS_FILE.write_text(json.dumps(DEFAULT_CHAINS, indent=2))
+    return DEFAULT_CHAINS[:]
+
+def _fire_chains(agent_key: str, status: str):
+    chains = _load_chains()
+    for chain in chains:
+        if chain.get("enabled") and chain.get("trigger_agent") == agent_key and chain.get("trigger_status") == status:
+            _enqueue_task(chain["action_agent"], chain["action_task"], f"Auto-chain: {chain['label']}")
+            _add_notification("chain_fired", f"Auto: {chain['label']}", f"{chain['action_agent']} triggered automatically", "⛓️")
 
 DEFAULT_SCHEDULES = [
     {
@@ -194,6 +333,14 @@ def _start_scheduler():
         trigger          = "interval",
         minutes          = 10,
         id               = "_auto_git_pull",
+        replace_existing = True,
+    )
+    # Order polling: every 2 minutes
+    _scheduler.add_job(
+        func             = _poll_orders,
+        trigger          = "interval",
+        minutes          = 2,
+        id               = "_order_poll",
         replace_existing = True,
     )
     _scheduler.start()
@@ -416,6 +563,7 @@ def _run_sub_agent_observable(target_key: str, task: str) -> str:
         duration = round((datetime.now() - started).total_seconds())
         agent_states[target_key] = {"status": "idle", "task": task, "last_result": result}
         _emit(target_key, "done", "Complete ✓", {"result": result[:2000]})
+        _fire_chains(target_key, "done")
         if target_key in PIPELINE_STAGES:
             _pipeline_complete_step(target_key)
         _save_history_entry({
@@ -509,6 +657,9 @@ def _run_task(key: str, task: str):
         duration = round((datetime.now() - started).total_seconds())
         agent_states[key] = {"status": "idle", "task": task, "last_result": result}
         _emit(key, "done", "Complete ✓", {"result": result[:2000]})
+        _fire_chains(key, "done")
+        if key in {"listing", "qc", "sales", "delivery", "ceo"}:
+            _add_notification("agent_done", f"{key.title()} completed", task[:80], "✅")
         _save_history_entry({
             "agent": key, "task": task[:200], "status": "done",
             "started": started.isoformat(), "duration_s": duration,
@@ -1031,6 +1182,194 @@ async def start_brainstorm():
     _save_ideas(ideas)
     return JSONResponse({"status": "started", "idea_count": len(pending), "agent": "ceo"})
 
+
+# ── Quick Stats ────────────────────────────────────────────────────────────────
+
+@app.get("/api/quick-stats")
+async def quick_stats():
+    from tools.data_store import DataStore
+    store = DataStore()
+    today = date.today().isoformat()
+    month = today[:7]
+    orders = store.get("orders", default=[])
+    today_rev  = sum(float(o.get("price", 0)) for o in orders if str(o.get("created_at", "")).startswith(today))
+    month_rev  = sum(float(o.get("price", 0)) for o in orders if str(o.get("created_at", "")).startswith(month))
+    open_cnt   = sum(1 for o in orders if o.get("status") in ("paid", "processing", "open"))
+    listings   = store.get("listings", default=[])
+    active_cnt = sum(1 for l in listings if l.get("status") == "active")
+    running    = sum(1 for s in agent_states.values() if s.get("status") == "running")
+    return JSONResponse({
+        "today_revenue":  round(today_rev, 2),
+        "monthly_revenue": round(month_rev, 2),
+        "open_orders":    open_cnt,
+        "active_listings": active_cnt,
+        "running_agents": running,
+        "ts": datetime.utcnow().isoformat() + "Z",
+    })
+
+
+# ── Notifications ──────────────────────────────────────────────────────────────
+
+@app.get("/api/notifications")
+async def list_notifications_ep():
+    with _notif_lock:
+        return JSONResponse(list(_notifications))
+
+@app.post("/api/notifications/read-all")
+async def mark_notifications_read():
+    with _notif_lock:
+        for n in _notifications:
+            n["read"] = True
+    return JSONResponse({"ok": True})
+
+@app.delete("/api/notifications/{notif_id}")
+async def dismiss_notification(notif_id: str):
+    with _notif_lock:
+        _notifications[:] = [n for n in _notifications if n["id"] != notif_id]
+    return JSONResponse({"ok": True})
+
+
+# ── Product Pipeline Board ─────────────────────────────────────────────────────
+
+def _load_pipeline_board() -> list:
+    try:
+        if PIPELINE_BOARD_FILE.exists():
+            return json.loads(PIPELINE_BOARD_FILE.read_text())
+    except Exception:
+        pass
+    return []
+
+def _save_pipeline_board(items: list):
+    PIPELINE_BOARD_FILE.write_text(json.dumps(items, indent=2))
+
+@app.get("/api/product-pipeline")
+async def get_product_pipeline():
+    return JSONResponse(_load_pipeline_board())
+
+@app.post("/api/product-pipeline")
+async def add_pipeline_item(body: dict):
+    items = _load_pipeline_board()
+    item_id = f"prod_{int(datetime.utcnow().timestamp()*1000)}"
+    item = {
+        "id": item_id,
+        "title": (body.get("title") or "New Product")[:120],
+        "type": body.get("type", "digital"),
+        "stage": body.get("stage", "concept"),
+        "notes": body.get("notes", ""),
+        "created_at": datetime.utcnow().isoformat() + "Z",
+        "updated_at": datetime.utcnow().isoformat() + "Z",
+    }
+    items.append(item)
+    _save_pipeline_board(items)
+    return JSONResponse(item, status_code=201)
+
+@app.patch("/api/product-pipeline/{item_id}")
+async def update_pipeline_item(item_id: str, body: dict):
+    items = _load_pipeline_board()
+    item = next((i for i in items if i["id"] == item_id), None)
+    if not item:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    for k in ("title", "type", "stage", "notes"):
+        if k in body:
+            item[k] = body[k]
+    item["updated_at"] = datetime.utcnow().isoformat() + "Z"
+    _save_pipeline_board(items)
+    return JSONResponse(item)
+
+@app.delete("/api/product-pipeline/{item_id}")
+async def delete_pipeline_item(item_id: str):
+    items = _load_pipeline_board()
+    _save_pipeline_board([i for i in items if i["id"] != item_id])
+    return JSONResponse({"ok": True})
+
+
+# ── Automation Chains ─────────────────────────────────────────────────────────
+
+@app.get("/api/chains")
+async def list_chains_ep():
+    return JSONResponse(_load_chains())
+
+@app.patch("/api/chains/{chain_id}")
+async def update_chain(chain_id: str, body: dict):
+    chains = _load_chains()
+    chain = next((c for c in chains if c["id"] == chain_id), None)
+    if not chain:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    if "enabled" in body:
+        chain["enabled"] = bool(body["enabled"])
+    CHAINS_FILE.write_text(json.dumps(chains, indent=2))
+    return JSONResponse(chain)
+
+@app.post("/api/chains")
+async def add_chain(body: dict):
+    chains = _load_chains()
+    chain_id = f"chain_{int(datetime.utcnow().timestamp()*1000)}"
+    chain = {
+        "id": chain_id,
+        "label": (body.get("label") or "Custom Chain")[:80],
+        "enabled": bool(body.get("enabled", True)),
+        "trigger_agent": body.get("trigger_agent", ""),
+        "trigger_status": body.get("trigger_status", "done"),
+        "action_agent": body.get("action_agent", ""),
+        "action_task": (body.get("action_task") or "")[:400],
+    }
+    chains.append(chain)
+    CHAINS_FILE.write_text(json.dumps(chains, indent=2))
+    return JSONResponse(chain, status_code=201)
+
+@app.delete("/api/chains/{chain_id}")
+async def delete_chain(chain_id: str):
+    chains = _load_chains()
+    CHAINS_FILE.write_text(json.dumps([c for c in chains if c["id"] != chain_id], indent=2))
+    return JSONResponse({"ok": True})
+
+
+# ── Product Creator ────────────────────────────────────────────────────────────
+
+@app.post("/api/create-product")
+async def create_product(body: dict):
+    product_type = (body.get("type") or "digital art").strip()
+    style        = (body.get("style") or "").strip()
+    keywords     = (body.get("keywords") or "").strip()
+    task = (
+        f"Create a new {product_type} digital product for the Etsy shop. "
+        + (f"Style: {style}. " if style else "")
+        + (f"Target keywords: {keywords}. " if keywords else "")
+        + "Generate the art concept, create the digital product file, and save it ready for QC review."
+    )
+    _enqueue_task("art", task, f"Product Creator: {product_type}")
+    _add_notification("product_queued", "Product creation started", f"{product_type}" + (f" — {style}" if style else ""), "🎨")
+    return JSONResponse({"status": "queued", "agent": "art", "task": task[:200]})
+
+
+# ── Listing Health ────────────────────────────────────────────────────────────
+
+@app.get("/api/listings/health")
+async def listings_health():
+    from tools.data_store import DataStore
+    store = DataStore()
+    listings = store.get("listings", default=[])
+    health = []
+    for lst in listings:
+        views   = int(lst.get("views", 0))
+        favs    = int(lst.get("favorited_by", lst.get("favorites", 0)))
+        sales   = int(lst.get("quantity_sold", lst.get("sales", 0)))
+        conv    = round(sales / views * 100, 1) if views > 0 else 0.0
+        score   = min(100, (conv * 10) + min(views / 10, 30) + min(favs * 2, 20))
+        health.append({
+            "id":          lst.get("listing_id", lst.get("id", "")),
+            "title":       (lst.get("title") or "")[:60],
+            "price":       lst.get("price", 0),
+            "views":       views,
+            "favorites":   favs,
+            "sales":       sales,
+            "conversion":  conv,
+            "score":       round(score),
+            "status":      lst.get("status", "active"),
+            "url":         lst.get("url", ""),
+        })
+    health.sort(key=lambda x: x["score"])
+    return JSONResponse(health)
 
 @app.get("/api/update-status")
 async def update_status():
