@@ -203,69 +203,123 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   border-left:8px solid transparent;border-right:8px solid transparent;border-top:8px solid rgba(255,255,255,.98)}
 .bub.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-.broof{position:relative;z-index:2;margin-bottom:-2px;
-  height:var(--rh,62px);width:calc(var(--bw,155px) + 24px);
-  background:var(--rc,#555);
-  clip-path:polygon(10px 100%,50% 2px,calc(100% - 10px) 100%);
-  filter:brightness(.78) saturate(1.1)}
-/* Roof shingle tiles */
+/* ── ROOF ─────────────────────────────────────────── */
+.broof{position:relative;z-index:2;margin-bottom:0;
+  height:var(--rh,72px);width:calc(var(--bw,155px) + 28px);
+  background:linear-gradient(160deg,var(--rc,#555) 0%,color-mix(in srgb,var(--rc,#555) 70%,#000) 100%);
+  clip-path:polygon(8px 100%,50% 3px,calc(100% - 8px) 100%);
+  filter:none}
+/* Shingle rows */
 .broof::before{content:'';position:absolute;inset:0;pointer-events:none;
   background:
-    repeating-linear-gradient(90deg,transparent 0,transparent 13px,rgba(0,0,0,.14) 13px,rgba(0,0,0,.14) 14px),
-    repeating-linear-gradient(0deg, transparent 0,transparent 7px, rgba(255,255,255,.08) 7px, rgba(255,255,255,.08) 8px)}
-/* Roof ridge highlight */
-.broof::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-  width:4px;height:100%;background:linear-gradient(0deg,rgba(255,255,255,.25),transparent);pointer-events:none}
+    repeating-linear-gradient(0deg,transparent 0,transparent 9px,rgba(0,0,0,.18) 9px,rgba(0,0,0,.18) 10px),
+    repeating-linear-gradient(90deg,transparent 0,transparent 11px,rgba(255,255,255,.06) 11px,rgba(255,255,255,.06) 12px)}
+/* Ridge highlight */
+.broof::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:3px;height:60%;background:linear-gradient(180deg,rgba(255,255,255,.55),transparent);pointer-events:none}
 
+/* Eave — overhang strip at bottom of roof */
+.beave{position:relative;z-index:3;width:calc(var(--bw,155px) + 32px);height:8px;
+  background:color-mix(in srgb,var(--rc,#555) 55%,#111);
+  border-radius:1px;margin-top:-1px;margin-bottom:0;
+  box-shadow:0 3px 6px rgba(0,0,0,.55)}
+
+/* ── BODY ─────────────────────────────────────────── */
 .bbody{position:relative;width:var(--bw,155px);height:var(--bh,185px);
-  background:var(--wc,#e8e8f0);border-radius:4px 4px 0 0;
-  outline:3px solid rgba(0,0,0,.42);overflow:hidden;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--wc,#e8e8f0) 95%,#fff) 0%,var(--wc,#e8e8f0) 60%,color-mix(in srgb,var(--wc,#e8e8f0) 88%,#888) 100%);
+  border-radius:2px 2px 0 0;outline:2.5px solid rgba(0,0,0,.38);overflow:hidden;
   display:flex;flex-direction:column;align-items:center;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
-/* brick/plaster texture */
-.bbody::before{content:'';position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset -4px 0 8px rgba(0,0,0,.12),inset 4px 0 6px rgba(255,255,255,.22)}
+/* Horizontal siding lines */
+.bbody::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(180deg,transparent 0,transparent 10px,rgba(0,0,0,.07) 10px,rgba(0,0,0,.07) 11px)}
+/* Corner trim boards */
+.bbody::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
   background:
-    repeating-linear-gradient(0deg,transparent 0,transparent 12px,rgba(0,0,0,.05) 12px,rgba(0,0,0,.05) 13px),
-    repeating-linear-gradient(90deg,transparent 0,transparent 17px,rgba(0,0,0,.03) 17px,rgba(0,0,0,.03) 18px)}
-/* Left highlight + right shadow — gives 3D depth */
-.bbody::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;
-  background:linear-gradient(90deg,rgba(255,255,255,.18) 0%,transparent 18%,transparent 82%,rgba(0,0,0,.1) 100%)}
+    linear-gradient(90deg,rgba(0,0,0,.18) 0,rgba(0,0,0,.18) 5px,transparent 5px,transparent calc(100% - 5px),rgba(0,0,0,.1) calc(100% - 5px),rgba(0,0,0,.1) 100%)}
 
-.bsign{margin:5px 4px 2px;background:rgba(20,10,0,.72);color:#fff;font-size:.5rem;font-weight:700;
-  padding:3px 7px;border-radius:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-width:calc(var(--bw,155px) - 10px);border:1px solid rgba(255,255,255,.2);letter-spacing:.06em;text-align:center;
-  box-shadow:0 2px 4px rgba(0,0,0,.4)}
+/* Foundation strip */
+.bfound{width:calc(var(--bw,155px) + 8px);height:10px;
+  background:linear-gradient(180deg,#6b6b6b,#3a3a3a);
+  border-radius:0 0 2px 2px;margin-top:auto;flex-shrink:0;position:relative;z-index:5;
+  box-shadow:0 3px 8px rgba(0,0,0,.6);align-self:center}
 
-.bwins{display:flex;gap:9px;justify-content:center;padding:6px 8px 2px;flex-wrap:wrap}
-/* Sims-style windows: wider, with frame and sill */
-.bwin{width:24px;height:30px;background:linear-gradient(135deg,#e3f4fd 10%,#bde8f8 50%,#7ec8ef 100%);
-  border-radius:4px 4px 0 0;border:3px solid rgba(0,0,0,.38);
-  box-shadow:inset 1px 1px 4px rgba(255,255,255,.6),0 2px 4px rgba(0,0,0,.25);
-  position:relative;flex-shrink:0}
-/* window cross bars */
-.bwin::before{content:'';position:absolute;top:3px;left:50%;width:1.5px;height:76%;
-  background:rgba(0,0,0,.18);transform:translateX(-50%)}
-.bwin::after{content:'';position:absolute;left:3px;top:45%;width:76%;height:1.5px;
-  background:rgba(0,0,0,.18)}
+/* ── SIGN ─────────────────────────────────────────── */
+.bsign{margin:6px 4px 2px;background:rgba(10,5,0,.82);color:#fff;font-size:.49rem;font-weight:700;
+  padding:3px 8px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  max-width:calc(var(--bw,155px) - 10px);border:1px solid rgba(255,255,255,.25);letter-spacing:.05em;text-align:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.5);position:relative;z-index:2}
+
+/* ── WINDOWS ──────────────────────────────────────── */
+.bwins{display:flex;gap:10px;justify-content:center;padding:6px 8px 3px;flex-wrap:wrap;position:relative;z-index:2}
+.bwin-wrap{display:flex;align-items:flex-start;gap:1px;position:relative}
+/* Shutter panels */
+.bshutter{width:6px;height:34px;border-radius:1px;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0,rgba(0,0,0,.22) 3px,transparent 3px,transparent 6px);
+  border:1px solid rgba(0,0,0,.35);flex-shrink:0;
+  background-color:color-mix(in srgb,var(--rc,#555) 75%,#000)}
+/* Window glass */
+.bwin{width:26px;height:34px;
+  background:linear-gradient(135deg,rgba(255,255,255,.85) 0%,#bde8f8 25%,#7ecfef 65%,#4fb8e0 100%);
+  border-radius:3px 3px 0 0;border:2.5px solid rgba(0,0,0,.4);
+  box-shadow:inset 1px 1px 5px rgba(255,255,255,.7),inset -1px -1px 3px rgba(0,100,150,.2),0 2px 4px rgba(0,0,0,.3);
+  position:relative;flex-shrink:0;overflow:hidden}
+/* Curtain at bottom of window */
+.bwin::before{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;
+  background:linear-gradient(180deg,transparent,rgba(255,240,200,.35));pointer-events:none}
+/* Window cross-frame */
+.bwin::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(90deg,transparent calc(50% - 1px),rgba(0,0,0,.22) calc(50% - 1px),rgba(0,0,0,.22) calc(50% + 1px),transparent calc(50% + 1px)),
+    linear-gradient(180deg,transparent calc(45% - 1px),rgba(0,0,0,.22) calc(45% - 1px),rgba(0,0,0,.22) calc(45% + 1px),transparent calc(45% + 1px))}
+/* Window sill ledge */
+.bwin-wrap::after{content:'';position:absolute;bottom:-4px;left:-3px;right:-3px;height:4px;
+  background:#888;border-radius:0 0 2px 2px;box-shadow:0 2px 3px rgba(0,0,0,.4)}
 @keyframes wlit{
-  from{background:linear-gradient(135deg,#b3e5fc 22%,#4fc3f7 100%);box-shadow:inset 1px 1px 3px rgba(255,255,255,.45)}
-  to  {background:linear-gradient(135deg,#fff176 22%,#ffd54f 100%);box-shadow:inset 0 0 12px rgba(255,220,50,.7),0 0 10px rgba(255,200,50,.35)}}
+  from{background:linear-gradient(135deg,rgba(255,255,255,.5) 0%,#b3e5fc 40%,#4fc3f7 100%)}
+  to  {background:linear-gradient(135deg,#fff9c4 0%,#ffd54f 50%,#ffb300 100%);
+       box-shadow:inset 0 0 14px rgba(255,215,0,.5),0 0 12px rgba(255,200,0,.35)}}
+.bld.running .bwin{animation:wlit .85s ease-in-out infinite alternate}
 
-.bdoor{width:30px;height:42px;border-radius:14px 14px 0 0;border:3px solid rgba(0,0,0,.32);
-  margin-top:auto;flex-shrink:0;position:relative;background:var(--rc,#555);filter:brightness(.6)}
-/* door knob */
-.bdoor::after{content:'';position:absolute;right:5px;top:50%;transform:translateY(-50%);
-  width:5px;height:5px;border-radius:50%;background:rgba(255,210,80,.95);
-  box-shadow:0 0 3px rgba(255,210,80,.6)}
-/* door step */
-.bdoor::before{content:'';position:absolute;bottom:-5px;left:-6px;right:-6px;height:5px;
-  background:rgba(0,0,0,.25);border-radius:0 0 3px 3px}
+/* ── DOOR ─────────────────────────────────────────── */
+.bdoor-wrap{display:flex;flex-direction:column;align-items:center;margin-top:auto;flex-shrink:0;position:relative;z-index:2}
+.bdoor{width:32px;height:46px;border-radius:3px 3px 0 0;border:2.5px solid rgba(0,0,0,.4);
+  flex-shrink:0;position:relative;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--rc,#555) 60%,#000) 0%,var(--rc,#555) 45%,color-mix(in srgb,var(--rc,#555) 85%,#fff) 100%);
+  box-shadow:inset 0 0 8px rgba(0,0,0,.3),2px 0 4px rgba(0,0,0,.2)}
+/* Door panels (2-panel look) */
+.bdoor::before{content:'';position:absolute;inset:4px 4px 30% 4px;
+  border:1.5px solid rgba(255,255,255,.2);border-radius:1px;background:rgba(0,0,0,.15)}
+.bdoor::after{content:'';position:absolute;left:4px;right:4px;top:55%;bottom:4px;
+  border:1.5px solid rgba(255,255,255,.2);border-radius:1px;background:rgba(0,0,0,.15)}
+/* Door knob */
+.bdoor-knob{position:absolute;right:5px;top:54%;transform:translateY(-50%);
+  width:5px;height:5px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#ffe082,#f9a825);
+  box-shadow:0 0 3px rgba(255,200,50,.8)}
+/* Stoop/steps */
+.bstoop{width:44px;height:8px;background:linear-gradient(180deg,#b0b0b0,#8a8a8a);
+  border-radius:2px;margin-top:0;flex-shrink:0;
+  box-shadow:0 3px 5px rgba(0,0,0,.45)}
+.bstoop2{width:52px;height:6px;background:linear-gradient(180deg,#999,#6b6b6b);
+  border-radius:1px;margin-top:0;flex-shrink:0;
+  box-shadow:0 2px 4px rgba(0,0,0,.35)}
 
-.bchim{position:absolute;top:-8px;right:16px;width:12px;height:24px;background:#484848;border-radius:2px;border:2px solid #333;z-index:3}
-.bchim::after{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);width:8px;height:8px;border-radius:50%;
-  animation:smk 2.2s ease-out infinite}
-@keyframes smk{0%{opacity:.8;transform:translateX(-50%) translateY(0) scale(1);background:rgba(170,170,170,.7)}
-  100%{opacity:0;transform:translateX(-50%) translateY(-40px) scale(2.8);background:transparent}}
+/* ── CHIMNEY ──────────────────────────────────────── */
+.bchim{position:absolute;top:-16px;right:18px;width:13px;height:28px;
+  background:linear-gradient(90deg,#3a3a3a,#555,#3a3a3a);
+  border-radius:2px;border:2px solid #2a2a2a;z-index:4;
+  box-shadow:2px 0 4px rgba(0,0,0,.4)}
+.bchim::after{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);width:8px;height:8px;
+  border-radius:50%;animation:smk 2.2s ease-out infinite}
+@keyframes smk{0%{opacity:.75;transform:translateX(-50%) translateY(0) scale(1);background:rgba(160,160,160,.7)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-48px) scale(3.2);background:transparent}}
+
+/* ── WINDOW BOX (decorative) ──────────────────────── */
+.bwinbox{height:5px;border-radius:2px;margin-top:-1px;
+  background:linear-gradient(180deg,#5a8a3c,#3a6a1c);
+  border:1px solid rgba(0,0,0,.4);
+  box-shadow:0 2px 3px rgba(0,0,0,.35)}
 
 .bbadge{position:absolute;top:-10px;right:-10px;background:#21262d;border:1.5px solid var(--border);
   color:var(--text);font-size:.42rem;font-weight:600;padding:1px 5px;border-radius:10px;z-index:15;white-space:nowrap}
