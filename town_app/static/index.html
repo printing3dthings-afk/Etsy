@@ -394,214 +394,333 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 }
 
 /* ── WINDOWS ──────────────────────────────────────── */
-.bwins{display:flex;gap:10px;justify-content:center;padding:6px 8px 3px;flex-wrap:wrap;position:relative;z-index:2}
-.bwin-wrap{display:flex;align-items:flex-start;gap:1px;position:relative}
-/* Shutter panels */
-.bshutter{width:6px;height:34px;border-radius:1px;
-  background:repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0,rgba(0,0,0,.22) 3px,transparent 3px,transparent 6px);
-  border:1px solid rgba(0,0,0,.35);flex-shrink:0;
-  background-color:color-mix(in srgb,var(--rc,#555) 75%,#000)}
-/* Window glass */
-.bwin{width:26px;height:34px;
-  background:linear-gradient(135deg,rgba(255,255,255,.85) 0%,#bde8f8 25%,#7ecfef 65%,#4fb8e0 100%);
-  border-radius:3px 3px 0 0;border:2.5px solid rgba(0,0,0,.4);
-  box-shadow:inset 1px 1px 5px rgba(255,255,255,.7),inset -1px -1px 3px rgba(0,100,150,.2),0 2px 4px rgba(0,0,0,.3);
-  position:relative;flex-shrink:0;overflow:hidden}
-/* Curtain at bottom of window */
-.bwin::before{content:'';position:absolute;bottom:0;left:0;right:0;height:40%;
-  background:linear-gradient(180deg,transparent,rgba(255,240,200,.35));pointer-events:none}
-/* Window cross-frame */
-.bwin::after{content:'';position:absolute;inset:0;pointer-events:none;
+/* Windows row */
+.bwins {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 6px 6px 2px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
+}
+/* Window wrapper with shutters */
+.bwin-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+  position: relative;
+}
+/* Shutter panels — louvered pixel look */
+.bshutter {
+  width: 6px;
+  height: 34px;
+  background-color: color-mix(in srgb, var(--rc,#555) 65%, #000);
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0, transparent 4px,
+    rgba(0,0,0,.4) 4px, rgba(0,0,0,.4) 5px
+  );
+  outline: 1px solid #000;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+/* Pixel art window */
+.bwin {
+  width: 26px;
+  height: 34px;
+  background: #88d8f8;
+  border-radius: 0;
+  outline: 2px solid #000;
+  box-shadow: inset 2px 2px 0 rgba(255,255,255,.7), inset -2px -2px 0 rgba(0,80,120,.3);
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+/* Pixel cross frame */
+.bwin::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background:
-    linear-gradient(90deg,transparent calc(50% - 1px),rgba(0,0,0,.22) calc(50% - 1px),rgba(0,0,0,.22) calc(50% + 1px),transparent calc(50% + 1px)),
-    linear-gradient(180deg,transparent calc(45% - 1px),rgba(0,0,0,.22) calc(45% - 1px),rgba(0,0,0,.22) calc(45% + 1px),transparent calc(45% + 1px))}
-/* Window sill ledge */
-.bwin-wrap::after{content:'';position:absolute;bottom:-4px;left:-3px;right:-3px;height:4px;
-  background:#888;border-radius:0 0 2px 2px;box-shadow:0 2px 3px rgba(0,0,0,.4)}
-@keyframes wlit{
-  from{background:linear-gradient(135deg,rgba(255,255,255,.5) 0%,#b3e5fc 40%,#4fc3f7 100%)}
-  to  {background:linear-gradient(135deg,#fff9c4 0%,#ffd54f 50%,#ffb300 100%);
-       box-shadow:inset 0 0 14px rgba(255,215,0,.5),0 0 12px rgba(255,200,0,.35)}}
-.bld.running .bwin{animation:wlit .85s ease-in-out infinite alternate}
+    linear-gradient(90deg, transparent calc(50% - 1px), #000 calc(50% - 1px), #000 calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(180deg, transparent calc(44% - 1px), #000 calc(44% - 1px), #000 calc(44% + 1px), transparent calc(44% + 1px));
+  pointer-events: none;
+}
+/* Window reflection pixel */
+.bwin::before {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 6px; height: 6px;
+  background: rgba(255,255,255,.85);
+  pointer-events: none;
+}
+/* Window sill */
+.bwin-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: -2px; right: -2px;
+  height: 5px;
+  background: #888;
+  outline: 1px solid #000;
+}
+/* Window glow when running */
+@keyframes wlit {
+  from { background: #88d8f8; box-shadow: inset 2px 2px 0 rgba(255,255,255,.7); }
+  to   { background: #ffe878; box-shadow: inset 0 0 0 2px #ffa800, 0 0 8px #ffcc00; }
+}
+.bld.running .bwin { animation: wlit .7s ease-in-out infinite alternate; }
 
 /* ── DOOR ─────────────────────────────────────────── */
-.bdoor-wrap{display:flex;flex-direction:column;align-items:center;margin-top:auto;flex-shrink:0;position:relative;z-index:2}
-.bdoor{width:32px;height:46px;border-radius:3px 3px 0 0;border:2.5px solid rgba(0,0,0,.4);
-  flex-shrink:0;position:relative;
-  background:linear-gradient(90deg,color-mix(in srgb,var(--rc,#555) 60%,#000) 0%,var(--rc,#555) 45%,color-mix(in srgb,var(--rc,#555) 85%,#fff) 100%);
-  box-shadow:inset 0 0 8px rgba(0,0,0,.3),2px 0 4px rgba(0,0,0,.2)}
-/* Door panels (2-panel look) */
-.bdoor::before{content:'';position:absolute;inset:4px 4px 30% 4px;
-  border:1.5px solid rgba(255,255,255,.2);border-radius:1px;background:rgba(0,0,0,.15)}
-.bdoor::after{content:'';position:absolute;left:4px;right:4px;top:55%;bottom:4px;
-  border:1.5px solid rgba(255,255,255,.2);border-radius:1px;background:rgba(0,0,0,.15)}
+.bdoor-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+.bdoor {
+  width: 30px;
+  height: 44px;
+  background: color-mix(in srgb, var(--rc,#555) 55%, #000);
+  border-radius: 0;
+  outline: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  position: relative;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+/* Door panels */
+.bdoor::before {
+  content: '';
+  position: absolute;
+  top: 4px; left: 4px; right: 4px;
+  height: 14px;
+  background: rgba(255,255,255,.15);
+  outline: 1px solid rgba(255,255,255,.2);
+}
+.bdoor::after {
+  content: '';
+  position: absolute;
+  bottom: 10px; left: 4px; right: 4px;
+  height: 14px;
+  background: rgba(255,255,255,.15);
+  outline: 1px solid rgba(255,255,255,.2);
+}
 /* Door knob */
-.bdoor-knob{position:absolute;right:5px;top:54%;transform:translateY(-50%);
-  width:5px;height:5px;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%,#ffe082,#f9a825);
-  box-shadow:0 0 3px rgba(255,200,50,.8)}
-/* Stoop/steps */
-.bstoop{width:44px;height:8px;background:linear-gradient(180deg,#b0b0b0,#8a8a8a);
-  border-radius:2px;margin-top:0;flex-shrink:0;
-  box-shadow:0 3px 5px rgba(0,0,0,.45)}
-.bstoop2{width:52px;height:6px;background:linear-gradient(180deg,#999,#6b6b6b);
-  border-radius:1px;margin-top:0;flex-shrink:0;
-  box-shadow:0 2px 4px rgba(0,0,0,.35)}
+.bdoor-knob {
+  position: absolute;
+  right: 4px;
+  top: 52%;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #ffd700;
+  outline: 1px solid #000;
+  box-shadow: 0 0 3px #ffaa00;
+}
+/* Stoop steps */
+.bstoop {
+  width: 38px; height: 6px;
+  background: #999;
+  outline: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+.bstoop2 {
+  width: 46px; height: 5px;
+  background: #777;
+  outline: 1px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
 
 /* ── CHIMNEY ──────────────────────────────────────── */
-.bchim{position:absolute;top:-16px;right:18px;width:13px;height:28px;
-  background:linear-gradient(90deg,#3a3a3a,#555,#3a3a3a);
-  border-radius:2px;border:2px solid #2a2a2a;z-index:4;
-  box-shadow:2px 0 4px rgba(0,0,0,.4)}
-.bchim::after{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);width:8px;height:8px;
-  border-radius:50%;animation:smk 2.2s ease-out infinite}
-@keyframes smk{0%{opacity:.75;transform:translateX(-50%) translateY(0) scale(1);background:rgba(160,160,160,.7)}
-  100%{opacity:0;transform:translateX(-50%) translateY(-48px) scale(3.2);background:transparent}}
+/* Chimney — pixel brick style */
+.bchim {
+  position: absolute;
+  top: -18px; right: 16px;
+  width: 14px; height: 28px;
+  background: repeating-linear-gradient(
+    180deg,
+    #884422 0, #884422 6px, #663311 6px, #663311 7px
+  );
+  outline: 2px solid #000;
+  z-index: 4;
+  box-shadow: 2px 2px 0 #000;
+  image-rendering: pixelated;
+}
+.bchim::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  animation: smk 2s ease-out infinite;
+}
+@keyframes smk {
+  0%   { opacity: .8; transform: translateX(-50%) translateY(0) scale(1); background: rgba(120,120,120,.7); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-36px) scale(3); background: transparent; }
+}
 
 /* ── WINDOW BOX (decorative) ──────────────────────── */
-.bwinbox{height:5px;border-radius:2px;margin-top:-1px;
-  background:linear-gradient(180deg,#5a8a3c,#3a6a1c);
-  border:1px solid rgba(0,0,0,.4);
-  box-shadow:0 2px 3px rgba(0,0,0,.35)}
+/* Pixel window box (green planter) */
+.bwinbox {
+  height: 6px;
+  background: repeating-linear-gradient(90deg, #2d7a10 0, #2d7a10 4px, #3d9a18 4px, #3d9a18 8px);
+  outline: 2px solid #000;
+  margin-top: 0;
+  image-rendering: pixelated;
+}
 
-.bbadge{position:absolute;top:-10px;right:-10px;background:#21262d;border:1.5px solid var(--border);
-  color:var(--text);font-size:.42rem;font-weight:600;padding:1px 5px;border-radius:10px;z-index:15;white-space:nowrap}
-.bld.running .bbadge{background:#162030;border-color:var(--accent);color:var(--accent)}
-.bld.done    .bbadge{background:#101e12;border-color:var(--green);color:var(--green)}
-.bld.error   .bbadge{background:#1e1010;border-color:var(--red);color:var(--red)}
+/* Badge */
+.bbadge {
+  position: absolute; top: -10px; right: -10px;
+  background: #0d1117;
+  border: 2px solid var(--border);
+  color: var(--text);
+  font-family: 'Press Start 2P', monospace;
+  font-size: .32rem;
+  padding: 2px 5px;
+  border-radius: 0;
+  z-index: 15;
+  white-space: nowrap;
+  outline: 1px solid #000;
+}
+.bld.running .bbadge { background: #0a1528; border-color: var(--accent); color: var(--accent); }
+.bld.done    .bbadge { background: #0a1a0c; border-color: var(--green); color: var(--green); }
+.bld.error   .bbadge { background: #1a0a0a; border-color: var(--red); color: var(--red); }
 
-.blabel{font-size:.48rem;font-weight:700;color:rgba(255,255,255,.82);
-  text-shadow:0 1px 5px rgba(0,0,0,.95);margin-top:4px;white-space:nowrap;text-align:center}
+/* Label */
+.blabel {
+  font-family: 'Press Start 2P', monospace;
+  font-size: .38rem;
+  font-weight: 400;
+  color: #fff;
+  text-shadow: 2px 2px 0 #000, -1px 0 0 #000, 0 -1px 0 #000;
+  margin-top: 5px;
+  white-space: nowrap;
+  text-align: center;
+  letter-spacing: .04em;
+}
 
 /* CEO building overrides */
-.bld-ceo .broof{clip-path:none;height:26px;border-radius:4px 4px 0 0;border-bottom:none;filter:none;
-  outline:3px solid rgba(0,0,0,.4);width:var(--bw)}
-.bld-ceo .broof::after{content:'🏛️';position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:1.4rem;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7))}
-.bld-ceo .bdoor{width:40px;height:52px;border-radius:18px 18px 0 0}
-.bld-ceo .bwins{gap:14px}.bld-ceo .bwin{width:26px;height:34px}
-/* columns on CEO */
-.bld-ceo .bbody::before{background:repeating-linear-gradient(90deg,transparent 0,transparent 22px,rgba(255,255,255,.18) 22px,rgba(255,255,255,.18) 26px),repeating-linear-gradient(0deg,transparent 0,transparent 12px,rgba(0,0,0,.04) 12px,rgba(0,0,0,.04) 13px)}
+.bld-ceo .broof {
+  clip-path: none;
+  height: 28px;
+  border-radius: 0;
+  outline: 3px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  width: var(--bw);
+}
+.bld-ceo .broof::after { content: '🏛️'; position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 1.6rem; }
+.bld-ceo .bdoor { width: 38px; height: 52px; border-radius: 0; }
+.bld-ceo .bwins { gap: 14px; }
+.bld-ceo .bwin { width: 28px; height: 36px; }
+.bld-ceo .bbody::before {
+  background: repeating-linear-gradient(
+    90deg, transparent 0, transparent 20px,
+    rgba(255,255,255,.15) 20px, rgba(255,255,255,.15) 24px
+  );
+}
+
+/* Hall overrides */
+.bld-hall .broof { filter: none !important; background: linear-gradient(180deg,#5a3a00,#3a2000) !important; --rc:#5a3a00; clip-path: none; outline: 3px solid #000; }
+.bld-hall .bbody { background: #d4aa50 !important; outline: 4px solid #000 !important; box-shadow: 5px 5px 0 #000; }
 
 /* District labels */
-.dlabel{position:absolute;font-size:1.05rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase;
-  color:rgba(255,255,255,.13);text-shadow:0 2px 8px rgba(0,0,0,.7);pointer-events:none;white-space:nowrap;z-index:2}
+.dlabel {
+  position: absolute;
+  font-family: 'Press Start 2P', monospace;
+  font-size: .7rem;
+  font-weight: 400;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.2);
+  text-shadow: 2px 2px 0 rgba(0,0,0,.8);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 2;
+}
 
-/* ── WALKERS ── */
-#walker-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:40}
-.walker{position:absolute;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:41;
-  transition:left 1.35s cubic-bezier(.4,0,.2,1),top 1.35s cubic-bezier(.4,0,.2,1)}
-.w-figure{display:flex;flex-direction:column;align-items:center}
-/* Shadow stays outside .w-figure */
-.w-shadow{width:26px;height:6px;background:rgba(0,0,0,.28);border-radius:50%;margin-top:1px;flex-shrink:0}
-/* Hair */
-.w-hair{width:26px;height:13px;border-radius:50% 50% 30% 30%;margin-bottom:-4px;flex-shrink:0;
-  border:1.5px solid rgba(0,0,0,.3);position:relative;z-index:2}
-/* Head */
-.w-head{width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.28);
-  box-shadow:inset -2px -2px 4px rgba(0,0,0,.2),inset 2px 2px 4px rgba(255,255,255,.35),0 2px 5px rgba(0,0,0,.35);
-  position:relative;flex-shrink:0;z-index:1;overflow:visible}
-/* Eyes */
-.w-eye{position:absolute;width:4px;height:4px;border-radius:50%;background:#1a1a1a;top:7px}
-.w-eye-l{left:4px}
-.w-eye-r{right:4px}
-/* Eye shine */
-.w-eye::after{content:'';position:absolute;width:1.5px;height:1.5px;border-radius:50%;background:rgba(255,255,255,.9);top:0;left:0}
-/* Smile */
-.w-mouth{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
-  width:9px;height:4px;border-radius:0 0 5px 5px;border-bottom:2px solid rgba(100,40,40,.7);border-left:1.5px solid transparent;border-right:1.5px solid transparent}
-/* Blush */
-.w-head::after{content:'';position:absolute;bottom:6px;left:0;right:0;
-  background:linear-gradient(90deg,transparent 10%,rgba(255,120,120,.18) 25%,transparent 40%,transparent 60%,rgba(255,120,120,.18) 75%,transparent 90%);
-  height:6px;pointer-events:none}
+/* ===== 8-BIT WALKERS ===== */
+#walker-layer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:40; image-rendering:pixelated; }
+.walker { position:absolute; display:flex; flex-direction:column; align-items:center; pointer-events:none; z-index:41; transition:left 1.35s cubic-bezier(.4,0,.2,1),top 1.35s cubic-bezier(.4,0,.2,1); image-rendering:pixelated; }
+.w-figure { display:flex; flex-direction:column; align-items:center; image-rendering:pixelated; }
+.w-shadow { width:28px; height:6px; background:rgba(0,0,0,.35); border-radius:50%; margin-top:1px; flex-shrink:0; }
+
+/* Hair — pixel block */
+.w-hair { width:22px; height:10px; border-radius:4px 4px 0 0; margin-bottom:-2px; flex-shrink:0; outline:2px solid #000; z-index:2; position:relative; }
+
+/* Head — chunky pixel square */
+.w-head { width:22px; height:20px; border-radius:2px; outline:2px solid #000; box-shadow:2px 2px 0 #000; position:relative; flex-shrink:0; z-index:1; image-rendering:pixelated; }
+/* Eyes — 2 pixel squares */
+.w-eye { position:absolute; width:4px; height:4px; background:#000; top:6px; }
+.w-eye-l { left:3px; }
+.w-eye-r { right:3px; }
+/* Eye shine dot */
+.w-eye::after { content:''; position:absolute; width:2px; height:2px; background:#fff; top:0; left:0; }
+/* Pixel smile */
+.w-mouth { position:absolute; bottom:4px; left:4px; right:4px; height:3px;
+  background: linear-gradient(90deg, transparent 0, transparent 2px, #000 2px, #000 4px, transparent 4px, transparent calc(100% - 4px), #000 calc(100% - 4px), #000 calc(100% - 2px), transparent calc(100% - 2px));
+}
+
 /* Neck */
-.w-neck{width:7px;height:4px;background:rgba(0,0,0,.15);margin-top:-1px;flex-shrink:0}
-/* Upper body */
-.w-upper{display:flex;align-items:flex-start;gap:0;margin-top:0}
-/* Shirt/torso */
-.w-torso{width:16px;height:20px;border-radius:3px 3px 2px 2px;border:2px solid rgba(0,0,0,.28);flex-shrink:0;position:relative;
-  box-shadow:inset -2px 0 4px rgba(0,0,0,.2),inset 2px 0 3px rgba(255,255,255,.2)}
-/* Collar */
-.w-torso::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
-  border-top:5px solid rgba(255,255,255,.3)}
-/* Arms */
-.w-arm{width:5px;height:16px;border-radius:3px;border:1.5px solid rgba(0,0,0,.3);
-  transform-origin:top center;flex-shrink:0;margin-top:2px;
-  box-shadow:inset 1px 0 2px rgba(255,255,255,.2)}
-/* Pants/legs */
-.w-legs{display:flex;gap:2px;margin-top:1px}
-.w-leg{width:7px;height:14px;border-radius:0 0 3px 3px;
-  border:1.5px solid rgba(0,0,0,.32);transform-origin:top center;position:relative;flex-shrink:0;
-  box-shadow:inset 1px 0 3px rgba(255,255,255,.15)}
-/* Belt */
-.w-leg:nth-child(1)::before,.w-leg:nth-child(2)::before{content:'';position:absolute;top:-3px;left:-1.5px;right:-1.5px;height:3px;
-  background:rgba(0,0,0,.4);border-radius:1px}
-/* Shoe */
-.w-leg::after{content:'';position:absolute;bottom:-4px;left:-2px;width:11px;height:4px;
-  background:linear-gradient(180deg,#333,#1a1a1a);border-radius:2px 3px 2px 1px;
-  box-shadow:0 1px 2px rgba(0,0,0,.5)}
+.w-neck { width:8px; height:4px; flex-shrink:0; outline:1px solid #000; }
 
-/* Walking animation */
-@keyframes w-bob{
-  0%  {transform:translateY(0)}
-  20% {transform:translateY(-4px)}
-  50% {transform:translateY(1px)}
-  70% {transform:translateY(-4px)}
-  100%{transform:translateY(0)}
-}
-@keyframes w-step{
-  0%  {transform:rotate(-28deg)}
-  50% {transform:rotate(28deg)}
-  100%{transform:rotate(-28deg)}
-}
-@keyframes w-arm-swing{
-  0%  {transform:rotate(22deg)}
-  50% {transform:rotate(-22deg)}
-  100%{transform:rotate(22deg)}
-}
-@keyframes w-shadow-walk{
-  0%,100%{transform:scaleX(1);opacity:.28}
-  50%    {transform:scaleX(.8);opacity:.14}
-}
-.walker.walking .w-figure{animation:w-bob .44s ease-in-out infinite}
-.walker.walking .w-leg:nth-child(1){animation:w-step .44s ease-in-out infinite}
-.walker.walking .w-leg:nth-child(2){animation:w-step .44s ease-in-out infinite reverse}
-.walker.walking .w-arm:nth-child(1){animation:w-arm-swing .44s ease-in-out infinite reverse}
-.walker.walking .w-arm:nth-child(3){animation:w-arm-swing .44s ease-in-out infinite}
-.walker.walking .w-shadow{animation:w-shadow-walk .44s ease-in-out infinite}
+/* Torso — shirt color */
+.w-upper { display:flex; align-items:flex-start; gap:0; margin-top:0; }
+.w-torso { width:18px; height:20px; border-radius:0; outline:2px solid #000; box-shadow:2px 2px 0 #000; flex-shrink:0; position:relative; image-rendering:pixelated; }
+/* Collar pixel */
+.w-torso::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:8px; height:4px; background:rgba(255,255,255,.3); }
+
+/* Arms — skin color, pixel size */
+.w-arm { width:6px; height:16px; border-radius:1px; outline:2px solid #000; transform-origin:top center; flex-shrink:0; margin-top:2px; image-rendering:pixelated; }
+
+/* Legs — pants color */
+.w-legs { display:flex; gap:2px; margin-top:1px; }
+.w-leg { width:8px; height:16px; border-radius:0 0 2px 2px; outline:2px solid #000; transform-origin:top center; position:relative; flex-shrink:0; image-rendering:pixelated; }
+/* Belt line */
+.w-leg:nth-child(1)::before, .w-leg:nth-child(2)::before { content:''; position:absolute; top:-3px; left:-1px; right:-1px; height:3px; background:rgba(0,0,0,.5); outline:1px solid #000; }
+/* Pixel shoe */
+.w-leg::after { content:''; position:absolute; bottom:-5px; left:-3px; width:14px; height:5px; background:#222; outline:2px solid #000; border-radius:0 2px 2px 0; }
+
+/* Walking */
+@keyframes w-bob { 0%{transform:translateY(0)} 20%{transform:translateY(-4px)} 50%{transform:translateY(1px)} 70%{transform:translateY(-4px)} 100%{transform:translateY(0)} }
+@keyframes w-step { 0%{transform:rotate(-30deg)} 50%{transform:rotate(30deg)} 100%{transform:rotate(-30deg)} }
+@keyframes w-arm-swing { 0%{transform:rotate(24deg)} 50%{transform:rotate(-24deg)} 100%{transform:rotate(24deg)} }
+@keyframes w-shadow-walk { 0%,100%{transform:scaleX(1);opacity:.35} 50%{transform:scaleX(.75);opacity:.15} }
+.walker.walking .w-figure { animation:w-bob .44s steps(4,end) infinite; }
+.walker.walking .w-leg:nth-child(1) { animation:w-step .44s steps(4,end) infinite; }
+.walker.walking .w-leg:nth-child(2) { animation:w-step .44s steps(4,end) infinite reverse; }
+.walker.walking .w-arm:nth-child(1) { animation:w-arm-swing .44s steps(4,end) infinite reverse; }
+.walker.walking .w-arm:nth-child(3) { animation:w-arm-swing .44s steps(4,end) infinite; }
+.walker.walking .w-shadow { animation:w-shadow-walk .44s steps(4,end) infinite; }
 
 /* Running */
-@keyframes w-run{
-  0%  {transform:rotate(-42deg)}
-  50% {transform:rotate(42deg)}
-  100%{transform:rotate(-42deg)}
-}
-@keyframes w-run-bob{
-  0%  {transform:translateY(0)}
-  25% {transform:translateY(-7px)}
-  50% {transform:translateY(0)}
-  75% {transform:translateY(-7px)}
-  100%{transform:translateY(0)}
-}
-@keyframes w-run-arm{
-  0%  {transform:rotate(38deg)}
-  50% {transform:rotate(-38deg)}
-  100%{transform:rotate(38deg)}
-}
-.walker.running .w-figure{animation:w-run-bob .26s ease-in-out infinite;transform-origin:bottom center}
-.walker.running .w-leg:nth-child(1){animation:w-run .26s ease-in-out infinite}
-.walker.running .w-leg:nth-child(2){animation:w-run .26s ease-in-out infinite reverse}
-.walker.running .w-arm:nth-child(1){animation:w-run-arm .26s ease-in-out infinite reverse}
-.walker.running .w-arm:nth-child(3){animation:w-run-arm .26s ease-in-out infinite}
-.walker.running .w-shadow{animation:w-shadow-walk .26s ease-in-out infinite}
+@keyframes w-run { 0%{transform:rotate(-44deg)} 50%{transform:rotate(44deg)} 100%{transform:rotate(-44deg)} }
+@keyframes w-run-bob { 0%{transform:translateY(0)} 25%{transform:translateY(-8px)} 50%{transform:translateY(0)} 75%{transform:translateY(-8px)} 100%{transform:translateY(0)} }
+@keyframes w-run-arm { 0%{transform:rotate(40deg)} 50%{transform:rotate(-40deg)} 100%{transform:rotate(40deg)} }
+.walker.running .w-figure { animation:w-run-bob .26s steps(4,end) infinite; transform-origin:bottom center; }
+.walker.running .w-leg:nth-child(1) { animation:w-run .26s steps(4,end) infinite; }
+.walker.running .w-leg:nth-child(2) { animation:w-run .26s steps(4,end) infinite reverse; }
+.walker.running .w-arm:nth-child(1) { animation:w-run-arm .26s steps(4,end) infinite reverse; }
+.walker.running .w-arm:nth-child(3) { animation:w-run-arm .26s steps(4,end) infinite; }
+.walker.running .w-shadow { animation:w-shadow-walk .26s steps(4,end) infinite; }
 
 /* Working */
-.walker.working{animation:wbob .55s ease-in-out infinite alternate}
-@keyframes wbob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+.walker.working { animation:wbob .55s steps(2,end) infinite alternate; }
+@keyframes wbob { from{transform:translateY(0)} to{transform:translateY(-4px)} }
 
-.walker-label{font-size:.44rem;font-weight:700;margin-top:4px;white-space:nowrap;
-  background:rgba(0,0,0,.75);padding:2px 6px;border-radius:4px;color:#fff;
-  border:1px solid rgba(255,255,255,.15);letter-spacing:.03em}
+.walker-label { font-family:'Press Start 2P',monospace; font-size:.32rem; margin-top:5px; white-space:nowrap; background:#000; padding:2px 5px; border-radius:0; color:#fff; outline:1px solid #fff; letter-spacing:.04em; }
 
 /* ── ZOOM HUD ── */
 #zoom-hud{position:absolute;bottom:14px;left:14px;display:flex;align-items:center;gap:5px;
@@ -1019,9 +1138,41 @@ body{transition:background .5s,color .5s}
   animation:badge-pulse 1.5s ease-in-out infinite alternate}
 @keyframes badge-pulse{from{opacity:.7}to{opacity:1;box-shadow:0 0 6px rgba(88,166,255,.5)}}
 
+/* 8-bit pixel trees */
+.tree8 {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 4;
+  image-rendering: pixelated;
+  filter: drop-shadow(2px 2px 0 #000);
+}
+.tree8-top3 { width: 48px; height: 24px; background: #5db81e; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); outline: 1px solid #000; }
+.tree8-top2 { width: 38px; height: 20px; background: #4ca818; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); margin-top: -10px; outline: 1px solid #000; }
+.tree8-top1 { width: 28px; height: 16px; background: #3d9812; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); margin-top: -8px; outline: 1px solid #000; }
+.tree8-trunk { width: 10px; height: 14px; background: #6b3a10; outline: 1px solid #000; }
+
+/* Round deciduous tree variant */
+.tree8r { position: absolute; display: flex; flex-direction:column; align-items:center; pointer-events:none; z-index:4; image-rendering:pixelated; filter:drop-shadow(2px 2px 0 #000); }
+.tree8r-top { width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 38% 36%, #6acc22, #3a8010); outline: 2px solid #000; }
+.tree8r-trunk { width: 10px; height: 12px; background: #6b3a10; outline: 1px solid #000; margin-top: -2px; }
+
+/* ── CRT SCANLINE OVERLAY ── */
+#crt-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0, transparent 3px,
+    rgba(0,0,0,.04) 3px, rgba(0,0,0,.04) 4px
+  );
+}
+
 /* ── MEETING HALL ── */
-.bld-hall .broof{filter:none!important;background:linear-gradient(180deg,#5a3a00,#3a2000)!important;--rc:#5a3a00}
-.bld-hall .bbody{background:linear-gradient(180deg,#f0d898,#d4b86a)!important;outline:3px solid rgba(0,0,0,.5)!important}
 .hall-flag-pole{position:absolute;top:-56px;left:50%;width:4px;height:56px;
   background:linear-gradient(180deg,#a08020,#5a3a00);transform:translateX(-50%);z-index:4}
 .hall-flag{position:absolute;top:-56px;left:calc(50% + 2px);width:28px;height:20px;
@@ -1107,6 +1258,7 @@ body{transition:background .5s,color .5s}
 <!-- TOWN VIEWPORT -->
 <div id="vp">
   <div id="world">
+    <canvas id="terrain-canvas"></canvas>
     <div id="sky">
       <div class="stars"></div>
       <div class="sun"></div>
@@ -1129,6 +1281,7 @@ body{transition:background .5s,color .5s}
     <button class="zbtn" onclick="doZoom(.8)" title="Zoom Out">−</button>
     <button class="zbtn" onclick="resetView()" title="Fit to screen">⌂</button>
   </div>
+  <div id="crt-overlay"></div>
 </div>
 
 <!-- RIGHT PANEL -->
@@ -1671,6 +1824,44 @@ function buildDecos(){
   ];
   trees.forEach(({t,x,y})=>mkTree(c,t,x,y));
 
+  // 8-bit pixel art trees — scattered throughout the world
+  const pixelTrees8=[
+    // Creative district edges
+    {v:'pine',x:50,y:830},{v:'round',x:95,y:870},{v:'pine',x:490,y:820},
+    {v:'round',x:545,y:865},{v:'pine',x:600,y:810},{v:'round',x:650,y:855},
+    // Creative district lower rows
+    {v:'pine',x:50,y:1140},{v:'round',x:95,y:1180},{v:'pine',x:490,y:1150},
+    {v:'round',x:545,y:1195},{v:'pine',x:600,y:1140},{v:'round',x:650,y:1185},
+    // Creative district bottom row
+    {v:'pine',x:50,y:1450},{v:'round',x:95,y:1490},{v:'pine',x:490,y:1455},
+    {v:'round',x:545,y:1500},{v:'pine',x:600,y:1450},{v:'round',x:650,y:1495},
+    // CEO area
+    {v:'round',x:1280,y:680},{v:'pine',x:1650,y:680},{v:'round',x:1340,y:720},
+    {v:'pine',x:1600,y:720},
+    // Market district edges
+    {v:'pine',x:730,y:820},{v:'round',x:775,y:860},{v:'pine',x:730,y:1140},
+    {v:'round',x:775,y:1180},{v:'pine',x:730,y:1455},{v:'round',x:775,y:1500},
+    // Market-Business gap
+    {v:'pine',x:1545,y:820},{v:'round',x:1590,y:860},{v:'pine',x:1545,y:1140},
+    {v:'round',x:1590,y:1180},{v:'pine',x:1545,y:1455},{v:'round',x:1590,y:1500},
+    // Business district right edge
+    {v:'pine',x:2560,y:820},{v:'round',x:2610,y:860},{v:'pine',x:2560,y:1140},
+    {v:'round',x:2610,y:1180},{v:'pine',x:2560,y:1455},{v:'round',x:2610,y:1500},
+    // Park zone trees (x>2650)
+    {v:'pine',x:2700,y:820},{v:'round',x:2760,y:865},{v:'pine',x:2820,y:830},
+    {v:'round',x:2880,y:870},{v:'pine',x:2950,y:825},{v:'round',x:3010,y:860},
+    {v:'pine',x:3080,y:830},{v:'round',x:3150,y:875},{v:'pine',x:3220,y:820},
+    {v:'round',x:3290,y:860},{v:'pine',x:3370,y:835},{v:'round',x:3440,y:870},
+    // Park mid-level
+    {v:'round',x:2720,y:1140},{v:'pine',x:2800,y:1175},{v:'round',x:2870,y:1150},
+    {v:'pine',x:2940,y:1185},{v:'round',x:3020,y:1145},{v:'pine',x:3090,y:1180},
+    {v:'round',x:3170,y:1155},{v:'pine',x:3240,y:1185},{v:'round',x:3320,y:1150},
+    // Park bottom row
+    {v:'pine',x:2720,y:1460},{v:'round',x:2790,y:1500},{v:'pine',x:2870,y:1465},
+    {v:'round',x:2960,y:1505},{v:'pine',x:3050,y:1460},{v:'round',x:3140,y:1500},
+  ];
+  pixelTrees8.forEach(({v,x,y})=>c.appendChild(mkTree8(x,y,v)));
+
   // Shrubs near buildings (updated for new y positions)
   const shrubs=[
     // Row A bottom shrubs
@@ -1752,9 +1943,121 @@ function mkTree(parent,type,x,y){
   parent.appendChild(d);
 }
 
+function drawTerrain() {
+  const canvas = document.getElementById('terrain-canvas');
+  if (!canvas) return;
+  const W = 3200, H = 2000;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  // -- Grass base tiles (checkerboard variation) --
+  const T = 32; // tile size
+  const grassPal = ['#5a9e1a','#52901a','#62aa1c','#4e8c14','#58a018'];
+  for (let y = 0; y < H; y += T) {
+    for (let x = 0; x < W; x += T) {
+      const idx = ((Math.floor(x/T)*3 + Math.floor(y/T)*7) ^ (Math.floor(x/T)+Math.floor(y/T))) % grassPal.length;
+      ctx.fillStyle = grassPal[Math.abs(idx)];
+      ctx.fillRect(x, y, T, T);
+    }
+  }
+
+  // -- Darker grass patches for texture --
+  const rng = (seed) => { let s=seed; return ()=>{ s=(s*1664525+1013904223)&0xffffffff; return (s>>>0)/0xffffffff; }; };
+  const r = rng(42);
+  for (let i = 0; i < 220; i++) {
+    const px = Math.floor(r()*W/T)*T, py = Math.floor(r()*H/T)*T;
+    ctx.fillStyle = '#3a7210';
+    ctx.fillRect(px, py, T, T);
+  }
+
+  // -- Pixel flowers scattered (avoid road areas: y 698-768, 1018-1080, 1330-1390) --
+  const flowerColors = ['#ff4444','#ffcc00','#ff88cc','#ffffff','#ff6622'];
+  const r2 = rng(99);
+  for (let i = 0; i < 380; i++) {
+    const fx = Math.floor(r2()*W), fy = Math.floor(r2()*H);
+    if ((fy > 680 && fy < 800) || (fy > 1000 && fy < 1110) || (fy > 1315 && fy < 1405)) continue;
+    ctx.fillStyle = '#2d6010';
+    ctx.fillRect(fx, fy+4, 2, 4);
+    ctx.fillStyle = flowerColors[i % flowerColors.length];
+    ctx.fillRect(fx-2, fy, 6, 4);
+    ctx.fillStyle = '#ffff88';
+    ctx.fillRect(fx, fy+1, 2, 2);
+  }
+
+  // -- Pixel grass tufts --
+  const r3 = rng(17);
+  for (let i = 0; i < 500; i++) {
+    const gx = Math.floor(r3()*W), gy = Math.floor(r3()*H);
+    if ((gy > 680 && gy < 800) || (gy > 1000 && gy < 1110) || (gy > 1315 && gy < 1405)) continue;
+    ctx.fillStyle = '#3a8010';
+    ctx.fillRect(gx, gy, 2, 6);
+    ctx.fillRect(gx+3, gy+2, 2, 4);
+    ctx.fillRect(gx-2, gy+1, 2, 5);
+  }
+
+  // -- Sky strip at very top --
+  const skyGrad = ctx.createLinearGradient(0,0,0,200);
+  skyGrad.addColorStop(0, '#5c94fc');
+  skyGrad.addColorStop(1, '#74aaff');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, 180);
+
+  // -- Pixel clouds --
+  function drawCloud(cx, cy, scale) {
+    const c = [[0,1],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2],[3,1],[3,2],[4,1]];
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    c.forEach(([dx,dy]) => ctx.fillRect(cx+dx*scale*8, cy+dy*scale*6, scale*8, scale*6));
+    ctx.fillStyle = 'rgba(200,220,255,0.5)';
+    c.forEach(([dx,dy]) => ctx.fillRect(cx+dx*scale*8+scale*2, cy+dy*scale*6+scale*3, scale*4, scale*3));
+  }
+  drawCloud(120, 20, 3); drawCloud(420, 35, 2); drawCloud(750, 15, 4);
+  drawCloud(1050, 40, 2); drawCloud(1350, 18, 3); drawCloud(1700, 30, 2);
+  drawCloud(2000, 12, 4); drawCloud(2400, 38, 2); drawCloud(2750, 22, 3);
+
+  // -- District divider fences --
+  function drawFencePost(x, y) {
+    ctx.fillStyle = '#8B6914';
+    ctx.fillRect(x, y, 8, 32);
+    ctx.fillStyle = '#a07820';
+    ctx.fillRect(x+2, y, 4, 6);
+    ctx.fillStyle = '#6B4F10';
+    ctx.fillRect(x, y+10, 8, 4);
+    ctx.fillRect(x, y+22, 8, 4);
+  }
+  function drawFenceRow(x, yStart, yEnd) {
+    for (let y = yStart; y < yEnd; y += 48) {
+      drawFencePost(x, y);
+      if (y+48 < yEnd) {
+        ctx.fillStyle = '#8B6914';
+        ctx.fillRect(x+4, y+14, 48, 4);
+        ctx.fillRect(x+4, y+26, 48, 4);
+      }
+    }
+  }
+  // Horizontal grass edge strip
+  for (let x = 0; x < W; x += 48) {
+    ctx.fillStyle = '#4a8010';
+    ctx.fillRect(x, 620, 32, 8);
+  }
+}
+
+function mkTree8(x, y, variant='pine') {
+  const el = document.createElement('div');
+  el.className = variant === 'round' ? 'tree8r' : 'tree8';
+  el.style.cssText = `left:${x}px;top:${y}px`;
+  if (variant === 'round') {
+    el.innerHTML = '<div class="tree8r-top"></div><div class="tree8r-trunk"></div>';
+  } else {
+    el.innerHTML = '<div class="tree8-top1"></div><div class="tree8-top2"></div><div class="tree8-top3"></div><div class="tree8-trunk"></div>';
+  }
+  return el;
+}
+
 function initTown(){
   buildRoads();
   buildDecos();
+  drawTerrain();
   const container=document.getElementById('buildings');
   AGENTS.forEach(a=>container.appendChild(mkBuilding(a)));
   setTimeout(()=>{ calcPositions(); spawnAllResidents(); },420);
