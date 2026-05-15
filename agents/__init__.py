@@ -15,6 +15,7 @@ from .financial_agent import FinancialAgent
 from .print_production_agent import PrintProductionAgent
 from .etsy_ads_agent import EtsyAdsAgent
 from .competitor_intel_agent import CompetitorIntelAgent
+from .customer_retention_agent import CustomerRetentionAgent
 from .promotions_agent import PromotionsAgent
 from .tax_compliance_agent import TaxComplianceAgent
 from .returns_agent import ReturnsAgent
@@ -22,6 +23,7 @@ from .supply_chain_agent import SupplyChainAgent
 from .email_marketing_agent import EmailMarketingAgent
 from .ab_testing_agent import ABTestingAgent
 from .api_connections_agent import APIConnectionsAgent
+from .trend_forecasting_agent import TrendForecastingAgent
 from .ceo_agent import CEOAgent
 
 __all__ = [
@@ -42,6 +44,7 @@ __all__ = [
     "PrintProductionAgent",
     "EtsyAdsAgent",
     "CompetitorIntelAgent",
+    "CustomerRetentionAgent",
     "PromotionsAgent",
     "TaxComplianceAgent",
     "ReturnsAgent",
@@ -49,5 +52,6 @@ __all__ = [
     "EmailMarketingAgent",
     "ABTestingAgent",
     "APIConnectionsAgent",
+    "TrendForecastingAgent",
     "CEOAgent",
 ]

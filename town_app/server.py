@@ -259,6 +259,7 @@ AGENT_CLASSES: dict[str, str] = {
     "social": "SocialMediaAgent", "finance": "FinancialAgent",
     "print": "PrintProductionAgent", "ads": "EtsyAdsAgent",
     "intel": "CompetitorIntelAgent", "promos": "PromotionsAgent",
+    "trend": "TrendForecastingAgent", "retention": "CustomerRetentionAgent",
     "tax": "TaxComplianceAgent", "returns": "ReturnsAgent",
     "supply": "SupplyChainAgent", "email": "EmailMarketingAgent",
     "abt": "ABTestingAgent", "api": "APIConnectionsAgent",
