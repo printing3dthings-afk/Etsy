@@ -757,7 +757,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .ev-delegation .fe-msg{color:#ffa657}.ev-thinking .fe-msg{color:#bc8cff}.ev-tool_call .fe-msg{color:#d29922}
 .task-card{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px}
 .task-card-header{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-.task-agent-icon{font-size:.95rem}.task-agent-name{font-size:.68rem;font-weight:600;flex:1}
+.task-agent-icon{font-size:.95rem}.task-agent-name{font-size:.85rem;font-weight:600;flex:1}
 .task-status{font-size:.58rem;padding:1px 6px;border-radius:8px;font-weight:600;border:1px solid}
 .ts-running{background:#162030;border-color:var(--accent);color:var(--accent)}
 .ts-done{background:#101e12;border-color:var(--green);color:var(--green)}
@@ -818,10 +818,13 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .cvt-run{padding:5px 12px;border-radius:6px;border:none;background:var(--green);color:#000;font-size:.65rem;font-weight:700;cursor:pointer;transition:opacity .15s}
 .cvt-run:disabled{opacity:.35;cursor:not-allowed}
 /* ── TASK TIMER ── */
-.task-timer{font-size:.56rem;color:#484f58;margin-top:3px;display:flex;align-items:center;gap:6px}
+.task-timer{margin-top:5px}
+.task-timer-eta{font-size:.82rem;font-weight:700;color:var(--accent);letter-spacing:.02em;margin-bottom:3px}
+.task-timer-eta.done{color:#4caf50}
+.task-timer-row{display:flex;align-items:center;gap:6px}
+.task-elapsed{font-size:.52rem;color:#484f58;white-space:nowrap}
 .task-progress{flex:1;height:3px;background:#21262d;border-radius:2px;overflow:hidden}
 .task-progress-bar{height:100%;background:var(--accent);border-radius:2px;transition:width 1s linear}
-.task-eta{white-space:nowrap;font-size:.52rem}
 /* legacy flat list kept for output panel */
 .files-section{margin-top:8px}
 .files-title{font-size:.65rem;font-weight:600;color:var(--text);margin-bottom:6px}
@@ -2484,9 +2487,17 @@ function _startTimerTick(){
       const elDiv=document.getElementById(`tc-elapsed-${key}`);
       const barEl=document.getElementById(`tc-bar-${key}`);
       const etaEl=document.getElementById(`tc-eta-${key}`);
-      if(elDiv) elDiv.textContent=`⏱ ${_fmtElapsed(elapsed)}`;
+      if(elDiv) elDiv.textContent=`⏱ ${_fmtElapsed(elapsed)} elapsed`;
       if(barEl) barEl.style.width=`${pct}%`;
-      if(etaEl) etaEl.textContent=remaining>0?`~${_fmtElapsed(remaining)} left`:'Almost done…';
+      if(etaEl){
+        if(remaining>0){
+          etaEl.textContent=`~${_fmtElapsed(remaining)} remaining`;
+          etaEl.className='task-timer-eta';
+        } else {
+          etaEl.textContent='Almost done…';
+          etaEl.className='task-timer-eta done';
+        }
+      }
     });
   },1000);
 }
@@ -2507,9 +2518,11 @@ function upsertTaskCard(key,status,task){
   const tc=taskCards[key]||{};
   const timerHtml=status==='running'?`
     <div class="task-timer">
-      <span id="tc-elapsed-${key}">⏱ 0s</span>
-      <div class="task-progress"><div class="task-progress-bar" id="tc-bar-${key}" style="width:0%"></div></div>
-      <span class="task-eta" id="tc-eta-${key}">~${_fmtElapsed(_estDuration(key))} est.</span>
+      <div class="task-timer-eta" id="tc-eta-${key}">~${_fmtElapsed(_estDuration(key))} remaining</div>
+      <div class="task-timer-row">
+        <span class="task-elapsed" id="tc-elapsed-${key}">⏱ 0s elapsed</span>
+        <div class="task-progress"><div class="task-progress-bar" id="tc-bar-${key}" style="width:0%"></div></div>
+      </div>
     </div>`:'';
   card.innerHTML=`
     <div class="task-card-header">
