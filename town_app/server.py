@@ -141,12 +141,20 @@ def _start_scheduler():
     _scheduler.start()
 
 
+def _safe_enqueue(key, task, label):
+    try:
+        _enqueue_task(key, task, label)
+    except Exception as exc:
+        import logging
+        logging.getLogger("scheduler").error(f"Scheduled job failed to enqueue [{label}]: {exc}", exc_info=True)
+
+
 def _register_job(s: dict):
     if _scheduler is None:
         return
     try:
         _scheduler.add_job(
-            func    = _enqueue_task,
+            func    = _safe_enqueue,
             trigger = CronTrigger.from_crontab(s["cron"]),
             args    = [s["agent"], s["task"], s["label"]],
             id      = s["id"],

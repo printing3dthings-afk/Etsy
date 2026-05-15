@@ -22,6 +22,9 @@ from agents.supply_chain_agent import SupplyChainAgent
 from agents.email_marketing_agent import EmailMarketingAgent
 from agents.ab_testing_agent import ABTestingAgent
 from agents.api_connections_agent import APIConnectionsAgent
+from agents.trend_forecasting_agent import TrendForecastingAgent
+from agents.customer_retention_agent import CustomerRetentionAgent
+from agents.workflow_coordinator_agent import WorkflowCoordinatorAgent
 
 SYSTEM_PROMPT = """You are the CEO of OnBrandCraftz (etsy.com/shop/onbrandcraftz) — an Etsy shop selling 3D printed home decor, hand painted wood items, AND digital products (planners, wall art, printables). Your single overriding objective is: profitable business within 30 days. Every decision is measured in dollars of net profit.
 
@@ -109,7 +112,7 @@ Day 5-7: Optimize Existing + Monitor
 - Physical (3D printed, hand painted): made-to-order, low stock (1-2) is normal
 - Digital: instant download, 999 units, delivered via email — highest margin, no shipping, no materials
 
-## YOUR 22-AGENT TEAM
+## YOUR 26-AGENT TEAM
 
 **Digital Product Pipeline (highest profit priority):**
 - Brand Design Agent: brand identity, logo, banner, mockups, thumbnail optimization for CTR
@@ -178,6 +181,8 @@ Target: zero listings with suboptimal titles, missing tags, or below-margin pric
 - Never skip Financial Agent review — every listing must have a confirmed margin
 - When a listing underperforms → Marketing + A/B Testing before giving up on it
 
+- PHYSICAL 3D PRINT ORDERS: NEVER delegate print jobs without explicit human approval. Flag physical orders as "awaiting_human_approval" and notify the owner. Only DIGITAL products are fully automated.
+
 **After every delegation you must:**
 1. Read the returned result
 2. Decide: is the result sufficient? If not, re-delegate with corrections.
@@ -207,6 +212,9 @@ Target: zero listings with suboptimal titles, missing tags, or below-margin pric
 - Receipt messages, buyer emails, newsletters → Email Marketing Agent
 - CTR/conversion experiments → A/B Testing Agent
 - API keys, integrations, connection health → API Connections Agent
+- Trend research, seasonal forecasting, upcoming niches → Trend Forecasting Agent
+- Buyer retention, win-back campaigns, CLV analysis → Customer Retention Agent
+- Pipeline health, bottleneck detection, daily ops overview → Workflow Coordinator
 
 ## DAILY BRIEFING (run every morning)
 1. Revenue last 24h + week-over-week trend (Analytics)
@@ -447,6 +455,33 @@ DELEGATION_TOOLS = [
             "required": ["task"],
         },
     },
+    {
+        "name": "delegate_to_trend_forecasting_agent",
+        "description": "Delegate trend research, seasonal opportunity identification, upcoming niche discovery, or art queue prioritization to the Trend Forecasting Agent. Use this to stay 8-16 weeks ahead of market trends.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"task": {"type": "string"}},
+            "required": ["task"],
+        },
+    },
+    {
+        "name": "delegate_to_customer_retention_agent",
+        "description": "Delegate buyer retention analysis, win-back campaigns for silent customers (30-90 days), customer lifetime value tracking, or VIP buyer identification to the Customer Retention Agent.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"task": {"type": "string"}},
+            "required": ["task"],
+        },
+    },
+    {
+        "name": "delegate_to_workflow_coordinator",
+        "description": "Delegate pipeline health checks, bottleneck detection, agent workload balancing, daily ops summaries, or task prioritization to the Workflow Coordinator. Use this to get a fast overview of what's stuck or needs attention.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"task": {"type": "string"}},
+            "required": ["task"],
+        },
+    },
 ]
 
 
@@ -479,6 +514,10 @@ class CEOAgent(BaseAgent):
             "email_marketing": EmailMarketingAgent(),
             "ab_testing": ABTestingAgent(),
             "api_connections": APIConnectionsAgent(),
+            # Growth & Operations
+            "trend_forecasting": TrendForecastingAgent(),
+            "customer_retention": CustomerRetentionAgent(),
+            "workflow_coordinator": WorkflowCoordinatorAgent(),
         }
         super().__init__(
             name="CEO Agent",
@@ -512,6 +551,9 @@ class CEOAgent(BaseAgent):
             "delegate_to_email_marketing_agent": "email_marketing",
             "delegate_to_ab_testing_agent": "ab_testing",
             "delegate_to_api_connections_agent": "api_connections",
+            "delegate_to_trend_forecasting_agent": "trend_forecasting",
+            "delegate_to_customer_retention_agent": "customer_retention",
+            "delegate_to_workflow_coordinator": "workflow_coordinator",
         }
         agent_key = agent_map.get(tool_name)
         if not agent_key:

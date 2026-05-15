@@ -15,12 +15,53 @@ class DataStore:
     def _load(self) -> None:
         if not os.path.exists(SHOP_DATA_FILE):
             raise FileNotFoundError(f"Shop data file not found: {SHOP_DATA_FILE}")
-        with open(SHOP_DATA_FILE, "r") as f:
-            self._data = json.load(f)
+        try:
+            with open(SHOP_DATA_FILE, "r") as f:
+                self._data = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            # Try to restore from most recent backup
+            backup_dir = os.path.join(os.path.dirname(SHOP_DATA_FILE), "backups")
+            if os.path.isdir(backup_dir):
+                backups = sorted(
+                    [f for f in os.listdir(backup_dir) if f.startswith("shop_data_")],
+                    reverse=True,
+                )
+                if backups:
+                    backup_path = os.path.join(backup_dir, backups[0])
+                    with open(backup_path, "r") as f:
+                        self._data = json.load(f)
+                    import shutil
+                    shutil.copy2(backup_path, SHOP_DATA_FILE)
+                    return
+            raise
 
     def save(self) -> None:
-        with open(SHOP_DATA_FILE, "w") as f:
+        import shutil
+        from datetime import datetime
+
+        tmp_path = SHOP_DATA_FILE + ".tmp"
+        # Write to temp file first (atomic write — prevents corruption)
+        with open(tmp_path, "w") as f:
             json.dump(self._data, f, indent=2)
+        # Rename into place (atomic on most filesystems)
+        os.replace(tmp_path, SHOP_DATA_FILE)
+
+        # Rolling backup — keep last 3
+        backup_dir = os.path.join(os.path.dirname(SHOP_DATA_FILE), "backups")
+        os.makedirs(backup_dir, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = os.path.join(backup_dir, f"shop_data_{ts}.json")
+        shutil.copy2(SHOP_DATA_FILE, backup_path)
+        # Prune: keep only 3 most recent backups
+        backups = sorted(
+            [f for f in os.listdir(backup_dir) if f.startswith("shop_data_")],
+            reverse=True,
+        )
+        for old in backups[3:]:
+            try:
+                os.remove(os.path.join(backup_dir, old))
+            except OSError:
+                pass
 
     def get(self, *keys: str, default: Any = None) -> Any:
         node = self._data

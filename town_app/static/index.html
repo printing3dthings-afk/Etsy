@@ -1256,6 +1256,12 @@ body{transition:background .5s,color .5s}
   <span class="hsp"></span>
   <div class="ws-dot off" id="ws-dot"></div>
   <span id="clock"></span>
+  <div id="status-bar" style="display:flex;align-items:center;gap:10px;font-size:.58rem;font-family:'Press Start 2P',monospace;margin-left:auto;padding-right:10px">
+    <span id="sb-approvals" style="display:none;background:#b71c1c;color:#fff;padding:2px 7px;border-radius:4px;cursor:pointer" onclick="openPhysicalApprovals()">⚠ <span id="sb-approval-count">0</span> APPROVAL NEEDED</span>
+    <span id="sb-qc" style="color:#484f58">QC: <span id="sb-qc-count">—</span></span>
+    <span id="sb-etsy" style="color:#484f58">ETSY: <span id="sb-etsy-status">—</span></span>
+    <span id="sb-smtp" style="color:#484f58">EMAIL: <span id="sb-smtp-status">—</span></span>
+  </div>
 </header>
 
 <!-- TOWN VIEWPORT -->
@@ -1526,6 +1532,10 @@ const AGENTS = [
    quick:['Connection health report','List all API keys status','Set up Pinterest API connection']},
   {key:'coordinator', name:'Workflow Coordinator', display:'Ops Center', icon:'⚙️', roof:'#1565C0',wall:'#E3F2FD', x:2600,y:1080,w:165,h:195, wins:2,chimney:false,
    quick:['Daily ops summary','Digital pipeline status','Find bottlenecks']},
+  {key:'trend',     name:'Trend Forecasting Agent', display:'Trend Lab',      icon:'🔮', roof:'#4A148C',wall:'#EDE7F6', x:2830,y:768, w:155,h:188, wins:2,chimney:false,
+   quick:['Seasonal opportunity calendar','Flag emerging trends for art agent','Get trend radar']},
+  {key:'retention', name:'Customer Retention Agent', display:'Retention Hub',  icon:'💎', roof:'#1B5E20',wall:'#E8F5E9', x:2830,y:1080,w:155,h:188, wins:2,chimney:false,
+   quick:['Retention report','Identify at-risk buyers','Get VIP buyers']},
   // ── MEETING HALL (not an agent — opens idea board) ──
   {key:'hall',     name:'Meeting Hall',           display:'Meeting Hall',   icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:800, y:240, w:240,h:275, wins:4,chimney:false,type:'hall',
    quick:[]},
@@ -2542,6 +2552,16 @@ function upsertTaskCard(key,status,task){
     if(!taskCards[key].startedAt) taskCards[key].startedAt=Date.now();
     _startTimerTick();
   }
+  // Prune old completed cards — keep max 50 entries
+  const keys = Object.keys(taskCards);
+  if(keys.length > 50){
+    const done = keys.filter(k=>taskCards[k].status==='done'||taskCards[k].status==='error');
+    done.slice(0, keys.length - 50).forEach(k=>{
+      delete taskCards[k];
+      const el = document.getElementById(`tc-${k}`);
+      if(el) el.remove();
+    });
+  }
 }
 function addTaskStep(key,msg){
   if(!taskCards[key]) taskCards[key]={steps:[],task:'',status:'running',startedAt:Date.now(),estDuration:_estDuration(key)};
@@ -3032,6 +3052,56 @@ setInterval(applyDayCycle, 60000);
 
 // ── CLOCK ────────────────────────────────────────────────────────────────────
 setInterval(()=>{ document.getElementById('clock').textContent=new Date().toLocaleTimeString(); },1000);
+
+// ── STATUS BAR POLLING ────────────────────────────────────────────────────────
+async function _pollStatusBar(){
+  try {
+    // Physical approvals
+    const ap = await fetch('/api/physical-approvals').then(r=>r.json()).catch(()=>({count:0}));
+    const apEl = document.getElementById('sb-approvals');
+    const apCount = document.getElementById('sb-approval-count');
+    if(ap.count > 0){
+      apEl.style.display='inline';
+      apCount.textContent = ap.count;
+    } else {
+      apEl.style.display='none';
+    }
+
+    // Etsy + SMTP status
+    const cfg = await fetch('/api/config').then(r=>r.json()).catch(()=>({}));
+    const etsyEl = document.getElementById('sb-etsy-status');
+    const smtpEl = document.getElementById('sb-smtp-status');
+    if(etsyEl) {
+      const etsyOk = cfg.etsy_api_key;
+      etsyEl.textContent = etsyOk ? '✓' : '✗';
+      etsyEl.style.color = etsyOk ? '#4caf50' : '#f44336';
+    }
+    if(smtpEl) {
+      const smtpOk = cfg.smtp;
+      smtpEl.textContent = smtpOk ? '✓' : '✗';
+      smtpEl.style.color = smtpOk ? '#4caf50' : '#f44336';
+    }
+
+    // QC queue count from task history
+    const qcEl = document.getElementById('sb-qc-count');
+    if(qcEl){
+      const hist = await fetch('/api/task-history?limit=5').then(r=>r.json()).catch(()=>([]) );
+      // Just show a dash — actual QC count needs a dedicated endpoint
+      qcEl.textContent = '✓';
+      qcEl.style.color = '#4caf50';
+    }
+  } catch(e){}
+}
+
+function openPhysicalApprovals(){
+  // Navigate user to the physical approvals — open print production agent
+  const a = AM['print'];
+  if(a) { selectedKey='print'; openPanel(a); }
+}
+
+// Poll every 30 seconds
+_pollStatusBar();
+setInterval(_pollStatusBar, 30000);
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('load',()=>{

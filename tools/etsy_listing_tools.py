@@ -13,7 +13,21 @@ from datetime import date
 from tools.data_store import DataStore
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError, is_configured
 
-DIGITAL_TAXONOMY_ID = 2078  # Etsy taxonomy ID for "Digital Files" (Craft Supplies & Tools > Patterns & How To)
+# Etsy taxonomy IDs by product type
+# Source: Etsy Open API v3 taxonomy — verified numeric IDs
+TAXONOMY_BY_TYPE: dict[str, int] = {
+    "digital_art":  2097,   # Art & Collectibles > Prints > Digital Prints
+    "wall_art":     2097,   # Art & Collectibles > Prints > Digital Prints
+    "planner":      2078,   # Craft Supplies & Tools > Patterns & How To > Digital Files
+    "clipart":      2078,   # Craft Supplies & Tools > Patterns & How To > Digital Files
+    "clipart_set":  2078,
+    "svg":          2078,
+    "template":     2078,
+    "default":      2097,   # Fall back to Digital Prints
+}
+
+def _get_taxonomy_id(product_type: str) -> int:
+    return TAXONOMY_BY_TYPE.get(product_type.lower().replace(" ", "_"), TAXONOMY_BY_TYPE["default"])
 
 TOOL_DEFINITIONS: list[dict] = [
     {
@@ -226,7 +240,7 @@ def _generate_listing_content(data: dict, store: DataStore) -> str:
         "section": data.get("section", "Digital Downloads"),
         "is_digital": True,
         "type": "download",
-        "taxonomy_id": DIGITAL_TAXONOMY_ID,
+        "taxonomy_id": _get_taxonomy_id(product.get("product_type", "default")),
     }
 
     product["listing_draft"] = listing_draft

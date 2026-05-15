@@ -99,7 +99,28 @@ class BaseAgent:
         }
         if self.tool_definitions:
             kwargs["tools"] = self.tool_definitions
-        return self.client.messages.create(**kwargs)
+
+        delays = [5, 15, 30]
+        last_exc: Exception | None = None
+        for attempt in range(4):
+            if attempt > 0:
+                wait = delays[attempt - 1]
+                self.logger.warning(f"Anthropic rate limit — retrying in {wait}s (attempt {attempt+1}/4)")
+                time.sleep(wait)
+            try:
+                return self.client.messages.create(**kwargs)
+            except anthropic.RateLimitError as e:
+                last_exc = e
+            except anthropic.APIStatusError as e:
+                if e.status_code in (529, 503, 500):
+                    last_exc = e
+                else:
+                    raise
+            except anthropic.APIConnectionError as e:
+                last_exc = e
+
+        self.logger.error(f"Anthropic API failed after 4 attempts: {last_exc}")
+        raise RuntimeError(f"Anthropic API unavailable after retries: {last_exc}") from last_exc
 
     def _extract_text(self, response: anthropic.types.Message) -> str:
         parts = []
