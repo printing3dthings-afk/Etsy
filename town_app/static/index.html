@@ -745,41 +745,49 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .w-figure { display:flex; flex-direction:column; align-items:center; image-rendering:pixelated; }
 .w-shadow { width:28px; height:6px; background:rgba(0,0,0,.35); border-radius:50%; margin-top:1px; flex-shrink:0; }
 
-/* Hair — pixel block */
-.w-hair { width:22px; height:10px; border-radius:4px 4px 0 0; margin-bottom:-2px; flex-shrink:0; outline:2px solid #000; z-index:2; position:relative; }
+/* Hat (SV-style cap) */
+.w-hat { width:26px; height:8px; border-radius:3px 3px 0 0; margin-bottom:-2px; flex-shrink:0; outline:2px solid #000; z-index:3; position:relative; }
+.w-hat::after { content:''; position:absolute; bottom:-3px; left:-3px; right:-3px; height:3px; background:inherit; filter:brightness(.72); outline:2px solid #000; border-radius:0 0 1px 1px; }
 
-/* Head — chunky pixel square */
-.w-head { width:22px; height:20px; border-radius:2px; outline:2px solid #000; box-shadow:2px 2px 0 #000; position:relative; flex-shrink:0; z-index:1; image-rendering:pixelated; }
-/* Eyes — 2 pixel squares */
-.w-eye { position:absolute; width:4px; height:4px; background:#000; top:6px; }
+/* Hair — pixel block */
+.w-hair { width:22px; height:7px; border-radius:0; margin-bottom:-2px; flex-shrink:0; outline:2px solid #000; z-index:2; position:relative; }
+
+/* Head — SV chunky face */
+.w-head { width:24px; height:22px; border-radius:2px; outline:2px solid #000; box-shadow:2px 2px 0 #000; position:relative; flex-shrink:0; z-index:1; image-rendering:pixelated; }
+/* Eyes — SV style, slightly taller */
+.w-eye { position:absolute; width:4px; height:5px; background:#1a0800; top:5px; border-radius:0 0 1px 1px; }
 .w-eye-l { left:3px; }
 .w-eye-r { right:3px; }
-/* Eye shine dot */
+/* Eye shine */
 .w-eye::after { content:''; position:absolute; width:2px; height:2px; background:#fff; top:0; left:0; }
+/* Rosy cheeks — iconic SV */
+.w-cheek { position:absolute; width:4px; height:3px; background:#f09090; border-radius:50%; top:13px; }
+.w-cheek-l { left:2px; }
+.w-cheek-r { right:2px; }
 /* Pixel smile */
-.w-mouth { position:absolute; bottom:4px; left:4px; right:4px; height:3px;
-  background: linear-gradient(90deg, transparent 0, transparent 2px, #000 2px, #000 4px, transparent 4px, transparent calc(100% - 4px), #000 calc(100% - 4px), #000 calc(100% - 2px), transparent calc(100% - 2px));
+.w-mouth { position:absolute; bottom:3px; left:5px; right:5px; height:3px;
+  background: linear-gradient(90deg, transparent 0, transparent 1px, #1a0800 1px, #1a0800 3px, transparent 3px, transparent calc(100% - 3px), #1a0800 calc(100% - 3px), #1a0800 calc(100% - 1px), transparent calc(100% - 1px));
 }
 
-/* Neck */
-.w-neck { width:8px; height:4px; flex-shrink:0; outline:1px solid #000; }
+/* Neck — short, compact */
+.w-neck { width:8px; height:3px; flex-shrink:0; outline:1px solid #000; }
 
-/* Torso — shirt color */
+/* Torso — wider SV proportions */
 .w-upper { display:flex; align-items:flex-start; gap:0; margin-top:0; }
-.w-torso { width:18px; height:20px; border-radius:0; outline:2px solid #000; box-shadow:2px 2px 0 #000; flex-shrink:0; position:relative; image-rendering:pixelated; }
+.w-torso { width:20px; height:18px; border-radius:0; outline:2px solid #000; box-shadow:2px 2px 0 #000; flex-shrink:0; position:relative; image-rendering:pixelated; }
 /* Collar pixel */
-.w-torso::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:8px; height:4px; background:rgba(255,255,255,.3); }
+.w-torso::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:8px; height:4px; background:rgba(255,255,255,.28); }
 
-/* Arms — skin color, pixel size */
-.w-arm { width:6px; height:16px; border-radius:1px; outline:2px solid #000; transform-origin:top center; flex-shrink:0; margin-top:2px; image-rendering:pixelated; }
+/* Arms */
+.w-arm { width:6px; height:14px; border-radius:0 0 2px 2px; outline:2px solid #000; transform-origin:top center; flex-shrink:0; margin-top:2px; image-rendering:pixelated; }
 
-/* Legs — pants color */
+/* Legs — chunkier SV style */
 .w-legs { display:flex; gap:2px; margin-top:1px; }
-.w-leg { width:8px; height:16px; border-radius:0 0 2px 2px; outline:2px solid #000; transform-origin:top center; position:relative; flex-shrink:0; image-rendering:pixelated; }
+.w-leg { width:10px; height:14px; border-radius:0 0 2px 2px; outline:2px solid #000; transform-origin:top center; position:relative; flex-shrink:0; image-rendering:pixelated; }
 /* Belt line */
-.w-leg:nth-child(1)::before, .w-leg:nth-child(2)::before { content:''; position:absolute; top:-3px; left:-1px; right:-1px; height:3px; background:rgba(0,0,0,.5); outline:1px solid #000; }
-/* Pixel shoe */
-.w-leg::after { content:''; position:absolute; bottom:-5px; left:-3px; width:14px; height:5px; background:#222; outline:2px solid #000; border-radius:0 2px 2px 0; }
+.w-leg:nth-child(1)::before, .w-leg:nth-child(2)::before { content:''; position:absolute; top:-3px; left:-1px; right:-1px; height:3px; background:rgba(0,0,0,.4); outline:1px solid #000; }
+/* SV-style boots — chunky, distinct */
+.w-leg::after { content:''; position:absolute; bottom:-5px; left:-3px; width:16px; height:6px; background:var(--wboot,#2a1808); outline:2px solid #000; border-radius:0 2px 2px 1px; }
 
 /* Walking */
 @keyframes w-bob { 0%{transform:translateY(0)} 20%{transform:translateY(-4px)} 50%{transform:translateY(1px)} 70%{transform:translateY(-4px)} 100%{transform:translateY(0)} }
@@ -1190,16 +1198,33 @@ body{transition:background .5s,color .5s}
   background:#5a3a10;border-radius:0 3px 3px 0}
 
 /* ── RESIDENTS (always visible outdoor figures) ── */
-.resident{position:absolute;display:flex;flex-direction:column;align-items:center;
+.resident{position:absolute;display:flex;flex-direction:column;align-items:center;image-rendering:pixelated;
   transition:left 1.35s cubic-bezier(.4,0,.2,1),top 1.35s cubic-bezier(.4,0,.2,1);
   z-index:41;pointer-events:none}
-.r-head{width:13px;height:13px;border-radius:50%;border:2.5px solid rgba(0,0,0,.32);box-shadow:0 2px 4px rgba(0,0,0,.3)}
-.r-torso{width:10px;height:14px;border-radius:3px;border:2px solid rgba(0,0,0,.26);margin-top:-1px}
-.r-legs{display:flex;gap:3px;margin-top:-2px}
-.r-leg{width:4px;height:12px;background:#444;border-radius:0 0 3px 3px;border:1px solid rgba(0,0,0,.28);transform-origin:top center}
-.r-shadow{width:15px;height:4px;background:rgba(0,0,0,.22);border-radius:50%;margin-top:-1px}
-.r-label{font-size:.38rem;font-weight:700;margin-top:2px;white-space:nowrap;
-  background:rgba(0,0,0,.72);padding:1px 4px;border-radius:3px;color:#fff;border:1px solid rgba(255,255,255,.08)}
+.r-hat{width:20px;height:7px;border-radius:2px 2px 0 0;outline:2px solid #000;flex-shrink:0;
+  margin-bottom:-2px;position:relative;z-index:3}
+.r-hat::after{content:'';position:absolute;bottom:-3px;left:-2px;right:-2px;height:3px;
+  background:inherit;filter:brightness(.7);outline:2px solid #000;border-radius:0 0 1px 1px}
+.r-hair{width:16px;height:6px;border-radius:0;outline:2px solid #000;flex-shrink:0;
+  margin-bottom:-2px;z-index:2}
+.r-head{width:16px;height:16px;border-radius:2px;outline:2px solid #000;
+  box-shadow:1px 1px 0 #000;position:relative;flex-shrink:0;z-index:1;image-rendering:pixelated}
+.r-eye{position:absolute;width:3px;height:3px;background:#1a0800;top:4px;border-radius:0 0 1px 1px}
+.r-eye-l{left:2px}.r-eye-r{right:2px}
+.r-eye::after{content:'';position:absolute;width:1px;height:1px;background:rgba(255,255,255,.9);top:0;left:0}
+.r-cheek{position:absolute;width:3px;height:2px;background:#f09090;border-radius:50%;top:9px}
+.r-cheek-l{left:1px}.r-cheek-r{right:1px}
+.r-torso{width:14px;height:13px;border-radius:0;outline:2px solid #000;
+  box-shadow:1px 1px 0 #000;flex-shrink:0;margin-top:0}
+.r-legs{display:flex;gap:2px;margin-top:1px}
+.r-leg{width:6px;height:10px;border-radius:0 0 2px 2px;outline:2px solid #000;
+  transform-origin:top center;position:relative;flex-shrink:0}
+.r-leg::after{content:'';position:absolute;bottom:-3px;left:-2px;width:10px;height:4px;
+  background:var(--rboot,#2a1808);outline:1px solid #000;border-radius:0 1px 1px 0}
+.r-shadow{width:18px;height:4px;background:rgba(0,0,0,.28);border-radius:50%;margin-top:2px;flex-shrink:0}
+.r-label{font-size:.3rem;font-weight:700;margin-top:3px;white-space:nowrap;
+  background:rgba(0,0,0,.75);padding:1px 4px;border-radius:0;color:#fff;
+  outline:1px solid rgba(255,255,255,.15);letter-spacing:.03em}
 /* idle: gentle sway */
 .resident.idle{animation:res-idle 4s ease-in-out infinite alternate}
 @keyframes res-idle{from{transform:rotate(-1deg)}to{transform:rotate(1deg)}}
@@ -1342,6 +1367,8 @@ body{transition:background .5s,color .5s}
   <button class="hbtn" onclick="openSetup()">⚙️ Setup</button>
   <button class="hbtn" onclick="switchTab('files')">📁 Files</button>
   <button class="hbtn" onclick="switchTab('feed')">📋 Feed</button>
+  <button class="hbtn" onclick="openHall()">📋 Board</button>
+  <button class="hbtn" onclick="openRefs()">🎨 Design Refs</button>
   <span class="hsp"></span>
   <div class="ws-dot off" id="ws-dot"></div>
   <span id="clock"></span>
@@ -2332,13 +2359,26 @@ window.addEventListener('resize',()=>{ setTimeout(()=>{ calcPositions(); reposit
 
 // ── RESIDENTS (always-visible figures) ───────────────────────────────────────
 function mkResident(a){
-  const color = a.roof||'#58a6ff';
+  const lk=WALKER_LOOKS[a.key]||{skin:'#e8c0a0',hair:'#333',hat:'#555',shirt:'#58a6ff',pants:'#2a2a3e',boot:'#2a1808'};
+  const hatC=lk.hat||lk.hair;
+  const bootC=lk.boot||'#2a1808';
   const d=document.createElement('div');
   d.className='resident idle'; d.id=`res-${a.key}`;
+  d.style.setProperty('--rboot', bootC);
   d.innerHTML=`
-    <div class="r-head" style="background:${color}"></div>
-    <div class="r-torso" style="background:${color}cc"></div>
-    <div class="r-legs"><div class="r-leg"></div><div class="r-leg"></div></div>
+    <div class="r-hat" style="background:${hatC}"></div>
+    <div class="r-hair" style="background:${lk.hair}"></div>
+    <div class="r-head" style="background:${lk.skin}">
+      <div class="r-eye r-eye-l"></div>
+      <div class="r-eye r-eye-r"></div>
+      <div class="r-cheek r-cheek-l"></div>
+      <div class="r-cheek r-cheek-r"></div>
+    </div>
+    <div class="r-torso" style="background:${lk.shirt}"></div>
+    <div class="r-legs">
+      <div class="r-leg" style="background:${lk.pants}"></div>
+      <div class="r-leg" style="background:${lk.pants}"></div>
+    </div>
     <div class="r-shadow"></div>
     <div class="r-label">${a.display}</div>`;
   return d;
@@ -2578,43 +2618,52 @@ setTimeout(tickIdle,5000);
 
 // ── WALKER SYSTEM ───────────────────────────────────────────────────────────
 const WALKER_LOOKS = {
-  ceo:      {skin:'#FDBCB4',hair:'#2C1810',shirt:'#3F1DCB',pants:'#1a1a2e'},
-  brand:    {skin:'#F5CBA7',hair:'#C0392B',shirt:'#E91E8C',pants:'#4a0030'},
-  art:      {skin:'#E8D5C4',hair:'#8E44AD',shirt:'#7B1FA2',pants:'#311b52'},
-  qc:       {skin:'#AED6F1',hair:'#1A5276',shirt:'#1565C0',pants:'#0d2137'},
-  listing:  {skin:'#FDEBD0',hair:'#784212',shirt:'#E65100',pants:'#3e1400'},
-  store:    {skin:'#A9DFBF',hair:'#145A32',shirt:'#2E7D32',pants:'#1b3a1d'},
-  delivery: {skin:'#A2D9CE',hair:'#0E6655',shirt:'#00838F',pants:'#004d57'},
-  sales:    {skin:'#F5B7B1',hair:'#922B21',shirt:'#B71C1C',pants:'#3b0707'},
-  product:  {skin:'#D2B4DE',hair:'#4A235A',shirt:'#4527A0',pants:'#1a0a3a'},
-  marketing:{skin:'#FDEBD0',hair:'#6D4C41',shirt:'#E65100',pants:'#3e1400'},
-  analytics:{skin:'#BBDEFB',hair:'#1A3A7E',shirt:'#1A237E',pants:'#0d1840'},
-  cs:       {skin:'#B2DFDB',hair:'#00695C',shirt:'#004D40',pants:'#001a14'},
-  social:   {skin:'#F8BBD9',hair:'#6D1935',shirt:'#880E4F',pants:'#2d0018'},
-  finance:  {skin:'#FAD7A0',hair:'#7D6608',shirt:'#F57F17',pants:'#4a3800'},
-  print:    {skin:'#CFD8DC',hair:'#263238',shirt:'#37474F',pants:'#1a2027'},
-  ads:      {skin:'#FDEBD0',hair:'#5D4037',shirt:'#BF360C',pants:'#3d1000'},
-  intel:    {skin:'#C8E6C9',hair:'#1B5E20',shirt:'#1B5E20',pants:'#0a2410'},
-  promos:   {skin:'#FFF9C4',hair:'#F57F17',shirt:'#FF8F00',pants:'#4a3000'},
-  tax:      {skin:'#F5F5F5',hair:'#212121',shirt:'#424242',pants:'#1a1a1a'},
-  returns:  {skin:'#FFCDD2',hair:'#B71C1C',shirt:'#C62828',pants:'#3d0808'},
-  supply:   {skin:'#D7CCC8',hair:'#4E342E',shirt:'#4E342E',pants:'#1a100d'},
-  email:    {skin:'#B3E5FC',hair:'#01579B',shirt:'#0277BD',pants:'#01334d'},
-  abt:      {skin:'#B2DFDB',hair:'#004D40',shirt:'#00695C',pants:'#00261e'},
-  api:      {skin:'#BBDEFB',hair:'#0D47A1',shirt:'#0D47A1',pants:'#061428'},
-  hall:     {skin:'#FFE0B2',hair:'#4E342E',shirt:'#795548',pants:'#3e2723'},
+  ceo:      {skin:'#e8c8a0',hair:'#2C1810',hat:'#1a1040',shirt:'#f0f0f0',pants:'#1a2040',boot:'#2a1808'},
+  brand:    {skin:'#f0c0a0',hair:'#b03018',hat:'#9a2820',shirt:'#e04878',pants:'#3c1040',boot:'#2a1010'},
+  art:      {skin:'#e8c0b0',hair:'#7828a8',hat:'#6b3090',shirt:'#c060c0',pants:'#301850',boot:'#201010'},
+  qc:       {skin:'#d8c0a8',hair:'#3a2810',hat:'#1e4468',shirt:'#3870d0',pants:'#1a2840',boot:'#181818'},
+  listing:  {skin:'#f0c888',hair:'#7a3018',hat:'#b84010',shirt:'#e88030',pants:'#3a1800',boot:'#2a1008'},
+  store:    {skin:'#c8a878',hair:'#2a3818',hat:'#2a5018',shirt:'#508030',pants:'#1e3018',boot:'#1a1010'},
+  delivery: {skin:'#d0c8b8',hair:'#183838',hat:'#0d5050',shirt:'#289090',pants:'#102830',boot:'#101818'},
+  sales:    {skin:'#f0c0b0',hair:'#882010',hat:'#8B1A1A',shirt:'#d03828',pants:'#2a1010',boot:'#1a0808'},
+  product:  {skin:'#d8c0e0',hair:'#3a1860',hat:'#3a1868',shirt:'#6848a8',pants:'#281040',boot:'#180818'},
+  marketing:{skin:'#f0c890',hair:'#6D4C41',hat:'#C04010',shirt:'#d85818',pants:'#3a1800',boot:'#2a1008'},
+  analytics:{skin:'#d0c8d8',hair:'#1a2060',hat:'#192060',shirt:'#2858a8',pants:'#101830',boot:'#101018'},
+  cs:       {skin:'#b8d8c8',hair:'#0a4030',hat:'#0a4838',shirt:'#189878',pants:'#102820',boot:'#101010'},
+  social:   {skin:'#f0b8c8',hair:'#6d1038',hat:'#781038',shirt:'#b83888',pants:'#2d0828',boot:'#180808'},
+  finance:  {skin:'#f0d090',hair:'#7D6608',hat:'#9a6010',shirt:'#c89818',pants:'#3a2800',boot:'#201808'},
+  print:    {skin:'#c8d0d8',hair:'#263238',hat:'#2e3840',shirt:'#508090',pants:'#1a2028',boot:'#101218'},
+  ads:      {skin:'#f0c8a8',hair:'#5D4037',hat:'#a02810',shirt:'#b83818',pants:'#301408',boot:'#1a0808'},
+  intel:    {skin:'#c8d8b8',hair:'#1B5E20',hat:'#1a3e18',shirt:'#2a7828',pants:'#102010',boot:'#101010'},
+  promos:   {skin:'#f8e090',hair:'#c87010',hat:'#a86010',shirt:'#d89018',pants:'#3a2800',boot:'#201808'},
+  tax:      {skin:'#d8d8d0',hair:'#282828',hat:'#282828',shirt:'#484848',pants:'#202020',boot:'#101010'},
+  returns:  {skin:'#f0c0b8',hair:'#881818',hat:'#881818',shirt:'#b82020',pants:'#280808',boot:'#180808'},
+  supply:   {skin:'#d0c0b0',hair:'#4E342E',hat:'#3c2010',shirt:'#886028',pants:'#2a1808',boot:'#181008'},
+  email:    {skin:'#c8d8f0',hair:'#0a3868',hat:'#0a3868',shirt:'#2070b8',pants:'#081a30',boot:'#081020'},
+  abt:      {skin:'#b8d8d0',hair:'#0a4030',hat:'#0a4030',shirt:'#189068',pants:'#081c18',boot:'#080f10'},
+  api:      {skin:'#c8c8f0',hair:'#0a2870',hat:'#0a2870',shirt:'#1838b0',pants:'#081028',boot:'#080818'},
+  coordinator:{skin:'#c8d0f0',hair:'#104888',hat:'#104888',shirt:'#1858b0',pants:'#0c1830',boot:'#081018'},
+  trend:    {skin:'#d8c8f0',hair:'#380870',hat:'#380870',shirt:'#7030c0',pants:'#180828',boot:'#100818'},
+  retention:{skin:'#b8d8b8',hair:'#185018',hat:'#185018',shirt:'#288028',pants:'#0c200c',boot:'#080f08'},
+  hall:     {skin:'#f0c888',hair:'#4E342E',hat:'#5a3a00',shirt:'#b09028',pants:'#3e2723',boot:'#2a1a10'},
 };
 
 function mkWalker(key,_color,run=false){
   const w=document.createElement('div');
   w.className='walker '+(run?'running':'walking'); w.id=`walker-${key}`;
-  const lk=WALKER_LOOKS[key]||{skin:'#FDBCB4',hair:'#333',shirt:'#58a6ff',pants:'#1a1a2e'};
+  const lk=WALKER_LOOKS[key]||{skin:'#e8c0a0',hair:'#333',hat:'#555',shirt:'#58a6ff',pants:'#2a2a3e',boot:'#2a1808'};
+  const hatC=lk.hat||lk.hair;
+  const bootC=lk.boot||'#2a1808';
+  w.style.setProperty('--wboot', bootC);
   w.innerHTML=`
     <div class="w-figure">
+      <div class="w-hat" style="background:${hatC}"></div>
       <div class="w-hair" style="background:${lk.hair}"></div>
       <div class="w-head" style="background:${lk.skin}">
         <div class="w-eye w-eye-l"></div>
         <div class="w-eye w-eye-r"></div>
+        <div class="w-cheek w-cheek-l"></div>
+        <div class="w-cheek w-cheek-r"></div>
         <div class="w-mouth"></div>
       </div>
       <div class="w-neck" style="background:color-mix(in srgb,${lk.skin} 80%,#000)"></div>
@@ -3374,6 +3423,101 @@ window.addEventListener('load',()=>{
   initMinimap();
   applyDayCycle();
 });
+
+// ── DESIGN REFERENCES ────────────────────────────────────────────────────────
+let _refsPending=[];
+
+function openRefs(){
+  document.getElementById('refs-modal').style.display='flex';
+  loadRefs();
+}
+function closeRefs(){ document.getElementById('refs-modal').style.display='none'; }
+
+async function loadRefs(){
+  const data=await fetch('/api/design-references').then(r=>r.json()).catch(()=>[]);
+  const gallery=document.getElementById('refs-gallery');
+  const empty=document.getElementById('refs-empty');
+  if(!data||!data.length){ empty.style.display='block'; gallery.innerHTML=''; gallery.appendChild(empty); return; }
+  empty.style.display='none';
+  const cards=data.map(ref=>`
+    <div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;overflow:hidden">
+      <img src="/${ref.path}" style="width:100%;height:90px;object-fit:cover;display:block;background:#161b22"
+        onerror="this.style.display='none'">
+      <div style="padding:6px 8px">
+        <div style="font-size:.56rem;color:#c9d1d9;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px">${ref.filename}</div>
+        <div style="font-size:.52rem;color:#8b949e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px">${ref.description||'No description'}</div>
+        <button onclick="deleteRef('${ref.id}')" style="font-size:.5rem;background:transparent;border:1px solid #f85149;color:#f85149;border-radius:4px;padding:1px 6px;cursor:pointer">Delete</button>
+      </div>
+    </div>`).join('');
+  gallery.innerHTML=cards;
+  gallery.appendChild(empty);
+}
+
+function refsDragOver(e){ e.preventDefault(); document.getElementById('refs-drop').style.borderColor='#58a6ff'; }
+function refsDragLeave(){ document.getElementById('refs-drop').style.borderColor='#30363d'; }
+function refsDrop(e){
+  e.preventDefault();
+  document.getElementById('refs-drop').style.borderColor='#30363d';
+  _refsPending=Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/'));
+  document.getElementById('refs-drop-label').textContent=`${_refsPending.length} image(s) ready — add description and click Upload`;
+}
+function refsFileChange(e){
+  _refsPending=Array.from(e.target.files);
+  document.getElementById('refs-drop-label').textContent=`${_refsPending.length} file(s) selected`;
+}
+async function refsUpload(){
+  if(!_refsPending.length){ alert('Select or drop images first.'); return; }
+  const desc=document.getElementById('refs-desc').value.trim();
+  const btn=document.getElementById('refs-upload-btn');
+  btn.disabled=true; btn.textContent='Uploading...';
+  for(const f of _refsPending){
+    const fd=new FormData(); fd.append('file',f); fd.append('description',desc);
+    await fetch('/api/upload-reference',{method:'POST',body:fd}).catch(()=>{});
+  }
+  _refsPending=[]; document.getElementById('refs-file').value='';
+  document.getElementById('refs-desc').value='';
+  document.getElementById('refs-drop-label').textContent='Drop images here or click to browse';
+  btn.disabled=false; btn.textContent='Upload';
+  loadRefs();
+}
+async function deleteRef(id){
+  if(!confirm('Delete this reference?')) return;
+  await fetch(`/api/design-references/${id}`,{method:'DELETE'});
+  loadRefs();
+}
 </script>
+<!-- DESIGN REFERENCES MODAL -->
+<div id="refs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;width:700px;max-height:84vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6)">
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #30363d;flex-shrink:0">
+      <span style="font-size:.75rem;font-weight:700;color:#fff;flex:1">🎨 Design References — Art Agent Style Guide</span>
+      <button onclick="closeRefs()" style="background:none;border:none;color:#8b949e;font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:14px 18px;border-bottom:1px solid #30363d;flex-shrink:0">
+      <div id="refs-drop" style="border:2px dashed #30363d;border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:border-color .15s"
+        onclick="document.getElementById('refs-file').click()"
+        ondragover="refsDragOver(event)" ondragleave="refsDragLeave()" ondrop="refsDrop(event)">
+        <div style="font-size:.65rem;color:#8b949e;margin-bottom:3px">📂 Drop images here or click to browse</div>
+        <div id="refs-drop-label" style="font-size:.55rem;color:#484f58">PNG, JPG, GIF, WebP — any style reference, color palette, or design example</div>
+      </div>
+      <input type="file" id="refs-file" accept="image/*" multiple style="display:none" onchange="refsFileChange(event)">
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input type="text" id="refs-desc" placeholder="Describe the style (e.g. 'sage green botanical minimalist wall art, A4 instant download')"
+          style="flex:1;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:7px 10px;font-size:.6rem;outline:none">
+        <button id="refs-upload-btn" onclick="refsUpload()"
+          style="background:#58a6ff;border:none;border-radius:6px;color:#000;padding:7px 16px;font-size:.62rem;font-weight:700;cursor:pointer;white-space:nowrap">Upload</button>
+      </div>
+      <div style="font-size:.52rem;color:#484f58;margin-top:6px">💡 Tip: Add a detailed description — the Art Agent reads these to match your style preferences</div>
+    </div>
+    <div style="padding:8px 18px;border-bottom:1px solid #21262d;flex-shrink:0;font-size:.58rem;color:#8b949e">
+      Uploaded references — Art Agent checks these before every creation
+    </div>
+    <div id="refs-gallery" style="flex:1;overflow-y:auto;padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;align-content:start">
+      <div id="refs-empty" style="font-size:.6rem;color:#484f58;font-style:italic;grid-column:1/-1;padding:20px 0;text-align:center">
+        No references uploaded yet.<br>Upload images to guide the Art Agent's style, colors, and themes.
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
