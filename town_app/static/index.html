@@ -1401,6 +1401,7 @@ body{transition:background .5s,color .5s}
   <button class="hbtn" onclick="openHall()">📋 Board</button>
   <button class="hbtn" onclick="openRefs()">🎨 Design Refs</button>
   <button class="hbtn" onclick="openNotifications()" id="notif-bell-btn" style="position:relative">🔔 <span id="notif-badge" style="display:none;position:absolute;top:2px;right:2px;background:#da3633;color:#fff;border-radius:99px;padding:0 4px;font-size:.48rem;font-weight:700;min-width:14px;text-align:center;line-height:14px"></span></button>
+  <button class="hbtn" onclick="openSysLog()" id="sysop-btn" title="System Health Log">🔧 System</button>
   <button class="hbtn" onclick="openIdeas()" id="ideas-hbtn">💡 Ideas <span id="ideas-hbadge" style="display:none;background:#f0c040;color:#000;border-radius:99px;padding:1px 6px;font-size:.55rem;margin-left:3px;font-weight:700"></span></button>
   <span class="hsp"></span>
   <div class="ws-dot off" id="ws-dot"></div>
@@ -1426,6 +1427,7 @@ body{transition:background .5s,color .5s}
   <div class="rev-stat" style="cursor:pointer" onclick="openChains()"><span class="rev-lbl">⛓️</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Chains</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openCreator()"><span class="rev-lbl">✨</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Create</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openListingHealth()"><span class="rev-lbl">📊</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Health</span></div>
+  <div class="rev-stat" style="cursor:pointer" onclick="openSysLog()" id="sysop-bar-btn"><span class="rev-lbl">🔧</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">System <span id="sysop-fix-count" style="display:none;background:#2a8040;color:#fff;border-radius:3px;padding:0 4px;font-size:.4rem"></span></span></div>
 </div>
 
 <!-- TOWN VIEWPORT -->
@@ -3839,6 +3841,72 @@ async function deleteChain(id){
 function openListingHealth(){ document.getElementById('health-modal').style.display='flex'; loadListingHealth(); }
 function closeListingHealth(){ document.getElementById('health-modal').style.display='none'; }
 
+// ── SYSTEM IMPROVEMENT LOG ───────────────────────────────────────────────────
+const SEV_COLOR  = {info:'#58a6ff', warning:'#f0c040', error:'#da3633', critical:'#da3633', high:'#f0c040', medium:'#8b949e', low:'#484f58'};
+const TYPE_COLOR = {fix:'#2a8040', suggestion:'#6b3090', action:'#1e4468', warning:'#9a6010', error:'#881818'};
+const TYPE_ICON  = {fix:'🔧', suggestion:'💡', action:'📋', warning:'⚠️', error:'❌'};
+
+function openSysLog(){ document.getElementById('syslog-modal').style.display='flex'; loadSysLog(); }
+function closeSysLog(){ document.getElementById('syslog-modal').style.display='none'; }
+
+let _syslogFilter = 'all';
+
+async function loadSysLog(){
+  const data = await fetch('/api/improvement-log?limit=200').then(r=>r.json()).catch(()=>({entries:[],total:0}));
+  const entries = data.entries || [];
+  _renderSysLog(entries);
+  // Update fix count badge
+  const fixes = entries.filter(e=>e.type==='fix').length;
+  const fc = document.getElementById('sysop-fix-count');
+  if(fc){ if(fixes>0){fc.textContent=fixes+' fixes';fc.style.display='inline';}else{fc.style.display='none';} }
+}
+
+function _renderSysLog(entries){
+  const filtered = _syslogFilter==='all' ? entries : entries.filter(e=>e.type===_syslogFilter);
+  const list = document.getElementById('syslog-list');
+  const empty = document.getElementById('syslog-empty');
+  document.getElementById('syslog-total').textContent = `${entries.length} entries`;
+  if(!filtered.length){ list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  list.innerHTML = filtered.map(e=>{
+    const tc  = TYPE_COLOR[e.type]||'#8b949e';
+    const ti  = TYPE_ICON[e.type]||'•';
+    const sc  = SEV_COLOR[e.severity]||'#8b949e';
+    const ts  = new Date(e.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+    const fc  = e.file_changed ? `<div style="font-size:.44rem;color:#484f58;margin-top:3px;font-family:monospace">📄 ${e.file_changed}</div>` : '';
+    const cat = e.category ? `<span style="font-size:.44rem;background:${sc}22;color:${sc};padding:1px 5px;border-radius:3px;margin-left:6px">${e.category}</span>` : '';
+    return `<div style="display:flex;gap:10px;padding:10px 16px;border-bottom:1px solid #161b22;align-items:flex-start">
+      <div style="width:20px;flex-shrink:0;font-size:.9rem;padding-top:1px">${ti}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:.55rem;font-weight:700;color:${tc};text-transform:uppercase;letter-spacing:.06em">${e.type}</span>
+          ${cat}
+          <span style="font-size:.55rem;font-weight:700;color:#e6edf3;flex:1">${e.action}</span>
+          <span style="font-size:.45rem;color:#484f58;white-space:nowrap">${ts}</span>
+        </div>
+        <div style="font-size:.55rem;color:#8b949e;line-height:1.5;margin-top:4px;white-space:pre-wrap">${e.detail}</div>
+        ${fc}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setSyslogFilter(f){
+  _syslogFilter=f;
+  document.querySelectorAll('.syslog-tab').forEach(t=>{ t.style.background=t.dataset.f===f?'#21262d':'transparent'; t.style.color=t.dataset.f===f?'#e6edf3':'#8b949e'; });
+  loadSysLog();
+}
+
+async function runSysScan(){
+  const btn=document.getElementById('sysop-run-btn');
+  btn.disabled=true; btn.textContent='Queuing...';
+  await fetch('/api/improvement-scan',{method:'POST'});
+  btn.textContent='Scan Queued ✓';
+  setTimeout(()=>{ btn.disabled=false; btn.textContent='🔧 Run Scan Now'; },3000);
+  selectAgent('sysop');
+  closeSysLog();
+}
+
 async function loadListingHealth(){
   const listings=await fetch('/api/listings/health').then(r=>r.json()).catch(()=>[]);
   const grid=document.getElementById('health-grid');
@@ -4110,6 +4178,41 @@ async function deleteRef(id){
       <div id="health-empty" style="font-size:.6rem;color:#484f58;grid-column:1/-1;padding:30px;text-align:center">
         No listings data yet. Run a listing audit to populate.
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- System Improvement Log -->
+<div id="syslog-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeSysLog()">
+  <div style="background:#0d1117;border:1px solid #30363d;border-radius:12px;width:min(860px,98vw);max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.8)">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #30363d;flex-shrink:0;gap:10px;background:#0d1117">
+      <span style="font-size:.8rem">🔧</span>
+      <span style="font-size:.72rem;font-weight:700;color:#c9d1d9;flex:1">System Improvement Log</span>
+      <span id="syslog-total" style="font-size:.5rem;color:#484f58">0 entries</span>
+      <button id="sysop-run-btn" onclick="runSysScan()" style="background:#1e4020;border:1px solid #2a6030;border-radius:6px;color:#60c060;padding:5px 14px;font-size:.58rem;font-weight:700;cursor:pointer;white-space:nowrap">🔧 Run Scan Now</button>
+      <button onclick="closeSysLog()" style="background:none;border:none;color:#8b949e;font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+    </div>
+
+    <!-- Filter tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid #21262d;flex-shrink:0;background:#0d1117">
+      <button class="syslog-tab" data-f="all"        onclick="setSyslogFilter('all')"        style="padding:7px 14px;background:#21262d;color:#e6edf3;border:none;cursor:pointer;font-size:.55rem;font-weight:600;border-right:1px solid #30363d">All</button>
+      <button class="syslog-tab" data-f="fix"        onclick="setSyslogFilter('fix')"        style="padding:7px 14px;background:transparent;color:#8b949e;border:none;cursor:pointer;font-size:.55rem;font-weight:600;border-right:1px solid #30363d">🔧 Fixes</button>
+      <button class="syslog-tab" data-f="suggestion" onclick="setSyslogFilter('suggestion')" style="padding:7px 14px;background:transparent;color:#8b949e;border:none;cursor:pointer;font-size:.55rem;font-weight:600;border-right:1px solid #30363d">💡 Suggestions</button>
+      <button class="syslog-tab" data-f="action"     onclick="setSyslogFilter('action')"     style="padding:7px 14px;background:transparent;color:#8b949e;border:none;cursor:pointer;font-size:.55rem;font-weight:600;border-right:1px solid #30363d">📋 Actions</button>
+      <button class="syslog-tab" data-f="warning"    onclick="setSyslogFilter('warning')"    style="padding:7px 14px;background:transparent;color:#8b949e;border:none;cursor:pointer;font-size:.55rem;font-weight:600">⚠️ Warnings</button>
+    </div>
+
+    <!-- Info bar -->
+    <div style="padding:7px 16px;font-size:.5rem;color:#484f58;border-bottom:1px solid #161b22;flex-shrink:0;background:#0a0d12">
+      Scans run automatically every 6 hours. 🔧 = auto-applied fix &nbsp;|&nbsp; 💡 = suggestion for you to review &nbsp;|&nbsp; 📋 = scan activity log
+    </div>
+
+    <!-- Log list -->
+    <div id="syslog-list" style="flex:1;overflow-y:auto"></div>
+    <div id="syslog-empty" style="display:none;padding:40px;text-align:center;font-size:.6rem;color:#484f58">
+      No entries yet. Run a scan to start building the improvement log.
     </div>
   </div>
 </div>

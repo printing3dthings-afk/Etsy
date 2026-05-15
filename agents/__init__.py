@@ -26,6 +26,7 @@ from .api_connections_agent import APIConnectionsAgent
 from .trend_forecasting_agent import TrendForecastingAgent
 from .ceo_agent import CEOAgent
 from .workflow_coordinator_agent import WorkflowCoordinatorAgent
+from .system_improvement_agent import SystemImprovementAgent
 
 __all__ = [
     "BaseAgent",
@@ -56,4 +57,5 @@ __all__ = [
     "TrendForecastingAgent",
     "CEOAgent",
     "WorkflowCoordinatorAgent",
+    "SystemImprovementAgent",
 ]

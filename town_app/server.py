@@ -343,6 +343,14 @@ def _start_scheduler():
         id               = "_order_poll",
         replace_existing = True,
     )
+    # System improvement scan: every 6 hours
+    _scheduler.add_job(
+        func             = lambda: _safe_enqueue("sysop", "Run a full system health scan: check task history for errors, scan agent and tool files for issues, research improvements online, auto-fix what is safe, and log suggestions for everything else.", "System Health Scan"),
+        trigger          = "interval",
+        hours            = 6,
+        id               = "_sysop_scan",
+        replace_existing = True,
+    )
     _scheduler.start()
 
 
@@ -477,6 +485,7 @@ AGENT_CLASSES: dict[str, str] = {
     "supply": "SupplyChainAgent", "email": "EmailMarketingAgent",
     "abt": "ABTestingAgent", "api": "APIConnectionsAgent",
     "coordinator": "WorkflowCoordinatorAgent",
+    "sysop": "SystemImprovementAgent",
 }
 
 
@@ -1343,6 +1352,31 @@ async def create_product(body: dict):
 
 
 # ── Listing Health ────────────────────────────────────────────────────────────
+
+# ── System Improvement Log ────────────────────────────────────────────────────
+
+_IMPROVEMENT_LOG = DATA_DIR / "improvement_log.json"
+
+@app.get("/api/improvement-log")
+async def get_improvement_log(limit: int = 100):
+    try:
+        if _IMPROVEMENT_LOG.exists():
+            entries = json.loads(_IMPROVEMENT_LOG.read_text())
+            return JSONResponse({"entries": entries[:limit], "total": len(entries)})
+    except Exception:
+        pass
+    return JSONResponse({"entries": [], "total": 0})
+
+@app.post("/api/improvement-scan")
+async def trigger_improvement_scan():
+    _enqueue_task(
+        "sysop",
+        "Run a full system health scan: check task history for errors, scan agent and tool files for issues, research improvements online, auto-fix what is safe, and log suggestions for everything else.",
+        "Manual Scan",
+    )
+    _add_notification("sysop_started", "System scan started", "Scanning codebase for issues and improvements", "🔧")
+    return JSONResponse({"status": "queued"})
+
 
 @app.get("/api/listings/health")
 async def listings_health():
