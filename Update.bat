@@ -8,7 +8,7 @@ echo    OnBrandCraftz Town - Update
 echo  ================================================
 echo.
 
-REM ── Try git pull first (fastest) ─────────────────
+REM -- Try git pull first (fastest) --
 git --version >nul 2>&1
 if not errorlevel 1 (
     if exist ".git" (
@@ -19,7 +19,7 @@ if not errorlevel 1 (
         if not errorlevel 1 (
             echo.
             echo  Update complete via git.
-            goto :INSTALL
+            goto INSTALL
         )
         echo  Git pull failed - falling back to ZIP download...
     ) else (
@@ -30,7 +30,7 @@ if not errorlevel 1 (
 )
 echo.
 
-REM ── ZIP download fallback (no git needed) ─────────
+REM -- ZIP download fallback (no git needed) --
 set ZIP_URL=https://github.com/printing3dthings-afk/Etsy/archive/refs/heads/claude/etsy-automation-agents-WFAPU.zip
 set ZIP_FILE=%TEMP%\onbrandcraftz_update.zip
 set EXTRACT_DIR=%TEMP%\onbrandcraftz_update
@@ -40,6 +40,7 @@ powershell -Command "Invoke-WebRequest -Uri '%ZIP_URL%' -OutFile '%ZIP_FILE%' -U
 if errorlevel 1 (
     echo.
     echo  ERROR: Download failed. Check your internet connection.
+    echo  If the repo is private, log into GitHub first then retry.
     pause
     exit /b 1
 )
@@ -55,23 +56,23 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM ── Find the extracted folder ─────────────────────
+REM -- Find the extracted folder --
 for /d %%D in ("%EXTRACT_DIR%\*") do set SOURCE_DIR=%%D
 
 echo  Copying updated files...
 echo  (Your .env and data files are kept as-is)
 echo.
 
-REM ── Copy everything except .env and data/ ─────────
+REM -- Copy everything except .env and data/ --
 robocopy "%SOURCE_DIR%" "%~dp0" /E /XF ".env" /XD "data" "__pycache__" ".git" /NFL /NDL /NJH /NJS >nul
 
-REM ── Clean up temp files ───────────────────────────
+REM -- Clean up temp files --
 del "%ZIP_FILE%" >nul 2>&1
 rmdir /s /q "%EXTRACT_DIR%" >nul 2>&1
 
 echo  Files updated successfully.
 
-REM ── Install / update packages ─────────────────────
+REM -- Install / update packages --
 :INSTALL
 echo.
 echo  Installing/updating packages...
