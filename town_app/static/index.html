@@ -4,6 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OnBrandCraftz Town</title>
 <link rel="icon" type="image/png" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#c9d1d9;--accent:#58a6ff;--green:#3fb950;--red:#f85149;--yellow:#d29922}
@@ -23,7 +25,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* ── TOWN VIEWPORT ── */
 #vp{overflow:hidden;position:relative;background:#0a1628;cursor:grab;user-select:none}
 #vp.grabbing{cursor:grabbing}
-#world{position:absolute;width:5000px;height:2700px;transform-origin:0 0}
+#world{position:absolute;width:5000px;height:2700px;transform-origin:0 0;image-rendering:pixelated;image-rendering:crisp-edges}
 
 /* ── SKY ── */
 #sky{position:absolute;top:0;left:0;width:100%;height:720px;
@@ -85,13 +87,57 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 #ground::after{content:'';position:absolute;top:0;left:0;right:0;height:80px;
   background:linear-gradient(180deg,rgba(80,200,60,.4),transparent)}
 
+/* ── TERRAIN CANVAS ── */
+#terrain-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  image-rendering: pixelated;
+}
+
 /* ── ROADS ── */
-.rh{position:absolute;left:0;right:0;background:#3c3c3c;border-top:3px solid #4e4e4e;border-bottom:3px solid #282828}
-.rv{position:absolute;background:#3c3c3c;border-left:3px solid #4e4e4e;border-right:3px solid #282828}
-.rcl{position:absolute;left:0;right:0;height:4px;
-  background:repeating-linear-gradient(90deg,#f5c518 0,#f5c518 28px,transparent 28px,transparent 58px)}
-/* sidewalk */
-.swk{position:absolute;background:#c0aa88;border:2px solid #a08860}
+.rh {
+  position: absolute;
+  left: 0; right: 0;
+  background: #2a2a2a;
+  outline: 3px solid #000;
+  z-index: 3;
+  image-rendering: pixelated;
+}
+.rv {
+  position: absolute;
+  background: #2a2a2a;
+  outline: 2px solid #000;
+  z-index: 3;
+  image-rendering: pixelated;
+}
+/* Center lane dashes */
+.rcl {
+  position: absolute;
+  left: 0; right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ffee00 0, #ffee00 24px,
+    transparent 24px, transparent 40px
+  );
+  z-index: 4;
+  image-rendering: pixelated;
+}
+/* Sidewalk — pixel cobblestone */
+.swk {
+  position: absolute;
+  background: repeating-linear-gradient(
+    90deg, #c8b870 0, #c8b870 14px, #b8a860 14px, #b8a860 15px
+  ),
+  repeating-linear-gradient(
+    180deg, transparent 0, transparent 14px, rgba(0,0,0,.1) 14px, rgba(0,0,0,.1) 15px
+  );
+  outline: 2px solid #000;
+  z-index: 3;
+  image-rendering: pixelated;
+}
 
 /* ── LAMP POSTS ── */
 .lamp{position:absolute;z-index:4}
@@ -183,17 +229,30 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   background:linear-gradient(180deg,#d8c8a0,#b8a870);}
 
 /* ── BUILDINGS ── */
-.bld{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;
-  transition:filter .25s,transform .22s;
-  filter:drop-shadow(0 10px 22px rgba(0,0,0,.65)) drop-shadow(0 3px 6px rgba(0,0,0,.4));
-  z-index:5}
-.bld:hover{filter:drop-shadow(0 14px 34px rgba(88,166,255,.8)) drop-shadow(0 5px 12px rgba(0,0,0,.55));
-  z-index:6;transform:translateY(-6px) scale(1.015)}
-.bld.selected{filter:drop-shadow(0 0 32px rgba(88,166,255,.98)) drop-shadow(0 8px 18px rgba(0,0,0,.55));
-  z-index:7;transform:translateY(-8px) scale(1.02)}
-.bld.running .bwin{animation:wlit .85s ease-in-out infinite alternate}
-.bld.done{filter:drop-shadow(0 0 24px rgba(63,185,80,.9)) drop-shadow(0 8px 18px rgba(0,0,0,.5))}
-.bld.error{filter:drop-shadow(0 0 24px rgba(248,81,73,.9)) drop-shadow(0 8px 18px rgba(0,0,0,.5))}
+/* ===== 8-BIT BUILDINGS ===== */
+.bld {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  image-rendering: pixelated;
+  filter: drop-shadow(3px 3px 0 #000) drop-shadow(-1px 0 0 #000);
+  z-index: 5;
+  transition: filter .15s, transform .15s;
+}
+.bld:hover {
+  filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 12px rgba(88,166,255,.9));
+  z-index: 6;
+  transform: translateY(-4px);
+}
+.bld.selected {
+  filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 20px rgba(88,166,255,1));
+  z-index: 7;
+  transform: translateY(-6px);
+}
+.bld.done { filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 16px #3fb950); }
+.bld.error { filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 16px #f85149); }
 
 .bub{position:absolute;top:-62px;left:50%;transform:translateX(-50%) translateY(8px);
   background:rgba(255,255,255,.98);color:#1a1a1a;font-size:.72rem;font-weight:600;
@@ -204,51 +263,135 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .bub.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* ── ROOF ─────────────────────────────────────────── */
-.broof{position:relative;z-index:2;margin-bottom:0;
-  height:var(--rh,72px);width:calc(var(--bw,155px) + 28px);
-  background:linear-gradient(160deg,var(--rc,#555) 0%,color-mix(in srgb,var(--rc,#555) 70%,#000) 100%);
-  clip-path:polygon(8px 100%,50% 3px,calc(100% - 8px) 100%);
-  filter:none}
-/* Shingle rows */
-.broof::before{content:'';position:absolute;inset:0;pointer-events:none;
-  background:
-    repeating-linear-gradient(0deg,transparent 0,transparent 9px,rgba(0,0,0,.18) 9px,rgba(0,0,0,.18) 10px),
-    repeating-linear-gradient(90deg,transparent 0,transparent 11px,rgba(255,255,255,.06) 11px,rgba(255,255,255,.06) 12px)}
-/* Ridge highlight */
-.broof::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:3px;height:60%;background:linear-gradient(180deg,rgba(255,255,255,.55),transparent);pointer-events:none}
+/* Stepped pixel art roof */
+.broof {
+  position: relative;
+  z-index: 2;
+  height: var(--rh, 64px);
+  width: calc(var(--bw, 155px) + 24px);
+  background: var(--rc, #555);
+  clip-path: polygon(
+    0% 100%,
+    5% 100%, 5% 84%, 10% 84%, 10% 68%, 16% 68%,
+    16% 52%, 22% 52%, 22% 36%, 28% 36%, 28% 20%,
+    50% 0%,
+    72% 20%, 72% 36%, 78% 36%, 78% 52%,
+    84% 52%, 84% 68%, 90% 68%, 90% 84%, 95% 84%, 95% 100%
+  );
+  outline: none;
+  image-rendering: pixelated;
+}
+/* Pixel shingle lines */
+.broof::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0, transparent 7px,
+    rgba(0,0,0,.25) 7px, rgba(0,0,0,.25) 8px
+  );
+  pointer-events: none;
+}
+/* Bright ridge pixel */
+.broof::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 50%;
+  transform: translateX(-50%);
+  width: 4px; height: 8px;
+  background: rgba(255,255,255,.6);
+  pointer-events: none;
+}
 
-/* Eave — overhang strip at bottom of roof */
-.beave{position:relative;z-index:3;width:calc(var(--bw,155px) + 32px);height:8px;
-  background:color-mix(in srgb,var(--rc,#555) 55%,#111);
-  border-radius:1px;margin-top:-1px;margin-bottom:0;
-  box-shadow:0 3px 6px rgba(0,0,0,.55)}
+/* Eave — pixel-wide overhang strip */
+.beave {
+  position: relative;
+  z-index: 3;
+  width: calc(var(--bw, 155px) + 32px);
+  height: 6px;
+  background: color-mix(in srgb, var(--rc,#555) 45%, #000);
+  margin-top: 0;
+  outline: 2px solid #000;
+  box-shadow: 0 3px 0 #000;
+  image-rendering: pixelated;
+}
 
 /* ── BODY ─────────────────────────────────────────── */
-.bbody{position:relative;width:var(--bw,155px);height:var(--bh,185px);
-  background:linear-gradient(180deg,color-mix(in srgb,var(--wc,#e8e8f0) 95%,#fff) 0%,var(--wc,#e8e8f0) 60%,color-mix(in srgb,var(--wc,#e8e8f0) 88%,#888) 100%);
-  border-radius:2px 2px 0 0;outline:2.5px solid rgba(0,0,0,.38);overflow:hidden;
-  display:flex;flex-direction:column;align-items:center;
-  box-shadow:inset -4px 0 8px rgba(0,0,0,.12),inset 4px 0 6px rgba(255,255,255,.22)}
-/* Horizontal siding lines */
-.bbody::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
-  background:repeating-linear-gradient(180deg,transparent 0,transparent 10px,rgba(0,0,0,.07) 10px,rgba(0,0,0,.07) 11px)}
-/* Corner trim boards */
-.bbody::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+/* Building wall */
+.bbody {
+  position: relative;
+  width: var(--bw, 155px);
+  height: var(--bh, 185px);
+  background: var(--wc, #e8e8f0);
+  border-radius: 0;
+  outline: 3px solid #000;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  image-rendering: pixelated;
+}
+/* Horizontal siding — bold pixel lines */
+.bbody::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    180deg,
+    transparent 0, transparent 11px,
+    rgba(0,0,0,.12) 11px, rgba(0,0,0,.12) 12px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+/* Corner pixel trim — dark 4px strips on edges */
+.bbody::after {
+  content: '';
+  position: absolute;
+  inset: 0;
   background:
-    linear-gradient(90deg,rgba(0,0,0,.18) 0,rgba(0,0,0,.18) 5px,transparent 5px,transparent calc(100% - 5px),rgba(0,0,0,.1) calc(100% - 5px),rgba(0,0,0,.1) 100%)}
+    linear-gradient(90deg, rgba(0,0,0,.25) 0, rgba(0,0,0,.25) 4px, transparent 4px,
+      transparent calc(100% - 4px), rgba(0,0,0,.2) calc(100% - 4px), rgba(0,0,0,.2) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
 
-/* Foundation strip */
-.bfound{width:calc(var(--bw,155px) + 8px);height:10px;
-  background:linear-gradient(180deg,#6b6b6b,#3a3a3a);
-  border-radius:0 0 2px 2px;margin-top:auto;flex-shrink:0;position:relative;z-index:5;
-  box-shadow:0 3px 8px rgba(0,0,0,.6);align-self:center}
+/* Foundation */
+.bfound {
+  width: calc(var(--bw, 155px) + 6px);
+  height: 10px;
+  background: linear-gradient(180deg, #555 0%, #333 100%);
+  outline: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  align-self: center;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
 
 /* ── SIGN ─────────────────────────────────────────── */
-.bsign{margin:6px 4px 2px;background:rgba(10,5,0,.82);color:#fff;font-size:.49rem;font-weight:700;
-  padding:3px 8px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-width:calc(var(--bw,155px) - 10px);border:1px solid rgba(255,255,255,.25);letter-spacing:.05em;text-align:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.5);position:relative;z-index:2}
+/* Sign — pixel font style */
+.bsign {
+  margin: 6px 4px 2px;
+  background: #111;
+  color: #fff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: .36rem;
+  font-weight: 400;
+  padding: 4px 6px;
+  border-radius: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(var(--bw,155px) - 10px);
+  border: 2px solid #fff;
+  outline: 2px solid #000;
+  letter-spacing: .04em;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
 
 /* ── WINDOWS ──────────────────────────────────────── */
 .bwins{display:flex;gap:10px;justify-content:center;padding:6px 8px 3px;flex-wrap:wrap;position:relative;z-index:2}
