@@ -4,13 +4,19 @@ Digital Delivery Tools — processes sales and emails digital files to customers
 Sends the purchased digital file as an email attachment via SMTP.
 
 Required .env settings:
-  SMTP_HOST       — e.g. smtp.gmail.com
-  SMTP_PORT       — e.g. 587
+  SMTP_HOST       — e.g. smtp.gmail.com  OR  smtp.office365.com
+  SMTP_PORT       — 587 (STARTTLS) or 465 (SSL)
   SMTP_USER       — your sending email address
-  SMTP_PASSWORD   — app password (NOT your regular password for Gmail)
+  SMTP_PASSWORD   — app password (see provider notes below)
   SENDER_NAME     — e.g. OnBrandCraftz
 
-For Gmail: enable 2FA and create an App Password at myaccount.google.com/apppasswords
+Gmail setup:
+  SMTP_HOST=smtp.gmail.com  SMTP_PORT=587
+  Enable 2FA then create an App Password at myaccount.google.com/apppasswords
+
+Outlook / Office 365 setup:
+  SMTP_HOST=smtp.office365.com  SMTP_PORT=587
+  Use your regular password, or an App Password if MFA is enabled on the account.
 """
 
 import json
@@ -337,12 +343,21 @@ def _check_email_config() -> str:
         "smtp_configured": configured,
         "checks": checks,
         "status": "Ready to send emails" if configured else "Missing required SMTP settings",
-        "gmail_setup": {
-            "SMTP_HOST": "smtp.gmail.com",
-            "SMTP_PORT": "587",
-            "SMTP_USER": "your_email@gmail.com",
-            "SMTP_PASSWORD": "<App Password from myaccount.google.com/apppasswords>",
-            "note": "Enable 2FA on your Google account, then create an App Password.",
+        "provider_examples": {
+            "gmail": {
+                "SMTP_HOST": "smtp.gmail.com",
+                "SMTP_PORT": "587",
+                "SMTP_USER": "your_email@gmail.com",
+                "SMTP_PASSWORD": "<App Password — myaccount.google.com/apppasswords>",
+                "note": "Enable 2FA on your Google account first, then create an App Password.",
+            },
+            "outlook_office365": {
+                "SMTP_HOST": "smtp.office365.com",
+                "SMTP_PORT": "587",
+                "SMTP_USER": "your_email@outlook.com",
+                "SMTP_PASSWORD": "<your password, or App Password if MFA is enabled>",
+                "note": "Works with Outlook.com, Hotmail, and Microsoft 365 / Office 365 accounts.",
+            },
         },
     }, indent=2)
 
@@ -398,11 +413,29 @@ def _smtp_send(to_email: str, subject: str, body: str, attachment_path: str) -> 
         part.add_header("Content-Disposition", f'attachment; filename="{filename}"')
         msg.attach(part)
 
-    with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
-        server.ehlo()
-        server.starttls()
-        server.login(smtp_user, smtp_password)
-        server.send_message(msg)
+    try:
+        if smtp_port == 465:
+            # SSL from the start (e.g. some custom SMTP servers)
+            import ssl as _ssl
+            ctx = _ssl.create_default_context()
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30, context=ctx) as server:
+                server.login(smtp_user, smtp_password)
+                server.send_message(msg)
+        else:
+            # STARTTLS — works for Gmail (587) and Outlook/Office 365 (587)
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.send_message(msg)
+    except smtplib.SMTPAuthenticationError as exc:
+        raise RuntimeError(
+            f"SMTP authentication failed for {smtp_user} on {smtp_host}:{smtp_port}. "
+            "Check SMTP_USER and SMTP_PASSWORD. For Gmail use an App Password; "
+            "for Outlook use your account password (or App Password if MFA is on)."
+        ) from exc
+    except (smtplib.SMTPException, OSError) as exc:
+        raise RuntimeError(f"SMTP error sending to {to_email}: {exc}") from exc
 
     return {"sent": True}
 
