@@ -82,15 +82,15 @@ TOOL_DEFINITIONS: list[dict] = [
                 },
                 "image_size": {
                     "type": "string",
-                    "enum": ["1024x1024", "1792x1024", "1024x1792"],
-                    "description": "Image size (1024x1024 is square, others are landscape/portrait)",
-                    "default": "1024x1024",
+                    "enum": ["1024x1024", "1536x1024", "1024x1536"],
+                    "description": "1024x1024=square, 1536x1024=landscape, 1024x1536=portrait (best for wall art)",
+                    "default": "1024x1536",
                 },
                 "quality": {
                     "type": "string",
-                    "enum": ["standard", "hd"],
-                    "description": "hd produces more detailed images (costs more)",
-                    "default": "hd",
+                    "enum": ["standard", "high"],
+                    "description": "high produces the most detailed images. Always use high for sellable products.",
+                    "default": "high",
                 },
             },
             "required": ["product_id", "dalle_prompt"],
@@ -357,25 +357,30 @@ def _generate_placeholder_art(data: dict, product: dict, store: DataStore) -> st
     }, indent=2)
 
 
-def _upscale_for_print(src_path: str, dst_path: str, target_px: int = 3000) -> None:
-    """Upscale a DALL-E 3 image (1024px) to print resolution and apply mild sharpening."""
+def _upscale_for_print(src_path: str, dst_path: str, target_px: int = 4500) -> None:
+    """Upscale to print resolution with multi-pass sharpening for top Etsy quality."""
     try:
         from PIL import Image, ImageFilter, ImageEnhance
-        img = Image.open(src_path).convert("RGBA" if src_path.endswith(".png") else "RGB")
+        img = Image.open(src_path).convert("RGB")
         w, h = img.size
-        if max(w, h) < target_px:
-            scale = target_px / max(w, h)
-            new_w, new_h = int(w * scale), int(h * scale)
-            img = img.resize((new_w, new_h), Image.LANCZOS)
-        # Mild unsharp mask (radius=2, percent=130, threshold=3) for crispness
-        rgb = img.convert("RGB")
-        sharpened = rgb.filter(ImageFilter.UnsharpMask(radius=2, percent=130, threshold=3))
-        # Slight contrast boost for vibrancy
-        sharpened = ImageEnhance.Contrast(sharpened).enhance(1.06)
-        # Set 300 DPI metadata
-        sharpened.save(dst_path, "PNG", dpi=(300, 300))
+
+        # Multi-pass upscale: 2x steps prevent aliasing artifacts vs single large jump
+        while max(img.size) < target_px:
+            scale = min(2.0, target_px / max(img.size))
+            img = img.resize((int(img.width * scale), int(img.height * scale)), Image.LANCZOS)
+
+        # Two-pass unsharp mask: first pass recovers LANCZOS softness, second sharpens detail
+        img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=2))
+        img = img.filter(ImageFilter.UnsharpMask(radius=0.5, percent=80,  threshold=1))
+
+        # Subtle vibrancy and contrast boost (Etsy thumbnails compress heavily)
+        img = ImageEnhance.Color(img).enhance(1.08)
+        img = ImageEnhance.Contrast(img).enhance(1.05)
+        img = ImageEnhance.Sharpness(img).enhance(1.1)
+
+        # 300 DPI metadata — required for print-on-demand buyers
+        img.save(dst_path, "PNG", dpi=(300, 300), optimize=False)
     except ImportError:
-        # No Pillow — just copy the raw file
         import shutil
         shutil.copy2(src_path, dst_path)
     # Clean up raw file
@@ -398,13 +403,17 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
 
     try:
         import base64
+        # Map size: portrait default for wall art, cap invalid legacy sizes
+        raw_size = data.get("image_size", "1024x1536")
+        valid_sizes = {"1024x1024", "1536x1024", "1024x1536"}
+        size = raw_size if raw_size in valid_sizes else "1024x1536"
+
         request_body = json.dumps({
             "model": "gpt-image-1",
             "prompt": data["dalle_prompt"],
-            "size": "1024x1024",
+            "size": size,
             "quality": "high",
             "n": 1,
-            "output_format": "png",
         }).encode()
 
         req = urllib.request.Request(
