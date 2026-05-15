@@ -23,7 +23,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 #clock{font-size:.68rem;color:#8b949e;white-space:nowrap}
 
 /* ── TOWN VIEWPORT ── */
-#vp{overflow:hidden;position:relative;background:#0a1628;cursor:grab;user-select:none}
+#vp{overflow:hidden;position:relative;background:#0a1628;cursor:grab;user-select:none;perspective:1800px;perspective-origin:50% 0%}
 #vp.grabbing{cursor:grabbing}
 #world{position:absolute;width:5000px;height:2700px;transform-origin:0 0;image-rendering:pixelated;image-rendering:crisp-edges}
 
@@ -1670,8 +1670,9 @@ let zoom=0.5, panX=0, panY=0;
 const vp    = document.getElementById('vp');
 const world = document.getElementById('world');
 
+const CAM_TILT = -22; // deg — top recedes into distance (Stardew Valley overhead angle)
 function applyTransform() {
-  world.style.transform = `translate(${panX}px,${panY}px) scale(${zoom})`;
+  world.style.transform = `translate(${panX}px,${panY}px) scale(${zoom}) rotateX(${CAM_TILT}deg)`;
   document.getElementById('zlabel').textContent = Math.round(zoom*100)+'%';
 }
 
@@ -3277,14 +3278,9 @@ function drawMinimap(){
     ctx.fillStyle=a.roof||'#30363d';
     ctx.fillRect(bx-3,by-3,6,6);
   });
-  // Viewport rectangle
-  const world=document.getElementById('world');
-  if(!world) return;
-  const tx=parseFloat(world.style.left)||0;
-  const ty=parseFloat(world.style.top)||0;
-  const z=parseFloat(world.style.transform?.match(/scale\(([^)]+)\)/)?.[1]||1);
-  const vw=window.innerWidth*(1/z), vh=window.innerHeight*(1/z);
-  const vx=(-tx/z)*scaleX, vy=(-ty/z)*scaleY;
+  // Viewport rectangle — use panX/panY globals (world is positioned via transform, not left/top)
+  const vw=window.innerWidth*(1/zoom), vh=window.innerHeight*(1/zoom);
+  const vx=(-panX/zoom)*scaleX, vy=(-panY/zoom)*scaleY;
   ctx.strokeStyle='rgba(88,166,255,.8)'; ctx.lineWidth=1.5;
   ctx.strokeRect(vx,vy,vw*scaleX,vh*scaleY);
 }
@@ -3294,10 +3290,9 @@ function initMinimap(){
   canvas.addEventListener('click',e=>{
     const rect=canvas.getBoundingClientRect();
     const mx=(e.clientX-rect.left)/180, my=(e.clientY-rect.top)/100;
-    const world=document.getElementById('world');
-    const z=parseFloat(world.style.transform?.match(/scale\(([^)]+)\)/)?.[1]||0.3);
-    world.style.left=(-mx*5000*z+window.innerWidth/2)+'px';
-    world.style.top =(-my*2700*z+window.innerHeight/2)+'px';
+    panX=-mx*5000*zoom+window.innerWidth/2;
+    panY=-my*2700*zoom+window.innerHeight/2;
+    applyTransform();
     drawMinimap();
   });
   setInterval(drawMinimap,500);
