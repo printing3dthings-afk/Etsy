@@ -186,6 +186,111 @@ class EtsyAPIClient:
             body={"products": [{"offerings": [{"quantity": quantity, "is_enabled": True}]}]},
         )
 
+    # ── Shop sections ─────────────────────────────────────────────────────────
+
+    def get_shop_sections(self) -> list[dict]:
+        """Get all shop sections. Returns list with id, title, rank, active_listing_count."""
+        self._require_oauth()
+        result = self._request("GET", f"shops/{self.shop_id}/sections")
+        return result.get("results", [])
+
+    def create_shop_section(self, title: str) -> dict:
+        """Create a new shop section. Returns the created section dict including id."""
+        self._require_oauth()
+        return self._request("POST", f"shops/{self.shop_id}/sections", body={"title": title})
+
+    def get_or_create_section(self, title: str) -> int:
+        """Get existing section ID by title, or create it. Returns section ID (int)."""
+        sections = self.get_shop_sections()
+        for s in sections:
+            if s.get("title", "").lower() == title.lower():
+                return int(s["shop_section_id"])
+        created = self.create_shop_section(title)
+        return int(created["shop_section_id"])
+
+    # ── Listing images ────────────────────────────────────────────────────────
+
+    def upload_listing_image(self, listing_id: int | str, image_path: str, rank: int = 1) -> dict:
+        """Upload an image file to a listing. rank=1 is the cover photo."""
+        self._require_oauth()
+        import mimetypes
+        import email.mime.multipart
+        import email.mime.base
+        import email.generator
+        import io
+
+        with open(image_path, "rb") as f:
+            image_data = f.read()
+
+        mime_type = mimetypes.guess_type(image_path)[0] or "image/png"
+        filename = os.path.basename(image_path)
+
+        # Build multipart form body manually (no requests library)
+        boundary = "----FormBoundary" + os.urandom(8).hex()
+        body_parts = []
+        body_parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="rank"\r\n\r\n{rank}'.encode())
+        body_parts.append(
+            f'--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="{filename}"\r\nContent-Type: {mime_type}\r\n\r\n'.encode()
+            + image_data
+        )
+        body_parts.append(f'--{boundary}--'.encode())
+        body = b'\r\n'.join(body_parts)
+
+        url = f"{BASE_URL}/shops/{self.shop_id}/listings/{listing_id}/images"
+        headers = {
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "Authorization": f"Bearer {self.access_token}",
+        }
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            body_text = e.read().decode()
+            try:
+                err = json.loads(body_text)
+                msg = err.get("error", body_text)
+            except Exception:
+                msg = body_text
+            raise EtsyAPIError(e.code, msg)
+
+    # ── Digital file upload ───────────────────────────────────────────────────
+
+    def upload_listing_file(self, listing_id: int | str, file_path: str, rank: int = 1) -> dict:
+        """Attach a digital file to a listing for instant Etsy download."""
+        self._require_oauth()
+        filename = os.path.basename(file_path)
+        with open(file_path, "rb") as f:
+            file_data = f.read()
+
+        boundary = "----FormBoundary" + os.urandom(8).hex()
+        body_parts = []
+        body_parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="rank"\r\n\r\n{rank}'.encode())
+        body_parts.append(
+            f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode()
+            + file_data
+        )
+        body_parts.append(f'--{boundary}--'.encode())
+        body = b'\r\n'.join(body_parts)
+
+        url = f"{BASE_URL}/shops/{self.shop_id}/listings/{listing_id}/files"
+        headers = {
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "Authorization": f"Bearer {self.access_token}",
+        }
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            body_text = e.read().decode()
+            try:
+                err = json.loads(body_text)
+                msg = err.get("error", body_text)
+            except Exception:
+                msg = body_text
+            raise EtsyAPIError(e.code, msg)
+
     def refresh_access_token(self) -> bool:
         """Exchange ETSY_REFRESH_TOKEN for a new access token and persist it to .env.
 

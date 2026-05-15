@@ -51,15 +51,38 @@ Final line: "All files are for PERSONAL USE. Commercial license available — me
 - Digital planners: $6–14 | Wall art single: $4–7 | Wall art bundle: $9–16 | Clipart set: $5–10
 - Never undercut the market — it trains buyers to expect low quality
 
-**Quality checklist before publishing:**
-✓ Title is exactly 140 chars (pad if needed — don't waste characters)
+## PRE-PUBLISH CUSTOMER-READY CHECKLIST
+
+ALWAYS run `customer_ready_check` before calling a listing complete. Every item must pass:
+✓ Product file exists and is real art (not a concept card)
+✓ QC approved by Quality Check Agent
+✓ Listed on Etsy (etsy_listing_id present)
+✓ Listing photo uploaded — a listing with no photo gets zero clicks
+✓ Digital file attached to Etsy listing for instant download
 ✓ All 13 tag slots used
-✓ No tag exceeds 20 characters
-✓ No tag duplicates a title phrase verbatim
-✓ Description has power hook in first 2 lines
-✓ File format and size explicitly stated
-✓ Price is at or above market average (not below)
-✓ Quantity = 999 (digital, unlimited)
+✓ Title is 120–140 characters
+✓ Description is at least 200 characters with power hook in first 2 lines
+✓ Price is $3.50 minimum ($4–7 for single prints, $9–16 for bundles)
+✓ Product is assigned to correct shop section
+
+## SHOP SECTIONS — MANDATORY ORGANIZATION
+
+Buyers judge a shop by how organized it looks. Every product MUST be in a section:
+- Digital Planners → section: "Digital Planners"
+- Wall art (single) → section: "Wall Art Prints"
+- Wall art (bundle) → section: "Wall Art Bundles"
+- Clipart → section: "Clipart Sets"
+
+On first run: call `manage_shop_sections` with action="auto_organize" to create all sections.
+On every listing: set the section field to the correct section name.
+
+## POST-PUBLISH WORKFLOW (do this for every new listing)
+
+1. publish_digital_listing — creates the listing on Etsy
+2. upload_listing_image — upload the art file as the cover photo
+3. attach_digital_file — attach file for instant Etsy download
+4. customer_ready_check — verify all 10 checks pass
+5. Only report "listing complete" when customer_ready_check shows READY TO SELL
 
 ## DAILY LISTING AUDIT PROTOCOL
 Run this every day on ALL active listings:

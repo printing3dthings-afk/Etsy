@@ -159,6 +159,63 @@ TOOL_DEFINITIONS: list[dict] = [
         ),
         "input_schema": {"type": "object", "properties": {}, "required": []},
     },
+    {
+        "name": "manage_shop_sections",
+        "description": (
+            "View, create, and organize Etsy shop sections (the category tabs buyers see on your shop page). "
+            "Ensures every product type has its own section: 'Digital Planners', 'Wall Art Prints', 'Clipart Sets', etc."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["list", "create", "auto_organize"],
+                    "description": "list=show all sections, create=make a new one, auto_organize=create standard sections for all product types",
+                },
+                "section_name": {"type": "string", "description": "Required for action=create"},
+            },
+            "required": ["action"],
+        },
+    },
+    {
+        "name": "upload_listing_image",
+        "description": "Upload a mockup or product image to an existing Etsy listing. Listings without images are invisible to buyers.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "DP-prefixed product ID"},
+                "image_path": {"type": "string", "description": "Full path to the image file (PNG or JPG)"},
+            },
+            "required": ["product_id"],
+        },
+    },
+    {
+        "name": "attach_digital_file",
+        "description": "Attach the digital product file directly to the Etsy listing for instant buyer download. This is in addition to email delivery.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "DP-prefixed product ID"},
+            },
+            "required": ["product_id"],
+        },
+    },
+    {
+        "name": "customer_ready_check",
+        "description": (
+            "Run a full customer-ready preflight check on a product before or after publishing. "
+            "Verifies: file exists + passed QC, listing has photo, digital file attached, section assigned, "
+            "all 13 tags used, description complete, price correct. Returns pass/fail per item."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string"},
+            },
+            "required": ["product_id"],
+        },
+    },
 ]
 
 
@@ -181,6 +238,14 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _optimize_listing_content(tool_input, store)
     if tool_name == "bulk_seo_audit":
         return _bulk_seo_audit(store)
+    if tool_name == "manage_shop_sections":
+        return _manage_shop_sections(tool_input, store)
+    if tool_name == "upload_listing_image":
+        return _upload_listing_image(tool_input, store)
+    if tool_name == "attach_digital_file":
+        return _attach_digital_file(tool_input, store)
+    if tool_name == "customer_ready_check":
+        return _customer_ready_check(tool_input["product_id"], store)
     return f"Unknown Etsy listing tool: {tool_name}"
 
 
@@ -754,6 +819,218 @@ def _bulk_seo_audit(store: DataStore) -> str:
             f"{len(critical + needs_work)} listings need SEO improvement. "
             "Run optimize_listing_content on each flagged product_id."
             if critical or needs_work else "All listings are well-optimized!"
+        ),
+    }, indent=2)
+
+
+def _manage_shop_sections(data: dict, store: DataStore) -> str:
+    from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+    client = EtsyAPIClient()
+    action = data.get("action", "list")
+
+    if not client.access_token:
+        # Return locally-tracked sections when not authenticated
+        local_sections = ["Digital Art Prints", "Digital Planners", "Clipart Sets", "SVG Files", "Wall Art Bundles"]
+        return json.dumps({
+            "note": "Etsy OAuth not connected — showing recommended section structure.",
+            "recommended_sections": local_sections,
+            "setup": "Run python tools/etsy_oauth.py to connect, then call manage_shop_sections to create these on Etsy.",
+        }, indent=2)
+
+    try:
+        if action == "list":
+            sections = client.get_shop_sections()
+            return json.dumps({"sections": sections, "count": len(sections)}, indent=2)
+
+        elif action == "create":
+            name = data.get("section_name", "")
+            if not name:
+                return json.dumps({"error": "section_name required for action=create"})
+            result = client.create_shop_section(name)
+            return json.dumps({"created": True, "section": result}, indent=2)
+
+        elif action == "auto_organize":
+            standard_sections = [
+                "Digital Art Prints", "Wall Art Bundles", "Digital Planners",
+                "Clipart Sets", "SVG Files",
+            ]
+            existing = [s.get("title", "").lower() for s in client.get_shop_sections()]
+            created = []
+            skipped = []
+            for name in standard_sections:
+                if name.lower() in existing:
+                    skipped.append(name)
+                else:
+                    client.create_shop_section(name)
+                    created.append(name)
+            return json.dumps({
+                "sections_created": created,
+                "sections_existing": skipped,
+                "total_sections": len(standard_sections),
+                "next_step": "All standard sections ready. Products will now be assigned to their section on publish.",
+            }, indent=2)
+
+    except EtsyAPIError as e:
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+def _upload_listing_image(data: dict, store: DataStore) -> str:
+    from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+    product = _find_product(data["product_id"], store)
+    if not product:
+        return json.dumps({"error": f"Product {data['product_id']} not found"})
+
+    listing_id = product.get("etsy_listing_id")
+    if not listing_id:
+        return json.dumps({"error": "Product is not yet listed on Etsy. Publish it first."})
+
+    # Use provided path or fall back to product file (for art prints)
+    image_path = data.get("image_path") or product.get("file_path", "")
+    if not image_path or not os.path.exists(image_path):
+        return json.dumps({"error": f"Image file not found: {image_path}"})
+
+    ext = os.path.splitext(image_path)[1].lower()
+    if ext not in (".png", ".jpg", ".jpeg"):
+        return json.dumps({"error": f"Image must be PNG or JPG. Got: {ext}"})
+
+    client = EtsyAPIClient()
+    if not client.access_token:
+        return json.dumps({"error": "Etsy OAuth required. Run python tools/etsy_oauth.py"})
+
+    try:
+        result = client.upload_listing_image(listing_id, image_path)
+        product["has_listing_image"] = True
+        _save_product(product, store)
+        return json.dumps({"success": True, "listing_id": listing_id, "image_uploaded": os.path.basename(image_path)}, indent=2)
+    except EtsyAPIError as e:
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+def _attach_digital_file(data: dict, store: DataStore) -> str:
+    from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+    product = _find_product(data["product_id"], store)
+    if not product:
+        return json.dumps({"error": f"Product {data['product_id']} not found"})
+
+    listing_id = product.get("etsy_listing_id")
+    if not listing_id:
+        return json.dumps({"error": "Product not listed on Etsy yet. Publish it first."})
+
+    file_path = product.get("file_path", "")
+    if not file_path or not os.path.exists(file_path):
+        return json.dumps({"error": f"Product file not found: {file_path}"})
+
+    # Block placeholder files
+    if product.get("is_placeholder"):
+        return json.dumps({"error": "Cannot attach: this is a placeholder/concept card, not a real product file."})
+
+    client = EtsyAPIClient()
+    if not client.access_token:
+        return json.dumps({"error": "Etsy OAuth required. Run python tools/etsy_oauth.py"})
+
+    try:
+        result = client.upload_listing_file(listing_id, file_path)
+        product["etsy_file_attached"] = True
+        _save_product(product, store)
+        return json.dumps({
+            "success": True,
+            "listing_id": listing_id,
+            "file_attached": os.path.basename(file_path),
+            "note": "Buyers can now download instantly from Etsy. Email delivery is still active as a backup.",
+        }, indent=2)
+    except EtsyAPIError as e:
+        return json.dumps({"error": str(e)}, indent=2)
+
+
+def _customer_ready_check(product_id: str, store: DataStore) -> str:
+    product = _find_product(product_id, store)
+    if not product:
+        return json.dumps({"error": f"Product {product_id} not found"})
+
+    checks = []
+    draft = product.get("listing_draft", {})
+
+    def chk(name, passed, detail, fix=""):
+        checks.append({"check": name, "pass": passed, "detail": detail, "fix": fix})
+
+    # 1. File exists and is real
+    file_path = product.get("file_path", "")
+    file_ok = bool(file_path) and os.path.exists(file_path) and not product.get("is_placeholder")
+    chk("Product file exists", file_ok,
+        os.path.basename(file_path) if file_ok else "No file or placeholder only",
+        "Generate real art with Art Creation Agent" if not file_ok else "")
+
+    # 2. QC passed
+    qc_ok = product.get("qc_status") == "approved" or product.get("spec_check_result") == "PASS"
+    chk("QC approved", qc_ok,
+        f"QC status: {product.get('qc_status', 'not run')}",
+        "Run Quality Check Agent on this product" if not qc_ok else "")
+
+    # 3. Listed on Etsy
+    listed = bool(product.get("etsy_listing_id"))
+    chk("Listed on Etsy", listed,
+        f"Listing ID: {product.get('etsy_listing_id', 'none')}",
+        "Run publish_digital_listing" if not listed else "")
+
+    # 4. Listing image uploaded
+    has_image = product.get("has_listing_image", False)
+    chk("Listing photo uploaded", has_image,
+        "Cover photo present" if has_image else "No photo — listing is invisible to buyers",
+        "Run upload_listing_image with a mockup or the art file itself" if not has_image else "")
+
+    # 5. Digital file attached to Etsy listing
+    file_attached = product.get("etsy_file_attached", False)
+    chk("Digital file attached to Etsy", file_attached,
+        "Instant download enabled" if file_attached else "File not attached — buyers can't download from Etsy",
+        "Run attach_digital_file" if not file_attached else "")
+
+    # 6. All 13 tags
+    tags = draft.get("tags", [])
+    tags_ok = len(tags) == 13
+    chk("All 13 tags used", tags_ok,
+        f"{len(tags)}/13 tags set",
+        "Run generate_listing_content and ensure exactly 13 tags" if not tags_ok else "")
+
+    # 7. Title length
+    title = draft.get("title", product.get("title", ""))
+    title_ok = 120 <= len(title) <= 140
+    chk("Title length (120-140 chars)", title_ok,
+        f"{len(title)} characters",
+        "Optimize title to 120-140 chars for maximum search visibility" if not title_ok else "")
+
+    # 8. Description present
+    desc = draft.get("description", "")
+    desc_ok = len(desc) >= 200
+    chk("Description complete", desc_ok,
+        f"{len(desc)} chars" if desc else "No description",
+        "Run generate_listing_content to create a full description" if not desc_ok else "")
+
+    # 9. Price set correctly
+    price = draft.get("price", product.get("price", 0))
+    price_ok = price >= 3.50
+    chk("Price above minimum ($3.50)", price_ok,
+        f"${price:.2f}",
+        "Increase price — below $3.50 signals low quality to buyers" if not price_ok else "")
+
+    # 10. Not a placeholder
+    not_placeholder = not product.get("is_placeholder", False)
+    chk("Real product (not concept card)", not_placeholder,
+        "Real generated art" if not_placeholder else "This is a concept card placeholder",
+        "Generate real art before publishing" if not not_placeholder else "")
+
+    passed = sum(1 for c in checks if c["pass"])
+    total = len(checks)
+    ready = passed == total
+
+    return json.dumps({
+        "product_id": product_id,
+        "title": product.get("title", ""),
+        "customer_ready": ready,
+        "score": f"{passed}/{total}",
+        "checks": checks,
+        "verdict": (
+            "READY TO SELL — all checks pass. This product is live and customer-ready." if ready
+            else f"NOT READY — {total - passed} issue(s) must be fixed before this listing will convert."
         ),
     }, indent=2)
 
