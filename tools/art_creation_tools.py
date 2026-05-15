@@ -338,6 +338,9 @@ def _generate_placeholder_art(data: dict, product: dict, store: DataStore) -> st
             f.write(_png1x1())
         file_size_kb = 1
 
+    product["is_placeholder"] = True
+    product["file_hash"] = None
+
     product["file_path"] = file_path
     product["file_format"] = "PNG"
     product["file_size_kb"] = file_size_kb
@@ -439,6 +442,11 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
         _upscale_for_print(raw_path, file_path, target_px=3000)
 
         file_size_kb = os.path.getsize(file_path) // 1024
+
+        import hashlib as _hashlib
+        with open(file_path, "rb") as _hf:
+            product["file_hash"] = _hashlib.sha256(_hf.read()).hexdigest()
+        product["is_placeholder"] = False
 
         product["file_path"] = file_path
         product["file_format"] = "PNG"
@@ -1074,6 +1082,11 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
     c.save()
     file_size_kb = os.path.getsize(file_path) // 1024
+
+    import hashlib as _hashlib
+    with open(file_path, "rb") as _hf:
+        product["file_hash"] = _hashlib.sha256(_hf.read()).hexdigest()
+    product["is_placeholder"] = False
 
     product["file_path"] = file_path
     product["file_format"] = "PDF"

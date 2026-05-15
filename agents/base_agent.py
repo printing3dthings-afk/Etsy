@@ -4,7 +4,7 @@ import os
 import time
 from logging.handlers import RotatingFileHandler
 from typing import Any
-from config import MODEL, MAX_TOKENS, MAX_ITERATIONS
+from config import MAX_TOKENS, MAX_ITERATIONS
 from tools import web_research_tools, learning_tools
 
 
@@ -51,11 +51,13 @@ class BaseAgent:
 
     _UNIVERSAL_TOOLS = web_research_tools.TOOL_DEFINITIONS + learning_tools.TOOL_DEFINITIONS
 
-    def __init__(self, name: str, system_prompt: str, tool_definitions: list[dict]):
+    def __init__(self, name: str, system_prompt: str, tool_definitions: list[dict], model: str = ""):
         self.name = name
         self.system_prompt = system_prompt
         # Merge domain tools with universal research + learning tools
         self.tool_definitions = tool_definitions + self._UNIVERSAL_TOOLS
+        from config import STANDARD_MODEL
+        self.model = model or STANDARD_MODEL
         self.client = anthropic.Anthropic()
         self.logger = _get_logger(name)
 
@@ -84,7 +86,7 @@ class BaseAgent:
 
     def _call_api(self, messages: list[dict]) -> anthropic.types.Message:
         kwargs: dict[str, Any] = {
-            "model": MODEL,
+            "model": self.model,
             "max_tokens": MAX_TOKENS,
             "system": [
                 {

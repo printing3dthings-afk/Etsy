@@ -12,7 +12,7 @@ import sys
 import tempfile
 import threading
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 from typing import Set
 
@@ -263,6 +263,7 @@ AGENT_CLASSES: dict[str, str] = {
     "tax": "TaxComplianceAgent", "returns": "ReturnsAgent",
     "supply": "SupplyChainAgent", "email": "EmailMarketingAgent",
     "abt": "ABTestingAgent", "api": "APIConnectionsAgent",
+    "coordinator": "WorkflowCoordinatorAgent",
 }
 
 
@@ -717,6 +718,55 @@ async def etsy_status():
         "status":           status,
         "next_step":        next_step,
     })
+
+
+@app.get("/api/physical-approvals")
+async def get_physical_approvals():
+    shop_data_path = DATA_DIR / "shop_data.json"
+    try:
+        shop_data = json.loads(shop_data_path.read_text()) if shop_data_path.exists() else {}
+    except Exception:
+        shop_data = {}
+
+    digital_types = {"digital_art", "planner", "clipart", "digital", "download"}
+    orders = shop_data.get("orders", [])
+    pending = [
+        o for o in orders
+        if o.get("product_type", "") not in digital_types or o.get("requires_human_approval", False)
+    ]
+
+    print_queue = shop_data.get("print_queue", [])
+    queued_unapproved = [
+        item for item in print_queue
+        if item.get("status") == "queued" and not item.get("human_approved", False)
+    ]
+
+    all_pending = pending + queued_unapproved
+    return JSONResponse({"pending_approvals": all_pending, "count": len(all_pending)})
+
+
+@app.post("/api/approve-physical/{order_id}")
+async def approve_physical_order(order_id: str):
+    shop_data_path = DATA_DIR / "shop_data.json"
+    try:
+        shop_data = json.loads(shop_data_path.read_text()) if shop_data_path.exists() else {}
+    except Exception:
+        shop_data = {}
+
+    orders = shop_data.get("orders", [])
+    found = False
+    for o in orders:
+        if str(o.get("id", "")) == order_id or str(o.get("order_id", "")) == order_id:
+            o["human_approved"] = True
+            o["approved_at"] = str(date.today())
+            found = True
+            break
+
+    if not found:
+        return JSONResponse({"error": f"Order {order_id} not found"}, status_code=404)
+
+    shop_data_path.write_text(json.dumps(shop_data, indent=2))
+    return JSONResponse({"approved": True, "order_id": order_id})
 
 
 _ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/bmp"}

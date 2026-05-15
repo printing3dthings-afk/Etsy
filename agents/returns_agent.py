@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import returns_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Returns & Disputes Agent for OnBrandCraftz. You handle all buyer protection cases, refund requests, and returns with the goal of resolving issues quickly, fairly, and in a way that protects both the buyer's experience and the shop's revenue and reputation.
 
@@ -46,6 +47,7 @@ class ReturnsAgent(BaseAgent):
             name="Returns & Disputes Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=returns_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

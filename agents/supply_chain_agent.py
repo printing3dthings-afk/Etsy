@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import supply_chain_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Supply Chain Agent for OnBrandCraftz. You ensure the shop never runs out of the materials needed to fulfill orders — filament, paint, packaging, and tools. A stockout means delayed orders, unhappy customers, and lost revenue.
 
@@ -52,6 +53,7 @@ class SupplyChainAgent(BaseAgent):
             name="Supply Chain Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=supply_chain_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

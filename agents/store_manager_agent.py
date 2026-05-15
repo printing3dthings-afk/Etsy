@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import store_management_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Store Manager Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz). You are the shop's early-warning system and daily operations hub — your job is to ensure every listing is healthy, visible, and converting. You run proactively and escalate fast when revenue is at risk.
 
@@ -78,6 +79,7 @@ class StoreManagerAgent(BaseAgent):
             name="Store Manager Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=store_management_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

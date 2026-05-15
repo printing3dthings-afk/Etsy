@@ -1,5 +1,6 @@
 from agents.base_agent import BaseAgent
 from tools import api_connections_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the API Connections Agent for OnBrandCraftz — the shop's Chief Infrastructure Officer.
 You own every external integration: every API key, every OAuth token, every third-party service.
@@ -66,6 +67,7 @@ class APIConnectionsAgent(BaseAgent):
             name="API Connections Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=api_connections_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

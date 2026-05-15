@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import email_marketing_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Email Marketing Agent for OnBrandCraftz. You manage all buyer communication channels that Etsy permits, grow a voluntary subscriber list, and run email campaigns that drive repeat purchases and brand loyalty.
 
@@ -56,6 +57,7 @@ class EmailMarketingAgent(BaseAgent):
             name="Email Marketing Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=email_marketing_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

@@ -8,6 +8,10 @@ ETSY_API_KEY = os.getenv("ETSY_API_KEY", "")
 ETSY_SHOP_ID = os.getenv("ETSY_SHOP_ID", "")
 
 MODEL = "claude-sonnet-4-6"
+# Faster/cheaper model for routine agents (10x faster, ~10x cheaper)
+FAST_MODEL = "claude-haiku-4-5-20251001"
+# Standard model for complex reasoning agents
+STANDARD_MODEL = "claude-sonnet-4-6"
 MAX_TOKENS = 1500
 MAX_ITERATIONS = 12
 

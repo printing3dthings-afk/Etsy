@@ -146,6 +146,24 @@ def _check_file_specs(product_id: str, store: DataStore) -> str:
     if not file_path or not os.path.exists(file_path):
         return json.dumps({"error": f"No file found for {product_id}. Generate the file first."})
 
+    # Hard stop: zero-byte file
+    if os.path.getsize(file_path) == 0:
+        return json.dumps({
+            "product_id": product_id,
+            "overall_result": "FAIL",
+            "error": "File is empty (0 bytes). Regenerate the product.",
+            "checks": [{"check": "File Integrity", "value": "0 bytes", "requirement": "> 0 bytes", "pass": False}],
+        })
+
+    # Hard stop: concept placeholder — never approve these
+    if product.get("is_placeholder"):
+        return json.dumps({
+            "product_id": product_id,
+            "overall_result": "FAIL",
+            "error": "This is a concept placeholder card, not real art. Generate actual art with gpt-image-1 before QC.",
+            "checks": [{"check": "Concept Card", "value": "Placeholder detected", "requirement": "Real generated art required", "pass": False}],
+        })
+
     checks: list[dict] = []
     file_size_kb = os.path.getsize(file_path) // 1024
 
@@ -175,6 +193,7 @@ def _check_file_specs(product_id: str, store: DataStore) -> str:
         try:
             from PIL import Image as PILImage
             with PILImage.open(file_path) as img:
+                img.load()  # Force full read — catches truncated/corrupt files
                 width, height = img.size
                 color_mode = img.mode
                 dpi_info = img.info.get("dpi", (72, 72))
@@ -219,12 +238,52 @@ def _check_file_specs(product_id: str, store: DataStore) -> str:
             })
 
     elif file_ext == "PDF":
-        image_checks.append({
-            "check": "PDF Format",
-            "value": "PDF detected",
-            "requirement": "PDF is valid for Etsy digital download",
-            "pass": True,
-        })
+        try:
+            with open(file_path, "rb") as pdf_f:
+                raw = pdf_f.read()
+            # Header check
+            has_header = raw[:5] == b"%PDF-"
+            # EOF marker check
+            has_eof = b"%%EOF" in raw[-200:]
+            # Minimum size — a valid sellable PDF should be >50 KB
+            min_size_pass = file_size_kb >= 50
+            # Page count estimate (count /Type /Page objects)
+            page_count = raw.count(b"/Type /Page") + raw.count(b"/Type/Page")
+            product_type = product.get("product_type", "")
+            min_pages = 20 if "planner" in product_type else 1
+            pages_pass = page_count >= min_pages
+
+            image_checks.append({
+                "check": "PDF Header",
+                "value": "Valid %PDF- header" if has_header else "Missing PDF header",
+                "requirement": "File must start with %PDF-",
+                "pass": has_header,
+            })
+            image_checks.append({
+                "check": "PDF Structure",
+                "value": "Valid EOF marker" if has_eof else "Missing %%EOF",
+                "requirement": "PDF must have proper end-of-file marker",
+                "pass": has_eof,
+            })
+            image_checks.append({
+                "check": "PDF Size",
+                "value": f"{file_size_kb} KB",
+                "requirement": "≥ 50 KB (empty/stub PDFs rejected)",
+                "pass": min_size_pass,
+            })
+            image_checks.append({
+                "check": "Page Count",
+                "value": f"~{page_count} pages",
+                "requirement": f"≥ {min_pages} page(s) for {product_type or 'this product type'}",
+                "pass": pages_pass,
+            })
+        except Exception as exc:
+            image_checks.append({
+                "check": "PDF Validation",
+                "value": f"Error reading PDF: {exc}",
+                "requirement": "PDF must be readable",
+                "pass": False,
+            })
 
     all_checks = checks + image_checks
     passed = sum(1 for c in all_checks if c.get("pass") is True)
@@ -235,6 +294,13 @@ def _check_file_specs(product_id: str, store: DataStore) -> str:
     product["file_size_kb"] = file_size_kb
     product["spec_check_result"] = overall
     product["spec_check_date"] = str(date.today())
+    _save_product(product, store)
+
+    # Compute and store file hash for delivery integrity verification
+    import hashlib
+    with open(file_path, "rb") as hf:
+        file_hash = hashlib.sha256(hf.read()).hexdigest()
+    product["file_hash"] = file_hash
     _save_product(product, store)
 
     return json.dumps({
@@ -255,6 +321,21 @@ def _approve_product(data: dict, store: DataStore) -> str:
     product = _find_product(data["product_id"], store)
     if not product:
         return json.dumps({"error": f"Product {data['product_id']} not found"})
+
+    # Block approval if automated spec check has failed
+    if product.get("spec_check_result") == "FAIL":
+        return json.dumps({
+            "error": "Cannot approve: automated spec check FAILED. Run check_file_specs to see what needs fixing.",
+            "product_id": data["product_id"],
+            "spec_result": product.get("spec_check_result"),
+        })
+
+    # Block approval of concept cards
+    if product.get("is_placeholder"):
+        return json.dumps({
+            "error": "Cannot approve: this is a concept placeholder, not real art.",
+            "product_id": data["product_id"],
+        })
 
     product["status"] = "approved"
     product["qc_status"] = "approved"

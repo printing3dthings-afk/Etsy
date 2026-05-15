@@ -225,6 +225,25 @@ def _send_delivery_email(data: dict, store: DataStore) -> str:
     if not file_path or not os.path.exists(file_path):
         return json.dumps({"error": f"Product file not found: {file_path}. Generate the file first."})
 
+    # Verify file integrity hash if available
+    expected_hash = product.get("file_hash")
+    if expected_hash:
+        import hashlib
+        with open(file_path, "rb") as hf:
+            actual_hash = hashlib.sha256(hf.read()).hexdigest()
+        if actual_hash != expected_hash:
+            return json.dumps({
+                "error": "Delivery blocked: file integrity check failed. The file may be corrupted or replaced. Re-run QC.",
+                "product_id": data["product_id"],
+            })
+
+    # Block delivery of concept cards
+    if product.get("is_placeholder"):
+        return json.dumps({
+            "error": "Delivery blocked: this product is a concept placeholder, not real art. Cannot send to customer.",
+            "product_id": data["product_id"],
+        })
+
     shop_name = store.shop.get("name", "OnBrandCraftz")
     customer_name = data.get("customer_name", "Valued Customer")
     subject, body = _build_email_content(customer_name, data["product_title"], shop_name, data["order_id"])
@@ -397,6 +416,11 @@ def _smtp_send(to_email: str, subject: str, body: str, attachment_path: str) -> 
     smtp_user = os.getenv("SMTP_USER", "")
     smtp_password = os.getenv("SMTP_PASSWORD", "")
     sender_name = os.getenv("SENDER_NAME", "OnBrandCraftz")
+
+    # Verify file integrity before sending
+    if attachment_path and os.path.exists(attachment_path):
+        if os.path.getsize(attachment_path) == 0:
+            raise RuntimeError(f"Delivery blocked: file is empty (0 bytes): {attachment_path}")
 
     msg = MIMEMultipart()
     msg["From"] = f"{sender_name} <{smtp_user}>"

@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import promotions_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Pricing & Promotions Agent for OnBrandCraftz. You drive revenue through strategic discounting, seasonal sales, and smart coupon campaigns — without eroding margins.
 
@@ -45,6 +46,7 @@ class PromotionsAgent(BaseAgent):
             name="Promotions Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=promotions_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
