@@ -411,7 +411,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   position: relative;
   width: var(--bw, 155px);
   height: var(--bh, 185px);
-  background: var(--wc, #e8e8f0);
+  background: var(--wc, #f0e8d8);
   border-radius: 0;
   outline: 3px solid #000;
   box-shadow: 4px 4px 0 rgba(0,0,0,.7);
@@ -450,7 +450,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .bfound {
   width: calc(var(--bw, 155px) + 6px);
   height: 10px;
-  background: linear-gradient(180deg, #555 0%, #333 100%);
+  background: linear-gradient(180deg, #8a7050 0%, #5a4020 100%);
   outline: 2px solid #000;
   box-shadow: 3px 3px 0 #000;
   align-self: center;
@@ -462,8 +462,8 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* Sign — pixel font style */
 .bsign {
   margin: 6px 4px 2px;
-  background: #111;
-  color: #fff;
+  background: #2a1800;
+  color: #f0d060;
   font-family: 'Press Start 2P', monospace;
   font-size: .36rem;
   font-weight: 400;
@@ -473,7 +473,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: calc(var(--bw,155px) - 10px);
-  border: 2px solid #fff;
+  border: 2px solid #d4a030;
   outline: 2px solid #000;
   letter-spacing: .04em;
   text-align: center;
@@ -614,7 +614,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* Stoop steps */
 .bstoop {
   width: 38px; height: 6px;
-  background: #999;
+  background: #a09070;
   outline: 2px solid #000;
   box-shadow: 2px 2px 0 #000;
   flex-shrink: 0;
@@ -622,7 +622,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 }
 .bstoop2 {
   width: 46px; height: 5px;
-  background: #777;
+  background: #807050;
   outline: 1px solid #000;
   box-shadow: 2px 2px 0 #000;
   flex-shrink: 0;
@@ -1570,63 +1570,63 @@ body{transition:background .5s,color .5s}
 // Road 3 at y:1330-1374 → Row C starts at y:1390
 const AGENTS = [
   // key, name, display, icon, roof, wall, x, y, w, h, wins, chimney, quick[]
-  {key:'ceo',      name:'CEO Agent',             display:'CEO HQ',         icon:'🏛️', roof:'#4A148C',wall:'#EDE7F6', x:1370,y:330, w:240,h:290, wins:3,chimney:false,large:true,
+  {key:'ceo',      name:'CEO Agent',             display:'CEO HQ',         icon:'🏛️', roof:'#7B1900',wall:'#f0e8d0', x:1370,y:330, w:240,h:290, wins:3,chimney:false,large:true,
    quick:['Run daily briefing','What should we focus on this week?','Full shop status report']},
   // ── Creative district ──────────────────────────────────────────────────────
-  {key:'brand',    name:'Brand Design Agent',    display:'Brand Design',   icon:'🎨', roof:'#AD1457',wall:'#FCE4EC', x:60,  y:768, w:155,h:185, wins:2,chimney:false,
+  {key:'brand',    name:'Brand Design Agent',    display:'Brand Design',   icon:'🎨', roof:'#9a2820',wall:'#f0dcc8', x:60,  y:768, w:155,h:185, wins:2,chimney:false,
    quick:['Create a shop banner concept','Review brand guidelines','Generate logo brief']},
-  {key:'art',      name:'Art Creation Agent',    display:'Art Creation',   icon:'🖼️', roof:'#6A1B9A',wall:'#F3E5F5', x:275, y:762, w:175,h:210, wins:2,chimney:false,
+  {key:'art',      name:'Art Creation Agent',    display:'Art Creation',   icon:'🖼️', roof:'#6b3090',wall:'#e8dcc8', x:275, y:762, w:175,h:210, wins:2,chimney:false,
    quick:['Create boho botanical wall art for Etsy','Create a daily planner PDF','List all digital products']},
-  {key:'qc',       name:'Quality Check Agent',   display:'Quality Check',  icon:'🔍', roof:'#1565C0',wall:'#E3F2FD', x:60,  y:1080,w:150,h:178, wins:2,chimney:false,
+  {key:'qc',       name:'Quality Check Agent',   display:'Quality Check',  icon:'🔍', roof:'#1e4468',wall:'#d8dcd8', x:60,  y:1080,w:150,h:178, wins:2,chimney:false,
    quick:['Review all pending products','Get QC summary','Approve all pending products']},
-  {key:'listing',  name:'Etsy Listing Agent',    display:'Etsy Listing',   icon:'🏪', roof:'#E65100',wall:'#FFF3E0', x:270, y:1080,w:160,h:188, wins:2,chimney:false,
+  {key:'listing',  name:'Etsy Listing Agent',    display:'Etsy Listing',   icon:'🏪', roof:'#b84010',wall:'#f0d898', x:270, y:1080,w:160,h:188, wins:2,chimney:false,
    quick:['Get all listings','Create SEO title for a 3D printed shelf','Publish approved digital products']},
-  {key:'store',    name:'Store Manager Agent',   display:'Store Manager',  icon:'🏬', roof:'#2E7D32',wall:'#E8F5E9', x:60,  y:1390,w:150,h:182, wins:2,chimney:true,
+  {key:'store',    name:'Store Manager Agent',   display:'Store Manager',  icon:'🏬', roof:'#2a5018',wall:'#d8c890', x:60,  y:1390,w:150,h:182, wins:2,chimney:true,
    quick:['Shop health report','Check renewal alerts','Update shop announcement']},
-  {key:'delivery', name:'Sales Processor Agent', display:'Sales Processor',icon:'📧', roof:'#00838F',wall:'#E0F7FA', x:270, y:1390,w:150,h:178, wins:2,chimney:false,
+  {key:'delivery', name:'Sales Processor Agent', display:'Sales Processor',icon:'📧', roof:'#0d5050',wall:'#ccdcd8', x:270, y:1390,w:150,h:178, wins:2,chimney:false,
    quick:['Check pending deliveries','Delivery statistics','Process all pending orders']},
   // ── Market district ────────────────────────────────────────────────────────
-  {key:'sales',    name:'Sales Agent',           display:'Sales',          icon:'💰', roof:'#B71C1C',wall:'#FFEBEE', x:855, y:768, w:165,h:195, wins:2,chimney:false,
+  {key:'sales',    name:'Sales Agent',           display:'Sales',          icon:'💰', roof:'#8B1A1A',wall:'#f0d8d0', x:855, y:768, w:165,h:195, wins:2,chimney:false,
    quick:["Today's revenue summary","Pending orders list","Monthly sales report"]},
-  {key:'product',  name:'Product Agent',         display:'Product',        icon:'📦', roof:'#4527A0',wall:'#EDE7F6', x:1080,y:768, w:155,h:188, wins:2,chimney:false,
+  {key:'product',  name:'Product Agent',         display:'Product',        icon:'📦', roof:'#3a1868',wall:'#e0d8ec', x:1080,y:768, w:155,h:188, wins:2,chimney:false,
    quick:['All listings overview','Find underpriced listings','Inventory status']},
-  {key:'marketing',name:'Marketing Agent',       display:'Marketing',      icon:'📈', roof:'#E65100',wall:'#FFF3E0', x:1295,y:768, w:160,h:192, wins:2,chimney:false,
+  {key:'marketing',name:'Marketing Agent',       display:'Marketing',      icon:'📈', roof:'#C04010',wall:'#f0dcc0', x:1295,y:768, w:160,h:192, wins:2,chimney:false,
    quick:['Top marketing opportunities','SEO improvement suggestions','Traffic analysis']},
-  {key:'analytics',name:'Analytics Agent',       display:'Analytics',      icon:'📊', roof:'#1A237E',wall:'#E8EAF6', x:855, y:1080,w:170,h:200, wins:3,chimney:false,
+  {key:'analytics',name:'Analytics Agent',       display:'Analytics',      icon:'📊', roof:'#192060',wall:'#d4d8ec', x:855, y:1080,w:170,h:200, wins:3,chimney:false,
    quick:['Weekly performance report','Top selling products','Revenue trends']},
-  {key:'cs',       name:'Customer Service Agent',display:'Customer Svc',   icon:'💬', roof:'#004D40',wall:'#E0F2F1', x:1080,y:1080,w:155,h:188, wins:2,chimney:false,
+  {key:'cs',       name:'Customer Service Agent',display:'Customer Svc',   icon:'💬', roof:'#0a4838',wall:'#ccd8d4', x:1080,y:1080,w:155,h:188, wins:2,chimney:false,
    quick:['Unread messages','Pending reviews','Draft a 5-star review response']},
-  {key:'social',   name:'Social Media Agent',    display:'Social Media',   icon:'📌', roof:'#880E4F',wall:'#FCE4EC', x:1295,y:1080,w:160,h:192, wins:2,chimney:false,
+  {key:'social',   name:'Social Media Agent',    display:'Social Media',   icon:'📌', roof:'#781038',wall:'#eed8e4', x:1295,y:1080,w:160,h:192, wins:2,chimney:false,
    quick:['Pinterest strategy for 3D prints','Content calendar this month','Best pins to create now']},
   // ── Business district ──────────────────────────────────────────────────────
-  {key:'finance',  name:'Financial Agent',       display:'Financial',      icon:'💵', roof:'#F57F17',wall:'#FFFDE7', x:1700,y:768, w:165,h:195, wins:2,chimney:false,
+  {key:'finance',  name:'Financial Agent',       display:'Financial',      icon:'💵', roof:'#9a6010',wall:'#f0e8b8', x:1700,y:768, w:165,h:195, wins:2,chimney:false,
    quick:['Monthly profit report','Calculate fees on a $25 sale','Cash flow summary']},
-  {key:'print',    name:'Print Production Agent',display:'Print Prod.',    icon:'🖨️', roof:'#37474F',wall:'#ECEFF1', x:1925,y:768, w:155,h:188, wins:2,chimney:true,
+  {key:'print',    name:'Print Production Agent',display:'Print Prod.',    icon:'🖨️', roof:'#2e3840',wall:'#d8dae0', x:1925,y:768, w:155,h:188, wins:2,chimney:true,
    quick:['Print queue status','Machine health check','Add a print job for order #001']},
-  {key:'ads',      name:'Etsy Ads Agent',        display:'Etsy Ads',       icon:'📣', roof:'#BF360C',wall:'#FBE9E7', x:2140,y:768, w:160,h:192, wins:2,chimney:false,
+  {key:'ads',      name:'Etsy Ads Agent',        display:'Etsy Ads',       icon:'📣', roof:'#a02810',wall:'#eedad0', x:2140,y:768, w:160,h:192, wins:2,chimney:false,
    quick:['Ad performance report','Recommend ad strategy','Best listings to promote']},
-  {key:'intel',    name:'Competitor Intel Agent',display:'Comp. Intel',    icon:'🔭', roof:'#1B5E20',wall:'#F1F8E9', x:1700,y:1080,w:155,h:188, wins:2,chimney:false,
+  {key:'intel',    name:'Competitor Intel Agent',display:'Comp. Intel',    icon:'🔭', roof:'#1a3e18',wall:'#cce0cc', x:1700,y:1080,w:155,h:188, wins:2,chimney:false,
    quick:['Find market gaps for 3D prints','Seasonal opportunities','Competitor pricing analysis']},
-  {key:'promos',   name:'Promotions Agent',      display:'Promotions',     icon:'🏷️', roof:'#F57F17',wall:'#FFFDE7', x:1925,y:1080,w:165,h:195, wins:2,chimney:false,
+  {key:'promos',   name:'Promotions Agent',      display:'Promotions',     icon:'🏷️', roof:'#a86010',wall:'#f0e4b0', x:1925,y:1080,w:165,h:195, wins:2,chimney:false,
    quick:['Active promotions','Best coupon for new customers','Plan a summer sale']},
-  {key:'tax',      name:'Tax Compliance Agent',  display:'Tax',            icon:'📋', roof:'#212121',wall:'#F5F5F5', x:2140,y:1080,w:155,h:182, wins:2,chimney:false,
+  {key:'tax',      name:'Tax Compliance Agent',  display:'Tax',            icon:'📋', roof:'#282828',wall:'#e0e0dc', x:2140,y:1080,w:155,h:182, wins:2,chimney:false,
    quick:['Quarterly tax estimate','Log $45 packaging expense','Copyright check for my new design']},
-  {key:'returns',  name:'Returns & Disputes',    display:'Returns',        icon:'↩️', roof:'#C62828',wall:'#FFEBEE', x:1700,y:1390,w:150,h:182, wins:2,chimney:false,
+  {key:'returns',  name:'Returns & Disputes',    display:'Returns',        icon:'↩️', roof:'#881818',wall:'#f0d8d8', x:1700,y:1390,w:150,h:182, wins:2,chimney:false,
    quick:['Open cases','Draft response to not-as-described claim','Return analytics']},
-  {key:'supply',   name:'Supply Chain Agent',    display:'Supply Chain',   icon:'⛏️', roof:'#3E2723',wall:'#EFEBE9', x:1925,y:1390,w:165,h:195, wins:2,chimney:true,
+  {key:'supply',   name:'Supply Chain Agent',    display:'Supply Chain',   icon:'⛏️', roof:'#3c2010',wall:'#e4d8c4', x:1925,y:1390,w:165,h:195, wins:2,chimney:true,
    quick:['Reorder alerts','Add Matte Black PLA 2000g at $0.02/g','Filament inventory']},
-  {key:'email',    name:'Email Marketing Agent', display:'Email Mktg',     icon:'📬', roof:'#0277BD',wall:'#E1F5FE', x:2140,y:1390,w:155,h:188, wins:2,chimney:false,
+  {key:'email',    name:'Email Marketing Agent', display:'Email Mktg',     icon:'📬', roof:'#0a3868',wall:'#ccd8ec', x:2140,y:1390,w:155,h:188, wins:2,chimney:false,
    quick:['Get receipt message','Draft a new subscriber newsletter','Create package insert copy']},
-  {key:'abt',      name:'A/B Testing Agent',     display:'A/B Testing',    icon:'🧪', roof:'#00695C',wall:'#E0F2F1', x:2365,y:1390,w:155,h:182, wins:2,chimney:false,
+  {key:'abt',      name:'A/B Testing Agent',     display:'A/B Testing',    icon:'🧪', roof:'#0a4030',wall:'#cce0d8', x:2365,y:1390,w:155,h:182, wins:2,chimney:false,
    quick:['Active tests','Generate test ideas for listing L001','Testing calendar']},
   // ── Infrastructure district ────────────────────────────────────────────────
-  {key:'api',      name:'API Connections Agent',  display:'API Connections', icon:'🔌', roof:'#0D47A1',wall:'#E3F2FD', x:2600,y:768, w:165,h:195, wins:2,chimney:false,
+  {key:'api',      name:'API Connections Agent',  display:'API Connections', icon:'🔌', roof:'#0a2870',wall:'#ccd4ec', x:2600,y:768, w:165,h:195, wins:2,chimney:false,
    quick:['Connection health report','List all API keys status','Set up Pinterest API connection']},
-  {key:'coordinator', name:'Workflow Coordinator', display:'Ops Center', icon:'⚙️', roof:'#1565C0',wall:'#E3F2FD', x:2600,y:1080,w:165,h:195, wins:2,chimney:false,
+  {key:'coordinator', name:'Workflow Coordinator', display:'Ops Center', icon:'⚙️', roof:'#104888',wall:'#d0d8f0', x:2600,y:1080,w:165,h:195, wins:2,chimney:false,
    quick:['Daily ops summary','Digital pipeline status','Find bottlenecks']},
-  {key:'trend',     name:'Trend Forecasting Agent', display:'Trend Lab',      icon:'🔮', roof:'#4A148C',wall:'#EDE7F6', x:2830,y:768, w:155,h:188, wins:2,chimney:false,
+  {key:'trend',     name:'Trend Forecasting Agent', display:'Trend Lab',      icon:'🔮', roof:'#380870',wall:'#ddd4f0', x:2830,y:768, w:155,h:188, wins:2,chimney:false,
    quick:['Seasonal opportunity calendar','Flag emerging trends for art agent','Get trend radar']},
-  {key:'retention', name:'Customer Retention Agent', display:'Retention Hub',  icon:'💎', roof:'#1B5E20',wall:'#E8F5E9', x:2830,y:1080,w:155,h:188, wins:2,chimney:false,
+  {key:'retention', name:'Customer Retention Agent', display:'Retention Hub',  icon:'💎', roof:'#185018',wall:'#cce4cc', x:2830,y:1080,w:155,h:188, wins:2,chimney:false,
    quick:['Retention report','Identify at-risk buyers','Get VIP buyers']},
   // ── MEETING HALL (not an agent — opens idea board) ──
   {key:'hall',     name:'Meeting Hall',           display:'Meeting Hall',   icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:800, y:240, w:240,h:275, wins:4,chimney:false,type:'hall',
