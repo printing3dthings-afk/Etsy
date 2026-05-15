@@ -1,7 +1,42 @@
 import anthropic
+import logging
+import os
+import time
+from logging.handlers import RotatingFileHandler
 from typing import Any
 from config import MODEL, MAX_TOKENS, MAX_ITERATIONS
 from tools import web_research_tools, learning_tools
+
+
+def _get_logger(name: str) -> logging.Logger:
+    """Create a configured logger that writes to logs/agents.log and stderr."""
+    logs_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+
+    logger = logging.getLogger(name)
+    if logger.handlers:
+        # Already configured — return as-is to avoid duplicate handlers
+        return logger
+
+    logger.setLevel(logging.DEBUG)
+
+    fmt = logging.Formatter("%(asctime)s [%(name)s] %(levelname)s %(message)s")
+
+    file_handler = RotatingFileHandler(
+        os.path.join(logs_dir, "agents.log"),
+        maxBytes=5 * 1024 * 1024,  # 5 MB
+        backupCount=3,
+    )
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(fmt)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(logging.ERROR)
+    stream_handler.setFormatter(fmt)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+    return logger
 
 
 class BaseAgent:
@@ -22,15 +57,18 @@ class BaseAgent:
         # Merge domain tools with universal research + learning tools
         self.tool_definitions = tool_definitions + self._UNIVERSAL_TOOLS
         self.client = anthropic.Anthropic()
+        self.logger = _get_logger(name)
 
     def run(self, task: str, max_iterations: int = MAX_ITERATIONS) -> str:
         """Run the agent on a task, handling the full tool-use loop."""
+        self.logger.info(f"START task={task[:80]}")
         messages: list[dict] = [{"role": "user", "content": task}]
 
         for _ in range(max_iterations):
             response = self._call_api(messages)
 
             if response.stop_reason == "end_turn":
+                self.logger.info(f"END stop_reason={response.stop_reason}")
                 return self._extract_text(response)
 
             if response.stop_reason == "tool_use":
@@ -39,6 +77,7 @@ class BaseAgent:
                 messages.append({"role": "user", "content": tool_results})
                 continue
 
+            self.logger.info(f"END stop_reason={response.stop_reason}")
             return self._extract_text(response) or f"[{self.name}] Stopped: {response.stop_reason}"
 
         return f"[{self.name}] Reached max iterations ({MAX_ITERATIONS}) without completing."
@@ -74,6 +113,7 @@ class BaseAgent:
                 try:
                     output = self._dispatch_tool(block.name, block.input)
                 except Exception as exc:
+                    self.logger.error(f"Tool {block.name} failed: {exc}", exc_info=True)
                     output = f"Tool error: {exc}"
                 results.append(
                     {
@@ -86,11 +126,15 @@ class BaseAgent:
 
     def _dispatch_tool(self, tool_name: str, tool_input: dict) -> Any:
         """Route universal tools here; delegate domain tools to subclass."""
+        self.logger.info(f"TOOL {tool_name} {list(tool_input.keys())}")
         if tool_name in web_research_tools.TOOL_NAMES:
-            return web_research_tools.execute_tool(tool_name, tool_input)
-        if tool_name in learning_tools.TOOL_NAMES:
-            return learning_tools.execute_tool(tool_name, tool_input, self.name)
-        return self.execute_tool(tool_name, tool_input)
+            output = web_research_tools.execute_tool(tool_name, tool_input)
+        elif tool_name in learning_tools.TOOL_NAMES:
+            output = learning_tools.execute_tool(tool_name, tool_input, self.name)
+        else:
+            output = self.execute_tool(tool_name, tool_input)
+        self.logger.debug(f"TOOL_RESULT {tool_name}: {str(output)[:200]}")
+        return output
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> Any:
         """Override in subclasses to handle domain-specific tool calls."""

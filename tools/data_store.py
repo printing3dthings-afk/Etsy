@@ -1,3 +1,4 @@
+import datetime
 import json
 import os
 from typing import Any
@@ -70,3 +71,21 @@ class DataStore:
 
     def find_review(self, review_id: str) -> dict | None:
         return next((r for r in self.reviews if r["id"] == review_id), None)
+
+    def log_action(self, agent: str, action: str, details: dict = None) -> None:
+        """Append an audit entry and persist; keeps only the last 500 entries."""
+        audit_log = self._data.setdefault("audit_log", [])
+        audit_log.append({
+            "ts":      datetime.datetime.now().isoformat(),
+            "agent":   agent,
+            "action":  action,
+            "details": details or {},
+        })
+        if len(audit_log) > 500:
+            self._data["audit_log"] = audit_log[-500:]
+        self.save()
+
+    def get_audit_log(self, limit: int = 50) -> list:
+        """Return the last *limit* audit entries, newest first."""
+        audit_log = self._data.get("audit_log", [])
+        return list(reversed(audit_log[-limit:]))

@@ -26,6 +26,7 @@ For OAuth (order management, listing edits):
 
 import os
 import json
+import time
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -48,11 +49,7 @@ class EtsyAPIClient:
         self.access_token = access_token or os.getenv("ETSY_ACCESS_TOKEN", "")
         self.shop_id = os.getenv("ETSY_SHOP_ID", "")
 
-    def _request(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
-        url = f"{BASE_URL}/{path.lstrip('/')}"
-        if params:
-            url = f"{url}?{urllib.parse.urlencode(params)}"
-
+    def _build_request(self, method: str, url: str, body: dict | None) -> urllib.request.Request:
         headers = {"Content-Type": "application/json"}
         if self.access_token:
             headers["Authorization"] = f"Bearer {self.access_token}"
@@ -60,21 +57,65 @@ class EtsyAPIClient:
             headers["x-api-key"] = self.api_key
         else:
             raise EtsyAPIError(0, "No API key or access token configured. Add ETSY_API_KEY to your .env file.")
-
         data = json.dumps(body).encode() if body else None
-        req = urllib.request.Request(url, data=data, headers=headers, method=method)
+        return urllib.request.Request(url, data=data, headers=headers, method=method)
 
-        try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                return json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            body_text = e.read().decode()
+    def _request(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
+        url = f"{BASE_URL}/{path.lstrip('/')}"
+        if params:
+            url = f"{url}?{urllib.parse.urlencode(params)}"
+
+        retryable_http = {429, 503}
+        delays = [2, 4]  # sleep durations between attempts 1→2 and 2→3
+
+        last_exc: Exception | None = None
+        for attempt in range(3):
+            if attempt > 0:
+                time.sleep(delays[attempt - 1])
+            try:
+                req = self._build_request(method, url, body)
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    return json.loads(resp.read().decode())
+            except urllib.error.HTTPError as e:
+                if e.code == 401 and self.access_token and self.refresh_access_token():
+                    # Token refreshed — retry once immediately (not counted as a backoff attempt)
+                    try:
+                        req = self._build_request(method, url, body)
+                        with urllib.request.urlopen(req, timeout=15) as resp:
+                            return json.loads(resp.read().decode())
+                    except urllib.error.HTTPError as e2:
+                        body_text = e2.read().decode()
+                        try:
+                            err = json.loads(body_text)
+                            msg = err.get("error", body_text)
+                        except Exception:
+                            msg = body_text
+                        raise EtsyAPIError(e2.code, msg)
+                if e.code in retryable_http:
+                    last_exc = e
+                    continue  # retry with backoff
+                # Non-retryable HTTP error (including 4xx auth errors other than 401)
+                body_text = e.read().decode()
+                try:
+                    err = json.loads(body_text)
+                    msg = err.get("error", body_text)
+                except Exception:
+                    msg = body_text
+                raise EtsyAPIError(e.code, msg)
+            except (OSError, urllib.error.URLError) as e:
+                last_exc = e
+                continue  # retry on network errors
+
+        # All attempts exhausted
+        if isinstance(last_exc, urllib.error.HTTPError):
+            body_text = last_exc.read().decode()
             try:
                 err = json.loads(body_text)
                 msg = err.get("error", body_text)
             except Exception:
                 msg = body_text
-            raise EtsyAPIError(e.code, msg)
+            raise EtsyAPIError(last_exc.code, msg)
+        raise EtsyAPIError(0, f"Network error after retries: {last_exc}")
 
     # ── Public endpoints (API key only) ──────────────────────────────────────
 
@@ -144,6 +185,124 @@ class EtsyAPIClient:
             f"shops/{self.shop_id}/listings/{listing_id}/inventory",
             body={"products": [{"offerings": [{"quantity": quantity, "is_enabled": True}]}]},
         )
+
+    def refresh_access_token(self) -> bool:
+        """Exchange ETSY_REFRESH_TOKEN for a new access token and persist it to .env.
+
+        Returns True on success, False on any failure.
+        """
+        client_id = os.getenv("ETSY_CLIENT_ID", "")
+        refresh_token = os.getenv("ETSY_REFRESH_TOKEN", "")
+        if not client_id or not refresh_token:
+            return False
+
+        payload = urllib.parse.urlencode({
+            "grant_type": "refresh_token",
+            "client_id": client_id,
+            "refresh_token": refresh_token,
+        }).encode()
+        req = urllib.request.Request(
+            "https://api.etsy.com/v3/public/oauth/token",
+            data=payload,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode())
+        except Exception:
+            return False
+
+        new_access = data.get("access_token", "")
+        new_refresh = data.get("refresh_token", refresh_token)
+        if not new_access:
+            return False
+
+        # Update in-memory token
+        self.access_token = new_access
+
+        # Persist to .env file
+        env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+        try:
+            if os.path.exists(env_path):
+                with open(env_path, "r") as fh:
+                    lines = fh.readlines()
+            else:
+                lines = []
+
+            updated = {"ETSY_ACCESS_TOKEN": False, "ETSY_REFRESH_TOKEN": False}
+            new_lines = []
+            for line in lines:
+                if line.startswith("ETSY_ACCESS_TOKEN="):
+                    new_lines.append(f"ETSY_ACCESS_TOKEN={new_access}\n")
+                    updated["ETSY_ACCESS_TOKEN"] = True
+                elif line.startswith("ETSY_REFRESH_TOKEN="):
+                    new_lines.append(f"ETSY_REFRESH_TOKEN={new_refresh}\n")
+                    updated["ETSY_REFRESH_TOKEN"] = True
+                else:
+                    new_lines.append(line)
+
+            # Append keys that were not already present
+            if not updated["ETSY_ACCESS_TOKEN"]:
+                new_lines.append(f"ETSY_ACCESS_TOKEN={new_access}\n")
+            if not updated["ETSY_REFRESH_TOKEN"]:
+                new_lines.append(f"ETSY_REFRESH_TOKEN={new_refresh}\n")
+
+            with open(env_path, "w") as fh:
+                fh.writelines(new_lines)
+        except Exception:
+            # Token is still updated in memory even if file write fails
+            pass
+
+        return True
+
+    def sync_orders_from_etsy(self) -> list[dict]:
+        """Fetch orders via OAuth and return a normalised list of order dicts.
+
+        Each dict contains: order_id, buyer_name, buyer_email, total_price,
+        items, created_date.
+
+        Returns an empty list when OAuth is not configured or the request fails.
+        """
+        try:
+            raw = self.get_orders()
+        except EtsyAPIError:
+            return []
+
+        receipts = raw.get("results", [])
+        orders = []
+        for r in receipts:
+            # Buyer name: prefer name field, fall back to first+last
+            buyer_name = r.get("name") or (
+                f"{r.get('first_line', '')} {r.get('last_line', '')}".strip()
+            )
+            # Items: list of transaction summaries
+            items = [
+                {
+                    "listing_id": t.get("listing_id"),
+                    "title": t.get("title", ""),
+                    "quantity": t.get("quantity", 1),
+                    "price": t.get("price", {}).get("amount", 0) / max(t.get("price", {}).get("divisor", 100), 1)
+                    if isinstance(t.get("price"), dict)
+                    else t.get("price", 0),
+                }
+                for t in r.get("transactions", [])
+            ]
+            total_raw = r.get("grandtotal") or r.get("total_price") or {}
+            if isinstance(total_raw, dict):
+                total_price = total_raw.get("amount", 0) / max(total_raw.get("divisor", 100), 1)
+            else:
+                total_price = float(total_raw or 0)
+
+            orders.append({
+                "order_id": r.get("receipt_id"),
+                "buyer_name": buyer_name,
+                "buyer_email": r.get("buyer_email", ""),
+                "total_price": round(total_price, 2),
+                "items": items,
+                "created_date": r.get("create_timestamp") or r.get("created_timestamp", ""),
+            })
+        return orders
 
     def _require_oauth(self) -> None:
         if not self.access_token:

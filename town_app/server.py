@@ -7,6 +7,7 @@ import json
 import os
 import queue
 import shutil
+import smtplib
 import sys
 import tempfile
 import threading
@@ -644,6 +645,77 @@ async def run_scheduled_now(job_id: str):
 async def get_pipeline():
     with _pipeline_lock:
         return JSONResponse(dict(_active_pipeline))
+
+
+@app.post("/api/test-email")
+async def test_email(body: dict):
+    to = body.get("to") or os.getenv("SMTP_USER", "")
+    if not to:
+        return JSONResponse({"error": "No recipient address — set SMTP_USER or pass 'to' in the request body."}, status_code=400)
+
+    smtp_host = os.getenv("SMTP_HOST", "")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USER", "")
+    smtp_pass = os.getenv("SMTP_PASSWORD", "")
+
+    subject   = "OnBrandCraftz — Email Test"
+    body_html = (
+        "<p>This is a test email from your OnBrandCraftz automation hub. "
+        "If you received this, your email delivery is working correctly.</p>"
+    )
+
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"]    = smtp_user
+    msg["To"]      = to
+    msg.attach(MIMEText(body_html, "html"))
+
+    try:
+        if smtp_port == 465:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [to], msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [to], msg.as_string())
+        return JSONResponse({"success": True, "sent_to": to})
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)})
+
+
+@app.get("/api/etsy-status")
+async def etsy_status():
+    def _is_set(var: str) -> bool:
+        v = os.getenv(var, "")
+        return bool(v and not v.lower().startswith("your_"))
+
+    api_key_set      = _is_set("ETSY_API_KEY")
+    oauth_configured = _is_set("ETSY_ACCESS_TOKEN")
+    shop_id          = os.getenv("ETSY_SHOP_ID", "")
+
+    if api_key_set and oauth_configured:
+        status    = "fully_connected"
+        next_step = "All Etsy credentials are configured. You're ready to publish and sync orders."
+    elif api_key_set:
+        status    = "api_key_only"
+        next_step = "Run python tools/etsy_oauth.py to enable publishing and order sync."
+    else:
+        status    = "not_configured"
+        next_step = "Add ETSY_API_KEY (and optionally ETSY_ACCESS_TOKEN) to your .env file, then restart the server."
+
+    return JSONResponse({
+        "api_key_set":      api_key_set,
+        "oauth_configured": oauth_configured,
+        "shop_id":          shop_id,
+        "status":           status,
+        "next_step":        next_step,
+    })
 
 
 _ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "image/bmp"}
