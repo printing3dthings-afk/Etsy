@@ -1058,9 +1058,11 @@ body{transition:background .5s,color .5s}
 
 /* ── BUILDING INTERIOR (hover/select reveal) ── */
 /* ── BUILDING INTERIOR ── */
+.bld{transition:transform .22s ease,z-index 0s;transform-origin:bottom center}
+.bld:hover{transform:scale(1.55);z-index:9999 !important}
 .binterior{position:absolute;left:1px;right:1px;bottom:38px;top:36px;
   background:linear-gradient(180deg,#e8d8b0 0%,#f5e8c0 30%,#f8eec8 100%);
-  opacity:0;transition:opacity .35s;pointer-events:none;overflow:hidden}
+  opacity:0;transition:opacity .3s;pointer-events:none;overflow:hidden}
 .bld:hover .binterior,.bld.selected .binterior{opacity:1}
 /* Wall texture (subtle horizontal banding) */
 .binterior::before{content:'';position:absolute;inset:0;z-index:0;
@@ -1227,6 +1229,73 @@ body{transition:background .5s,color .5s}
   background:#5a3a10;border-radius:3px 0 0 3px}
 .bi-headset::after{content:'';position:absolute;right:-5px;top:6px;width:5px;height:7px;
   background:#5a3a10;border-radius:0 3px 3px 0}
+/* Whiteboard */
+.bi-wb{position:absolute;left:3px;top:8px;width:36px;height:26px;background:#f8f8f8;border:2px solid #888;border-radius:1px;z-index:2}
+.bi-wb::before{content:'';position:absolute;inset:3px;background:repeating-linear-gradient(180deg,transparent 0,transparent 4px,rgba(0,0,0,.06) 4px,rgba(0,0,0,.06) 5px)}
+.bi-wb::after{content:'';position:absolute;bottom:3px;left:3px;right:3px;height:1px;background:#4a90d9;box-shadow:0 -4px 0 rgba(220,0,0,.4),0 -8px 0 rgba(0,160,0,.3)}
+/* Paint palette */
+.bi-palette{position:absolute;left:4px;bottom:22px;width:20px;height:13px;background:#f0e0c0;border-radius:50%;border:1px solid #c0a080;z-index:3}
+.bi-palette::before{content:'';position:absolute;top:2px;left:2px;width:4px;height:4px;background:#e53935;border-radius:50%;box-shadow:5px 0 0 #1e88e5,10px 0 0 #43a047,2px 5px 0 #fdd835,7px 5px 0 #ab47bc}
+/* Open laptop */
+.bi-laptop{position:absolute;bottom:22px;left:3px;z-index:6;width:24px;height:16px}
+.bi-laptop::before{content:'';position:absolute;bottom:0;left:0;width:24px;height:3px;background:#333;border-radius:1px}
+.bi-laptop::after{content:'';position:absolute;bottom:3px;left:2px;width:20px;height:13px;background:#1a1a3a;border-radius:2px 2px 0 0;border:1px solid #555}
+/* Stack of boxes */
+.bi-boxes{position:absolute;right:3px;bottom:14px;z-index:2;width:22px;height:22px}
+.bi-boxes::before{content:'';position:absolute;bottom:0;right:0;width:20px;height:11px;background:#d4a040;border:1px solid #a06010}
+.bi-boxes::after{content:'';position:absolute;bottom:10px;right:2px;width:16px;height:10px;background:#c49030;border:1px solid #a06010}
+/* Filament spools */
+.bi-spools{position:absolute;right:3px;top:8px;width:18px;height:36px;background:#222;border:1px solid #444;border-radius:2px;z-index:2}
+.bi-spools::before{content:'';position:absolute;top:3px;left:50%;transform:translateX(-50%);width:12px;height:12px;background:#e53935;border-radius:50%;border:3px solid #111;box-shadow:0 15px 0 #1565c0}
+.bi-spools::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:12px;height:12px;background:#43a047;border-radius:50%;border:3px solid #111}
+/* Camera on tripod */
+.bi-camera{position:absolute;right:4px;bottom:14px;z-index:2;width:18px;height:22px}
+.bi-camera::before{content:'';position:absolute;bottom:0;right:6px;width:2px;height:14px;background:#666;box-shadow:-5px 6px 0 1px #555}
+.bi-camera::after{content:'';position:absolute;top:3px;right:0;width:16px;height:10px;background:#1a1a1a;border-radius:2px;border:1px solid #555}
+/* A/B comparison board */
+.bi-ab{position:absolute;left:2px;top:8px;width:36px;height:22px;z-index:2}
+.bi-ab::before{content:'A';position:absolute;left:0;top:0;width:16px;height:22px;background:#0d3a0d;border:1px solid #2ea043;border-radius:1px;color:#4caf50;font-size:9px;font-weight:900;text-align:center;line-height:22px}
+.bi-ab::after{content:'B';position:absolute;right:0;top:0;width:16px;height:22px;background:#0d1a3a;border:1px solid #1e88e5;border-radius:1px;color:#64b5f6;font-size:9px;font-weight:900;text-align:center;line-height:22px}
+/* Map with pins */
+.bi-pinmap{position:absolute;left:3px;top:8px;width:30px;height:20px;background:#c8e6c9;border:2px solid #5a3a10;border-radius:1px;z-index:2}
+.bi-pinmap::before{content:'';position:absolute;inset:2px;background:linear-gradient(135deg,#80cbc4 0%,#80cbc4 40%,#a5d6a7 40%,#a5d6a7 70%,#e0f2f1 70%)}
+.bi-pinmap::after{content:'';position:absolute;top:3px;left:6px;width:4px;height:6px;background:#e53935;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;box-shadow:10px 3px 0 #1e88e5,16px -1px 0 #43a047}
+/* Ring light */
+.bi-ringlight{position:absolute;right:3px;top:10px;width:24px;height:24px;border:4px solid #e0e0e0;border-radius:50%;z-index:2}
+.bi-ringlight::before{content:'';position:absolute;inset:-3px;border-radius:50%;box-shadow:0 0 10px rgba(255,240,200,.7),0 0 20px rgba(255,240,200,.3);animation:rg 2s ease-in-out infinite alternate}
+@keyframes rg{from{box-shadow:0 0 5px rgba(255,240,200,.4)}to{box-shadow:0 0 16px rgba(255,240,200,.9)}}
+/* Coupon / sale sign */
+.bi-coupon{position:absolute;left:3px;top:8px;width:32px;height:16px;background:#ff5722;border:1px solid #bf360c;border-radius:2px;z-index:2}
+.bi-coupon::before{content:'SALE %';position:absolute;inset:0;color:#fff;font-size:6px;font-weight:900;text-align:center;line-height:16px;letter-spacing:.5px}
+.bi-coupon::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,#ff5722 0,#ff5722 5px,#fff3e0 5px,#fff3e0 7px)}
+/* Package scale */
+.bi-pscale{position:absolute;left:4px;bottom:14px;z-index:2;width:22px;height:14px}
+.bi-pscale::before{content:'';position:absolute;bottom:0;left:0;width:22px;height:4px;background:#888;border-radius:50%;border:1px solid #555}
+.bi-pscale::after{content:'';position:absolute;bottom:4px;left:4px;width:14px;height:10px;background:#e0e0e0;border:1px solid #9e9e9e;border-radius:2px 2px 0 0}
+/* Magnifier */
+.bi-magnifier{position:absolute;right:3px;top:10px;width:18px;height:22px;z-index:2}
+.bi-magnifier::before{content:'';position:absolute;top:0;left:1px;width:13px;height:13px;border:3px solid #7a5020;border-radius:50%}
+.bi-magnifier::after{content:'';position:absolute;bottom:0;right:0;width:3px;height:11px;background:#8a5a28;border-radius:2px;transform:rotate(40deg);transform-origin:top right}
+/* Approval stamp */
+.bi-stamp{position:absolute;left:3px;bottom:22px;z-index:6;width:18px;height:22px}
+.bi-stamp::before{content:'✓';position:absolute;bottom:0;left:0;width:16px;height:14px;background:#c62828;border-radius:1px;color:#fff;font-size:10px;font-weight:900;text-align:center;line-height:14px;border:1px solid #8b0000}
+.bi-stamp::after{content:'';position:absolute;top:0;left:3px;width:10px;height:8px;background:#6d4c41;border-radius:3px 3px 0 0;border:1px solid #4e342e}
+/* Calculator */
+.bi-calc{position:absolute;right:3px;bottom:22px;width:14px;height:18px;background:#e0e0e0;border:1px solid #9e9e9e;border-radius:2px;z-index:6}
+.bi-calc::before{content:'';position:absolute;top:2px;left:1px;right:1px;height:4px;background:#1a237e;border-radius:1px}
+.bi-calc::after{content:'';position:absolute;bottom:2px;left:1px;right:1px;height:9px;background:#bdbdbd;border-radius:1px;box-shadow:inset 3px 0 0 rgba(0,0,0,.15),inset 0 3px 0 rgba(0,0,0,.1)}
+/* Globe */
+.bi-globe{position:absolute;right:5px;top:12px;width:18px;height:18px;background:radial-gradient(circle at 35% 35%,#64b5f6,#1565c0);border-radius:50%;border:2px solid #0d47a1;z-index:2}
+.bi-globe::before{content:'';position:absolute;top:1px;left:1px;right:1px;bottom:1px;border-radius:50%;background:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(255,255,255,.15) 3px,rgba(255,255,255,.15) 4px)}
+.bi-globe::after{content:'';position:absolute;top:1px;left:50%;transform:translateX(-50%);width:1px;bottom:1px;background:rgba(255,255,255,.3)}
+/* Trophy case */
+.bi-trophies{position:absolute;left:3px;top:8px;width:26px;height:28px;background:#6d3a0a;border:1px solid #4a2508;border-radius:1px;z-index:2}
+.bi-trophies::before{content:'🏆';position:absolute;top:2px;left:2px;font-size:8px}
+.bi-trophies::after{content:'🥇';position:absolute;bottom:3px;right:2px;font-size:7px}
+/* Data screens wall */
+.bi-datawall{position:absolute;left:3px;top:8px;width:38px;height:22px;background:#0a0f1a;border:1px solid #1e3a5f;border-radius:1px;z-index:2}
+.bi-datawall::before{content:'';position:absolute;top:2px;left:2px;width:14px;height:8px;background:#0d2a4a;border:1px solid #1e5a8a;box-shadow:16px 0 0 #0d2a4a, 0 10px 0 #1a0a2a, 16px 10px 0 #1a2a0a}
+.bi-datawall::after{content:'';position:absolute;top:3px;left:3px;width:3px;height:6px;background:#2196f3;opacity:.7;box-shadow:5px 2px 0 #4caf50, 10px -1px 0 #ff9800, 17px 1px 0 #2196f3, 5px -3px 0 rgba(33,150,243,.4)}
 
 /* ── RESIDENTS (always visible outdoor figures) ── */
 .resident{position:absolute;display:flex;flex-direction:column;align-items:center;image-rendering:pixelated;
@@ -1847,32 +1916,66 @@ function resetView(){
 
 // ── BUILD TOWN ─────────────────────────────────────────────────────────────
 
-// Unique interior extras per agent key
+// Unique interior extras per agent key — 6-8 themed items each
 const INTERIOR_EXTRAS = {
-  ceo:      `<div class="bi-bookcase"></div><div class="bi-award">🏆</div><div class="bi-plant"></div>`,
-  brand:    `<div class="bi-swatches"></div><div class="bi-easel"></div><div class="bi-plant"></div>`,
-  art:      `<div class="bi-easel"></div><div class="bi-chart" style="left:3px;top:9px;background:#f5e0c0"></div><div class="bi-plant"></div>`,
-  qc:       `<div class="bi-corkboard"></div><div class="bi-bookcase" style="width:14px"></div>`,
-  listing:  `<div class="bi-corkboard"></div><div class="bi-bookcase" style="width:14px;right:3px"></div>`,
-  store:    `<div class="bi-chart"></div><div class="bi-bookcase" style="width:14px"></div><div class="bi-plant"></div>`,
-  delivery: `<div class="bi-printer3d" style="width:20px;height:18px;right:3px;bottom:22px"></div><div class="bi-chart" style="left:3px"></div>`,
-  sales:    `<div class="bi-linechart"></div><div class="bi-bookcase" style="width:14px"></div><div class="bi-plant"></div>`,
-  product:  `<div class="bi-chart"></div><div class="bi-bookcase" style="width:14px"></div>`,
-  marketing:`<div class="bi-corkboard"></div><div class="bi-linechart" style="top:40px"></div>`,
-  analytics:`<div class="bi-linechart"></div><div class="bi-chart" style="left:35px;top:9px"></div><div class="bi-bookcase" style="width:12px"></div>`,
-  cs:       `<div class="bi-headset"></div><div class="bi-chart" style="left:24px;top:9px"></div><div class="bi-plant"></div>`,
-  social:   `<div class="bi-corkboard"></div><div class="bi-plant"></div>`,
-  finance:  `<div class="bi-safe"></div><div class="bi-bookcase"></div><div class="bi-linechart" style="left:3px"></div>`,
-  print:    `<div class="bi-printer3d"></div><div class="bi-bookcase" style="width:12px"></div>`,
-  ads:      `<div class="bi-linechart"></div><div class="bi-chart" style="left:32px;top:9px"></div>`,
-  intel:    `<div class="bi-telescope"></div><div class="bi-corkboard" style="top:36px;left:3px;height:20px"></div>`,
-  promos:   `<div class="bi-chart"></div><div class="bi-bookcase" style="width:12px"></div>`,
-  tax:      `<div class="bi-cabinet"></div><div class="bi-bookcase" style="width:14px"></div>`,
-  returns:  `<div class="bi-cabinet" style="width:14px;height:24px"></div><div class="bi-chart"></div>`,
-  supply:   `<div class="bi-bookcase"></div><div class="bi-plant"></div>`,
-  email:    `<div class="bi-corkboard" style="height:20px"></div><div class="bi-bookcase" style="width:12px"></div>`,
-  abt:      `<div class="bi-chart"></div><div class="bi-linechart" style="left:32px;top:9px;width:24px"></div>`,
-  api:      `<div class="bi-server"></div><div class="bi-chart" style="left:3px"></div>`,
+  ceo:      `<div class="bi-trophies"></div><div class="bi-pinmap"></div><div class="bi-globe"></div><div class="bi-bookcase"></div><div class="bi-award">🏆</div>`,
+  brand:    `<div class="bi-wb"></div><div class="bi-easel"></div><div class="bi-swatches"></div><div class="bi-palette"></div><div class="bi-plant"></div>`,
+  art:      `<div class="bi-easel"></div><div class="bi-palette"></div><div class="bi-ringlight"></div><div class="bi-corkboard" style="top:38px;height:18px"></div>`,
+  qc:       `<div class="bi-magnifier"></div><div class="bi-stamp"></div><div class="bi-corkboard"></div><div class="bi-cabinet"></div>`,
+  listing:  `<div class="bi-corkboard"></div><div class="bi-chart"></div><div class="bi-linechart" style="left:3px;top:38px"></div><div class="bi-calc"></div>`,
+  store:    `<div class="bi-cabinet"></div><div class="bi-chart"></div><div class="bi-plant"></div><div class="bi-bookcase" style="width:14px"></div>`,
+  delivery: `<div class="bi-printer3d"></div><div class="bi-boxes"></div><div class="bi-pscale"></div><div class="bi-chart" style="left:3px;top:9px"></div>`,
+  sales:    `<div class="bi-linechart"></div><div class="bi-chart" style="left:3px;top:38px"></div><div class="bi-trophies" style="width:18px;height:22px"></div><div class="bi-calc"></div>`,
+  product:  `<div class="bi-wb"></div><div class="bi-chart"></div><div class="bi-bookcase" style="width:14px"></div><div class="bi-calc"></div>`,
+  marketing:`<div class="bi-corkboard"></div><div class="bi-linechart" style="top:40px"></div><div class="bi-coupon"></div><div class="bi-swatches" style="top:38px"></div>`,
+  analytics:`<div class="bi-datawall"></div><div class="bi-linechart" style="left:3px;top:38px"></div><div class="bi-chart" style="left:40px;top:9px;width:18px"></div><div class="bi-server" style="width:14px;height:28px"></div>`,
+  cs:       `<div class="bi-headset"></div><div class="bi-chart" style="left:26px;top:9px"></div><div class="bi-corkboard" style="top:38px;height:16px"></div><div class="bi-plant"></div>`,
+  social:   `<div class="bi-ringlight"></div><div class="bi-camera"></div><div class="bi-corkboard"></div><div class="bi-swatches" style="top:38px"></div>`,
+  finance:  `<div class="bi-safe"></div><div class="bi-bookcase"></div><div class="bi-linechart" style="left:3px"></div><div class="bi-calc"></div>`,
+  print:    `<div class="bi-printer3d"></div><div class="bi-spools"></div><div class="bi-boxes" style="right:28px"></div><div class="bi-chart" style="left:3px;top:9px;width:22px"></div>`,
+  ads:      `<div class="bi-linechart"></div><div class="bi-chart" style="left:3px;top:38px"></div><div class="bi-coupon" style="top:40px"></div><div class="bi-calc"></div>`,
+  intel:    `<div class="bi-telescope"></div><div class="bi-pinmap"></div><div class="bi-corkboard" style="top:36px;height:18px"></div><div class="bi-cabinet" style="width:14px"></div>`,
+  promos:   `<div class="bi-coupon"></div><div class="bi-chart"></div><div class="bi-corkboard" style="top:38px;height:16px"></div><div class="bi-plant"></div>`,
+  tax:      `<div class="bi-cabinet"></div><div class="bi-bookcase"></div><div class="bi-calc"></div><div class="bi-chart" style="left:3px;top:38px"></div>`,
+  returns:  `<div class="bi-boxes"></div><div class="bi-magnifier" style="right:26px"></div><div class="bi-cabinet" style="right:3px"></div><div class="bi-chart" style="left:3px;top:9px"></div>`,
+  supply:   `<div class="bi-bookcase"></div><div class="bi-boxes" style="right:26px"></div><div class="bi-chart"></div><div class="bi-plant"></div>`,
+  email:    `<div class="bi-laptop"></div><div class="bi-chart" style="left:30px;top:9px"></div><div class="bi-corkboard" style="top:38px;height:16px"></div><div class="bi-linechart" style="left:3px;top:9px;width:22px"></div>`,
+  abt:      `<div class="bi-ab"></div><div class="bi-linechart" style="left:3px;top:38px"></div><div class="bi-chart" style="left:40px;top:9px;width:18px"></div><div class="bi-bookcase" style="width:14px"></div>`,
+  api:      `<div class="bi-server"></div><div class="bi-datawall" style="top:38px;height:14px"></div><div class="bi-corkboard" style="width:22px;top:9px;left:26px"></div>`,
+  sysop:    `<div class="bi-server"></div><div class="bi-magnifier" style="right:26px"></div><div class="bi-laptop"></div><div class="bi-chart" style="left:3px;top:38px"></div>`,
+  trend:    `<div class="bi-linechart"></div><div class="bi-pinmap" style="top:38px"></div><div class="bi-corkboard" style="left:36px;top:8px;width:22px"></div><div class="bi-plant"></div>`,
+  coordinator:`<div class="bi-wb"></div><div class="bi-corkboard" style="top:38px;height:16px"></div><div class="bi-chart"></div><div class="bi-pinmap" style="right:3px;left:auto"></div>`,
+};
+
+// Unique wall background gradient per agent
+const INTERIOR_WALLS = {
+  ceo:      'linear-gradient(180deg,#c8a878 0%,#d4b890 30%,#e0c8a0 100%)',
+  brand:    'linear-gradient(180deg,#fff8f0 0%,#fff0e8 30%,#fff8f0 100%)',
+  art:      'linear-gradient(180deg,#fdf0e0 0%,#fae8d0 30%,#fdf4e8 100%)',
+  qc:       'linear-gradient(180deg,#f0f4f8 0%,#e8f0f4 30%,#f0f4f8 100%)',
+  listing:  'linear-gradient(180deg,#e8f0fa 0%,#dce8f5 30%,#e8f0fa 100%)',
+  store:    'linear-gradient(180deg,#fdf8e0 0%,#f8f0c8 30%,#fdf8e0 100%)',
+  delivery: 'linear-gradient(180deg,#e8e8e8 0%,#dcdcdc 30%,#e8e8e8 100%)',
+  sales:    'linear-gradient(180deg,#f0e0e0 0%,#e8d0d0 30%,#f0e0e0 100%)',
+  product:  'linear-gradient(180deg,#f4f8f4 0%,#eef4ee 30%,#f4f8f4 100%)',
+  marketing:'linear-gradient(180deg,#f0e8f8 0%,#e8d8f0 30%,#f0e8f8 100%)',
+  analytics:'linear-gradient(180deg,#0d1117 0%,#161b22 30%,#0d1117 100%)',
+  cs:       'linear-gradient(180deg,#e0f4f4 0%,#d0ecec 30%,#e0f4f4 100%)',
+  social:   'linear-gradient(180deg,#ffffff 0%,#f8f8f8 30%,#ffffff 100%)',
+  finance:  'linear-gradient(180deg,#e0e8d8 0%,#d4dcc8 30%,#e0e8d8 100%)',
+  print:    'linear-gradient(180deg,#f0f0f0 0%,#e8e8e8 30%,#f0f0f0 100%)',
+  ads:      'linear-gradient(180deg,#2a1a08 0%,#1e1208 30%,#2a1a08 100%)',
+  intel:    'linear-gradient(180deg,#0a0e14 0%,#0e1420 30%,#0a0e14 100%)',
+  promos:   'linear-gradient(180deg,#fff4e0 0%,#ffecd0 30%,#fff4e0 100%)',
+  tax:      'linear-gradient(180deg,#f0ece8 0%,#e8e4e0 30%,#f0ece8 100%)',
+  returns:  'linear-gradient(180deg,#f4f4f4 0%,#eeeeee 30%,#f4f4f4 100%)',
+  supply:   'linear-gradient(180deg,#e4e8e4 0%,#d8dcd8 30%,#e4e8e4 100%)',
+  email:    'linear-gradient(180deg,#e8f0fc 0%,#dce8fa 30%,#e8f0fc 100%)',
+  abt:      'linear-gradient(180deg,#f8f8fc 0%,#f0f0f8 30%,#f8f8fc 100%)',
+  api:      'linear-gradient(180deg,#0a0a10 0%,#0e0e18 30%,#0a0a10 100%)',
+  sysop:    'linear-gradient(180deg,#0a1018 0%,#0e1420 30%,#0a1018 100%)',
+  trend:    'linear-gradient(180deg,#f0f4e8 0%,#e8f0dc 30%,#f0f4e8 100%)',
+  coordinator:'linear-gradient(180deg,#e8e8f0 0%,#dcdcec 30%,#e8e8f0 100%)',
 };
 
 // Screen color per agent role
@@ -1899,13 +2002,14 @@ function mkBuilding(a){
   const scrCls = SCREEN_COLORS[a.key]||'scr-blue';
   const extras = INTERIOR_EXTRAS[a.key]||'<div class="bi-bookcase" style="width:14px"></div>';
 
+  const wallBg = INTERIOR_WALLS[a.key] || 'linear-gradient(180deg,#e8d8b0 0%,#f5e8c0 30%,#f8eec8 100%)';
   const interior = isHall
     ? `<div class="binterior" style="opacity:0">
          <div class="hall-mini-board" id="hall-mini">${
            AGENTS.filter(x=>x.type!=='hall').slice(0,9).map(()=>'<div class="mini-note"></div>').join('')
          }</div>
        </div>`
-    : `<div class="binterior">
+    : `<div class="binterior" style="background:${wallBg}">
          <div class="bi-ceil"></div>
          <div class="bi-lamp"></div>
          ${extras}
