@@ -163,8 +163,10 @@ def _poll_orders():
                     pass
                 _add_notification("new_order", f"New Order #{oid}", f"{buyer} — ${total:.2f}", "🛒")
             ORDERS_SEEN_FILE.write_text(json.dumps(list(seen)))
-    except Exception:
-        pass
+    except Exception as _poll_err:
+        _poll_orders._fail_count = getattr(_poll_orders, "_fail_count", 0) + 1
+        if _poll_orders._fail_count % 5 == 1:
+            _add_notification("api_error", "Etsy order poll failed", f"Could not reach Etsy API: {str(_poll_err)[:120]}. Check ETSY_ACCESS_TOKEN.", "🔴")
 
 # ── Task history ───────────────────────────────────────────────────────────────
 
@@ -250,6 +252,78 @@ DEFAULT_CHAINS = [
         "action_agent": "trend",
         "action_task": "Based on the latest analytics report, identify 2-3 product or marketing ideas that could improve performance. Submit the best one using the submit_idea tool.",
     },
+    {
+        "id": "analytics_to_marketing",
+        "label": "Analytics → SEO Boost",
+        "enabled": True,
+        "trigger_agent": "analytics",
+        "trigger_status": "done",
+        "action_agent": "marketing",
+        "action_task": "Analytics just completed a deep-dive. Review the performance data and update SEO on the 3 lowest-performing listings: improve titles, add missing tags, and log keyword performance to the knowledge base.",
+    },
+    {
+        "id": "intel_to_ads",
+        "label": "Competitor Intel → Ads Update",
+        "enabled": True,
+        "trigger_agent": "intel",
+        "trigger_status": "done",
+        "action_agent": "ads",
+        "action_task": "Competitor intelligence just completed. Review findings and update our Etsy Ads strategy: raise bids on keywords where competitors are strong, lower bids where we dominate. Log strategy changes.",
+    },
+    {
+        "id": "sales_to_finance",
+        "label": "Sales Done → Finance Report",
+        "enabled": True,
+        "trigger_agent": "sales",
+        "trigger_status": "done",
+        "action_agent": "finance",
+        "action_task": "A sales processing run just completed. Pull today's revenue, calculate COGS and profit margins, flag any unusual variance vs last week, and update the financial summary.",
+    },
+    {
+        "id": "trend_to_art",
+        "label": "Trend Found → Art Creation",
+        "enabled": False,
+        "trigger_agent": "trend",
+        "trigger_status": "done",
+        "action_agent": "art",
+        "action_task": "Trend forecasting just completed. Review the highest-confidence HOT or EMERGING trends flagged (confidence >= 7) and create art for the top trend. Include style, color palette, and product format in the brief.",
+    },
+    {
+        "id": "retention_to_email",
+        "label": "Retention → Email Campaign",
+        "enabled": False,
+        "trigger_agent": "retention",
+        "trigger_status": "done",
+        "action_agent": "email",
+        "action_task": "Customer retention analysis just finished. Draft a re-engagement email campaign targeting customers who purchased 30-90 days ago. Use retention insights to craft a compelling subject line and offer.",
+    },
+    {
+        "id": "store_to_listing",
+        "label": "Store Audit → Listing Refresh",
+        "enabled": True,
+        "trigger_agent": "store",
+        "trigger_status": "done",
+        "action_agent": "listing",
+        "action_task": "Store management just completed an audit. Review listings flagged as underperforming or expiring and refresh their SEO: update titles, tags, and descriptions on the top 3 flagged listings.",
+    },
+    {
+        "id": "finance_to_ceo",
+        "label": "Finance Report → CEO Alert",
+        "enabled": True,
+        "trigger_agent": "finance",
+        "trigger_status": "done",
+        "action_agent": "ceo",
+        "action_task": "Financial agent just completed a report. Review the financial summary and take executive actions as needed: adjust pricing strategy, flag cash flow concerns, or approve new product investment.",
+    },
+    {
+        "id": "marketing_to_social",
+        "label": "Marketing → Social Push",
+        "enabled": False,
+        "trigger_agent": "marketing",
+        "trigger_status": "done",
+        "action_agent": "social",
+        "action_task": "Marketing just completed an SEO update. Create social media content (Pinterest pins, Instagram posts) for the listings that were optimized. Use the new keyword findings in captions and hashtags.",
+    },
 ]
 
 def _load_chains() -> list:
@@ -301,6 +375,38 @@ DEFAULT_SCHEDULES = [
         "cron":    "0 10 * * 0",
         "enabled": True,
     },
+    {
+        "id":      "weekly_tax",
+        "label":   "Weekly Tax Summary",
+        "agent":   "tax",
+        "task":    "Generate weekly tax summary: total revenue, taxable transactions, estimated tax liability, new deductions to log. Flag any sales in new states that may create tax nexus. Recommend quarterly estimated payment if needed.",
+        "cron":    "0 7 * * 1",
+        "enabled": True,
+    },
+    {
+        "id":      "weekly_supply",
+        "label":   "Weekly Supply Check",
+        "agent":   "supply",
+        "task":    "Run weekly supply chain health check: review filament inventory levels, flag items below reorder threshold, check for supplier delays, and recommend purchase orders for next week's production needs.",
+        "cron":    "0 8 * * 1",
+        "enabled": True,
+    },
+    {
+        "id":      "abt_review",
+        "label":   "A/B Test Review",
+        "agent":   "abt",
+        "task":    "Review all active A/B tests: identify tests with 14+ days of data, run statistical analysis on each, declare winners where confidence >= 95%, save winning strategies to the knowledge base, and suggest the next test to set up.",
+        "cron":    "0 9 * * 3",
+        "enabled": True,
+    },
+    {
+        "id":      "weekly_retention",
+        "label":   "Weekly Retention Check",
+        "agent":   "retention",
+        "task":    "Run weekly customer retention analysis: identify repeat customers, buyers at risk of churning (60+ days since last purchase), and highest-value customers. Recommend targeted re-engagement actions and draft one follow-up offer.",
+        "cron":    "0 11 * * 2",
+        "enabled": True,
+    },
 ]
 
 _scheduler: BackgroundScheduler | None = None
@@ -318,6 +424,39 @@ def _load_schedules() -> list:
 
 def _save_schedules(schedules: list):
     SCHEDULE_FILE.write_text(json.dumps(schedules, indent=2))
+
+
+def _check_stalled_agents():
+    """Reset any agent that has been running for more than 10 minutes."""
+    now = datetime.now()
+    for key, state in list(agent_states.items()):
+        if state.get("status") != "running":
+            continue
+        started_str = state.get("started")
+        if not started_str:
+            continue
+        try:
+            elapsed = (now - datetime.fromisoformat(started_str)).total_seconds()
+            if elapsed > 600:
+                mins = int(elapsed // 60)
+                agent_states[key] = {
+                    "status": "error",
+                    "task": state.get("task", ""),
+                    "error": f"Timed out after {mins} minutes",
+                }
+                _add_notification("agent_timeout", f"{key.upper()} timed out", f"Reset after {mins} min — task may be too complex or API unresponsive", "⚠️")
+                try:
+                    asyncio.run_coroutine_threadsafe(
+                        manager.broadcast(json.dumps({
+                            "type": "agent_update", "agent": key,
+                            "status": "error", "message": f"Timed out after {mins} minutes",
+                        })),
+                        _event_loop,
+                    )
+                except Exception:
+                    pass
+        except Exception:
+            pass
 
 
 def _start_scheduler():
@@ -349,6 +488,14 @@ def _start_scheduler():
         trigger          = "interval",
         hours            = 6,
         id               = "_sysop_scan",
+        replace_existing = True,
+    )
+    # Stall watchdog: reset agents stuck running for > 10 minutes
+    _scheduler.add_job(
+        func             = _check_stalled_agents,
+        trigger          = "interval",
+        minutes          = 5,
+        id               = "_stall_watchdog",
         replace_existing = True,
     )
     _scheduler.start()
@@ -1418,6 +1565,50 @@ async def apply_update():
         return JSONResponse({"error": "Pull already in progress"}, status_code=409)
     threading.Thread(target=_git_pull, daemon=True).start()
     return JSONResponse({"status": "pulling", "message": "Git pull started — server will reload if files changed"})
+
+
+@app.get("/api/setup")
+async def get_setup_status():
+    """Return configuration status for all required credentials."""
+    def _check(var: str, label: str, critical: bool = False) -> dict:
+        val = os.getenv(var, "").strip()
+        hint = (val[:6] + "…") if len(val) > 6 else ("(empty)" if not val else val)
+        return {"key": var, "label": label, "configured": bool(val), "hint": hint, "critical": critical}
+
+    checks = [
+        _check("ANTHROPIC_API_KEY",   "Claude AI",              critical=True),
+        _check("ETSY_API_KEY",        "Etsy API Key",           critical=True),
+        _check("ETSY_ACCESS_TOKEN",   "Etsy Access Token",      critical=False),
+        _check("ETSY_SHOP_ID",        "Etsy Shop ID",           critical=True),
+        _check("OPENAI_API_KEY",      "OpenAI / DALL-E",        critical=False),
+        _check("SMTP_USER",           "Email (SMTP)",           critical=False),
+        _check("SMTP_PASSWORD",       "Email Password",         critical=False),
+    ]
+    ready = all(c["configured"] for c in checks if c["critical"])
+    return JSONResponse({
+        "status":  "ready" if ready else "setup_needed",
+        "checks":  checks,
+        "message": "All critical credentials configured." if ready else "Some required credentials are missing — add them to your .env file.",
+        "scheduler_running": _scheduler is not None and _scheduler.running,
+        "agents_registered": len(AGENT_CLASSES),
+        "schedules_active": sum(1 for s in _load_schedules() if s.get("enabled")),
+        "chains_active": sum(1 for c in _load_chains() if c.get("enabled")),
+    })
+
+
+@app.get("/api/agent-states")
+async def get_agent_states_api():
+    """Return current status and last-run summary for every agent."""
+    summary = {}
+    for key, state in agent_states.items():
+        summary[key] = {
+            "status":       state.get("status", "idle"),
+            "task":         state.get("task", ""),
+            "last_result":  state.get("last_result", ""),
+            "error":        state.get("error", ""),
+            "started":      state.get("started", ""),
+        }
+    return JSONResponse(summary)
 
 
 @app.post("/api/run/{agent_key}")

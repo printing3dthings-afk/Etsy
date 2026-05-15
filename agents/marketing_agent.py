@@ -1,6 +1,6 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
-from tools import marketing_tools
+from tools import marketing_tools, learning_tools
 
 SYSTEM_PROMPT = """You are the Marketing Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz) — an Etsy SEO specialist and growth marketer whose work directly controls how many buyers find the shop. You don't give vague advice. You give exact titles, exact tags, and exact keyword recommendations with data behind them.
 
@@ -99,8 +99,10 @@ class MarketingAgent(BaseAgent):
         super().__init__(
             name="Marketing Agent",
             system_prompt=SYSTEM_PROMPT,
-            tool_definitions=marketing_tools.TOOL_DEFINITIONS,
+            tool_definitions=marketing_tools.TOOL_DEFINITIONS + learning_tools.TOOL_DEFINITIONS,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
+        if tool_name in learning_tools.TOOL_NAMES:
+            return learning_tools.execute_tool(tool_name, tool_input, agent_name="Marketing Agent")
         return marketing_tools.execute_tool(tool_name, tool_input, self._store)

@@ -2525,17 +2525,27 @@ function setResidentState(key, state){
 
 // ── MEETING HALL BOARD ───────────────────────────────────────────────────────
 const PIN_COLORS=['#e74c3c','#f39c12','#27ae60','#2980b9','#8e44ad','#16a085','#d35400','#c0392b'];
+let _agentSummaries={};
+function refreshAgentSummaries(){
+  fetch('/api/agent-states').then(r=>r.json()).then(d=>{ _agentSummaries=d; }).catch(()=>{});
+}
+refreshAgentSummaries();
+setInterval(refreshAgentSummaries, 30000);
+
 function buildIdeaCard(a){
   const tc=taskCards[a.key]||{};
+  const srv=_agentSummaries[a.key]||{};
   const status=activeAgents.has(a.key)?'running':(tc.status||'idle');
   const statusMap={running:'ist-running',done:'ist-done',error:'ist-error',thinking:'ist-thinking',idle:'ist-idle'};
   const sLabel={running:'Working',done:'Done',error:'Error',thinking:'Thinking',idle:'Idle'};
   const sc=statusMap[status]||'ist-idle';
-  const task=tc.task||'No active task';
+  const task=tc.task||srv.task||'No active task';
   const lastSteps=(tc.steps||[]).slice(-3).join('\n');
   const pinIdx=AGENTS.findIndex(x=>x.key===a.key)%PIN_COLORS.length;
   const pinColor=PIN_COLORS[pinIdx];
   const stripColor=a.roof;
+  const lastResult=srv.last_result?srv.last_result.slice(0,120):'';
+  const errMsg=srv.error&&status==='error'?srv.error.slice(0,80):'';
   return `<div class="idea-card" onclick="closeHall();selectAgent('${a.key}')" title="Click to select ${a.name}">
     <div class="idea-pin" style="background:${pinColor}"></div>
     <div style="position:absolute;left:0;top:0;bottom:0;width:5px;border-radius:2px 0 0 2px;background:${stripColor}"></div>
@@ -2546,6 +2556,8 @@ function buildIdeaCard(a){
     </div>
     <div class="idea-task">${esc(task.slice(0,90))}</div>
     ${lastSteps?`<div class="idea-steps">${esc(lastSteps)}</div>`:''}
+    ${lastResult&&status!=='running'?`<div style="margin-top:4px;font-size:.5rem;color:#7d8590;border-top:1px solid #21262d;padding-top:4px;line-height:1.4">Last: ${esc(lastResult)}…</div>`:''}
+    ${errMsg?`<div style="margin-top:4px;font-size:.5rem;color:#da3633;border-top:1px solid #21262d;padding-top:4px">⚠️ ${esc(errMsg)}</div>`:''}
   </div>`;
 }
 
@@ -3292,9 +3304,10 @@ document.getElementById('task-input').addEventListener('keydown',e=>{ if(e.key==
 
 // ── SETUP MODAL ──────────────────────────────────────────────────────────────
 function openSetup(){
-  fetch('/api/config').then(r=>r.json()).then(cfg=>{
+  Promise.all([fetch('/api/config').then(r=>r.json()), fetch('/api/setup').then(r=>r.json())])
+  .then(([cfg, sys])=>{
     const rows=[
-      {icon:'🤖',name:'Anthropic API',   key:'anthropic', desc:'Required — powers all 22 agents'},
+      {icon:'🤖',name:'Anthropic API',   key:'anthropic', desc:'Required — powers all 28 agents'},
       {icon:'🎨',name:'OpenAI / DALL-E 3',key:'openai',   desc:'AI art generation (concept cards work without it)'},
       {icon:'📬',name:'Email (SMTP)',     key:'smtp',      desc:'Send digital files to customers via email'},
       {icon:'🛒',name:'Etsy API Key',     key:'etsy_api',  desc:'Read shop data & competitor research'},
@@ -3309,7 +3322,19 @@ function openSetup(){
           <div class="cfg-desc">${r.desc}</div>
         </div>
         <span class="cfg-status ${cfg[r.key]?'cfg-ok':'cfg-miss'}">${cfg[r.key]?'✓ Connected':'✗ Missing'}</span>
-      </div>`).join('');
+      </div>`).join('')
+    + `<div style="margin-top:14px;padding:10px;background:#161b22;border-radius:6px;border:1px solid #30363d">
+        <div style="font-size:.65rem;font-weight:700;color:#7d8590;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">System Status</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          ${[
+            ['⚙️ Scheduler',sys.scheduler_running?'Running':'Stopped',sys.scheduler_running?'#2ea043':'#da3633'],
+            ['🤖 Agents',sys.agents_registered+' registered','#58a6ff'],
+            ['⏰ Schedules',sys.schedules_active+' active','#3fb950'],
+            ['⛓️ Chains',sys.chains_active+' active','#f0c040'],
+          ].map(([lbl,val,col])=>`<div style="font-size:.6rem;color:#8b949e">${lbl}: <span style="color:${col};font-weight:700">${val}</span></div>`).join('')}
+        </div>
+        <div style="margin-top:6px;font-size:.58rem;color:${sys.status==='ready'?'#3fb950':'#f0883e'}">${sys.message}</div>
+      </div>`;
     document.getElementById('etsy-instructions').style.display=!cfg.etsy_oauth?'block':'none';
     document.getElementById('openai-instructions').style.display=!cfg.openai?'block':'none';
     document.getElementById('setup-modal').classList.add('open');
