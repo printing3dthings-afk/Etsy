@@ -17,10 +17,35 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 #hdr h1{font-size:.85rem;font-weight:700;color:#fff;white-space:nowrap;margin-right:4px}
 .hbtn{padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text);font-size:.7rem;cursor:pointer;transition:background .15s;white-space:nowrap}
 .hbtn:hover{background:#21262d}
+#notif-panel{position:fixed;top:52px;right:12px;width:320px;max-height:480px;background:#161b22;border:1px solid #30363d;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:8000;display:none;flex-direction:column;overflow:hidden}
+#notif-panel.open{display:flex}
+.notif-hdr{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #21262d;flex-shrink:0}
+.notif-hdr span{flex:1;font-size:.6rem;font-weight:700;color:#c9d1d9}
+.notif-hdr button{background:none;border:none;color:#58a6ff;font-size:.55rem;cursor:pointer}
+.notif-list{flex:1;overflow-y:auto}
+.notif-item{display:flex;gap:10px;padding:10px 14px;border-bottom:1px solid #161b22;cursor:pointer;transition:background .1s}
+.notif-item:hover{background:#21262d}
+.notif-item.unread{background:#0d1f0d}
+.notif-icon{font-size:1rem;flex-shrink:0;line-height:1.4}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:.58rem;font-weight:700;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-sub{font-size:.52rem;color:#8b949e;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-ts{font-size:.45rem;color:#484f58;margin-top:3px}
+#notif-empty{padding:24px;text-align:center;font-size:.58rem;color:#484f58}
 .hsp{flex:1}
 .ws-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:0 0 6px var(--green)}
 .ws-dot.off{background:var(--red);box-shadow:0 0 6px var(--red)}
 #clock{font-size:.68rem;color:#8b949e;white-space:nowrap}
+
+/* ── REVENUE WIDGET ── */
+#rev-bar{display:flex;align-items:center;gap:0;background:#0d1117;border-bottom:2px solid #1a4020;flex-shrink:0;overflow:hidden;height:28px}
+.rev-stat{display:flex;align-items:center;gap:5px;padding:0 14px;border-right:1px solid #21262d;height:100%;white-space:nowrap}
+.rev-stat:last-child{border-right:none}
+.rev-lbl{font-size:.45rem;color:#484f58;text-transform:uppercase;letter-spacing:.06em}
+.rev-val{font-size:.62rem;font-weight:700;color:#a0e060;font-family:'Press Start 2P',monospace}
+.rev-val.rev-warn{color:#f0c040}
+.rev-val.rev-run{color:#58a6ff}
+#rev-bar .rev-spacer{flex:1}
 
 /* ── TOWN VIEWPORT ── */
 #vp{overflow:hidden;position:relative;background:#0a1628;cursor:grab;user-select:none;perspective:1800px;perspective-origin:50% 0%}
@@ -1375,6 +1400,7 @@ body{transition:background .5s,color .5s}
   <button class="hbtn" onclick="switchTab('feed')">📋 Feed</button>
   <button class="hbtn" onclick="openHall()">📋 Board</button>
   <button class="hbtn" onclick="openRefs()">🎨 Design Refs</button>
+  <button class="hbtn" onclick="openNotifications()" id="notif-bell-btn" style="position:relative">🔔 <span id="notif-badge" style="display:none;position:absolute;top:2px;right:2px;background:#da3633;color:#fff;border-radius:99px;padding:0 4px;font-size:.48rem;font-weight:700;min-width:14px;text-align:center;line-height:14px"></span></button>
   <button class="hbtn" onclick="openIdeas()" id="ideas-hbtn">💡 Ideas <span id="ideas-hbadge" style="display:none;background:#f0c040;color:#000;border-radius:99px;padding:1px 6px;font-size:.55rem;margin-left:3px;font-weight:700"></span></button>
   <span class="hsp"></span>
   <div class="ws-dot off" id="ws-dot"></div>
@@ -1388,6 +1414,19 @@ body{transition:background .5s,color .5s}
     <button id="sb-update-btn" onclick="applyUpdate()" title="Pull latest code from GitHub" style="font-family:'Press Start 2P',monospace;font-size:.52rem;background:#1b2838;border:1px solid #4a90d9;color:#4a90d9;padding:2px 8px;border-radius:4px;cursor:pointer">⟳ UPDATE</button>
   </div>
 </header>
+
+<div id="rev-bar">
+  <div class="rev-stat"><span class="rev-lbl">Today</span><span class="rev-val" id="rv-today">$0.00</span></div>
+  <div class="rev-stat"><span class="rev-lbl">This Month</span><span class="rev-val" id="rv-month">$0.00</span></div>
+  <div class="rev-stat"><span class="rev-lbl">Open Orders</span><span class="rev-val rev-warn" id="rv-orders">0</span></div>
+  <div class="rev-stat"><span class="rev-lbl">Live Listings</span><span class="rev-val" id="rv-listings">0</span></div>
+  <div class="rev-stat"><span class="rev-lbl">Agents Running</span><span class="rev-val rev-run" id="rv-agents">0</span></div>
+  <div class="rev-spacer"></div>
+  <div class="rev-stat" style="cursor:pointer" onclick="openPipeline()"><span class="rev-lbl">📦</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Pipeline</span></div>
+  <div class="rev-stat" style="cursor:pointer" onclick="openChains()"><span class="rev-lbl">⛓️</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Chains</span></div>
+  <div class="rev-stat" style="cursor:pointer" onclick="openCreator()"><span class="rev-lbl">✨</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Create</span></div>
+  <div class="rev-stat" style="cursor:pointer" onclick="openListingHealth()"><span class="rev-lbl">📊</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Health</span></div>
+</div>
 
 <!-- TOWN VIEWPORT -->
 <div id="vp">
@@ -3192,6 +3231,14 @@ function connectWS(){
       Object.entries(msg.states||{}).forEach(([k,s])=>setBS(k,s.status==='running'?'running':'idle'));
     } else if(msg.type==='agent_event'){
       handleEvent(msg);
+    } else if(msg.type==='new_order'){
+      _showOrderToast(msg.order);
+      _animateBuilding('delivery');
+      loadRevStats();
+    } else if(msg.type==='notification'){
+      _unreadNotifs++;
+      _updateNotifBadge();
+      if(document.getElementById('notif-panel').classList.contains('open')) loadNotifications();
     } else if(msg.type==='new_idea'){
       _ideaCount++;
       _updateIdeaBadge();
@@ -3201,6 +3248,28 @@ function connectWS(){
     }
   };
 }
+let _unreadNotifs = 0;
+
+function _updateNotifBadge(){
+  const b=document.getElementById('notif-badge');
+  if(!b) return;
+  if(_unreadNotifs>0){ b.textContent=_unreadNotifs>99?'99+':_unreadNotifs; b.style.display='inline-block'; }
+  else { b.style.display='none'; }
+}
+
+function _showOrderToast(order){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:#1a4020;border:2px solid #2a8040;border-radius:8px;padding:12px 18px;z-index:9990;font-size:.62rem;color:#a0e060;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:fadeIn .3s';
+  t.innerHTML=`🛒 New Order #${order.id}<br><span style="color:#c9d1d9">${order.buyer} — $${Number(order.total).toFixed(2)}</span>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),5000);
+}
+
+function _animateBuilding(key){
+  const el=document.querySelector(`[id^="bub-${key}"]`)||document.getElementById(`bub-${key}`);
+  if(el){ el.textContent='🛒'; el.style.display='block'; setTimeout(()=>{ el.style.display='none'; el.textContent=''; },4000); }
+}
+
 function setWsDot(ok){ document.getElementById('ws-dot').className='ws-dot'+(ok?'':' off'); }
 
 // ── RUN TASK ─────────────────────────────────────────────────────────────────
@@ -3526,6 +3595,8 @@ window.addEventListener('load',()=>{
   initTown();
   resetView();
   tickBubbles();
+  loadRevStats();
+  loadNotifications().then(()=>{ fetch('/api/notifications').then(r=>r.json()).then(ns=>{ _unreadNotifs=ns.filter(n=>!n.read).length; _updateNotifBadge(); }); });
   connectWS();
   initMinimap();
   applyDayCycle();
@@ -3533,6 +3604,49 @@ window.addEventListener('load',()=>{
 
 // ── DESIGN REFERENCES ────────────────────────────────────────────────────────
 let _refsPending=[];
+
+// ── REVENUE WIDGET ──────────────────────────────────────────────────────────
+async function loadRevStats(){
+  const s=await fetch('/api/quick-stats').then(r=>r.json()).catch(()=>({}));
+  if(s.today_revenue!==undefined){
+    document.getElementById('rv-today').textContent='$'+s.today_revenue.toFixed(2);
+    document.getElementById('rv-month').textContent='$'+s.monthly_revenue.toFixed(2);
+    document.getElementById('rv-orders').textContent=s.open_orders;
+    document.getElementById('rv-listings').textContent=s.active_listings;
+    document.getElementById('rv-agents').textContent=s.running_agents;
+  }
+}
+setInterval(loadRevStats, 30000);
+
+// ── NOTIFICATION CENTER ──────────────────────────────────────────────────────
+function openNotifications(){
+  const p=document.getElementById('notif-panel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')){ loadNotifications(); _unreadNotifs=0; _updateNotifBadge(); fetch('/api/notifications/read-all',{method:'POST'}); }
+}
+document.addEventListener('click',e=>{ if(!e.target.closest('#notif-panel')&&!e.target.closest('#notif-bell-btn')) document.getElementById('notif-panel').classList.remove('open'); });
+
+async function loadNotifications(){
+  const notifs=await fetch('/api/notifications').then(r=>r.json()).catch(()=>[]);
+  const list=document.getElementById('notif-list');
+  if(!notifs.length){ list.innerHTML='<div id="notif-empty">No notifications yet.</div>'; return; }
+  list.innerHTML=notifs.map(n=>{
+    const ts=new Date(n.ts).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    return `<div class="notif-item ${n.read?'':'unread'}" onclick="dismissNotif('${n.id}',this)">
+      <div class="notif-icon">${n.icon}</div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        ${n.body?`<div class="notif-sub">${n.body}</div>`:''}
+        <div class="notif-ts">${ts}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function dismissNotif(id,el){
+  el?.remove();
+  await fetch(`/api/notifications/${id}`,{method:'DELETE'});
+}
 
 // ── IDEAS BOARD ──────────────────────────────────────────────────────────────
 let _ideaCount = 0;
@@ -3613,6 +3727,145 @@ async function startBrainstorm(){
   closeIdeas();
   selectAgent('ceo');
   btn.textContent='☕ Start Brainstorm';
+}
+
+// ── PRODUCT PIPELINE ─────────────────────────────────────────────────────────
+const PIPELINE_COLS=[
+  {id:'concept',label:'💡 Concept',color:'#9a6010'},
+  {id:'art',    label:'🎨 Art',    color:'#6b3090'},
+  {id:'qc',     label:'🔍 QC',     color:'#1e4468'},
+  {id:'ready',  label:'✅ Ready',  color:'#2a5018'},
+  {id:'live',   label:'🏪 Live',   color:'#8B1A1A'},
+  {id:'archived',label:'📦 Done', color:'#282828'},
+];
+
+function openPipeline(){ document.getElementById('pipeline-modal').style.display='flex'; loadPipeline(); }
+function closePipeline(){ document.getElementById('pipeline-modal').style.display='none'; }
+
+async function loadPipeline(){
+  const items=await fetch('/api/product-pipeline').then(r=>r.json()).catch(()=>[]);
+  PIPELINE_COLS.forEach(col=>{
+    const colEl=document.getElementById(`pcol-${col.id}`);
+    if(!colEl) return;
+    const colItems=items.filter(i=>i.stage===col.id);
+    colEl.innerHTML=colItems.length===0
+      ? `<div style="font-size:.52rem;color:#484f58;text-align:center;padding:12px">Empty</div>`
+      : colItems.map(item=>`
+        <div style="background:#21262d;border:1px solid #30363d;border-radius:6px;padding:8px 10px;margin-bottom:6px">
+          <div style="font-size:.58rem;font-weight:700;color:#e6edf3;margin-bottom:4px">${item.title}</div>
+          <div style="font-size:.5rem;color:#8b949e;margin-bottom:6px">${item.type}</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${PIPELINE_COLS.filter(c=>c.id!==col.id).map(c=>`
+              <button onclick="movePipelineItem('${item.id}','${c.id}')"
+                style="font-size:.42rem;padding:2px 6px;background:${c.color}22;color:${c.color};border:1px solid ${c.color}44;border-radius:3px;cursor:pointer">→${c.label.split(' ')[0]}</button>
+            `).join('')}
+            <button onclick="deletePipelineItem('${item.id}')"
+              style="font-size:.42rem;padding:2px 6px;background:#da363322;color:#da3633;border:1px solid #da363344;border-radius:3px;cursor:pointer">✕</button>
+          </div>
+        </div>`).join('');
+  });
+}
+
+async function addPipelineItem(){
+  const title=document.getElementById('pipe-title').value.trim();
+  const type=document.getElementById('pipe-type').value;
+  if(!title) return;
+  await fetch('/api/product-pipeline',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,type,stage:'concept'})});
+  document.getElementById('pipe-title').value='';
+  loadPipeline();
+}
+
+async function movePipelineItem(id,stage){
+  await fetch(`/api/product-pipeline/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({stage})});
+  loadPipeline();
+}
+
+async function deletePipelineItem(id){
+  await fetch(`/api/product-pipeline/${id}`,{method:'DELETE'});
+  loadPipeline();
+}
+
+// ── PRODUCT CREATOR WIZARD ───────────────────────────────────────────────────
+function openCreator(){ document.getElementById('creator-modal').style.display='flex'; }
+function closeCreator(){ document.getElementById('creator-modal').style.display='none'; }
+
+async function runCreator(){
+  const type=document.getElementById('cr-type').value;
+  const style=document.getElementById('cr-style').value.trim();
+  const keywords=document.getElementById('cr-keywords').value.trim();
+  if(!style) return;
+  const btn=document.getElementById('cr-btn');
+  btn.disabled=true; btn.textContent='Queuing...';
+  await fetch('/api/create-product',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,style,keywords})});
+  closeCreator();
+  selectAgent('art');
+  btn.disabled=false; btn.textContent='🎨 Create Product';
+}
+
+// ── AUTOMATION CHAINS ─────────────────────────────────────────────────────────
+function openChains(){ document.getElementById('chains-modal').style.display='flex'; loadChains(); }
+function closeChains(){ document.getElementById('chains-modal').style.display='none'; }
+
+async function loadChains(){
+  const chains=await fetch('/api/chains').then(r=>r.json()).catch(()=>[]);
+  const list=document.getElementById('chains-list');
+  list.innerHTML=chains.map(c=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #21262d">
+      <label style="position:relative;width:36px;height:20px;flex-shrink:0">
+        <input type="checkbox" ${c.enabled?'checked':''} onchange="toggleChain('${c.id}',this.checked)"
+          style="opacity:0;width:0;height:0;position:absolute">
+        <span style="position:absolute;inset:0;background:${c.enabled?'#2a8040':'#21262d'};border-radius:10px;border:1px solid #30363d;cursor:pointer;transition:background .2s">
+          <span style="position:absolute;top:2px;left:${c.enabled?'18':'2'}px;width:14px;height:14px;background:#fff;border-radius:50%;transition:left .2s"></span>
+        </span>
+      </label>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.6rem;font-weight:700;color:#e6edf3">${c.label}</div>
+        <div style="font-size:.52rem;color:#8b949e;margin-top:2px">${c.trigger_agent} done → ${c.action_agent}</div>
+      </div>
+      <button onclick="deleteChain('${c.id}')" style="background:none;border:none;color:#484f58;cursor:pointer;font-size:.75rem">✕</button>
+    </div>`).join('');
+}
+
+async function toggleChain(id,enabled){
+  await fetch(`/api/chains/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled})});
+}
+
+async function deleteChain(id){
+  await fetch(`/api/chains/${id}`,{method:'DELETE'});
+  loadChains();
+}
+
+// ── LISTING HEALTH ───────────────────────────────────────────────────────────
+function openListingHealth(){ document.getElementById('health-modal').style.display='flex'; loadListingHealth(); }
+function closeListingHealth(){ document.getElementById('health-modal').style.display='none'; }
+
+async function loadListingHealth(){
+  const listings=await fetch('/api/listings/health').then(r=>r.json()).catch(()=>[]);
+  const grid=document.getElementById('health-grid');
+  const empty=document.getElementById('health-empty');
+  if(!listings.length){ grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  grid.innerHTML=listings.map(l=>{
+    const score=l.score||0;
+    const sc=score>=70?'#2a8040':score>=40?'#9a6010':'#881818';
+    const bar=Math.round(score);
+    return `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:5px">
+      <div style="font-size:.58rem;font-weight:700;color:#e6edf3;line-height:1.3">${l.title||'Untitled'}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+        <span style="font-size:.52rem;color:#8b949e">$${l.price||0}</span>
+        <span style="font-size:.52rem;font-weight:700;color:${sc}">${score}/100</span>
+      </div>
+      <div style="background:#21262d;border-radius:2px;height:4px;overflow:hidden">
+        <div style="height:100%;width:${bar}%;background:${sc};transition:width .3s"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:2px">
+        <span style="font-size:.48rem;color:#8b949e">👁 ${l.views}</span>
+        <span style="font-size:.48rem;color:#8b949e">♥ ${l.favorites}</span>
+        <span style="font-size:.48rem;color:#8b949e">🛒 ${l.sales}</span>
+        <span style="font-size:.48rem;color:#8b949e">${l.conversion}%</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function openRefs(){
@@ -3742,6 +3995,120 @@ async function deleteRef(id){
     <div id="refs-gallery" style="flex:1;overflow-y:auto;padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;align-content:start">
       <div id="refs-empty" style="font-size:.6rem;color:#484f58;font-style:italic;grid-column:1/-1;padding:20px 0;text-align:center">
         No references uploaded yet.<br>Upload images to guide the Art Agent's style, colors, and themes.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification panel (dropdown, not modal) -->
+<div id="notif-panel">
+  <div class="notif-hdr">
+    <span>🔔 Notifications</span>
+    <button onclick="fetch('/api/notifications/read-all',{method:'POST'});document.getElementById('notif-list').querySelectorAll('.unread').forEach(e=>e.classList.remove('unread'));_unreadNotifs=0;_updateNotifBadge()">Mark all read</button>
+  </div>
+  <div id="notif-list" class="notif-list"></div>
+</div>
+
+<!-- Product Pipeline Board -->
+<div id="pipeline-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto" onclick="if(event.target===this)closePipeline()">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;width:min(1100px,98vw);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7);margin:auto">
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #30363d;flex-shrink:0;gap:10px">
+      <span style="font-size:.75rem;font-weight:700;color:#c9d1d9;flex:1">📦 Product Pipeline</span>
+      <button onclick="closePipeline()" style="background:none;border:none;color:#8b949e;font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid #30363d;display:flex;gap:8px;flex-shrink:0">
+      <input id="pipe-title" type="text" placeholder="New product title…" style="flex:1;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:7px 10px;font-size:.6rem;outline:none">
+      <select id="pipe-type" style="background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:7px 10px;font-size:.6rem;outline:none">
+        <option value="digital">Digital Download</option>
+        <option value="3d_print">3D Print</option>
+        <option value="bundle">Bundle</option>
+        <option value="planner">Planner/Template</option>
+      </select>
+      <button onclick="addPipelineItem()" style="background:#2a5018;border:1px solid #4a8028;border-radius:6px;color:#a0e060;padding:7px 16px;font-size:.6rem;font-weight:700;cursor:pointer">+ Add</button>
+    </div>
+    <div style="display:flex;gap:0;overflow-x:auto;min-height:300px">
+      <script>
+      (function(){
+        const cols=[
+          {id:'concept',label:'💡 Concept',color:'#9a6010'},
+          {id:'art',    label:'🎨 Art',    color:'#6b3090'},
+          {id:'qc',     label:'🔍 QC',     color:'#1e4468'},
+          {id:'ready',  label:'✅ Ready',  color:'#2a5018'},
+          {id:'live',   label:'🏪 Live',   color:'#8B1A1A'},
+          {id:'archived',label:'📦 Done', color:'#282828'},
+        ];
+        document.write(cols.map(c=>`
+          <div style="flex:1;min-width:160px;border-right:1px solid #21262d;display:flex;flex-direction:column">
+            <div style="padding:10px 12px;font-size:.6rem;font-weight:700;color:${c.color};border-bottom:1px solid #21262d;background:${c.color}18;flex-shrink:0">${c.label}</div>
+            <div id="pcol-${c.id}" style="flex:1;padding:10px 8px;overflow-y:auto;min-height:200px"></div>
+          </div>`).join(''));
+      })();
+      </script>
+    </div>
+  </div>
+</div>
+
+<!-- Product Creator Wizard -->
+<div id="creator-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeCreator()">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;width:440px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7)">
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #30363d">
+      <span style="font-size:.75rem;font-weight:700;color:#c9d1d9;flex:1">✨ Create New Product</span>
+      <button onclick="closeCreator()" style="background:none;border:none;color:#8b949e;font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:18px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:.55rem;color:#8b949e;display:block;margin-bottom:5px">Product Type</label>
+        <select id="cr-type" style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:8px 10px;font-size:.62rem;outline:none">
+          <option value="digital wall art">Digital Wall Art</option>
+          <option value="printable planner">Printable Planner</option>
+          <option value="3D printable design">3D Printable Design</option>
+          <option value="digital sticker pack">Digital Sticker Pack</option>
+          <option value="SVG bundle">SVG Bundle</option>
+          <option value="digital template">Digital Template</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:.55rem;color:#8b949e;display:block;margin-bottom:5px">Style Description <span style="color:#da3633">*</span></label>
+        <input id="cr-style" type="text" placeholder="e.g. boho botanical, sage green, minimalist line art…" style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:8px 10px;font-size:.62rem;outline:none;box-sizing:border-box">
+      </div>
+      <div>
+        <label style="font-size:.55rem;color:#8b949e;display:block;margin-bottom:5px">Target Keywords</label>
+        <input id="cr-keywords" type="text" placeholder="e.g. instant download, wall decor, farmhouse kitchen…" style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:8px 10px;font-size:.62rem;outline:none;box-sizing:border-box">
+      </div>
+      <button id="cr-btn" onclick="runCreator()" style="background:#6b3090;border:1px solid #9b50c0;border-radius:6px;color:#e0c0ff;padding:10px;font-size:.65rem;font-weight:700;cursor:pointer;margin-top:4px">🎨 Create Product</button>
+      <div style="font-size:.52rem;color:#484f58;text-align:center">Aria (Art Agent) will design it → QC will review automatically</div>
+    </div>
+  </div>
+</div>
+
+<!-- Automation Chains -->
+<div id="chains-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeChains()">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;width:500px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7)">
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #30363d;flex-shrink:0">
+      <span style="font-size:.75rem;font-weight:700;color:#c9d1d9;flex:1">⛓️ Automation Chains</span>
+      <button onclick="closeChains()" style="background:none;border:none;color:#8b949e;font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:8px 14px;border-bottom:1px solid #21262d;font-size:.52rem;color:#8b949e;flex-shrink:0">
+      When an agent finishes, automatically trigger the next one in the chain.
+    </div>
+    <div id="chains-list" style="flex:1;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- Listing Health Dashboard -->
+<div id="health-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeListingHealth()">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;width:800px;max-height:84vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7)">
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #30363d;flex-shrink:0;gap:10px">
+      <span style="font-size:.75rem;font-weight:700;color:#c9d1d9;flex:1">📊 Listing Health Dashboard</span>
+      <button onclick="openNotifications();closeListingHealth();selectAgent('product')" style="background:#1e4468;border:1px solid #2e6488;border-radius:6px;color:#88c0ff;padding:5px 12px;font-size:.55rem;cursor:pointer">🔍 Run Full Audit</button>
+      <button onclick="closeListingHealth()" style="background:none;border:none;color:#8b949e;font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <div style="padding:8px 18px;border-bottom:1px solid #21262d;font-size:.52rem;color:#8b949e;flex-shrink:0">
+      Sorted by health score (lowest first). Score = conversion rate + traffic + favorites.
+    </div>
+    <div id="health-grid" style="flex:1;overflow-y:auto;padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;align-content:start">
+      <div id="health-empty" style="font-size:.6rem;color:#484f58;grid-column:1/-1;padding:30px;text-align:center">
+        No listings data yet. Run a listing audit to populate.
       </div>
     </div>
   </div>
