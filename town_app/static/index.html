@@ -1869,6 +1869,62 @@ function buildRoads(){
   });
 }
 
+function mkFenceRow(parent, x, y, len, gap=48){
+  const posts = Math.ceil(len/gap)+1;
+  for(let i=0;i<posts;i++){
+    const p=document.createElement('div');
+    p.className='fence-post';
+    p.style.cssText=`left:${x+i*gap}px;top:${y}px`;
+    parent.appendChild(p);
+    if(i<posts-1){
+      const r1=document.createElement('div'),r2=document.createElement('div');
+      r1.className='fence-rail';r2.className='fence-rail';
+      r1.style.cssText=`left:${x+i*gap+5}px;top:${y+10}px;width:${gap-4}px`;
+      r2.style.cssText=`left:${x+i*gap+5}px;top:${y+22}px;width:${gap-4}px`;
+      parent.appendChild(r1);parent.appendChild(r2);
+    }
+  }
+}
+
+function mkChicken(parent, x, y){
+  const d=document.createElement('div');
+  d.className='animal chicken';
+  d.style.cssText=`left:${x}px;top:${y}px`;
+  d.innerHTML=`<div class="ck-wrap">
+    <div class="ck-body">
+      <div class="ck-wing"></div>
+      <div class="ck-head">
+        <div class="ck-comb"></div>
+        <div class="ck-beak"></div>
+        <div class="ck-wattle"></div>
+      </div>
+    </div>
+    <div class="ck-legs"><div class="ck-leg"></div><div class="ck-leg"></div></div>
+  </div>`;
+  parent.appendChild(d);
+}
+
+function mkDog(parent, x, y){
+  const d=document.createElement('div');
+  d.className='animal dog-sprite';
+  d.style.cssText=`left:${x}px;top:${y}px`;
+  d.innerHTML=`<div class="dog-wrap">
+    <div class="dog-body">
+      <div class="dog-tail"></div>
+      <div class="dog-head">
+        <div class="dog-ear"></div>
+        <div class="dog-eye"></div>
+        <div class="dog-snout"><div class="dog-nose"></div></div>
+      </div>
+    </div>
+    <div class="dog-legs">
+      <div class="dog-leg"></div><div class="dog-leg"></div>
+      <div class="dog-leg"></div><div class="dog-leg"></div>
+    </div>
+  </div>`;
+  parent.appendChild(d);
+}
+
 function buildDecos(){
   const c=document.getElementById('decos');
   // Lamp posts along road 1 (y:700)
@@ -1997,17 +2053,40 @@ function buildDecos(){
     c.appendChild(b);
   });
 
-  // Park pond (extended world)
-  const pond=document.createElement('div');
-  pond.style.cssText=`position:absolute;left:3300px;top:1150px;width:260px;height:140px;
-    background:radial-gradient(ellipse at 40% 38%,rgba(130,200,255,.88),rgba(40,120,200,.7));
-    border-radius:50%;border:4px solid #7ab8d8;
-    box-shadow:0 6px 20px rgba(0,0,0,.4),inset 0 4px 12px rgba(255,255,255,.2);
-    z-index:3;animation:f-shimmer 3.5s ease-in-out infinite alternate`;
-  c.appendChild(pond);
+  // River/lake drawn on terrain canvas (see drawTerrain)
+  // Add water shimmer overlay
+  const waterOverlay=document.createElement('div');
+  waterOverlay.style.cssText=`position:absolute;left:2762px;top:1062px;width:580px;height:310px;
+    border-radius:50%;pointer-events:none;z-index:4;
+    background:radial-gradient(ellipse at 40% 38%,rgba(180,230,255,.18),transparent 70%);
+    animation:f-shimmer 3.2s ease-in-out infinite alternate`;
+  c.appendChild(waterOverlay);
 
   // Fountain in front of CEO building (CEO: x:1370, w:240 → center x:1490; bottom y:620)
   mkFountain(c, 1448, 607);
+
+  // ── FENCES (SV wooden fences along paths) ────────────────────────────────
+  // Along road 1 top edge
+  mkFenceRow(c, 0, 692, 700);
+  mkFenceRow(c, 820, 692, 700);
+  mkFenceRow(c, 1700, 692, 900);
+  // Along road 2 top edge
+  mkFenceRow(c, 0, 1010, 700);
+  mkFenceRow(c, 820, 1010, 700);
+  // Around crop field
+  mkFenceRow(c, 240, 1694, 260);
+  // Right of business district
+  mkFenceRow(c, 2640, 692, 400);
+  mkFenceRow(c, 2640, 1010, 400);
+
+  // ── CHICKENS scattered in open areas ─────────────────────────────────────
+  [[180,980],[420,990],[780,1000],[950,1300],[1380,995],[1830,1300],
+   [2200,985],[2450,1290],[2700,1010],[2850,1300],[3100,1010],
+   [350,1720],[500,1740],[280,1750]].forEach(([x,y])=>mkChicken(c,x,y));
+
+  // ── DOG near CEO / town square ───────────────────────────────────────────
+  mkDog(c, 1520, 980);
+  mkDog(c, 380, 1280);
 }
 
 function mkFountain(parent, x, y){
@@ -2103,24 +2182,89 @@ function drawTerrain() {
     ctx.fillRect(gx-2, gy+1, 2, 5);
   }
 
-  // -- Sky strip at very top --
-  const skyGrad = ctx.createLinearGradient(0,0,0,200);
-  skyGrad.addColorStop(0, '#5c94fc');
-  skyGrad.addColorStop(1, '#74aaff');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, W, 180);
+  // Sky handled by CSS — canvas starts at ground level
 
-  // -- Pixel clouds --
-  function drawCloud(cx, cy, scale) {
-    const c = [[0,1],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2],[3,1],[3,2],[4,1]];
-    ctx.fillStyle = 'rgba(255,255,255,0.92)';
-    c.forEach(([dx,dy]) => ctx.fillRect(cx+dx*scale*8, cy+dy*scale*6, scale*8, scale*6));
-    ctx.fillStyle = 'rgba(200,220,255,0.5)';
-    c.forEach(([dx,dy]) => ctx.fillRect(cx+dx*scale*8+scale*2, cy+dy*scale*6+scale*3, scale*4, scale*3));
+  // -- River / lake in park area --
+  const riverGrad = ctx.createRadialGradient(3050,1200,10,3050,1200,260);
+  riverGrad.addColorStop(0,'rgba(100,180,255,.92)');
+  riverGrad.addColorStop(0.6,'rgba(60,140,220,.88)');
+  riverGrad.addColorStop(1,'rgba(30,100,190,.82)');
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(3050, 1220, 290, 145, 0.08, 0, Math.PI*2);
+  ctx.fillStyle = riverGrad;
+  ctx.fill();
+  ctx.strokeStyle = '#5a9ad8';
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.restore();
+  // River shore sand
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(3050, 1220, 306, 160, 0.08, 0, Math.PI*2);
+  ctx.fillStyle = '#c8a840';
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(3050, 1220, 290, 145, 0.08, 0, Math.PI*2);
+  const riverGrad2 = ctx.createRadialGradient(3050,1220,10,3050,1220,290);
+  riverGrad2.addColorStop(0,'rgba(100,180,255,.92)');
+  riverGrad2.addColorStop(0.7,'rgba(60,140,220,.88)');
+  riverGrad2.addColorStop(1,'rgba(30,100,190,.82)');
+  ctx.fillStyle = riverGrad2;
+  ctx.fill();
+  ctx.restore();
+  // River sparkle lines
+  ctx.fillStyle = 'rgba(255,255,255,.5)';
+  [[2820,1180,28,4],[2880,1210,22,3],[2950,1185,32,4],[3020,1215,20,3],
+   [3100,1190,26,4],[3180,1215,18,3],[3250,1185,24,4],[3180,1240,20,3],
+   [3050,1250,30,3],[2900,1240,18,3]].forEach(([x,y,w,h])=>ctx.fillRect(x,y,w,h));
+  // Lily pads
+  ctx.fillStyle='#2a8418';
+  [[2860,1200,16,10],[2960,1240,18,12],[3080,1200,14,9],[3160,1240,16,10],[3240,1200,12,8],[2940,1180,14,9]].forEach(([x,y,w,h])=>{
+    ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);ctx.fill();
+  });
+  ctx.strokeStyle='#1a5a10';ctx.lineWidth=1;
+  [[2860,1200,16,10],[2960,1240,18,12],[3080,1200,14,9],[3160,1240,16,10],[3240,1200,12,8],[2940,1180,14,9]].forEach(([x,y,w,h])=>{
+    ctx.beginPath();ctx.ellipse(x+w/2,y+h/2,w/2,h/2,0,0,Math.PI*2);ctx.stroke();
+  });
+
+  // -- Crop fields (lower left — farm feel) --
+  const cropStartX=280, cropStartY=1720, cW=16, cH=16;
+  const cropTypes=['tilled','tilled','sprout','grown','sprout','tilled','grown','grown'];
+  for(let row=0;row<7;row++){
+    for(let col=0;col<14;col++){
+      const tx=cropStartX+col*cW, ty=cropStartY+row*cH;
+      const t=cropTypes[(row*14+col)%cropTypes.length];
+      if(t==='tilled'){
+        ctx.fillStyle=row%2===0?'#5a3010':'#6a4018';
+        ctx.fillRect(tx,ty,cW,cH);
+        for(let i=0;i<cW;i+=4){ctx.fillStyle='rgba(0,0,0,.1)';ctx.fillRect(tx+i,ty,1,cH);}
+      } else if(t==='sprout'){
+        ctx.fillStyle='#5a3010';ctx.fillRect(tx,ty,cW,cH);
+        ctx.fillStyle='#44a820';ctx.fillRect(tx+6,ty+2,3,10);
+        ctx.fillStyle='#60cc30';ctx.fillRect(tx+3,ty+2,9,5);
+      } else {
+        ctx.fillStyle='#5a3010';ctx.fillRect(tx,ty,cW,cH);
+        ctx.fillStyle='#44a820';ctx.fillRect(tx+6,ty+0,3,12);
+        ctx.fillStyle='#f5c030';
+        ctx.beginPath();ctx.ellipse(tx+8,ty-1,5,4,0,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#c88000';ctx.lineWidth=1;
+        ctx.beginPath();ctx.ellipse(tx+8,ty-1,5,4,0,0,Math.PI*2);ctx.stroke();
+      }
+    }
   }
-  drawCloud(120, 20, 3); drawCloud(420, 35, 2); drawCloud(750, 15, 4);
-  drawCloud(1050, 40, 2); drawCloud(1350, 18, 3); drawCloud(1700, 30, 2);
-  drawCloud(2000, 12, 4); drawCloud(2400, 38, 2); drawCloud(2750, 22, 3);
+  // Crop field border fence posts
+  for(let col=0;col<=14;col+=2){
+    const fx=cropStartX+col*cW-4;
+    ctx.fillStyle='#b08828';ctx.fillRect(fx,cropStartY-20,8,20);
+    ctx.fillStyle='#d4a840';ctx.fillRect(fx+1,cropStartY-20,6,4);
+    if(col<14){
+      ctx.fillStyle='#c09030';ctx.fillRect(fx+4,cropStartY-14,cW*2-4,4);
+      ctx.fillStyle='#c09030';ctx.fillRect(fx+4,cropStartY-6,cW*2-4,3);
+    }
+  }
 
   // -- District divider fences --
   function drawFencePost(x, y) {
