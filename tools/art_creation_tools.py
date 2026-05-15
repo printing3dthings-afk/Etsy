@@ -15,6 +15,7 @@ import os
 import urllib.request
 import urllib.error
 from datetime import date
+from pathlib import Path
 from typing import Any
 
 from tools.data_store import DataStore
@@ -34,6 +35,26 @@ def _next_product_id(store: DataStore) -> str:
 
 
 # ── TOOL DEFINITIONS ──────────────────────────────────────────────────────────
+
+def _get_design_references(tool_input: dict) -> str:
+    refs_meta = Path("data/design_refs_meta.json")
+    if not refs_meta.exists():
+        return "No design references uploaded yet. The user has not provided style examples."
+    try:
+        meta = json.loads(refs_meta.read_text())
+    except Exception:
+        return "No design references available."
+    if not meta:
+        return "No design references uploaded yet."
+    lines = [f"Found {len(meta)} design reference(s) uploaded by the shop owner:\n"]
+    for i, ref in enumerate(meta, 1):
+        desc = ref.get('description', 'No description provided')
+        lines.append(f"{i}. {ref['filename']} ({ref.get('size_kb','?')} KB)")
+        lines.append(f"   Style/Theme: {desc}")
+        lines.append(f"   Uploaded: {ref.get('uploaded_at','')[:10]}")
+    lines.append("\nUse these style descriptions to guide your art creation — match the aesthetic, color palette, and themes described.")
+    return "\n".join(lines)
+
 
 TOOL_DEFINITIONS: list[dict] = [
     {
@@ -178,6 +199,15 @@ TOOL_DEFINITIONS: list[dict] = [
             "required": ["product_id", "status"],
         },
     },
+    {
+        "name": "get_design_references",
+        "description": "Get the list of design reference images uploaded by the shop owner. These images represent the style, color palette, and aesthetic the owner wants. Always call this BEFORE creating any new art to ensure your work matches their vision.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
+    },
 ]
 
 
@@ -196,6 +226,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _get_digital_product(tool_input["product_id"], store)
     if tool_name == "update_product_status":
         return _update_product_status(tool_input, store)
+    elif tool_name == "get_design_references":
+        return _get_design_references(tool_input)
     return f"Unknown art creation tool: {tool_name}"
 
 

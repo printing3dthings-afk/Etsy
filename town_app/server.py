@@ -25,7 +25,7 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
-from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, File, Form, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -35,6 +35,8 @@ DATA_DIR     = Path(__file__).parent.parent / "data"
 REPO_ROOT    = Path(__file__).parent.parent
 HISTORY_FILE = DATA_DIR / "task_history.json"
 SCHEDULE_FILE= DATA_DIR / "schedule.json"
+REFS_DIR     = DATA_DIR / "design_references"
+REFS_META    = DATA_DIR / "design_refs_meta.json"
 
 # ── Auto-update state ──────────────────────────────────────────────────────────
 _update_lock   = threading.Lock()
@@ -884,6 +886,77 @@ async def convert_to_svg(
         "path":     rel,
         "size_kb":  round(out_path.stat().st_size / 1024, 1),
     })
+
+
+# ── Design References ──────────────────────────────────────────────────────────
+
+_ALLOWED_REF_EXTS  = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"}
+
+def _load_refs_meta() -> list:
+    try:
+        if REFS_META.exists():
+            return json.loads(REFS_META.read_text())
+    except Exception:
+        pass
+    return []
+
+def _save_refs_meta(meta: list):
+    REFS_META.write_text(json.dumps(meta, indent=2))
+
+
+@app.post("/api/upload-reference")
+async def upload_reference(file: UploadFile = File(...), description: str = Form("")):
+    REFS_DIR.mkdir(parents=True, exist_ok=True)
+    ext = Path(file.filename or "upload").suffix.lower()
+    if ext not in _ALLOWED_REF_EXTS:
+        return JSONResponse({"error": f"Unsupported file type: {ext}"}, status_code=400)
+    stem = Path(file.filename or "ref").stem[:40]
+    out_path = REFS_DIR / f"{stem}{ext}"
+    counter = 1
+    while out_path.exists():
+        out_path = REFS_DIR / f"{stem}_{counter}{ext}"
+        counter += 1
+    contents = await file.read()
+    out_path.write_bytes(contents)
+    ref_id = f"{out_path.stem}_{int(datetime.utcnow().timestamp())}"
+    meta = _load_refs_meta()
+    entry = {
+        "id": ref_id,
+        "filename": out_path.name,
+        "path": f"data/design_references/{out_path.name}",
+        "description": description,
+        "uploaded_at": datetime.utcnow().isoformat() + "Z",
+        "size_kb": round(len(contents) / 1024, 1),
+    }
+    meta.append(entry)
+    _save_refs_meta(meta)
+    return JSONResponse(entry)
+
+
+@app.get("/api/design-references")
+async def list_design_references():
+    return JSONResponse(_load_refs_meta())
+
+
+@app.delete("/api/design-references/{ref_id}")
+async def delete_design_reference(ref_id: str):
+    meta = _load_refs_meta()
+    entry = next((m for m in meta if m["id"] == ref_id), None)
+    if not entry:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    file_path = REFS_DIR / entry["filename"]
+    if file_path.exists():
+        file_path.unlink()
+    _save_refs_meta([m for m in meta if m["id"] != ref_id])
+    return JSONResponse({"deleted": True, "id": ref_id})
+
+
+@app.get("/data/design_references/{filename}")
+async def serve_design_reference(filename: str):
+    path = REFS_DIR / filename
+    if not path.exists():
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    return FileResponse(str(path))
 
 
 @app.get("/api/update-status")
