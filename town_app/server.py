@@ -8,6 +8,7 @@ import os
 import queue
 import shutil
 import smtplib
+import subprocess
 import sys
 import tempfile
 import threading
@@ -31,8 +32,54 @@ from fastapi.staticfiles import StaticFiles
 # ── Paths ──────────────────────────────────────────────────────────────────────
 STATIC_DIR   = Path(__file__).parent / "static"
 DATA_DIR     = Path(__file__).parent.parent / "data"
+REPO_ROOT    = Path(__file__).parent.parent
 HISTORY_FILE = DATA_DIR / "task_history.json"
 SCHEDULE_FILE= DATA_DIR / "schedule.json"
+
+# ── Auto-update state ──────────────────────────────────────────────────────────
+_update_lock   = threading.Lock()
+_update_state  = {
+    "last_pull":   None,   # ISO timestamp
+    "last_result": "never_checked",  # "up_to_date" | "updated" | "error" | "never_checked"
+    "last_message": "",
+    "pulling": False,
+}
+
+def _git_pull() -> dict:
+    """Run git pull --ff-only and return result dict."""
+    with _update_lock:
+        _update_state["pulling"] = True
+    try:
+        result = subprocess.run(
+            ["git", "pull", "--ff-only"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        now = datetime.utcnow().isoformat() + "Z"
+        stdout = result.stdout.strip()
+        if result.returncode != 0:
+            state = "error"
+            msg   = result.stderr.strip() or stdout or "git pull failed"
+        elif "Already up to date" in stdout:
+            state = "up_to_date"
+            msg   = stdout
+        else:
+            state = "updated"
+            msg   = stdout
+        with _update_lock:
+            _update_state.update({"last_pull": now, "last_result": state, "last_message": msg, "pulling": False})
+        return {"result": state, "message": msg, "timestamp": now}
+    except Exception as exc:
+        now = datetime.utcnow().isoformat() + "Z"
+        msg = str(exc)
+        with _update_lock:
+            _update_state.update({"last_pull": now, "last_result": "error", "last_message": msg, "pulling": False})
+        return {"result": "error", "message": msg, "timestamp": now}
+
+def _git_pull_job():
+    _git_pull()
 
 # ── Task history ───────────────────────────────────────────────────────────────
 
@@ -138,6 +185,14 @@ def _start_scheduler():
     for s in schedules:
         if s.get("enabled"):
             _register_job(s)
+    # Auto-update: pull from git every 10 minutes
+    _scheduler.add_job(
+        func             = _git_pull_job,
+        trigger          = "interval",
+        minutes          = 10,
+        id               = "_auto_git_pull",
+        replace_existing = True,
+    )
     _scheduler.start()
 
 
@@ -831,6 +886,21 @@ async def convert_to_svg(
     })
 
 
+@app.get("/api/update-status")
+async def update_status():
+    with _update_lock:
+        state = dict(_update_state)
+    return JSONResponse(state)
+
+
+@app.post("/api/apply-update")
+async def apply_update():
+    if _update_state.get("pulling"):
+        return JSONResponse({"error": "Pull already in progress"}, status_code=409)
+    threading.Thread(target=_git_pull, daemon=True).start()
+    return JSONResponse({"status": "pulling", "message": "Git pull started — server will reload if files changed"})
+
+
 @app.post("/api/run/{agent_key}")
 async def run_agent(agent_key: str, body: dict):
     if agent_key not in AGENT_CLASSES:
@@ -875,4 +945,4 @@ if __name__ == "__main__":
         target=lambda: (time.sleep(1.5), webbrowser.open("http://localhost:8080")),
         daemon=True,
     ).start()
-    uvicorn.run("town_app.server:app", host="0.0.0.0", port=8080, reload=False)
+    uvicorn.run("town_app.server:app", host="0.0.0.0", port=8080, reload=True, reload_dirs=[str(REPO_ROOT)])

@@ -857,6 +857,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .pv-stage.done .pv-label{color:var(--green)}
 .pv-arrow{font-size:.55rem;color:#21262d;flex-shrink:0;margin-top:-8px}
 @keyframes pv-pulse{0%,100%{box-shadow:0 0 6px var(--accent)}50%{box-shadow:0 0 14px var(--accent)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
 /* ── GOALS DASHBOARD ── */
 #tab-goals{padding:0;flex-direction:column}
 .goals-scroll{flex:1;overflow-y:auto;padding:8px}
@@ -1261,6 +1262,8 @@ body{transition:background .5s,color .5s}
     <span id="sb-qc" style="color:#484f58">QC: <span id="sb-qc-count">—</span></span>
     <span id="sb-etsy" style="color:#484f58">ETSY: <span id="sb-etsy-status">—</span></span>
     <span id="sb-smtp" style="color:#484f58">EMAIL: <span id="sb-smtp-status">—</span></span>
+    <span id="sb-update-badge" style="display:none;background:#1565c0;color:#fff;padding:2px 7px;border-radius:4px;animation:pulse 1.5s infinite">↑ UPDATE READY</span>
+    <button id="sb-update-btn" onclick="applyUpdate()" title="Pull latest code from GitHub" style="font-family:'Press Start 2P',monospace;font-size:.52rem;background:#1b2838;border:1px solid #4a90d9;color:#4a90d9;padding:2px 8px;border-radius:4px;cursor:pointer">⟳ UPDATE</button>
   </div>
 </header>
 
@@ -3085,18 +3088,45 @@ async function _pollStatusBar(){
     // QC queue count from task history
     const qcEl = document.getElementById('sb-qc-count');
     if(qcEl){
-      const hist = await fetch('/api/task-history?limit=5').then(r=>r.json()).catch(()=>([]) );
-      // Just show a dash — actual QC count needs a dedicated endpoint
       qcEl.textContent = '✓';
       qcEl.style.color = '#4caf50';
+    }
+
+    // Auto-update status
+    const upd = await fetch('/api/update-status').then(r=>r.json()).catch(()=>({}));
+    const badge = document.getElementById('sb-update-badge');
+    const btn   = document.getElementById('sb-update-btn');
+    if(upd.pulling){
+      if(btn){ btn.textContent='⟳ PULLING...'; btn.disabled=true; btn.style.opacity='0.5'; }
+      if(badge) badge.style.display='none';
+    } else {
+      if(btn){ btn.textContent='⟳ UPDATE'; btn.disabled=false; btn.style.opacity='1'; }
+      if(upd.last_result === 'updated' && badge){
+        badge.style.display='inline';
+        setTimeout(()=>{ if(badge) badge.style.display='none'; }, 8000);
+      }
     }
   } catch(e){}
 }
 
 function openPhysicalApprovals(){
-  // Navigate user to the physical approvals — open print production agent
   const a = AM['print'];
   if(a) { selectedKey='print'; openPanel(a); }
+}
+
+async function applyUpdate(){
+  const btn = document.getElementById('sb-update-btn');
+  if(btn){ btn.textContent='⟳ PULLING...'; btn.disabled=true; btn.style.opacity='0.5'; }
+  try {
+    const r = await fetch('/api/apply-update', {method:'POST'}).then(r=>r.json()).catch(()=>({}));
+    if(r.error){
+      alert('Update error: ' + r.error);
+      if(btn){ btn.textContent='⟳ UPDATE'; btn.disabled=false; btn.style.opacity='1'; }
+    }
+    // If files changed, uvicorn will reload → WS reconnects in 3s automatically
+  } catch(e){
+    if(btn){ btn.textContent='⟳ UPDATE'; btn.disabled=false; btn.style.opacity='1'; }
+  }
 }
 
 // Poll every 30 seconds
