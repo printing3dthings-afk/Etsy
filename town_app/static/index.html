@@ -723,6 +723,9 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* Hall overrides */
 .bld-hall .broof { filter: none !important; background: linear-gradient(180deg,#5a3a00,#3a2000) !important; --rc:#5a3a00; clip-path: none; outline: 3px solid #000; }
 .bld-hall .bbody { background: #d4aa50 !important; outline: 4px solid #000 !important; box-shadow: 5px 5px 0 #000; }
+.hall-actions { display:flex; gap:4px; justify-content:center; margin-top:3px; z-index:8; position:relative; }
+.hall-act-btn { font-family:'Press Start 2P',monospace; font-size:.3rem; padding:3px 7px; background:#2a1800; color:#f0d060; border:2px solid #000; outline:1px solid #c8a040; cursor:pointer; border-radius:0; white-space:nowrap; transition:background .1s; }
+.hall-act-btn:hover { background:#3a2800; }
 
 /* District labels */
 .dlabel {
@@ -1372,6 +1375,7 @@ body{transition:background .5s,color .5s}
   <button class="hbtn" onclick="switchTab('feed')">📋 Feed</button>
   <button class="hbtn" onclick="openHall()">📋 Board</button>
   <button class="hbtn" onclick="openRefs()">🎨 Design Refs</button>
+  <button class="hbtn" onclick="openIdeas()" id="ideas-hbtn">💡 Ideas <span id="ideas-hbadge" style="display:none;background:#f0c040;color:#000;border-radius:99px;padding:1px 6px;font-size:.55rem;margin-left:3px;font-weight:700"></span></button>
   <span class="hsp"></span>
   <div class="ws-dot off" id="ws-dot"></div>
   <span id="clock"></span>
@@ -1904,7 +1908,12 @@ function mkBuilding(a){
       ${a.chimney?'<div class="bchim"></div>':''}
       <div class="bfound"></div>
     </div>
-    <div class="bbadge" id="bdg-${a.key}">${isHall?'📋 view board':'idle'}</div>
+    ${isHall
+      ? `<div class="hall-actions">
+           <button class="hall-act-btn" onclick="event.stopPropagation();openHall()">📋 Board</button>
+           <button class="hall-act-btn" onclick="event.stopPropagation();openIdeas()">💡 Ideas</button>
+         </div>`
+      : `<div class="bbadge" id="bdg-${a.key}">idle</div>`}
     <div class="blabel">${a.display}</div>`;
   el.onclick=()=>isHall?openHall():selectAgent(a.key);
   el.onmouseenter=e=>{ showTip(e,isHall?'Meeting Hall — click to view all agent tasks':a.name); if(isHall) updateMiniBoard(); };
@@ -3183,6 +3192,12 @@ function connectWS(){
       Object.entries(msg.states||{}).forEach(([k,s])=>setBS(k,s.status==='running'?'running':'idle'));
     } else if(msg.type==='agent_event'){
       handleEvent(msg);
+    } else if(msg.type==='new_idea'){
+      _ideaCount++;
+      _updateIdeaBadge();
+      const bld=document.getElementById(`bub-hall`);
+      if(bld){ bld.textContent='💡'; bld.style.display='block'; setTimeout(()=>{ bld.style.display='none'; bld.textContent=''; },3500); }
+      if(document.getElementById('ideas-modal').style.display!=='none') loadIdeas();
     }
   };
 }
@@ -3519,6 +3534,87 @@ window.addEventListener('load',()=>{
 // ── DESIGN REFERENCES ────────────────────────────────────────────────────────
 let _refsPending=[];
 
+// ── IDEAS BOARD ──────────────────────────────────────────────────────────────
+let _ideaCount = 0;
+
+function _updateIdeaBadge(){
+  const b=document.getElementById('ideas-hbadge');
+  if(!b) return;
+  if(_ideaCount>0){ b.textContent=_ideaCount; b.style.display='inline'; }
+  else { b.style.display='none'; }
+}
+
+function openIdeas(){
+  document.getElementById('ideas-modal').style.display='flex';
+  loadIdeas();
+}
+function closeIdeas(){ document.getElementById('ideas-modal').style.display='none'; }
+
+const CAT_COLORS={product:'#5a9e3a',marketing:'#c04010',operations:'#104888',design:'#6b3090',pricing:'#9a6010',general:'#3a4a5a'};
+const AGENT_ICONS = Object.fromEntries(AGENTS.map(a=>[a.key,{icon:a.icon,name:a.firstName||a.display}]));
+
+async function loadIdeas(){
+  const ideas = await fetch('/api/ideas').then(r=>r.json()).catch(()=>[]);
+  const pending = ideas.filter(i=>i.status==='pending');
+  _ideaCount = pending.length;
+  _updateIdeaBadge();
+  const grid = document.getElementById('ideas-grid');
+  const empty = document.getElementById('ideas-empty');
+  if(pending.length===0){
+    grid.innerHTML=''; empty.style.display='block';
+    document.getElementById('ideas-brainstorm-btn').disabled=true;
+    return;
+  }
+  empty.style.display='none';
+  document.getElementById('ideas-brainstorm-btn').disabled=false;
+  grid.innerHTML = pending.map(idea=>{
+    const ag = AGENT_ICONS[idea.agent]||{icon:'🤖',name:idea.agent};
+    const catC = CAT_COLORS[idea.category]||CAT_COLORS.general;
+    const ts = new Date(idea.submitted_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `<div style="background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px;position:relative">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:.9rem">${ag.icon}</span>
+        <span style="font-size:.55rem;font-weight:700;color:#c9d1d9;flex:1">${ag.name}</span>
+        <span style="font-size:.48rem;background:${catC};color:#fff;padding:2px 6px;border-radius:3px">${idea.category}</span>
+        <button onclick="deleteIdea('${idea.id}')" title="Remove" style="background:none;border:none;color:#484f58;cursor:pointer;font-size:.75rem;padding:0;line-height:1">✕</button>
+      </div>
+      <div style="font-size:.6rem;font-weight:700;color:#e6edf3;line-height:1.4">${idea.title}</div>
+      <div style="font-size:.55rem;color:#8b949e;line-height:1.5;flex:1">${idea.description}</div>
+      <div style="font-size:.48rem;color:#484f58;margin-top:4px">${ts}</div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteIdea(id){
+  await fetch(`/api/ideas/${id}`,{method:'DELETE'});
+  loadIdeas();
+}
+
+async function addIdeaFromUI(){
+  const title = document.getElementById('idea-title-inp').value.trim();
+  const desc  = document.getElementById('idea-desc-inp').value.trim();
+  const cat   = document.getElementById('idea-cat-sel').value;
+  if(!title) return;
+  const btn = document.getElementById('idea-add-btn');
+  btn.disabled=true; btn.textContent='Submitting...';
+  await fetch('/api/ideas',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({agent:'you',title,description:desc,category:cat})});
+  document.getElementById('idea-title-inp').value='';
+  document.getElementById('idea-desc-inp').value='';
+  btn.disabled=false; btn.textContent='+ Add Idea';
+  loadIdeas();
+}
+
+async function startBrainstorm(){
+  const btn=document.getElementById('ideas-brainstorm-btn');
+  btn.disabled=true; btn.textContent='Starting...';
+  const res=await fetch('/api/ideas/brainstorm',{method:'POST'}).then(r=>r.json()).catch(()=>({error:'Failed'}));
+  if(res.error){ btn.disabled=false; btn.textContent='☕ Start Brainstorm'; alert(res.error); return; }
+  closeIdeas();
+  selectAgent('ceo');
+  btn.textContent='☕ Start Brainstorm';
+}
+
 function openRefs(){
   document.getElementById('refs-modal').style.display='flex';
   loadRefs();
@@ -3579,6 +3675,45 @@ async function deleteRef(id){
 }
 </script>
 <!-- DESIGN REFERENCES MODAL -->
+<div id="ideas-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeIdeas()">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;width:760px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.7)">
+    <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #30363d;flex-shrink:0;gap:10px">
+      <span style="font-size:.75rem;font-weight:700;color:#f0c040;flex:1">💡 Ideas Board — Team Brainstorm</span>
+      <button id="ideas-brainstorm-btn" onclick="startBrainstorm()" disabled
+        style="background:#2a5018;border:1px solid #4a8028;border-radius:6px;color:#a0e060;padding:5px 14px;font-size:.6rem;font-weight:700;cursor:pointer;white-space:nowrap">☕ Start Brainstorm</button>
+      <button onclick="closeIdeas()" style="background:none;border:none;color:#8b949e;font-size:1.2rem;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:12px 18px;border-bottom:1px solid #30363d;flex-shrink:0;display:flex;gap:8px;align-items:flex-start">
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <input type="text" id="idea-title-inp" placeholder="Idea title…" maxlength="120"
+          style="background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:7px 10px;font-size:.62rem;outline:none;width:100%;box-sizing:border-box">
+        <textarea id="idea-desc-inp" placeholder="Describe the idea — why it matters, potential impact, rough next steps…" rows="2" maxlength="800"
+          style="background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:7px 10px;font-size:.58rem;outline:none;resize:vertical;width:100%;box-sizing:border-box"></textarea>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0">
+        <select id="idea-cat-sel" style="background:#0d1117;border:1px solid #30363d;border-radius:6px;color:#c9d1d9;padding:7px 10px;font-size:.6rem;outline:none">
+          <option value="general">General</option>
+          <option value="product">Product</option>
+          <option value="marketing">Marketing</option>
+          <option value="design">Design</option>
+          <option value="pricing">Pricing</option>
+          <option value="operations">Operations</option>
+        </select>
+        <button id="idea-add-btn" onclick="addIdeaFromUI()"
+          style="background:#f0c040;border:none;border-radius:6px;color:#000;padding:7px 18px;font-size:.62rem;font-weight:700;cursor:pointer;white-space:nowrap">+ Add Idea</button>
+      </div>
+    </div>
+    <div style="padding:8px 18px;border-bottom:1px solid #21262d;flex-shrink:0;font-size:.55rem;color:#8b949e">
+      Pending ideas — agents submit these automatically. Click <strong style="color:#a0e060">Start Brainstorm</strong> to send them to Victor (CEO) for review.
+    </div>
+    <div id="ideas-grid" style="flex:1;overflow-y:auto;padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;align-content:start">
+      <div id="ideas-empty" style="font-size:.6rem;color:#484f58;font-style:italic;grid-column:1/-1;padding:30px 0;text-align:center">
+        No ideas yet.<br><br>Agents will submit ideas here as they work. You can also add your own above.
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="refs-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;width:700px;max-height:84vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6)">
     <div style="display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid #30363d;flex-shrink:0">
