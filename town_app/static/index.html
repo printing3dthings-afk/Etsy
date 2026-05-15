@@ -29,7 +29,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 
 /* ── SKY ── */
 #sky{position:absolute;top:0;left:0;width:100%;height:720px;
-  background:linear-gradient(180deg,#001428 0%,#0a2448 18%,#1a4880 38%,#2d6aaa 58%,#4e92cc 76%,#7ab8e0 90%,#a8d8f0 100%);
+  background:linear-gradient(180deg,#1855c8 0%,#2872e8 18%,#4292f0 38%,#5eb0f8 58%,#82c8fa 76%,#aadcfc 90%,#c8eeff 100%);
   overflow:hidden}
 .stars{position:absolute;inset:0;height:55%;
   background-image:
@@ -67,15 +67,22 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .c5::before{width:92px;height:74px;top:-34px;left:24px}.c5::after{width:74px;height:58px;top:-26px;left:84px}
 @keyframes cloud-drift{from{transform:translateX(0)}to{transform:translateX(3450px)}}
 
-/* ── HILLS ── */
-#hills{position:absolute;top:530px;left:0;width:100%;height:240px;pointer-events:none}
-.hh{position:absolute;bottom:0;border-radius:50%}
-.hh1{width:1100px;height:400px;left:-80px;background:linear-gradient(180deg,#3a7530,#1e3a10)}
-.hh2{width:850px;height:340px;left:580px;background:linear-gradient(180deg,#448030,#244820);opacity:.9}
-.hh3{width:980px;height:360px;left:1700px;background:linear-gradient(180deg,#3c7830,#20400e)}
-.hh4{width:1200px;height:430px;left:2400px;background:linear-gradient(180deg,#367028,#1c3810);opacity:.93}
-.hh5{width:900px;height:320px;left:3800px;background:linear-gradient(180deg,#3e7a30,#224012);opacity:.88}
-.hh6{width:700px;height:290px;left:4400px;background:linear-gradient(180deg,#3a7028,#1e3a10);opacity:.85}
+/* ── MOUNTAINS (Stardew Valley style — 3 layered ranges) ── */
+#hills{position:absolute;top:290px;left:0;width:100%;height:460px;pointer-events:none}
+.mtn{position:absolute;bottom:0;left:0;width:100%;pointer-events:none}
+/* Far mountains — blue/purple atmospheric haze */
+.mtn-far{height:390px;
+  background:linear-gradient(180deg,#3858b8 0%,#2a40a8 35%,#1e3090 100%);
+  clip-path:polygon(0% 100%,0% 55%,3% 42%,6% 52%,9% 30%,12% 46%,16% 20%,20% 38%,23% 50%,26% 24%,30% 42%,33% 16%,37% 36%,40% 50%,43% 28%,46% 44%,49% 14%,52% 34%,55% 48%,58% 26%,61% 44%,64% 20%,68% 40%,71% 52%,74% 30%,77% 46%,80% 18%,84% 38%,87% 52%,90% 34%,93% 48%,96% 26%,99% 44%,100% 52%,100% 100%);
+  opacity:.82}
+/* Mid mountains — dark forest green */
+.mtn-mid{height:318px;
+  background:linear-gradient(180deg,#2a6020 0%,#1a3c10 100%);
+  clip-path:polygon(0% 100%,0% 62%,4% 44%,8% 65%,12% 36%,16% 58%,20% 46%,24% 66%,28% 34%,32% 55%,36% 26%,40% 48%,44% 62%,48% 38%,52% 56%,56% 32%,60% 52%,64% 40%,68% 62%,72% 30%,76% 50%,80% 38%,84% 60%,88% 34%,92% 54%,96% 44%,100% 62%,100% 100%)}
+/* Near hills — bright grass green */
+.mtn-near{height:245px;
+  background:linear-gradient(180deg,#4a8a2a 0%,#2a5018 100%);
+  clip-path:polygon(0% 100%,0% 68%,5% 52%,10% 70%,16% 44%,22% 64%,28% 52%,34% 72%,40% 40%,46% 62%,52% 48%,58% 70%,64% 38%,70% 58%,76% 46%,82% 68%,88% 50%,94% 65%,100% 70%,100% 100%)}
 
 /* ── GROUND ── */
 #ground{position:absolute;top:650px;left:0;width:100%;height:2100px;
@@ -100,41 +107,41 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .rh {
   position: absolute;
   left: 0; right: 0;
-  background: #2a2a2a;
-  outline: 3px solid #000;
+  background:
+    repeating-linear-gradient(90deg,#c8aa60 0,#c8aa60 28px,#b89848 28px,#b89848 32px),
+    repeating-linear-gradient(180deg,transparent 0,transparent 20px,rgba(0,0,0,.06) 20px,rgba(0,0,0,.06) 21px);
+  border-top:2px solid #9a7828;border-bottom:2px solid #9a7828;
   z-index: 3;
   image-rendering: pixelated;
 }
 .rv {
   position: absolute;
-  background: #2a2a2a;
-  outline: 2px solid #000;
+  background:
+    repeating-linear-gradient(180deg,#c8aa60 0,#c8aa60 28px,#b89848 28px,#b89848 32px);
+  border-left:2px solid #9a7828;border-right:2px solid #9a7828;
   z-index: 3;
   image-rendering: pixelated;
 }
-/* Center lane dashes */
+/* Path center marker — earthy */
 .rcl {
   position: absolute;
   left: 0; right: 0;
-  height: 4px;
+  height: 3px;
   background: repeating-linear-gradient(
     90deg,
-    #ffee00 0, #ffee00 24px,
-    transparent 24px, transparent 40px
+    rgba(150,110,30,.4) 0, rgba(150,110,30,.4) 18px,
+    transparent 18px, transparent 34px
   );
   z-index: 4;
   image-rendering: pixelated;
 }
-/* Sidewalk — pixel cobblestone */
+/* Sidewalk — warm stone */
 .swk {
   position: absolute;
-  background: repeating-linear-gradient(
-    90deg, #c8b870 0, #c8b870 14px, #b8a860 14px, #b8a860 15px
-  ),
-  repeating-linear-gradient(
-    180deg, transparent 0, transparent 14px, rgba(0,0,0,.1) 14px, rgba(0,0,0,.1) 15px
-  );
-  outline: 2px solid #000;
+  background:
+    repeating-linear-gradient(90deg,#d4c088 0,#d4c088 14px,#c4ae78 14px,#c4ae78 15px),
+    repeating-linear-gradient(180deg,transparent 0,transparent 14px,rgba(0,0,0,.08) 14px,rgba(0,0,0,.08) 15px);
+  border-top:1px solid #9a7820;
   z-index: 3;
   image-rendering: pixelated;
 }
@@ -152,12 +159,93 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .tree-trunk{width:9px;background:linear-gradient(180deg,#7a5828,#4a3418);border-radius:0 0 2px 2px}
 .tree-crown{border-radius:52% 52% 42% 42%;animation:tsway 3.5s ease-in-out infinite alternate;transform-origin:bottom center}
 @keyframes tsway{from{transform:rotate(-3.5deg)}to{transform:rotate(3.5deg)}}
-.t-sm .tree-trunk{height:18px}.t-sm .tree-crown{width:36px;height:44px;background:radial-gradient(ellipse at 40% 35%,#58cc48,#1b6014)}
-.t-md .tree-trunk{height:26px}.t-md .tree-crown{width:52px;height:64px;background:radial-gradient(ellipse at 40% 35%,#4cbd3e,#1b5a14)}
-.t-lg .tree-trunk{height:36px}.t-lg .tree-crown{width:72px;height:88px;background:radial-gradient(ellipse at 40% 35%,#42b035,#174e10)}
+.t-sm .tree-trunk{height:18px}.t-sm .tree-crown{width:40px;height:50px;background:radial-gradient(ellipse at 38% 33%,#72e040,#20720a)}
+.t-md .tree-trunk{height:26px}.t-md .tree-crown{width:58px;height:72px;background:radial-gradient(ellipse at 38% 33%,#64d838,#1a6608)}
+.t-lg .tree-trunk{height:38px}.t-lg .tree-crown{width:80px;height:98px;background:radial-gradient(ellipse at 38% 33%,#58cc30,#155a06)}
 .t-pine .tree-trunk{height:16px;width:10px}.t-pine .tree-crown{width:0;height:0;border:0;border-left:22px solid transparent;border-right:22px solid transparent;border-bottom:72px solid #1b6022;border-radius:0;background:transparent;filter:drop-shadow(2px 4px 4px rgba(0,0,0,.3))}
 /* shrub */
-.shrub{position:absolute;width:28px;height:20px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#4caf50,#2e7d32);border:2px solid rgba(0,0,0,.15);pointer-events:none;z-index:3}
+.shrub{position:absolute;width:28px;height:20px;border-radius:50%;background:radial-gradient(ellipse at 40% 35%,#56c855,#267828);border:2px solid rgba(0,0,0,.2);pointer-events:none;z-index:3}
+
+/* ── FENCE (Stardew Valley wooden) ── */
+.fence-post{position:absolute;width:9px;height:32px;
+  background:linear-gradient(90deg,#d8b048 0%,#b08828 50%,#d8b048 100%);
+  border-radius:2px 2px 0 0;outline:2px solid rgba(0,0,0,.5);z-index:4;pointer-events:none}
+.fence-post::before{content:'';position:absolute;top:0;left:1px;right:1px;height:6px;
+  background:#e8c860;border-radius:2px 2px 0 0}
+.fence-rail{position:absolute;height:5px;
+  background:linear-gradient(180deg,#d0a838 0%,#a07820 100%);
+  border-radius:1px;outline:1px solid rgba(0,0,0,.3);z-index:4;pointer-events:none}
+
+/* ── ANIMALS ── */
+.animal{position:absolute;pointer-events:none;z-index:8;image-rendering:pixelated}
+
+/* Chicken */
+.chicken{animation:ck-bounce 1s steps(2,end) infinite}
+.ck-wrap{position:relative;display:inline-block}
+.ck-body{width:16px;height:11px;background:#f2eedd;border-radius:2px 5px 3px 2px;
+  outline:2px solid #1a0800;position:relative;display:block}
+.ck-head{width:9px;height:8px;background:#f2eedd;border-radius:4px 4px 3px 2px;
+  outline:2px solid #1a0800;position:absolute;right:-5px;top:-6px}
+.ck-comb{width:9px;height:5px;background:#cc2020;position:absolute;top:-5px;left:-1px;
+  clip-path:polygon(0 100%,15% 10%,35% 65%,55% 10%,75% 65%,100% 10%,100% 100%);
+  outline:1px solid #800000}
+.ck-beak{width:5px;height:3px;background:#d48020;outline:1px solid #1a0800;
+  position:absolute;top:2px;right:-4px;clip-path:polygon(0 0,100% 50%,0 100%)}
+.ck-wattle{width:4px;height:5px;background:#e03030;border-radius:0 0 50% 50%;
+  outline:1px solid #1a0800;position:absolute;bottom:-4px;right:-3px}
+.ck-wing{width:10px;height:7px;background:#ddd8c0;border-radius:3px 4px 4px 2px;
+  outline:1px solid #1a0800;position:absolute;top:1px;left:1px}
+.ck-legs{position:absolute;bottom:-7px;left:3px;display:flex;gap:4px}
+.ck-leg{width:2px;height:7px;background:#d48020;outline:1px solid #1a0800;position:relative}
+.ck-leg::after{content:'';position:absolute;bottom:0;left:-2px;width:6px;height:2px;
+  background:#d48020;outline:1px solid #1a0800;border-radius:0 1px 1px 0}
+@keyframes ck-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+
+/* Dog */
+.dog-sprite{animation:dog-trot 0.6s steps(2,end) infinite}
+.dog-wrap{position:relative;display:inline-block}
+.dog-body{width:22px;height:13px;background:#c46820;border-radius:2px 4px 3px 2px;
+  outline:2px solid #1a0800;position:relative;display:block}
+.dog-head{width:12px;height:10px;background:#c46820;border-radius:3px 4px 3px 2px;
+  outline:2px solid #1a0800;position:absolute;right:-8px;top:-7px}
+.dog-ear{width:6px;height:7px;background:#9a5018;border-radius:1px 3px 3px 1px;
+  outline:2px solid #1a0800;position:absolute;top:-4px;right:1px}
+.dog-eye{width:3px;height:3px;background:#1a0800;border-radius:50%;
+  position:absolute;top:2px;right:2px}
+.dog-eye::after{content:'';width:1px;height:1px;background:rgba(255,255,255,.85);
+  border-radius:50%;position:absolute;top:0;left:0}
+.dog-snout{width:7px;height:4px;background:#d49038;border-radius:2px 2px 3px 3px;
+  outline:2px solid #1a0800;position:absolute;bottom:0;right:-2px}
+.dog-nose{width:3px;height:2px;background:#1a0800;border-radius:1px;
+  position:absolute;top:0;left:2px}
+.dog-tail{width:4px;height:11px;background:#c46820;border-radius:2px;
+  outline:2px solid #1a0800;position:absolute;left:-3px;top:-8px;
+  transform:rotate(-40deg);transform-origin:bottom center;
+  animation:dog-wag 0.55s ease-in-out infinite}
+.dog-legs{position:absolute;bottom:-9px;left:2px;display:flex;gap:4px}
+.dog-leg{width:4px;height:9px;background:#c46820;outline:2px solid #1a0800;
+  border-radius:0 0 2px 2px}
+.dog-leg:nth-child(1),.dog-leg:nth-child(3){animation:dl-a 0.6s steps(2,end) infinite}
+.dog-leg:nth-child(2),.dog-leg:nth-child(4){animation:dl-b 0.6s steps(2,end) infinite}
+@keyframes dog-trot{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes dog-wag{0%,100%{transform:rotate(-40deg)}50%{transform:rotate(-60deg)}}
+@keyframes dl-a{0%,100%{transform:skewX(10deg)}50%{transform:skewX(-10deg)}}
+@keyframes dl-b{0%,100%{transform:skewX(-10deg)}50%{transform:skewX(10deg)}}
+
+/* Crop tiles */
+.crop-patch{position:absolute;pointer-events:none;z-index:3}
+.cp-tilled{position:absolute;width:16px;height:16px;
+  background:repeating-linear-gradient(0deg,#5a3010 0,#5a3010 7px,#7a4820 7px,#7a4820 8px);
+  outline:1px solid rgba(0,0,0,.18)}
+.cp-sprout{position:absolute;width:16px;height:16px;background:#5a3010}
+.cp-sprout::before{content:'';position:absolute;top:2px;left:5px;width:2px;height:10px;background:#44a820;outline:1px solid #1a4a00}
+.cp-sprout::after{content:'';position:absolute;top:2px;left:3px;width:7px;height:5px;background:#58c830;border-radius:50% 50% 0 0;outline:1px solid #1a4a00}
+.cp-grown{position:absolute;width:16px;height:16px;background:#5a3010}
+.cp-grown::before{content:'';position:absolute;top:0;left:4px;width:3px;height:12px;background:#44a820;outline:1px solid #1a4a00}
+.cp-grown::after{content:'';position:absolute;top:-3px;left:2px;width:10px;height:8px;background:#f5c030;border-radius:50%;outline:2px solid #c88000}
+
+/* River shimmer override */
+@keyframes river-ripple{0%,100%{transform:translateX(0);opacity:.6}50%{transform:translateX(12px);opacity:.9}}
 
 /* ── FOUNTAIN ── */
 .fountain{position:absolute;pointer-events:none;z-index:5}
@@ -1153,14 +1241,14 @@ body{transition:background .5s,color .5s}
   image-rendering: pixelated;
   filter: drop-shadow(2px 2px 0 #000);
 }
-.tree8-top3 { width: 48px; height: 24px; background: #5db81e; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); outline: 1px solid #000; }
-.tree8-top2 { width: 38px; height: 20px; background: #4ca818; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); margin-top: -10px; outline: 1px solid #000; }
-.tree8-top1 { width: 28px; height: 16px; background: #3d9812; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); margin-top: -8px; outline: 1px solid #000; }
+.tree8-top3 { width: 52px; height: 26px; background: #62c820; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); outline: 1px solid #000; }
+.tree8-top2 { width: 40px; height: 22px; background: #50b818; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); margin-top: -11px; outline: 1px solid #000; }
+.tree8-top1 { width: 28px; height: 17px; background: #3ea810; clip-path: polygon(0% 100%, 50% 0%, 100% 100%); margin-top: -9px; outline: 1px solid #000; }
 .tree8-trunk { width: 10px; height: 14px; background: #6b3a10; outline: 1px solid #000; }
 
 /* Round deciduous tree variant */
 .tree8r { position: absolute; display: flex; flex-direction:column; align-items:center; pointer-events:none; z-index:4; image-rendering:pixelated; filter:drop-shadow(2px 2px 0 #000); }
-.tree8r-top { width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle at 38% 36%, #6acc22, #3a8010); outline: 2px solid #000; }
+.tree8r-top { width: 50px; height: 50px; border-radius: 50%; background: radial-gradient(circle at 36% 34%, #80e028, #2e8008); outline: 2px solid #000; }
 .tree8r-trunk { width: 10px; height: 12px; background: #6b3a10; outline: 1px solid #000; margin-top: -2px; }
 
 /* ── CRT SCANLINE OVERLAY ── */
@@ -1278,8 +1366,9 @@ body{transition:background .5s,color .5s}
       <div class="cloud c3"></div><div class="cloud c4"></div><div class="cloud c5"></div>
     </div>
     <div id="hills">
-      <div class="hh hh1"></div><div class="hh hh2"></div>
-      <div class="hh hh3"></div><div class="hh hh4"></div>
+      <div class="mtn mtn-far"></div>
+      <div class="mtn mtn-mid"></div>
+      <div class="mtn mtn-near"></div>
     </div>
     <div id="ground"></div>
     <div id="roads"></div>
@@ -1971,7 +2060,7 @@ function drawTerrain() {
 
   // -- Grass base tiles (checkerboard variation) --
   const T = 32; // tile size
-  const grassPal = ['#5a9e1a','#52901a','#62aa1c','#4e8c14','#58a018'];
+  const grassPal = ['#4ead18','#56bc1c','#62cc20','#46a012','#5ab818','#42940e'];
   for (let y = 0; y < H; y += T) {
     for (let x = 0; x < W; x += T) {
       const idx = ((Math.floor(x/T)*3 + Math.floor(y/T)*7) ^ (Math.floor(x/T)+Math.floor(y/T))) % grassPal.length;
