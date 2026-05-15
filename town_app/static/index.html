@@ -347,50 +347,78 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 #walker-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:40}
 .walker{position:absolute;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:41;
   transition:left 1.35s cubic-bezier(.4,0,.2,1),top 1.35s cubic-bezier(.4,0,.2,1)}
-/* Figure wrapper — receives the bob animation so shadow stays on ground */
 .w-figure{display:flex;flex-direction:column;align-items:center}
-/* Shadow stays OUTSIDE .w-figure so it doesn't bob with the body */
-.w-shadow{width:20px;height:5px;background:rgba(0,0,0,.26);border-radius:50%;margin-top:0px;flex-shrink:0}
+/* Shadow stays outside .w-figure */
+.w-shadow{width:26px;height:6px;background:rgba(0,0,0,.28);border-radius:50%;margin-top:1px;flex-shrink:0}
+/* Hair */
+.w-hair{width:26px;height:13px;border-radius:50% 50% 30% 30%;margin-bottom:-4px;flex-shrink:0;
+  border:1.5px solid rgba(0,0,0,.3);position:relative;z-index:2}
 /* Head */
-.w-head{width:16px;height:16px;border-radius:50%;border:2.5px solid rgba(0,0,0,.32);
-  box-shadow:0 2px 5px rgba(0,0,0,.35);position:relative;flex-shrink:0}
-.w-head::before{content:'';position:absolute;top:3px;left:3px;width:5px;height:5px;background:rgba(0,0,0,.22);border-radius:50%}
+.w-head{width:22px;height:22px;border-radius:50%;border:2px solid rgba(0,0,0,.28);
+  box-shadow:inset -2px -2px 4px rgba(0,0,0,.2),inset 2px 2px 4px rgba(255,255,255,.35),0 2px 5px rgba(0,0,0,.35);
+  position:relative;flex-shrink:0;z-index:1;overflow:visible}
+/* Eyes */
+.w-eye{position:absolute;width:4px;height:4px;border-radius:50%;background:#1a1a1a;top:7px}
+.w-eye-l{left:4px}
+.w-eye-r{right:4px}
+/* Eye shine */
+.w-eye::after{content:'';position:absolute;width:1.5px;height:1.5px;border-radius:50%;background:rgba(255,255,255,.9);top:0;left:0}
+/* Smile */
+.w-mouth{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
+  width:9px;height:4px;border-radius:0 0 5px 5px;border-bottom:2px solid rgba(100,40,40,.7);border-left:1.5px solid transparent;border-right:1.5px solid transparent}
+/* Blush */
+.w-head::after{content:'';position:absolute;bottom:6px;left:0;right:0;
+  background:linear-gradient(90deg,transparent 10%,rgba(255,120,120,.18) 25%,transparent 40%,transparent 60%,rgba(255,120,120,.18) 75%,transparent 90%);
+  height:6px;pointer-events:none}
 /* Neck */
-.w-neck{width:5px;height:3px;background:rgba(0,0,0,.18);margin-top:-1px;flex-shrink:0}
-/* Upper body row: left arm + torso + right arm */
+.w-neck{width:7px;height:4px;background:rgba(0,0,0,.15);margin-top:-1px;flex-shrink:0}
+/* Upper body */
 .w-upper{display:flex;align-items:flex-start;gap:0;margin-top:0}
-.w-torso{width:13px;height:16px;border-radius:3px 3px 2px 2px;border:2px solid rgba(0,0,0,.26);flex-shrink:0}
-.w-arm{width:4px;height:13px;border-radius:2px;background:#555;border:1px solid rgba(0,0,0,.28);
-  transform-origin:top center;flex-shrink:0;margin-top:1px}
-/* Legs */
-.w-legs{display:flex;gap:2px;margin-top:-1px}
-.w-leg{width:5px;height:11px;border-radius:0 0 2px 2px;background:#3a3a3a;
-  border:1px solid rgba(0,0,0,.3);transform-origin:top center;position:relative;flex-shrink:0}
-/* Shoe/foot */
-.w-leg::after{content:'';position:absolute;bottom:-3px;left:-1px;width:7px;height:3px;
-  background:#222;border-radius:1px 2px 2px 1px}
+/* Shirt/torso */
+.w-torso{width:16px;height:20px;border-radius:3px 3px 2px 2px;border:2px solid rgba(0,0,0,.28);flex-shrink:0;position:relative;
+  box-shadow:inset -2px 0 4px rgba(0,0,0,.2),inset 2px 0 3px rgba(255,255,255,.2)}
+/* Collar */
+.w-torso::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:5px solid rgba(255,255,255,.3)}
+/* Arms */
+.w-arm{width:5px;height:16px;border-radius:3px;border:1.5px solid rgba(0,0,0,.3);
+  transform-origin:top center;flex-shrink:0;margin-top:2px;
+  box-shadow:inset 1px 0 2px rgba(255,255,255,.2)}
+/* Pants/legs */
+.w-legs{display:flex;gap:2px;margin-top:1px}
+.w-leg{width:7px;height:14px;border-radius:0 0 3px 3px;
+  border:1.5px solid rgba(0,0,0,.32);transform-origin:top center;position:relative;flex-shrink:0;
+  box-shadow:inset 1px 0 3px rgba(255,255,255,.15)}
+/* Belt */
+.w-leg:nth-child(1)::before,.w-leg:nth-child(2)::before{content:'';position:absolute;top:-3px;left:-1.5px;right:-1.5px;height:3px;
+  background:rgba(0,0,0,.4);border-radius:1px}
+/* Shoe */
+.w-leg::after{content:'';position:absolute;bottom:-4px;left:-2px;width:11px;height:4px;
+  background:linear-gradient(180deg,#333,#1a1a1a);border-radius:2px 3px 2px 1px;
+  box-shadow:0 1px 2px rgba(0,0,0,.5)}
 
-/* ── WALKING (ground contact, no floating) ── */
+/* Walking animation */
 @keyframes w-bob{
   0%  {transform:translateY(0)}
-  20% {transform:translateY(-3px)}   /* push-off */
-  50% {transform:translateY(1px)}    /* foot-strike compression */
-  70% {transform:translateY(-3px)}   /* push-off other side */
+  20% {transform:translateY(-4px)}
+  50% {transform:translateY(1px)}
+  70% {transform:translateY(-4px)}
   100%{transform:translateY(0)}
 }
 @keyframes w-step{
-  0%  {transform:rotate(-26deg)}
-  50% {transform:rotate(26deg)}
-  100%{transform:rotate(-26deg)}
+  0%  {transform:rotate(-28deg)}
+  50% {transform:rotate(28deg)}
+  100%{transform:rotate(-28deg)}
 }
 @keyframes w-arm-swing{
-  0%  {transform:rotate(20deg)}
-  50% {transform:rotate(-20deg)}
-  100%{transform:rotate(20deg)}
+  0%  {transform:rotate(22deg)}
+  50% {transform:rotate(-22deg)}
+  100%{transform:rotate(22deg)}
 }
 @keyframes w-shadow-walk{
-  0%,100%{transform:scaleX(1);opacity:.26}
-  50%    {transform:scaleX(.82);opacity:.16}
+  0%,100%{transform:scaleX(1);opacity:.28}
+  50%    {transform:scaleX(.8);opacity:.14}
 }
 .walker.walking .w-figure{animation:w-bob .44s ease-in-out infinite}
 .walker.walking .w-leg:nth-child(1){animation:w-step .44s ease-in-out infinite}
@@ -399,38 +427,38 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .walker.walking .w-arm:nth-child(3){animation:w-arm-swing .44s ease-in-out infinite}
 .walker.walking .w-shadow{animation:w-shadow-walk .44s ease-in-out infinite}
 
-/* ── RUNNING ── */
+/* Running */
 @keyframes w-run{
-  0%  {transform:rotate(-40deg)}
-  50% {transform:rotate(40deg)}
-  100%{transform:rotate(-40deg)}
+  0%  {transform:rotate(-42deg)}
+  50% {transform:rotate(42deg)}
+  100%{transform:rotate(-42deg)}
 }
 @keyframes w-run-bob{
   0%  {transform:translateY(0)}
-  25% {transform:translateY(-6px)}
+  25% {transform:translateY(-7px)}
   50% {transform:translateY(0)}
-  75% {transform:translateY(-6px)}
+  75% {transform:translateY(-7px)}
   100%{transform:translateY(0)}
 }
 @keyframes w-run-arm{
-  0%  {transform:rotate(35deg)}
-  50% {transform:rotate(-35deg)}
-  100%{transform:rotate(35deg)}
+  0%  {transform:rotate(38deg)}
+  50% {transform:rotate(-38deg)}
+  100%{transform:rotate(38deg)}
 }
-.walker.running .w-figure{animation:w-run-bob .26s ease-in-out infinite}
+.walker.running .w-figure{animation:w-run-bob .26s ease-in-out infinite;transform-origin:bottom center}
 .walker.running .w-leg:nth-child(1){animation:w-run .26s ease-in-out infinite}
 .walker.running .w-leg:nth-child(2){animation:w-run .26s ease-in-out infinite reverse}
 .walker.running .w-arm:nth-child(1){animation:w-run-arm .26s ease-in-out infinite reverse}
 .walker.running .w-arm:nth-child(3){animation:w-run-arm .26s ease-in-out infinite}
 .walker.running .w-shadow{animation:w-shadow-walk .26s ease-in-out infinite}
-/* Lean forward while running */
-.walker.running .w-figure{transform-origin:bottom center}
 
-/* Working (at desk) */
+/* Working */
 .walker.working{animation:wbob .55s ease-in-out infinite alternate}
 @keyframes wbob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
-.walker-label{font-size:.44rem;font-weight:700;margin-top:3px;white-space:nowrap;
-  background:rgba(0,0,0,.7);padding:1px 5px;border-radius:3px;color:#fff;border:1px solid rgba(255,255,255,.1)}
+
+.walker-label{font-size:.44rem;font-weight:700;margin-top:4px;white-space:nowrap;
+  background:rgba(0,0,0,.75);padding:2px 6px;border-radius:4px;color:#fff;
+  border:1px solid rgba(255,255,255,.15);letter-spacing:.03em}
 
 /* ── ZOOM HUD ── */
 #zoom-hud{position:absolute;bottom:14px;left:14px;display:flex;align-items:center;gap:5px;
@@ -1333,7 +1361,7 @@ function mkBuilding(a){
   el.className='bld'+(isCeo?' bld-ceo':isHall?' bld-hall':'');
   el.style.cssText=`left:${a.x}px;top:${a.y}px;--bw:${a.w}px;--bh:${a.h}px;--rc:${a.roof};--wc:${a.wall}`;
   const rw=a.w+(isCeo?0:22);
-  const winsHtml=Array(a.wins||2).fill('<div class="bwin"></div>').join('');
+  const winsHtml=Array(a.wins||2).fill(0).map(()=>`<div class="bwin-wrap"><div class="bshutter" style="background-color:color-mix(in srgb,${a.roof} 65%,#000)"></div><div class="bwin"></div><div class="bshutter" style="background-color:color-mix(in srgb,${a.roof} 65%,#000)"></div></div>`).join('');
   const scrCls = SCREEN_COLORS[a.key]||'scr-blue';
   const extras = INTERIOR_EXTRAS[a.key]||'<div class="bi-bookcase" style="width:14px"></div>';
 
@@ -1370,13 +1398,22 @@ function mkBuilding(a){
     ${hallExtras}
     <div class="bub" id="bub-${a.key}"></div>
     <div class="broof" style="width:${rw}px"></div>
+    <div class="beave" style="width:${rw+8}px"></div>
     <div class="bbody">
       ${hallBody}
       <div class="bsign">${a.icon} ${a.display}</div>
       <div class="bwins">${winsHtml}</div>
+      <div class="bwinbox" style="width:${Math.min((a.wins||2)*38,a.w-16)}px"></div>
       ${interior}
-      <div class="bdoor"></div>
+      <div class="bdoor-wrap">
+        <div class="bdoor">
+          <div class="bdoor-knob"></div>
+        </div>
+        <div class="bstoop"></div>
+        <div class="bstoop2"></div>
+      </div>
       ${a.chimney?'<div class="bchim"></div>':''}
+      <div class="bfound"></div>
     </div>
     <div class="bbadge" id="bdg-${a.key}">${isHall?'📋 view board':'idle'}</div>
     <div class="blabel">${a.display}</div>`;
@@ -1843,22 +1880,55 @@ function tickIdle(){
 setTimeout(tickIdle,5000);
 
 // ── WALKER SYSTEM ───────────────────────────────────────────────────────────
-function mkWalker(key,color,run=false){
+const WALKER_LOOKS = {
+  ceo:      {skin:'#FDBCB4',hair:'#2C1810',shirt:'#3F1DCB',pants:'#1a1a2e'},
+  brand:    {skin:'#F5CBA7',hair:'#C0392B',shirt:'#E91E8C',pants:'#4a0030'},
+  art:      {skin:'#E8D5C4',hair:'#8E44AD',shirt:'#7B1FA2',pants:'#311b52'},
+  qc:       {skin:'#AED6F1',hair:'#1A5276',shirt:'#1565C0',pants:'#0d2137'},
+  listing:  {skin:'#FDEBD0',hair:'#784212',shirt:'#E65100',pants:'#3e1400'},
+  store:    {skin:'#A9DFBF',hair:'#145A32',shirt:'#2E7D32',pants:'#1b3a1d'},
+  delivery: {skin:'#A2D9CE',hair:'#0E6655',shirt:'#00838F',pants:'#004d57'},
+  sales:    {skin:'#F5B7B1',hair:'#922B21',shirt:'#B71C1C',pants:'#3b0707'},
+  product:  {skin:'#D2B4DE',hair:'#4A235A',shirt:'#4527A0',pants:'#1a0a3a'},
+  marketing:{skin:'#FDEBD0',hair:'#6D4C41',shirt:'#E65100',pants:'#3e1400'},
+  analytics:{skin:'#BBDEFB',hair:'#1A3A7E',shirt:'#1A237E',pants:'#0d1840'},
+  cs:       {skin:'#B2DFDB',hair:'#00695C',shirt:'#004D40',pants:'#001a14'},
+  social:   {skin:'#F8BBD9',hair:'#6D1935',shirt:'#880E4F',pants:'#2d0018'},
+  finance:  {skin:'#FAD7A0',hair:'#7D6608',shirt:'#F57F17',pants:'#4a3800'},
+  print:    {skin:'#CFD8DC',hair:'#263238',shirt:'#37474F',pants:'#1a2027'},
+  ads:      {skin:'#FDEBD0',hair:'#5D4037',shirt:'#BF360C',pants:'#3d1000'},
+  intel:    {skin:'#C8E6C9',hair:'#1B5E20',shirt:'#1B5E20',pants:'#0a2410'},
+  promos:   {skin:'#FFF9C4',hair:'#F57F17',shirt:'#FF8F00',pants:'#4a3000'},
+  tax:      {skin:'#F5F5F5',hair:'#212121',shirt:'#424242',pants:'#1a1a1a'},
+  returns:  {skin:'#FFCDD2',hair:'#B71C1C',shirt:'#C62828',pants:'#3d0808'},
+  supply:   {skin:'#D7CCC8',hair:'#4E342E',shirt:'#4E342E',pants:'#1a100d'},
+  email:    {skin:'#B3E5FC',hair:'#01579B',shirt:'#0277BD',pants:'#01334d'},
+  abt:      {skin:'#B2DFDB',hair:'#004D40',shirt:'#00695C',pants:'#00261e'},
+  api:      {skin:'#BBDEFB',hair:'#0D47A1',shirt:'#0D47A1',pants:'#061428'},
+  hall:     {skin:'#FFE0B2',hair:'#4E342E',shirt:'#795548',pants:'#3e2723'},
+};
+
+function mkWalker(key,_color,run=false){
   const w=document.createElement('div');
   w.className='walker '+(run?'running':'walking'); w.id=`walker-${key}`;
-  // Skin tone: slightly lighter than roof color for face highlight
+  const lk=WALKER_LOOKS[key]||{skin:'#FDBCB4',hair:'#333',shirt:'#58a6ff',pants:'#1a1a2e'};
   w.innerHTML=`
     <div class="w-figure">
-      <div class="w-head" style="background:${color}"></div>
-      <div class="w-neck" style="background:${color}cc"></div>
+      <div class="w-hair" style="background:${lk.hair}"></div>
+      <div class="w-head" style="background:${lk.skin}">
+        <div class="w-eye w-eye-l"></div>
+        <div class="w-eye w-eye-r"></div>
+        <div class="w-mouth"></div>
+      </div>
+      <div class="w-neck" style="background:color-mix(in srgb,${lk.skin} 80%,#000)"></div>
       <div class="w-upper">
-        <div class="w-arm" style="background:${color}dd"></div>
-        <div class="w-torso" style="background:${color}"></div>
-        <div class="w-arm" style="background:${color}dd"></div>
+        <div class="w-arm" style="background:${lk.skin}"></div>
+        <div class="w-torso" style="background:${lk.shirt}"></div>
+        <div class="w-arm" style="background:${lk.skin}"></div>
       </div>
       <div class="w-legs">
-        <div class="w-leg" style="background:${color}88"></div>
-        <div class="w-leg" style="background:${color}88"></div>
+        <div class="w-leg" style="background:${lk.pants}"></div>
+        <div class="w-leg" style="background:${lk.pants}"></div>
       </div>
     </div>
     <div class="w-shadow"></div>
