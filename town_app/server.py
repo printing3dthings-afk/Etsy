@@ -33,8 +33,10 @@ from fastapi.staticfiles import StaticFiles
 STATIC_DIR   = Path(__file__).parent / "static"
 DATA_DIR     = Path(__file__).parent.parent / "data"
 REPO_ROOT    = Path(__file__).parent.parent
-HISTORY_FILE = DATA_DIR / "task_history.json"
-SCHEDULE_FILE= DATA_DIR / "schedule.json"
+HISTORY_FILE       = DATA_DIR / "task_history.json"
+AGENT_STATES_FILE  = DATA_DIR / "agent_states.json"
+SESSION_LOG_FILE   = DATA_DIR / "session_log.json"
+SCHEDULE_FILE      = DATA_DIR / "schedule.json"
 REFS_DIR     = DATA_DIR / "design_references"
 REFS_META    = DATA_DIR / "design_refs_meta.json"
 IDEAS_FILE          = DATA_DIR / "ideas.json"
@@ -186,6 +188,44 @@ def _save_history_entry(entry: dict):
         history.insert(0, entry)
         history = history[:500]          # cap at 500 entries
         HISTORY_FILE.write_text(json.dumps(history, indent=2))
+
+# ── Agent state persistence ────────────────────────────────────────────────────
+
+_states_lock = threading.Lock()
+
+def _load_agent_states() -> dict:
+    try:
+        if AGENT_STATES_FILE.exists():
+            return json.loads(AGENT_STATES_FILE.read_text())
+    except Exception:
+        pass
+    return {}
+
+def _persist_agent_states():
+    with _states_lock:
+        try:
+            AGENT_STATES_FILE.write_text(json.dumps(agent_states, indent=2))
+        except Exception:
+            pass
+
+# ── Session log (survives restarts) ───────────────────────────────────────────
+
+_session_log_lock = threading.Lock()
+
+def _append_session_log(entry: dict):
+    with _session_log_lock:
+        try:
+            log = []
+            if SESSION_LOG_FILE.exists():
+                try:
+                    log = json.loads(SESSION_LOG_FILE.read_text())
+                except Exception:
+                    log = []
+            log.append(entry)
+            log = log[-2000:]        # keep last 2000 events
+            SESSION_LOG_FILE.write_text(json.dumps(log))
+        except Exception:
+            pass
 
 # ── Task queue ─────────────────────────────────────────────────────────────────
 # CEO and pipeline tasks queue sequentially so they don't race each other.
@@ -444,6 +484,7 @@ def _check_stalled_agents():
                     "task": state.get("task", ""),
                     "error": f"Timed out after {mins} minutes",
                 }
+                _persist_agent_states()
                 _add_notification("agent_timeout", f"{key.upper()} timed out", f"Reset after {mins} min — task may be too complex or API unresponsive", "⚠️")
                 try:
                     asyncio.run_coroutine_threadsafe(
@@ -528,12 +569,22 @@ def _register_job(s: dict):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _event_loop
+    global _event_loop, agent_states
     _event_loop = asyncio.get_running_loop()
+    # Restore last known agent states from disk
+    saved = _load_agent_states()
+    if saved:
+        # Mark any previously-running agents as interrupted so they show correctly
+        for k, v in saved.items():
+            if isinstance(v, dict) and v.get("status") == "running":
+                v["status"] = "idle"
+                v["last_result"] = "(interrupted by restart)"
+        agent_states.update(saved)
     _start_scheduler()
     yield
     if _scheduler:
         _scheduler.shutdown(wait=False)
+    _persist_agent_states()
 
 
 app = FastAPI(title="OnBrandCraftz Town", lifespan=lifespan)
@@ -606,15 +657,22 @@ DELEGATION_MAP: dict[str, str] = {
 def _emit(agent_key: str, event: str, message: str, extra: dict | None = None):
     if _event_loop is None or _event_loop.is_closed():
         return
+    now = datetime.now()
     payload = {
         "type":    "agent_event",
         "agent":   agent_key,
         "event":   event,
         "message": message,
-        "ts":      datetime.now().strftime("%H:%M:%S"),
+        "ts":      now.strftime("%H:%M:%S"),
         "data":    extra or {},
     }
     asyncio.run_coroutine_threadsafe(manager.broadcast(payload), _event_loop)
+    _append_session_log({
+        "agent":   agent_key,
+        "event":   event,
+        "message": message,
+        "ts":      now.isoformat(),
+    })
 
 # ── Agent factory ──────────────────────────────────────────────────────────────
 
@@ -707,9 +765,10 @@ def _run_sub_agent_observable(target_key: str, task: str) -> str:
     if target_key in PIPELINE_STAGES:
         _pipeline_step(target_key)
 
-    agent_states[target_key] = {"status": "running", "task": task, "started": datetime.now().isoformat()}
-    _emit(target_key, "start", task[:80])
     started = datetime.now()
+    agent_states[target_key] = {"status": "running", "task": task, "started": started.isoformat()}
+    _persist_agent_states()
+    _emit(target_key, "start", task[:80])
     try:
         sub = _build_agent(target_key)
         if sub is None:
@@ -718,6 +777,7 @@ def _run_sub_agent_observable(target_key: str, task: str) -> str:
         result = sub.run(task)
         duration = round((datetime.now() - started).total_seconds())
         agent_states[target_key] = {"status": "idle", "task": task, "last_result": result}
+        _persist_agent_states()
         _emit(target_key, "done", "Complete ✓", {"result": result[:2000]})
         _fire_chains(target_key, "done")
         if target_key in PIPELINE_STAGES:
@@ -731,6 +791,7 @@ def _run_sub_agent_observable(target_key: str, task: str) -> str:
     except Exception as exc:
         duration = round((datetime.now() - started).total_seconds())
         agent_states[target_key] = {"status": "error", "task": task, "error": str(exc)}
+        _persist_agent_states()
         _emit(target_key, "error", f"Error: {str(exc)[:200]}")
         _save_history_entry({
             "agent": target_key, "task": task[:200], "status": "error",
@@ -810,6 +871,7 @@ def _run_task(key: str, task: str):
 
     started = datetime.now()
     agent_states[key] = {"status": "running", "task": task, "started": started.isoformat()}
+    _persist_agent_states()
     _emit(key, "start", task[:80])
     try:
         agent = _build_agent(key)
@@ -819,6 +881,7 @@ def _run_task(key: str, task: str):
         result = agent.run(task)
         duration = round((datetime.now() - started).total_seconds())
         agent_states[key] = {"status": "idle", "task": task, "last_result": result}
+        _persist_agent_states()
         _emit(key, "done", "Complete ✓", {"result": result[:2000]})
         _fire_chains(key, "done")
         if key in {"listing", "qc", "sales", "delivery", "ceo"}:
@@ -832,6 +895,7 @@ def _run_task(key: str, task: str):
     except Exception as exc:
         duration = round((datetime.now() - started).total_seconds())
         agent_states[key] = {"status": "error", "task": task, "error": str(exc)}
+        _persist_agent_states()
         _emit(key, "error", f"Error: {str(exc)[:300]}")
         _save_history_entry({
             "agent": key, "task": task[:200], "status": "error",
@@ -891,6 +955,17 @@ async def favicon():
 @app.get("/api/agents")
 async def list_agents():
     return JSONResponse({"agents": list(AGENT_CLASSES.keys()), "states": agent_states})
+
+
+@app.get("/api/session-log")
+async def get_session_log(limit: int = 200):
+    try:
+        if SESSION_LOG_FILE.exists():
+            log = json.loads(SESSION_LOG_FILE.read_text())
+            return JSONResponse({"log": log[-limit:], "total": len(log)})
+    except Exception:
+        pass
+    return JSONResponse({"log": [], "total": 0})
 
 
 @app.get("/api/config")
