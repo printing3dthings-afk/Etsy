@@ -518,18 +518,24 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   overflow: hidden;
   image-rendering: pixelated;
 }
-/* Horizontal siding — bold pixel lines */
+/* Brick pattern — horizontal mortar lines + offset vertical joints */
 .bbody::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: repeating-linear-gradient(
-    180deg,
-    transparent 0, transparent 11px,
-    rgba(0,0,0,.12) 11px, rgba(0,0,0,.12) 12px
-  );
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px, transparent 11px,
+      rgba(0,0,0,.18) 11px, rgba(0,0,0,.18) 12px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px, transparent 23px,
+      rgba(0,0,0,.12) 23px, rgba(0,0,0,.12) 24px
+    );
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 /* Corner pixel trim — dark 4px strips on edges */
 .bbody::after {
@@ -540,7 +546,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
     linear-gradient(90deg, rgba(0,0,0,.25) 0, rgba(0,0,0,.25) 4px, transparent 4px,
       transparent calc(100% - 4px), rgba(0,0,0,.2) calc(100% - 4px), rgba(0,0,0,.2) 100%);
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
 /* Foundation */
@@ -564,20 +570,29 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   top: 0;
   left: 0;
   right: 0;
-  height: 26px;
-  padding: 5px 6px 4px;
-  font-size: .28rem;
-  border-bottom: 2px solid #d4a030;
-  outline: 1px solid rgba(0,0,0,.4);
+  z-index: 4;
+  font-family: 'Press Start 2P', monospace;
+  font-size: .3rem;
+  color: #f0e8d0;
+  background: linear-gradient(180deg, #3a2a10, #2a1c08);
+  border-bottom: 2px solid #7a5a20;
+  border-left: 2px solid #7a5a20;
+  border-right: 2px solid #7a5a20;
+  outline: 1px solid #000;
+  padding: 3px 8px 3px 6px;
   text-align: center;
+  white-space: nowrap;
+  letter-spacing: .04em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 2px 2px 0 #000;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  z-index: 4;
-  background: #2a1800;
-  color: #f0d060;
-  font-family: 'Press Start 2P', monospace;
-  line-height: 1.3;
+}
+.bsign::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-bottom: 1px solid rgba(200,160,80,.3);
+  pointer-events: none;
 }
 
 /* ── WINDOWS ──────────────────────────────────────── */
@@ -655,6 +670,8 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   outline: 2px solid #000;
   box-shadow: 1px 2px 0 rgba(0,0,0,.4);
 }
+/* Window sill overhang shadow */
+.bwin-wrap::before { content:''; position:absolute; bottom:-4px; left:-3px; right:-3px; height:4px; background:rgba(0,0,0,.5); z-index:10; border-radius:0 0 2px 2px; }
 /* Window glow when running */
 @keyframes wlit {
   from { background: #88d8f8; box-shadow: inset 2px 2px 0 rgba(255,255,255,.7); }
@@ -1709,6 +1726,17 @@ body{transition:background .5s,color .5s}
   background:repeating-linear-gradient(180deg,#7a4020 0,#7a4020 4px,#5a2a10 4px,#5a2a10 5px);
   border:2px solid #3a1800;border-radius:2px 2px 0 0
 }
+/* Staff roster board inside Meeting Hall */
+.hall-roster { position:absolute; left:6px; top:8px; width:calc(100% - 12px); background:rgba(30,18,6,.92); border:2px solid #8a6020; border-radius:2px; overflow:hidden; max-height:78%; z-index:10; }
+.hall-roster-title { font-family:'Press Start 2P',monospace; font-size:.22rem; color:#f0d060; text-align:center; padding:3px 4px; background:#3a2400; border-bottom:1px solid #6a4810; letter-spacing:.06em; }
+.hall-roster-scroll { overflow-y:auto; max-height:120px; }
+.hall-roster-scroll::-webkit-scrollbar { width:3px; }
+.hall-roster-scroll::-webkit-scrollbar-thumb { background:#6a4810; }
+.hall-roster-entry { display:grid; grid-template-columns:14px 1fr 1fr; align-items:center; padding:1px 4px; border-bottom:1px solid rgba(138,96,32,.25); font-family:'Press Start 2P',monospace; }
+.hall-roster-entry:last-child { border-bottom:none; }
+.hr-icon { font-size:.5rem; }
+.hr-name { font-size:.19rem; color:#f0d898; letter-spacing:.02em; }
+.hr-title { font-size:.18rem; color:#a08840; text-align:right; }
 @keyframes fire-flicker {
   from{transform:translateX(-50%) scale(1)}
   to{transform:translateX(-50%) scale(1.14) rotate(2deg)}
@@ -2389,6 +2417,39 @@ function mkBuilding(a){
            <div class="hall-chair-head" style="right:-9px;top:50%;transform:translateY(-50%)"></div>
          </div>
          <div class="hall-fireplace-r"></div>
+         <div class="hall-roster" id="hall-roster-board">
+           <div class="hall-roster-title">STAFF DIRECTORY</div>
+           <div class="hall-roster-scroll">
+             <div class="hall-roster-entry"><span class="hr-icon">🏛️</span><span class="hr-name">Victor</span><span class="hr-title">CEO</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🎨</span><span class="hr-name">Luna</span><span class="hr-title">Brand Design</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🖼️</span><span class="hr-name">Aria</span><span class="hr-title">Art Creation</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📋</span><span class="hr-name">Sage</span><span class="hr-title">Planner Studio</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🔍</span><span class="hr-name">Marcus</span><span class="hr-title">Quality Check</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🏬</span><span class="hr-name">Sam</span><span class="hr-title">Store Manager</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📈</span><span class="hr-name">Chase</span><span class="hr-title">Marketing</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📊</span><span class="hr-name">Nova</span><span class="hr-title">Analytics</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">💰</span><span class="hr-name">Rex</span><span class="hr-title">Sales</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">💵</span><span class="hr-name">Sterling</span><span class="hr-title">Finance</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📦</span><span class="hr-name">Violet</span><span class="hr-title">Product</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🖨️</span><span class="hr-name">Gus</span><span class="hr-title">Print Prod.</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">💬</span><span class="hr-name">Jade</span><span class="hr-title">Customer Svc</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📌</span><span class="hr-name">Blossom</span><span class="hr-title">Social Media</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">↩️</span><span class="hr-name">Rosie</span><span class="hr-title">Returns</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🏪</span><span class="hr-name">Penny</span><span class="hr-title">Etsy Listing</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📧</span><span class="hr-name">Dex</span><span class="hr-title">Sales Processor</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📬</span><span class="hr-name">Beau</span><span class="hr-title">Email Mktg</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🔭</span><span class="hr-name">Scout</span><span class="hr-title">Comp. Intel</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🧪</span><span class="hr-name">Theo</span><span class="hr-title">A/B Testing</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📣</span><span class="hr-name">Sparky</span><span class="hr-title">Etsy Ads</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🏷️</span><span class="hr-name">Goldie</span><span class="hr-title">Promotions</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">📋</span><span class="hr-name">Irving</span><span class="hr-title">Tax Compliance</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">💎</span><span class="hr-name">Emerald</span><span class="hr-title">Retention</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">⛏️</span><span class="hr-name">Bruno</span><span class="hr-title">Supply Chain</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🔌</span><span class="hr-name">Byte</span><span class="hr-title">API Connections</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">🔮</span><span class="hr-name">Mystic</span><span class="hr-title">Trend Lab</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">⚙️</span><span class="hr-name">Otto</span><span class="hr-title">Ops Center</span></div>
+           </div>
+         </div>
          <div class="bi-floor"></div>
        </div>`
     : isShop
@@ -3035,12 +3096,13 @@ window.addEventListener('resize',()=>{ setTimeout(()=>{ calcPositions(); reposit
 
 // ── RESIDENTS (always-visible figures) ───────────────────────────────────────
 function mkResident(a){
-  const lk=WALKER_LOOKS[a.key]||{skin:'#e8c0a0',hair:'#333',hat:'#555',shirt:'#58a6ff',pants:'#2a2a3e',boot:'#2a1808'};
+  const lk=WALKER_LOOKS[a.key]||{skin:'#e8c0a0',hair:'#333',hat:'#555',hatClass:'',shirt:'#58a6ff',pants:'#2a2a3e',boot:'#2a1808',accent:'#fff',extra:''};
   const hatC=lk.hat||lk.hair;
   const bootC=lk.boot||'#2a1808';
   const d=document.createElement('div');
   d.className='resident idle'; d.id=`res-${a.key}`;
   d.style.setProperty('--rboot', bootC);
+  if(lk.accent) d.style.setProperty('--waccent', lk.accent);
   d.innerHTML=`
     <div class="r-hat" style="background:${hatC}"></div>
     <div class="r-hair" style="background:${lk.hair}"></div>
@@ -3053,7 +3115,7 @@ function mkResident(a){
     <div class="r-neck" style="background:color-mix(in srgb,${lk.skin} 80%,#000)"></div>
     <div class="r-upper">
       <div class="r-arm" style="background:${lk.skin}"></div>
-      <div class="r-torso" style="background:${lk.shirt}"></div>
+      <div class="r-torso" style="background:${lk.shirt}">${lk.extra||''}</div>
       <div class="r-arm" style="background:${lk.skin}"></div>
     </div>
     <div class="r-legs">
@@ -3390,46 +3452,54 @@ setTimeout(tickIdle,5000);
 
 // ── WALKER SYSTEM ───────────────────────────────────────────────────────────
 const WALKER_LOOKS = {
-  ceo:      {skin:'#e8c8a0',hair:'#2C1810',hat:'#1a1040',shirt:'#f0f0f0',pants:'#1a2040',boot:'#2a1808'},
-  brand:    {skin:'#f0c0a0',hair:'#b03018',hat:'#9a2820',shirt:'#e04878',pants:'#3c1040',boot:'#2a1010'},
-  art:      {skin:'#e8c0b0',hair:'#7828a8',hat:'#6b3090',shirt:'#c060c0',pants:'#301850',boot:'#201010'},
-  qc:       {skin:'#d8c0a8',hair:'#3a2810',hat:'#1e4468',shirt:'#3870d0',pants:'#1a2840',boot:'#181818'},
-  listing:  {skin:'#f0c888',hair:'#7a3018',hat:'#b84010',shirt:'#e88030',pants:'#3a1800',boot:'#2a1008'},
-  store:    {skin:'#c8a878',hair:'#2a3818',hat:'#2a5018',shirt:'#508030',pants:'#1e3018',boot:'#1a1010'},
-  delivery: {skin:'#d0c8b8',hair:'#183838',hat:'#0d5050',shirt:'#289090',pants:'#102830',boot:'#101818'},
-  sales:    {skin:'#f0c0b0',hair:'#882010',hat:'#8B1A1A',shirt:'#d03828',pants:'#2a1010',boot:'#1a0808'},
-  product:  {skin:'#d8c0e0',hair:'#3a1860',hat:'#3a1868',shirt:'#6848a8',pants:'#281040',boot:'#180818'},
-  marketing:{skin:'#f0c890',hair:'#6D4C41',hat:'#C04010',shirt:'#d85818',pants:'#3a1800',boot:'#2a1008'},
-  analytics:{skin:'#d0c8d8',hair:'#1a2060',hat:'#192060',shirt:'#2858a8',pants:'#101830',boot:'#101018'},
-  cs:       {skin:'#b8d8c8',hair:'#0a4030',hat:'#0a4838',shirt:'#189878',pants:'#102820',boot:'#101010'},
-  social:   {skin:'#f0b8c8',hair:'#6d1038',hat:'#781038',shirt:'#b83888',pants:'#2d0828',boot:'#180808'},
-  finance:  {skin:'#f0d090',hair:'#7D6608',hat:'#9a6010',shirt:'#c89818',pants:'#3a2800',boot:'#201808'},
-  print:    {skin:'#c8d0d8',hair:'#263238',hat:'#2e3840',shirt:'#508090',pants:'#1a2028',boot:'#101218'},
-  ads:      {skin:'#f0c8a8',hair:'#5D4037',hat:'#a02810',shirt:'#b83818',pants:'#301408',boot:'#1a0808'},
-  intel:    {skin:'#c8d8b8',hair:'#1B5E20',hat:'#1a3e18',shirt:'#2a7828',pants:'#102010',boot:'#101010'},
-  promos:   {skin:'#f8e090',hair:'#c87010',hat:'#a86010',shirt:'#d89018',pants:'#3a2800',boot:'#201808'},
-  tax:      {skin:'#d8d8d0',hair:'#282828',hat:'#282828',shirt:'#484848',pants:'#202020',boot:'#101010'},
-  returns:  {skin:'#f0c0b8',hair:'#881818',hat:'#881818',shirt:'#b82020',pants:'#280808',boot:'#180808'},
-  supply:   {skin:'#d0c0b0',hair:'#4E342E',hat:'#3c2010',shirt:'#886028',pants:'#2a1808',boot:'#181008'},
-  email:    {skin:'#c8d8f0',hair:'#0a3868',hat:'#0a3868',shirt:'#2070b8',pants:'#081a30',boot:'#081020'},
-  abt:      {skin:'#b8d8d0',hair:'#0a4030',hat:'#0a4030',shirt:'#189068',pants:'#081c18',boot:'#080f10'},
-  api:      {skin:'#c8c8f0',hair:'#0a2870',hat:'#0a2870',shirt:'#1838b0',pants:'#081028',boot:'#080818'},
-  coordinator:{skin:'#c8d0f0',hair:'#104888',hat:'#104888',shirt:'#1858b0',pants:'#0c1830',boot:'#081018'},
-  trend:    {skin:'#d8c8f0',hair:'#380870',hat:'#380870',shirt:'#7030c0',pants:'#180828',boot:'#100818'},
-  retention:{skin:'#b8d8b8',hair:'#185018',hat:'#185018',shirt:'#288028',pants:'#0c200c',boot:'#080f08'},
-  hall:     {skin:'#f0c888',hair:'#4E342E',hat:'#5a3a00',shirt:'#b09028',pants:'#3e2723',boot:'#2a1a10'},
+  brand:   {skin:'#f0d0b8',hair:'#6b1a1a',hat:'#9a2820',hatClass:'w-hat-beret',shirt:'#c84030',pants:'#4a1010',boot:'#2a0808',accent:'#f0f0c0',extra:'<div class="w-apron" style="--waccent:rgba(240,240,200,.5)"></div>'},
+  art:     {skin:'#f8dcc0',hair:'#7B5EA7',hat:'#6b3090',hatClass:'w-hat-beret',shirt:'#9b50c0',pants:'#280848',boot:'#180830',accent:'#f0c8ff',extra:'<div class="w-apron" style="--waccent:rgba(200,140,255,.4)"></div><div class="w-badge" style="--waccent:#f0c0ff"></div>'},
+  planner: {skin:'#e8d0b0',hair:'#2e6e4e',hat:'#2e6e4e',hatClass:'w-hat-grad',shirt:'#3a8060',pants:'#1a3828',boot:'#0e2018',accent:'#c0f0d8',extra:'<div class="w-badge" style="--waccent:#c0f0d8"></div><div class="w-tie" style="--waccent:#1a5040"></div>'},
+  qc:      {skin:'#d8e0d8',hair:'#1e4468',hat:'#1e4468',hatClass:'w-hat-hardhat',shirt:'#2a5a7a',pants:'#102030',boot:'#081018',accent:'#88c8ff',extra:'<div class="w-badge" style="--waccent:#f0f020"></div>'},
+  store:   {skin:'#e8d0c0',hair:'#2a5018',hat:'#2a5018',hatClass:'w-hat-beanie',shirt:'#3a6828',pants:'#1a3010',boot:'#101808',accent:'#a0e060',extra:'<div class="w-vest"></div><div class="w-badge" style="--waccent:#a0e060"></div>'},
+  marketing:{skin:'#f0d0a0',hair:'#C04010',hat:'#C04010',hatClass:'w-hat-visor',shirt:'#e05020',pants:'#401008',boot:'#280808',accent:'#ffe060',extra:'<div class="w-star" style="--waccent:#ffe060"></div>'},
+  analytics:{skin:'#c8d0e8',hair:'#192060',hat:'#192060',hatClass:'w-hat-grad',shirt:'#243080',pants:'#080f28',boot:'#040810',accent:'#80c0ff',extra:'<div class="w-labcoat"></div>'},
+  ceo:     {skin:'#f0e0c0',hair:'#7B1900',hat:'#7B1900',hatClass:'w-hat-tophat',shirt:'#5a2010',pants:'#200c08',boot:'#100604',accent:'#f0d040',extra:'<div class="w-lapel"></div><div class="w-tie" style="--waccent:#f0d040"></div>'},
+  sales:   {skin:'#f0c8b8',hair:'#8B1A1A',hat:'#8B1A1A',hatClass:'w-hat-visor',shirt:'#b02020',pants:'#300808',boot:'#200404',accent:'#f0e040',extra:'<div class="w-tie" style="--waccent:#f0e040"></div>'},
+  finance: {skin:'#e8e0c0',hair:'#9a6010',hat:'#8a5008',hatClass:'w-hat-tophat',shirt:'#7a4808',pants:'#2a1804',boot:'#180e02',accent:'#f0d040',extra:'<div class="w-lapel"></div><div class="w-bowtie" style="--waccent:#f0d040"></div>'},
+  product: {skin:'#e0d0f0',hair:'#3a1868',hat:'#3a1868',hatClass:'w-hat-beanie',shirt:'#5030a0',pants:'#180830',boot:'#0c0418',accent:'#d0b0ff',extra:'<div class="w-badge" style="--waccent:#d0b0ff"></div>'},
+  print:   {skin:'#d0d8e0',hair:'#2e3840',hat:'#2e3840',hatClass:'w-hat-hardhat',shirt:'#3a4858',pants:'#101820',boot:'#081018',accent:'#80c0e0',extra:'<div class="w-vest"></div>'},
+  returns: {skin:'#f0c0b8',hair:'#881818',hat:'#881818',hatClass:'w-hat-beanie',shirt:'#b82020',pants:'#280808',boot:'#180808',accent:'#ffb8b8',extra:'<div class="w-apron" style="--waccent:rgba(255,180,180,.4)"></div>'},
+  listing: {skin:'#f8e0a8',hair:'#b84010',hat:'#b84010',hatClass:'w-hat-visor',shirt:'#d05018',pants:'#401408',boot:'#280e04',accent:'#f0f040',extra:'<div class="w-star" style="--waccent:#f0f040"></div>'},
+  cs:      {skin:'#c8e8d8',hair:'#0a4838',hat:'#0a4838',hatClass:'w-hat-headset',shirt:'#186050',pants:'#041c18',boot:'#020f0c',accent:'#80f0c0',extra:'<div class="w-badge" style="--waccent:#80f0c0"></div>'},
+  social:  {skin:'#f0d8e8',hair:'#781038',hat:'#781038',hatClass:'w-hat-beret',shirt:'#a82060',pants:'#280818',boot:'#180410',accent:'#f0a0c0',extra:'<div class="w-star" style="--waccent:#f0a0c0"></div>'},
+  delivery:{skin:'#c8e0e0',hair:'#0d5050',hat:'#0d5050',hatClass:'w-hat-visor',shirt:'#1a7070',pants:'#042020',boot:'#021010',accent:'#60e8e8',extra:'<div class="w-vest"></div><div class="w-badge" style="--waccent:#60e8e8"></div>'},
+  email:   {skin:'#c8d8f0',hair:'#0a3868',hat:'#0a3868',hatClass:'w-hat-tophat',shirt:'#1858a8',pants:'#040f28',boot:'#020810',accent:'#80b0ff',extra:'<div class="w-tie" style="--waccent:#80b0ff"></div>'},
+  intel:   {skin:'#c8d8c8',hair:'#1a3e18',hat:'#1a3e18',hatClass:'w-hat-beanie',shirt:'#2a5828',pants:'#081408',boot:'#040a04',accent:'#80e880',extra:'<div class="w-scarf" style="--waccent:#80e880"></div>'},
+  ads:     {skin:'#f0d8a0',hair:'#a02810',hat:'#ff4020',hatClass:'w-hat-visor',shirt:'#d84020',pants:'#380808',boot:'#200404',accent:'#ffe020',extra:'<div class="w-star" style="--waccent:#ffe020"></div><div class="w-badge" style="--waccent:#ffe020"></div>'},
+  promos:  {skin:'#f0e0a0',hair:'#a86010',hat:'#f0b030',hatClass:'w-hat-party',shirt:'#d08020',pants:'#3a2008',boot:'#201008',accent:'#f8f020',extra:'<div class="w-star" style="--waccent:#f8f020"></div>'},
+  tax:     {skin:'#d8d8d0',hair:'#282828',hat:'#282828',hatClass:'w-hat-tophat',shirt:'#383838',pants:'#101010',boot:'#080808',accent:'#c8c8c8',extra:'<div class="w-lapel"></div><div class="w-tie" style="--waccent:#505050"></div>'},
+  returns2:{skin:'#f0d0c0',hair:'#881818',hat:'#881818',hatClass:'',shirt:'#b82020',pants:'#280808',boot:'#180808',accent:'#f0a080',extra:''},
+  supply:  {skin:'#d0c0b0',hair:'#4E342E',hat:'#3c2010',hatClass:'w-hat-hardhat',shirt:'#7a5020',pants:'#281808',boot:'#180e04',accent:'#e0b060',extra:'<div class="w-vest"></div>'},
+  email2:  {skin:'#c8d8f0',hair:'#0a3868',hat:'#0a3868',hatClass:'w-hat-beanie',shirt:'#2070b8',pants:'#081a30',boot:'#081020',accent:'#a0c8ff',extra:''},
+  abt:     {skin:'#b8d8d0',hair:'#0a4030',hat:'#0a4030',hatClass:'w-hat-grad',shirt:'#1a7060',pants:'#081c18',boot:'#040e0c',accent:'#60f0d0',extra:'<div class="w-labcoat"></div>'},
+  api:     {skin:'#c8c8f0',hair:'#0a2870',hat:'#0a2870',hatClass:'w-hat-beanie',shirt:'#1838b0',pants:'#080f28',boot:'#040818',accent:'#8080ff',extra:'<div class="w-labcoat"></div><div class="w-badge" style="--waccent:#8080ff"></div>'},
+  coordinator:{skin:'#c8d0f0',hair:'#104888',hat:'#104888',hatClass:'w-hat-visor',shirt:'#1858c0',pants:'#081028',boot:'#040818',accent:'#90b0ff',extra:'<div class="w-badge" style="--waccent:#90b0ff"></div>'},
+  trend:   {skin:'#d8c8f0',hair:'#380870',hat:'#5010a0',hatClass:'w-hat-wizard',shirt:'#6020b0',pants:'#1a0830',boot:'#0c0418',accent:'#d080ff',extra:'<div class="w-scarf" style="--waccent:#d080ff"></div>'},
+  retention:{skin:'#b8d8b8',hair:'#185018',hat:'#185018',hatClass:'w-hat-beanie',shirt:'#288028',pants:'#0c180c',boot:'#060e06',accent:'#80f080',extra:'<div class="w-badge" style="--waccent:#f060a0"></div><div class="w-scarf" style="--waccent:#f060a0"></div>'},
+  hall:    {skin:'#f0c888',hair:'#4E342E',hat:'#5a3a00',hatClass:'',shirt:'#b09028',pants:'#3e2723',boot:'#2a1a10',accent:'#f0d060',extra:''},
+  shop:    {skin:'#f8d0e8',hair:'#8B1A8B',hat:'#c040c0',hatClass:'w-hat-crown',shirt:'#a030a0',pants:'#3a0838',boot:'#200420',accent:'#f0c0ff',extra:'<div class="w-star" style="--waccent:#f0c0ff"></div>'},
+  storage: {skin:'#d0d0c0',hair:'#3a3a3a',hat:'#2a2a2a',hatClass:'w-hat-hardhat',shirt:'#505048',pants:'#282820',boot:'#181810',accent:'#c0c0a0',extra:'<div class="w-vest"></div>'},
+  planner2:{skin:'#e0f0e0',hair:'#2e6e4e',hat:'#2e6e4e',hatClass:'w-hat-beanie',shirt:'#3a8060',pants:'#1a3828',boot:'#0e2018',accent:'#b0f0d0',extra:''},
 };
 
 function mkWalker(key,_color,run=false){
   const w=document.createElement('div');
   w.className='walker '+(run?'running':'walking'); w.id=`walker-${key}`;
-  const lk=WALKER_LOOKS[key]||{skin:'#e8c0a0',hair:'#333',hat:'#555',shirt:'#58a6ff',pants:'#2a2a3e',boot:'#2a1808'};
+  const lk=WALKER_LOOKS[key]||{skin:'#e8c0a0',hair:'#333',hat:'#555',hatClass:'',shirt:'#58a6ff',pants:'#2a2a3e',boot:'#2a1808',accent:'#fff',extra:''};
   const hatC=lk.hat||lk.hair;
   const bootC=lk.boot||'#2a1808';
+  const hatCls='w-hat '+(lk.hatClass||'');
   w.style.setProperty('--wboot', bootC);
+  if(lk.accent) w.style.setProperty('--waccent', lk.accent);
   w.innerHTML=`
     <div class="w-figure">
-      <div class="w-hat" style="background:${hatC}"></div>
+      <div class="${hatCls}" style="background:${hatC}"></div>
       <div class="w-hair" style="background:${lk.hair}"></div>
       <div class="w-head" style="background:${lk.skin}">
         <div class="w-eye w-eye-l"></div>
@@ -3441,7 +3511,7 @@ function mkWalker(key,_color,run=false){
       <div class="w-neck" style="background:color-mix(in srgb,${lk.skin} 80%,#000)"></div>
       <div class="w-upper">
         <div class="w-arm" style="background:${lk.skin}"></div>
-        <div class="w-torso" style="background:${lk.shirt}"></div>
+        <div class="w-torso" style="background:${lk.shirt}">${lk.extra||''}</div>
         <div class="w-arm" style="background:${lk.skin}"></div>
       </div>
       <div class="w-legs">
