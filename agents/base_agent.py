@@ -54,8 +54,16 @@ class BaseAgent:
     def __init__(self, name: str, system_prompt: str, tool_definitions: list[dict], model: str = ""):
         self.name = name
         self.system_prompt = system_prompt
-        # Merge domain tools with universal research + learning tools
-        self.tool_definitions = tool_definitions + self._UNIVERSAL_TOOLS
+        # Merge domain tools with universal research + learning tools; deduplicate by name
+        merged = tool_definitions + self._UNIVERSAL_TOOLS
+        seen: set[str] = set()
+        deduped: list[dict] = []
+        for t in merged:
+            n = t.get("name")
+            if n not in seen:
+                seen.add(n)
+                deduped.append(t)
+        self.tool_definitions = deduped
         from config import STANDARD_MODEL
         self.model = model or STANDARD_MODEL
         self.client = anthropic.Anthropic()
