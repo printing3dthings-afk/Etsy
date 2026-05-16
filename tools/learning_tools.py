@@ -243,7 +243,7 @@ def execute_tool(tool_name: str, tool_input: dict, agent_name: str = "") -> str:
 def _save_insight(inp: dict, agent: str) -> str:
     data = _load("insights.json")
     entry = {
-        "id": f"ins_{len(data) + 1}",
+        "id": f"ins_{int(datetime.now().timestamp() * 1000)}",
         "agent": agent,
         "category": inp.get("category", "general"),
         "insight": inp.get("insight", ""),
@@ -276,7 +276,7 @@ def _get_insights(inp: dict) -> str:
 def _save_strategy(inp: dict, agent: str) -> str:
     data = _load("strategies.json")
     entry = {
-        "id": f"strat_{len(data) + 1}",
+        "id": f"strat_{int(datetime.now().timestamp() * 1000)}",
         "agent": agent,
         "strategy_name": inp.get("strategy_name", ""),
         "description": inp.get("description", ""),
@@ -363,7 +363,7 @@ def _get_history(inp: dict) -> str:
 def _save_design(inp: dict, agent: str) -> str:
     data = _load("designs.json")
     entry = {
-        "id": f"des_{len(data) + 1}",
+        "id": f"des_{int(datetime.now().timestamp() * 1000)}",
         "agent": agent,
         "style_name": inp.get("style_name", ""),
         "description": inp.get("description", ""),

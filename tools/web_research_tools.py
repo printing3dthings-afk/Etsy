@@ -335,7 +335,10 @@ def _research_product_names(inp: dict) -> str:
     style = inp.get("style", "")
     query = f"{style} {product_type}".strip()
     market_raw = _research_etsy_market({"query": query, "limit": 20})
-    market = json.loads(market_raw)
+    try:
+        market = json.loads(market_raw)
+    except (json.JSONDecodeError, TypeError):
+        market = {}
 
     result = {
         "product_type": product_type,
@@ -583,7 +586,10 @@ def _find_best_keywords(inp: dict) -> str:
         kb = KEYWORD_DB["digital"] if "art" in n or "print" in n else KEYWORD_DB["3d"]
 
     market_raw = _research_etsy_market({"query": niche, "limit": 20})
-    market = json.loads(market_raw)
+    try:
+        market = json.loads(market_raw)
+    except (json.JSONDecodeError, TypeError):
+        market = {}
 
     result = {
         "niche": niche,

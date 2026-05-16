@@ -891,7 +891,8 @@ def _run_task(key: str, task: str):
             "started": started.isoformat(), "duration_s": duration,
             "result_preview": result[:300], "triggered_by": "manual",
         })
-        _active_pipeline.clear()
+        with _pipeline_lock:
+            _active_pipeline.clear()
     except Exception as exc:
         duration = round((datetime.now() - started).total_seconds())
         agent_states[key] = {"status": "error", "task": task, "error": str(exc)}
@@ -902,7 +903,8 @@ def _run_task(key: str, task: str):
             "started": started.isoformat(), "duration_s": duration,
             "result_preview": str(exc)[:300], "triggered_by": "manual",
         })
-        _active_pipeline.clear()
+        with _pipeline_lock:
+            _active_pipeline.clear()
 
 # ── File helpers ───────────────────────────────────────────────────────────────
 
