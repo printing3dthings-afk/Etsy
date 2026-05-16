@@ -1497,6 +1497,77 @@ async def dismiss_notification(notif_id: str):
     return JSONResponse({"ok": True})
 
 
+# ── Digital Product Gallery ────────────────────────────────────────────────────
+
+@app.get("/api/digital-products")
+async def get_digital_products():
+    """Return all agent-created digital products with browser-accessible file URLs."""
+    try:
+        data = _store.load()
+        raw = data.get("digital_products", [])
+        products = []
+        data_dir = DATA_DIR.resolve()
+        for p in raw:
+            entry = {
+                "id":          p.get("id") or p.get("product_id", ""),
+                "title":       p.get("title", "Untitled"),
+                "type":        p.get("product_type", "digital"),
+                "status":      p.get("status", "unknown"),
+                "qc_status":   p.get("qc_status"),
+                "price":       p.get("price"),
+                "color_scheme":p.get("color_scheme"),
+                "interactive": p.get("interactive", False),
+                "created_at":  p.get("created_at", ""),
+                "file_url":    None,
+                "thumb_url":   None,
+            }
+            # Resolve absolute file_path → relative web URL
+            fp = p.get("file_path", "")
+            if fp:
+                try:
+                    resolved = Path(fp).resolve()
+                    rel = resolved.relative_to(data_dir)
+                    entry["file_url"] = f"/data/{rel.as_posix()}"
+                except (ValueError, TypeError):
+                    pass
+            pid = entry["id"]
+            # Look for companion image thumbnail
+            for ext in (".jpg", ".jpeg", ".png"):
+                candidate = data_dir / "digital_products" / "product_files" / f"{pid}{ext}"
+                if candidate.exists():
+                    entry["thumb_url"] = f"/data/digital_products/product_files/{pid}{ext}"
+                    break
+            products.append(entry)
+        products.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+        return JSONResponse({"products": products, "total": len(products)})
+    except Exception as e:
+        logger.error(f"get_digital_products: {e}", exc_info=True)
+        return JSONResponse({"products": [], "total": 0, "error": str(e)})
+
+
+@app.patch("/api/digital-products/{product_id}/status")
+async def set_product_status(product_id: str, body: dict):
+    """Move a product to 'archived' or 'approved' without deleting the file."""
+    allowed = {"archived", "approved", "qc_pending", "active"}
+    new_status = body.get("status", "")
+    if new_status not in allowed:
+        return JSONResponse({"error": f"status must be one of {allowed}"}, status_code=400)
+    try:
+        data = _store.load()
+        products = data.get("digital_products", [])
+        product = next((p for p in products if (p.get("id") or p.get("product_id")) == product_id), None)
+        if not product:
+            return JSONResponse({"error": "Product not found"}, status_code=404)
+        product["status"] = new_status
+        if new_status == "archived":
+            product["archived_at"] = datetime.utcnow().isoformat() + "Z"
+        _store.save(data)
+        return JSONResponse({"ok": True, "id": product_id, "status": new_status})
+    except Exception as e:
+        logger.error(f"set_product_status: {e}", exc_info=True)
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 # ── Product Pipeline Board ─────────────────────────────────────────────────────
 
 def _load_pipeline_board() -> list:

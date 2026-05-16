@@ -846,6 +846,27 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .hall-actions { display:flex; gap:4px; justify-content:center; margin-top:3px; z-index:8; position:relative; }
 .hall-act-btn { font-family:'Press Start 2P',monospace; font-size:.3rem; padding:3px 7px; background:#2a1800; color:#f0d060; border:2px solid #000; outline:1px solid #c8a040; cursor:pointer; border-radius:0; white-space:nowrap; transition:background .1s; }
 .hall-act-btn:hover { background:#3a2800; }
+/* Shopping Center */
+.bld-shop .broof { filter:none !important; background:linear-gradient(180deg,#7a108a,#5a0070) !important; clip-path:none; outline:3px solid #000; }
+.bld-shop .bbody { background:#fceef8 !important; outline:4px solid #000 !important; box-shadow:6px 6px 0 #000; }
+.bld-shop .bsign { font-size:.38rem; }
+.shop-awning { position:absolute; top:0; left:-6px; right:-6px; height:20px; background:repeating-linear-gradient(90deg,#c020c0 0,#c020c0 10px,#ff80ff 10px,#ff80ff 20px); border:2px solid #000; z-index:5; }
+.shop-plate { position:absolute; bottom:52px; left:50%; transform:translateX(-50%); background:#4a0060; color:#f0c0ff; font-family:'Press Start 2P',monospace; font-size:.3rem; padding:3px 8px; border:2px solid #c080e0; white-space:nowrap; z-index:6; letter-spacing:.05em; }
+.shop-display-rack { position:absolute; bottom:8px; left:12%; width:18px; height:36px; background:#c080c0; border:2px solid #6a106a; }
+.shop-display-rack::before { content:''; position:absolute; top:4px; left:2px; right:2px; height:6px; background:#ffc0ff; }
+.shop-display-rack::after { content:''; position:absolute; top:14px; left:2px; right:2px; height:6px; background:#ff80f0; }
+.shop-glass-door { width:48px; height:58px; background:linear-gradient(135deg,rgba(200,160,220,.8),rgba(240,200,255,.6)); border:3px solid #8040a0; border-radius:2px; margin:0 auto; position:relative; }
+.shop-glass-door::after { content:''; position:absolute; top:0; left:50%; width:2px; height:100%; background:rgba(128,0,160,.4); }
+.shop-neon { animation: neon-pulse 2s ease-in-out infinite; }
+@keyframes neon-pulse { 0%,100%{opacity:1;text-shadow:0 0 4px #ff80ff,0 0 8px #ff40ff} 50%{opacity:.7;text-shadow:0 0 2px #ff80ff} }
+/* Storage / Archive */
+.bld-storage .broof { filter:none !important; background:linear-gradient(180deg,#3a3a3a,#222) !important; clip-path:none; outline:3px solid #000; }
+.bld-storage .bbody { background:#d0d0c8 !important; outline:4px solid #000 !important; box-shadow:5px 5px 0 #000; }
+.storage-roller-door { position:absolute; bottom:52px; left:50%; transform:translateX(-50%); width:60%; height:32px; background:repeating-linear-gradient(180deg,#a0a098 0,#a0a098 4px,#b8b8b0 4px,#b8b8b0 8px); border:2px solid #606060; z-index:5; }
+.storage-shelf { position:absolute; left:4%; right:4%; top:20%; height:5px; background:#808070; border:1px solid #505048; z-index:4; }
+.storage-shelf::before,.storage-shelf::after { content:''; position:absolute; top:4px; width:6px; height:16px; background:#606058; }
+.storage-shelf::before { left:4px; }
+.storage-shelf::after { right:4px; }
 
 /* District labels */
 .dlabel {
@@ -1741,6 +1762,8 @@ body{transition:background .5s,color .5s}
   <div class="rev-stat"><span class="rev-lbl">Agents Running</span><span class="rev-val rev-run" id="rv-agents">0</span></div>
   <div class="rev-spacer"></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openPipeline()"><span class="rev-lbl">📦</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Pipeline</span></div>
+  <div class="rev-stat" style="cursor:pointer" onclick="openShop()"><span class="rev-lbl">🛍️</span><span class="rev-val" style="color:#f0c0ff;font-size:.5rem">Products</span></div>
+  <div class="rev-stat" style="cursor:pointer" onclick="openStorage()"><span class="rev-lbl">🗄️</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Archive</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openChains()"><span class="rev-lbl">⛓️</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Chains</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openCreator()"><span class="rev-lbl">✨</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Create</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openListingHealth()"><span class="rev-lbl">📊</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Health</span></div>
@@ -2083,10 +2106,23 @@ const AGENTS = [
    firstName:'Otto', bio:'Organized and central. He is the glue that keeps everything moving.', speed:1.0,
    chatLines:['Workflow optimized.','Everyone in position.','Syncing the team.','Operations running smooth.'],
    quick:['Daily ops summary','Digital pipeline status','Find bottlenecks']},
+  // ── PLANNER STUDIO (Row A gap, between QC and Store) ──
+  {key:'planner', name:'Planner Design Agent', display:'Planner Studio', icon:'📋', roof:'#2e6e4e',wall:'#ddf0e4', x:1712,y:442, w:165,h:202, wins:2,chimney:false,
+   firstName:'Sage', bio:'Expert planner designer. Every page is crafted for maximum usability and beauty.', speed:0.9,
+   chatLines:['Tab navigation complete!','Fillable fields ready.','This planner is stunning.','GoodNotes compatible.'],
+   quick:['Create an undated daily planner','Create a wellness planner with sage cream','List all planners']},
   // ── MEETING HALL (bottom of town) ──
   {key:'hall', name:'Meeting Hall', display:'Meeting Hall', icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:2230,y:2270, w:350,h:390, wins:4,chimney:false,type:'hall',
    firstName:'Hall', bio:'Where big ideas are born.', speed:1.0, chatLines:[],
    quick:[]},
+  // ── DIGITAL SHOPPING CENTER (left of Meeting Hall) ──
+  {key:'shop', name:'Digital Shopping Center', display:'Shop Center', icon:'🛍️', type:'shop', roof:'#8B1A8B',wall:'#fceef8', x:1420,y:2280, w:310,h:340, wins:4,chimney:false,
+   firstName:'', bio:'Browse all digital products — wall art and planners. Approve or archive each.', speed:1.0,
+   chatLines:[], quick:[]},
+  // ── PRODUCT ARCHIVE / STORAGE (right of Meeting Hall) ──
+  {key:'storage', name:'Product Archive', display:'Archive', icon:'🗄️', type:'storage', roof:'#3a3a3a',wall:'#d0d0c8', x:2700,y:2320, w:250,h:280, wins:3,chimney:false,
+   firstName:'', bio:'Archived products stored here for future reference.', speed:1.0,
+   chatLines:[], quick:[]},
 ];
 const AM = Object.fromEntries(AGENTS.map(a=>[a.key,a]));
 
@@ -2255,9 +2291,12 @@ const SCREEN_COLORS = {
 function mkBuilding(a){
   const el=document.createElement('div');
   el.id=`b-${a.key}`; el.dataset.key=a.key;
-  const isHall = a.type==='hall';
+  const isHall    = a.type==='hall';
+  const isShop    = a.type==='shop';
+  const isStorage = a.type==='storage';
+  const isSpecial = isShop || isStorage;
   const isCeo  = a.large;
-  el.className='bld'+(isCeo?' bld-ceo':isHall?' bld-hall':'');
+  el.className='bld'+(isCeo?' bld-ceo':isHall?' bld-hall':isShop?' bld-shop':isStorage?' bld-storage':'');
   el.style.cssText=`left:${a.x}px;top:${a.y}px;--bw:${a.w}px;--bh:${a.h}px;--rc:${a.roof};--wc:${a.wall}`;
   const rw=a.w+(isCeo?0:22);
   const winsHtml=Array(a.wins||2).fill(0).map(()=>`<div class="bwin-wrap"><div class="bshutter" style="background-color:color-mix(in srgb,${a.roof} 65%,#000)"></div><div class="bwin"></div><div class="bshutter" style="background-color:color-mix(in srgb,${a.roof} 65%,#000)"></div></div>`).join('');
@@ -2296,6 +2335,22 @@ function mkBuilding(a){
          <div class="hall-fireplace-r"></div>
          <div class="bi-floor"></div>
        </div>`
+    : isShop
+    ? `<div class="binterior shop-int" style="background:linear-gradient(180deg,#f8e0f8 0%,#fceef8 60%,#fff0fc 100%)">
+         <div class="bi-ceil" style="background:#c060b0"></div>
+         <div class="shop-display-rack"></div>
+         <div class="shop-display-rack" style="left:55%"></div>
+         <div class="shop-neon" style="font-size:.28rem;position:absolute;top:6px;left:50%;transform:translateX(-50%);color:#ff40ff;text-shadow:0 0 4px #ff80ff;white-space:nowrap;font-weight:900">OPEN</div>
+         <div class="bi-floor" style="background:#e0b8e0"></div>
+       </div>`
+    : isStorage
+    ? `<div class="binterior storage-int" style="background:linear-gradient(180deg,#c8c8b8 0%,#d8d8c8 60%,#e0e0d0 100%)">
+         <div class="bi-ceil" style="background:#505050"></div>
+         <div class="storage-shelf"></div>
+         <div class="storage-shelf" style="top:40%"></div>
+         <div class="storage-shelf" style="top:62%"></div>
+         <div class="bi-floor" style="background:#b0b0a0"></div>
+       </div>`
     : `<div class="binterior" style="background:${wallBg}">
          <div class="bi-ceil"></div>
          <div class="bi-lamp"></div>
@@ -2318,6 +2373,10 @@ function mkBuilding(a){
     : '';
   const hallBody = isHall
     ? `<div class="hall-cols"></div><div class="hall-plate">MEETING HALL</div>` : '';
+  const shopBody = isShop
+    ? `<div class="shop-awning"></div><div class="shop-plate">DIGITAL SHOP</div>` : '';
+  const storageBody = isStorage
+    ? `<div class="storage-roller-door"></div><div class="shop-plate" style="color:#e0e0c8;border-color:#606060">ARCHIVE</div>` : '';
 
   el.innerHTML=`
     ${hallExtras}
@@ -2325,15 +2384,13 @@ function mkBuilding(a){
     <div class="broof" style="width:${rw}px"></div>
     <div class="beave" style="width:${rw+8}px"></div>
     <div class="bbody">
-      ${hallBody}
+      ${hallBody}${shopBody}${storageBody}
       <div class="bsign">${a.icon} ${a.display}</div>
       <div class="bwins">${winsHtml}</div>
       <div class="bwinbox"></div>
       ${interior}
       <div class="bdoor-wrap">
-        <div class="bdoor">
-          <div class="bdoor-knob"></div>
-        </div>
+        ${isShop ? `<div class="shop-glass-door"></div>` : `<div class="bdoor"><div class="bdoor-knob"></div></div>`}
         <div class="bstoop"></div>
         <div class="bstoop2"></div>
       </div>
@@ -2345,10 +2402,27 @@ function mkBuilding(a){
            <button class="hall-act-btn" onclick="event.stopPropagation();openHall()">📋 Board</button>
            <button class="hall-act-btn" onclick="event.stopPropagation();openIdeas()">💡 Ideas</button>
          </div>`
+      : isShop
+      ? `<div class="hall-actions">
+           <button class="hall-act-btn" style="background:#4a0060;color:#f0c0ff;border-color:#8040a0" onclick="event.stopPropagation();openShop()">🛍️ Browse</button>
+         </div>`
+      : isStorage
+      ? `<div class="hall-actions">
+           <button class="hall-act-btn" style="background:#282828;color:#d0d0c0;border-color:#505050" onclick="event.stopPropagation();openStorage()">🗄️ Archive</button>
+         </div>`
       : `<div class="bbadge" id="bdg-${a.key}">idle</div>`}
     <div class="blabel">${a.display}</div>`;
-  el.onclick=()=>isHall?openHall():selectAgent(a.key);
-  el.onmouseenter=e=>{ showTip(e,isHall?'Meeting Hall — click to view all agent tasks':a.name); if(isHall) updateMiniBoard(); };
+  el.onclick=()=>{
+    if(isHall) openHall();
+    else if(isShop) openShop();
+    else if(isStorage) openStorage();
+    else selectAgent(a.key);
+  };
+  const tipText = isHall ? 'Meeting Hall — click to view all agent tasks'
+                : isShop ? 'Digital Shopping Center — browse wall art & planners'
+                : isStorage ? 'Product Archive — view archived products'
+                : a.name;
+  el.onmouseenter=e=>{ showTip(e, tipText); if(isHall) updateMiniBoard(); };
   el.onmouseleave=hideTip;
   el.onmousemove=moveTip;
   return el;
@@ -4754,5 +4828,198 @@ async function deleteRef(id){
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     DIGITAL SHOPPING CENTER MODAL
+════════════════════════════════════════════════════════════════ -->
+<div id="shop-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto" onclick="if(event.target===this)closeShop()">
+  <div style="background:#0d1117;border:2px solid #8040a0;border-radius:10px;width:100%;max-width:940px;display:flex;flex-direction:column;min-height:560px">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #21262d;flex-shrink:0;background:linear-gradient(90deg,#1a0028,#0d1117)">
+      <span style="font-size:1.4rem">🛍️</span>
+      <span style="font-size:.82rem;font-weight:700;color:#f0c0ff;flex:1">Digital Shopping Center</span>
+      <button onclick="loadShopProducts()" title="Refresh" style="background:none;border:1px solid #8040a0;color:#c080e0;font-size:.6rem;padding:3px 10px;border-radius:4px;cursor:pointer">⟳ Refresh</button>
+      <button onclick="closeShop()" style="background:none;border:none;color:#8b949e;font-size:1.4rem;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <!-- Tab bar -->
+    <div style="display:flex;border-bottom:1px solid #21262d;flex-shrink:0">
+      <button id="shop-tab-art" onclick="showShopTab('art')" style="flex:1;padding:10px;background:#1a0030;color:#f0c0ff;border:none;border-bottom:3px solid #c040c0;cursor:pointer;font-size:.6rem;font-weight:700">🖼️ Wall Art &amp; Digital Art</button>
+      <button id="shop-tab-planner" onclick="showShopTab('planner')" style="flex:1;padding:10px;background:transparent;color:#8b949e;border:none;border-bottom:3px solid transparent;cursor:pointer;font-size:.6rem;font-weight:700">📋 Planners</button>
+      <button id="shop-tab-all" onclick="showShopTab('all')" style="flex:1;padding:10px;background:transparent;color:#8b949e;border:none;border-bottom:3px solid transparent;cursor:pointer;font-size:.6rem;font-weight:700">📦 All Products</button>
+    </div>
+    <!-- Legend -->
+    <div style="padding:8px 18px;font-size:.5rem;color:#8b949e;border-bottom:1px solid #161b22;display:flex;gap:16px;flex-shrink:0">
+      <span>✅ Approved</span><span style="color:#f0c040">🔍 QC Pending</span><span style="color:#da3633">❌ Rejected</span><span style="color:#484f58">🗄️ Archived</span>
+    </div>
+    <!-- Product grid -->
+    <div id="shop-grid" style="flex:1;padding:16px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;align-content:start;overflow-y:auto;min-height:300px">
+      <div id="shop-loading" style="grid-column:1/-1;text-align:center;padding:40px;color:#484f58;font-size:.62rem">Loading products…</div>
+    </div>
+    <!-- Footer info -->
+    <div id="shop-footer" style="padding:10px 18px;font-size:.5rem;color:#484f58;border-top:1px solid #21262d;flex-shrink:0"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     PRODUCT ARCHIVE / STORAGE MODAL
+════════════════════════════════════════════════════════════════ -->
+<div id="storage-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto" onclick="if(event.target===this)closeStorage()">
+  <div style="background:#0d1117;border:2px solid #505050;border-radius:10px;width:100%;max-width:860px;display:flex;flex-direction:column;min-height:480px">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid #21262d;flex-shrink:0;background:linear-gradient(90deg,#161616,#0d1117)">
+      <span style="font-size:1.4rem">🗄️</span>
+      <span style="font-size:.82rem;font-weight:700;color:#d0d0c0;flex:1">Product Archive</span>
+      <span style="font-size:.5rem;color:#484f58">Files are kept — products can be restored at any time</span>
+      <button onclick="loadStorageProducts()" title="Refresh" style="background:none;border:1px solid #505050;color:#909090;font-size:.6rem;padding:3px 10px;border-radius:4px;cursor:pointer">⟳ Refresh</button>
+      <button onclick="closeStorage()" style="background:none;border:none;color:#8b949e;font-size:1.4rem;cursor:pointer;line-height:1">✕</button>
+    </div>
+    <div style="padding:8px 18px;font-size:.52rem;color:#8b949e;border-bottom:1px solid #161b22;flex-shrink:0">
+      Archived products are preserved on disk. Restore them to active status any time, or open the file for reference.
+    </div>
+    <div id="storage-grid" style="flex:1;padding:16px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;align-content:start;overflow-y:auto;min-height:280px">
+      <div id="storage-loading" style="grid-column:1/-1;text-align:center;padding:40px;color:#484f58;font-size:.62rem">Loading archive…</div>
+    </div>
+    <div id="storage-footer" style="padding:10px 18px;font-size:.5rem;color:#484f58;border-top:1px solid #21262d;flex-shrink:0"></div>
+  </div>
+</div>
+
+<script>
+// ── DIGITAL SHOPPING CENTER ──────────────────────────────────────────────────
+let _shopAllProducts = [];
+let _shopCurrentTab = 'art';
+
+function openShop(){
+  document.getElementById('shop-modal').style.display='flex';
+  loadShopProducts();
+}
+function closeShop(){ document.getElementById('shop-modal').style.display='none'; }
+
+function showShopTab(tab){
+  _shopCurrentTab = tab;
+  ['art','planner','all'].forEach(t=>{
+    const btn = document.getElementById(`shop-tab-${t}`);
+    if(btn){
+      btn.style.background = t===tab ? '#1a0030' : 'transparent';
+      btn.style.color = t===tab ? '#f0c0ff' : '#8b949e';
+      btn.style.borderBottomColor = t===tab ? '#c040c0' : 'transparent';
+    }
+  });
+  renderShopGrid(_shopAllProducts);
+}
+
+async function loadShopProducts(){
+  document.getElementById('shop-loading').style.display='block';
+  document.getElementById('shop-grid').innerHTML = '<div id="shop-loading" style="grid-column:1/-1;text-align:center;padding:40px;color:#484f58;font-size:.62rem">Loading products…</div>';
+  try {
+    const data = await fetch('/api/digital-products').then(r=>r.json());
+    _shopAllProducts = (data.products||[]).filter(p=>p.status!=='archived');
+    renderShopGrid(_shopAllProducts);
+    document.getElementById('shop-footer').textContent = `${_shopAllProducts.length} active product(s) · ${data.total||0} total`;
+  } catch(e) {
+    document.getElementById('shop-grid').innerHTML = `<div style="grid-column:1/-1;color:#da3633;font-size:.62rem;padding:24px">Error loading products: ${e.message}</div>`;
+  }
+}
+
+function renderShopGrid(products){
+  const grid = document.getElementById('shop-grid');
+  const artTypes = ['digital_art','wall_art','art_print','clipart','art','illustration','svg'];
+  const plannerTypes = ['planner','digital_planner'];
+
+  const filtered = _shopCurrentTab === 'all' ? products
+    : _shopCurrentTab === 'art'
+      ? products.filter(p => artTypes.some(t => (p.type||'').toLowerCase().includes(t)) || !(plannerTypes.some(t=>(p.type||'').toLowerCase().includes(t))))
+    : products.filter(p => plannerTypes.some(t => (p.type||'').toLowerCase().includes(t)));
+
+  if(!filtered.length){
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#484f58;font-size:.62rem">No products in this category yet.</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(p => shopProductCard(p)).join('');
+}
+
+function shopProductCard(p){
+  const statusIcon = p.status==='approved' ? '✅' : p.status==='rejected' ? '❌' : p.status==='archived' ? '🗄️' : '🔍';
+  const statusColor = p.status==='approved' ? '#2a8040' : p.status==='rejected' ? '#8a1a1a' : p.status==='archived' ? '#404040' : '#6a5000';
+  const thumb = p.thumb_url
+    ? `<img src="${p.thumb_url}" alt="" style="width:100%;height:130px;object-fit:cover;border-radius:4px;margin-bottom:8px;border:1px solid #30363d" onerror="this.style.display='none'">`
+    : `<div style="width:100%;height:130px;background:#161b22;border-radius:4px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:2rem;border:1px solid #30363d">${(p.type||'').includes('planner')?'📋':'🖼️'}</div>`;
+  const fileBtn = p.file_url
+    ? `<a href="${p.file_url}" target="_blank" style="display:inline-block;padding:4px 10px;background:#1e3a5a;border:1px solid #2e5a8a;color:#6ab0ff;border-radius:4px;font-size:.48rem;text-decoration:none;cursor:pointer">📂 View File</a>`
+    : `<span style="font-size:.48rem;color:#484f58">No file</span>`;
+  return `<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:4px">
+    ${thumb}
+    <div style="font-size:.54rem;font-weight:700;color:#e6edf3;line-height:1.3;margin-bottom:2px">${escHtml(p.title)}</div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <span style="background:${statusColor};color:#fff;font-size:.44rem;padding:2px 6px;border-radius:3px">${statusIcon} ${p.status||'?'}</span>
+      ${p.price ? `<span style="font-size:.5rem;color:#a0e060;font-weight:700">$${p.price}</span>` : ''}
+    </div>
+    ${p.color_scheme ? `<div style="font-size:.44rem;color:#8b949e">🎨 ${p.color_scheme.replace(/_/g,' ')}</div>` : ''}
+    <div style="font-size:.44rem;color:#484f58;margin-bottom:6px">${p.created_at||''}</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:auto">
+      ${fileBtn}
+      <button onclick="shopApprove('${p.id}')" style="padding:4px 8px;background:#1e4020;border:1px solid #2a6030;color:#60c060;border-radius:4px;font-size:.46rem;cursor:pointer" title="Mark as approved / go ahead">✅ Approve</button>
+      <button onclick="shopArchive('${p.id}')" style="padding:4px 8px;background:#2a1800;border:1px solid #4a3000;color:#c09040;border-radius:4px;font-size:.46rem;cursor:pointer" title="Move to archive (file kept)">🗄️ Archive</button>
+    </div>
+  </div>`;
+}
+
+async function shopApprove(id){
+  await fetch(`/api/digital-products/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'approved'})});
+  loadShopProducts();
+}
+async function shopArchive(id){
+  if(!confirm('Move this product to the archive? The file is kept — you can restore it any time.')) return;
+  await fetch(`/api/digital-products/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'archived'})});
+  loadShopProducts();
+}
+
+// ── PRODUCT ARCHIVE (STORAGE) ────────────────────────────────────────────────
+function openStorage(){
+  document.getElementById('storage-modal').style.display='flex';
+  loadStorageProducts();
+}
+function closeStorage(){ document.getElementById('storage-modal').style.display='none'; }
+
+async function loadStorageProducts(){
+  document.getElementById('storage-grid').innerHTML = '<div id="storage-loading" style="grid-column:1/-1;text-align:center;padding:40px;color:#484f58;font-size:.62rem">Loading archive…</div>';
+  try {
+    const data = await fetch('/api/digital-products').then(r=>r.json());
+    const archived = (data.products||[]).filter(p=>p.status==='archived');
+    if(!archived.length){
+      document.getElementById('storage-grid').innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#484f58;font-size:.62rem">Archive is empty. Products you archive from the Shopping Center will appear here.</div>`;
+    } else {
+      document.getElementById('storage-grid').innerHTML = archived.map(p => storageCard(p)).join('');
+    }
+    document.getElementById('storage-footer').textContent = `${archived.length} archived product(s) · Files preserved on disk`;
+  } catch(e) {
+    document.getElementById('storage-grid').innerHTML = `<div style="grid-column:1/-1;color:#da3633;font-size:.62rem;padding:24px">Error: ${e.message}</div>`;
+  }
+}
+
+function storageCard(p){
+  const thumb = p.thumb_url
+    ? `<img src="${p.thumb_url}" alt="" style="width:100%;height:100px;object-fit:cover;border-radius:4px;margin-bottom:8px;border:1px solid #30363d;filter:grayscale(60%)" onerror="this.style.display='none'">`
+    : `<div style="width:100%;height:100px;background:#0d1117;border-radius:4px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;border:1px solid #30363d;opacity:.5">${(p.type||'').includes('planner')?'📋':'🖼️'}</div>`;
+  const fileBtn = p.file_url
+    ? `<a href="${p.file_url}" target="_blank" style="padding:4px 8px;background:#161b22;border:1px solid #30363d;color:#8b949e;border-radius:4px;font-size:.46rem;text-decoration:none;cursor:pointer">📂 View</a>`
+    : '';
+  return `<div style="background:#0d1117;border:1px solid #21262d;border-radius:8px;padding:10px;opacity:.85">
+    ${thumb}
+    <div style="font-size:.52rem;font-weight:700;color:#c9d1d9;margin-bottom:4px;line-height:1.3">${escHtml(p.title)}</div>
+    <div style="font-size:.44rem;color:#484f58;margin-bottom:8px">Archived ${p.archived_at ? p.archived_at.slice(0,10) : ''}</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      ${fileBtn}
+      <button onclick="storageRestore('${p.id}')" style="padding:4px 8px;background:#1e3060;border:1px solid #2e50a0;color:#6090e0;border-radius:4px;font-size:.46rem;cursor:pointer">↩️ Restore</button>
+    </div>
+  </div>`;
+}
+
+async function storageRestore(id){
+  await fetch(`/api/digital-products/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'qc_pending'})});
+  loadStorageProducts();
+}
+
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
 </body>
 </html>
