@@ -790,6 +790,13 @@ def _make_observable(agent, key: str):
 # ── Task runner ────────────────────────────────────────────────────────────────
 
 def _run_task(key: str, task: str):
+    if not os.getenv("ANTHROPIC_API_KEY", ""):
+        agent_states[key] = {
+            "status": "error", "task": task,
+            "error": "ANTHROPIC_API_KEY not set — open .env and paste your key, then restart.",
+        }
+        _emit(key, "error", "❌ ANTHROPIC_API_KEY missing — check .env and restart.")
+        return
     if _should_route_to_ceo(key, task):
         _emit(key, "routed", "Routing to CEO for full pipeline…", {"to": "ceo", "from": key})
         agent_name = AGENT_CLASSES.get(key, key)
@@ -1650,7 +1657,15 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("  OnBrandCraftz Town — Starting...")
     print("  Open: http://localhost:8080")
-    print("=" * 60 + "\n")
+    print("=" * 60)
+    # Credential check visible in the bat window
+    _ak = os.getenv("ANTHROPIC_API_KEY", "")
+    if _ak:
+        print(f"  Anthropic API key: loaded ({_ak[:12]}...)")
+    else:
+        print("  WARNING: ANTHROPIC_API_KEY not found — agents will fail!")
+        print("  Make sure .env is in the repo root and contains the key.")
+    print()
     threading.Thread(
         target=lambda: (time.sleep(1.5), webbrowser.open("http://localhost:8080")),
         daemon=True,
