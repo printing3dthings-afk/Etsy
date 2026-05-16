@@ -48,7 +48,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 #rev-bar .rev-spacer{flex:1}
 
 /* ── TOWN VIEWPORT ── */
-#vp{overflow:hidden;position:relative;background:#0a1628;cursor:grab;user-select:none;perspective:1800px;perspective-origin:50% 0%}
+#vp{overflow:hidden;position:relative;background:#0a1628;cursor:grab;user-select:none}
 #vp.grabbing{cursor:grabbing}
 #world{position:absolute;width:5000px;height:2700px;transform-origin:0 0;image-rendering:pixelated;image-rendering:crisp-edges}
 
@@ -1064,6 +1064,14 @@ body{transition:background .5s,color .5s}
   background:linear-gradient(180deg,#e8d8b0 0%,#f5e8c0 30%,#f8eec8 100%);
   opacity:0;transition:opacity .3s;pointer-events:none;overflow:hidden}
 .bld:hover .binterior,.bld.selected .binterior{opacity:1}
+/* On hover: show ONLY interior — hide all exterior elements */
+.bld:hover .broof,.bld:hover .beave,.bld:hover .bub,
+.bld:hover .blabel,.bld:hover .bbadge,.bld:hover .bsign,
+.bld:hover .bwins,.bld:hover .bwinbox,.bld:hover .bdoor-wrap,
+.bld:hover .bfound,.bld:hover .bchim,.bld:hover .bstoop,
+.bld:hover .bstoop2,.bld:hover .hall-flag-pole,.bld:hover .hall-flag{display:none !important}
+.bld:hover .bbody{background:transparent !important;border:none !important;box-shadow:none !important;outline:none !important}
+.bld:hover .binterior{inset:0}
 /* Wall texture (subtle horizontal banding) */
 .binterior::before{content:'';position:absolute;inset:0;z-index:0;
   background:repeating-linear-gradient(180deg,transparent 0,transparent 18px,rgba(140,90,20,.07) 18px,rgba(140,90,20,.07) 19px),
@@ -1842,9 +1850,14 @@ let zoom=0.5, panX=0, panY=0;
 const vp    = document.getElementById('vp');
 const world = document.getElementById('world');
 
-const CAM_TILT = -22; // deg — top recedes into distance (Stardew Valley overhead angle)
+const SV_Y = 0.72; // vertical squeeze — Stardew Valley overhead look, no blank-area artifacts
 function applyTransform() {
-  world.style.transform = `translate(${panX}px,${panY}px) scale(${zoom}) rotateX(${CAM_TILT}deg)`;
+  const r = vp.getBoundingClientRect();
+  const ww = 5000 * zoom, wh = 2700 * zoom * SV_Y;
+  // Hard-stop: never scroll past world edges (blank areas never visible)
+  if(ww >= r.width)  panX = Math.min(0, Math.max(panX, r.width  - ww));
+  if(wh >= r.height) panY = Math.min(0, Math.max(panY, r.height - wh));
+  world.style.transform = `translate(${panX}px,${panY}px) scale(${zoom}) scaleY(${SV_Y})`;
   document.getElementById('zlabel').textContent = Math.round(zoom*100)+'%';
 }
 
@@ -1909,8 +1922,8 @@ function doZoom(f){
 }
 function resetView(){
   const r=vp.getBoundingClientRect();
-  zoom=Math.min((r.width-20)/5000,(r.height-20)/2700)*.9;
-  panX=(r.width-5000*zoom)/2; panY=Math.max(0,(r.height-2700*zoom)/2);
+  zoom=Math.min((r.width-20)/5000,(r.height-20)/(2700*SV_Y))*.9;
+  panX=(r.width-5000*zoom)/2; panY=Math.max(0,(r.height-2700*zoom*SV_Y)/2);
   applyTransform();
 }
 
@@ -3589,9 +3602,9 @@ function drawMinimap(){
     ctx.fillStyle=a.roof||'#30363d';
     ctx.fillRect(bx-3,by-3,6,6);
   });
-  // Viewport rectangle — use panX/panY globals (world is positioned via transform, not left/top)
-  const vw=window.innerWidth*(1/zoom), vh=window.innerHeight*(1/zoom);
-  const vx=(-panX/zoom)*scaleX, vy=(-panY/zoom)*scaleY;
+  // Viewport rectangle (accounts for SV_Y vertical squeeze)
+  const vw=window.innerWidth/zoom, vh=window.innerHeight/(zoom*SV_Y);
+  const vx=(-panX/zoom)*scaleX, vy=(-panY/(zoom*SV_Y))*scaleY;
   ctx.strokeStyle='rgba(88,166,255,.8)'; ctx.lineWidth=1.5;
   ctx.strokeRect(vx,vy,vw*scaleX,vh*scaleY);
 }
@@ -3602,7 +3615,7 @@ function initMinimap(){
     const rect=canvas.getBoundingClientRect();
     const mx=(e.clientX-rect.left)/180, my=(e.clientY-rect.top)/100;
     panX=-mx*5000*zoom+window.innerWidth/2;
-    panY=-my*2700*zoom+window.innerHeight/2;
+    panY=-my*2700*zoom*SV_Y+window.innerHeight/2;
     applyTransform();
     drawMinimap();
   });
