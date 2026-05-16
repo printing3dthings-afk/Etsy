@@ -12,7 +12,7 @@
 html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
 
 /* ── LAYOUT ── */
-#app{display:grid;grid-template-rows:46px 1fr;grid-template-columns:1fr 340px;height:100vh}
+#app{display:grid;grid-template-rows:46px 28px 1fr;grid-template-columns:1fr 340px;height:100vh}
 #hdr{grid-column:1/-1;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:8px;z-index:200}
 #hdr h1{font-size:.85rem;font-weight:700;color:#fff;white-space:nowrap;margin-right:4px}
 .hbtn{padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text);font-size:.7rem;cursor:pointer;transition:background .15s;white-space:nowrap}
@@ -38,7 +38,7 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 #clock{font-size:.68rem;color:#8b949e;white-space:nowrap}
 
 /* ── REVENUE WIDGET ── */
-#rev-bar{display:flex;align-items:center;gap:0;background:#0d1117;border-bottom:2px solid #1a4020;flex-shrink:0;overflow:hidden;height:28px}
+#rev-bar{grid-column:1/-1;display:flex;align-items:center;gap:0;background:#0d1117;border-bottom:2px solid #1a4020;flex-shrink:0;overflow:hidden;height:28px}
 .rev-stat{display:flex;align-items:center;gap:5px;padding:0 14px;border-right:1px solid #21262d;height:100%;white-space:nowrap}
 .rev-stat:last-child{border-right:none}
 .rev-lbl{font-size:.45rem;color:#484f58;text-transform:uppercase;letter-spacing:.06em}
