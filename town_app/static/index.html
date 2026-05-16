@@ -258,36 +258,79 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .ck-leg::after{content:'';position:absolute;bottom:0;left:-3px;width:8px;height:2px;
   background:#d48020;outline:1px solid #1a0800;border-radius:0 2px 2px 0}
 
-/* Dog */
-.dog-sprite{animation:dog-trot 0.6s steps(2,end) infinite}
-.dog-wrap{position:relative;display:inline-block}
-.dog-body{width:22px;height:13px;background:#c46820;border-radius:2px 4px 3px 2px;
-  outline:2px solid #1a0800;position:relative;display:block}
-.dog-head{width:12px;height:10px;background:#c46820;border-radius:3px 4px 3px 2px;
-  outline:2px solid #1a0800;position:absolute;right:-8px;top:-7px}
-.dog-ear{width:6px;height:7px;background:#9a5018;border-radius:1px 3px 3px 1px;
-  outline:2px solid #1a0800;position:absolute;top:-4px;right:1px}
-.dog-eye{width:3px;height:3px;background:#1a0800;border-radius:50%;
+/* Dog — larger, more detailed */
+.dog-sprite{animation:dog-wander 12s ease-in-out infinite}
+@keyframes dog-wander{0%,100%{transform:translateX(0)}30%{transform:translateX(18px)}70%{transform:translateX(-10px)}}
+.dog-wrap{position:relative;display:inline-block;animation:dog-trot .55s cubic-bezier(.4,0,.2,1) infinite alternate}
+@keyframes dog-trot{from{transform:translateY(0) rotate(-1deg)}to{transform:translateY(-4px) rotate(1deg)}}
+.dog-body{width:28px;height:16px;background:#c46820;border-radius:3px 5px 4px 3px;
+  outline:2px solid #1a0800;position:relative;display:block;
+  box-shadow:inset -3px -2px 0 rgba(0,0,0,.15),inset 2px 2px 0 rgba(255,255,255,.2)}
+.dog-body::before{content:'';position:absolute;top:4px;left:4px;right:8px;height:5px;
+  background:rgba(180,90,10,.3);border-radius:2px}
+.dog-head{width:15px;height:12px;background:#c46820;border-radius:4px 5px 3px 3px;
+  outline:2px solid #1a0800;position:absolute;right:-10px;top:-8px;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.2)}
+.dog-ear{width:7px;height:9px;background:#9a5018;border-radius:1px 4px 4px 1px;
+  outline:2px solid #1a0800;position:absolute;top:-5px;right:1px;
+  animation:dog-ear-droop 2s ease-in-out infinite alternate}
+@keyframes dog-ear-droop{from{transform:rotate(0deg)}to{transform:rotate(5deg)}}
+.dog-eye{width:4px;height:4px;background:#1a0800;border-radius:50%;
   position:absolute;top:2px;right:2px}
-.dog-eye::after{content:'';width:1px;height:1px;background:rgba(255,255,255,.85);
+.dog-eye::after{content:'';width:1px;height:1px;background:rgba(255,255,255,.9);
   border-radius:50%;position:absolute;top:0;left:0}
-.dog-snout{width:7px;height:4px;background:#d49038;border-radius:2px 2px 3px 3px;
-  outline:2px solid #1a0800;position:absolute;bottom:0;right:-2px}
-.dog-nose{width:3px;height:2px;background:#1a0800;border-radius:1px;
-  position:absolute;top:0;left:2px}
-.dog-tail{width:4px;height:11px;background:#c46820;border-radius:2px;
-  outline:2px solid #1a0800;position:absolute;left:-3px;top:-8px;
+.dog-snout{width:9px;height:5px;background:#d49038;border-radius:3px 3px 4px 4px;
+  outline:2px solid #1a0800;position:absolute;bottom:0;right:-3px}
+.dog-nose{width:4px;height:2px;background:#1a0800;border-radius:1px;
+  position:absolute;top:1px;left:2px}
+.dog-tail{width:5px;height:14px;background:#c46820;border-radius:3px;
+  outline:2px solid #1a0800;position:absolute;left:-4px;top:-10px;
   transform:rotate(-40deg);transform-origin:bottom center;
-  animation:dog-wag 0.55s ease-in-out infinite}
-.dog-legs{position:absolute;bottom:-9px;left:2px;display:flex;gap:4px}
-.dog-leg{width:4px;height:9px;background:#c46820;outline:2px solid #1a0800;
-  border-radius:0 0 2px 2px}
-.dog-leg:nth-child(1),.dog-leg:nth-child(3){animation:dl-a 0.6s steps(2,end) infinite}
-.dog-leg:nth-child(2),.dog-leg:nth-child(4){animation:dl-b 0.6s steps(2,end) infinite}
-@keyframes dog-trot{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@keyframes dog-wag{0%,100%{transform:rotate(-40deg)}50%{transform:rotate(-60deg)}}
-@keyframes dl-a{0%,100%{transform:skewX(10deg)}50%{transform:skewX(-10deg)}}
-@keyframes dl-b{0%,100%{transform:skewX(-10deg)}50%{transform:skewX(10deg)}}
+  animation:dog-wag .5s ease-in-out infinite}
+.dog-legs{position:absolute;bottom:-11px;left:3px;display:flex;gap:5px}
+.dog-leg{width:5px;height:11px;background:#c46820;outline:2px solid #1a0800;
+  border-radius:0 0 3px 3px;position:relative}
+.dog-leg::after{content:'';position:absolute;bottom:-3px;left:-1px;width:7px;height:4px;
+  background:#9a5018;outline:1px solid #1a0800;border-radius:0 2px 2px 0}
+.dog-leg:nth-child(1),.dog-leg:nth-child(3){animation:dl-a .55s cubic-bezier(.4,0,.2,1) infinite}
+.dog-leg:nth-child(2),.dog-leg:nth-child(4){animation:dl-b .55s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes dog-wag{0%,100%{transform:rotate(-40deg)}50%{transform:rotate(-65deg)}}
+@keyframes dl-a{0%,100%{transform:skewX(12deg)}50%{transform:skewX(-12deg)}}
+@keyframes dl-b{0%,100%{transform:skewX(-12deg)}50%{transform:skewX(12deg)}}
+
+/* Cat */
+.cat-sprite { animation: cat-idle 4s ease-in-out infinite alternate; }
+@keyframes cat-idle { from { transform: rotate(-2deg) } to { transform: rotate(2deg) } }
+.cat-wrap { position: relative; display: inline-block; }
+.cat-body { width: 18px; height: 12px; background: #e8c880; border-radius: 3px 5px 4px 3px;
+  outline: 2px solid #1a0800; position: relative; display: block;
+  box-shadow: inset -2px -1px 0 rgba(0,0,0,.15), inset 2px 2px 0 rgba(255,255,255,.3) }
+.cat-body::before { content:''; position:absolute; top:2px; left:2px; right:4px; height:4px;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent 3px,rgba(120,80,20,.2) 3px,rgba(120,80,20,.2) 4px);
+  border-radius:1px }
+.cat-tail { position:absolute; left:-10px; bottom:0; width:12px; height:4px;
+  background:#e8c880; outline:2px solid #1a0800; border-radius:3px 0 0 3px;
+  transform:rotate(-30deg); transform-origin:right center;
+  animation:cat-tail-wave 1.5s ease-in-out infinite alternate }
+@keyframes cat-tail-wave { from{transform:rotate(-30deg)}to{transform:rotate(-60deg)} }
+.cat-head { width:11px; height:10px; background:#e8c880; border-radius:5px 5px 3px 3px;
+  outline:2px solid #1a0800; position:absolute; right:-5px; top:-8px }
+.cat-ear-l,.cat-ear-r { position:absolute; top:-6px; width:0; height:0;
+  border-left:4px solid transparent; border-right:4px solid transparent;
+  border-bottom:7px solid #e8c880; filter:drop-shadow(0 -1px 0 #1a0800) }
+.cat-ear-l { left:0; }
+.cat-ear-r { right:0; }
+.cat-eye { position:absolute; width:3px; height:2px; background:#1a0800; border-radius:50%; top:3px; }
+.cat-eye-l { left:2px; }
+.cat-eye-r { right:2px; }
+.cat-nose { position:absolute; width:4px; height:2px; background:#e06080; border-radius:50%; top:6px; left:50%; transform:translateX(-50%); }
+.cat-whisker-l,.cat-whisker-r { position:absolute; top:7px; height:1px; width:8px;
+  background:rgba(0,0,0,.6); border-radius:1px; }
+.cat-whisker-l { right:11px; transform:rotate(-10deg); }
+.cat-whisker-r { left:11px; transform:rotate(10deg); }
+.cat-legs { position:absolute; bottom:-6px; left:3px; display:flex; gap:5px; }
+.cat-leg { width:3px; height:6px; background:#e8c880; outline:1px solid #1a0800; border-radius:0 0 2px 2px; position:relative; }
+.cat-leg::after { content:''; position:absolute; bottom:-2px; left:-1px; width:5px; height:3px; background:#d4b060; outline:1px solid #1a0800; border-radius:2px; }
 
 /* Crop tiles */
 .crop-patch{position:absolute;pointer-events:none;z-index:3}
@@ -571,12 +614,12 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 }
 /* Pixel art window */
 .bwin {
-  width: 26px;
-  height: 34px;
-  background: #88d8f8;
+  width: 28px;
+  height: 36px;
+  background: linear-gradient(135deg, #a0e0ff 0%, #60c8f8 40%, #88d8f8 70%, #b0e8ff 100%);
   border-radius: 0;
   outline: 2px solid #000;
-  box-shadow: inset 2px 2px 0 rgba(255,255,255,.7), inset -2px -2px 0 rgba(0,80,120,.3);
+  box-shadow: inset 3px 3px 0 rgba(255,255,255,.75), inset -2px -2px 0 rgba(0,60,120,.35);
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
@@ -601,15 +644,16 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   background: rgba(255,255,255,.85);
   pointer-events: none;
 }
-/* Window sill */
+/* Window sill — stone style */
 .bwin-wrap::after {
   content: '';
   position: absolute;
-  bottom: -5px;
-  left: -2px; right: -2px;
-  height: 5px;
-  background: #888;
-  outline: 1px solid #000;
+  bottom: -6px;
+  left: -4px; right: -4px;
+  height: 6px;
+  background: linear-gradient(180deg,#a09070 0%,#786840 100%);
+  outline: 2px solid #000;
+  box-shadow: 1px 2px 0 rgba(0,0,0,.4);
 }
 /* Window glow when running */
 @keyframes wlit {
@@ -717,16 +761,31 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 }
 
 /* ── WINDOW BOX (decorative) ──────────────────────── */
-/* Pixel window box (green planter) */
+/* Window box (flower planter) */
 .bwinbox {
   position: absolute;
-  top: 75px;
+  top: 72px;
   left: 50%;
   transform: translateX(-50%);
-  height: 6px;
-  background: repeating-linear-gradient(90deg, #2d7a10 0, #2d7a10 4px, #3d9a18 4px, #3d9a18 8px);
+  height: 8px;
+  width: var(--bw, 155px);
+  background: linear-gradient(180deg,#7a4010 0%,#5a2a08 100%);
   outline: 2px solid #000;
   z-index: 3;
+  image-rendering: pixelated;
+  border-radius: 0 0 2px 2px;
+}
+.bwinbox::before {
+  content: '';
+  position: absolute;
+  top: -6px; left: 4px; right: 4px;
+  height: 8px;
+  background: repeating-linear-gradient(90deg,
+    #e03030 0, #e03030 4px, #3d9a18 4px, #3d9a18 6px,
+    #f0c030 6px, #f0c030 10px, #e03030 10px, #e03030 14px,
+    #3d9a18 14px, #3d9a18 16px, #e86030 16px, #e86030 20px,
+    #3d9a18 20px, #3d9a18 22px);
+  border-radius: 2px 2px 0 0;
   image-rendering: pixelated;
 }
 
@@ -1345,30 +1404,37 @@ body{transition:background .5s,color .5s}
 .resident{position:absolute;display:flex;flex-direction:column;align-items:center;image-rendering:pixelated;
   transition:left 1.35s cubic-bezier(.4,0,.2,1),top 1.35s cubic-bezier(.4,0,.2,1);
   z-index:41;pointer-events:none}
-.r-hat{width:20px;height:7px;border-radius:2px 2px 0 0;outline:2px solid #000;flex-shrink:0;
+.r-hat{width:22px;height:8px;border-radius:3px 3px 0 0;outline:2px solid #000;flex-shrink:0;
   margin-bottom:-2px;position:relative;z-index:3}
-.r-hat::after{content:'';position:absolute;bottom:-3px;left:-2px;right:-2px;height:3px;
-  background:inherit;filter:brightness(.7);outline:2px solid #000;border-radius:0 0 1px 1px}
-.r-hair{width:16px;height:6px;border-radius:0;outline:2px solid #000;flex-shrink:0;
+.r-hat::after{content:'';position:absolute;bottom:-3px;left:-3px;right:-3px;height:3px;
+  background:inherit;filter:brightness(.68);outline:2px solid #000;border-radius:0 0 1px 1px}
+.r-hair{width:18px;height:6px;border-radius:0;outline:2px solid #000;flex-shrink:0;
   margin-bottom:-2px;z-index:2}
-.r-head{width:16px;height:16px;border-radius:2px;outline:2px solid #000;
-  box-shadow:1px 1px 0 #000;position:relative;flex-shrink:0;z-index:1;image-rendering:pixelated}
-.r-eye{position:absolute;width:3px;height:3px;background:#1a0800;top:4px;border-radius:0 0 1px 1px}
-.r-eye-l{left:2px}.r-eye-r{right:2px}
+.r-head{width:18px;height:18px;border-radius:2px;outline:2px solid #000;
+  box-shadow:2px 2px 0 #000;position:relative;flex-shrink:0;z-index:1;image-rendering:pixelated}
+.r-eye{position:absolute;width:3px;height:4px;background:#1a0800;top:4px;border-radius:0 0 1px 1px}
+.r-eye-l{left:3px}.r-eye-r{right:3px}
 .r-eye::after{content:'';position:absolute;width:1px;height:1px;background:rgba(255,255,255,.9);top:0;left:0}
-.r-cheek{position:absolute;width:3px;height:2px;background:#f09090;border-radius:50%;top:9px}
+.r-cheek{position:absolute;width:4px;height:3px;background:#f09090;border-radius:50%;top:11px}
 .r-cheek-l{left:1px}.r-cheek-r{right:1px}
-.r-torso{width:14px;height:13px;border-radius:0;outline:2px solid #000;
-  box-shadow:1px 1px 0 #000;flex-shrink:0;margin-top:0}
+.r-neck{width:8px;height:3px;flex-shrink:0;outline:1px solid #000;margin-top:0}
+.r-upper{display:flex;align-items:flex-start;gap:0;margin-top:0}
+.r-arm{width:5px;height:13px;border-radius:0 0 2px 2px;outline:2px solid #000;
+  transform-origin:top center;flex-shrink:0;margin-top:1px;image-rendering:pixelated}
+.r-torso{width:16px;height:14px;border-radius:0;outline:2px solid #000;
+  box-shadow:2px 2px 0 #000;flex-shrink:0;position:relative}
+.r-torso::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:8px;height:3px;background:rgba(255,255,255,.22)}
 .r-legs{display:flex;gap:2px;margin-top:1px}
-.r-leg{width:6px;height:10px;border-radius:0 0 2px 2px;outline:2px solid #000;
+.r-leg{width:7px;height:11px;border-radius:0 0 2px 2px;outline:2px solid #000;
   transform-origin:top center;position:relative;flex-shrink:0}
-.r-leg::after{content:'';position:absolute;bottom:-3px;left:-2px;width:10px;height:4px;
-  background:var(--rboot,#2a1808);outline:1px solid #000;border-radius:0 1px 1px 0}
-.r-shadow{width:18px;height:4px;background:rgba(0,0,0,.28);border-radius:50%;margin-top:2px;flex-shrink:0}
+.r-leg::after{content:'';position:absolute;bottom:-4px;left:-2px;width:11px;height:5px;
+  background:var(--rboot,#2a1808);outline:2px solid #000;border-radius:0 2px 2px 1px}
+.r-shadow{width:22px;height:5px;background:rgba(0,0,0,.3);border-radius:50%;margin-top:2px;flex-shrink:0}
 .r-label{font-size:.3rem;font-weight:700;margin-top:3px;white-space:nowrap;
-  background:rgba(0,0,0,.75);padding:1px 4px;border-radius:0;color:#fff;
-  outline:1px solid rgba(255,255,255,.15);letter-spacing:.03em}
+  background:rgba(0,0,0,.8);padding:1px 5px;border-radius:2px;color:#fff;
+  outline:1px solid rgba(255,255,255,.15);letter-spacing:.03em;
+  text-shadow:0 0 4px rgba(255,255,255,.3)}
 /* idle: gentle sway */
 .resident.idle{animation:res-idle 4s ease-in-out infinite alternate}
 @keyframes res-idle{from{transform:rotate(-1deg)}to{transform:rotate(1deg)}}
@@ -1403,6 +1469,8 @@ body{transition:background .5s,color .5s}
 }
 .resident.walking .r-leg:nth-child(1){animation:wlk .36s cubic-bezier(.4,0,.2,1) infinite}
 .resident.walking .r-leg:nth-child(2){animation:wlk .36s cubic-bezier(.4,0,.2,1) infinite reverse}
+.resident.walking .r-arm:nth-child(1){animation:wlk .36s cubic-bezier(.4,0,.2,1) infinite reverse}
+.resident.walking .r-arm:nth-child(3){animation:wlk .36s cubic-bezier(.4,0,.2,1) infinite}
 .resident.walking{animation:res-walk-bob .36s cubic-bezier(.4,0,.2,1) infinite}
 /* research overlay badge on buildings */
 .b-research-badge{position:absolute;top:4px;right:4px;background:rgba(88,166,255,.18);
@@ -1443,6 +1511,130 @@ body{transition:background .5s,color .5s}
     transparent 0, transparent 3px,
     rgba(0,0,0,.04) 3px, rgba(0,0,0,.04) 4px
   );
+}
+
+/* ── MEETING HALL INTERIOR ── */
+.hall-int-view { background: linear-gradient(180deg,#5a3000 0%,#8B5010 12%,#c89830 40%,#d4aa50 70%,#e0c060 100%) !important; }
+.hall-chandelier {
+  position:absolute;top:7px;left:50%;transform:translateX(-50%);
+  width:70px;height:10px;
+  background:linear-gradient(90deg,#8B6914,#f5d060 30%,#f8e080 50%,#f5d060 70%,#8B6914);
+  border-radius:5px;z-index:6;
+  border:2px solid #5a3a00;
+  box-shadow:0 0 18px rgba(255,230,80,.7),0 0 40px rgba(255,200,40,.3)
+}
+.hall-chandelier::before {
+  content:'';position:absolute;top:10px;left:5px;right:5px;height:70px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,240,140,.28) 0%,transparent 70%);
+  pointer-events:none
+}
+.hall-chandelier::after {
+  content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  width:4px;height:8px;background:#5a3a00
+}
+/* Crest/seal on back wall */
+.hall-crest-seal {
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  width:38px;height:38px;
+  background:radial-gradient(circle at 40% 38%,#f8e060 0%,#d4a820 55%,#8B5800 100%);
+  border-radius:50%;border:4px solid #5a3a00;z-index:5;
+  box-shadow:0 0 12px rgba(255,200,50,.45),inset 0 2px 4px rgba(255,255,200,.3)
+}
+.hall-crest-seal::before {
+  content:'⭐';position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);font-size:14px;line-height:1
+}
+.hall-crest-seal::after {
+  content:'';position:absolute;inset:-8px;border-radius:50%;
+  border:2px solid rgba(255,200,50,.3);pointer-events:none
+}
+/* Wall paintings */
+.hall-painting-l,.hall-painting-r {
+  position:absolute;top:16px;width:30px;height:26px;
+  background:linear-gradient(135deg,#c07830,#e0a040);
+  border:3px solid #5a3000;border-radius:2px;z-index:5;
+  box-shadow:2px 2px 0 #2a1000
+}
+.hall-painting-l { left:8px; }
+.hall-painting-r { right:8px; }
+.hall-painting-l::before,.hall-painting-r::before {
+  content:'';position:absolute;inset:3px;
+  background:linear-gradient(135deg,#204010,#388020 40%,#509040);
+  border-radius:1px
+}
+/* Decorative banners */
+.hall-banner-l,.hall-banner-r {
+  position:absolute;top:0;width:6px;height:40px;z-index:4;
+  background:linear-gradient(180deg,#c0392b,#e74c3c);
+  clip-path:polygon(0 0,100% 0,100% 85%,50% 100%,0 85%);
+  border:1px solid #8b1a1a
+}
+.hall-banner-l { left:22px; }
+.hall-banner-r { right:22px; }
+/* Big meeting table */
+.hall-big-table {
+  position:absolute;bottom:22px;left:5%;right:5%;height:52px;z-index:5
+}
+.hall-tbl-surface {
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,#8B4A0A 0%,#6B3408 45%,#4a2006 100%);
+  border-radius:8px;border:3px solid #2a1200;
+  box-shadow:0 5px 0 #1a0800,0 6px 0 #0a0400,
+             inset 0 2px 3px rgba(255,200,100,.18),
+             inset 0 -2px 4px rgba(0,0,0,.3)
+}
+.hall-tbl-surface::before {
+  content:'';position:absolute;top:4px;left:8px;right:8px;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,220,120,.4),transparent)
+}
+/* Chairs above table (perspective top row) */
+.hall-chair-t {
+  position:absolute;top:-12px;width:12%;height:13px;
+  background:linear-gradient(180deg,#2a0a00 0%,#4a1800 60%,#3a1000 100%);
+  border-radius:3px 3px 1px 1px;border:2px solid #1a0400;
+  box-shadow:0 -1px 0 #1a0800
+}
+.hall-chair-t::before {
+  content:'';position:absolute;top:-4px;left:1px;right:1px;height:4px;
+  background:#3a1200;border-radius:2px 2px 0 0;border:1px solid #1a0400
+}
+/* Chairs below table (perspective bottom row) */
+.hall-chair-b {
+  position:absolute;bottom:-12px;width:12%;height:13px;
+  background:linear-gradient(180deg,#4a1800 0%,#2a0a00 100%);
+  border-radius:1px 1px 3px 3px;border:2px solid #1a0400
+}
+.hall-chair-b::after {
+  content:'';position:absolute;bottom:-4px;left:1px;right:1px;height:4px;
+  background:#3a1200;border-radius:0 0 2px 2px;border:1px solid #1a0400
+}
+/* Head-of-table chairs (sides) */
+.hall-chair-head {
+  position:absolute;width:10px;height:16px;
+  background:linear-gradient(90deg,#3a1200,#5a2000);
+  border-radius:2px;border:2px solid #1a0400
+}
+/* Fireplace in hall interior */
+.hall-fireplace-r {
+  position:absolute;bottom:14px;right:7px;width:26px;height:34px;z-index:6;
+  background:linear-gradient(180deg,#2a1000 0%,#1a0800 100%);
+  border:3px solid #6B3A10;border-radius:3px 3px 0 0;
+  box-shadow:inset 0 8px 0 #1a0800
+}
+.hall-fireplace-r::before {
+  content:'🔥';position:absolute;bottom:3px;left:50%;
+  transform:translateX(-50%);font-size:13px;line-height:1;
+  animation:fire-flicker .38s ease-in-out infinite alternate
+}
+.hall-fireplace-r::after {
+  content:'';position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  width:10px;height:14px;
+  background:repeating-linear-gradient(180deg,#7a4020 0,#7a4020 4px,#5a2a10 4px,#5a2a10 5px);
+  border:2px solid #3a1800;border-radius:2px 2px 0 0
+}
+@keyframes fire-flicker {
+  from{transform:translateX(-50%) scale(1)}
+  to{transform:translateX(-50%) scale(1.14) rotate(2deg)}
 }
 
 /* ── MEETING HALL ── */
@@ -2074,10 +2266,35 @@ function mkBuilding(a){
 
   const wallBg = INTERIOR_WALLS[a.key] || 'linear-gradient(180deg,#e8d8b0 0%,#f5e8c0 30%,#f8eec8 100%)';
   const interior = isHall
-    ? `<div class="binterior" style="opacity:0">
-         <div class="hall-mini-board" id="hall-mini">${
-           AGENTS.filter(x=>x.type!=='hall').slice(0,9).map(()=>'<div class="mini-note"></div>').join('')
-         }</div>
+    ? `<div class="binterior hall-int-view" style="opacity:0">
+         <div class="bi-ceil"></div>
+         <div class="hall-chandelier"></div>
+         <div class="hall-crest-seal"></div>
+         <div class="hall-painting-l"></div>
+         <div class="hall-painting-r"></div>
+         <div class="hall-banner-l"></div>
+         <div class="hall-banner-r"></div>
+         <div class="hall-big-table">
+           <div class="hall-tbl-surface"></div>
+           <div class="hall-chair-t" style="left:4%"></div>
+           <div class="hall-chair-t" style="left:17%"></div>
+           <div class="hall-chair-t" style="left:30%"></div>
+           <div class="hall-chair-t" style="left:43%"></div>
+           <div class="hall-chair-t" style="left:56%"></div>
+           <div class="hall-chair-t" style="left:69%"></div>
+           <div class="hall-chair-t" style="left:82%"></div>
+           <div class="hall-chair-b" style="left:4%"></div>
+           <div class="hall-chair-b" style="left:17%"></div>
+           <div class="hall-chair-b" style="left:30%"></div>
+           <div class="hall-chair-b" style="left:43%"></div>
+           <div class="hall-chair-b" style="left:56%"></div>
+           <div class="hall-chair-b" style="left:69%"></div>
+           <div class="hall-chair-b" style="left:82%"></div>
+           <div class="hall-chair-head" style="left:-9px;top:50%;transform:translateY(-50%)"></div>
+           <div class="hall-chair-head" style="right:-9px;top:50%;transform:translateY(-50%)"></div>
+         </div>
+         <div class="hall-fireplace-r"></div>
+         <div class="bi-floor"></div>
        </div>`
     : `<div class="binterior" style="background:${wallBg}">
          <div class="bi-ceil"></div>
@@ -2207,9 +2424,11 @@ function mkChicken(parent, x, y){
   d.style.cssText=`left:${x}px;top:${y}px`;
   d.innerHTML=`<div class="ck-wrap">
     <div class="ck-body">
+      <div class="ck-tail"></div>
       <div class="ck-wing"></div>
       <div class="ck-head">
         <div class="ck-comb"></div>
+        <div class="ck-eye"></div>
         <div class="ck-beak"></div>
         <div class="ck-wattle"></div>
       </div>
@@ -2235,6 +2454,33 @@ function mkDog(parent, x, y){
     <div class="dog-legs">
       <div class="dog-leg"></div><div class="dog-leg"></div>
       <div class="dog-leg"></div><div class="dog-leg"></div>
+    </div>
+  </div>`;
+  parent.appendChild(d);
+}
+
+function mkCat(parent, x, y){
+  const colors = ['#e8c880','#c8a060','#f0d8a0','#6a4a20','#e8e0d0'];
+  const col = colors[Math.floor(Math.random()*colors.length)];
+  const d=document.createElement('div');
+  d.className='animal cat-sprite';
+  d.style.cssText=`left:${x}px;top:${y}px`;
+  d.innerHTML=`<div class="cat-wrap">
+    <div class="cat-body" style="background:${col};box-shadow:inset -2px -1px 0 rgba(0,0,0,.15)">
+      <div class="cat-tail" style="background:${col}"></div>
+      <div class="cat-head" style="background:${col}">
+        <div class="cat-ear-l" style="border-bottom-color:${col}"></div>
+        <div class="cat-ear-r" style="border-bottom-color:${col}"></div>
+        <div class="cat-eye cat-eye-l"></div>
+        <div class="cat-eye cat-eye-r"></div>
+        <div class="cat-nose"></div>
+      </div>
+    </div>
+    <div class="cat-whisker-l"></div>
+    <div class="cat-whisker-r"></div>
+    <div class="cat-legs">
+      <div class="cat-leg" style="background:${col}"></div>
+      <div class="cat-leg" style="background:${col}"></div>
     </div>
   </div>`;
   parent.appendChild(d);
@@ -2376,8 +2622,13 @@ function buildDecos(){
     animation:f-shimmer 3.2s ease-in-out infinite alternate`;
   c.appendChild(waterOverlay);
 
-  // Fountain in front of CEO building (CEO: x:1370, w:240 → center x:1490; bottom y:620)
-  mkFountain(c, 1448, 607);
+  // Town plaza fountain — centered on CEO building (x:2230,w:240 → center:2350), in street junction
+  const plazaStone = document.createElement('div');
+  plazaStone.style.cssText = `position:absolute;left:2175px;top:710px;width:350px;height:78px;
+  background:radial-gradient(ellipse at 50% 50%,#c8b880 0%,#b8a870 50%,transparent 72%);
+  border-radius:50%;z-index:2;pointer-events:none`;
+  c.appendChild(plazaStone);
+  mkFountain(c, 2295, 713);
 
   // ── FENCES (SV wooden fences along paths) ────────────────────────────────
   // Along road 1 top edge
@@ -2401,6 +2652,14 @@ function buildDecos(){
   // ── DOG near CEO / town square ───────────────────────────────────────────
   mkDog(c, 1520, 980);
   mkDog(c, 380, 1280);
+  // Cats scattered around town
+  mkCat(c, 650, 1000);
+  mkCat(c, 1580, 1300);
+  mkCat(c, 2400, 990);
+  mkCat(c, 1200, 1740);
+  mkCat(c, 3000, 1300);
+  mkCat(c, 1750, 1620);
+  mkCat(c, 450, 1620);
 }
 
 function mkFountain(parent, x, y){
@@ -2431,8 +2690,8 @@ function mkFountain(parent, x, y){
 
 function mkLamp(parent,x,y,h){
   const d=document.createElement('div');
-  d.className='lamp'; d.style.cssText=`left:${x}px;top:${y-h}px;width:30px;height:${h}px`;
-  d.innerHTML=`<div class="lamp-halo"></div><div class="lamp-globe"></div><div class="lamp-arm"></div><div class="lamp-pole" style="height:${h}px"></div>`;
+  d.className='lamp'; d.style.cssText=`left:${x}px;top:${y-h}px;width:30px;height:${h+6}px`;
+  d.innerHTML=`<div class="lamp-halo"></div><div class="lamp-globe"></div><div class="lamp-arm"></div><div class="lamp-pole" style="height:${h}px"></div><div class="lamp-base"></div>`;
   parent.appendChild(d);
 }
 
@@ -2661,7 +2920,12 @@ function mkResident(a){
       <div class="r-cheek r-cheek-l"></div>
       <div class="r-cheek r-cheek-r"></div>
     </div>
-    <div class="r-torso" style="background:${lk.shirt}"></div>
+    <div class="r-neck" style="background:color-mix(in srgb,${lk.skin} 80%,#000)"></div>
+    <div class="r-upper">
+      <div class="r-arm" style="background:${lk.skin}"></div>
+      <div class="r-torso" style="background:${lk.shirt}"></div>
+      <div class="r-arm" style="background:${lk.skin}"></div>
+    </div>
     <div class="r-legs">
       <div class="r-leg" style="background:${lk.pants}"></div>
       <div class="r-leg" style="background:${lk.pants}"></div>
