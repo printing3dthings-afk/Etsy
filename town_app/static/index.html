@@ -822,28 +822,28 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* SV-style boots — chunky, distinct */
 .w-leg::after { content:''; position:absolute; bottom:-5px; left:-3px; width:16px; height:6px; background:var(--wboot,#2a1808); outline:2px solid #000; border-radius:0 2px 2px 1px; }
 
-/* Walking */
-@keyframes w-bob { 0%{transform:translateY(0)} 20%{transform:translateY(-4px)} 50%{transform:translateY(1px)} 70%{transform:translateY(-4px)} 100%{transform:translateY(0)} }
-@keyframes w-step { 0%{transform:rotate(-30deg)} 50%{transform:rotate(30deg)} 100%{transform:rotate(-30deg)} }
-@keyframes w-arm-swing { 0%{transform:rotate(24deg)} 50%{transform:rotate(-24deg)} 100%{transform:rotate(24deg)} }
-@keyframes w-shadow-walk { 0%,100%{transform:scaleX(1);opacity:.35} 50%{transform:scaleX(.75);opacity:.15} }
-.walker.walking .w-figure { animation:w-bob .44s steps(4,end) infinite; }
-.walker.walking .w-leg:nth-child(1) { animation:w-step .44s steps(4,end) infinite; }
-.walker.walking .w-leg:nth-child(2) { animation:w-step .44s steps(4,end) infinite reverse; }
-.walker.walking .w-arm:nth-child(1) { animation:w-arm-swing .44s steps(4,end) infinite reverse; }
-.walker.walking .w-arm:nth-child(3) { animation:w-arm-swing .44s steps(4,end) infinite; }
-.walker.walking .w-shadow { animation:w-shadow-walk .44s steps(4,end) infinite; }
+/* Walking — smooth cubic-bezier for fluid motion */
+@keyframes w-bob { 0%{transform:translateY(0)} 25%{transform:translateY(-5px)} 50%{transform:translateY(1px)} 75%{transform:translateY(-5px)} 100%{transform:translateY(0)} }
+@keyframes w-step { 0%{transform:rotate(-32deg)} 50%{transform:rotate(32deg)} 100%{transform:rotate(-32deg)} }
+@keyframes w-arm-swing { 0%{transform:rotate(28deg)} 50%{transform:rotate(-28deg)} 100%{transform:rotate(28deg)} }
+@keyframes w-shadow-walk { 0%,100%{transform:scaleX(1);opacity:.35} 50%{transform:scaleX(.7);opacity:.12} }
+.walker.walking .w-figure { animation:w-bob .48s cubic-bezier(.4,0,.2,1) infinite; }
+.walker.walking .w-leg:nth-child(1) { animation:w-step .48s cubic-bezier(.4,0,.2,1) infinite; }
+.walker.walking .w-leg:nth-child(2) { animation:w-step .48s cubic-bezier(.4,0,.2,1) infinite reverse; }
+.walker.walking .w-arm:nth-child(1) { animation:w-arm-swing .48s cubic-bezier(.4,0,.2,1) infinite reverse; }
+.walker.walking .w-arm:nth-child(3) { animation:w-arm-swing .48s cubic-bezier(.4,0,.2,1) infinite; }
+.walker.walking .w-shadow { animation:w-shadow-walk .48s cubic-bezier(.4,0,.2,1) infinite; }
 
-/* Running */
-@keyframes w-run { 0%{transform:rotate(-44deg)} 50%{transform:rotate(44deg)} 100%{transform:rotate(-44deg)} }
-@keyframes w-run-bob { 0%{transform:translateY(0)} 25%{transform:translateY(-8px)} 50%{transform:translateY(0)} 75%{transform:translateY(-8px)} 100%{transform:translateY(0)} }
-@keyframes w-run-arm { 0%{transform:rotate(40deg)} 50%{transform:rotate(-40deg)} 100%{transform:rotate(40deg)} }
-.walker.running .w-figure { animation:w-run-bob .26s steps(4,end) infinite; transform-origin:bottom center; }
-.walker.running .w-leg:nth-child(1) { animation:w-run .26s steps(4,end) infinite; }
-.walker.running .w-leg:nth-child(2) { animation:w-run .26s steps(4,end) infinite reverse; }
-.walker.running .w-arm:nth-child(1) { animation:w-run-arm .26s steps(4,end) infinite reverse; }
-.walker.running .w-arm:nth-child(3) { animation:w-run-arm .26s steps(4,end) infinite; }
-.walker.running .w-shadow { animation:w-shadow-walk .26s steps(4,end) infinite; }
+/* Running — smoother fast stride */
+@keyframes w-run { 0%{transform:rotate(-48deg)} 50%{transform:rotate(48deg)} 100%{transform:rotate(-48deg)} }
+@keyframes w-run-bob { 0%{transform:translateY(0)} 25%{transform:translateY(-9px)} 50%{transform:translateY(0)} 75%{transform:translateY(-9px)} 100%{transform:translateY(0)} }
+@keyframes w-run-arm { 0%{transform:rotate(44deg)} 50%{transform:rotate(-44deg)} 100%{transform:rotate(44deg)} }
+.walker.running .w-figure { animation:w-run-bob .28s cubic-bezier(.4,0,.2,1) infinite; transform-origin:bottom center; }
+.walker.running .w-leg:nth-child(1) { animation:w-run .28s cubic-bezier(.4,0,.2,1) infinite; }
+.walker.running .w-leg:nth-child(2) { animation:w-run .28s cubic-bezier(.4,0,.2,1) infinite reverse; }
+.walker.running .w-arm:nth-child(1) { animation:w-run-arm .28s cubic-bezier(.4,0,.2,1) infinite reverse; }
+.walker.running .w-arm:nth-child(3) { animation:w-run-arm .28s cubic-bezier(.4,0,.2,1) infinite; }
+.walker.running .w-shadow { animation:w-shadow-walk .28s cubic-bezier(.4,0,.2,1) infinite; }
 
 /* Working */
 .walker.working { animation:wbob .55s steps(2,end) infinite alternate; }
@@ -1357,10 +1357,22 @@ body{transition:background .5s,color .5s}
 /* learning: brain pulse */
 .resident.learning{animation:res-learn 1.4s ease-in-out infinite alternate}
 @keyframes res-learn{from{transform:translateY(0);filter:drop-shadow(0 0 3px #d29922)}to{transform:translateY(-5px);filter:drop-shadow(0 0 12px #f0c030)}}
-/* walking */
-.resident.walking .r-leg:nth-child(1){animation:wlk .38s ease-in-out infinite}
-.resident.walking .r-leg:nth-child(2){animation:wlk .38s ease-in-out infinite reverse}
-.resident.walking{animation:none}
+/* walking — smooth leg swing + body bob */
+@keyframes wlk{
+  0%   {transform:rotate(-28deg)}
+  50%  {transform:rotate(28deg)}
+  100% {transform:rotate(-28deg)}
+}
+@keyframes res-walk-bob{
+  0%   {transform:translateY(0) rotate(-.5deg)}
+  25%  {transform:translateY(-3px) rotate(.5deg)}
+  50%  {transform:translateY(0) rotate(-.5deg)}
+  75%  {transform:translateY(-2px) rotate(.5deg)}
+  100% {transform:translateY(0) rotate(-.5deg)}
+}
+.resident.walking .r-leg:nth-child(1){animation:wlk .36s cubic-bezier(.4,0,.2,1) infinite}
+.resident.walking .r-leg:nth-child(2){animation:wlk .36s cubic-bezier(.4,0,.2,1) infinite reverse}
+.resident.walking{animation:res-walk-bob .36s cubic-bezier(.4,0,.2,1) infinite}
 /* research overlay badge on buildings */
 .b-research-badge{position:absolute;top:4px;right:4px;background:rgba(88,166,255,.18);
   border:1px solid #58a6ff;border-radius:4px;font-size:.45rem;color:#79c0ff;
@@ -1727,120 +1739,129 @@ body{transition:background .5s,color .5s}
 // Road 3 at y:1330-1374 → Row C starts at y:1390
 const AGENTS = [
   // key, name, display, icon, roof, wall, x, y, w, h, wins, chimney, quick[], firstName, bio, speed, chatLines
-  {key:'ceo', name:'CEO Agent', display:'CEO HQ', icon:'🏛️', roof:'#7B1900',wall:'#f0e8d0', x:2380,y:960, w:240,h:290, wins:3,chimney:false,large:true,
-   firstName:'Victor', bio:'Strategic visionary who sees the whole board. Calm under pressure, razor sharp.', speed:0.8,
-   chatLines:['Focus on the big picture.','What is our revenue today?','Execute with precision.','Vision drives results.'],
-   quick:['Run daily briefing','What should we focus on this week?','Full shop status report']},
-  // ── Creative district ──────────────────────────────────────────────────────
-  {key:'brand', name:'Brand Design Agent', display:'Brand Design', icon:'🎨', roof:'#9a2820',wall:'#f0dcc8', x:1500,y:660, w:155,h:195, wins:2,chimney:false,
+  // ── Row 1: top district ────────────────────────────────────────────────────
+  // Left block: Creative
+  {key:'brand', name:'Brand Design Agent', display:'Brand Design', icon:'🎨', roof:'#9a2820',wall:'#f0dcc8', x:1000,y:455, w:155,h:195, wins:2,chimney:false,
    firstName:'Luna', bio:'Creative spark who lives for aesthetics. Every pixel is a decision.', speed:1.1,
    chatLines:['I am feeling cobalt blue today!','The font always matters.','Everything is an aesthetic.','Bold colors, bold sales.'],
    quick:['Create a shop banner concept','Review brand guidelines','Generate logo brief']},
-  {key:'art', name:'Art Creation Agent', display:'Art Creation', icon:'🖼️', roof:'#6b3090',wall:'#e8dcc8', x:1720,y:620, w:175,h:215, wins:2,chimney:false,
+  {key:'art', name:'Art Creation Agent', display:'Art Creation', icon:'🖼️', roof:'#6b3090',wall:'#e8dcc8', x:1225,y:435, w:175,h:215, wins:2,chimney:false,
    firstName:'Aria', bio:'Dreamy and inspired. She finds beauty in every color and shape.', speed:0.85,
    chatLines:['Inspiration is flowing...','Colors tell stories.','I see beauty in everything.','This palette speaks to me.'],
    quick:['Create boho botanical wall art for Etsy','Create a daily planner PDF','List all digital products']},
-  {key:'qc', name:'Quality Check Agent', display:'Quality Check', icon:'🔍', roof:'#1e4468',wall:'#d8dcd8', x:1965,y:655, w:150,h:190, wins:2,chimney:false,
+  {key:'qc', name:'Quality Check Agent', display:'Quality Check', icon:'🔍', roof:'#1e4468',wall:'#d8dcd8', x:1468,y:455, w:150,h:190, wins:2,chimney:false,
    firstName:'Marcus', bio:'Meticulous and no-nonsense. Good enough is never good enough.', speed:0.9,
    chatLines:['That needs one more pass.','Details. Always details.','Good enough is not good enough.','I found three issues.'],
    quick:['Review all pending products','Get QC summary','Approve all pending products']},
-  {key:'listing', name:'Etsy Listing Agent', display:'Etsy Listing', icon:'🏪', roof:'#b84010',wall:'#f0d898', x:1500,y:1468, w:160,h:196, wins:2,chimney:false,
-   firstName:'Penny', bio:'Upbeat and detail-obsessed. She can SEO-optimize anything.', speed:1.15,
-   chatLines:['SEO that title!','This description needs punch.','Another listing done!','Keywords are my love language.'],
-   quick:['Get all listings','Create SEO title for a 3D printed shelf','Publish approved digital products']},
-  {key:'store', name:'Store Manager Agent', display:'Store Manager', icon:'🏬', roof:'#2a5018',wall:'#d8c890', x:2645,y:645, w:152,h:192, wins:2,chimney:false,
+  // Right block: Commerce
+  {key:'store', name:'Store Manager Agent', display:'Store Manager', icon:'🏬', roof:'#2a5018',wall:'#d8c890', x:2700,y:450, w:152,h:192, wins:2,chimney:false,
    firstName:'Sam', bio:'Reliable backbone of the shop. Steady, dependable, always prepared.', speed:1.0,
    chatLines:['Shop is looking healthy.','Renewals are on time.','I keep the lights on.','Everything in order.'],
    quick:['Shop health report','Check renewal alerts','Update shop announcement']},
-  {key:'delivery', name:'Sales Processor Agent', display:'Sales Processor', icon:'📧', roof:'#0d5050',wall:'#ccdcd8', x:1500,y:1782, w:150,h:186, wins:2,chimney:false,
-   firstName:'Dex', bio:'Fast, efficient, zero fuss. Gets orders out the door before you blink.', speed:1.3,
-   chatLines:['Order shipped!','On to the next.','Speed is my thing.','Nothing sits in queue on my watch.'],
-   quick:['Check pending deliveries','Delivery statistics','Process all pending orders']},
-  // ── Market district ────────────────────────────────────────────────────────
-  {key:'sales', name:'Sales Agent', display:'Sales', icon:'💰', roof:'#8B1A1A',wall:'#f0d8d0', x:1252,y:952, w:165,h:200, wins:2,chimney:false,
-   firstName:'Rex', bio:'Competitive hustler who lives for the close. Every click is an opportunity.', speed:1.2,
-   chatLines:['Ka-ching!','More sales, more better.','Close everything.','Revenue is oxygen.'],
-   quick:["Today's revenue summary","Pending orders list","Monthly sales report"]},
-  {key:'product', name:'Product Agent', display:'Product', icon:'📦', roof:'#3a1868',wall:'#e0d8ec', x:2888,y:952, w:158,h:195, wins:2,chimney:false,
-   firstName:'Violet', bio:'Thoughtful and analytical. She finds the perfect price and position.', speed:0.95,
-   chatLines:['This could be positioned better.','The price is not quite right.','Optimization is an art.','Every product has potential.'],
-   quick:['All listings overview','Find underpriced listings','Inventory status']},
-  {key:'marketing', name:'Marketing Agent', display:'Marketing', icon:'📈', roof:'#C04010',wall:'#f0dcc0', x:2870,y:628, w:160,h:198, wins:2,chimney:false,
+  {key:'marketing', name:'Marketing Agent', display:'Marketing', icon:'📈', roof:'#C04010',wall:'#f0dcc0', x:2924,y:432, w:160,h:198, wins:2,chimney:false,
    firstName:'Chase', bio:'Bold trend-hunter who moves fast and thinks faster.', speed:1.25,
    chatLines:['This is going viral!','Bold moves pay off.','Trends are my territory.','The algorithm loves this.'],
    quick:['Top marketing opportunities','SEO improvement suggestions','Traffic analysis']},
-  {key:'analytics', name:'Analytics Agent', display:'Analytics', icon:'📊', roof:'#192060',wall:'#d4d8ec', x:3102,y:655, w:170,h:205, wins:3,chimney:false,
+  {key:'analytics', name:'Analytics Agent', display:'Analytics', icon:'📊', roof:'#192060',wall:'#d4d8ec', x:3158,y:450, w:170,h:205, wins:3,chimney:false,
    firstName:'Nova', bio:'Data geek with quiet confidence. Numbers tell her everything she needs.', speed:0.9,
    chatLines:['The data speaks clearly.','Interesting pattern...','Numbers do not lie.','Correlation confirmed.'],
    quick:['Weekly performance report','Top selling products','Revenue trends']},
-  {key:'cs', name:'Customer Service Agent', display:'Customer Svc', icon:'💬', roof:'#0a4838',wall:'#ccd8d4', x:1732,y:1450, w:155,h:194, wins:2,chimney:false,
-   firstName:'Jade', bio:'Warm, patient, and empathetic. Every customer feels heard.', speed:0.95,
-   chatLines:['Every customer matters.','Kindness goes a long way.','They just needed to be heard.','Resolved with a smile.'],
-   quick:['Unread messages','Pending reviews','Draft a 5-star review response']},
-  {key:'social', name:'Social Media Agent', display:'Social Media', icon:'📌', roof:'#781038',wall:'#eed8e4', x:1957,y:1478, w:160,h:198, wins:2,chimney:false,
-   firstName:'Blossom', bio:'Trendy, expressive, and always on-brand. Pinning before it was cool.', speed:1.1,
-   chatLines:['That is so pinnable!','Aesthetic check done.','The algorithm loves this.','Vibes are immaculate.'],
-   quick:['Pinterest strategy for 3D prints','Content calendar this month','Best pins to create now']},
-  // ── Business district ──────────────────────────────────────────────────────
-  {key:'finance', name:'Financial Agent', display:'Financial', icon:'💵', roof:'#9a6010',wall:'#f0e8b8', x:1268,y:1258, w:165,h:200, wins:2,chimney:false,
+  // ── Row 2: CEO row ─────────────────────────────────────────────────────────
+  // Left: Operations pair
+  {key:'sales', name:'Sales Agent', display:'Sales', icon:'💰', roof:'#8B1A1A',wall:'#f0d8d0', x:1000,y:870, w:165,h:200, wins:2,chimney:false,
+   firstName:'Rex', bio:'Competitive hustler who lives for the close. Every click is an opportunity.', speed:1.2,
+   chatLines:['Ka-ching!','More sales, more better.','Close everything.','Revenue is oxygen.'],
+   quick:["Today's revenue summary","Pending orders list","Monthly sales report"]},
+  {key:'finance', name:'Financial Agent', display:'Financial', icon:'💵', roof:'#9a6010',wall:'#f0e8b8', x:1232,y:875, w:165,h:200, wins:2,chimney:false,
    firstName:'Sterling', bio:'Conservative and sharp with numbers. Margins are sacred.', speed:0.85,
    chatLines:['Margins look solid.','Revenue over expenses. Always.','Watch the fees.','The books balance.'],
    quick:['Monthly profit report','Calculate fees on a $25 sale','Cash flow summary']},
-  {key:'print', name:'Print Production Agent', display:'Print Prod.', icon:'🖨️', roof:'#2e3840',wall:'#d8dae0', x:2908,y:1258, w:155,h:192, wins:2,chimney:true,
+  // Center: CEO HQ
+  {key:'ceo', name:'CEO Agent', display:'CEO HQ', icon:'🏛️', roof:'#7B1900',wall:'#f0e8d0', x:2230,y:835, w:240,h:295, wins:3,chimney:false,large:true,
+   firstName:'Victor', bio:'Strategic visionary who sees the whole board. Calm under pressure, razor sharp.', speed:0.8,
+   chatLines:['Focus on the big picture.','What is our revenue today?','Execute with precision.','Vision drives results.'],
+   quick:['Run daily briefing','What should we focus on this week?','Full shop status report']},
+  // Right: Product pair
+  {key:'product', name:'Product Agent', display:'Product', icon:'📦', roof:'#3a1868',wall:'#e0d8ec', x:2700,y:870, w:158,h:195, wins:2,chimney:false,
+   firstName:'Violet', bio:'Thoughtful and analytical. She finds the perfect price and position.', speed:0.95,
+   chatLines:['This could be positioned better.','The price is not quite right.','Optimization is an art.','Every product has potential.'],
+   quick:['All listings overview','Find underpriced listings','Inventory status']},
+  {key:'print', name:'Print Production Agent', display:'Print Prod.', icon:'🖨️', roof:'#2e3840',wall:'#d8dae0', x:2932,y:875, w:155,h:192, wins:2,chimney:true,
    firstName:'Gus', bio:'Hands-on and dependable. If the machine is humming, Gus is happy.', speed:1.0,
    chatLines:['Queue is clear.','Machine is humming.','Another batch ready.','Filament loaded.'],
    quick:['Print queue status','Machine health check','Add a print job for order #001']},
-  {key:'ads', name:'Etsy Ads Agent', display:'Etsy Ads', icon:'📣', roof:'#a02810',wall:'#eedad0', x:2648,y:1458, w:160,h:198, wins:2,chimney:false,
-   firstName:'Sparky', bio:'Loud, hyped, and unstoppable. Click rates are a personal victory.', speed:1.35,
-   chatLines:['CLICK RATES ARE UP!','Spend more to earn more!','This campaign is fire!','ROAS looking good!'],
-   quick:['Ad performance report','Recommend ad strategy','Best listings to promote']},
-  {key:'intel', name:'Competitor Intel Agent', display:'Comp. Intel', icon:'🔭', roof:'#1a3e18',wall:'#cce0cc', x:1948,y:1788, w:155,h:192, wins:2,chimney:false,
-   firstName:'Scout', bio:'Curious and observant. Spots market gaps before anyone else.', speed:1.1,
-   chatLines:['Spotted a gap in the market.','Competitor dropped their price.','Intel acquired.','I see everything.'],
-   quick:['Find market gaps for 3D prints','Seasonal opportunities','Competitor pricing analysis']},
-  {key:'promos', name:'Promotions Agent', display:'Promotions', icon:'🏷️', roof:'#a86010',wall:'#f0e4b0', x:2882,y:1472, w:165,h:200, wins:2,chimney:false,
-   firstName:'Goldie', bio:'Sunny and deals-oriented. Nobody throws a sale like Goldie.', speed:1.2,
-   chatLines:['Sale time!','Coupon codes ready!','Deals, deals, deals!','Everybody loves a discount.'],
-   quick:['Active promotions','Best coupon for new customers','Plan a summer sale']},
-  {key:'tax', name:'Tax Compliance Agent', display:'Tax', icon:'📋', roof:'#282828',wall:'#e0e0dc', x:3118,y:1450, w:155,h:188, wins:2,chimney:false,
-   firstName:'Irving', bio:'Methodical, serious, and cautious. Compliance is non-negotiable.', speed:0.8,
-   chatLines:['Keep those receipts.','Q3 estimates filed.','Compliance is non-negotiable.','Every deduction counts.'],
-   quick:['Quarterly tax estimate','Log $45 packaging expense','Copyright check for my new design']},
-  {key:'returns', name:'Returns & Disputes', display:'Returns', icon:'↩️', roof:'#881818',wall:'#f0d8d8', x:1252,y:1528, w:152,h:188, wins:2,chimney:false,
+  // ── Row 3: Service row ─────────────────────────────────────────────────────
+  // Left block: Customer-facing
+  {key:'returns', name:'Returns & Disputes', display:'Returns', icon:'↩️', roof:'#881818',wall:'#f0d8d8', x:1000,y:1330, w:152,h:188, wins:2,chimney:false,
    firstName:'Rosie', bio:'Diplomatic and even-keeled. Turns unhappy customers into loyal ones.', speed:0.9,
    chatLines:['Resolved without escalation.','Everyone deserves fair treatment.','Case closed.','Diplomacy wins.'],
    quick:['Open cases','Draft response to not-as-described claim','Return analytics']},
-  {key:'supply', name:'Supply Chain Agent', display:'Supply Chain', icon:'⛏️', roof:'#3c2010',wall:'#e4d8c4', x:1268,y:1798, w:165,h:200, wins:2,chimney:true,
-   firstName:'Bruno', bio:'Gruff, practical, and rock-solid. Nothing stops if Bruno is on the job.', speed:0.85,
-   chatLines:['Filament incoming.','Stock levels nominal.','Can not print without supplies.','Reorder placed.'],
-   quick:['Reorder alerts','Add Matte Black PLA 2000g at $0.02/g','Filament inventory']},
-  {key:'email', name:'Email Marketing Agent', display:'Email Mktg', icon:'📬', roof:'#0a3868',wall:'#ccd8ec', x:1722,y:1762, w:155,h:194, wins:2,chimney:false,
-   firstName:'Beau', bio:'Charming and persuasive. A subject line from Beau always gets opened.', speed:1.05,
-   chatLines:['Subject line is everything.','Opens are up 12%.','A little persuasion never hurts.','CTR looking good.'],
-   quick:['Get receipt message','Draft a new subscriber newsletter','Create package insert copy']},
-  {key:'abt', name:'A/B Testing Agent', display:'A/B Testing', icon:'🧪', roof:'#0a4030',wall:'#cce0d8', x:2648,y:1775, w:155,h:188, wins:2,chimney:false,
-   firstName:'Theo', bio:'Scientific and experimental. No decision is made without a hypothesis.', speed:1.0,
-   chatLines:['Hypothesis confirmed.','Test it. Always test it.','Statistical significance reached.','Variant B wins.'],
-   quick:['Active tests','Generate test ideas for listing L001','Testing calendar']},
-  // ── Infrastructure district ────────────────────────────────────────────────
-  {key:'api', name:'API Connections Agent', display:'API Connections', icon:'🔌', roof:'#0a2870',wall:'#ccd4ec', x:2878,y:1758, w:165,h:200, wins:2,chimney:false,
-   firstName:'Byte', bio:'Technical, precise, and minimal. Every endpoint is a handshake.', speed:1.0,
-   chatLines:['All endpoints nominal.','Connection stable.','Ping: 12ms.','Latency is low today.'],
-   quick:['Connection health report','List all API keys status','Set up Pinterest API connection']},
-  {key:'coordinator', name:'Workflow Coordinator', display:'Ops Center', icon:'⚙️', roof:'#104888',wall:'#d0d8f0', x:3118,y:1778, w:165,h:200, wins:2,chimney:false,
-   firstName:'Otto', bio:'Organized and central. He is the glue that keeps everything moving.', speed:1.0,
-   chatLines:['Workflow optimized.','Everyone in position.','Syncing the team.','Operations running smooth.'],
-   quick:['Daily ops summary','Digital pipeline status','Find bottlenecks']},
-  {key:'trend', name:'Trend Forecasting Agent', display:'Trend Lab', icon:'🔮', roof:'#380870',wall:'#ddd4f0', x:2908,y:1798, w:155,h:195, wins:2,chimney:false,
-   firstName:'Mystic', bio:'Visionary and ahead of the curve. She sees trends months before they peak.', speed:0.75,
-   chatLines:['I see it before others do.','Cottagecore is peaking...','The future is clear.','This trend is rising.'],
-   quick:['Seasonal opportunity calendar','Flag emerging trends for art agent','Get trend radar']},
-  {key:'retention', name:'Customer Retention Agent', display:'Retention Hub', icon:'💎', roof:'#185018',wall:'#cce4cc', x:2888,y:1528, w:158,h:195, wins:2,chimney:false,
+  {key:'listing', name:'Etsy Listing Agent', display:'Etsy Listing', icon:'🏪', roof:'#b84010',wall:'#f0d898', x:1218,y:1325, w:160,h:196, wins:2,chimney:false,
+   firstName:'Penny', bio:'Upbeat and detail-obsessed. She can SEO-optimize anything.', speed:1.15,
+   chatLines:['SEO that title!','This description needs punch.','Another listing done!','Keywords are my love language.'],
+   quick:['Get all listings','Create SEO title for a 3D printed shelf','Publish approved digital products']},
+  {key:'cs', name:'Customer Service Agent', display:'Customer Svc', icon:'💬', roof:'#0a4838',wall:'#ccd8d4', x:1446,y:1330, w:155,h:194, wins:2,chimney:false,
+   firstName:'Jade', bio:'Warm, patient, and empathetic. Every customer feels heard.', speed:0.95,
+   chatLines:['Every customer matters.','Kindness goes a long way.','They just needed to be heard.','Resolved with a smile.'],
+   quick:['Unread messages','Pending reviews','Draft a 5-star review response']},
+  {key:'social', name:'Social Media Agent', display:'Social Media', icon:'📌', roof:'#781038',wall:'#eed8e4', x:1670,y:1330, w:160,h:198, wins:2,chimney:false,
+   firstName:'Blossom', bio:'Trendy, expressive, and always on-brand. Pinning before it was cool.', speed:1.1,
+   chatLines:['That is so pinnable!','Aesthetic check done.','The algorithm loves this.','Vibes are immaculate.'],
+   quick:['Pinterest strategy for 3D prints','Content calendar this month','Best pins to create now']},
+  // Right block: Commerce/Ads
+  {key:'retention', name:'Customer Retention Agent', display:'Retention Hub', icon:'💎', roof:'#185018',wall:'#cce4cc', x:2700,y:1325, w:158,h:195, wins:2,chimney:false,
    firstName:'Emerald', bio:'Loyal and caring. She treats every buyer like they are the only one.', speed:0.95,
    chatLines:['They came back!','Loyalty is earned daily.','Every customer is family.','Repeat buyer confirmed.'],
    quick:['Retention report','Identify at-risk buyers','Get VIP buyers']},
-  // ── MEETING HALL (not an agent — opens idea board) ──
-  {key:'hall', name:'Meeting Hall', display:'Meeting Hall', icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:2325,y:2162, w:350,h:390, wins:4,chimney:false,type:'hall',
+  {key:'ads', name:'Etsy Ads Agent', display:'Etsy Ads', icon:'📣', roof:'#a02810',wall:'#eedad0', x:2930,y:1330, w:160,h:198, wins:2,chimney:false,
+   firstName:'Sparky', bio:'Loud, hyped, and unstoppable. Click rates are a personal victory.', speed:1.35,
+   chatLines:['CLICK RATES ARE UP!','Spend more to earn more!','This campaign is fire!','ROAS looking good!'],
+   quick:['Ad performance report','Recommend ad strategy','Best listings to promote']},
+  {key:'promos', name:'Promotions Agent', display:'Promotions', icon:'🏷️', roof:'#a86010',wall:'#f0e4b0', x:3162,y:1325, w:165,h:200, wins:2,chimney:false,
+   firstName:'Goldie', bio:'Sunny and deals-oriented. Nobody throws a sale like Goldie.', speed:1.2,
+   chatLines:['Sale time!','Coupon codes ready!','Deals, deals, deals!','Everybody loves a discount.'],
+   quick:['Active promotions','Best coupon for new customers','Plan a summer sale']},
+  {key:'tax', name:'Tax Compliance Agent', display:'Tax', icon:'📋', roof:'#282828',wall:'#e0e0dc', x:3400,y:1330, w:155,h:188, wins:2,chimney:false,
+   firstName:'Irving', bio:'Methodical, serious, and cautious. Compliance is non-negotiable.', speed:0.8,
+   chatLines:['Keep those receipts.','Q3 estimates filed.','Compliance is non-negotiable.','Every deduction counts.'],
+   quick:['Quarterly tax estimate','Log $45 packaging expense','Copyright check for my new design']},
+  // ── Row 4: Infrastructure row ──────────────────────────────────────────────
+  // Left block: Ops
+  {key:'supply', name:'Supply Chain Agent', display:'Supply Chain', icon:'⛏️', roof:'#3c2010',wall:'#e4d8c4', x:1000,y:1750, w:165,h:200, wins:2,chimney:true,
+   firstName:'Bruno', bio:'Gruff, practical, and rock-solid. Nothing stops if Bruno is on the job.', speed:0.85,
+   chatLines:['Filament incoming.','Stock levels nominal.','Can not print without supplies.','Reorder placed.'],
+   quick:['Reorder alerts','Add Matte Black PLA 2000g at $0.02/g','Filament inventory']},
+  {key:'delivery', name:'Sales Processor Agent', display:'Sales Processor', icon:'📧', roof:'#0d5050',wall:'#ccdcd8', x:1232,y:1750, w:150,h:186, wins:2,chimney:false,
+   firstName:'Dex', bio:'Fast, efficient, zero fuss. Gets orders out the door before you blink.', speed:1.3,
+   chatLines:['Order shipped!','On to the next.','Speed is my thing.','Nothing sits in queue on my watch.'],
+   quick:['Check pending deliveries','Delivery statistics','Process all pending orders']},
+  {key:'email', name:'Email Marketing Agent', display:'Email Mktg', icon:'📬', roof:'#0a3868',wall:'#ccd8ec', x:1450,y:1755, w:155,h:194, wins:2,chimney:false,
+   firstName:'Beau', bio:'Charming and persuasive. A subject line from Beau always gets opened.', speed:1.05,
+   chatLines:['Subject line is everything.','Opens are up 12%.','A little persuasion never hurts.','CTR looking good.'],
+   quick:['Get receipt message','Draft a new subscriber newsletter','Create package insert copy']},
+  {key:'intel', name:'Competitor Intel Agent', display:'Comp. Intel', icon:'🔭', roof:'#1a3e18',wall:'#cce0cc', x:1674,y:1752, w:155,h:192, wins:2,chimney:false,
+   firstName:'Scout', bio:'Curious and observant. Spots market gaps before anyone else.', speed:1.1,
+   chatLines:['Spotted a gap in the market.','Competitor dropped their price.','Intel acquired.','I see everything.'],
+   quick:['Find market gaps for 3D prints','Seasonal opportunities','Competitor pricing analysis']},
+  // Right block: Tech/Research
+  {key:'abt', name:'A/B Testing Agent', display:'A/B Testing', icon:'🧪', roof:'#0a4030',wall:'#cce0d8', x:2700,y:1750, w:155,h:188, wins:2,chimney:false,
+   firstName:'Theo', bio:'Scientific and experimental. No decision is made without a hypothesis.', speed:1.0,
+   chatLines:['Hypothesis confirmed.','Test it. Always test it.','Statistical significance reached.','Variant B wins.'],
+   quick:['Active tests','Generate test ideas for listing L001','Testing calendar']},
+  {key:'api', name:'API Connections Agent', display:'API Connections', icon:'🔌', roof:'#0a2870',wall:'#ccd4ec', x:2930,y:1750, w:165,h:200, wins:2,chimney:false,
+   firstName:'Byte', bio:'Technical, precise, and minimal. Every endpoint is a handshake.', speed:1.0,
+   chatLines:['All endpoints nominal.','Connection stable.','Ping: 12ms.','Latency is low today.'],
+   quick:['Connection health report','List all API keys status','Set up Pinterest API connection']},
+  {key:'trend', name:'Trend Forecasting Agent', display:'Trend Lab', icon:'🔮', roof:'#380870',wall:'#ddd4f0', x:3168,y:1750, w:155,h:195, wins:2,chimney:false,
+   firstName:'Mystic', bio:'Visionary and ahead of the curve. She sees trends months before they peak.', speed:0.75,
+   chatLines:['I see it before others do.','Cottagecore is peaking...','The future is clear.','This trend is rising.'],
+   quick:['Seasonal opportunity calendar','Flag emerging trends for art agent','Get trend radar']},
+  {key:'coordinator', name:'Workflow Coordinator', display:'Ops Center', icon:'⚙️', roof:'#104888',wall:'#d0d8f0', x:3400,y:1755, w:165,h:200, wins:2,chimney:false,
+   firstName:'Otto', bio:'Organized and central. He is the glue that keeps everything moving.', speed:1.0,
+   chatLines:['Workflow optimized.','Everyone in position.','Syncing the team.','Operations running smooth.'],
+   quick:['Daily ops summary','Digital pipeline status','Find bottlenecks']},
+  // ── MEETING HALL (bottom of town) ──
+  {key:'hall', name:'Meeting Hall', display:'Meeting Hall', icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:2230,y:2270, w:350,h:390, wins:4,chimney:false,type:'hall',
    firstName:'Hall', bio:'Where big ideas are born.', speed:1.0, chatLines:[],
    quick:[]},
 ];
@@ -2087,28 +2108,32 @@ function mkBuilding(a){
 
 function buildRoads(){
   const r=document.getElementById('roads');
-  // Horizontal main roads — now properly above each building row
+  // 4 horizontal main streets between rows, plus sidewalks and center stripe
   const roads=[
-    {cls:'rh',style:'top:700px;height:52px'},   // above Row A (y:768)
-    {cls:'rh',style:'top:1018px;height:46px'},  // above Row B (y:1080)
-    {cls:'rh',style:'top:1330px;height:44px'},  // above Row C (y:1390)
-    // Center dashed lines
-    {cls:'rcl',style:'top:725px'},
-    {cls:'rcl',style:'top:1040px'},
-    {cls:'rcl',style:'top:1351px'},
-    // Vertical connectors (from road 1 top to road 3 bottom, ~680px span)
-    {cls:'rv',style:'left:193px;top:698px;width:36px;height:678px'},
-    {cls:'rv',style:'left:458px;top:698px;width:36px;height:678px'},
-    {cls:'rv',style:'left:1475px;top:600px;width:36px;height:776px'},  // CEO connector
-    {cls:'rv',style:'left:1055px;top:698px;width:36px;height:678px'},
-    {cls:'rv',style:'left:1268px;top:698px;width:36px;height:678px'},
-    {cls:'rv',style:'left:1848px;top:698px;width:36px;height:678px'},
-    {cls:'rv',style:'left:2068px;top:698px;width:36px;height:678px'},
-    {cls:'rv',style:'left:2290px;top:698px;width:36px;height:678px'},
-    // Sidewalk strips between road and buildings
-    {cls:'swk',style:'top:752px;left:0;right:0;height:16px;background:#d4c8a0;border:none'},
-    {cls:'swk',style:'top:1064px;left:0;right:0;height:16px;background:#d4c8a0;border:none'},
-    {cls:'swk',style:'top:1374px;left:0;right:0;height:16px;background:#d4c8a0;border:none'},
+    // Street 1 — between Row 1 (bottoms ~650) and Row 2 (tops ~835)
+    {cls:'rh',style:'top:710px;height:78px'},
+    {cls:'rcl',style:'top:748px'},
+    {cls:'swk',style:'top:788px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
+    // Street 2 — between Row 2 (bottoms ~1130) and Row 3 (tops ~1325)
+    {cls:'rh',style:'top:1178px;height:78px'},
+    {cls:'rcl',style:'top:1216px'},
+    {cls:'swk',style:'top:1256px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
+    // Street 3 — between Row 3 (bottoms ~1530) and Row 4 (tops ~1750)
+    {cls:'rh',style:'top:1590px;height:78px'},
+    {cls:'rcl',style:'top:1628px'},
+    {cls:'swk',style:'top:1668px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
+    // Street 4 — between Row 4 (bottoms ~1960) and Hall (top ~2270)
+    {cls:'rh',style:'top:2010px;height:70px'},
+    {cls:'rcl',style:'top:2044px'},
+    {cls:'swk',style:'top:2080px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
+    // Central vertical avenue (between left block x~1830 and CEO/right block x~2230)
+    {cls:'rv',style:'left:1890px;top:390px;width:44px;height:1680px'},
+    // Right-center vertical (between CEO x~2470 and right block x~2700)
+    {cls:'rv',style:'left:2550px;top:390px;width:44px;height:1680px'},
+    // Left outer vertical (left of left block x~1000)
+    {cls:'rv',style:'left:950px;top:710px;width:38px;height:1368px'},
+    // Right outer vertical (right of right block x~3558)
+    {cls:'rv',style:'left:3580px;top:710px;width:38px;height:1368px'},
   ];
   roads.forEach(({cls,style})=>{
     const d=document.createElement('div');
@@ -2116,9 +2141,10 @@ function buildRoads(){
   });
   // District labels
   const labels=[
-    {text:'Creative District',x:65,y:672},
-    {text:'Market District',x:855,y:672},
-    {text:'Business District',x:1700,y:672},
+    {text:'Creative Hub',   x:980, y:360},
+    {text:'Central HQ',     x:2140,y:760},
+    {text:'Commerce Hub',   x:2680,y:360},
+    {text:'Meeting Hall',   x:2200,y:2200},
   ];
   labels.forEach(({text,x,y})=>{
     const d=document.createElement('div');
@@ -2185,12 +2211,11 @@ function mkDog(parent, x, y){
 
 function buildDecos(){
   const c=document.getElementById('decos');
-  // Lamp posts along road 1 (y:700)
-  for(let x=120;x<4900;x+=230){ mkLamp(c,x,668,42); }
-  // Lamp posts along road 2 (y:1018)
-  for(let x=220;x<4800;x+=280){ mkLamp(c,x,985,36); }
-  // Lamp posts along road 3 (y:1330)
-  for(let x=150;x<4800;x+=300){ mkLamp(c,x,1297,33); }
+  // Lamp posts along each horizontal street
+  for(let x=200;x<4900;x+=260){ mkLamp(c,x,676,44); }   // Street 1 (y:710)
+  for(let x=280;x<4800;x+=300){ mkLamp(c,x,1144,38); }  // Street 2 (y:1178)
+  for(let x=200;x<4800;x+=320){ mkLamp(c,x,1556,36); }  // Street 3 (y:1590)
+  for(let x=300;x<4700;x+=340){ mkLamp(c,x,1976,34); }  // Street 4 (y:2010)
 
   // Trees throughout town and extended world
   const trees=[
@@ -2569,7 +2594,7 @@ function initTown(){
   drawTerrain();
   const container=document.getElementById('buildings');
   AGENTS.forEach(a=>container.appendChild(mkBuilding(a)));
-  setTimeout(()=>{ calcPositions(); spawnAllResidents(); },420);
+  setTimeout(()=>{ calcPositions(); spawnAllResidents(); startIdleWandering(); },420);
 }
 
 function calcPositions(){
@@ -2636,12 +2661,57 @@ function repositionResidents(){
   });
 }
 
+// ── IDLE WANDERING ────────────────────────────────────────────────────────────
+const _wanderTimers = {};
+const WANDER_R = 110;      // max wander radius in world-px
+const WANDER_MIN = 2500;   // min pause between wanders
+const WANDER_MAX = 7000;   // max pause between wanders
+const WANDER_MS = 900;     // walk transition duration
+
+function startIdleWandering(){
+  AGENTS.forEach(a=>{ if(a.type==='hall') return; _scheduleWander(a.key); });
+}
+
+function _scheduleWander(key){
+  clearTimeout(_wanderTimers[key]);
+  const delay = WANDER_MIN + Math.random() * (WANDER_MAX - WANDER_MIN);
+  _wanderTimers[key] = setTimeout(()=>_doWander(key), delay);
+}
+
+function _doWander(key){
+  const r = document.getElementById(`res-${key}`);
+  if(!r || !r.classList.contains('idle')){ _scheduleWander(key); return; }
+  const hp = homePos[key];
+  if(!hp){ _scheduleWander(key); return; }
+  const angle = Math.random() * Math.PI * 2;
+  const dist  = 25 + Math.random() * WANDER_R;
+  const tx = hp.x + Math.cos(angle) * dist;
+  const ty = hp.y + Math.sin(angle) * dist * 0.45; // SV perspective flatten
+  r.classList.add('walking');
+  r.style.transition = `left ${WANDER_MS}ms cubic-bezier(.4,0,.2,1),top ${WANDER_MS}ms cubic-bezier(.4,0,.2,1)`;
+  r.style.left = tx+'px'; r.style.top = ty+'px';
+  // pause at destination, then return home
+  setTimeout(()=>{
+    if(!r.classList.contains('idle')){ r.style.transition=''; _scheduleWander(key); return; }
+    r.style.left = hp.x+'px'; r.style.top = hp.y+'px';
+    setTimeout(()=>{
+      r.classList.remove('walking');
+      r.style.transition = '';
+      _scheduleWander(key);
+    }, WANDER_MS);
+  }, WANDER_MS + 400 + Math.random() * 1800);
+}
+
 function setResidentState(key, state){
   const r=document.getElementById(`res-${key}`); if(!r) return;
+  clearTimeout(_wanderTimers[key]);
+  r.style.transition = '';
   r.classList.remove('idle','working','thinking','walking','researching','learning');
   r.classList.add(state||'idle');
   if(state==='idle'){
-    const hp=homePos[key]; if(hp){ r.style.left=hp.x+'px'; r.style.top=hp.y+'px'; }
+    const hp=homePos[key];
+    if(hp){ r.style.left=hp.x+'px'; r.style.top=hp.y+'px'; }
+    _scheduleWander(key);
   }
 }
 
