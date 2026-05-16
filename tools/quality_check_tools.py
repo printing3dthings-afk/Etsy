@@ -197,7 +197,8 @@ def _check_file_specs(product_id: str, store: DataStore) -> str:
                 width, height = img.size
                 color_mode = img.mode
                 dpi_info = img.info.get("dpi", (72, 72))
-                dpi = int(dpi_info[0]) if isinstance(dpi_info, tuple) else int(dpi_info)
+                # round() not int() — PIL stores 300dpi as 11811 px/m which reads back as 299.9994
+                dpi = round(dpi_info[0]) if isinstance(dpi_info, tuple) else round(dpi_info)
 
             min_dimension = min(width, height)
             res_pass = min_dimension >= RECOMMENDED_MIN_PX

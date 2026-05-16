@@ -404,8 +404,9 @@ def _upscale_for_print(src_path: str, dst_path: str, target_px: int = 4500) -> N
         w, h = img.size
 
         # Multi-pass upscale: 2x steps prevent aliasing artifacts vs single large jump
-        while max(img.size) < target_px:
-            scale = min(2.0, target_px / max(img.size))
+        # Use min(img.size) so the SHORTEST side reaches target_px (QC requirement)
+        while min(img.size) < target_px:
+            scale = min(2.0, target_px / min(img.size))
             img = img.resize((int(img.width * scale), int(img.height * scale)), Image.LANCZOS)
 
         # Two-pass unsharp mask: first pass recovers LANCZOS softness, second sharpens detail
@@ -417,8 +418,14 @@ def _upscale_for_print(src_path: str, dst_path: str, target_px: int = 4500) -> N
         img = ImageEnhance.Contrast(img).enhance(1.05)
         img = ImageEnhance.Sharpness(img).enhance(1.1)
 
-        # 300 DPI metadata — required for print-on-demand buyers
-        img.save(dst_path, "PNG", dpi=(300, 300), optimize=False)
+        # Save as JPEG at 95% — massively smaller than PNG at this resolution
+        # while being fully print-quality at 300 DPI and well under Etsy's 20 MB limit
+        jpg_path = os.path.splitext(dst_path)[0] + ".jpg"
+        img.save(jpg_path, "JPEG", quality=95, dpi=(300, 300), optimize=True)
+        # If caller expected a different extension, also write there (no-op if same)
+        if jpg_path != dst_path:
+            import shutil as _shutil
+            _shutil.move(jpg_path, dst_path)
     except ImportError:
         import shutil
         shutil.copy2(src_path, dst_path)
@@ -473,8 +480,8 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
         else:
             urllib.request.urlretrieve(img_data, raw_path)
 
-        # Upscale + sharpen for print quality
-        file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.png")
+        # Upscale + sharpen for print quality; output is JPEG (smaller, still print-quality)
+        file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.jpg")
         _upscale_for_print(raw_path, file_path, target_px=3000)
 
         file_size_kb = os.path.getsize(file_path) // 1024
@@ -485,7 +492,7 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
         product["is_placeholder"] = False
 
         product["file_path"] = file_path
-        product["file_format"] = "PNG"
+        product["file_format"] = "JPEG"
         product["file_size_kb"] = file_size_kb
         product["status"] = "qc_pending"
         product["updated_at"] = str(date.today())
@@ -496,7 +503,7 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
             "product_id": product_id,
             "file_path": file_path,
             "file_size_kb": file_size_kb,
-            "dimensions": "3000x3000px (upscaled for print quality)",
+            "dimensions": "3000px min-side JPEG 95% @ 300 DPI (print-ready)",
             "status": "qc_pending",
             "next_step": "Send to Quality Check Agent for review.",
         }, indent=2)
