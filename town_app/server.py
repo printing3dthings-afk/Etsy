@@ -238,6 +238,7 @@ _queue_worker_started = False
 # High-priority queue for digital order delivery — processes immediately.
 _delivery_queue: queue.Queue = queue.Queue()
 _delivery_worker_started = False
+_delivery_worker_lock = threading.Lock()
 
 def _queue_worker():
     while True:
@@ -271,10 +272,11 @@ def _enqueue_task(key: str, task: str, scheduled_label: str = ""):
 def _enqueue_delivery(task: str, scheduled_label: str = ""):
     """Queue a delivery task on the high-priority dedicated worker."""
     global _delivery_worker_started
-    if not _delivery_worker_started:
-        t = threading.Thread(target=_delivery_worker, daemon=True)
-        t.start()
-        _delivery_worker_started = True
+    with _delivery_worker_lock:
+        if not _delivery_worker_started:
+            t = threading.Thread(target=_delivery_worker, daemon=True)
+            t.start()
+            _delivery_worker_started = True
     _delivery_queue.put((task, scheduled_label))
 
 # ── Scheduler ──────────────────────────────────────────────────────────────────
@@ -1503,8 +1505,9 @@ async def dismiss_notification(notif_id: str):
 async def get_digital_products():
     """Return all agent-created digital products with browser-accessible file URLs."""
     try:
-        data = _store.load()
-        raw = data.get("digital_products", [])
+        from tools.data_store import DataStore
+        store = DataStore()
+        raw = store.get("digital_products", default=[])
         products = []
         data_dir = DATA_DIR.resolve()
         for p in raw:
@@ -1518,6 +1521,7 @@ async def get_digital_products():
                 "color_scheme":p.get("color_scheme"),
                 "interactive": p.get("interactive", False),
                 "created_at":  p.get("created_at", ""),
+                "archived_at": p.get("archived_at"),
                 "file_url":    None,
                 "thumb_url":   None,
             }
@@ -1541,30 +1545,32 @@ async def get_digital_products():
         products.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return JSONResponse({"products": products, "total": len(products)})
     except Exception as e:
-        logger.error(f"get_digital_products: {e}", exc_info=True)
+        print(f"[ERROR] get_digital_products: {e}", flush=True)
         return JSONResponse({"products": [], "total": 0, "error": str(e)})
 
 
 @app.patch("/api/digital-products/{product_id}/status")
 async def set_product_status(product_id: str, body: dict):
     """Move a product to 'archived' or 'approved' without deleting the file."""
+    from tools.data_store import DataStore
     allowed = {"archived", "approved", "qc_pending", "active"}
     new_status = body.get("status", "")
     if new_status not in allowed:
-        return JSONResponse({"error": f"status must be one of {allowed}"}, status_code=400)
+        return JSONResponse({"error": f"status must be one of {sorted(allowed)}"}, status_code=400)
     try:
-        data = _store.load()
-        products = data.get("digital_products", [])
+        store = DataStore()
+        products = store.get("digital_products", default=[])
         product = next((p for p in products if (p.get("id") or p.get("product_id")) == product_id), None)
         if not product:
             return JSONResponse({"error": "Product not found"}, status_code=404)
         product["status"] = new_status
         if new_status == "archived":
             product["archived_at"] = datetime.utcnow().isoformat() + "Z"
-        _store.save(data)
+        store.set(products, "digital_products")
+        store.save()
         return JSONResponse({"ok": True, "id": product_id, "status": new_status})
     except Exception as e:
-        logger.error(f"set_product_status: {e}", exc_info=True)
+        print(f"[ERROR] set_product_status: {e}", flush=True)
         return JSONResponse({"error": str(e)}, status_code=500)
 
 

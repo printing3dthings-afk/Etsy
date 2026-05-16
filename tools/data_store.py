@@ -1,14 +1,20 @@
 import datetime
 import json
 import os
+import threading
 from typing import Any
 from config import SHOP_DATA_FILE
 
 
 class DataStore:
-    """Shared in-memory data store backed by shop_data.json."""
+    """Shared in-memory data store backed by shop_data.json.
+
+    Thread-safe: all public read/write methods acquire a reentrant lock so
+    concurrent agent threads cannot corrupt each other's modifications.
+    """
 
     def __init__(self):
+        self._lock = threading.RLock()
         self._data: dict = {}
         self._load()
 
@@ -39,43 +45,46 @@ class DataStore:
         import shutil
         from datetime import datetime
 
-        tmp_path = SHOP_DATA_FILE + ".tmp"
-        # Write to temp file first (atomic write — prevents corruption)
-        with open(tmp_path, "w") as f:
-            json.dump(self._data, f, indent=2)
-        # Rename into place (atomic on most filesystems)
-        os.replace(tmp_path, SHOP_DATA_FILE)
+        with self._lock:
+            tmp_path = SHOP_DATA_FILE + ".tmp"
+            # Write to temp file first (atomic write — prevents corruption)
+            with open(tmp_path, "w") as f:
+                json.dump(self._data, f, indent=2)
+            # Rename into place (atomic on most filesystems)
+            os.replace(tmp_path, SHOP_DATA_FILE)
 
-        # Rolling backup — keep last 3
-        backup_dir = os.path.join(os.path.dirname(SHOP_DATA_FILE), "backups")
-        os.makedirs(backup_dir, exist_ok=True)
-        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = os.path.join(backup_dir, f"shop_data_{ts}.json")
-        shutil.copy2(SHOP_DATA_FILE, backup_path)
-        # Prune: keep only 3 most recent backups
-        backups = sorted(
-            [f for f in os.listdir(backup_dir) if f.startswith("shop_data_")],
-            reverse=True,
-        )
-        for old in backups[3:]:
-            try:
-                os.remove(os.path.join(backup_dir, old))
-            except OSError:
-                pass
+            # Rolling backup — keep last 3
+            backup_dir = os.path.join(os.path.dirname(SHOP_DATA_FILE), "backups")
+            os.makedirs(backup_dir, exist_ok=True)
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = os.path.join(backup_dir, f"shop_data_{ts}.json")
+            shutil.copy2(SHOP_DATA_FILE, backup_path)
+            # Prune: keep only 3 most recent backups
+            backups = sorted(
+                [f for f in os.listdir(backup_dir) if f.startswith("shop_data_")],
+                reverse=True,
+            )
+            for old in backups[3:]:
+                try:
+                    os.remove(os.path.join(backup_dir, old))
+                except OSError:
+                    pass
 
     def get(self, *keys: str, default: Any = None) -> Any:
-        node = self._data
-        for key in keys:
-            if not isinstance(node, dict) or key not in node:
-                return default
-            node = node[key]
-        return node
+        with self._lock:
+            node = self._data
+            for key in keys:
+                if not isinstance(node, dict) or key not in node:
+                    return default
+                node = node[key]
+            return node
 
     def set(self, value: Any, *keys: str) -> None:
-        node = self._data
-        for key in keys[:-1]:
-            node = node.setdefault(key, {})
-        node[keys[-1]] = value
+        with self._lock:
+            node = self._data
+            for key in keys[:-1]:
+                node = node.setdefault(key, {})
+            node[keys[-1]] = value
 
     @property
     def shop(self) -> dict:
@@ -115,15 +124,16 @@ class DataStore:
 
     def log_action(self, agent: str, action: str, details: dict = None) -> None:
         """Append an audit entry and persist; keeps only the last 500 entries."""
-        audit_log = self._data.setdefault("audit_log", [])
-        audit_log.append({
-            "ts":      datetime.datetime.now().isoformat(),
-            "agent":   agent,
-            "action":  action,
-            "details": details or {},
-        })
-        if len(audit_log) > 500:
-            self._data["audit_log"] = audit_log[-500:]
+        with self._lock:
+            audit_log = self._data.setdefault("audit_log", [])
+            audit_log.append({
+                "ts":      datetime.datetime.now().isoformat(),
+                "agent":   agent,
+                "action":  action,
+                "details": details or {},
+            })
+            if len(audit_log) > 500:
+                self._data["audit_log"] = audit_log[-500:]
         self.save()
 
     def get_audit_log(self, limit: int = 50) -> list:

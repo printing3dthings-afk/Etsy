@@ -440,7 +440,9 @@ class CEOAgent(BaseAgent):
         if len(tool_blocks) <= 1:
             return super()._process_tool_calls(response)
 
+        import threading as _threading
         results: list[dict | None] = [None] * len(tool_blocks)
+        results_lock = _threading.Lock()
 
         def _run_one(idx: int, block) -> None:
             try:
@@ -448,11 +450,13 @@ class CEOAgent(BaseAgent):
             except Exception as exc:
                 self.logger.error(f"CEO parallel tool {block.name} failed: {exc}", exc_info=True)
                 output = f"Tool error: {exc}"
-            results[idx] = {
+            entry = {
                 "type": "tool_result",
                 "tool_use_id": block.id,
                 "content": str(output),
             }
+            with results_lock:
+                results[idx] = entry
 
         max_workers = min(len(tool_blocks), 5)
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
