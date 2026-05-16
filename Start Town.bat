@@ -68,12 +68,12 @@ REM -- Ask access mode --
 echo  How do you want to access the Town?
 echo.
 echo    [1]  Local only   (same WiFi)
-echo    [2]  Public URL   (anywhere, requires ngrok)
+echo    [2]  Public URL   (anywhere, free - no account needed)
 echo.
 set /p ACCESS_MODE="  Enter 1 or 2 then press Enter: "
 echo.
 
-if "%ACCESS_MODE%"=="2" goto NGROK_MODE
+if "%ACCESS_MODE%"=="2" goto CLOUDFLARED_MODE
 
 REM ==================================================
 :LOCAL_MODE
@@ -102,20 +102,19 @@ pause
 exit /b 0
 
 REM ==================================================
-:NGROK_MODE
-ngrok version >nul 2>&1
-if errorlevel 1 (
-    echo  ngrok not found.
+:CLOUDFLARED_MODE
+
+REM -- Download cloudflared if not present --
+if not exist "cloudflared.exe" (
+    echo  cloudflared.exe not found. Downloading ^(~40 MB, one time^)...
+    powershell -NoProfile -Command "Invoke-WebRequest -Uri 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe' -OutFile 'cloudflared.exe' -UseBasicParsing"
+    if errorlevel 1 (
+        echo  ERROR: Download failed. Check your internet connection.
+        pause
+        exit /b 1
+    )
+    echo  cloudflared.exe downloaded.
     echo.
-    echo  Quick install:
-    echo    1. Download from https://ngrok.com/download  (Windows ZIP)
-    echo    2. Extract ngrok.exe into this folder
-    echo    3. Sign up free at ngrok.com, then run once:
-    echo         ngrok config add-authtoken YOUR_TOKEN
-    echo    4. Re-run Start Town.bat and choose option 2.
-    echo.
-    pause
-    exit /b 1
 )
 
 REM -- Start server in background --
@@ -124,44 +123,56 @@ start "OnBrandCraftz Server" /b python town_app\server.py
 
 REM -- Wait until server is accepting connections --
 echo  Waiting for server to be ready...
-:WAIT_LOOP
+:CF_WAIT_SERVER
 timeout /t 1 /nobreak >nul
-powershell -Command "try{(Invoke-WebRequest http://localhost:8080 -UseBasicParsing -TimeoutSec 1).StatusCode;exit 0}catch{exit 1}" >nul 2>&1
-if errorlevel 1 goto WAIT_LOOP
+powershell -NoProfile -Command "try{(Invoke-WebRequest http://localhost:8080 -UseBasicParsing -TimeoutSec 1).StatusCode;exit 0}catch{exit 1}" >nul 2>&1
+if errorlevel 1 goto CF_WAIT_SERVER
 echo  Server ready.
 echo.
 
-REM -- Start ngrok --
-echo  Opening ngrok tunnel...
-start "ngrok" /b ngrok http 8080
+REM -- Start cloudflared, pipe output to a temp log --
+echo  Opening Cloudflare tunnel (no account needed)...
+set "CF_LOG=%TEMP%\oncraftz_cf.log"
+if exist "%CF_LOG%" del "%CF_LOG%"
+start "cloudflared" /b cmd /c "cloudflared.exe tunnel --url http://localhost:8080 --no-autoupdate 1>"%CF_LOG%" 2>&1"
 
-REM -- Poll ngrok API for the public URL --
-timeout /t 3 /nobreak >nul
-:NGROK_WAIT
-timeout /t 1 /nobreak >nul
-powershell -Command "try{$r=(Invoke-WebRequest http://localhost:4040/api/tunnels -UseBasicParsing).Content|ConvertFrom-Json;if($r.tunnels.Count -gt 0){exit 0}else{exit 1}}catch{exit 1}" >nul 2>&1
-if errorlevel 1 goto NGROK_WAIT
+REM -- Poll log for trycloudflare.com URL (up to ~30 s) --
+echo  Waiting for public URL...
+set CF_TRIES=0
+:CF_URL_WAIT
+timeout /t 2 /nobreak >nul
+set /a CF_TRIES+=1
+if %CF_TRIES% gtr 15 (
+    echo  ERROR: Timed out waiting for cloudflared URL.
+    echo  Check your internet connection and try again.
+    goto CF_SHUTDOWN
+)
+set PUBLIC_URL=
+for /f "usebackq delims=" %%U in (`powershell -NoProfile -Command "$c=Get-Content '%CF_LOG%' -ErrorAction SilentlyContinue -Raw;if($c){$m=[regex]::Match($c,'https://[a-z0-9-]+\.trycloudflare\.com');if($m.Success){Write-Output $m.Value}}"`) do set PUBLIC_URL=%%U
+if not defined PUBLIC_URL goto CF_URL_WAIT
 
-for /f "usebackq delims=" %%U in (`powershell -Command "(Invoke-WebRequest http://localhost:4040/api/tunnels -UseBasicParsing).Content|ConvertFrom-Json|Select-Object -ExpandProperty tunnels|Where-Object{$_.proto -eq 'https'}|Select-Object -First 1 -ExpandProperty public_url"`) do set PUBLIC_URL=%%U
+REM -- Post URL to server so the town UI shows it --
+powershell -NoProfile -Command "Invoke-WebRequest -Uri 'http://localhost:8080/api/tunnel-url' -Method POST -Body '{\"url\":\"%PUBLIC_URL%\"}' -ContentType 'application/json' -UseBasicParsing" >nul 2>&1
 
+echo.
 echo  ================================================
 echo.
-echo    PUBLIC URL (share this -- works from anywhere):
+echo    PUBLIC URL (works from anywhere, free):
 echo.
 echo      %PUBLIC_URL%
 echo.
-if defined LOCAL_IP (echo    WiFi only  :  http://%LOCAL_IP%:8080)
+if defined LOCAL_IP (echo    Same WiFi  :  http://%LOCAL_IP%:8080)
 echo    This PC    :  http://localhost:8080
 echo.
-echo    Free plan: URL changes each restart.
-echo    ngrok.com paid plan = permanent URL.
-echo.
+echo    No account required.  URL changes each restart.
 echo    Keep this window open.  Press any key to stop.
 echo  ================================================
 echo.
 start "" "%PUBLIC_URL%"
 pause >nul
 
-REM -- Clean shutdown --
-taskkill /f /fi "WINDOWTITLE eq ngrok" >nul 2>&1
+:CF_SHUTDOWN
+REM -- Clear tunnel URL and shut down --
+powershell -NoProfile -Command "Invoke-WebRequest -Uri 'http://localhost:8080/api/tunnel-url' -Method POST -Body '{\"url\":\"\"}' -ContentType 'application/json' -UseBasicParsing" >nul 2>&1
+taskkill /f /fi "WINDOWTITLE eq cloudflared" >nul 2>&1
 taskkill /f /fi "WINDOWTITLE eq OnBrandCraftz Server" >nul 2>&1
