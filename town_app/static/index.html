@@ -174,11 +174,27 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 
 /* ── LAMP POSTS ── */
 .lamp{position:absolute;z-index:4}
-.lamp-pole{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:6px;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#9a8830 0%,#5a5018 100%)}
-.lamp-arm{position:absolute;top:0;left:50%;transform:translateX(-50%) translateX(-10px);width:26px;height:9px;background:#9a8830;border-radius:4px 4px 0 0}
-.lamp-globe{position:absolute;top:-10px;left:50%;transform:translateX(-50%) translateX(4px);width:18px;height:18px;border-radius:50%;background:rgba(255,235,150,.85);border:2px solid rgba(200,160,50,.6);animation:lglow 2.8s ease-in-out infinite alternate}
-.lamp-halo{position:absolute;top:-16px;left:50%;transform:translateX(-50%) translateX(4px);width:32px;height:32px;border-radius:50%;background:radial-gradient(ellipse,rgba(255,230,120,.45) 0%,transparent 70%);animation:lglow 2.8s ease-in-out infinite alternate}
-@keyframes lglow{from{opacity:.65}to{opacity:1}}
+.lamp-pole{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:7px;
+  border-radius:4px 4px 0 0;
+  background:linear-gradient(90deg,#b09838 0%,#c8b050 35%,#a88828 65%,#6a5820 100%);
+  outline:1px solid #3a2808}
+.lamp-base{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+  width:18px;height:6px;background:linear-gradient(180deg,#a08828,#6a5010);
+  border-radius:2px 2px 4px 4px;outline:2px solid #3a2000}
+.lamp-arm{position:absolute;top:0;left:50%;transform:translateX(-50%) translateX(-12px);
+  width:28px;height:10px;background:linear-gradient(180deg,#b09838,#9a8020);
+  border-radius:5px 5px 0 0;outline:1px solid #5a3a00}
+.lamp-globe{position:absolute;top:-12px;left:50%;transform:translateX(-50%) translateX(4px);
+  width:20px;height:20px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,rgba(255,255,220,1) 0%,rgba(255,230,120,.9) 50%,rgba(220,170,40,.8) 100%);
+  border:2px solid rgba(200,160,50,.8);
+  animation:lglow 2.8s ease-in-out infinite alternate;
+  box-shadow:0 0 8px rgba(255,230,100,.5)}
+.lamp-halo{position:absolute;top:-20px;left:50%;transform:translateX(-50%) translateX(4px);
+  width:40px;height:40px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(255,230,120,.5) 0%,rgba(255,200,50,.1) 50%,transparent 70%);
+  animation:lglow 2.8s ease-in-out infinite alternate}
+@keyframes lglow{from{opacity:.6;box-shadow:0 0 5px rgba(255,220,80,.4)}to{opacity:1;box-shadow:0 0 14px rgba(255,230,100,.75)}}
 
 /* ── TREES ── */
 .tree{position:absolute;display:flex;flex-direction:column;align-items:center;pointer-events:none;z-index:3}
@@ -205,27 +221,42 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 /* ── ANIMALS ── */
 .animal{position:absolute;pointer-events:none;z-index:8;image-rendering:pixelated}
 
-/* Chicken */
-.chicken{animation:ck-bounce 1s steps(2,end) infinite}
-.ck-wrap{position:relative;display:inline-block}
-.ck-body{width:16px;height:11px;background:#f2eedd;border-radius:2px 5px 3px 2px;
-  outline:2px solid #1a0800;position:relative;display:block}
-.ck-head{width:9px;height:8px;background:#f2eedd;border-radius:4px 4px 3px 2px;
-  outline:2px solid #1a0800;position:absolute;right:-5px;top:-6px}
-.ck-comb{width:9px;height:5px;background:#cc2020;position:absolute;top:-5px;left:-1px;
-  clip-path:polygon(0 100%,15% 10%,35% 65%,55% 10%,75% 65%,100% 10%,100% 100%);
-  outline:1px solid #800000}
-.ck-beak{width:5px;height:3px;background:#d48020;outline:1px solid #1a0800;
-  position:absolute;top:2px;right:-4px;clip-path:polygon(0 0,100% 50%,0 100%)}
-.ck-wattle{width:4px;height:5px;background:#e03030;border-radius:0 0 50% 50%;
-  outline:1px solid #1a0800;position:absolute;bottom:-4px;right:-3px}
-.ck-wing{width:10px;height:7px;background:#ddd8c0;border-radius:3px 4px 4px 2px;
-  outline:1px solid #1a0800;position:absolute;top:1px;left:1px}
-.ck-legs{position:absolute;bottom:-7px;left:3px;display:flex;gap:4px}
-.ck-leg{width:2px;height:7px;background:#d48020;outline:1px solid #1a0800;position:relative}
-.ck-leg::after{content:'';position:absolute;bottom:0;left:-2px;width:6px;height:2px;
-  background:#d48020;outline:1px solid #1a0800;border-radius:0 1px 1px 0}
-@keyframes ck-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+/* Chicken — enlarged, more detailed */
+.chicken{animation:ck-wander 8s ease-in-out infinite}
+@keyframes ck-wander{0%,100%{transform:translateX(0)}25%{transform:translateX(12px)}75%{transform:translateX(-8px)}}
+.ck-wrap{position:relative;display:inline-block;animation:ck-bounce .8s ease-in-out infinite alternate}
+@keyframes ck-bounce{0%{transform:translateY(0) rotate(-2deg)}100%{transform:translateY(-4px) rotate(2deg)}}
+.ck-body{width:22px;height:15px;background:#f5f0e0;border-radius:3px 7px 5px 3px;
+  outline:2px solid #1a0800;position:relative;display:block;
+  box-shadow:inset -3px -2px 0 rgba(0,0,0,.12),inset 2px 2px 0 rgba(255,255,255,.4)}
+.ck-tail{position:absolute;left:-6px;top:-3px;width:8px;height:10px;background:#f0ead8;
+  outline:2px solid #1a0800;border-radius:3px 0 0 3px;
+  clip-path:polygon(100% 0,100% 100%,0 60%,20% 20%)}
+.ck-head{width:12px;height:10px;background:#f5f0e0;border-radius:5px 5px 4px 3px;
+  outline:2px solid #1a0800;position:absolute;right:-6px;top:-7px;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.5)}
+.ck-comb{width:11px;height:7px;background:#cc2020;position:absolute;top:-6px;left:0;
+  clip-path:polygon(0 100%,12% 8%,30% 60%,50% 8%,70% 60%,88% 8%,100% 100%);
+  outline:1px solid #880000}
+.ck-beak{width:6px;height:4px;background:#d48020;outline:2px solid #1a0800;
+  position:absolute;top:3px;right:-5px;border-radius:0 2px 2px 0}
+.ck-eye{width:3px;height:3px;background:#1a0800;border-radius:50%;
+  position:absolute;top:2px;left:4px}
+.ck-eye::after{content:'';width:1px;height:1px;background:rgba(255,255,255,.9);
+  border-radius:50%;position:absolute;top:0;left:0}
+.ck-wattle{width:5px;height:6px;background:#e03030;border-radius:0 0 60% 60%;
+  outline:1px solid #1a0800;position:absolute;bottom:-5px;right:-4px}
+.ck-wing{width:14px;height:9px;background:#e8e0c8;border-radius:4px 5px 5px 3px;
+  outline:2px solid #1a0800;position:absolute;top:2px;left:2px;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.3)}
+.ck-wing::after{content:'';position:absolute;top:2px;left:2px;right:2px;height:2px;
+  background:rgba(160,140,100,.4);border-radius:1px}
+.ck-legs{position:absolute;bottom:-9px;left:5px;display:flex;gap:5px}
+.ck-leg{width:2px;height:9px;background:#d48020;outline:1px solid #1a0800;position:relative}
+.ck-leg::before{content:'';position:absolute;top:0;left:-1px;width:4px;height:3px;
+  background:#c07010;outline:1px solid #1a0800}
+.ck-leg::after{content:'';position:absolute;bottom:0;left:-3px;width:8px;height:2px;
+  background:#d48020;outline:1px solid #1a0800;border-radius:0 2px 2px 0}
 
 /* Dog */
 .dog-sprite{animation:dog-trot 0.6s steps(2,end) infinite}
