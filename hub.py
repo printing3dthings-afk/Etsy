@@ -13,7 +13,7 @@ from config import ANTHROPIC_API_KEY
 from agents import (
     CEOAgent, SalesAgent, ProductAgent, MarketingAgent,
     AnalyticsAgent, CustomerServiceAgent, SocialMediaAgent,
-    ArtCreationAgent, QualityCheckAgent, EtsyListingAgent,
+    ArtCreationAgent, PlannerDesignAgent, QualityCheckAgent, EtsyListingAgent,
     StoreManagerAgent, SalesProcessorAgent, BrandDesignAgent,
     FinancialAgent, PrintProductionAgent, EtsyAdsAgent,
     CompetitorIntelAgent, PromotionsAgent, TaxComplianceAgent,
@@ -27,6 +27,7 @@ AGENTS = {
     # ── Digital Product Pipeline ─────────────────────────────────────────────
     "brand":     ("Brand Design Agent",       lambda: BrandDesignAgent()),
     "art":       ("Art Creation Agent",       lambda: ArtCreationAgent()),
+    "planner":   ("Planner Design Agent",     lambda: PlannerDesignAgent()),
     "qc":        ("Quality Check Agent",      lambda: QualityCheckAgent()),
     "listing":   ("Etsy Listing Agent",       lambda: EtsyListingAgent()),
     "store":     ("Store Manager Agent",      lambda: StoreManagerAgent()),
@@ -91,7 +92,8 @@ HELP_TEXT = """
 ║                                                                          ║
 ║  AGENTS — Digital Product Pipeline                                       ║
 ║  brand         Brand Design Agent (logo, banner, brand identity)         ║
-║  art           Art Creation Agent (digital art + planners)               ║
+║  art           Art Creation Agent (wall art, clipart, illustrations)      ║
+║  planner       Planner Design Agent (all digital planner categories)      ║
 ║  qc            Quality Check Agent (file review + approval)              ║
 ║  listing       Etsy Listing Agent (SEO + publish to Etsy)               ║
 ║  store         Store Manager Agent (shop health + announcements)         ║

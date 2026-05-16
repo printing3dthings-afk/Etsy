@@ -6,6 +6,7 @@ from agents.analytics_agent import AnalyticsAgent
 from agents.customer_service_agent import CustomerServiceAgent
 from agents.social_media_agent import SocialMediaAgent
 from agents.art_creation_agent import ArtCreationAgent
+from agents.planner_design_agent import PlannerDesignAgent
 from agents.quality_check_agent import QualityCheckAgent
 from agents.etsy_listing_agent import EtsyListingAgent
 from agents.store_manager_agent import StoreManagerAgent
@@ -28,7 +29,7 @@ from agents.workflow_coordinator_agent import WorkflowCoordinatorAgent
 
 # Max characters from a single agent result to include in CEO context.
 # Keeps the message history lean so CEO never hits context limits.
-_RESULT_CAP = 700
+_RESULT_CAP = 2000
 
 SYSTEM_PROMPT = """You are the CEO of OnBrandCraftz (etsy.com/shop/onbrandcraftz) — an Etsy shop selling 3D printed home decor and digital products (planners, wall art, printables).
 
@@ -46,6 +47,7 @@ For every task you receive:
 - Maximum 5 delegations per task. Do the most critical 5; note what remains.
 - After your last delegation, write the PIPELINE SUMMARY immediately. Do not start new work.
 - Never call the same agent twice for the same sub-task.
+- When multiple agents are independent (e.g., Analytics + Competitor Intel + Store Health), call ALL of them in a single response as parallel tool calls. Do not wait for one before calling the others.
 
 ## ISSUE-FIXING LOOP
 When an agent result shows a problem, fix it before proceeding:
@@ -69,7 +71,8 @@ Never automate physical 3D print production. Flag all physical print jobs as
 ## DELEGATION MAP
 | What you need | Which agent |
 |--------------|-------------|
-| New digital art or planner | delegate_to_art_creation_agent |
+| New digital wall art, clipart, illustrations | delegate_to_art_creation_agent |
+| Any digital planner (daily/weekly/monthly/fitness/budget/etc.) | delegate_to_planner_design_agent |
 | Review / approve a digital file | delegate_to_quality_check_agent |
 | Brand identity, mockups | delegate_to_brand_design_agent |
 | SEO keywords, competitor research | delegate_to_marketing_agent |
@@ -117,7 +120,16 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_art_creation_agent",
-        "description": "Delegate digital art creation, concept design, or planner generation to the Art Creation Agent.",
+        "description": "Delegate digital art creation tasks — wall art, botanical illustrations, abstract art, clipart sets, celestial art, fine art animal prints — to the Art Creation Agent. Do NOT delegate planners here.",
+        "input_schema": {
+            "type": "object",
+            "properties": {"task": {"type": "string"}},
+            "required": ["task"],
+        },
+    },
+    {
+        "name": "delegate_to_planner_design_agent",
+        "description": "Delegate ALL digital planner creation to the Planner Design Agent: daily, weekly, monthly, academic, fitness, meal, budget, project management, travel, habit, self-care, wedding, and teacher planners. Do NOT use the Art Creation Agent for planners.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -354,6 +366,7 @@ class CEOAgent(BaseAgent):
         self._agents = {
             "brand_design":       BrandDesignAgent(),
             "art_creation":       ArtCreationAgent(),
+            "planner_design":     PlannerDesignAgent(),
             "quality_check":      QualityCheckAgent(),
             "etsy_listing":       EtsyListingAgent(),
             "store_manager":      StoreManagerAgent(),
@@ -420,6 +433,34 @@ class CEOAgent(BaseAgent):
             "Task partially complete — check the pipeline summary above for what remains."
         )
 
+    def _process_tool_calls(self, response) -> list[dict]:
+        """Fan out independent agent delegations in parallel threads."""
+        import concurrent.futures
+        tool_blocks = [b for b in response.content if b.type == "tool_use"]
+        if len(tool_blocks) <= 1:
+            return super()._process_tool_calls(response)
+
+        results: list[dict | None] = [None] * len(tool_blocks)
+
+        def _run_one(idx: int, block) -> None:
+            try:
+                output = self._dispatch_tool(block.name, block.input)
+            except Exception as exc:
+                self.logger.error(f"CEO parallel tool {block.name} failed: {exc}", exc_info=True)
+                output = f"Tool error: {exc}"
+            results[idx] = {
+                "type": "tool_result",
+                "tool_use_id": block.id,
+                "content": str(output),
+            }
+
+        max_workers = min(len(tool_blocks), 5)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(_run_one, i, b) for i, b in enumerate(tool_blocks)]
+            concurrent.futures.wait(futures)
+
+        return [r for r in results if r is not None]
+
     def _trim_history(self, messages: list[dict]) -> list[dict]:
         """Keep the initial user message + the most recent N assistant/user pairs."""
         if len(messages) <= 1 + _MAX_HISTORY_PAIRS * 2:
@@ -438,6 +479,7 @@ class CEOAgent(BaseAgent):
         agent_map = {
             "delegate_to_brand_design_agent":     "brand_design",
             "delegate_to_art_creation_agent":     "art_creation",
+            "delegate_to_planner_design_agent":   "planner_design",
             "delegate_to_quality_check_agent":    "quality_check",
             "delegate_to_etsy_listing_agent":     "etsy_listing",
             "delegate_to_store_manager_agent":    "store_manager",

@@ -337,7 +337,19 @@ def _publish_digital_listing(data: dict, store: DataStore) -> str:
         return json.dumps({"error": f"Product {data['product_id']} not found"})
 
     if product.get("status") not in ("approved",):
-        return json.dumps({"error": f"Product must be approved before listing. Status: {product.get('status')}"})
+        return json.dumps({"error": f"Product must be QC-approved before listing. Current status: {product.get('status')}. Run the Quality Check Agent first."})
+
+    # Enforce QC gate — product must have explicitly passed quality check
+    qc_passed = (
+        product.get("qc_status") == "approved"
+        or product.get("spec_check_result") == "PASS"
+    )
+    if not qc_passed:
+        return json.dumps({
+            "error": "QC gate blocked: this product has not passed Quality Check.",
+            "qc_status": product.get("qc_status", "not_run"),
+            "fix": "Delegate to Quality Check Agent to review and approve this product first.",
+        })
 
     draft = product.get("listing_draft")
     if not draft:

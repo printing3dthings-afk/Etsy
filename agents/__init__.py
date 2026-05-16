@@ -6,6 +6,7 @@ from .analytics_agent import AnalyticsAgent
 from .customer_service_agent import CustomerServiceAgent
 from .social_media_agent import SocialMediaAgent
 from .art_creation_agent import ArtCreationAgent
+from .planner_design_agent import PlannerDesignAgent
 from .quality_check_agent import QualityCheckAgent
 from .etsy_listing_agent import EtsyListingAgent
 from .store_manager_agent import StoreManagerAgent
@@ -37,6 +38,7 @@ __all__ = [
     "CustomerServiceAgent",
     "SocialMediaAgent",
     "ArtCreationAgent",
+    "PlannerDesignAgent",
     "QualityCheckAgent",
     "EtsyListingAgent",
     "StoreManagerAgent",

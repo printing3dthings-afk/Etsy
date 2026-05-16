@@ -115,7 +115,7 @@ def _git_pull_job():
     _git_pull()
 
 def _poll_orders():
-    """Poll Etsy for new unshipped paid orders every 2 min. Auto-trigger delivery agent."""
+    """Poll Etsy for new unshipped paid orders every 30 sec. Auto-trigger dedicated delivery worker."""
     access_token = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
     shop_id      = os.getenv("ETSY_SHOP_ID", "").strip()
     client_id    = os.getenv("ETSY_CLIENT_ID", "").strip()
@@ -152,7 +152,7 @@ def _poll_orders():
                     f"Process new Etsy order #{oid} from {buyer} (${total:.2f}). "
                     f"Send any digital files, confirm payment, update order status."
                 )
-                _enqueue_task("delivery", task, f"Auto: Order #{oid}")
+                _enqueue_delivery(task, f"Auto: Order #{oid}")
                 try:
                     asyncio.run_coroutine_threadsafe(
                         manager.broadcast(json.dumps({
@@ -229,9 +229,15 @@ def _append_session_log(entry: dict):
 
 # ── Task queue ─────────────────────────────────────────────────────────────────
 # CEO and pipeline tasks queue sequentially so they don't race each other.
+# Delivery tasks get their own dedicated worker so orders are never blocked
+# behind long-running CEO or analytics jobs.
 
 _task_queue: queue.Queue = queue.Queue()
 _queue_worker_started = False
+
+# High-priority queue for digital order delivery — processes immediately.
+_delivery_queue: queue.Queue = queue.Queue()
+_delivery_worker_started = False
 
 def _queue_worker():
     while True:
@@ -243,6 +249,17 @@ def _queue_worker():
         finally:
             _task_queue.task_done()
 
+def _delivery_worker():
+    """Dedicated worker for instant digital order fulfillment."""
+    while True:
+        task, scheduled_label = _delivery_queue.get()
+        try:
+            if scheduled_label:
+                _emit("delivery", "scheduled", f"⏰ {scheduled_label}")
+            _run_task("delivery", task)
+        finally:
+            _delivery_queue.task_done()
+
 def _enqueue_task(key: str, task: str, scheduled_label: str = ""):
     global _queue_worker_started
     if not _queue_worker_started:
@@ -250,6 +267,15 @@ def _enqueue_task(key: str, task: str, scheduled_label: str = ""):
         t.start()
         _queue_worker_started = True
     _task_queue.put((key, task, scheduled_label))
+
+def _enqueue_delivery(task: str, scheduled_label: str = ""):
+    """Queue a delivery task on the high-priority dedicated worker."""
+    global _delivery_worker_started
+    if not _delivery_worker_started:
+        t = threading.Thread(target=_delivery_worker, daemon=True)
+        t.start()
+        _delivery_worker_started = True
+    _delivery_queue.put((task, scheduled_label))
 
 # ── Scheduler ──────────────────────────────────────────────────────────────────
 
@@ -515,11 +541,11 @@ def _start_scheduler():
         id               = "_auto_git_pull",
         replace_existing = True,
     )
-    # Order polling: every 2 minutes
+    # Order polling: every 30 seconds for near-instant digital delivery
     _scheduler.add_job(
         func             = _poll_orders,
         trigger          = "interval",
-        minutes          = 2,
+        seconds          = 30,
         id               = "_order_poll",
         replace_existing = True,
     )
@@ -629,6 +655,7 @@ agent_states: dict[str, dict] = {}
 DELEGATION_MAP: dict[str, str] = {
     "delegate_to_brand_design_agent":    "brand",
     "delegate_to_art_creation_agent":    "art",
+    "delegate_to_planner_design_agent":  "planner",
     "delegate_to_quality_check_agent":   "qc",
     "delegate_to_etsy_listing_agent":    "listing",
     "delegate_to_store_manager_agent":   "store",
@@ -678,6 +705,7 @@ def _emit(agent_key: str, event: str, message: str, extra: dict | None = None):
 
 AGENT_CLASSES: dict[str, str] = {
     "ceo": "CEOAgent", "brand": "BrandDesignAgent", "art": "ArtCreationAgent",
+    "planner": "PlannerDesignAgent",
     "qc": "QualityCheckAgent", "listing": "EtsyListingAgent",
     "store": "StoreManagerAgent", "delivery": "SalesProcessorAgent",
     "sales": "SalesAgent", "product": "ProductAgent", "marketing": "MarketingAgent",
@@ -701,7 +729,7 @@ def _build_agent(key: str):
 
 # ── Pipeline routing ───────────────────────────────────────────────────────────
 
-_PIPELINE_AGENTS = {"brand", "art", "qc", "listing", "store", "marketing", "finance", "analytics"}
+_PIPELINE_AGENTS = {"brand", "art", "planner", "qc", "listing", "store", "marketing", "finance", "analytics"}
 
 _PIPELINE_KEYWORDS = {
     "create", "launch", "new product", "new listing", "design a", "design the",
