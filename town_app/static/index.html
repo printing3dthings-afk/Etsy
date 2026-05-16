@@ -33,8 +33,9 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .notif-ts{font-size:.45rem;color:#484f58;margin-top:3px}
 #notif-empty{padding:24px;text-align:center;font-size:.58rem;color:#484f58}
 .hsp{flex:1}
-.ws-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:0 0 6px var(--green)}
-.ws-dot.off{background:var(--red);box-shadow:0 0 6px var(--red)}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:0 0 6px var(--green);transition:background .3s,box-shadow .3s}
+.ws-dot.off{background:var(--red);box-shadow:0 0 6px var(--red),0 0 0 2px rgba(248,81,73,.3);animation:ws-pulse 1.5s ease-in-out infinite}
+@keyframes ws-pulse{0%,100%{box-shadow:0 0 6px var(--red),0 0 0 2px rgba(248,81,73,.3)}50%{box-shadow:0 0 10px var(--red),0 0 0 5px rgba(248,81,73,.15)}}
 #clock{font-size:.68rem;color:#8b949e;white-space:nowrap}
 
 /* ── REVENUE WIDGET ── */
@@ -1481,7 +1482,7 @@ body{transition:background .5s,color .5s}
   <button class="hbtn" onclick="openSysLog()" id="sysop-btn" title="System Health Log">🔧 System</button>
   <button class="hbtn" onclick="openIdeas()" id="ideas-hbtn">💡 Ideas <span id="ideas-hbadge" style="display:none;background:#f0c040;color:#000;border-radius:99px;padding:1px 6px;font-size:.55rem;margin-left:3px;font-weight:700"></span></button>
   <span class="hsp"></span>
-  <div class="ws-dot off" id="ws-dot"></div>
+  <div class="ws-dot off" id="ws-dot" title="Click to reconnect" onclick="connectWS()" style="cursor:pointer"></div>
   <span id="clock"></span>
   <div id="status-bar" style="display:flex;align-items:center;gap:10px;font-size:.58rem;font-family:'Press Start 2P',monospace;margin-left:auto;padding-right:10px">
     <span id="sb-approvals" style="display:none;background:#b71c1c;color:#fff;padding:2px 7px;border-radius:4px;cursor:pointer" onclick="openPhysicalApprovals()">⚠ <span id="sb-approval-count">0</span> APPROVAL NEEDED</span>
@@ -3404,12 +3405,27 @@ function _animateBuilding(key){
 function setWsDot(ok){ document.getElementById('ws-dot').className='ws-dot'+(ok?'':' off'); }
 
 // ── RUN TASK ─────────────────────────────────────────────────────────────────
-function runTask(){
+async function runTask(){
   if(!selectedKey) return;
   const inp=document.getElementById('task-input');
   const task=inp.value.trim(); if(!task) return;
-  if(!ws||ws.readyState!==WebSocket.OPEN){ alert('Not connected. Please wait.'); return; }
-  ws.send(JSON.stringify({type:'run',agent:selectedKey,task}));
+
+  const wsOk = ws && ws.readyState===WebSocket.OPEN;
+  if(wsOk){
+    ws.send(JSON.stringify({type:'run',agent:selectedKey,task}));
+  } else {
+    // WS down — submit via REST so the task still runs
+    try {
+      const r = await fetch(`/api/run/${selectedKey}`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({task})
+      });
+      if(!r.ok){ const d=await r.json().catch(()=>({})); alert('Server error: '+(d.error||r.statusText)); return; }
+      // Trigger a fresh WS connection so we receive events
+      if(!ws||ws.readyState===WebSocket.CLOSED||ws.readyState===WebSocket.CLOSING) connectWS();
+    } catch(e){ alert('Cannot reach server — make sure Start Town.bat is running.'); return; }
+  }
+
   inp.value='';
   setBS(selectedKey,'running'); activeAgents.add(selectedKey); updateActiveBar();
   showBubble(selectedKey,task.slice(0,50));
@@ -3474,9 +3490,20 @@ function hideTip()   { tip.style.display='none'; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── QUICK PRESETS ─────────────────────────────────────────────────────────────
-function runPreset(agentKey, task){
-  if(!ws||ws.readyState!==WebSocket.OPEN){ alert('Not connected. Please wait.'); return; }
-  ws.send(JSON.stringify({type:'run',agent:agentKey,task}));
+async function runPreset(agentKey, task){
+  const wsOk = ws && ws.readyState===WebSocket.OPEN;
+  if(wsOk){
+    ws.send(JSON.stringify({type:'run',agent:agentKey,task}));
+  } else {
+    try {
+      const r = await fetch(`/api/run/${agentKey}`,{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({task})
+      });
+      if(!r.ok){ const d=await r.json().catch(()=>({})); alert('Server error: '+(d.error||r.statusText)); return; }
+      if(!ws||ws.readyState===WebSocket.CLOSED||ws.readyState===WebSocket.CLOSING) connectWS();
+    } catch(e){ alert('Cannot reach server — make sure Start Town.bat is running.'); return; }
+  }
   setBS(agentKey,'running'); activeAgents.add(agentKey); updateActiveBar();
   showBubble(agentKey,task.slice(0,50));
   taskCards[agentKey]={steps:[],task,status:'running',startedAt:Date.now(),estDuration:_estDuration(agentKey)};
