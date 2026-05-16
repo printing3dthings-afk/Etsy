@@ -1842,6 +1842,7 @@ body{transition:background .5s,color .5s}
     <span id="sb-qc" style="color:#484f58">QC: <span id="sb-qc-count">—</span></span>
     <span id="sb-etsy" style="color:#484f58">ETSY: <span id="sb-etsy-status">—</span></span>
     <span id="sb-smtp" style="color:#484f58">EMAIL: <span id="sb-smtp-status">—</span></span>
+    <a id="sb-tunnel" href="#" target="_blank" style="display:none;background:#1a0030;border:1px solid #9b50c0;color:#d080ff;padding:2px 9px;border-radius:4px;font-size:.48rem;text-decoration:none;white-space:nowrap" title="Public tunnel URL — open on any device">🌐 <span id="sb-tunnel-label">tunnel</span></a>
     <span id="sb-update-badge" style="display:none;background:#1565c0;color:#fff;padding:2px 7px;border-radius:4px;animation:pulse 1.5s infinite">↑ UPDATE READY</span>
     <button id="sb-update-btn" onclick="applyUpdate()" title="Pull latest code from GitHub" style="font-family:'Press Start 2P',monospace;font-size:.52rem;background:#1b2838;border:1px solid #4a90d9;color:#4a90d9;padding:2px 8px;border-radius:4px;cursor:pointer">⟳ UPDATE</button>
   </div>
@@ -4296,6 +4297,21 @@ async function _pollStatusBar(){
     if(qcEl){
       qcEl.textContent = '✓';
       qcEl.style.color = '#4caf50';
+    }
+
+    // Cloudflare Tunnel URL
+    const tun = await fetch('/api/tunnel-url').then(r=>r.json()).catch(()=>({}));
+    const tunEl  = document.getElementById('sb-tunnel');
+    const tunLbl = document.getElementById('sb-tunnel-label');
+    if(tun.url && tunEl){
+      tunEl.href = tun.url;
+      tunEl.style.display = 'inline';
+      // Show just the subdomain to keep it short
+      const short = tun.url.replace('https://','').split('.')[0];
+      if(tunLbl) tunLbl.textContent = short + '.cf';
+      tunEl.title = `Public URL: ${tun.url}\nClick to open — share with phone`;
+    } else if(tunEl){
+      tunEl.style.display = 'none';
     }
 
     // Auto-update status

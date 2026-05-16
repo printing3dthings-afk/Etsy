@@ -235,6 +235,9 @@ def _append_session_log(entry: dict):
 _task_queue: queue.Queue = queue.Queue()
 _queue_worker_started = False
 
+# Public tunnel URL set by cloudflared watcher (empty when no tunnel running)
+_tunnel_url: str = ""
+
 # High-priority queue for digital order delivery — processes immediately.
 _delivery_queue: queue.Queue = queue.Queue()
 _delivery_worker_started = False
@@ -1004,6 +1007,18 @@ async def pwa_icon(size: str):
 @app.get("/api/agents")
 async def list_agents():
     return JSONResponse({"agents": list(AGENT_CLASSES.keys()), "states": agent_states})
+
+
+@app.get("/api/tunnel-url")
+async def get_tunnel_url():
+    return JSONResponse({"url": _tunnel_url})
+
+
+@app.post("/api/tunnel-url")
+async def set_tunnel_url(body: dict):
+    global _tunnel_url
+    _tunnel_url = body.get("url", "")
+    return JSONResponse({"ok": True})
 
 
 @app.get("/api/session-log")
