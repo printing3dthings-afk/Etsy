@@ -26,223 +26,83 @@ from agents.trend_forecasting_agent import TrendForecastingAgent
 from agents.customer_retention_agent import CustomerRetentionAgent
 from agents.workflow_coordinator_agent import WorkflowCoordinatorAgent
 
-SYSTEM_PROMPT = """You are the CEO of OnBrandCraftz (etsy.com/shop/onbrandcraftz) — an Etsy shop selling 3D printed home decor, hand painted wood items, AND digital products (planners, wall art, printables). Your single overriding objective is: profitable business within 30 days. Every decision is measured in dollars of net profit.
+# Max characters from a single agent result to include in CEO context.
+# Keeps the message history lean so CEO never hits context limits.
+_RESULT_CAP = 700
 
-## PRIMARY MISSION: PROFITABLE IN 30 DAYS
+SYSTEM_PROMPT = """You are the CEO of OnBrandCraftz (etsy.com/shop/onbrandcraftz) — an Etsy shop selling 3D printed home decor and digital products (planners, wall art, printables).
 
-**Revenue target milestones:**
-- Day 7:  $50 revenue, first digital sale proven
-- Day 14: $150 revenue, digital pipeline running autonomously
-- Day 21: $400 revenue, top 3 listings converting at ≥ 2.5%
-- Day 30: $800+ revenue/month run-rate, net margin ≥ 60% on digital products
+## YOUR ONLY JOB: DELEGATE AND DECIDE
+You are a pure orchestrator. You never write SEO copy, never generate art, never calculate margins, never do research yourself. The moment you start doing a specialist's work — stop and delegate instead.
 
-Digital products are your fastest path to profit — near-zero COGS, unlimited sales, no shipping delays. Every day without a live, optimized digital product is a lost day.
+For every task you receive:
+1. Identify which 1–5 agents are needed and in what order.
+2. Delegate to the first agent. Wait for the result.
+3. Read the result. If there is a problem, delegate a fix before moving on.
+4. Continue down the chain.
+5. After the last delegation, write your PIPELINE SUMMARY and stop.
 
-## LEARN BEFORE YOU ACT — ALWAYS
+## HARD LIMITS PER INVOCATION
+- Maximum 5 delegations per task. Do the most critical 5; note what remains.
+- After your last delegation, write the PIPELINE SUMMARY immediately. Do not start new work.
+- Never call the same agent twice for the same sub-task.
 
-Before any product decision, before any listing goes live, run this sequence:
-1. `get_market_insights` — what do we already know? Check the knowledge base first.
-2. `research_etsy_market` — what are competitors doing RIGHT NOW? Prices, titles, tags.
-3. `research_design_trends` — is this product style what buyers want this season?
-4. `find_best_keywords` — what exact words are buyers typing to find this?
-5. Save every new finding with `save_market_insight` — the whole team learns from it.
+## ISSUE-FIXING LOOP
+When an agent result shows a problem, fix it before proceeding:
+| Problem | Fix delegation |
+|---------|---------------|
+| Art file fails QC | → Art Creation Agent with the specific rejection reason |
+| Margin below 35% | → Financial Agent to suggest a corrected price |
+| SEO score < 80 | → Etsy Listing Agent with specific improvements needed |
+| Stock / inventory alert | → Supply Chain Agent |
+| Customer message unread | → Customer Service Agent |
+Allow one retry per issue. If it fails twice, flag for human review and move on.
 
-The agents that fail are the ones that guess. The agents that win research first.
+## PRODUCT PIPELINE ORDER (digital products)
+Art Creation → Quality Check → Brand Design → Marketing → Financial → Etsy Listing
+Each step must pass before the next begins. Do not skip steps.
 
-## 30-DAY EXECUTION ROADMAP
-
-### WEEK 1 — Foundation (Days 1–7)
-**Goal: Fix what's broken, launch first digital products based on research**
-
-Day 1-2: Audit & Research
-- Run `bulk_seo_audit` on all existing listings → fix worst 5 (title + tags)
-- `research_etsy_market` on top 5 product categories → identify biggest gaps
-- `research_design_trends` for home decor + wall art + planners
-- Save all findings to knowledge base
-
-Day 3-4: First Digital Launch
-- Research shows the best 2 product types to launch now
-- Art Creation Agent generates 2 premium digital products (DALL-E 3 HD)
-- Full 7-agent pipeline for each: Art → QC → Brand → Marketing → Financial → Listing → CEO
-- Target price: $4.99–$9.99 for art prints, $8.99–$14.99 for planners
-
-Day 5-7: Optimize Existing + Monitor
-- Financial Agent reprices any listing below 50% margin
-- A/B Testing Agent starts thumbnail test on top 3 listings
-- Social Media Agent pins all new and existing products to Pinterest
-- Track: which listing got its first view? Its first favorite? Report.
-
-### WEEK 2 — Product Pipeline (Days 8–14)
-**Goal: 10 live digital products, each with a passing SEO score ≥ 85/100**
-
-- Launch 2 new digital products every day (art prints and/or planners)
-- Research niche demand before each launch — no guessing
-- Every product must pass full 7-agent pipeline; no exceptions
-- Etsy Ads Agent: turn on Etsy Ads for top 3 listings at $1/day each
-- Email Marketing Agent: set up first post-purchase email sequence
-- Target end of week: $150 total revenue, at least 3 listings with 1+ sale
-
-### WEEK 3 — SEO + Traffic (Days 15–21)
-**Goal: Double views on top performers, Pinterest traffic flowing**
-
-- Marketing Agent: daily SEO audit → fix any listing scoring < 85
-- Etsy Ads Agent: review ROAS on running ads → scale winners, pause losers
-- Social Media Agent: 5 Pinterest pins per day minimum
-- Competitor Intel Agent: identify 3 new market gaps from research
-- Launch 5 more digital products targeting newly identified gaps
-- Customer Service Agent: reach out to any buyer who didn't leave a review
-- Target: first 5-star review, 200+ total views/day
-
-### WEEK 4 — Scale (Days 22–30)
-**Goal: $800/month run-rate, profitable machine running**
-
-- Scale Etsy Ads budget on any campaign with ROAS > 3x
-- Cut any listing with 0 sales AND 0 favorites after 21 days
-- Launch 3 more products in the highest-converting category
-- Promotions Agent: run first sale event (20% off for 48 hours on select items)
-- A/B Testing Agent: document which thumbnails won; apply winning style to all
-- Store Manager: optimize shop sections, about page, shop policies
-- Financial Agent: produce full P&L report; confirm net margin ≥ 60% on digital
-
-## FULFILLMENT MODELS
-- Physical (3D printed, hand painted): made-to-order, low stock (1-2) is normal
-- Digital: instant download, 999 units, delivered via email — highest margin, no shipping, no materials
-
-## FULFILLMENT MODELS
-- Physical (3D printed, hand painted): made-to-order, low stock (1-2) is normal
-- Digital: instant download, 999 units, delivered via email — highest margin, no shipping, no materials
-
-## YOUR 26-AGENT TEAM
-
-**Digital Product Pipeline (highest profit priority):**
-- Brand Design Agent: brand identity, logo, banner, mockups, thumbnail optimization for CTR
-- Art Creation Agent: world-class digital art (DALL-E 3 HD) and premium PDF planners
-- Quality Check Agent: ruthless gatekeeper — only top-1% Etsy quality passes
-- Etsy Listing Agent: SEO-optimized listings + daily audit of ALL existing listings
-- Store Manager Agent: shop health, renewals, daily performance audit
-- Sales Processor Agent: instant digital file delivery after purchase
-
-**Shop Operations:**
-- Sales Agent: order tracking, revenue reporting, shipping queue
-- Product Agent: physical listing management, inventory, pricing optimization
-- Marketing Agent: Etsy SEO research, keyword intelligence, competitor analysis
-- Analytics Agent: profitability dashboard, per-listing metrics, trend identification
-- Customer Service Agent: reviews, messages, Star Seller maintenance
-- Social Media Agent: Pinterest traffic, content calendar, organic reach
-
-**Business Infrastructure:**
-- Financial Agent: net profit per listing, fee breakdowns, margin alerts, P&L
-- Print Production Agent: print queue, machine uptime, filament cost tracking
-- Etsy Ads Agent: ROAS optimization, promoted listing ROI, ad budget allocation
-- Competitor Intel Agent: market gaps, competitor pricing, trend forecasting
-- Promotions Agent: strategic discounts, sales events, bundle pricing
-- Tax Compliance Agent: quarterly estimates, deductions, expense tracking
-- Returns & Disputes Agent: refund management, Star Seller protection
-- Supply Chain Agent: materials inventory, filament stock, supplier costs
-- Email Marketing Agent: buyer follow-up, receipt copy, repeat purchase campaigns
-- A/B Testing Agent: systematic CTR and conversion experiments
-
-## MANDATORY PRE-LISTING REVIEW PIPELINE
-No product goes live until ALL of these steps are complete — in order:
-1. **Art Creation Agent** — generates premium asset (DALL-E 3 HD or multi-page planner PDF)
-2. **Quality Check Agent** — visual review + technical specs; must APPROVE (not just pass)
-3. **Brand Design Agent** — confirms product fits brand identity + provides mockup image
-4. **Marketing Agent** — keyword research: identifies top 3 search terms for this product type
-5. **Financial Agent** — calculates net margin: price must yield ≥ 35% net after all fees
-6. **Etsy Listing Agent** — writes optimized title (140 chars, keyword-first), 13 tags, full description
-7. **CEO (you)** — final sign-off: does this listing meet premium standards AND margin target?
-
-Reject and recycle any step that doesn't pass. A mediocre listing hurts search ranking for every other listing in the shop.
-
-## DAILY LISTING REVIEW WORKFLOW (run every day)
-This is your most important recurring task. Execute in this order:
-1. **Analytics Agent** — pull per-listing views, favorites, conversion rate, revenue (last 7 days)
-2. **Marketing Agent** — run SEO audit on all active listings; flag titles/tags below best-practice score
-3. **Etsy Listing Agent** — generate optimized replacements for any listing scoring < 80/100 on SEO audit
-4. **Store Manager Agent** — check renewal alerts, sold-out flags, listing health score
-5. **Financial Agent** — flag any listing with net margin < 25% for repricing or removal
-6. **CEO (you)** — approve updates, push changes, report summary of improvements made
-
-Target: zero listings with suboptimal titles, missing tags, or below-margin pricing.
-
-## DELEGATION RULES — NON-NEGOTIABLE
-
-**You NEVER do work yourself that belongs to a specialist agent.**
-- You have a `delegate_to_*` tool for every agent. USE THEM. Every time.
-- Answering a task directly without delegating = wrong. The answer will be inferior and untraceable.
-- Even for a "simple" question about revenue: call `delegate_to_analytics_agent` — don't guess.
-- Even for a "quick" title suggestion: call `delegate_to_etsy_listing_agent` and `delegate_to_marketing_agent`.
-- You are the orchestrator. You read results, make decisions, and assign next steps. That is all.
-
-**Sequencing:**
-- Product pipeline tasks → always all 7 steps in order, each waiting for the previous result
-- Parallel-safe tasks (e.g., Analytics + Marketing running independent research) → call both tools back-to-back
-- Never approve a product for listing without the full 7-step pipeline above
-- Never skip Financial Agent review — every listing must have a confirmed margin
-- When a listing underperforms → Marketing + A/B Testing before giving up on it
-
-- PHYSICAL 3D PRINT ORDERS: NEVER delegate print jobs without explicit human approval. Flag physical orders as "awaiting_human_approval" and notify the owner. Only DIGITAL products are fully automated.
-
-**After every delegation you must:**
-1. Read the returned result
-2. Decide: is the result sufficient? If not, re-delegate with corrections.
-3. Summarize what was done and what comes next.
+## PHYSICAL ORDERS: HUMAN APPROVAL REQUIRED
+Never automate physical 3D print production. Flag all physical print jobs as
+"awaiting_human_approval" and stop. Only digital products are fully automated.
 
 ## DELEGATION MAP
-- Brand/identity/mockups → Brand Design Agent
-- New digital product creation → Art Creation Agent
-- QC and file approval → Quality Check Agent
-- Listing creation + SEO audit + listing updates → Etsy Listing Agent
-- Shop health, renewals, announcements → Store Manager Agent
-- Digital file delivery → Sales Processor Agent
-- Physical orders, shipping → Sales Agent
-- Physical inventory, pricing → Product Agent
-- SEO research, keyword intel, traffic → Marketing Agent
-- Performance reports, dashboards, trends → Analytics Agent
-- Customer messages, review responses → Customer Service Agent
-- Pinterest, social content → Social Media Agent
-- Net profit, margins, fees, P&L → Financial Agent
-- 3D print queue, machines, filament → Print Production Agent
-- Ad budget, ROAS, promoted listings → Etsy Ads Agent
-- Competitor research, market gaps → Competitor Intel Agent
-- Discounts, sales events, coupons → Promotions Agent
-- Taxes, deductions, compliance → Tax Compliance Agent
-- Returns, refunds, disputes → Returns & Disputes Agent
-- Materials, suppliers, purchase orders → Supply Chain Agent
-- Receipt messages, buyer emails, newsletters → Email Marketing Agent
-- CTR/conversion experiments → A/B Testing Agent
-- API keys, integrations, connection health → API Connections Agent
-- Trend research, seasonal forecasting, upcoming niches → Trend Forecasting Agent
-- Buyer retention, win-back campaigns, CLV analysis → Customer Retention Agent
-- Pipeline health, bottleneck detection, daily ops overview → Workflow Coordinator
+| What you need | Which agent |
+|--------------|-------------|
+| New digital art or planner | delegate_to_art_creation_agent |
+| Review / approve a digital file | delegate_to_quality_check_agent |
+| Brand identity, mockups | delegate_to_brand_design_agent |
+| SEO keywords, competitor research | delegate_to_marketing_agent |
+| Net margin, fees, pricing | delegate_to_financial_agent |
+| Create / update Etsy listing | delegate_to_etsy_listing_agent |
+| Shop health, renewals | delegate_to_store_manager_agent |
+| Performance reports, dashboards | delegate_to_analytics_agent |
+| Orders, revenue tracking | delegate_to_sales_agent |
+| Digital order fulfillment | delegate_to_sales_processor_agent |
+| Customer messages, reviews | delegate_to_customer_service_agent |
+| Pinterest, social content | delegate_to_social_media_agent |
+| 3D print queue, machines | delegate_to_print_production_agent |
+| Ad budget, ROAS | delegate_to_etsy_ads_agent |
+| Competitor gaps, market intel | delegate_to_competitor_intel_agent |
+| Discounts, sales events | delegate_to_promotions_agent |
+| Taxes, deductions | delegate_to_tax_compliance_agent |
+| Returns, disputes | delegate_to_returns_agent |
+| Materials, filament stock | delegate_to_supply_chain_agent |
+| Buyer emails, receipt copy | delegate_to_email_marketing_agent |
+| CTR / conversion experiments | delegate_to_ab_testing_agent |
+| API keys, integrations | delegate_to_api_connections_agent |
+| Trend forecasting, seasonal gaps | delegate_to_trend_forecasting_agent |
+| Buyer retention, win-back | delegate_to_customer_retention_agent |
+| Pipeline health, bottlenecks | delegate_to_workflow_coordinator |
 
-## DAILY BRIEFING (run every morning)
-1. Revenue last 24h + week-over-week trend (Analytics)
-2. New orders needing action (Sales + Print Production)
-3. Digital product pipeline status — what's in queue, what's blocked (Art + QC + Listing)
-4. Listings flagged from last night's SEO audit (Marketing + Listing Agent)
-5. Profit alert — any listing now below margin floor (Financial)
-6. Unread messages/reviews needing response (Customer Service)
-7. Open disputes (Returns Agent)
-8. Top growth opportunity today (Competitor Intel)
-
-## EFFICIENCY RULES
-- Delegate, don't repeat. If Analytics already pulled data, pass it to Marketing — don't pull again.
-- Cache results. If you've run a competitor report today, use those results all day.
-- Time-box each agent run. If a task takes > 3 tool calls and produces no output, escalate.
-- Quality over quantity. One excellent $8 planner that converts at 4% beats five mediocre $3 downloads at 0.5%.
-
-## OUTPUT FORMAT AFTER COMPLETING A TASK
-Always end your response with:
+## PIPELINE SUMMARY (required at the end of every response)
 ```
 PIPELINE SUMMARY
-✓ [AgentName]: [what was done]
-✓ [AgentName]: [what was done]
-→ Next: [what happens next]
-Net status: [on-track / behind / ahead] vs 30-day goal
-```
-
-You see the whole picture. Every decision is measured in dollars of net profit."""
+✓ AgentName: [one-line result]
+✓ AgentName: [one-line result]
+→ Remaining: [any steps not completed this session, or "none"]
+Status: done | blocked on [X] | needs human approval
+```"""
 
 DELEGATION_TOOLS = [
     # ── Digital Product Pipeline ─────────────────────────────────────────────
@@ -457,7 +317,7 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_trend_forecasting_agent",
-        "description": "Delegate trend research, seasonal opportunity identification, upcoming niche discovery, or art queue prioritization to the Trend Forecasting Agent. Use this to stay 8-16 weeks ahead of market trends.",
+        "description": "Delegate trend research, seasonal opportunity identification, upcoming niche discovery, or art queue prioritization to the Trend Forecasting Agent.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -466,7 +326,7 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_customer_retention_agent",
-        "description": "Delegate buyer retention analysis, win-back campaigns for silent customers (30-90 days), customer lifetime value tracking, or VIP buyer identification to the Customer Retention Agent.",
+        "description": "Delegate buyer retention analysis, win-back campaigns for silent customers, customer lifetime value tracking, or VIP buyer identification to the Customer Retention Agent.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -475,7 +335,7 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_workflow_coordinator",
-        "description": "Delegate pipeline health checks, bottleneck detection, agent workload balancing, daily ops summaries, or task prioritization to the Workflow Coordinator. Use this to get a fast overview of what's stuck or needs attention.",
+        "description": "Delegate pipeline health checks, bottleneck detection, agent workload balancing, daily ops summaries, or task prioritization to the Workflow Coordinator.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -484,82 +344,138 @@ DELEGATION_TOOLS = [
     },
 ]
 
+# How many recent message pairs (assistant+user) to keep before trimming.
+# Prevents CEO context from growing unbounded across many delegations.
+_MAX_HISTORY_PAIRS = 4
+
 
 class CEOAgent(BaseAgent):
     def __init__(self):
         self._agents = {
-            # Digital Product Pipeline
-            "brand_design": BrandDesignAgent(),
-            "art_creation": ArtCreationAgent(),
-            "quality_check": QualityCheckAgent(),
-            "etsy_listing": EtsyListingAgent(),
-            "store_manager": StoreManagerAgent(),
-            "sales_processor": SalesProcessorAgent(),
-            # Shop Operations
-            "sales": SalesAgent(),
-            "product": ProductAgent(),
-            "marketing": MarketingAgent(),
-            "analytics": AnalyticsAgent(),
-            "customer_service": CustomerServiceAgent(),
-            "social_media": SocialMediaAgent(),
-            # Business Infrastructure
-            "financial": FinancialAgent(),
-            "print_production": PrintProductionAgent(),
-            "etsy_ads": EtsyAdsAgent(),
-            "competitor_intel": CompetitorIntelAgent(),
-            "promotions": PromotionsAgent(),
-            "tax_compliance": TaxComplianceAgent(),
-            "returns": ReturnsAgent(),
-            "supply_chain": SupplyChainAgent(),
-            "email_marketing": EmailMarketingAgent(),
-            "ab_testing": ABTestingAgent(),
-            "api_connections": APIConnectionsAgent(),
-            # Growth & Operations
-            "trend_forecasting": TrendForecastingAgent(),
+            "brand_design":       BrandDesignAgent(),
+            "art_creation":       ArtCreationAgent(),
+            "quality_check":      QualityCheckAgent(),
+            "etsy_listing":       EtsyListingAgent(),
+            "store_manager":      StoreManagerAgent(),
+            "sales_processor":    SalesProcessorAgent(),
+            "sales":              SalesAgent(),
+            "product":            ProductAgent(),
+            "marketing":          MarketingAgent(),
+            "analytics":          AnalyticsAgent(),
+            "customer_service":   CustomerServiceAgent(),
+            "social_media":       SocialMediaAgent(),
+            "financial":          FinancialAgent(),
+            "print_production":   PrintProductionAgent(),
+            "etsy_ads":           EtsyAdsAgent(),
+            "competitor_intel":   CompetitorIntelAgent(),
+            "promotions":         PromotionsAgent(),
+            "tax_compliance":     TaxComplianceAgent(),
+            "returns":            ReturnsAgent(),
+            "supply_chain":       SupplyChainAgent(),
+            "email_marketing":    EmailMarketingAgent(),
+            "ab_testing":         ABTestingAgent(),
+            "api_connections":    APIConnectionsAgent(),
+            "trend_forecasting":  TrendForecastingAgent(),
             "customer_retention": CustomerRetentionAgent(),
             "workflow_coordinator": WorkflowCoordinatorAgent(),
         }
-        super().__init__(
-            name="CEO Agent",
-            system_prompt=SYSTEM_PROMPT,
-            tool_definitions=DELEGATION_TOOLS,
+        # CEO only needs delegation tools — no universal research/learning tools.
+        # Pass tool_definitions directly without the base-class universal merge.
+        self.name = "CEO Agent"
+        self.system_prompt = SYSTEM_PROMPT
+        self.tool_definitions = DELEGATION_TOOLS
+        from config import STANDARD_MODEL
+        self.model = STANDARD_MODEL
+        import anthropic as _anthropic
+        self.client = _anthropic.Anthropic()
+        from agents.base_agent import _get_logger
+        self.logger = _get_logger("CEO Agent")
+
+    def run(self, task: str, max_iterations: int = 6) -> str:
+        """Run CEO with a reduced iteration cap and trimmed message history."""
+        self.logger.info(f"CEO START task={task[:80]}")
+        messages: list[dict] = [{"role": "user", "content": task}]
+
+        for iteration in range(max_iterations):
+            # Trim history before each API call to stay within context limits.
+            messages = self._trim_history(messages)
+
+            response = self._call_api(messages)
+
+            if response.stop_reason == "end_turn":
+                self.logger.info("CEO END stop_reason=end_turn")
+                return self._extract_text(response)
+
+            if response.stop_reason == "tool_use":
+                tool_results = self._process_tool_calls(response)
+                messages.append({"role": "assistant", "content": response.content})
+                messages.append({"role": "user", "content": tool_results})
+                continue
+
+            self.logger.info(f"CEO END stop_reason={response.stop_reason}")
+            return self._extract_text(response) or f"[CEO] Stopped: {response.stop_reason}"
+
+        return (
+            f"[CEO] Reached delegation limit ({max_iterations} steps). "
+            "Task partially complete — check the pipeline summary above for what remains."
         )
+
+    def _trim_history(self, messages: list[dict]) -> list[dict]:
+        """Keep the initial user message + the most recent N assistant/user pairs."""
+        if len(messages) <= 1 + _MAX_HISTORY_PAIRS * 2:
+            return messages
+        # Always keep messages[0] (the original task).
+        recent = messages[1:]
+        # Keep only the last N pairs (each pair = 1 assistant + 1 user/tool_result).
+        keep = recent[-(  _MAX_HISTORY_PAIRS * 2):]
+        trimmed_count = len(recent) - len(keep)
+        if trimmed_count:
+            self.logger.debug(f"CEO trimmed {trimmed_count} old messages to stay within context")
+        return [messages[0]] + keep
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
         task = tool_input.get("task", "")
         agent_map = {
-            "delegate_to_brand_design_agent": "brand_design",
-            "delegate_to_art_creation_agent": "art_creation",
-            "delegate_to_quality_check_agent": "quality_check",
-            "delegate_to_etsy_listing_agent": "etsy_listing",
-            "delegate_to_store_manager_agent": "store_manager",
-            "delegate_to_sales_processor_agent": "sales_processor",
-            "delegate_to_sales_agent": "sales",
-            "delegate_to_product_agent": "product",
-            "delegate_to_marketing_agent": "marketing",
-            "delegate_to_analytics_agent": "analytics",
+            "delegate_to_brand_design_agent":     "brand_design",
+            "delegate_to_art_creation_agent":     "art_creation",
+            "delegate_to_quality_check_agent":    "quality_check",
+            "delegate_to_etsy_listing_agent":     "etsy_listing",
+            "delegate_to_store_manager_agent":    "store_manager",
+            "delegate_to_sales_processor_agent":  "sales_processor",
+            "delegate_to_sales_agent":            "sales",
+            "delegate_to_product_agent":          "product",
+            "delegate_to_marketing_agent":        "marketing",
+            "delegate_to_analytics_agent":        "analytics",
             "delegate_to_customer_service_agent": "customer_service",
-            "delegate_to_social_media_agent": "social_media",
-            "delegate_to_financial_agent": "financial",
+            "delegate_to_social_media_agent":     "social_media",
+            "delegate_to_financial_agent":        "financial",
             "delegate_to_print_production_agent": "print_production",
-            "delegate_to_etsy_ads_agent": "etsy_ads",
+            "delegate_to_etsy_ads_agent":         "etsy_ads",
             "delegate_to_competitor_intel_agent": "competitor_intel",
-            "delegate_to_promotions_agent": "promotions",
-            "delegate_to_tax_compliance_agent": "tax_compliance",
-            "delegate_to_returns_agent": "returns",
-            "delegate_to_supply_chain_agent": "supply_chain",
-            "delegate_to_email_marketing_agent": "email_marketing",
-            "delegate_to_ab_testing_agent": "ab_testing",
-            "delegate_to_api_connections_agent": "api_connections",
-            "delegate_to_trend_forecasting_agent": "trend_forecasting",
-            "delegate_to_customer_retention_agent": "customer_retention",
-            "delegate_to_workflow_coordinator": "workflow_coordinator",
+            "delegate_to_promotions_agent":       "promotions",
+            "delegate_to_tax_compliance_agent":   "tax_compliance",
+            "delegate_to_returns_agent":          "returns",
+            "delegate_to_supply_chain_agent":     "supply_chain",
+            "delegate_to_email_marketing_agent":  "email_marketing",
+            "delegate_to_ab_testing_agent":       "ab_testing",
+            "delegate_to_api_connections_agent":  "api_connections",
+            "delegate_to_trend_forecasting_agent":"trend_forecasting",
+            "delegate_to_customer_retention_agent":"customer_retention",
+            "delegate_to_workflow_coordinator":   "workflow_coordinator",
         }
         agent_key = agent_map.get(tool_name)
         if not agent_key:
             return f"Unknown delegation tool: {tool_name}"
 
         agent = self._agents[agent_key]
-        print(f"  [CEO] -> Delegating to {agent.name}...")
+        self.logger.info(f"CEO -> {agent.name} | task={task[:60]}")
+        print(f"  [CEO] -> {agent.name}...")
+
         result = agent.run(task)
-        return f"[{agent.name} Report]\n{result}"
+
+        # Truncate long results — CEO needs key outcomes, not full reports.
+        # The delegated agent's full output is already logged separately.
+        if len(result) > _RESULT_CAP:
+            result = result[:_RESULT_CAP] + f"\n[...truncated — full report in agent log]"
+
+        return f"[{agent.name}]\n{result}"
