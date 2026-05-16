@@ -893,6 +893,48 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .w-hat { width:26px; height:8px; border-radius:3px 3px 0 0; margin-bottom:-2px; flex-shrink:0; outline:2px solid #000; z-index:3; position:relative; }
 .w-hat::after { content:''; position:absolute; bottom:-3px; left:-3px; right:-3px; height:3px; background:inherit; filter:brightness(.72); outline:2px solid #000; border-radius:0 0 1px 1px; }
 
+/* Beret — artistic angled disc */
+.w-hat-beret { width:32px; height:11px; border-radius:50% 50% 40% 40%; margin-left:-5px; transform:rotate(-8deg); }
+.w-hat-beret::after { border-radius:0 0 2px 2px; }
+
+/* Top hat — tall rectangle with brim */
+.w-hat-tophat { width:18px; height:16px; border-radius:2px 2px 0 0; }
+.w-hat-tophat::after { left:-5px; right:-5px; height:4px; border-radius:0; background:inherit; filter:brightness(.65); bottom:-4px; }
+
+/* Hard hat — wide dome */
+.w-hat-hardhat { width:30px; height:12px; border-radius:6px 6px 0 0; margin-left:-4px; }
+.w-hat-hardhat::after { left:-5px; right:-5px; height:3px; border-radius:0; }
+
+/* Visor cap — flat top with front brim only */
+.w-hat-visor { width:28px; height:7px; border-radius:2px 2px 0 0; margin-left:-2px; }
+.w-hat-visor::after { left:-2px; right:auto; width:36px; height:3px; border-radius:0 2px 2px 0; bottom:-3px; }
+
+/* Wizard hat — pointed triangle */
+.w-hat-wizard { width:20px; height:20px; clip-path:polygon(50% 0,100% 100%,0 100%); border-radius:0; margin-bottom:0; }
+.w-hat-wizard::after { display:none; }
+
+/* Party hat — bright cone */
+.w-hat-party { width:18px; height:18px; clip-path:polygon(50% 0,100% 100%,0 100%); border-radius:0; margin-bottom:0; }
+.w-hat-party::after { display:none; }
+
+/* Crown — zigzag */
+.w-hat-crown { width:24px; height:10px; clip-path:polygon(0 100%,0 50%,20% 0,40% 50%,60% 0,80% 50%,100% 0,100% 100%); border-radius:0; }
+.w-hat-crown::after { display:none; }
+
+/* Headset — no hat, just headset arc (uses ::before for arc) */
+.w-hat-headset { width:0; height:0; border-radius:0; outline:none; margin:0; background:transparent !important; }
+.w-hat-headset::after { display:none; }
+.w-hat-headset::before { content:''; position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:22px; height:12px; border:3px solid #333; border-bottom:none; border-radius:12px 12px 0 0; background:transparent; }
+
+/* Graduation cap */
+.w-hat-grad { width:26px; height:5px; border-radius:1px; }
+.w-hat-grad::before { content:''; position:absolute; top:-6px; left:50%; transform:translateX(-50%); width:14px; height:6px; background:inherit; border-radius:1px; }
+.w-hat-grad::after { left:-2px; right:-2px; height:3px; border-radius:0; }
+
+/* Beanie — fits head tightly, ribbed */
+.w-hat-beanie { width:24px; height:9px; border-radius:4px 4px 0 0; background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0,rgba(255,255,255,.12) 3px,transparent 3px,transparent 6px) !important; }
+.w-hat-beanie::after { display:none; }
+
 /* Hair — pixel block */
 .w-hair { width:22px; height:7px; border-radius:0; margin-bottom:-2px; flex-shrink:0; outline:2px solid #000; z-index:2; position:relative; }
 
@@ -921,6 +963,20 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
 .w-torso { width:20px; height:18px; border-radius:0; outline:2px solid #000; box-shadow:2px 2px 0 #000; flex-shrink:0; position:relative; image-rendering:pixelated; }
 /* Collar pixel */
 .w-torso::before { content:''; position:absolute; top:0; left:50%; transform:translateX(-50%); width:8px; height:4px; background:rgba(255,255,255,.28); }
+
+/* Torso accessories — positioned inside w-torso */
+.w-tie { position:absolute; top:3px; left:50%; transform:translateX(-50%); width:4px; height:11px; background:var(--waccent,#c0302c); clip-path:polygon(50% 0,100% 18%,75% 100%,25% 100%,0 18%); z-index:3; }
+.w-bowtie { position:absolute; top:4px; left:50%; transform:translateX(-50%); width:8px; height:5px; background:var(--waccent,#2c80c0); clip-path:polygon(0 0,50% 35%,100% 0,100% 100%,50% 65%,0 100%); z-index:3; }
+.w-badge { position:absolute; top:7px; right:2px; width:6px; height:5px; background:var(--waccent,#f0c020); border:1px solid #000; border-radius:1px; z-index:3; }
+.w-badge::after { content:''; position:absolute; top:1px; left:1px; right:1px; height:1px; background:rgba(0,0,0,.4); }
+.w-apron { position:absolute; inset:0; background:var(--waccent,rgba(255,255,255,.4)); clip-path:polygon(28% 0,72% 0,88% 100%,12% 100%); z-index:2; opacity:.75; }
+.w-vest { position:absolute; inset:0; background:rgba(0,0,0,.25); clip-path:polygon(12% 0,88% 0,100% 100%,0 100%); z-index:2; }
+.w-vest::before { content:''; position:absolute; top:0; left:15%; width:2px; height:100%; background:rgba(255,255,255,.2); }
+.w-lapel { position:absolute; top:0; left:0; right:0; height:7px; background:rgba(0,0,0,.3); clip-path:polygon(0 0,35% 0,50% 100%,65% 0,100% 0,100% 30%,50% 100%,0 30%); z-index:3; }
+.w-labcoat { position:absolute; inset:0; background:rgba(240,240,255,.35); clip-path:polygon(10% 0,90% 0,100% 100%,0 100%); z-index:2; }
+.w-labcoat::before { content:''; position:absolute; bottom:3px; left:3px; width:5px; height:4px; background:rgba(100,180,255,.8); border:1px solid rgba(0,100,200,.5); border-radius:1px; }
+.w-star { position:absolute; top:6px; left:2px; width:6px; height:6px; background:var(--waccent,#f0e020); clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%); z-index:3; }
+.w-scarf { position:absolute; top:0; left:-1px; right:-1px; height:5px; background:var(--waccent,#e04020); border-radius:2px; z-index:3; }
 
 /* Arms */
 .w-arm { width:6px; height:14px; border-radius:0 0 2px 2px; outline:2px solid #000; transform-origin:top center; flex-shrink:0; margin-top:2px; image-rendering:pixelated; }
