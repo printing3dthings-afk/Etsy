@@ -983,6 +983,23 @@ async def root():
 async def favicon():
     return FileResponse(STATIC_DIR / "favicon.png", media_type="image/png")
 
+@app.get("/manifest.json", include_in_schema=False)
+async def manifest():
+    return FileResponse(STATIC_DIR / "manifest.json", media_type="application/manifest+json")
+
+@app.get("/sw.js", include_in_schema=False)
+async def service_worker():
+    resp = FileResponse(STATIC_DIR / "sw.js", media_type="application/javascript")
+    resp.headers["Service-Worker-Allowed"] = "/"
+    return resp
+
+@app.get("/icon-{size}.png", include_in_schema=False)
+async def pwa_icon(size: str):
+    path = STATIC_DIR / f"icon-{size}.png"
+    if not path.exists():
+        return JSONResponse({"error": "not found"}, status_code=404)
+    return FileResponse(str(path), media_type="image/png")
+
 
 @app.get("/api/agents")
 async def list_agents():

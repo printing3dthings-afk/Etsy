@@ -1,0 +1,36 @@
+{
+  "name": "OnBrandCraftz — Etsy Hub",
+  "short_name": "OnBrandCraftz",
+  "description": "AI-powered Etsy shop management — 28 agents, live digital product pipeline",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0d1117",
+  "theme_color": "#6b3090",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/icon-32.png",  "sizes": "32x32",   "type": "image/png" },
+    { "src": "/icon-180.png", "sizes": "180x180",  "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192",  "type": "image/png", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192",  "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512",  "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512",  "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Daily Briefing",
+      "short_name": "Briefing",
+      "description": "Run the morning briefing",
+      "url": "/?agent=ceo&task=brief",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Product Gallery",
+      "short_name": "Products",
+      "description": "Browse digital products",
+      "url": "/?open=shop",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

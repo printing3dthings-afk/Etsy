@@ -1,8 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>OnBrandCraftz Town</title>
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#6b3090">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OnBrandCraftz">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
 <link rel="icon" type="image/png" href="/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -5146,6 +5155,50 @@ async function storageRestore(id){
 }
 
 function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── PWA — Service Worker + Install Banner ────────────────────────────────────
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js', {scope:'/'})
+    .then(reg => console.log('[SW] registered, scope:', reg.scope))
+    .catch(err => console.warn('[SW] registration failed:', err));
+}
+
+// Handle URL shortcuts from manifest (e.g. ?open=shop, ?agent=ceo&task=brief)
+(function handleShortcuts(){
+  const p = new URLSearchParams(location.search);
+  const openTarget = p.get('open');
+  const agentKey   = p.get('agent');
+  const task       = p.get('task');
+  if(openTarget === 'shop')    window.addEventListener('DOMContentLoaded', () => setTimeout(openShop, 800));
+  if(agentKey && task === 'brief') window.addEventListener('DOMContentLoaded', () => setTimeout(()=>runPreset(agentKey,'Run the daily morning briefing: analytics revenue summary, sales shipping queue, and CS unread messages.'), 1200));
+})();
+
+// PWA install prompt — show a subtle banner when Chrome offers install
+let _installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  const banner = document.getElementById('pwa-install-banner');
+  if(banner) banner.style.display = 'flex';
+});
+window.addEventListener('appinstalled', () => {
+  const banner = document.getElementById('pwa-install-banner');
+  if(banner) banner.style.display = 'none';
+  _installPrompt = null;
+});
+function installPWA(){
+  if(!_installPrompt) return;
+  _installPrompt.prompt();
+  _installPrompt.userChoice.then(() => { _installPrompt = null; });
+}
 </script>
+
+<!-- PWA install banner (shown by Chrome when installable) -->
+<div id="pwa-install-banner" style="display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#4a0060,#6b3090);border:1px solid #9b50c0;border-radius:10px;padding:10px 18px;align-items:center;gap:12px;z-index:99999;box-shadow:0 4px 24px rgba(0,0,0,.6);white-space:nowrap">
+  <img src="/icon-192.png" style="width:32px;height:32px;border-radius:6px" alt="">
+  <span style="font-family:'Press Start 2P',monospace;font-size:.5rem;color:#f0c0ff">Add to Home Screen</span>
+  <button onclick="installPWA()" style="font-family:'Press Start 2P',monospace;font-size:.48rem;background:#c040c0;border:none;color:#fff;padding:6px 12px;border-radius:6px;cursor:pointer">Install</button>
+  <button onclick="this.parentElement.style.display='none'" style="background:none;border:none;color:#c080e0;font-size:1rem;cursor:pointer;line-height:1">✕</button>
+</div>
 </body>
 </html>
