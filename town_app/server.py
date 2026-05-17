@@ -804,24 +804,25 @@ def _build_agent(key: str):
 
 # ── Pipeline routing ───────────────────────────────────────────────────────────
 
-_PIPELINE_AGENTS = {"brand", "art", "planner", "qc", "listing", "store", "marketing", "finance", "analytics"}
+_PIPELINE_AGENTS = {"brand", "art", "planner", "qc", "store", "marketing", "finance", "analytics"}
 
 _PIPELINE_KEYWORDS = {
-    "create", "launch", "new product", "new listing", "design a", "design the",
+    "create", "launch", "new product", "design a", "design the",
     "make a", "make the", "build a", "generate a", "generate the", "produce a",
-    "develop a", "write a listing", "publish", "add to etsy", "add a listing",
-    "start a new", "plan a new", "full pipeline", "full process",
+    "develop a", "start a new", "plan a new", "full pipeline", "full process",
 }
 
 _QUERY_PREFIXES = {
     "get", "list", "show", "check", "what", "how", "report", "status",
     "summary", "analyze", "review", "audit", "find", "search", "give",
     "tell", "explain", "describe", "calculate", "run", "pull",
+    "publish", "add", "write",
 }
 
 
 def _should_route_to_ceo(agent_key: str, task: str) -> bool:
-    if agent_key in ("ceo", "hall"):
+    # Listing agent always handles its own tasks — never route to CEO
+    if agent_key in ("ceo", "hall", "listing"):
         return False
     if agent_key not in _PIPELINE_AGENTS:
         return False
@@ -1918,6 +1919,66 @@ async def direct_pipeline(body: dict):
         daemon=True,
     ).start()
     return JSONResponse({"status": "started", "category": category})
+
+
+@app.post("/api/list-product")
+async def list_product(body: dict):
+    """Send a specific approved product to the Etsy Listing Agent."""
+    product_id = (body.get("product_id") or "").strip()
+    if not product_id:
+        return JSONResponse({"error": "product_id is required"}, status_code=400)
+    from tools.data_store import DataStore as _DS
+    store = _DS()
+    products = store.get("digital_products", default=[])
+    product = next((p for p in products if p.get("id") == product_id), None)
+    if not product:
+        return JSONResponse({"error": f"Product {product_id} not found"}, status_code=404)
+    if product.get("status") != "approved":
+        return JSONResponse({"error": f"Product must be approved (current: {product.get('status')})"}, status_code=400)
+    task = (
+        f"Create an optimised Etsy listing for digital product {product_id} (status=approved). "
+        f"Title of product: {product.get('title', product_id)}. "
+        "Steps: 1) Call get_approved_unlisted_products to see the product details. "
+        "2) Call generate_listing_content with a compelling title (max 140 chars), 13 SEO tags, "
+        "full description, and price. "
+        "3) Call publish_digital_listing with confirm=true to go live."
+    )
+    threading.Thread(
+        target=_run_sub_agent_observable,
+        args=("listing", task),
+        kwargs={"max_iterations": 10},
+        daemon=True,
+    ).start()
+    _add_notification("listing_started", f"Listing Agent: {product_id}",
+                      f"Creating Etsy listing for {product.get('title', product_id)[:60]}", "📤")
+    return JSONResponse({"status": "started", "product_id": product_id})
+
+
+@app.post("/api/list-all-approved")
+async def list_all_approved():
+    """Send all approved unlisted products to the Etsy Listing Agent at once."""
+    from tools.data_store import DataStore as _DS
+    store = _DS()
+    products = store.get("digital_products", default=[])
+    to_list = [p for p in products if p.get("status") == "approved" and not p.get("etsy_listing_id")]
+    if not to_list:
+        return JSONResponse({"status": "none", "message": "No approved unlisted products found"})
+    ids = ", ".join(p["id"] for p in to_list)
+    task = (
+        f"Create optimised Etsy listings for all approved unlisted digital products. "
+        f"Products to list: {ids}. "
+        "For each product: call generate_listing_content with SEO title (max 140 chars), "
+        "13 tags, full description, and price. Then call publish_digital_listing with confirm=true."
+    )
+    threading.Thread(
+        target=_run_sub_agent_observable,
+        args=("listing", task),
+        kwargs={"max_iterations": 15},
+        daemon=True,
+    ).start()
+    _add_notification("listing_batch_started", f"Listing Agent: {len(to_list)} products",
+                      f"Creating Etsy listings for {ids[:80]}", "📤")
+    return JSONResponse({"status": "started", "count": len(to_list), "products": ids})
 
 
 # ── Listing Health ────────────────────────────────────────────────────────────
