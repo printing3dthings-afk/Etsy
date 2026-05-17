@@ -1843,6 +1843,7 @@ body{transition:background .5s,color .5s}
     <span id="sb-etsy" style="color:#484f58">ETSY: <span id="sb-etsy-status">—</span></span>
     <span id="sb-smtp" style="color:#484f58">EMAIL: <span id="sb-smtp-status">—</span></span>
     <a id="sb-tunnel" href="#" target="_blank" style="display:none;background:#1a0030;border:1px solid #9b50c0;color:#d080ff;padding:2px 9px;border-radius:4px;font-size:.48rem;text-decoration:none;white-space:nowrap" title="Public tunnel URL — open on any device">🌐 <span id="sb-tunnel-label">tunnel</span></a>
+    <span id="sb-notunnel" style="color:#484f58;font-size:.45rem" title="Start tunnel to get a public URL (option 2 in Start Town.bat)">🌐 no tunnel</span>
     <span id="sb-update-badge" style="display:none;background:#1565c0;color:#fff;padding:2px 7px;border-radius:4px;animation:pulse 1.5s infinite">↑ UPDATE READY</span>
     <button id="sb-update-btn" onclick="applyUpdate()" title="Pull latest code from GitHub" style="font-family:'Press Start 2P',monospace;font-size:.52rem;background:#1b2838;border:1px solid #4a90d9;color:#4a90d9;padding:2px 8px;border-radius:4px;cursor:pointer">⟳ UPDATE</button>
   </div>
@@ -4301,17 +4302,29 @@ async function _pollStatusBar(){
 
     // Cloudflare Tunnel URL
     const tun = await fetch('/api/tunnel-url').then(r=>r.json()).catch(()=>({}));
-    const tunEl  = document.getElementById('sb-tunnel');
-    const tunLbl = document.getElementById('sb-tunnel-label');
-    if(tun.url && tunEl){
-      tunEl.href = tun.url;
-      tunEl.style.display = 'inline';
-      // Show just the subdomain to keep it short
+    const tunEl    = document.getElementById('sb-tunnel');
+    const tunLbl   = document.getElementById('sb-tunnel-label');
+    const noTunEl  = document.getElementById('sb-notunnel');
+    let tunBanner  = document.getElementById('tunnel-banner');
+    if(tun.url){
+      if(tunEl){ tunEl.href=tun.url; tunEl.style.display='inline'; }
+      if(noTunEl) noTunEl.style.display='none';
       const short = tun.url.replace('https://','').split('.')[0];
       if(tunLbl) tunLbl.textContent = short + '.cf';
-      tunEl.title = `Public URL: ${tun.url}\nClick to open — share with phone`;
-    } else if(tunEl){
-      tunEl.style.display = 'none';
+      if(tunEl) tunEl.title = `Public URL: ${tun.url}\nClick to open`;
+      // show/update persistent banner
+      if(!tunBanner){
+        tunBanner = document.createElement('div');
+        tunBanner.id = 'tunnel-banner';
+        tunBanner.style.cssText='position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:9999;background:#2d0050;border:2px solid #9b50c0;border-top:none;border-radius:0 0 10px 10px;padding:4px 18px;font-family:monospace;font-size:.75rem;color:#d080ff;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px #9b50c077';
+        document.body.appendChild(tunBanner);
+      }
+      tunBanner.innerHTML = `🌐 <strong style="color:#fff">Public URL:</strong> <a href="${tun.url}" target="_blank" style="color:#c080ff;text-decoration:none">${tun.url}</a> <span style="color:#888;font-size:.65rem">(click to open on any device)</span>`;
+      tunBanner.style.display='flex';
+    } else {
+      if(tunEl) tunEl.style.display='none';
+      if(noTunEl) noTunEl.style.display='inline';
+      if(tunBanner) tunBanner.style.display='none';
     }
 
     // Auto-update status
