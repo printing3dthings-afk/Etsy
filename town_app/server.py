@@ -1876,4 +1876,4 @@ if __name__ == "__main__":
         target=lambda: (time.sleep(1.5), webbrowser.open("http://localhost:8080")),
         daemon=True,
     ).start()
-    uvicorn.run("town_app.server:app", host="0.0.0.0", port=8080, reload=True, reload_dirs=[str(REPO_ROOT)])
+    uvicorn.run("town_app.server:app", host="0.0.0.0", port=8080, reload=False)

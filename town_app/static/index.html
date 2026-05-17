@@ -4390,9 +4390,13 @@ async function applyUpdate(){
         if(btn){ btn.textContent='⟳ UPDATE'; btn.disabled=false; btn.style.opacity='1'; }
         const badge = document.getElementById('sb-update-badge');
         if(st.last_result === 'updated'){
-          if(btn) btn.style.color='#4caf50';
-          setTimeout(()=>{ if(btn) btn.style.color=''; },4000);
-          if(badge){ badge.style.display='inline'; setTimeout(()=>{ badge.style.display='none'; },6000); }
+          if(btn){ btn.textContent='✓ UPDATED'; btn.style.color='#4caf50'; }
+          setTimeout(()=>{ if(btn){ btn.textContent='⟳ UPDATE'; btn.style.color=''; } },5000);
+          if(badge){ badge.style.display='inline'; setTimeout(()=>{ badge.style.display='none'; },8000); }
+          // Server no longer auto-reloads — prompt user to restart
+          setTimeout(()=>{
+            if(confirm('New code pulled! Restart the server now to apply changes?\n\nClose Start Town.bat and reopen it.')){}
+          },500);
         } else if(st.last_result === 'up_to_date'){
           if(btn){ btn.textContent='✓ UP TO DATE'; setTimeout(()=>{ btn.textContent='⟳ UPDATE'; },3000); }
         } else if(st.last_result === 'error'){
