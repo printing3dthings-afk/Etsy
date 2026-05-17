@@ -497,9 +497,28 @@ def _save_schedules(schedules: list):
     SCHEDULE_FILE.write_text(json.dumps(schedules, indent=2))
 
 
-def _check_stalled_agents():
-    """Reset any agent that has been running for more than 10 minutes."""
+# Per-agent timeout thresholds (seconds) before supervisor intervenes.
+# Sonnet creative agents get more time; Haiku operational agents are faster.
+_AGENT_TIMEOUTS: dict[str, int] = {
+    "ceo":      180,   # Haiku, 3 iterations
+    "art":      300,   # Sonnet, generates image files
+    "planner":  300,   # Sonnet, generates planner PDFs
+    "brand":    240,   # Sonnet, design work
+    "listing":  180,   # Sonnet, SEO writing
+    "marketing":180,
+    "qc":       180,   # Sonnet, file review
+}
+_DEFAULT_TIMEOUT = 120   # All other Haiku agents: 2 minutes
+
+# Tracks how many times each agent has been retried this session.
+_supervisor_retries: dict[str, int] = {}
+
+
+def _supervisor_check():
+    """Detect slow/hung agents and recover them — runs every 90 seconds."""
     now = datetime.now()
+    stuck: list[tuple[str, str, int]] = []
+
     for key, state in list(agent_states.items()):
         if state.get("status") != "running":
             continue
@@ -507,28 +526,68 @@ def _check_stalled_agents():
         if not started_str:
             continue
         try:
-            elapsed = (now - datetime.fromisoformat(started_str)).total_seconds()
-            if elapsed > 600:
-                mins = int(elapsed // 60)
-                agent_states[key] = {
-                    "status": "error",
-                    "task": state.get("task", ""),
-                    "error": f"Timed out after {mins} minutes",
-                }
-                _persist_agent_states()
-                _add_notification("agent_timeout", f"{key.upper()} timed out", f"Reset after {mins} min — task may be too complex or API unresponsive", "⚠️")
-                try:
-                    asyncio.run_coroutine_threadsafe(
-                        manager.broadcast(json.dumps({
-                            "type": "agent_update", "agent": key,
-                            "status": "error", "message": f"Timed out after {mins} minutes",
-                        })),
-                        _event_loop,
-                    )
-                except Exception:
-                    pass
+            elapsed = int((now - datetime.fromisoformat(started_str)).total_seconds())
+            threshold = _AGENT_TIMEOUTS.get(key, _DEFAULT_TIMEOUT)
+            if elapsed > threshold:
+                stuck.append((key, state.get("task", ""), elapsed))
         except Exception:
             pass
+
+    for key, task, elapsed in stuck:
+        retry_count = _supervisor_retries.get(key, 0)
+        mins = elapsed // 60
+        secs = elapsed % 60
+
+        # Reset the stuck agent to error state and broadcast it
+        agent_states[key] = {
+            "status": "error", "task": task,
+            "error": f"Supervisor reset after {mins}m {secs}s",
+        }
+        _persist_agent_states()
+        _emit(key, "error", f"⚠ Supervisor: reset after {mins}m {secs}s")
+
+        if retry_count < 2 and task:
+            # Ask Claude to simplify the task and requeue
+            try:
+                from agents.supervisor_agent import SupervisorAgent
+                simplified = SupervisorAgent().simplify_task(key, task, elapsed)
+                if simplified and simplified.upper() != "SKIP":
+                    _supervisor_retries[key] = retry_count + 1
+                    _enqueue_task(key, simplified, f"Supervisor retry #{retry_count + 1}")
+                    _add_notification(
+                        "supervisor_retry",
+                        f"Supervisor: {key.upper()} requeued",
+                        f"Stalled after {mins}m — simplified and retried automatically",
+                        "🔄",
+                    )
+                    print(f"  [Supervisor] {key} simplified + requeued (retry #{retry_count + 1})", flush=True)
+                else:
+                    _supervisor_retries[key] = 99  # Prevent further retries
+                    _add_notification(
+                        "supervisor_skip",
+                        f"Supervisor: {key.upper()} skipped",
+                        f"Task unrecoverable after {mins}m — needs human review",
+                        "⚠️",
+                    )
+                    print(f"  [Supervisor] {key} skipped (unrecoverable)", flush=True)
+            except Exception as exc:
+                print(f"  [Supervisor] Error for {key}: {exc}", flush=True)
+                _add_notification(
+                    "supervisor_error",
+                    f"Supervisor: {key.upper()} reset",
+                    f"Stuck after {mins}m — task aborted (supervisor error)",
+                    "⚠️",
+                )
+        else:
+            # Already retried max times — give up and notify
+            _supervisor_retries[key] = 0
+            _add_notification(
+                "supervisor_abort",
+                f"Supervisor: {key.upper()} aborted",
+                f"Stuck {mins}m, retried {retry_count}x — needs human review",
+                "🚫",
+            )
+            print(f"  [Supervisor] {key} aborted after {retry_count} retries", flush=True)
 
 
 def _start_scheduler():
@@ -554,12 +613,12 @@ def _start_scheduler():
         id               = "_sysop_scan",
         replace_existing = True,
     )
-    # Stall watchdog: reset agents stuck running for > 10 minutes
+    # Supervisor: detect and recover stuck agents every 90 seconds
     _scheduler.add_job(
-        func             = _check_stalled_agents,
+        func             = _supervisor_check,
         trigger          = "interval",
-        minutes          = 5,
-        id               = "_stall_watchdog",
+        seconds          = 90,
+        id               = "_supervisor",
         replace_existing = True,
     )
     _scheduler.start()

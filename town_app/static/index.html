@@ -1842,6 +1842,7 @@ body{transition:background .5s,color .5s}
     <span id="sb-qc" style="color:#484f58">QC: <span id="sb-qc-count">—</span></span>
     <span id="sb-etsy" style="color:#484f58">ETSY: <span id="sb-etsy-status">—</span></span>
     <span id="sb-smtp" style="color:#484f58">EMAIL: <span id="sb-smtp-status">—</span></span>
+    <span id="sb-supervisor" style="color:#484f58;font-size:.45rem" title="Supervisor Agent — monitoring all agents">👁️ <span id="sb-supervisor-label">watching</span></span>
     <a id="sb-tunnel" href="#" target="_blank" style="display:none;background:#1a0030;border:1px solid #9b50c0;color:#d080ff;padding:2px 9px;border-radius:4px;font-size:.48rem;text-decoration:none;white-space:nowrap" title="Public tunnel URL — open on any device">🌐 <span id="sb-tunnel-label">tunnel</span></a>
     <span id="sb-notunnel" style="color:#484f58;font-size:.45rem" title="Start tunnel to get a public URL (option 2 in Start Town.bat)">🌐 no tunnel</span>
     <span id="sb-update-badge" style="display:none;background:#1565c0;color:#fff;padding:2px 7px;border-radius:4px;animation:pulse 1.5s infinite">↑ UPDATE READY</span>
@@ -2201,6 +2202,10 @@ const AGENTS = [
    firstName:'Otto', bio:'Organized and central. He is the glue that keeps everything moving.', speed:1.0,
    chatLines:['Workflow optimized.','Everyone in position.','Syncing the team.','Operations running smooth.'],
    quick:['Daily ops summary','Digital pipeline status','Find bottlenecks']},
+  {key:'supervisor', name:'Supervisor Agent', display:'Control Tower', icon:'👁️', roof:'#1a1a2e',wall:'#e8e0f8', x:3590,y:1750, w:140,h:195, wins:2,chimney:false,
+   firstName:'Vance', bio:'Always watching. Vance monitors every agent and rescues stuck tasks automatically.',speed:0.85,
+   chatLines:['All agents nominal.','Detected a slow task — fixing it.','Retry queued.','Watching the pipeline.','No stalls detected.'],
+   quick:[]},
   // ── PLANNER STUDIO (Row A gap, between QC and Store) ──
   {key:'planner', name:'Planner Design Agent', display:'Planner Studio', icon:'📋', roof:'#2e6e4e',wall:'#ddf0e4', x:1712,y:442, w:165,h:202, wins:2,chimney:false,
    firstName:'Sage', bio:'Expert planner designer. Every page is crafted for maximum usability and beauty.', speed:0.9,
@@ -2338,6 +2343,7 @@ const INTERIOR_EXTRAS = {
   sysop:    `<div class="bi-server"></div><div class="bi-magnifier" style="right:26px"></div><div class="bi-laptop"></div><div class="bi-chart" style="left:3px;top:38px"></div>`,
   trend:    `<div class="bi-linechart"></div><div class="bi-pinmap" style="top:38px"></div><div class="bi-corkboard" style="left:36px;top:8px;width:22px"></div><div class="bi-plant"></div>`,
   coordinator:`<div class="bi-wb"></div><div class="bi-corkboard" style="top:38px;height:16px"></div><div class="bi-chart"></div><div class="bi-pinmap" style="right:3px;left:auto"></div>`,
+  supervisor:`<div class="bi-server"></div><div class="bi-chart" style="left:3px;top:38px;background:#a080ff22"></div><div class="bi-magnifier" style="right:3px"></div>`,
 };
 
 // Unique wall background gradient per agent
@@ -2369,6 +2375,7 @@ const INTERIOR_WALLS = {
   sysop:    'linear-gradient(180deg,#0a1018 0%,#0e1420 30%,#0a1018 100%)',
   trend:    'linear-gradient(180deg,#f0f4e8 0%,#e8f0dc 30%,#f0f4e8 100%)',
   coordinator:'linear-gradient(180deg,#e8e8f0 0%,#dcdcec 30%,#e8e8f0 100%)',
+  supervisor:'linear-gradient(180deg,#0d0818 0%,#1a1030 30%,#0d0818 100%)',
 };
 
 // Screen color per agent role
@@ -2459,6 +2466,7 @@ function mkBuilding(a){
              <div class="hall-roster-entry"><span class="hr-icon">🔌</span><span class="hr-name">Byte</span><span class="hr-title">API Connections</span></div>
              <div class="hall-roster-entry"><span class="hr-icon">🔮</span><span class="hr-name">Mystic</span><span class="hr-title">Trend Lab</span></div>
              <div class="hall-roster-entry"><span class="hr-icon">⚙️</span><span class="hr-name">Otto</span><span class="hr-title">Ops Center</span></div>
+             <div class="hall-roster-entry"><span class="hr-icon">👁️</span><span class="hr-name">Vance</span><span class="hr-title">Control Tower</span></div>
            </div>
          </div>
          <div class="bi-floor"></div>
@@ -3491,6 +3499,7 @@ const WALKER_LOOKS = {
   abt:     {skin:'#b8d8d0',hair:'#0a4030',hat:'#0a4030',hatClass:'w-hat-grad',shirt:'#1a7060',pants:'#081c18',boot:'#040e0c',accent:'#60f0d0',extra:'<div class="w-labcoat"></div>'},
   api:     {skin:'#c8c8f0',hair:'#0a2870',hat:'#0a2870',hatClass:'w-hat-beanie',shirt:'#1838b0',pants:'#080f28',boot:'#040818',accent:'#8080ff',extra:'<div class="w-labcoat"></div><div class="w-badge" style="--waccent:#8080ff"></div>'},
   coordinator:{skin:'#c8d0f0',hair:'#104888',hat:'#104888',hatClass:'w-hat-visor',shirt:'#1858c0',pants:'#081028',boot:'#040818',accent:'#90b0ff',extra:'<div class="w-badge" style="--waccent:#90b0ff"></div>'},
+  supervisor:{skin:'#e8d8c0',hair:'#1a1a2e',hat:'#1a1a2e',hatClass:'w-hat-fedora',shirt:'#2d1b6e',pants:'#1a1a2e',boot:'#0a0a18',accent:'#a080ff',extra:'<div class="w-lapel" style="--waccent:#a080ff"></div>'},
   trend:   {skin:'#d8c8f0',hair:'#380870',hat:'#5010a0',hatClass:'w-hat-wizard',shirt:'#6020b0',pants:'#1a0830',boot:'#0c0418',accent:'#d080ff',extra:'<div class="w-scarf" style="--waccent:#d080ff"></div>'},
   retention:{skin:'#b8d8b8',hair:'#185018',hat:'#185018',hatClass:'w-hat-beanie',shirt:'#288028',pants:'#0c180c',boot:'#060e06',accent:'#80f080',extra:'<div class="w-badge" style="--waccent:#f060a0"></div><div class="w-scarf" style="--waccent:#f060a0"></div>'},
   hall:    {skin:'#f0c888',hair:'#4E342E',hat:'#5a3a00',hatClass:'',shirt:'#b09028',pants:'#3e2723',boot:'#2a1a10',accent:'#f0d060',extra:''},
@@ -3973,6 +3982,16 @@ function connectWS(){
       _unreadNotifs++;
       _updateNotifBadge();
       if(document.getElementById('notif-panel').classList.contains('open')) loadNotifications();
+      // Update supervisor status bar label on interventions
+      const nid = msg.notif?.id || '';
+      const supLbl = document.getElementById('sb-supervisor-label');
+      if(supLbl && nid.startsWith('supervisor_')){
+        const action = nid.includes('retry')?'retried':nid.includes('abort')?'aborted':nid.includes('skip')?'skipped':'intervened';
+        supLbl.textContent = action;
+        supLbl.style.color = nid.includes('retry')?'#60c060':'#ff8040';
+        setTimeout(()=>{ supLbl.textContent='watching'; supLbl.style.color=''; },8000);
+        showBubble('supervisor', msg.notif?.message?.slice(0,60)||'Intervention complete');
+      }
     } else if(msg.type==='new_idea'){
       _ideaCount++;
       _updateIdeaBadge();
