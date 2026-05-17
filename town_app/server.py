@@ -538,14 +538,6 @@ def _start_scheduler():
     for s in schedules:
         if s.get("enabled"):
             _register_job(s)
-    # Auto-update: pull from git every 10 minutes
-    _scheduler.add_job(
-        func             = _git_pull_job,
-        trigger          = "interval",
-        minutes          = 10,
-        id               = "_auto_git_pull",
-        replace_existing = True,
-    )
     # Order polling: every 30 seconds for near-instant digital delivery
     _scheduler.add_job(
         func             = _poll_orders,
