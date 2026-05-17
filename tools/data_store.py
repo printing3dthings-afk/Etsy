@@ -20,7 +20,15 @@ class DataStore:
 
     def _load(self) -> None:
         if not os.path.exists(SHOP_DATA_FILE):
-            raise FileNotFoundError(f"Shop data file not found: {SHOP_DATA_FILE}")
+            # First run — create the data directory and an empty shop file
+            os.makedirs(os.path.dirname(SHOP_DATA_FILE), exist_ok=True)
+            self._data = {
+                "shop": {}, "listings": [], "orders": [], "messages": [],
+                "reviews": [], "analytics": {}, "digital_products": [],
+            }
+            with open(SHOP_DATA_FILE, "w") as f:
+                json.dump(self._data, f, indent=2)
+            return
         try:
             with open(SHOP_DATA_FILE, "r") as f:
                 self._data = json.load(f)

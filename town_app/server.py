@@ -33,6 +33,13 @@ from fastapi.staticfiles import StaticFiles
 STATIC_DIR   = Path(__file__).parent / "static"
 DATA_DIR     = Path(__file__).parent.parent / "data"
 REPO_ROOT    = Path(__file__).parent.parent
+
+# Ensure all required directories exist on first run (fresh Windows install)
+for _d in [DATA_DIR, DATA_DIR / "design_references",
+           DATA_DIR / "digital_products" / "product_files",
+           REPO_ROOT / "logs"]:
+    _d.mkdir(parents=True, exist_ok=True)
+
 HISTORY_FILE       = DATA_DIR / "task_history.json"
 AGENT_STATES_FILE  = DATA_DIR / "agent_states.json"
 SESSION_LOG_FILE   = DATA_DIR / "session_log.json"
