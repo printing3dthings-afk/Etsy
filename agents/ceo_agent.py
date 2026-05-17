@@ -382,6 +382,51 @@ class CEOAgent(BaseAgent):
         from agents.base_agent import _get_logger
         self.logger = _get_logger("CEO Agent")
 
+    def _call_api(self, messages: list[dict]):
+        """Force tool use on the first call so CEO always delegates immediately."""
+        from typing import Any
+        from config import MAX_TOKENS
+
+        # Check if there are already tool results in the conversation.
+        # If not, this is the planning call — force a tool call so CEO can't write prose instead.
+        has_tool_results = any(
+            isinstance(m.get("content"), list)
+            and any(b.get("type") == "tool_result" for b in m["content"])
+            for m in messages
+        )
+
+        import anthropic as _ant
+        kwargs: dict[str, Any] = {
+            "model":      self.model,
+            "max_tokens": MAX_TOKENS,
+            "system": [{"type": "text", "text": self.system_prompt,
+                         "cache_control": {"type": "ephemeral"}}],
+            "messages":   messages,
+            "tools":      self.tool_definitions,
+        }
+        if not has_tool_results:
+            # First call — must delegate, no option to write prose
+            kwargs["tool_choice"] = {"type": "any"}
+
+        import time
+        delays = [5, 15, 30]
+        last_exc = None
+        for attempt in range(4):
+            if attempt:
+                time.sleep(delays[attempt - 1])
+            try:
+                return self.client.messages.create(**kwargs)
+            except _ant.RateLimitError as e:
+                last_exc = e
+            except _ant.APIStatusError as e:
+                if e.status_code in (529, 503, 500):
+                    last_exc = e
+                else:
+                    raise
+            except _ant.APIConnectionError as e:
+                last_exc = e
+        raise RuntimeError(f"Anthropic API unavailable: {last_exc}") from last_exc
+
     def run(self, task: str, max_iterations: int = 3) -> str:
         """Run CEO with a reduced iteration cap and trimmed message history."""
         self.logger.info(f"CEO START task={task[:80]}")
