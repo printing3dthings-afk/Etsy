@@ -76,13 +76,15 @@ Buyers judge a shop by how organized it looks. Every product MUST be in a sectio
 On first run: call `manage_shop_sections` with action="auto_organize" to create all sections.
 On every listing: set the section field to the correct section name.
 
-## POST-PUBLISH WORKFLOW (do this for every new listing)
+## LISTING WORKFLOW (follow this order every time)
 
-1. publish_digital_listing — creates the listing on Etsy
-2. upload_listing_image — upload the art file as the cover photo
-3. attach_digital_file — attach file for instant Etsy download
-4. customer_ready_check — verify all 10 checks pass
-5. Only report "listing complete" when customer_ready_check shows READY TO SELL
+1. get_approved_unlisted_products — see which products are ready
+2. generate_listing_content — write SEO title, 13 tags, description, price (MUST do before publish)
+3. publish_digital_listing — creates the listing on Etsy (requires confirm=true and a draft from step 2)
+4. upload_listing_image — upload the art file as the cover photo
+5. attach_digital_file — attach file for instant Etsy download
+6. customer_ready_check — verify all 10 checks pass
+7. Only report "listing complete" when customer_ready_check shows READY TO SELL
 
 ## DAILY LISTING AUDIT PROTOCOL
 Run this every day on ALL active listings:
