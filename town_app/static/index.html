@@ -1859,6 +1859,7 @@ body{transition:background .5s,color .5s}
   <div class="rev-spacer"></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openPipeline()"><span class="rev-lbl">📦</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Pipeline</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openShop()"><span class="rev-lbl">🛍️</span><span class="rev-val" style="color:#f0c0ff;font-size:.5rem">Products</span></div>
+  <div class="rev-stat" style="cursor:pointer;background:#1a0030;border-left:2px solid #6b30c0" onclick="openCreateModal()"><span class="rev-lbl">✨</span><span class="rev-val" style="color:#c080ff;font-size:.5rem;font-weight:700">CREATE</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openStorage()"><span class="rev-lbl">🗄️</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Archive</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openChains()"><span class="rev-lbl">⛓️</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Chains</span></div>
   <div class="rev-stat" style="cursor:pointer" onclick="openCreator()"><span class="rev-lbl">✨</span><span class="rev-val" style="color:#c9d1d9;font-size:.5rem">Create</span></div>
@@ -5063,6 +5064,36 @@ async function deleteRef(id){
 <!-- ══════════════════════════════════════════════════════════════
      DIGITAL SHOPPING CENTER MODAL
 ════════════════════════════════════════════════════════════════ -->
+<!-- ── CREATE PRODUCT MODAL ─────────────────────────────────────────────── -->
+<div id="create-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;align-items:center;justify-content:center" onclick="if(event.target===this)closeCreateModal()">
+  <div style="background:#12071e;border:2px solid #6b30c0;border-radius:12px;padding:28px;width:min(520px,92vw);max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="color:#d080ff;font-family:'Press Start 2P',monospace;font-size:.75rem;margin:0">✨ CREATE PRODUCT</h2>
+      <button onclick="closeCreateModal()" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer">✕</button>
+    </div>
+    <p style="color:#888;font-size:.6rem;margin:0 0 18px">Direct pipeline — no CEO needed. Creates → QC → Lists automatically.</p>
+
+    <div style="display:flex;gap:10px;margin-bottom:18px">
+      <button id="cp-btn-art" onclick="cpSetType('art')" style="flex:1;padding:10px;background:#1a0830;border:2px solid #6b30c0;color:#d080ff;border-radius:8px;cursor:pointer;font-size:.6rem;font-weight:700">🎨 Digital Art</button>
+      <button id="cp-btn-planner" onclick="cpSetType('planner')" style="flex:1;padding:10px;background:#0a1820;border:2px solid #30608b;color:#80c0ff;border-radius:8px;cursor:pointer;font-size:.6rem;font-weight:700">📋 Planner</button>
+    </div>
+
+    <label style="color:#aaa;font-size:.55rem;display:block;margin-bottom:4px">DESCRIPTION *</label>
+    <textarea id="cp-desc" placeholder="e.g. Botanical wall art with watercolour wildflowers, soft sage and cream palette" rows="3"
+      style="width:100%;background:#0a0a14;border:1px solid #333;color:#e0d0ff;border-radius:6px;padding:8px;font-size:.6rem;resize:vertical;box-sizing:border-box;margin-bottom:12px"></textarea>
+
+    <label style="color:#aaa;font-size:.55rem;display:block;margin-bottom:4px">STYLE / NOTES (optional)</label>
+    <input id="cp-style" placeholder="e.g. Minimalist, boho, A4 + Letter sizes, neutral tones"
+      style="width:100%;background:#0a0a14;border:1px solid #333;color:#e0d0ff;border-radius:6px;padding:8px;font-size:.6rem;box-sizing:border-box;margin-bottom:20px">
+
+    <button id="cp-submit" onclick="submitCreatePipeline()"
+      style="width:100%;padding:12px;background:linear-gradient(135deg,#6b30c0,#9040d0);border:none;border-radius:8px;color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;font-family:'Press Start 2P',monospace">
+      ✨ START PIPELINE
+    </button>
+    <p id="cp-status" style="color:#60c060;font-size:.55rem;text-align:center;margin:10px 0 0;display:none"></p>
+  </div>
+</div>
+
 <div id="shop-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto" onclick="if(event.target===this)closeShop()">
   <div style="background:#0d1117;border:2px solid #8040a0;border-radius:10px;width:100%;max-width:940px;display:flex;flex-direction:column;min-height:560px">
     <!-- Header -->
@@ -5118,6 +5149,45 @@ async function deleteRef(id){
 // ── DIGITAL SHOPPING CENTER ──────────────────────────────────────────────────
 let _shopAllProducts = [];
 let _shopCurrentTab = 'art';
+
+// ── CREATE PRODUCT MODAL ─────────────────────────────────────────────────────
+let _cpType = 'art';
+function cpSetType(t){
+  _cpType = t;
+  document.getElementById('cp-btn-art').style.borderColor     = t==='art'    ? '#c060ff' : '#444';
+  document.getElementById('cp-btn-planner').style.borderColor = t==='planner'? '#60a0ff' : '#444';
+}
+function openCreateModal(){
+  document.getElementById('create-modal').style.display='flex';
+  cpSetType('art');
+  document.getElementById('cp-desc').value='';
+  document.getElementById('cp-style').value='';
+  document.getElementById('cp-status').style.display='none';
+  document.getElementById('cp-submit').disabled=false;
+  document.getElementById('cp-submit').textContent='✨ START PIPELINE';
+}
+function closeCreateModal(){ document.getElementById('create-modal').style.display='none'; }
+async function submitCreatePipeline(){
+  const desc = document.getElementById('cp-desc').value.trim();
+  if(!desc){ alert('Please enter a description.'); return; }
+  const style = document.getElementById('cp-style').value.trim();
+  const btn = document.getElementById('cp-submit');
+  const st  = document.getElementById('cp-status');
+  btn.disabled=true; btn.textContent='Starting…';
+  try {
+    const r = await fetch('/api/direct-pipeline',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({category:_cpType, description:desc, style})
+    }).then(r=>r.json());
+    if(r.error){ alert('Error: '+r.error); btn.disabled=false; btn.textContent='✨ START PIPELINE'; return; }
+    st.textContent = '✓ Pipeline started! Watch the task panel for progress.';
+    st.style.display='block';
+    btn.textContent='✨ RUNNING…';
+    setTimeout(()=>closeCreateModal(), 2500);
+  } catch(e){
+    alert('Cannot reach server.'); btn.disabled=false; btn.textContent='✨ START PIPELINE';
+  }
+}
 
 function openShop(){
   document.getElementById('shop-modal').style.display='flex';

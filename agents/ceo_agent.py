@@ -375,8 +375,8 @@ class CEOAgent(BaseAgent):
         self.name = "CEO Agent"
         self.system_prompt = SYSTEM_PROMPT
         self.tool_definitions = DELEGATION_TOOLS
-        from config import FAST_MODEL
-        self.model = FAST_MODEL
+        from config import STANDARD_MODEL
+        self.model = STANDARD_MODEL   # Sonnet — Haiku is unreliable for tool use
         import anthropic as _anthropic
         self.client = _anthropic.Anthropic()
         from agents.base_agent import _get_logger

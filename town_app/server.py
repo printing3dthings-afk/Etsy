@@ -1777,6 +1777,78 @@ async def create_product(body: dict):
     return JSONResponse({"status": "queued", "agent": "art", "task": task[:200]})
 
 
+def _run_direct_pipeline(category: str, description: str, style: str):
+    """Run art/planner → QC → listing sequentially without the CEO."""
+    is_planner = category == "planner"
+    creator    = "planner" if is_planner else "art"
+    label      = "Planner" if is_planner else "Art"
+
+    _add_notification("pipeline_direct_start", f"Direct Pipeline: {label}", description[:80], "🚀")
+    _pipeline_start("ceo")   # reuse pipeline visualiser
+
+    # ── Step 1: Create ────────────────────────────────────────────────────────
+    create_task = (
+        f"Create a {'digital planner' if is_planner else 'digital wall art'} product: {description}. "
+        + (f"Style: {style}. " if style else "")
+        + "Save the file and return the saved file path."
+    )
+    result1 = _run_sub_agent_observable(creator, create_task)
+    if "[error]" in result1.lower() or "error:" in result1.lower()[:60]:
+        _add_notification("pipeline_direct_error", f"Direct Pipeline: {label} creation failed", result1[:120], "❌")
+        return
+
+    # ── Step 2: QC ───────────────────────────────────────────────────────────
+    qc_task = (
+        f"Review the most recently created {label.lower()} product. "
+        "Check quality — dimensions, file integrity, design quality. "
+        "Approve if it meets standards or reject with specific actionable feedback."
+    )
+    result2 = _run_sub_agent_observable("qc", qc_task)
+
+    # If QC rejected, do one automatic retry with the feedback
+    if "reject" in result2.lower():
+        retry_task = (
+            f"{create_task} "
+            f"IMPORTANT: Previous attempt was rejected by QC. Feedback: {result2[:300]}. "
+            "Fix all issues before saving."
+        )
+        result1 = _run_sub_agent_observable(creator, retry_task)
+        result2 = _run_sub_agent_observable("qc", qc_task)
+
+    if "reject" in result2.lower():
+        _add_notification("pipeline_direct_qc", f"Direct Pipeline: {label} needs review", "QC rejected twice — check products tab", "⚠️")
+        return
+
+    # ── Step 3: List on Etsy ─────────────────────────────────────────────────
+    list_task = (
+        f"Create a fully optimised Etsy listing for the approved {label.lower()} product: {description}. "
+        "Write a compelling title (max 140 chars), 13 tags, detailed description, and set competitive pricing. "
+        "Publish the listing."
+    )
+    _run_sub_agent_observable("listing", list_task)
+
+    _add_notification("pipeline_direct_done", f"Direct Pipeline: {label} complete ✓",
+                      f"{description[:60]} — created, QC'd, and listed", "✅")
+
+
+@app.post("/api/direct-pipeline")
+async def direct_pipeline(body: dict):
+    """Run the full create→QC→list pipeline directly, no CEO needed."""
+    category    = (body.get("category") or "art").strip().lower()
+    description = (body.get("description") or "").strip()
+    style       = (body.get("style") or "").strip()
+    if not description:
+        return JSONResponse({"error": "description is required"}, status_code=400)
+    if category not in ("art", "planner"):
+        category = "art"
+    threading.Thread(
+        target=_run_direct_pipeline,
+        args=(category, description, style),
+        daemon=True,
+    ).start()
+    return JSONResponse({"status": "started", "category": category})
+
+
 # ── Listing Health ────────────────────────────────────────────────────────────
 
 # ── System Improvement Log ────────────────────────────────────────────────────
