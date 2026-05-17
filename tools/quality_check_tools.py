@@ -117,6 +117,8 @@ def _list_products_for_review(store: DataStore) -> str:
         p for p in products
         if p.get("status") in ("qc_pending", "concept") and p.get("file_path")
     ]
+    # Newest first so the agent reviews the most recently created product first
+    reviewable.sort(key=lambda p: p.get("created_at", ""), reverse=True)
     summary = [
         {
             "id": p["id"],

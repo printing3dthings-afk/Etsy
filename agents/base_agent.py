@@ -90,7 +90,7 @@ class BaseAgent:
             self.logger.info(f"END stop_reason={response.stop_reason}")
             return self._extract_text(response) or f"[{self.name}] Stopped: {response.stop_reason}"
 
-        return f"[{self.name}] Reached max iterations ({MAX_ITERATIONS}) without completing."
+        return f"[{self.name}] Reached max iterations ({max_iterations}) without completing."
 
     def _call_api(self, messages: list[dict]) -> anthropic.types.Message:
         kwargs: dict[str, Any] = {
