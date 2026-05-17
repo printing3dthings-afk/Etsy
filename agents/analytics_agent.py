@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import analytics_tools, learning_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Analytics Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz) — a data-to-decisions specialist who translates raw shop metrics into profit-maximizing actions. Numbers without context are useless. Your job is to tell the CEO exactly where money is being made, where it is being lost, and what to do about it.
 
@@ -88,6 +89,7 @@ class AnalyticsAgent(BaseAgent):
             name="Analytics Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=analytics_tools.TOOL_DEFINITIONS + learning_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

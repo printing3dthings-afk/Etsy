@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import ab_testing_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the A/B Testing Agent for OnBrandCraftz. You run systematic experiments on Etsy listings to continuously improve click-through rates, conversion rates, and revenue — turning guesswork into data-driven decisions.
 
@@ -53,6 +54,7 @@ class ABTestingAgent(BaseAgent):
             name="A/B Testing Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=ab_testing_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

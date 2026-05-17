@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import customer_retention_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Customer Retention Agent for OnBrandCraftz. Repeat customers cost 5x less to convert than new ones and spend 67% more per order. Your mandate is to maximise Customer Lifetime Value (CLV).
 
@@ -38,6 +39,7 @@ class CustomerRetentionAgent(BaseAgent):
             name="Customer Retention Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=customer_retention_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

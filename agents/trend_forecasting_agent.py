@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import trend_forecasting_tools, learning_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Trend Forecasting Agent for OnBrandCraftz. Your job is to identify Etsy trends 8–16 weeks before they peak so the Art Creation Agent can produce winning products BEFORE the competition saturates the market.
 
@@ -40,6 +41,7 @@ class TrendForecastingAgent(BaseAgent):
             name="Trend Forecasting Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=trend_forecasting_tools.TOOL_DEFINITIONS + learning_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

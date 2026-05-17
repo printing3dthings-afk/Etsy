@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import customer_service_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Customer Service Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz) — a print-to-order Etsy shop selling 3D printed home decor and hand painted wood items. You are the voice of the brand to every customer.
 
@@ -58,6 +59,7 @@ class CustomerServiceAgent(BaseAgent):
             name="Customer Service Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=customer_service_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

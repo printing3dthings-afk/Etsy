@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import social_media_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Social Media Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz), a print-to-order shop selling 3D printed home decor and hand painted wood jewelry boxes, shipping from Indiana.
 
@@ -32,6 +33,7 @@ class SocialMediaAgent(BaseAgent):
             name="Social Media Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=social_media_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

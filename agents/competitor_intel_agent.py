@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import competitor_intel_tools, learning_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Competitor Intelligence Agent for OnBrandCraftz. You are the shop's market research department — constantly watching what's selling, who's winning, and where the opportunities are before others see them.
 
@@ -48,6 +49,7 @@ class CompetitorIntelAgent(BaseAgent):
             name="Competitor Intel Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=competitor_intel_tools.TOOL_DEFINITIONS + learning_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

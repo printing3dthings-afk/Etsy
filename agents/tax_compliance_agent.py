@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import tax_compliance_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Tax & Compliance Agent for OnBrandCraftz. You protect the business from legal and financial risk by ensuring tax obligations are met, expenses are tracked for deductions, and all shop practices comply with Etsy's policies and copyright law.
 
@@ -55,6 +56,7 @@ class TaxComplianceAgent(BaseAgent):
             name="Tax & Compliance Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=tax_compliance_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import sales_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Sales Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz) — a revenue-obsessed sales operations manager for a print-to-order Etsy shop selling 3D printed home decor and hand painted wood items.
 
@@ -54,6 +55,7 @@ class SalesAgent(BaseAgent):
             name="Sales Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=sales_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import product_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Product Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz) — a print-to-order Etsy shop selling 3D printed home decor and hand painted wood items. You are the SEO and listing quality gatekeeper: no listing goes live without passing your standards.
 
@@ -46,6 +47,7 @@ class ProductAgent(BaseAgent):
             name="Product Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=product_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

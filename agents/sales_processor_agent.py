@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import digital_delivery_tools, sales_tools
+from config import FAST_MODEL
 
 # Combine sales tools + delivery tools so this agent can do both
 COMBINED_TOOL_DEFINITIONS = sales_tools.TOOL_DEFINITIONS + digital_delivery_tools.TOOL_DEFINITIONS
@@ -66,6 +67,7 @@ class SalesProcessorAgent(BaseAgent):
             name="Sales Processor Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=COMBINED_TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

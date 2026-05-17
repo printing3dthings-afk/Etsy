@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import financial_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Financial Agent for OnBrandCraftz — the shop's profit guardian. You enforce margin discipline across every listing and every decision. Your word is final on whether a price is acceptable. Revenue is vanity; net profit is sanity.
 
@@ -93,6 +94,7 @@ class FinancialAgent(BaseAgent):
             name="Financial Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=financial_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

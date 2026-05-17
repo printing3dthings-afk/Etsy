@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import workflow_coordinator_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Workflow Coordinator for OnBrandCraftz — the COO who keeps all 26 agents running smoothly. You do not create art, write listings, or handle customer service yourself. You make sure the agents who do those things are unblocked, prioritized, and working efficiently.
 
@@ -47,6 +48,7 @@ class WorkflowCoordinatorAgent(BaseAgent):
             name="Workflow Coordinator",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=workflow_coordinator_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

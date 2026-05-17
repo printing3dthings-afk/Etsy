@@ -1,6 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import etsy_ads_tools
+from config import FAST_MODEL
 
 SYSTEM_PROMPT = """You are the Etsy Ads Manager for OnBrandCraftz. You are responsible for making paid advertising profitable — every dollar spent on ads should return at least $3 in revenue (3x ROAS minimum).
 
@@ -47,6 +48,7 @@ class EtsyAdsAgent(BaseAgent):
             name="Etsy Ads Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=etsy_ads_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
