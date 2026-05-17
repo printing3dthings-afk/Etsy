@@ -439,7 +439,7 @@ DEFAULT_SCHEDULES = [
         "agent":   "ceo",
         "task":    "Run the daily morning briefing: delegate to Analytics Agent for a revenue summary, Sales Agent for shipping queue check, and Customer Service Agent for unread messages. Summarize findings and flag any urgent issues.",
         "cron":    "0 9 * * 1-5",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id":      "competitor_intel",
@@ -447,7 +447,7 @@ DEFAULT_SCHEDULES = [
         "agent":   "intel",
         "task":    "Run weekly competitor intelligence: research top competitors for 3D printed home decor and hand painted wood items on Etsy. Identify their best-selling products, pricing, and keywords. Save all findings to the knowledge base.",
         "cron":    "0 8 * * 0",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id":      "listing_audit",
@@ -455,7 +455,7 @@ DEFAULT_SCHEDULES = [
         "agent":   "product",
         "task":    "Run a full SEO audit of all listings using bulk_seo_audit. For each listing scoring below 70, generate improvement suggestions. Update the worst 3 listings with improved titles and tags. Save insights to knowledge base.",
         "cron":    "0 9 * * 1",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id":      "analytics_weekly",
@@ -463,7 +463,7 @@ DEFAULT_SCHEDULES = [
         "agent":   "analytics",
         "task":    "Run weekly deep-dive analytics: per-listing profitability table, traffic sources, conversion funnel, best/worst categories. Compare against 30-day revenue targets. Log all metrics to knowledge base. Provide 3 specific revenue-growing recommendations.",
         "cron":    "0 10 * * 0",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id":      "weekly_tax",
@@ -471,7 +471,7 @@ DEFAULT_SCHEDULES = [
         "agent":   "tax",
         "task":    "Generate weekly tax summary: total revenue, taxable transactions, estimated tax liability, new deductions to log. Flag any sales in new states that may create tax nexus. Recommend quarterly estimated payment if needed.",
         "cron":    "0 7 * * 1",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id":      "weekly_supply",
@@ -479,7 +479,7 @@ DEFAULT_SCHEDULES = [
         "agent":   "supply",
         "task":    "Run weekly supply chain health check: review filament inventory levels, flag items below reorder threshold, check for supplier delays, and recommend purchase orders for next week's production needs.",
         "cron":    "0 8 * * 1",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id":      "abt_review",
@@ -487,15 +487,15 @@ DEFAULT_SCHEDULES = [
         "agent":   "abt",
         "task":    "Review all active A/B tests: identify tests with 14+ days of data, run statistical analysis on each, declare winners where confidence >= 95%, save winning strategies to the knowledge base, and suggest the next test to set up.",
         "cron":    "0 9 * * 3",
-        "enabled": True,
+        "enabled": False,
     },
     {
         "id":      "weekly_retention",
         "label":   "Weekly Retention Check",
         "agent":   "retention",
-        "task":    "Run weekly customer retention analysis: identify repeat customers, buyers at risk of churning (60+ days since last purchase), and highest-value customers. Recommend targeted re-engagement actions and draft one follow-up offer.",
+        "task":    "Run weekly customer retention analysis: identify repeat customers, buyers at risk of churning (60+ days since last purchase), and highest-value customers. Recommend targeted re-engagement actions and draft one follow-up er offer.",
         "cron":    "0 11 * * 2",
-        "enabled": True,
+        "enabled": False,
     },
 ]
 
@@ -624,11 +624,13 @@ def _start_scheduler():
         id               = "_order_poll",
         replace_existing = True,
     )
-    # System improvement scan: every 6 hours
+    # System improvement scan: weekly on Saturday at 3am (NOT every 6 hours —
+    # auto-editing code files while agents are running is dangerous)
     _scheduler.add_job(
         func             = lambda: _safe_enqueue("sysop", "Run a full system health scan: check task history for errors, scan agent and tool files for issues, research improvements online, auto-fix what is safe, and log suggestions for everything else.", "System Health Scan"),
-        trigger          = "interval",
-        hours            = 6,
+        trigger          = "cron",
+        day_of_week      = "sat",
+        hour             = 3,
         id               = "_sysop_scan",
         replace_existing = True,
     )

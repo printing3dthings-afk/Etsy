@@ -5,7 +5,7 @@
     "agent": "ceo",
     "task": "Run the daily morning briefing: delegate to Analytics Agent for a revenue summary, Sales Agent for shipping queue check, and Customer Service Agent for unread messages. Summarize findings and flag any urgent issues.",
     "cron": "0 9 * * 1-5",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "competitor_intel",
@@ -13,7 +13,7 @@
     "agent": "intel",
     "task": "Run weekly competitor intelligence: research top competitors for 3D printed home decor and hand painted wood items on Etsy. Identify their best-selling products, pricing, and keywords. Save all findings to the knowledge base.",
     "cron": "0 8 * * 0",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "listing_audit",
@@ -21,7 +21,7 @@
     "agent": "product",
     "task": "Run a full SEO audit of all listings using bulk_seo_audit. For each listing scoring below 70, generate improvement suggestions. Update the worst 3 listings with improved titles and tags. Save insights to knowledge base.",
     "cron": "0 9 * * 1",
-    "enabled": true
+    "enabled": false
   },
   {
     "id": "analytics_weekly",
@@ -29,6 +29,6 @@
     "agent": "analytics",
     "task": "Run weekly deep-dive analytics: per-listing profitability table, traffic sources, conversion funnel, best/worst categories. Compare against 30-day revenue targets. Log all metrics to knowledge base. Provide 3 specific revenue-growing recommendations.",
     "cron": "0 10 * * 0",
-    "enabled": true
+    "enabled": false
   }
 ]
