@@ -3616,10 +3616,19 @@ function updateActiveBar(){
 }
 
 // ── TASK CARDS + TIMER ───────────────────────────────────────────────────────
-// Estimated pipeline steps: CEO delegates 6–8 sub-agents × ~40s each = ~280–320s
-// Simple agent task: ~60s
 const PIPELINE_AGENTS_SET=new Set(['ceo','brand','art','qc','listing','store','marketing','finance','analytics']);
-function _estDuration(key){ return PIPELINE_AGENTS_SET.has(key)?300:70; }
+// Per-agent duration history: learned from actual task completions this session
+const _agentDurHistory={};
+function _recordDuration(key,sec){
+  if(!_agentDurHistory[key]) _agentDurHistory[key]=[];
+  _agentDurHistory[key].push(sec);
+  if(_agentDurHistory[key].length>10) _agentDurHistory[key].shift();
+}
+function _estDuration(key){
+  const h=_agentDurHistory[key];
+  if(h&&h.length) return Math.round(h.reduce((a,b)=>a+b,0)/h.length);
+  return PIPELINE_AGENTS_SET.has(key)?300:70;
+}
 
 function _fmtElapsed(sec){
   if(sec<60) return `${sec}s`;
@@ -3915,6 +3924,8 @@ function handleEvent(msg){
       setBS(key,'done'); activeAgents.delete(key); showBubble(key,'✓ Done!');
       setTimeout(()=>{ setBS(key,'idle'); setResidentState(key,'idle'); document.getElementById(`bidle-${key}`)?.classList.remove('working'); },3500);
       removeWalker(key); upsertTaskCard(key,'done',null);
+      // Record actual duration so future estimates are accurate
+      if(taskCards[key]?.startedAt) _recordDuration(key,Math.round((Date.now()-taskCards[key].startedAt)/1000));
       if(data?.result){ showOutput(key,data.result); _checkForSale(data.result); }
       if(_fbLoaded) loadFileBrowser();
       if(_goalsLoaded) loadGoalsDashboard();
@@ -3940,7 +3951,18 @@ function connectWS(){
   ws.onmessage=e=>{
     const msg=JSON.parse(e.data);
     if(msg.type==='init'){
-      Object.entries(msg.states||{}).forEach(([k,s])=>setBS(k,s.status==='running'?'running':'idle'));
+      Object.entries(msg.states||{}).forEach(([k,s])=>{
+        const isRunning = s.status==='running';
+        setBS(k, isRunning ? 'running' : 'idle');
+        if(isRunning){
+          // Restore timer from server's actual start time so elapsed is correct after page reload
+          const serverStartMs = s.started ? new Date(s.started).getTime() : Date.now();
+          if(!taskCards[k]) taskCards[k]={steps:[],task:s.task||'',status:'running',startedAt:serverStartMs,estDuration:_estDuration(k)};
+          else { taskCards[k].startedAt=serverStartMs; taskCards[k].status='running'; }
+          upsertTaskCard(k,'running',s.task||'');
+          _startTimerTick();
+        }
+      });
     } else if(msg.type==='agent_event'){
       handleEvent(msg);
     } else if(msg.type==='new_order'){
