@@ -4379,8 +4379,30 @@ async function applyUpdate(){
     if(r.error){
       alert('Update error: ' + r.error);
       if(btn){ btn.textContent='⟳ UPDATE'; btn.disabled=false; btn.style.opacity='1'; }
+      return;
     }
-    // If files changed, uvicorn will reload → WS reconnects in 3s automatically
+    // Poll every 2s until the pull finishes
+    for(let i=0;i<20;i++){
+      await new Promise(res=>setTimeout(res,2000));
+      let st = {};
+      try{ st = await fetch('/api/update-status').then(r=>r.json()); }catch(e){ break; }
+      if(!st.pulling){
+        if(btn){ btn.textContent='⟳ UPDATE'; btn.disabled=false; btn.style.opacity='1'; }
+        const badge = document.getElementById('sb-update-badge');
+        if(st.last_result === 'updated'){
+          if(btn) btn.style.color='#4caf50';
+          setTimeout(()=>{ if(btn) btn.style.color=''; },4000);
+          if(badge){ badge.style.display='inline'; setTimeout(()=>{ badge.style.display='none'; },6000); }
+        } else if(st.last_result === 'up_to_date'){
+          if(btn){ btn.textContent='✓ UP TO DATE'; setTimeout(()=>{ btn.textContent='⟳ UPDATE'; },3000); }
+        } else if(st.last_result === 'error'){
+          alert('Update failed: ' + (st.last_message||'unknown error'));
+        }
+        return;
+      }
+    }
+    // Timeout — reset button
+    if(btn){ btn.textContent='⟳ UPDATE'; btn.disabled=false; btn.style.opacity='1'; }
   } catch(e){
     if(btn){ btn.textContent='⟳ UPDATE'; btn.disabled=false; btn.style.opacity='1'; }
   }
