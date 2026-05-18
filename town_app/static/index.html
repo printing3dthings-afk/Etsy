@@ -866,6 +866,34 @@ html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-seri
   );
 }
 
+/* Hub building overrides — large, detailed buildings */
+.bld-hub .broof { clip-path:none; outline:3px solid #000; box-shadow:3px 3px 0 #000; }
+.bld-hub .bbody { outline:3px solid #000 !important; box-shadow:6px 6px 0 #000; }
+.bld-hub .bsign { font-size:.34rem; padding:2px 6px; letter-spacing:.03em; }
+.bld-hub .bwins { gap:16px; }
+.bld-hub .bwin  { width:26px; height:34px; }
+.bld-hub .bdoor { width:32px; height:48px; }
+.hub-act-row { display:flex; align-items:center; gap:6px; justify-content:center; margin-top:3px; z-index:8; position:relative; flex-wrap:wrap; }
+.hub-open-btn { font-family:'Press Start 2P',monospace; font-size:.28rem; padding:3px 8px; border:2px solid; cursor:pointer; border-radius:0; white-space:nowrap; transition:background .12s; outline:1px solid rgba(255,255,255,.15); }
+.hub-open-btn:hover { filter:brightness(1.3); }
+/* Hub interior elements */
+.hub-int { position:relative; overflow:hidden; }
+.hub-screen { position:absolute; top:10%; left:8%; right:8%; height:26%; border:2px solid rgba(255,255,255,.2); border-radius:2px; display:flex; flex-direction:column; justify-content:flex-end; padding:3px 4px; gap:2px; }
+.hub-screen-line { height:2px; background:rgba(255,255,255,.4); border-radius:1px; width:100%; }
+.hub-member-grid { position:absolute; top:38%; left:4%; right:4%; display:flex; flex-wrap:wrap; gap:3px; justify-content:center; }
+.hub-mini-agent { display:flex; flex-direction:column; align-items:center; gap:1px; background:rgba(255,255,255,.12); border-radius:3px; padding:2px 4px; min-width:28px; }
+.hub-mini-icon { font-size:.55rem; line-height:1; }
+.hub-mini-name { font-family:'Press Start 2P',monospace; font-size:.2rem; color:rgba(255,255,255,.75); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:32px; }
+.hub-table { position:absolute; bottom:14%; left:12%; right:12%; height:6%; background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.25); border-radius:2px; }
+/* Hub panel (agent selection overlay) */
+.hub-member-btn { display:flex; flex-direction:column; align-items:center; gap:5px; background:#21262d; border:1px solid #30363d; border-radius:8px; padding:10px 8px; cursor:pointer; transition:background .12s, border-color .12s; position:relative; }
+.hub-member-btn:hover { background:#2d333b; border-color:#58a6ff66; }
+.hub-member-active { border-color:#3fb95066 !important; background:#0d2a14 !important; }
+.hub-member-active:hover { background:#112e18 !important; }
+.hub-member-icon { font-size:1.4rem; line-height:1; }
+.hub-member-name { font-size:.52rem; color:#c9d1d9; text-align:center; line-height:1.3; font-family:inherit; }
+.hub-member-badge { position:absolute; top:4px; right:6px; color:#3fb950; font-size:.7rem; line-height:1; }
+
 /* Hall overrides */
 .bld-hall .broof { filter: none !important; background: linear-gradient(180deg,#5a3a00,#3a2000) !important; --rc:#5a3a00; clip-path: none; outline: 3px solid #000; }
 .bld-hall .bbody { background: #d4aa50 !important; outline: 4px solid #000 !important; box-shadow: 5px 5px 0 #000; }
@@ -2074,17 +2102,24 @@ body{transition:background .5s,color .5s}
   </div>
 </div>
 
+<!-- Hub Panel — appears when clicking a hub building to select a member agent -->
+<div id="hub-panel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9500;background:#161b22;border:1px solid #30363d;border-radius:14px;padding:18px 20px 20px;min-width:280px;max-width:520px;box-shadow:0 16px 48px rgba(0,0,0,.8);flex-direction:column;gap:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <div id="hub-panel-title" style="font-size:.82rem;font-weight:700;color:#e6edf3;display:flex;align-items:center;gap:6px"></div>
+    <button onclick="closeHubPanel()" style="background:none;border:none;color:#8b949e;font-size:1rem;cursor:pointer;padding:2px 6px;border-radius:4px;line-height:1" onmouseover="this.style.background='#21262d'" onmouseout="this.style.background='none'">✕</button>
+  </div>
+  <div id="hub-panel-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px"></div>
+</div>
+
 <script>
 // ── AGENT DATA ──────────────────────────────────────────────────────────────
 // Row y-positions (all buildings now below their road)
 // Road 1 at y:700-752 → Row A starts at y:768
 // Road 2 at y:1018-1064 → Row B starts at y:1080
 // Road 3 at y:1330-1374 → Row C starts at y:1390
-const AGENTS = [
-  // key, name, display, icon, roof, wall, x, y, w, h, wins, chimney, quick[], firstName, bio, speed, chatLines
-  // ── Row 1: top district ────────────────────────────────────────────────────
-  // Left block: Creative
-  {key:'brand', name:'Brand Design Agent', display:'Brand Design', icon:'🎨', roof:'#9a2820',wall:'#f0dcc8', x:1000,y:455, w:155,h:195, wins:2,chimney:false,
+// ── FULL AGENT REGISTRY (28 agents — used for chat, quick actions, feed display)
+const AGENT_REGISTRY = [
+  {key:'brand', name:'Brand Design Agent', display:'Brand Design', icon:'🎨', roof:'#9a2820',wall:'#f0dcc8', wins:2,chimney:false,
    firstName:'Luna', bio:'Creative spark who lives for aesthetics. Every pixel is a decision.', speed:1.1,
    chatLines:['I am feeling cobalt blue today!','The font always matters.','Everything is an aesthetic.','Bold colors, bold sales.'],
    quick:['Create a shop banner concept','Review brand guidelines','Generate logo brief']},
@@ -2212,23 +2247,81 @@ const AGENTS = [
    firstName:'Sage', bio:'Expert planner designer. Every page is crafted for maximum usability and beauty.', speed:0.9,
    chatLines:['Tab navigation complete!','Fillable fields ready.','This planner is stunning.','GoodNotes compatible.'],
    quick:['Create an undated daily planner','Create a wellness planner with sage cream','List all planners']},
-  // ── MEETING HALL (bottom of town) ──
-  {key:'hall', name:'Meeting Hall', display:'Meeting Hall', icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:2230,y:2270, w:350,h:390, wins:4,chimney:false,type:'hall',
-   firstName:'Hall', bio:'Where big ideas are born.', speed:1.0, chatLines:[],
-   quick:[]},
-  // ── DIGITAL SHOPPING CENTER (left of Meeting Hall) ──
-  {key:'shop', name:'Digital Shopping Center', display:'Shop Center', icon:'🛍️', type:'shop', roof:'#8B1A8B',wall:'#fceef8', x:1420,y:2280, w:310,h:340, wins:4,chimney:false,
-   firstName:'', bio:'Browse all digital products — wall art and planners. Approve or archive each.', speed:1.0,
+]; // end AGENT_REGISTRY
+
+// Hub map: agent key → hub building key (for WS routing, badge, walker state)
+const HUB_OF = {
+  art:'creative', planner:'creative', brand:'creative',
+  ceo:'hq', supervisor:'hq', coordinator:'hq',
+  marketing:'mktg', social:'mktg', intel:'mktg', ads:'mktg', trend:'mktg', abt:'mktg', email:'mktg',
+  finance:'finops', analytics:'finops', tax:'finops', supply:'finops', api:'finops',
+  store:'ops', product:'ops', sales:'ops', delivery:'ops', cs:'ops', retention:'ops', promos:'ops', returns:'ops',
+  qc:'publish', listing:'publish', print:'publish',
+};
+
+// Hub members: hub key → array of member agent keys
+const HUB_MEMBERS = {
+  creative:['art','planner','brand'],
+  hq:['ceo','supervisor','coordinator'],
+  mktg:['marketing','social','intel','ads','trend','abt','email'],
+  finops:['finance','analytics','tax','supply','api'],
+  ops:['store','product','sales','delivery','cs','retention','promos','returns'],
+  publish:['qc','listing','print'],
+};
+
+// Buildings rendered on the town map (6 large hubs + 3 special buildings)
+const AGENTS = [
+  {key:'creative', name:'Creative Studio', display:'Creative Studio', icon:'🎨', type:'hub',
+   roof:'#6b3090', wall:'#ede0f8', x:840, y:420, w:320, h:420, wins:4, chimney:false,
+   members:['art','planner','brand'],
+   firstName:'Studio', bio:'Art creation, planner design and brand development.', speed:1.0,
    chatLines:[], quick:[]},
-  // ── PRODUCT ARCHIVE / STORAGE (right of Meeting Hall) ──
+  {key:'hq', name:'CEO HQ', display:'CEO HQ', icon:'🏛️', type:'hub',
+   roof:'#7B1900', wall:'#f0e8d0', x:1660, y:390, w:360, h:460, wins:4, chimney:false,
+   members:['ceo','supervisor','coordinator'],
+   firstName:'HQ', bio:'Strategy, oversight and workflow coordination.', speed:0.85,
+   chatLines:[], quick:[]},
+  {key:'mktg', name:'Marketing Hub', display:'Marketing Hub', icon:'📈', type:'hub',
+   roof:'#C04010', wall:'#f0dcc0', x:2580, y:420, w:320, h:420, wins:4, chimney:false,
+   members:['marketing','social','intel','ads','trend','abt','email'],
+   firstName:'Hub', bio:'Marketing, social media, ads and competitor intelligence.', speed:1.1,
+   chatLines:[], quick:[]},
+  {key:'finops', name:'Finance & Analytics', display:'Finance & Analytics', icon:'📊', type:'hub',
+   roof:'#192060', wall:'#d4d8ec', x:840, y:1100, w:320, h:420, wins:4, chimney:false,
+   members:['finance','analytics','tax','supply','api'],
+   firstName:'Hub', bio:'Financial reporting, analytics, tax compliance and supply chain.', speed:0.9,
+   chatLines:[], quick:[]},
+  {key:'ops', name:'Operations Center', display:'Operations Center', icon:'🏬', type:'hub',
+   roof:'#2a5018', wall:'#d8e4d0', x:1660, y:1100, w:360, h:460, wins:4, chimney:false,
+   members:['store','product','sales','delivery','cs','retention','promos','returns'],
+   firstName:'Hub', bio:'Store management, sales, customer service and fulfillment.', speed:1.0,
+   chatLines:[], quick:[]},
+  {key:'publish', name:'Quality & Publishing', display:'Quality & Publishing', icon:'🔍', type:'hub',
+   roof:'#1e4468', wall:'#d0d8e8', x:2580, y:1100, w:320, h:420, wins:4, chimney:false,
+   members:['qc','listing','print'],
+   firstName:'Hub', bio:'Quality control, Etsy listing optimization and print production.', speed:0.9,
+   chatLines:[], quick:[]},
+  // ── Special buildings ──
+  {key:'hall', name:'Meeting Hall', display:'Meeting Hall', icon:'🏛️', roof:'#5a3a00',wall:'#f0d898', x:2230,y:2270, w:350,h:390, wins:4,chimney:false,type:'hall',
+   firstName:'Hall', bio:'Where big ideas are born.', speed:1.0, chatLines:[], quick:[]},
+  {key:'shop', name:'Digital Shopping Center', display:'Shop Center', icon:'🛍️', type:'shop', roof:'#8B1A8B',wall:'#fceef8', x:1420,y:2280, w:310,h:340, wins:4,chimney:false,
+   firstName:'', bio:'Browse all digital products — wall art and planners.', speed:1.0,
+   chatLines:[], quick:[]},
   {key:'storage', name:'Product Archive', display:'Archive', icon:'🗄️', type:'storage', roof:'#3a3a3a',wall:'#d0d0c8', x:2700,y:2320, w:250,h:280, wins:3,chimney:false,
    firstName:'', bio:'Archived products stored here for future reference.', speed:1.0,
    chatLines:[], quick:[]},
 ];
-const AM = Object.fromEntries(AGENTS.map(a=>[a.key,a]));
+
+// Unified lookup: hub keys + all 28 original agent keys
+const AM = {
+  ...Object.fromEntries(AGENT_REGISTRY.map(a=>[a.key,a])),
+  ...Object.fromEntries(AGENTS.map(a=>[a.key,a])),
+};
 
 // ── STATE ───────────────────────────────────────────────────────────────────
-let selectedKey=null, feedCount=0, taskCards={}, bpositions={}, homePos={};
+let selectedKey=null;      // hub building key highlighted on the map
+let selectedAgentKey=null; // actual agent key receiving tasks (may differ from selectedKey)
+let feedCount=0, taskCards={}, bpositions={}, homePos={};
 let activeAgents=new Set();
 
 // ── ZOOM / PAN ──────────────────────────────────────────────────────────────
@@ -2397,16 +2490,38 @@ function mkBuilding(a){
   const isHall    = a.type==='hall';
   const isShop    = a.type==='shop';
   const isStorage = a.type==='storage';
+  const isHub     = a.type==='hub';
   const isSpecial = isShop || isStorage;
-  const isCeo  = a.large;
-  el.className='bld'+(isCeo?' bld-ceo':isHall?' bld-hall':isShop?' bld-shop':isStorage?' bld-storage':'');
+  const isCeo  = a.key==='hq';
+  el.className='bld'+(isCeo?' bld-ceo':isHall?' bld-hall':isShop?' bld-shop':isStorage?' bld-storage':isHub?' bld-hub':'');
   el.style.cssText=`left:${a.x}px;top:${a.y}px;--bw:${a.w}px;--bh:${a.h}px;--rc:${a.roof};--wc:${a.wall}`;
   const rw=a.w+(isCeo?0:22);
   const winsHtml=Array(a.wins||2).fill(0).map(()=>`<div class="bwin-wrap"><div class="bshutter" style="background-color:color-mix(in srgb,${a.roof} 65%,#000)"></div><div class="bwin"></div><div class="bshutter" style="background-color:color-mix(in srgb,${a.roof} 65%,#000)"></div></div>`).join('');
   const scrCls = SCREEN_COLORS[a.key]||'scr-blue';
   const extras = INTERIOR_EXTRAS[a.key]||'<div class="bi-bookcase" style="width:14px"></div>';
 
-  const wallBg = INTERIOR_WALLS[a.key] || 'linear-gradient(180deg,#e8d8b0 0%,#f5e8c0 30%,#f8eec8 100%)';
+  const wallBg = INTERIOR_WALLS[a.key] || (isHub ? `linear-gradient(180deg,color-mix(in srgb,${a.wall} 80%,#fff) 0%,${a.wall} 50%,color-mix(in srgb,${a.wall} 90%,#f0f0f0) 100%)` : 'linear-gradient(180deg,#e8d8b0 0%,#f5e8c0 30%,#f8eec8 100%)');
+  // Hub interior: team member grid + large work screen + branded floor
+  const hubInterior = isHub ? (()=>{
+    const memberHtml = (a.members||[]).map(mKey=>{
+      const m=AM[mKey]; if(!m) return '';
+      return `<div class="hub-mini-agent"><div class="hub-mini-icon">${m.icon}</div><div class="hub-mini-name">${m.display.split(' ')[0]}</div></div>`;
+    }).join('');
+    return `<div class="binterior hub-int" style="background:${wallBg}">
+      <div class="bi-ceil" style="background:${a.roof}"></div>
+      <div class="hub-screen" style="background:color-mix(in srgb,${a.roof} 18%,#0d1117)">
+        <div class="hub-screen-line"></div><div class="hub-screen-line" style="width:60%"></div><div class="hub-screen-line" style="width:80%"></div>
+      </div>
+      <div class="hub-member-grid">${memberHtml}</div>
+      <div class="hub-table" style="border-color:${a.roof}44"></div>
+      <div class="bidler" id="bidle-${a.key}">
+        <div class="bi-head" style="background:${a.roof}"></div>
+        <div class="bi-body" style="background:${a.roof}bb"></div>
+        <div class="bi-legs"></div>
+      </div>
+      <div class="bi-floor" style="background:color-mix(in srgb,${a.wall} 60%,#888)"></div>
+    </div>`;
+  })() : '';
   const interior = isHall
     ? `<div class="binterior hall-int-view" style="opacity:0">
          <div class="bi-ceil"></div>
@@ -2488,6 +2603,8 @@ function mkBuilding(a){
          <div class="storage-shelf" style="top:62%"></div>
          <div class="bi-floor" style="background:#b0b0a0"></div>
        </div>`
+    : isHub
+    ? hubInterior
     : `<div class="binterior" style="background:${wallBg}">
          <div class="bi-ceil"></div>
          <div class="bi-lamp"></div>
@@ -2547,17 +2664,24 @@ function mkBuilding(a){
       ? `<div class="hall-actions">
            <button class="hall-act-btn" style="background:#282828;color:#d0d0c0;border-color:#505050" onclick="event.stopPropagation();openStorage()">🗄️ Archive</button>
          </div>`
+      : isHub
+      ? `<div class="hub-act-row">
+           <button class="hub-open-btn" style="background:${a.roof}22;color:color-mix(in srgb,${a.roof} 80%,#fff);border-color:${a.roof}66" onclick="event.stopPropagation();openHubPanel('${a.key}')">👥 ${(a.members||[]).length} Agents</button>
+           <div class="bbadge" id="bdg-${a.key}">idle</div>
+         </div>`
       : `<div class="bbadge" id="bdg-${a.key}">idle</div>`}
     <div class="blabel">${a.display}</div>`;
   el.onclick=()=>{
     if(isHall) openHall();
     else if(isShop) openShop();
     else if(isStorage) openStorage();
+    else if(isHub) openHubPanel(a.key);
     else selectAgent(a.key);
   };
   const tipText = isHall ? 'Meeting Hall — click to view all agent tasks'
                 : isShop ? 'Digital Shopping Center — browse wall art & planners'
                 : isStorage ? 'Product Archive — view archived products'
+                : isHub ? `${a.name} — ${(a.members||[]).length} agents (click to select)`
                 : a.name;
   el.onmouseenter=e=>{ showTip(e, tipText); if(isHall) updateMiniBoard(); };
   el.onmouseleave=hideTip;
@@ -2567,32 +2691,23 @@ function mkBuilding(a){
 
 function buildRoads(){
   const r=document.getElementById('roads');
-  // 4 horizontal main streets between rows, plus sidewalks and center stripe
+  // Roads for 6 hub layout: 2 rows of 3 buildings + bottom special row
+  // Row 1: creative(x:840,w:320→1160), hq(x:1660,w:360→2020), mktg(x:2580,w:320→2900)
+  // Row 2: finops(x:840→1160), ops(x:1660→2020), publish(x:2580→2900)
+  // Bottom: shop(x:1420), hall(x:2230), storage(x:2700)
   const roads=[
-    // Street 1 — between Row 1 (bottoms ~650) and Row 2 (tops ~835)
-    {cls:'rh',style:'top:710px;height:78px'},
-    {cls:'rcl',style:'top:748px'},
-    {cls:'swk',style:'top:788px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
-    // Street 2 — between Row 2 (bottoms ~1130) and Row 3 (tops ~1325)
-    {cls:'rh',style:'top:1178px;height:78px'},
-    {cls:'rcl',style:'top:1216px'},
-    {cls:'swk',style:'top:1256px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
-    // Street 3 — between Row 3 (bottoms ~1530) and Row 4 (tops ~1750)
-    {cls:'rh',style:'top:1590px;height:78px'},
-    {cls:'rcl',style:'top:1628px'},
-    {cls:'swk',style:'top:1668px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
-    // Street 4 — between Row 4 (bottoms ~1960) and Hall (top ~2270)
-    {cls:'rh',style:'top:2010px;height:70px'},
-    {cls:'rcl',style:'top:2044px'},
-    {cls:'swk',style:'top:2080px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
-    // Central vertical avenue (between left block x~1830 and CEO/right block x~2230)
-    {cls:'rv',style:'left:1890px;top:390px;width:44px;height:1680px'},
-    // Right-center vertical (between CEO x~2470 and right block x~2700)
-    {cls:'rv',style:'left:2550px;top:390px;width:44px;height:1680px'},
-    // Left outer vertical (left of left block x~1000)
-    {cls:'rv',style:'left:950px;top:710px;width:38px;height:1368px'},
-    // Right outer vertical (right of right block x~3558)
-    {cls:'rv',style:'left:3580px;top:710px;width:38px;height:1368px'},
+    // Main horizontal street between row 1 (bottoms ~840) and row 2 (tops ~1100)
+    {cls:'rh', style:'top:940px;height:80px'},
+    {cls:'rcl',style:'top:978px'},
+    {cls:'swk',style:'top:1020px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
+    // Main horizontal street between row 2 (bottoms ~1520) and bottom row (tops ~2270)
+    {cls:'rh', style:'top:1620px;height:80px'},
+    {cls:'rcl',style:'top:1658px'},
+    {cls:'swk',style:'top:1698px;left:0;right:0;height:14px;background:#d4c8a0;border:none'},
+    // Vertical avenue between left and center columns (between x:1160 and x:1660)
+    {cls:'rv', style:'left:1240px;top:380px;width:60px;height:1340px'},
+    // Vertical avenue between center and right columns (between x:2020 and x:2580)
+    {cls:'rv', style:'left:2100px;top:380px;width:60px;height:1340px'},
   ];
   roads.forEach(({cls,style})=>{
     const d=document.createElement('div');
@@ -2600,10 +2715,13 @@ function buildRoads(){
   });
   // District labels
   const labels=[
-    {text:'Creative Hub',   x:980, y:360},
-    {text:'Central HQ',     x:2140,y:760},
-    {text:'Commerce Hub',   x:2680,y:360},
-    {text:'Meeting Hall',   x:2200,y:2200},
+    {text:'Creative District',    x:840,  y:345},
+    {text:'Executive District',   x:1660, y:340},
+    {text:'Marketing District',   x:2580, y:345},
+    {text:'Finance District',     x:840,  y:1025},
+    {text:'Operations District',  x:1660, y:1025},
+    {text:'Quality District',     x:2580, y:1025},
+    {text:'Town Square',          x:2200, y:2200},
   ];
   labels.forEach(({text,x,y})=>{
     const d=document.createElement('div');
@@ -3170,10 +3288,10 @@ function repositionResidents(){
 
 // ── IDLE WANDERING ────────────────────────────────────────────────────────────
 const _wanderTimers = {};
-const WANDER_R = 110;      // max wander radius in world-px
-const WANDER_MIN = 2500;   // min pause between wanders
-const WANDER_MAX = 7000;   // max pause between wanders
-const WANDER_MS = 900;     // walk transition duration
+const WANDER_R = 1400;     // town-wide roaming radius in world-px
+const WANDER_MIN = 3000;   // min pause between wanders
+const WANDER_MAX = 9000;   // max pause between wanders
+const WANDER_MS = 2200;    // walk transition duration (longer for bigger distances)
 
 function startIdleWandering(){
   AGENTS.forEach(a=>{ if(a.type==='hall') return; _scheduleWander(a.key); });
@@ -3232,15 +3350,17 @@ refreshAgentSummaries();
 setInterval(refreshAgentSummaries, 30000);
 
 function buildIdeaCard(a){
-  const tc=taskCards[a.key]||{};
+  // Look up task/status via hub key (DOM state is keyed by hub)
+  const tcKey = HUB_OF[a.key] || a.key;
+  const tc=taskCards[tcKey]||{};
   const srv=_agentSummaries[a.key]||{};
-  const status=activeAgents.has(a.key)?'running':(tc.status||'idle');
+  const status=activeAgents.has(tcKey)?'running':(tc.status||'idle');
   const statusMap={running:'ist-running',done:'ist-done',error:'ist-error',thinking:'ist-thinking',idle:'ist-idle'};
   const sLabel={running:'Working',done:'Done',error:'Error',thinking:'Thinking',idle:'Idle'};
   const sc=statusMap[status]||'ist-idle';
   const task=tc.task||srv.task||'No active task';
   const lastSteps=(tc.steps||[]).slice(-3).join('\n');
-  const pinIdx=AGENTS.findIndex(x=>x.key===a.key)%PIN_COLORS.length;
+  const pinIdx=AGENT_REGISTRY.findIndex(x=>x.key===a.key)%PIN_COLORS.length;
   const pinColor=PIN_COLORS[pinIdx];
   const stripColor=a.roof;
   const lastResult=srv.last_result?srv.last_result.slice(0,120):'';
@@ -3262,7 +3382,8 @@ function buildIdeaCard(a){
 
 function updateHallBoard(){
   const board=document.getElementById('hall-board'); if(!board) return;
-  board.innerHTML=AGENTS.filter(a=>a.type!=='hall').map(a=>buildIdeaCard(a)).join('');
+  // Show all 28 individual agents (not hubs) for granular status view
+  board.innerHTML=AGENT_REGISTRY.map(a=>buildIdeaCard(a)).join('');
   const sub=document.getElementById('hall-subtitle'); if(!sub) return;
   const running=[...activeAgents].length;
   sub.textContent=running?`${running} agent${running>1?'s':''} currently working`:'All agents idle';
@@ -3271,10 +3392,11 @@ function updateHallBoard(){
 function updateMiniBoard(){
   const mini=document.getElementById('hall-mini'); if(!mini) return;
   const notes=mini.querySelectorAll('.mini-note');
-  AGENTS.filter(a=>a.type!=='hall').slice(0,notes.length).forEach((a,i)=>{
-    const working=activeAgents.has(a.key);
+  AGENT_REGISTRY.slice(0,notes.length).forEach((a,i)=>{
+    const hubKey = HUB_OF[a.key] || a.key;
+    const working=activeAgents.has(hubKey);
     notes[i].style.background=working?'#c8f5c8':'#fef9c3';
-    notes[i].title=a.display+(working?' — working':'— idle');
+    notes[i].title=a.display+(working?' — working':' — idle');
   });
 }
 
@@ -3284,6 +3406,31 @@ function openHall(){
 }
 function closeHall(){ document.getElementById('hall-modal').classList.remove('open'); }
 document.getElementById('hall-modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeHall(); });
+
+// ── HUB PANEL — select an agent inside a hub building ─────────────────────────
+function openHubPanel(hubKey){
+  const hub = AM[hubKey];
+  if(!hub) return;
+  const panel = document.getElementById('hub-panel');
+  const title = document.getElementById('hub-panel-title');
+  const grid  = document.getElementById('hub-panel-grid');
+  title.innerHTML = `${hub.icon} <span>${hub.name}</span>`;
+  grid.innerHTML = (hub.members||[]).map(mKey=>{
+    const ag = AM[mKey];
+    if(!ag) return '';
+    const hubK = HUB_OF[mKey]||mKey;
+    const isActive = activeAgents.has(hubK);
+    return `<div class="hub-member-btn ${isActive?'hub-member-active':''}" onclick="closeHubPanel();selectAgent('${mKey}')" title="${ag.name}">
+      <span class="hub-member-icon">${ag.icon}</span>
+      <span class="hub-member-name">${ag.display}</span>
+      ${isActive?'<span class="hub-member-badge">●</span>':''}
+    </div>`;
+  }).join('');
+  panel.style.display = 'flex';
+}
+function closeHubPanel(){
+  document.getElementById('hub-panel').style.display = 'none';
+}
 
 // ── AUTONOMOUS IDLE BEHAVIOR ──────────────────────────────────────────────────
 const IDLE_THOUGHTS={
@@ -3403,64 +3550,47 @@ const LEARNING_THOUGHTS = new Set([
 ]);
 
 // ── SPEECH BUBBLES ──────────────────────────────────────────────────────────
-const _activeBubbles = new Map(); // key → timeout id
 
-function showBubble(key) {
-  const a = AM[key];
-  if (!a || !a.chatLines || a.chatLines.length === 0) return;
-  const el = document.getElementById(`res-${key}`);
-  if (!el) return;
-  if (_activeBubbles.has(key)) return; // already showing
-
-  const line = a.chatLines[Math.floor(Math.random() * a.chatLines.length)];
-  const bub = document.createElement('div');
-  bub.className = 'speech-bubble';
-  bub.textContent = line;
-  el.appendChild(bub);
-  requestAnimationFrame(() => bub.classList.add('visible'));
-
-  const t = setTimeout(() => {
-    bub.classList.remove('visible');
-    setTimeout(() => bub.remove(), 350);
-    _activeBubbles.delete(key);
-  }, 3200);
-  _activeBubbles.set(key, t);
-}
 
 function tickBubbles() {
-  const idleKeys = AGENTS.filter(a => a.type !== 'hall' && !activeAgents.has(a.key) && a.chatLines?.length).map(a => a.key);
-  if (idleKeys.length > 0 && Math.random() < 0.55) {
-    const key = idleKeys[Math.floor(Math.random() * idleKeys.length)];
-    showBubble(key);
+  const idleAgents = AGENT_REGISTRY.filter(a => {
+    const hk = HUB_OF[a.key] || a.key;
+    return !activeAgents.has(hk) && a.chatLines?.length;
+  });
+  if (idleAgents.length > 0 && Math.random() < 0.55) {
+    const a = idleAgents[Math.floor(Math.random() * idleAgents.length)];
+    const line = a.chatLines[Math.floor(Math.random() * a.chatLines.length)];
+    showBubble(HUB_OF[a.key] || a.key, line);
   }
   setTimeout(tickBubbles, 4000 + Math.random() * 5000);
 }
 
 let _idleTimer;
 function tickIdle(){
-  const idleKeys=AGENTS.filter(a=>a.type!=='hall'&&!activeAgents.has(a.key)).map(a=>a.key);
+  const idleKeys=AGENT_REGISTRY.filter(a=>{ const hk=HUB_OF[a.key]||a.key; return !activeAgents.has(hk); }).map(a=>a.key);
   if(idleKeys.length>0){
     const key=idleKeys[Math.floor(Math.random()*idleKeys.length)];
+    const hubKey = HUB_OF[key] || key;
     const thoughts=IDLE_THOUGHTS[key]||['Reviewing tasks...','Analyzing data...','Planning improvements...'];
     const thought=thoughts[Math.floor(Math.random()*thoughts.length)];
-    showBubble(key, thought);
+    showBubble(hubKey, thought);
     // Pick animation state based on thought type
     let animState = 'thinking';
     if(RESEARCH_THOUGHTS.has(thought)) animState = 'researching';
     else if(LEARNING_THOUGHTS.has(thought)) animState = 'learning';
-    setResidentState(key, animState);
-    document.getElementById(`bidle-${key}`)?.classList.add('working');
-    // Show research badge on building during research
-    const bel = document.getElementById(`b-${key}`);
+    setResidentState(hubKey, animState);
+    document.getElementById(`bidle-${hubKey}`)?.classList.add('working');
+    // Show research badge on hub building during research
+    const bel = document.getElementById(`b-${hubKey}`);
     if(animState==='researching' && bel){
       let badge = bel.querySelector('.b-research-badge');
       if(!badge){ badge=document.createElement('div'); badge.className='b-research-badge'; bel.appendChild(badge); }
       badge.textContent='🔍 Researching...';
     }
     setTimeout(()=>{
-      if(!activeAgents.has(key)){
-        setResidentState(key,'idle');
-        document.getElementById(`bidle-${key}`)?.classList.remove('working');
+      if(!activeAgents.has(hubKey)){
+        setResidentState(hubKey,'idle');
+        document.getElementById(`bidle-${hubKey}`)?.classList.remove('working');
         bel?.querySelector('.b-research-badge')?.remove();
       }
     }, 4200);
@@ -3507,6 +3637,13 @@ const WALKER_LOOKS = {
   shop:    {skin:'#f8d0e8',hair:'#8B1A8B',hat:'#c040c0',hatClass:'w-hat-crown',shirt:'#a030a0',pants:'#3a0838',boot:'#200420',accent:'#f0c0ff',extra:'<div class="w-star" style="--waccent:#f0c0ff"></div>'},
   storage: {skin:'#d0d0c0',hair:'#3a3a3a',hat:'#2a2a2a',hatClass:'w-hat-hardhat',shirt:'#505048',pants:'#282820',boot:'#181810',accent:'#c0c0a0',extra:'<div class="w-vest"></div>'},
   planner2:{skin:'#e0f0e0',hair:'#2e6e4e',hat:'#2e6e4e',hatClass:'w-hat-beanie',shirt:'#3a8060',pants:'#1a3828',boot:'#0e2018',accent:'#b0f0d0',extra:''},
+  // Hub building walkers (representative look for each hub)
+  creative:{skin:'#f8dcc0',hair:'#7B5EA7',hat:'#6b3090',hatClass:'w-hat-beret',shirt:'#9b50c0',pants:'#280848',boot:'#180830',accent:'#f0c8ff',extra:'<div class="w-apron" style="--waccent:rgba(200,140,255,.4)"></div>'},
+  hq:      {skin:'#f0e0c0',hair:'#7B1900',hat:'#7B1900',hatClass:'w-hat-tophat',shirt:'#5a2010',pants:'#200c08',boot:'#100604',accent:'#f0d040',extra:'<div class="w-lapel"></div><div class="w-tie" style="--waccent:#f0d040"></div>'},
+  mktg:    {skin:'#f0d0a0',hair:'#C04010',hat:'#C04010',hatClass:'w-hat-visor',shirt:'#e05020',pants:'#401008',boot:'#280808',accent:'#ffe060',extra:'<div class="w-star" style="--waccent:#ffe060"></div>'},
+  finops:  {skin:'#c8d0e8',hair:'#192060',hat:'#192060',hatClass:'w-hat-grad',shirt:'#243080',pants:'#080f28',boot:'#040810',accent:'#80c0ff',extra:'<div class="w-labcoat"></div>'},
+  ops:     {skin:'#e8d0c0',hair:'#2a5018',hat:'#2a5018',hatClass:'w-hat-beanie',shirt:'#3a6828',pants:'#1a3010',boot:'#101808',accent:'#a0e060',extra:'<div class="w-vest"></div><div class="w-badge" style="--waccent:#a0e060"></div>'},
+  publish: {skin:'#d8e0d8',hair:'#1e4468',hat:'#1e4468',hatClass:'w-hat-hardhat',shirt:'#2a5a7a',pants:'#102030',boot:'#081018',accent:'#88c8ff',extra:'<div class="w-badge" style="--waccent:#f0f020"></div>'},
 };
 
 function mkWalker(key,_color,run=false){
@@ -3575,10 +3712,18 @@ function removeWalker(key){
 // ── AGENT SELECTION ─────────────────────────────────────────────────────────
 function selectAgent(key){
   if(AM[key]?.type==='hall'){ openHall(); return; }
+  if(AM[key]?.type==='hub'){ openHubPanel(key); return; }
+  if(AM[key]?.type==='shop'){ openShop(); return; }
+  if(AM[key]?.type==='storage'){ openStorage(); return; }
+  // Deselect previous hub/agent highlight
   if(selectedKey) document.getElementById(`b-${selectedKey}`)?.classList.remove('selected');
-  selectedKey=key;
-  document.getElementById(`b-${key}`)?.classList.add('selected');
+  // Highlight the hub building that contains this agent; track actual agent key for task submission
+  const hubKey = HUB_OF[key] || key;
+  selectedKey = hubKey;
+  selectedAgentKey = key; // the real agent key sent to the backend
+  document.getElementById(`b-${hubKey}`)?.classList.add('selected');
   const a=AM[key];
+  if(!a) return;
   document.getElementById('sel-icon').textContent=a.icon;
   document.getElementById('sel-name').textContent=a.name;
   const inp=document.getElementById('task-input');
@@ -3890,7 +4035,9 @@ function addFeed(key,event,msg,ts){
 
 // ── WEBSOCKET EVENTS ─────────────────────────────────────────────────────────
 function handleEvent(msg){
-  const {agent:key,event,message,ts,data}=msg;
+  const {agent:rawKey,event,message,ts,data}=msg;
+  // Route DOM updates through hub map: individual agents → their hub building
+  const key = HUB_OF[rawKey] || rawKey;
   switch(event){
     case 'start':
       setBS(key,'running'); activeAgents.add(key);
@@ -3910,10 +4057,11 @@ function handleEvent(msg){
       setResidentState(key,'working');
       break;
     case 'delegation':{
-      const toKey=data?.to;
+      const toRaw=data?.to;
+      const toKey = HUB_OF[toRaw] || toRaw;
       if(toKey){ spawnWalker(key,toKey); setResidentState(toKey,'working'); document.getElementById(`bidle-${toKey}`)?.classList.add('working'); }
-      addTaskStep(key,'→ Sending to '+(AM[toKey]?.display||toKey));
-      showBubble(key,'→ '+(AM[toKey]?.display||toKey)); break;
+      addTaskStep(key,'→ '+(AM[toRaw]?.display||toKey));
+      showBubble(key,'→ '+(AM[toRaw]?.display||toKey)); break;
     }
     case 'tool_call':
       setBS(key,'running'); showBubble(key,message); addTaskStep(key,message.slice(0,80));
@@ -3929,17 +4077,16 @@ function handleEvent(msg){
     case 'pipeline_step_done':
       if(data?.stage) pvDoneStage(data.stage); break;
     case 'scheduled':
-      addFeed('ceo','start',message,ts); showBubble('ceo',message.slice(0,60)); break;
+      addFeed('ceo','start',message,ts); showBubble(HUB_OF['ceo']||'ceo',message.slice(0,60)); break;
     case 'done':
       setBS(key,'done'); activeAgents.delete(key); showBubble(key,'✓ Done!');
       setTimeout(()=>{ setBS(key,'idle'); setResidentState(key,'idle'); document.getElementById(`bidle-${key}`)?.classList.remove('working'); },3500);
       removeWalker(key); upsertTaskCard(key,'done',null);
-      // Record actual duration so future estimates are accurate
       if(taskCards[key]?.startedAt) _recordDuration(key,Math.round((Date.now()-taskCards[key].startedAt)/1000));
       if(data?.result){ showOutput(key,data.result); _checkForSale(data.result); }
       if(_fbLoaded) loadFileBrowser();
       if(_goalsLoaded) loadGoalsDashboard();
-      if(key==='ceo'||key==='listing') pvHide();
+      if(rawKey==='ceo'||rawKey==='listing') pvHide();
       updateHallBoard(); break;
     case 'error':
       setBS(key,'error'); activeAgents.delete(key); showBubble(key,'⚠ error');
@@ -3947,7 +4094,7 @@ function handleEvent(msg){
       removeWalker(key); upsertTaskCard(key,'error',null);
       showOutput(key,'ERROR: '+message); break;
   }
-  updateActiveBar(); addFeed(key,event,message,ts); updateHallBoard();
+  updateActiveBar(); addFeed(rawKey,event,message,ts); updateHallBoard();
 }
 
 // ── WEBSOCKET ────────────────────────────────────────────────────────────────
@@ -3977,7 +4124,7 @@ function connectWS(){
       handleEvent(msg);
     } else if(msg.type==='new_order'){
       _showOrderToast(msg.order);
-      _animateBuilding('delivery');
+      _animateBuilding(HUB_OF['delivery']||'delivery');
       loadRevStats();
     } else if(msg.type==='notification'){
       _unreadNotifs++;
@@ -3991,7 +4138,7 @@ function connectWS(){
         supLbl.textContent = action;
         supLbl.style.color = nid.includes('retry')?'#60c060':'#ff8040';
         setTimeout(()=>{ supLbl.textContent='watching'; supLbl.style.color=''; },8000);
-        showBubble('supervisor', msg.notif?.message?.slice(0,60)||'Intervention complete');
+        showBubble(HUB_OF['supervisor']||'supervisor', msg.notif?.message?.slice(0,60)||'Intervention complete');
       }
     } else if(msg.type==='new_idea'){
       _ideaCount++;
@@ -4028,17 +4175,18 @@ function setWsDot(ok){ document.getElementById('ws-dot').className='ws-dot'+(ok?
 
 // ── RUN TASK ─────────────────────────────────────────────────────────────────
 async function runTask(){
-  if(!selectedKey) return;
+  if(!selectedAgentKey && !selectedKey) return;
+  const agentKey = selectedAgentKey || selectedKey; // actual agent key for backend
   const inp=document.getElementById('task-input');
   const task=inp.value.trim(); if(!task) return;
 
   const wsOk = ws && ws.readyState===WebSocket.OPEN;
   if(wsOk){
-    ws.send(JSON.stringify({type:'run',agent:selectedKey,task}));
+    ws.send(JSON.stringify({type:'run',agent:agentKey,task}));
   } else {
     // WS down — submit via REST so the task still runs
     try {
-      const r = await fetch(`/api/run/${selectedKey}`,{
+      const r = await fetch(`/api/run/${agentKey}`,{
         method:'POST', headers:{'Content-Type':'application/json'},
         body:JSON.stringify({task})
       });
@@ -4049,10 +4197,11 @@ async function runTask(){
   }
 
   inp.value='';
-  setBS(selectedKey,'running'); activeAgents.add(selectedKey); updateActiveBar();
-  showBubble(selectedKey,task.slice(0,50));
-  taskCards[selectedKey]={steps:[],task,status:'running',startedAt:Date.now(),estDuration:_estDuration(selectedKey)};
-  upsertTaskCard(selectedKey,'running',task);
+  const hubKey = HUB_OF[agentKey] || agentKey;
+  setBS(hubKey,'running'); activeAgents.add(hubKey); updateActiveBar();
+  showBubble(hubKey,task.slice(0,50));
+  taskCards[hubKey]={steps:[],task,status:'running',startedAt:Date.now(),estDuration:_estDuration(hubKey)};
+  upsertTaskCard(hubKey,'running',task);
   switchTab('tasks');
 }
 document.getElementById('task-input').addEventListener('keydown',e=>{ if(e.key==='Enter') runTask(); });
@@ -4113,6 +4262,7 @@ function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 
 // ── QUICK PRESETS ─────────────────────────────────────────────────────────────
 async function runPreset(agentKey, task){
+  const hubKey = HUB_OF[agentKey] || agentKey;
   const wsOk = ws && ws.readyState===WebSocket.OPEN;
   if(wsOk){
     ws.send(JSON.stringify({type:'run',agent:agentKey,task}));
@@ -4126,10 +4276,10 @@ async function runPreset(agentKey, task){
       if(!ws||ws.readyState===WebSocket.CLOSED||ws.readyState===WebSocket.CLOSING) connectWS();
     } catch(e){ alert('Cannot reach server — make sure Start Town.bat is running.'); return; }
   }
-  setBS(agentKey,'running'); activeAgents.add(agentKey); updateActiveBar();
-  showBubble(agentKey,task.slice(0,50));
-  taskCards[agentKey]={steps:[],task,status:'running',startedAt:Date.now(),estDuration:_estDuration(agentKey)};
-  upsertTaskCard(agentKey,'running',task);
+  setBS(hubKey,'running'); activeAgents.add(hubKey); updateActiveBar();
+  showBubble(hubKey,task.slice(0,50));
+  taskCards[hubKey]={steps:[],task,status:'running',startedAt:Date.now(),estDuration:_estDuration(hubKey)};
+  upsertTaskCard(hubKey,'running',task);
   switchTab('tasks');
 }
 
@@ -4387,8 +4537,7 @@ async function _pollStatusBar(){
 }
 
 function openPhysicalApprovals(){
-  const a = AM['print'];
-  if(a) { selectedKey='print'; openPanel(a); }
+  selectAgent('print');
 }
 
 async function applyUpdate(){
@@ -4511,7 +4660,7 @@ function openIdeas(){
 function closeIdeas(){ document.getElementById('ideas-modal').style.display='none'; }
 
 const CAT_COLORS={product:'#5a9e3a',marketing:'#c04010',operations:'#104888',design:'#6b3090',pricing:'#9a6010',general:'#3a4a5a'};
-const AGENT_ICONS = Object.fromEntries(AGENTS.map(a=>[a.key,{icon:a.icon,name:a.firstName||a.display}]));
+const AGENT_ICONS = Object.fromEntries([...AGENT_REGISTRY,...AGENTS].map(a=>[a.key,{icon:a.icon,name:a.firstName||a.display}]));
 
 async function loadIdeas(){
   const ideas = await fetch('/api/ideas').then(r=>r.json()).catch(()=>[]);
