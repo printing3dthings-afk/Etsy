@@ -1838,15 +1838,20 @@ def _run_direct_pipeline(category: str, description: str, style: str):
         )
     else:
         create_task = (
-            f"Create a complete digital wall art product. "
-            f"Description: {description}. "
-            + (f"Style: {style}. " if style else "")
-            + "Steps: 1) Call create_art_concept to register the product. "
-            + "2) Call generate_digital_art with the product_id to create the image file. "
-            + "Return the product_id and file path when done."
+            f"Create a premium Etsy digital wall art product.\n"
+            f"Description: {description}.\n"
+            + (f"Style: {style}.\n" if style else "")
+            + "Steps:\n"
+            "1) Call get_design_references then create_art_concept.\n"
+            "2) Call generate_digital_art — write a museum-quality DALL-E prompt using the full formula: "
+            "[medium+technique], [named subject/species], [4-5 colors with hex hints], "
+            "[lighting direction+quality], [composition], [mood], "
+            "['high resolution archival fine art print, 300 DPI, museum-quality'], "
+            "['no text, no watermarks, no borders, no signatures, no frames'].\n"
+            "3) Return the product_id when done."
         )
 
-    result1 = _run_sub_agent_observable(creator, create_task, max_iterations=15)
+    result1 = _run_sub_agent_observable(creator, create_task, max_iterations=8)
 
     product_id = _direct_pipeline_extract_product_id(result1)
     if not product_id:
@@ -1869,23 +1874,23 @@ def _run_direct_pipeline(category: str, description: str, style: str):
         result2 = f"approved product_id={product_id}"
     else:
         qc_task = (
-            f"Review digital product {product_id} (status=qc_pending). "
-            "Steps: 1) Call check_file_specs with this product_id. "
-            "2) If checks pass and file exists with real content, call approve_product. "
-            "3) If checks fail, call reject_product with specific reasons."
+            f"QC product {product_id}. Do exactly 2 steps, nothing else:\n"
+            f"1) check_file_specs product_id={product_id}\n"
+            f"2) If spec_check_result=PASS → approve_product. If FAIL → reject_product with reasons."
         )
-        result2 = _run_sub_agent_observable("qc", qc_task, max_iterations=8)
+        result2 = _run_sub_agent_observable("qc", qc_task, max_iterations=4)
 
         if "reject" in result2.lower():
             # One retry: recreate the product with QC feedback
             retry_task = create_task + f"\n\nIMPORTANT — Previous attempt was rejected by QC: {result2[:300]}"
-            result1 = _run_sub_agent_observable(creator, retry_task, max_iterations=15)
+            result1 = _run_sub_agent_observable(creator, retry_task, max_iterations=8)
             product_id2 = _direct_pipeline_extract_product_id(result1) or product_id
             qc_task2 = (
-                f"Review digital product {product_id2} (status=qc_pending). "
-                "Steps: 1) Call check_file_specs. 2) If passed, call approve_product."
+                f"QC product {product_id2}. Two steps only:\n"
+                f"1) check_file_specs product_id={product_id2}\n"
+                f"2) approve_product if PASS, reject_product if FAIL."
             )
-            result2 = _run_sub_agent_observable("qc", qc_task2, max_iterations=8)
+            result2 = _run_sub_agent_observable("qc", qc_task2, max_iterations=4)
             product_id = product_id2
 
         if "reject" in result2.lower():
@@ -1895,11 +1900,20 @@ def _run_direct_pipeline(category: str, description: str, style: str):
 
     # ── Step 3: Etsy Listing ──────────────────────────────────────────────────
     list_task = (
-        f"Create an optimised Etsy listing for digital product {product_id} (status=approved). "
-        f"Product description: {description}. "
-        "Write title (max 140 chars), exactly 13 keyword tags, full description, set pricing, and save the listing."
+        f"Create an Etsy listing for digital product {product_id} (status=approved).\n"
+        f"Product: {description}." + (f" Style: {style}." if style else "") + "\n"
+        "Use your expert SEO knowledge — do NOT call research or market tools.\n"
+        "Complete these 5 steps in order:\n"
+        "1) generate_listing_content — title 120-140 chars (primary keyword first), "
+        "exactly 13 multi-word tags (each ≤20 chars, no verbatim title repeats), "
+        "description 300+ chars (power hook in line 1, list file specs, usage instructions), "
+        "price $5-$9 for single art or $9-$16 for bundles, section='Wall Art Prints' or 'Digital Planners'.\n"
+        "2) publish_digital_listing confirm=true.\n"
+        "3) upload_listing_image product_id.\n"
+        "4) attach_digital_file product_id.\n"
+        "5) customer_ready_check product_id."
     )
-    _run_sub_agent_observable("listing", list_task, max_iterations=10)
+    _run_sub_agent_observable("listing", list_task, max_iterations=7)
 
     _add_notification("pipeline_direct_done", f"Direct Pipeline: {label} complete ✓",
                       f"{description[:60]} — created, QC approved, listed on Etsy", "✅")
@@ -1938,17 +1952,23 @@ async def list_product(body: dict):
     if product.get("status") != "approved":
         return JSONResponse({"error": f"Product must be approved (current: {product.get('status')})"}, status_code=400)
     task = (
-        f"Create an optimised Etsy listing for digital product {product_id} (status=approved). "
-        f"Title of product: {product.get('title', product_id)}. "
-        "Steps: 1) Call get_approved_unlisted_products to see the product details. "
-        "2) Call generate_listing_content with a compelling title (max 140 chars), 13 SEO tags, "
-        "full description, and price. "
-        "3) Call publish_digital_listing with confirm=true to go live."
+        f"Create an Etsy listing for digital product {product_id} (status=approved).\n"
+        f"Product title: {product.get('title', product_id)}. "
+        f"Concept: {product.get('concept', '')}.\n"
+        "Use your expert SEO knowledge — do NOT call research or market tools.\n"
+        "Complete these 5 steps in order:\n"
+        "1) generate_listing_content — title 120-140 chars (primary keyword first), "
+        "exactly 13 multi-word tags (each ≤20 chars), description 300+ chars (power hook in line 1), "
+        "price $5-$9 single art or $9-$16 bundles, section='Wall Art Prints' or 'Digital Planners'.\n"
+        "2) publish_digital_listing confirm=true.\n"
+        "3) upload_listing_image.\n"
+        "4) attach_digital_file.\n"
+        "5) customer_ready_check."
     )
     threading.Thread(
         target=_run_sub_agent_observable,
         args=("listing", task),
-        kwargs={"max_iterations": 10},
+        kwargs={"max_iterations": 7},
         daemon=True,
     ).start()
     _add_notification("listing_started", f"Listing Agent: {product_id}",
@@ -1967,15 +1987,22 @@ async def list_all_approved():
         return JSONResponse({"status": "none", "message": "No approved unlisted products found"})
     ids = ", ".join(p["id"] for p in to_list)
     task = (
-        f"Create optimised Etsy listings for all approved unlisted digital products. "
-        f"Products to list: {ids}. "
-        "For each product: call generate_listing_content with SEO title (max 140 chars), "
-        "13 tags, full description, and price. Then call publish_digital_listing with confirm=true."
+        f"Create Etsy listings for these approved products: {ids}.\n"
+        "Use your expert SEO knowledge — do NOT call research or market tools.\n"
+        "For EACH product in sequence, complete all 5 steps:\n"
+        "1) generate_listing_content — title 120-140 chars (primary keyword first), "
+        "exactly 13 multi-word tags (each ≤20 chars), description 300+ chars (power hook in line 1), "
+        "price $5-$9 single art or $9-$16 bundles, section='Wall Art Prints' or 'Digital Planners'.\n"
+        "2) publish_digital_listing confirm=true.\n"
+        "3) upload_listing_image.\n"
+        "4) attach_digital_file.\n"
+        "5) customer_ready_check.\n"
+        "Repeat all 5 steps for every product ID listed."
     )
     threading.Thread(
         target=_run_sub_agent_observable,
         args=("listing", task),
-        kwargs={"max_iterations": 15},
+        kwargs={"max_iterations": 7 * len(to_list)},
         daemon=True,
     ).start()
     _add_notification("listing_batch_started", f"Listing Agent: {len(to_list)} products",

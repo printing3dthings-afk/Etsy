@@ -512,19 +512,19 @@ def _upscale_for_print(src_path: str, dst_path: str, target_px: int = 4500) -> N
             scale = min(2.0, target_px / min(img.size))
             img = img.resize((int(img.width * scale), int(img.height * scale)), Image.LANCZOS)
 
-        # Two-pass unsharp mask: first pass recovers LANCZOS softness, second sharpens detail
-        img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=2))
-        img = img.filter(ImageFilter.UnsharpMask(radius=0.5, percent=80,  threshold=1))
+        # Three-pass sharpening: recover LANCZOS softness → fine detail → final crisp
+        img = img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=140, threshold=2))
+        img = img.filter(ImageFilter.UnsharpMask(radius=0.6, percent=90,  threshold=1))
+        img = img.filter(ImageFilter.UnsharpMask(radius=0.3, percent=50,  threshold=0))
 
-        # Subtle vibrancy and contrast boost (Etsy thumbnails compress heavily)
-        img = ImageEnhance.Color(img).enhance(1.08)
-        img = ImageEnhance.Contrast(img).enhance(1.05)
-        img = ImageEnhance.Sharpness(img).enhance(1.1)
+        # Vibrancy + contrast boost for Etsy thumbnail pop (thumbnails compress heavily)
+        img = ImageEnhance.Color(img).enhance(1.12)
+        img = ImageEnhance.Contrast(img).enhance(1.08)
+        img = ImageEnhance.Sharpness(img).enhance(1.15)
 
-        # Save as JPEG at 95% — massively smaller than PNG at this resolution
-        # while being fully print-quality at 300 DPI and well under Etsy's 20 MB limit
+        # Save at 97% JPEG — noticeably better fine detail vs 95%, still well under 20 MB
         jpg_path = os.path.splitext(dst_path)[0] + ".jpg"
-        img.save(jpg_path, "JPEG", quality=95, dpi=(300, 300), optimize=True)
+        img.save(jpg_path, "JPEG", quality=97, dpi=(300, 300), optimize=True)
         # If caller expected a different extension, also write there (no-op if same)
         if jpg_path != dst_path:
             import shutil as _shutil

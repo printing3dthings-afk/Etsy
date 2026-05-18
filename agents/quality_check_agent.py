@@ -51,10 +51,12 @@ You are the last line of defense before a customer receives our product. Reject 
 class QualityCheckAgent(BaseAgent):
     def __init__(self):
         self._store = DataStore()
+        from config import FAST_MODEL
         super().__init__(
             name="Quality Check Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=quality_check_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
@@ -62,6 +64,7 @@ class QualityCheckAgent(BaseAgent):
 
     def visual_review(self, product_id: str) -> str:
         """Use Claude vision to visually inspect a digital product image."""
+        from PIL import Image as _PIL_Image
         products = self._store.get("digital_products", default=[])
         product = next((p for p in products if p["id"] == product_id), None)
         if not product:
@@ -75,27 +78,32 @@ class QualityCheckAgent(BaseAgent):
         if ext not in ("png", "jpg", "jpeg"):
             return f"Visual review skipped (not an image file: .{ext})"
 
-        with open(file_path, "rb") as f:
-            image_data = base64.standard_b64encode(f.read()).decode("utf-8")
-        media_type = "image/png" if ext == "png" else "image/jpeg"
+        # Resize to 1024px max-side before encoding — full 3000px is unnecessarily slow
+        try:
+            img = _PIL_Image.open(file_path).convert("RGB")
+            img.thumbnail((1024, 1024), _PIL_Image.LANCZOS)
+            import io as _io
+            buf = _io.BytesIO()
+            img.save(buf, format="JPEG", quality=85)
+            image_data = base64.standard_b64encode(buf.getvalue()).decode("utf-8")
+            media_type = "image/jpeg"
+        except Exception:
+            with open(file_path, "rb") as f:
+                image_data = base64.standard_b64encode(f.read()).decode("utf-8")
+            media_type = "image/png" if ext == "png" else "image/jpeg"
 
         response = self.client.messages.create(
             model=self._get_model(),
-            max_tokens=1024,
+            max_tokens=512,
             messages=[{
                 "role": "user",
                 "content": [
                     {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": image_data}},
                     {"type": "text", "text": (
-                        f"You are a quality control reviewer for an Etsy digital art shop. "
-                        f"This is product '{product.get('title', product_id)}' (type: {product.get('product_type', 'unknown')}).\n\n"
-                        "Evaluate this image on:\n"
-                        "1. Overall visual quality (sharpness, composition, color balance)\n"
-                        "2. Commercial appeal — would this sell well as an Etsy digital download?\n"
-                        "3. Print readiness — any issues that would look bad when printed?\n"
-                        "4. Any AI artifacts, watermarks, or distracting elements?\n"
-                        "5. Does it match what the title/type implies?\n\n"
-                        "Give a pass/fail recommendation with specific notes."
+                        f"QC review for Etsy digital art product '{product.get('title', product_id)}' "
+                        f"(type: {product.get('product_type', 'unknown')}).\n"
+                        "Check: sharpness, composition, colors, AI artifacts, watermarks, commercial appeal.\n"
+                        "Reply: PASS or FAIL, one sentence reason."
                     )},
                 ],
             }],
@@ -103,5 +111,5 @@ class QualityCheckAgent(BaseAgent):
         return response.content[0].text if response.content else "No visual review returned"
 
     def _get_model(self) -> str:
-        from config import MODEL
-        return MODEL
+        from config import STANDARD_MODEL
+        return STANDARD_MODEL
