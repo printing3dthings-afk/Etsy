@@ -1828,27 +1828,29 @@ def _run_direct_pipeline(category: str, description: str, style: str):
 
     # ── Step 1: Create the product file ──────────────────────────────────────
     if is_planner:
+        style_part = f"Style: {style}.\n" if style else ""
         create_task = (
-            f"Create a premium digital planner with a handcrafted art cover. "
-            f"Description: {description}. "
-            + (f"Style: {style}. " if style else "")
-            + "Follow these steps in exact order:\n"
-            + "1) Call create_art_concept with product_type='planner' to register the product.\n"
-            + "2) Call generate_digital_art to create the cover image. "
-            + "Choose the cover prompt matching your planned color scheme from your system prompt's "
-            + "COVER IMAGE PROMPTS table. Use size='1024x1024', quality='high'. "
-            + "Note the file_path from the result.\n"
-            + "3) Call create_digital_planner with the product_id, your chosen color_scheme, "
-            + "interactive=true, include_sections=['monthly','weekly','habit_tracker','goals','notes'], "
-            + "year=0, and cover_image_path=<file_path from step 2>.\n"
-            + "Return the product_id when done."
+            f"Create a premium digital planner with a handcrafted art cover.\n"
+            f"Description: {description}.\n"
+            f"{style_part}"
+            "Follow these steps in exact order:\n"
+            "1) Call create_art_concept with product_type='planner' to register the product.\n"
+            "2) Call generate_digital_art to create the cover image. "
+            "Choose the cover prompt matching your planned color scheme from your system prompt's "
+            "COVER IMAGE PROMPTS table. Use size='1024x1024', quality='high'. "
+            "Note the file_path from the result.\n"
+            "3) Call create_digital_planner with the product_id, your chosen color_scheme, "
+            "interactive=true, include_sections=['monthly','weekly','habit_tracker','goals','notes'], "
+            "year=0, and cover_image_path=<file_path from step 2>.\n"
+            "Return the product_id when done."
         )
     else:
+        style_part = f"Style: {style}.\n" if style else ""
         create_task = (
             f"Create a premium Etsy digital wall art product.\n"
             f"Description: {description}.\n"
-            + (f"Style: {style}.\n" if style else "")
-            + "Do exactly 2 steps:\n"
+            f"{style_part}"
+            "Do exactly 2 steps:\n"
             "1) Call create_art_concept — set product_type='wall_art', price=7.\n"
             "2) Call generate_digital_art with a museum-quality DALL-E prompt built from this formula: "
             "[medium+technique], [named subject/species], [4-5 specific colors with hex hints], "

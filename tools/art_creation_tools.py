@@ -656,6 +656,7 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         from reportlab.lib.pagesizes import A4, LETTER
         from reportlab.lib.colors import Color
         from reportlab.lib.units import mm
+        from reportlab.lib.utils import ImageReader
     except ImportError:
         brief_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_planner_spec.txt")
         with open(brief_path, "w") as f:
@@ -832,26 +833,21 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         rect(0, 0, PW, PH, f=BG)
 
         top_h = PH * 0.58
-        cover_img_path = str(data.get("cover_image_path", "") or "")
-        has_art = bool(cover_img_path and os.path.exists(cover_img_path))
+        cover_img_path = data.get("cover_image_path") or ""
+        use_art = cover_img_path and os.path.exists(cover_img_path)
 
-        if has_art:
-            # Embed the handcrafted cover art image in the top panel
+        if use_art:
             try:
-                from reportlab.lib.utils import ImageReader
                 c.drawImage(ImageReader(cover_img_path), 0, PH - top_h, PW, top_h,
                             preserveAspectRatio=False)
-                # Semi-transparent theme-color wash over the lower 42% of the image
-                # so the title text stays readable over any art
+                # Alpha wash anchors the title text against any cover artwork
                 c.setFillAlpha(0.52)
                 c.setFillColorRGB(*T)
                 c.rect(0, PH - top_h, PW, top_h * 0.42, fill=1, stroke=0)
                 c.setFillAlpha(1.0)
             except Exception:
-                has_art = False  # fall back to geometric if image can't be drawn
-
-        if not has_art:
-            # Geometric design (fallback or when no cover art requested)
+                use_art = False
+        if not use_art:
             rect(0, PH - top_h, PW, top_h, f=T)
             circle(PW - 18, PH - 18, 120, f=_blend(T, 0.22))
             circle(22, PH - top_h + 22, 55,  f=A)
