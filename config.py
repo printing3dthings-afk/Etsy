@@ -12,7 +12,7 @@ MODEL = "claude-sonnet-4-6"
 FAST_MODEL = "claude-haiku-4-5-20251001"
 # Standard model for complex reasoning agents
 STANDARD_MODEL = "claude-sonnet-4-6"
-MAX_TOKENS = 4096
+MAX_TOKENS = 8192
 MAX_ITERATIONS = 10
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
