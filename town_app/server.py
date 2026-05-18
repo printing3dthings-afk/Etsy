@@ -2156,7 +2156,7 @@ async def websocket_endpoint(ws: WebSocket):
 if __name__ == "__main__":
     import time, webbrowser, uvicorn
     print("\n" + "=" * 60)
-    print("  OnBrandCraftz Town — Starting...")
+    print("  OnBrandCraftz Town - Starting...")
     print("  Open: http://localhost:8080")
     print("=" * 60)
     # Credential check visible in the bat window
@@ -2164,7 +2164,7 @@ if __name__ == "__main__":
     if _ak:
         print(f"  Anthropic API key: loaded ({_ak[:12]}...)")
     else:
-        print("  WARNING: ANTHROPIC_API_KEY not found — agents will fail!")
+        print("  WARNING: ANTHROPIC_API_KEY not found - agents will fail!")
         print("  Make sure .env is in the repo root and contains the key.")
     print()
     def _open_browser():
@@ -2187,7 +2187,7 @@ if __name__ == "__main__":
         if "10048" in str(_e) or "Address already in use" in str(_e):
             print()
             print("  ERROR: Port 8080 is already in use.")
-            print("  Fix: open Task Manager → Details tab → end any python.exe process,")
+            print("  Fix: open Task Manager > Details tab > end any python.exe process,")
             print("       then restart Start Town.")
         else:
             raise
