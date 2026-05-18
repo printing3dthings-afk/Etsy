@@ -51,12 +51,12 @@ class EtsyAPIClient:
 
     def _build_request(self, method: str, url: str, body: dict | None) -> urllib.request.Request:
         headers = {"Content-Type": "application/json"}
+        if not self.api_key and not self.access_token:
+            raise EtsyAPIError(0, "No API key or access token configured. Add ETSY_API_KEY to your .env file.")
+        if self.api_key:
+            headers["x-api-key"] = self.api_key
         if self.access_token:
             headers["Authorization"] = f"Bearer {self.access_token}"
-        elif self.api_key:
-            headers["x-api-key"] = self.api_key
-        else:
-            raise EtsyAPIError(0, "No API key or access token configured. Add ETSY_API_KEY to your .env file.")
         data = json.dumps(body).encode() if body else None
         return urllib.request.Request(url, data=data, headers=headers, method=method)
 
@@ -145,7 +145,9 @@ class EtsyAPIClient:
 
     def get_shop(self, shop_id_or_name: str = "") -> dict:
         """Get shop information by shop ID or name."""
-        target = shop_id_or_name or self.shop_id or "onbrandcraftz"
+        target = shop_id_or_name or self.shop_id
+        if not target:
+            raise EtsyAPIError(0, "No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.")
         return self._request("GET", f"shops/{target}")
 
     def get_shop_listings(self, shop_id: str = "", limit: int = 25, state: str = "active") -> dict:

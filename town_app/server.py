@@ -123,24 +123,16 @@ def _git_pull_job():
     _git_pull()
 
 def _poll_orders():
-    """Poll Etsy for new unshipped paid orders every 30 sec. Auto-trigger dedicated delivery worker."""
-    access_token = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
-    shop_id      = os.getenv("ETSY_SHOP_ID", "").strip()
-    client_id    = os.getenv("ETSY_CLIENT_ID", "").strip()
-    if not access_token or not shop_id:
+    """Poll Etsy for new paid+unshipped orders every 30 s; auto-trigger delivery."""
+    if not os.getenv("ETSY_ACCESS_TOKEN", "").strip() or not os.getenv("ETSY_SHOP_ID", "").strip():
         return
     try:
-        import urllib.request as _ur
-        url = (
-            f"https://openapi.etsy.com/v3/application/shops/{shop_id}/receipts"
-            f"?was_paid=true&was_shipped=false&limit=25"
+        from tools.etsy_api import EtsyAPIClient
+        client = EtsyAPIClient()
+        data = client._request(
+            "GET", f"shops/{client.shop_id}/receipts",
+            params={"was_paid": True, "was_shipped": False, "limit": 25},
         )
-        req = _ur.Request(url, headers={
-            "x-api-key": client_id,
-            "Authorization": f"Bearer {access_token}",
-        })
-        with _ur.urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read())
         orders = data.get("results", [])
         seen: set = set()
         try:
@@ -156,11 +148,11 @@ def _poll_orders():
                 cents = order.get("grandtotal", {}).get("amount", 0)
                 total = cents / 100.0
                 seen.add(oid)
-                task  = (
+                _enqueue_delivery(
                     f"Process new Etsy order #{oid} from {buyer} (${total:.2f}). "
-                    f"Send any digital files, confirm payment, update order status."
+                    f"Send any digital files, confirm payment, update order status.",
+                    f"Auto: Order #{oid}",
                 )
-                _enqueue_delivery(task, f"Auto: Order #{oid}")
                 try:
                     asyncio.run_coroutine_threadsafe(
                         manager.broadcast(json.dumps({
@@ -171,12 +163,13 @@ def _poll_orders():
                     )
                 except Exception:
                     pass
-                _add_notification("new_order", f"New Order #{oid}", f"{buyer} — ${total:.2f}", "🛒")
+                _add_notification("new_order", f"New Order #{oid}", f"{buyer} - ${total:.2f}", "")
             ORDERS_SEEN_FILE.write_text(json.dumps(list(seen)))
     except Exception as _poll_err:
         _poll_orders._fail_count = getattr(_poll_orders, "_fail_count", 0) + 1
         if _poll_orders._fail_count % 5 == 1:
-            _add_notification("api_error", "Etsy order poll failed", f"Could not reach Etsy API: {str(_poll_err)[:120]}. Check ETSY_ACCESS_TOKEN.", "🔴")
+            _add_notification("api_error", "Etsy order poll failed",
+                              f"Could not reach Etsy API: {str(_poll_err)[:120]}. Check ETSY_ACCESS_TOKEN.", "")
 
 # ── Task history ───────────────────────────────────────────────────────────────
 

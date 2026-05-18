@@ -279,7 +279,7 @@ def _set_shop_announcement(announcement: str, store: DataStore) -> str:
     if is_configured() and os.getenv("ETSY_ACCESS_TOKEN"):
         try:
             client = EtsyAPIClient()
-            client._request("PUT", f"shops/{client.shop_id}", body={"announcement": announcement})
+            client._request("PATCH", f"shops/{client.shop_id}", body={"announcement": announcement})
             return json.dumps({
                 "success": True,
                 "announcement": announcement,
