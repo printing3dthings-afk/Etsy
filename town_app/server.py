@@ -2167,8 +2167,27 @@ if __name__ == "__main__":
         print("  WARNING: ANTHROPIC_API_KEY not found — agents will fail!")
         print("  Make sure .env is in the repo root and contains the key.")
     print()
-    threading.Thread(
-        target=lambda: (time.sleep(1.5), webbrowser.open("http://localhost:8080")),
-        daemon=True,
-    ).start()
-    uvicorn.run("town_app.server:app", host="0.0.0.0", port=8080, reload=False)
+    def _open_browser():
+        import socket
+        for _ in range(20):           # poll up to 10 s (20 × 0.5 s)
+            time.sleep(0.5)
+            try:
+                s = socket.create_connection(("127.0.0.1", 8080), timeout=0.5)
+                s.close()
+                break
+            except OSError:
+                pass
+        webbrowser.open("http://localhost:8080")
+
+    threading.Thread(target=_open_browser, daemon=True).start()
+
+    try:
+        uvicorn.run("town_app.server:app", host="0.0.0.0", port=8080, reload=False)
+    except OSError as _e:
+        if "10048" in str(_e) or "Address already in use" in str(_e):
+            print()
+            print("  ERROR: Port 8080 is already in use.")
+            print("  Fix: open Task Manager → Details tab → end any python.exe process,")
+            print("       then restart Start Town.")
+        else:
+            raise

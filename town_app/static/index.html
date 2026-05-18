@@ -3750,8 +3750,8 @@ function setBS(key,state){
 }
 function showBubble(key,text){
   const b=document.getElementById(`bub-${key}`);
-  if(!b) return;
-  b.textContent=text.slice(0,80); b.classList.add('show');
+  if(!b || text==null) return;
+  b.textContent=String(text).slice(0,80); b.classList.add('show');
   clearTimeout(b._t); b._t=setTimeout(()=>b.classList.remove('show'),5000);
 }
 
