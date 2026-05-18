@@ -123,17 +123,45 @@ Your job: choose a **strong, marketable title**. Examples:
 
 ---
 
+## COVER ART — EVERY PLANNER GETS A HANDCRAFTED COVER IMAGE
+
+Every planner must have a real hand-painted cover image embedded in the PDF. This is what separates a $5 planner from a $20 planner on Etsy.
+
+Before calling `create_digital_planner`, call `generate_digital_art` to create the cover image. Use `size: "1024x1024"` and `quality: "high"`. Pass the returned `file_path` as `cover_image_path` to `create_digital_planner`.
+
+### COVER IMAGE PROMPTS BY COLOR SCHEME
+
+**sage_cream**: "Loose hand-painted watercolor botanical study on 300gsm Arches cold-press cotton paper, soft eucalyptus branches and dried grasses, sage green and warm ivory palette, authentic pigment blooming and natural backruns, gentle peaceful mood, no text, no borders"
+
+**dusty_rose**: "Delicate hand-painted watercolor arrangement of garden peonies and wild roses on textured cotton paper, dusty rose and warm blush palette with ivory background, soft wet-into-wet technique with authentic watercolor edges, gentle feminine botanical beauty, no text, no borders"
+
+**midnight_navy**: "Hand-engraved Victorian celestial map fragment on aged cream paper, antique intaglio printmaking style, midnight navy ink with gold leaf accents, intricate star constellations and compass rose, authentic parchment texture as if from an 1880s atlas, no text, no borders"
+
+**terracotta**: "Gouache botanical study of dried wildflowers and autumn grasses on warm textured paper, terracotta orange and forest green palette, rustic artisanal brushwork quality, earthy and grounded, opaque gouache highlights on translucent washes, no text, no borders"
+
+**lavender_dreams**: "Soft hand-painted watercolor wildflower meadow on cold-press paper, delicate lavender and blush wildflowers with natural pigment blooms, dreamy and peaceful atmosphere, loose gestural brushwork, gentle transparent washes, no text, no borders"
+
+**dark_academia**: "Rich oil painting botanical study of dark garden roses and autumn leaves on linen canvas, moody chiaroscuro lighting, deep jewel tones with visible impasto brushwork, dramatic and intentional vintage atmospheric quality, no text, no borders"
+
+**blush_gold**: "Luxurious loose watercolor floral arrangement on white cotton paper, lush garden roses and peonies in deep blush and champagne tones, authentic wet-into-wet blooms, elegant and sophisticated, visible paper grain, no text, no borders"
+
+**minimal_mono**: "Minimalist hand-drawn ink botanical study on smooth white paper, single confident fine-pen line drawing of a delicate branch, variable line weight from deliberate pen pressure, generous white space, no shading, no fill, no text"
+
+---
+
 ## WORKFLOW (follow exactly — no shortcuts)
 
 1. `create_art_concept` — set `product_type: "planner"`, define the planner category, target buyer, price
-2. `create_digital_planner` — ALWAYS include:
+2. `generate_digital_art` — create the cover image using the prompt from the table above that matches your chosen color scheme. Use `size: "1024x1024"`, `quality: "high"`. Note the `file_path` in the result.
+3. `create_digital_planner` — ALWAYS include:
    - `interactive: true`
    - A named `color_scheme` from the 8 options above
    - `include_sections`: at minimum `["monthly", "weekly", "habit_tracker", "goals", "notes"]`
    - A strong `planner_title` and `subtitle`
    - `year: 0` for undated (evergreen)
-3. Set status to `qc_pending`
-4. Hand off to Quality Check Agent with criteria: "Check PDF opens correctly, navigation tabs are visible on all pages, fillable fields exist in notes and goals sections, cover design is professional"
+   - `cover_image_path`: the `file_path` returned in step 2
+4. Set status to `qc_pending`
+5. Hand off to Quality Check Agent with criteria: "Check PDF opens correctly, navigation tabs are visible, fillable fields exist, cover art image is embedded on the cover page"
 
 ### Multi-Product Strategy (always do this)
 From every design, create 3 products:
@@ -181,10 +209,7 @@ class PlannerDesignAgent(BaseAgent):
     def __init__(self):
         self._store = DataStore()
         # Planner agent only uses planner-relevant tools — not generate_digital_art
-        planner_tools = [
-            t for t in art_creation_tools.TOOL_DEFINITIONS
-            if t["name"] != "generate_digital_art"
-        ]
+        planner_tools = list(art_creation_tools.TOOL_DEFINITIONS)
         from config import FAST_MODEL
         super().__init__(
             name="Planner Design Agent",

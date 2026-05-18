@@ -77,48 +77,48 @@ INFRASTRUCTURE:
 Synthesize everything into an executive daily briefing. Lead with the most urgent items first."""
 
 HELP_TEXT = """
-╔═════════════════════════════════════════════════════════════════════════╗
-║            OnBrandCraftz — Etsy Agent Hub                               ║
-╠═════════════════════════════════════════════════════════════════════════╣
-║  COMMANDS                                                                ║
-║  help          Show this help menu                                       ║
-║  brief         Run daily briefing (all agents)                           ║
-║  pipeline      Show digital product pipeline status                      ║
-║  agent <name>  Switch to a specific agent                                ║
-║  quit / exit   Exit the hub                                              ║
-║                                                                          ║
-║  AGENTS — Orchestrator                                                   ║
-║  ceo           CEO Agent (orchestrates all 22 agents)                    ║
-║                                                                          ║
-║  AGENTS — Digital Product Pipeline                                       ║
-║  brand         Brand Design Agent (logo, banner, brand identity)         ║
-║  art           Art Creation Agent (wall art, clipart, illustrations)      ║
-║  planner       Planner Design Agent (all digital planner categories)      ║
-║  qc            Quality Check Agent (file review + approval)              ║
-║  listing       Etsy Listing Agent (SEO + publish to Etsy)               ║
-║  store         Store Manager Agent (shop health + announcements)         ║
-║  delivery      Sales Processor Agent (email digital files)               ║
-║                                                                          ║
-║  AGENTS — Shop Operations                                                ║
-║  sales         Sales Agent (physical orders, revenue, shipping)          ║
-║  product       Product Agent (physical listings, inventory)              ║
-║  marketing     Marketing Agent (SEO, promotions, traffic)                ║
-║  analytics     Analytics Agent (reports, dashboard)                      ║
-║  cs            Customer Service Agent (messages, reviews)                ║
-║  social        Social Media Agent (Pinterest strategy)                   ║
-║                                                                          ║
-║  AGENTS — Business Infrastructure                                        ║
-║  finance       Financial Agent (profit, fees, COGS, cash flow)          ║
-║  print         Print Production Agent (print queue, machines, filament)  ║
-║  ads           Etsy Ads Agent (budget, ROAS, promoted listings)          ║
-║  intel         Competitor Intel Agent (research, gaps, trends)           ║
-║  promos        Promotions Agent (sales events, coupons, discounts)       ║
-║  tax           Tax Compliance Agent (taxes, deductions, copyright)       ║
-║  returns       Returns & Disputes Agent (refunds, Etsy cases)            ║
-║  supply        Supply Chain Agent (materials, suppliers, orders)         ║
-║  email         Email Marketing Agent (newsletters, receipt messages)     ║
-║  abt           A/B Testing Agent (listing experiments, CTR/conversion)   ║
-╚═════════════════════════════════════════════════════════════════════════╝
++=========================================================================+
+|            OnBrandCraftz - Etsy Agent Hub                               |
++=========================================================================+
+|  COMMANDS                                                                |
+|  help          Show this help menu                                       |
+|  brief         Run daily briefing (all agents)                           |
+|  pipeline      Show digital product pipeline status                      |
+|  agent <name>  Switch to a specific agent                                |
+|  quit / exit   Exit the hub                                              |
+|                                                                          |
+|  AGENTS - Orchestrator                                                   |
+|  ceo           CEO Agent (orchestrates all 22 agents)                    |
+|                                                                          |
+|  AGENTS - Digital Product Pipeline                                       |
+|  brand         Brand Design Agent (logo, banner, brand identity)         |
+|  art           Art Creation Agent (wall art, clipart, illustrations)     |
+|  planner       Planner Design Agent (all digital planner categories)     |
+|  qc            Quality Check Agent (file review + approval)              |
+|  listing       Etsy Listing Agent (SEO + publish to Etsy)               |
+|  store         Store Manager Agent (shop health + announcements)         |
+|  delivery      Sales Processor Agent (email digital files)               |
+|                                                                          |
+|  AGENTS - Shop Operations                                                |
+|  sales         Sales Agent (physical orders, revenue, shipping)          |
+|  product       Product Agent (physical listings, inventory)              |
+|  marketing     Marketing Agent (SEO, promotions, traffic)                |
+|  analytics     Analytics Agent (reports, dashboard)                      |
+|  cs            Customer Service Agent (messages, reviews)                |
+|  social        Social Media Agent (Pinterest strategy)                   |
+|                                                                          |
+|  AGENTS - Business Infrastructure                                        |
+|  finance       Financial Agent (profit, fees, COGS, cash flow)          |
+|  print         Print Production Agent (print queue, machines, filament)  |
+|  ads           Etsy Ads Agent (budget, ROAS, promoted listings)          |
+|  intel         Competitor Intel Agent (research, gaps, trends)           |
+|  promos        Promotions Agent (sales events, coupons, discounts)       |
+|  tax           Tax Compliance Agent (taxes, deductions, copyright)       |
+|  returns       Returns & Disputes Agent (refunds, Etsy cases)            |
+|  supply        Supply Chain Agent (materials, suppliers, orders)         |
+|  email         Email Marketing Agent (newsletters, receipt messages)     |
+|  abt           A/B Testing Agent (listing experiments, CTR/conversion)   |
++=========================================================================+
 """
 
 PIPELINE_PROMPT = """Check the complete digital product pipeline status. Ask:
@@ -140,7 +140,7 @@ def check_env() -> bool:
 
 def print_banner():
     print("\n" + "=" * 70)
-    print("   OnBrandCraftz — Etsy Agent Hub")
+    print("   OnBrandCraftz - Etsy Agent Hub")
     print("   Powered by Claude AI  |  22 Specialized Agents")
     print("=" * 70)
     print("Type 'help' for commands, 'brief' for daily briefing,")
@@ -198,7 +198,7 @@ def main():
             continue
 
         if cmd == "brief":
-            print("\n[CEO] Running daily briefing — delegating to all agents...\n")
+            print("\n[CEO] Running daily briefing - delegating to all agents...\n")
             result = ceo.run(DAILY_BRIEFING_PROMPT)
             print(f"\n{result}\n")
             print("=" * 60)

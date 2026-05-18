@@ -1829,12 +1829,19 @@ def _run_direct_pipeline(category: str, description: str, style: str):
     # ── Step 1: Create the product file ──────────────────────────────────────
     if is_planner:
         create_task = (
-            f"Create a complete digital planner product. "
+            f"Create a premium digital planner with a handcrafted art cover. "
             f"Description: {description}. "
             + (f"Style: {style}. " if style else "")
-            + "Steps: 1) Call create_art_concept to register the product. "
-            + "2) Call create_digital_planner with the product_id to generate the PDF file. "
-            + "Return the product_id and file path when done."
+            + "Follow these steps in exact order:\n"
+            + "1) Call create_art_concept with product_type='planner' to register the product.\n"
+            + "2) Call generate_digital_art to create the cover image. "
+            + "Choose the cover prompt matching your planned color scheme from your system prompt's "
+            + "COVER IMAGE PROMPTS table. Use size='1024x1024', quality='high'. "
+            + "Note the file_path from the result.\n"
+            + "3) Call create_digital_planner with the product_id, your chosen color_scheme, "
+            + "interactive=true, include_sections=['monthly','weekly','habit_tracker','goals','notes'], "
+            + "year=0, and cover_image_path=<file_path from step 2>.\n"
+            + "Return the product_id when done."
         )
     else:
         create_task = (

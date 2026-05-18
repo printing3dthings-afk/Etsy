@@ -106,7 +106,7 @@ def main():
     })
 
     auth_link = f"{AUTH_URL}?{params}"
-    print("\n── Etsy OAuth Setup ─────────────────────────────────────")
+    print("\n-- Etsy OAuth Setup ---------------------------------------------")
     print("Open this URL in your browser to authorize the hub:\n")
     print(auth_link)
     print("\nWaiting for Etsy to redirect back...")
@@ -119,7 +119,7 @@ def main():
         sys.exit(1)
 
     if _state_received != state:
-        print("ERROR: State mismatch — possible CSRF. Aborting.")
+        print("ERROR: State mismatch - possible CSRF. Aborting.")
         sys.exit(1)
 
     # Exchange code for tokens

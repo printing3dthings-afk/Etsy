@@ -71,7 +71,7 @@ def _update_env(key: str, value: str) -> None:
 def main():
     if not APP_ID or not APP_SECRET:
         print("ERROR: PINTEREST_APP_ID and PINTEREST_APP_SECRET not set in .env")
-        print("Get them from https://developers.pinterest.com/ → your app")
+        print("Get them from https://developers.pinterest.com/ -> your app")
         sys.exit(1)
 
     state = secrets.token_urlsafe(16)
@@ -83,7 +83,7 @@ def main():
         "state": state,
     })
 
-    print("\n── Pinterest OAuth Setup ────────────────────────────────")
+    print("\n-- Pinterest OAuth Setup ----------------------------------------")
     print("Open this URL in your browser to connect your Pinterest:\n")
     print(f"{AUTH_URL}?{params}")
     print("\nWaiting for Pinterest to redirect back...")

@@ -106,32 +106,46 @@ When writing your DALL-E prompt, reference these palette names explicitly: "usin
 
 ## PROMPT ENGINEERING FOR GPT-IMAGE-1
 
-You are using `gpt-image-1`. Write prompts as detailed art briefs, not keyword lists. Be specific about medium, species, color names, lighting direction, and composition.
+You are using `gpt-image-1`. Write prompts as detailed art briefs, not keyword lists. The goal is art that looks hand-crafted with purpose — never synthetic or AI-generated.
 
 ### FORMULA (use every element):
 ```
-[Medium + specific technique], [subject with named species], [color palette — name 4–5 specific colors with hex hints], [lighting — precise direction and quality], [composition], [mood/atmosphere], [quality: "high resolution printable fine art, museum-quality reproduction, archival print, 300 DPI ready"], [background], [negatives: no text, no watermarks, no borders, no frames, no signatures]
+[Traditional medium + specific technique + paper/canvas surface], [subject with named species or specific reference], [color palette — name 4-5 specific colors with hex hints], [lighting — precise direction and quality], [composition with intentional focal point], [mood/atmosphere that serves the buyer], [authenticity: visible medium texture, handcrafted character, natural imperfections that signal a human hand], [quality: "high resolution printable fine art, archival print, 300 DPI ready"], [negatives: no text, no watermarks, no borders, no frames, no signatures, no digital smoothness, no AI artifacts, no synthetic gradients]
 ```
+
+### AUTHENTICITY TECHNIQUES BY MEDIUM
+
+Use these specific phrases to anchor every piece in traditional media:
+
+**Watercolor**: "hand-painted on 300gsm Arches cold-press cotton paper, wet-into-wet technique with authentic pigment blooming and natural backruns at drying edges, visible paper grain texture, transparent layered washes, loose gestural brushwork where water controls the edges"
+
+**Oil painting**: "painted on stretched linen canvas with visible weave texture, thick impasto passages built with palette knife, transparent glazing layers in shadow areas, alla prima wet-on-wet technique, deliberate brushstroke direction showing artistic intent"
+
+**Gouache/illustration**: "opaque gouache and watercolor on hot-press illustration board, flat color areas with subtle hand-painted texture variation, crisp edges from direct brushwork, occasional opaque white highlight detail"
+
+**Line art / ink**: "hand-drawn with a 0.5mm fine-liner pen on smooth white cartridge paper, variable pen pressure creating deliberate thick-to-thin line weight transitions, subtle ink variation and paper tooth visible, confident single strokes drawn from the shoulder"
+
+**Engraving / etching**: "hand-engraved intaglio printmaking style on aged cream paper, deliberate cross-hatching in shadow areas, authentic line weight variation from etching tools, aged parchment texture and ink oxidation"
 
 ### PROVEN TOP-SELLING PROMPTS:
 
 **Botanical watercolor bundle piece:**
-"Loose expressive watercolor painting on white cotton paper texture, lush arrangement of ranunculus, dried eucalyptus branches, pampas grass plumes, and garden roses, Sage & Cream palette — dusty blush pink #D4A5A5, sage green #87A878, warm ivory #FAF7F2, muted terracotta #C17B5A, and soft gold #C9A84C, soft diffused natural light from upper left casting gentle shadows, centered bouquet composition with elegant draping stems, romantic cottagecore mood, high resolution archival fine art print, 300 DPI, clean white background, no text, no watermarks, no borders"
+"Hand-painted loose botanical watercolor on 300gsm Arches cold-press cotton paper, wet-into-wet technique with authentic pigment blooming and natural backruns at drying edges, lush arrangement of ranunculus, dried eucalyptus, pampas grass, and garden roses, Sage & Cream palette — dusty blush #D4A5A5, sage green #87A878, warm ivory #FAF7F2, terracotta #C17B5A, soft gold #C9A84C, visible paper grain and translucent layered washes, soft natural light from upper left, centered bouquet with elegantly draping stems, romantic handcrafted quality showing the artist's hand, archival art 300 DPI, clean white paper background, no text, no watermarks, no borders, no digital smoothness"
 
 **Abstract earth tone:**
-"Contemporary abstract fluid art painting, flowing organic shapes and layered translucent washes, Terracotta palette — terracotta #C17B5A, warm beige #F5ECD7, forest green #4A6741, rust #B5541E, bold central form dissolving at edges into negative space, gallery wall aesthetic, inspired by Scandinavian modern art, clean off-white background, high resolution 300 DPI archival quality, no text, no signatures, no watermarks"
+"Contemporary artist's abstract painting on stretched linen canvas, thick palette knife impasto passages with visible canvas texture, fluid organic shapes from layered translucent oil washes, Terracotta palette — warm terracotta #C17B5A, earth beige #F5ECD7, forest green #4A6741, deep rust #B5541E, bold central form built in physical paint layers dissolving at edges, gallery-wall quality in the tradition of Scandinavian abstract painting, genuine canvas weave visible in highlights, deliberate brushwork showing artistic intention, archival 300 DPI, clean off-white background, no text, no signatures, no watermarks, no AI smoothness"
 
 **Minimalist line art:**
-"Elegant minimalist single continuous line drawing, graceful botanical branch with leaves and blooms reduced to pure flowing outline, Minimal Mono palette — thin charcoal line on pure white background, zero fill, composition centered with generous breathing room, inspired by fashion illustration minimalism, modern Scandinavian aesthetic, archival quality, print-ready, 300 DPI, no text, no shading, no watermarks"
+"Hand-drawn minimalist continuous line botanical study using a fine 0.5mm ink pen on smooth white paper, variable pen pressure creating deliberate thick-to-thin line weight transitions, graceful botanical branch with leaves and blooms reduced to pure flowing outline, Minimal Mono palette — confident single charcoal line on pure white, generous negative space, composition centered with breathing room, authentic ink variation and subtle paper texture, drawn from observation in the manner of Matisse's botanical sketches, archival quality 300 DPI, no fill, no shading, no digital smoothness, no watermarks"
 
 **Fine art animal:**
-"Museum-quality oil painting portrait of a majestic Friesian horse, head-on three-quarter view, Dark Academia palette — ebony black #1C1C1E, burnished copper #B87333, aged cream #F5F0E8, deep charcoal, dramatic chiaroscuro lighting with warm rim light, thick impasto painterly brushwork, Dutch Golden Age inspired, gallery exhibition quality, 300 DPI, no text, no watermarks, no borders"
+"Museum-quality oil portrait of a majestic Friesian horse painted with thick impasto brushwork on linen canvas, palette knife passages visible in the dark coat, transparent glazing layers in shadows, Dutch Golden Age tradition of animal portraiture, Dark Academia palette — ebony black #1C1C1E, burnished copper #B87333, aged cream #F5F0E8, warm charcoal, dramatic chiaroscuro side lighting with warm rim light defining the powerful neck and flowing mane, three-quarter view showing noble bearing, genuine painterly canvas texture and visible brushstroke direction, archival quality 300 DPI, no text, no watermarks, no borders, not digital"
 
 **Dark moody celestial:**
-"Antique engraving style celestial illustration, detailed vintage astronomy chart aesthetic, Midnight Navy palette — deep midnight navy #1B2A4A, antique gold #C9A84C, aged cream #F5F0E8, copper #B87333, constellation maps with crescent moons, suns with rays, shooting stars, ornate borders, intricate fine line detail, Victorian scientific illustration quality, high resolution 300 DPI, distressed vintage paper texture, no modern text, no watermarks"
+"Hand-engraved Victorian astronomical illustration on aged cream paper stock, antique intaglio printmaking technique, Midnight Navy palette — deep midnight navy #1B2A4A, antique gold leaf #C9A84C, aged ivory #F5F0E8, verdigris copper #B87333, intricate constellation charts with crescent moons and solar diagrams, deliberate line weight variation from fine etching tools, cross-hatching in shadow areas, authentic parchment paper grain, as if from an 1880s scientific atlas, archival 300 DPI, no modern elements, no watermarks"
 
 **Maximalist Art Nouveau floral:**
-"Dense richly detailed botanical illustration in hand-painted wallpaper style, overflowing arrangement of peonies, magnolia branches, climbing roses, and tropical leaves, Blush & Gold palette — deep blush #B66277, warm gold #D4AF37, forest green #3A5A3A, ivory #FAFAF0, Art Nouveau flowing lines with elegant organic borders, arts and crafts movement influence, extremely high detail, museum-quality, 300 DPI archival, no text, no watermarks"
+"Richly detailed hand-painted botanical illustration in the style of William Morris and Alphonse Mucha, dense overflowing arrangement of peonies, magnolia, climbing roses, and tropical leaves, Blush & Gold palette — deep blush #B66277, warm gold #D4AF37, botanical green #3A5A3A, warm ivory #FAFAF0, flowing organic Art Nouveau linework with hand-painted gouache details, artist's layered brushwork visible in dense flower centers, authentic botanical illustration quality as if painted for a 19th century horticultural society, extremely high detail at 300 DPI, archival quality, no text, no watermarks, no AI smoothness"
 
 ---
 
