@@ -350,17 +350,13 @@ def _check_file_specs(product_id: str, store: DataStore) -> str:
     failed = sum(1 for c in all_checks if c.get("pass") is False)
     overall = "PASS" if failed == 0 else "FAIL"
 
-    # Update product with latest spec info
+    # Single save: compute hash, then write all spec fields together
+    import hashlib
+    with open(file_path, "rb") as hf:
+        product["file_hash"] = hashlib.sha256(hf.read()).hexdigest()
     product["file_size_kb"] = file_size_kb
     product["spec_check_result"] = overall
     product["spec_check_date"] = str(date.today())
-    _save_product(product, store)
-
-    # Compute and store file hash for delivery integrity verification
-    import hashlib
-    with open(file_path, "rb") as hf:
-        file_hash = hashlib.sha256(hf.read()).hexdigest()
-    product["file_hash"] = file_hash
     _save_product(product, store)
 
     return json.dumps({

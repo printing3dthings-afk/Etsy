@@ -1,6 +1,7 @@
 """System Improvement Agent — autonomous code scanner, bug fixer, and platform optimizer."""
 
 from agents.base_agent import BaseAgent
+from config import STANDARD_MODEL
 from tools import system_improvement_tools
 
 SYSTEM_PROMPT = """You are the OnBrandCraftz System Improvement Agent — an autonomous senior engineer whose sole job is to make this Etsy automation platform faster, more reliable, and more capable every time you run.
@@ -77,7 +78,7 @@ class SystemImprovementAgent(BaseAgent):
             name="system_improvement",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=system_improvement_tools.TOOL_DEFINITIONS,
-            model="claude-sonnet-4-6",
+            model=STANDARD_MODEL,
         )
 
     def _dispatch_tool(self, tool_name: str, tool_input: dict) -> str:

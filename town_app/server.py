@@ -1853,7 +1853,7 @@ def _run_direct_pipeline(category: str, description: str, style: str):
             "Return the product_id."
         )
 
-    result1 = _run_sub_agent_observable(creator, create_task, max_iterations=5)
+    result1 = _run_sub_agent_observable(creator, create_task, max_iterations=6 if is_planner else 5)
 
     product_id = _direct_pipeline_extract_product_id(result1)
     if not product_id:
@@ -1880,10 +1880,10 @@ def _run_direct_pipeline(category: str, description: str, style: str):
         )
         result2 = _run_sub_agent_observable("qc", qc_task, max_iterations=3)
 
-        if "REJECTED" in result2 or "reject" in result2.lower():
+        if "REJECTED" in result2:
             # One retry: recreate the product with QC feedback
             retry_task = create_task + f"\n\nIMPORTANT — Previous attempt was rejected by QC: {result2[:300]}"
-            result1 = _run_sub_agent_observable(creator, retry_task, max_iterations=5)
+            result1 = _run_sub_agent_observable(creator, retry_task, max_iterations=6 if is_planner else 5)
             product_id2 = _direct_pipeline_extract_product_id(result1) or product_id
             qc_task2 = (
                 f"QC product {product_id2}. One step: call check_and_auto_approve product_id={product_id2}"
@@ -1891,7 +1891,7 @@ def _run_direct_pipeline(category: str, description: str, style: str):
             result2 = _run_sub_agent_observable("qc", qc_task2, max_iterations=3)
             product_id = product_id2
 
-        if "REJECTED" in result2 or "reject" in result2.lower():
+        if "REJECTED" in result2:
             _add_notification("pipeline_direct_qc", f"Direct Pipeline: {label} needs review",
                               "QC rejected twice — check Products tab", "⚠️")
             return

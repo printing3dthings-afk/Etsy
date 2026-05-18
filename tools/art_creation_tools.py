@@ -534,8 +534,7 @@ def _upscale_for_print(src_path: str, dst_path: str, target_px: int = 4500) -> N
             import shutil as _shutil
             _shutil.move(jpg_path, dst_path)
     except ImportError:
-        import shutil
-        shutil.copy2(src_path, dst_path)
+        raise RuntimeError("Pillow is required for print upscaling — run: pip install Pillow")
     # Clean up raw file
     try:
         os.remove(src_path)
@@ -585,7 +584,9 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
             with open(raw_path, "wb") as f:
                 f.write(base64.b64decode(img_data))
         else:
-            urllib.request.urlretrieve(img_data, raw_path)
+            with urllib.request.urlopen(img_data, timeout=60) as _r:
+                with open(raw_path, "wb") as _f:
+                    _f.write(_r.read())
 
         # Upscale + sharpen for print quality; output is JPEG (smaller, still print-quality)
         file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.jpg")
