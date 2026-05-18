@@ -118,10 +118,12 @@ You are the last line of optimization before a product goes invisible in Etsy se
 class EtsyListingAgent(BaseAgent):
     def __init__(self):
         self._store = DataStore()
+        from config import FAST_MODEL
         super().__init__(
             name="Etsy Listing Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=etsy_listing_tools.TOOL_DEFINITIONS,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

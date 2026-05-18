@@ -23,6 +23,22 @@ RECOMMENDED_MIN_PX = 3000
 
 TOOL_DEFINITIONS: list[dict] = [
     {
+        "name": "check_and_auto_approve",
+        "description": (
+            "Run spec checks AND auto-approve in one step. "
+            "If all specs pass, immediately sets status=approved and returns 'APPROVED'. "
+            "If any spec fails, returns 'REJECTED' with reasons (does NOT approve). "
+            "Use this instead of calling check_file_specs + approve_product separately."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "DP-prefixed product ID"}
+            },
+            "required": ["product_id"],
+        },
+    },
+    {
         "name": "list_products_for_review",
         "description": "List all digital products awaiting QC (status = qc_pending or concept with a file).",
         "input_schema": {"type": "object", "properties": {}, "required": []},
@@ -94,6 +110,8 @@ TOOL_DEFINITIONS: list[dict] = [
 
 
 def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
+    if tool_name == "check_and_auto_approve":
+        return _check_and_auto_approve(tool_input["product_id"], store)
     if tool_name == "list_products_for_review":
         return _list_products_for_review(store)
     if tool_name == "check_file_specs":
@@ -135,8 +153,47 @@ def _list_products_for_review(store: DataStore) -> str:
     return json.dumps({
         "products_pending_review": summary,
         "count": len(summary),
-        "note": "Use check_file_specs for automated checks, then approve_product or reject_product.",
+        "note": "Use check_and_auto_approve for single-step QC, or check_file_specs then approve/reject.",
     }, indent=2)
+
+
+def _check_and_auto_approve(product_id: str, store: DataStore) -> str:
+    """Run spec checks and immediately approve if all pass, reject if any fail."""
+    spec_result_json = _check_file_specs(product_id, store)
+    try:
+        spec = json.loads(spec_result_json)
+    except Exception:
+        return spec_result_json
+
+    if spec.get("error"):
+        return json.dumps({"outcome": "REJECTED", "product_id": product_id,
+                           "reason": spec["error"]}, indent=2)
+
+    if spec.get("overall_result") == "PASS":
+        approve_result = _approve_product(
+            {"product_id": product_id, "qc_notes": "Auto-approved: all spec checks passed."},
+            store,
+        )
+        try:
+            a = json.loads(approve_result)
+            a["outcome"] = "APPROVED"
+            return json.dumps(a, indent=2)
+        except Exception:
+            return approve_result
+    else:
+        failed = [c for c in spec.get("checks", []) if c.get("pass") is False]
+        reasons = [f"{c['check']}: {c['value']} (requires {c.get('requirement', '?')})" for c in failed]
+        reject_result = _reject_product(
+            {"product_id": product_id, "rejection_reasons": reasons,
+             "suggested_fixes": "Fix the failed spec checks and regenerate the file."},
+            store,
+        )
+        try:
+            r = json.loads(reject_result)
+            r["outcome"] = "REJECTED"
+            return json.dumps(r, indent=2)
+        except Exception:
+            return reject_result
 
 
 def _check_file_specs(product_id: str, store: DataStore) -> str:

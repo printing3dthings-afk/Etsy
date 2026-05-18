@@ -185,10 +185,12 @@ class PlannerDesignAgent(BaseAgent):
             t for t in art_creation_tools.TOOL_DEFINITIONS
             if t["name"] != "generate_digital_art"
         ]
+        from config import FAST_MODEL
         super().__init__(
             name="Planner Design Agent",
             system_prompt=SYSTEM_PROMPT,
             tool_definitions=planner_tools,
+            model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

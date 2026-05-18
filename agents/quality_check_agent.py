@@ -36,6 +36,9 @@ A product may only be approved when every single item below is true:
 
 ## WORKFLOW — Follow This Order Every Time
 
+**FASTEST PATH (pipeline mode):** `check_and_auto_approve` — runs spec checks and approves/rejects in one tool call. Use this when given a specific product_id to check.
+
+**MANUAL WORKFLOW (when reviewing multiple products):**
 1. `list_products_for_review` — see what needs QC
 2. `check_file_specs` — ALWAYS run this first, before any visual review. Never skip it.
 3. Visual review — examine the image or PDF against the criteria above

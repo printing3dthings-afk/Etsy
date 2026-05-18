@@ -1841,17 +1841,17 @@ def _run_direct_pipeline(category: str, description: str, style: str):
             f"Create a premium Etsy digital wall art product.\n"
             f"Description: {description}.\n"
             + (f"Style: {style}.\n" if style else "")
-            + "Steps:\n"
-            "1) Call get_design_references then create_art_concept.\n"
-            "2) Call generate_digital_art — write a museum-quality DALL-E prompt using the full formula: "
-            "[medium+technique], [named subject/species], [4-5 colors with hex hints], "
-            "[lighting direction+quality], [composition], [mood], "
-            "['high resolution archival fine art print, 300 DPI, museum-quality'], "
-            "['no text, no watermarks, no borders, no signatures, no frames'].\n"
-            "3) Return the product_id when done."
+            + "Do exactly 2 steps:\n"
+            "1) Call create_art_concept — set product_type='wall_art', price=7.\n"
+            "2) Call generate_digital_art with a museum-quality DALL-E prompt built from this formula: "
+            "[medium+technique], [named subject/species], [4-5 specific colors with hex hints], "
+            "[lighting direction+quality], [composition rule], [emotional mood], "
+            "'high resolution archival fine art print, 300 DPI, museum-quality', "
+            "'no text, no watermarks, no borders, no signatures, no frames'.\n"
+            "Return the product_id."
         )
 
-    result1 = _run_sub_agent_observable(creator, create_task, max_iterations=8)
+    result1 = _run_sub_agent_observable(creator, create_task, max_iterations=5)
 
     product_id = _direct_pipeline_extract_product_id(result1)
     if not product_id:
@@ -1874,26 +1874,22 @@ def _run_direct_pipeline(category: str, description: str, style: str):
         result2 = f"approved product_id={product_id}"
     else:
         qc_task = (
-            f"QC product {product_id}. Do exactly 2 steps, nothing else:\n"
-            f"1) check_file_specs product_id={product_id}\n"
-            f"2) If spec_check_result=PASS → approve_product. If FAIL → reject_product with reasons."
+            f"QC product {product_id}. One step only: call check_and_auto_approve product_id={product_id}"
         )
-        result2 = _run_sub_agent_observable("qc", qc_task, max_iterations=4)
+        result2 = _run_sub_agent_observable("qc", qc_task, max_iterations=3)
 
-        if "reject" in result2.lower():
+        if "REJECTED" in result2 or "reject" in result2.lower():
             # One retry: recreate the product with QC feedback
             retry_task = create_task + f"\n\nIMPORTANT — Previous attempt was rejected by QC: {result2[:300]}"
-            result1 = _run_sub_agent_observable(creator, retry_task, max_iterations=8)
+            result1 = _run_sub_agent_observable(creator, retry_task, max_iterations=5)
             product_id2 = _direct_pipeline_extract_product_id(result1) or product_id
             qc_task2 = (
-                f"QC product {product_id2}. Two steps only:\n"
-                f"1) check_file_specs product_id={product_id2}\n"
-                f"2) approve_product if PASS, reject_product if FAIL."
+                f"QC product {product_id2}. One step: call check_and_auto_approve product_id={product_id2}"
             )
-            result2 = _run_sub_agent_observable("qc", qc_task2, max_iterations=4)
+            result2 = _run_sub_agent_observable("qc", qc_task2, max_iterations=3)
             product_id = product_id2
 
-        if "reject" in result2.lower():
+        if "REJECTED" in result2 or "reject" in result2.lower():
             _add_notification("pipeline_direct_qc", f"Direct Pipeline: {label} needs review",
                               "QC rejected twice — check Products tab", "⚠️")
             return
@@ -1913,7 +1909,7 @@ def _run_direct_pipeline(category: str, description: str, style: str):
         "4) attach_digital_file product_id.\n"
         "5) customer_ready_check product_id."
     )
-    _run_sub_agent_observable("listing", list_task, max_iterations=7)
+    _run_sub_agent_observable("listing", list_task, max_iterations=6)
 
     _add_notification("pipeline_direct_done", f"Direct Pipeline: {label} complete ✓",
                       f"{description[:60]} — created, QC approved, listed on Etsy", "✅")
@@ -1968,7 +1964,7 @@ async def list_product(body: dict):
     threading.Thread(
         target=_run_sub_agent_observable,
         args=("listing", task),
-        kwargs={"max_iterations": 7},
+        kwargs={"max_iterations": 6},
         daemon=True,
     ).start()
     _add_notification("listing_started", f"Listing Agent: {product_id}",
@@ -2002,7 +1998,7 @@ async def list_all_approved():
     threading.Thread(
         target=_run_sub_agent_observable,
         args=("listing", task),
-        kwargs={"max_iterations": 7 * len(to_list)},
+        kwargs={"max_iterations": 6 * len(to_list)},
         daemon=True,
     ).start()
     _add_notification("listing_batch_started", f"Listing Agent: {len(to_list)} products",
