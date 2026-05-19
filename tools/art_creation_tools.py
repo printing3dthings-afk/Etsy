@@ -1204,9 +1204,9 @@ def _create_room_composite(data: dict, store: DataStore) -> str:
         avail_h = (furn_top_px - int(ROOM_PX * 0.05)) - (wall_top_px + int(ROOM_PX * 0.04))
         avail_h = max(120, avail_h)
 
-        # Scale art so visible frame height = 75% of available wall height, capped at 36% room width
-        target_vis_fh = int(avail_h * 0.75)
-        art_long = min(int(ROOM_PX * 0.36), max(80, target_vis_fh - FRAME_MAT_TOTAL))
+        # Scale art so visible frame height = 90% of available wall height, capped at 52% room width
+        target_vis_fh = int(avail_h * 0.90)
+        art_long = min(int(ROOM_PX * 0.52), max(80, target_vis_fh - FRAME_MAT_TOTAL))
 
         framed, _ = _render_framed_art_rgba(art_img, frame_style, art_long)
         fw, fh    = framed.size
