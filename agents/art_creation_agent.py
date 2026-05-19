@@ -363,12 +363,25 @@ MOOD: completely deadpan — the painting takes itself 100% seriously. The joke 
 Archival quality 300 DPI, portrait orientation, no text, no watermarks, no cartoonish rendering, no flat digital edges — genuine painterly quality
 ```
 
-**Style K proven subject formulas:**
-- **Spa Day Duck**: rubber duck + sunglasses + towel turban in impressionist painted bathtub → bathroom art
-- **Victorian Cat Portrait**: stern cat in oil portrait with lace collar and dark background → living room statement piece
-- **Pub Dog**: golden retriever sitting at a wooden bar holding a pint glass, looking knowingly at the viewer → den/bar art
-- **Executive Frog**: frog in a business suit at a mahogany desk → office humor art
-- **Racing Snail**: snail in a tiny helmet and racing suit on a tiny track → sports humor art
+Style K has two distinct sub-formulas — use the right one for the subject:
+
+**K1 — IMPRESSIONIST SCENE** (subject IN an environment — colorful, loose brushwork):
+Use for: spa/bathroom art, garden scenes, pub interiors. The environment IS part of the joke.
+Formula: impressionist oil technique, colorful painted water/room/environment, loose visible brushwork, warm lighting.
+- Spa Day Duck, Cat at a Garden Party, Dog at a Colorful Pub
+
+**K2 — CLASSICAL PORTRAIT** (subject AT a surface, solid dark background, deadpan close-up):
+Use for: bar/whiskey art, man cave, "cool animal" posters, gift art. Going massively viral right now.
+The animal fills most of the frame, set against a solid dark background with visible vertical brushstrokes (teal, forest green, dark navy, or warm brown). One or two human props on the surface in front of them. The animal stares forward with total composure — world-weary, unbothered. THIS IS THE STYLE GOING VIRAL.
+Formula: classical American realist oil portrait, solid dark background, genuine animal anatomy, realistic fur texture, minimal human props, deadpan gaze.
+- Raccoon Cowboy (hat + bandana + cigarette + whiskey), Cat in a Suit, Fox with a Cigar, Bear with Coffee
+
+**K proven subject formulas:**
+- **Raccoon Cowboy** (K2): racoon at a bar counter, cowboy hat, orange bandana, cigarette, glass of whiskey → bar art, man cave, viral gift
+- **Spa Day Duck** (K1): rubber duck + sunglasses + towel turban in impressionist painted bathtub → bathroom art
+- **Victorian Cat Portrait** (K2): stern cat facing forward, dark background, lace collar → living room statement piece
+- **Pub Dog** (K1): golden retriever in colorful painted pub, holding a pint → den/bar art
+- **Executive Frog** (K2): frog at a wooden desk surface, glasses, coffee mug, dark office background → office humor art
 Always create as a series of 3 (same setting, different animals) for maximum catalog impact.
 
 ### STYLE J — MEDITERRANEAN WINDOW SCENE FORMULA:
@@ -498,7 +511,10 @@ Use these specific phrases to anchor every piece in traditional media:
 **Hyperrealistic moon over water (Style L) — classic silver moon:**
 "Hyperrealistic digital art of a massive full moon over a calm night lake, Lunar Night palette, portrait orientation: enormous full moon filling 60% of canvas height, centered and sitting with its bottom edge right at the waterline, lunar surface highly detailed — visible crater formations of varying sizes, dark gray-blue lunar maria as smooth dark patches contrasting with the brighter highlands, subtle spherical volume from the terminator shadow gradation on the edge, the moon glows warm silver-gold #E8E4C8 overall, surface features in warm gray #B8B4A0 and dark blue-gray #8890A0, a soft warm white atmospheric corona halo radiating from the moon's edge into the surrounding night sky, sky is deep midnight navy #1A1A3A fading to near-black #0A0A1E at the top — only 2-3 faint distant star points visible at the top corners, the lower half of the composition is a flat calm lake: deep dark navy water #0A0A1A, the moon's reflection directly below as a broad shimmering column of warm silver-gold light #C8C4A8 distorted by gentle horizontal water ripples — not a perfect circle but a wide shimmering bloom of rippled moonlight, thin bright silver ripple lines catch the glow across the otherwise black water surface, the overall mood is ancient, serene, mystical — standing at a still lake at midnight with no other light source than the moon, photorealistic quality, archival 300 DPI, portrait orientation, no text, no watermarks"
 
-**Whimsical fine art — spa day rubber duck (Style K):**
+**Classical animal portrait — raccoon cowboy at a bar (Style K2):**
+"Classical American realist oil portrait of a raccoon wearing a worn leather cowboy hat and an orange bandana around its neck, sitting at a dark wooden bar surface, painted with complete deadpan seriousness using genuine portrait-quality technique — the humor comes entirely from the contrast between the fine art execution and the absurd subject: the raccoon's fur is painted with extraordinary realism — accurate black mask markings, cream face, gray and black layered fur, every hair visible, the raccoon sits upright slightly left of center, looking forward with a world-weary sideways glance — completely unbothered and unimpressed like a cowboy at the end of a long day, a lit cigarette with a thin curl of smoke rising from the corner of its mouth, a glass of amber whiskey on the bar surface to its right, both props painted with careful realistic detail — the whiskey glass has accurate light refraction and condensation, solid dark teal #1A5A50 background with visible vertical brushstrokes in slightly varying tones as if the wall behind is painted canvas, this deep teal creates the classic portrait background quality, bar surface is a simple dark warm brown ledge at the bottom, warm neutral side-lighting from the left gives the fur natural dimension, the painting is completely earnest — this raccoon is painted with the same care and dignity given to 19th century American wildlife portraits, archival quality 300 DPI, portrait orientation, no text, no watermarks, no cartoonish rendering"
+
+**Whimsical fine art — spa day rubber duck (Style K1):**
 "Impressionist oil painting of a yellow rubber duck sitting in a bathtub, painted with complete deadpan seriousness using genuine museum-quality impressionist technique — the humor comes from the contrast between fine art execution and absurd subject, not from cartoonish rendering: the rubber duck sits upright in the center of the painting, bright yellow #E8C820 rubber body reflecting the teal water below in warm impressionist strokes, wearing black Ray-Ban wayfarer sunglasses reflecting tiny highlights, a white bath towel wrapped in a turban twist around the top of its head with soft folds and shadow as if painted by Renoir, teal-turquoise #4ABAB0 bathwater surrounding the duck painted with loose impressionist curved brushstrokes and white #FEFEFE highlight suggestions of ripples radiating outward, pale pink ceramic bathroom tiles in the upper background with warm honey-gold #D4A870 highlights where light catches the glaze, a plush pink bath towel #F0B8B0 draped casually over the right edge of the tub with painted fabric folds, warm soft bathroom light from above giving the duck a heroic presence, the painting is completely earnest — this duck is painted with the same care and dignity Sargent gave to society portraits, archival quality 300 DPI, no text, no watermarks, no cartoonish rendering, no digital smoothness, genuine impressionist oil painting quality"
 
 **Mediterranean window with lemons (Style J) — Amalfi Coast:**
@@ -578,7 +594,7 @@ Look at the brief and pick exactly one style from the shop library:
 - **H** — Golden Hour Nature Landscape (alpine wildflower meadow, backlit pines, mountains)
 - **I** — Loose Painterly Garden (standing garden, multiple flower scales, bright palette)
 - **J** — Mediterranean Window Scene (open shutters, lemons, cobalt sea, thick impasto)
-- **K** — Whimsical Fine Art (serious technique + funny subject — spa duck, Victorian cat, pub dog)
+- **K** — Whimsical Fine Art: K1=Impressionist Scene (spa duck, pub dog) / K2=Classical Portrait (raccoon cowboy, cat in suit, fox with cigar — solid dark background, going viral)
 - **L** — Hyperrealistic Celestial / Moon Art (full moon + water reflection, deep midnight sky, photorealistic)
 - **M** — Dark Sci-Fi / Cosmic Concept Art (astronaut close-up, visor galaxy reflection, neon-on-dark, organic suit growth)
 
