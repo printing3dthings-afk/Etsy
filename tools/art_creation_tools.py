@@ -1652,9 +1652,17 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
     def page_footer(label=""):
         hline(ML, PW - MR - TAB_W - 4, MB - 6, LIGHT, 0.4)
+
+        # Back-to-index pill button — bottom-left of every interior page
+        _bw = 50; _bh = 14
+        _bx = ML; _by = MB - 22
+        rect(_bx, _by, _bw, _bh, f=_blend(T, 0.85), radius=3)
+        font("Helvetica-Bold", 6.5); fill(T)
+        c.drawCentredString(_bx + _bw / 2, _by + 4, "‹ INDEX")
+        c.linkAbsolute("Back to Index", "index",
+                       (_bx, _by, _bx + _bw, _by + _bh))
+
         font("Helvetica", 6); fill(MID)
-        year_str = "" if undated else str(planner_year)
-        c.drawString(ML, MB - 16, f"{title}  •  {year_str}".strip(" •"))
         if label:
             c.drawCentredString((PW - TAB_W) / 2, MB - 16, label)
         c.drawRightString(PW - MR - TAB_W - 6, MB - 16, "OnBrandCraftz")
