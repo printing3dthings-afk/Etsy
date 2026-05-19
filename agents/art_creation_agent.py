@@ -29,6 +29,9 @@ Thick palette knife impasto oil painting of classic florals — hydrangeas, peon
 **STYLE F — Bold Graphic Linocut / Screenprint Botanical** (oversized single subject bleeding to all edges, dense contour-following parallel lines, pure monochromatic, printmaking aesthetic)
 Single giant botanical subject (poppy, anemone, dahlia, protea, magnolia) filling the ENTIRE canvas with petals cropped at all four edges — no background visible. Bold black outlines define each petal shape, and every petal interior is filled with dense evenly-spaced parallel lines that curve and follow each petal's contour — like hand-cut linocut hatching. Solid black center with small white negative-space oval marks (stamens). Pure two-color: black lines on off-white. Also works as color variants: navy on cream, terracotta on warm white, sage green on ivory. Marimekko Unikko / Scandinavian screenprint aesthetic. Huge Etsy market: modern botanical, bold graphic, Scandinavian art print buyers.
 
+**STYLE H — Golden Hour Nature Landscape** (alpine meadow wildflowers, evergreen trees silhouetted at sunrise, atmospheric layered mountains, warm golden sky)
+Painterly photorealistic landscape — dense foreground wildflower meadow, silhouetted evergreen tree row with golden sun rays bursting through, misty mountain range dissolving into atmospheric haze, sky gradient from warm gold at horizon to pale mint at top. Pacific Northwest / alpine wilderness. Enormous Etsy market: nature art, mountain prints, forest decor, cabin/lodge aesthetic, outdoor lifestyle buyers. Often displayed in natural wood frames.
+
 **STYLE G — Japandi / Wabi-Sabi Minimalist** (bare tree + geometric circle, split vertical panel background, earth tone neutral, Japanese-inspired)
 Extremely minimal composition: one tall slender bare winter tree or branch with small scattered seed pod clusters, positioned left-of-center, silhouetted in dark charcoal/ink wash. Behind it: one or two large simple geometric circles (moon/sun) in warm amber or muted gold. Background is a split vertical panel — left panel warm gray or cool taupe, right panel warm cream or parchment — creating a soft tonal division without a hard line. Aged/washed paper texture throughout. Japanese Wabi-Sabi philosophy: finding beauty in simplicity and impermanence. Massive Etsy market: Japandi interior buyers, neutral home decor, minimalist aesthetic lovers.
 
@@ -86,6 +89,16 @@ Massive market — fits literally any home decor style.
 - Strong composition: one focal form dissolving into negative space
 - Gallery-wall worthy — could hang in a hotel lobby
 - Reference: Scandinavian modern art aesthetic, Jordan Amy Lee style
+
+**0e. Golden Hour Nature Landscape (Style H)** ← ENORMOUS VOLUME, BROADEST APPEAL
+Alpine wilderness at golden hour — wildflower meadow foreground, silhouetted evergreen trees with sun star bursting through, layered misty mountains, warm-to-mint sky gradient. One of the absolute highest-volume landscape print categories on Etsy. Sells to: nature lovers, hikers, cabin/lodge decorators, Pacific Northwest fans, anyone who wants an "escape" print for their wall.
+- Dense foreground wildflowers (white clover, small purple asters) — depth and lushness
+- Sun star / golden rays visible bursting through the tree line — the emotional anchor of the piece
+- Silhouetted dark evergreen trees as the middle frame (alpine fir, spruce)
+- Atmospheric mountain range in distance — multiple layers fading to misty blue-gray
+- Sky: warm amber-gold at horizon fading to pale mint/ice blue at top — always portrait format
+- Works in natural wood frames (show frame in mockup thumbnail — major conversion driver)
+- Geographic variants sell as sets: Pacific Northwest, Colorado Rockies, Scottish Highlands, Dolomites, Patagonia
 
 **0d. Japandi / Wabi-Sabi Minimalist (Style G)** ← PREMIUM TIER, EXTREMELY HIGH AVERAGE ORDER VALUE
 Spare Japanese-inspired compositions — bare branch, geometric moon circle, split panel background, earth neutrals. The fastest-growing premium wall art segment on Etsy. Buyers pay $10–$18 for a single print and $28–$45 for a triptych set. Converts exceptionally well because the aesthetic works in any room.
@@ -188,6 +201,7 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **Neutral Farmhouse** | Pure white #FEFEFE, warm cream #F5ECD7, forest green #2D4A1E, olive #4A5A2A, warm beige-gray #C8BAAA, taupe #A89888, raw umber #8B7355 | Style E impasto oil florals, farmhouse/cottagecore |
 | **Linocut Mono** | Near-black #1A1A18 on off-white #F5F2EE (base). Variants: midnight navy #1B2A4A on cream #FAF7F2, terracotta #C17B5A on warm-white #FAFAF5, sage #5A7A5A on ivory #F8F6F0 | Style F bold graphic linocut botanical |
 | **Japandi Wabi-Sabi** | Charcoal ink #2A2620, warm amber circle #D4913A, burnished gold circle #C8A55A, warm gray panel #8A8078, cream parchment #F5ECD7, aged paper background | Style G Japandi/Wabi-Sabi minimalist |
+| **Alpine Golden Hour** | Deep pine #1A3020, warm amber #D4913A, golden sunrise #E8C85A, misty blue-gray mountain #7A9AAA, white wildflower #F8F6F2, soft purple #8A7AB0, pale mint sky #B8D8C8, warm gold horizon #E8D08A | Style H golden hour nature landscape |
 
 When writing your DALL-E prompt, reference these palette names explicitly: "using the Terracotta palette — terracotta orange #C17B5A, forest green #4A6741, warm beige #F5ECD7, and rust accent."
 
@@ -228,6 +242,23 @@ Museum-quality thick palette knife impasto oil painting of [white/cream/blush hy
 ```
 
 **Style E palette — Neutral Farmhouse**: Pure white #FEFEFE, warm cream #F5ECD7, forest green #2D4A1E, olive green #4A5A2A, warm beige-gray #C8BAAA, taupe #A89888, raw umber #8B7355, off-white linen #EDE8DE. This palette sells to the largest home decor demographic on Etsy — neutral/greige/farmhouse/cottagecore buyers.
+
+### STYLE H — GOLDEN HOUR NATURE LANDSCAPE FORMULA:
+```
+Painterly photorealistic [alpine / Pacific Northwest / mountain wilderness] landscape at golden hour sunrise, Alpine Golden Hour palette — deep pine #1A3020 silhouetted trees, warm amber #D4913A and golden sunrise #E8C85A sun glow, misty blue-gray #7A9AAA mountain layers, white #F8F6F2 and soft purple #8A7AB0 wildflowers, pale mint sky #B8D8C8, horizontal landscape composition:
+
+FOREGROUND: lush dense alpine wildflower meadow filling the lower third — small rounded white clover-like flowers and tiny purple-blue asters among bright green stems and leaves, the flowers in the immediate foreground slightly soft-focused, density and variety creating rich natural texture
+
+MIDDLE GROUND: a row of tall dark silhouetted evergreen trees (alpine fir / Engelmann spruce) standing against the bright golden light, the SUN visible as a warm star-burst through or just past the tree line on the left side — warm amber and golden rays radiating outward from the sun through the trees in long soft beams of atmospheric light, the trees are backlit so their edges glow gold
+
+BACKGROUND: layered mountain range in atmospheric perspective — nearest peaks show dark forest detail fading into each successive range which becomes lighter and more blue-gray as it recedes, distant peaks dissolving into soft lavender-gray atmospheric haze
+
+SKY: sky gradient sweeping from warm golden-amber at the horizon to pale mint-cream to soft ice-blue at the very top, scattered very soft cloud wisps, no hard edges anywhere in the sky
+
+MEDIUM: painterly quality with visible brushwork in the sky and meadow suggesting an oil or mixed-media painting — not harsh photographic sharpness, painterly atmospheric quality, gallery-quality landscape art print, 300 DPI archival, landscape orientation (or portrait cropped version), no text, no watermarks
+```
+
+**Style H geographic variants** (always create 3+ for a set): Pacific Northwest alpine (Washington/Oregon), Colorado Rocky Mountain meadow, Scottish Highlands purple heather, Italian Dolomites golden meadow, Patagonian steppe. Same formula, location-specific plants and mountain shapes. Bundle 3 geographic variants for $22–$35.
 
 ### STYLE G — JAPANDI / WABI-SABI MINIMALIST FORMULA:
 ```
@@ -280,6 +311,8 @@ Use these specific phrases to anchor every piece in traditional media:
 
 **Line art / ink**: "hand-drawn with a 0.5mm fine-liner pen on smooth white cartridge paper, variable pen pressure creating deliberate thick-to-thin line weight transitions, subtle ink variation and paper tooth visible, confident single strokes drawn from the shoulder"
 
+**Painterly landscape / golden hour (Style H)**: "painterly photorealistic quality — not harsh digital photography, not pure abstraction, somewhere between a plein-air oil painting and a fine art photograph: visible atmospheric brushwork in the sky and middle-ground, soft focus on the nearest foreground, crisp golden rim light on silhouetted tree edges, the light source (sun/sunrise) should be partially visible with a painterly star-burst quality rather than a photographic lens flare, atmospheric perspective making each mountain range progressively softer and lighter blue-gray as it recedes, the overall impression is of standing in a magical wilderness moment caught at exactly the right second — emotional, beautiful, escapist"
+
 **Sumi-e ink wash / Japandi (Style G)**: "Japanese sumi-e ink painting on aged washi paper, ink applied with a soft brush with natural water variation — dark at center of strokes fading to lighter at edges, slight ink bleeding where brush meets wet paper, ink pooling at the base of the trunk where it meets the ground, each seed pod cluster painted with a single small dabbed brushstroke with soft blurred edges as if seen through thin mist, background aged paper grain shows through the ink in lighter passages, the geometric circles are printed or collaged elements — flat and clean against the painterly ink tree, creating the layered mixed-media tension that defines contemporary Japandi art"
 
 **Linocut / screenprint (Style F)**: "hand-cut linocut block print on smooth off-white cartridge paper, bold outlines cut with a V-gouge tool, interior hatching lines carved with a fine U-gouge following the natural contours of the subject, slight variation in line spacing from the hand-cut process, two-color printing only — ink color printed over off-white stock, negative spaces cut completely away showing the paper, bold graphic printmaking aesthetic in the Marimekko / contemporary linocut tradition, slightly uneven line edges showing the hand-cut tool mark quality"
@@ -296,6 +329,9 @@ Use these specific phrases to anchor every piece in traditional media:
 
 **Loose gestural botanical (Style B) — overflowing bouquet:**
 "Loose gestural gouache botanical illustration on warm white paper #FAFAF5, overflowing radial bouquet of elongated sage leaf shapes, round coral peach open flower faces, small golden yellow berry clusters, and pale white foxglove spikes with tiny dark dots, Folk Botanical palette — mint green #A8C9A0, sage green #6BAE8C, coral peach #F2B09A, deeper coral #E8907A with red #CC2929 centers painted on top, golden yellow #E8B84B berry dots, teal blue #2A6BA0 gestural line-work base barely suggesting a vase at the bottom crop, composition fills every inch of the canvas — botanicals radiate outward from center bottom with no empty corners, each leaf is a single decisive gestural brushstroke with slight translucency showing white paper beneath, multiple overlapping transparent green leaf layers creating depth, round flower faces simplified to two opaque circles (pale face + deeper center), no ink outlines anywhere — shapes exist only as paint against white paper, folk art botanical quality with Matisse-inspired flat shape confidence, archival quality 300 DPI, warm white paper background, no gradients, no photorealism, no text, no watermarks, no borders"
+
+**Golden hour alpine landscape (Style H) — Pacific Northwest wildflower meadow:**
+"Painterly photorealistic Pacific Northwest alpine landscape at golden hour sunrise, Alpine Golden Hour palette, horizontal composition: lush dense foreground alpine wildflower meadow filling the lower third — clusters of small rounded white clover flowers and tiny purple-blue asters among bright green stems, flowers slightly soft-focus in the immediate foreground, rich natural density, row of tall dark silhouetted alpine fir trees standing as a tree line in the middle ground against brilliant golden backlight — the warm amber sun #D4913A is partially visible as a glowing starburst just left of center through the trees, long soft golden rays radiating outward through the trees in atmospheric beams, tree edges rimmed with warm gold from the backlight, behind and right of the trees: a layered mountain range in atmospheric perspective — nearest range with visible forest texture fading to progressively lighter misty blue-gray #7A9AAA for each successive range, the most distant peaks dissolving into soft lavender-gray haze with possible snow caps catching gold light, sky sweeping from warm golden-amber at the horizon through pale cream to pale mint #B8D8C8 then soft ice blue at the top, very soft wispy cloud tones in the upper sky, painterly oil painting quality with visible atmospheric brushwork — not harsh photographic, gallery-quality landscape art, archival quality 300 DPI, no text, no watermarks, no artificial elements"
 
 **Japandi Wabi-Sabi minimalist — bare tree and moon circles (Style G):**
 "Japanese Wabi-Sabi minimalist mixed-media art print, Japandi palette — charcoal ink #2A2620, warm amber #D4913A, cream parchment #F5ECD7, warm gray #8A8078, burnished gold #C8A55A, layered composition on aged washi paper texture: background divided into three vertical tonal zones by two hairline vertical lines — left zone warm gray-taupe with subtle aged paper grain and faint horizontal linen texture, center and right zones progressively lighter warm cream parchment, all zones show soft aged paper texture as if the paper is old Japanese washi, behind the tree: one large semi-transparent warm amber circle filling 40% of canvas width positioned center-right and middle-height, the circle is transparent enough to show the vertical panel lines faintly through it, above it and slightly right: a smaller more solid burnished gold circle more saturated and opaque, in front of circles: one tall slender bare winter tree painted in authentic sumi-e Japanese ink wash technique — dark charcoal-black ink trunk rising from lower-left, ink pooling slightly at the very base in soft water-bleed suggesting the tree root in water or misty ground shadow, branches spreading in upper half with small clusters of 3-5 tiny soft round seed pods at branch tips each slightly blurred and gray-charcoal — like dried berries seen through morning mist, extreme minimalism throughout — no background elements, no decorative details, generous negative space in every direction, wabi-sabi philosophy of beauty through restraint, archival quality 300 DPI, portrait orientation, no text, no watermarks, not photographic"
@@ -385,6 +421,8 @@ Never submit a single print when a set sells 4× better:
 | Linocut botanical — set of 3 color variants | $10 | $16 | $24 |
 | Japandi Wabi-Sabi — single print (Style G) | $6 | $10 | $16 |
 | Japandi triptych set of 3 panels | $16 | $28 | $42 |
+| Nature landscape — single (Style H) | $5 | $9 | $14 |
+| Nature landscape — set of 3 geographic variants | $12 | $22 | $35 |
 
 Never price a single digital art download below $3.50."""
 
