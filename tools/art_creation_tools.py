@@ -237,9 +237,12 @@ TOOL_DEFINITIONS: list[dict] = [
         "description": (
             "Generate a premium interactive PDF planner using reportlab. "
             "Creates a ready-to-sell digital planner with: a stunning cover page, "
-            "hyperlinked side-tab navigation (GoodNotes/Notability compatible), "
-            "fillable text form fields, interactive checkboxes, monthly/weekly/habit/goals/notes sections, "
-            "and a 'How to Use' instruction page. Choose one of 8 curated color scheme packages."
+            "hyperlinked side-tab navigation (GoodNotes/Notability/Xodo compatible), "
+            "fillable text form fields, interactive checkboxes, "
+            "monthly/weekly/daily/habit/goals/notes/budget/meal sections, "
+            "optional monthly review + month-at-a-glance companion pages, "
+            "and a 'How to Use' instruction page. "
+            "Choose one of 12 curated color scheme packages."
         ),
         "input_schema": {
             "type": "object",
@@ -251,23 +254,20 @@ TOOL_DEFINITIONS: list[dict] = [
                     "enum": [
                         "sage_cream", "dusty_rose", "midnight_navy", "terracotta",
                         "lavender_dreams", "dark_academia", "blush_gold", "minimal_mono",
+                        "mocha_latte", "wine_burgundy", "ice_blue", "forest_deep",
                     ],
                     "description": (
-                        "Named color scheme package. sage_cream=Sage & Cream (earthy, popular), "
-                        "dusty_rose=Dusty Rose (feminine, bestseller), "
-                        "midnight_navy=Midnight Navy + Gold (premium professional), "
-                        "terracotta=Terracotta & Forest (warm earthy), "
-                        "lavender_dreams=Lavender Dreams (soft, calm), "
-                        "dark_academia=Dark Academia (rich, dramatic), "
-                        "blush_gold=Blush & Gold (elegant, feminine), "
-                        "minimal_mono=Minimal Monochrome (clean, modern). "
-                        "Default: sage_cream."
+                        "Named color scheme. Colorful: sage_cream, dusty_rose, midnight_navy, "
+                        "terracotta, lavender_dreams, dark_academia, blush_gold, minimal_mono. "
+                        "Sophisticated/editorial: mocha_latte (warm chocolate), "
+                        "wine_burgundy (deep wine), ice_blue (powder blue), "
+                        "forest_deep (dark forest green). Default: sage_cream."
                     ),
                     "default": "sage_cream",
                 },
                 "interactive": {
                     "type": "boolean",
-                    "description": "Add fillable PDF form fields and interactive checkboxes (recommended: true). Works in Adobe Reader, Preview, GoodNotes, Notability, Xodo.",
+                    "description": "Add fillable PDF form fields and interactive checkboxes (always true for premium planners). Works in GoodNotes, Notability, Xodo, Adobe Reader, Preview.",
                     "default": True,
                 },
                 "planner_format": {
@@ -280,22 +280,60 @@ TOOL_DEFINITIONS: list[dict] = [
                     "type": "integer",
                     "description": "Planner year. Use 0 for undated (evergreen, outsells dated 3:1).",
                 },
+                "weekly_layout": {
+                    "type": "string",
+                    "enum": ["horizontal", "vertical", "lined", "hourly"],
+                    "description": (
+                        "Weekly page layout style. "
+                        "horizontal=days stacked with per-day sections (richest, recommended), "
+                        "vertical=7 day columns across the page, "
+                        "lined=simple lined layout by day, "
+                        "hourly=time-slot schedule per day. Default: horizontal."
+                    ),
+                    "default": "horizontal",
+                },
+                "calendar_integration": {
+                    "type": "string",
+                    "enum": ["none", "google", "apple"],
+                    "description": (
+                        "Embed calendar shortcut links in daily/monthly pages. "
+                        "google=Google Calendar links (works iOS + Android + web), "
+                        "apple=Apple Calendar links (iOS/macOS only), "
+                        "none=no integration. Only applies to dated planners (year != 0). Default: none."
+                    ),
+                    "default": "none",
+                },
                 "include_sections": {
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "enum": ["monthly", "weekly", "daily", "habit_tracker", "notes", "goals", "budget", "meal_plan"],
+                        "enum": [
+                            "monthly", "monthly_review", "month_at_a_glance",
+                            "weekly", "daily",
+                            "habit_tracker", "goals", "notes", "budget", "meal_plan",
+                        ],
                     },
-                    "description": "Sections to include. Always include at minimum: monthly, weekly, habit_tracker, goals, notes.",
+                    "description": (
+                        "Sections to include. Premium full planner: "
+                        "['monthly','monthly_review','month_at_a_glance','weekly','habit_tracker','goals','notes']. "
+                        "monthly_review=end-of-month reflection page, "
+                        "month_at_a_glance=overview with trends/priorities/achievements."
+                    ),
                     "default": ["monthly", "weekly", "habit_tracker", "goals", "notes"],
                 },
                 "subtitle": {
                     "type": "string",
-                    "description": "Optional subtitle shown below the title on the cover, e.g. 'Undated Daily Planner' or '2026 Annual Planner'.",
+                    "description": "Subtitle on the cover, e.g. 'Undated · Fillable PDF · GoodNotes Compatible'.",
+                },
+                "tab_color": {
+                    "type": "string",
+                    "enum": ["scheme", "white", "light_pink", "brown", "olive", "black"],
+                    "description": "Side navigation tab color. scheme=uses the color scheme's theme color (default), or choose: white, light_pink, brown, olive, black.",
+                    "default": "scheme",
                 },
                 "cover_image_path": {
                     "type": "string",
-                    "description": "Optional path to a hand-painted cover image generated by generate_digital_art. Embeds the art image in the top panel of the cover page for a premium, handcrafted look. Pass the file_path returned by generate_digital_art.",
+                    "description": "Path to cover art from generate_digital_art. Embeds the image in the cover top panel for a premium handcrafted look.",
                 },
             },
             "required": ["product_id", "planner_title"],
@@ -728,9 +766,22 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     if undated:
         planner_year = dt_date.today().year
 
-    sections = data.get("include_sections", ["monthly", "weekly", "habit_tracker", "goals", "notes"])
+    sections         = data.get("include_sections", ["monthly", "weekly", "habit_tracker", "goals", "notes"])
+    weekly_layout    = data.get("weekly_layout", "horizontal")
+    cal_integration  = data.get("calendar_integration", "none")
     title    = data["planner_title"]
     subtitle = data.get("subtitle", "")
+
+    # Tab color override (5 options: scheme default, white, light_pink, brown, olive, black)
+    _TAB_COLOR_MAP = {
+        "white":      (0.96, 0.96, 0.96),
+        "light_pink": (0.949, 0.769, 0.808),
+        "brown":      (0.545, 0.416, 0.322),
+        "olive":      (0.431, 0.482, 0.290),
+        "black":      (0.110, 0.110, 0.118),
+    }
+    _tab_color_key = data.get("tab_color", "scheme")
+    _TAB_OVERRIDE  = _TAB_COLOR_MAP.get(_tab_color_key)  # None means use scheme T
 
     MONTHS     = ["January","February","March","April","May","June",
                   "July","August","September","October","November","December"]
@@ -809,7 +860,8 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             if ty < MB:
                 break
             is_active = (bm == active_bm)
-            tab_color = T if is_active else _blend(T, 0.68)
+            base_tc   = _TAB_OVERRIDE if _TAB_OVERRIDE else T
+            tab_color = base_tc if is_active else _blend(base_tc, 0.68)
             text_color = WHITE if is_active else _blend(WHITE, 0.25)
             rect(TAB_X, ty, TAB_W, TAB_H, f=tab_color, radius=3)
             c.saveState()
@@ -1459,6 +1511,209 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         page_footer("MEAL PLANNER")
         c.showPage()
 
+    # ── HYPERLINKED INDEX PAGE ────────────────────────────────────────────────
+    def draw_index_page():
+        c.bookmarkPage("index")
+        c.addOutlineEntry("Index", "index", level=0)
+        page_bg()
+        content_w = CW - TAB_W - 4
+
+        # Header
+        font("Helvetica-BoldOblique", 22); fill(T)
+        c.drawString(ML + 10, PH - MT - 32, "Index")
+        hline(ML, ML + content_w, PH - MT - 38, A, 1.2)
+
+        # Build index entries from current sections
+        index_groups = [
+            ("Yearly", [
+                ("Calendar", "yearly"),
+                ("Key Dates", "yearly"),
+                ("Quarter 1", "yearly"), ("Quarter 2", "yearly"),
+                ("Quarter 3", "yearly"), ("Quarter 4", "yearly"),
+            ]),
+            ("Monthly", [(m, f"month_{i}") for i, m in enumerate(MONTHS)]),
+        ]
+        section_map = {
+            "weekly":              [("Weekly Planner", "weekly_start")],
+            "habit_tracker":       [("Habit Tracker", "habit")],
+            "goals":               [("Goals & Vision", "goals")],
+            "budget":              [("Yearly Finance", "budget"), ("Spending Tracker", "budget"),
+                                    ("Savings Tracker", "budget"), ("Bills & Subscriptions", "budget")],
+            "meal_plan":           [("Meal Planner", "meal"), ("Grocery List", "meal"),
+                                    ("Recipe Cards", "meal")],
+            "monthly_review":      [("Monthly Review", "monthly_review_0")],
+            "month_at_a_glance":   [("Month at a Glance", "month_glance_0")],
+            "notes":               [("Notes — Lined", "notes"), ("Notes — Dotted", "notes"),
+                                    ("Notes — Graph", "notes"), ("Notes — Blank", "notes")],
+        }
+        wellness_entries = [
+            ("Life Goals", "goals"), ("Bucket List", "notes"), ("Fitness Log", "notes"),
+            ("Body Measurements", "notes"), ("Sleep Tracker", "habit"),
+            ("Gratitude Journal", "notes"), ("Routine Planner", "notes"),
+            ("Favorite Quotes", "notes"),
+        ]
+        productivity_entries = [
+            ("My Projects", "goals"), ("Meeting Notes", "notes"), ("Time Log", "notes"),
+            ("Priority Matrix", "goals"), ("Brain Dump", "notes"), ("Habit Tracker", "habit"),
+        ]
+
+        for sec in sections:
+            if sec in section_map:
+                index_groups.append((sec.replace("_", " ").title(), section_map[sec]))
+        if any(s in sections for s in ["habit_tracker", "goals", "notes"]):
+            index_groups.append(("Wellness", wellness_entries))
+            index_groups.append(("Productivity", productivity_entries))
+
+        # Render 2-column layout
+        col_w  = content_w / 2 - 6
+        col2_x = ML + col_w + 12
+        y      = PH - MT - 52
+        col    = 0
+        xs     = [ML, col2_x]
+
+        for group_name, entries in index_groups:
+            if y < MB + 60:
+                if col == 0:
+                    col = 1; y = PH - MT - 52
+                else:
+                    break
+            x = xs[col]
+            font("Helvetica-Bold", 8); fill(T)
+            c.drawString(x, y, group_name.upper())
+            hline(x, x + col_w, y - 3, _blend(T, 0.4), 0.6)
+            y -= 14
+
+            for entry_label, entry_bm in entries:
+                if y < MB + 20:
+                    if col == 0:
+                        col = 1; y = PH - MT - 52 - 30
+                    else:
+                        break
+                    x = xs[col]
+                font("Helvetica", 7.5); fill(DARK)
+                c.drawString(x + 8, y, entry_label)
+                # Dotted leader
+                leader_x = x + 8 + c.stringWidth(entry_label, "Helvetica", 7.5) + 4
+                dots_end  = x + col_w - 4
+                font("Helvetica", 6); fill(MID)
+                dot_str = "." * max(0, int((dots_end - leader_x) / 3))
+                c.drawString(leader_x, y, dot_str)
+                # Clickable link over the whole row
+                c.linkAbsolute(entry_label, entry_bm, (x, y - 2, x + col_w, y + 8))
+                y -= 11
+
+            y -= 6  # group gap
+
+        page_footer("Index")
+        draw_nav_tabs("index")
+        c.showPage()
+
+    # ── MONTHLY REVIEW PAGE ──────────────────────────────────────────────────
+    def draw_monthly_review(month_idx=0):
+        c.bookmarkPage(f"monthly_review_{month_idx}")
+        page_bg()
+        content_w = CW - TAB_W - 4
+        month_name = MONTHS[month_idx % 12] if not undated else ""
+        hdr_label = f"{month_name.upper()} REVIEW" if month_name else "MONTHLY REVIEW"
+
+        rect(ML, PH - MT - 44, content_w, 44, f=T)
+        rect(ML, PH - MT - 44, 4, 44, f=A)
+        font("Helvetica-Bold", 16); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 28, hdr_label)
+        font("Helvetica", 8); fill(_blend(WHITE, 0.35))
+        c.drawRightString(ML + content_w, PH - MT - 28, "Reflect · Review · Reset")
+
+        y = PH - MT - 60
+        col_gap = 6
+        half_w = (content_w - col_gap) / 2
+
+        def review_field(label, field_h, name, x=ML, w=None):
+            nonlocal y
+            fw = w or content_w
+            font("Helvetica-Bold", 7); fill(T)
+            c.drawString(x, y, label.upper())
+            hline(x, x + fw, y - 2, A, 0.8)
+            y -= 4
+            text_field(x, y - field_h, fw, field_h, name, multiline=True, font_size=8)
+            y -= field_h + 14
+
+        review_field("Monthly Memories", 52, f"rev_{month_idx}_memories")
+        review_field("Gratitude & Highlights", 44, f"rev_{month_idx}_gratitude")
+        review_field("Challenges & Lessons Learned", 44, f"rev_{month_idx}_challenges")
+
+        # Two-column row
+        save_y = y
+        review_field("What Went Well", 60, f"rev_{month_idx}_well", ML, half_w)
+        col2_y = save_y
+        y = col2_y
+        review_field("To Remove / Change", 60, f"rev_{month_idx}_remove", ML + half_w + col_gap, half_w)
+
+        review_field("Next Month — Action Items", 48, f"rev_{month_idx}_actions")
+
+        # Habit mini-circles row
+        font("Helvetica-Bold", 7); fill(MID)
+        c.drawString(ML, y + 2, "HABIT CHECK")
+        for hi in range(12):
+            cx = ML + 14 + hi * (content_w - 14) / 12
+            circle(cx, y - 8, 6, s=_blend(T, 0.4), f=BG, lwidth=0.8)
+            font("Helvetica", 5.5); fill(MID)
+            c.drawCentredString(cx, y - 10, str(hi + 1))
+
+        page_footer(hdr_label)
+        draw_nav_tabs(f"monthly_review_{month_idx}")
+        c.showPage()
+
+    # ── MONTH AT A GLANCE PAGE ────────────────────────────────────────────────
+    def draw_month_at_a_glance(month_idx=0):
+        c.bookmarkPage(f"month_glance_{month_idx}")
+        page_bg()
+        content_w = CW - TAB_W - 4
+        month_name = MONTHS[month_idx % 12] if not undated else ""
+        hdr_label = f"{month_name.upper()} AT A GLANCE" if month_name else "MONTH AT A GLANCE"
+
+        rect(ML, PH - MT - 44, content_w, 44, f=A)
+        rect(ML, PH - MT - 44, 4, 44, f=T)
+        font("Helvetica-Bold", 15); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 28, hdr_label)
+
+        y = PH - MT - 60
+        left_w = content_w * 0.48
+        right_w = content_w - left_w - 8
+        right_x = ML + left_w + 8
+
+        def glance_field(label, field_h, name, x=ML, w=None):
+            nonlocal y
+            fw = w or left_w
+            font("Helvetica-Bold", 7); fill(T)
+            c.drawString(x, y, label.upper())
+            hline(x, x + fw, y - 2, _blend(T, 0.4), 0.6)
+            y -= 4
+            text_field(x, y - field_h, fw, field_h, name, multiline=True, font_size=8)
+            y -= field_h + 12
+
+        glance_field("Trends This Month", 40, f"gl_{month_idx}_trends")
+        glance_field("Goals", 44, f"gl_{month_idx}_goals")
+        glance_field("Top Priorities", 40, f"gl_{month_idx}_priorities")
+        glance_field("Achievements", 40, f"gl_{month_idx}_achieve")
+
+        # Right column
+        ry = PH - MT - 60
+        for label, fh, name in [
+            ("Important Days", 72, f"gl_{month_idx}_days"),
+            ("To-Do List", 60, f"gl_{month_idx}_todo"),
+            ("Notes", 52, f"gl_{month_idx}_notes"),
+        ]:
+            font("Helvetica-Bold", 7); fill(T)
+            c.drawString(right_x, ry, label.upper())
+            hline(right_x, right_x + right_w, ry - 2, _blend(T, 0.4), 0.6)
+            ry -= 4
+            text_field(right_x, ry - fh, right_w, fh, name, multiline=True, font_size=8)
+            ry -= fh + 12
+
+        page_footer(hdr_label)
+        draw_nav_tabs(f"month_glance_{month_idx}")
+        c.showPage()
+
     # ── NOTES PAGE ───────────────────────────────────────────────────────────
     def draw_notes_page(page_num=1):
         bm = "notes" if page_num == 1 else f"notes_{page_num}"
@@ -1498,6 +1753,7 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     # ── ASSEMBLE ──────────────────────────────────────────────────────────────
     page_count = 0
     draw_cover();       page_count += 1
+    draw_index_page();  page_count += 1
     draw_how_to_use();  page_count += 1
 
     if "monthly" in sections or "weekly" in sections:
@@ -1506,6 +1762,10 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     if "monthly" in sections:
         for mi in range(12):
             draw_monthly_page(mi); page_count += 1
+            if "month_at_a_glance" in sections:
+                draw_month_at_a_glance(mi); page_count += 1
+            if "monthly_review" in sections:
+                draw_monthly_review(mi); page_count += 1
 
     if "weekly" in sections:
         if undated:
