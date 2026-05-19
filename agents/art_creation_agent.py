@@ -29,6 +29,15 @@ Thick palette knife impasto oil painting of classic florals — hydrangeas, peon
 **STYLE F — Bold Graphic Linocut / Screenprint Botanical** (oversized single subject bleeding to all edges, dense contour-following parallel lines, pure monochromatic, printmaking aesthetic)
 Single giant botanical subject (poppy, anemone, dahlia, protea, magnolia) filling the ENTIRE canvas with petals cropped at all four edges — no background visible. Bold black outlines define each petal shape, and every petal interior is filled with dense evenly-spaced parallel lines that curve and follow each petal's contour — like hand-cut linocut hatching. Solid black center with small white negative-space oval marks (stamens). Pure two-color: black lines on off-white. Also works as color variants: navy on cream, terracotta on warm white, sage green on ivory. Marimekko Unikko / Scandinavian screenprint aesthetic. Huge Etsy market: modern botanical, bold graphic, Scandinavian art print buyers.
 
+**STYLE O — Colorful Abstract Vanitas / Skull Art** (human skull in vivid geometric faceted color planes, cubist oil painting, NOT gothic — warm background, gallery statement piece)
+A bold fine art statement piece: a human skull rendered entirely in vivid colorful geometric/faceted oil paint planes — cobalt blue, teal, crimson red, hot pink, blush rose, warm ivory — like a cubist painting where each anatomical section is a different vivid color. Warm sandy beige background. Bold confident brushwork with visible paint texture. NOT the gothic/dark skull market — this targets art collectors and gallery-wall builders who want striking fine art. Etsy search: "colorful skull art print", "abstract skull wall art", "vanitas art print".
+
+**STYLE N — American Muscle Car / Automotive Art** (classic muscle car as painted subject, three approaches: dramatic studio portrait, retro racing poster, neon night drive)
+Classic American muscle cars — Chevelle SS, Mustang, Camaro, Dodge Charger, Plymouth Barracuda — as fine art prints. Enormous Etsy market: car enthusiast collectors, man cave/garage decor, gift buyers (wives buying for husbands, sons buying for dads). Very specific buyer searches by make/model. Three sub-styles serve different buyers:
+- **N1 — Dramatic Studio Portrait**: car on pure black or near-black background, perfect dramatic lighting, photorealistic digital painting quality, every chrome detail and paint reflection visible
+- **N2 — Retro Racing Poster**: bold flat graphic design in 1960s/70s racing poster aesthetic — bold stripes, limited palette, retro typography placement, vintage Shell/Texaco poster feel
+- **N3 — Neon Night Drive**: car on a wet night road, city neon reflections, dramatic atmospheric cinematic scene, rain-slicked pavement catching colored light
+
 **STYLE M — Dark Sci-Fi / Cosmic Concept Art** (hyper-detailed digital painting, close-up cosmic figure, visor galaxy reflection, neon electric glow on dark, organic suit growth, floating planets)
 Hyper-detailed dark digital concept art — the quality level of a AAA game cinematic poster. A close-up portrait of an astronaut or cosmic figure fills the canvas. The helmet visor reflects a vivid inner galaxy (orange nebula, teal swirls, impossible cosmic color). Dark organic elements (deep-toned flowers, coral, or cosmic growth) cover the suit. Electric blue and violet atmospheric rim lighting against near-black background. Floating glowing orbs/planets. Painterly digital art technique with extraordinary detail. Etsy market: gaming room art, sci-fi fantasy, dark maximalist, teen/young adult bedroom posters.
 
@@ -104,6 +113,22 @@ Massive market — fits literally any home decor style.
 - Strong composition: one focal form dissolving into negative space
 - Gallery-wall worthy — could hang in a hotel lobby
 - Reference: Scandinavian modern art aesthetic, Jordan Amy Lee style
+
+**0l. Colorful Abstract Skull / Vanitas Art (Style O)** ← ART COLLECTOR MARKET, GALLERY WALL, STATEMENT PIECE, HIGH AOV
+Vivid multi-colored abstract skull painting — fine art statement piece, NOT gothic dark art. The skull becomes a vehicle for colorful geometric/faceted paint: cobalt, teal, crimson, hot pink, blush, ivory on a warm sandy beige background. The buyer is an art collector or gallery-wall builder. Very specific and underserved niche on Etsy with premium pricing.
+- Target buyer: art lovers, gallery-wall collectors, bold modern home decor, dark-academia-but-make-it-colorful
+- Always warm beige/cream background — this is what separates it from dark/gothic skulls
+- Bold confident loose brushwork with visible paint texture — impressionist handling of a graphic subject
+- Bundle strategy: 3-skull series in different dominant palettes (cool, warm, earth)
+
+**0k. American Muscle Car / Automotive Art (Style N)** ← MAN CAVE + GARAGE DECOR, GIFT MARKET, HIGH AOV
+Classic muscle car art — one of Etsy's highest average-order-value niches. Car enthusiasts buy large format (24×36, 30×40) and pay premium prices. Gifters buy without hesitation. Searches are very specific by model — always name the exact make/model/year in both the DALL-E prompt AND the listing title.
+- Top-selling subjects: 1969–1970 Chevelle SS, 1967–1969 Camaro, 1964–1969 Mustang Fastback, 1968–1970 Dodge Charger, 1970 Plymouth 'Cuda, 1970 Pontiac GTO Judge
+- Always specify: exact year, make, model, color, and any racing stripes
+- N1 (Dramatic Studio): pure black background, gallery-quality photorealistic painting — highest price point
+- N2 (Retro Poster): bold flat graphic, vintage racing aesthetic — highest volume
+- N3 (Neon Night): wet pavement, city neon, cinematic — growing trend, younger buyer
+- Bundle strategy: same car in all 3 styles = 3 listings, one design concept
 
 **0j. Dark Sci-Fi / Cosmic Concept Art (Style M)** ← GAMING ROOM + SCI-FI POSTER MARKET, HIGH IMPULSE BUY
 Hyper-detailed dark digital concept art — astronaut close-up with cosmic visor reflection. Completely different buyer from botanical/farmhouse art: gamers, sci-fi fans, dark aesthetic teens, pop culture collectors. Very strong impulse purchase — people see it and immediately want it. Priced premium ($10–$20 single) because the perceived production value is very high.
@@ -268,6 +293,10 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **Garden Folk** | Coral red #C84B3A, blush pink #F4B8B0, warm yellow #E8C230, orange #E87A30, forest green #2A5A3A, sage #8ABAA0, off-white #F8F4EE background, pink-lavender wash accents | Style I loose painterly garden / abstract folk floral |
 | **Mediterranean Lemon** | Turquoise window #1A8A8A, lemon yellow #E8D430, deep leaf green #2A5A20, cobalt sea #1A6AB0, cerulean #2080C0, pale sky #A8C8E8, terracotta sill #D4886A, warm cliff sienna #C47A52, white village #F5F0E8 | Style J Mediterranean window scene |
 | **Whimsical Spa** | Rubber yellow #E8C820, teal bathwater #4ABAB0, white/blush towel #F5E8E4, pale pink bath tile #F0D4CC, warm honey tile highlight #D4A870, pink fluffy towel #F0B8B0, black sunglasses | Style K whimsical fine art — spa duck palette |
+| **Colorful Vanitas** | Cobalt blue #1A3A9A, teal #1A8A8A, crimson red #9A1A1A, hot pink #E01890, blush rose #F0A8B8, warm ivory #F5ECD7, sandy beige background #D4C4A8, warm cream #F0E8D8, charcoal accent #2A2420 | Style O colorful abstract skull vanitas art |
+| **Muscle Car Studio** | Pure black #0A0808 background, deep teal metallic #1A6A7A or any car color, chrome silver #C8D0D8, white racing stripe #F5F5F5, warm studio spotlight #F8E8C8, dark shadow asphalt, red brake caliper accent | Style N1 dramatic studio portrait |
+| **Retro Racing Poster** | Bold flat limited palette per era: 1960s-70s (cream #F5ECD7, deep red #A81A1A, black, gold #C8A030), or muscle blue (cobalt #1A3A8A, white, red accent), retro poster textures | Style N2 retro racing poster |
+| **Neon Night Drive** | Wet black asphalt, electric blue #1A6AE8 and magenta #C81A8A neon reflections, deep dark #080812 night, car silhouette in vivid metallic, rain-wet road reflections | Style N3 neon night drive |
 | **Cosmic Concept** | Near-black #050818 background, electric blue rim #1A5AE8, violet glow #6A1AE8, hot pink orbs #E01890, orange nebula visor #E84818, teal cosmic #18C8D8, dark organic suit teal #1A2A3A, vivid visor galaxy (orange+teal+violet) | Style M dark sci-fi cosmic concept art |
 | **Lunar Night** | Warm silver-gold moon #E8E4C8, lunar gray #B8B4A0, dark mare blue-gray #8890A0, deep midnight navy #1A1A3A, near-black sky #0A0A1E, moonlit water silver #C8C4A8. Blood Moon variant: amber-red #C84820, dark purple sky #1A0A2A. | Style L hyperrealistic celestial moon art |
 
@@ -310,6 +339,54 @@ Museum-quality thick palette knife impasto oil painting of [white/cream/blush hy
 ```
 
 **Style E palette — Neutral Farmhouse**: Pure white #FEFEFE, warm cream #F5ECD7, forest green #2D4A1E, olive green #4A5A2A, warm beige-gray #C8BAAA, taupe #A89888, raw umber #8B7355, off-white linen #EDE8DE. This palette sells to the largest home decor demographic on Etsy — neutral/greige/farmhouse/cottagecore buyers.
+
+### STYLE N — AMERICAN MUSCLE CAR / AUTOMOTIVE ART FORMULA:
+
+**N1 — Dramatic Studio Portrait formula:**
+```
+Museum-quality photorealistic digital painting of a [year] [make] [model] classic muscle car, Muscle Car Studio palette, landscape orientation: pure black #0A0808 studio background — nothing else, no environment, no ground line visible — the car exists in pure darkness, three-quarter front angle (front-left corner facing viewer, slight upward camera angle), perfect dramatic studio lighting: one strong key light from upper-left creating a sweeping highlight across the hood and roof, a softer fill from the right keeping shadow areas visible but dark, a subtle warm rim light from behind catching the trunk and rear quarter panel, the car's paint is [color — specify: deep teal metallic, classic red, midnight black, British racing green, etc.] with the metallic flake visible in the highlights, white racing stripes if applicable running the full hood length, chrome bumpers and trim rendered with perfect reflective accuracy — you can see the black studio environment reflected in the chrome, polished wheels with detailed spoke work, every surface detail rendered: door seams, emblems, glass reflections, rubber tire texture, the painting should look like the most expensive car commercial ever made but rendered as oil painting not photography, archival quality 300 DPI, landscape orientation preferred (cars are wider than tall), no text, no watermarks
+```
+
+**N2 — Retro Racing Poster formula:**
+```
+Vintage 1960s American racing poster art of a [year] [make] [model] muscle car, Retro Racing Poster palette — bold flat limited colors (deep red #A81A1A + cream #F5ECD7 + black + gold #C8A030 OR cobalt #1A3A8A + white + red), flat graphic design style inspired by vintage Shell/Texaco/Mobil racing posters from 1965-1975: the car rendered in bold flat shapes with limited color — not photorealistic, stylized and graphic, strong black outline defining the car silhouette, simplified flat color fills for body panels and chrome details, bold diagonal speed lines or racing flag graphic in the background, vintage halftone dot texture overlay suggesting printed poster aging, a bold [make/model] wordmark in period-appropriate racing typography at the top or bottom — use a classic bold sans-serif or racing script, simple bold composition with the car dominant, vintage poster printing imperfections (slight ink spread, color registration offset), archival quality 300 DPI, landscape or portrait orientation
+```
+
+**N3 — Neon Night Drive formula:**
+```
+Cinematic digital painting of a [year] [make] [model] muscle car on a wet urban night street, Neon Night Drive palette — deep dark night #080812, wet black asphalt reflecting neon, electric blue #1A6AE8 and magenta #C81A8A neon sign reflections: the car drives (or is parked) on a rain-wet urban street at night, pavement is wet and reflective — the entire color palette of neon lights around reflects in complex puddle reflections under and around the car, the car's paint is vivid metallic [color] gleaming under the mixed neon and headlight illumination, headlights cast two sharp beams forward into the dark, light rain or mist in the air creates atmospheric volumetric light shafts through the headlights and neon signs, the background suggests an urban street — barely visible building silhouettes, out-of-focus neon signage in the distance, the overall mood is cinematic and dramatic like a Michael Mann film still, painterly digital art technique with extraordinary atmospheric detail, archival quality 300 DPI, landscape orientation
+```
+
+**Style N proven prompts:**
+
+**N1 — 1970 Chevelle SS Studio Portrait:**
+"Museum-quality photorealistic digital painting of a 1970 Chevrolet Chevelle SS muscle car, pure black studio background, three-quarter front-left angle with slight upward camera, perfect dramatic studio lighting: strong key light from upper-left sweeping a highlight across the long hood and roofline, soft fill from the right, warm rim light catching the rear quarter panel, deep teal metallic paint #1A6A7A with brilliant metallic flake visible in highlights, two bold white racing stripes running the full length of the hood, chrome front bumper and quad headlights rendered with perfect mirror reflectivity showing black studio reflection, polished 5-spoke chrome aftermarket wheels with detailed spoke work and black tire rubber, SS badge visible on grille and front quarter panel, door seams and body lines razor-sharp, every chrome accent gleaming, the painting has the quality of the most expensive automotive commercial photography but rendered as fine art oil painting, archival quality 300 DPI, landscape orientation, no text, no watermarks, no background elements"
+
+**N2 — Retro Racing Poster (Mustang):**
+"Vintage 1960s American racing poster of a 1967 Ford Mustang Fastback, bold flat graphic design in the style of vintage Shell and Texaco racing posters, limited palette: deep red #A81A1A, warm cream #F5ECD7, black, and gold #C8A030, the Mustang rendered in bold flat stylized shapes — not photorealistic, graphic and iconic, black outline defining the car silhouette, bold diagonal speed lines in the background, vintage halftone dot texture suggesting aged printing, 'MUSTANG' in bold period racing typography at top, the whole composition has the authentic feeling of a 1968 race program cover, slight printing imperfections (ink spread, color offset), archival quality 300 DPI, landscape orientation, no modern elements"
+
+### STYLE O — COLORFUL ABSTRACT VANITAS / SKULL ART FORMULA:
+```
+Contemporary abstract oil painting of a human skull rendered in vivid geometric faceted planes of color — NOT gothic or dark, pure fine art in the colorful skull painting tradition, Colorful Vanitas palette:
+
+SKULL: a human skull as the sole subject, centered and filling most of the canvas. The skull is rendered in bold geometric/faceted planes — like cubist oil painting where each anatomical section (forehead, cheekbone, jaw, orbital, nasal cavity, cranium) is painted as a distinct faceted plane in a vivid, different color. Primary colors: cobalt blue #1A3A9A, teal #1A8A8A, crimson red #9A1A1A, hot pink/magenta #E01890, blush rose #F0A8B8, warm ivory #F5ECD7, with charcoal #2A2420 for outline definition. The skull's 3D form must still read clearly — the facets follow the actual anatomy, creating a coherent skull shape that simply happens to be entirely multi-colored.
+
+PAINT HANDLING: bold confident impasto-adjacent oil painting brushwork — visible paint texture throughout, directional brushstrokes following each faceted plane, thick pigment in the bright color areas. NOT flat digital fills — each colored plane has painterly variation within it. The effect should look like an expensive original painting in a contemporary art gallery.
+
+BACKGROUND: warm beige-sand #D4C4A8 with loose gestural background strokes in warm cream and sandy tones — painterly and organic, gives depth and warmth behind the skull. NOT black or dark background — warm light background is essential to separating this from gothic skull art.
+
+MOOD: confident, bold, striking — a statement piece. The skull does not feel dark or morbid — the vivid color makes it feel celebratory, artistic, almost joyful in its exuberance. Gallery-quality and collectible.
+
+Archival quality 300 DPI, portrait orientation, no text, no watermarks, no dark background, NOT gothic, NOT Halloween
+```
+
+**Style O proven prompts:**
+
+**O1 — Classic Multi-Color Skull:**
+"Contemporary abstract oil painting of a human skull rendered entirely in vibrant geometric faceted planes of color — cobalt blue #1A3A9A, teal #1A8A8A, crimson red #9A1A1A, hot pink #E01890, blush rose #F0A8B8, and warm ivory #F5ECD7. Each anatomical section is a distinct vivid colored facet following the skull's actual form. Bold confident impasto-adjacent oil brushwork with visible paint texture in every plane. Skull centered and filling most of the canvas. Warm beige-sand #D4C4A8 painterly background with loose gestural cream strokes. NOT dark or gothic — vivid, colorful, gallery-quality fine art statement piece. Portrait orientation, no text, no watermarks, archival quality 300 DPI"
+
+**O2 — Warm Dominant (Coral + Gold + Amber):**
+"Abstract oil painting of a human skull in bold colorful geometric faceted planes — warm dominant palette: deep coral #D44830, golden amber #D49A30, burnt orange #C87030, blush pink #F0A890, warm ivory #F5ECD7, soft sage #8AAA80 for contrast. Each facet a different vivid warm color following skull anatomy, thick confident brushwork, visible paint texture. Warm parchment #E8D8C0 painterly background. Gallery-quality fine art, bold and striking, NOT gothic. Portrait orientation, no text, 300 DPI"
 
 ### STYLE M — DARK SCI-FI / COSMIC CONCEPT ART FORMULA:
 ```
@@ -597,6 +674,8 @@ Look at the brief and pick exactly one style from the shop library:
 - **K** — Whimsical Fine Art: K1=Impressionist Scene (spa duck, pub dog) / K2=Classical Portrait (raccoon cowboy, cat in suit, fox with cigar — solid dark background, going viral)
 - **L** — Hyperrealistic Celestial / Moon Art (full moon + water reflection, deep midnight sky, photorealistic)
 - **M** — Dark Sci-Fi / Cosmic Concept Art (astronaut close-up, visor galaxy reflection, neon-on-dark, organic suit growth)
+- **N** — American Muscle Car / Automotive Art: N1=Studio Portrait (black bg, dramatic lighting) / N2=Retro Racing Poster / N3=Neon Night Drive
+- **O** — Colorful Abstract Vanitas / Skull Art (multi-color cubist skull, warm beige bg, gallery statement — NOT gothic)
 
 Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
 
@@ -651,6 +730,9 @@ Never submit a single print when a set sells 4× better:
 | Moon art — 3-variant set (silver/blood/blue) | $12 | $20 | $32 |
 | Loose painterly garden — single (Style I) | $5 | $8 | $13 |
 | Loose painterly garden — seasonal 3-pack | $12 | $20 | $30 |
+
+| Colorful skull vanitas — single (Style O) | $7 | $12 | $18 |
+| Colorful skull 3-palette series | $16 | $28 | $42 |
 
 Never price a single digital art download below $3.50."""
 
