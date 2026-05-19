@@ -688,8 +688,13 @@ Name the chosen style in your `create_art_concept` call (include "Style X —" i
    - For dark/moody art (Style C2, dark_academia, celestial): `frame_style="black"`, `wall_color="dark"`
    - For botanical/farmhouse art (Style E, sage_cream): `frame_style="natural_wood"`, `wall_color="cream"`
    - For luxury/quote art: `frame_style="gold"`, `wall_color="cream"`
-6. Set status to `qc_pending`
-7. Hand off to Quality Check Agent: "Is this gallery-worthy? Does it look like a top-10 Etsy result? Confirm bundle ZIP and mockup paths are saved."
+6. `create_room_composite` — generates empty room backgrounds (AI) then composites the REAL art file in. NEVER ask the AI to "draw the painting in a room scene" — that produces a different painting. Always use this tool for room settings. Default rooms: kitchen_dining, living_room, entryway.
+7. `create_size_comparison` — composites the REAL art at 8×10 / 16×20 / 24×36 on a clean wall. NEVER generate a size comparison via AI image generation — it will show a different painting.
+8. Set status to `qc_pending`
+9. Hand off to Quality Check Agent: "Is this gallery-worthy? Does it look like a top-10 Etsy result? Confirm bundle ZIP, mockup, room composite, and size comparison paths are saved."
+
+**CRITICAL RULE — listing photo consistency:**
+All listing photos (frame mockups, room settings, size comparison) MUST show the identical art as the download. Use `create_room_composite` and `create_size_comparison` for every listing — these tools composite the real source file. Never use `generate_digital_art` to create room or size guide images.
 
 ### Bundle Strategy (always do this)
 Never submit a single print when a set sells 4× better:

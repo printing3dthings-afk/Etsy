@@ -439,6 +439,61 @@ TOOL_DEFINITIONS: list[dict] = [
             "required": ["product_id"],
         },
     },
+    {
+        "name": "create_room_composite",
+        "description": (
+            "Generate empty room background photos (via AI) then composite the REAL art file "
+            "into each room at proper scale. This guarantees the listing photos show the EXACT "
+            "same art as the download — never an AI re-imagination. Always use this instead of "
+            "asking the AI to 'include the painting' in a room scene. "
+            "Replaces the need for manually generated room settings."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "DP-prefixed product ID"},
+                "frame_style": {
+                    "type": "string",
+                    "enum": ["natural_wood", "black", "white", "gold"],
+                    "description": "Frame to use in the room scenes.",
+                    "default": "natural_wood",
+                },
+                "room_styles": {
+                    "type": "array",
+                    "items": {"type": "string", "enum": ["kitchen_dining", "living_room", "entryway", "bedroom"]},
+                    "description": "Which room types to generate. Default: kitchen_dining, living_room, entryway.",
+                    "default": ["kitchen_dining", "living_room", "entryway"],
+                },
+            },
+            "required": ["product_id"],
+        },
+    },
+    {
+        "name": "create_size_comparison",
+        "description": (
+            "Create a size guide photo showing the REAL art composited at 3 print sizes "
+            "(8×10, 16×20, 24×36) side-by-side on a clean wall. Labels each size. "
+            "Always use this for size comparison — never generate a size comparison with AI "
+            "because the painting would differ from the download."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "DP-prefixed product ID"},
+                "frame_style": {
+                    "type": "string",
+                    "enum": ["natural_wood", "black", "white", "gold"],
+                    "default": "natural_wood",
+                },
+                "wall_color": {
+                    "type": "string",
+                    "enum": ["warm_gray", "white", "cream", "dark", "sage"],
+                    "default": "warm_gray",
+                },
+            },
+            "required": ["product_id"],
+        },
+    },
     SUBMIT_IDEA_DEFINITION,
 ]
 
@@ -464,6 +519,10 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _create_size_bundle(tool_input, store)
     if tool_name == "create_frame_mockup":
         return _create_frame_mockup(tool_input, store)
+    if tool_name == "create_room_composite":
+        return _create_room_composite(tool_input, store)
+    if tool_name == "create_size_comparison":
+        return _create_size_comparison(tool_input, store)
     if tool_name == "submit_idea":
         return handle_submit_idea(tool_input)
     return f"Unknown art creation tool: {tool_name}"
@@ -908,6 +967,298 @@ def _create_frame_mockup(data: dict, store: DataStore) -> str:
         "frame_style": frame_style,
         "wall_color": wall_key,
         "note": "Mockup ready — use as Etsy listing thumbnail image.",
+    }, indent=2)
+
+
+# ── ROOM COMPOSITE + SIZE COMPARISON ─────────────────────────────────────────
+
+def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int) -> tuple:
+    """Render art in a beveled frame with drop shadow on a transparent RGBA canvas.
+    Returns (RGBA PIL Image, (art_x0, art_y0, art_x1, art_y1)).
+    """
+    from PIL import Image, ImageDraw, ImageFilter
+
+    pal = _FRAME_PALETTES.get(frame_style, _FRAME_PALETTES["natural_wood"])
+
+    aw, ah = art_img.size
+    scale = long_side_px / max(aw, ah)
+    art = art_img.resize((int(aw * scale), int(ah * scale)), Image.LANCZOS)
+    aw, ah = art.size
+
+    FRAME_W, MAT_W, BEVEL = 38, 14, 6
+    total_w = aw + 2 * (MAT_W + FRAME_W)
+    total_h = ah + 2 * (MAT_W + FRAME_W)
+    PAD = 52  # padding for shadow bleed
+
+    cw, ch = total_w + PAD * 2, total_h + PAD * 2
+    canvas = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+
+    # Drop shadow
+    shadow = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow)
+    sd.rectangle([PAD + 14, PAD + 18, PAD + total_w + 14, PAD + total_h + 18], fill=(0, 0, 0, 120))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=20))
+    canvas = Image.alpha_composite(canvas, shadow)
+
+    draw = ImageDraw.Draw(canvas)
+    fx0, fy0 = PAD, PAD
+    fx1, fy1 = PAD + total_w, PAD + total_h
+
+    # Frame body
+    draw.rectangle([fx0, fy0, fx1, fy1], fill=(*pal["base"], 255))
+
+    # Bevel
+    for b in range(BEVEL):
+        t = 1.0 - b / BEVEL
+        hi = tuple(int(pal["base"][i] + (pal["hi"][i] - pal["base"][i]) * t) for i in range(3)) + (255,)
+        lo = tuple(int(pal["base"][i] + (pal["lo"][i] - pal["base"][i]) * t) for i in range(3)) + (255,)
+        draw.line([(fx0+b, fy0+b), (fx1-b, fy0+b)], fill=hi)
+        draw.line([(fx0+b, fy0+b), (fx0+b, fy1-b)], fill=hi)
+        draw.line([(fx0+b, fy1-b), (fx1-b, fy1-b)], fill=lo)
+        draw.line([(fx1-b, fy0+b), (fx1-b, fy1-b)], fill=lo)
+
+    # White mat
+    mx0, my0 = fx0 + FRAME_W, fy0 + FRAME_W
+    mx1, my1 = fx1 - FRAME_W, fy1 - FRAME_W
+    draw.rectangle([mx0, my0, mx1, my1], fill=(250, 247, 242, 255))
+    for s in range(4):
+        v = 215 - s * 14
+        draw.rectangle([mx0+s, my0+s, mx1-s, my1-s], outline=(v, v-2, v-5, 255))
+
+    # Paste art with subtle glare
+    ax0, ay0 = mx0 + MAT_W, my0 + MAT_W
+    art_rgba = art.convert("RGBA")
+    glare = Image.new("RGBA", (aw, ah), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(glare)
+    for y in range(ah):
+        p = y / ah
+        if p < 0.28:
+            alpha = int((0.28 - p) / 0.28 * 18)
+            gd.line([(0, y), (aw, y)], fill=(255, 255, 255, alpha))
+    glare = glare.filter(ImageFilter.GaussianBlur(radius=3))
+    art_rgba = Image.alpha_composite(art_rgba, glare)
+    canvas.paste(art_rgba, (ax0, ay0), art_rgba)
+
+    return canvas, (ax0, ay0, ax0 + aw, ay0 + ah)
+
+
+def _fetch_image_bytes(prompt: str, size: str = "1024x1024") -> bytes | None:
+    """Call OpenAI image generation and return raw JPEG bytes, or None on failure."""
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key:
+        return None
+    try:
+        import base64 as _b64
+        body = json.dumps({
+            "model": "gpt-image-1",
+            "prompt": prompt,
+            "size": size,
+            "quality": "medium",
+            "n": 1,
+            "output_format": "jpeg",
+        }).encode()
+        req = urllib.request.Request(
+            "https://api.openai.com/v1/images/generations",
+            data=body,
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            result = json.loads(resp.read())
+        item = result["data"][0]
+        if item.get("b64_json"):
+            return _b64.b64decode(item["b64_json"])
+        if item.get("url"):
+            with urllib.request.urlopen(item["url"], timeout=30) as r:
+                return r.read()
+    except Exception:
+        pass
+    return None
+
+
+_ROOM_BG_PROMPTS: dict[str, str] = {
+    "kitchen_dining": (
+        "Bright Mediterranean kitchen and dining room, interior design photography. "
+        "Wooden dining table with rattan chairs, bowl of lemons, warm cream walls, "
+        "terracotta tile floor, natural sunlight, small potted plant. "
+        "The back wall is COMPLETELY EMPTY — no art, no pictures, no frames, no hooks, "
+        "nothing on the wall. Plain clean empty wall. Pottery Barn catalog style. Photorealistic."
+    ),
+    "living_room": (
+        "Bright coastal living room, interior design photography. Linen sofa with cream "
+        "and terracotta throw pillows, rattan coffee table with eucalyptus stems, "
+        "woven sand-tone area rug, afternoon golden light, sheer curtains. "
+        "The wall above the sofa is COMPLETELY EMPTY — no art, no pictures, no frames, "
+        "nothing on the wall. Plain clean empty wall. High-end magazine photo. Photorealistic."
+    ),
+    "entryway": (
+        "Bright entryway hallway, interior design photography. White shiplap wainscoting, "
+        "small white console table, fresh white flowers in glass vase, yellow ceramic bowl, "
+        "jute runner on hardwood floor, skylight above. "
+        "The wall above the console is COMPLETELY EMPTY — no art, no pictures, no frames, "
+        "nothing on the wall. Plain clean empty wall. Coastal Living magazine style. Photorealistic."
+    ),
+    "bedroom": (
+        "Serene bedroom, interior design photography. White linen bedding, wooden nightstands "
+        "with small lamps, warm morning light through sheer curtains, fiddle leaf fig plant. "
+        "The wall above the headboard is COMPLETELY EMPTY — no art, no pictures, no frames, "
+        "nothing on the wall. Plain clean empty wall. Minimal and calm. Photorealistic."
+    ),
+}
+
+
+def _create_room_composite(data: dict, store: DataStore) -> str:
+    """Generate empty room backgrounds via AI, then composite the real art file into each."""
+    try:
+        from PIL import Image, ImageEnhance
+        import io
+    except ImportError:
+        return json.dumps({"error": "Pillow required"})
+
+    product_id  = data["product_id"]
+    frame_style = data.get("frame_style", "natural_wood")
+    room_styles = data.get("room_styles", ["kitchen_dining", "living_room", "entryway"])
+
+    product = _find_product(product_id, store)
+    if not product:
+        return json.dumps({"error": f"Product {product_id} not found"})
+    src = product.get("file_path")
+    if not src or not os.path.exists(src):
+        return json.dumps({"error": "No image file. Call generate_digital_art first."})
+
+    art_img = Image.open(src).convert("RGB")
+
+    ROOM_PX   = 1024
+    ART_LONG  = int(ROOM_PX * 0.43)   # frame long-side = 43% of room width
+
+    saved: list[dict] = []
+    for room_key in room_styles:
+        prompt    = _ROOM_BG_PROMPTS.get(room_key, _ROOM_BG_PROMPTS["living_room"])
+        img_bytes = _fetch_image_bytes(prompt, size="1024x1024")
+        if not img_bytes:
+            saved.append({"room": room_key, "error": "image generation failed"})
+            continue
+
+        room_bg = Image.open(io.BytesIO(img_bytes)).convert("RGBA").resize(
+            (ROOM_PX, ROOM_PX), Image.LANCZOS
+        )
+
+        framed, _ = _render_framed_art_rgba(art_img, frame_style, ART_LONG)
+        fw, fh    = framed.size
+
+        # Center horizontally; top of frame at 7% from image top
+        px = (ROOM_PX - fw) // 2
+        py = max(0, int(ROOM_PX * 0.07))
+        py = min(py, int(ROOM_PX * 0.80) - fh)  # never clip below 80%
+
+        room_bg.paste(framed, (px, py), framed)
+        final = ImageEnhance.Contrast(room_bg.convert("RGB")).enhance(1.04)
+
+        out = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_room_{room_key}_{frame_style}.jpg")
+        final.save(out, "JPEG", quality=93, optimize=True)
+        saved.append({"room": room_key, "path": out})
+
+    paths = [s["path"] for s in saved if "path" in s]
+    product["room_composite_paths"] = paths
+    product["updated_at"]           = str(date.today())
+    _save_product(product, store)
+
+    return json.dumps({
+        "success":   True,
+        "product_id": product_id,
+        "composites": saved,
+        "note": "Room settings use the REAL art file composited in — identical to the download.",
+    }, indent=2)
+
+
+def _create_size_comparison(data: dict, store: DataStore) -> str:
+    """Composite the real art at 3 print sizes on a clean wall for a size guide photo."""
+    try:
+        from PIL import Image, ImageDraw, ImageFont, ImageEnhance
+    except ImportError:
+        return json.dumps({"error": "Pillow required"})
+
+    product_id  = data["product_id"]
+    frame_style = data.get("frame_style", "natural_wood")
+    wall_key    = data.get("wall_color", "warm_gray")
+
+    product = _find_product(product_id, store)
+    if not product:
+        return json.dumps({"error": f"Product {product_id} not found"})
+    src = product.get("file_path")
+    if not src or not os.path.exists(src):
+        return json.dumps({"error": "No image file. Call generate_digital_art first."})
+
+    art_img  = Image.open(src).convert("RGB")
+    wall_rgb = _WALL_PALETTES.get(wall_key, _WALL_PALETTES["warm_gray"])
+
+    CW, CH = 1500, 1020
+
+    # Wall gradient
+    canvas = Image.new("RGB", (CW, CH), wall_rgb)
+    draw   = ImageDraw.Draw(canvas)
+    for y in range(CH):
+        fade = int(y / CH * 32)
+        c    = tuple(max(0, v - fade) for v in wall_rgb)
+        draw.line([(0, y), (CW, y)], fill=c)
+
+    # Baseboard strip at bottom
+    board_y = CH - 56
+    for y in range(board_y, CH):
+        t = (y - board_y) / (CH - board_y)
+        c = tuple(max(0, int(v * (1 - t * 0.18))) for v in wall_rgb)
+        draw.line([(0, y), (CW, y)], fill=c)
+    draw.line([(0, board_y), (CW, board_y)], fill=tuple(max(0, v - 38) for v in wall_rgb), width=2)
+
+    # Three frame sizes: long side as fraction of canvas width
+    SIZE_SPECS = [
+        ("8×10\"",  int(CW * 0.165)),
+        ("16×20\"", int(CW * 0.295)),
+        ("24×36\"", int(CW * 0.43)),
+    ]
+
+    frames = [(label, *_render_framed_art_rgba(art_img, frame_style, ls)) for label, ls in SIZE_SPECS]
+
+    total_fw = sum(frm.size[0] for _, frm, _ in frames)
+    GAP      = (CW - total_fw) // (len(frames) + 1)
+    BOTTOM_Y = int(CH * 0.82)
+
+    try:
+        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 30)
+    except Exception:
+        font = ImageFont.load_default()
+
+    x = GAP
+    canvas_rgba = canvas.convert("RGBA")
+    label_positions: list[tuple] = []
+
+    for label, framed, _ in frames:
+        fw, fh = framed.size
+        py     = max(10, BOTTOM_Y - fh)
+        canvas_rgba.paste(framed, (x, py), framed)
+        label_positions.append((label, x + fw // 2, BOTTOM_Y + 16))
+        x += fw + GAP
+
+    canvas = canvas_rgba.convert("RGB")
+    draw   = ImageDraw.Draw(canvas)
+    for label, lx, ly in label_positions:
+        tw = draw.textlength(label, font=font) if hasattr(draw, "textlength") else 80
+        draw.text((lx - tw // 2 + 1, ly + 1), label, font=font, fill=(180, 174, 165))
+        draw.text((lx - tw // 2,     ly),     label, font=font, fill=(75,  68,  58))
+
+    canvas = ImageEnhance.Contrast(canvas).enhance(1.05)
+
+    out = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_size_comparison_{frame_style}.jpg")
+    canvas.save(out, "JPEG", quality=93, optimize=True)
+
+    product["size_comparison_path"] = out
+    product["updated_at"]           = str(date.today())
+    _save_product(product, store)
+
+    return json.dumps({
+        "success":    True,
+        "product_id": product_id,
+        "path":       out,
+        "note":       "Size comparison uses the REAL art composited at 3 print sizes.",
     }, indent=2)
 
 
