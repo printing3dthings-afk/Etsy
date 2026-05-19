@@ -511,10 +511,16 @@ Look at the brief and pick exactly one style from the shop library:
 Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
 
 1. `create_art_concept` — include `style` letter and name in the `concept` field, market niche, target buyer, palette choice, price tier
-2. `generate_digital_art` — use the exact DALL-E formula for the chosen style from above, size=`1024x1536` (portrait) AND `1024x1024` (square) — generate BOTH for multi-size bundle listings, quality=`high`
+2. `generate_digital_art` — use the exact DALL-E formula for the chosen style from above, size=`1024x1536`, quality=`high`
 3. If creating a set, run `generate_digital_art` for each piece (coordinated prompts, same palette, same style)
-4. Set status to `qc_pending`
-5. Hand off to Quality Check Agent with specific review criteria: "Is this gallery-worthy? Does it look like a top-10 Etsy result? Is the composition strong? Are colors harmonious?"
+4. `create_size_bundle` — generates the ZIP with all 8 print sizes (8×8 through 30×40) at 300 DPI. This IS the Etsy download file. Always do this step.
+5. `create_frame_mockup` — generate 2–3 mockups with different frame/wall combinations:
+   - Always: `frame_style="natural_wood"`, `wall_color="warm_gray"` (universal, safest)
+   - For dark/moody art (Style C2, dark_academia, celestial): `frame_style="black"`, `wall_color="dark"`
+   - For botanical/farmhouse art (Style E, sage_cream): `frame_style="natural_wood"`, `wall_color="cream"`
+   - For luxury/quote art: `frame_style="gold"`, `wall_color="cream"`
+6. Set status to `qc_pending`
+7. Hand off to Quality Check Agent: "Is this gallery-worthy? Does it look like a top-10 Etsy result? Confirm bundle ZIP and mockup paths are saved."
 
 ### Bundle Strategy (always do this)
 Never submit a single print when a set sells 4× better:

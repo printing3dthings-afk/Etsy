@@ -395,6 +395,50 @@ TOOL_DEFINITIONS: list[dict] = [
             "required": []
         }
     },
+    {
+        "name": "create_size_bundle",
+        "description": (
+            "Generate a ZIP file containing the product's art image at 8 standard print sizes "
+            "(8×8, 12×12, 24×24 square; 12×14, 16×20, 18×24, 24×36, 30×40 portrait), all JPEG "
+            "at 300 DPI with a README. Call this after generate_digital_art — it produces the "
+            "actual Etsy upload file buyers download. Top sellers always include all sizes."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "DP-prefixed product ID"},
+            },
+            "required": ["product_id"],
+        },
+    },
+    {
+        "name": "create_frame_mockup",
+        "description": (
+            "Generate a framed wall-scene mockup image for an Etsy listing thumbnail. "
+            "Composites the product art into a realistic frame with drop shadow against a "
+            "painted wall background. Call after generate_digital_art. Create 2–3 mockups "
+            "with different frame/wall combos for listing photos."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {"type": "string", "description": "DP-prefixed product ID"},
+                "frame_style": {
+                    "type": "string",
+                    "enum": ["natural_wood", "black", "white", "gold"],
+                    "description": "Frame material. natural_wood is safest default; black for moody/dark art; gold for luxury/botanical.",
+                    "default": "natural_wood",
+                },
+                "wall_color": {
+                    "type": "string",
+                    "enum": ["warm_gray", "white", "cream", "dark", "sage"],
+                    "description": "Wall background color. warm_gray is most versatile; dark for moody/celestial art; cream for farmhouse/botanical.",
+                    "default": "warm_gray",
+                },
+            },
+            "required": ["product_id"],
+        },
+    },
     SUBMIT_IDEA_DEFINITION,
 ]
 
@@ -416,6 +460,10 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _update_product_status(tool_input, store)
     elif tool_name == "get_design_references":
         return _get_design_references(tool_input)
+    if tool_name == "create_size_bundle":
+        return _create_size_bundle(tool_input, store)
+    if tool_name == "create_frame_mockup":
+        return _create_frame_mockup(tool_input, store)
     if tool_name == "submit_idea":
         return handle_submit_idea(tool_input)
     return f"Unknown art creation tool: {tool_name}"
@@ -620,6 +668,247 @@ def _upscale_for_print(src_path: str, dst_path: str, target_px: int = 4500) -> N
         os.remove(src_path)
     except OSError:
         pass
+
+
+# ── MULTI-SIZE BUNDLE ─────────────────────────────────────────────────────────
+
+_BUNDLE_SIZES = [
+    # (filename_prefix, width_inches, height_inches)
+    ("8x8",   8,  8),
+    ("12x12", 12, 12),
+    ("24x24", 24, 24),
+    ("12x14", 12, 14),
+    ("16x20", 16, 20),
+    ("18x24", 18, 24),
+    ("24x36", 24, 36),
+    ("30x40", 30, 40),
+]
+_BUNDLE_DPI = 300
+
+
+def _create_size_bundle(data: dict, store: DataStore) -> str:
+    import zipfile
+    try:
+        from PIL import Image, ImageFilter
+    except ImportError:
+        return json.dumps({"error": "Pillow required — run: pip install Pillow"})
+
+    product_id = data["product_id"]
+    product = _find_product(product_id, store)
+    if not product:
+        return json.dumps({"error": f"Product {product_id} not found"})
+    src = product.get("file_path")
+    if not src or not os.path.exists(src):
+        return json.dumps({"error": "No image file found. Call generate_digital_art first."})
+
+    master = Image.open(src).convert("RGB")
+
+    # Upscale master to 6000px short side (covers up to 20×30" at true 300 DPI)
+    target_px = 6000
+    while min(master.size) < target_px:
+        scale = min(2.0, target_px / min(master.size))
+        master = master.resize(
+            (int(master.width * scale), int(master.height * scale)), Image.LANCZOS
+        )
+    master = master.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=2))
+
+    bundle_dir = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_bundle_tmp")
+    os.makedirs(bundle_dir, exist_ok=True)
+
+    created: list[tuple[str, str]] = []
+    for prefix, win, hin in _BUNDLE_SIZES:
+        tw, th = win * _BUNDLE_DPI, hin * _BUNDLE_DPI
+        src_r = master.width / master.height
+        tgt_r = tw / th
+
+        if src_r > tgt_r + 0.02:
+            cw = int(master.height * tgt_r)
+            x0 = (master.width - cw) // 2
+            crop = master.crop((x0, 0, x0 + cw, master.height))
+        elif src_r < tgt_r - 0.02:
+            ch = int(master.width / tgt_r)
+            y0 = (master.height - ch) // 2
+            crop = master.crop((0, y0, master.width, y0 + ch))
+        else:
+            crop = master
+
+        sized = crop.resize((tw, th), Image.LANCZOS)
+        sized = sized.filter(ImageFilter.UnsharpMask(radius=0.6, percent=80, threshold=1))
+        fname = f"{prefix}in_300dpi.jpg"
+        sized.save(os.path.join(bundle_dir, fname), "JPEG",
+                   quality=97, dpi=(_BUNDLE_DPI, _BUNDLE_DPI), optimize=True)
+        created.append((fname, f"{win}×{hin} inches"))
+
+    zip_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_allsizes.zip")
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=1) as zf:
+        readme = (
+            f"OnBrandCraftz — Print-Ready Digital Download\n"
+            f"{'=' * 48}\n"
+            f"Product: {product.get('title', product_id)}\n\n"
+            f"FILES INCLUDED ({len(created)} sizes, all 300 DPI JPEG):\n\n"
+            + "".join(f"  • {fname}  →  {desc}\n" for fname, desc in created)
+            + "\n\nPRINTING: Select the file matching your frame size.\n"
+            "Set print dimensions to the file's inches at 300 DPI / best quality.\n"
+            "Recommended print labs: Mpix, Nations Photo Lab, Printful, Canva Print.\n\n"
+            "Thank you for your purchase!\n"
+        )
+        zf.writestr("READ_ME_FIRST.txt", readme)
+        for fname, _ in created:
+            zf.write(os.path.join(bundle_dir, fname), fname)
+
+    import shutil as _shutil
+    _shutil.rmtree(bundle_dir, ignore_errors=True)
+
+    product["bundle_zip_path"] = zip_path
+    product["bundle_sizes"] = [f"{w}x{h}" for _, w, h in _BUNDLE_SIZES]
+    product["updated_at"] = str(date.today())
+    _save_product(product, store)
+
+    return json.dumps({
+        "success": True,
+        "product_id": product_id,
+        "zip_path": zip_path,
+        "sizes_included": [f"{w}×{h}in" for _, w, h in _BUNDLE_SIZES],
+        "note": "ZIP ready — upload this as the Etsy digital download file.",
+    }, indent=2)
+
+
+# ── FRAME MOCKUP ──────────────────────────────────────────────────────────────
+
+_FRAME_PALETTES = {
+    "natural_wood": {"base": (139, 100, 48), "hi": (180, 138, 75), "lo": (82, 58, 22)},
+    "black":        {"base": (30,  27,  24),  "hi": (55,  48,  40),  "lo": (14,  12,  10)},
+    "white":        {"base": (238, 235, 230), "hi": (255, 255, 255), "lo": (190, 185, 178)},
+    "gold":         {"base": (175, 138, 48),  "hi": (220, 185, 88),  "lo": (110, 84,  22)},
+}
+_WALL_PALETTES = {
+    "warm_gray": (215, 208, 198),
+    "white":     (248, 246, 244),
+    "cream":     (238, 230, 215),
+    "dark":      (48,  42,  38),
+    "sage":      (182, 196, 180),
+}
+
+
+def _create_frame_mockup(data: dict, store: DataStore) -> str:
+    try:
+        from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
+    except ImportError:
+        return json.dumps({"error": "Pillow required — run: pip install Pillow"})
+
+    product_id = data["product_id"]
+    frame_style = data.get("frame_style", "natural_wood")
+    wall_key    = data.get("wall_color", "warm_gray")
+
+    product = _find_product(product_id, store)
+    if not product:
+        return json.dumps({"error": f"Product {product_id} not found"})
+    src = product.get("file_path")
+    if not src or not os.path.exists(src):
+        return json.dumps({"error": "No image file found. Call generate_digital_art first."})
+
+    pal      = _FRAME_PALETTES.get(frame_style, _FRAME_PALETTES["natural_wood"])
+    wall_rgb = _WALL_PALETTES.get(wall_key, _WALL_PALETTES["warm_gray"])
+
+    art = Image.open(src).convert("RGB")
+    aw, ah = art.size
+
+    # Scale art so its longest side = 920px inside the mockup
+    scale = 920 / max(aw, ah)
+    art   = art.resize((int(aw * scale), int(ah * scale)), Image.LANCZOS)
+    aw, ah = art.size
+
+    FRAME_W = 44   # frame border thickness px
+    MAT_W   = 18   # white mat inside frame
+    BEVEL   = 7    # bevel width for 3-D frame edge
+
+    total_w = aw + 2 * (MAT_W + FRAME_W)
+    total_h = ah + 2 * (MAT_W + FRAME_W)
+
+    canvas_w = total_w + 420
+    canvas_h = total_h + 440
+
+    # ── Wall background (subtle top-to-bottom gradient) ──
+    canvas = Image.new("RGB", (canvas_w, canvas_h), wall_rgb)
+    draw   = ImageDraw.Draw(canvas)
+    for y in range(canvas_h):
+        fade = int(y / canvas_h * 28)
+        c    = tuple(max(0, v - fade) for v in wall_rgb)
+        draw.line([(0, y), (canvas_w, y)], fill=c)
+
+    # ── Drop shadow (gaussian-blurred rectangle offset below-right) ──
+    cx0 = (canvas_w - total_w) // 2
+    cy0 = (canvas_h - total_h) // 2
+    shadow_layer = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow_layer)
+    sd.rectangle([cx0 + 16, cy0 + 20, cx0 + total_w + 16, cy0 + total_h + 20],
+                 fill=(0, 0, 0, 145))
+    shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(radius=24))
+    canvas = Image.alpha_composite(canvas.convert("RGBA"), shadow_layer).convert("RGB")
+
+    # ── Frame body ──
+    draw = ImageDraw.Draw(canvas)
+    fx0, fy0 = cx0, cy0
+    fx1, fy1 = cx0 + total_w, cy0 + total_h
+    draw.rectangle([fx0, fy0, fx1, fy1], fill=pal["base"])
+
+    # Bevel: top/left lighter (highlight), bottom/right darker (shadow)
+    for b in range(BEVEL):
+        t = 1.0 - b / BEVEL
+        hi = tuple(int(pal["base"][i] + (pal["hi"][i] - pal["base"][i]) * t) for i in range(3))
+        lo = tuple(int(pal["base"][i] + (pal["lo"][i] - pal["base"][i]) * t) for i in range(3))
+        draw.line([(fx0+b, fy0+b), (fx1-b, fy0+b)], fill=hi)   # top
+        draw.line([(fx0+b, fy0+b), (fx0+b, fy1-b)], fill=hi)   # left
+        draw.line([(fx0+b, fy1-b), (fx1-b, fy1-b)], fill=lo)   # bottom
+        draw.line([(fx1-b, fy0+b), (fx1-b, fy1-b)], fill=lo)   # right
+
+    # ── White mat ──
+    mx0, my0 = fx0 + FRAME_W, fy0 + FRAME_W
+    mx1, my1 = fx1 - FRAME_W, fy1 - FRAME_W
+    draw.rectangle([mx0, my0, mx1, my1], fill=(250, 247, 242))
+    for s in range(5):   # inner mat shadow suggests depth
+        v = 215 - s * 14
+        draw.rectangle([mx0+s, my0+s, mx1-s, my1-s], outline=(v, v-2, v-5))
+
+    # ── Paste art ──
+    ax0, ay0 = mx0 + MAT_W, my0 + MAT_W
+    canvas.paste(art, (ax0, ay0))
+
+    # ── Subtle diagonal glare over art (top-left catch-light) ──
+    glare = Image.new("RGBA", (aw, ah), (0, 0, 0, 0))
+    gd    = ImageDraw.Draw(glare)
+    for y in range(ah):
+        p = y / ah
+        if p < 0.30:
+            alpha = int((0.30 - p) / 0.30 * 20)
+            gd.line([(0, y), (aw, y)], fill=(255, 255, 255, alpha))
+    glare = glare.filter(ImageFilter.GaussianBlur(radius=4))
+    art_r = Image.alpha_composite(art.convert("RGBA"), glare).convert("RGB")
+    canvas.paste(art_r, (ax0, ay0))
+
+    # ── Final contrast boost for Etsy thumbnail pop ──
+    canvas = ImageEnhance.Contrast(canvas).enhance(1.06)
+
+    mockup_path = os.path.join(
+        PRODUCT_FILES_DIR, f"{product_id}_mockup_{frame_style}_{wall_key}.jpg"
+    )
+    canvas.save(mockup_path, "JPEG", quality=95, dpi=(150, 150), optimize=True)
+
+    mockups = product.get("mockup_paths", [])
+    if mockup_path not in mockups:
+        mockups.append(mockup_path)
+    product["mockup_paths"] = mockups
+    product["updated_at"]   = str(date.today())
+    _save_product(product, store)
+
+    return json.dumps({
+        "success": True,
+        "product_id": product_id,
+        "mockup_path": mockup_path,
+        "frame_style": frame_style,
+        "wall_color": wall_key,
+        "note": "Mockup ready — use as Etsy listing thumbnail image.",
+    }, indent=2)
 
 
 def _generate_digital_art(data: dict, store: DataStore) -> str:
