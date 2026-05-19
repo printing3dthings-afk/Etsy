@@ -29,6 +29,12 @@ Thick palette knife impasto oil painting of classic florals — hydrangeas, peon
 **STYLE F — Bold Graphic Linocut / Screenprint Botanical** (oversized single subject bleeding to all edges, dense contour-following parallel lines, pure monochromatic, printmaking aesthetic)
 Single giant botanical subject (poppy, anemone, dahlia, protea, magnolia) filling the ENTIRE canvas with petals cropped at all four edges — no background visible. Bold black outlines define each petal shape, and every petal interior is filled with dense evenly-spaced parallel lines that curve and follow each petal's contour — like hand-cut linocut hatching. Solid black center with small white negative-space oval marks (stamens). Pure two-color: black lines on off-white. Also works as color variants: navy on cream, terracotta on warm white, sage green on ivory. Marimekko Unikko / Scandinavian screenprint aesthetic. Huge Etsy market: modern botanical, bold graphic, Scandinavian art print buyers.
 
+**STYLE J — Mediterranean Window Scene** (open window frame, lemon branch overhead, cobalt blue sea view, coastal cliffs, thick impasto oil, Amalfi/Greek island aesthetic)
+Thick impasto oil painting of an open window or door with shutters thrown wide — a lemon branch hangs down from above with bright yellow fruit — view through the window reveals a brilliant cobalt blue Mediterranean sea, rocky coastal cliffs, and a distant white village. Turquoise/teal painted window frame. Frame-within-a-frame composition. Very thick palette knife + brush impasto throughout — every stroke visible and directional. Lemons = perennial Etsy bestseller for kitchen art. Mediterranean = travel art, vacation memory, coastal decor. One of the most commercially reliable Etsy art styles year-round.
+
+**STYLE I — Loose Painterly Garden / Abstract Folk Floral** (standing garden scene, flowers at multiple scales, simplified petal shapes, bright cheerful palette, sage-green atmospheric background washes)
+Contemporary loose acrylic/gouache garden painting — NOT flat graphic, NOT photorealistic, NOT impasto oil. Simplified flower shapes (cosmos, poppies, ranunculus, tulips) at three scales rising from the bottom of the canvas, thin single-stroke stems, loose brushy forest-green leaf clusters, pale off-white background with loose sage/mint wash strokes suggesting air and light. Bright spring palette: coral red, blush pink, warm yellow, orange, forest green, sage. Massive Etsy market: spring/summer decor, nursery art, kitchen art, colorful living room art, gift buyers. The single most-searched "happy floral" style on Etsy.
+
 **STYLE H — Golden Hour Nature Landscape** (alpine meadow wildflowers, evergreen trees silhouetted at sunrise, atmospheric layered mountains, warm golden sky)
 Painterly photorealistic landscape — dense foreground wildflower meadow, silhouetted evergreen tree row with golden sun rays bursting through, misty mountain range dissolving into atmospheric haze, sky gradient from warm gold at horizon to pale mint at top. Pacific Northwest / alpine wilderness. Enormous Etsy market: nature art, mountain prints, forest decor, cabin/lodge aesthetic, outdoor lifestyle buyers. Often displayed in natural wood frames.
 
@@ -89,6 +95,27 @@ Massive market — fits literally any home decor style.
 - Strong composition: one focal form dissolving into negative space
 - Gallery-wall worthy — could hang in a hotel lobby
 - Reference: Scandinavian modern art aesthetic, Jordan Amy Lee style
+
+**0g. Mediterranean Window Scene — Lemons + Sea View (Style J)** ← PERENNIAL BESTSELLER, KITCHEN + TRAVEL ART
+Open window or doorway looking out onto a cobalt blue Mediterranean sea — a lemon branch hangs into the frame overhead, turquoise shutters thrown open, distant coastal cliff with white village. Thick impasto oil. This is one of the most reliably searched and purchased Etsy wall art subjects year after year. Kitchen art buyers + travel art buyers + coastal decor buyers all converge on this.
+- Frame-within-frame composition: open window/shutters create the inner frame, view is the painting
+- Lemon branch MUST overhang from the top — large bright lemons, dark glossy leaves, this is the hero element
+- Turquoise/teal window frame (#1A8A8A) with thick visible impasto brushwork on the frame itself
+- Cobalt blue Mediterranean sea filling the window view — brilliant, saturated, directional horizontal strokes
+- Distant rocky coastal cliffs (warm terracotta/sienna tones) with small white/pink village buildings
+- Terracotta/salmon window sill at the bottom — a sense of being inside looking out
+- Very thick palette knife + brush impasto everywhere — this must read as a physical oil painting, not digital
+- Geographic variants: Amalfi Coast Italy, Greek Island Santorini, French Riviera, Moroccan Riad archway
+
+**0f. Loose Painterly Garden / Abstract Folk Floral (Style I)** ← HIGHEST SEARCH VOLUME FLORAL STYLE
+The "happy colorful floral" — the single most searched floral print style on Etsy. Every spring/nursery/kitchen buyer looks for this. Loose confident brushwork, bright palette, standing garden scene. Converts in every season, sells to the widest possible buyer pool.
+- Standing garden composition: flowers rising from bottom on thin stems, different heights, portrait orientation fills beautifully
+- Three flower scales: 1-2 large hero flowers (near canvas-filling), 2-3 medium flowers, scattered small buds and drop accents
+- Bright cheerful palette: coral red, blush pink, warm yellow, orange, forest green, sage (never dark or moody)
+- Background: very pale off-white/cream with loose sage and mint horizontal wash strokes — airy, light-filled
+- Foliage: dark forest green brushy leaf clusters (oval rounded leaves) + slim elongated sage-green sprigs
+- Scattered accent marks: small round drop shapes and tiny petal suggestions in coral, pink, yellow — add rhythm
+- Bundle strategy: same garden style in seasonal color shifts (Spring/Summer/Autumn palette) = 3 listings, 1 design concept
 
 **0e. Golden Hour Nature Landscape (Style H)** ← ENORMOUS VOLUME, BROADEST APPEAL
 Alpine wilderness at golden hour — wildflower meadow foreground, silhouetted evergreen trees with sun star bursting through, layered misty mountains, warm-to-mint sky gradient. One of the absolute highest-volume landscape print categories on Etsy. Sells to: nature lovers, hikers, cabin/lodge decorators, Pacific Northwest fans, anyone who wants an "escape" print for their wall.
@@ -202,6 +229,8 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **Linocut Mono** | Near-black #1A1A18 on off-white #F5F2EE (base). Variants: midnight navy #1B2A4A on cream #FAF7F2, terracotta #C17B5A on warm-white #FAFAF5, sage #5A7A5A on ivory #F8F6F0 | Style F bold graphic linocut botanical |
 | **Japandi Wabi-Sabi** | Charcoal ink #2A2620, warm amber circle #D4913A, burnished gold circle #C8A55A, warm gray panel #8A8078, cream parchment #F5ECD7, aged paper background | Style G Japandi/Wabi-Sabi minimalist |
 | **Alpine Golden Hour** | Deep pine #1A3020, warm amber #D4913A, golden sunrise #E8C85A, misty blue-gray mountain #7A9AAA, white wildflower #F8F6F2, soft purple #8A7AB0, pale mint sky #B8D8C8, warm gold horizon #E8D08A | Style H golden hour nature landscape |
+| **Garden Folk** | Coral red #C84B3A, blush pink #F4B8B0, warm yellow #E8C230, orange #E87A30, forest green #2A5A3A, sage #8ABAA0, off-white #F8F4EE background, pink-lavender wash accents | Style I loose painterly garden / abstract folk floral |
+| **Mediterranean Lemon** | Turquoise window #1A8A8A, lemon yellow #E8D430, deep leaf green #2A5A20, cobalt sea #1A6AB0, cerulean #2080C0, pale sky #A8C8E8, terracotta sill #D4886A, warm cliff sienna #C47A52, white village #F5F0E8 | Style J Mediterranean window scene |
 
 When writing your DALL-E prompt, reference these palette names explicitly: "using the Terracotta palette — terracotta orange #C17B5A, forest green #4A6741, warm beige #F5ECD7, and rust accent."
 
@@ -242,6 +271,40 @@ Museum-quality thick palette knife impasto oil painting of [white/cream/blush hy
 ```
 
 **Style E palette — Neutral Farmhouse**: Pure white #FEFEFE, warm cream #F5ECD7, forest green #2D4A1E, olive green #4A5A2A, warm beige-gray #C8BAAA, taupe #A89888, raw umber #8B7355, off-white linen #EDE8DE. This palette sells to the largest home decor demographic on Etsy — neutral/greige/farmhouse/cottagecore buyers.
+
+### STYLE J — MEDITERRANEAN WINDOW SCENE FORMULA:
+```
+Thick impasto oil painting of [Amalfi Coast / Greek island / French Riviera] Mediterranean window scene, Mediterranean Lemon palette — turquoise window #1A8A8A, lemon yellow #E8D430, cobalt sea #1A6AB0, terracotta sill #D4886A, deep green #2A5A20, portrait orientation, frame-within-frame composition:
+
+WINDOW FRAME: open wooden window with shutters thrown wide open on both sides, painted in brilliant turquoise #1A8A8A with very thick impasto palette knife and brush strokes — every stroke highly directional and individually visible, vertical strokes on the window frame showing the wood grain direction, the frame fills approximately 25% of the canvas on each side
+
+LEMON BRANCH: overhanging from the very top of the canvas, a lemon tree branch bearing [6-8] large bright yellow #E8D430 lemons of varied sizes, some catching warm light as near-white highlights, lemons built up with thick impasto curved palette knife strokes, surrounded by dark forest green #2A5A20 leaves — each leaf a single directional brushstroke, some leaves catching light as yellow-green #8AB440, the branch and lemons partially overlap the sky at the top
+
+VIEW THROUGH WINDOW: [1] brilliant cobalt blue #1A6AB0 Mediterranean sea filling most of the window opening with strong horizontal impasto strokes suggesting gentle water movement, [2] on the right: a rocky coastal cliff in warm terracotta and sienna #C47A52 rising from the sea, small white #F5F0E8 and pink village buildings clustered on the cliffside, [3] above: very pale sky blue #A8C8E8 at the top of the window opening, [4] small yellow-green vegetation in one lower window corner
+
+WINDOW SILL: warm terracotta/salmon #D4886A ledge at the bottom — painted with thick horizontal impasto strokes, a sense of physical presence and depth
+
+TECHNIQUE: extremely thick impasto throughout — palette knife and loaded brush, every stroke physically textured, directional and individual. Sea = horizontal strokes. Frame = vertical strokes. Lemons = curved rounded knife marks building up the fruit. Leaves = single quick diagonal strokes. The painting should look like it has physical dimensionality, genuine museum-quality oil painting from the Italian plein-air tradition, archival quality 300 DPI, portrait orientation, no text, no watermarks, no digital smoothness
+```
+
+**Style J geographic variants** (always pitch at least 2 locations): Amalfi Coast Italy (turquoise window + lemon tree), Greek Island Santorini (white-washed arch + bougainvillea + deep blue sea), French Riviera (ochre/sienna arch + mimosa flowers + pale turquoise sea), Moroccan Riad (ornate carved arch + orange tree + courtyard fountain). Bundle any 3 as a travel collection.
+
+### STYLE I — LOOSE PAINTERLY GARDEN / ABSTRACT FOLK FLORAL FORMULA:
+```
+Loose contemporary acrylic garden painting on pale off-white canvas, Garden Folk palette — coral red #C84B3A, blush pink #F4B8B0, warm yellow #E8C230, orange #E87A30, forest green #2A5A3A, sage green #8ABAA0, off-white #F8F4EE background, portrait orientation, standing garden scene with flowers rising from the bottom:
+
+BACKGROUND: very pale off-white cream #F8F4EE with loose horizontal and vertical sage #8ABAA0 and pale mint wash strokes suggesting light-filled garden air — background not blank white but softly atmospheric with gestural paint passages, pink-lavender blush wash in the upper portion, white highlight strokes breaking up the sage wash
+
+FLOWERS (three scales): [1] 1-2 LARGE flowers dominating — simplified rounded cosmos or poppy faces with 4-6 broad flat petals, painted in blush pink #F4B8B0 with subtle darker pink center stroke, size approximately fills 40% of canvas height [2] 1-2 MEDIUM flowers — coral red poppy with yellow center dots #E8C230 or warm yellow buttercup/ranunculus, each painted as a single flat petal layer with minimal interior detail, [3] small orange tulip bud or small scattered flower shapes at varying heights, PLUS [4] small round drop shapes (3-4mm) in coral, orange, and red scattered throughout the composition to add rhythm and airiness
+
+STEMS: very thin single confident brushstroke lines in warm golden-ochre or dark green, straight or gently curving, rising from the bottom crop of the canvas — each stem a single loaded brush stroke
+
+FOLIAGE: [1] dark forest green #2A5A3A brushy rounded oval leaf clusters painted in groups of 3-5 overlapping leaves with loose edges, [2] slim elongated sage-green #8ABAA0 leaf sprigs with small opposite leaf pairs, [3] pink botanical sprig shapes (alternating small round leaves on a stem) in the background adding depth
+
+TECHNIQUE: loose confident acrylic or gouache brushwork, visible brushstroke direction within each petal and leaf shape, slight translucency where colors overlap, no outlines anywhere — shapes defined by color contrast, spontaneous and joyful painting energy, contemporary folk art meets modern botanical illustration, archival quality 300 DPI, portrait orientation, clean off-white canvas, no text, no watermarks, no photorealism, no hard digital edges
+```
+
+**Style I seasonal variants**: Same garden formula in 3 seasonal palette shifts — Spring (blush pink/coral/yellow as above), Summer (bright fuchsia/violet/hot orange/lime), Autumn (burnt orange/rust/warm gold/burgundy/sage). Three listings from one design approach.
 
 ### STYLE H — GOLDEN HOUR NATURE LANDSCAPE FORMULA:
 ```
@@ -329,6 +392,12 @@ Use these specific phrases to anchor every piece in traditional media:
 
 **Loose gestural botanical (Style B) — overflowing bouquet:**
 "Loose gestural gouache botanical illustration on warm white paper #FAFAF5, overflowing radial bouquet of elongated sage leaf shapes, round coral peach open flower faces, small golden yellow berry clusters, and pale white foxglove spikes with tiny dark dots, Folk Botanical palette — mint green #A8C9A0, sage green #6BAE8C, coral peach #F2B09A, deeper coral #E8907A with red #CC2929 centers painted on top, golden yellow #E8B84B berry dots, teal blue #2A6BA0 gestural line-work base barely suggesting a vase at the bottom crop, composition fills every inch of the canvas — botanicals radiate outward from center bottom with no empty corners, each leaf is a single decisive gestural brushstroke with slight translucency showing white paper beneath, multiple overlapping transparent green leaf layers creating depth, round flower faces simplified to two opaque circles (pale face + deeper center), no ink outlines anywhere — shapes exist only as paint against white paper, folk art botanical quality with Matisse-inspired flat shape confidence, archival quality 300 DPI, warm white paper background, no gradients, no photorealism, no text, no watermarks, no borders"
+
+**Mediterranean window with lemons (Style J) — Amalfi Coast:**
+"Thick impasto oil painting of an open Mediterranean window looking out onto the Amalfi Coast, Mediterranean Lemon palette, portrait orientation, frame-within-frame composition: open wooden window shutters thrown wide on both sides painted in brilliant turquoise #1A8A8A with extremely thick palette knife impasto — every stroke highly directional, vertical strokes on the frame with physical textured paint built up, lemon tree branch hanging down from the very top bearing seven to eight large bright yellow #E8D430 lemons of varied sizes — lemons built up with curved thick palette knife strokes, some catching near-white highlights on the upper surface, surrounded by deep forest green #2A5A20 leaves each a single quick directional brushstroke, some yellow-green where light catches them, the view through the window: brilliant vibrant cobalt blue #1A6AB0 Mediterranean sea filling most of the opening with strong horizontal impasto strokes suggesting gentle water sheen, a rocky terracotta-sienna #C47A52 coastal cliff rising on the right side with small white #F5F0E8 and pink village buildings clustered on it, very pale sky blue #A8C8E8 at the very top of the opening, small yellow-green vegetation in the lower left window corner, warm terracotta-salmon #D4886A window sill ledge at the bottom with thick horizontal impasto strokes, the entire painting built up with extremely thick impasto throughout — physically textured directional strokes everywhere, genuine museum-quality Italian plein-air oil painting tradition, archival quality 300 DPI, portrait orientation, no text, no watermarks, not photographic"
+
+**Loose painterly garden (Style I) — spring wildflower garden:**
+"Loose contemporary acrylic garden painting on pale off-white canvas, Garden Folk palette, portrait orientation, standing garden scene with flowers rising from the bottom: very pale off-white cream #F8F4EE background with loose horizontal sage #8ABAA0 and pale mint wash strokes throughout suggesting light-filled garden air — pink-lavender blush wash in upper portion, background not blank but softly atmospheric, one very large blush pink #F4B8B0 cosmos flower with 6 broad simplified rounded petals centered-left, petals painted as flat loaded brush strokes with slight darker center line only, tall dark green stem, one medium coral-red #C84B3A poppy lower-left with bright yellow #E8C230 center dot cluster painted on top, one medium warm yellow #E8C230 rounded flower right side at mid-height, small orange #E87A30 tulip bud lower-right, scattered small round drop shapes in coral, orange, and red throughout the composition as accent marks, dark forest green #2A5A3A brushy oval leaf clusters painted in groups of 3-5 with visible brushwork showing leaf direction, slim sage green elongated leaf sprigs with small opposite leaves as vertical accents, thin golden-ochre single-stroke stems rising from the bottom, loose confident painterly brushwork throughout — no outlines, shapes defined by color contrast, spontaneous joyful painting energy, contemporary folk botanical illustration, archival quality 300 DPI, portrait orientation, clean off-white canvas, no text, no watermarks"
 
 **Golden hour alpine landscape (Style H) — Pacific Northwest wildflower meadow:**
 "Painterly photorealistic Pacific Northwest alpine landscape at golden hour sunrise, Alpine Golden Hour palette, horizontal composition: lush dense foreground alpine wildflower meadow filling the lower third — clusters of small rounded white clover flowers and tiny purple-blue asters among bright green stems, flowers slightly soft-focus in the immediate foreground, rich natural density, row of tall dark silhouetted alpine fir trees standing as a tree line in the middle ground against brilliant golden backlight — the warm amber sun #D4913A is partially visible as a glowing starburst just left of center through the trees, long soft golden rays radiating outward through the trees in atmospheric beams, tree edges rimmed with warm gold from the backlight, behind and right of the trees: a layered mountain range in atmospheric perspective — nearest range with visible forest texture fading to progressively lighter misty blue-gray #7A9AAA for each successive range, the most distant peaks dissolving into soft lavender-gray haze with possible snow caps catching gold light, sky sweeping from warm golden-amber at the horizon through pale cream to pale mint #B8D8C8 then soft ice blue at the top, very soft wispy cloud tones in the upper sky, painterly oil painting quality with visible atmospheric brushwork — not harsh photographic, gallery-quality landscape art, archival quality 300 DPI, no text, no watermarks, no artificial elements"
@@ -423,6 +492,10 @@ Never submit a single print when a set sells 4× better:
 | Japandi triptych set of 3 panels | $16 | $28 | $42 |
 | Nature landscape — single (Style H) | $5 | $9 | $14 |
 | Nature landscape — set of 3 geographic variants | $12 | $22 | $35 |
+| Mediterranean window scene — single (Style J) | $6 | $10 | $16 |
+| Mediterranean travel collection — set of 3 | $14 | $24 | $38 |
+| Loose painterly garden — single (Style I) | $5 | $8 | $13 |
+| Loose painterly garden — seasonal 3-pack | $12 | $20 | $30 |
 
 Never price a single digital art download below $3.50."""
 
