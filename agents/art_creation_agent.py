@@ -315,8 +315,36 @@ You are using `gpt-image-1`. Write prompts as detailed art briefs, not keyword l
 
 ### STYLE A — BOLD FLAT ILLUSTRATION FORMULA:
 ```
-Flat opaque gouache illustration on smooth hot-press board, [bold simplified subject — name it specifically], Bold Indie palette — [list 5-6 flat colors with hex], [patterned background: bold vertical stripes / large checkerboard / solid color block], flat even lighting with no shadows or gradients, bold simplified shapes with slight hand-painted edge variation, visible light brush texture within flat color fills, limited palette with one unexpected pop color accent, centered composition with confident graphic design intent, contemporary indie art print aesthetic, deliberate naive charm with artistic confidence, archival quality 300 DPI, no gradients, no blending, no photorealism, no outlines, no shadows, no text, no watermarks
+Flat opaque gouache illustration on smooth hot-press board, contemporary indie art print in the style of Paper Collective and risograph screenprint posters, Bold Indie palette — pick 5-6 colors from: crimson red #8B1A1A, forest green #2D5016, coral pink #E8868A, light pink #F4B8B8, magenta #C2185B, cream #F5F0E8 — use each as a SINGLE FLAT OPAQUE FILL with zero transparency:
+
+SUBJECT: [bold simplified botanical or object — vase with flowers / single plant / animal silhouette — describe it specifically]
+
+BACKGROUND: MANDATORY — bold patterned background chosen from: wide vertical stripes alternating two palette colors / large equal-sized checkerboard in two palette colors / solid single-color block. The background MUST be a strong graphic pattern, NOT a plain or textured neutral.
+
+RENDERING RULES (all mandatory):
+- Every shape is filled with a SINGLE FLAT OPAQUE COLOR — no gradients inside any shape, no color-to-color transitions, no soft blending anywhere
+- Visible light brush texture WITHIN each flat fill (the kind Pillow or gouache leaves — rough but opaque), NOT watercolor transparency
+- Hard painted color edges where two shapes meet — the COLOR CONTRAST creates the edge, NO separate ink outlines drawn on top
+- ZERO drop shadows, ZERO cast shadows, ZERO dimensional lighting, ZERO highlights or specular
+- Flat even lighting as if photographed under a copy machine — NO illusion of depth or 3D form
+- Shapes are deliberately simplified and slightly imperfect — human hand quality, NOT CAD-perfect
+- One unexpected pop color accent (magenta shelf / crimson stripe / coral background band)
+
+ABSOLUTELY NOT: no watercolor washes, no transparency, no gradients, no blending, no photorealism, no outlines, no shadows, no 3D, no text, no watermarks. If any shape looks painterly or blended, that is wrong.
+
+Archival quality 300 DPI, portrait orientation
 ```
+
+**Style A proven prompt (checker vase):**
+"Flat opaque gouache illustration on smooth hot-press illustration board, contemporary indie art print, Bold Indie palette — deep crimson red #8B1A1A, forest green #2D5016, coral pink #E8868A, light pink #F4B8B8, magenta #C2185B, cream #F5F0E8:
+
+SUBJECT: large ceramic vase with bold black-and-cream equal checkerboard pattern, the vase filled with overflowing drooping fritillaria flowers and simplified leaf shapes — each petal and leaf filled with a single flat opaque color, pink petals #E8868A and forest green #2D5016 leaves.
+
+BACKGROUND: wide bold vertical stripes alternating light pink #F4B8B8 and coral pink #E8868A, filling the entire background behind the vase.
+
+A flat solid magenta #C2185B rectangular shelf or color-block beneath the vase base.
+
+Every single shape — vase panels, flower petals, leaves, background stripes, shelf — is filled with ONE flat opaque color only. NO gradients, NO transparency, NO soft edges, NO shadows, NO highlights, NO blending anywhere. Hard color edges between every shape. Visible light dry-brush texture within each color area. Graphic and bold like a risograph print. Archival quality 300 DPI, portrait orientation, no text, no watermarks"
 
 ### STYLE C — HAND-LETTERED QUOTE PRINT FORMULA:
 ```
