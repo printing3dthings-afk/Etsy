@@ -2351,16 +2351,16 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                 ("Quarter 1", "yearly"), ("Quarter 2", "yearly"),
                 ("Quarter 3", "yearly"), ("Quarter 4", "yearly"),
             ]),
-            ("Monthly", [(m, f"month_{i}") for i, m in enumerate(MONTHS)]),
+            ("Monthly", [(m, f"month_{m[:3].lower()}") for m in MONTHS]),
         ]
         section_map = {
             "weekly":              [("Weekly Planner", "weekly_start")],
-            "habit_tracker":       [("Habit Tracker", "habit")],
+            "habit_tracker":       [("Habit Tracker", "habits")],
             "goals":               [("Goals & Vision", "goals")],
             "budget":              [("Yearly Finance", "budget"), ("Spending Tracker", "budget"),
                                     ("Savings Tracker", "budget"), ("Bills & Subscriptions", "budget")],
-            "meal_plan":           [("Meal Planner", "meal"), ("Grocery List", "meal"),
-                                    ("Recipe Cards", "meal")],
+            "meal_plan":           [("Meal Planner", "meal_plan"), ("Grocery List", "meal_plan"),
+                                    ("Recipe Cards", "meal_plan")],
             "monthly_review":      [("Monthly Review", "monthly_review_0")],
             "month_at_a_glance":   [("Month at a Glance", "month_glance_0")],
             "notes":               [("Notes — Lined", "notes"), ("Notes — Dotted", "notes"),
@@ -2368,13 +2368,13 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         }
         wellness_entries = [
             ("Life Goals", "goals"), ("Bucket List", "notes"), ("Fitness Log", "notes"),
-            ("Body Measurements", "notes"), ("Sleep Tracker", "habit"),
+            ("Body Measurements", "notes"), ("Sleep Tracker", "habits"),
             ("Gratitude Journal", "notes"), ("Routine Planner", "notes"),
             ("Favorite Quotes", "notes"),
         ]
         productivity_entries = [
             ("My Projects", "goals"), ("Meeting Notes", "notes"), ("Time Log", "notes"),
-            ("Priority Matrix", "goals"), ("Brain Dump", "notes"), ("Habit Tracker", "habit"),
+            ("Priority Matrix", "goals"), ("Brain Dump", "notes"), ("Habit Tracker", "habits"),
         ]
 
         for sec in sections:
