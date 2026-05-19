@@ -29,6 +29,9 @@ Thick palette knife impasto oil painting of classic florals — hydrangeas, peon
 **STYLE F — Bold Graphic Linocut / Screenprint Botanical** (oversized single subject bleeding to all edges, dense contour-following parallel lines, pure monochromatic, printmaking aesthetic)
 Single giant botanical subject (poppy, anemone, dahlia, protea, magnolia) filling the ENTIRE canvas with petals cropped at all four edges — no background visible. Bold black outlines define each petal shape, and every petal interior is filled with dense evenly-spaced parallel lines that curve and follow each petal's contour — like hand-cut linocut hatching. Solid black center with small white negative-space oval marks (stamens). Pure two-color: black lines on off-white. Also works as color variants: navy on cream, terracotta on warm white, sage green on ivory. Marimekko Unikko / Scandinavian screenprint aesthetic. Huge Etsy market: modern botanical, bold graphic, Scandinavian art print buyers.
 
+**STYLE K — Whimsical Fine Art / Elevated Funny Subject** (serious impressionist technique applied to a hilarious subject — rubber duck in spa, cat in Victorian portrait, dog at a bar, frog in a suit)
+The contrast IS the product: genuine museum-quality oil painting technique + absurd or funny subject. Buyers get real fine art that also makes them laugh. Enormous bathroom art market + gift art market + pet portrait market. This style goes viral, gets saved, gets shared — the algorithm loves it. A spa-day rubber duck painted at the level of a Sargent portrait is funnier and more share-worthy than any clip art joke print.
+
 **STYLE J — Mediterranean Window Scene** (open window frame, lemon branch overhead, cobalt blue sea view, coastal cliffs, thick impasto oil, Amalfi/Greek island aesthetic)
 Thick impasto oil painting of an open window or door with shutters thrown wide — a lemon branch hangs down from above with bright yellow fruit — view through the window reveals a brilliant cobalt blue Mediterranean sea, rocky coastal cliffs, and a distant white village. Turquoise/teal painted window frame. Frame-within-a-frame composition. Very thick palette knife + brush impasto throughout — every stroke visible and directional. Lemons = perennial Etsy bestseller for kitchen art. Mediterranean = travel art, vacation memory, coastal decor. One of the most commercially reliable Etsy art styles year-round.
 
@@ -95,6 +98,13 @@ Massive market — fits literally any home decor style.
 - Strong composition: one focal form dissolving into negative space
 - Gallery-wall worthy — could hang in a hotel lobby
 - Reference: Scandinavian modern art aesthetic, Jordan Amy Lee style
+
+**0h. Whimsical Fine Art — Elevated Funny Subject (Style K)** ← VIRAL, GIFT-ABLE, BATHROOM ART BESTSELLER
+Impressionist oil painting technique applied to an absurd or funny subject. The contrast between HIGH ART execution and LOW/FUNNY subject is what makes it go viral. Rubber ducks, cats in Victorian settings, dogs at bars, frogs in suits — painted with the same care as a Sargent portrait. Dominates the bathroom art, novelty gift, and pet art categories.
+- The technique MUST be genuinely good — visible impressionist brushwork, correct light and shadow, serious painting quality. The joke is that it's TOO good.
+- Subject ideas: rubber duck wearing sunglasses and towel turban in a painted bathtub (spa day), cat in oil portrait with ruff collar and stern expression, golden retriever at a pub bar holding a pint, frog in a business meeting, snail in a racing helmet, hamster as a Renaissance pope
+- Best settings: bathroom for duck/cat spa prints, pub/library/office for dog/cat portraits, sport venues for animal athletes
+- These ALWAYS work in sets: "The Spa Day Series" (duck, cat, dog each in spa setting), "The Portrait Gallery" (assorted animals in Victorian portrait style)
 
 **0g. Mediterranean Window Scene — Lemons + Sea View (Style J)** ← PERENNIAL BESTSELLER, KITCHEN + TRAVEL ART
 Open window or doorway looking out onto a cobalt blue Mediterranean sea — a lemon branch hangs into the frame overhead, turquoise shutters thrown open, distant coastal cliff with white village. Thick impasto oil. This is one of the most reliably searched and purchased Etsy wall art subjects year after year. Kitchen art buyers + travel art buyers + coastal decor buyers all converge on this.
@@ -231,6 +241,7 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **Alpine Golden Hour** | Deep pine #1A3020, warm amber #D4913A, golden sunrise #E8C85A, misty blue-gray mountain #7A9AAA, white wildflower #F8F6F2, soft purple #8A7AB0, pale mint sky #B8D8C8, warm gold horizon #E8D08A | Style H golden hour nature landscape |
 | **Garden Folk** | Coral red #C84B3A, blush pink #F4B8B0, warm yellow #E8C230, orange #E87A30, forest green #2A5A3A, sage #8ABAA0, off-white #F8F4EE background, pink-lavender wash accents | Style I loose painterly garden / abstract folk floral |
 | **Mediterranean Lemon** | Turquoise window #1A8A8A, lemon yellow #E8D430, deep leaf green #2A5A20, cobalt sea #1A6AB0, cerulean #2080C0, pale sky #A8C8E8, terracotta sill #D4886A, warm cliff sienna #C47A52, white village #F5F0E8 | Style J Mediterranean window scene |
+| **Whimsical Spa** | Rubber yellow #E8C820, teal bathwater #4ABAB0, white/blush towel #F5E8E4, pale pink bath tile #F0D4CC, warm honey tile highlight #D4A870, pink fluffy towel #F0B8B0, black sunglasses | Style K whimsical fine art — spa duck palette |
 
 When writing your DALL-E prompt, reference these palette names explicitly: "using the Terracotta palette — terracotta orange #C17B5A, forest green #4A6741, warm beige #F5ECD7, and rust accent."
 
@@ -271,6 +282,31 @@ Museum-quality thick palette knife impasto oil painting of [white/cream/blush hy
 ```
 
 **Style E palette — Neutral Farmhouse**: Pure white #FEFEFE, warm cream #F5ECD7, forest green #2D4A1E, olive green #4A5A2A, warm beige-gray #C8BAAA, taupe #A89888, raw umber #8B7355, off-white linen #EDE8DE. This palette sells to the largest home decor demographic on Etsy — neutral/greige/farmhouse/cottagecore buyers.
+
+### STYLE K — WHIMSICAL FINE ART FORMULA:
+```
+[Impressionist / portrait oil / Dutch Golden Age] painting of [funny subject doing human activity], executed with genuine museum-quality technique — the humor comes entirely from the contrast between the serious fine art execution and the absurd subject matter, NOT from cartoonish rendering:
+
+TECHNIQUE: genuine impressionist oil painting quality throughout — visible directional brushwork, correct light and shadow modeling, wet-on-wet paint mixing, the same technical care a master painter would give to a serious portrait or scene. DO NOT make the subject look cartoony or cute. Paint it as if it is the most important subject in art history.
+
+SUBJECT: [describe the funny subject with precise detail — e.g., "a yellow rubber duck sitting upright in a bathtub, wearing black Ray-Ban wayfarer sunglasses, with a white bath towel wrapped turban-style around the top of its head, its yellow rubber body reflecting the teal bathwater below"]
+
+SETTING: [described as a genuine fine art backdrop — e.g., "an impressionist bathroom interior: pale pink ceramic tiles with warm honey and gold highlights in the upper background, a plush pink bath towel draped over the right edge of the tub, teal-turquoise bathwater painted with loose impressionist brushstrokes and white highlight suggestions of ripples and water movement"]
+
+LIGHT: warm natural or bathroom light — soft highlights on the subject, warm reflected light from the water, the subject is the center of attention and well-lit
+
+MOOD: completely deadpan — the painting takes itself 100% seriously. The joke requires this. No cartoonish exaggeration. Paint the rubber duck like Sargent would paint a duchess.
+
+Archival quality 300 DPI, portrait orientation, no text, no watermarks, no cartoonish rendering, no flat digital edges — genuine painterly quality
+```
+
+**Style K proven subject formulas:**
+- **Spa Day Duck**: rubber duck + sunglasses + towel turban in impressionist painted bathtub → bathroom art
+- **Victorian Cat Portrait**: stern cat in oil portrait with lace collar and dark background → living room statement piece
+- **Pub Dog**: golden retriever sitting at a wooden bar holding a pint glass, looking knowingly at the viewer → den/bar art
+- **Executive Frog**: frog in a business suit at a mahogany desk → office humor art
+- **Racing Snail**: snail in a tiny helmet and racing suit on a tiny track → sports humor art
+Always create as a series of 3 (same setting, different animals) for maximum catalog impact.
 
 ### STYLE J — MEDITERRANEAN WINDOW SCENE FORMULA:
 ```
@@ -393,6 +429,9 @@ Use these specific phrases to anchor every piece in traditional media:
 **Loose gestural botanical (Style B) — overflowing bouquet:**
 "Loose gestural gouache botanical illustration on warm white paper #FAFAF5, overflowing radial bouquet of elongated sage leaf shapes, round coral peach open flower faces, small golden yellow berry clusters, and pale white foxglove spikes with tiny dark dots, Folk Botanical palette — mint green #A8C9A0, sage green #6BAE8C, coral peach #F2B09A, deeper coral #E8907A with red #CC2929 centers painted on top, golden yellow #E8B84B berry dots, teal blue #2A6BA0 gestural line-work base barely suggesting a vase at the bottom crop, composition fills every inch of the canvas — botanicals radiate outward from center bottom with no empty corners, each leaf is a single decisive gestural brushstroke with slight translucency showing white paper beneath, multiple overlapping transparent green leaf layers creating depth, round flower faces simplified to two opaque circles (pale face + deeper center), no ink outlines anywhere — shapes exist only as paint against white paper, folk art botanical quality with Matisse-inspired flat shape confidence, archival quality 300 DPI, warm white paper background, no gradients, no photorealism, no text, no watermarks, no borders"
 
+**Whimsical fine art — spa day rubber duck (Style K):**
+"Impressionist oil painting of a yellow rubber duck sitting in a bathtub, painted with complete deadpan seriousness using genuine museum-quality impressionist technique — the humor comes from the contrast between fine art execution and absurd subject, not from cartoonish rendering: the rubber duck sits upright in the center of the painting, bright yellow #E8C820 rubber body reflecting the teal water below in warm impressionist strokes, wearing black Ray-Ban wayfarer sunglasses reflecting tiny highlights, a white bath towel wrapped in a turban twist around the top of its head with soft folds and shadow as if painted by Renoir, teal-turquoise #4ABAB0 bathwater surrounding the duck painted with loose impressionist curved brushstrokes and white #FEFEFE highlight suggestions of ripples radiating outward, pale pink ceramic bathroom tiles in the upper background with warm honey-gold #D4A870 highlights where light catches the glaze, a plush pink bath towel #F0B8B0 draped casually over the right edge of the tub with painted fabric folds, warm soft bathroom light from above giving the duck a heroic presence, the painting is completely earnest — this duck is painted with the same care and dignity Sargent gave to society portraits, archival quality 300 DPI, no text, no watermarks, no cartoonish rendering, no digital smoothness, genuine impressionist oil painting quality"
+
 **Mediterranean window with lemons (Style J) — Amalfi Coast:**
 "Thick impasto oil painting of an open Mediterranean window looking out onto the Amalfi Coast, Mediterranean Lemon palette, portrait orientation, frame-within-frame composition: open wooden window shutters thrown wide on both sides painted in brilliant turquoise #1A8A8A with extremely thick palette knife impasto — every stroke highly directional, vertical strokes on the frame with physical textured paint built up, lemon tree branch hanging down from the very top bearing seven to eight large bright yellow #E8D430 lemons of varied sizes — lemons built up with curved thick palette knife strokes, some catching near-white highlights on the upper surface, surrounded by deep forest green #2A5A20 leaves each a single quick directional brushstroke, some yellow-green where light catches them, the view through the window: brilliant vibrant cobalt blue #1A6AB0 Mediterranean sea filling most of the opening with strong horizontal impasto strokes suggesting gentle water sheen, a rocky terracotta-sienna #C47A52 coastal cliff rising on the right side with small white #F5F0E8 and pink village buildings clustered on it, very pale sky blue #A8C8E8 at the very top of the opening, small yellow-green vegetation in the lower left window corner, warm terracotta-salmon #D4886A window sill ledge at the bottom with thick horizontal impasto strokes, the entire painting built up with extremely thick impasto throughout — physically textured directional strokes everywhere, genuine museum-quality Italian plein-air oil painting tradition, archival quality 300 DPI, portrait orientation, no text, no watermarks, not photographic"
 
@@ -494,6 +533,8 @@ Never submit a single print when a set sells 4× better:
 | Nature landscape — set of 3 geographic variants | $12 | $22 | $35 |
 | Mediterranean window scene — single (Style J) | $6 | $10 | $16 |
 | Mediterranean travel collection — set of 3 | $14 | $24 | $38 |
+| Whimsical fine art — single (Style K) | $6 | $10 | $16 |
+| Whimsical series of 3 (same theme) | $14 | $22 | $34 |
 | Loose painterly garden — single (Style I) | $5 | $8 | $13 |
 | Loose painterly garden — seasonal 3-pack | $12 | $20 | $30 |
 
