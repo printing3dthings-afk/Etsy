@@ -42,6 +42,14 @@ Every top-selling planner includes a clear setup page showing buyers how to open
 ### 6. Undated Format (Primary Version)
 Undated planners outsell dated planners 3:1 because they are evergreen — a buyer in March can still use them. Always create the undated version first (`year: 0`), then optionally create a dated version as a second product.
 
+### 7. A Sticker Sheet Companion (MAJOR VALUE-ADD — top sellers always include this)
+The top Etsy planner shops bundle 4,000+ functional stickers with every planner. A sticker sheet PDF includes:
+- Sticky note shapes (rounded rectangle, cloud, tag shapes) in the planner's color palette
+- Small lifestyle icon stickers (coffee, heart, star, clock, book, plant, gym, shopping, travel, etc.) as clean line art
+- Day/date labels and priority labels ("important", "urgent", "to buy", "to do")
+- Available in 8 coordinating color palettes matching the planner scheme
+This turns a $12 planner into a $22 bundle. Always create the sticker sheet as a second companion product using `generate_digital_art` with the sticker sheet prompt below.
+
 ---
 
 ## THE 8 COLOR SCHEME PACKAGES
@@ -123,38 +131,89 @@ Your job: choose a **strong, marketable title**. Examples:
 
 ---
 
-## COVER ART — EVERY PLANNER GETS A HANDCRAFTED COVER IMAGE
+## COVER ART — EVERY PLANNER GETS A PREMIUM COVER IMAGE
 
-Every planner must have a real hand-painted cover image embedded in the PDF. This is what separates a $5 planner from a $20 planner on Etsy.
+Every planner must have a beautiful cover image embedded in the PDF. This is what separates a $5 planner from a $20 planner on Etsy.
 
 Before calling `create_digital_planner`, call `generate_digital_art` to create the cover image. Use `size: "1024x1024"` and `quality: "high"`. Pass the returned `file_path` as `cover_image_path` to `create_digital_planner`.
 
-### COVER IMAGE PROMPTS BY COLOR SCHEME
+### COVER STYLE LIBRARY — 12 STYLES, CHOOSE THE BEST FOR THE PLANNER'S VIBE
 
-Use the **flat gouache illustration style** — bold simplified shapes, flat color fills with faint brush texture, hard painted edges, no gradients, no photorealism. This is the shop's signature look and makes the planner cover look artist-made and premium.
+Pick the cover style that fits the planner's personality, then adapt the colors to match the chosen color scheme. Mix and match freely.
 
-**sage_cream**: "Flat opaque gouache illustration on smooth hot-press board, bold simplified single stem of eucalyptus and dried pampas grass in a small round vase, sage green #87A878 stems and leaves, warm ivory #FAF7F2 background, dusty blush #D4A5A5 vase, flat color fills with faint brush texture, no gradients, no shadows, centered composition, contemporary indie illustration style, no text, no borders, archival 300 DPI"
+---
 
-**dusty_rose**: "Flat opaque gouache illustration on smooth hot-press board, bold simplified drooping garden rose and peony stems in a small striped vase, dusty rose #C9858A and warm blush #F2C4CE palette, light pink #FAF0F0 background with subtle vertical stripe texture in two pink tones, flat color fills with faint visible brush texture, hard painted color edges, no gradients, no shadows, centered composition, contemporary indie art print style, no text, no borders, archival 300 DPI"
+**STYLE 1 — RETRO RAINBOW ARCHES** (best for: lavender_dreams, dusty_rose, blush_gold)
+"Retro 70s-inspired abstract art, bold concentric rainbow arch shapes in soft gradient steps, portrait orientation, color palette: soft coral #F2917A, warm peach #F7C5A0, pale yellow #FDE8A0, mint #A8DEC0, sky blue #A0C8E8, lavender #C8A8E8 stacked arches from bottom center radiating up, warm cream #FAFAF5 background, clean flat color fills, smooth graphic design, no gradients within each stripe, contemporary retro poster aesthetic, no text, no borders, archival 300 DPI"
 
-**midnight_navy**: "Flat opaque gouache illustration on smooth hot-press board, bold simplified crescent moon with a single branch of star-shaped botanical elements, midnight navy #1B2A4A and antique gold #C9A84C palette on aged cream #F5F0E8 background, bold geometric checker or diamond pattern in two navy tones framing the composition, flat color fills with faint brush texture, no gradients, no shadows, contemporary graphic poster style, no text, no borders, archival 300 DPI"
+**STYLE 2 — SCATTERED WILDFLOWER REPEAT** (best for: sage_cream, dusty_rose, terracotta)
+"Seamless repeat pattern of small delicate wildflowers and botanical elements scattered across a warm cream #FAF7F2 background, hand-painted flat gouache style, small blooms in dusty rose #C9858A, sage leaf shapes in sage green #87A878, tiny yellow centers #E8B84B, slim curved stems, each element simplified to 3-4 flat painted shapes, organic spacing with natural rhythm, no two elements identical, gentle botanical surface pattern, no text, archival 300 DPI"
 
-**terracotta**: "Flat opaque gouache illustration on smooth hot-press board, bold simplified arrangement of dried grasses and terracotta clay pots with succulent plants, terracotta #C17B5A and forest green #4A6741 on warm beige #F5ECD7 background, bold horizontal stripe background in two warm earth tones, flat color fills with faint brush texture, hard painted edges, no gradients, no shadows, contemporary indie poster style, no text, no borders, archival 300 DPI"
+**STYLE 3 — DREAMY SKY AND CLOUDS** (best for: lavender_dreams, dusty_rose, midnight_navy)
+"Soft dreamy painted sky with fluffy clouds, portrait orientation, lavender #C8B4E8 and blush pink #F4C4D4 sky blending softly, white #FFFFFF and pale lavender #E8DFFF rounded cloud shapes in the lower half, soft subtle color gradation from pink at top to lavender-white at bottom, gentle painterly quality, no hard lines, serene and dreamy atmosphere, some small star dots in upper sky, no text, no borders, archival 300 DPI"
 
-**lavender_dreams**: "Flat opaque gouache illustration on smooth hot-press board, bold simplified wildflower stems with round blooms in a checkered round vase, soft lavender #C3B1E1 and muted purple #9B8EC4 palette, light blush #FAF0F6 background with bold wide vertical stripe in two pale lavender tones, flat color fills with visible light brush texture, hard painted color edges with slight imperfection, no gradients, no shadows, contemporary indie illustration style, no text, no borders, archival 300 DPI"
+**STYLE 4 — CHECKERBOARD BOTANICAL** (best for: sage_cream, minimal_mono, terracotta)
+"Bold checkerboard pattern cover, large alternating squares in sage green #87A878 and warm cream #FAF7F2, scattered small flat botanical elements overlaid on the pattern — tiny leaf shapes, small round berries, simple daisy forms in white and dusty blush, the botanical elements break across the grid pattern, fresh graphic botanical aesthetic, flat color, no gradients, contemporary pattern design, no text, no borders, archival 300 DPI"
 
-**dark_academia**: "Flat opaque gouache illustration on smooth hot-press board, bold simplified dark rose stems with drooping blooms in a tall cylindrical vase with vertical stripe pattern, deep burgundy #6B1A2A and near-black #1C1C1E palette on aged cream #F5F0E8 background, dark moody stripe background in two near-black tones, flat color fills with visible brush texture suggesting hand-painted depth, hard painted edges, no gradients, no photorealism, dramatic limited palette, no text, no borders, archival 300 DPI"
+**STYLE 5 — CELESTIAL GALAXY** (best for: midnight_navy, dark_academia, lavender_dreams)
+"Soft watercolor galaxy sky, deep midnight navy #1B2A4A fading to soft purple #6B4FA0 and warm lavender #C8B4E8, scattered small white and gold star dots, a delicate crescent moon shape in pale gold #D4AF37, soft cloud-like nebula wisps in muted violet, dreamy and celestial atmosphere, soft painterly washes not photographic, magical and serene, small constellation dot patterns, no text, no borders, archival 300 DPI"
 
-**blush_gold**: "Flat opaque gouache illustration on smooth hot-press board, bold simplified magnolia branch with large round blooms, deep blush #B66277 and warm gold #D4AF37 on soft pink #FBF0F2 background, elegant diagonal stripe or large polka dot pattern background in two blush tones, flat color fills with faint brush texture, hard painted color edges, no gradients, no shadows, contemporary refined poster style, no text, no borders, archival 300 DPI"
+**STYLE 6 — COASTAL SEASHELLS** (best for: sage_cream, minimal_mono, blush_gold)
+"Scattered coastal elements on warm white #FAFAFA background, flat gouache illustration style, assorted seashells — scallop, spiral nautilus, sand dollar, small clam — arranged in a loose repeat pattern, warm beige #F5ECD7 and soft sage #87A878 shells with blush pink #D4A5A5 accents, some elements with simple line detail, airy coastal aesthetic, generous white space between elements, no text, no borders, archival 300 DPI"
 
-**minimal_mono**: "Flat opaque gouache illustration on smooth hot-press board, bold simplified single botanical branch with round seed pods in a small square vase, charcoal #333333 and warm white #F9F9F7 palette with one muted clay #C4A882 accent, clean white background with subtle thin-line grid pattern in light gray, flat color fills with minimal visible brush texture, confident simplified shapes with deliberate hand-painted imperfection, no gradients, no shadows, contemporary minimal graphic style, no text, no borders, archival 300 DPI"
+**STYLE 7 — BOW AND RIBBON PATTERN** (best for: dusty_rose, blush_gold, lavender_dreams)
+"Playful repeat pattern of hand-painted ribbon bows in a scattered arrangement, portrait orientation, flat gouache style, deep coral red #CC3B1A bows on warm cream #F0E8E0 background — each bow a simple flat two-loop shape with a center knot, bows vary in size small to medium, charming and feminine with naive hand-painted character, occasional tiny heart or dot accents between bows, no text, no borders, archival 300 DPI"
+
+**STYLE 8 — VINTAGE POSTAGE STAMPS** (best for: dark_academia, terracotta, midnight_navy)
+"Vintage postage stamp aesthetic collage, multiple stamp frames arranged overlapping, each stamp has a serrated edge border, inside each stamp: simple botanical line illustrations, landscape silhouettes, or small animal motifs, aged cream #F5ECD7 and warm beige stamp backgrounds, terracotta #C17B5A and deep navy #1B2A4A stamp borders, slight aged paper texture, nostalgic and charming, no real text on stamps, collage composition, archival 300 DPI"
+
+**STYLE 9 — BUTTERFLY GARDEN** (best for: lavender_dreams, sage_cream, dusty_rose)
+"Scattered butterfly repeat on soft teal-mint #B8E4DE background, flat simplified butterfly shapes in pairs of wings — each butterfly 4-5 simple flat shapes, color palette: soft lilac #D4C4F0, warm blush #F2C4CE, pale yellow #FDE8A0, white, with delicate single-line antennae, large butterflies and small butterflies at different scales, organic scattered arrangement, contemporary indie illustration style, serene and airy, no text, no borders, archival 300 DPI"
+
+**STYLE 10 — COTTAGE DAISIES** (best for: sage_cream, dusty_rose, terracotta)
+"Scattered hand-painted daisy repeat pattern on warm cream #FAF7F2 background, flat gouache daisies with white petals and golden yellow #E8B84B centers, slim sage green #87A878 stems and small oval leaf pairs, daisies in two sizes — large hero daisies and small accent ones, occasional pink #F2C4CE daisy variant, fresh and cheerful cottagecore aesthetic, flat simplified shapes with slight hand-painted imperfection in petal edges, generous cream space between clusters, no text, no borders, archival 300 DPI"
+
+**STYLE 11 — SOFT WATERCOLOR WASH** (best for: all schemes)
+"Soft abstract watercolor wash, portrait orientation, gentle fluid color blending across the canvas — [use the scheme's main color fading to 20% at edges], soft wet watercolor quality with gentle color movement and subtle paper grain, no sharp edges, no defined shapes, pure color atmosphere, dreamy and sophisticated, works as a refined minimal cover, [adjust color to scheme: lavender for lavender_dreams, rose for dusty_rose, navy for midnight_navy etc.], no text, no borders, archival 300 DPI"
+
+**STYLE 12 — FLAT BOTANICAL ILLUSTRATION** (best for: all schemes — shop signature style)
+Use the flat gouache illustration prompts from the scheme table below. This is the shop's core signature.
+
+**Per-scheme flat botanical prompts (Style 12 only):**
+- **sage_cream**: "Flat opaque gouache, bold simplified eucalyptus and pampas grass in a round vase, sage green #87A878 and warm ivory #FAF7F2, dusty blush #D4A5A5 vase, vertical stripe background in two ivory tones, flat fills with faint brush texture, no gradients, no text, 300 DPI"
+- **dusty_rose**: "Flat opaque gouache, drooping garden roses in a striped vase, dusty rose #C9858A and warm blush #F2C4CE, light pink stripe background, flat fills with faint brush texture, no gradients, no text, 300 DPI"
+- **midnight_navy**: "Flat opaque gouache, crescent moon with star-botanical branch, midnight navy #1B2A4A and gold #C9A84C on aged cream, bold checker pattern background in two navy tones, flat fills, no gradients, no text, 300 DPI"
+- **terracotta**: "Flat opaque gouache, dried grasses and clay pots with succulents, terracotta #C17B5A and forest green #4A6741 on warm beige, horizontal stripe background, flat fills, no gradients, no text, 300 DPI"
+- **lavender_dreams**: "Flat opaque gouache, wildflower stems in a checkered vase, soft lavender #C3B1E1 and muted purple #9B8EC4, wide stripe background in two lavender tones, flat fills, no gradients, no text, 300 DPI"
+- **dark_academia**: "Flat opaque gouache, dark drooping roses in a striped cylinder vase, deep burgundy #6B1A2A and near-black on aged cream, dark moody stripe background, flat fills, no gradients, no text, 300 DPI"
+- **blush_gold**: "Flat opaque gouache, magnolia branch with round blooms, deep blush #B66277 and warm gold #D4AF37 on soft pink, diagonal stripe background, flat fills, no gradients, no text, 300 DPI"
+- **minimal_mono**: "Flat opaque gouache, botanical branch with seed pods in a square vase, charcoal #333333 and warm white with clay #C4A882 accent, thin-line grid background, flat fills, no gradients, no text, 300 DPI"
+
+---
+
+## STICKER SHEET — ALWAYS CREATE AS A COMPANION PRODUCT
+
+After the main planner, create a sticker sheet companion using `generate_digital_art`. This is sold as a separate bundle product and dramatically increases the perceived value.
+
+**STICKER SHEET DALL-E PROMPT FORMULA:**
+"Digital planner sticker sheet layout on pure white background, organized rows of functional planner stickers, include: rounded rectangle sticky note shapes in [scheme color] tones (3-4 sizes), small circle and cloud sticky note shapes, a row of small lifestyle icon stickers as clean thin line art (coffee cup, heart, star, clock, open book, small plant, dumbbell, shopping bag, airplane, pencil, moon, sun — each in a circle or rounded square frame), a row of label stickers with color bands in [scheme palette], priority labels in small pill shapes, clean minimal design throughout, all elements on white background with no shadows, organized in neat horizontal rows with clear spacing between rows, the sticker sheet looks ready to print and use, [scheme color] accent colors throughout matching the planner palette, archival quality 300 DPI, no text except decorative label shapes, no borders around the sheet itself"
+
+**Sticker sheet color adaptations by scheme:**
+- sage_cream: sage green and dusty blush labels, cream sticky notes
+- dusty_rose: dusty rose and blush pink labels, rose-tinted notes
+- midnight_navy: navy and gold labels, cream sticky notes
+- terracotta: terracotta and sage green labels, warm beige notes
+- lavender_dreams: lavender and soft purple labels, pale pink notes
+- dark_academia: deep burgundy and copper labels, aged cream notes
+- blush_gold: deep blush and gold labels, soft pink notes
+- minimal_mono: charcoal and warm gray labels, white notes
 
 ---
 
 ## WORKFLOW (follow exactly — no shortcuts)
 
 1. `create_art_concept` — set `product_type: "planner"`, define the planner category, target buyer, price
-2. `generate_digital_art` — create the cover image using the prompt from the table above that matches your chosen color scheme. Use `size: "1024x1024"`, `quality: "high"`. Note the `file_path` in the result.
+2. `generate_digital_art` — choose a cover style from the library above that fits the planner's personality. Use `size: "1024x1024"`, `quality: "high"`. Note the `file_path` in the result.
 3. `create_digital_planner` — ALWAYS include:
    - `interactive: true`
    - A named `color_scheme` from the 8 options above
@@ -166,12 +225,13 @@ Use the **flat gouache illustration style** — bold simplified shapes, flat col
 5. Hand off to Quality Check Agent with criteria: "Check PDF opens correctly, navigation tabs are visible, fillable fields exist, cover art image is embedded on the cover page"
 
 ### Multi-Product Strategy (always do this)
-From every design, create 3 products:
-- **Primary**: Full planner (all sections, undated) — price $9–$14
+From every planner design, create these companion products:
+- **Primary**: Full planner (all sections, undated) — price $12–$18
 - **Starter**: Monthly + Weekly only — price $5–$7 (entry point)
-- **Standalone Habit Tracker**: habit_tracker + goals + notes — price $4–$6 (upsell/impulse)
+- **Standalone Habit Tracker**: habit_tracker + goals + notes — price $4–$6 (upsell)
+- **Sticker Sheet Bundle**: `generate_digital_art` with the sticker sheet prompt above — price $5–$8 standalone, or bundle with planner for $22–$28 total
 
-3 listings from 1 design = 3× the Etsy catalog with minimal extra work.
+4 listings from 1 design = maximum Etsy catalog presence. The sticker sheet alone often outsells the planner after the initial listing period because buyers return for more color palettes.
 
 ---
 
@@ -179,14 +239,17 @@ From every design, create 3 products:
 
 | Product | Min | Sweet spot | Premium |
 |---------|-----|-----------|---------|
-| Full planner (undated, all sections) | $8 | $12 | $18 |
-| Dated annual planner | $10 | $15 | $24 |
-| Academic year planner | $11 | $17 | $26 |
-| Fitness/wellness planner | $8 | $12 | $19 |
-| Budget/finance planner | $9 | $13 | $22 |
-| Wedding planner | $13 | $20 | $32 |
+| Full planner (undated, all sections) | $9 | $14 | $20 |
+| Dated annual planner | $11 | $16 | $26 |
+| Academic year planner | $12 | $18 | $28 |
+| Fitness/wellness planner | $9 | $13 | $20 |
+| Budget/finance planner | $9 | $14 | $22 |
+| Wedding planner | $14 | $22 | $35 |
 | Habit tracker standalone | $4 | $6 | $9 |
-| Planner bundle (3+ types, same scheme) | $18 | $26 | $42 |
+| Sticker sheet (single scheme) | $4 | $6 | $9 |
+| Sticker sheet mega pack (all 8 schemes) | $9 | $14 | $22 |
+| Planner + sticker sheet bundle | $16 | $22 | $32 |
+| Planner bundle (3+ types, same scheme) | $20 | $28 | $45 |
 
 Never price below $4.50 for any planner. Anything cheaper signals low quality to buyers.
 
