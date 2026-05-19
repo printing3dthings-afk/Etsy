@@ -972,11 +972,14 @@ def _create_frame_mockup(data: dict, store: DataStore) -> str:
 
 # ── ROOM COMPOSITE + SIZE COMPARISON ─────────────────────────────────────────
 
-def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int) -> tuple:
-    """Render art in a beveled frame with drop shadow on a transparent RGBA canvas.
+def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int,
+                            ambient_rgb: tuple = (215, 208, 198)) -> tuple:
+    """Render art in a photorealistic frame on a transparent RGBA canvas.
+    ambient_rgb: sampled wall color used to tint the frame to match room lighting.
     Returns (RGBA PIL Image, (art_x0, art_y0, art_x1, art_y1)).
     """
-    from PIL import Image, ImageDraw, ImageFilter
+    import random
+    from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 
     pal = _FRAME_PALETTES.get(frame_style, _FRAME_PALETTES["natural_wood"])
 
@@ -985,57 +988,136 @@ def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int) -
     art = art_img.resize((int(aw * scale), int(ah * scale)), Image.LANCZOS)
     aw, ah = art.size
 
-    FRAME_W, MAT_W, BEVEL = 38, 14, 6
+    FRAME_W = 48   # molding width
+    MAT_W   = 16   # white mat
+    BEVEL   = 18   # depth of 3-D bevel on molding face
+    PAD     = 60   # transparent bleed for shadow
+
     total_w = aw + 2 * (MAT_W + FRAME_W)
     total_h = ah + 2 * (MAT_W + FRAME_W)
-    PAD = 52  # padding for shadow bleed
+    cw, ch  = total_w + PAD * 2, total_h + PAD * 2
 
-    cw, ch = total_w + PAD * 2, total_h + PAD * 2
     canvas = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
 
-    # Drop shadow
-    shadow = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-    sd = ImageDraw.Draw(shadow)
-    sd.rectangle([PAD + 14, PAD + 18, PAD + total_w + 14, PAD + total_h + 18], fill=(0, 0, 0, 120))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=20))
-    canvas = Image.alpha_composite(canvas, shadow)
+    # ── Realistic drop shadow (two-layer: hard contact + soft cast) ──
+    for offset, blur, alpha in [(10, 6, 90), (18, 28, 60)]:
+        s = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+        sd = ImageDraw.Draw(s)
+        sd.rectangle([PAD + offset, PAD + offset,
+                      PAD + total_w + offset, PAD + total_h + offset],
+                     fill=(0, 0, 0, alpha))
+        s = s.filter(ImageFilter.GaussianBlur(radius=blur))
+        canvas = Image.alpha_composite(canvas, s)
 
     draw = ImageDraw.Draw(canvas)
     fx0, fy0 = PAD, PAD
     fx1, fy1 = PAD + total_w, PAD + total_h
 
-    # Frame body
-    draw.rectangle([fx0, fy0, fx1, fy1], fill=(*pal["base"], 255))
+    # ── Frame base fill ──
+    base = pal["base"]
+    draw.rectangle([fx0, fy0, fx1, fy1], fill=(*base, 255))
 
-    # Bevel
+    # ── Wood grain texture (natural_wood only; gold/black/white get subtle variation) ──
+    fw_px = fx1 - fx0
+    fh_px = fy1 - fy0
+    rng = random.Random(42)   # deterministic seed so grain is repeatable
+    grain_layer = Image.new("RGBA", (fw_px, fh_px), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(grain_layer)
+
+    if frame_style == "natural_wood":
+        # Horizontal fiber lines with slight brightness variation and waviness
+        y = 0
+        while y < fh_px:
+            step   = rng.randint(2, 5)
+            bright = rng.randint(-22, 18)
+            r2 = max(0, min(255, base[0] + bright))
+            g2 = max(0, min(255, base[1] + int(bright * 0.7)))
+            b2 = max(0, min(255, base[2] + int(bright * 0.4)))
+            alpha = rng.randint(55, 120)
+            # Slightly wavy line: small vertical offsets every 40px
+            pts = []
+            cx = 0
+            wy = y + rng.randint(-1, 1)
+            while cx <= fw_px:
+                wy += rng.uniform(-0.3, 0.3)
+                pts.append((cx, wy))
+                cx += 40
+            if len(pts) >= 2:
+                gd.line(pts, fill=(r2, g2, b2, alpha), width=step)
+            y += step
+    else:
+        # Subtle brightness flicker for non-wood materials
+        for y in range(0, fh_px, 4):
+            bright = rng.randint(-8, 8)
+            r2 = max(0, min(255, base[0] + bright))
+            g2 = max(0, min(255, base[1] + bright))
+            b2 = max(0, min(255, base[2] + bright))
+            gd.line([(0, y), (fw_px, y)], fill=(r2, g2, b2, 40))
+
+    grain_layer = grain_layer.filter(ImageFilter.GaussianBlur(radius=0.6))
+    canvas.paste(grain_layer, (fx0, fy0), grain_layer)
+
+    # ── 3-D Bevel molding — wide face with realistic lighting ratios ──
+    draw = ImageDraw.Draw(canvas)
     for b in range(BEVEL):
-        t = 1.0 - b / BEVEL
-        hi = tuple(int(pal["base"][i] + (pal["hi"][i] - pal["base"][i]) * t) for i in range(3)) + (255,)
-        lo = tuple(int(pal["base"][i] + (pal["lo"][i] - pal["base"][i]) * t) for i in range(3)) + (255,)
-        draw.line([(fx0+b, fy0+b), (fx1-b, fy0+b)], fill=hi)
-        draw.line([(fx0+b, fy0+b), (fx0+b, fy1-b)], fill=hi)
-        draw.line([(fx0+b, fy1-b), (fx1-b, fy1-b)], fill=lo)
-        draw.line([(fx1-b, fy0+b), (fx1-b, fy1-b)], fill=lo)
+        t = (1.0 - b / BEVEL) ** 1.4   # power curve: bright near edge, rapid falloff
+        hi = tuple(int(base[i] + (pal["hi"][i] - base[i]) * t) for i in range(3)) + (255,)
+        lo = tuple(int(base[i] + (pal["lo"][i] - base[i]) * t) for i in range(3)) + (255,)
+        draw.line([(fx0+b, fy0+b), (fx1-b, fy0+b)], fill=hi, width=1)   # top highlight
+        draw.line([(fx0+b, fy0+b), (fx0+b, fy1-b)], fill=hi, width=1)   # left highlight
+        draw.line([(fx0+b, fy1-b), (fx1-b, fy1-b)], fill=lo, width=1)   # bottom shadow
+        draw.line([(fx1-b, fy0+b), (fx1-b, fy1-b)], fill=lo, width=1)   # right shadow
 
-    # White mat
+    # ── Specular highlight: bright glancing reflection on top-left molding face ──
+    spec_layer = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    sp = ImageDraw.Draw(spec_layer)
+    for i in range(8):
+        a = max(0, 55 - i * 7)
+        sp.line([(fx0 + BEVEL + i, fy0 + 2), (fx0 + BEVEL + i, fy1 - 2)],
+                fill=(255, 255, 255, a))
+        sp.line([(fx0 + 2, fy0 + BEVEL + i), (fx1 - 2, fy0 + BEVEL + i)],
+                fill=(255, 255, 255, a))
+    spec_layer = spec_layer.filter(ImageFilter.GaussianBlur(radius=2))
+    canvas = Image.alpha_composite(canvas, spec_layer)
+    draw = ImageDraw.Draw(canvas)
+
+    # ── Ambient light tint: blend wall color temperature into frame (8%) ──
+    ar, ag, ab = ambient_rgb
+    for i in range(3):
+        tint_c = (int(base[i] * 0.92 + (ar, ag, ab)[i] * 0.08),) * 1
+    # Apply tint as a semi-transparent overlay on the frame rect only
+    tint_layer = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+    tl = ImageDraw.Draw(tint_layer)
+    tl.rectangle([fx0, fy0, fx1, fy1],
+                 fill=(int(ar * 0.08 + base[0] * 0.92),
+                       int(ag * 0.08 + base[1] * 0.92),
+                       int(ab * 0.08 + base[2] * 0.92), 25))
+    canvas = Image.alpha_composite(canvas, tint_layer)
+    draw = ImageDraw.Draw(canvas)
+
+    # ── White mat with deep inner shadow recess ──
     mx0, my0 = fx0 + FRAME_W, fy0 + FRAME_W
     mx1, my1 = fx1 - FRAME_W, fy1 - FRAME_W
-    draw.rectangle([mx0, my0, mx1, my1], fill=(250, 247, 242, 255))
-    for s in range(4):
-        v = 215 - s * 14
-        draw.rectangle([mx0+s, my0+s, mx1-s, my1-s], outline=(v, v-2, v-5, 255))
+    draw.rectangle([mx0, my0, mx1, my1], fill=(252, 249, 244, 255))
+    for s in range(8):
+        v = 200 - s * 12
+        draw.rectangle([mx0+s, my0+s, mx1-s, my1-s], outline=(v, v-1, v-3, 255))
 
-    # Paste art with subtle glare
+    # ── Inner frame edge: dark lip where frame meets mat ──
+    draw.rectangle([mx0, my0, mx1, my1], outline=(80, 72, 60, 200), width=1)
+
+    # ── Paste art with glass-glare overlay ──
     ax0, ay0 = mx0 + MAT_W, my0 + MAT_W
     art_rgba = art.convert("RGBA")
     glare = Image.new("RGBA", (aw, ah), (0, 0, 0, 0))
     gd = ImageDraw.Draw(glare)
+    # Diagonal band of soft reflected light (upper-left corner)
     for y in range(ah):
         p = y / ah
-        if p < 0.28:
-            alpha = int((0.28 - p) / 0.28 * 18)
-            gd.line([(0, y), (aw, y)], fill=(255, 255, 255, alpha))
-    glare = glare.filter(ImageFilter.GaussianBlur(radius=3))
+        if p < 0.22:
+            a = int((0.22 - p) / 0.22 * 16)
+            gd.line([(0, y), (aw, y)], fill=(255, 255, 255, a))
+    glare = glare.filter(ImageFilter.GaussianBlur(radius=5))
     art_rgba = Image.alpha_composite(art_rgba, glare)
     canvas.paste(art_rgba, (ax0, ay0), art_rgba)
 
@@ -1180,7 +1262,15 @@ def _create_room_composite(data: dict, store: DataStore) -> str:
     art_img = Image.open(src).convert("RGB")
     ROOM_PX = 1024
     PAD     = _FRAME_RGBA_PAD          # shadow bleed around the framed RGBA image
-    FRAME_MAT_TOTAL = 2 * (38 + 14)    # 2×(FRAME_W + MAT_W) = 104px added to art dims
+    FRAME_MAT_TOTAL = 2 * (48 + 16)   # 2×(FRAME_W + MAT_W) = 128px added to art dims
+
+    # Per-room max frame width as fraction of room image — entryway kept smaller
+    _ROOM_MAX_FRAC = {
+        "kitchen_dining": 0.50,
+        "living_room":    0.50,
+        "entryway":       0.36,
+        "bedroom":        0.48,
+    }
 
     saved: list[dict] = []
     for room_key in room_styles:
@@ -1193,22 +1283,29 @@ def _create_room_composite(data: dict, store: DataStore) -> str:
         room_bg = Image.open(io.BytesIO(img_bytes)).convert("RGBA").resize(
             (ROOM_PX, ROOM_PX), Image.LANCZOS
         )
+        room_rgb = room_bg.convert("RGB")
 
         # Detect clear wall zone above furniture
-        wall_top_f, furn_top_f = _scan_clear_wall_zone(room_bg.convert("RGB"))
+        wall_top_f, furn_top_f = _scan_clear_wall_zone(room_rgb)
         wall_top_px = int(ROOM_PX * wall_top_f)
         furn_top_px = int(ROOM_PX * furn_top_f)
 
-        # Available height for the VISIBLE frame (not including shadow bleed)
-        # Leave 5% gap between frame bottom and furniture top
+        # Sample ambient wall color from the center of the clear wall zone
+        sample_y = (wall_top_px + furn_top_px) // 2
+        sample_y = min(sample_y, ROOM_PX - 1)
+        wall_samples = [room_rgb.getpixel((int(ROOM_PX * x), sample_y))
+                        for x in (0.3, 0.4, 0.5, 0.6, 0.7)]
+        ambient = tuple(sum(s[c] for s in wall_samples) // len(wall_samples) for c in range(3))
+
+        # Available height for the VISIBLE frame; leave 5% gap above furniture
         avail_h = (furn_top_px - int(ROOM_PX * 0.05)) - (wall_top_px + int(ROOM_PX * 0.04))
         avail_h = max(120, avail_h)
 
-        # Scale art so visible frame height = 90% of available wall height, capped at 52% room width
+        max_frac = _ROOM_MAX_FRAC.get(room_key, 0.50)
         target_vis_fh = int(avail_h * 0.90)
-        art_long = min(int(ROOM_PX * 0.52), max(80, target_vis_fh - FRAME_MAT_TOTAL))
+        art_long = min(int(ROOM_PX * max_frac), max(80, target_vis_fh - FRAME_MAT_TOTAL))
 
-        framed, _ = _render_framed_art_rgba(art_img, frame_style, art_long)
+        framed, _ = _render_framed_art_rgba(art_img, frame_style, art_long, ambient_rgb=ambient)
         fw, fh    = framed.size
 
         # Visible frame bounds within the RGBA image: [PAD .. fh-PAD]
