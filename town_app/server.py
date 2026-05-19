@@ -1838,18 +1838,23 @@ def _run_direct_pipeline(category: str, description: str, style: str):
             "Return the product_id when done."
         )
     else:
-        style_part = f"Style: {style}.\n" if style else ""
+        style_part = f"Requested style: {style}.\n" if style else (
+            "Choose the best-fit style from the shop library in your system prompt "
+            "(A=Bold Flat, B=Gestural Botanical, C/C2=Quote Print, E=Impasto Oil Floral, "
+            "F=Linocut, G=Japandi, H=Golden Hour Landscape, I=Painterly Garden, "
+            "J=Mediterranean Window, K=Whimsical Fine Art). "
+            "Name the chosen style in the concept field.\n"
+        )
         create_task = (
             f"Create a premium Etsy digital wall art product.\n"
             f"Description: {description}.\n"
             f"{style_part}"
             "Do exactly 2 steps:\n"
-            "1) Call create_art_concept — set product_type='wall_art', price=7.\n"
-            "2) Call generate_digital_art with a museum-quality DALL-E prompt built from this formula: "
-            "[medium+technique], [named subject/species], [4-5 specific colors with hex hints], "
-            "[lighting direction+quality], [composition rule], [emotional mood], "
-            "'high resolution archival fine art print, 300 DPI, museum-quality', "
-            "'no text, no watermarks, no borders, no signatures, no frames'.\n"
+            "1) Call create_art_concept — set product_type='wall_art', price=7. "
+            "Include 'Style X — [name]' at the start of the concept field so the style is recorded.\n"
+            "2) Call generate_digital_art using the DALL-E formula for the chosen style from your "
+            "system prompt (use the PROVEN TOP-SELLING PROMPTS section as your template). "
+            "Use size='1024x1536', quality='high'.\n"
             "Return the product_id."
         )
 

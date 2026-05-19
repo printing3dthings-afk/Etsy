@@ -198,6 +198,10 @@ TOOL_DEFINITIONS: list[dict] = [
                     "default": "3000x3000px 300dpi",
                 },
                 "price": {"type": "number", "description": "Planned selling price in USD"},
+                "art_style": {
+                    "type": "string",
+                    "description": "Shop style letter+name, e.g. 'A - Bold Flat Illustration' or 'G - Japandi Wabi-Sabi'. Use one of A/B/C/C2/D/E/F/G/H/I/J/K from the system prompt style library.",
+                },
             },
             "required": ["title", "product_type", "concept", "target_audience", "price"],
         },
@@ -427,6 +431,7 @@ def _create_art_concept(data: dict, store: DataStore) -> str:
         "id": product_id,
         "title": data["title"],
         "product_type": data["product_type"],
+        "art_style": data.get("art_style", ""),
         "concept": data["concept"],
         "target_audience": data["target_audience"],
         "dimensions": data.get("dimensions", "3000x3000px 300dpi"),

@@ -494,9 +494,25 @@ Top Etsy art shops include ALL print sizes in one download. A buyer picks 8×8 f
 
 ## WORKFLOW (follow exactly)
 
-1. `create_art_concept` — market niche, target buyer, palette choice, price tier
-2. `generate_digital_art` — full prompt with formula above, size=`1024x1536`, quality=`high`
-3. If creating a set, run `generate_digital_art` for each piece (coordinated prompts, same palette)
+**STEP 0 — CHOOSE A STYLE (mandatory before anything else):**
+Look at the brief and pick exactly one style from the shop library:
+- **A** — Bold Flat Illustration (checker vase, stripe bg, opaque gouache)
+- **B** — Loose Gestural Botanical (overflowing bouquet, semi-transparent, folk art)
+- **C / C2** — Hand-Lettered Quote (plain cream background / dark textured background)
+- **D** — Cute Printable Template (hand-drawn, washi tape, flat PNG)
+- **E** — Impasto Oil Floral (palette knife, farmhouse, white hydrangeas)
+- **F** — Bold Graphic Linocut (oversized subject, contour-line hatching, two-color)
+- **G** — Japandi Wabi-Sabi (bare tree, amber circles, vertical panels, sumi-e)
+- **H** — Golden Hour Nature Landscape (alpine wildflower meadow, backlit pines, mountains)
+- **I** — Loose Painterly Garden (standing garden, multiple flower scales, bright palette)
+- **J** — Mediterranean Window Scene (open shutters, lemons, cobalt sea, thick impasto)
+- **K** — Whimsical Fine Art (serious technique + funny subject — spa duck, Victorian cat, pub dog)
+
+Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
+
+1. `create_art_concept` — include `style` letter and name in the `concept` field, market niche, target buyer, palette choice, price tier
+2. `generate_digital_art` — use the exact DALL-E formula for the chosen style from above, size=`1024x1536` (portrait) AND `1024x1024` (square) — generate BOTH for multi-size bundle listings, quality=`high`
+3. If creating a set, run `generate_digital_art` for each piece (coordinated prompts, same palette, same style)
 4. Set status to `qc_pending`
 5. Hand off to Quality Check Agent with specific review criteria: "Is this gallery-worthy? Does it look like a top-10 Etsy result? Is the composition strong? Are colors harmonious?"
 
