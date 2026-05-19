@@ -29,6 +29,9 @@ Thick palette knife impasto oil painting of classic florals — hydrangeas, peon
 **STYLE F — Bold Graphic Linocut / Screenprint Botanical** (oversized single subject bleeding to all edges, dense contour-following parallel lines, pure monochromatic, printmaking aesthetic)
 Single giant botanical subject (poppy, anemone, dahlia, protea, magnolia) filling the ENTIRE canvas with petals cropped at all four edges — no background visible. Bold black outlines define each petal shape, and every petal interior is filled with dense evenly-spaced parallel lines that curve and follow each petal's contour — like hand-cut linocut hatching. Solid black center with small white negative-space oval marks (stamens). Pure two-color: black lines on off-white. Also works as color variants: navy on cream, terracotta on warm white, sage green on ivory. Marimekko Unikko / Scandinavian screenprint aesthetic. Huge Etsy market: modern botanical, bold graphic, Scandinavian art print buyers.
 
+**STYLE M — Dark Sci-Fi / Cosmic Concept Art** (hyper-detailed digital painting, close-up cosmic figure, visor galaxy reflection, neon electric glow on dark, organic suit growth, floating planets)
+Hyper-detailed dark digital concept art — the quality level of a AAA game cinematic poster. A close-up portrait of an astronaut or cosmic figure fills the canvas. The helmet visor reflects a vivid inner galaxy (orange nebula, teal swirls, impossible cosmic color). Dark organic elements (deep-toned flowers, coral, or cosmic growth) cover the suit. Electric blue and violet atmospheric rim lighting against near-black background. Floating glowing orbs/planets. Painterly digital art technique with extraordinary detail. Etsy market: gaming room art, sci-fi fantasy, dark maximalist, teen/young adult bedroom posters.
+
 **STYLE L — Hyperrealistic Celestial / Moon Art** (photorealistic full moon, water reflection, deep midnight sky, dramatic scale, warm silver-gold tones)
 Hyperrealistic digital art quality — NOT painterly, NOT engraving, NOT watercolor. A massive detailed full moon filling 60% of the canvas sitting right at a calm waterline, its reflection rippling below. Deep midnight navy to near-black sky. Warm silver-gold moon surface showing realistic crater detail. One of the most consistently searched celestial art subjects on Etsy year-round. Buyers: bedroom art, spiritual/meditation decor, moon phase collectors, celestial aesthetic.
 
@@ -101,6 +104,16 @@ Massive market — fits literally any home decor style.
 - Strong composition: one focal form dissolving into negative space
 - Gallery-wall worthy — could hang in a hotel lobby
 - Reference: Scandinavian modern art aesthetic, Jordan Amy Lee style
+
+**0j. Dark Sci-Fi / Cosmic Concept Art (Style M)** ← GAMING ROOM + SCI-FI POSTER MARKET, HIGH IMPULSE BUY
+Hyper-detailed dark digital concept art — astronaut close-up with cosmic visor reflection. Completely different buyer from botanical/farmhouse art: gamers, sci-fi fans, dark aesthetic teens, pop culture collectors. Very strong impulse purchase — people see it and immediately want it. Priced premium ($10–$20 single) because the perceived production value is very high.
+- Close-up of an astronaut or cosmic figure, slightly below eye-level, dramatic upward angle
+- The suit is covered in dark organic growth: deep-toned space flowers, coral, or bioluminescent fungi in dark teal and near-black purple — beautiful and slightly unsettling
+- Helmet visor: the reflective glass shows a vivid inner galaxy swirl in impossible colors — hot orange nebula, electric teal cosmic gas, vivid violet star clusters — a world inside the helmet
+- Background: near-black #050818 with electric blue #1A5AE8 atmospheric glow on one side and warm red-orange #E84818 cosmic light on the other — dramatic two-tone rim lighting on the figure
+- Floating spheres: 2–3 glowing orbs/planets in hot pink/magenta #E01890 and purple at varying distances in the background
+- Overall mood: epic, cosmic, dark fantasy — like a movie poster for a space odyssey
+- Variants: Astronaut (suit), Deep Sea Diver (vintage diving suit + coral ocean), Knight (dark armor + magical reflective visor with inner realm)
 
 **0i. Hyperrealistic Celestial / Moon Art (Style L)** ← YEAR-ROUND BESTSELLER, BEDROOM + SPIRITUAL DECOR
 Full moon over water reflection — one of Etsy's most perennially searched celestial compositions. Deep dramatic scale. Warm silver-gold lunar surface with crater detail. Mirror reflection in rippling water. Works at every size from 8×8 to 30×40. Buyers return for multiple sizes and variants (supermoon, blood moon, crescent moon rising).
@@ -255,6 +268,7 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **Garden Folk** | Coral red #C84B3A, blush pink #F4B8B0, warm yellow #E8C230, orange #E87A30, forest green #2A5A3A, sage #8ABAA0, off-white #F8F4EE background, pink-lavender wash accents | Style I loose painterly garden / abstract folk floral |
 | **Mediterranean Lemon** | Turquoise window #1A8A8A, lemon yellow #E8D430, deep leaf green #2A5A20, cobalt sea #1A6AB0, cerulean #2080C0, pale sky #A8C8E8, terracotta sill #D4886A, warm cliff sienna #C47A52, white village #F5F0E8 | Style J Mediterranean window scene |
 | **Whimsical Spa** | Rubber yellow #E8C820, teal bathwater #4ABAB0, white/blush towel #F5E8E4, pale pink bath tile #F0D4CC, warm honey tile highlight #D4A870, pink fluffy towel #F0B8B0, black sunglasses | Style K whimsical fine art — spa duck palette |
+| **Cosmic Concept** | Near-black #050818 background, electric blue rim #1A5AE8, violet glow #6A1AE8, hot pink orbs #E01890, orange nebula visor #E84818, teal cosmic #18C8D8, dark organic suit teal #1A2A3A, vivid visor galaxy (orange+teal+violet) | Style M dark sci-fi cosmic concept art |
 | **Lunar Night** | Warm silver-gold moon #E8E4C8, lunar gray #B8B4A0, dark mare blue-gray #8890A0, deep midnight navy #1A1A3A, near-black sky #0A0A1E, moonlit water silver #C8C4A8. Blood Moon variant: amber-red #C84820, dark purple sky #1A0A2A. | Style L hyperrealistic celestial moon art |
 
 When writing your DALL-E prompt, reference these palette names explicitly: "using the Terracotta palette — terracotta orange #C17B5A, forest green #4A6741, warm beige #F5ECD7, and rust accent."
@@ -296,6 +310,23 @@ Museum-quality thick palette knife impasto oil painting of [white/cream/blush hy
 ```
 
 **Style E palette — Neutral Farmhouse**: Pure white #FEFEFE, warm cream #F5ECD7, forest green #2D4A1E, olive green #4A5A2A, warm beige-gray #C8BAAA, taupe #A89888, raw umber #8B7355, off-white linen #EDE8DE. This palette sells to the largest home decor demographic on Etsy — neutral/greige/farmhouse/cottagecore buyers.
+
+### STYLE M — DARK SCI-FI / COSMIC CONCEPT ART FORMULA:
+```
+Hyper-detailed dark digital concept art portrait, Cosmic Concept palette — near-black #050818, electric blue #1A5AE8, violet #6A1AE8, hot pink #E01890, orange nebula #E84818, teal cosmic #18C8D8, close-up portrait orientation:
+
+FIGURE: close-up of a [vintage astronaut / deep-sea diver / armored knight] filling most of the canvas, camera angle slightly below eye-level looking up for maximum dramatic scale. The suit/armor is dark and covered in intricate organic growth — dark space flowers, bioluminescent coral, or cosmic fungal clusters in deep dark teal #1A2A3A and near-black purple tones — beautiful organic texture that makes the suit look ancient and alive.
+
+VISOR/REFLECTIVE SURFACE: the helmet visor or face plate is reflective glass showing a vivid galaxy scene reflected inside — a swirling nebula in hot orange #E84818 and electric teal #18C8D8 with violet star clusters #8A1AE8, the galaxy inside the visor is impossibly vivid and detailed as if a whole universe exists within, the glass rim of the visor catches electric blue rim light.
+
+LIGHTING: dramatic two-tone rim lighting — strong electric blue #1A5AE8 light source from the left side casting cold rim light along the suit edge, warm orange-red #E84818 from the right as cosmic glow, the figure itself is largely in shadow with only the rim lighting and visor glow illuminating it, this creates maximum drama.
+
+BACKGROUND: near-black #050818 with subtle electric blue and violet atmospheric haze, 2–3 floating glowing spheres at different scales — hot pink #E01890 orbs and muted violet #5A1A8A spheres — partially out of focus at different depths, scattered very faint star field.
+
+TECHNIQUE: hyper-detailed digital painting — the level of a AAA game cinematic poster or premium sci-fi movie art. Visible painterly brushwork but extraordinarily detailed. Every element has physical texture — the suit material, the organic growth, the visor glass. Dramatic lighting makes the figure appear 3D. Archival quality 300 DPI, portrait orientation, no text, no watermarks.
+```
+
+**Style M variants**: Astronaut + space (as described), Deep Sea Diver + underwater abyss (replace space background with dark deep ocean, bioluminescent sea creatures, dark pressure suit with coral and anemone growth, visor reflects an inner fire/lava world), Dark Knight + fantasy realm (medieval armor covered in dark vines, visor reflects a magic portal).
 
 ### STYLE L — HYPERREALISTIC CELESTIAL / MOON ART FORMULA:
 ```
@@ -461,6 +492,9 @@ Use these specific phrases to anchor every piece in traditional media:
 **Loose gestural botanical (Style B) — overflowing bouquet:**
 "Loose gestural gouache botanical illustration on warm white paper #FAFAF5, overflowing radial bouquet of elongated sage leaf shapes, round coral peach open flower faces, small golden yellow berry clusters, and pale white foxglove spikes with tiny dark dots, Folk Botanical palette — mint green #A8C9A0, sage green #6BAE8C, coral peach #F2B09A, deeper coral #E8907A with red #CC2929 centers painted on top, golden yellow #E8B84B berry dots, teal blue #2A6BA0 gestural line-work base barely suggesting a vase at the bottom crop, composition fills every inch of the canvas — botanicals radiate outward from center bottom with no empty corners, each leaf is a single decisive gestural brushstroke with slight translucency showing white paper beneath, multiple overlapping transparent green leaf layers creating depth, round flower faces simplified to two opaque circles (pale face + deeper center), no ink outlines anywhere — shapes exist only as paint against white paper, folk art botanical quality with Matisse-inspired flat shape confidence, archival quality 300 DPI, warm white paper background, no gradients, no photorealism, no text, no watermarks, no borders"
 
+**Dark sci-fi concept art (Style M) — cosmic astronaut:**
+"Hyper-detailed dark digital concept art portrait, Cosmic Concept palette, close-up portrait of a vintage astronaut filling the canvas, camera angle slightly below eye-level looking upward for dramatic scale: the space suit is dark and covered in intricate organic growth — dark space flowers and bioluminescent coral clusters in deep dark teal #1A2A3A and near-black purple tones, the organic growth makes the suit look ancient and alive with beautiful dark texture, the helmet visor is reflective glass showing a vivid impossible galaxy reflected inside — swirling nebula in hot orange #E84818 and electric teal #18C8D8 with violet star clusters, an entire universe glowing within the visor, the glass rim catches electric blue rim light, dramatic two-tone rim lighting: strong electric blue #1A5AE8 rim light from the left side of the suit, warm orange-red #E84818 cosmic glow from the right, the figure is largely in deep shadow with only rim lighting and visor glow illuminating it, near-black #050818 background with subtle electric blue and violet atmospheric haze, 2-3 floating glowing spheres at different depths — hot pink #E01890 orb upper right, muted violet #5A1A8A sphere lower left, partially out of focus, scattered faint star field, hyper-detailed digital painting quality equal to AAA game cinematic poster art, extraordinary detail in every surface texture, dramatic 3D lighting, archival quality 300 DPI, portrait orientation, no text, no watermarks"
+
 **Hyperrealistic moon over water (Style L) — classic silver moon:**
 "Hyperrealistic digital art of a massive full moon over a calm night lake, Lunar Night palette, portrait orientation: enormous full moon filling 60% of canvas height, centered and sitting with its bottom edge right at the waterline, lunar surface highly detailed — visible crater formations of varying sizes, dark gray-blue lunar maria as smooth dark patches contrasting with the brighter highlands, subtle spherical volume from the terminator shadow gradation on the edge, the moon glows warm silver-gold #E8E4C8 overall, surface features in warm gray #B8B4A0 and dark blue-gray #8890A0, a soft warm white atmospheric corona halo radiating from the moon's edge into the surrounding night sky, sky is deep midnight navy #1A1A3A fading to near-black #0A0A1E at the top — only 2-3 faint distant star points visible at the top corners, the lower half of the composition is a flat calm lake: deep dark navy water #0A0A1A, the moon's reflection directly below as a broad shimmering column of warm silver-gold light #C8C4A8 distorted by gentle horizontal water ripples — not a perfect circle but a wide shimmering bloom of rippled moonlight, thin bright silver ripple lines catch the glow across the otherwise black water surface, the overall mood is ancient, serene, mystical — standing at a still lake at midnight with no other light source than the moon, photorealistic quality, archival 300 DPI, portrait orientation, no text, no watermarks"
 
@@ -546,6 +580,7 @@ Look at the brief and pick exactly one style from the shop library:
 - **J** — Mediterranean Window Scene (open shutters, lemons, cobalt sea, thick impasto)
 - **K** — Whimsical Fine Art (serious technique + funny subject — spa duck, Victorian cat, pub dog)
 - **L** — Hyperrealistic Celestial / Moon Art (full moon + water reflection, deep midnight sky, photorealistic)
+- **M** — Dark Sci-Fi / Cosmic Concept Art (astronaut close-up, visor galaxy reflection, neon-on-dark, organic suit growth)
 
 Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
 
