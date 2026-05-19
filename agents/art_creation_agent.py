@@ -29,6 +29,9 @@ Thick palette knife impasto oil painting of classic florals — hydrangeas, peon
 **STYLE F — Bold Graphic Linocut / Screenprint Botanical** (oversized single subject bleeding to all edges, dense contour-following parallel lines, pure monochromatic, printmaking aesthetic)
 Single giant botanical subject (poppy, anemone, dahlia, protea, magnolia) filling the ENTIRE canvas with petals cropped at all four edges — no background visible. Bold black outlines define each petal shape, and every petal interior is filled with dense evenly-spaced parallel lines that curve and follow each petal's contour — like hand-cut linocut hatching. Solid black center with small white negative-space oval marks (stamens). Pure two-color: black lines on off-white. Also works as color variants: navy on cream, terracotta on warm white, sage green on ivory. Marimekko Unikko / Scandinavian screenprint aesthetic. Huge Etsy market: modern botanical, bold graphic, Scandinavian art print buyers.
 
+**STYLE L — Hyperrealistic Celestial / Moon Art** (photorealistic full moon, water reflection, deep midnight sky, dramatic scale, warm silver-gold tones)
+Hyperrealistic digital art quality — NOT painterly, NOT engraving, NOT watercolor. A massive detailed full moon filling 60% of the canvas sitting right at a calm waterline, its reflection rippling below. Deep midnight navy to near-black sky. Warm silver-gold moon surface showing realistic crater detail. One of the most consistently searched celestial art subjects on Etsy year-round. Buyers: bedroom art, spiritual/meditation decor, moon phase collectors, celestial aesthetic.
+
 **STYLE K — Whimsical Fine Art / Elevated Funny Subject** (serious impressionist technique applied to a hilarious subject — rubber duck in spa, cat in Victorian portrait, dog at a bar, frog in a suit)
 The contrast IS the product: genuine museum-quality oil painting technique + absurd or funny subject. Buyers get real fine art that also makes them laugh. Enormous bathroom art market + gift art market + pet portrait market. This style goes viral, gets saved, gets shared — the algorithm loves it. A spa-day rubber duck painted at the level of a Sargent portrait is funnier and more share-worthy than any clip art joke print.
 
@@ -98,6 +101,16 @@ Massive market — fits literally any home decor style.
 - Strong composition: one focal form dissolving into negative space
 - Gallery-wall worthy — could hang in a hotel lobby
 - Reference: Scandinavian modern art aesthetic, Jordan Amy Lee style
+
+**0i. Hyperrealistic Celestial / Moon Art (Style L)** ← YEAR-ROUND BESTSELLER, BEDROOM + SPIRITUAL DECOR
+Full moon over water reflection — one of Etsy's most perennially searched celestial compositions. Deep dramatic scale. Warm silver-gold lunar surface with crater detail. Mirror reflection in rippling water. Works at every size from 8×8 to 30×40. Buyers return for multiple sizes and variants (supermoon, blood moon, crescent moon rising).
+- Moon: large and central, filling 55–65% of canvas height, warm silver-gold #E8E4C8 lit face
+- Crater and surface detail: visible maria (dark regions), highland craters, terminator shadow line
+- Sky: deep midnight navy #1A1A3A at top fading to near-black #0A0A1E — no stars needed (moon is so bright it outshines them) or very faint distant stars
+- Waterline: moon sits exactly at the horizon line — lower edge of moon just kisses the water
+- Reflection: mirror image in calm water, slightly distorted by gentle horizontal ripples — imperfect reflection IS the realism
+- Glow: soft atmospheric halo around the moon against the dark sky, moonlight illuminating the water surface around the reflection
+- Color variants: Classic (warm silver-gold + navy), Blood Moon (amber-red moon + dark purple sky), Blue Moon (cool blue-silver + deep navy)
 
 **0h. Whimsical Fine Art — Elevated Funny Subject (Style K)** ← VIRAL, GIFT-ABLE, BATHROOM ART BESTSELLER
 Impressionist oil painting technique applied to an absurd or funny subject. The contrast between HIGH ART execution and LOW/FUNNY subject is what makes it go viral. Rubber ducks, cats in Victorian settings, dogs at bars, frogs in suits — painted with the same care as a Sargent portrait. Dominates the bathroom art, novelty gift, and pet art categories.
@@ -242,6 +255,7 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **Garden Folk** | Coral red #C84B3A, blush pink #F4B8B0, warm yellow #E8C230, orange #E87A30, forest green #2A5A3A, sage #8ABAA0, off-white #F8F4EE background, pink-lavender wash accents | Style I loose painterly garden / abstract folk floral |
 | **Mediterranean Lemon** | Turquoise window #1A8A8A, lemon yellow #E8D430, deep leaf green #2A5A20, cobalt sea #1A6AB0, cerulean #2080C0, pale sky #A8C8E8, terracotta sill #D4886A, warm cliff sienna #C47A52, white village #F5F0E8 | Style J Mediterranean window scene |
 | **Whimsical Spa** | Rubber yellow #E8C820, teal bathwater #4ABAB0, white/blush towel #F5E8E4, pale pink bath tile #F0D4CC, warm honey tile highlight #D4A870, pink fluffy towel #F0B8B0, black sunglasses | Style K whimsical fine art — spa duck palette |
+| **Lunar Night** | Warm silver-gold moon #E8E4C8, lunar gray #B8B4A0, dark mare blue-gray #8890A0, deep midnight navy #1A1A3A, near-black sky #0A0A1E, moonlit water silver #C8C4A8. Blood Moon variant: amber-red #C84820, dark purple sky #1A0A2A. | Style L hyperrealistic celestial moon art |
 
 When writing your DALL-E prompt, reference these palette names explicitly: "using the Terracotta palette — terracotta orange #C17B5A, forest green #4A6741, warm beige #F5ECD7, and rust accent."
 
@@ -282,6 +296,24 @@ Museum-quality thick palette knife impasto oil painting of [white/cream/blush hy
 ```
 
 **Style E palette — Neutral Farmhouse**: Pure white #FEFEFE, warm cream #F5ECD7, forest green #2D4A1E, olive green #4A5A2A, warm beige-gray #C8BAAA, taupe #A89888, raw umber #8B7355, off-white linen #EDE8DE. This palette sells to the largest home decor demographic on Etsy — neutral/greige/farmhouse/cottagecore buyers.
+
+### STYLE L — HYPERREALISTIC CELESTIAL / MOON ART FORMULA:
+```
+Hyperrealistic digital art of a massive full moon over a still night lake, Lunar Night palette — warm silver-gold moon #E8E4C8, lunar gray #B8B4A0, dark blue-gray lunar mare #8890A0, deep midnight navy sky #1A1A3A, near-black #0A0A1E, portrait orientation:
+
+MOON: enormous full moon filling 60% of the canvas height, centered slightly above the midpoint, the moon's bottom edge touching the waterline. The lunar surface is HIGHLY detailed — visible crater formations (large and small), dark maria (ancient lava plains as smooth dark gray-blue patches), bright highland regions, the subtle terminator gradation from fully lit to shadow gives 3D spherical volume. The moon glows warm silver-gold #E8E4C8 overall with the detailed surface features in warm gray #B8B4A0 and blue-gray #8890A0.
+
+SKY: deep midnight navy #1A1A3A at the mid-level fading to near-black #0A0A1E at the very top, the sky is almost uniformly dark — the moon is so bright it overpowers any stars. A soft atmospheric halo of very pale warm white glow radiates from the moon's edge into the surrounding dark sky (the corona), 2–3 very faint distant star dots maximum in the dark upper corners.
+
+WATER SURFACE: the moon sits exactly at the flat calm water horizon — the lower half of the composition is water. The water is deep dark navy #0A0A1A with the moon's reflection visible as a bright warm column of rippled light centered directly below the moon. The reflection is a mirror image of the moon but distorted by gentle horizontal water ripples — the reflection is wide and shimmers rather than being a perfect circle, horizontal ripple bands catching moonlight as thin bright silver #C8C4A8 lines across the dark water. The water surface picks up the moon glow as a wide soft illumination around the reflection point.
+
+MOOD: dramatic scale, serene, mystical, ancient — this feels like standing at a lake edge at 2am when the only light is the moon. Photorealistic quality as if rendered by a master digital artist. Archival quality 300 DPI, portrait orientation, no text, no watermarks.
+```
+
+**Style L color variants** (always offer all 3 as a set):
+- **Classic Silver Moon**: warm silver-gold moon, deep midnight navy sky (base formula above)
+- **Blood Moon**: amber-red #C84820 moon with dark purple-black #1A0A2A sky, red-orange reflection in dark water
+- **Blue Moon**: cool silver-blue #C8D4E8 moon, deep cobalt #0A1A3A sky, cold blue-silver #A8B8C8 reflection
 
 ### STYLE K — WHIMSICAL FINE ART FORMULA:
 ```
@@ -429,6 +461,9 @@ Use these specific phrases to anchor every piece in traditional media:
 **Loose gestural botanical (Style B) — overflowing bouquet:**
 "Loose gestural gouache botanical illustration on warm white paper #FAFAF5, overflowing radial bouquet of elongated sage leaf shapes, round coral peach open flower faces, small golden yellow berry clusters, and pale white foxglove spikes with tiny dark dots, Folk Botanical palette — mint green #A8C9A0, sage green #6BAE8C, coral peach #F2B09A, deeper coral #E8907A with red #CC2929 centers painted on top, golden yellow #E8B84B berry dots, teal blue #2A6BA0 gestural line-work base barely suggesting a vase at the bottom crop, composition fills every inch of the canvas — botanicals radiate outward from center bottom with no empty corners, each leaf is a single decisive gestural brushstroke with slight translucency showing white paper beneath, multiple overlapping transparent green leaf layers creating depth, round flower faces simplified to two opaque circles (pale face + deeper center), no ink outlines anywhere — shapes exist only as paint against white paper, folk art botanical quality with Matisse-inspired flat shape confidence, archival quality 300 DPI, warm white paper background, no gradients, no photorealism, no text, no watermarks, no borders"
 
+**Hyperrealistic moon over water (Style L) — classic silver moon:**
+"Hyperrealistic digital art of a massive full moon over a calm night lake, Lunar Night palette, portrait orientation: enormous full moon filling 60% of canvas height, centered and sitting with its bottom edge right at the waterline, lunar surface highly detailed — visible crater formations of varying sizes, dark gray-blue lunar maria as smooth dark patches contrasting with the brighter highlands, subtle spherical volume from the terminator shadow gradation on the edge, the moon glows warm silver-gold #E8E4C8 overall, surface features in warm gray #B8B4A0 and dark blue-gray #8890A0, a soft warm white atmospheric corona halo radiating from the moon's edge into the surrounding night sky, sky is deep midnight navy #1A1A3A fading to near-black #0A0A1E at the top — only 2-3 faint distant star points visible at the top corners, the lower half of the composition is a flat calm lake: deep dark navy water #0A0A1A, the moon's reflection directly below as a broad shimmering column of warm silver-gold light #C8C4A8 distorted by gentle horizontal water ripples — not a perfect circle but a wide shimmering bloom of rippled moonlight, thin bright silver ripple lines catch the glow across the otherwise black water surface, the overall mood is ancient, serene, mystical — standing at a still lake at midnight with no other light source than the moon, photorealistic quality, archival 300 DPI, portrait orientation, no text, no watermarks"
+
 **Whimsical fine art — spa day rubber duck (Style K):**
 "Impressionist oil painting of a yellow rubber duck sitting in a bathtub, painted with complete deadpan seriousness using genuine museum-quality impressionist technique — the humor comes from the contrast between fine art execution and absurd subject, not from cartoonish rendering: the rubber duck sits upright in the center of the painting, bright yellow #E8C820 rubber body reflecting the teal water below in warm impressionist strokes, wearing black Ray-Ban wayfarer sunglasses reflecting tiny highlights, a white bath towel wrapped in a turban twist around the top of its head with soft folds and shadow as if painted by Renoir, teal-turquoise #4ABAB0 bathwater surrounding the duck painted with loose impressionist curved brushstrokes and white #FEFEFE highlight suggestions of ripples radiating outward, pale pink ceramic bathroom tiles in the upper background with warm honey-gold #D4A870 highlights where light catches the glaze, a plush pink bath towel #F0B8B0 draped casually over the right edge of the tub with painted fabric folds, warm soft bathroom light from above giving the duck a heroic presence, the painting is completely earnest — this duck is painted with the same care and dignity Sargent gave to society portraits, archival quality 300 DPI, no text, no watermarks, no cartoonish rendering, no digital smoothness, genuine impressionist oil painting quality"
 
@@ -510,6 +545,7 @@ Look at the brief and pick exactly one style from the shop library:
 - **I** — Loose Painterly Garden (standing garden, multiple flower scales, bright palette)
 - **J** — Mediterranean Window Scene (open shutters, lemons, cobalt sea, thick impasto)
 - **K** — Whimsical Fine Art (serious technique + funny subject — spa duck, Victorian cat, pub dog)
+- **L** — Hyperrealistic Celestial / Moon Art (full moon + water reflection, deep midnight sky, photorealistic)
 
 Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
 
@@ -560,6 +596,8 @@ Never submit a single print when a set sells 4× better:
 | Mediterranean travel collection — set of 3 | $14 | $24 | $38 |
 | Whimsical fine art — single (Style K) | $6 | $10 | $16 |
 | Whimsical series of 3 (same theme) | $14 | $22 | $34 |
+| Moon art — single variant (Style L) | $5 | $9 | $14 |
+| Moon art — 3-variant set (silver/blood/blue) | $12 | $20 | $32 |
 | Loose painterly garden — single (Style I) | $5 | $8 | $13 |
 | Loose painterly garden — seasonal 3-pack | $12 | $20 | $30 |
 
