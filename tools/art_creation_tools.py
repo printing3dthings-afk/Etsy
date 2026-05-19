@@ -1740,88 +1740,145 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     def draw_cover():
         c.bookmarkPage("cover")
         c.addOutlineEntry("Cover", "cover", level=0)
+
+        cx       = PW / 2
+        split_y  = PH * 0.375          # cream bottom starts here
+        top_h    = PH - split_y        # theme-color top block height
+
+        # ── Full cream base ──────────────────────────────────────────────────
         rect(0, 0, PW, PH, f=BG)
 
-        top_h = PH * 0.58
+        # ── Top color block ──────────────────────────────────────────────────
         cover_img_path = data.get("cover_image_path") or ""
         use_art = cover_img_path and os.path.exists(cover_img_path)
-
         if use_art:
             try:
-                c.drawImage(ImageReader(cover_img_path), 0, PH - top_h, PW, top_h,
+                c.drawImage(ImageReader(cover_img_path), 0, split_y, PW, top_h,
                             preserveAspectRatio=False)
-                # Alpha wash anchors the title text against any cover artwork
-                c.setFillAlpha(0.52)
+                c.setFillAlpha(0.58)
                 c.setFillColorRGB(*T)
-                c.rect(0, PH - top_h, PW, top_h * 0.42, fill=1, stroke=0)
+                c.rect(0, split_y, PW, top_h, fill=1, stroke=0)
                 c.setFillAlpha(1.0)
             except Exception:
                 use_art = False
         if not use_art:
-            rect(0, PH - top_h, PW, top_h, f=T)
-            circle(PW - 18, PH - 18, 120, f=_blend(T, 0.22))
-            circle(22, PH - top_h + 22, 55,  f=A)
-            circle(50, PH - top_h + 85,  22,  f=AL)
-            circle(PW - 55, PH - top_h + 55, 16, f=_blend(A, 0.55))
+            rect(0, split_y, PW, top_h, f=T)
 
-        # Accent stripe at base of art/color block
-        rect(0, PH - top_h - 6, PW, 6, f=A)
-        rect(0, PH - top_h - 10, PW, 3, f=AL)
+        # ── Decorative geometry (top block) ──────────────────────────────────
+        # Large semi-transparent circle — upper-right corner
+        circle(PW + 8, PH + 8, PW * 0.48, f=_blend(T, 0.17))
+        # Medium circle — lower-left of top block for balance
+        circle(-12, split_y + 55, 80, f=_blend(T, 0.20))
+        # Accent dot cluster — upper-left margin
+        circle(ML + 15, PH - MT - 16, 11, f=A)
+        circle(ML + 36, PH - MT - 16,  5, f=AL)
+        circle(ML + 15, PH - MT - 40,  5, f=_blend(A, 0.55))
+        # Thin horizontal accent lines beside dot cluster
+        for i in range(3):
+            hline(ML + 50, ML + 100, PH - MT - 12 - i * 8,
+                  _blend(WHITE, 0.30), 0.5)
 
-        # Title
-        cx = PW / 2
-        words = title.split()
-        font("Helvetica-Bold", 40)
+        # Subtle dot grid — bottom strip of top block (above split)
+        dp  = 9; dr = 0.55
+        gx  = ML + 4
+        gy0 = split_y + 18
+        gy1 = split_y + int(top_h * 0.22)
+        while gx <= PW - ML:
+            gy = gy0
+            while gy <= gy1:
+                circle(gx, gy, dr, f=_blend(T, 0.28))
+                gy += dp
+            gx += dp
+
+        # Thin top-of-page bar in accent color
+        rect(0, PH - 6, PW, 6, f=A)
+
+        # ── Title ────────────────────────────────────────────────────────────
+        title_cy = split_y + top_h * 0.545   # vertical center, slightly above mid
+        font("Helvetica-Bold", 44)
         fill(WHITE)
+        words = title.split()
         if len(title) <= 22:
-            c.drawCentredString(cx, PH - top_h / 2 + 18, title)
+            c.drawCentredString(cx, title_cy + 8, title)
+            txt_bot = title_cy - 16
         else:
             mid = len(words) // 2
-            c.drawCentredString(cx, PH - top_h / 2 + 34, " ".join(words[:mid]))
-            c.drawCentredString(cx, PH - top_h / 2 - 14, " ".join(words[mid:]))
+            c.drawCentredString(cx, title_cy + 30, " ".join(words[:mid]))
+            c.drawCentredString(cx, title_cy - 4,  " ".join(words[mid:]))
+            txt_bot = title_cy - 22
 
-        # Year / undated badge
-        badge_label = "UNDATED" if undated else str(planner_year)
-        bw = 82; bh = 26
-        rect(cx - bw/2, PH - top_h / 2 - 54, bw, bh, f=A, radius=5)
-        font("Helvetica-Bold", 13); fill(DARK)
-        c.drawCentredString(cx, PH - top_h / 2 - 54 + 8, badge_label)
+        # Thin elegant rule under title
+        hline(cx - 68, cx + 68, txt_bot - 13, _blend(WHITE, 0.42), 0.7)
 
         # Subtitle
         if subtitle:
-            font("Helvetica", 11); fill(WHITE)
-            c.drawCentredString(cx, PH - top_h / 2 - 90, subtitle.upper())
+            font("Helvetica", 10); fill(_blend(WHITE, 0.60))
+            c.drawCentredString(cx, txt_bot - 29, subtitle.upper())
 
-        # Bottom info block
-        info_top = PH - top_h - 40
+        # ── Year badge (near bottom of top block) ────────────────────────────
+        badge_label = "UNDATED" if undated else str(planner_year)
+        bw = 80; bh = 22
+        rect(cx - bw / 2, split_y + 22, bw, bh, f=A, radius=5)
+        font("Helvetica-Bold", 11); fill(DARK)
+        c.drawCentredString(cx, split_y + 22 + 7, badge_label)
+
+        # ── Split accent stripe ───────────────────────────────────────────────
+        rect(0, split_y - 5, PW, 5, f=A)
+        rect(0, split_y - 8, PW, 2, f=AL)
+
+        # ── Bottom section (cream) ────────────────────────────────────────────
+        # Tagline
+        tl_y = split_y - 28
         font("Helvetica", 9); fill(MID)
-        c.drawCentredString(cx, info_top, "plan with purpose  \xb7  live with intention")
-        hline(cx - 70, cx + 70, info_top - 10, A, 1.0)
+        c.drawCentredString(cx, tl_y, "plan with purpose  \xb7  live with intention")
+        # Double decorative rule
+        hline(cx - 58, cx + 58, tl_y - 11, A,  0.9)
+        hline(cx - 40, cx + 40, tl_y - 15, AL, 0.5)
 
-        # Included sections list
-        info_y = info_top - 28
-        font("Helvetica-Bold", 7.5); fill(MID)
-        c.drawCentredString(cx, info_y, "INSIDE THIS PLANNER")
-        info_y -= 14
-        section_labels = {
-            "monthly":"Monthly Overview","weekly":"Weekly Planning",
-            "habit_tracker":"Habit Tracker","goals":"Goals & Vision",
-            "notes":"Notes Pages","daily":"Daily Pages",
-            "budget":"Budget Tracker","meal_plan":"Meal Planning",
+        # "INSIDE THIS PLANNER" header
+        inside_y = tl_y - 33
+        font("Helvetica-Bold", 7); fill(T)
+        c.drawCentredString(cx, inside_y, "INSIDE THIS PLANNER")
+
+        # Section pill tags — packed into rows
+        _sec_labels = {
+            "monthly": "Monthly Overview", "weekly": "Weekly Planning",
+            "habit_tracker": "Habit Tracker", "goals": "Goals & Vision",
+            "notes": "Notes Pages",  "daily": "Daily Pages",
+            "budget": "Budget Tracker", "meal_plan": "Meal Planning",
+            "monthly_review": "Monthly Review",
+            "month_at_a_glance": "Month at a Glance",
         }
-        included = "  \xb7  ".join(section_labels.get(s, s.title()) for s in sections)
-        font("Helvetica", 8.5); fill(MID)
-        c.drawCentredString(cx, info_y, included)
+        tags = [_sec_labels.get(s, s.replace("_", " ").title()) for s in sections]
+        tag_h = 14; tpad = 8; tgap = 5
+        font("Helvetica", 7)
+        tag_widths = [c.stringWidth(t, "Helvetica", 7) + tpad * 2 for t in tags]
+        max_row_w = PW - ML * 2
+        rows: list = []; row: list = []; row_w = 0.0
+        for tag, tw in zip(tags, tag_widths):
+            gap = tgap if row else 0
+            if row_w + gap + tw > max_row_w and row:
+                rows.append(row); row = [(tag, tw)]; row_w = tw
+            else:
+                row.append((tag, tw)); row_w += gap + tw
+        if row:
+            rows.append(row)
 
-        # Color scheme label
-        info_y -= 20
-        font("Helvetica", 7); fill(_blend(MID, 0.4))
-        c.drawCentredString(cx, info_y, f"Color Scheme: {cs['label']}")
+        ty = inside_y - 16
+        for ri, row in enumerate(rows[:3]):
+            total_w = sum(tw for _, tw in row) + tgap * (len(row) - 1)
+            rx = cx - total_w / 2
+            ry = ty - ri * (tag_h + 5)
+            for tag, tw in row:
+                rect(rx, ry - tag_h + 2, tw, tag_h, f=_blend(T, 0.87), radius=4)
+                font("Helvetica", 7); fill(T)
+                c.drawString(rx + tpad, ry - 4, tag)
+                rx += tw + tgap
 
         # Footer
-        font("Helvetica", 7); fill(_blend(MID, 0.5))
-        c.drawCentredString(cx, MB + 8, "OnBrandCraftz  \xb7  Digital Download  \xb7  Personal Use")
-
+        font("Helvetica", 7); fill(_blend(MID, 0.50))
+        c.drawCentredString(cx, MB + 8,
+                            "OnBrandCraftz  \xb7  Digital Download  \xb7  Personal Use")
         c.showPage()
 
     # ── HOW TO USE PAGE ──────────────────────────────────────────────────────
@@ -2331,100 +2388,122 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         page_footer("MEAL PLANNER")
         c.showPage()
 
-    # ── HYPERLINKED INDEX PAGE ────────────────────────────────────────────────
+    # ── TABLE OF CONTENTS (hyperlinked) ─────────────────────────────────────
     def draw_index_page():
         c.bookmarkPage("index")
         c.addOutlineEntry("Index", "index", level=0)
         page_bg()
         content_w = CW - TAB_W - 4
 
-        # Header
-        font("Helvetica-BoldOblique", 22); fill(T)
-        c.drawString(ML + 10, PH - MT - 32, "Index")
-        hline(ML, ML + content_w, PH - MT - 38, A, 1.2)
+        # Header bar
+        rect(ML, PH - MT - 44, content_w, 44, f=T)
+        rect(ML, PH - MT - 44, 4, 44, f=A)
+        font("Helvetica-Bold", 18); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 28, "TABLE OF CONTENTS")
+        font("Helvetica", 7.5); fill(_blend(WHITE, 0.45))
+        c.drawRightString(ML + content_w, PH - MT - 28, "tap any item to jump there ›")
 
-        # Build index entries from current sections
-        index_groups = [
-            ("Yearly", [
-                ("Calendar", "yearly"),
-                ("Key Dates", "yearly"),
-                ("Quarter 1", "yearly"), ("Quarter 2", "yearly"),
-                ("Quarter 3", "yearly"), ("Quarter 4", "yearly"),
-            ]),
-            ("Monthly", [(m, f"month_{m[:3].lower()}") for m in MONTHS]),
-        ]
-        section_map = {
-            "weekly":              [("Weekly Planner", "weekly_start")],
-            "habit_tracker":       [("Habit Tracker", "habits")],
-            "goals":               [("Goals & Vision", "goals")],
-            "budget":              [("Yearly Finance", "budget"), ("Spending Tracker", "budget"),
-                                    ("Savings Tracker", "budget"), ("Bills & Subscriptions", "budget")],
-            "meal_plan":           [("Meal Planner", "meal_plan"), ("Grocery List", "meal_plan"),
-                                    ("Recipe Cards", "meal_plan")],
-            "monthly_review":      [("Monthly Review", "monthly_review_0")],
-            "month_at_a_glance":   [("Month at a Glance", "month_glance_0")],
-            "notes":               [("Notes — Lined", "notes"), ("Notes — Dotted", "notes"),
-                                    ("Notes — Graph", "notes"), ("Notes — Blank", "notes")],
-        }
-        wellness_entries = [
-            ("Life Goals", "goals"), ("Bucket List", "notes"), ("Fitness Log", "notes"),
-            ("Body Measurements", "notes"), ("Sleep Tracker", "habits"),
-            ("Gratitude Journal", "notes"), ("Routine Planner", "notes"),
-            ("Favorite Quotes", "notes"),
-        ]
-        productivity_entries = [
-            ("My Projects", "goals"), ("Meeting Notes", "notes"), ("Time Log", "notes"),
-            ("Priority Matrix", "goals"), ("Brain Dump", "notes"), ("Habit Tracker", "habits"),
-        ]
+        # ── Build groups — only for sections that are actually in this planner ─
+        index_groups: list[tuple[str, list]] = []
 
-        for sec in sections:
-            if sec in section_map:
-                index_groups.append((sec.replace("_", " ").title(), section_map[sec]))
-        if any(s in sections for s in ["habit_tracker", "goals", "notes"]):
-            index_groups.append(("Wellness", wellness_entries))
-            index_groups.append(("Productivity", productivity_entries))
+        if "monthly" in sections or "weekly" in sections:
+            index_groups.append(("Year at a Glance", [("Calendar Overview", "yearly")]))
 
-        # Render 2-column layout
-        col_w  = content_w / 2 - 6
-        col2_x = ML + col_w + 12
-        y      = PH - MT - 52
-        col    = 0
-        xs     = [ML, col2_x]
+        if "monthly" in sections:
+            index_groups.append(("Monthly Pages",
+                                  [(m, f"month_{m[:3].lower()}") for m in MONTHS]))
+
+        if "weekly" in sections:
+            index_groups.append(("Weekly Pages", [("Weekly Planner", "weekly_start")]))
+
+        if "habit_tracker" in sections:
+            index_groups.append(("Habit Tracker", [("Habit Tracker", "habits")]))
+
+        if "goals" in sections:
+            index_groups.append(("Goals & Vision",
+                                  [("Goals & Vision Board", "goals")]))
+
+        if "budget" in sections:
+            index_groups.append(("Budget & Finance", [
+                ("Budget Tracker",    "budget"),
+                ("Spending Overview", "budget"),
+                ("Savings Tracker",   "budget"),
+            ]))
+
+        if "meal_plan" in sections:
+            index_groups.append(("Meal Planning", [
+                ("Weekly Meal Planner", "meal_plan"),
+                ("Grocery List",        "meal_plan"),
+            ]))
+
+        if "monthly_review" in sections:
+            index_groups.append(("Monthly Review",
+                                  [("Monthly Review", "monthly_review_0")]))
+
+        if "month_at_a_glance" in sections:
+            index_groups.append(("Month at a Glance",
+                                  [("Month at a Glance", "month_glance_0")]))
+
+        if "notes" in sections:
+            index_groups.append(("Notes & Journal", [
+                ("Dot-Grid Notes", "notes"),
+                ("Free Notes",     "notes"),
+            ]))
+
+        # ── Layout constants ──────────────────────────────────────────────────
+        col_w   = content_w / 2 - 6
+        col2_x  = ML + col_w + 12
+        y       = PH - MT - 62
+        col     = 0
+        xs      = [ML, col2_x]
+        GHH     = 18    # group header height
+        ROW_H   = 14    # entry row height
+        ROW_PAD = 3     # row top padding
 
         for group_name, entries in index_groups:
-            if y < MB + 60:
+            needed = GHH + len(entries) * ROW_H + 10
+            if y - needed < MB + 20:
                 if col == 0:
-                    col = 1; y = PH - MT - 52
+                    col = 1; y = PH - MT - 62
                 else:
                     break
             x = xs[col]
-            font("Helvetica-Bold", 8); fill(T)
-            c.drawString(x, y, group_name.upper())
-            hline(x, x + col_w, y - 3, _blend(T, 0.4), 0.6)
-            y -= 14
 
-            for entry_label, entry_bm in entries:
+            # Group header pill
+            rect(x, y - GHH + 4, col_w, GHH, f=_blend(T, 0.87), radius=3)
+            font("Helvetica-Bold", 7.5); fill(T)
+            c.drawString(x + 8, y - GHH + 8, group_name.upper())
+            y -= GHH + 2
+
+            for ei, (entry_label, entry_bm) in enumerate(entries):
                 if y < MB + 20:
                     if col == 0:
-                        col = 1; y = PH - MT - 52 - 30
+                        col = 1; y = PH - MT - 62 - GHH - 2
                     else:
                         break
                     x = xs[col]
-                font("Helvetica", 7.5); fill(DARK)
-                c.drawString(x + 8, y, entry_label)
-                # Dotted leader
-                leader_x = x + 8 + c.stringWidth(entry_label, "Helvetica", 7.5) + 4
-                dots_end  = x + col_w - 4
-                font("Helvetica", 6); fill(MID)
-                dot_str = "." * max(0, int((dots_end - leader_x) / 3))
-                c.drawString(leader_x, y, dot_str)
-                # Clickable link over the whole row
-                c.linkAbsolute(entry_label, entry_bm, (x, y - 2, x + col_w, y + 8))
-                y -= 11
 
-            y -= 6  # group gap
+                # Alternating row background
+                row_fill = _blend(T, 0.97) if ei % 2 == 0 else _blend(T, 0.93)
+                rect(x, y - ROW_H + ROW_PAD, col_w, ROW_H, f=row_fill)
 
-        page_footer("Index")
+                # Entry text — theme color signals it is clickable
+                font("Helvetica", 8); fill(T)
+                c.drawString(x + 10, y - ROW_H + ROW_PAD + 4, entry_label)
+
+                # Right-side chevron
+                font("Helvetica-Bold", 9); fill(_blend(T, 0.50))
+                c.drawRightString(x + col_w - 6, y - ROW_H + ROW_PAD + 3, "›")
+
+                # Clickable link covering the entire row
+                c.linkAbsolute(entry_label, entry_bm,
+                               (x, y - ROW_H + ROW_PAD,
+                                x + col_w, y + ROW_PAD))
+                y -= ROW_H
+
+            y -= 8  # gap between groups
+
+        page_footer("Table of Contents")
         draw_nav_tabs("index")
         c.showPage()
 
