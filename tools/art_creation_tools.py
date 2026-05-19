@@ -1077,33 +1077,85 @@ def _fetch_image_bytes(prompt: str, size: str = "1024x1024") -> bytes | None:
 
 _ROOM_BG_PROMPTS: dict[str, str] = {
     "kitchen_dining": (
-        "Bright Mediterranean kitchen and dining room, interior design photography. "
-        "Wooden dining table with rattan chairs, bowl of lemons, warm cream walls, "
-        "terracotta tile floor, natural sunlight, small potted plant. "
-        "The back wall is COMPLETELY EMPTY — no art, no pictures, no frames, no hooks, "
-        "nothing on the wall. Plain clean empty wall. Pottery Barn catalog style. Photorealistic."
+        "Interior design photography of a bright Mediterranean kitchen and dining area. "
+        "Camera pulled back to show the full back wall — furniture sits in the lower third only. "
+        "Wooden dining table with rattan chairs, bowl of lemons, terracotta tile floor, cream walls. "
+        "COMPOSITION: the back wall occupies the top 60% of the image as a large empty surface. "
+        "The wall is COMPLETELY BLANK — no art, no frames, no shelves, no hooks, nothing. "
+        "Furniture and floor occupy only the bottom 40%. Pottery Barn catalog. Photorealistic."
     ),
     "living_room": (
-        "Bright coastal living room, interior design photography. Linen sofa with cream "
-        "and terracotta throw pillows, rattan coffee table with eucalyptus stems, "
-        "woven sand-tone area rug, afternoon golden light, sheer curtains. "
-        "The wall above the sofa is COMPLETELY EMPTY — no art, no pictures, no frames, "
-        "nothing on the wall. Plain clean empty wall. High-end magazine photo. Photorealistic."
+        "Interior design photography of a bright coastal living room. "
+        "Camera pulled back so sofa and furniture sit in the lower 40% of the frame. "
+        "Linen sofa with cream and terracotta pillows, rattan coffee table, jute rug, golden light. "
+        "COMPOSITION: the wall behind the sofa fills the top 55% of the image as a large empty surface. "
+        "The wall is COMPLETELY BLANK — no art, no frames, no pictures, nothing on the wall at all. "
+        "Furniture occupies only the bottom 40%. High-end magazine photo. Photorealistic."
     ),
     "entryway": (
-        "Bright entryway hallway, interior design photography. White shiplap wainscoting, "
-        "small white console table, fresh white flowers in glass vase, yellow ceramic bowl, "
-        "jute runner on hardwood floor, skylight above. "
-        "The wall above the console is COMPLETELY EMPTY — no art, no pictures, no frames, "
-        "nothing on the wall. Plain clean empty wall. Coastal Living magazine style. Photorealistic."
+        "Interior design photography of a bright home entryway. "
+        "Camera straight-on so the back wall dominates the upper 65% of the frame. "
+        "Small white console table at the very bottom of the image, glass vase with white flowers, "
+        "jute runner on hardwood floor, white wainscoting on lower walls. "
+        "COMPOSITION: the wall above the console table fills the top 60% as a large empty surface. "
+        "The wall is COMPLETELY BLANK — no art, no frames, no pictures, nothing on the wall. "
+        "Console table sits along the bottom edge only. Coastal Living style. Photorealistic."
     ),
     "bedroom": (
-        "Serene bedroom, interior design photography. White linen bedding, wooden nightstands "
-        "with small lamps, warm morning light through sheer curtains, fiddle leaf fig plant. "
-        "The wall above the headboard is COMPLETELY EMPTY — no art, no pictures, no frames, "
-        "nothing on the wall. Plain clean empty wall. Minimal and calm. Photorealistic."
+        "Interior design photography of a serene bedroom. "
+        "Camera pulled back so bed and headboard sit in the lower 45% of the frame. "
+        "White linen bedding, wooden nightstands, morning light through sheer curtains. "
+        "COMPOSITION: the wall above the headboard fills the top 50% as a large empty surface. "
+        "The wall is COMPLETELY BLANK — no art, no frames, no pictures, nothing on the wall. "
+        "Bed occupies only the lower portion. Minimal and calm. Photorealistic."
     ),
 }
+
+# Shadow bleed padding used inside _render_framed_art_rgba
+_FRAME_RGBA_PAD = 52
+
+
+def _scan_clear_wall_zone(room_img: Any) -> tuple[float, float]:
+    """
+    Detect where the clear wall ends and furniture begins by scanning brightness + variance.
+    Returns (wall_top_frac, furniture_top_frac) as fractions of image height.
+    """
+    from PIL import ImageFilter
+    w, h = room_img.size
+    blurred = room_img.filter(ImageFilter.GaussianBlur(radius=5))
+
+    xs = [int(w * f) for f in (0.2, 0.35, 0.5, 0.65, 0.8)]
+    row_bright: list[float] = []
+    row_var:    list[float] = []
+    for y in range(h):
+        vals = [(blurred.getpixel((x, y))[0] + blurred.getpixel((x, y))[1] + blurred.getpixel((x, y))[2]) / 3
+                for x in xs]
+        avg = sum(vals) / len(vals)
+        var = sum((v - avg) ** 2 for v in vals) / len(vals)
+        row_bright.append(avg)
+        row_var.append(var)
+
+    # Reference: top 15% (ceiling / plain wall area)
+    ref_h = max(1, int(h * 0.15))
+    ref_b = sum(row_bright[:ref_h]) / ref_h
+    ref_v = max(1.0, sum(row_var[:ref_h]) / ref_h)
+
+    bright_thresh = ref_b * 0.83   # 17% darker = likely furniture/objects
+    var_thresh    = ref_v * 6.0    # 6× more varied = furniture detail
+
+    furniture_frac = 0.68  # fallback
+    win = 10
+    for y in range(int(h * 0.15), int(h * 0.90) - win):
+        ahead_b = row_bright[y: y + win]
+        ahead_v = row_var[y: y + win]
+        if sum(1 for b in ahead_b if b < bright_thresh) >= 6:
+            furniture_frac = y / h
+            break
+        if sum(1 for v in ahead_v if v > var_thresh) >= 5:
+            furniture_frac = y / h
+            break
+
+    return 0.04, furniture_frac
 
 
 def _create_room_composite(data: dict, store: DataStore) -> str:
@@ -1126,9 +1178,9 @@ def _create_room_composite(data: dict, store: DataStore) -> str:
         return json.dumps({"error": "No image file. Call generate_digital_art first."})
 
     art_img = Image.open(src).convert("RGB")
-
-    ROOM_PX   = 1024
-    ART_LONG  = int(ROOM_PX * 0.43)   # frame long-side = 43% of room width
+    ROOM_PX = 1024
+    PAD     = _FRAME_RGBA_PAD          # shadow bleed around the framed RGBA image
+    FRAME_MAT_TOTAL = 2 * (38 + 14)    # 2×(FRAME_W + MAT_W) = 104px added to art dims
 
     saved: list[dict] = []
     for room_key in room_styles:
@@ -1142,13 +1194,39 @@ def _create_room_composite(data: dict, store: DataStore) -> str:
             (ROOM_PX, ROOM_PX), Image.LANCZOS
         )
 
-        framed, _ = _render_framed_art_rgba(art_img, frame_style, ART_LONG)
+        # Detect clear wall zone above furniture
+        wall_top_f, furn_top_f = _scan_clear_wall_zone(room_bg.convert("RGB"))
+        wall_top_px = int(ROOM_PX * wall_top_f)
+        furn_top_px = int(ROOM_PX * furn_top_f)
+
+        # Available height for the VISIBLE frame (not including shadow bleed)
+        # Leave 5% gap between frame bottom and furniture top
+        avail_h = (furn_top_px - int(ROOM_PX * 0.05)) - (wall_top_px + int(ROOM_PX * 0.04))
+        avail_h = max(120, avail_h)
+
+        # Scale art so visible frame height = 75% of available wall height, capped at 36% room width
+        target_vis_fh = int(avail_h * 0.75)
+        art_long = min(int(ROOM_PX * 0.36), max(80, target_vis_fh - FRAME_MAT_TOTAL))
+
+        framed, _ = _render_framed_art_rgba(art_img, frame_style, art_long)
         fw, fh    = framed.size
 
-        # Center horizontally; top of frame at 7% from image top
+        # Visible frame bounds within the RGBA image: [PAD .. fh-PAD]
+        vis_fh = fh - 2 * PAD   # actual visible frame height (no shadow bleed)
+        vis_fw = fw - 2 * PAD
+
+        # Center visible frame vertically in the wall zone
+        wall_center_px = (wall_top_px + furn_top_px) / 2
+        vis_top_y  = int(wall_center_px - vis_fh / 2)
+        vis_top_y  = max(wall_top_px + 10, vis_top_y)
+        # Ensure visible frame bottom stays above furniture with margin
+        max_vis_bottom = furn_top_px - int(ROOM_PX * 0.04)
+        if vis_top_y + vis_fh > max_vis_bottom:
+            vis_top_y = max(wall_top_px + 10, max_vis_bottom - vis_fh)
+
+        # Convert visible top to paste position (accounting for PAD bleed)
+        py = vis_top_y - PAD
         px = (ROOM_PX - fw) // 2
-        py = max(0, int(ROOM_PX * 0.07))
-        py = min(py, int(ROOM_PX * 0.80) - fh)  # never clip below 80%
 
         room_bg.paste(framed, (px, py), framed)
         final = ImageEnhance.Contrast(room_bg.convert("RGB")).enhance(1.04)
