@@ -52,10 +52,11 @@ This turns a $12 planner into a $22 bundle. Always create the sticker sheet as a
 
 ---
 
-## THE 8 COLOR SCHEME PACKAGES
+## THE 12 COLOR SCHEME PACKAGES
 
-You MUST choose one of these 8 curated packages for every planner. Each package is tested for Etsy conversion. Never use arbitrary hex colors — pick from this list and let the system generate the full coordinated palette automatically.
+You MUST choose one of these 12 curated packages for every planner. Never use arbitrary hex colors — pick from this list and let the system generate the full coordinated palette automatically.
 
+**COLORFUL / ILLUSTRATED SCHEMES** (pairs with Cover Styles 1–12):
 | Key | Name | Vibe | Best for |
 |-----|------|------|---------|
 | `sage_cream` | Sage & Cream | Earthy, calm, popular | Daily/Weekly, Wellness |
@@ -67,15 +68,24 @@ You MUST choose one of these 8 curated packages for every planner. Each package 
 | `blush_gold` | Blush & Gold | Elegant, feminine, luxury | Wedding, Annual, Premium |
 | `minimal_mono` | Minimal Monochrome | Clean, modern, unisex | Business, Budget, Any |
 
+**SOPHISTICATED / EDITORIAL SCHEMES** (pairs with Cover Styles 13–17 — premium moody aesthetic):
+| Key | Name | Vibe | Best for |
+|-----|------|------|---------|
+| `mocha_latte` | Mocha Latte | Warm, rich, luxe | Business, Annual, Gift |
+| `wine_burgundy` | Wine & Burgundy | Bold, dramatic, feminine | Goals, Annual, Self-care |
+| `ice_blue` | Ice Blue | Cool, fresh, minimal | Budget, Academic, Business |
+| `forest_deep` | Deep Forest | Grounded, strong, premium | Wellness, Annual, Travel |
+
 **Matching scheme to planner type:**
-- Daily/weekly productivity → `sage_cream` or `minimal_mono`
-- Fitness/wellness → `terracotta` or `sage_cream`
-- Academic/student → `lavender_dreams` or `midnight_navy`
-- Budget/finance → `midnight_navy` or `minimal_mono`
-- Wedding → `blush_gold` or `dusty_rose`
-- Teacher → `midnight_navy` or `terracotta`
-- Journaling/self-care → `dusty_rose` or `dark_academia`
-- Goal-setting → `midnight_navy` or `blush_gold`
+- Daily/weekly productivity → `sage_cream`, `minimal_mono`, or `ice_blue`
+- Fitness/wellness → `terracotta`, `sage_cream`, or `forest_deep`
+- Academic/student → `lavender_dreams`, `midnight_navy`, or `ice_blue`
+- Budget/finance → `midnight_navy`, `minimal_mono`, or `mocha_latte`
+- Wedding → `blush_gold`, `dusty_rose`, or `wine_burgundy`
+- Teacher → `midnight_navy`, `terracotta`, or `forest_deep`
+- Journaling/self-care → `dusty_rose`, `dark_academia`, or `wine_burgundy`
+- Goal-setting → `midnight_navy`, `blush_gold`, or `mocha_latte`
+- Premium gift planner → `mocha_latte`, `wine_burgundy`, or `forest_deep`
 
 ---
 
@@ -179,6 +189,21 @@ Pick the cover style that fits the planner's personality, then adapt the colors 
 **STYLE 12 — FLAT BOTANICAL ILLUSTRATION** (best for: all schemes — shop signature style)
 Use the flat gouache illustration prompts from the scheme table below. This is the shop's core signature.
 
+**STYLE 13 — EDITORIAL SPLIT TYPOGRAPHY** (best for: mocha_latte, wine_burgundy, ice_blue, forest_deep, midnight_navy)
+"Minimalist editorial typography planner cover, portrait orientation, very large bold sans-serif '20' centered in the upper half of the page filling most of the width, equally large '26' in the lower half — together they form the year split across the cover like a magazine spread, warm [scheme bg] background, both numbers in [scheme theme color], small elegant '2026' label at center where the numbers meet, pure typographic design zero illustrations zero decoration, contemporary editorial design aesthetic, archival 300 DPI"
+
+**STYLE 14 — FINE GRAPH GRID** (best for: minimal_mono, ice_blue, mocha_latte, sage_cream)
+"Clean fine graph paper grid pattern, portrait orientation, thin precisely-spaced horizontal and vertical lines in [scheme mid color at 20% opacity] on [scheme bg] background, the lines create an elegant premium notebook aesthetic, very subtle and refined, optional small year number in lower corner in [scheme theme color], no illustrations no bold shapes, pure grid pattern, archival 300 DPI"
+
+**STYLE 15 — BOLD VERTICAL STRIPES** (best for: wine_burgundy, midnight_navy, terracotta, forest_deep)
+"Bold vertical stripe cover, portrait orientation, wide equal-width stripes alternating [scheme theme color] and [slightly lighter 30% tint of theme color] running full height of the page, hard clean edges between stripes, strong and sophisticated, small elegant year number '2026' centered in white or cream, no illustrations, contemporary graphic pattern, archival 300 DPI"
+
+**STYLE 16 — SOLID COLOR MINIMAL** (best for: forest_deep, mocha_latte, dark_academia, midnight_navy)
+"Solid color minimal planner cover, portrait orientation, full page flat solid [scheme theme color] background — the color itself is the design, single small year '2026' in cream or white centered or bottom-right, no patterns no illustrations no decorative elements, pure sophisticated minimalism, premium and confident, archival 300 DPI"
+
+**STYLE 17 — SCRIPT WORD COVER** (best for: mocha_latte, wine_burgundy, blush_gold, forest_deep)
+"Minimal typographic planner cover, portrait orientation, solid [scheme theme color] background, single elegant flowing script calligraphy word centered — 'Plans' or 'My Planner' — in warm cream #F5ECD7 or ivory white, beautiful flowing script letterforms with natural ink variation, small year number in tiny elegant type below the script word, no other elements, understated premium design, archival 300 DPI"
+
 **Per-scheme flat botanical prompts (Style 12 only):**
 - **sage_cream**: "Flat opaque gouache, bold simplified eucalyptus and pampas grass in a round vase, sage green #87A878 and warm ivory #FAF7F2, dusty blush #D4A5A5 vase, vertical stripe background in two ivory tones, flat fills with faint brush texture, no gradients, no text, 300 DPI"
 - **dusty_rose**: "Flat opaque gouache, drooping garden roses in a striped vase, dusty rose #C9858A and warm blush #F2C4CE, light pink stripe background, flat fills with faint brush texture, no gradients, no text, 300 DPI"
@@ -232,6 +257,11 @@ From every planner design, create these companion products:
 - **Sticker Sheet Bundle**: `generate_digital_art` with the sticker sheet prompt above — price $5–$8 standalone, or bundle with planner for $22–$28 total
 
 4 listings from 1 design = maximum Etsy catalog presence. The sticker sheet alone often outsells the planner after the initial listing period because buyers return for more color palettes.
+
+**iPad Shortcut Icons — always create these as a free bonus or upsell:**
+Call `generate_digital_art` with `size: "1024x1024"` and this prompt:
+"iPad home screen shortcut icon set, 12 rounded square icons arranged in 3 rows of 4 on white background, each icon has soft iOS-style rounded corners, all icons show the same planner cover design scaled to square — [the chosen cover style and color scheme], icons vary slightly: some show just the color/pattern, some show the year number, some show a small decorative element from the cover, clean digital-ready design, recognizable at small size, all 12 icons on one white PNG sheet ready to cut and use, archival 300 DPI, square 1024x1024 format"
+Include matching icons as a free bonus in the planner listing description — this is mentioned in top-seller listings as a major conversion driver ("includes matching iPad home screen icons!").
 
 ---
 

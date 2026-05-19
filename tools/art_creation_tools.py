@@ -99,6 +99,43 @@ COLOR_SCHEMES: dict[str, dict] = {
         "mid":    (0.42, 0.42, 0.42),
         "light":  (0.88, 0.88, 0.88),
     },
+    # ── Sophisticated/editorial schemes (second tier — premium moody aesthetic) ─
+    "mocha_latte": {
+        "label":  "Mocha Latte",
+        "theme":  (0.290, 0.180, 0.102),   # #4A2E1A chocolate brown
+        "accent": (0.831, 0.769, 0.690),   # #D4C4B0 warm cream-taupe
+        "bg":     (0.941, 0.918, 0.878),   # #F0EAE0 latte beige
+        "dark":   (0.20, 0.12, 0.07),
+        "mid":    (0.55, 0.42, 0.32),
+        "light":  (0.90, 0.84, 0.78),
+    },
+    "wine_burgundy": {
+        "label":  "Wine & Burgundy",
+        "theme":  (0.545, 0.125, 0.251),   # #8B2040 deep wine
+        "accent": (0.769, 0.522, 0.541),   # #C4858A dusty rose
+        "bg":     (0.980, 0.941, 0.941),   # #FAF0F0 blush white
+        "dark":   (0.25, 0.05, 0.10),
+        "mid":    (0.55, 0.30, 0.35),
+        "light":  (0.93, 0.87, 0.88),
+    },
+    "ice_blue": {
+        "label":  "Ice Blue",
+        "theme":  (0.545, 0.659, 0.769),   # #8BA8C4 powder blue
+        "accent": (0.839, 0.890, 0.933),   # #D6E3EE light ice
+        "bg":     (0.933, 0.957, 0.980),   # #EEF4FA very light blue
+        "dark":   (0.22, 0.30, 0.38),
+        "mid":    (0.48, 0.57, 0.66),
+        "light":  (0.88, 0.91, 0.94),
+    },
+    "forest_deep": {
+        "label":  "Deep Forest",
+        "theme":  (0.165, 0.227, 0.165),   # #2A3A2A dark forest green
+        "accent": (0.353, 0.431, 0.290),   # #5A6E4A sage olive
+        "bg":     (0.941, 0.957, 0.933),   # #F0F4EE light sage
+        "dark":   (0.10, 0.14, 0.10),
+        "mid":    (0.35, 0.44, 0.35),
+        "light":  (0.85, 0.90, 0.85),
+    },
 }
 
 
