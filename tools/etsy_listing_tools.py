@@ -216,6 +216,25 @@ TOOL_DEFINITIONS: list[dict] = [
             "required": ["product_id"],
         },
     },
+    {
+        "name": "get_planner_listing_template",
+        "description": (
+            "Get the complete pre-written Etsy listing content (title, description, tags, price, "
+            "section, photos checklist) for any of our digital planners. Use this instead of writing "
+            "listing content from scratch — the templates are already SEO-optimized for Etsy search. "
+            "Pass product_id (DP1026, DP1027, DP1028, DP1029) or empty string for all templates."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "product_id": {
+                    "type": "string",
+                    "description": "DP1026/DP1027/DP1028/DP1029 or empty for all",
+                },
+            },
+            "required": [],
+        },
+    },
 ]
 
 
@@ -246,6 +265,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _attach_digital_file(tool_input, store)
     if tool_name == "customer_ready_check":
         return _customer_ready_check(tool_input["product_id"], store)
+    if tool_name == "get_planner_listing_template":
+        return _get_planner_listing_template(tool_input.get("product_id", ""))
     return f"Unknown Etsy listing tool: {tool_name}"
 
 
@@ -453,17 +474,70 @@ def _get_seo_tips(product_type: str) -> str:
             "pricing_range": "$2 - $15 for single prints, $5 - $25 for bundles",
         },
         "planner": {
-            "title_keywords": ["digital planner", "printable planner", "PDF planner", "2026 planner", "undated planner"],
-            "description_tips": [
-                "Specify the planner year or 'undated' for evergreen listings",
-                "List all sections: monthly, weekly, daily, habit tracker, etc.",
-                "Mention page count",
-                "Clarify print vs. digital use (GoodNotes, Notability compatibility)",
-                "Include what file formats are delivered",
+            "title_keywords": [
+                "digital planner", "GoodNotes planner", "Notability planner",
+                "iPad planner", "fillable PDF", "2026 planner", "kawaii planner",
+                "instant download", "PDF planner",
             ],
-            "top_tags": ["digital planner", "printable planner", "PDF planner", "daily planner",
-                         "weekly planner", "undated planner", "goodnotes planner", "instant download"],
-            "pricing_range": "$4 - $20 for individual planners, $10 - $35 for bundles",
+            "title_formula": (
+                "[Style] Digital Planner [Year] | GoodNotes Notability iPad | "
+                "Fillable PDF + Sticker Pack | Instant Download | [Niche] Planner"
+            ),
+            "description_section_order": [
+                "1. Emotional hook (1-2 sentences — who it's for and the feeling it creates)",
+                "2. WHAT'S INCLUDED (bullet list — files, page count, sticker sheets, interactive features)",
+                "3. COMPATIBLE APPS (GoodNotes 6, Notability, PDF Expert, Xodo, Acrobat, print-ready)",
+                "4. HOW TO USE STICKERS (3 numbered steps — unzip, import PNGs into app, drag unlimited)",
+                "5. HOW TO USE THE PLANNER (numbered steps — download, open in app, tap to fill)",
+                "6. SECTIONS INCLUDED (every section name with 1-line description)",
+                "7. TECHNICAL DETAILS (format, page size, page count, file size, color theme)",
+                "8. FAQ (iPhone/iPad compat, printing, sharing, refund policy)",
+                "9. COPYRIGHT (personal use only, no resale/redistribution)",
+            ],
+            "description_tips": [
+                "Lead with an emotional hook — buyers search for a feeling, not a feature",
+                "Use emoji section headers (✅ 📦 📱 📅 📄 ❓) — they improve scannability on mobile",
+                "Mention GoodNotes 6 by name — it's the #1 search term for digital planners",
+                "Always include page count — buyers compare this heavily",
+                "Explain the sticker import process in exactly 3 steps — remove friction",
+                "Add FAQ to address: iPhone use, printing, file sharing, app compatibility",
+                "Use ━━━ divider lines for section headers — they display on Etsy mobile",
+                "Mention 'Instant Download' in description body as well as title",
+                "State 'Personal use only' to set expectations and reduce disputes",
+            ],
+            "top_tags": [
+                "digital planner", "goodnotes planner", "notability planner",
+                "ipad planner", "fillable pdf", "kawaii planner", "2026 planner",
+                "instant download", "pdf planner", "digital download",
+                "planner bundle", "sticker planner", "life planner",
+            ],
+            "niche_tags": {
+                "student": ["student planner", "school planner", "study planner", "academic planner"],
+                "budget": ["budget planner", "finance planner", "money planner", "savings planner"],
+                "fitness": ["fitness planner", "wellness planner", "health planner", "habit tracker"],
+                "life": ["life planner", "daily planner", "planner bundle", "productivity planner"],
+            },
+            "pricing_strategy": {
+                "base_digital_planner": "$9.99 — student/niche entry price",
+                "premium_planner": "$12.99 — niche planners (budget, fitness) with specialized pages",
+                "ultimate_bundle": "$14.99 — 100+ page planners with sticker pack + kawaii cover",
+                "etsy_fee_note": "Etsy takes ~18% total (6.5% transaction + 3%+$0.25 payment + $0.20 listing). Net at $14.99 ≈ $12.15",
+            },
+            "shop_section": "Digital Planners",
+            "taxonomy_id": 2078,
+            "listing_photos_required": [
+                "1. iPad lifestyle mockup — planner on screen with desk props (MAIN IMAGE)",
+                "2. What's included flat lay — PDF icon + sticker PNGs + feature list",
+                "3. Monthly spread close-up",
+                "4. Weekly spread close-up",
+                "5. Kawaii sticker library — all 3 sheets preview",
+                "6. Sticker import how-to — 3-step GoodNotes import graphic",
+                "7. App compatibility logos — GoodNotes, Notability, PDF Expert, Xodo, Acrobat",
+                "8. Kawaii cover close-up",
+                "9. Habit tracker or specialty page",
+                "10. Before/after — blank page vs filled planner",
+            ],
+            "pricing_range": "$9.99 - $14.99 for digital planners with sticker pack",
         },
         "printable": {
             "title_keywords": ["printable", "instant download", "digital download", "print at home"],
@@ -1044,6 +1118,321 @@ def _customer_ready_check(product_id: str, store: DataStore) -> str:
             "READY TO SELL — all checks pass. This product is live and customer-ready." if ready
             else f"NOT READY — {total - passed} issue(s) must be fixed before this listing will convert."
         ),
+    }, indent=2)
+
+
+# ── PRE-WRITTEN LISTING TEMPLATES ────────────────────────────────────────────
+
+_PLANNER_DESCRIPTION_DP1026 = """✨ Stay organized, stay cute — your ultimate kawaii digital life planner is here!
+
+Meet the Ultimate Digital Life Planner 2026, the most complete fillable PDF planner for GoodNotes, Notability, and iPad — packed with 102 beautifully designed pages, an illustrated kawaii cover, and a full kawaii sticker pack so you can personalize every single page.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📦 WHAT'S INCLUDED
+━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Interactive PDF Planner — 102 pages, US Letter, Lavender Dreams color theme
+✅ Kawaii Sticker Pack ZIP — 3 PNG sticker sheets (60+ stickers, transparent background)
+   • Sheet 1: Planner & Stationery — notebooks, pens, stars, washi tape, coffee cups
+   • Sheet 2: Cozy Lifestyle — mugs, candles, books, fairy lights, sleeping cat
+   • Sheet 3: Seasonal & Holiday — cherry blossoms, pumpkins, snowflakes, valentines
+✅ Fully fillable — type directly in GoodNotes, Notability, PDF Expert, or Acrobat
+✅ Hyperlinked side tabs — jump to any section in one tap
+✅ Interactive sticker menu — tap STICKERS button for drag-and-drop sticker fun
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📱 COMPATIBLE APPS
+━━━━━━━━━━━━━━━━━━━━━━━━
+★ GoodNotes 6 (iPad, iPhone, Mac) — BEST experience
+★ Notability (iPad, iPhone)
+★ PDF Expert by Readdle
+★ Xodo PDF Reader
+★ Adobe Acrobat Reader (all platforms)
+★ Print-ready — print at home or at a print shop
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 HOW TO USE YOUR STICKERS
+━━━━━━━━━━━━━━━━━━━━━━━━
+1. Unzip your sticker pack after downloading
+2. In GoodNotes 6: tap the Elements button → Stickers tab → tap + → import the 3 PNG files
+3. Your stickers now live in your GoodNotes library — drag any sticker onto any page, unlimited times!
+   (Notability: use Photo Stickers | PDF Expert/Acrobat: use the built-in STICKERS button in the planner footer)
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📖 HOW TO USE THE PLANNER
+━━━━━━━━━━━━━━━━━━━━━━━━
+1. Download your files instantly from Etsy (PDF + ZIP)
+2. Open the PDF in GoodNotes 6, Notability, or PDF Expert
+3. Tap any text box to type — all fields are fillable
+4. Use the side tabs to jump between sections in one tap
+5. Import sticker PNGs into your app for unlimited kawaii decoration
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📅 SECTIONS INCLUDED (102 pages)
+━━━━━━━━━━━━━━━━━━━━━━━━
+• Yearly Overview — see all 12 months at a glance
+• Monthly Calendars × 12 — full month grid with daily notes
+• Monthly Reviews × 12 — reflect, celebrate wins, plan improvements
+• Month at a Glance × 12 — top priorities, focus areas, intentions
+• Weekly Spreads × 52 — time-blocked horizontal layout for every week of 2026
+• Habit Tracker — 31-day grid, fully customizable
+• Goals Page — quarterly goals, action steps, milestones
+• Budget Tracker — income, expenses, savings, bills
+• Meal Planner — weekly meal plan with grocery list
+• Notes Pages × 4 — lined and dot-grid mix
+• Kawaii Sticker Library × 3 — illustrated sticker reference sheets
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📄 TECHNICAL DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━
+• Format: Interactive fillable PDF
+• Page size: US Letter (8.5 × 11 inches)
+• Pages: 102
+• Color theme: Lavender Dreams
+• File size: ~15MB PDF + sticker ZIP
+• Delivery: Instant digital download — no physical item shipped
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+❓ FAQ
+━━━━━━━━━━━━━━━━━━━━━━━━
+Q: Does this work on iPhone?
+A: Yes! GoodNotes 6, Notability, and Adobe Acrobat Reader all work on iPhone. GoodNotes gives the best experience on iPad.
+
+Q: Can I print this?
+A: Absolutely! Print at home or at any print shop. Works great as a physical planner too.
+
+Q: Is this a physical item?
+A: No — this is a digital download only. You will receive a PDF and ZIP file instantly after purchase. Nothing is shipped.
+
+Q: Can I share this with friends?
+A: This license is for personal use only. Please do not share, resell, or redistribute the files.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+© COPYRIGHT
+━━━━━━━━━━━━━━━━━━━━━━━━
+© OnBrandCraftz. Personal use only. Not for resale, redistribution, or commercial use."""
+
+_PLANNER_DESCRIPTION_DP1027 = """📚 Keep your school year on track — cute, organized, and totally you!
+
+The Kawaii Student Planner 2026 is a fillable PDF planner built for GoodNotes, Notability, and iPad. Whether you're in high school or college, this 88-page planner keeps every assignment, exam, goal, and habit in one adorable place — plus 60+ kawaii stickers to make it your own.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📦 WHAT'S INCLUDED
+━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Interactive PDF Planner — 88 pages, US Letter, Cotton Candy color theme
+✅ Kawaii Sticker Pack ZIP — 3 PNG sticker sheets (60+ stickers, transparent background)
+✅ Fully fillable — type directly in GoodNotes, Notability, or Acrobat
+✅ Hyperlinked side tabs — jump to any section in one tap
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📱 COMPATIBLE APPS
+━━━━━━━━━━━━━━━━━━━━━━━━
+★ GoodNotes 6 (iPad, iPhone, Mac) — BEST experience
+★ Notability (iPad, iPhone)
+★ PDF Expert by Readdle
+★ Adobe Acrobat Reader (all platforms)
+★ Print-ready for physical use
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 HOW TO USE YOUR STICKERS
+━━━━━━━━━━━━━━━━━━━━━━━━
+1. Unzip your sticker pack after downloading
+2. In GoodNotes 6: tap Elements → Stickers → + → import the 3 PNG files
+3. Drag any sticker onto any page, unlimited times!
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📅 SECTIONS INCLUDED (88 pages)
+━━━━━━━━━━━━━━━━━━━━━━━━
+• Yearly Overview
+• Monthly Calendars × 12
+• Monthly Reviews × 12 — what went well, what to improve
+• Weekly Spreads × 52 — plan each week with time blocks
+• Habit Tracker — build your study habits
+• Goals Page — semester goals and action steps
+• Notes Pages × 4
+• Kawaii Sticker Library × 3
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📄 TECHNICAL DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━
+• Format: Interactive fillable PDF
+• Page size: US Letter (8.5 × 11 inches)
+• Pages: 88 | Color theme: Cotton Candy
+• Delivery: Instant digital download — no physical item shipped
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+❓ FAQ
+━━━━━━━━━━━━━━━━━━━━━━━━
+Q: Works on iPhone? A: Yes — GoodNotes 6 and Notability both work on iPhone and iPad.
+Q: Can I print it? A: Yes! Print at home or at a print/copy shop.
+Q: Is it physical? A: No — instant digital download only. Nothing is shipped.
+
+© OnBrandCraftz. Personal use only. Not for resale or redistribution."""
+
+_PLANNER_DESCRIPTION_DP1028 = """💰 Finally get your money under control — with a planner you'll actually want to open.
+
+The Budget & Finance Planner 2026 is a fillable PDF planner for GoodNotes, Notability, and iPad. Designed for monthly budgeting, bill tracking, savings goals, and financial planning — 100 pages in a deep Midnight Blue theme that feels serious and polished. Plus 60+ kawaii stickers to celebrate every win.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📦 WHAT'S INCLUDED
+━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Interactive PDF Planner — 100 pages, US Letter, Midnight Blue color theme
+✅ Kawaii Sticker Pack ZIP — 3 PNG sticker sheets (60+ stickers, transparent background)
+✅ Fully fillable — type directly in GoodNotes, Notability, or Acrobat
+✅ Hyperlinked side tabs — jump to any section in one tap
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📱 COMPATIBLE APPS
+━━━━━━━━━━━━━━━━━━━━━━━━
+★ GoodNotes 6 (iPad, iPhone, Mac)
+★ Notability | PDF Expert | Adobe Acrobat Reader
+★ Print-ready for binder use
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 HOW TO USE YOUR STICKERS
+━━━━━━━━━━━━━━━━━━━━━━━━
+1. Unzip your sticker pack | 2. In GoodNotes: Elements → Stickers → + → import PNGs | 3. Drag onto any page, unlimited times
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📅 SECTIONS INCLUDED (100 pages)
+━━━━━━━━━━━━━━━━━━━━━━━━
+• Yearly Overview
+• Monthly Calendars × 12 — income, expenses, net tracking
+• Monthly Reviews × 12
+• Month at a Glance × 12
+• Weekly Spreads × 52
+• Budget Tracker — monthly income, fixed/variable expenses, savings
+• Goals Page — savings goals, debt payoff milestones
+• Notes Pages × 4
+• Kawaii Sticker Library × 3
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📄 TECHNICAL DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━
+• Format: Fillable PDF | Pages: 100 | Color: Midnight Blue
+• Delivery: Instant digital download — nothing shipped
+
+© OnBrandCraftz. Personal use only. Not for resale or redistribution."""
+
+_PLANNER_DESCRIPTION_DP1029 = """🌸 Your wellness journey starts here — track every workout, meal, and habit in one beautiful planner.
+
+The Fitness & Wellness Planner 2026 is a fillable PDF planner for GoodNotes, Notability, and iPad. 89 pages of workout logs, meal planning, habit tracking, and mindfulness journaling — in a warm Coral Peach theme. Includes 60+ kawaii stickers to decorate and celebrate your progress.
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📦 WHAT'S INCLUDED
+━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Interactive PDF Planner — 89 pages, US Letter, Coral Peach color theme
+✅ Kawaii Sticker Pack ZIP — 3 PNG sticker sheets (60+ stickers, transparent background)
+✅ Fully fillable — type in GoodNotes, Notability, PDF Expert, or Acrobat
+✅ Hyperlinked side tabs — jump to any section instantly
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📱 COMPATIBLE APPS
+━━━━━━━━━━━━━━━━━━━━━━━━
+★ GoodNotes 6 (iPad, iPhone, Mac) | ★ Notability | ★ PDF Expert | ★ Acrobat Reader
+★ Print-ready — works as a physical fitness journal too
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 HOW TO USE YOUR STICKERS
+━━━━━━━━━━━━━━━━━━━━━━━━
+1. Unzip your sticker pack | 2. In GoodNotes: Elements → Stickers → + → import PNGs | 3. Drag onto any page, unlimited times
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📅 SECTIONS INCLUDED (89 pages)
+━━━━━━━━━━━━━━━━━━━━━━━━
+• Yearly Overview
+• Monthly Calendars × 12 — track workouts and milestones
+• Monthly Reviews × 12
+• Weekly Spreads × 52 — plan workouts and self-care by the week
+• Habit Tracker — 31-day grid for sleep, water, movement, and more
+• Meal Planner — weekly meals and grocery list
+• Goals Page — fitness goals, measurements, progress
+• Notes Pages × 4 — journaling and mindfulness
+• Kawaii Sticker Library × 3
+
+━━━━━━━━━━━━━━━━━━━━━━━━
+📄 TECHNICAL DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━
+• Format: Fillable PDF | Pages: 89 | Color: Coral Peach
+• Delivery: Instant digital download — nothing shipped
+
+© OnBrandCraftz. Personal use only. Not for resale or redistribution."""
+
+_PLANNER_TEMPLATES: dict[str, dict] = {
+    "DP1026": {
+        "title": "Kawaii Digital Planner 2026 | GoodNotes Notability iPad | Fillable PDF + Sticker Pack | Instant Download | Life Planner Bundle",
+        "description": _PLANNER_DESCRIPTION_DP1026,
+        "tags": ["digital planner", "goodnotes planner", "notability planner", "ipad planner",
+                 "fillable pdf", "kawaii planner", "2026 planner", "instant download",
+                 "life planner", "planner bundle", "pdf planner", "digital download", "sticker planner"],
+        "price": 14.99,
+        "section": "Digital Planners",
+        "pages": 102,
+        "color_theme": "Lavender Dreams",
+        "files_included": ["DP1026.pdf (102 pages, ~15MB)", "DP1026_sticker_pack.zip (3 PNG sheets, ~3MB)"],
+        "photos_needed": [
+            "iPad lifestyle — planner cover on screen, cozy desk props",
+            "What's included flat lay — PDF + sticker PNGs",
+            "Monthly spread screenshot",
+            "Weekly spread screenshot",
+            "Sticker library — all 3 kawaii sheets",
+            "Sticker import how-to graphic (GoodNotes steps)",
+            "App compatibility logos graphic",
+            "Kawaii cover close-up",
+            "Habit tracker page",
+            "Goals or budget page",
+        ],
+    },
+    "DP1027": {
+        "title": "Kawaii Student Planner 2026 | School Planner GoodNotes Notability | Fillable PDF + Sticker Pack | Academic Planner Instant Download",
+        "description": _PLANNER_DESCRIPTION_DP1027,
+        "tags": ["digital planner", "student planner", "school planner", "goodnotes planner",
+                 "ipad planner", "fillable pdf", "kawaii planner", "2026 planner",
+                 "instant download", "study planner", "academic planner", "pdf planner", "digital download"],
+        "price": 9.99,
+        "section": "Digital Planners",
+        "pages": 88,
+        "color_theme": "Cotton Candy",
+        "files_included": ["DP1027.pdf (88 pages, ~13MB)", "DP1027_sticker_pack.zip (3 PNG sheets)"],
+    },
+    "DP1028": {
+        "title": "Budget Planner 2026 Digital | Finance Planner GoodNotes iPad | Fillable PDF + Sticker Pack | Money Planner Instant Download Kawaii",
+        "description": _PLANNER_DESCRIPTION_DP1028,
+        "tags": ["budget planner", "finance planner", "digital planner", "goodnotes planner",
+                 "fillable pdf", "money planner", "2026 planner", "instant download",
+                 "ipad planner", "kawaii planner", "pdf planner", "digital download", "savings planner"],
+        "price": 12.99,
+        "section": "Digital Planners",
+        "pages": 100,
+        "color_theme": "Midnight Blue",
+        "files_included": ["DP1028.pdf (100 pages, ~14MB)", "DP1028_sticker_pack.zip (3 PNG sheets)"],
+    },
+    "DP1029": {
+        "title": "Kawaii Fitness Planner 2026 | Wellness Planner GoodNotes iPad | Fillable PDF + Sticker Pack | Health Habit Tracker Instant Download",
+        "description": _PLANNER_DESCRIPTION_DP1029,
+        "tags": ["fitness planner", "wellness planner", "digital planner", "goodnotes planner",
+                 "fillable pdf", "health planner", "2026 planner", "instant download",
+                 "ipad planner", "kawaii planner", "habit tracker", "meal planner", "pdf planner"],
+        "price": 12.99,
+        "section": "Digital Planners",
+        "pages": 89,
+        "color_theme": "Coral Peach",
+        "files_included": ["DP1029.pdf (89 pages, ~14MB)", "DP1029_sticker_pack.zip (3 PNG sheets)"],
+    },
+}
+
+
+def _get_planner_listing_template(product_id: str) -> str:
+    if product_id and product_id in _PLANNER_TEMPLATES:
+        return json.dumps({
+            "product_id": product_id,
+            "template": _PLANNER_TEMPLATES[product_id],
+            "usage": "Pass title/description/tags/price directly to generate_listing_content. No rewriting needed — these are Etsy SEO-optimized.",
+        }, indent=2)
+    return json.dumps({
+        "all_templates": {pid: {k: v for k, v in tmpl.items() if k != "description"}
+                         for pid, tmpl in _PLANNER_TEMPLATES.items()},
+        "usage": "Call with a specific product_id (DP1026/DP1027/DP1028/DP1029) to get the full description.",
+        "note": "Descriptions omitted from this summary — request a specific product_id to get the full text.",
     }, indent=2)
 
 
