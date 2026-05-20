@@ -283,6 +283,34 @@ COLOR_SCHEMES: dict[str, dict] = {
         "mid":    (0.42, 0.58, 0.64),
         "light":  (0.84, 0.90, 0.93),
     },
+    # ── New requested themes ──────────────────────────────────────────────────
+    "midnight_blue": {
+        "label":  "Midnight Blue",
+        "theme":  (0.106, 0.145, 0.408),   # #1B2568 true midnight blue
+        "accent": (0.839, 0.886, 1.000),   # #D6E2FF soft blue-white
+        "bg":     (0.941, 0.953, 0.984),   # #F0F3FB ice blue white
+        "dark":   (0.06, 0.08, 0.22),
+        "mid":    (0.35, 0.42, 0.62),
+        "light":  (0.82, 0.86, 0.96),
+    },
+    "coral_peach": {
+        "label":  "Coral Peach",
+        "theme":  (0.992, 0.424, 0.286),   # #FD6C49 warm coral
+        "accent": (1.000, 0.765, 0.506),   # #FFC381 peach gold
+        "bg":     (1.000, 0.957, 0.937),   # #FFF4EF warm peach cream
+        "dark":   (0.28, 0.13, 0.08),
+        "mid":    (0.60, 0.38, 0.28),
+        "light":  (0.97, 0.88, 0.84),
+    },
+    "sage_green": {
+        "label":  "Sage Green",
+        "theme":  (0.384, 0.549, 0.361),   # #62 8C5C eucalyptus sage
+        "accent": (0.855, 0.914, 0.820),   # #DAE9D1 sage frost
+        "bg":     (0.937, 0.969, 0.929),   # #EFF7ED light sage
+        "dark":   (0.10, 0.20, 0.10),
+        "mid":    (0.36, 0.52, 0.34),
+        "light":  (0.84, 0.93, 0.82),
+    },
 }
 
 # ── PLANNER TIER PRESETS ──────────────────────────────────────────────────────
@@ -2455,8 +2483,23 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
         # ── Apply cover art if provided ───────────────────────────────────────
         cover_img_path = data.get("cover_image_path") or ""
+        full_page_cover = bool(data.get("full_page_cover", False))
         use_art = cover_img_path and os.path.exists(cover_img_path)
-        if use_art:
+        if use_art and full_page_cover:
+            # Full-page kawaii illustration cover — fills entire page
+            try:
+                c.drawImage(ImageReader(cover_img_path), 0, 0, PW, PH,
+                            preserveAspectRatio=False)
+                # Light vignette at very bottom for title readability
+                c.saveState()
+                c.setFillAlpha(0.45); c.setFillColorRGB(*BG)
+                c.rect(0, 0, PW, PH * 0.18, fill=1, stroke=0)
+                c.setFillAlpha(1.0); c.restoreState()
+                c.showPage()
+                return  # Full-page cover is complete — skip tier drawing
+            except Exception:
+                full_page_cover = False
+        elif use_art:
             try:
                 c.drawImage(ImageReader(cover_img_path), 0, split_y, PW, top_h,
                             preserveAspectRatio=False)
@@ -4091,59 +4134,87 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
     # ── DALL-E sticker sheet image generation ────────────────────────────────
     _STICKER_SHEET_PROMPTS = [
-        # Sheet 1 — illustrated kawaii objects
-        ("Kawaii planner sticker clipart sheet, clean white background. "
-         "20 individual cute illustrated stickers spaced apart on the white page — "
-         "NOT in a tight grid, arranged loosely like a real sticker sheet. "
-         "Every sticker has: THICK black outline (3px), pastel colors, "
-         "cute kawaii face with two small dot eyes, pink blush ovals on cheeks, small smile curve. "
-         "Stickers: (1) pastel pink coffee cup with matching lid, sleeve stripe, smiling face; "
-         "(2) sky-blue scissors with golden pivot screw, cute face on handle; "
-         "(3) bright yellow 5-point star, face in center, sparkle lines around it; "
-         "(4) purple pencil cup holding 5 colorful pencils (pink/blue/yellow/green/orange), face on cup; "
-         "(5) pastel pink open laptop, smiling screen face, mint green keyboard; "
-         "(6) lavender zippered pencil case with golden zipper pull, cute face; "
-         "(7) pastel pink rectangular eraser with two colored stripes, kawaii face; "
-         "(8) red heart shape with face and tiny sparkles; "
-         "(9) three washi tape rolls stacked (teal on top, pink middle, purple bottom), each with face; "
-         "(10) pink flower pot with chunky green succulent leaves, face on pot; "
-         "(11) mint teal 5-point star with face and blush; "
-         "(12) green botanical leaf sprig with two leaves; "
-         "(13) golden trophy cup with face; "
-         "(14) open pastel pink notebook with ruled lines inside; "
-         "(15) pink ruler with centimeter marks and face; "
-         "(16) blue water bottle with straw, face on bottle; "
-         "(17) rainbow arc with puffy white cloud ends; "
-         "(18) pink decorative bow; "
-         "(19) purple alarm clock with two bells on top, face on clock face; "
-         "(20) mint green paint palette with colorful paint dots and face. "
-         "Style: Japanese kawaii chibi flat illustration, bold outlines, very pastel fills, "
-         "white drop-shadow behind each sticker. Pure white background. NO text. NO watermarks."),
-        # Sheet 2 — text label stickers + mood stickers
-        ("Kawaii planner label and mood sticker sheet, pure white background. "
-         "20 individual decorative stickers arranged loosely on the page. "
-         "Every sticker has thick black outline and pastel color. Mix of text and illustrated: "
-         "(1) white rounded rectangle sticker, black bold text 'PLAN with Love', black heart icon, pink blush hearts around it; "
-         "(2) white sticker with bold black text 'PLANNER GIRL' and gold star decoration; "
-         "(3) pastel sky-blue cloud shape sticker with black bold+script text 'It\\'s Planner Time!'; "
-         "(4) coral-red rounded pill sticker with white bold text 'IMPORTANT!'; "
-         "(5) sky-blue rounded rectangle with white checkmark and text 'TO-DO'; "
-         "(6) mint green circle with white '✓ DONE!' text and confetti; "
-         "(7) pink scalloped banner sticker with 'BIRTHDAY!' text and colorful sprinkles and stars; "
-         "(8) soft lavender speech bubble sticker with 'SELF CARE' pastel text; "
-         "(9) golden sunburst star sticker with 'GOAL MET!' text; "
-         "(10) peach rounded pill with 'URGENT!' white text; "
-         "(11) purple speech bubble 'REMEMBER' with exclamation; "
-         "(12) teal cloud sticker 'VACAY!' with tiny airplane; "
-         "(13) bright yellow speech bubble 'AMAZING!'; "
-         "(14) mint droplet/pill sticker 'WATER' with water drop icon; "
-         "(15) pink heart sticker with 'GRATEFUL' script text inside; "
-         "(16) olive green rounded badge 'WIN!' with gold star; "
-         "(17) orange star burst 'BUSY DAY!'; "
-         "(18) lavender moon crescent with kawaii sleeping face; "
-         "(19) pink sunrise shape with 'GOOD MORNING' text; "
-         "(20) mint green four-leaf clover with face. "
-         "Kawaii flat style, bold outlines, pastel fills, white background. NO watermarks."),
+        # Sheet 1 — Planner girl & stationery objects
+        ("Kawaii planner girl stationery sticker clipart sheet, pure white background. "
+         "18-20 individual adorable illustrated stickers loosely arranged on the page — "
+         "NOT in a grid, scattered naturally like a real premium sticker sheet you'd peel off. "
+         "Every sticker: VERY THICK black outline (4px), pastel watercolor-style fills, "
+         "kawaii face (large glossy dot eyes with white catchlight, pink blush ovals, tiny smile arc). "
+         "Stickers include: "
+         "(1) kawaii planner notebook, open, pastel lilac cover, small kawaii face on cover, "
+         "golden pen clipped on side, floating sparkle stars around it — CENTER HERO sticker, larger; "
+         "(2) tall pastel pink travel mug with heart pattern sleeve, steam wisps that form a tiny heart, face; "
+         "(3) cute girl silhouette holding a giant pencil — planner girl icon in pastel outfit; "
+         "(4) lavender zippered pencil pouch with golden zipper, colorful pencils peeking out, kawaii face; "
+         "(5) pastel blue ink fountain pen with golden nib, face, ink drop shape below; "
+         "(6) stack of 3 colorful notebooks (pink, mint, yellow), kawaii face on top one; "
+         "(7) washi tape dispenser roll in teal/pink stripe, face on tape wheel; "
+         "(8) pastel pink rectangular eraser, two blue stripes, cute face; "
+         "(9) pink sticky note pad with golden crown icon, face on pad; "
+         "(10) bright yellow 6-point star with sparkle rays, face in center, large blush cheeks; "
+         "(11) pastel mint green scissors with golden screw pivot, face on handle; "
+         "(12) round pink clock face, golden roman numerals, kawaii sleepy face; "
+         "(13) a floating heart with wings, pastel red, tiny kawaii face, sparkles; "
+         "(14) purple glitter tube mascara/highlighter pen with star cap, face; "
+         "(15) transparent rectangular ruler with pink gradient, kawaii face; "
+         "(16) mint blue paint palette with 8 rainbow paint dots, smiling face; "
+         "(17) golden trophy cup with star, pastel yellow, kawaii face on cup; "
+         "(18) small green succulent in a pink polka-dot pot, face on pot. "
+         "Style: premium Japanese kawaii chibi illustration, very thick outlines, luminous pastel fills, "
+         "tiny white drop-shadow behind every sticker. Pure white background. NO text. NO watermarks."),
+        # Sheet 2 — Cozy lifestyle
+        ("Kawaii cozy lifestyle sticker clipart sheet, pure white background. "
+         "18-20 individual illustrated stickers loosely arranged on the page, not in a grid. "
+         "Every sticker has VERY THICK black outline (4px), soft pastel colors, "
+         "kawaii face (glossy dot eyes, pink blush cheeks, tiny smile) on all object stickers. "
+         "Stickers include: "
+         "(1) large kawaii ceramic mug filled with hot cocoa, marshmallows peeking out, "
+         "steam wisps, face on mug — HERO sticker, larger than rest; "
+         "(2) open book with golden ribbon bookmark, face on cover pages, tiny hearts drifting up; "
+         "(3) lit pillar candle, warm amber glow halo, dripping wax, kawaii face on candle body; "
+         "(4) cozy chunky knit blanket folded in soft cream/blush colors, kawaii face peeking from fold; "
+         "(5) vintage-style kettle in pastel blue with floral decal, steam from spout, face; "
+         "(6) string of fairy lights looping across, each bulb has a tiny smiley dot face; "
+         "(7) small macaron pastel pink and mint, kawaii face on macaron top; "
+         "(8) fluffy tabby cat curled up sleeping, kawaii face, tiny 'zzz' letters; "
+         "(9) pastel pink bath bomb fizzing in water, sparkle bubbles, face; "
+         "(10) cozy socks pair — one bunny face, one bear face on the cuffs; "
+         "(11) succulent terrarium glass globe with 3 small plants, face on globe; "
+         "(12) honey jar with wooden dipper, golden drip, kawaii face on jar; "
+         "(13) small diffuser/oil burner with glowing flame, swirling aromatherapy wisps, face; "
+         "(14) reading glasses with heart-shaped frames, kawaii face reflected in lens; "
+         "(15) pastel popcorn box with striped pattern, smiling face; "
+         "(16) little music note triple-cluster — three notes with tiny faces; "
+         "(17) cinnamon roll pastry, icing swirl, kawaii face in center; "
+         "(18) rainy window pane with water drops, rainbow outside, kawaii cloud face in corner. "
+         "Style: premium kawaii flat illustration, thick outlines, warm cozy pastel palette, "
+         "tiny white glow drop-shadow. Pure white background. NO text. NO watermarks."),
+        # Sheet 3 — Seasonal & holiday
+        ("Kawaii seasonal holiday sticker clipart sheet, pure white background. "
+         "18-20 individual illustrated stickers loosely arranged on the page, not in a grid. "
+         "Every sticker has VERY THICK black outline (4px), vivid pastel colors, "
+         "kawaii face (glossy dot eyes, pink blush, smile) on main stickers. "
+         "Include stickers for all four seasons and key holidays: "
+         "SPRING: (1) large pastel pink cherry blossom branch — HERO, center, larger; "
+         "(2) yellow daffodil bouquet in blue vase, face on vase; "
+         "(3) pastel rainbow arc with fluffy cloud ends, face in rainbow center; "
+         "(4) Easter egg trio in blue/purple/pink with dot patterns, tiniest faces; "
+         "(5) kawaii bee on a flower, striped yellow body, tiny face, heart antennae; "
+         "SUMMER: (6) round smiling sun with alternating short/long rays, face, blush; "
+         "(7) kawaii watermelon slice, black seed dots as tiny eyes, pink flesh; "
+         "(8) pastel ice cream cone with two scoops (strawberry + mint), face on cone; "
+         "(9) sunflower head, brown center with kawaii face, yellow petals; "
+         "AUTUMN/FALL: (10) cute pumpkin, orange, green stem, kawaii face (not scary); "
+         "(11) golden autumn leaf trio — maple, oak, birch — warm orange/red/yellow; "
+         "(12) acorn with kawaii face, stripey brown hat; "
+         "(13) steaming pumpkin spice latte cup with autumn sleeve, face, whipped cream top; "
+         "WINTER/HOLIDAY: (14) round snowflake shape in ice blue, 6-pointed, kawaii face in center; "
+         "(15) Christmas ornament ball, deep red with gold cap, white swirl, face; "
+         "(16) pastel snowman — carrot nose, scarf, button eyes replaced with kawaii dot eyes + blush; "
+         "(17) Valentine's Day big puffy heart in pastel red-pink, kawaii face, sparkles; "
+         "(18) festive gift box with bow, pastel purple/teal, face on box, sparkle stars around it. "
+         "Style: premium kawaii chibi illustration, thick outlines, vivid but still pastel fills, "
+         "tiny white drop-shadow. Pure white background. NO text. NO watermarks."),
     ]
 
     def _load_or_gen_sticker_img(sheet_num: int) -> str | None:
@@ -4195,13 +4266,14 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             '}catch(e){app.alert("Works in Adobe Acrobat Reader, PDF Expert & Xodo.",1);}'
         )
 
-        for pg_idx in range(2):
-            bm = "sticker_picker" if pg_idx == 0 else "sticker_picker_2"
+        for pg_idx in range(3):
+            bm = "sticker_picker" if pg_idx == 0 else f"sticker_picker_{pg_idx + 1}"
             c.bookmarkPage(bm)
             if pg_idx == 0:
                 c.addOutlineEntry("✨ Sticker Library", bm, level=0)
             else:
-                c.addOutlineEntry("✨ Sticker Library (cont.)", bm, level=1)
+                sheet_names = ["", "Cozy Lifestyle", "Seasonal & Holiday"]
+                c.addOutlineEntry(f"✨ Stickers — {sheet_names[pg_idx]}", bm, level=1)
 
             # ── Cream page background ─────────────────────────────────────────
             rect(0, 0, PW, PH, f=(0.998, 0.996, 0.992))
@@ -4214,11 +4286,13 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             rect(0, PH - hdr_h, PW - TAB_W - 2, hdr_h, f=T)
             rect(0, PH - hdr_h - 2, PW - TAB_W - 2, 2, f=A)
             rect(0, PH - hdr_h, 7, hdr_h, f=A)
+            _sheet_subtitles = ["Planner & Stationery", "Cozy Lifestyle", "Seasonal & Holiday"]
             font("Helvetica-Bold", 22); fill(WHITE)
-            c.drawString(ML + 12, PH - hdr_h + 14, "✨  Kawaii Sticker Library")
+            c.drawString(ML + 12, PH - hdr_h + 14,
+                         f"✨  Kawaii Sticker Library — {_sheet_subtitles[pg_idx]}")
             font("Helvetica", 8); fill(_blend(WHITE, 0.32))
             c.drawRightString(PW - TAB_W - 12, PH - hdr_h + 28,
-                              f"Page {pg_idx + 1} of 2")
+                              f"Page {pg_idx + 1} of 3")
 
             # ── How-to pills ──────────────────────────────────────────────────
             tip_y = PH - hdr_h - 7
@@ -4269,7 +4343,9 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
             if not img_path:
                 # ── Programmatic kawaii fallback ──────────────────────────────
-                cats_on_page = _STICKER_CATEGORIES[0:3] if pg_idx == 0 else _STICKER_CATEGORIES[3:5]
+                cats_on_page = (_STICKER_CATEGORIES[0:2] if pg_idx == 0 else
+                                _STICKER_CATEGORIES[2:4] if pg_idx == 1 else
+                                _STICKER_CATEGORIES[4:])
                 n_cats = len(cats_on_page)
                 avail_h = img_h
                 cat_h = (avail_h - 6 * (n_cats - 1)) / n_cats
