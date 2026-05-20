@@ -3861,155 +3861,236 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         c.showPage()
 
     # ── STICKER PICKER PAGE (interactive, linked from every calendar page) ──────
-    # Palette — vibrant but coordinated
-    _STK_G  = (0.20, 0.72, 0.40)   # emerald green
-    _STK_Y  = (0.95, 0.75, 0.10)   # golden yellow
-    _STK_R  = (0.90, 0.28, 0.28)   # coral red
-    _STK_P  = (0.62, 0.32, 0.88)   # violet purple
-    _STK_O  = (0.95, 0.50, 0.18)   # warm orange
-    _STK_B  = (0.22, 0.60, 0.92)   # sky blue
-    _STK_PK = (0.95, 0.40, 0.62)   # hot pink
-    _STK_TL = (0.18, 0.72, 0.72)   # teal
-    _STK_GD = (0.80, 0.55, 0.12)   # gold
-    _STK_LV = (0.70, 0.50, 0.92)   # lavender
+    import math as _math
 
+    # ── Pastel kawaii palette ─────────────────────────────────────────────────
+    _STK_G  = (0.20, 0.72, 0.40)   # mint green
+    _STK_Y  = (0.95, 0.78, 0.15)   # sunshine yellow
+    _STK_R  = (0.95, 0.35, 0.45)   # coral pink-red
+    _STK_P  = (0.68, 0.45, 0.92)   # soft violet
+    _STK_O  = (0.98, 0.58, 0.28)   # warm peach-orange
+    _STK_B  = (0.38, 0.72, 0.95)   # sky blue
+    _STK_PK = (0.98, 0.50, 0.72)   # bubblegum pink
+    _STK_TL = (0.20, 0.80, 0.78)   # teal mint
+    _STK_GD = (0.88, 0.68, 0.18)   # gold
+    _STK_LV = (0.75, 0.58, 0.95)   # lavender
+
+    # shape key: "star" | "heart" | "circle" | "pill" | "speech"
     _STICKER_CATEGORIES = [
-        # ── 1. PRIORITY & TASKS ──────────────────────────────────────────────
         ("PRIORITY & TASKS", _STK_R, [
-            ("IMPORTANT",  _STK_R,  "!"),    ("URGENT",    _STK_R,  "!!"),
-            ("DEADLINE",   _STK_O,  "⏰"),   ("MEETING",   _STK_B,  "◈"),
-            ("TO-DO",      _STK_B,  "✓"),    ("ERRANDS",   _STK_G,  "◎"),
-            ("BUSY DAY",   _STK_O,  "🔥"),   ("FOCUS",     T,       "◉"),
-            ("CALL",       _STK_TL, "☎"),    ("EMAIL",     _STK_B,  "✉"),
-            ("TO BUY",     _STK_G,  "🛒"),   ("PAY BILL",  _STK_R,  "$"),
-            ("REMINDER",   _STK_O,  "📌"),   ("BLOCKED",   _STK_R,  "🚫"),
-            ("REVIEW",     T,       "👁"),    ("SUBMIT",    _STK_G,  "→"),
+            ("IMPORTANT",   _STK_R,   "star"),   ("URGENT",    _STK_O,   "speech"),
+            ("DEADLINE",    _STK_O,   "circle"),  ("MEETING",   _STK_B,   "pill"),
+            ("TO-DO",       _STK_B,   "pill"),    ("ERRANDS",   _STK_G,   "pill"),
+            ("BUSY DAY",    _STK_O,   "star"),    ("FOCUS",     T,        "circle"),
+            ("CALL",        _STK_TL,  "pill"),    ("EMAIL",     _STK_B,   "pill"),
+            ("TO BUY",      _STK_G,   "pill"),    ("PAY BILL",  _STK_R,   "speech"),
+            ("REMINDER",    _STK_O,   "circle"),  ("REVIEW",    T,        "pill"),
+            ("SUBMIT",      _STK_G,   "pill"),    ("BLOCKED",   _STK_R,   "pill"),
         ]),
-        # ── 2. EVENTS & DATES ────────────────────────────────────────────────
         ("EVENTS & DATES", _STK_Y, [
-            ("BIRTHDAY!",  _STK_PK, "🎂"),   ("APPT",      _STK_B,  "📅"),
-            ("VACAY!",     _STK_B,  "✈"),    ("ANNIVERSARY",_STK_PK,"♥"),
-            ("MEMORIES",   _STK_P,  "📷"),   ("GIFT DUE",  _STK_PK, "🎁"),
-            ("EVENT",      T,       "🎉"),    ("FAMILY",    _STK_Y,  "🏡"),
-            ("HOLIDAY",    _STK_Y,  "⭐"),   ("GOAL MET!", _STK_G,  "🏆"),
-            ("DONE!",      _STK_G,  "✅"),   ("WIN!",      _STK_Y,  "⭐"),
-            ("PLAN",       _STK_B,  "📝"),   ("MILESTONE", _STK_GD, "🌟"),
-            ("BILL DUE",   _STK_R,  "💳"),   ("NEW MOON",  _STK_P,  "🌙"),
+            ("BIRTHDAY!",   _STK_PK,  "star"),    ("APPT",      _STK_B,   "pill"),
+            ("VACAY!",      _STK_B,   "speech"),  ("ANNIVERSARY",_STK_PK, "heart"),
+            ("MEMORIES",    _STK_P,   "circle"),  ("GIFT DUE",  _STK_PK,  "pill"),
+            ("EVENT",       T,        "star"),     ("FAMILY",    _STK_Y,   "heart"),
+            ("HOLIDAY",     _STK_Y,   "star"),    ("GOAL MET!", _STK_G,   "speech"),
+            ("DONE!",       _STK_G,   "circle"),  ("WIN!",      _STK_Y,   "star"),
+            ("PLAN",        _STK_B,   "pill"),    ("MILESTONE", _STK_GD,  "star"),
+            ("BILL DUE",    _STK_R,   "pill"),    ("NEW MOON",  _STK_LV,  "circle"),
         ]),
-        # ── 3. WELLNESS & MOOD ───────────────────────────────────────────────
         ("WELLNESS & MOOD", _STK_P, [
-            ("AMAZING",    _STK_Y,  "😍"),   ("GOOD",      _STK_G,  "😊"),
-            ("OKAY",       _STK_B,  "😐"),   ("LOW",       _STK_P,  "💜"),
-            ("WATER",      _STK_B,  "💧"),   ("SLEPT WELL",_STK_LV, "😴"),
-            ("WORKOUT",    _STK_G,  "💪"),   ("GRATEFUL",  _STK_Y,  "🙏"),
-            ("CALM",       _STK_TL, "🧘"),   ("HIGH ENERGY",_STK_O, "⚡"),
-            ("MEALS",      _STK_G,  "🥗"),   ("SELF CARE", _STK_PK, "🌸"),
-            ("MEDS",       _STK_B,  "💊"),   ("SELF LOVE", _STK_PK, "❤"),
-            ("SUNSHINE",   _STK_Y,  "☀"),    ("MINDFUL",   _STK_LV, "🌿"),
+            ("AMAZING",     _STK_Y,   "star"),    ("GOOD",      _STK_G,   "circle"),
+            ("OKAY",        _STK_B,   "circle"),  ("LOW",       _STK_LV,  "heart"),
+            ("WATER",       _STK_B,   "circle"),  ("SLEPT WELL",_STK_LV,  "circle"),
+            ("WORKOUT",     _STK_G,   "speech"),  ("GRATEFUL",  _STK_Y,   "heart"),
+            ("CALM",        _STK_TL,  "circle"),  ("HIGH ENERGY",_STK_O,  "star"),
+            ("MEALS",       _STK_G,   "pill"),    ("SELF CARE", _STK_PK,  "heart"),
+            ("MEDS",        _STK_B,   "pill"),    ("SELF LOVE", _STK_PK,  "heart"),
+            ("SUNSHINE",    _STK_Y,   "star"),    ("MINDFUL",   _STK_TL,  "circle"),
         ]),
-        # ── 4. SCHOOL & WORK ─────────────────────────────────────────────────
         ("SCHOOL & WORK", _STK_B, [
-            ("STUDY",      _STK_B,  "📚"),   ("NOTES",     T,       "📝"),
-            ("TEST DAY",   _STK_R,  "🧪"),   ("SUBMIT",    _STK_G,  "📤"),
-            ("DUE DATE",   _STK_R,  "⏰"),   ("REVIEWED",  _STK_G,  "✅"),
-            ("PRESENT",    _STK_O,  "🎤"),   ("ONLINE",    _STK_B,  "💻"),
-            ("FOCUS!",     T,       "🎯"),    ("NO PHONE",  _STK_R,  "🚫"),
-            ("READ",       _STK_P,  "📖"),   ("WRITE",     T,       "✍"),
-            ("PROGRESS",   _STK_G,  "📈"),   ("GREAT WORK",_STK_Y,  "🌟"),
-            ("ACHIEVEMENT",_STK_GD, "🏅"),   ("LEVEL UP",  _STK_O,  "🚀"),
+            ("STUDY",       _STK_B,   "speech"),  ("NOTES",     T,        "pill"),
+            ("TEST DAY",    _STK_R,   "circle"),  ("SUBMIT",    _STK_G,   "pill"),
+            ("DUE DATE",    _STK_R,   "star"),    ("REVIEWED",  _STK_G,   "circle"),
+            ("PRESENT",     _STK_O,   "speech"),  ("ONLINE",    _STK_B,   "pill"),
+            ("FOCUS!",      T,        "star"),     ("NO PHONE",  _STK_R,   "circle"),
+            ("READ",        _STK_P,   "pill"),    ("WRITE",     T,        "pill"),
+            ("PROGRESS",    _STK_G,   "speech"),  ("GREAT WORK",_STK_Y,   "star"),
+            ("ACHIEVEMENT", _STK_GD,  "star"),    ("LEVEL UP",  _STK_O,   "speech"),
         ]),
-        # ── 5. MOTIVATION ────────────────────────────────────────────────────
         ("MOTIVATION", _STK_GD, [
-            ("YOU GOT THIS",_STK_O, "💪"),   ("STRONG",    _STK_R,  "🔥"),
-            ("SHINE",      _STK_Y,  "✨"),   ("ON FIRE",   _STK_O,  "🔥"),
-            ("CRUSHED IT", _STK_G,  "🏆"),   ("GROWTH",    _STK_G,  "📈"),
-            ("BELIEVE",    _STK_P,  "💫"),   ("MAGIC DAY", _STK_LV, "✨"),
-            ("FRESH START",_STK_TL, "🌱"),   ("GO WITH IT",_STK_B,  "🌊"),
-            ("NEW CHAPTER",_STK_P,  "📖"),   ("YES!",      _STK_Y,  "🙌"),
-            ("GLOW UP",    _STK_PK, "💅"),   ("DREAM BIG", _STK_LV, "💭"),
-            ("BE KIND",    _STK_PK, "❤"),    ("GOOD VIBES",_STK_Y,  "🎶"),
+            ("YOU GOT THIS",_STK_O,   "speech"),  ("STRONG",    _STK_R,   "star"),
+            ("SHINE",       _STK_Y,   "star"),    ("ON FIRE",   _STK_O,   "star"),
+            ("CRUSHED IT",  _STK_G,   "speech"),  ("GROWTH",    _STK_G,   "circle"),
+            ("BELIEVE",     _STK_P,   "heart"),   ("MAGIC DAY", _STK_LV,  "star"),
+            ("FRESH START", _STK_TL,  "circle"),  ("GO WITH IT",_STK_B,   "speech"),
+            ("NEW CHAPTER", _STK_P,   "pill"),    ("YES!",      _STK_Y,   "circle"),
+            ("GLOW UP",     _STK_PK,  "star"),    ("DREAM BIG", _STK_LV,  "heart"),
+            ("BE KIND",     _STK_PK,  "heart"),   ("GOOD VIBES",_STK_Y,   "speech"),
         ]),
     ]
 
-    def _draw_one_sticker(sx, sy, sw, sh, lbl, col, sym, sticker_page_mode=False):
-        """Draw a single sticker tile and attach a JS Link annotation to it."""
-        sh_inner = sh - 2
-        # Soft shadow (offset rect in slightly darker tint)
-        rect(sx + 2, sy - 2, sw, sh_inner, f=_blend(col, 0.60), radius=10)
-        # Main pill body with light fill
-        rect(sx, sy, sw, sh_inner, f=_blend(col, 0.88), radius=10)
-        # Colored border ring
-        rect(sx, sy, sw, sh_inner, s=_blend(col, 0.50), lwidth=1.0, radius=10)
-        # Highlight stripe at top
-        rect(sx + 4, sy + sh_inner - 7, sw - 8, 5,
-             f=_blend(WHITE, 0.0 if col == WHITE else -0.1), radius=3)
+    # ── Kawaii drawing primitives ─────────────────────────────────────────────
+    def _kawaii_face(face_cx, face_cy, size):
+        """Dot eyes, curved smile, pink blush cheeks."""
+        eye_r = max(1.2, size * 0.07)
+        # Eyes
+        c.setFillColorRGB(0.08, 0.08, 0.12); c.setLineWidth(0)
+        c.circle(face_cx - size * 0.16, face_cy + size * 0.06, eye_r, fill=1, stroke=0)
+        c.circle(face_cx + size * 0.16, face_cy + size * 0.06, eye_r, fill=1, stroke=0)
+        # Blush ovals
+        c.saveState()
+        c.setFillColorRGB(0.98, 0.68, 0.74); c.setFillAlpha(0.60)
+        bx = size * 0.22; by = size * 0.06; bw = size * 0.13; bh = size * 0.07
+        c.ellipse(face_cx - bx - bw, face_cy - by - bh,
+                  face_cx - bx + bw, face_cy - by + bh, fill=1, stroke=0)
+        c.ellipse(face_cx + bx - bw, face_cy - by - bh,
+                  face_cx + bx + bw, face_cy - by + bh, fill=1, stroke=0)
+        c.setFillAlpha(1.0); c.restoreState()
+        # Smile arc
+        c.setStrokeColorRGB(0.08, 0.08, 0.12)
+        c.setLineWidth(max(0.5, size * 0.055)); c.setLineCap(1)
+        p = c.beginPath()
+        p.moveTo(face_cx - size * 0.13, face_cy - size * 0.01)
+        p.curveTo(face_cx - size * 0.07, face_cy - size * 0.15,
+                  face_cx + size * 0.07, face_cy - size * 0.15,
+                  face_cx + size * 0.13, face_cy - size * 0.01)
+        c.drawPath(p, fill=0, stroke=1); c.setLineCap(0)
 
-        # Symbol (large, centred in upper 60% of tile)
-        sym_y = sy + sh_inner * 0.42
-        font("Helvetica-Bold", min(18, sh_inner * 0.42)); fill(col)
-        c.drawCentredString(sx + sw / 2, sym_y, sym)
+    def _star_pts(cx, cy, r_out, r_in, n=5):
+        pts = []
+        for i in range(n * 2):
+            r = r_out if i % 2 == 0 else r_in
+            a = _math.pi * (i / n) - _math.pi / 2
+            pts.append((cx + r * _math.cos(a), cy + r * _math.sin(a)))
+        return pts
 
-        # Label text (small, bottom strip)
-        font("Helvetica-Bold", min(6.5, sw / len(lbl) * 1.4)); fill(_blend(col, 0.10))
-        c.drawCentredString(sx + sw / 2, sy + 4, lbl)
+    def _draw_shape_path(shape, cx, cy, r, outline_extra=0):
+        """Draw filled+stroked shape. Returns (approx face_cx, face_cy, face_size)."""
+        re = r + outline_extra
+        if shape == "star":
+            p = c.beginPath()
+            for i, (px, py) in enumerate(_star_pts(cx, cy, re, re * 0.44)):
+                p.moveTo(px, py) if i == 0 else p.lineTo(px, py)
+            p.close(); c.drawPath(p, fill=1, stroke=1 if outline_extra == 0 else 0)
+            return cx, cy + r * 0.08, r * 0.52
+        elif shape == "heart":
+            s = re * 0.58
+            p = c.beginPath()
+            p.moveTo(cx, cy - s)
+            p.curveTo(cx - s * 1.9, cy - s * 0.2, cx - s * 1.9, cy + s * 1.0, cx, cy + s * 0.6)
+            p.curveTo(cx + s * 1.9, cy + s * 1.0, cx + s * 1.9, cy - s * 0.2, cx, cy - s)
+            p.close(); c.drawPath(p, fill=1, stroke=1 if outline_extra == 0 else 0)
+            return cx, cy + s * 0.1, s * 0.80
+        elif shape == "speech":
+            # Rounded rect + small triangle at bottom-left
+            rr = re * 0.22
+            p = c.beginPath()
+            p.moveTo(cx - re + rr, cy + re)
+            p.lineTo(cx + re - rr, cy + re)
+            p.curveTo(cx + re, cy + re, cx + re, cy + re, cx + re, cy + re - rr)
+            p.lineTo(cx + re, cy - re * 0.4 + rr)
+            p.curveTo(cx + re, cy - re * 0.4, cx + re, cy - re * 0.4, cx + re - rr, cy - re * 0.4)
+            p.lineTo(cx - re * 0.1, cy - re * 0.4)
+            p.lineTo(cx - re * 0.35, cy - re * 0.8)  # tail point
+            p.lineTo(cx - re * 0.55, cy - re * 0.4)
+            p.lineTo(cx - re + rr, cy - re * 0.4)
+            p.curveTo(cx - re, cy - re * 0.4, cx - re, cy - re * 0.4, cx - re, cy - re * 0.4 + rr)
+            p.lineTo(cx - re, cy + re - rr)
+            p.curveTo(cx - re, cy + re, cx - re, cy + re, cx - re + rr, cy + re)
+            p.close(); c.drawPath(p, fill=1, stroke=1 if outline_extra == 0 else 0)
+            return cx, cy + re * 0.15, re * 0.62
+        else:  # circle
+            c.circle(cx, cy, re, fill=1, stroke=1 if outline_extra == 0 else 0)
+            return cx, cy, re * 0.72
 
-        # JS: if on sticker-picker page, go back to source page and place annotation.
-        # If on a regular page via the STICKER PANEL button, addAnnot directly.
+    def _draw_kawaii_sticker(sx, sy, sw, sh, lbl, col, shape="pill",
+                              sticker_page_mode=False):
+        """Kawaii sticker: white outline → pastel fill → black border → face → label → JS."""
+        cx = sx + sw / 2
+        cy = sy + sh * 0.54   # center shifted up a bit to leave room for label
+        r = min(sw, sh * 0.88) * 0.44
+
+        is_pill = shape == "pill"
+
+        if is_pill:
+            # White outline box
+            c.setFillColorRGB(1, 1, 1); c.setLineWidth(0)
+            c.roundRect(sx - 3, sy - 1, sw + 6, sh + 4, (sh + 4) * 0.28, fill=1, stroke=0)
+            # Pastel fill + dark outline
+            c.setFillColorRGB(*_blend(col, 0.80))
+            c.setStrokeColorRGB(*_blend(col, 0.15))
+            c.setLineWidth(1.2)
+            c.roundRect(sx, sy, sw, sh, sh * 0.28, fill=1, stroke=1)
+            # Bold label text centered
+            fs = min(7.5, sw / max(1, len(lbl)) * 1.6)
+            font("Helvetica-Bold", fs); fill(_blend(col, 0.08))
+            c.drawCentredString(cx, sy + sh * 0.34, lbl)
+        else:
+            # White outline shape (extra=3)
+            c.setFillColorRGB(1, 1, 1); c.setLineWidth(0)
+            _draw_shape_path(shape, cx, cy, r + 3, outline_extra=3)
+            # Colored fill shape
+            c.setFillColorRGB(*_blend(col, 0.78))
+            c.setStrokeColorRGB(*_blend(col, 0.18))
+            c.setLineWidth(1.0)
+            fce_cx, fce_cy, fce_sz = _draw_shape_path(shape, cx, cy, r)
+            # Kawaii face (skip for very small stickers)
+            if r > 9:
+                _kawaii_face(fce_cx, fce_cy, fce_sz)
+            # Label below shape
+            label_y = sy + 3
+            fs = min(6.5, sw / max(1, len(lbl)) * 1.5)
+            font("Helvetica-Bold", fs); fill(_blend(col, 0.10))
+            c.drawCentredString(cx, label_y, lbl)
+
+        # JS overlay — popup → place FreeText annotation on page
         _r, _g, _b = col[0], col[1], col[2]
-        _lr = min(1.0, _r * 0.55 + 0.45)
-        _lg = min(1.0, _g * 0.55 + 0.45)
-        _lb = min(1.0, _b * 0.55 + 0.45)
-        _safe_sym = sym.replace('"', "'")
-        _safe_lbl = lbl.replace('"', "'")
+        _lr = min(1.0, _r * 0.45 + 0.55)
+        _lg = min(1.0, _g * 0.45 + 0.55)
+        _lb = min(1.0, _b * 0.45 + 0.55)
+        _safe = lbl.replace('"', "'")
 
         if sticker_page_mode:
             _js = (
                 f'var pg=parseInt(this.getField("{_stk_pg}").value);'
                 f'if(isNaN(pg)||pg<0){{'
-                f'app.alert("Tap the \\u2605 button on any page first, then come here to pick a sticker.",3);return;}}'
+                f'app.alert("Tap the \\u2728 button on any planner page first!",3);return;}}'
                 f'var cx=parseFloat(this.getField("{_stk_x}").value);'
                 f'var cy=parseFloat(this.getField("{_stk_y}").value);'
                 f'var cw=parseFloat(this.getField("{_stk_w}").value);'
                 f'var ch=parseFloat(this.getField("{_stk_h}").value);'
-                f'try{{'
-                f'this.addAnnot({{type:"FreeText",page:pg,'
+                f'try{{this.addAnnot({{type:"FreeText",page:pg,'
                 f'rect:[cx,cy,cx+cw,cy+ch],'
-                f'contents:"{_safe_sym}  {_safe_lbl}",'
+                f'contents:"{_safe}",'
                 f'fillColor:["RGB",{_lr:.3f},{_lg:.3f},{_lb:.3f}],'
                 f'strokeColor:["RGB",{_r:.3f},{_g:.3f},{_b:.3f}],'
-                f'textColor:["RGB",{_r*0.3:.3f},{_g*0.3:.3f},{_b*0.3:.3f}],'
-                f'textSize:9,alignment:1}});}}'
-                f'catch(e){{}}'
+                f'textColor:["RGB",{_r*0.25:.3f},{_g*0.25:.3f},{_b*0.25:.3f}],'
+                f'textSize:10,alignment:1}});'
                 f'this.getField("{_stk_pg}").value="-1";'
-                f'this.pageNum=pg;'
+                f'this.pageNum=pg;}}catch(e){{}}'
             )
         else:
             _js = (
                 f'var pg=this.pageNum;'
-                f'var ph=this.getPageHeight(pg);'
-                f'var pw=this.getPageWidth(pg);'
-                f'try{{'
-                f'this.addAnnot({{type:"FreeText",page:pg,'
-                f'rect:[pw*0.35,ph*0.45,pw*0.65,ph*0.57],'
-                f'contents:"{_safe_sym}  {_safe_lbl}",'
+                f'var ph=this.getPageHeight(pg);var pw=this.getPageWidth(pg);'
+                f'try{{this.addAnnot({{type:"FreeText",page:pg,'
+                f'rect:[pw*0.33,ph*0.44,pw*0.67,ph*0.58],'
+                f'contents:"{_safe}",'
                 f'fillColor:["RGB",{_lr:.3f},{_lg:.3f},{_lb:.3f}],'
                 f'strokeColor:["RGB",{_r:.3f},{_g:.3f},{_b:.3f}],'
-                f'textColor:["RGB",{_r*0.3:.3f},{_g*0.3:.3f},{_b*0.3:.3f}],'
-                f'textSize:10,alignment:1}});'
+                f'textColor:["RGB",{_r*0.25:.3f},{_g*0.25:.3f},{_b*0.25:.3f}],'
+                f'textSize:11,alignment:1}});'
                 f'app.alert("\\u2728 Sticker added! Drag it anywhere.",1);'
-                f'}}catch(e){{'
-                f'app.alert("Sticker ready. Works in Acrobat Reader, PDF Expert & Xodo.",1);}}'
+                f'}}catch(e){{app.alert("Works in Acrobat Reader, PDF Expert & Xodo.",1);}}'
             )
-        if not _js_button(sx, sy, sw, sh, _js):
+        if not _js_button(sx, sy, sw, sh + 4, _js):
             c.linkAbsolute(f"Sticker: {lbl}", "sticker_picker",
                            (sx, sy, sx + sw, sy + sh))
 
     def draw_sticker_picker_page():
-        """Two-page sticker library — beautiful tiles, JS-linked back to source page."""
+        """Two-page kawaii sticker library with illustrated tiles."""
         content_w = CW - TAB_W - 4
-        hdr_h = 50
 
-        # Split 5 categories: page 1 → cats 0-2,  page 2 → cats 3-4
         for pg_idx, cat_slice in enumerate([(0, 3), (3, 5)]):
             bm = "sticker_picker" if pg_idx == 0 else "sticker_picker_2"
             c.bookmarkPage(bm)
@@ -4017,111 +4098,119 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                 c.addOutlineEntry("✨ Sticker Library", bm, level=0)
             else:
                 c.addOutlineEntry("✨ Sticker Library (cont.)", bm, level=1)
-            page_bg()
+
+            # Cream/white background for clean sticker-sheet look
+            rect(0, 0, PW, PH, f=(0.995, 0.993, 0.988))
+            # Subtle dot pattern
+            _dp = 18
+            for _gx in range(int(ML), int(PW - TAB_W - 2), _dp):
+                for _gy in range(int(MB + 10), int(PH - 40), _dp):
+                    circle(_gx, _gy, 0.5, f=_blend(T, 0.65))
 
             # ── Header ────────────────────────────────────────────────────────
-            # Full-width gradient-like header
+            hdr_h = 52
             rect(0, PH - hdr_h, PW - TAB_W - 2, hdr_h, f=T)
-            rect(0, PH - hdr_h, PW - TAB_W - 2, hdr_h, f=_blend(A, 0.65), radius=0)
             rect(0, PH - hdr_h - 3, PW - TAB_W - 2, 3, f=A)
-            # Left accent bar
-            rect(0, PH - hdr_h, 6, hdr_h, f=A)
+            rect(0, PH - hdr_h, 7, hdr_h, f=A)
+            font("Helvetica-Bold", 24); fill(WHITE)
+            c.drawString(ML + 14, PH - hdr_h + 17, "✨  Kawaii Sticker Library")
+            font("Helvetica", 8.5); fill(_blend(WHITE, 0.28))
+            c.drawRightString(PW - TAB_W - 14, PH - hdr_h + 32,
+                              f"Page {pg_idx + 1} of 2  ·  {5 if pg_idx == 0 else 2} categories")
 
-            font("Helvetica-Bold", 22); fill(WHITE)
-            c.drawString(ML + 12, PH - hdr_h + 16, "✨  STICKER LIBRARY")
-            font("Helvetica", 8); fill(_blend(WHITE, 0.30))
-            pg_lbl = f"Page {pg_idx + 1} of 2"
-            c.drawRightString(PW - TAB_W - 14, PH - hdr_h + 28, pg_lbl)
+            # How-to strips
+            tip_y = PH - hdr_h - 8
+            for icon, tip in [
+                ("✏ Acrobat / Xodo / PDF Expert →",
+                 "Tap ✨ STICKERS in the footer on any page to pick & drag a sticker"),
+                ("📱 GoodNotes / Notability →",
+                 "Screenshot this page, then import it as a custom sticker sheet in your app"),
+            ]:
+                rect(ML, tip_y - 12, content_w, 15, f=_blend(A, 0.82), radius=6)
+                font("Helvetica-Bold", 6.5); fill(T)
+                iw = c.stringWidth(icon, _fn("bold"), 6.5)
+                c.drawString(ML + 7, tip_y - 4, icon)
+                font("Helvetica", 6.5); fill(DARK)
+                c.drawString(ML + 10 + iw, tip_y - 4, tip)
+                tip_y -= 19
 
-            # How-to pills
-            _tips = [
-                ("Acrobat / Xodo / PDF Expert", "Tap the ✨ STICKERS button on any page → pick a sticker → drag it anywhere"),
-                ("GoodNotes / Notability", "Screenshot this page → import as custom sticker sheet in your app"),
-            ]
-            tip_y = PH - hdr_h - 18
-            for tip_icon, tip_txt in _tips:
-                rect(ML, tip_y - 10, content_w, 14, f=_blend(A, 0.84), radius=5)
-                font("Helvetica-Bold", 6); fill(T)
-                c.drawString(ML + 6, tip_y - 3, tip_icon + ":")
-                font("Helvetica", 6); fill(DARK)
-                c.drawString(ML + 6 + c.stringWidth(tip_icon + ": ", _fn("bold"), 6),
-                             tip_y - 3, tip_txt)
-                tip_y -= 17
-
-            top_y = tip_y - 6
+            top_y = tip_y - 4
 
             # ── Category sections ─────────────────────────────────────────────
             cats_on_page = _STICKER_CATEGORIES[cat_slice[0]:cat_slice[1]]
             n_cats = len(cats_on_page)
-            avail_h = top_y - MB - 24
-            cat_h = avail_h / n_cats - 8
+            avail_h = top_y - MB - 22
+            # Allocate equal vertical space per category
+            cat_h = (avail_h - 6 * (n_cats - 1)) / n_cats
 
             for ci, (cat_name, cat_color, stickers) in enumerate(cats_on_page):
-                cat_y = top_y - ci * (cat_h + 8)
+                cat_top = top_y - ci * (cat_h + 6)
 
-                # Category label pill
-                pill_w = min(content_w, 8 * len(cat_name) + 24)
-                rect(ML, cat_y - 18, pill_w, 18, f=cat_color, radius=9)
-                # Accent dot
-                circle(ML + 11, cat_y - 9, 4, f=_blend(cat_color, 0.20))
-                font("Helvetica-Bold", 8.5); fill(WHITE)
-                c.drawString(ML + 20, cat_y - 14, cat_name)
+                # Category banner pill
+                pill_w = content_w
+                rect(ML, cat_top - 20, pill_w, 20, f=_blend(cat_color, 0.25), radius=8)
+                rect(ML, cat_top - 20, 6, 20, f=cat_color, radius=3)
+                circle(ML + 16, cat_top - 10, 6, f=cat_color)
+                font("Helvetica-Bold", 9); fill(_blend(cat_color, 0.05))
+                c.drawString(ML + 27, cat_top - 15, cat_name.upper())
 
-                # Sticker grid — 8 per row
+                # Sticker grid — 8 stickers per row, up to 2 rows per category
                 stk_cols = 8; stk_gap = 5
                 sw = (content_w - stk_gap * (stk_cols - 1)) / stk_cols
-                sh = min(cat_h - 22, sw * 1.05)
-                stk_top = cat_y - 22
+                row_h = cat_h - 24   # full row height per row of stickers
+                sh = min(row_h - 4, sw * 1.10)  # each sticker height
+                stk_top = cat_top - 24
 
-                for si, (lbl, col, sym) in enumerate(stickers):
+                for si, (lbl, col, shape) in enumerate(stickers):
                     ic = si % stk_cols
                     ir = si // stk_cols
                     sx = ML + ic * (sw + stk_gap)
                     sy = stk_top - ir * (sh + stk_gap + 2) - sh
-                    if sy < MB + 20:
+                    if sy < MB + 16:
                         break
-                    _draw_one_sticker(sx, sy, sw, sh, lbl, col, sym,
-                                      sticker_page_mode=True)
+                    _draw_kawaii_sticker(sx, sy, sw, sh, lbl, col, shape,
+                                         sticker_page_mode=True)
 
             page_footer(f"STICKER LIBRARY · Page {pg_idx + 1}")
             draw_nav_tabs()
             c.showPage()
 
     def draw_sticker_pack_page(pack_idx=1):
-        """Single-category sticker page for Tier 1/2 styles."""
+        """Single-category kawaii sticker page for Tier 1/2 styles."""
         bm = f"stickers_{pack_idx}"
         c.bookmarkPage(bm)
         if pack_idx == 1:
             c.addOutlineEntry("Sticker Pack", bm, level=0)
         else:
             c.addOutlineEntry(f"Sticker Pack {pack_idx}", bm, level=1)
-        page_bg()
+        # Cream background for clean sticker look
+        rect(0, 0, PW, PH, f=(0.995, 0.993, 0.988))
         content_w = CW - TAB_W - 4
 
         cat_idx = (pack_idx - 1) % len(_STICKER_CATEGORIES)
         cat_name, cat_color, stickers = _STICKER_CATEGORIES[cat_idx]
 
         rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
-        rect(0, PH - MT - 48, 5, 48 + MT, f=cat_color)
-        font("Helvetica-Bold", 18); fill(WHITE)
+        rect(0, PH - MT - 48, 7, 48 + MT, f=cat_color)
+        font("Helvetica-Bold", 20); fill(WHITE)
         c.drawString(ML + 14, PH - MT - 30, f"✨  {cat_name}")
-        font("Helvetica", 7); fill(_blend(WHITE, 0.40))
+        font("Helvetica", 7); fill(_blend(WHITE, 0.38))
         c.drawRightString(PW - TAB_W - 10, PH - MT - 30,
                           "Screenshot → import as custom sticker sheet in GoodNotes / Notability")
         rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=cat_color)
 
-        cols = 4; gutter = 12
+        cols = 4; gutter = 14
         sw = (content_w - gutter * (cols - 1)) / cols
-        sh = sw * 1.05
-        sy0 = PH - MT - 66
+        sh = sw * 1.15
+        sy0 = PH - MT - 68
 
-        for si, (lbl, col, sym) in enumerate(stickers[:16]):
+        for si, (lbl, col, shape) in enumerate(stickers[:16]):
             ci = si % cols; ri = si // cols
             sx = ML + ci * (sw + gutter)
             sy = sy0 - ri * (sh + gutter) - sh
             if sy < MB + 20:
                 break
-            _draw_one_sticker(sx, sy, sw, sh, lbl, col, sym, sticker_page_mode=False)
+            _draw_kawaii_sticker(sx, sy, sw, sh, lbl, col, shape, sticker_page_mode=False)
 
         page_footer(f"STICKER PACK · {cat_name}")
         draw_nav_tabs()
