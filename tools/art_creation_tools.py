@@ -2310,9 +2310,11 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                 'app.alert("Tap the STICKERS button to add a label sticker to this page.\\n\\nWorks in: Adobe Acrobat Reader, Acrobat Pro, PDF Expert, and Xodo.\\n\\nGoodNotes users: screenshot the Sticker Sheet page to use as a custom sticker library.",1);'
                 '}'
             )
-            if not _js_button(_sx, _sy, _sw, _bh, _sticker_js):
-                c.linkAbsolute("Sticker Panel",
-                               "sticker_picker", (_sx, _sy, _sx + _sw, _sy + _bh))
+            # Always add page-nav link first (works in ALL viewers including GoodNotes)
+            c.linkAbsolute("Sticker Library", "sticker_picker",
+                           (_sx, _sy, _sx + _sw, _sy + _bh))
+            # Then overlay JS link on top (Acrobat users get popup menu instead)
+            _js_button(_sx, _sy, _sw, _bh, _sticker_js)
 
         font("Helvetica", 6); fill(MID)
         if label:
@@ -4087,11 +4089,113 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             c.linkAbsolute(f"Sticker: {lbl}", "sticker_picker",
                            (sx, sy, sx + sw, sy + sh))
 
-    def draw_sticker_picker_page():
-        """Two-page kawaii sticker library with illustrated tiles."""
-        content_w = CW - TAB_W - 4
+    # ── DALL-E sticker sheet image generation ────────────────────────────────
+    _STICKER_SHEET_PROMPTS = [
+        # Sheet 1 — illustrated kawaii objects
+        ("Kawaii planner sticker clipart sheet, clean white background. "
+         "20 individual cute illustrated stickers spaced apart on the white page — "
+         "NOT in a tight grid, arranged loosely like a real sticker sheet. "
+         "Every sticker has: THICK black outline (3px), pastel colors, "
+         "cute kawaii face with two small dot eyes, pink blush ovals on cheeks, small smile curve. "
+         "Stickers: (1) pastel pink coffee cup with matching lid, sleeve stripe, smiling face; "
+         "(2) sky-blue scissors with golden pivot screw, cute face on handle; "
+         "(3) bright yellow 5-point star, face in center, sparkle lines around it; "
+         "(4) purple pencil cup holding 5 colorful pencils (pink/blue/yellow/green/orange), face on cup; "
+         "(5) pastel pink open laptop, smiling screen face, mint green keyboard; "
+         "(6) lavender zippered pencil case with golden zipper pull, cute face; "
+         "(7) pastel pink rectangular eraser with two colored stripes, kawaii face; "
+         "(8) red heart shape with face and tiny sparkles; "
+         "(9) three washi tape rolls stacked (teal on top, pink middle, purple bottom), each with face; "
+         "(10) pink flower pot with chunky green succulent leaves, face on pot; "
+         "(11) mint teal 5-point star with face and blush; "
+         "(12) green botanical leaf sprig with two leaves; "
+         "(13) golden trophy cup with face; "
+         "(14) open pastel pink notebook with ruled lines inside; "
+         "(15) pink ruler with centimeter marks and face; "
+         "(16) blue water bottle with straw, face on bottle; "
+         "(17) rainbow arc with puffy white cloud ends; "
+         "(18) pink decorative bow; "
+         "(19) purple alarm clock with two bells on top, face on clock face; "
+         "(20) mint green paint palette with colorful paint dots and face. "
+         "Style: Japanese kawaii chibi flat illustration, bold outlines, very pastel fills, "
+         "white drop-shadow behind each sticker. Pure white background. NO text. NO watermarks."),
+        # Sheet 2 — text label stickers + mood stickers
+        ("Kawaii planner label and mood sticker sheet, pure white background. "
+         "20 individual decorative stickers arranged loosely on the page. "
+         "Every sticker has thick black outline and pastel color. Mix of text and illustrated: "
+         "(1) white rounded rectangle sticker, black bold text 'PLAN with Love', black heart icon, pink blush hearts around it; "
+         "(2) white sticker with bold black text 'PLANNER GIRL' and gold star decoration; "
+         "(3) pastel sky-blue cloud shape sticker with black bold+script text 'It\\'s Planner Time!'; "
+         "(4) coral-red rounded pill sticker with white bold text 'IMPORTANT!'; "
+         "(5) sky-blue rounded rectangle with white checkmark and text 'TO-DO'; "
+         "(6) mint green circle with white '✓ DONE!' text and confetti; "
+         "(7) pink scalloped banner sticker with 'BIRTHDAY!' text and colorful sprinkles and stars; "
+         "(8) soft lavender speech bubble sticker with 'SELF CARE' pastel text; "
+         "(9) golden sunburst star sticker with 'GOAL MET!' text; "
+         "(10) peach rounded pill with 'URGENT!' white text; "
+         "(11) purple speech bubble 'REMEMBER' with exclamation; "
+         "(12) teal cloud sticker 'VACAY!' with tiny airplane; "
+         "(13) bright yellow speech bubble 'AMAZING!'; "
+         "(14) mint droplet/pill sticker 'WATER' with water drop icon; "
+         "(15) pink heart sticker with 'GRATEFUL' script text inside; "
+         "(16) olive green rounded badge 'WIN!' with gold star; "
+         "(17) orange star burst 'BUSY DAY!'; "
+         "(18) lavender moon crescent with kawaii sleeping face; "
+         "(19) pink sunrise shape with 'GOOD MORNING' text; "
+         "(20) mint green four-leaf clover with face. "
+         "Kawaii flat style, bold outlines, pastel fills, white background. NO watermarks."),
+    ]
 
-        for pg_idx, cat_slice in enumerate([(0, 3), (3, 5)]):
+    def _load_or_gen_sticker_img(sheet_num: int) -> str | None:
+        """Load cached DALL-E sticker sheet image or generate a new one."""
+        cache_path = os.path.join(PRODUCT_FILES_DIR,
+                                  f"{product_id}_sticker_sheet_{sheet_num}.jpg")
+        if os.path.exists(cache_path) and os.path.getsize(cache_path) > 20_000:
+            return cache_path
+        prompt = _STICKER_SHEET_PROMPTS[sheet_num - 1]
+        try:
+            img_bytes = _fetch_image_bytes(prompt, size="1024x1024")
+            if img_bytes and len(img_bytes) > 10_000:
+                with open(cache_path, "wb") as _f:
+                    _f.write(img_bytes)
+                return cache_path
+        except Exception:
+            pass
+        return None
+
+    def draw_sticker_picker_page():
+        """Two-page kawaii sticker library: DALL-E illustrated sheets embedded full-page."""
+        content_w = CW - TAB_W - 4
+        hdr_h = 44
+
+        # ── JS popup for Acrobat users who click a sticker area ──────────────
+        _popup_js = (
+            'var cats=["PRIORITY & TASKS","EVENTS & DATES",'
+            '"WELLNESS & MOOD","SCHOOL & WORK","MOTIVATION"];'
+            'var ci=app.popupMenu(cats);if(ci<0)return;'
+            'var ls=['
+            '["IMPORTANT","URGENT","DEADLINE","MEETING","TO-DO","ERRANDS","BUSY DAY","FOCUS","CALL","EMAIL","TO BUY","PAY BILL","REMINDER","BLOCKED","REVIEW","SUBMIT"],'
+            '["BIRTHDAY!","APPT","VACAY!","ANNIVERSARY","MEMORIES","GIFT DUE","EVENT","FAMILY","HOLIDAY","GOAL MET!","DONE!","WIN!","PLAN","MILESTONE","BILL DUE","NEW MOON"],'
+            '["AMAZING","GOOD","OKAY","LOW","WATER","SLEPT WELL","WORKOUT","GRATEFUL","CALM","HIGH ENERGY","MEALS","SELF CARE","MEDS","SELF LOVE","SUNSHINE","MINDFUL"],'
+            '["STUDY","NOTES","TEST DAY","SUBMIT","DUE DATE","REVIEWED","PRESENT","ONLINE","FOCUS!","NO PHONE","READ","WRITE","PROGRESS","GREAT WORK","ACHIEVEMENT","LEVEL UP"],'
+            '["YOU GOT THIS","STRONG","SHINE","ON FIRE","CRUSHED IT","GROWTH","BELIEVE","MAGIC DAY","FRESH START","GO WITH IT","NEW CHAPTER","YES!","GLOW UP","DREAM BIG","BE KIND","GOOD VIBES"]'
+            '];'
+            'var si=app.popupMenu(ls[ci]);if(si<0)return;'
+            'var lbl=ls[ci][si];'
+            'var fc=[["RGB",1.0,0.88,0.85],["RGB",0.85,0.95,1.0],'
+            '["RGB",0.88,0.97,0.88],["RGB",0.90,0.88,1.0],["RGB",1.0,0.97,0.82]];'
+            'var sc=[["RGB",0.85,0.35,0.30],["RGB",0.25,0.55,0.85],'
+            '["RGB",0.25,0.65,0.38],["RGB",0.55,0.35,0.82],["RGB",0.82,0.62,0.15]];'
+            'var pg=this.pageNum;var ph=this.getPageHeight(pg);var pw=this.getPageWidth(pg);'
+            'try{this.addAnnot({type:"FreeText",page:pg,'
+            'rect:[pw*0.33,ph*0.44,pw*0.67,ph*0.58],'
+            'contents:lbl,fillColor:fc[ci],strokeColor:sc[ci],'
+            'textColor:["RGB",0.08,0.08,0.12],textSize:11,alignment:1});'
+            'app.alert("\\u2728 Sticker added! Drag it anywhere.",1);'
+            '}catch(e){app.alert("Works in Adobe Acrobat Reader, PDF Expert & Xodo.",1);}'
+        )
+
+        for pg_idx in range(2):
             bm = "sticker_picker" if pg_idx == 0 else "sticker_picker_2"
             c.bookmarkPage(bm)
             if pg_idx == 0:
@@ -4099,77 +4203,98 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             else:
                 c.addOutlineEntry("✨ Sticker Library (cont.)", bm, level=1)
 
-            # Cream/white background for clean sticker-sheet look
-            rect(0, 0, PW, PH, f=(0.995, 0.993, 0.988))
-            # Subtle dot pattern
-            _dp = 18
-            for _gx in range(int(ML), int(PW - TAB_W - 2), _dp):
-                for _gy in range(int(MB + 10), int(PH - 40), _dp):
-                    circle(_gx, _gy, 0.5, f=_blend(T, 0.65))
+            # ── Cream page background ─────────────────────────────────────────
+            rect(0, 0, PW, PH, f=(0.998, 0.996, 0.992))
+            # Subtle small dot grid
+            for _gx in range(int(ML), int(PW - TAB_W), 16):
+                for _gy in range(int(MB + 8), int(PH - 38), 16):
+                    circle(_gx, _gy, 0.45, f=_blend(T, 0.70))
 
             # ── Header ────────────────────────────────────────────────────────
-            hdr_h = 52
             rect(0, PH - hdr_h, PW - TAB_W - 2, hdr_h, f=T)
-            rect(0, PH - hdr_h - 3, PW - TAB_W - 2, 3, f=A)
+            rect(0, PH - hdr_h - 2, PW - TAB_W - 2, 2, f=A)
             rect(0, PH - hdr_h, 7, hdr_h, f=A)
-            font("Helvetica-Bold", 24); fill(WHITE)
-            c.drawString(ML + 14, PH - hdr_h + 17, "✨  Kawaii Sticker Library")
-            font("Helvetica", 8.5); fill(_blend(WHITE, 0.28))
-            c.drawRightString(PW - TAB_W - 14, PH - hdr_h + 32,
-                              f"Page {pg_idx + 1} of 2  ·  {5 if pg_idx == 0 else 2} categories")
+            font("Helvetica-Bold", 22); fill(WHITE)
+            c.drawString(ML + 12, PH - hdr_h + 14, "✨  Kawaii Sticker Library")
+            font("Helvetica", 8); fill(_blend(WHITE, 0.32))
+            c.drawRightString(PW - TAB_W - 12, PH - hdr_h + 28,
+                              f"Page {pg_idx + 1} of 2")
 
-            # How-to strips
-            tip_y = PH - hdr_h - 8
-            for icon, tip in [
-                ("✏ Acrobat / Xodo / PDF Expert →",
-                 "Tap ✨ STICKERS in the footer on any page to pick & drag a sticker"),
-                ("📱 GoodNotes / Notability →",
-                 "Screenshot this page, then import it as a custom sticker sheet in your app"),
+            # ── How-to pills ──────────────────────────────────────────────────
+            tip_y = PH - hdr_h - 7
+            for _icon, _tip in [
+                ("Acrobat / Xodo → ",
+                 "Tap ✨ STICKERS button in footer on any page → menu pops up → sticker drops on page → drag it anywhere"),
+                ("GoodNotes / Notability → ",
+                 "Screenshot this page → open your app → import as Custom Sticker Sheet → drag onto any page"),
             ]:
-                rect(ML, tip_y - 12, content_w, 15, f=_blend(A, 0.82), radius=6)
-                font("Helvetica-Bold", 6.5); fill(T)
-                iw = c.stringWidth(icon, _fn("bold"), 6.5)
-                c.drawString(ML + 7, tip_y - 4, icon)
-                font("Helvetica", 6.5); fill(DARK)
-                c.drawString(ML + 10 + iw, tip_y - 4, tip)
-                tip_y -= 19
+                rect(ML, tip_y - 11, content_w, 14, f=_blend(A, 0.80), radius=5)
+                font("Helvetica-Bold", 6); fill(T)
+                _iw = c.stringWidth(_icon, _fn("bold"), 6)
+                c.drawString(ML + 6, tip_y - 3, _icon)
+                font("Helvetica", 6); fill(DARK)
+                c.drawString(ML + 6 + _iw, tip_y - 3, _tip)
+                tip_y -= 17
 
-            top_y = tip_y - 4
+            # ── Main sticker image area ───────────────────────────────────────
+            img_top = tip_y - 4
+            img_bot = MB + 24
+            img_h = img_top - img_bot
 
-            # ── Category sections ─────────────────────────────────────────────
-            cats_on_page = _STICKER_CATEGORIES[cat_slice[0]:cat_slice[1]]
-            n_cats = len(cats_on_page)
-            avail_h = top_y - MB - 22
-            # Allocate equal vertical space per category
-            cat_h = (avail_h - 6 * (n_cats - 1)) / n_cats
+            img_path = _load_or_gen_sticker_img(pg_idx + 1)
 
-            for ci, (cat_name, cat_color, stickers) in enumerate(cats_on_page):
-                cat_top = top_y - ci * (cat_h + 6)
+            if img_path:
+                # Embed DALL-E sticker sheet image full-width
+                try:
+                    c.drawImage(ImageReader(img_path),
+                                ML, img_bot, content_w, img_h,
+                                preserveAspectRatio=True, anchor="c")
 
-                # Category banner pill
-                pill_w = content_w
-                rect(ML, cat_top - 20, pill_w, 20, f=_blend(cat_color, 0.25), radius=8)
-                rect(ML, cat_top - 20, 6, 20, f=cat_color, radius=3)
-                circle(ML + 16, cat_top - 10, 6, f=cat_color)
-                font("Helvetica-Bold", 9); fill(_blend(cat_color, 0.05))
-                c.drawString(ML + 27, cat_top - 15, cat_name.upper())
+                    # Thin rounded frame around image
+                    rect(ML - 1, img_bot - 1, content_w + 2, img_h + 2,
+                         s=_blend(T, 0.60), lwidth=0.8, radius=6)
 
-                # Sticker grid — 8 stickers per row, up to 2 rows per category
-                stk_cols = 8; stk_gap = 5
-                sw = (content_w - stk_gap * (stk_cols - 1)) / stk_cols
-                row_h = cat_h - 24   # full row height per row of stickers
-                sh = min(row_h - 4, sw * 1.10)  # each sticker height
-                stk_top = cat_top - 24
+                    # Invisible 4×5 JS grid overlay so Acrobat users can click
+                    # any sticker area and get the popup menu
+                    _gcols = 5; _grows = 4
+                    _gw = content_w / _gcols
+                    _gh = img_h / _grows
+                    for _gr in range(_grows):
+                        for _gc in range(_gcols):
+                            _bx = ML + _gc * _gw
+                            _by = img_bot + _gr * _gh
+                            _js_button(_bx, _by, _gw, _gh, _popup_js)
+                except Exception:
+                    img_path = None
 
-                for si, (lbl, col, shape) in enumerate(stickers):
-                    ic = si % stk_cols
-                    ir = si // stk_cols
-                    sx = ML + ic * (sw + stk_gap)
-                    sy = stk_top - ir * (sh + stk_gap + 2) - sh
-                    if sy < MB + 16:
-                        break
-                    _draw_kawaii_sticker(sx, sy, sw, sh, lbl, col, shape,
-                                         sticker_page_mode=True)
+            if not img_path:
+                # ── Programmatic kawaii fallback ──────────────────────────────
+                cats_on_page = _STICKER_CATEGORIES[0:3] if pg_idx == 0 else _STICKER_CATEGORIES[3:5]
+                n_cats = len(cats_on_page)
+                avail_h = img_h
+                cat_h = (avail_h - 6 * (n_cats - 1)) / n_cats
+
+                for ci, (cat_name, cat_color, stickers) in enumerate(cats_on_page):
+                    cat_top = img_top - ci * (cat_h + 6)
+                    rect(ML, cat_top - 18, content_w, 18, f=_blend(cat_color, 0.22), radius=7)
+                    rect(ML, cat_top - 18, 5, 18, f=cat_color, radius=3)
+                    font("Helvetica-Bold", 8.5); fill(_blend(cat_color, 0.05))
+                    c.drawString(ML + 14, cat_top - 13, cat_name.upper())
+
+                    stk_cols = 8; stk_gap = 5
+                    sw = (content_w - stk_gap * (stk_cols - 1)) / stk_cols
+                    row_h = cat_h - 22
+                    sh = min(row_h - 4, sw * 1.10)
+                    stk_top = cat_top - 22
+
+                    for si, (lbl, col, shape) in enumerate(stickers):
+                        ic = si % stk_cols; ir = si // stk_cols
+                        sx = ML + ic * (sw + stk_gap)
+                        sy = stk_top - ir * (sh + stk_gap + 2) - sh
+                        if sy < img_bot + 4:
+                            break
+                        _draw_kawaii_sticker(sx, sy, sw, sh, lbl, col, shape,
+                                             sticker_page_mode=True)
 
             page_footer(f"STICKER LIBRARY · Page {pg_idx + 1}")
             draw_nav_tabs()
