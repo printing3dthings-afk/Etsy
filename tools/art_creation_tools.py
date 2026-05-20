@@ -2015,11 +2015,14 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     # ── Resolve style → tier → explicit params (each layer overrides the last) ─
     _style_key  = data.get("planner_style", "")
     _style_conf = PLANNER_STYLES.get(_style_key, {})
-    _tier_num   = int(data.get("planner_tier", _style_conf.get("tier", 0)))
+    _default_tier = 3 if data.get("interactive", True) else 1
+    _tier_num   = int(data.get("planner_tier", _style_conf.get("tier", _default_tier)))
     _tier_conf  = PLANNER_TIERS.get(_tier_num, {})
-    _design     = _tier_num if _tier_num in (1, 2, 3) else 2
+    _design     = _tier_num if _tier_num in (1, 2, 3) else 3
     _variant    = _style_conf.get("design_variant", "standard")
     _extras     = _style_conf.get("extras", [])
+    if _design == 3 and "sticker_pack" not in _extras:
+        _extras = list(_extras) + ["sticker_pack"]
     _is_fun     = _style_conf.get("fun", False)
 
     # Color scheme: style → explicit param → tier default → "sage_cream"
@@ -2181,14 +2184,14 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         c.linkAbsolute("Back to Index", "index",
                        (_bx, _by, _bx + _bw, _by + _bh))
 
-        # Tier 3 sticker picker shortcut button
+        # Persistent STICKERS panel button — always visible on every page (Tier 3)
         if _design == 3 and "sticker_pack" in _extras:
-            _sw = 62; _sx = _bx + _bw + 6; _sy = _by
-            rect(_sx, _sy, _sw, _bh, f=_blend(A, 0.85), radius=3)
-            font("Helvetica-Bold", 6.5); fill(DARK)
-            c.drawCentredString(_sx + _sw / 2, _sy + 4, "★ STICKERS")
-            c.linkAbsolute("Sticker Picker", "sticker_picker",
-                           (_sx, _sy, _sx + _sw, _sy + _bh))
+            _sw = 70; _sx = _bx + _bw + 6; _sy = _by
+            rect(_sx, _sy, _sw, _bh, f=T, radius=4)
+            font("Helvetica-Bold", 6.5); fill(WHITE)
+            c.drawCentredString(_sx + _sw / 2, _sy + 4, "★  STICKER PANEL")
+            c.linkAbsolute("Sticker Panel — tap to open, then tap a sticker to drag-drop",
+                           "sticker_picker", (_sx, _sy, _sx + _sw, _sy + _bh))
 
         font("Helvetica", 6); fill(MID)
         if label:
@@ -2244,9 +2247,10 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             name=fname,
             tooltip=name_hint.replace("_", " ").title(),
             x=x, y=y, width=w, height=h,
-            borderStyle="underlined",
-            borderColor=_col(_blend(LIGHT, -0.1)),
-            fillColor=_col(BG),
+            borderStyle="solid",
+            borderWidth=0.5,
+            borderColor=_col(_blend(T, 0.88)),
+            fillColor=_col(_blend(T, 0.975)),
             textColor=_col(DARK),
             fontSize=font_size,
             forceBorder=True,
@@ -2340,7 +2344,7 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             try:
                 c.drawImage(ImageReader(cover_img_path), 0, split_y, PW, top_h,
                             preserveAspectRatio=False)
-                c.setFillAlpha(0.58); c.setFillColorRGB(*T)
+                c.setFillAlpha(0.18); c.setFillColorRGB(*T)
                 c.rect(0, split_y, PW, top_h, fill=1, stroke=0)
                 c.setFillAlpha(1.0)
             except Exception:
@@ -2728,14 +2732,25 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
         content_w = CW - TAB_W - 4
 
-        # Header
-        rect(0, PH - MT - 52, PW - TAB_W - 2, 52 + MT, f=T)
-        font("Helvetica-Bold", 28); fill(WHITE)
-        c.drawString(ML + 10, PH - MT - 36, month_name.upper())
+        # Header — modern: cream bg + large theme-colored month name + accent stripe
         year_str = "" if undated else str(planner_year)
-        font("Helvetica", 13); fill(_blend(WHITE, 0.4))
-        c.drawRightString(PW - TAB_W - 10, PH - MT - 36, year_str)
-        rect(0, PH - MT - 56, PW - TAB_W - 2, 4, f=A)
+        rect(0, PH - MT - 56, PW - TAB_W - 2, 56 + MT, f=BG)
+        # Thin accent top bar
+        rect(0, PH - MT - 4, PW - TAB_W - 2, 4 + MT, f=T)
+        # Large month name in theme color
+        font("Helvetica-Bold", 32); fill(T)
+        c.drawString(ML + 10, PH - MT - 38, month_name)
+        # Year in mid-gray beside it
+        if year_str:
+            font("Helvetica", 13); fill(MID)
+            mw = c.stringWidth(month_name, "Helvetica-Bold", 32)
+            c.drawString(ML + 10 + mw + 8, PH - MT - 28, year_str)
+        # Accent pill — day-of-week hint
+        rect(ML + 10, PH - MT - 52, 42, 10, f=_blend(A, 0.55), radius=4)
+        font("Helvetica-Bold", 5.5); fill(WHITE)
+        c.drawCentredString(ML + 31, PH - MT - 45, "MONTHLY PLANNER")
+        # Bottom accent stripe
+        rect(0, PH - MT - 57, PW - TAB_W - 2, 2, f=_blend(T, 0.65))
 
         top_y     = PH - MT - 60
         notes_h   = 145
@@ -2745,13 +2760,13 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         row_h     = (cal_area - day_h_row) / num_rows
         col_w     = content_w / 7
 
-        # Day headers
+        # Day headers — modern pill style
         for di, dn in enumerate(DAYS_SHORT):
             x0 = ML + di * col_w
-            bg = TM if di < 5 else T
-            rect(x0, top_y - day_h_row, col_w, day_h_row, f=bg)
-            font("Helvetica-Bold", 7.5); fill(WHITE)
-            c.drawCentredString(x0 + col_w/2, top_y - day_h_row + 7, dn)
+            bg = T if di >= 5 else _blend(T, 0.70)
+            rect(x0 + 1, top_y - day_h_row + 1, col_w - 2, day_h_row - 2, f=bg, radius=3)
+            font("Helvetica-Bold", 7); fill(WHITE)
+            c.drawCentredString(x0 + col_w/2, top_y - day_h_row + 6, dn)
 
         # Calendar grid
         if not undated:
@@ -2764,79 +2779,81 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             for di in range(7):
                 cx0 = ML + di * col_w
                 cy0 = top_y - day_h_row - (ri+1) * row_h
-                bg = _blend(T, 0.94) if di >= 5 else BG
-                rect(cx0, cy0, col_w, row_h, f=bg, s=LIGHT, lwidth=0.35)
+                # Weekend cells: very subtle tint; weekday cells: clean BG
+                bg = _blend(T, 0.955) if di >= 5 else BG
+                rect(cx0, cy0, col_w, row_h, f=bg, s=_blend(T, 0.80), lwidth=0.4, radius=2)
+
+                day_num = 0
                 if not undated and ri < len(cal):
                     day_num = cal[ri][di]
-                    if day_num:
-                        font("Helvetica-Bold", 9); fill(T if di >= 5 else DARK)
-                        c.drawString(cx0 + 4, top_y - day_h_row - ri * row_h - 14, str(day_num))
 
-                        # All small icon buttons live in the top header strip (cy0+row_h-14
-                        # to cy0+row_h) which is ABOVE the text field — so they stay visible.
-                        # Lay them out right→left: ★ sticker | G+ gcal | A apple
-                        _hdr_btn_h = 10   # button height fits in the 14pt header strip
-                        _hdr_btn_y = cy0 + row_h - _hdr_btn_h - 2  # 2pt from top edge
-                        _btn_right  = cx0 + col_w - 2               # right edge cursor
+                # Button strip height at top of each cell
+                _hdr_btn_h = 11
+                _hdr_btn_y = cy0 + row_h - _hdr_btn_h - 1
+                _btn_right  = cx0 + col_w - 2
 
-                        # ★ Sticker picker button (Tier 3 only)
-                        if _design == 3 and "sticker_pack" in _extras:
-                            sk = 10
-                            sk_x = _btn_right - sk; sk_y = _hdr_btn_y
-                            rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.82), radius=2)
-                            font("Helvetica-Bold", 6); fill(WHITE)
-                            c.drawCentredString(sk_x + sk / 2, sk_y + 3, "★")
-                            # JS: store cell coords + navigate to picker
-                            _cell_x  = float(cx0)
-                            _cell_y  = float(cy0)
-                            _cell_w  = float(col_w)
-                            _cell_h  = float(row_h - 14)  # body below header strip
-                            _js_sel = (
-                                f'this.getField("{_stk_pg}").value=String(this.pageNum);'
-                                f'this.getField("{_stk_x}").value="{_cell_x:.2f}";'
-                                f'this.getField("{_stk_y}").value="{_cell_y:.2f}";'
-                                f'this.getField("{_stk_w}").value="{_cell_w:.2f}";'
-                                f'this.getField("{_stk_h}").value="{_cell_h:.2f}";'
-                                f'this.gotoNamedDest("sticker_picker");'
-                            )
-                            if not _js_button(sk_x, sk_y, sk, sk, _js_sel):
-                                c.linkAbsolute("Sticker Picker", "sticker_picker",
-                                               (sk_x, sk_y, sk_x + sk, sk_y + sk))
-                            _btn_right -= sk + 2
+                if day_num:
+                    # Day number in a small circle bubble
+                    _circle_r = 7
+                    _circle_cx = cx0 + 10
+                    _circle_cy = cy0 + row_h - 10
+                    _day_bg = T if di >= 5 else _blend(T, 0.82)
+                    circle(_circle_cx, _circle_cy, _circle_r, f=_day_bg)
+                    font("Helvetica-Bold", 6); fill(WHITE)
+                    c.drawCentredString(_circle_cx, _circle_cy - 2.5, str(day_num))
 
-                        # Google Calendar buttons (Tier 3, dated)
-                        if cal_integration in ("google", "both") and not undated:
-                            gcal_date = f"{planner_year}{month_num:02d}{day_num:02d}"
-                            gcal_day  = (f"https://calendar.google.com/calendar/r"
-                                         f"/day/{planner_year}/{month_num}/{day_num}")
-                            gcal_add  = (f"https://calendar.google.com/calendar/r"
-                                         f"/eventedit?dates={gcal_date}/{gcal_date}")
-                            # Tap day number → open Google Calendar day view
-                            c.linkURL(gcal_day, (cx0, cy0 + row_h - 14,
-                                                  cx0 + 18, cy0 + row_h))
-                            # "+" add-event button in header strip
-                            bs = 10; bx = _btn_right - bs; by = _hdr_btn_y
-                            rect(bx, by, bs, bs, f=_blend(A, 0.82), radius=2)
-                            font("Helvetica-Bold", 6); fill(DARK)
-                            c.drawCentredString(bx + bs / 2, by + 3, "+")
-                            c.linkURL(gcal_add, (bx, by, bx + bs, by + bs))
-                            _btn_right -= bs + 2
+                    # ★ Sticker picker button (Tier 3 only)
+                    if _design == 3 and "sticker_pack" in _extras:
+                        sk = 11
+                        sk_x = _btn_right - sk; sk_y = _hdr_btn_y
+                        rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.78), radius=2)
+                        font("Helvetica-Bold", 6); fill(WHITE)
+                        c.drawCentredString(sk_x + sk / 2, sk_y + 3, "★")
+                        _cell_x = float(cx0); _cell_y = float(cy0)
+                        _cell_w = float(col_w); _cell_h = float(row_h - 14)
+                        _js_sel = (
+                            f'this.getField("{_stk_pg}").value=String(this.pageNum);'
+                            f'this.getField("{_stk_x}").value="{_cell_x:.2f}";'
+                            f'this.getField("{_stk_y}").value="{_cell_y:.2f}";'
+                            f'this.getField("{_stk_w}").value="{_cell_w:.2f}";'
+                            f'this.getField("{_stk_h}").value="{_cell_h:.2f}";'
+                            f'this.gotoNamedDest("sticker_picker");'
+                        )
+                        if not _js_button(sk_x, sk_y, sk, sk, _js_sel):
+                            c.linkAbsolute("Sticker Picker", "sticker_picker",
+                                           (sk_x, sk_y, sk_x + sk, sk_y + sk))
+                        _btn_right -= sk + 2
 
-                        # Apple Calendar button
-                        if cal_integration in ("apple", "both") and not undated:
-                            _secs = int((_dt(planner_year, month_num, day_num)
-                                         - _dt(2001, 1, 1)).total_seconds())
-                            abs_ = 10; abx = _btn_right - abs_; aby = _hdr_btn_y
-                            rect(abx, aby, abs_, abs_, f=_blend(T, 0.78), radius=2)
-                            font("Helvetica-Bold", 5.5); fill(WHITE)
-                            c.drawCentredString(abx + abs_ / 2, aby + 3, "A")
-                            c.linkURL(f"calshow:{_secs}",
-                                      (abx, aby, abx + abs_, aby + abs_))
+                    # Google Calendar button
+                    if cal_integration in ("google", "both") and not undated:
+                        gcal_day = (f"https://calendar.google.com/calendar/r"
+                                    f"/day/{planner_year}/{month_num}/{day_num}")
+                        gcal_add = (f"https://calendar.google.com/calendar/r"
+                                    f"/eventedit?dates={planner_year}{month_num:02d}{day_num:02d}"
+                                    f"/{planner_year}{month_num:02d}{day_num:02d}")
+                        c.linkURL(gcal_day, (cx0, cy0 + row_h - 14, cx0 + 18, cy0 + row_h))
+                        bs = 11; bx = _btn_right - bs; by = _hdr_btn_y
+                        rect(bx, by, bs, bs, f=_blend(A, 0.78), radius=2)
+                        font("Helvetica-Bold", 6); fill(DARK)
+                        c.drawCentredString(bx + bs / 2, by + 3, "G")
+                        c.linkURL(gcal_add, (bx, by, bx + bs, by + bs))
+                        _btn_right -= bs + 2
 
-                        # Fillable event text area — occupies the cell body below header strip
-                        if is_interactive and row_h > 22:
-                            text_field(cx0 + 2, cy0 + 2, col_w - 4, row_h - 16,
-                                       f"month_{month_num}_cell_{ri}_{di}", font_size=6)
+                    # Apple Calendar button
+                    if cal_integration in ("apple", "both") and not undated:
+                        _secs = int((_dt(planner_year, month_num, day_num)
+                                     - _dt(2001, 1, 1)).total_seconds())
+                        abs_ = 11; abx = _btn_right - abs_; aby = _hdr_btn_y
+                        rect(abx, aby, abs_, abs_, f=_blend(T, 0.78), radius=2)
+                        font("Helvetica-Bold", 5.5); fill(WHITE)
+                        c.drawCentredString(abx + abs_ / 2, aby + 3, "A")
+                        c.linkURL(f"calshow:{_secs}", (abx, aby, abx + abs_, aby + abs_))
+
+                # Fillable event text area — ALWAYS added to every cell (undated AND dated)
+                if is_interactive and row_h > 14:
+                    _tf_top = row_h - (14 if day_num else 4)
+                    text_field(cx0 + 2, cy0 + 2, col_w - 4, _tf_top - 2,
+                               f"month_{month_num}_cell_{ri}_{di}", font_size=6)
 
         cal_bottom = top_y - day_h_row - num_rows * row_h
 
@@ -3680,29 +3697,29 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     _STK_B = (0.35, 0.65, 0.90)
 
     _STICKER_CATEGORIES = [
-        ("PRODUCTIVITY", T, [
-            ("DONE",    _STK_G, "✓"),  ("GOAL",   T,      "◎"),
-            ("WIN",     _STK_Y, "★"),  ("FOCUS",  T,      "●"),
-            ("IDEA",    _STK_Y, "!"),   ("URGENT", _STK_R, "!!"),
-            ("NOTE",    _STK_P, "✎"),  ("DUE",    _STK_O, "→"),
-            ("PLAN",    T,      "◈"),  ("NEXT",   A,      "▶"),
-            ("REVIEW",  _STK_P, "↺"),  ("START",  _STK_G, "▷"),
+        ("PRIORITY LABELS", T, [
+            ("IMPORTANT", _STK_R, "!"),   ("URGENT",   _STK_R, "!!"),
+            ("DEADLINE",  _STK_O, "→"),   ("MEETING",  T,      "◈"),
+            ("TO-DO",     _STK_B, "✓"),   ("ERRANDS",  _STK_G, "◎"),
+            ("BUSY DAY",  _STK_O, "●"),   ("FOCUS",    T,      "◉"),
+            ("CALLS",     _STK_P, "☎"),   ("EMAILS",   _STK_B, "✉"),
+            ("TO BUY",    _STK_G, "◈"),   ("DUE",      _STK_R, "!"),
         ]),
-        ("WELLNESS & MOOD", A, [
-            ("AMAZING",  A,      "☺"), ("GOOD",    _STK_G, "♡"),
-            ("OKAY",     MID,    "—"), ("LOW",     T,      "~"),
-            ("WATER",    _STK_B, "~"), ("SLEEP",   _STK_P, "Zzz"),
-            ("MOVE",     _STK_G, "↑"), ("GRATEFUL",A,      "♥"),
-            ("CALM",     _STK_P, "◉"), ("ENERGY",  _STK_O, "⚡"),
-            ("REST",     _STK_P, "○"), ("JOY",     A,      "★"),
+        ("EVENTS & REMINDERS", A, [
+            ("BIRTHDAY!",  _STK_Y, "★"),  ("APPT",     T,      "◎"),
+            ("VACAY!",     _STK_B, "✈"),  ("MEMORIES", _STK_P, "♥"),
+            ("SELF CARE",  A,      "♡"),  ("PLAN",     T,      "▶"),
+            ("REMEMBER",   _STK_O, "→"),  ("DUE BILL", _STK_R, "$"),
+            ("GOAL MET",   _STK_G, "✔"),  ("WIN",      _STK_Y, "★"),
+            ("NEW!",       A,      "▶"),  ("DONE!",    _STK_G, "✓"),
         ]),
-        ("CELEBRATIONS", _STK_Y, [
-            ("YAY!",    A,      "★"),  ("WINNING", _STK_Y, "♦"),
-            ("DONE!",   _STK_G, "✓"),  ("WOW",    T,      "!!"),
-            ("GOAL MET",A,      "◎"),  ("1st",    _STK_Y, "#1"),
-            ("LOVE IT", _STK_R, "♥"),  ("HERO",   T,      "★★"),
-            ("NEW!",    A,      "▶"),  ("EPIC",   _STK_O, "◆"),
-            ("YES!",    _STK_G, "✔"),  ("PARTY",  A,      "♦♦"),
+        ("WELLNESS & MOOD", _STK_P, [
+            ("AMAZING",  A,      "☺"),  ("GOOD",     _STK_G, "♡"),
+            ("OKAY",     MID,    "—"),  ("LOW",      T,      "~"),
+            ("WATER",    _STK_B, "~"),  ("SLEEP",    _STK_P, "Zzz"),
+            ("WORKOUT",  _STK_G, "↑"),  ("GRATEFUL", A,      "♥"),
+            ("CALM",     _STK_P, "◉"),  ("ENERGY",   _STK_O, "⚡"),
+            ("MEALS",    _STK_Y, "◈"),  ("JOY",      A,      "★"),
         ]),
     ]
 
@@ -3722,12 +3739,16 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                           "Tap ★ on any day · choose category · tap sticker to apply")
         rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=A)
 
-        # App compatibility note
-        note_y = PH - MT - 63
-        font("Helvetica-Oblique", 6); fill(MID)
-        c.drawCentredString((PW - TAB_W) / 2, note_y,
-                            "GoodNotes/Notability: screenshot this page → import as custom sticker sheet  ·  "
-                            "Acrobat/Xodo/PDF Expert: tap sticker → it appears on your day page")
+        # App compatibility note — clear drag/drop instructions
+        note_y = PH - MT - 60
+        # Instruction box
+        rect(ML, note_y - 12, CW - TAB_W - 4, 26, f=_blend(A, 0.88), radius=5)
+        font("Helvetica-Bold", 6.5); fill(T)
+        c.drawString(ML + 8, note_y - 1, "HOW TO USE STICKERS:")
+        font("Helvetica", 6); fill(DARK)
+        c.drawString(ML + 8, note_y - 10,
+                     "GoodNotes / Notability: screenshot this page → Photos → import as custom sticker sheet → drag & drop onto any planner page  ·  "
+                     "Acrobat / Xodo / PDF Expert: tap any sticker below → it is placed on the day you tapped ★ on")
 
         # Three category columns
         cols = 3; col_gap = 10
@@ -3845,16 +3866,27 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         sh = sw * 0.90
         sx0 = ML; sy0 = inst_y - 16
 
+        # Leave 18pt at bottom of each sticker for a writable label field
+        label_h = 18
+        sh_body = sh - label_h - 4
+
         for si, (lbl, col, sym) in enumerate(stickers[:cols * rows]):
             ci = si % cols; ri = si // cols
             sx = sx0 + ci * (sw + gutter)
             sy = sy0 - ri * (sh + gutter) - sh
-            rect(sx, sy, sw, sh, f=_blend(col, 0.82), radius=10)
-            rect(sx, sy, sw, sh, s=_blend(col, 0.65), lwidth=0.6, radius=10)
-            font("Helvetica-Bold", 22); fill(col)
-            c.drawCentredString(sx + sw / 2, sy + sh * 0.48, sym)
-            font("Helvetica-Bold", 7.5); fill(_blend(col, 0.3))
-            c.drawCentredString(sx + sw / 2, sy + 8, lbl)
+
+            # Sticker body (upper portion)
+            rect(sx, sy + label_h + 2, sw, sh_body, f=_blend(col, 0.82), radius=8)
+            rect(sx, sy + label_h + 2, sw, sh_body, s=_blend(col, 0.55), lwidth=0.6, radius=8)
+            font("Helvetica-Bold", 18); fill(col)
+            c.drawCentredString(sx + sw / 2, sy + label_h + 2 + sh_body * 0.40, sym)
+            font("Helvetica-Bold", 6.5); fill(_blend(col, 0.25))
+            c.drawCentredString(sx + sw / 2, sy + label_h + 6, lbl)
+
+            # Writable label field below each sticker
+            if is_interactive:
+                text_field(sx + 1, sy + 1, sw - 2, label_h - 2,
+                           f"sticker_{pack_idx}_{si}_label", font_size=7)
 
         page_footer(f"STICKER PACK · {cat_name}")
         draw_nav_tabs()
