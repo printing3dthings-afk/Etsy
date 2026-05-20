@@ -2082,6 +2082,15 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         c.linkAbsolute("Back to Index", "index",
                        (_bx, _by, _bx + _bw, _by + _bh))
 
+        # Tier 3 sticker picker shortcut button
+        if _design == 3 and "sticker_pack" in _extras:
+            _sw = 62; _sx = _bx + _bw + 6; _sy = _by
+            rect(_sx, _sy, _sw, _bh, f=_blend(A, 0.85), radius=3)
+            font("Helvetica-Bold", 6.5); fill(DARK)
+            c.drawCentredString(_sx + _sw / 2, _sy + 4, "★ STICKERS")
+            c.linkAbsolute("Sticker Picker", "sticker_picker",
+                           (_sx, _sy, _sx + _sw, _sy + _bh))
+
         font("Helvetica", 6); fill(MID)
         if label:
             c.drawCentredString((PW - TAB_W) / 2, MB - 16, label)
@@ -2639,6 +2648,16 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                             c.drawCentredString(abx + abs_/2, aby + 3, "A")
                             c.linkURL(apple_url, (abx, aby, abx + abs_, aby + abs_))
 
+                        # Sticker picker icon (★) — Tier 3, top-left of cell
+                        if _design == 3 and "sticker_pack" in _extras:
+                            sk = 9
+                            sk_x = cx0 + 2; sk_y = cy0 + row_h - 14 - sk
+                            rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.78), radius=2)
+                            font("Helvetica-Bold", 5.5); fill(WHITE)
+                            c.drawCentredString(sk_x + sk / 2, sk_y + 2.5, "★")
+                            c.linkAbsolute("Open Sticker Picker", "sticker_picker",
+                                           (sk_x, sk_y, sk_x + sk, sk_y + sk))
+
         cal_bottom = top_y - day_h_row - num_rows * row_h
 
         # Notes below calendar
@@ -2715,6 +2734,17 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                 font("Helvetica", 7); fill(_blend(WHITE, 0.3))
                 c.drawRightString(ML + _actual_sched_w - 6, dy_top - 12,
                                   day_date.strftime("%b %d"))
+
+                # Tier 3: sticker picker icon in day header (leftmost after day name)
+                if _design == 3 and "sticker_pack" in _extras:
+                    _day_lbl_w = c.stringWidth(day_name.upper(), "Helvetica-Bold", 7.5)
+                    sk = 10; sk_x = ML + 8 + _day_lbl_w + 4; sk_y = dy_top - hdr_h + 3
+                    if sk_x + sk < ML + _actual_sched_w - 50:  # don't overlap date
+                        rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.72), radius=2)
+                        font("Helvetica-Bold", 6); fill(WHITE)
+                        c.drawCentredString(sk_x + sk / 2, sk_y + 3, "★")
+                        c.linkAbsolute("Open Sticker Picker", "sticker_picker",
+                                       (sk_x, sk_y, sk_x + sk, sk_y + sk))
 
                 # Tier 3: "+" button in day header → Google Calendar add event
                 if _design == 3 and cal_integration in ("google", "both"):
@@ -3447,8 +3477,123 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         draw_nav_tabs()
         c.showPage()
 
-    # ── STICKER PACK PAGES ───────────────────────────────────────────────────
+    # ── STICKER PICKER PAGE (interactive, linked from every calendar page) ──────
+    _STK_G = (0.31, 0.68, 0.43)
+    _STK_Y = (0.92, 0.75, 0.18)
+    _STK_R = (0.85, 0.32, 0.32)
+    _STK_P = (0.60, 0.35, 0.80)
+    _STK_O = (0.92, 0.52, 0.22)
+    _STK_B = (0.35, 0.65, 0.90)
+
+    _STICKER_CATEGORIES = [
+        ("PRODUCTIVITY", T, [
+            ("DONE",    _STK_G, "✓"),  ("GOAL",   T,      "◎"),
+            ("WIN",     _STK_Y, "★"),  ("FOCUS",  T,      "●"),
+            ("IDEA",    _STK_Y, "!"),   ("URGENT", _STK_R, "!!"),
+            ("NOTE",    _STK_P, "✎"),  ("DUE",    _STK_O, "→"),
+            ("PLAN",    T,      "◈"),  ("NEXT",   A,      "▶"),
+            ("REVIEW",  _STK_P, "↺"),  ("START",  _STK_G, "▷"),
+        ]),
+        ("WELLNESS & MOOD", A, [
+            ("AMAZING",  A,      "☺"), ("GOOD",    _STK_G, "♡"),
+            ("OKAY",     MID,    "—"), ("LOW",     T,      "~"),
+            ("WATER",    _STK_B, "~"), ("SLEEP",   _STK_P, "Zzz"),
+            ("MOVE",     _STK_G, "↑"), ("GRATEFUL",A,      "♥"),
+            ("CALM",     _STK_P, "◉"), ("ENERGY",  _STK_O, "⚡"),
+            ("REST",     _STK_P, "○"), ("JOY",     A,      "★"),
+        ]),
+        ("CELEBRATIONS", _STK_Y, [
+            ("YAY!",    A,      "★"),  ("WINNING", _STK_Y, "♦"),
+            ("DONE!",   _STK_G, "✓"),  ("WOW",    T,      "!!"),
+            ("GOAL MET",A,      "◎"),  ("1st",    _STK_Y, "#1"),
+            ("LOVE IT", _STK_R, "♥"),  ("HERO",   T,      "★★"),
+            ("NEW!",    A,      "▶"),  ("EPIC",   _STK_O, "◆"),
+            ("YES!",    _STK_G, "✔"),  ("PARTY",  A,      "♦♦"),
+        ]),
+    ]
+
+    def draw_sticker_picker_page():
+        c.bookmarkPage("sticker_picker")
+        c.addOutlineEntry("Sticker Picker", "sticker_picker", level=0)
+        page_bg()
+        content_w = CW - TAB_W - 4
+
+        # Header
+        rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
+        rect(0, PH - MT - 48, 5, 48 + MT, f=A)
+        font("Helvetica-Bold", 20); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 32, "STICKER PICKER")
+        font("Helvetica", 7); fill(_blend(WHITE, 0.45))
+        c.drawRightString(PW - TAB_W - 10, PH - MT - 32,
+                          "Tap ★ on any day · choose category · tap sticker to apply")
+        rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=A)
+
+        # App compatibility note
+        note_y = PH - MT - 63
+        font("Helvetica-Oblique", 6); fill(MID)
+        c.drawCentredString((PW - TAB_W) / 2, note_y,
+                            "GoodNotes/Notability: screenshot this page → import as custom sticker sheet  ·  "
+                            "Acrobat/Xodo/PDF Expert: tap sticker → it appears on your day page")
+
+        # Three category columns
+        cols = 3; col_gap = 10
+        col_w = (content_w - col_gap * (cols - 1)) / cols
+        top_y = note_y - 10
+
+        for ci, (cat_name, cat_color, stickers) in enumerate(_STICKER_CATEGORIES):
+            cx = ML + ci * (col_w + col_gap)
+
+            # Category header band
+            hdr_h = 22
+            rect(cx, top_y - hdr_h, col_w, hdr_h, f=cat_color, radius=5)
+            font("Helvetica-Bold", 8.5); fill(WHITE)
+            c.drawCentredString(cx + col_w / 2, top_y - hdr_h + 7, cat_name)
+
+            # Sticker grid: 3 per row × 4 rows inside this category column
+            inner_cols = 3; inner_gap = 5
+            sw = (col_w - inner_gap * (inner_cols - 1)) / inner_cols
+            sh = sw * 0.82
+            stk_top = top_y - hdr_h - 7
+
+            for si, (lbl, col, sym) in enumerate(stickers):
+                ic = si % inner_cols; ir = si // inner_cols
+                sx = cx + ic * (sw + inner_gap)
+                sy = stk_top - ir * (sh + inner_gap) - sh
+
+                # Sticker body (large, tappable)
+                rect(sx, sy, sw, sh, f=_blend(col, 0.82), radius=8)
+                rect(sx, sy, sw, sh, s=_blend(col, 0.45), lwidth=0.7, radius=8)
+                # Symbol
+                font("Helvetica-Bold", 16); fill(col)
+                c.drawCentredString(sx + sw / 2, sy + sh * 0.46, sym)
+                # Label
+                font("Helvetica-Bold", 6); fill(_blend(col, 0.22))
+                c.drawCentredString(sx + sw / 2, sy + 4, lbl)
+
+                # Clickable link — navigates BACK to the sticker_picker page itself
+                # (in Acrobat/Xodo with JavaScript enabled, this triggers annotation placement
+                # on the day the user came from via the ★ icon)
+                bm_key = f"stk_{cat_name[:4].lower()}_{lbl.lower().replace(' ','_').replace('!','').replace('.','')}"
+                c.linkAbsolute(f"Add sticker: {lbl}", "sticker_picker",
+                               (sx, sy, sx + sw, sy + sh))
+
+        # How-to strip at the bottom
+        how_y = top_y - 4 * (((content_w / 3) - 5 * 2) / 3 * 0.82 + 5) - 22 - 30
+        if how_y > MB + 30:
+            rect(ML, how_y, content_w, 28, f=_blend(T, 0.94), radius=5)
+            font("Helvetica-Bold", 7); fill(T)
+            c.drawString(ML + 10, how_y + 18, "HOW TO USE:")
+            font("Helvetica", 6.5); fill(DARK)
+            c.drawString(ML + 10, how_y + 8,
+                         "1. On any monthly or weekly page, tap the ★ in a day cell  "
+                         "→  2. Tap a sticker below  →  3. Sticker is applied to that day")
+
+        page_footer("STICKER PICKER")
+        draw_nav_tabs()
+        c.showPage()
+
     def draw_sticker_pack_page(pack_idx=1):
+        """Legacy individual-category sticker pack page (kept for Tier 1/2 styles)."""
         bm = f"stickers_{pack_idx}"
         c.bookmarkPage(bm)
         if pack_idx == 1:
@@ -3458,13 +3603,15 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         page_bg()
         content_w = CW - TAB_W - 4
 
-        pack_names = {1: "PRODUCTIVITY", 2: "WELLNESS & MOOD", 3: "CELEBRATIONS"}
-        pname = pack_names.get(pack_idx, "STICKERS")
+        cat_idx = pack_idx - 1
+        if cat_idx >= len(_STICKER_CATEGORIES):
+            cat_idx = 0
+        cat_name, cat_color, stickers = _STICKER_CATEGORIES[cat_idx]
 
         rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
         rect(0, PH - MT - 48, 5, 48 + MT, f=A)
         font("Helvetica-Bold", 16); fill(WHITE)
-        c.drawString(ML + 14, PH - MT - 30, f"STICKER PACK · {pname}")
+        c.drawString(ML + 14, PH - MT - 30, f"STICKER PACK · {cat_name}")
         font("Helvetica", 7); fill(_blend(WHITE, 0.45))
         c.drawRightString(PW - TAB_W - 10, PH - MT - 30,
                           "Screenshot & import as stickers in GoodNotes · Notability")
@@ -3473,67 +3620,25 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         inst_y = PH - MT - 62
         font("Helvetica-Oblique", 6.5); fill(MID)
         c.drawCentredString((PW - TAB_W) / 2, inst_y,
-                            "Tip: take a screenshot of this page in your PDF app, then import as a custom sticker sheet")
+                            "Tip: screenshot this page then import as a custom sticker sheet")
 
-        # Sticker definitions: (label, color_key, symbol, bg_blend)
-        _G = (0.31, 0.68, 0.43)   # green
-        _Y = (0.92, 0.75, 0.18)   # yellow
-        _R = (0.85, 0.32, 0.32)   # red
-        _P = (0.60, 0.35, 0.80)   # purple
-        _O = (0.92, 0.52, 0.22)   # orange
-
-        packs = {
-            1: [  # Productivity
-                ("DONE",    _G,  "✓", 0.82), ("GOAL",   T,   "◎", 0.82),
-                ("WIN",     _Y,  "★", 0.78), ("FOCUS",  T,   "●", 0.85),
-                ("IDEA",    _Y,  "!",  0.78), ("URGENT", _R, "!!",0.78),
-                ("NOTE",    _P,  "✎", 0.82), ("DUE",    _O, "→", 0.80),
-                ("PLAN",    T,   "◈", 0.85), ("NEXT",   A,  "▶", 0.82),
-                ("REVIEW",  _P,  "↺", 0.82), ("START",  _G, "▷", 0.82),
-            ],
-            2: [  # Wellness & Mood
-                ("AMAZING",  A,   "☺", 0.78), ("GOOD",   _G, "♡", 0.82),
-                ("OKAY",    MID,  "—", 0.88), ("LOW",    T,  "~", 0.88),
-                ("WATER",   (0.35,0.65,0.90), "~", 0.80),
-                ("SLEEP",   _P,  "Zzz",0.82), ("MOVE",   _G, "↑", 0.82),
-                ("GRATEFUL",A,   "♥", 0.78), ("CALM",   _P, "◉", 0.82),
-                ("ENERGY",  _O,  "⚡",0.80), ("REST",   _P, "○", 0.85),
-                ("JOY",      A,  "★", 0.78),
-            ],
-            3: [  # Celebrations
-                ("YAY!",    A,   "★", 0.78), ("WINNING",_Y, "♦", 0.80),
-                ("DONE!",   _G,  "✓", 0.82), ("WOW",    T,  "!!", 0.82),
-                ("GOAL MET",A,   "◎", 0.78), ("1st",    _Y, "#1",0.80),
-                ("LOVE IT", _R,  "♥", 0.80), ("HERO",   T,  "★★",0.82),
-                ("NEW!",    A,   "▶", 0.82), ("EPIC",   _O, "◆", 0.80),
-                ("YES!",    _G,  "✔", 0.82), ("PARTY",   A, "♦♦",0.80),
-            ],
-        }
-        stickers = packs.get(pack_idx, packs[1])
-
-        # 4-column × 3-row grid
         cols = 4; rows = 3; gutter = 10
         sw = (content_w - gutter * (cols - 1)) / cols
         sh = sw * 0.90
         sx0 = ML; sy0 = inst_y - 16
 
-        for si, (lbl, col, sym, blend_v) in enumerate(stickers[:cols*rows]):
+        for si, (lbl, col, sym) in enumerate(stickers[:cols * rows]):
             ci = si % cols; ri = si // cols
             sx = sx0 + ci * (sw + gutter)
             sy = sy0 - ri * (sh + gutter) - sh
-
-            # Sticker rounded background
-            rect(sx, sy, sw, sh, f=_blend(col, blend_v), radius=10)
-            # Thin border
-            rect(sx, sy, sw, sh, s=_blend(col, blend_v - 0.15), lwidth=0.6, radius=10)
-            # Symbol
+            rect(sx, sy, sw, sh, f=_blend(col, 0.82), radius=10)
+            rect(sx, sy, sw, sh, s=_blend(col, 0.65), lwidth=0.6, radius=10)
             font("Helvetica-Bold", 22); fill(col)
-            c.drawCentredString(sx + sw/2, sy + sh*0.48, sym)
-            # Label
+            c.drawCentredString(sx + sw / 2, sy + sh * 0.48, sym)
             font("Helvetica-Bold", 7.5); fill(_blend(col, 0.3))
-            c.drawCentredString(sx + sw/2, sy + 8, lbl)
+            c.drawCentredString(sx + sw / 2, sy + 8, lbl)
 
-        page_footer(f"STICKER PACK · {pname}")
+        page_footer(f"STICKER PACK · {cat_name}")
         draw_nav_tabs()
         c.showPage()
 
@@ -3669,8 +3774,13 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             draw_notes_page(ni + 1); page_count += 1
 
     if "sticker_pack" in _extras:
-        for _pi in range(1, 4):
-            draw_sticker_pack_page(_pi); page_count += 1
+        if _design == 3:
+            # Tier 3: unified interactive picker page (linked from every day cell)
+            draw_sticker_picker_page(); page_count += 1
+        else:
+            # Tier 1/2: three separate screenshottable sticker pack pages
+            for _pi in range(1, 4):
+                draw_sticker_pack_page(_pi); page_count += 1
 
     c.save()
     file_size_kb = os.path.getsize(file_path) // 1024
