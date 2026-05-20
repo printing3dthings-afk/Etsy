@@ -65,6 +65,20 @@ Thick impasto oil painting of an open window or door with shutters thrown wide �
 **STYLE I — Loose Painterly Garden / Abstract Folk Floral** (standing garden scene, flowers at multiple scales, simplified petal shapes, bright cheerful palette, sage-green atmospheric background washes)
 Contemporary loose acrylic/gouache garden painting — NOT flat graphic, NOT photorealistic, NOT impasto oil. Simplified flower shapes (cosmos, poppies, ranunculus, tulips) at three scales rising from the bottom of the canvas, thin single-stroke stems, loose brushy forest-green leaf clusters, pale off-white background with loose sage/mint wash strokes suggesting air and light. Bright spring palette: coral red, blush pink, warm yellow, orange, forest green, sage. Massive Etsy market: spring/summer decor, nursery art, kitchen art, colorful living room art, gift buyers. The single most-searched "happy floral" style on Etsy.
 
+**STYLE W — Retro Badge / Bold Outline Character Art** (thick black outlines, flat solid background, graphic text integrated into design, personality characters with accessories — Keith Haring meets vintage enamel pin)
+Bold graphic poster art with a retro sticker/badge aesthetic. A family or group of characters (animals, creatures, people) rendered in a flat graphic style with THICK black outlines, on a flat solid background color. Text is integrated into the composition as part of the design — top line and bottom line framing the characters like a vintage badge or enamel pin. The concept is always a declaration or statement: "Cool People Live Here", "Cat People Live Here", "Adventure Lives Here", "Chaos Reigns Here." Very high gift-purchase intent — buyers buy these for housewarming gifts, as personality statements about themselves or their families, or as humor art.
+- Thick bold black outlines around EVERY shape — character bodies, accessories, text letters, border elements
+- FLAT solid background — mint green, coral, butter yellow, sky blue, warm peach — one color fills the entire bg
+- Very limited palette: background + black + white + 1 accent color (orange feet/beaks, red accessories)
+- Characters have personality accessories: sunglasses, hats, bows, scarves — this is essential for humor/charm
+- Radiance/shine lines around characters (short diagonal lines emanating outward = energy/coolness)
+- Integrated text: bold all-caps condensed text at top and bottom, framing the characters
+- Border elements: dashed lines, corner brackets, decorative dash sequences as graphic framing
+- Family configurations: 2 adults + 2 children, solo character, couple, trio — characters at different scales
+- Sub-styles: W1=Family Portrait declaration (penguin/cat/dog/bear family + "Live Here"); W2=Solo Character Poster (one bold animal with personality, short statement); W3=Activity/Interest Poster ("Plant People Live Here" + plant monsters, "Coffee People Live Here" + coffee cups with faces)
+- Bundle strategy: "The Live Here Collection" — 3 different animal families, same graphic format = coordinating set for different rooms or family types. Sells as gift set.
+- Frame: thin oak or white frame on bright white wall — the clean minimal frame lets the graphic art be the statement
+
 **STYLE V — Vintage Ticket / Concert Stub Art** (aged paper texture, ticket or boarding-pass format, bold script quote + serif elements, distressed letterpress, numbered stub column, simple silhouette illustration)
 Retro vintage print art in the aesthetic of a concert ticket, lottery ticket, or vintage boarding pass. One of the fastest-growing Etsy art trends. Pinkish-rose or warm cream aged paper background with visible texture, a bold boundary border with rounded corners in a contrast color (red, navy, deep green), and a vertical stub column on the right with a large number. Inside: a dominant oversized script or cursive word ("Enjoy", "Dream", "Wander", "Create") overlaid on smaller uppercase supporting text and a simple silhouette illustration (surfer, mountain hiker, cyclist, van, sailboat, guitar). Distressed letterpress/risograph texture throughout — ink doesn't fully saturate evenly, creating vintage print imperfection.
 - Background: aged warm rose-pink or warm cream parchment texture — NOT flat, visible paper grain and light printing marks
@@ -187,6 +201,13 @@ Daytime English countryside river or mill pond scene — the bright, warm, summe
 - Bright partly cloudy sky: white cumulus clouds, pale blue, warm and cheerful
 - Impressionist/plein-air quality: visible directional brushwork, warm light throughout
 - Palette: rich summer green #3A6A2A, warm yellow-green #8AA838, river reflection blue-silver #8AA8B8, sandy path #D4B880, cottage white #F5F0E8, warm sky blue #88B0D0
+
+**0w. Retro Badge / Bold Outline Character Art (Style W)** ← GIFT MARKET + HUMOR HOME DECOR, VIRAL FORMAT, EXTREMELY HIGH GIFT-PURCHASE INTENT
+The "Cool People Live Here" format is one of Etsy's most shared and gifted art formats. Buyers buy for themselves (personality statement), as housewarming gifts, and as birthday/moving gifts. The humor comes from the specific combination: GOOD ART + FUNNY DECLARATION + RELATABLE CHARACTER. The graphic bold-outline style reads as design-forward, not cheap, which justifies the $10–$18 price point even for a fun/humor print.
+- W1 family portrait: highest gifting intent (fits every family type — dog people, cat people, plant people)
+- W2 solo character: strong impulse buy (buyer sees their spirit animal)
+- W3 activity poster: strong self-identification buy ("coffee people live here")
+- Goes viral on Pinterest and Instagram because the format is immediately readable and shareable
 
 **0v. Vintage Ticket / Concert Stub Art (Style V)** ← FAST-GROWING TREND, STATEMENT PIECE, HIGH AOV, VIRAL FORMAT
 The vintage ticket aesthetic is one of Etsy's fastest-growing art trends. Buyers recognize the format instantly, love the nostalgic feel, and it works as a large statement piece above a sofa or in a hallway. The horizontal landscape format makes it perfect for wide walls. Gets saved and shared — the format is distinctive and memorable.
@@ -425,6 +446,9 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **English Summer River** | Rich summer green #3A6A2A, warm yellow-green #8AA838, river silver-blue reflection #8AA8B8, sandy warm path #D4B880, cottage white #F5F0E8, warm sky blue #88B0D0, duck brown #7A5A38, linen canvas warm #F0EAD8, pale sky cloud white #EEF2F5 | Style S English pastoral river/countryside — daytime impressionist |
 | **Sonoran Desert** | Sandy amber ground #D4A870, terracotta floor #C8824A, sage-green cactus #7A8A58, warm brown scrub #9A6A38, dusty blue-gray mountain #8AA8C0, near-white sky #F5F2EE, pale sky #E8EEF2, cholla warm gray #A89878, yucca olive #6A7A48 | Style T desert Southwest Sonoran landscape — high-key bright |
 | **Nursery Primary** | Bright red #CC2020, golden yellow #E8C020, forest green #2A7A2A, royal blue #1A3A9A, orange #E87820, blush pink #F0A8A8, warm white #FAFAF5 background, cream #F5F0E8, warm gray outline #6A6058 | Style U vintage children's book illustration — bold animal characters |
+| **Retro Badge Mint** | Flat mint-sage background #A8C8B8, pure black outlines #0A0808, clean white fills #FAFAF8, orange accent #E87820, black text #0A0808, dashed border black | Style W retro badge — mint colorway (penguins/animals with sunglasses) |
+| **Retro Badge Coral** | Flat coral-peach background #E8A890, pure black #0A0808, white #FAFAF8, yellow accent #E8D020, black text | Style W retro badge — coral colorway |
+| **Retro Badge Yellow** | Flat butter yellow #F0D870, pure black #0A0808, white #FAFAF8, red accent #CC2020, black text | Style W retro badge — yellow colorway |
 | **Vintage Ticket Rose/Navy** | Aged rose-pink paper #E8B8B0, blush pink texture #D4A098, red border #CC2020, cobalt blue script #1A3A9A, cream inner #F5EEE8, stub column cream #F0E8E0, aged paper brown spot #8A6A58, distress texture warm | Style V vintage ticket/concert stub — rose and navy colorway |
 | **Vintage Ticket Cream/Forest** | Warm parchment cream #F0E8D0, aged paper spot #C8A870, deep forest border #1A4A1A, dark teal script #1A4A4A, buff inner #F5F0E8, stub warm tan #E8DCC8 | Style V vintage ticket — cream and forest colorway |
 
@@ -792,6 +816,11 @@ Use these specific phrases to anchor every piece in traditional media:
 **Maximalist Art Nouveau floral:**
 "Richly detailed hand-painted botanical illustration in the style of William Morris and Alphonse Mucha, dense overflowing arrangement of peonies, magnolia, climbing roses, and tropical leaves, Blush & Gold palette — deep blush #B66277, warm gold #D4AF37, botanical green #3A5A3A, warm ivory #FAFAF0, flowing organic Art Nouveau linework with hand-painted gouache details, artist's layered brushwork visible in dense flower centers, authentic botanical illustration quality as if painted for a 19th century horticultural society, extremely high detail at 300 DPI, archival quality, no text, no watermarks, no AI smoothness"
 
+### STYLE W — RETRO BADGE / BOLD OUTLINE CHARACTER ART FORMULA:
+
+**W1 — Family Portrait Declaration proven prompt — penguin family:**
+"Retro badge graphic art poster, Retro Badge Mint palette, portrait orientation: flat solid mint-sage #A8C8B8 background filling the entire canvas — flat, no gradient, no texture, a bold black rectangular border with slightly rounded corners runs around the full composition with about 8% canvas inset on all sides, the border line is 6-8px thick pure black, at the very top inside the border: bold all-caps condensed black text reading 'COOL PEOPLE' — thick black letterforms, clean sans-serif, about 8% canvas height tall, at the very bottom inside the border: bold all-caps condensed black text reading 'LIVE HERE' same size and weight, centered, three horizontal dashed lines in black span the full width just above 'LIVE HERE' (short dash gap short dash pattern) creating a decorative separator, centered in the main field: a family group of four penguins rendered in thick bold black outlines with clean flat fills — a tall adult penguin on the left and a slightly shorter adult penguin on the right, both facing forward and slightly inward, each wearing black rectangular sunglasses with tiny white lens glints, the two adult penguins hold hands/flippers in the center, between and slightly in front of them: two smaller child penguins side by side, both also wearing sunglasses, all penguin bodies: white belly area #FAFAF8, black back and head areas, orange-yellow feet #E87820 and orange beak #E87820, the adult penguins have 3-4 short diagonal radiance lines emanating from around their heads (like a halo of energy lines showing they are cool/glowing), all shapes have thick bold black outlines, flat color fills only — no gradients, no shading, no shadows, perfectly clean graphic design aesthetic, the style is deliberately bold, simple, and graphic — like a vintage enamel badge or sticker sheet, archival quality 300 DPI, portrait orientation, no watermarks"
+
 ### STYLE V — VINTAGE TICKET / CONCERT STUB ART FORMULA:
 
 **Style V proven prompt — rose/navy surfing ticket:**
@@ -920,6 +949,7 @@ Look at the brief and pick exactly one style from the shop library:
 - **T** — Desert Southwest / Sonoran Landscape (saguaro cactus, sandy desert floor, blue-gray mountains, HIGH-KEY bright near-white sky — NOT moody, NOT golden hour; boho/desert home decor)
 - **U** — Children's Animal Character Art: U1=Modern Bold Color Block (single animal, solid bright bg) / U2=Vintage Gouache Scene (animals in vehicle/parade, naive brushwork) / U3=Alphabet/number art
 - **V** — Vintage Ticket / Concert Stub Art (aged paper, ticket format, bold script hero word, distressed letterpress, numbered stub — landscape orientation, statement piece)
+- **W** — Retro Badge / Bold Outline Character Art (thick black outlines, flat solid bg, integrated text declaration, personality characters with sunglasses/accessories — W1=family portrait, W2=solo character, W3=activity poster)
 
 Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
 
@@ -1005,6 +1035,9 @@ Never submit a single print when a set sells 4× better:
 | Minimalist silhouette poster — single panel (Style Q) | $6 | $10 | $16 |
 | Minimalist silhouette triptych — 3-panel matching set | $14 | $24 | $38 |
 | Minimalist silhouette — 3 color variants of same scene | $12 | $20 | $32 |
+
+| Retro badge character art — single (Style W) | $6 | $10 | $16 |
+| Retro badge "Live Here" Collection — 3-animal set | $14 | $24 | $36 |
 
 | Vintage ticket art — single horizontal (Style V) | $7 | $12 | $18 |
 | Vintage ticket Adventure Series — 3-print set | $16 | $28 | $42 |
