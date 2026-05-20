@@ -2190,8 +2190,41 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             rect(_sx, _sy, _sw, _bh, f=T, radius=4)
             font("Helvetica-Bold", 6.5); fill(WHITE)
             c.drawCentredString(_sx + _sw / 2, _sy + 4, "★  STICKER PANEL")
-            c.linkAbsolute("Sticker Panel — tap to open, then tap a sticker to drag-drop",
-                           "sticker_picker", (_sx, _sy, _sx + _sw, _sy + _bh))
+            _sticker_js = (
+                'var cats=["PRIORITY LABELS","EVENTS & REMINDERS","WELLNESS & MOOD"];'
+                'var catIdx=app.popupMenu(cats);'
+                'if(catIdx<0)return;'
+                'var lists=['
+                '["IMPORTANT","URGENT","DEADLINE","MEETING","TO-DO","ERRANDS","BUSY DAY"],'
+                '["BIRTHDAY!","APPT","VACAY!","MEMORIES","SELF CARE","REMEMBER","DUE BILL"],'
+                '["AMAZING","GOOD","OKAY","WATER","SLEEP","WORKOUT","GRATEFUL"]'
+                '];'
+                'var stkIdx=app.popupMenu(lists[catIdx]);'
+                'if(stkIdx<0)return;'
+                'var lbl=lists[catIdx][stkIdx];'
+                'var fills=[["RGB",1.0,0.85,0.82],["RGB",0.83,0.90,1.0],["RGB",0.85,0.95,0.85]];'
+                'var strokes=[["RGB",0.80,0.35,0.30],["RGB",0.30,0.50,0.80],["RGB",0.35,0.65,0.40]];'
+                'var pg=this.pageNum;'
+                'var ph=this.getPageHeight(pg);'
+                'var pw=this.getPageWidth(pg);'
+                'try{'
+                'this.addAnnot({'
+                'type:"FreeText",page:pg,'
+                'rect:[pw*0.35,ph*0.43,pw*0.65,ph*0.57],'
+                'contents:lbl,'
+                'fillColor:fills[catIdx],'
+                'strokeColor:strokes[catIdx],'
+                'textColor:["RGB",0.10,0.10,0.15],'
+                'textSize:10,textFont:"HelvBd",alignment:1'
+                '});'
+                '}catch(e){'
+                'app.alert("Sticker placed! Drag it anywhere on the page.\\n\\n'
+                'Works best in Adobe Acrobat, PDF Expert, and Xodo.",1);'
+                '}'
+            )
+            if not _js_button(_sx, _sy, _sw, _bh, _sticker_js):
+                c.linkAbsolute("Sticker Panel — tap to open",
+                               "sticker_picker", (_sx, _sy, _sx + _sw, _sy + _bh))
 
         font("Helvetica", 6); fill(MID)
         if label:
