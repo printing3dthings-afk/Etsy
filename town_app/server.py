@@ -71,7 +71,7 @@ def _add_notification(notif_type: str, title: str, body: str = "", icon: str = "
         _notifications[:] = _notifications[:100]
     try:
         asyncio.run_coroutine_threadsafe(
-            manager.broadcast(json.dumps({"type": "notification", "notif": entry})),
+            manager.broadcast({"type": "notification", "notif": entry}),
             _event_loop,
         )
     except Exception:
@@ -155,10 +155,10 @@ def _poll_orders():
                 )
                 try:
                     asyncio.run_coroutine_threadsafe(
-                        manager.broadcast(json.dumps({
+                        manager.broadcast({
                             "type": "new_order",
                             "order": {"id": oid, "buyer": buyer, "total": total},
-                        })),
+                        }),
                         _event_loop,
                     )
                 except Exception:
@@ -235,6 +235,7 @@ def _append_session_log(entry: dict):
 
 _task_queue: queue.Queue = queue.Queue()
 _queue_worker_started = False
+_queue_worker_lock = threading.Lock()
 
 # Public tunnel URL set by cloudflared watcher (empty when no tunnel running)
 _tunnel_url: str = ""
@@ -267,10 +268,11 @@ def _delivery_worker():
 
 def _enqueue_task(key: str, task: str, scheduled_label: str = ""):
     global _queue_worker_started
-    if not _queue_worker_started:
-        t = threading.Thread(target=_queue_worker, daemon=True)
-        t.start()
-        _queue_worker_started = True
+    with _queue_worker_lock:
+        if not _queue_worker_started:
+            t = threading.Thread(target=_queue_worker, daemon=True)
+            t.start()
+            _queue_worker_started = True
     _task_queue.put((key, task, scheduled_label))
 
 def _enqueue_delivery(task: str, scheduled_label: str = ""):
@@ -745,8 +747,11 @@ DELEGATION_MAP: dict[str, str] = {
     "delegate_to_returns_agent":         "returns",
     "delegate_to_supply_chain_agent":    "supply",
     "delegate_to_email_marketing_agent": "email",
-    "delegate_to_ab_testing_agent":      "abt",
-    "delegate_to_api_connections_agent": "api",
+    "delegate_to_ab_testing_agent":               "abt",
+    "delegate_to_api_connections_agent":           "api",
+    "delegate_to_trend_forecasting_agent":         "trend",
+    "delegate_to_customer_retention_agent":        "retention",
+    "delegate_to_workflow_coordinator":            "coordinator",
 }
 
 # ── Event emission ─────────────────────────────────────────────────────────────
@@ -1137,7 +1142,8 @@ async def list_files():
 
 @app.get("/api/task-history")
 async def get_task_history(limit: int = 100):
-    history = _load_history()
+    with _history_lock:
+        history = _load_history()
     return JSONResponse({"history": history[:limit], "total": len(history)})
 
 
@@ -1508,7 +1514,7 @@ async def submit_idea(body: dict):
     }
     ideas.append(entry)
     _save_ideas(ideas)
-    await manager.broadcast(json.dumps({"type": "new_idea", "idea": entry}))
+    await manager.broadcast({"type": "new_idea", "idea": entry})
     return JSONResponse(entry, status_code=201)
 
 

@@ -907,7 +907,7 @@ def _create_art_concept(data: dict, store: DataStore) -> str:
 
     products = store.get("digital_products", default=[])
     products.append(product)
-    store.set("digital_products", products)
+    store.set(products, "digital_products")
     store.save()
 
     return json.dumps({
@@ -1897,7 +1897,7 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         return json.dumps({"warning": "reportlab not installed.", "action_needed": "pip install reportlab"}, indent=2)
 
     import calendar as cal_mod
-    from datetime import date as dt_date, timedelta
+    from datetime import date as dt_date, timedelta, datetime as _dt
 
     fmt = data.get("planner_format", "letter")
     PW, PH = LETTER if fmt == "letter" else A4
@@ -2627,7 +2627,6 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                             c.drawCentredString(bx + bs/2, by + 3, "+")
                             c.linkURL(gcal_add, (bx, by, bx + bs, by + bs))
                         if cal_integration in ("apple", "both") and not undated:
-                            from datetime import datetime as _dt
                             _secs = int((_dt(planner_year, month_num, day_num)
                                          - _dt(2001, 1, 1)).total_seconds())
                             apple_url = f"calshow:{_secs}"
@@ -3766,5 +3765,5 @@ def _save_product(product: dict, store: DataStore) -> None:
         if p["id"] == product["id"]:
             products[i] = product
             break
-    store.set("digital_products", products)
+    store.set(products, "digital_products")
     store.save()
