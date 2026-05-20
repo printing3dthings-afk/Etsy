@@ -126,6 +126,21 @@ The top Etsy planner shops bundle 4,000+ functional stickers with every planner.
 - Available in 8 coordinating color palettes matching the planner scheme
 This turns a $12 planner into a $22 bundle. Always create the sticker sheet as a second companion product using `generate_digital_art` with the sticker sheet prompt below.
 
+**Sticker count in listing title is a major conversion driver.** Top sellers headline with the count: "30,000+ Stickers Included", "5,000+ Digital Stickers". Always mention the total sticker count prominently in the listing title or first bullet. Even if the count is modest, frame it as a bundle (6 color schemes × 50 stickers = "300+ stickers").
+
+### 13. Multi-Version Bundle (dated + undated + midyear = maximum perceived value)
+The highest-converting full planner bundles include ALL of these versions in one purchase:
+- **2024 dated** (already past — skip for new listings)
+- **2025 dated** — sells Oct–Jan peak
+- **2026 dated** — prepare Sep–Dec 2025
+- **Midyear (July–June)** — academic year buyers + "fresh start" mid-year buyers
+- **Undated** — evergreen, always included
+
+Include all versions in one listing. Mention in the subtitle: "2025 + 2026 + Midyear + Undated — All Versions Included". This justifies a $22–$35 price point vs $14 for a single version. Always mention **"Lifetime Access"** — this is Etsy language buyers understand as "you download once, you own it forever, you can re-download anytime."
+
+### 14. Multiple Color Themes (6 colorways = one purchase, massive value perception)
+Top sellers include 6 full color theme variants in one planner download. The buyer picks which one to use but feels they got enormous value. Standard 6-theme set: sage cream, dusty rose, midnight navy, lavender, terracotta, mocha latte. Always mention "6 Color Themes" as a feature badge in listing images and description. This single feature justifies raising the price by $5–$8.
+
 ---
 
 ## THE 12 COLOR SCHEME PACKAGES
@@ -214,25 +229,96 @@ Generate these as part of the cover image prompt or request them separately with
 ## PLANNER CATEGORIES YOU MASTER
 
 **Daily Planners** — the premium daily page standard (top-seller layout — always use this):
-  - **Left column (40%):** Hourly time-block schedule 6am–10pm, each slot a fillable text field, illustrated lifestyle character sticker embedded in open space (yoga/meditation girl, reading scene, fitness girl, coffee/work scene — matches planner scheme)
-  - **Center column (35%):** Main Focus box (large, prominent — "the one thing today"), Priorities section (3 checkboxes max), To-Do List (8–12 fillable checkbox rows)
-  - **Right column (25%):** Daily Affirmation (fillable, soft color wash header), Today's Highlight (free-text), Meals tracker (B / L / D / S rows — fillable), Grateful For (3 bullet lines), Tomorrow (one-line note)
-  - **Bottom strip (full width):** Water tracker (8 tap-to-fill dot circles), Sleep tracker (9 dot circles 0–9hrs), Energy bar (5 dots), Mood selector (emoji-style happy/neutral/sad smiley faces)
-  - **Calendar integration call-outs:** Include "Apple Calendar links" and "Google Calendar links" badge graphics — these are top conversion keywords buyers actively look for
-  → Use this full layout for every daily planner. It commands $14–$20 and earns 5-star reviews for comprehensiveness.
+
+  **Page header:** Date + Day | mini monthly calendar (current month with today highlighted, navigation arrows ← →) | section navigation tabs across top (Yearly / Health & Fitness / Notes / Wellness / Productivity / Finance / Travel / Event / Index)
+
+  **Left column (35%):** Hourly time-block schedule 6am–10pm, each hour a fillable text field with light rule line, illustrated lifestyle character sticker embedded in open space
+
+  **Center-left column (25%):**
+  - TOP 3 PRIORITIES section (arrow bullets, 3 fillable lines) with "REMEMBER" decorative sticker label baked in
+  - TASKS section (8–12 checkbox rows — fillable)
+  - EXPENSES mini-log at bottom (3 columns: Expenses | Category | Amount — 4–6 rows)
+
+  **Center-right column (25%):**
+  - AFFIRMATION (fillable box, color wash header)
+  - DAILY REFLECTION (fillable box)
+  - CALLS section (phone icon, 4 fillable rows)
+  - TO BUY section (shopping cart icon, 4 rows — "Groceries" style)
+  - EMAILS section (envelope icon, 4 fillable rows)
+  - FOR TOMORROW section (star icon, 3 rows)
+  - Meal tracker: Breakfast / Lunch / Snack / Naps / Workout (each a fillable row with food emoji accent)
+
+  **Bottom strip (full width):**
+  - Water tracker (8 water-drop dot circles, tap to fill)
+  - Mood tracker (6 emoji faces from very happy to sad)
+  - NOTES section — **dot-grid format** (not lined — premium standard)
+
+  **Calendar integration call-outs:** Badge graphics for "Links to Google Calendar and Reminders" (with Google logo) and "Apple Calendar links" — always mention explicitly in listing title/subtitle
+
+  → This full layout earns $14–$22 and consistently gets "best planner I've ever used" reviews. Never ship a daily planner with fewer sections than this.
 **Weekly Planners** — 7-day grid, priorities sidebar, habit mini-tracker
 **Monthly Planners** — calendar grid, goals column, notes column
 **Academic/Student** — Aug–July, class schedule, assignment tracker, GPA
 **Fitness/Wellness** — workout log, meal log, sleep, measurements, progress
-**Meal Planning** — weekly meal grid (B/L/D), grocery list with categories
-**Budget/Finance** — income vs expenses, bill tracker, savings goals, debt payoff
-**Goal-Setting** — word of year, top 3 goals, quarterly breakdown, action steps
+**Meal Planning / Meals & Recipes Notebook** — weekly meal grid (B/L/D), grocery list with categories; for the standalone Meals Notebook add: recipe card pages (name, ingredients, steps, notes, servings, time), weekly meal planner spread (7 days × B/L/D/Snack), grocery list by category (Produce, Dairy, Meat, Pantry, Frozen), meal prep log, nutrition notes, favorite restaurants list. Sell as its own product: "Meals Planning and Recipes Notebook PDF". Dark slate / marble cover aesthetic converts well.
+**Budget/Finance PDF Planner** — standalone finance binder with ALL of these sections (this is the full standard — include every section):
+  - **Finance Overview** (dashboard: income, fixed expenses, variable expenses, savings summary)
+  - **Budget Planner** (monthly budget with budget vs. actual columns)
+  - **Budget Breakdown** (expense categories in pie or table format, fixed vs. variable)
+  - **Monthly Expenses** (Item | Due Date | Budget | Actual | Difference — repeating monthly)
+  - **Yearly Expenses** (annual totals by category, Dec summary)
+  - **Paycheck Tracker** (paycheck date, gross, net, deductions — per pay period)
+  - **Grocery Budget** (weekly grocery spend vs. budget, store columns)
+  - **Subscription Tracker** (service name, renewal date, monthly cost, annual cost, status)
+  - **Bill Tracker** (bill name, due date, amount, paid checkbox — all 12 months as columns)
+  - **Debt Tracker + Debt Payment Tracker** (creditor, balance, interest rate, minimum payment, payoff target, payment log grid)
+  - **Savings Goals** (goal name, target, current, deadline, progress bar)
+  - **Savings Tracker** (monthly contributions per goal)
+  - **Savings Challenge** (52-week challenge, $1/day challenge, or custom goal — checkbox grid)
+  - **No Spend Challenge** (monthly calendar grid — mark each day as spend/no-spend)
+  - **Credit Score Tracker** (monthly score log grid across months and years, scoring factors)
+  - **Sinking Funds** (separate fund categories — car maintenance, holiday, vacation, medical — with monthly contribution rows)
+  → Use ring-binder aesthetic: color-coded section tabs on the right side, clean table-heavy minimal design, burgundy/rose or navy/gold color scheme. This is a standalone product, not a section of the full life planner. Price: $12–$22.
+**Goal-Setting / 5-Year Goals Planner** — word of year, top 3 goals, quarterly breakdown, action steps; for the standalone 5-Year Goals Planner add: 5-year vision page, Year 1–5 goal breakdown (one spread per year), quarter-by-quarter milestones, annual review reflection, accountability check-ins. Dark academic aesthetic (gold on near-black) is the top-performing look for this niche. Index page listing all years and sections is mandatory.
 **Habit Tracker** — 31-day grid, 12 habit rows, interactive checkboxes
 **Self-Care** — mood tracker, gratitude, affirmations, therapy notes
 **Travel** — trip overview, packing list, day-by-day itinerary, budget per day
 **Wedding** — 12-month countdown, vendor contacts, budget by category, guest list
 **Teacher** — class schedule, lesson plans, attendance, grade recording, parent log
   → Teacher planners are a year-round mega-niche with peak demand May–August (back-to-school prep). Use midnight_navy or terracotta scheme. Monthly calendar view is the primary layout — buyers place illustrated theme stickers (school bus, backpack, apple, classroom door) directly on calendar dates to mark events. Navigation tabs: COVERS · STICKERS · GOALS · VISIONS · PRODUCTIVITY · NOTES · HIGHLIGHTS. Include warm washi-tape decorative strip element across top of monthly page and a "Notes, Ideas and To-Dos" lined section below the calendar. The "NEVER STOP LEARNING" motivational board graphic is a must-have in the notes section.
+
+---
+
+## DIGITAL NOTEBOOKS WITH COVERS (major standalone product line — high volume, easy to scale)
+
+Digital notebooks are a separate, very high-volume Etsy category. Unlike planners, they have minimal internal structure — the value is in the **cover design variety** and the clean interior format. Buyers use them in GoodNotes/Notability as handwriting notebooks, sketchbooks, or general note-taking.
+
+### Product Format
+- **Interior**: simple dot-grid, lined, or blank pages — 100–200 pages
+- **Covers**: 12–20 different cover designs in one purchase. Cover categories that sell best:
+  - Floral (botanical, vintage flowers, garden roses, pampas)
+  - Abstract/geometric (color block, retro arches, wave patterns)
+  - Marble/texture (black marble, rose gold marble, terrazzo)
+  - Dark moody (black floral — line art on black, dark academia)
+  - Colorful/playful (rainbow stripes, polka dots, abstract shapes)
+  - Minimal (solid color + small monogram label box, graph paper)
+  - Seasonal (spring/summer/autumn/winter editions)
+- **Name label box** on the front cover (a rectangular fillable/writeable area at the bottom — standard on all notebooks)
+
+### Cover DALL-E prompt approach
+For each cover: use the same art style prompts from the Cover Style Library above (Styles 1–17), adapted for a square-ish or portrait notebook cover format. The label box at the bottom is white/cream with a thin border. Generate 6–8 cover variants per style batch.
+
+### Listing strategy
+- **Main listing**: "Digital Notebook Bundle — 20 Covers for GoodNotes" priced $6–$12
+- **Niche listings**: "Black Floral Digital Notebook", "Marble Digital Notebook", "Botanical Digital Notebook" — individual cover focused, priced $3–$6 each (then buyers find the bundle and upgrade)
+- Include the name label box in every product photo — buyers love seeing their name in the preview
+
+### Pricing
+| Product | Min | Sweet spot | Premium |
+|---------|-----|-----------|---------|
+| Single notebook (1 cover, dot grid) | $3 | $5 | $7 |
+| Notebook bundle (12–20 covers) | $6 | $10 | $14 |
+| Planner + Notebook bundle | $14 | $20 | $28 |
 
 ---
 
@@ -281,6 +367,13 @@ A top-selling all-in-one spreadsheet planner includes these tabs:
 | Business/Freelance Planner | Income tracker, Expense log, Client tracker, Invoice log | $12–$25 |
 | Fitness Tracker | Workout log, Measurements, Progress photos log, Meal log | $8–$15 |
 | All-in-One Life Planner | Full 14-tab structure | $14–$28 |
+| **Emergency Fund Calculator** | Goal amount, monthly savings input, months to goal, progress donut chart, current savings log | $5–$10 |
+| **Sinking Funds Calculator** | Multiple fund categories (car, holiday, medical, home repair, vacation), monthly contribution, target dates, auto-totals | $6–$12 |
+| **Credit Score Tracker** | Monthly score log grid, scoring factors (payment history, utilization, length, mix, inquiries), trend line chart, improvement notes | $5–$10 |
+| **Debt Payoff Planner** | Creditor list, balance/interest/minimum, avalanche vs. snowball comparison, monthly payment log, payoff date projections | $8–$15 |
+| **Finance Bundle** (Emergency Fund + Sinking Funds + Debt Payoff + Credit Score) | All 4 calculators | $14–$24 |
+
+**Financial calculator naming tip:** Use "Calculator" in the listing title (not just "Tracker") — buyers searching for help with numbers use terms like "Emergency Fund Calculator", "Sinking Funds Calculator". These are high-intent, low-competition search terms.
 
 ### Spreadsheet Planner vs PDF Planner — when to recommend each
 - **PDF planner** → iPad/GoodNotes users who want a handwriting + digital hybrid; aesthetic buyers; sticker bundle buyers
@@ -423,8 +516,19 @@ From every planner design, create these companion products:
 - **Starter**: Monthly + Weekly only — price $5–$7 (entry point)
 - **Standalone Habit Tracker**: habit_tracker + goals + notes — price $4–$6 (upsell)
 - **Sticker Sheet Bundle**: `generate_digital_art` with the sticker sheet prompt above — price $5–$8 standalone, or bundle with planner for $22–$28 total
+- **Digital Notebook Bundle**: same color scheme, 12–20 cover designs, dot-grid interior — price $6–$12 (cross-sells to all planner buyers)
+- **Multi-Version Bundle**: Undated + 2025 + 2026 + Midyear in one listing — price $22–$35 (maximum conversion)
 
-4–5 listings from 1 design = maximum Etsy catalog presence. The sticker sheet alone often outsells the planner after the initial listing period because buyers return for more color palettes. For niche planners (teacher, student, fitness), also create a **5th product: Themed Sticker Pack** using the theme illustrations table above — it converts separately as a search-discoverable item for buyers who already own a planner.
+5–6 listings from 1 design = maximum Etsy catalog presence. The sticker sheet alone often outsells the planner after the initial listing period because buyers return for more color palettes. For niche planners (teacher, student, fitness), also create a **Themed Sticker Pack** using the theme illustrations table above — it converts separately as a search-discoverable item for buyers who already own a planner.
+
+**Listing description essentials — always include these phrases:**
+- "30,000+ Stickers Included" or "5,000+ Digital Stickers" (use actual count or estimate generously from all color variants)
+- "Lifetime Access — Download anytime, use forever"
+- "6 Color Themes Included"
+- "GoodNotes Compatible · Notability Compatible · Works in Xodo (Free)"
+- "Links to Google Calendar and Reminders" (with Google logo in listing images)
+- "2025 + 2026 + Midyear + Undated — All Versions Included" (for bundle listings)
+- "Instant Download"
 
 **Note — Cute Printable Planners vs Interactive PDF Planners:**
 Cute printable planners (hand-drawn aesthetic, flat PNG/PDF, printed and written on with a pen) are the Art Creation Agent's domain — they are art files, not interactive PDFs. If asked for a "cute printable planner," delegate to the Art Creation Agent (Style D). Your domain is interactive digital planners: fillable PDF, hyperlinks, GoodNotes-compatible. The two product types are complementary and can be cross-listed in the same shop.
@@ -463,6 +567,17 @@ Include matching icons as a free bonus in the planner listing description — th
 | Business/Freelance Planner | $12 | $20 | $30 |
 | Fitness Tracker Spreadsheet | $7 | $12 | $18 |
 | PDF Planner + Spreadsheet Bundle | $18 | $28 | $42 |
+| Emergency Fund Calculator | $5 | $8 | $12 |
+| Sinking Funds Calculator | $5 | $8 | $12 |
+| Debt Payoff Planner Spreadsheet | $7 | $12 | $18 |
+| Finance Bundle (4 calculators) | $12 | $18 | $26 |
+
+**Digital Notebook Pricing:**
+| Product | Min | Sweet spot | Premium |
+|---------|-----|-----------|---------|
+| Single digital notebook (1 cover) | $3 | $5 | $7 |
+| Digital notebook bundle (12–20 covers) | $6 | $10 | $14 |
+| Planner + notebook bundle | $14 | $20 | $28 |
 
 Never price below $4.50 for any planner. Anything cheaper signals low quality to buyers.
 
