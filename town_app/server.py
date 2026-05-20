@@ -1266,17 +1266,23 @@ async def test_email(body: dict):
     msg["To"]      = to
     msg.attach(MIMEText(body_html, "html"))
 
-    try:
+    msg_string = msg.as_string()
+
+    def _send_smtp():
         if smtp_port == 465:
             with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
                 server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, [to], msg.as_string())
+                server.sendmail(smtp_user, [to], msg_string)
         else:
             with smtplib.SMTP(smtp_host, smtp_port) as server:
                 server.ehlo()
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, [to], msg.as_string())
+                server.sendmail(smtp_user, [to], msg_string)
+
+    try:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _send_smtp)
         return JSONResponse({"success": True, "sent_to": to})
     except Exception as exc:
         return JSONResponse({"error": str(exc)})
@@ -1392,7 +1398,7 @@ async def convert_to_svg(
         shutil.copyfileobj(file.file, tmp)
         tmp_path = tmp.name
 
-    try:
+    def _run_vtracer():
         vtracer.convert_image_to_svg_py(
             image_path      = tmp_path,
             out_path        = str(out_path),
@@ -1402,6 +1408,10 @@ async def convert_to_svg(
             layer_difference= layer_difference,
             path_precision  = path_precision,
         )
+
+    try:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _run_vtracer)
     finally:
         os.unlink(tmp_path)
 

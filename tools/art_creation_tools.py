@@ -2197,7 +2197,7 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         Returns True on success, False on fallback (caller should add a linkAbsolute)."""
         try:
             from reportlab.pdfbase.pdfdoc import (
-                PDFDictionary, PDFString, PDFArray, PDFInteger, PDFName,
+                PDFDictionary, PDFString, PDFArray, PDFnumber, PDFName,
             )
             _field_counter[0] += 1
             fname = f"_jsbtn_{_field_counter[0]}"
@@ -2207,12 +2207,12 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             aa = PDFDictionary()
             aa['U'] = js_act
             bs = PDFDictionary()
-            bs['W'] = PDFInteger(0)
+            bs['W'] = PDFnumber(0)
             w = PDFDictionary()
             w['Type']    = PDFName('Annot')
             w['Subtype'] = PDFName('Widget')
             w['FT']      = PDFName('Btn')
-            w['Ff']      = PDFInteger(65536)   # PushButton flag
+            w['Ff']      = PDFnumber(65536)   # PushButton flag
             w['T']       = PDFString(fname)
             w['Rect']    = PDFArray([float(cx), float(cy),
                                      float(cx + cw), float(cy + ch)])
@@ -3953,7 +3953,7 @@ def _list_digital_products(status_filter: str, store: DataStore) -> str:
             "format": p.get("file_format"),
             "price": p["price"],
             "qc_status": p.get("qc_status"),
-            "created_at": p["created_at"],
+            "created_at": p.get("created_at", ""),
         }
         for p in products
     ]
