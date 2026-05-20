@@ -65,6 +65,18 @@ Thick impasto oil painting of an open window or door with shutters thrown wide �
 **STYLE I — Loose Painterly Garden / Abstract Folk Floral** (standing garden scene, flowers at multiple scales, simplified petal shapes, bright cheerful palette, sage-green atmospheric background washes)
 Contemporary loose acrylic/gouache garden painting — NOT flat graphic, NOT photorealistic, NOT impasto oil. Simplified flower shapes (cosmos, poppies, ranunculus, tulips) at three scales rising from the bottom of the canvas, thin single-stroke stems, loose brushy forest-green leaf clusters, pale off-white background with loose sage/mint wash strokes suggesting air and light. Bright spring palette: coral red, blush pink, warm yellow, orange, forest green, sage. Massive Etsy market: spring/summer decor, nursery art, kitchen art, colorful living room art, gift buyers. The single most-searched "happy floral" style on Etsy.
 
+**STYLE V — Vintage Ticket / Concert Stub Art** (aged paper texture, ticket or boarding-pass format, bold script quote + serif elements, distressed letterpress, numbered stub column, simple silhouette illustration)
+Retro vintage print art in the aesthetic of a concert ticket, lottery ticket, or vintage boarding pass. One of the fastest-growing Etsy art trends. Pinkish-rose or warm cream aged paper background with visible texture, a bold boundary border with rounded corners in a contrast color (red, navy, deep green), and a vertical stub column on the right with a large number. Inside: a dominant oversized script or cursive word ("Enjoy", "Dream", "Wander", "Create") overlaid on smaller uppercase supporting text and a simple silhouette illustration (surfer, mountain hiker, cyclist, van, sailboat, guitar). Distressed letterpress/risograph texture throughout — ink doesn't fully saturate evenly, creating vintage print imperfection.
+- Background: aged warm rose-pink or warm cream parchment texture — NOT flat, visible paper grain and light printing marks
+- Border: thick rounded-corner rectangular border in a bold contrast color (red #CC2020, navy #1A2A5A, forest #1A4A1A)
+- Stub column: right ~20% separated by a vertical dashed perforated line, contains a large rotated 5-6 digit number
+- Typography: giant script/cursive hero word at dominant scale + small uppercase supporting text ("LIFE'S SHORT", "THE RIDE", ticket-like labels)
+- Illustration: single simple flat silhouette inside the main field — surfer catching a wave, van on a road, sailboat, mountain peaks, guitar
+- Distress: the whole print has letterpress ink variation — slightly uneven ink density, slight paper grain showing through color fills, minor registration offset
+- Color schemes: Rose/Navy (shown), Cream/Forest, Warm Yellow/Dark Teal, Peach/Navy, Tan/Burgundy
+- Bundle strategy: "Adventure Ticket Series" — 3 tickets with same design but different quotes and color combos = instant gallery wall set
+- Price premium: buyers pay $10–$18 for the statement-piece format, especially at large 24×36 horizontal
+
 **STYLE U — Children's Animal Character Art** (bold animal portraits for nursery and children's rooms — two sub-styles: U1 Modern Bold Color Block, U2 Vintage Gouache Illustration)
 The single biggest gift-purchase category on Etsy year-round. New parents, baby shower guests, and nursery decorators all buy these. Two distinct aesthetics serve different buyer tastes — both use the same subjects (cute animals with personality) but different rendering approaches.
 - **U1 — Modern Bold Color Block**: Each print has ONE solid bright colored background (choose from: warm orange #E87820, teal #1A8A8A, golden yellow #E8C020, bright green #2A9A2A, pink #E870A8, cornflower blue #3A6AC0). Single centered animal character, simplified rounded forms, big expressive eyes, slightly textured paper background visible. Clean modern flat illustration, NOT vintage. This is the gallery-wall-of-animals format — each animal gets its own print and background color. Animals: panda, tiger with sunglasses, orange tabby cat, Dalmatian, black cat in yellow raincoat, giraffe, toucan, border collie, beagle, flamingo, zebra, bee. Characters can have accessories (sunglasses, raincoat, skateboard, scooter) for personality. Thin oak frame is the default.
@@ -175,6 +187,12 @@ Daytime English countryside river or mill pond scene — the bright, warm, summe
 - Bright partly cloudy sky: white cumulus clouds, pale blue, warm and cheerful
 - Impressionist/plein-air quality: visible directional brushwork, warm light throughout
 - Palette: rich summer green #3A6A2A, warm yellow-green #8AA838, river reflection blue-silver #8AA8B8, sandy path #D4B880, cottage white #F5F0E8, warm sky blue #88B0D0
+
+**0v. Vintage Ticket / Concert Stub Art (Style V)** ← FAST-GROWING TREND, STATEMENT PIECE, HIGH AOV, VIRAL FORMAT
+The vintage ticket aesthetic is one of Etsy's fastest-growing art trends. Buyers recognize the format instantly, love the nostalgic feel, and it works as a large statement piece above a sofa or in a hallway. The horizontal landscape format makes it perfect for wide walls. Gets saved and shared — the format is distinctive and memorable.
+- Distressed aged paper texture + bold script quote + letterpress imperfection is the core combination
+- Works in any room: living room (large horizontal), hallway, office, beach house
+- "Adventure Ticket Series" 3-pack: same ticket design, 3 different quotes + 3 color combos = top bundle format
 
 **0u. Vintage Children's Book Illustration (Style U)** ← NURSERY ART + BABY SHOWER GIFT MARKET, HIGHEST YEAR-ROUND VOLUME
 Naive gouache animal illustration — the nursery art category is Etsy's most consistent year-round revenue driver. New parents buy multiple prints per child, baby shower guests buy as gifts, and children's room makeovers drive repeat purchases. Bold colorful animals, warm white background, vintage children's book quality. Sells to: new parents, baby shower shoppers, grandparents, nursery decorators. The charming imperfection IS the product — it feels hand-crafted not AI.
@@ -407,6 +425,8 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **English Summer River** | Rich summer green #3A6A2A, warm yellow-green #8AA838, river silver-blue reflection #8AA8B8, sandy warm path #D4B880, cottage white #F5F0E8, warm sky blue #88B0D0, duck brown #7A5A38, linen canvas warm #F0EAD8, pale sky cloud white #EEF2F5 | Style S English pastoral river/countryside — daytime impressionist |
 | **Sonoran Desert** | Sandy amber ground #D4A870, terracotta floor #C8824A, sage-green cactus #7A8A58, warm brown scrub #9A6A38, dusty blue-gray mountain #8AA8C0, near-white sky #F5F2EE, pale sky #E8EEF2, cholla warm gray #A89878, yucca olive #6A7A48 | Style T desert Southwest Sonoran landscape — high-key bright |
 | **Nursery Primary** | Bright red #CC2020, golden yellow #E8C020, forest green #2A7A2A, royal blue #1A3A9A, orange #E87820, blush pink #F0A8A8, warm white #FAFAF5 background, cream #F5F0E8, warm gray outline #6A6058 | Style U vintage children's book illustration — bold animal characters |
+| **Vintage Ticket Rose/Navy** | Aged rose-pink paper #E8B8B0, blush pink texture #D4A098, red border #CC2020, cobalt blue script #1A3A9A, cream inner #F5EEE8, stub column cream #F0E8E0, aged paper brown spot #8A6A58, distress texture warm | Style V vintage ticket/concert stub — rose and navy colorway |
+| **Vintage Ticket Cream/Forest** | Warm parchment cream #F0E8D0, aged paper spot #C8A870, deep forest border #1A4A1A, dark teal script #1A4A4A, buff inner #F5F0E8, stub warm tan #E8DCC8 | Style V vintage ticket — cream and forest colorway |
 
 When writing your DALL-E prompt, reference these palette names explicitly: "using the Terracotta palette — terracotta orange #C17B5A, forest green #4A6741, warm beige #F5ECD7, and rust accent."
 
@@ -772,6 +792,11 @@ Use these specific phrases to anchor every piece in traditional media:
 **Maximalist Art Nouveau floral:**
 "Richly detailed hand-painted botanical illustration in the style of William Morris and Alphonse Mucha, dense overflowing arrangement of peonies, magnolia, climbing roses, and tropical leaves, Blush & Gold palette — deep blush #B66277, warm gold #D4AF37, botanical green #3A5A3A, warm ivory #FAFAF0, flowing organic Art Nouveau linework with hand-painted gouache details, artist's layered brushwork visible in dense flower centers, authentic botanical illustration quality as if painted for a 19th century horticultural society, extremely high detail at 300 DPI, archival quality, no text, no watermarks, no AI smoothness"
 
+### STYLE V — VINTAGE TICKET / CONCERT STUB ART FORMULA:
+
+**Style V proven prompt — rose/navy surfing ticket:**
+"Vintage letterpress print art in the style of a 1960s concert ticket or lottery ticket, Vintage Ticket Rose/Navy palette, landscape orientation 3:2 horizontal, the entire canvas IS the ticket: aged warm rose-pink background #E8B8B0 with visible paper grain texture and subtle pale geometric watermark pattern in slightly lighter pink tone, slight ink staining and paper age variation creating organic texture across the surface, a thick bold rectangular border with rounded corners in bright red #CC2020 runs around the entire composition with an inner margin of about 6% canvas width, the border has slight letterpress ink variation — not perfectly uniform opacity, on the RIGHT side approximately 22% of the width: a vertical dashed perforated tear line in red, the stub column to the right of this line has a rotated large 6-digit serial number '960325' in a bold condensed serif font in dark navy #1A3A9A, 'ADMIT ONE' in small uppercase above the number, inside the main left portion: 'LIFE'S SHORT' in small bold condensed uppercase serif #1A3A9A centered near the top, a giant bold cobalt blue #1A3A9A script/cursive word 'Enjoy' dominating the center-left at very large scale — the script letters have relaxed natural curves, the 'E' begins with a generous descending stroke, the letters fill 40% of the canvas height, slightly imperfect ink coverage suggesting genuine letterpress printing, below the script: 'THE RIDE' in small bold uppercase #1A3A9A, to the right of center inside the main field: a simple flat silhouette illustration of a surfer riding a wave in dark red #881A1A — figure leaning forward on the board, wave curl to the left, small sun circle upper left inside the border in red, two small seagull marks in red, small island with palm tree silhouette lower right in red, the entire piece has genuine letterpress imperfection — ink doesn't saturate evenly, slight color variation, paper grain shows through especially in the red border areas, archival quality 300 DPI, landscape orientation, horizontal format"
+
 ### STYLE S — ENGLISH PASTORAL RIVER SCENE FORMULA:
 
 **Style S proven prompt — summer river with ducks and cottage:**
@@ -893,7 +918,8 @@ Look at the brief and pick exactly one style from the shop library:
 - **R** — Victorian Pastoral / Twilight Meadow (rolling English meadow at dusk, white wildflowers, firefly sparkle, large framing tree, warm peach-lavender sky, Victorian academic oil quality — NOT the same as Style H alpine)
 - **S** — English Pastoral River Scene (daytime, river/pond with ducks, English cottage, lush summer greens, plein-air impressionist, visible linen canvas texture)
 - **T** — Desert Southwest / Sonoran Landscape (saguaro cactus, sandy desert floor, blue-gray mountains, HIGH-KEY bright near-white sky — NOT moody, NOT golden hour; boho/desert home decor)
-- **U** — Vintage Children's Book Illustration: U1=single animal portrait (centered, white bg) / U2=group/scene (animals in vehicle, parade, jungle) / U3=alphabet/number art (letter + animal companion)
+- **U** — Children's Animal Character Art: U1=Modern Bold Color Block (single animal, solid bright bg) / U2=Vintage Gouache Scene (animals in vehicle/parade, naive brushwork) / U3=Alphabet/number art
+- **V** — Vintage Ticket / Concert Stub Art (aged paper, ticket format, bold script hero word, distressed letterpress, numbered stub — landscape orientation, statement piece)
 
 Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
 
@@ -911,6 +937,7 @@ Name the chosen style in your `create_art_concept` call (include "Style X —" i
    - **Mediterranean / Lemon / Luxury (J, gold-adjacent)**: `frame_style="brushed_gold"`, `wall_color="cream"`
    - **Children's nursery / Animal characters (U, C3)**: `frame_style="oak"`, `wall_color="white"` — matches the gallery-wall-of-animals format
    - **Quote prints C1**: `frame_style="white"`, `wall_color="warm_gray"` OR `frame_style="oak"`, `wall_color="white"`
+   - **Vintage Ticket / Statement art (V)**: `frame_style="brushed_gold"`, `wall_color="warm_gray"` OR `wall_color="white"` — thin gold frame on cream/white wall as shown in lifestyle example
    - **Bold flat illustration A / Colorful skull O**: `frame_style="natural_wood"`, `wall_color="warm_gray"`
    - **Walnut** — use for premium modern (Style N studio portrait, dark fine art)
    - **Cherry** — use for warm traditional (botanical sets, fine art animal portraits)
@@ -978,6 +1005,9 @@ Never submit a single print when a set sells 4× better:
 | Minimalist silhouette poster — single panel (Style Q) | $6 | $10 | $16 |
 | Minimalist silhouette triptych — 3-panel matching set | $14 | $24 | $38 |
 | Minimalist silhouette — 3 color variants of same scene | $12 | $20 | $32 |
+
+| Vintage ticket art — single horizontal (Style V) | $7 | $12 | $18 |
+| Vintage ticket Adventure Series — 3-print set | $16 | $28 | $42 |
 
 | Victorian twilight meadow — single (Style R) | $6 | $10 | $16 |
 | Victorian English Seasons triptych — set of 3 | $14 | $24 | $38 |
