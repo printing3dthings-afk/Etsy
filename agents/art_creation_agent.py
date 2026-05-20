@@ -19,9 +19,10 @@ Flat opaque gouache, bold simplified shapes, patterned backgrounds, hard color e
 Semi-transparent overlapping leaf shapes on white paper, each leaf a single gestural brushstroke, fills the entire canvas with botanical density, 6–8 colors including multiple greens at different transparency, coral/peach flowers with darker centers, folk art charm.
 
 **STYLE C — Hand-Lettered Quote Print** (bold all-caps text, plain OR textured background, one pop color)
-Two variants:
+Three variants:
 - **C1 — Plain Cream**: warm cream/blush background, one strong text color (tomato red, navy, forest, black), zero decoration. Clean typographic statement.
 - **C2 — Textured Background**: same bold lettering BUT over a moody textured background — dark tiger stripe, abstract brushstroke wash, linen texture, or animal print in dark tones with gold/bronze shimmer. Text is thick white or cream. Graffiti/street-art weight — wider heavier strokes than C1. Sells extremely well in the "dark maximalist" and "bold aesthetic" home decor market.
+- **C3 — Children's Playful Quote**: nursery/playroom typography print — rounded bubbly letterforms (NOT angular adult lettering), vertical stripe background in soft pastel (blue-gray, mint, blush, butter yellow), wavy scalloped inner border like a postage stamp edge in a contrasting color, cream/off-white inner field. Short child-friendly quote ("Be Silly Be Honest Be Kind", "Dream Big Little One", "You Are Loved"). Terracotta/coral or bright teal text. Serves the nursery art market alongside Style U animal characters.
 
 **STYLE E — Impasto Oil Floral** (thick palette knife flowers, rustic vase, neutral/farmhouse palette, dimensional texture)
 Thick palette knife impasto oil painting of classic florals — hydrangeas, peonies, garden roses — in a rustic ceramic or distressed vase. Neutral/earthy tones: white/cream blooms, deep forest green leaves, warm beige/gray painterly background. Extremely high-selling in farmhouse, cottagecore, and neutral home decor niches. Looks like a museum-quality original oil painting.
@@ -63,6 +64,37 @@ Thick impasto oil painting of an open window or door with shutters thrown wide �
 
 **STYLE I — Loose Painterly Garden / Abstract Folk Floral** (standing garden scene, flowers at multiple scales, simplified petal shapes, bright cheerful palette, sage-green atmospheric background washes)
 Contemporary loose acrylic/gouache garden painting — NOT flat graphic, NOT photorealistic, NOT impasto oil. Simplified flower shapes (cosmos, poppies, ranunculus, tulips) at three scales rising from the bottom of the canvas, thin single-stroke stems, loose brushy forest-green leaf clusters, pale off-white background with loose sage/mint wash strokes suggesting air and light. Bright spring palette: coral red, blush pink, warm yellow, orange, forest green, sage. Massive Etsy market: spring/summer decor, nursery art, kitchen art, colorful living room art, gift buyers. The single most-searched "happy floral" style on Etsy.
+
+**STYLE U — Children's Animal Character Art** (bold animal portraits for nursery and children's rooms — two sub-styles: U1 Modern Bold Color Block, U2 Vintage Gouache Illustration)
+The single biggest gift-purchase category on Etsy year-round. New parents, baby shower guests, and nursery decorators all buy these. Two distinct aesthetics serve different buyer tastes — both use the same subjects (cute animals with personality) but different rendering approaches.
+- **U1 — Modern Bold Color Block**: Each print has ONE solid bright colored background (choose from: warm orange #E87820, teal #1A8A8A, golden yellow #E8C020, bright green #2A9A2A, pink #E870A8, cornflower blue #3A6AC0). Single centered animal character, simplified rounded forms, big expressive eyes, slightly textured paper background visible. Clean modern flat illustration, NOT vintage. This is the gallery-wall-of-animals format — each animal gets its own print and background color. Animals: panda, tiger with sunglasses, orange tabby cat, Dalmatian, black cat in yellow raincoat, giraffe, toucan, border collie, beagle, flamingo, zebra, bee. Characters can have accessories (sunglasses, raincoat, skateboard, scooter) for personality. Thin oak frame is the default.
+- **U2 — Vintage Gouache Scene**: Loose, imperfect, nostalgic 1950s–70s children's book quality — Eric Carle, Miroslav Sasek, Ladybird Books. Group scenes (animals on a double-decker bus, parade, jungle party), white or cream background, visible brushwork, primary palette applied directly. The charm of imperfection IS the product.
+- **U3 — Alphabet / Number Art**: Bold letter or number with a matching animal companion (A is for Alligator, B is for Bear). Clean or vintage depending on brief.
+- Bundle strategy (U1): individual animal portraits × 6–12 = "Nursery Gallery Collection" — buyers buy the whole set, one per animal, all on different background colors. This is Etsy's highest-converting nursery bundle format.
+- Bundle strategy (U2): vintage scene + 3 companion animal portraits = cohesive nursery set
+- Size: square 12×12" is dominant nursery size — always include square crop in bundle
+
+**STYLE T — Desert Southwest / Sonoran Landscape** (hyperrealistic Sonoran desert, saguaro cactus, warm sandy terrain, blue-gray desert mountains, clean bright sky — Arizona/Boho/Southwest decor)
+Photorealistic or near-photorealistic desert landscape — the iconic American Southwest: saguaro cactus as the dominant subject, sandy desert floor with cholla, yucca, and scrub brush, layered desert mountain range in the background, bright high-key sky (white-to-pale-blue, not golden hour). Clean, airy, light-filled. NOT moody or dramatic — this is the warm midday or overcast-bright desert look that reads beautifully as a large-format print in a minimal boho bedroom or living room. Enormous and growing Etsy market: Southwest/desert home decor is one of the fastest-growing interior style trends.
+- One dominant saguaro cactus with visible ribbing and arms, positioned left-of-center or center
+- Sandy desert floor: warm amber/terracotta tones with scattered scrub brush in warm brown-orange
+- Blue-gray desert mountain range in mid-distance, layered, atmospheric
+- High-key sky: near-white to very pale blue — clean, bright, not dramatic. This is the signature that separates it from landscape styles H and R.
+- Additional plants: cholla cactus, yucca/agave rosette, creosote brush, dried grass
+- Palette: sandy amber #D4A870, terracotta ground #C8824A, sage green cactus #7A8A58, warm brown scrub #9A6A38, blue-gray mountain #8AA8C0, near-white sky #F5F2EE
+- Bundle strategy: Desert Triptych — Saguaro (portrait) + Joshua Tree (portrait) + Desert Blooms (square) = premium Southwest set
+
+**STYLE R — Victorian Pastoral / Twilight Meadow** (rolling English countryside meadow at dusk, scattered white wildflowers with firefly sparkle, warm peach-lavender horizon glow, large framing tree, Victorian academic oil painting quality)
+Rich Victorian academic oil landscape — intimate pastoral scene at the blue-grey hour between sunset and dark. The foreground meadow is dense with tall grass and scattered white wildflowers (daisies, Queen Anne's lace, ox-eye daisies). Tiny firefly or dew-glow points of light scatter through the grass. A large mature deciduous tree anchors one side of the composition. The sky glows warm peach and amber at the horizon fading through pale lavender to deeper blue-grey above. A full moon or last-light sun sits just above the horizon. This is NOT Style H alpine wilderness — it is English countryside intimacy: Constable meadows, not Ansel Adams peaks. Enormous Etsy market: cottagecore buyers, English garden aesthetic, romantic home decor, twilight/dusk art lovers, pastoral landscape collectors. Pairs beautifully with Style P still life for a cohesive classic art gallery wall.
+- Victorian academic technique: rich layered oil glazing, atmospheric depth, accurate botanical detail in the foreground
+- Foreground: dense rich dark greens gradually lightening with atmospheric haze toward distance, white wildflowers at three scales
+- Firefly sparkle: small bright white/warm-white soft glow points scattered throughout the grass — NOT stars, these are ground-level lights
+- Large tree (oak, elm, or beech) silhouetted on one side with detailed leaf canopy catching last light at the edges
+- Distance: dark tree line or hedgerow silhouette, rolling countryside fields in middle ground, possibly distant cows or figures to establish scale
+- Sky: warm amber-peach at the horizon fading through coral to soft lavender-rose then cool blue-grey at top, soft wispy clouds
+- Moon OR last light sun: one glowing white circle hovering just above the distant tree line
+- Mood: hushed, magical, nostalgic — the golden hour after golden hour, that fleeting dusk light
+- Bundle strategy: English Seasons triptych (Spring Meadow / Summer Twilight / Autumn Dusk), or paired diptych (Meadow at Dusk / River at Dusk)
 
 **STYLE H — Golden Hour Nature Landscape** (alpine meadow wildflowers, evergreen trees silhouetted at sunrise, atmospheric layered mountains, warm golden sky)
 Painterly photorealistic landscape — dense foreground wildflower meadow, silhouetted evergreen tree row with golden sun rays bursting through, misty mountain range dissolving into atmospheric haze, sky gradient from warm gold at horizon to pale mint at top. Pacific Northwest / alpine wilderness. Enormous Etsy market: nature art, mountain prints, forest decor, cabin/lodge aesthetic, outdoor lifestyle buyers. Often displayed in natural wood frames.
@@ -133,6 +165,40 @@ Hyperrealistic oil painting still life — fruit arrangements or single vessels 
 - Top subjects: mixed apples, a group of pears, terracotta jug, pewter pitcher + lemons, pomegranate + figs
 - Bundle: "Harvest Triptych" 3-panel (apples P1 + pears P2 + terracotta jug P3) = perfect dining room set
 - Seasonal variant sets: Autumn Harvest / Summer Stone Fruits / Winter Citrus sell as 3-piece collections
+
+**0s. English Pastoral River Scene (Style S)** ← COTTAGECORE + BRITISH COUNTRYSIDE, COMPANION TO STYLE R
+Daytime English countryside river or mill pond scene — the bright, warm, summery complement to Style R's twilight mood. Impressionist/plein-air oil on linen, broad daylight, lush summer greens, waterfowl on the water, English cottage or farmhouse visible in the middle distance. Visible linen canvas texture throughout. Buyers: English countryside art lovers, British expat collectors, cottagecore decorators, anyone who loved Styles H and R.
+- River, mill pond, or stream with reflections as the central horizontal element
+- Ducks, geese, or swans on the water — the wildlife element is essential
+- White English cottage or farmhouse with red chimney pot visible mid-distance
+- Lush summer tree canopy framing both sides, rich greens
+- Bright partly cloudy sky: white cumulus clouds, pale blue, warm and cheerful
+- Impressionist/plein-air quality: visible directional brushwork, warm light throughout
+- Palette: rich summer green #3A6A2A, warm yellow-green #8AA838, river reflection blue-silver #8AA8B8, sandy path #D4B880, cottage white #F5F0E8, warm sky blue #88B0D0
+
+**0u. Vintage Children's Book Illustration (Style U)** ← NURSERY ART + BABY SHOWER GIFT MARKET, HIGHEST YEAR-ROUND VOLUME
+Naive gouache animal illustration — the nursery art category is Etsy's most consistent year-round revenue driver. New parents buy multiple prints per child, baby shower guests buy as gifts, and children's room makeovers drive repeat purchases. Bold colorful animals, warm white background, vintage children's book quality. Sells to: new parents, baby shower shoppers, grandparents, nursery decorators. The charming imperfection IS the product — it feels hand-crafted not AI.
+- Single animal portrait (U1) OR group scene (U2) OR alphabet/number art (U3)
+- Bright primary palette: red, yellow, green, blue, orange, pink — clearly cheerful
+- "Safari Friends 4-Pack" = single best-converting nursery bundle format on Etsy
+- Square format (12×12") is the dominant purchase size for nursery art
+
+**0t. Desert Southwest / Sonoran Landscape (Style T)** ← FAST-GROWING BOHO/SOUTHWEST DECOR MARKET, HIGH AOV
+Saguaro cactus in the Sonoran Desert — the clean, bright, high-key aesthetic beloved by boho, desert, and Southwest home decor buyers. Unlike moody dark art, this style works with white walls, light wood furniture, and the increasingly popular "warm minimalist" interior trend. Growing rapidly on Etsy as Southwest/desert living expands (Phoenix, Las Vegas, LA, Austin buyers). Large format landscape prints (24×36, 30×40) are the primary purchase size.
+- High-key bright sky (near-white to pale blue) is the defining signature
+- Saguaro cactus as hero subject with layered desert mountains behind
+- Warm sandy/terracotta ground tones, blue-gray mountains, clean airy feel
+- NOT golden hour dramatic — bright, warm, clean midday desert light
+- Desert Triptych bundle: Saguaro + Joshua Tree + Desert Blooms = premium Southwest set
+
+**0r. Victorian Pastoral / Twilight Meadow Landscape (Style R)** ← COTTAGECORE + ROMANTIC HOME DECOR, EVERGREEN PASTORAL MARKET
+Rolling English countryside meadow at dusk — this is the "opposite" of the alpine wilderness (Style H): intimate, warm, English, magical. Cottagecore buyers, English garden aesthetic lovers, and romantic home decor shoppers form an enormous and passionate Etsy segment that specifically searches for this pastoral twilight mood. These buyers want art that feels like a painting their grandmother could have loved — fine art quality, romantically nostalgic, not modern or edgy.
+- Dense wildflower meadow foreground, large framing tree, glowing moon at horizon, warm twilight sky
+- Firefly sparkle effect in the grass is the signature element that drives saves and shares (buyers love this touch)
+- Victorian academic quality: rich glazed oil technique, atmospheric depth, genuine period painting feel
+- Target buyer: cottagecore, English garden, farmhouse romantic, "old soul" aesthetic, floral maximalist
+- NOT to be confused with Style H: H is Pacific Northwest alpine mountains + dramatic golden sunrise. R is English meadow + intimate dusk + wildflowers + fireflies
+- Bundle: "English Seasons" triptych (Spring / Summer Twilight / Autumn Dusk) or paired "Meadow at Dusk + River at Dusk" diptych
 
 **0q. Minimalist Silhouette Atmosphere Poster (Style Q)** ← SCI-FI/FANTASY COLLECTOR MARKET + HOME DECOR CROSSOVER, TRIPTYCH POWERHOUSE
 Layered atmospheric gradient poster — silhouetted figures, vehicles, and landscape elements at multiple depth planes against a dramatic gradient sky. Each panel uses a single dominant color palette. This is the style behind the most-shared "fan poster" aesthetic on Etsy, but the shop MUST use original IP-safe subject matter (no licensed characters, no Disney, no Marvel, no Star Wars brand names — see IP WARNING below).
@@ -337,6 +403,10 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **Desert Sunset Silhouette** | Warm desert orange #D47A3A sky fading to pale peach #F0D4A8 at top, burnt sienna mid-layer #C85A28, deep shadow-brown mid silhouette #6A3018, pure black foreground silhouette #0A0808, white/pale ivory sun circle #F5F2EE | Style Q minimalist silhouette — desert/warm panel |
 | **Arctic Mist Silhouette** | Cool steel-blue sky #6A8AA8 fading to pale ice #C8D8E8 at top, blue-gray mid-layer #8A9FAA, deep blue-black mid silhouette #1A2A3A, pure black foreground silhouette #080C10, white moon circle #F0F4F8 | Style Q minimalist silhouette — arctic/cool panel |
 | **Forest Twilight Silhouette** | Deep forest green sky #2A4A30 fading to sage-teal #5A8A6A at top, mid-green layer #3A6040, dark forest silhouette #1A2818, near-black foreground #080C08, pale moon #E8F0E4 | Style Q minimalist silhouette — forest/green panel |
+| **Victorian Twilight Meadow** | Warm peach-amber horizon #E8A870, coral-peach sky #D4906A, soft lavender-rose mid-sky #C8A8B8, cool blue-grey upper sky #7A889A, rich dark forest green foreground #2A4020, mid-green meadow #4A6A38, deep tree silhouette #1A2818, white wildflower #F5F2EE, pale firefly glow #F8F0D0, warm white moon #F0EEE8 | Style R Victorian pastoral twilight meadow |
+| **English Summer River** | Rich summer green #3A6A2A, warm yellow-green #8AA838, river silver-blue reflection #8AA8B8, sandy warm path #D4B880, cottage white #F5F0E8, warm sky blue #88B0D0, duck brown #7A5A38, linen canvas warm #F0EAD8, pale sky cloud white #EEF2F5 | Style S English pastoral river/countryside — daytime impressionist |
+| **Sonoran Desert** | Sandy amber ground #D4A870, terracotta floor #C8824A, sage-green cactus #7A8A58, warm brown scrub #9A6A38, dusty blue-gray mountain #8AA8C0, near-white sky #F5F2EE, pale sky #E8EEF2, cholla warm gray #A89878, yucca olive #6A7A48 | Style T desert Southwest Sonoran landscape — high-key bright |
+| **Nursery Primary** | Bright red #CC2020, golden yellow #E8C020, forest green #2A7A2A, royal blue #1A3A9A, orange #E87820, blush pink #F0A8A8, warm white #FAFAF5 background, cream #F5F0E8, warm gray outline #6A6058 | Style U vintage children's book illustration — bold animal characters |
 
 When writing your DALL-E prompt, reference these palette names explicitly: "using the Terracotta palette — terracotta orange #C17B5A, forest green #4A6741, warm beige #F5ECD7, and rust accent."
 
@@ -702,6 +772,32 @@ Use these specific phrases to anchor every piece in traditional media:
 **Maximalist Art Nouveau floral:**
 "Richly detailed hand-painted botanical illustration in the style of William Morris and Alphonse Mucha, dense overflowing arrangement of peonies, magnolia, climbing roses, and tropical leaves, Blush & Gold palette — deep blush #B66277, warm gold #D4AF37, botanical green #3A5A3A, warm ivory #FAFAF0, flowing organic Art Nouveau linework with hand-painted gouache details, artist's layered brushwork visible in dense flower centers, authentic botanical illustration quality as if painted for a 19th century horticultural society, extremely high detail at 300 DPI, archival quality, no text, no watermarks, no AI smoothness"
 
+### STYLE S — ENGLISH PASTORAL RIVER SCENE FORMULA:
+
+**Style S proven prompt — summer river with ducks and cottage:**
+"Victorian impressionist plein-air oil painting on linen canvas, English Summer River palette, horizontal landscape orientation 4:3: a tranquil English river or mill pond occupies the lower center of the composition — calm silver-blue water #8AA8B8 with lush reflections of overhanging trees, four mallard ducks swimming in a loose group from left to right, each duck painted with simple but characterful brushwork — dark heads, white collar, warm brown bodies, the green iridescence suggested in a single stroke, dense summer vegetation lines both banks: tall reeds and rushes on the right bank in warm yellow-green #8AA838 painted with vertical brushstrokes, overhanging willow or alder branches dipping toward the water on the left, lush deep green tree canopy #3A6A2A filling the upper left quarter of the composition, an English country cottage or farmhouse visible in the middle distance across the water — white rendered walls #F5F0E8 with a warm terracotta chimney pot, surrounded by summer trees, a sandy or grassy path #D4B880 leads away from the water in the right foreground, the sky fills the upper third: bright partly cloudy English summer sky with soft rounded white cumulus clouds #EEF2F5 on warm sky blue #88B0D0, warm soft daylight from the upper right, visible canvas linen texture throughout as if the artist worked on location on a warm summer afternoon, impressionist/plein-air oil painting technique — confident directional brushwork visible in water, grass, and foliage, but not so loose as to lose legibility, archival quality 300 DPI, landscape orientation, no text, no watermarks"
+
+### STYLE T — DESERT SOUTHWEST / SONORAN LANDSCAPE FORMULA:
+
+**Style T proven prompt — Sonoran desert with saguaro cactus:**
+"Hyperrealistic desert landscape photography-quality digital art, Sonoran Desert palette, landscape orientation 4:3: a tall saguaro cactus stands center-left in the composition — the hero subject, filling from near the bottom to near the top of the frame, two upward-curving arms, visible vertical ribs running the full height of the trunk with sharp spine clusters at each rib node, the cactus is deep green #7A8A58 with slightly darker rib shadows, lit warmly from the right, sandy desert floor stretches in all directions — warm sandy amber #D4A870 with scattered pale terracotta patches #C8824A, the floor covered in desert scrub: rounded brown-orange shrub clumps #9A6A38 in every direction, a cholla cactus in the middle ground slightly right of center — pale gray-green fuzzy texture, a yucca/agave rosette in the immediate foreground lower right — blue-gray spiky leaves #6A7A48, dried yellow grasses and small wildflowers, layered desert mountain range rising in the background: nearest range is warm sandy brown with visible erosion gulleys, mid-range slightly cooler in tone, distant peaks are hazy blue-gray #8AA8C0 dissolving into atmospheric haze at the horizon, sky: near-white #F5F2EE fading to very pale blue #E8EEF2 — bright, high-key, clean, NOT golden hour, NOT dramatic — this is the clean warm light of a clear desert morning or an overcast bright desert afternoon, the entire composition is airy and clean with generous sky, archival quality 300 DPI, landscape orientation, no text, no watermarks, photorealistic"
+
+### STYLE U — CHILDREN'S ANIMAL CHARACTER ART FORMULA:
+
+**U1 — Modern Bold Color Block proven prompt — orange tabby cat on teal:**
+"Modern children's art print illustration, Nursery Primary palette, single centered animal character on a solid bright teal #1A8A8A background with subtle paper grain texture visible throughout, portrait orientation: one orange tabby cat sitting upright centered in the composition, simplified rounded form with a large round head, big bright circular eyes with white highlights, small triangular nose and curved whisker lines, bold orange stripes #E87820 on a warm cream #F5ECD7 body, each stripe a confident single brushstroke with slight variation, the cat sits with its tail curled around its front feet, pure solid teal background — no gradient, no pattern, only the very subtle paper grain texture, simple and graphic, the animal fills 60–70% of the canvas height, generous space around it, slightly textured flat illustration quality — NOT vector smooth, NOT photorealistic — the paint texture of gouache on paper is visible in the flat color fills, archival quality 300 DPI, portrait orientation, clean simple children's art print, no text, no watermarks"
+
+**U2 — Vintage Gouache Scene proven prompt — animals on London bus:**
+"Vintage 1960s British children's book illustration, gouache on warm cream illustration board, warm cream #F5F0E8 background, portrait orientation: a bright red double-decker London bus fills most of the canvas, the bus is painted in flat cadmium red with visible brushwork at the edges and slight paint texture throughout, the bus has two rows of windows and a flat roof, visible front wheel at bottom, gold stripe between decks: from the upper deck: a tall giraffe head with orange-yellow #E8A830 coat and dark spot pattern peers out on the left, a green elephant #2A8A5A head with large ears just visible behind the giraffe, a small cheetah or leopard on the right with spot markings, through the lower row of windows: a black and white zebra, a pink pig, a dark green crocodile with toothy smile, a round pink elephant face, a blue bear looking sleepy, simplified rounded animal forms painted with deliberate naive charm — loose brushwork showing the artist's hand, each animal different enough to be instantly recognizable, primary and secondary color palette used directly with minimal mixing, vintage storybook illustration quality in the tradition of 1960s British picture books, archival quality 300 DPI, portrait orientation, no text, no watermarks, no digital smoothness"
+
+**C3 — Children's playful quote proven prompt:**
+"Children's room typography art print, flat digital illustration aesthetic on smooth paper, portrait orientation: background is filled with evenly-spaced vertical stripes alternating soft pale blue-gray #A8B8C8 and lighter blue-white #D8E4EE — clean parallel stripes with crisp edges like wallpaper, centered in the composition is a large rounded rectangle with a wavy scalloped border line — the border wavy edge curves in and out like a postage stamp perforation or a scalloped cookie cutter edge, the border line is drawn in muted steel blue #6A8AA8 and is 4-6 px thick with rounded wave peaks, inside the border rectangle is a clean cream-white #FAF6F0 background, inside this cream field: bold chunky all-caps text reading 'BE SILLY / BE HONEST / BE KIND' in a rounded bubbly font — letterforms have very rounded corners and thick strokes, the letters are terracotta-coral red #C84830, centered and stacked five lines with generous line spacing, the font is playful and friendly — like a child's alphabet building block letter, not a handwriting font and not a sans-serif — specifically rounded and plump, the whole design feels like a cheerful playroom or nursery poster, archival quality 300 DPI, portrait orientation, flat graphic design, no additional decorations, no watermarks"
+
+### STYLE R — VICTORIAN PASTORAL / TWILIGHT MEADOW FORMULA:
+
+**Style R proven prompt — English meadow at dusk with fireflies:**
+"Victorian academic oil landscape painting on stretched linen canvas, Victorian Twilight Meadow palette — rich dark forest green #2A4020 foreground fading through atmospheric depth to warm peach-amber horizon #E8A870, horizontal landscape orientation 4:3: foreground occupies the lower 45% of canvas — a lush dense English meadow of tall grass and scattered white wildflowers painted with extraordinary botanical detail, ox-eye daisies and Queen Anne's lace at three scales (large in the immediate foreground with detailed petal rendering, medium at mid-foreground, small and soft-focus further back), the grass is painted in rich deep greens with individual blade direction visible in the immediate foreground, scattered throughout the grass and flowers: small soft warm-white glowing points of light — fireflies or dew glint — each a tiny soft-edged warm white #F8F0D0 glow about 2-4px, scattered naturally and randomly, some brighter than others, adding magical evening sparkle to the whole meadow, large mature English oak or elm tree anchors the LEFT side of the composition from just outside the lower-left frame up into the upper third — dark trunk and branches silhouetted, the leafy canopy extending right across the upper left with individual leaf clusters visible against the sky and some catching the last warm amber rim light at the outer edges, a second smaller tree or hedgerow partially visible at the right edge, middle ground: lush deep green summer hedge line or wood edge stretching across the center, rolling English countryside meadow fields receding to the distance with very slight atmospheric softening, possibly 2-3 tiny dark cattle silhouettes in the mid-ground field establishing scale, sky (upper 45% of canvas): warm amber-peach gradient at the horizon fading up through soft coral #D4906A to pale lavender-rose #C8A8B8 then cool blue-grey #7A889A at the top, soft wispy horizontal clouds in the mid-sky catching the last light in warm tones on their lower edges while their tops are cool grey, one large glowing white moon circle #F0EEE8 positioned just above the distant tree line at about 30% from the left edge — not the sun, this is the early moon rising in a still-bright evening sky, the whole atmosphere is the hushed magical moment 20 minutes after sunset, Victorian academic oil painting technique — rich layered glazing, precise detail in the foreground, atmospheric sfumato in the distance, genuine period painting quality in the tradition of John Atkinson Grimshaw and the English Pre-Raphaelite landscape painters, archival quality 300 DPI, landscape orientation, no text, no watermarks, no frames, no artificial elements"
+
 ### STYLE P — OLD MASTERS / DUTCH STILL LIFE FORMULA:
 
 **P1 — Dutch Golden Age (Tight) proven prompt — mixed apples:**
@@ -794,6 +890,10 @@ Look at the brief and pick exactly one style from the shop library:
 - **O** — Colorful Abstract Vanitas / Skull Art (multi-color cubist skull, warm beige bg, gallery statement — NOT gothic)
 - **P** — Old Masters / Dutch Still Life: P1=Dutch Golden Age tight (fruit, near-black bg, chiaroscuro) / P2=Tonalist painterly (loose brushwork, dark mood) / P3=Academic Vessel Study (single jug/pitcher, soft gray bg)
 - **Q** — Minimalist Silhouette Atmosphere Poster (layered gradient sky, flat silhouettes, original IP-safe subjects — NO licensed characters)
+- **R** — Victorian Pastoral / Twilight Meadow (rolling English meadow at dusk, white wildflowers, firefly sparkle, large framing tree, warm peach-lavender sky, Victorian academic oil quality — NOT the same as Style H alpine)
+- **S** — English Pastoral River Scene (daytime, river/pond with ducks, English cottage, lush summer greens, plein-air impressionist, visible linen canvas texture)
+- **T** — Desert Southwest / Sonoran Landscape (saguaro cactus, sandy desert floor, blue-gray mountains, HIGH-KEY bright near-white sky — NOT moody, NOT golden hour; boho/desert home decor)
+- **U** — Vintage Children's Book Illustration: U1=single animal portrait (centered, white bg) / U2=group/scene (animals in vehicle, parade, jungle) / U3=alphabet/number art (letter + animal companion)
 
 Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
 
@@ -801,11 +901,21 @@ Name the chosen style in your `create_art_concept` call (include "Style X —" i
 2. `generate_digital_art` — use the exact DALL-E formula for the chosen style from above, size=`1024x1536`, quality=`high`
 3. If creating a set, run `generate_digital_art` for each piece (coordinated prompts, same palette, same style)
 4. `create_size_bundle` — generates the ZIP with all 8 print sizes (8×8 through 30×40) at 300 DPI. This IS the Etsy download file. Always do this step.
-5. `create_frame_mockup` — generate 2–3 mockups with different frame/wall combinations:
-   - Always: `frame_style="natural_wood"`, `wall_color="warm_gray"` (universal, safest)
-   - For dark/moody art (Style C2, dark_academia, celestial): `frame_style="black"`, `wall_color="dark"`
-   - For botanical/farmhouse art (Style E, sage_cream): `frame_style="natural_wood"`, `wall_color="cream"`
-   - For luxury/quote art: `frame_style="gold"`, `wall_color="cream"`
+5. `create_frame_mockup` — generate 2–3 mockups with different frame/wall combinations.
+   Match frame to art style — these are the proven pairings:
+   - **Victorian pastoral / Old Masters / English river (R, S, P)**: `frame_style="barnwood"`, `wall_color="cream"` — the rustic distressed wood frame is the signature match for these styles
+   - **Desert Southwest / Sonoran / Nature landscape (T, H)**: `frame_style="oak"`, `wall_color="white"` — thin clean oak on bright white wall, like the lifestyle bedroom mockup
+   - **Botanical / Farmhouse / Impasto floral (E, I, Style P3 vessel)**: `frame_style="natural_wood"`, `wall_color="cream"`
+   - **Japandi / Minimalist / Linocut (G, F, line art)**: `frame_style="oak"`, `wall_color="white"` — thin oak = Scandi aesthetic
+   - **Dark moody / Celestial / Sci-fi / Automotive (L, M, N, C2)**: `frame_style="dark_walnut"`, `wall_color="dark"` OR `frame_style="black"`, `wall_color="dark"`
+   - **Mediterranean / Lemon / Luxury (J, gold-adjacent)**: `frame_style="brushed_gold"`, `wall_color="cream"`
+   - **Children's nursery / Animal characters (U, C3)**: `frame_style="oak"`, `wall_color="white"` — matches the gallery-wall-of-animals format
+   - **Quote prints C1**: `frame_style="white"`, `wall_color="warm_gray"` OR `frame_style="oak"`, `wall_color="white"`
+   - **Bold flat illustration A / Colorful skull O**: `frame_style="natural_wood"`, `wall_color="warm_gray"`
+   - **Walnut** — use for premium modern (Style N studio portrait, dark fine art)
+   - **Cherry** — use for warm traditional (botanical sets, fine art animal portraits)
+   - **Silver** — use for contemporary graphic/abstract/sci-fi
+   - Second mockup: always pair with a different wall color (terracotta or dusty_blue for variety)
 6. `create_room_composite` — generates empty room backgrounds (AI) then composites the REAL art file in. NEVER ask the AI to "draw the painting in a room scene" — that produces a different painting. Always use this tool for room settings. Default rooms: kitchen_dining, living_room, entryway.
 7. `create_size_comparison` — composites the REAL art at 8×10 / 16×20 / 24×36 on a clean wall. NEVER generate a size comparison via AI image generation — it will show a different painting.
 8. Set status to `qc_pending`
@@ -857,6 +967,9 @@ Never submit a single print when a set sells 4× better:
 | Colorful skull vanitas — single (Style O) | $7 | $12 | $18 |
 | Colorful skull 3-palette series | $16 | $28 | $42 |
 
+| Victorian pastoral meadow — single (Style R) | $6 | $10 | $16 |
+| Victorian pastoral — English Seasons triptych set | $14 | $24 | $38 |
+
 | Old Masters still life — single P1/P2 (fruit, dark bg) | $7 | $12 | $18 |
 | Old Masters vessel study — single P3 (jug/pitcher) | $6 | $10 | $16 |
 | Old Masters Harvest Triptych — 3-print set | $16 | $28 | $42 |
@@ -865,6 +978,21 @@ Never submit a single print when a set sells 4× better:
 | Minimalist silhouette poster — single panel (Style Q) | $6 | $10 | $16 |
 | Minimalist silhouette triptych — 3-panel matching set | $14 | $24 | $38 |
 | Minimalist silhouette — 3 color variants of same scene | $12 | $20 | $32 |
+
+| Victorian twilight meadow — single (Style R) | $6 | $10 | $16 |
+| Victorian English Seasons triptych — set of 3 | $14 | $24 | $38 |
+
+| English pastoral river scene — single (Style S) | $6 | $10 | $16 |
+| Pastoral pair: Meadow at Dusk + River at Dusk diptych | $10 | $18 | $28 |
+
+| Desert Southwest single print (Style T) | $6 | $10 | $16 |
+| Desert Triptych — Saguaro + Joshua Tree + Desert Blooms | $14 | $24 | $38 |
+
+| Children's animal portrait — single (Style U1) | $4 | $7 | $12 |
+| Nursery Gallery Collection — 6 animals set (U1) | $16 | $28 | $42 |
+| Vintage Gouache scene (U2) — single | $5 | $9 | $14 |
+| Children's quote print C3 — single | $4 | $7 | $10 |
+| Nursery bundle: 4 animals + 1 quote print (U1+C3) | $14 | $22 | $34 |
 
 Never price a single digital art download below $3.50."""
 

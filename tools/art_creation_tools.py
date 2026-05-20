@@ -776,13 +776,21 @@ TOOL_DEFINITIONS: list[dict] = [
                 "product_id": {"type": "string", "description": "DP-prefixed product ID"},
                 "frame_style": {
                     "type": "string",
-                    "enum": ["natural_wood", "black", "white", "gold"],
-                    "description": "Frame material. natural_wood is safest default; black for moody/dark art; gold for luxury/botanical.",
+                    "enum": ["natural_wood", "barnwood", "walnut", "dark_walnut", "oak", "maple", "cherry",
+                             "black", "white", "gold", "brushed_gold", "silver"],
+                    "description": (
+                        "Frame material. "
+                        "natural_wood=medium warm oak; barnwood=rustic distressed reclaimed wood (cottagecore/farmhouse/Victorian pastoral); "
+                        "walnut=rich dark brown modern; dark_walnut=near-black wood; oak=light Scandi; maple=warm golden light; cherry=warm red-brown; "
+                        "black=matte modern; white=gallery/Scandi; gold=ornate traditional; brushed_gold=contemporary brass; silver=modern metal. "
+                        "Match to art style: barnwood for pastoral/vintage/cottagecore/Old Masters; walnut for dark moody/celestial; "
+                        "oak for botanical/Japandi/minimalist; brushed_gold for Mediterranean/luxury; silver for modern/sci-fi/graphic."
+                    ),
                     "default": "natural_wood",
                 },
                 "wall_color": {
                     "type": "string",
-                    "enum": ["warm_gray", "white", "cream", "dark", "sage"],
+                    "enum": ["warm_gray", "white", "cream", "dark", "sage", "terracotta", "dusty_blue"],
                     "description": "Wall background color. warm_gray is most versatile; dark for moody/celestial art; cream for farmhouse/botanical.",
                     "default": "warm_gray",
                 },
@@ -805,7 +813,8 @@ TOOL_DEFINITIONS: list[dict] = [
                 "product_id": {"type": "string", "description": "DP-prefixed product ID"},
                 "frame_style": {
                     "type": "string",
-                    "enum": ["natural_wood", "black", "white", "gold"],
+                    "enum": ["natural_wood", "barnwood", "walnut", "dark_walnut", "oak", "maple", "cherry",
+                             "black", "white", "gold", "brushed_gold", "silver"],
                     "description": "Frame to use in the room scenes.",
                     "default": "natural_wood",
                 },
@@ -833,12 +842,13 @@ TOOL_DEFINITIONS: list[dict] = [
                 "product_id": {"type": "string", "description": "DP-prefixed product ID"},
                 "frame_style": {
                     "type": "string",
-                    "enum": ["natural_wood", "black", "white", "gold"],
+                    "enum": ["natural_wood", "barnwood", "walnut", "dark_walnut", "oak", "maple", "cherry",
+                             "black", "white", "gold", "brushed_gold", "silver"],
                     "default": "natural_wood",
                 },
                 "wall_color": {
                     "type": "string",
-                    "enum": ["warm_gray", "white", "cream", "dark", "sage"],
+                    "enum": ["warm_gray", "white", "cream", "dark", "sage", "terracotta", "dusty_blue"],
                     "default": "warm_gray",
                 },
             },
@@ -1186,17 +1196,31 @@ def _create_size_bundle(data: dict, store: DataStore) -> str:
 # ── FRAME MOCKUP ──────────────────────────────────────────────────────────────
 
 _FRAME_PALETTES = {
-    "natural_wood": {"base": (139, 100, 48), "hi": (180, 138, 75), "lo": (82, 58, 22)},
-    "black":        {"base": (30,  27,  24),  "hi": (55,  48,  40),  "lo": (14,  12,  10)},
-    "white":        {"base": (238, 235, 230), "hi": (255, 255, 255), "lo": (190, 185, 178)},
-    "gold":         {"base": (175, 138, 48),  "hi": (220, 185, 88),  "lo": (110, 84,  22)},
+    # Keys: base/hi/lo colors, grain type, frame_w (molding px), mat_w (mat px), bevel px
+    # ── Original 4 ──
+    "natural_wood": {"base": (139, 100, 48), "hi": (180, 138, 75), "lo": (82, 58, 22),  "grain": "wood",     "frame_w": 36, "mat_w": 16, "bevel": 14},
+    "black":        {"base": (30,  27,  24),  "hi": (55,  48,  40),  "lo": (14,  12,  10), "grain": "flat",  "frame_w": 22, "mat_w": 16, "bevel": 10},
+    "white":        {"base": (238, 235, 230), "hi": (255, 255, 255), "lo": (190, 185, 178), "grain": "flat", "frame_w": 14, "mat_w": 26, "bevel": 6},
+    "gold":         {"base": (175, 138, 48),  "hi": (220, 185, 88),  "lo": (110, 84,  22),  "grain": "metal","frame_w": 44, "mat_w": 20, "bevel": 18},
+    # ── Real-world wood frames ──
+    "barnwood":     {"base": (72,  50,  30),  "hi": (105, 78,  52),  "lo": (32,  20,  10),  "grain": "barnwood","frame_w": 54, "mat_w": 0,  "bevel": 20},
+    "walnut":       {"base": (90,  58,  30),  "hi": (128, 88,  50),  "lo": (50,  30,  12),  "grain": "wood",  "frame_w": 32, "mat_w": 16, "bevel": 12},
+    "dark_walnut":  {"base": (48,  30,  15),  "hi": (75,  50,  28),  "lo": (22,  12,  5),   "grain": "wood",  "frame_w": 28, "mat_w": 14, "bevel": 12},
+    "oak":          {"base": (190, 152, 88),  "hi": (222, 188, 128), "lo": (140, 108, 55),  "grain": "wood",  "frame_w": 14, "mat_w": 22, "bevel": 6},
+    "maple":        {"base": (210, 175, 110), "hi": (238, 210, 155), "lo": (165, 130, 72),  "grain": "wood",  "frame_w": 14, "mat_w": 22, "bevel": 6},
+    "cherry":       {"base": (148, 72,  45),  "hi": (188, 108, 72),  "lo": (90,  40,  20),  "grain": "wood",  "frame_w": 26, "mat_w": 16, "bevel": 10},
+    # ── Modern / metal frames ──
+    "brushed_gold": {"base": (185, 155, 75),  "hi": (228, 198, 120), "lo": (128, 102, 40),  "grain": "brushed","frame_w": 16, "mat_w": 20, "bevel": 8},
+    "silver":       {"base": (172, 178, 185), "hi": (215, 220, 225), "lo": (115, 120, 128), "grain": "brushed","frame_w": 12, "mat_w": 22, "bevel": 6},
 }
 _WALL_PALETTES = {
-    "warm_gray": (215, 208, 198),
-    "white":     (248, 246, 244),
-    "cream":     (238, 230, 215),
-    "dark":      (48,  42,  38),
-    "sage":      (182, 196, 180),
+    "warm_gray":   (215, 208, 198),
+    "white":       (248, 246, 244),
+    "cream":       (238, 230, 215),
+    "dark":        (48,  42,  38),
+    "sage":        (182, 196, 180),
+    "terracotta":  (210, 185, 165),
+    "dusty_blue":  (185, 198, 212),
 }
 
 
@@ -1228,9 +1252,9 @@ def _create_frame_mockup(data: dict, store: DataStore) -> str:
     art   = art.resize((int(aw * scale), int(ah * scale)), Image.LANCZOS)
     aw, ah = art.size
 
-    FRAME_W = 44   # frame border thickness px
-    MAT_W   = 18   # white mat inside frame
-    BEVEL   = 7    # bevel width for 3-D frame edge
+    FRAME_W = pal.get("frame_w", 44)   # molding width — per frame style
+    MAT_W   = pal.get("mat_w",   18)   # white mat — per frame style
+    BEVEL   = pal.get("bevel",    7)   # bevel depth
 
     total_w = aw + 2 * (MAT_W + FRAME_W)
     total_h = ah + 2 * (MAT_W + FRAME_W)
@@ -1339,10 +1363,10 @@ def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int,
     art = art_img.resize((int(aw * scale), int(ah * scale)), Image.LANCZOS)
     aw, ah = art.size
 
-    FRAME_W = 48   # molding width
-    MAT_W   = 16   # white mat
-    BEVEL   = 18   # depth of 3-D bevel on molding face
-    PAD     = 60   # transparent bleed for shadow
+    FRAME_W = pal.get("frame_w", 48)   # molding width — per frame style
+    MAT_W   = pal.get("mat_w",   16)   # white mat — per frame style
+    BEVEL   = pal.get("bevel",   18)   # depth of 3-D bevel on molding face
+    PAD     = 60                        # transparent bleed for shadow
 
     total_w = aw + 2 * (MAT_W + FRAME_W)
     total_h = ah + 2 * (MAT_W + FRAME_W)
@@ -1375,7 +1399,9 @@ def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int,
     grain_layer = Image.new("RGBA", (fw_px, fh_px), (0, 0, 0, 0))
     gd = ImageDraw.Draw(grain_layer)
 
-    if frame_style == "natural_wood":
+    grain_type = pal.get("grain", "flat")
+
+    if grain_type == "wood":
         # Horizontal fiber lines with slight brightness variation and waviness
         y = 0
         while y < fh_px:
@@ -1385,7 +1411,6 @@ def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int,
             g2 = max(0, min(255, base[1] + int(bright * 0.7)))
             b2 = max(0, min(255, base[2] + int(bright * 0.4)))
             alpha = rng.randint(55, 120)
-            # Slightly wavy line: small vertical offsets every 40px
             pts = []
             cx = 0
             wy = y + rng.randint(-1, 1)
@@ -1396,8 +1421,63 @@ def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int,
             if len(pts) >= 2:
                 gd.line(pts, fill=(r2, g2, b2, alpha), width=step)
             y += step
+
+    elif grain_type == "barnwood":
+        # Wide bold grain lines, high contrast — reclaimed/aged wood character
+        y = 0
+        while y < fh_px:
+            step   = rng.randint(2, 8)
+            bright = rng.randint(-38, 28)
+            r2 = max(0, min(255, base[0] + bright))
+            g2 = max(0, min(255, base[1] + int(bright * 0.8)))
+            b2 = max(0, min(255, base[2] + int(bright * 0.6)))
+            alpha = rng.randint(80, 170)
+            pts = []
+            cx = 0
+            wy = y + rng.randint(-2, 2)
+            while cx <= fw_px:
+                wy += rng.uniform(-0.6, 0.6)
+                pts.append((cx, wy))
+                cx += 30
+            if len(pts) >= 2:
+                gd.line(pts, fill=(r2, g2, b2, alpha), width=step)
+            y += step
+        # Deep pitting/distress marks: short dark vertical scratches
+        for _ in range(rng.randint(20, 40)):
+            sx = rng.randint(0, fw_px)
+            sy = rng.randint(0, fh_px)
+            length = rng.randint(6, 22)
+            dark = rng.randint(100, 160)
+            gd.line([(sx, sy), (sx + rng.randint(-2, 2), sy + length)],
+                    fill=(10, 6, 2, dark), width=rng.randint(1, 2))
+
+    elif grain_type == "brushed":
+        # Fine horizontal parallel lines — brushed metal / brushed gold texture
+        for y in range(0, fh_px, 2):
+            bright = rng.randint(-18, 18)
+            r2 = max(0, min(255, base[0] + bright))
+            g2 = max(0, min(255, base[1] + int(bright * 0.9)))
+            b2 = max(0, min(255, base[2] + int(bright * 0.8)))
+            alpha = rng.randint(35, 90)
+            gd.line([(0, y), (fw_px, y)], fill=(r2, g2, b2, alpha), width=1)
+        # Occasional brighter reflection streak
+        for _ in range(rng.randint(2, 5)):
+            sy = rng.randint(0, fh_px)
+            for i in range(3):
+                a = max(0, 70 - i * 24)
+                gd.line([(0, sy + i), (fw_px, sy + i)], fill=(255, 255, 255, a))
+
+    elif grain_type == "metal":
+        # Gold/silver — subtle diagonal sheen with horizontal micro-lines
+        for y in range(0, fh_px, 3):
+            bright = rng.randint(-12, 12)
+            r2 = max(0, min(255, base[0] + bright))
+            g2 = max(0, min(255, base[1] + int(bright * 0.85)))
+            b2 = max(0, min(255, base[2] + int(bright * 0.5)))
+            gd.line([(0, y), (fw_px, y)], fill=(r2, g2, b2, 50))
+
     else:
-        # Subtle brightness flicker for non-wood materials
+        # flat: subtle brightness flicker only
         for y in range(0, fh_px, 4):
             bright = rng.randint(-8, 8)
             r2 = max(0, min(255, base[0] + bright))
@@ -1518,12 +1598,14 @@ _ROOM_BG_PROMPTS: dict[str, str] = {
         "Furniture and floor occupy only the bottom 40%. Pottery Barn catalog. Photorealistic."
     ),
     "living_room": (
-        "Interior design photography of a bright coastal living room. "
-        "Camera pulled back so sofa and furniture sit in the lower 40% of the frame. "
-        "Linen sofa with cream and terracotta pillows, rattan coffee table, jute rug, golden light. "
-        "COMPOSITION: the wall behind the sofa fills the top 55% of the image as a large empty surface. "
+        "Interior design photography of an elevated transitional living room, warm and polished. "
+        "Cream linen sofa with warm gold and sage green throw pillows, marble or stone coffee table, "
+        "ceramic table lamp, olive tree in a terracotta pot, Persian-style area rug, warm hardwood floor. "
+        "White walls with subtle wainscoting panel molding detail. Large window with natural light on the left. "
+        "Camera pulled back so sofa and furniture sit in the lower 45% of the frame. "
+        "COMPOSITION: the wall behind the sofa fills the top 50% of the image as a large empty surface. "
         "The wall is COMPLETELY BLANK — no art, no frames, no pictures, nothing on the wall at all. "
-        "Furniture occupies only the bottom 40%. High-end magazine photo. Photorealistic."
+        "Furniture occupies only the lower portion. Pottery Barn / RH catalog quality. Photorealistic."
     ),
     "entryway": (
         "Interior design photography of a bright home entryway. "
@@ -1535,12 +1617,15 @@ _ROOM_BG_PROMPTS: dict[str, str] = {
         "Console table sits along the bottom edge only. Coastal Living style. Photorealistic."
     ),
     "bedroom": (
-        "Interior design photography of a serene bedroom. "
-        "Camera pulled back so bed and headboard sit in the lower 45% of the frame. "
-        "White linen bedding, wooden nightstands, morning light through sheer curtains. "
-        "COMPOSITION: the wall above the headboard fills the top 50% as a large empty surface. "
+        "Interior design photography of a serene minimalist boho bedroom, bright and airy. "
+        "Low natural wood platform bed with white linen star-print bedding, slightly rumpled. "
+        "Exposed dark wooden ceiling beam, sheer white floor-length curtains letting in soft morning light. "
+        "Small wooden hairpin-leg side table with a round white ceramic vase holding dried pampas grass. "
+        "White textured area rug on light wood floor. Pure white walls. "
+        "Camera pulled back — bed and furniture sit in the lower 50% of the frame only. "
+        "COMPOSITION: the wall above the headboard fills the top 45% as a large, completely empty surface. "
         "The wall is COMPLETELY BLANK — no art, no frames, no pictures, nothing on the wall. "
-        "Bed occupies only the lower portion. Minimal and calm. Photorealistic."
+        "Bright, clean, neutral — Pottery Barn / Restoration Hardware catalog quality. Photorealistic."
     ),
 }
 
