@@ -2086,6 +2086,44 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     c.setSubject(f"Digital Planner — {cs['label']} color scheme")
     c.setCreator("OnBrandCraftz Planner Design Agent")
 
+    # ── Register custom fonts (Poppins) ───────────────────────────────────────
+    _FONTS_DIR = os.path.join(os.path.dirname(__file__), "..", "assets", "fonts")
+    _FONT_MAP = {}
+    try:
+        from reportlab.pdfbase import pdfmetrics as _pm
+        from reportlab.pdfbase.ttfonts import TTFont as _TTF
+        _font_files = {
+            "Poppins":          "Poppins-Regular.ttf",
+            "Poppins-Bold":     "Poppins-Bold.ttf",
+            "Poppins-SemiBold": "Poppins-SemiBold.ttf",
+            "Poppins-Italic":   "Poppins-Italic.ttf",
+        }
+        for _fn, _ff in _font_files.items():
+            _fp = os.path.join(_FONTS_DIR, _ff)
+            if os.path.exists(_fp):
+                _pm.registerFont(_TTF(_fn, _fp))
+                _FONT_MAP[_fn] = _fn
+        # Register family so bold/italic substitution works
+        if "Poppins" in _FONT_MAP and "Poppins-Bold" in _FONT_MAP:
+            from reportlab.pdfbase.pdfmetrics import registerFontFamily
+            registerFontFamily("Poppins",
+                normal="Poppins", bold="Poppins-Bold",
+                italic="Poppins-Italic" if "Poppins-Italic" in _FONT_MAP else "Poppins",
+                boldItalic="Poppins-Bold")
+    except Exception:
+        pass
+
+    # Font name resolver: prefer Poppins, fall back to Helvetica variants
+    def _fn(variant="regular"):
+        v = variant.lower()
+        if v in ("bold", "b"):
+            return _FONT_MAP.get("Poppins-Bold", "Helvetica-Bold")
+        if v in ("semibold", "sb"):
+            return _FONT_MAP.get("Poppins-SemiBold", _FONT_MAP.get("Poppins-Bold", "Helvetica-Bold"))
+        if v in ("italic", "i"):
+            return _FONT_MAP.get("Poppins-Italic", "Helvetica-Oblique")
+        return _FONT_MAP.get("Poppins", "Helvetica")
+
     # ── Color helper for acroForm (needs reportlab Color objects) ─────────────
     def _col(rgb): return Color(rgb[0], rgb[1], rgb[2])
 
@@ -2093,7 +2131,15 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     def fill(rgb):   c.setFillColorRGB(*rgb)
     def stroke(rgb): c.setStrokeColorRGB(*rgb)
     def lw(w):       c.setLineWidth(w)
-    def font(name, size): c.setFont(name, size)
+    def font(name, size):
+        # Allow shorthand aliases so all existing call-sites work unchanged
+        _alias = {
+            "Helvetica":         _fn("regular"),
+            "Helvetica-Bold":    _fn("bold"),
+            "Helvetica-Oblique": _fn("italic"),
+            "Helvetica-BoldOblique": _fn("bold"),
+        }
+        c.setFont(_alias.get(name, name), size)
 
     def rect(x, y, w, h, f=None, s=None, lwidth=0.5, radius=0):
         if lwidth: lw(lwidth)
@@ -2186,44 +2232,86 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
         # Persistent STICKERS panel button — always visible on every page (Tier 3)
         if _design == 3 and "sticker_pack" in _extras:
-            _sw = 70; _sx = _bx + _bw + 6; _sy = _by
-            rect(_sx, _sy, _sw, _bh, f=T, radius=4)
+            _sw = 80; _sx = _bx + _bw + 6; _sy = _by
+            # Gradient-like effect: two layered rects
+            rect(_sx, _sy, _sw, _bh, f=_blend(A, 0.30), radius=5)
+            rect(_sx + 1, _sy + 1, _sw - 2, _bh - 2, f=T, radius=4)
             font("Helvetica-Bold", 6.5); fill(WHITE)
-            c.drawCentredString(_sx + _sw / 2, _sy + 4, "★  STICKER PANEL")
+            c.drawCentredString(_sx + _sw / 2, _sy + 3.5, "✨  STICKERS")
             _sticker_js = (
-                'var cats=["PRIORITY LABELS","EVENTS & REMINDERS","WELLNESS & MOOD"];'
+                # Category menu
+                'var cats=['
+                '"  \U0001F534  PRIORITY & TASKS",'
+                '"  \U0001F4C5  EVENTS & DATES",'
+                '"  \U0001F497  WELLNESS & MOOD",'
+                '"  \U0001F393  SCHOOL & STUDY",'
+                '"  \U0001F4AA  MOTIVATION"'
+                '];'
                 'var catIdx=app.popupMenu(cats);'
                 'if(catIdx<0)return;'
                 'var lists=['
-                '["IMPORTANT","URGENT","DEADLINE","MEETING","TO-DO","ERRANDS","BUSY DAY"],'
-                '["BIRTHDAY!","APPT","VACAY!","MEMORIES","SELF CARE","REMEMBER","DUE BILL"],'
-                '["AMAZING","GOOD","OKAY","WATER","SLEEP","WORKOUT","GRATEFUL"]'
+                # 0 PRIORITY
+                '["! IMPORTANT","!! URGENT","⏰ DEADLINE","\U0001F4CB MEETING",'
+                '"✓ TO-DO","\U0001F6CD ERRANDS","\U0001F525 BUSY DAY",'
+                '"\U0001F4DE CALL","✉ EMAIL","\U0001F4B3 PAY BILL",'
+                '"\U0001F6D2 TO BUY","⏳ DUE TODAY","⭐ PRIORITY",'
+                '"\U0001F4CC PIN THIS","\U0001F512 BLOCKED","❗ REMINDER"],'
+                # 1 EVENTS
+                '["\U0001F382 BIRTHDAY!","\U0001F4C6 APPT","✈ VACAY!",'
+                '"\U0001F48C ANNIVERSARY","\U0001F4f8 MEMORIES","\U0001F381 GIFT DUE",'
+                '"\U0001F91D EVENT","\U0001F3e0 FAMILY TIME","\U0001F506 HOLIDAY",'
+                '"\U0001F3c6 GOAL MET!","✅ DONE!","⭐ WIN!",'
+                '"\U0001F4dd PLAN","\U0001F514 REMEMBER","\U0001F4B8 BILL DUE","\U0001F31f MILESTONE"],'
+                # 2 WELLNESS
+                '["\U0001F60d AMAZING","\U0001F642 GOOD","\U0001F610 OKAY",'
+                '"\U0001F614 LOW","\U0001F4a7 WATER","\U0001F634 SLEEP WELL",'
+                '"\U0001F3cb WORKOUT","\U0001F64f GRATEFUL","\U0001F9d8 CALM",'
+                '"⚡ HIGH ENERGY","\U0001F957 MEALS","\U0001F33f SELF CARE",'
+                '"\U0001F48a MEDS","❤ SELF LOVE","\U0001F31e SUNSHINE","\U0001F9e0 MINDFUL"],'
+                # 3 SCHOOL
+                '["\U0001F4da STUDY","\U0001F4dd NOTES","\U0001F9ea TEST DAY",'
+                '"\U0001F4e5 SUBMIT","⏰ DUE DATE","✅ REVIEWED",'
+                '"\U0001F4ac PRESENT","\U0001F4bb ONLINE","\U0001F3af FOCUS!",'
+                '"\U0001F6ab NO PHONE","\U0001F4da READ","✍ WRITE",'
+                '"\U0001F4c8 PROGRESS","\U0001F31f GREAT WORK","\U0001F3c5 ACHIEVEMENT","\U0001F680 LEVEL UP"],'
+                # 4 MOTIVATION
+                '["\U0001F680 YOU GOT THIS","\U0001F4aa STRONG",'
+                '"\U0001F31f SHINE","\U0001F525 ON FIRE",'
+                '"\U0001F3af CRUSHED IT","\U0001F4cf GROWTH",'
+                '"\U0001F49c BELIEVE","✨ MAGIC DAY",'
+                '"\U0001F334 FRESH START","\U0001F30a GO WITH IT",'
+                '"\U0001F308 NEW CHAPTER","\U0001F64c YES!",'
+                '"\U0001F31b GLOW UP","\U0001F4ab DREAM BIG",'
+                '"❤ BE KIND","\U0001F3b6 GOOD VIBES"]'
                 '];'
                 'var stkIdx=app.popupMenu(lists[catIdx]);'
                 'if(stkIdx<0)return;'
                 'var lbl=lists[catIdx][stkIdx];'
-                'var fills=[["RGB",1.0,0.85,0.82],["RGB",0.83,0.90,1.0],["RGB",0.85,0.95,0.85]];'
-                'var strokes=[["RGB",0.80,0.35,0.30],["RGB",0.30,0.50,0.80],["RGB",0.35,0.65,0.40]];'
+                # Colors per category: coral, sky, sage, lilac, gold
+                'var fc=[["RGB",1.0,0.88,0.85],["RGB",0.85,0.93,1.0],'
+                '["RGB",0.88,0.97,0.88],["RGB",0.93,0.88,1.0],["RGB",1.0,0.96,0.82]];'
+                'var sc=[["RGB",0.85,0.38,0.32],["RGB",0.28,0.52,0.82],'
+                '["RGB",0.28,0.62,0.38],["RGB",0.55,0.32,0.80],["RGB",0.80,0.62,0.18]];'
                 'var pg=this.pageNum;'
                 'var ph=this.getPageHeight(pg);'
                 'var pw=this.getPageWidth(pg);'
                 'try{'
-                'this.addAnnot({'
+                'var a=this.addAnnot({'
                 'type:"FreeText",page:pg,'
-                'rect:[pw*0.35,ph*0.43,pw*0.65,ph*0.57],'
+                'rect:[pw*0.33,ph*0.45,pw*0.67,ph*0.57],'
                 'contents:lbl,'
-                'fillColor:fills[catIdx],'
-                'strokeColor:strokes[catIdx],'
-                'textColor:["RGB",0.10,0.10,0.15],'
-                'textSize:10,textFont:"HelvBd",alignment:1'
+                'fillColor:fc[catIdx],'
+                'strokeColor:sc[catIdx],'
+                'textColor:["RGB",0.08,0.08,0.12],'
+                'textSize:11,alignment:1'
                 '});'
+                'if(a)app.alert("✨ Sticker added! Drag it anywhere you like.",1);'
                 '}catch(e){'
-                'app.alert("Sticker placed! Drag it anywhere on the page.\\n\\n'
-                'Works best in Adobe Acrobat, PDF Expert, and Xodo.",1);'
+                'app.alert("Tap the STICKERS button to add a label sticker to this page.\\n\\nWorks in: Adobe Acrobat Reader, Acrobat Pro, PDF Expert, and Xodo.\\n\\nGoodNotes users: screenshot the Sticker Sheet page to use as a custom sticker library.",1);'
                 '}'
             )
             if not _js_button(_sx, _sy, _sw, _bh, _sticker_js):
-                c.linkAbsolute("Sticker Panel — tap to open",
+                c.linkAbsolute("Sticker Panel",
                                "sticker_picker", (_sx, _sy, _sx + _sw, _sy + _bh))
 
         font("Helvetica", 6); fill(MID)
@@ -2329,32 +2417,25 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         )
 
     def _js_button(cx, cy, cw, ch, js_code):
-        """Overlay a transparent push-button annotation with a JS mouse-up action.
-        Returns True on success, False on fallback (caller should add a linkAbsolute)."""
+        """Overlay an invisible Link annotation with a JavaScript action.
+        Link annotations fire JS reliably in Acrobat Reader, Acrobat Pro, PDF Expert,
+        and Xodo — no AcroForm registration needed.
+        Returns True on success, False on fallback."""
         try:
             from reportlab.pdfbase.pdfdoc import (
                 PDFDictionary, PDFString, PDFArray, PDFnumber, PDFName,
             )
-            _field_counter[0] += 1
-            fname = f"_jsbtn_{_field_counter[0]}"
             js_act = PDFDictionary()
             js_act['S'] = PDFName('JavaScript')
             js_act['JS'] = PDFString(js_code)
-            aa = PDFDictionary()
-            aa['U'] = js_act
-            bs = PDFDictionary()
-            bs['W'] = PDFnumber(0)
-            w = PDFDictionary()
-            w['Type']    = PDFName('Annot')
-            w['Subtype'] = PDFName('Widget')
-            w['FT']      = PDFName('Btn')
-            w['Ff']      = PDFnumber(65536)   # PushButton flag
-            w['T']       = PDFString(fname)
-            w['Rect']    = PDFArray([float(cx), float(cy),
-                                     float(cx + cw), float(cy + ch)])
-            w['AA']      = aa
-            w['BS']      = bs
-            c._addAnnotation(w)
+            link = PDFDictionary()
+            link['Type']    = PDFName('Annot')
+            link['Subtype'] = PDFName('Link')
+            link['Rect']    = PDFArray([float(cx), float(cy),
+                                        float(cx + cw), float(cy + ch)])
+            link['Border']  = PDFArray([PDFnumber(0), PDFnumber(0), PDFnumber(0)])
+            link['A']       = js_act
+            c._addAnnotation(link)
             return True
         except Exception:
             return False
@@ -2835,25 +2916,67 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                     font("Helvetica-Bold", 6); fill(WHITE)
                     c.drawCentredString(_circle_cx, _circle_cy - 2.5, str(day_num))
 
-                    # ★ Sticker picker button (Tier 3 only)
+                    # ✨ Sticker button in cell header (Tier 3 only)
+                    # Tapping it shows the category popup and places a sticker on THIS cell
                     if _design == 3 and "sticker_pack" in _extras:
-                        sk = 11
-                        sk_x = _btn_right - sk; sk_y = _hdr_btn_y
-                        rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.78), radius=2)
-                        font("Helvetica-Bold", 6); fill(WHITE)
-                        c.drawCentredString(sk_x + sk / 2, sk_y + 3, "★")
-                        _cell_x = float(cx0); _cell_y = float(cy0)
-                        _cell_w = float(col_w); _cell_h = float(row_h - 14)
-                        _js_sel = (
-                            f'this.getField("{_stk_pg}").value=String(this.pageNum);'
-                            f'this.getField("{_stk_x}").value="{_cell_x:.2f}";'
-                            f'this.getField("{_stk_y}").value="{_cell_y:.2f}";'
-                            f'this.getField("{_stk_w}").value="{_cell_w:.2f}";'
-                            f'this.getField("{_stk_h}").value="{_cell_h:.2f}";'
-                            f'this.gotoNamedDest("sticker_picker");'
+                        sk = 13
+                        sk_x = _btn_right - sk; sk_y = _hdr_btn_y - 1
+                        # Gradient-like pill: soft accent fill + colored dot
+                        rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.75), radius=3)
+                        font("Helvetica-Bold", 7); fill(WHITE)
+                        c.drawCentredString(sk_x + sk / 2, sk_y + 3, "✨")
+                        _cell_x = float(cx0 + 1)
+                        _cell_y = float(cy0 + 4)
+                        _cell_w = float(col_w - 2)
+                        _cell_h = float(row_h - 18)
+                        # JS: popup menu → place sticker directly in the cell
+                        _js_cell = (
+                            'var cats=["PRIORITY & TASKS","EVENTS & DATES",'
+                            '"WELLNESS & MOOD","SCHOOL & WORK","MOTIVATION"];'
+                            'var catIdx=app.popupMenu(cats);'
+                            'if(catIdx<0)return;'
+                            'var lists=['
+                            '["! IMPORTANT","!! URGENT","⏰ DEADLINE","◈ MEETING",'
+                            '"✓ TO-DO","◎ ERRANDS","🔥 BUSY DAY","◉ FOCUS",'
+                            '"☎ CALL","✉ EMAIL","🛒 TO BUY","$ PAY BILL",'
+                            '"📌 REMINDER","🚫 BLOCKED","👁 REVIEW","→ SUBMIT"],'
+                            '["🎂 BIRTHDAY!","📅 APPT","✈ VACAY!","♥ ANNIV.",'
+                            '"📷 MEMORIES","🎁 GIFT DUE","🎉 EVENT","🏡 FAMILY",'
+                            '"⭐ HOLIDAY","🏆 GOAL MET!","✅ DONE!","⭐ WIN!",'
+                            '"📝 PLAN","🌟 MILESTONE","💳 BILL DUE","🌙 NEW MOON"],'
+                            '["😍 AMAZING","😊 GOOD","😐 OKAY","💜 LOW",'
+                            '"💧 WATER","😴 SLEPT WELL","💪 WORKOUT","🙏 GRATEFUL",'
+                            '"🧘 CALM","⚡ HIGH ENERGY","🥗 MEALS","🌸 SELF CARE",'
+                            '"💊 MEDS","❤ SELF LOVE","☀ SUNSHINE","🌿 MINDFUL"],'
+                            '["📚 STUDY","📝 NOTES","🧪 TEST","📤 SUBMIT",'
+                            '"⏰ DUE DATE","✅ REVIEWED","🎤 PRESENT","💻 ONLINE",'
+                            '"🎯 FOCUS!","🚫 NO PHONE","📖 READ","✍ WRITE",'
+                            '"📈 PROGRESS","🌟 GREAT WORK","🏅 ACHIEVEMENT","🚀 LEVEL UP"],'
+                            '["💪 YOU GOT THIS","🔥 STRONG","✨ SHINE","🔥 ON FIRE",'
+                            '"🏆 CRUSHED IT","📈 GROWTH","💫 BELIEVE","✨ MAGIC DAY",'
+                            '"🌱 FRESH START","🌊 GO WITH IT","📖 NEW CHAPTER","🙌 YES!",'
+                            '"💅 GLOW UP","💭 DREAM BIG","❤ BE KIND","🎶 GOOD VIBES"]'
+                            '];'
+                            'var stkIdx=app.popupMenu(lists[catIdx]);'
+                            'if(stkIdx<0)return;'
+                            'var lbl=lists[catIdx][stkIdx];'
+                            'var fc=[["RGB",1.0,0.88,0.85],["RGB",0.85,0.95,1.0],'
+                            '["RGB",0.88,0.97,0.88],["RGB",0.90,0.88,1.0],["RGB",1.0,0.97,0.82]];'
+                            'var sc=[["RGB",0.85,0.35,0.30],["RGB",0.25,0.55,0.85],'
+                            '["RGB",0.25,0.65,0.38],["RGB",0.55,0.35,0.82],["RGB",0.82,0.62,0.15]];'
+                            f'var pg=this.pageNum;'
+                            f'try{{'
+                            f'this.addAnnot({{type:"FreeText",page:pg,'
+                            f'rect:[{_cell_x:.1f},{_cell_y:.1f},'
+                            f'{_cell_x + _cell_w:.1f},{_cell_y + _cell_h:.1f}],'
+                            f'contents:lbl,'
+                            f'fillColor:fc[catIdx],strokeColor:sc[catIdx],'
+                            f'textColor:["RGB",0.08,0.08,0.12],textSize:8,alignment:1}});}}'
+                            f'catch(e){{'
+                            f'app.alert("Sticker works in Acrobat, PDF Expert & Xodo.",1);}}'
                         )
-                        if not _js_button(sk_x, sk_y, sk, sk, _js_sel):
-                            c.linkAbsolute("Sticker Picker", "sticker_picker",
+                        if not _js_button(sk_x, sk_y, sk, sk, _js_cell):
+                            c.linkAbsolute("Add Sticker", "sticker_picker",
                                            (sk_x, sk_y, sk_x + sk, sk_y + sk))
                         _btn_right -= sk + 2
 
@@ -2965,29 +3088,45 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                 c.drawRightString(ML + _actual_sched_w - 6, dy_top - 12,
                                   day_date.strftime("%b %d"))
 
-                # Tier 3: sticker picker icon in day header (leftmost after day name)
+                # Tier 3: ✨ sticker button in day header — popup menu, no page nav
                 if _design == 3 and "sticker_pack" in _extras:
-                    _day_lbl_w = c.stringWidth(day_name.upper(), "Helvetica-Bold", 7.5)
-                    sk = 10; sk_x = ML + 8 + _day_lbl_w + 4; sk_y = dy_top - hdr_h + 3
+                    _day_lbl_w = c.stringWidth(day_name.upper(), _fn("bold"), 7.5)
+                    sk = 12; sk_x = ML + 8 + _day_lbl_w + 4; sk_y = dy_top - hdr_h + 2
                     if sk_x + sk < ML + _actual_sched_w - 50:
-                        rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.72), radius=2)
-                        font("Helvetica-Bold", 6); fill(WHITE)
-                        c.drawCentredString(sk_x + sk / 2, sk_y + 3, "★")
-                        # JS: store the day row area as sticker target
-                        _wk_x = float(ML)
+                        rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.70), radius=3)
+                        font("Helvetica-Bold", 7); fill(WHITE)
+                        c.drawCentredString(sk_x + sk / 2, sk_y + 3, "✨")
+                        _wk_x = float(ML + 2)
                         _wk_y = float(dy_bot + 2)
-                        _wk_w = float(_actual_sched_w)
-                        _wk_h = float(day_h - hdr_h - 4)
+                        _wk_w = float(_actual_sched_w - 4)
+                        _wk_h = float(day_h - hdr_h - 6)
                         _js_wk = (
-                            f'this.getField("{_stk_pg}").value=String(this.pageNum);'
-                            f'this.getField("{_stk_x}").value="{_wk_x:.2f}";'
-                            f'this.getField("{_stk_y}").value="{_wk_y:.2f}";'
-                            f'this.getField("{_stk_w}").value="{_wk_w:.2f}";'
-                            f'this.getField("{_stk_h}").value="{_wk_h:.2f}";'
-                            f'this.gotoNamedDest("sticker_picker");'
+                            'var cats=["PRIORITY & TASKS","EVENTS & DATES",'
+                            '"WELLNESS & MOOD","SCHOOL & WORK","MOTIVATION"];'
+                            'var ci=app.popupMenu(cats);if(ci<0)return;'
+                            'var ls=['
+                            '["! IMPORTANT","!! URGENT","⏰ DEADLINE","◈ MEETING","✓ TO-DO","🔥 BUSY DAY","📌 REMINDER","→ SUBMIT"],'
+                            '["🎂 BIRTHDAY!","📅 APPT","✈ VACAY!","🎉 EVENT","🏆 GOAL MET!","✅ DONE!","🌟 MILESTONE","📝 PLAN"],'
+                            '["😍 AMAZING","😊 GOOD","💪 WORKOUT","🙏 GRATEFUL","💧 WATER","😴 SLEPT WELL","🌸 SELF CARE","❤ SELF LOVE"],'
+                            '["📚 STUDY","📝 NOTES","⏰ DUE DATE","🎯 FOCUS!","✅ REVIEWED","🚀 LEVEL UP","🏅 ACHIEVEMENT","📈 PROGRESS"],'
+                            '["💪 YOU GOT THIS","✨ SHINE","🏆 CRUSHED IT","💫 BELIEVE","🌱 FRESH START","🙌 YES!","💭 DREAM BIG","🎶 GOOD VIBES"]'
+                            '];'
+                            'var si=app.popupMenu(ls[ci]);if(si<0)return;'
+                            'var lbl=ls[ci][si];'
+                            'var fc=[["RGB",1.0,0.88,0.85],["RGB",0.85,0.95,1.0],'
+                            '["RGB",0.88,0.97,0.88],["RGB",0.90,0.88,1.0],["RGB",1.0,0.97,0.82]];'
+                            'var sc=[["RGB",0.85,0.35,0.30],["RGB",0.25,0.55,0.85],'
+                            '["RGB",0.25,0.65,0.38],["RGB",0.55,0.35,0.82],["RGB",0.82,0.62,0.15]];'
+                            f'var pg=this.pageNum;'
+                            f'try{{this.addAnnot({{type:"FreeText",page:pg,'
+                            f'rect:[{_wk_x:.1f},{_wk_y:.1f},'
+                            f'{_wk_x + _wk_w * 0.5:.1f},{_wk_y + _wk_h:.1f}],'
+                            f'contents:lbl,fillColor:fc[ci],strokeColor:sc[ci],'
+                            f'textColor:["RGB",0.08,0.08,0.12],textSize:9,alignment:1}});}}'
+                            f'catch(e){{app.alert("Works in Acrobat, PDF Expert & Xodo.",1);}}'
                         )
                         if not _js_button(sk_x, sk_y, sk, sk, _js_wk):
-                            c.linkAbsolute("Sticker Picker", "sticker_picker",
+                            c.linkAbsolute("Add Sticker", "sticker_picker",
                                            (sk_x, sk_y, sk_x + sk, sk_y + sk))
 
                 # Tier 3: "+" button in day header → Google Calendar add event
@@ -3722,204 +3861,267 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         c.showPage()
 
     # ── STICKER PICKER PAGE (interactive, linked from every calendar page) ──────
-    _STK_G = (0.31, 0.68, 0.43)
-    _STK_Y = (0.92, 0.75, 0.18)
-    _STK_R = (0.85, 0.32, 0.32)
-    _STK_P = (0.60, 0.35, 0.80)
-    _STK_O = (0.92, 0.52, 0.22)
-    _STK_B = (0.35, 0.65, 0.90)
+    # Palette — vibrant but coordinated
+    _STK_G  = (0.20, 0.72, 0.40)   # emerald green
+    _STK_Y  = (0.95, 0.75, 0.10)   # golden yellow
+    _STK_R  = (0.90, 0.28, 0.28)   # coral red
+    _STK_P  = (0.62, 0.32, 0.88)   # violet purple
+    _STK_O  = (0.95, 0.50, 0.18)   # warm orange
+    _STK_B  = (0.22, 0.60, 0.92)   # sky blue
+    _STK_PK = (0.95, 0.40, 0.62)   # hot pink
+    _STK_TL = (0.18, 0.72, 0.72)   # teal
+    _STK_GD = (0.80, 0.55, 0.12)   # gold
+    _STK_LV = (0.70, 0.50, 0.92)   # lavender
 
     _STICKER_CATEGORIES = [
-        ("PRIORITY LABELS", T, [
-            ("IMPORTANT", _STK_R, "!"),   ("URGENT",   _STK_R, "!!"),
-            ("DEADLINE",  _STK_O, "→"),   ("MEETING",  T,      "◈"),
-            ("TO-DO",     _STK_B, "✓"),   ("ERRANDS",  _STK_G, "◎"),
-            ("BUSY DAY",  _STK_O, "●"),   ("FOCUS",    T,      "◉"),
-            ("CALLS",     _STK_P, "☎"),   ("EMAILS",   _STK_B, "✉"),
-            ("TO BUY",    _STK_G, "◈"),   ("DUE",      _STK_R, "!"),
+        # ── 1. PRIORITY & TASKS ──────────────────────────────────────────────
+        ("PRIORITY & TASKS", _STK_R, [
+            ("IMPORTANT",  _STK_R,  "!"),    ("URGENT",    _STK_R,  "!!"),
+            ("DEADLINE",   _STK_O,  "⏰"),   ("MEETING",   _STK_B,  "◈"),
+            ("TO-DO",      _STK_B,  "✓"),    ("ERRANDS",   _STK_G,  "◎"),
+            ("BUSY DAY",   _STK_O,  "🔥"),   ("FOCUS",     T,       "◉"),
+            ("CALL",       _STK_TL, "☎"),    ("EMAIL",     _STK_B,  "✉"),
+            ("TO BUY",     _STK_G,  "🛒"),   ("PAY BILL",  _STK_R,  "$"),
+            ("REMINDER",   _STK_O,  "📌"),   ("BLOCKED",   _STK_R,  "🚫"),
+            ("REVIEW",     T,       "👁"),    ("SUBMIT",    _STK_G,  "→"),
         ]),
-        ("EVENTS & REMINDERS", A, [
-            ("BIRTHDAY!",  _STK_Y, "★"),  ("APPT",     T,      "◎"),
-            ("VACAY!",     _STK_B, "✈"),  ("MEMORIES", _STK_P, "♥"),
-            ("SELF CARE",  A,      "♡"),  ("PLAN",     T,      "▶"),
-            ("REMEMBER",   _STK_O, "→"),  ("DUE BILL", _STK_R, "$"),
-            ("GOAL MET",   _STK_G, "✔"),  ("WIN",      _STK_Y, "★"),
-            ("NEW!",       A,      "▶"),  ("DONE!",    _STK_G, "✓"),
+        # ── 2. EVENTS & DATES ────────────────────────────────────────────────
+        ("EVENTS & DATES", _STK_Y, [
+            ("BIRTHDAY!",  _STK_PK, "🎂"),   ("APPT",      _STK_B,  "📅"),
+            ("VACAY!",     _STK_B,  "✈"),    ("ANNIVERSARY",_STK_PK,"♥"),
+            ("MEMORIES",   _STK_P,  "📷"),   ("GIFT DUE",  _STK_PK, "🎁"),
+            ("EVENT",      T,       "🎉"),    ("FAMILY",    _STK_Y,  "🏡"),
+            ("HOLIDAY",    _STK_Y,  "⭐"),   ("GOAL MET!", _STK_G,  "🏆"),
+            ("DONE!",      _STK_G,  "✅"),   ("WIN!",      _STK_Y,  "⭐"),
+            ("PLAN",       _STK_B,  "📝"),   ("MILESTONE", _STK_GD, "🌟"),
+            ("BILL DUE",   _STK_R,  "💳"),   ("NEW MOON",  _STK_P,  "🌙"),
         ]),
+        # ── 3. WELLNESS & MOOD ───────────────────────────────────────────────
         ("WELLNESS & MOOD", _STK_P, [
-            ("AMAZING",  A,      "☺"),  ("GOOD",     _STK_G, "♡"),
-            ("OKAY",     MID,    "—"),  ("LOW",      T,      "~"),
-            ("WATER",    _STK_B, "~"),  ("SLEEP",    _STK_P, "Zzz"),
-            ("WORKOUT",  _STK_G, "↑"),  ("GRATEFUL", A,      "♥"),
-            ("CALM",     _STK_P, "◉"),  ("ENERGY",   _STK_O, "⚡"),
-            ("MEALS",    _STK_Y, "◈"),  ("JOY",      A,      "★"),
+            ("AMAZING",    _STK_Y,  "😍"),   ("GOOD",      _STK_G,  "😊"),
+            ("OKAY",       _STK_B,  "😐"),   ("LOW",       _STK_P,  "💜"),
+            ("WATER",      _STK_B,  "💧"),   ("SLEPT WELL",_STK_LV, "😴"),
+            ("WORKOUT",    _STK_G,  "💪"),   ("GRATEFUL",  _STK_Y,  "🙏"),
+            ("CALM",       _STK_TL, "🧘"),   ("HIGH ENERGY",_STK_O, "⚡"),
+            ("MEALS",      _STK_G,  "🥗"),   ("SELF CARE", _STK_PK, "🌸"),
+            ("MEDS",       _STK_B,  "💊"),   ("SELF LOVE", _STK_PK, "❤"),
+            ("SUNSHINE",   _STK_Y,  "☀"),    ("MINDFUL",   _STK_LV, "🌿"),
+        ]),
+        # ── 4. SCHOOL & WORK ─────────────────────────────────────────────────
+        ("SCHOOL & WORK", _STK_B, [
+            ("STUDY",      _STK_B,  "📚"),   ("NOTES",     T,       "📝"),
+            ("TEST DAY",   _STK_R,  "🧪"),   ("SUBMIT",    _STK_G,  "📤"),
+            ("DUE DATE",   _STK_R,  "⏰"),   ("REVIEWED",  _STK_G,  "✅"),
+            ("PRESENT",    _STK_O,  "🎤"),   ("ONLINE",    _STK_B,  "💻"),
+            ("FOCUS!",     T,       "🎯"),    ("NO PHONE",  _STK_R,  "🚫"),
+            ("READ",       _STK_P,  "📖"),   ("WRITE",     T,       "✍"),
+            ("PROGRESS",   _STK_G,  "📈"),   ("GREAT WORK",_STK_Y,  "🌟"),
+            ("ACHIEVEMENT",_STK_GD, "🏅"),   ("LEVEL UP",  _STK_O,  "🚀"),
+        ]),
+        # ── 5. MOTIVATION ────────────────────────────────────────────────────
+        ("MOTIVATION", _STK_GD, [
+            ("YOU GOT THIS",_STK_O, "💪"),   ("STRONG",    _STK_R,  "🔥"),
+            ("SHINE",      _STK_Y,  "✨"),   ("ON FIRE",   _STK_O,  "🔥"),
+            ("CRUSHED IT", _STK_G,  "🏆"),   ("GROWTH",    _STK_G,  "📈"),
+            ("BELIEVE",    _STK_P,  "💫"),   ("MAGIC DAY", _STK_LV, "✨"),
+            ("FRESH START",_STK_TL, "🌱"),   ("GO WITH IT",_STK_B,  "🌊"),
+            ("NEW CHAPTER",_STK_P,  "📖"),   ("YES!",      _STK_Y,  "🙌"),
+            ("GLOW UP",    _STK_PK, "💅"),   ("DREAM BIG", _STK_LV, "💭"),
+            ("BE KIND",    _STK_PK, "❤"),    ("GOOD VIBES",_STK_Y,  "🎶"),
         ]),
     ]
 
+    def _draw_one_sticker(sx, sy, sw, sh, lbl, col, sym, sticker_page_mode=False):
+        """Draw a single sticker tile and attach a JS Link annotation to it."""
+        sh_inner = sh - 2
+        # Soft shadow (offset rect in slightly darker tint)
+        rect(sx + 2, sy - 2, sw, sh_inner, f=_blend(col, 0.60), radius=10)
+        # Main pill body with light fill
+        rect(sx, sy, sw, sh_inner, f=_blend(col, 0.88), radius=10)
+        # Colored border ring
+        rect(sx, sy, sw, sh_inner, s=_blend(col, 0.50), lwidth=1.0, radius=10)
+        # Highlight stripe at top
+        rect(sx + 4, sy + sh_inner - 7, sw - 8, 5,
+             f=_blend(WHITE, 0.0 if col == WHITE else -0.1), radius=3)
+
+        # Symbol (large, centred in upper 60% of tile)
+        sym_y = sy + sh_inner * 0.42
+        font("Helvetica-Bold", min(18, sh_inner * 0.42)); fill(col)
+        c.drawCentredString(sx + sw / 2, sym_y, sym)
+
+        # Label text (small, bottom strip)
+        font("Helvetica-Bold", min(6.5, sw / len(lbl) * 1.4)); fill(_blend(col, 0.10))
+        c.drawCentredString(sx + sw / 2, sy + 4, lbl)
+
+        # JS: if on sticker-picker page, go back to source page and place annotation.
+        # If on a regular page via the STICKER PANEL button, addAnnot directly.
+        _r, _g, _b = col[0], col[1], col[2]
+        _lr = min(1.0, _r * 0.55 + 0.45)
+        _lg = min(1.0, _g * 0.55 + 0.45)
+        _lb = min(1.0, _b * 0.55 + 0.45)
+        _safe_sym = sym.replace('"', "'")
+        _safe_lbl = lbl.replace('"', "'")
+
+        if sticker_page_mode:
+            _js = (
+                f'var pg=parseInt(this.getField("{_stk_pg}").value);'
+                f'if(isNaN(pg)||pg<0){{'
+                f'app.alert("Tap the \\u2605 button on any page first, then come here to pick a sticker.",3);return;}}'
+                f'var cx=parseFloat(this.getField("{_stk_x}").value);'
+                f'var cy=parseFloat(this.getField("{_stk_y}").value);'
+                f'var cw=parseFloat(this.getField("{_stk_w}").value);'
+                f'var ch=parseFloat(this.getField("{_stk_h}").value);'
+                f'try{{'
+                f'this.addAnnot({{type:"FreeText",page:pg,'
+                f'rect:[cx,cy,cx+cw,cy+ch],'
+                f'contents:"{_safe_sym}  {_safe_lbl}",'
+                f'fillColor:["RGB",{_lr:.3f},{_lg:.3f},{_lb:.3f}],'
+                f'strokeColor:["RGB",{_r:.3f},{_g:.3f},{_b:.3f}],'
+                f'textColor:["RGB",{_r*0.3:.3f},{_g*0.3:.3f},{_b*0.3:.3f}],'
+                f'textSize:9,alignment:1}});}}'
+                f'catch(e){{}}'
+                f'this.getField("{_stk_pg}").value="-1";'
+                f'this.pageNum=pg;'
+            )
+        else:
+            _js = (
+                f'var pg=this.pageNum;'
+                f'var ph=this.getPageHeight(pg);'
+                f'var pw=this.getPageWidth(pg);'
+                f'try{{'
+                f'this.addAnnot({{type:"FreeText",page:pg,'
+                f'rect:[pw*0.35,ph*0.45,pw*0.65,ph*0.57],'
+                f'contents:"{_safe_sym}  {_safe_lbl}",'
+                f'fillColor:["RGB",{_lr:.3f},{_lg:.3f},{_lb:.3f}],'
+                f'strokeColor:["RGB",{_r:.3f},{_g:.3f},{_b:.3f}],'
+                f'textColor:["RGB",{_r*0.3:.3f},{_g*0.3:.3f},{_b*0.3:.3f}],'
+                f'textSize:10,alignment:1}});'
+                f'app.alert("\\u2728 Sticker added! Drag it anywhere.",1);'
+                f'}}catch(e){{'
+                f'app.alert("Sticker ready. Works in Acrobat Reader, PDF Expert & Xodo.",1);}}'
+            )
+        if not _js_button(sx, sy, sw, sh, _js):
+            c.linkAbsolute(f"Sticker: {lbl}", "sticker_picker",
+                           (sx, sy, sx + sw, sy + sh))
+
     def draw_sticker_picker_page():
-        c.bookmarkPage("sticker_picker")
-        c.addOutlineEntry("Sticker Picker", "sticker_picker", level=0)
-        page_bg()
+        """Two-page sticker library — beautiful tiles, JS-linked back to source page."""
         content_w = CW - TAB_W - 4
+        hdr_h = 50
 
-        # Header
-        rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
-        rect(0, PH - MT - 48, 5, 48 + MT, f=A)
-        font("Helvetica-Bold", 20); fill(WHITE)
-        c.drawString(ML + 14, PH - MT - 32, "STICKER PICKER")
-        font("Helvetica", 7); fill(_blend(WHITE, 0.45))
-        c.drawRightString(PW - TAB_W - 10, PH - MT - 32,
-                          "Tap ★ on any day · choose category · tap sticker to apply")
-        rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=A)
+        # Split 5 categories: page 1 → cats 0-2,  page 2 → cats 3-4
+        for pg_idx, cat_slice in enumerate([(0, 3), (3, 5)]):
+            bm = "sticker_picker" if pg_idx == 0 else "sticker_picker_2"
+            c.bookmarkPage(bm)
+            if pg_idx == 0:
+                c.addOutlineEntry("✨ Sticker Library", bm, level=0)
+            else:
+                c.addOutlineEntry("✨ Sticker Library (cont.)", bm, level=1)
+            page_bg()
 
-        # App compatibility note — clear drag/drop instructions
-        note_y = PH - MT - 60
-        # Instruction box
-        rect(ML, note_y - 12, CW - TAB_W - 4, 26, f=_blend(A, 0.88), radius=5)
-        font("Helvetica-Bold", 6.5); fill(T)
-        c.drawString(ML + 8, note_y - 1, "HOW TO USE STICKERS:")
-        font("Helvetica", 6); fill(DARK)
-        c.drawString(ML + 8, note_y - 10,
-                     "GoodNotes / Notability: screenshot this page → Photos → import as custom sticker sheet → drag & drop onto any planner page  ·  "
-                     "Acrobat / Xodo / PDF Expert: tap any sticker below → it is placed on the day you tapped ★ on")
+            # ── Header ────────────────────────────────────────────────────────
+            # Full-width gradient-like header
+            rect(0, PH - hdr_h, PW - TAB_W - 2, hdr_h, f=T)
+            rect(0, PH - hdr_h, PW - TAB_W - 2, hdr_h, f=_blend(A, 0.65), radius=0)
+            rect(0, PH - hdr_h - 3, PW - TAB_W - 2, 3, f=A)
+            # Left accent bar
+            rect(0, PH - hdr_h, 6, hdr_h, f=A)
 
-        # Three category columns
-        cols = 3; col_gap = 10
-        col_w = (content_w - col_gap * (cols - 1)) / cols
-        top_y = note_y - 10
+            font("Helvetica-Bold", 22); fill(WHITE)
+            c.drawString(ML + 12, PH - hdr_h + 16, "✨  STICKER LIBRARY")
+            font("Helvetica", 8); fill(_blend(WHITE, 0.30))
+            pg_lbl = f"Page {pg_idx + 1} of 2"
+            c.drawRightString(PW - TAB_W - 14, PH - hdr_h + 28, pg_lbl)
 
-        for ci, (cat_name, cat_color, stickers) in enumerate(_STICKER_CATEGORIES):
-            cx = ML + ci * (col_w + col_gap)
+            # How-to pills
+            _tips = [
+                ("Acrobat / Xodo / PDF Expert", "Tap the ✨ STICKERS button on any page → pick a sticker → drag it anywhere"),
+                ("GoodNotes / Notability", "Screenshot this page → import as custom sticker sheet in your app"),
+            ]
+            tip_y = PH - hdr_h - 18
+            for tip_icon, tip_txt in _tips:
+                rect(ML, tip_y - 10, content_w, 14, f=_blend(A, 0.84), radius=5)
+                font("Helvetica-Bold", 6); fill(T)
+                c.drawString(ML + 6, tip_y - 3, tip_icon + ":")
+                font("Helvetica", 6); fill(DARK)
+                c.drawString(ML + 6 + c.stringWidth(tip_icon + ": ", _fn("bold"), 6),
+                             tip_y - 3, tip_txt)
+                tip_y -= 17
 
-            # Category header band
-            hdr_h = 22
-            rect(cx, top_y - hdr_h, col_w, hdr_h, f=cat_color, radius=5)
-            font("Helvetica-Bold", 8.5); fill(WHITE)
-            c.drawCentredString(cx + col_w / 2, top_y - hdr_h + 7, cat_name)
+            top_y = tip_y - 6
 
-            # Sticker grid: 3 per row × 4 rows inside this category column
-            inner_cols = 3; inner_gap = 5
-            sw = (col_w - inner_gap * (inner_cols - 1)) / inner_cols
-            sh = sw * 0.82
-            stk_top = top_y - hdr_h - 7
+            # ── Category sections ─────────────────────────────────────────────
+            cats_on_page = _STICKER_CATEGORIES[cat_slice[0]:cat_slice[1]]
+            n_cats = len(cats_on_page)
+            avail_h = top_y - MB - 24
+            cat_h = avail_h / n_cats - 8
 
-            for si, (lbl, col, sym) in enumerate(stickers):
-                ic = si % inner_cols; ir = si // inner_cols
-                sx = cx + ic * (sw + inner_gap)
-                sy = stk_top - ir * (sh + inner_gap) - sh
+            for ci, (cat_name, cat_color, stickers) in enumerate(cats_on_page):
+                cat_y = top_y - ci * (cat_h + 8)
 
-                # Sticker body (large, tappable)
-                rect(sx, sy, sw, sh, f=_blend(col, 0.82), radius=8)
-                rect(sx, sy, sw, sh, s=_blend(col, 0.45), lwidth=0.7, radius=8)
-                # Symbol
-                font("Helvetica-Bold", 16); fill(col)
-                c.drawCentredString(sx + sw / 2, sy + sh * 0.46, sym)
-                # Label
-                font("Helvetica-Bold", 6); fill(_blend(col, 0.22))
-                c.drawCentredString(sx + sw / 2, sy + 4, lbl)
+                # Category label pill
+                pill_w = min(content_w, 8 * len(cat_name) + 24)
+                rect(ML, cat_y - 18, pill_w, 18, f=cat_color, radius=9)
+                # Accent dot
+                circle(ML + 11, cat_y - 9, 4, f=_blend(cat_color, 0.20))
+                font("Helvetica-Bold", 8.5); fill(WHITE)
+                c.drawString(ML + 20, cat_y - 14, cat_name)
 
-                # JS button: paste sticker annotation on target day, then navigate back.
-                # Overlay is transparent so the drawn sticker visual shows through.
-                _r, _g, _b = col[0], col[1], col[2]
-                _sr = max(0.0, _r - 0.20)
-                _sg = max(0.0, _g - 0.20)
-                _sb = max(0.0, _b - 0.20)
-                _safe_sym = sym.replace('\\', '').replace('"', "'")
-                _safe_lbl = lbl.replace('\\', '').replace('"', "'")
-                _js_paste = (
-                    f'var pg=parseInt(this.getField("{_stk_pg}").value);'
-                    f'if(isNaN(pg)||pg<0){{'
-                    f'app.alert("Tap ★ on a day cell first, then choose a sticker.",3);return;}}'
-                    f'var sx=parseFloat(this.getField("{_stk_x}").value);'
-                    f'var sy=parseFloat(this.getField("{_stk_y}").value);'
-                    f'var sw=parseFloat(this.getField("{_stk_w}").value);'
-                    f'var sh=parseFloat(this.getField("{_stk_h}").value);'
-                    f'try{{'
-                    f'this.addAnnot({{type:"FreeText",page:pg,'
-                    f'rect:[sx+sw*0.05,sy+sh*0.10,sx+sw*0.95,sy+sh*0.90],'
-                    f'contents:"{_safe_sym} {_safe_lbl}",'
-                    f'fillColor:["RGB",{_r:.3f},{_g:.3f},{_b:.3f}],'
-                    f'strokeColor:["RGB",{_sr:.3f},{_sg:.3f},{_sb:.3f}],'
-                    f'textColor:["RGB",1,1,1],textSize:7,textFont:"HelvBd",alignment:1}});'
-                    f'}}catch(e){{}}'
-                    f'this.getField("{_stk_pg}").value="-1";'
-                    f'this.pageNum=pg;'
-                )
-                if not _js_button(sx, sy, sw, sh, _js_paste):
-                    c.linkAbsolute(f"Add sticker: {lbl}", "sticker_picker",
-                                   (sx, sy, sx + sw, sy + sh))
+                # Sticker grid — 8 per row
+                stk_cols = 8; stk_gap = 5
+                sw = (content_w - stk_gap * (stk_cols - 1)) / stk_cols
+                sh = min(cat_h - 22, sw * 1.05)
+                stk_top = cat_y - 22
 
-        # How-to strip at the bottom
-        how_y = top_y - 4 * (((content_w / 3) - 5 * 2) / 3 * 0.82 + 5) - 22 - 30
-        if how_y > MB + 30:
-            rect(ML, how_y, content_w, 28, f=_blend(T, 0.94), radius=5)
-            font("Helvetica-Bold", 7); fill(T)
-            c.drawString(ML + 10, how_y + 18, "HOW TO USE:")
-            font("Helvetica", 6.5); fill(DARK)
-            c.drawString(ML + 10, how_y + 8,
-                         "1. On any monthly or weekly page, tap the ★ in a day cell  "
-                         "→  2. Tap a sticker below  →  3. Sticker is applied to that day")
+                for si, (lbl, col, sym) in enumerate(stickers):
+                    ic = si % stk_cols
+                    ir = si // stk_cols
+                    sx = ML + ic * (sw + stk_gap)
+                    sy = stk_top - ir * (sh + stk_gap + 2) - sh
+                    if sy < MB + 20:
+                        break
+                    _draw_one_sticker(sx, sy, sw, sh, lbl, col, sym,
+                                      sticker_page_mode=True)
 
-        page_footer("STICKER PICKER")
-        draw_nav_tabs()
-        c.showPage()
+            page_footer(f"STICKER LIBRARY · Page {pg_idx + 1}")
+            draw_nav_tabs()
+            c.showPage()
 
     def draw_sticker_pack_page(pack_idx=1):
-        """Legacy individual-category sticker pack page (kept for Tier 1/2 styles)."""
+        """Single-category sticker page for Tier 1/2 styles."""
         bm = f"stickers_{pack_idx}"
         c.bookmarkPage(bm)
         if pack_idx == 1:
-            c.addOutlineEntry("Sticker Packs", bm, level=0)
+            c.addOutlineEntry("Sticker Pack", bm, level=0)
         else:
             c.addOutlineEntry(f"Sticker Pack {pack_idx}", bm, level=1)
         page_bg()
         content_w = CW - TAB_W - 4
 
-        cat_idx = pack_idx - 1
-        if cat_idx >= len(_STICKER_CATEGORIES):
-            cat_idx = 0
+        cat_idx = (pack_idx - 1) % len(_STICKER_CATEGORIES)
         cat_name, cat_color, stickers = _STICKER_CATEGORIES[cat_idx]
 
         rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
-        rect(0, PH - MT - 48, 5, 48 + MT, f=A)
-        font("Helvetica-Bold", 16); fill(WHITE)
-        c.drawString(ML + 14, PH - MT - 30, f"STICKER PACK · {cat_name}")
-        font("Helvetica", 7); fill(_blend(WHITE, 0.45))
+        rect(0, PH - MT - 48, 5, 48 + MT, f=cat_color)
+        font("Helvetica-Bold", 18); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 30, f"✨  {cat_name}")
+        font("Helvetica", 7); fill(_blend(WHITE, 0.40))
         c.drawRightString(PW - TAB_W - 10, PH - MT - 30,
-                          "Screenshot & import as stickers in GoodNotes · Notability")
-        rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=A)
+                          "Screenshot → import as custom sticker sheet in GoodNotes / Notability")
+        rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=cat_color)
 
-        inst_y = PH - MT - 62
-        font("Helvetica-Oblique", 6.5); fill(MID)
-        c.drawCentredString((PW - TAB_W) / 2, inst_y,
-                            "Tip: screenshot this page then import as a custom sticker sheet")
-
-        cols = 4; rows = 3; gutter = 10
+        cols = 4; gutter = 12
         sw = (content_w - gutter * (cols - 1)) / cols
-        sh = sw * 0.90
-        sx0 = ML; sy0 = inst_y - 16
+        sh = sw * 1.05
+        sy0 = PH - MT - 66
 
-        # Leave 18pt at bottom of each sticker for a writable label field
-        label_h = 18
-        sh_body = sh - label_h - 4
-
-        for si, (lbl, col, sym) in enumerate(stickers[:cols * rows]):
+        for si, (lbl, col, sym) in enumerate(stickers[:16]):
             ci = si % cols; ri = si // cols
-            sx = sx0 + ci * (sw + gutter)
+            sx = ML + ci * (sw + gutter)
             sy = sy0 - ri * (sh + gutter) - sh
-
-            # Sticker body (upper portion)
-            rect(sx, sy + label_h + 2, sw, sh_body, f=_blend(col, 0.82), radius=8)
-            rect(sx, sy + label_h + 2, sw, sh_body, s=_blend(col, 0.55), lwidth=0.6, radius=8)
-            font("Helvetica-Bold", 18); fill(col)
-            c.drawCentredString(sx + sw / 2, sy + label_h + 2 + sh_body * 0.40, sym)
-            font("Helvetica-Bold", 6.5); fill(_blend(col, 0.25))
-            c.drawCentredString(sx + sw / 2, sy + label_h + 6, lbl)
-
-            # Writable label field below each sticker
-            if is_interactive:
-                text_field(sx + 1, sy + 1, sw - 2, label_h - 2,
-                           f"sticker_{pack_idx}_{si}_label", font_size=7)
+            if sy < MB + 20:
+                break
+            _draw_one_sticker(sx, sy, sw, sh, lbl, col, sym, sticker_page_mode=False)
 
         page_footer(f"STICKER PACK · {cat_name}")
         draw_nav_tabs()
