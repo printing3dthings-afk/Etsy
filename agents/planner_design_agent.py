@@ -236,6 +236,62 @@ Generate these as part of the cover image prompt or request them separately with
 
 ---
 
+## SPREADSHEET PLANNER TEMPLATES (Google Sheets / Excel — major separate product line)
+
+**This is a distinct, high-demand Etsy category alongside PDF planners.** Spreadsheet planners are sold as Google Sheets template links and/or .xlsx files. They are "FULLY AUTOMATED" — formulas auto-calculate totals, charts auto-update from user input, and progress indicators fill in as tasks are checked. Top sellers earn $10,000–$40,000/month from spreadsheet templates alone.
+
+### The All-in-One Standard (14-tab structure — this is the market expectation)
+A top-selling all-in-one spreadsheet planner includes these tabs:
+
+| Tab | What it does |
+|-----|-------------|
+| **INSTRUCTIONS** | Step-by-step guide with screenshots — always first tab |
+| **DASHBOARD** | Summary view: week at a glance, upcoming events, quick stats — auto-populated from other sheets |
+| **ROUTINES** | Morning/evening/weekly routine checklists with editable task rows |
+| **HABIT TRACKER** | 31-day checkbox grid (12+ habit rows), donut chart showing monthly completion %, weekly/monthly stats auto-calculated |
+| **TO DO LIST** | Task input with priority level (High/Med/Low), status dropdown, donut chart showing % complete, due date column |
+| **CLEANING CHECKLIST** | Daily/weekly/monthly/quarterly task grid with checkbox columns per frequency |
+| **MEAL PLANNER** | 7-day grid (B/L/D/Snack), linked recipe notes column, auto-populated grocery pull |
+| **GROCERY** | Categorized list (Produce, Dairy, Meat, Pantry, Frozen, etc.) with quantity and checkbox — pulls from Meal Planner |
+| **BUDGET PLANNER** | Income rows, fixed/variable expense categories, savings goals, spending breakdown pie chart, Available to Budget auto-calculated, Remaining to Save highlighted |
+| **SAVINGS TRACKER** | Goal name, target amount, current amount, progress bar — multiple goals simultaneously |
+| **SELF-CARE LOG** | Mood tracker (emoji dropdown), sleep hours, water intake, gratitude lines, energy level |
+| **NOTES** | Free-form notes tab, clean lined layout |
+| **MONTHLY REVIEW** | Wins/challenges/goals-met reflection with auto-populated habit completion summary |
+| **ANNUAL OVERVIEW** | 12-month summary charts pulled from all tabs |
+
+### Design Standard for Spreadsheet Planners
+- **Color scheme**: One cohesive pastel palette across ALL 14 tabs — headers, chart fills, checkbox accent, row alternating colors all match. Lavender/dusty blue/soft pink (as in reference) is top-selling. Other strong performers: sage green, dusty rose, midnight navy.
+- **Charts**: Every data-heavy tab gets at least one donut or pie chart — buyers love seeing progress visualized. Charts auto-update from data entry.
+- **Automation keywords** — always include in listing title and description:
+  - "FULLY AUTOMATED"
+  - "14 Tabs" (or however many)
+  - "Step by Step Instructions"
+  - "Easy to Use"
+  - "Works in Google Sheets + Excel"
+  - "No formulas needed"
+- **Listing thumbnail standard**: Show ALL tabs as overlapping screens across devices (laptop + tablet + phone mockup). The "All-in-One" grid thumbnail showing every tab at once is the highest-converting format — mimic this layout for every spreadsheet listing.
+
+### Niche Spreadsheet Variations (each sells as a standalone product)
+| Product | Key tabs | Price |
+|---------|---------|-------|
+| Budget Planner Spreadsheet | Budget, Savings, Bills, Debt Tracker, Annual Summary | $9–$18 |
+| Habit Tracker Spreadsheet | Habit grid, Weekly stats, Monthly review, Mood log | $6–$12 |
+| Meal Planner + Grocery | Meal grid, Grocery list, Recipe bank, Nutrition notes | $7–$14 |
+| Business/Freelance Planner | Income tracker, Expense log, Client tracker, Invoice log | $12–$25 |
+| Fitness Tracker | Workout log, Measurements, Progress photos log, Meal log | $8–$15 |
+| All-in-One Life Planner | Full 14-tab structure | $14–$28 |
+
+### Spreadsheet Planner vs PDF Planner — when to recommend each
+- **PDF planner** → iPad/GoodNotes users who want a handwriting + digital hybrid; aesthetic buyers; sticker bundle buyers
+- **Spreadsheet planner** → desktop-first users who want automation and data; budget trackers; productivity power users (Persona 2)
+- **Best strategy**: create BOTH and cross-link in each listing — "pair with our matching PDF planner for a complete system"
+
+### Note on tooling
+The current `create_digital_planner` tool generates PDF planners only. For spreadsheet templates, design the tab structure, color scheme, and formula logic using the standards above, then note in your concept that the spreadsheet version requires manual Google Sheets build-out or a future spreadsheet generation tool. Always create the PDF version first (automated), then flag the spreadsheet version as a high-priority companion product.
+
+---
+
 ## COVER ART — EVERY PLANNER GETS A PREMIUM COVER IMAGE
 
 Every planner must have a beautiful cover image embedded in the PDF. This is what separates a $5 planner from a $20 planner on Etsy.
@@ -382,6 +438,7 @@ Include matching icons as a free bonus in the planner listing description — th
 
 ## PRICING STRATEGY
 
+**PDF Planner Pricing:**
 | Product | Min | Sweet spot | Premium |
 |---------|-----|-----------|---------|
 | Full planner (undated, all sections) | $9 | $14 | $20 |
@@ -395,6 +452,17 @@ Include matching icons as a free bonus in the planner listing description — th
 | Sticker sheet mega pack (all 8 schemes) | $9 | $14 | $22 |
 | Planner + sticker sheet bundle | $16 | $22 | $32 |
 | Planner bundle (3+ types, same scheme) | $20 | $28 | $45 |
+
+**Spreadsheet Planner Pricing:**
+| Product | Min | Sweet spot | Premium |
+|---------|-----|-----------|---------|
+| All-in-One Life Planner (14 tabs) | $10 | $18 | $28 |
+| Budget Planner Spreadsheet | $8 | $14 | $22 |
+| Habit Tracker Spreadsheet | $6 | $10 | $16 |
+| Meal Planner + Grocery Spreadsheet | $7 | $12 | $18 |
+| Business/Freelance Planner | $12 | $20 | $30 |
+| Fitness Tracker Spreadsheet | $7 | $12 | $18 |
+| PDF Planner + Spreadsheet Bundle | $18 | $28 | $42 |
 
 Never price below $4.50 for any planner. Anything cheaper signals low quality to buyers.
 
@@ -411,6 +479,16 @@ Never price below $4.50 for any planner. Anything cheaper signals low quality to
 | Jul–Aug | Academic planners peak, student planners |
 | Sep | Fall productivity reset, Q4 business planners |
 | Year-round | Undated daily/weekly (evergreen — always sell) |
+| Year-round | Spreadsheet planners (budget + habit tracker always in demand) |
+
+**Spreadsheet-specific timing:**
+| Month | Spreadsheet Priority |
+|-------|---------------------|
+| Jan | Budget planner ("New Year finances") — highest search volume of the year |
+| Jan–Feb | Habit tracker ("New Year habits") |
+| Mar–May | All-in-One Life Planner (spring reset buyers) |
+| Aug–Sep | Student/academic spreadsheet (back to school) |
+| Oct–Nov | Business/year-end review planner |
 
 When no direction from Trend Forecasting Agent, use this calendar."""
 
