@@ -2615,48 +2615,58 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                     if day_num:
                         font("Helvetica-Bold", 9); fill(T if di >= 5 else DARK)
                         c.drawString(cx0 + 4, top_y - day_h_row - ri * row_h - 14, str(day_num))
-                        # Fillable mini event area inside cell
-                        if is_interactive and row_h > 22:
-                            text_field(cx0 + 2, cy0 + 2, col_w - 4, row_h - 16,
-                                       f"month_{month_num}_cell_{ri}_{di}", font_size=6)
-                        # Tier 3: calendar link buttons in each cell
+
+                        # All small icon buttons live in the top header strip (cy0+row_h-14
+                        # to cy0+row_h) which is ABOVE the text field — so they stay visible.
+                        # Lay them out right→left: ★ sticker | G+ gcal | A apple
+                        _hdr_btn_h = 10   # button height fits in the 14pt header strip
+                        _hdr_btn_y = cy0 + row_h - _hdr_btn_h - 2  # 2pt from top edge
+                        _btn_right  = cx0 + col_w - 2               # right edge cursor
+
+                        # ★ Sticker picker button (Tier 3 only)
+                        if _design == 3 and "sticker_pack" in _extras:
+                            sk = 10
+                            sk_x = _btn_right - sk; sk_y = _hdr_btn_y
+                            rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.82), radius=2)
+                            font("Helvetica-Bold", 6); fill(WHITE)
+                            c.drawCentredString(sk_x + sk / 2, sk_y + 3, "★")
+                            c.linkAbsolute("Open Sticker Picker", "sticker_picker",
+                                           (sk_x, sk_y, sk_x + sk, sk_y + sk))
+                            _btn_right -= sk + 2
+
+                        # Google Calendar buttons (Tier 3, dated)
                         if cal_integration in ("google", "both") and not undated:
                             gcal_date = f"{planner_year}{month_num:02d}{day_num:02d}"
                             gcal_day  = (f"https://calendar.google.com/calendar/r"
                                          f"/day/{planner_year}/{month_num}/{day_num}")
                             gcal_add  = (f"https://calendar.google.com/calendar/r"
                                          f"/eventedit?dates={gcal_date}/{gcal_date}")
-                            # Date number tap → Google Calendar day view
-                            c.linkURL(gcal_day, (cx0, cy0 + row_h - 18,
+                            # Tap day number → open Google Calendar day view
+                            c.linkURL(gcal_day, (cx0, cy0 + row_h - 14,
                                                   cx0 + 18, cy0 + row_h))
-                            # "+" button (bottom-right of cell) → add event
-                            bs = 9; bx = cx0 + col_w - bs - 2; by = cy0 + 2
+                            # "+" add-event button in header strip
+                            bs = 10; bx = _btn_right - bs; by = _hdr_btn_y
                             rect(bx, by, bs, bs, f=_blend(A, 0.82), radius=2)
-                            font("Helvetica-Bold", 5.5); fill(DARK)
-                            c.drawCentredString(bx + bs/2, by + 3, "+")
+                            font("Helvetica-Bold", 6); fill(DARK)
+                            c.drawCentredString(bx + bs / 2, by + 3, "+")
                             c.linkURL(gcal_add, (bx, by, bx + bs, by + bs))
+                            _btn_right -= bs + 2
+
+                        # Apple Calendar button
                         if cal_integration in ("apple", "both") and not undated:
                             _secs = int((_dt(planner_year, month_num, day_num)
                                          - _dt(2001, 1, 1)).total_seconds())
-                            apple_url = f"calshow:{_secs}"
-                            # Small "A" button beside Google "+" (or alone)
-                            abx = (cx0 + col_w - 20 if cal_integration == "both"
-                                   else cx0 + col_w - 11)
-                            aby = cy0 + 2; abs_ = 9
-                            rect(abx, aby, abs_, abs_, f=_blend(T, 0.75), radius=2)
-                            font("Helvetica-Bold", 5); fill(WHITE)
-                            c.drawCentredString(abx + abs_/2, aby + 3, "A")
-                            c.linkURL(apple_url, (abx, aby, abx + abs_, aby + abs_))
-
-                        # Sticker picker icon (★) — Tier 3, top-left of cell
-                        if _design == 3 and "sticker_pack" in _extras:
-                            sk = 9
-                            sk_x = cx0 + 2; sk_y = cy0 + row_h - 14 - sk
-                            rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.78), radius=2)
+                            abs_ = 10; abx = _btn_right - abs_; aby = _hdr_btn_y
+                            rect(abx, aby, abs_, abs_, f=_blend(T, 0.78), radius=2)
                             font("Helvetica-Bold", 5.5); fill(WHITE)
-                            c.drawCentredString(sk_x + sk / 2, sk_y + 2.5, "★")
-                            c.linkAbsolute("Open Sticker Picker", "sticker_picker",
-                                           (sk_x, sk_y, sk_x + sk, sk_y + sk))
+                            c.drawCentredString(abx + abs_ / 2, aby + 3, "A")
+                            c.linkURL(f"calshow:{_secs}",
+                                      (abx, aby, abx + abs_, aby + abs_))
+
+                        # Fillable event text area — occupies the cell body below header strip
+                        if is_interactive and row_h > 22:
+                            text_field(cx0 + 2, cy0 + 2, col_w - 4, row_h - 16,
+                                       f"month_{month_num}_cell_{ri}_{di}", font_size=6)
 
         cal_bottom = top_y - day_h_row - num_rows * row_h
 
