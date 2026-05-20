@@ -138,6 +138,41 @@ COLOR_SCHEMES: dict[str, dict] = {
     },
 }
 
+# ── PLANNER TIER PRESETS ──────────────────────────────────────────────────────
+PLANNER_TIERS: dict[int, dict] = {
+    1: {
+        "label":            "Starter",
+        "badge":            "STARTER",
+        "interactive":      False,
+        "sections":         ["monthly", "weekly", "notes"],
+        "calendar_integration": "none",
+        "subtitle_default": "Printable PDF · Print at Home",
+        "design_desc":      "Clean minimal design — ideal for printing and hand-writing.",
+    },
+    2: {
+        "label":            "Digital Pro",
+        "badge":            "DIGITAL PRO",
+        "interactive":      True,
+        "sections":         ["monthly", "monthly_review", "month_at_a_glance",
+                             "weekly", "habit_tracker", "goals",
+                             "budget", "meal_plan", "notes"],
+        "calendar_integration": "none",
+        "subtitle_default": "Fillable PDF · GoodNotes · Notability · Xodo",
+        "design_desc":      "Polished interactive design — fillable fields, hyperlinks, all sections.",
+    },
+    3: {
+        "label":            "Connected",
+        "badge":            "CONNECTED",
+        "interactive":      True,
+        "sections":         ["monthly", "monthly_review", "month_at_a_glance",
+                             "weekly", "habit_tracker", "goals",
+                             "budget", "meal_plan", "notes"],
+        "calendar_integration": "google",
+        "subtitle_default": "Fillable PDF · Google Calendar Sync · GoodNotes · Notability",
+        "design_desc":      "Premium integrated design — live calendar links, dot-grid pages, rich decorative elements.",
+    },
+}
+
 
 def _ensure_dirs() -> None:
     os.makedirs(PRODUCT_FILES_DIR, exist_ok=True)
@@ -296,13 +331,25 @@ TOOL_DEFINITIONS: list[dict] = [
                     ),
                     "default": "horizontal",
                 },
+                "planner_tier": {
+                    "type": "integer",
+                    "enum": [1, 2, 3],
+                    "description": (
+                        "Planner tier — sets all defaults (sections, interactivity, calendar, design level). "
+                        "1=Starter: print-ready PDF, clean minimal design, monthly+weekly+notes, no form fields, lowest price. "
+                        "2=Digital Pro: polished design, all sections, fully fillable fields, GoodNotes/Notability compatible, mid price. "
+                        "3=Connected: premium dot-grid design, everything in 2 plus live Google & Apple Calendar links on every dated cell, highest price. "
+                        "Any explicit param overrides the tier default."
+                    ),
+                },
                 "calendar_integration": {
                     "type": "string",
-                    "enum": ["none", "google", "apple"],
+                    "enum": ["none", "google", "apple", "both"],
                     "description": (
                         "Embed calendar shortcut links in daily/monthly pages. "
                         "google=Google Calendar links (works iOS + Android + web), "
-                        "apple=Apple Calendar links (iOS/macOS only), "
+                        "apple=Apple Calendar links via calshow: scheme (iOS/macOS only), "
+                        "both=Google + Apple links side by side, "
                         "none=no integration. Only applies to dated planners (year != 0). Default: none."
                     ),
                     "default": "none",
@@ -1580,17 +1627,26 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     TAB_GAP = 1.5
     TAB_X   = PW - TAB_W - 2.0
 
-    is_interactive = data.get("interactive", True)
+    # ── Resolve tier presets (explicit params override tier defaults) ─────────
+    _tier_num  = int(data.get("planner_tier", 0))
+    _tier_conf = PLANNER_TIERS.get(_tier_num, {})
+    _design    = _tier_num if _tier_num in (1, 2, 3) else 2  # 1=minimal 2=polished 3=premium
+
+    is_interactive = data.get("interactive",
+                               _tier_conf.get("interactive", True))
     planner_year   = data.get("year", dt_date.today().year)
     undated        = (planner_year == 0)
     if undated:
         planner_year = dt_date.today().year
 
-    sections         = data.get("include_sections", ["monthly", "weekly", "habit_tracker", "goals", "notes"])
-    weekly_layout    = data.get("weekly_layout", "horizontal")
-    cal_integration  = data.get("calendar_integration", "none")
+    sections        = data.get("include_sections",
+                                _tier_conf.get("sections",
+                                ["monthly", "weekly", "habit_tracker", "goals", "notes"]))
+    weekly_layout   = data.get("weekly_layout", "horizontal")
+    cal_integration = data.get("calendar_integration",
+                                _tier_conf.get("calendar_integration", "none"))
     title    = data["planner_title"]
-    subtitle = data.get("subtitle", "")
+    subtitle = data.get("subtitle", _tier_conf.get("subtitle_default", ""))
 
     # Tab color override (5 options: scheme default, white, light_pink, brown, olive, black)
     _TAB_COLOR_MAP = {
@@ -1649,14 +1705,29 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
     def page_bg():
         rect(0, 0, PW, PH, f=BG)
+        if _design == 1:
+            # Tier 1: thin left accent strip — clean and simple
+            rect(0, 0, 3, PH, f=_blend(T, 0.55))
+        elif _design == 3:
+            # Tier 3: subtle full-page dot grid (premium texture)
+            _dp = 20; _dr = 0.42
+            _gx = ML + _dp
+            while _gx <= PW - MR - TAB_W - 4:
+                _gy = MB + _dp
+                while _gy <= PH - MT - _dp:
+                    circle(_gx, _gy, _dr, f=LIGHT)
+                    _gy += _dp
+                _gx += _dp
+            # Thin left accent bar in accent color
+            rect(0, 0, 3, PH, f=A)
 
     def page_footer(label=""):
         hline(ML, PW - MR - TAB_W - 4, MB - 6, LIGHT, 0.4)
 
-        # Back-to-index pill button — bottom-left of every interior page
-        _bw = 50; _bh = 14
-        _bx = ML; _by = MB - 22
-        rect(_bx, _by, _bw, _bh, f=_blend(T, 0.85), radius=3)
+        # Back-to-index pill button (tier 1 gets simpler style)
+        _bw = 50; _bh = 14; _bx = ML; _by = MB - 22
+        _btn_fill = _blend(T, 0.90) if _design == 1 else _blend(T, 0.85)
+        rect(_bx, _by, _bw, _bh, f=_btn_fill, radius=3)
         font("Helvetica-Bold", 6.5); fill(T)
         c.drawCentredString(_bx + _bw / 2, _by + 4, "‹ INDEX")
         c.linkAbsolute("Back to Index", "index",
@@ -1750,140 +1821,280 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         c.addOutlineEntry("Cover", "cover", level=0)
 
         cx       = PW / 2
-        split_y  = PH * 0.375          # cream bottom starts here
-        top_h    = PH - split_y        # theme-color top block height
+        split_y  = PH * 0.375
+        top_h    = PH - split_y
 
-        # ── Full cream base ──────────────────────────────────────────────────
         rect(0, 0, PW, PH, f=BG)
 
-        # ── Top color block ──────────────────────────────────────────────────
+        # ── Apply cover art if provided ───────────────────────────────────────
         cover_img_path = data.get("cover_image_path") or ""
         use_art = cover_img_path and os.path.exists(cover_img_path)
         if use_art:
             try:
                 c.drawImage(ImageReader(cover_img_path), 0, split_y, PW, top_h,
                             preserveAspectRatio=False)
-                c.setFillAlpha(0.58)
-                c.setFillColorRGB(*T)
+                c.setFillAlpha(0.58); c.setFillColorRGB(*T)
                 c.rect(0, split_y, PW, top_h, fill=1, stroke=0)
                 c.setFillAlpha(1.0)
             except Exception:
                 use_art = False
-        if not use_art:
-            rect(0, split_y, PW, top_h, f=T)
 
-        # ── Decorative geometry (top block) ──────────────────────────────────
-        # Large semi-transparent circle — upper-right corner
-        circle(PW + 8, PH + 8, PW * 0.48, f=_blend(T, 0.17))
-        # Medium circle — lower-left of top block for balance
-        circle(-12, split_y + 55, 80, f=_blend(T, 0.20))
-        # Accent dot cluster — upper-left margin
-        circle(ML + 15, PH - MT - 16, 11, f=A)
-        circle(ML + 36, PH - MT - 16,  5, f=AL)
-        circle(ML + 15, PH - MT - 40,  5, f=_blend(A, 0.55))
-        # Thin horizontal accent lines beside dot cluster
-        for i in range(3):
-            hline(ML + 50, ML + 100, PH - MT - 12 - i * 8,
-                  _blend(WHITE, 0.30), 0.5)
+        # ══════════════════════════════════════════════════════════════════════
+        # TIER 1 — CLEAN MINIMAL COVER
+        # ══════════════════════════════════════════════════════════════════════
+        if _design == 1:
+            if not use_art:
+                rect(0, split_y, PW, top_h, f=T)
+                # Single small accent circle in upper-right
+                circle(PW - 30, PH - 30, 55, f=_blend(T, 0.22))
 
-        # Subtle dot grid — bottom strip of top block (above split)
-        dp  = 9; dr = 0.55
-        gx  = ML + 4
-        gy0 = split_y + 18
-        gy1 = split_y + int(top_h * 0.22)
-        while gx <= PW - ML:
-            gy = gy0
-            while gy <= gy1:
-                circle(gx, gy, dr, f=_blend(T, 0.28))
-                gy += dp
-            gx += dp
+            # Thin top bar
+            rect(0, PH - 4, PW, 4, f=A)
+            # Accent stripe at split
+            rect(0, split_y - 4, PW, 4, f=A)
 
-        # Thin top-of-page bar in accent color
-        rect(0, PH - 6, PW, 6, f=A)
-
-        # ── Title ────────────────────────────────────────────────────────────
-        title_cy = split_y + top_h * 0.545   # vertical center, slightly above mid
-        font("Helvetica-Bold", 44)
-        fill(WHITE)
-        words = title.split()
-        if len(title) <= 22:
-            c.drawCentredString(cx, title_cy + 8, title)
-            txt_bot = title_cy - 16
-        else:
-            mid = len(words) // 2
-            c.drawCentredString(cx, title_cy + 30, " ".join(words[:mid]))
-            c.drawCentredString(cx, title_cy - 4,  " ".join(words[mid:]))
-            txt_bot = title_cy - 22
-
-        # Thin elegant rule under title
-        hline(cx - 68, cx + 68, txt_bot - 13, _blend(WHITE, 0.42), 0.7)
-
-        # Subtitle
-        if subtitle:
-            font("Helvetica", 10); fill(_blend(WHITE, 0.60))
-            c.drawCentredString(cx, txt_bot - 29, subtitle.upper())
-
-        # ── Year badge (near bottom of top block) ────────────────────────────
-        badge_label = "UNDATED" if undated else str(planner_year)
-        bw = 80; bh = 22
-        rect(cx - bw / 2, split_y + 22, bw, bh, f=A, radius=5)
-        font("Helvetica-Bold", 11); fill(DARK)
-        c.drawCentredString(cx, split_y + 22 + 7, badge_label)
-
-        # ── Split accent stripe ───────────────────────────────────────────────
-        rect(0, split_y - 5, PW, 5, f=A)
-        rect(0, split_y - 8, PW, 2, f=AL)
-
-        # ── Bottom section (cream) ────────────────────────────────────────────
-        # Tagline
-        tl_y = split_y - 28
-        font("Helvetica", 9); fill(MID)
-        c.drawCentredString(cx, tl_y, "plan with purpose  \xb7  live with intention")
-        # Double decorative rule
-        hline(cx - 58, cx + 58, tl_y - 11, A,  0.9)
-        hline(cx - 40, cx + 40, tl_y - 15, AL, 0.5)
-
-        # "INSIDE THIS PLANNER" header
-        inside_y = tl_y - 33
-        font("Helvetica-Bold", 7); fill(T)
-        c.drawCentredString(cx, inside_y, "INSIDE THIS PLANNER")
-
-        # Section pill tags — packed into rows
-        _sec_labels = {
-            "monthly": "Monthly Overview", "weekly": "Weekly Planning",
-            "habit_tracker": "Habit Tracker", "goals": "Goals & Vision",
-            "notes": "Notes Pages",  "daily": "Daily Pages",
-            "budget": "Budget Tracker", "meal_plan": "Meal Planning",
-            "monthly_review": "Monthly Review",
-            "month_at_a_glance": "Month at a Glance",
-        }
-        tags = [_sec_labels.get(s, s.replace("_", " ").title()) for s in sections]
-        tag_h = 14; tpad = 8; tgap = 5
-        font("Helvetica", 7)
-        tag_widths = [c.stringWidth(t, "Helvetica", 7) + tpad * 2 for t in tags]
-        max_row_w = PW - ML * 2
-        rows: list = []; row: list = []; row_w = 0.0
-        for tag, tw in zip(tags, tag_widths):
-            gap = tgap if row else 0
-            if row_w + gap + tw > max_row_w and row:
-                rows.append(row); row = [(tag, tw)]; row_w = tw
+            # Title — large and centered
+            font("Helvetica-Bold", 42); fill(WHITE)
+            words = title.split()
+            title_cy = split_y + top_h * 0.52
+            if len(title) <= 22:
+                c.drawCentredString(cx, title_cy + 6, title)
+                txt_bot = title_cy - 14
             else:
-                row.append((tag, tw)); row_w += gap + tw
-        if row:
-            rows.append(row)
+                mid = len(words) // 2
+                c.drawCentredString(cx, title_cy + 28, " ".join(words[:mid]))
+                c.drawCentredString(cx, title_cy - 4,  " ".join(words[mid:]))
+                txt_bot = title_cy - 20
+            hline(cx - 55, cx + 55, txt_bot - 12, _blend(WHITE, 0.35), 0.6)
+            if subtitle:
+                font("Helvetica", 10); fill(_blend(WHITE, 0.55))
+                c.drawCentredString(cx, txt_bot - 27, subtitle.upper())
 
-        ty = inside_y - 16
-        for ri, row in enumerate(rows[:3]):
-            total_w = sum(tw for _, tw in row) + tgap * (len(row) - 1)
-            rx = cx - total_w / 2
-            ry = ty - ri * (tag_h + 5)
-            for tag, tw in row:
-                rect(rx, ry - tag_h + 2, tw, tag_h, f=_blend(T, 0.87), radius=4)
-                font("Helvetica", 7); fill(T)
-                c.drawString(rx + tpad, ry - 4, tag)
-                rx += tw + tgap
+            # Year badge
+            badge_label = "UNDATED" if undated else str(planner_year)
+            rect(cx - 38, split_y + 18, 76, 20, f=A, radius=4)
+            font("Helvetica-Bold", 10); fill(DARK)
+            c.drawCentredString(cx, split_y + 18 + 6, badge_label)
 
-        # Footer
+            # Bottom — section list as plain dot-separated text
+            tl_y = split_y - 24
+            font("Helvetica", 8.5); fill(MID)
+            c.drawCentredString(cx, tl_y, "plan with purpose  \xb7  live with intention")
+            hline(cx - 50, cx + 50, tl_y - 10, A, 0.7)
+            _sec_labels = {
+                "monthly": "Monthly", "weekly": "Weekly", "notes": "Notes",
+                "habit_tracker": "Habits", "goals": "Goals",
+                "budget": "Budget", "meal_plan": "Meals",
+                "monthly_review": "Review", "month_at_a_glance": "At a Glance",
+            }
+            sec_text = "  ·  ".join(_sec_labels.get(s, s.title()) for s in sections)
+            font("Helvetica", 8); fill(MID)
+            c.drawCentredString(cx, tl_y - 28, sec_text)
+
+        # ══════════════════════════════════════════════════════════════════════
+        # TIER 2 — POLISHED TWO-TONE COVER (current design)
+        # ══════════════════════════════════════════════════════════════════════
+        elif _design == 2:
+            if not use_art:
+                rect(0, split_y, PW, top_h, f=T)
+                circle(PW + 8, PH + 8, PW * 0.48, f=_blend(T, 0.17))
+                circle(-12, split_y + 55, 80, f=_blend(T, 0.20))
+                circle(ML + 15, PH - MT - 16, 11, f=A)
+                circle(ML + 36, PH - MT - 16,  5, f=AL)
+                circle(ML + 15, PH - MT - 40,  5, f=_blend(A, 0.55))
+                for i in range(3):
+                    hline(ML + 50, ML + 100, PH - MT - 12 - i * 8,
+                          _blend(WHITE, 0.30), 0.5)
+                dp = 9; dr = 0.55
+                gx = ML + 4; gy0 = split_y + 18; gy1 = split_y + int(top_h * 0.22)
+                while gx <= PW - ML:
+                    gy = gy0
+                    while gy <= gy1:
+                        circle(gx, gy, dr, f=_blend(T, 0.28))
+                        gy += dp
+                    gx += dp
+            rect(0, PH - 6, PW, 6, f=A)
+            title_cy = split_y + top_h * 0.545
+            font("Helvetica-Bold", 44); fill(WHITE)
+            words = title.split()
+            if len(title) <= 22:
+                c.drawCentredString(cx, title_cy + 8, title); txt_bot = title_cy - 16
+            else:
+                mid = len(words) // 2
+                c.drawCentredString(cx, title_cy + 30, " ".join(words[:mid]))
+                c.drawCentredString(cx, title_cy - 4,  " ".join(words[mid:]))
+                txt_bot = title_cy - 22
+            hline(cx - 68, cx + 68, txt_bot - 13, _blend(WHITE, 0.42), 0.7)
+            if subtitle:
+                font("Helvetica", 10); fill(_blend(WHITE, 0.60))
+                c.drawCentredString(cx, txt_bot - 29, subtitle.upper())
+            badge_label = "UNDATED" if undated else str(planner_year)
+            bw = 80; bh = 22
+            rect(cx - bw/2, split_y + 22, bw, bh, f=A, radius=5)
+            font("Helvetica-Bold", 11); fill(DARK)
+            c.drawCentredString(cx, split_y + 22 + 7, badge_label)
+            rect(0, split_y - 5, PW, 5, f=A); rect(0, split_y - 8, PW, 2, f=AL)
+            tl_y = split_y - 28
+            font("Helvetica", 9); fill(MID)
+            c.drawCentredString(cx, tl_y, "plan with purpose  \xb7  live with intention")
+            hline(cx - 58, cx + 58, tl_y - 11, A, 0.9)
+            hline(cx - 40, cx + 40, tl_y - 15, AL, 0.5)
+            inside_y = tl_y - 33
+            font("Helvetica-Bold", 7); fill(T)
+            c.drawCentredString(cx, inside_y, "INSIDE THIS PLANNER")
+            _sec_labels = {
+                "monthly": "Monthly Overview", "weekly": "Weekly Planning",
+                "habit_tracker": "Habit Tracker", "goals": "Goals & Vision",
+                "notes": "Notes Pages", "daily": "Daily Pages",
+                "budget": "Budget Tracker", "meal_plan": "Meal Planning",
+                "monthly_review": "Monthly Review",
+                "month_at_a_glance": "Month at a Glance",
+            }
+            tags = [_sec_labels.get(s, s.replace("_", " ").title()) for s in sections]
+            tag_h = 14; tpad = 8; tgap = 5
+            font("Helvetica", 7)
+            tag_widths = [c.stringWidth(t, "Helvetica", 7) + tpad * 2 for t in tags]
+            max_row_w = PW - ML * 2
+            rows: list = []; row: list = []; row_w = 0.0
+            for tag, tw in zip(tags, tag_widths):
+                gap = tgap if row else 0
+                if row_w + gap + tw > max_row_w and row:
+                    rows.append(row); row = [(tag, tw)]; row_w = tw
+                else:
+                    row.append((tag, tw)); row_w += gap + tw
+            if row:
+                rows.append(row)
+            ty = inside_y - 16
+            for ri, row in enumerate(rows[:3]):
+                total_w = sum(tw for _, tw in row) + tgap * (len(row) - 1)
+                rx = cx - total_w / 2; ry = ty - ri * (tag_h + 5)
+                for tag, tw in row:
+                    rect(rx, ry - tag_h + 2, tw, tag_h, f=_blend(T, 0.87), radius=4)
+                    font("Helvetica", 7); fill(T)
+                    c.drawString(rx + tpad, ry - 4, tag)
+                    rx += tw + tgap
+
+        # ══════════════════════════════════════════════════════════════════════
+        # TIER 3 — PREMIUM CONNECTED COVER
+        # ══════════════════════════════════════════════════════════════════════
+        else:
+            if not use_art:
+                rect(0, split_y, PW, top_h, f=T)
+                # Large primary arc — upper-right
+                circle(PW + 14, PH + 14, PW * 0.52, f=_blend(T, 0.16))
+                # Second overlapping arc — lower-right of block
+                circle(PW + 5, split_y + 60, PW * 0.28, f=_blend(T, 0.20))
+                # Medium circle — lower-left for balance
+                circle(-18, split_y + 70, 95, f=_blend(T, 0.18))
+                # Accent dot cluster
+                circle(ML + 16, PH - MT - 16, 13, f=A)
+                circle(ML + 40, PH - MT - 14,  6, f=AL)
+                circle(ML + 16, PH - MT - 44,  6, f=_blend(A, 0.55))
+                for i in range(4):
+                    hline(ML + 56, ML + 115, PH - MT - 10 - i * 8,
+                          _blend(WHITE, 0.28), 0.5)
+                # Rich dot grid across entire top block
+                dp = 8; dr = 0.6
+                gx = ML + 4; gy0 = split_y + 16; gy1 = split_y + int(top_h * 0.38)
+                while gx <= PW - ML:
+                    gy = gy0
+                    while gy <= gy1:
+                        circle(gx, gy, dr, f=_blend(T, 0.26))
+                        gy += dp
+                    gx += dp
+                # Diagonal accent band (upper-left)
+                for i in range(6):
+                    hline(0, ML + 30 + i * 8, PH - MT - 28 - i * 12,
+                          _blend(A, 0.22), 0.4)
+            # Premium top bar
+            rect(0, PH - 7, PW, 7, f=A)
+            rect(0, PH - 10, PW, 2, f=AL)
+
+            # Title
+            title_cy = split_y + top_h * 0.545
+            font("Helvetica-Bold", 44); fill(WHITE)
+            words = title.split()
+            if len(title) <= 22:
+                c.drawCentredString(cx, title_cy + 8, title); txt_bot = title_cy - 16
+            else:
+                mid = len(words) // 2
+                c.drawCentredString(cx, title_cy + 30, " ".join(words[:mid]))
+                c.drawCentredString(cx, title_cy - 4,  " ".join(words[mid:]))
+                txt_bot = title_cy - 22
+            hline(cx - 72, cx + 72, txt_bot - 13, _blend(WHITE, 0.45), 0.8)
+            if subtitle:
+                font("Helvetica", 10); fill(_blend(WHITE, 0.62))
+                c.drawCentredString(cx, txt_bot - 29, subtitle.upper())
+
+            # Year badge + CONNECTED badge side by side
+            badge_label = "UNDATED" if undated else str(planner_year)
+            bw = 78; bh = 22
+            tier_badge = "CONNECTED"
+            tbw = 86
+            total_bw = bw + 8 + tbw
+            bx0 = cx - total_bw / 2
+            rect(bx0, split_y + 22, bw, bh, f=A, radius=5)
+            font("Helvetica-Bold", 11); fill(DARK)
+            c.drawCentredString(bx0 + bw/2, split_y + 22 + 7, badge_label)
+            rect(bx0 + bw + 8, split_y + 22, tbw, bh, f=_blend(A, 0.60), radius=5)
+            font("Helvetica-Bold", 9.5); fill(WHITE)
+            c.drawCentredString(bx0 + bw + 8 + tbw/2, split_y + 22 + 7, tier_badge)
+
+            # Premium split stripe (double)
+            rect(0, split_y - 6, PW, 6, f=A)
+            rect(0, split_y - 10, PW, 3, f=AL)
+            rect(0, split_y - 13, PW, 2, f=_blend(A, 0.45))
+
+            # Bottom section
+            tl_y = split_y - 30
+            font("Helvetica", 9); fill(MID)
+            c.drawCentredString(cx, tl_y, "plan with purpose  \xb7  live with intention")
+            hline(cx - 62, cx + 62, tl_y - 11, A, 0.9)
+            hline(cx - 42, cx + 42, tl_y - 15, AL, 0.5)
+            inside_y = tl_y - 33
+            font("Helvetica-Bold", 7); fill(T)
+            c.drawCentredString(cx, inside_y, "INSIDE THIS PLANNER")
+            _sec_labels = {
+                "monthly": "Monthly Overview", "weekly": "Weekly Planning",
+                "habit_tracker": "Habit Tracker", "goals": "Goals & Vision",
+                "notes": "Notes Pages", "daily": "Daily Pages",
+                "budget": "Budget Tracker", "meal_plan": "Meal Planning",
+                "monthly_review": "Monthly Review",
+                "month_at_a_glance": "Month at a Glance",
+            }
+            tags = [_sec_labels.get(s, s.replace("_", " ").title()) for s in sections]
+            if cal_integration in ("google", "both"):
+                tags.append("Google Calendar")
+            if cal_integration in ("apple", "both"):
+                tags.append("Apple Calendar")
+            tag_h = 14; tpad = 8; tgap = 5
+            font("Helvetica", 7)
+            tag_widths = [c.stringWidth(t, "Helvetica", 7) + tpad * 2 for t in tags]
+            max_row_w = PW - ML * 2
+            rows: list = []; row: list = []; row_w = 0.0
+            for tag, tw in zip(tags, tag_widths):
+                gap = tgap if row else 0
+                if row_w + gap + tw > max_row_w and row:
+                    rows.append(row); row = [(tag, tw)]; row_w = tw
+                else:
+                    row.append((tag, tw)); row_w += gap + tw
+            if row:
+                rows.append(row)
+            ty = inside_y - 16
+            for ri, row in enumerate(rows[:3]):
+                total_w = sum(tw for _, tw in row) + tgap * (len(row) - 1)
+                rx = cx - total_w / 2; ry = ty - ri * (tag_h + 5)
+                for ti2, (tag, tw) in enumerate(row):
+                    # Calendar tags get accent color, others get theme color
+                    is_cal = tag in ("Google Calendar", "Apple Calendar")
+                    pill_f = _blend(A, 0.80) if is_cal else _blend(T, 0.87)
+                    pill_c = DARK if is_cal else T
+                    rect(rx, ry - tag_h + 2, tw, tag_h, f=pill_f, radius=4)
+                    font("Helvetica-Bold" if is_cal else "Helvetica", 7); fill(pill_c)
+                    c.drawString(rx + tpad, ry - 4, tag)
+                    rx += tw + tgap
+
+        # ── Shared footer (all tiers) ─────────────────────────────────────────
         font("Helvetica", 7); fill(_blend(MID, 0.50))
         c.drawCentredString(cx, MB + 8,
                             "OnBrandCraftz  \xb7  Digital Download  \xb7  Personal Use")
@@ -2050,6 +2261,35 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                         if is_interactive and row_h > 22:
                             text_field(cx0 + 2, cy0 + 2, col_w - 4, row_h - 16,
                                        f"month_{month_num}_cell_{ri}_{di}", font_size=6)
+                        # Tier 3: calendar link buttons in each cell
+                        if cal_integration in ("google", "both") and not undated:
+                            gcal_date = f"{planner_year}{month_num:02d}{day_num:02d}"
+                            gcal_day  = (f"https://calendar.google.com/calendar/r"
+                                         f"/day/{planner_year}/{month_num}/{day_num}")
+                            gcal_add  = (f"https://calendar.google.com/calendar/r"
+                                         f"/eventedit?dates={gcal_date}/{gcal_date}")
+                            # Date number tap → Google Calendar day view
+                            c.linkURL(gcal_day, (cx0, cy0 + row_h - 18,
+                                                  cx0 + 18, cy0 + row_h))
+                            # "+" button (bottom-right of cell) → add event
+                            bs = 9; bx = cx0 + col_w - bs - 2; by = cy0 + 2
+                            rect(bx, by, bs, bs, f=_blend(A, 0.82), radius=2)
+                            font("Helvetica-Bold", 5.5); fill(DARK)
+                            c.drawCentredString(bx + bs/2, by + 3, "+")
+                            c.linkURL(gcal_add, (bx, by, bx + bs, by + bs))
+                        if cal_integration in ("apple", "both") and not undated:
+                            from datetime import datetime as _dt
+                            _secs = int((_dt(planner_year, month_num, day_num)
+                                         - _dt(2001, 1, 1)).total_seconds())
+                            apple_url = f"calshow:{_secs}"
+                            # Small "A" button beside Google "+" (or alone)
+                            abx = (cx0 + col_w - 20 if cal_integration == "both"
+                                   else cx0 + col_w - 11)
+                            aby = cy0 + 2; abs_ = 9
+                            rect(abx, aby, abs_, abs_, f=_blend(T, 0.75), radius=2)
+                            font("Helvetica-Bold", 5); fill(WHITE)
+                            c.drawCentredString(abx + abs_/2, aby + 3, "A")
+                            c.linkURL(apple_url, (abx, aby, abx + abs_, aby + abs_))
 
         cal_bottom = top_y - day_h_row - num_rows * row_h
 
@@ -2106,61 +2346,101 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         day_h    = (top_y - MB) / 7
         line_clr = _blend(LIGHT, -0.05)
 
+        # Tier 1: full-width writing area (no sidebar)
+        # Tier 2/3: 62% schedule + sidebar
+        _use_sidebar = (_design >= 2)
+        _actual_sched_w = sched_w if _use_sidebar else content_w
+
         for di, day_name in enumerate(DAYS_LONG):
             dy_top = top_y - di * day_h
             dy_bot = dy_top - day_h
             is_weekend = di >= 5
-            hdr_h = 17
+            hdr_h = 17 if _design >= 2 else 14
 
             bg_hdr = TM if is_weekend else T
-            rect(ML, dy_top - hdr_h, sched_w, hdr_h, f=bg_hdr)
+            rect(ML, dy_top - hdr_h, _actual_sched_w, hdr_h, f=bg_hdr)
             font("Helvetica-Bold", 7.5); fill(WHITE)
             c.drawString(ML + 6, dy_top - 12, day_name.upper())
+
             if not undated and start_date:
                 day_date = start_date + timedelta(days=di)
                 font("Helvetica", 7); fill(_blend(WHITE, 0.3))
-                c.drawRightString(ML + sched_w - 6, dy_top - 12, day_date.strftime("%b %d"))
+                c.drawRightString(ML + _actual_sched_w - 6, dy_top - 12,
+                                  day_date.strftime("%b %d"))
 
-            # Fillable day area
+                # Tier 3: "+" button in day header → Google Calendar add event
+                if _design == 3 and cal_integration in ("google", "both"):
+                    gcal_date = day_date.strftime("%Y%m%d")
+                    gcal_add  = (f"https://calendar.google.com/calendar/r"
+                                 f"/eventedit?dates={gcal_date}/{gcal_date}")
+                    bs = 12; bx = ML + _actual_sched_w - bs - 22; by = dy_top - hdr_h + 2
+                    rect(bx, by, bs, bs, f=A, radius=3)
+                    font("Helvetica-Bold", 7); fill(DARK)
+                    c.drawCentredString(bx + bs/2, by + 4, "+")
+                    c.linkURL(gcal_add, (bx, by, bx + bs, by + bs))
+
+            # Fillable / lined day area
             field_h = day_h - hdr_h - 2
             if field_h > 6:
-                text_field(ML + 2, dy_bot + 2, sched_w - 4, field_h,
-                           f"week_{week_num_or_label}_day{di}", multiline=True, font_size=8)
+                if _design == 1:
+                    # Tier 1: simple lined rows
+                    line_y = dy_top - hdr_h - 10
+                    while line_y > dy_bot + 4:
+                        hline(ML + 8, ML + _actual_sched_w - 4, line_y, LIGHT, 0.3)
+                        line_y -= 10
+                else:
+                    text_field(ML + 2, dy_bot + 2, _actual_sched_w - 4, field_h,
+                               f"week_{week_num_or_label}_day{di}",
+                               multiline=True, font_size=8)
 
             if di < 6:
-                hline(ML, ML + sched_w, dy_bot, LIGHT, 0.4)
+                hline(ML, ML + _actual_sched_w, dy_bot, LIGHT, 0.4)
             circle(ML + 3, dy_top - hdr_h - (day_h - hdr_h)/2, 2, f=bg_hdr)
 
-        # Right sidebar
-        sb_y = top_y
+        # ── Right sidebar (tier 2 and 3 only) ────────────────────────────────
+        if _use_sidebar:
+            sb_y = top_y
 
-        def sidebar_section(label, field_h, name_hint):
-            nonlocal sb_y
-            font("Helvetica-Bold", 7); fill(T)
-            c.drawString(sidebar_x, sb_y - 11, label.upper())
-            text_field(sidebar_x, sb_y - 11 - field_h, sidebar_w, field_h, name_hint, multiline=True, font_size=8)
-            sb_y -= field_h + 18
+            def sidebar_section(label, field_h, name_hint):
+                nonlocal sb_y
+                font("Helvetica-Bold", 7); fill(T)
+                c.drawString(sidebar_x, sb_y - 11, label.upper())
+                text_field(sidebar_x, sb_y - 11 - field_h, sidebar_w, field_h,
+                           name_hint, multiline=True, font_size=8)
+                sb_y -= field_h + 18
 
-        sidebar_section("TOP PRIORITIES", 75, f"week_{week_num_or_label}_priorities")
-        sidebar_section("NOTES", 90, f"week_{week_num_or_label}_notes")
+            sidebar_section("TOP PRIORITIES", 75, f"week_{week_num_or_label}_priorities")
+            sidebar_section("NOTES", 90, f"week_{week_num_or_label}_notes")
 
-        # Habit mini-tracker
-        habit_y = sb_y - 14
-        font("Helvetica-Bold", 7); fill(MID)
-        c.drawString(sidebar_x, habit_y + 2, "HABITS")
-        for hi in range(5):
-            hx = sidebar_x + hi * (sidebar_w / 5)
-            checkbox_field(hx + 2, habit_y - 14, 10, f"week_{week_num_or_label}_habit{hi}")
-            font("Helvetica", 5.5); fill(MID)
-            c.drawCentredString(hx + 7, habit_y - 22, str(hi + 1))
+            # Tier 3: "Open week in Google Calendar" button in sidebar
+            if _design == 3 and not undated and start_date and cal_integration in ("google", "both"):
+                wk_url = (f"https://calendar.google.com/calendar/r"
+                          f"/week/{start_date.year}/{start_date.month}/{start_date.day}")
+                rect(sidebar_x, sb_y - 22, sidebar_w, 20, f=A, radius=4)
+                font("Helvetica-Bold", 6.5); fill(DARK)
+                c.drawCentredString(sidebar_x + sidebar_w/2, sb_y - 22 + 6,
+                                    "OPEN WEEK IN GOOGLE CAL")
+                c.linkURL(wk_url, (sidebar_x, sb_y - 22, sidebar_x + sidebar_w, sb_y - 2))
+                sb_y -= 30
 
-        # Water tracker circles
-        water_y = habit_y - 34
-        font("Helvetica-Bold", 7); fill(MID)
-        c.drawString(sidebar_x, water_y, "WATER")
-        for wi in range(8):
-            wx = sidebar_x + wi * (sidebar_w / 8)
-            circle(wx + 5, water_y - 10, 4, s=_blend(T, 0.45), lwidth=0.7)
+            # Habit mini-tracker
+            habit_y = sb_y - 14
+            font("Helvetica-Bold", 7); fill(MID)
+            c.drawString(sidebar_x, habit_y + 2, "HABITS")
+            for hi in range(5):
+                hx = sidebar_x + hi * (sidebar_w / 5)
+                checkbox_field(hx + 2, habit_y - 14, 10,
+                               f"week_{week_num_or_label}_habit{hi}")
+                font("Helvetica", 5.5); fill(MID)
+                c.drawCentredString(hx + 7, habit_y - 22, str(hi + 1))
+
+            # Water tracker circles
+            water_y = habit_y - 34
+            font("Helvetica-Bold", 7); fill(MID)
+            c.drawString(sidebar_x, water_y, "WATER")
+            for wi in range(8):
+                wx = sidebar_x + wi * (sidebar_w / 8)
+                circle(wx + 5, water_y - 10, 4, s=_blend(T, 0.45), lwidth=0.7)
 
         draw_nav_tabs("weekly_start")
         page_footer(f"WEEK  {week_num_or_label}")
@@ -2657,11 +2937,88 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         page_footer(f"NOTES  {page_num}")
         c.showPage()
 
+    # ── CALENDAR SYNC GUIDE (tier 3 only) ────────────────────────────────────
+    def draw_calendar_sync_page():
+        c.bookmarkPage("cal_sync")
+        c.addOutlineEntry("Calendar Sync Guide", "cal_sync", level=0)
+        page_bg()
+        content_w = CW - TAB_W - 4
+
+        # Header
+        rect(0, PH - MT - 54, PW - TAB_W - 2, 54 + MT, f=T)
+        rect(0, PH - MT - 54, 5, 54 + MT, f=A)
+        font("Helvetica-Bold", 20); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 34, "CALENDAR SYNC GUIDE")
+        font("Helvetica", 8.5); fill(_blend(WHITE, 0.45))
+        c.drawRightString(PW - TAB_W - 10, PH - MT - 34, "Google Calendar · Apple Calendar")
+        rect(0, PH - MT - 58, PW - TAB_W - 2, 4, f=A)
+
+        y = PH - MT - 80
+        steps = [
+            ("TAP A DATE TO VIEW IT",
+             "Every dated cell in the monthly calendar is a live link. Tap the "
+             "date number (e.g. 12) to open that day directly in Google Calendar "
+             "— works on iPhone, Android, Mac, and PC."),
+            ('TAP "+" TO ADD AN EVENT',
+             'Each day cell has a small + button in the bottom-right corner. '
+             "Tap it to open Google Calendar's New Event screen pre-filled "
+             "with that date — ready for you to type the event details."),
+            ("WEEKLY CALENDAR BUTTON",
+             "On each weekly page, tap OPEN WEEK IN GOOGLE CAL in the sidebar "
+             "to see your full week schedule alongside your planner notes."),
+            ("WORKS ON ALL DEVICES",
+             "Google Calendar links open in any browser. On iPhone or Android, "
+             "install the free Google Calendar app for the best experience. "
+             "The A button in each cell opens Apple Calendar on iOS and macOS."),
+            ("SYNC BOTH CALENDARS",
+             "To use both: add your Google account to iOS Settings → Calendar → "
+             "Accounts. Your Google events will then appear in Apple Calendar "
+             "and both apps stay in sync automatically."),
+        ]
+
+        for i, (heading, body) in enumerate(steps):
+            if y < MB + 50:
+                break
+            # Step circle
+            circle(ML + 11, y - 5, 10, f=A)
+            font("Helvetica-Bold", 7.5); fill(DARK)
+            c.drawCentredString(ML + 11, y - 7, str(i + 1))
+            # Heading
+            font("Helvetica-Bold", 9.5); fill(T)
+            c.drawString(ML + 28, y - 1, heading)
+            y -= 17
+            # Body — simple word-wrap
+            font("Helvetica", 8); fill(DARK)
+            words = body.split(); line = ""; max_w = content_w - 34
+            for w in words:
+                test = (line + " " + w).strip()
+                if c.stringWidth(test, "Helvetica", 8) <= max_w:
+                    line = test
+                else:
+                    c.drawString(ML + 28, y, line); y -= 11; line = w
+            if line:
+                c.drawString(ML + 28, y, line); y -= 11
+            y -= 14
+
+        # Big Google Calendar button at the bottom
+        gcal_main = "https://calendar.google.com"
+        bw2 = 180; bh2 = 26; bx2 = (PW - TAB_W) / 2 - bw2 / 2; by2 = MB + 28
+        rect(bx2, by2, bw2, bh2, f=A, radius=6)
+        font("Helvetica-Bold", 10); fill(DARK)
+        c.drawCentredString(bx2 + bw2/2, by2 + 9, "OPEN GOOGLE CALENDAR")
+        c.linkURL(gcal_main, (bx2, by2, bx2 + bw2, by2 + bh2))
+
+        page_footer("Calendar Sync Guide")
+        draw_nav_tabs()
+        c.showPage()
+
     # ── ASSEMBLE ──────────────────────────────────────────────────────────────
     page_count = 0
     draw_cover();       page_count += 1
     draw_index_page();  page_count += 1
     draw_how_to_use();  page_count += 1
+    if cal_integration in ("google", "apple", "both"):
+        draw_calendar_sync_page(); page_count += 1
 
     if "monthly" in sections or "weekly" in sections:
         draw_yearly_overview(); page_count += 1
