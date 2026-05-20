@@ -820,7 +820,7 @@ TOOL_DEFINITIONS: list[dict] = [
                 },
                 "room_styles": {
                     "type": "array",
-                    "items": {"type": "string", "enum": ["kitchen_dining", "living_room", "entryway", "bedroom"]},
+                    "items": {"type": "string", "enum": ["kitchen_dining", "living_room", "entryway", "bedroom", "pub"]},
                     "description": "Which room types to generate. Default: kitchen_dining, living_room, entryway.",
                     "default": ["kitchen_dining", "living_room", "entryway"],
                 },
@@ -1627,6 +1627,19 @@ _ROOM_BG_PROMPTS: dict[str, str] = {
         "The wall is COMPLETELY BLANK — no art, no frames, no pictures, nothing on the wall. "
         "Bright, clean, neutral — Pottery Barn / Restoration Hardware catalog quality. Photorealistic."
     ),
+    "pub": (
+        "Interior photography of a warm upscale English pub or whiskey bar. "
+        "Rich dark walnut wood paneling covering the walls — vertical raised panels with chair rail molding. "
+        "Polished dark wood bar top with warm amber light reflected across its surface. "
+        "Brass picture-rail picture light mounted above where the art will hang, casting a focused warm downward beam. "
+        "Rows of amber whiskey bottles and glassware on open wood shelves slightly out of focus in background. "
+        "Round leather-topped dark metal bar stools along the bar below the art. "
+        "Warm amber incandescent pendant lighting overhead, supplemented by the picture light. "
+        "Patrons visible in extreme soft-focus background — warm and lively atmosphere. "
+        "Camera positioned straight on — the dark walnut paneled wall fills the upper 55% of the frame as a large empty surface. "
+        "COMPOSITION: the wall above the bar is COMPLETELY BLANK — no art, no frames, nothing on the wall. "
+        "Bar and stools occupy only the lower 45%. Warm amber and honey wood tones throughout. Photorealistic."
+    ),
 }
 
 # Shadow bleed padding used inside _render_framed_art_rgba
@@ -1706,6 +1719,7 @@ def _create_room_composite(data: dict, store: DataStore) -> str:
         "living_room":    0.50,
         "entryway":       0.36,
         "bedroom":        0.48,
+        "pub":            0.52,
     }
 
     saved: list[dict] = []
