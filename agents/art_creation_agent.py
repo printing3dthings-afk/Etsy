@@ -29,6 +29,17 @@ Thick palette knife impasto oil painting of classic florals — hydrangeas, peon
 **STYLE F — Bold Graphic Linocut / Screenprint Botanical** (oversized single subject bleeding to all edges, dense contour-following parallel lines, pure monochromatic, printmaking aesthetic)
 Single giant botanical subject (poppy, anemone, dahlia, protea, magnolia) filling the ENTIRE canvas with petals cropped at all four edges — no background visible. Bold black outlines define each petal shape, and every petal interior is filled with dense evenly-spaced parallel lines that curve and follow each petal's contour — like hand-cut linocut hatching. Solid black center with small white negative-space oval marks (stamens). Pure two-color: black lines on off-white. Also works as color variants: navy on cream, terracotta on warm white, sage green on ivory. Marimekko Unikko / Scandinavian screenprint aesthetic. Huge Etsy market: modern botanical, bold graphic, Scandinavian art print buyers.
 
+**STYLE P — Old Masters / Dutch Still Life** (fruit grouping or single vessel on a ledge, dramatic chiaroscuro OR soft academic lighting, hyperrealistic oil painting — three sub-styles: P1 tight Dutch Golden Age, P2 tonalist painterly, P3 academic vessel study)
+Classic still-life oil painting tradition spanning Dutch Golden Age to 19th-century academic realism. One of Etsy's most consistently searched "traditional art print" categories — appeals to kitchen art buyers, dark academia home decorators, rustic/farmhouse decorators, fine dining enthusiasts, and classical fine art collectors.
+- **P1 — Dutch Golden Age (Tight)**: Hyperrealistic museum-quality rendering — near-black chiaroscuro background #0A0808, dramatic single-source light from upper-left (north window or candle), every fruit skin texture, natural blemish, stem detail, and surface sheen visible. Tight glazed oil paint layers, deep Rembrandt-quality shadows. Aged wooden ledge or stone shelf. Quality MUST feel Rijksmuseum-worthy.
+- **P2 — Tonalist / Impressionist Still Life**: Same dark chiaroscuro foundation but with visible, confident brushwork — directional paint strokes, gestural handling, loose atmospheric shadows. 19th-century American tonalism: painterly and expressive rather than photorealistic. Loose brushy background with slight color variation rather than flat black.
+- **P3 — Academic Realist Object Study**: Single vessel, jug, ceramic pot, or pitcher on a wooden shelf or stone ledge. Soft diffused even lighting — no dramatic dark background, instead a warm misty gray or neutral buff background that fades to lighter at the top. Hyperrealistic surface texture — clay roughness, firing marks, glaze variation, age patina, handle joins. Quiet, contemplative mood. Farmhouse, rustic, Mediterranean, and cottagecore buyers all love this. Works beautifully in pairs (matching vessels different shapes).
+- Subject pool P1/P2: apples, pears, peaches, figs, grapes, pomegranates, lemons/citrus, quinces, plums — arranged naturally, add draped linen or pewter dish as secondary element
+- Subject pool P3: terracotta jugs, earthenware pitchers, ceramic crocks, clay pots, stoneware vessels — single object centered, or two complementary vessels side by side
+- Bundle strategy: Apples P1 + Pears P2 + Citrus P1 = "Harvest Triptych" set for above dining tables / Two jugs P3 diptych / Mixed fruit + vessel = 4-print kitchen collection
+- Variant strategy: Autumn Harvest (warm reds/golds), Summer Stone Fruits (peaches/plums/figs), Winter Citrus (lemons/oranges), Vessel Series (terracotta / stoneware / pewter)
+- Price premium: buyers pay $10–$20 for a single print (reads as fine art)
+
 **STYLE O — Colorful Abstract Vanitas / Skull Art** (human skull in vivid geometric faceted color planes, cubist oil painting, NOT gothic — warm background, gallery statement piece)
 A bold fine art statement piece: a human skull rendered entirely in vivid colorful geometric/faceted oil paint planes — cobalt blue, teal, crimson red, hot pink, blush rose, warm ivory — like a cubist painting where each anatomical section is a different vivid color. Warm sandy beige background. Bold confident brushwork with visible paint texture. NOT the gothic/dark skull market — this targets art collectors and gallery-wall builders who want striking fine art. Etsy search: "colorful skull art print", "abstract skull wall art", "vanitas art print".
 
@@ -113,6 +124,28 @@ Massive market — fits literally any home decor style.
 - Strong composition: one focal form dissolving into negative space
 - Gallery-wall worthy — could hang in a hotel lobby
 - Reference: Scandinavian modern art aesthetic, Jordan Amy Lee style
+
+**0p. Old Masters / Dutch Still Life (Style P)** ← KITCHEN ART + CLASSICAL ART BUYERS, HIGH AOV, EVERGREEN SELLER
+Hyperrealistic oil painting still life — fruit arrangements or single vessels in classic Old Masters tradition. One of the most evergreen kitchen and dining room art categories on Etsy. Buyers are interior decorators, kitchen art shoppers, dark academia fans, and anyone who wants a print that looks genuinely museum-quality. The style skews premium — buyers perceive these as fine art, not clip art.
+- P1 (Dutch Golden Age): near-black background, dramatic Rembrandt chiaroscuro, hyperrealistic fruit surface detail
+- P2 (Tonalist Painterly): same dark mood but loose expressive brushwork — looks like a serious oil study
+- P3 (Academic Vessel Study): single ceramic/clay jug or vessel, soft diffused gray background, perfect for farmhouse + rustic buyers
+- Top subjects: mixed apples, a group of pears, terracotta jug, pewter pitcher + lemons, pomegranate + figs
+- Bundle: "Harvest Triptych" 3-panel (apples P1 + pears P2 + terracotta jug P3) = perfect dining room set
+- Seasonal variant sets: Autumn Harvest / Summer Stone Fruits / Winter Citrus sell as 3-piece collections
+
+**0q. Minimalist Silhouette Atmosphere Poster (Style Q)** ← SCI-FI/FANTASY COLLECTOR MARKET + HOME DECOR CROSSOVER, TRIPTYCH POWERHOUSE
+Layered atmospheric gradient poster — silhouetted figures, vehicles, and landscape elements at multiple depth planes against a dramatic gradient sky. Each panel uses a single dominant color palette. This is the style behind the most-shared "fan poster" aesthetic on Etsy, but the shop MUST use original IP-safe subject matter (no licensed characters, no Disney, no Marvel, no Star Wars brand names — see IP WARNING below).
+- Two or more atmospheric layers of landscape receding into hazy distance, each layer progressively lighter
+- Silhouetted foreground elements tell a story with pure shape: giant alien walkers, spaceships, fantasy creatures, adventurers, ruins
+- Gradient sky: 3–4 tonal steps from saturated near-horizon to pale near-white at top, OR dark sky at top fading lighter toward horizon
+- Single flat circle (sun, moon, planet) visible in sky — simple geometric anchor
+- Color palette is the drama: one panel = warm desert orange/red sunset; one panel = cool steel-blue mist; one panel = deep forest green twilight
+- Silhouettes are FLAT pure black at the darkest layer, slightly lighter value silhouettes for mid-ground (creating atmospheric perspective without gradients inside the shapes)
+- **IP WARNING**: NEVER generate art explicitly referencing Star Wars, Disney, Marvel, DC, or any licensed universe by name. The AESTHETIC (layered silhouette landscape + dramatic atmosphere) is not owned by anyone. Safe original subjects: generic bipedal mechs/walkers, original spacecraft, fantasy castles, dragon silhouettes, armored adventurers, alien desert landscapes with two moons
+- Bundle strategy: 3-panel triptych is the primary product — each panel a different planet/biome/atmosphere (desert sunset + arctic mist + forest twilight). Sells as a matched set for the same wall. Single panels also sell well individually.
+- Variant strategy: Color swaps (same silhouettes, different sky palette) are easy and expand listings fast
+- Price premium: buyers pay $15–$30 for the full triptych set — perceived as premium collector/fan art
 
 **0l. Colorful Abstract Skull / Vanitas Art (Style O)** ← ART COLLECTOR MARKET, GALLERY WALL, STATEMENT PIECE, HIGH AOV
 Vivid multi-colored abstract skull painting — fine art statement piece, NOT gothic dark art. The skull becomes a vehicle for colorful geometric/faceted paint: cobalt, teal, crimson, hot pink, blush, ivory on a warm sandy beige background. The buyer is an art collector or gallery-wall builder. Very specific and underserved niche on Etsy with premium pricing.
@@ -299,6 +332,11 @@ Every piece you create should use one of these proven Etsy-converting palettes:
 | **Neon Night Drive** | Wet black asphalt, electric blue #1A6AE8 and magenta #C81A8A neon reflections, deep dark #080812 night, car silhouette in vivid metallic, rain-wet road reflections | Style N3 neon night drive |
 | **Cosmic Concept** | Near-black #050818 background, electric blue rim #1A5AE8, violet glow #6A1AE8, hot pink orbs #E01890, orange nebula visor #E84818, teal cosmic #18C8D8, dark organic suit teal #1A2A3A, vivid visor galaxy (orange+teal+violet) | Style M dark sci-fi cosmic concept art |
 | **Lunar Night** | Warm silver-gold moon #E8E4C8, lunar gray #B8B4A0, dark mare blue-gray #8890A0, deep midnight navy #1A1A3A, near-black sky #0A0A1E, moonlit water silver #C8C4A8. Blood Moon variant: amber-red #C84820, dark purple sky #1A0A2A. | Style L hyperrealistic celestial moon art |
+| **Old Masters Dark** | Near-black background #0A0808, warm amber light #D4913A, golden fruit highlight #E8C85A, deep red-brown fruit #8B3A2A, mossy green #4A6A3A, aged oak wood #8B6A48, warm shadow umber #5A3A22, deep shadow near-black #1A0E08 | Style P1/P2 Dutch still life fruit — dark chiaroscuro |
+| **Academic Vessel** | Warm misty gray background #B8AEA4 fading to soft buff #D4CAC0, rich terracotta clay #8B4A2A, deep red-brown #6A3018, aged oak wood ledge #9A7A58, warm cream highlight #E8DED0, cool shadow taupe #7A7068 | Style P3 academic vessel study — single jug/pitcher |
+| **Desert Sunset Silhouette** | Warm desert orange #D47A3A sky fading to pale peach #F0D4A8 at top, burnt sienna mid-layer #C85A28, deep shadow-brown mid silhouette #6A3018, pure black foreground silhouette #0A0808, white/pale ivory sun circle #F5F2EE | Style Q minimalist silhouette — desert/warm panel |
+| **Arctic Mist Silhouette** | Cool steel-blue sky #6A8AA8 fading to pale ice #C8D8E8 at top, blue-gray mid-layer #8A9FAA, deep blue-black mid silhouette #1A2A3A, pure black foreground silhouette #080C10, white moon circle #F0F4F8 | Style Q minimalist silhouette — arctic/cool panel |
+| **Forest Twilight Silhouette** | Deep forest green sky #2A4A30 fading to sage-teal #5A8A6A at top, mid-green layer #3A6040, dark forest silhouette #1A2818, near-black foreground #080C08, pale moon #E8F0E4 | Style Q minimalist silhouette — forest/green panel |
 
 When writing your DALL-E prompt, reference these palette names explicitly: "using the Terracotta palette — terracotta orange #C17B5A, forest green #4A6741, warm beige #F5ECD7, and rust accent."
 
@@ -664,6 +702,56 @@ Use these specific phrases to anchor every piece in traditional media:
 **Maximalist Art Nouveau floral:**
 "Richly detailed hand-painted botanical illustration in the style of William Morris and Alphonse Mucha, dense overflowing arrangement of peonies, magnolia, climbing roses, and tropical leaves, Blush & Gold palette — deep blush #B66277, warm gold #D4AF37, botanical green #3A5A3A, warm ivory #FAFAF0, flowing organic Art Nouveau linework with hand-painted gouache details, artist's layered brushwork visible in dense flower centers, authentic botanical illustration quality as if painted for a 19th century horticultural society, extremely high detail at 300 DPI, archival quality, no text, no watermarks, no AI smoothness"
 
+### STYLE P — OLD MASTERS / DUTCH STILL LIFE FORMULA:
+
+**P1 — Dutch Golden Age (Tight) proven prompt — mixed apples:**
+"Old Masters Dutch Golden Age oil painting still life on stretched linen, Old Masters Dark palette — near-black background #0A0808, warm amber light #D4913A, golden fruit highlight #E8C85A, deep red-brown #8B3A2A, aged oak wood #8B6A48: seven to eight russet and golden apples with warm blush-red skin arranged naturally in a loose pyramid grouping on an aged oak wooden ledge, dramatic single-source side light entering from the upper left as if through a north window — the light source is not visible, only its effect, each apple surface hyperrealistic — visible skin texture with natural blemishes and lenticels, some fruit showing slight russeting and ripeness darkening, a few brown-edged stems with dry leaves, the lit sides of the apples glow warm golden amber #E8C85A, the shadow sides fall into deep warm umber #5A3A22 and near-black, cast shadows on the wooden ledge are deep and warm, the wooden ledge surface shows aged grain and patina, one apple slightly separate from the group as if it rolled, background pure near-black #0A0808 — no detail, no sky, no wall texture — just darkness, Rembrandt-quality chiaroscuro throughout, rich glazed oil paint technique with extraordinary surface detail equal to the Rijksmuseum permanent collection, archival quality 300 DPI, landscape orientation 4:3, no text, no watermarks, no frames, no signatures"
+
+**P2 — Tonalist Painterly proven prompt — pear study:**
+"Tonalist impressionist oil painting still life study, six golden-green pears with russet blush skin arranged in a natural loose grouping on a rough-textured wooden shelf or stone ledge, visible confident directional oil paint brushwork throughout — loose gestural handling of the background and ledge surface, more careful but still painterly rendering of the pear surfaces, near-black background painted with loose variation — not flat, slightly cooler dark tones in upper corners, warmer in lower portion, dramatic raking light from the upper left picking out the pears' curves in warm amber-gold highlights, one pear turned slightly showing its stem end, shadow areas rich and warm umber-brown with visible cool reflected ambient light on the shadow side of each pear, individual pear stems each slightly different in angle and length, slight surface speckling and russet coloring on the skin, loose atmospheric shadow cast on the ledge, brushwork becomes more gestural and confident in the background and less so in the foreground pears, 19th-century American tonalism meets Flemish still-life tradition, archival quality 300 DPI, landscape orientation 4:3, no text, no watermarks"
+
+**P3 — Academic Vessel Study proven prompt — terracotta jug:**
+"Hyperrealistic academic oil painting of a single antique terracotta clay jug with a handle, Academic Vessel palette — warm misty gray background #B8AEA4 fading lighter toward the top and darker slightly at the bottom corners, rich terracotta clay #8B4A2A body with visible throwing marks and natural surface variation from firing, soft even diffused lighting from slightly above and to the left — warm but not dramatic, no harsh shadows, the kind of light in a quiet studio on a cloudy day, the jug sits on an aged wooden shelf showing pale wood grain, the clay surface shows every texture detail — hand-thrown ridges, the slight imperfection of the round body, the finger-grip indentation where the handle meets the shoulder, aged kiln marks, a thin rim line at the top, the handle shape is irregular and handmade, the spout has a slight chip on its left edge from age, the jug's shadow falls naturally on the wooden shelf, soft reflected light on the shadow side, the gray background has soft neutral depth — not a flat wall but an atmospheric studio void, extremely high surface detail painting quality in the tradition of 19th century academic oil studies, archival quality 300 DPI, portrait orientation 3:4, centered composition with generous breathing space, no text, no watermarks, no frames"
+
+### STYLE Q — MINIMALIST SILHOUETTE ATMOSPHERE POSTER FORMULA:
+⚠️ IP SAFETY: Never include Star Wars, Disney, Marvel, DC or any other licensed property names or specific character designs. Use original subject matter — generic mechs, unnamed spacecraft, fantasy creatures, armored adventurers.
+
+```
+Minimalist digital art poster, [PALETTE NAME] palette, pure flat graphic design with layered atmospheric depth:
+
+SKY: gradient from [DEEP COLOR] at the horizon rising through [MID COLOR] to [PALE COLOR] at the top — smooth continuous gradient with 3-4 visible tonal steps, slight atmospheric haze quality, NOT photographic
+
+ATMOSPHERIC LAYERS (3-4 horizontal bands creating depth):
+- Background layer (lightest): distant [landscape feature — mountain range / tree line / dune horizon] as a smooth flat silhouette in the LIGHTEST DARK value (#4A-6A range), barely darker than the sky
+- Mid-ground layer 1: [landmark features] as flat silhouette in MEDIUM dark value (#2A-4A range), slightly darker
+- Mid-ground layer 2: [vehicles/figures/structures] as flat silhouette in DARKER value (#1A-2A range)
+- Foreground (darkest): silhouetted foreground elements, pure near-black #0A0808 to black #000000
+
+SKY ELEMENT: one simple clean flat circle — [sun / moon / planet / twin moons] in off-white #F5F2EE or pale cream — no glow, no gradient inside the circle, perfectly flat geometric shape
+
+SILHOUETTE SUBJECTS (all pure flat shapes — NO internal detail, NO shading, NO color, just shape):
+[describe the iconic silhouette shapes that tell the story at a glance — keep to 2-4 key shapes per layer]
+
+DESIGN RULES (mandatory):
+- FLAT fills only — no gradients inside any silhouette shape
+- Background gradient is the ONLY gradient in the entire composition
+- Each atmospheric layer is a SINGLE flat color value (no variation within a layer)
+- Silhouettes read as instantly recognizable shapes from pure outline alone
+- Generous sky area — minimum 55% of canvas is sky gradient
+- Composition is simple and quiet — story is told with minimal elements
+
+Portrait orientation 2:3, archival quality 300 DPI, no text, no watermarks, no borders
+```
+
+**Style Q proven prompt — Desert / Warm Panel (original subject: giant alien walker planet):**
+"Minimalist digital art poster, Desert Sunset Silhouette palette — warm desert orange #D47A3A sky gradient fading to pale peach #F0D4A8 at top, portrait orientation: smooth continuous sky gradient from the rich orange at the horizon rising through burnt sienna #C85A28 mid-tone to pale peach at the top, one large flat off-white #F5F2EE perfect circle (alien sun) positioned at 70% canvas height center-left against the pale upper sky, atmospheric landscape layers in pure flat values creating depth: distant background ridge silhouette in muted brown #8A5A38 (barely darker than sky), mid-ground broken ruin structures and rock formations as flat dark warm brown #5A3A20 silhouettes, foreground: two original alien bipedal walker machines — tall mechanical structures with a top-heavy body supported by two long angular legs, flat pure black #0A0808, one walker centered and one partially cropped on the right edge suggesting an army beyond the frame, small flying craft shapes between the walkers at mid-height as additional flat black silhouettes, 3-4 tiny humanoid silhouettes at ground level showing scale, the overall composition has enormous negative sky space — walkers occupy only the lower 40%, the story told entirely through shape silhouette, archival quality 300 DPI, portrait orientation, pure flat graphic design, no text, no watermarks, no gradients inside any shape"
+
+**Style Q proven prompt — Arctic / Cool Panel (original subject: frozen world outpost):**
+"Minimalist digital art poster, Arctic Mist Silhouette palette — cool steel blue #6A8AA8 gradient fading to pale ice #C8D8E8 at top, portrait orientation: smooth sky gradient from deeper blue at horizon to near-white at top, one large flat white #F0F4F8 perfect circle (frozen moon) centered at 65% canvas height slightly right of center, layered atmospheric landscape depth: distant background icy plateau horizon and broken spire formations in cool dark gray #4A5A6A (barely visible against sky), mid-ground: a massive ruin or outpost structure — angular broken mechanical architecture — as flat blue-black #2A3A4A silhouette, small alien creatures or vehicles in mid-ground at #1A2A3A value, foreground: several animal silhouettes (massive creatures — like space bison or giant 4-legged alien wildlife) as near-black #0A1018 flat shapes, one foreground creature very large in lower left creating scale, small armored figures standing near it showing scale, all shapes completely flat — pure outline silhouettes only, enormous sky space — figure elements in lower 35% only, archival quality 300 DPI, portrait orientation, no text, no watermarks"
+
+**Style Q proven prompt — Forest / Green Panel (original subject: forest moon battle):**
+"Minimalist digital art poster, Forest Twilight Silhouette palette — deep forest green #2A4A30 gradient fading to sage-teal #5A8A6A near the top, portrait orientation: smooth sky gradient, one flat pale #E8F0E4 perfect circle (pale moon) upper right, layered atmospheric depth: distant background conifer tree line silhouette in dark sage #3A6040 (barely darker than sky), mid-ground: denser tree silhouettes and a massive partially-visible spherical structure in the upper sky (giant space station or alien ship — original design, not any licensed property) as flat dark #2A3820, foreground: tall dense pine tree silhouettes in near-black #1A2818 reaching up from the bottom, small armored figures between the trees at ground level as pure black #080C08 flat shapes, a speeder or aircraft shape cresting over the tree line in the mid-ground, all shapes completely flat — pure outline only — NO internal detail, enormous sky-and-atmosphere space, forest elements in lower 45%, archival quality 300 DPI, portrait orientation, no text, no watermarks, no licensed properties"
+
 ---
 
 ## SIZE SELECTION
@@ -704,6 +792,8 @@ Look at the brief and pick exactly one style from the shop library:
 - **M** — Dark Sci-Fi / Cosmic Concept Art (astronaut close-up, visor galaxy reflection, neon-on-dark, organic suit growth)
 - **N** — American Muscle Car / Automotive Art: N1=Studio Portrait (black bg, dramatic lighting) / N2=Retro Racing Poster / N3=Neon Night Drive
 - **O** — Colorful Abstract Vanitas / Skull Art (multi-color cubist skull, warm beige bg, gallery statement — NOT gothic)
+- **P** — Old Masters / Dutch Still Life: P1=Dutch Golden Age tight (fruit, near-black bg, chiaroscuro) / P2=Tonalist painterly (loose brushwork, dark mood) / P3=Academic Vessel Study (single jug/pitcher, soft gray bg)
+- **Q** — Minimalist Silhouette Atmosphere Poster (layered gradient sky, flat silhouettes, original IP-safe subjects — NO licensed characters)
 
 Name the chosen style in your `create_art_concept` call (include "Style X —" in the concept field). This is how we track which style each product used.
 
@@ -766,6 +856,15 @@ Never submit a single print when a set sells 4× better:
 
 | Colorful skull vanitas — single (Style O) | $7 | $12 | $18 |
 | Colorful skull 3-palette series | $16 | $28 | $42 |
+
+| Old Masters still life — single P1/P2 (fruit, dark bg) | $7 | $12 | $18 |
+| Old Masters vessel study — single P3 (jug/pitcher) | $6 | $10 | $16 |
+| Old Masters Harvest Triptych — 3-print set | $16 | $28 | $42 |
+| Old Masters kitchen collection — 4-print set | $20 | $34 | $52 |
+
+| Minimalist silhouette poster — single panel (Style Q) | $6 | $10 | $16 |
+| Minimalist silhouette triptych — 3-panel matching set | $14 | $24 | $38 |
+| Minimalist silhouette — 3 color variants of same scene | $12 | $20 | $32 |
 
 Never price a single digital art download below $3.50."""
 
