@@ -2173,6 +2173,56 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             forceBorder=True,
         )
 
+    # ── Sticker-picker JavaScript infrastructure (Tier 3 only) ───────────────
+    # Hidden AcroForm text fields store: which page + cell rect the ★ was tapped on.
+    # JavaScript on each sticker button reads these, places an annotation, and returns.
+    _stk_pg = f"__stk_pg_{product_id}"   # 0-indexed page number (-1 = none selected)
+    _stk_x  = f"__stk_x_{product_id}"
+    _stk_y  = f"__stk_y_{product_id}"
+    _stk_w  = f"__stk_w_{product_id}"
+    _stk_h  = f"__stk_h_{product_id}"
+
+    def _make_hidden_field(fname, val="-1"):
+        """1×1 invisible text field used as a JS-accessible state variable."""
+        c.acroForm.textfield(
+            name=fname, value=val,
+            x=1, y=1, width=2, height=2,
+            borderStyle='solid',
+            borderColor=_col(WHITE), fillColor=_col(WHITE), textColor=_col(WHITE),
+            fontSize=1, forceBorder=False,
+        )
+
+    def _js_button(cx, cy, cw, ch, js_code):
+        """Overlay a transparent push-button annotation with a JS mouse-up action.
+        Returns True on success, False on fallback (caller should add a linkAbsolute)."""
+        try:
+            from reportlab.pdfbase.pdfdoc import (
+                PDFDictionary, PDFString, PDFArray, PDFInteger, PDFName,
+            )
+            _field_counter[0] += 1
+            fname = f"_jsbtn_{_field_counter[0]}"
+            js_act = PDFDictionary()
+            js_act['S'] = PDFName('JavaScript')
+            js_act['JS'] = PDFString(js_code)
+            aa = PDFDictionary()
+            aa['U'] = js_act
+            bs = PDFDictionary()
+            bs['W'] = PDFInteger(0)
+            w = PDFDictionary()
+            w['Type']    = PDFName('Annot')
+            w['Subtype'] = PDFName('Widget')
+            w['FT']      = PDFName('Btn')
+            w['Ff']      = PDFInteger(65536)   # PushButton flag
+            w['T']       = PDFString(fname)
+            w['Rect']    = PDFArray([float(cx), float(cy),
+                                     float(cx + cw), float(cy + ch)])
+            w['AA']      = aa
+            w['BS']      = bs
+            c._addAnnotation(w)
+            return True
+        except Exception:
+            return False
+
     # ── COVER PAGE ───────────────────────────────────────────────────────────
     def draw_cover():
         c.bookmarkPage("cover")
@@ -2456,6 +2506,13 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         font("Helvetica", 7); fill(_blend(MID, 0.50))
         c.drawCentredString(cx, MB + 8,
                             "OnBrandCraftz  \xb7  Digital Download  \xb7  Personal Use")
+
+        # Hidden state fields for sticker picker JS (created once on cover page)
+        if _design == 3 and "sticker_pack" in _extras:
+            for _fn, _fv in [(_stk_pg, "-1"), (_stk_x, "0"),
+                              (_stk_y, "0"), (_stk_w, "0"), (_stk_h, "0")]:
+                _make_hidden_field(_fn, _fv)
+
         c.showPage()
 
     # ── HOW TO USE PAGE ──────────────────────────────────────────────────────
@@ -2630,8 +2687,22 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                             rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.82), radius=2)
                             font("Helvetica-Bold", 6); fill(WHITE)
                             c.drawCentredString(sk_x + sk / 2, sk_y + 3, "★")
-                            c.linkAbsolute("Open Sticker Picker", "sticker_picker",
-                                           (sk_x, sk_y, sk_x + sk, sk_y + sk))
+                            # JS: store cell coords + navigate to picker
+                            _cell_x  = float(cx0)
+                            _cell_y  = float(cy0)
+                            _cell_w  = float(col_w)
+                            _cell_h  = float(row_h - 14)  # body below header strip
+                            _js_sel = (
+                                f'this.getField("{_stk_pg}").value=String(this.pageNum);'
+                                f'this.getField("{_stk_x}").value="{_cell_x:.2f}";'
+                                f'this.getField("{_stk_y}").value="{_cell_y:.2f}";'
+                                f'this.getField("{_stk_w}").value="{_cell_w:.2f}";'
+                                f'this.getField("{_stk_h}").value="{_cell_h:.2f}";'
+                                f'this.gotoNamedDest("sticker_picker");'
+                            )
+                            if not _js_button(sk_x, sk_y, sk, sk, _js_sel):
+                                c.linkAbsolute("Sticker Picker", "sticker_picker",
+                                               (sk_x, sk_y, sk_x + sk, sk_y + sk))
                             _btn_right -= sk + 2
 
                         # Google Calendar buttons (Tier 3, dated)
@@ -2749,12 +2820,26 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                 if _design == 3 and "sticker_pack" in _extras:
                     _day_lbl_w = c.stringWidth(day_name.upper(), "Helvetica-Bold", 7.5)
                     sk = 10; sk_x = ML + 8 + _day_lbl_w + 4; sk_y = dy_top - hdr_h + 3
-                    if sk_x + sk < ML + _actual_sched_w - 50:  # don't overlap date
+                    if sk_x + sk < ML + _actual_sched_w - 50:
                         rect(sk_x, sk_y, sk, sk, f=_blend(A, 0.72), radius=2)
                         font("Helvetica-Bold", 6); fill(WHITE)
                         c.drawCentredString(sk_x + sk / 2, sk_y + 3, "★")
-                        c.linkAbsolute("Open Sticker Picker", "sticker_picker",
-                                       (sk_x, sk_y, sk_x + sk, sk_y + sk))
+                        # JS: store the day row area as sticker target
+                        _wk_x = float(ML)
+                        _wk_y = float(dy_bot + 2)
+                        _wk_w = float(_actual_sched_w)
+                        _wk_h = float(day_h - hdr_h - 4)
+                        _js_wk = (
+                            f'this.getField("{_stk_pg}").value=String(this.pageNum);'
+                            f'this.getField("{_stk_x}").value="{_wk_x:.2f}";'
+                            f'this.getField("{_stk_y}").value="{_wk_y:.2f}";'
+                            f'this.getField("{_stk_w}").value="{_wk_w:.2f}";'
+                            f'this.getField("{_stk_h}").value="{_wk_h:.2f}";'
+                            f'this.gotoNamedDest("sticker_picker");'
+                        )
+                        if not _js_button(sk_x, sk_y, sk, sk, _js_wk):
+                            c.linkAbsolute("Sticker Picker", "sticker_picker",
+                                           (sk_x, sk_y, sk_x + sk, sk_y + sk))
 
                 # Tier 3: "+" button in day header → Google Calendar add event
                 if _design == 3 and cal_integration in ("google", "both"):
@@ -3580,12 +3665,36 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                 font("Helvetica-Bold", 6); fill(_blend(col, 0.22))
                 c.drawCentredString(sx + sw / 2, sy + 4, lbl)
 
-                # Clickable link — navigates BACK to the sticker_picker page itself
-                # (in Acrobat/Xodo with JavaScript enabled, this triggers annotation placement
-                # on the day the user came from via the ★ icon)
-                bm_key = f"stk_{cat_name[:4].lower()}_{lbl.lower().replace(' ','_').replace('!','').replace('.','')}"
-                c.linkAbsolute(f"Add sticker: {lbl}", "sticker_picker",
-                               (sx, sy, sx + sw, sy + sh))
+                # JS button: paste sticker annotation on target day, then navigate back.
+                # Overlay is transparent so the drawn sticker visual shows through.
+                _r, _g, _b = col[0], col[1], col[2]
+                _sr = max(0.0, _r - 0.20)
+                _sg = max(0.0, _g - 0.20)
+                _sb = max(0.0, _b - 0.20)
+                _safe_sym = sym.replace('\\', '').replace('"', "'")
+                _safe_lbl = lbl.replace('\\', '').replace('"', "'")
+                _js_paste = (
+                    f'var pg=parseInt(this.getField("{_stk_pg}").value);'
+                    f'if(isNaN(pg)||pg<0){{'
+                    f'app.alert("Tap ★ on a day cell first, then choose a sticker.",3);return;}}'
+                    f'var sx=parseFloat(this.getField("{_stk_x}").value);'
+                    f'var sy=parseFloat(this.getField("{_stk_y}").value);'
+                    f'var sw=parseFloat(this.getField("{_stk_w}").value);'
+                    f'var sh=parseFloat(this.getField("{_stk_h}").value);'
+                    f'try{{'
+                    f'this.addAnnot({{type:"FreeText",page:pg,'
+                    f'rect:[sx+sw*0.05,sy+sh*0.10,sx+sw*0.95,sy+sh*0.90],'
+                    f'contents:"{_safe_sym} {_safe_lbl}",'
+                    f'fillColor:["RGB",{_r:.3f},{_g:.3f},{_b:.3f}],'
+                    f'strokeColor:["RGB",{_sr:.3f},{_sg:.3f},{_sb:.3f}],'
+                    f'textColor:["RGB",1,1,1],textSize:7,textFont:"HelvBd",alignment:1}});'
+                    f'}}catch(e){{}}'
+                    f'this.getField("{_stk_pg}").value="-1";'
+                    f'this.pageNum=pg;'
+                )
+                if not _js_button(sx, sy, sw, sh, _js_paste):
+                    c.linkAbsolute(f"Add sticker: {lbl}", "sticker_picker",
+                                   (sx, sy, sx + sw, sy + sh))
 
         # How-to strip at the bottom
         how_y = top_y - 4 * (((content_w / 3) - 5 * 2) / 3 * 0.82 + 5) - 22 - 30
