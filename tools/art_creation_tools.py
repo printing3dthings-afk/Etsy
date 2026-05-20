@@ -136,6 +136,153 @@ COLOR_SCHEMES: dict[str, dict] = {
         "mid":    (0.35, 0.44, 0.35),
         "light":  (0.85, 0.90, 0.85),
     },
+    # ── Fun / bold schemes ────────────────────────────────────────────────────
+    "cotton_candy": {
+        "label":  "Cotton Candy",
+        "theme":  (0.871, 0.592, 0.776),   # #DE97C6 pink
+        "accent": (0.580, 0.808, 0.933),   # #94CEEE sky blue
+        "bg":     (0.996, 0.965, 0.988),   # #FEF6FC
+        "dark":   (0.28, 0.16, 0.24),
+        "mid":    (0.56, 0.42, 0.52),
+        "light":  (0.94, 0.88, 0.92),
+    },
+    "bubblegum": {
+        "label":  "Bubblegum",
+        "theme":  (0.973, 0.341, 0.576),   # #F85793 hot pink
+        "accent": (0.400, 0.867, 0.882),   # #66DDE1 cyan
+        "bg":     (0.996, 0.933, 0.965),   # #FEEFF6
+        "dark":   (0.26, 0.10, 0.18),
+        "mid":    (0.58, 0.36, 0.50),
+        "light":  (0.97, 0.88, 0.93),
+    },
+    "lemon_zest": {
+        "label":  "Lemon Zest",
+        "theme":  (0.220, 0.220, 0.100),   # near-black with yellow tint
+        "accent": (0.949, 0.824, 0.063),   # #F2D210 bright yellow
+        "bg":     (0.996, 0.992, 0.937),   # #FEFDED
+        "dark":   (0.14, 0.14, 0.06),
+        "mid":    (0.40, 0.40, 0.22),
+        "light":  (0.94, 0.94, 0.84),
+    },
+    "neon_pop": {
+        "label":  "Neon Pop",
+        "theme":  (0.188, 0.188, 0.216),   # #303037 dark charcoal
+        "accent": (0.976, 0.275, 0.573),   # #F94692 neon pink
+        "bg":     (0.992, 0.980, 0.996),   # almost white
+        "dark":   (0.12, 0.12, 0.16),
+        "mid":    (0.40, 0.38, 0.44),
+        "light":  (0.86, 0.84, 0.90),
+    },
+    "retro_sunset": {
+        "label":  "Retro Sunset",
+        "theme":  (0.843, 0.392, 0.196),   # #D76432 burnt orange
+        "accent": (0.945, 0.714, 0.204),   # #F1B634 golden yellow
+        "bg":     (0.988, 0.953, 0.910),   # #FCF3E8 warm cream
+        "dark":   (0.22, 0.13, 0.08),
+        "mid":    (0.52, 0.38, 0.28),
+        "light":  (0.94, 0.86, 0.80),
+    },
+    "tropical": {
+        "label":  "Tropical",
+        "theme":  (0.043, 0.604, 0.576),   # #0B9A93 teal
+        "accent": (0.957, 0.639, 0.165),   # #F4A32A mango
+        "bg":     (0.929, 0.976, 0.973),   # #EDF9F8
+        "dark":   (0.04, 0.22, 0.20),
+        "mid":    (0.30, 0.55, 0.52),
+        "light":  (0.82, 0.94, 0.93),
+    },
+    "spring_blossom": {
+        "label":  "Spring Blossom",
+        "theme":  (0.890, 0.467, 0.651),   # #E377A6 blossom pink
+        "accent": (0.467, 0.761, 0.459),   # #77C275 fresh green
+        "bg":     (0.996, 0.961, 0.980),   # #FEF5FB
+        "dark":   (0.24, 0.14, 0.18),
+        "mid":    (0.55, 0.40, 0.48),
+        "light":  (0.96, 0.88, 0.93),
+    },
+    # ── Moody / dark schemes ──────────────────────────────────────────────────
+    "midnight_purple": {
+        "label":  "Midnight Purple",
+        "theme":  (0.298, 0.157, 0.478),   # #4C287A deep purple
+        "accent": (0.773, 0.620, 0.933),   # #C59EEE soft lavender
+        "bg":     (0.976, 0.969, 0.992),   # #F9F7FD
+        "dark":   (0.16, 0.10, 0.24),
+        "mid":    (0.44, 0.36, 0.56),
+        "light":  (0.88, 0.85, 0.94),
+    },
+    "deep_ocean": {
+        "label":  "Deep Ocean",
+        "theme":  (0.047, 0.310, 0.490),   # #0C4F7D ocean blue
+        "accent": (0.200, 0.733, 0.667),   # #33BBAA teal
+        "bg":     (0.929, 0.965, 0.984),   # #EEF6FB
+        "dark":   (0.04, 0.18, 0.28),
+        "mid":    (0.30, 0.52, 0.62),
+        "light":  (0.82, 0.90, 0.95),
+    },
+    "art_deco_bk": {
+        "label":  "Art Deco",
+        "theme":  (0.067, 0.067, 0.067),   # #111 near black
+        "accent": (0.831, 0.686, 0.216),   # #D4AF37 gold
+        "bg":     (0.988, 0.984, 0.973),   # #FBF9F8 warm white
+        "dark":   (0.06, 0.06, 0.06),
+        "mid":    (0.35, 0.32, 0.28),
+        "light":  (0.88, 0.86, 0.82),
+    },
+    "rosewood": {
+        "label":  "Rosewood",
+        "theme":  (0.537, 0.200, 0.259),   # #893342 deep rose
+        "accent": (0.557, 0.416, 0.337),   # #8E6A56 warm wood
+        "bg":     (0.984, 0.953, 0.945),   # #FBF3F1
+        "dark":   (0.22, 0.10, 0.12),
+        "mid":    (0.52, 0.34, 0.38),
+        "light":  (0.93, 0.86, 0.88),
+    },
+    # ── Natural / earthy schemes ──────────────────────────────────────────────
+    "peach_cream": {
+        "label":  "Peach & Cream",
+        "theme":  (0.890, 0.561, 0.416),   # #E38F6A peach
+        "accent": (0.580, 0.341, 0.224),   # #945739 terracotta
+        "bg":     (0.996, 0.953, 0.933),   # #FEF3EE
+        "dark":   (0.28, 0.16, 0.10),
+        "mid":    (0.56, 0.40, 0.32),
+        "light":  (0.96, 0.88, 0.84),
+    },
+    "sky_breeze": {
+        "label":  "Sky Breeze",
+        "theme":  (0.388, 0.651, 0.878),   # #63A6E0 sky blue
+        "accent": (0.996, 0.788, 0.388),   # #FEC963 sunny yellow
+        "bg":     (0.937, 0.961, 0.984),   # #EFF5FB
+        "dark":   (0.13, 0.22, 0.32),
+        "mid":    (0.40, 0.54, 0.66),
+        "light":  (0.84, 0.90, 0.95),
+    },
+    "autumn_harvest": {
+        "label":  "Autumn Harvest",
+        "theme":  (0.667, 0.278, 0.122),   # #AA471F pumpkin
+        "accent": (0.839, 0.635, 0.204),   # #D6A234 harvest gold
+        "bg":     (0.984, 0.961, 0.929),   # #FBF5ED
+        "dark":   (0.22, 0.12, 0.06),
+        "mid":    (0.52, 0.35, 0.24),
+        "light":  (0.94, 0.87, 0.82),
+    },
+    "mint_chip": {
+        "label":  "Mint Chip",
+        "theme":  (0.231, 0.682, 0.565),   # #3BAD90 mint
+        "accent": (0.290, 0.200, 0.157),   # #4A3328 chocolate
+        "bg":     (0.929, 0.980, 0.965),   # #EDF9F7
+        "dark":   (0.10, 0.20, 0.16),
+        "mid":    (0.35, 0.55, 0.46),
+        "light":  (0.82, 0.93, 0.89),
+    },
+    "ocean_mist": {
+        "label":  "Ocean Mist",
+        "theme":  (0.388, 0.620, 0.698),   # #639EB2 muted teal
+        "accent": (0.843, 0.761, 0.647),   # #D7C2A5 sandy beige
+        "bg":     (0.929, 0.957, 0.969),   # #EEF4F7
+        "dark":   (0.16, 0.26, 0.30),
+        "mid":    (0.42, 0.58, 0.64),
+        "light":  (0.84, 0.90, 0.93),
+    },
 }
 
 # ── PLANNER TIER PRESETS ──────────────────────────────────────────────────────
@@ -170,6 +317,137 @@ PLANNER_TIERS: dict[int, dict] = {
         "calendar_integration": "google",
         "subtitle_default": "Fillable PDF · Google Calendar Sync · GoodNotes · Notability",
         "design_desc":      "Premium integrated design — live calendar links, dot-grid pages, rich decorative elements.",
+    },
+}
+
+
+# ── PLANNER STYLE PRESETS (5 per tier, personality + sections + color) ────────
+_S_ALL = ["monthly", "monthly_review", "month_at_a_glance",
+          "weekly", "habit_tracker", "goals", "budget", "meal_plan", "notes"]
+_S_CORE = ["monthly", "weekly", "notes"]
+_S_LIFE = ["monthly", "monthly_review", "weekly", "habit_tracker", "goals", "notes"]
+_S_BUSI = ["monthly", "monthly_review", "month_at_a_glance", "weekly", "goals", "budget", "notes"]
+
+PLANNER_STYLES: dict[str, dict] = {
+    # ── TIER 1 — STARTER (print-friendly, 5 styles) ──────────────────────────
+    "t1_classic": {
+        "tier": 1, "name": "Classic Minimal",
+        "color_scheme": "minimal_mono", "sections": _S_CORE,
+        "design_variant": "minimal",
+        "subtitle": "Printable PDF · Clean & Simple",
+        "fun": False,
+    },
+    "t1_bold_fun": {
+        "tier": 1, "name": "Bold & Bright",
+        "color_scheme": "bubblegum", "sections": _S_CORE,
+        "design_variant": "fun",
+        "subtitle": "Printable PDF · Fun & Colorful",
+        "fun": True,
+    },
+    "t1_botanical": {
+        "tier": 1, "name": "Botanical Garden",
+        "color_scheme": "spring_blossom", "sections": _S_CORE,
+        "design_variant": "botanical",
+        "subtitle": "Printable PDF · Nature Inspired",
+        "fun": False,
+    },
+    "t1_student": {
+        "tier": 1, "name": "Student Planner",
+        "color_scheme": "sky_breeze",
+        "sections": ["monthly", "weekly", "notes"],
+        "design_variant": "student",
+        "subtitle": "Printable PDF · Academic Planner",
+        "fun": True,
+    },
+    "t1_retro": {
+        "tier": 1, "name": "Retro Vibes",
+        "color_scheme": "retro_sunset", "sections": _S_CORE,
+        "design_variant": "retro",
+        "subtitle": "Printable PDF · 70s Inspired",
+        "fun": True,
+    },
+    # ── TIER 2 — DIGITAL PRO (fillable, 5 styles) ────────────────────────────
+    "t2_executive": {
+        "tier": 2, "name": "Executive Pro",
+        "color_scheme": "midnight_navy", "sections": _S_BUSI,
+        "design_variant": "premium",
+        "subtitle": "Fillable PDF · Professional Planner",
+        "fun": False,
+    },
+    "t2_wellness": {
+        "tier": 2, "name": "Wellness Journal",
+        "color_scheme": "lavender_dreams", "sections": _S_LIFE,
+        "design_variant": "wellness",
+        "subtitle": "Fillable PDF · Mind Body Soul",
+        "fun": False,
+    },
+    "t2_creative": {
+        "tier": 2, "name": "Creative Studio",
+        "color_scheme": "retro_sunset", "sections": _S_ALL,
+        "design_variant": "creative",
+        "subtitle": "Fillable PDF · For Creative Minds",
+        "fun": True,
+    },
+    "t2_family": {
+        "tier": 2, "name": "Family Organizer",
+        "color_scheme": "mint_chip",
+        "sections": ["monthly", "monthly_review", "weekly", "meal_plan", "habit_tracker", "notes"],
+        "design_variant": "fun",
+        "subtitle": "Fillable PDF · Family Life Planner",
+        "fun": True,
+    },
+    "t2_dark_luxe": {
+        "tier": 2, "name": "Dark Luxe",
+        "color_scheme": "dark_academia", "sections": _S_ALL,
+        "design_variant": "premium",
+        "subtitle": "Fillable PDF · Dark Academia Aesthetic",
+        "fun": False,
+    },
+    # ── TIER 3 — CONNECTED (premium, 5 styles) ───────────────────────────────
+    "t3_elite": {
+        "tier": 3, "name": "Elite Premium",
+        "color_scheme": "art_deco_bk", "sections": _S_ALL,
+        "calendar_integration": "both",
+        "design_variant": "ultra_premium",
+        "subtitle": "Connected PDF · Google & Apple Calendar · Premium",
+        "extras": ["color_selector", "vision_board", "mood_tracker", "sticker_pack"],
+        "fun": False,
+    },
+    "t3_manifestation": {
+        "tier": 3, "name": "Manifestation Journal",
+        "color_scheme": "midnight_purple", "sections": _S_LIFE,
+        "calendar_integration": "google",
+        "design_variant": "spiritual",
+        "subtitle": "Connected PDF · Manifest · Dream · Achieve",
+        "extras": ["color_selector", "vision_board", "mood_tracker", "sticker_pack"],
+        "fun": False,
+    },
+    "t3_boss": {
+        "tier": 3, "name": "Business Boss",
+        "color_scheme": "deep_ocean", "sections": _S_ALL,
+        "calendar_integration": "both",
+        "design_variant": "business",
+        "subtitle": "Connected PDF · KPIs · Goals · Revenue Tracking",
+        "extras": ["color_selector", "sticker_pack"],
+        "fun": False,
+    },
+    "t3_rainbow_fun": {
+        "tier": 3, "name": "Rainbow Party",
+        "color_scheme": "bubblegum", "sections": _S_LIFE,
+        "calendar_integration": "google",
+        "design_variant": "rainbow_fun",
+        "subtitle": "Connected PDF · Fun · Colorful · Joyful",
+        "extras": ["color_selector", "mood_tracker", "sticker_pack"],
+        "fun": True,
+    },
+    "t3_boho_luxe": {
+        "tier": 3, "name": "Boho Luxe",
+        "color_scheme": "terracotta", "sections": _S_ALL,
+        "calendar_integration": "google",
+        "design_variant": "botanical",
+        "subtitle": "Connected PDF · Boho Aesthetic · Earthy Luxury",
+        "extras": ["color_selector", "vision_board", "mood_tracker", "sticker_pack"],
+        "fun": False,
     },
 }
 
@@ -288,19 +566,45 @@ TOOL_DEFINITIONS: list[dict] = [
             "properties": {
                 "product_id": {"type": "string", "description": "DP-prefixed product ID"},
                 "planner_title": {"type": "string", "description": "Planner title shown on the cover"},
+                "planner_style": {
+                    "type": "string",
+                    "enum": [
+                        "t1_classic", "t1_bold_fun", "t1_botanical", "t1_student", "t1_retro",
+                        "t2_executive", "t2_wellness", "t2_creative", "t2_family", "t2_dark_luxe",
+                        "t3_elite", "t3_manifestation", "t3_boss", "t3_rainbow_fun", "t3_boho_luxe",
+                    ],
+                    "description": (
+                        "Planner style preset — auto-sets tier, color scheme, sections, and design. "
+                        "TIER 1 (print-only): t1_classic=minimal mono, t1_bold_fun=bubblegum/fun, "
+                        "t1_botanical=spring blossom/nature, t1_student=sky breeze/academic, t1_retro=retro sunset/70s. "
+                        "TIER 2 (fillable PDF): t2_executive=navy/corporate, t2_wellness=lavender/mindful, "
+                        "t2_creative=retro/artistic, t2_family=mint/family organizer, t2_dark_luxe=dark academia. "
+                        "TIER 3 (connected+premium): t3_elite=art deco black/gold, "
+                        "t3_manifestation=purple/spiritual+vision board, t3_boss=ocean blue/business KPIs, "
+                        "t3_rainbow_fun=bubblegum/party+stickers, t3_boho_luxe=terracotta/earthy luxury. "
+                        "Style auto-sets tier, color, sections. Any explicit param overrides the style."
+                    ),
+                },
                 "color_scheme": {
                     "type": "string",
                     "enum": [
                         "sage_cream", "dusty_rose", "midnight_navy", "terracotta",
                         "lavender_dreams", "dark_academia", "blush_gold", "minimal_mono",
                         "mocha_latte", "wine_burgundy", "ice_blue", "forest_deep",
+                        "cotton_candy", "bubblegum", "lemon_zest", "neon_pop",
+                        "retro_sunset", "tropical", "spring_blossom",
+                        "midnight_purple", "deep_ocean", "art_deco_bk", "rosewood",
+                        "peach_cream", "sky_breeze", "autumn_harvest",
+                        "mint_chip", "ocean_mist",
                     ],
                     "description": (
-                        "Named color scheme. Colorful: sage_cream, dusty_rose, midnight_navy, "
-                        "terracotta, lavender_dreams, dark_academia, blush_gold, minimal_mono. "
-                        "Sophisticated/editorial: mocha_latte (warm chocolate), "
-                        "wine_burgundy (deep wine), ice_blue (powder blue), "
-                        "forest_deep (dark forest green). Default: sage_cream."
+                        "27 color schemes. Neutral/classic: sage_cream, dusty_rose, midnight_navy, terracotta, "
+                        "lavender_dreams, dark_academia, blush_gold, minimal_mono, mocha_latte, wine_burgundy, "
+                        "ice_blue, forest_deep, ocean_mist. "
+                        "Fun/bold: cotton_candy, bubblegum, lemon_zest, neon_pop, retro_sunset, tropical, "
+                        "spring_blossom, sky_breeze, peach_cream, mint_chip, autumn_harvest. "
+                        "Dark/premium: midnight_purple, deep_ocean, art_deco_bk, rosewood. "
+                        "Default: sage_cream."
                     ),
                     "default": "sage_cream",
                 },
@@ -603,7 +907,7 @@ def _create_art_concept(data: dict, store: DataStore) -> str:
 
     products = store.get("digital_products", default=[])
     products.append(product)
-    store.set(products, "digital_products")
+    store.set("digital_products", products)
     store.save()
 
     return json.dumps({
@@ -1572,26 +1876,8 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     if not product:
         return json.dumps({"error": f"Product {product_id} not found"})
 
-    # ── resolve color scheme ──────────────────────────────────────────────────
-    scheme_key = data.get("color_scheme", "sage_cream")
-    if scheme_key not in COLOR_SCHEMES:
-        scheme_key = "sage_cream"
-    cs = COLOR_SCHEMES[scheme_key]
-    T      = cs["theme"]
-    A      = cs["accent"]
-    BG     = cs["bg"]
-    DARK   = cs["dark"]
-    MID    = cs["mid"]
-    LIGHT  = cs["light"]
-    WHITE  = (1.0, 1.0, 1.0)
-
     def _blend(rgb, factor):
         return tuple(c + (1.0 - c) * factor for c in rgb)
-
-    TL  = _blend(T, 0.82)
-    TM  = _blend(T, 0.50)
-    AL  = _blend(A, 0.75)
-    BGL = _blend(BG, -0.03) if BG[0] > 0.5 else _blend(BG, 0.15)
 
     # ── page setup ────────────────────────────────────────────────────────────
     try:
@@ -1627,10 +1913,33 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     TAB_GAP = 1.5
     TAB_X   = PW - TAB_W - 2.0
 
-    # ── Resolve tier presets (explicit params override tier defaults) ─────────
-    _tier_num  = int(data.get("planner_tier", 0))
-    _tier_conf = PLANNER_TIERS.get(_tier_num, {})
-    _design    = _tier_num if _tier_num in (1, 2, 3) else 2  # 1=minimal 2=polished 3=premium
+    # ── Resolve style → tier → explicit params (each layer overrides the last) ─
+    _style_key  = data.get("planner_style", "")
+    _style_conf = PLANNER_STYLES.get(_style_key, {})
+    _tier_num   = int(data.get("planner_tier", _style_conf.get("tier", 0)))
+    _tier_conf  = PLANNER_TIERS.get(_tier_num, {})
+    _design     = _tier_num if _tier_num in (1, 2, 3) else 2
+    _variant    = _style_conf.get("design_variant", "standard")
+    _extras     = _style_conf.get("extras", [])
+    _is_fun     = _style_conf.get("fun", False)
+
+    # Color scheme: style → explicit param → tier default → "sage_cream"
+    _style_scheme   = _style_conf.get("color_scheme", "sage_cream")
+    scheme_key      = data.get("color_scheme", _style_scheme)
+    if scheme_key not in COLOR_SCHEMES:
+        scheme_key = "sage_cream"
+    cs    = COLOR_SCHEMES[scheme_key]
+    T     = cs["theme"]
+    A     = cs["accent"]
+    BG    = cs["bg"]
+    DARK  = cs["dark"]
+    MID   = cs["mid"]
+    LIGHT = cs["light"]
+    WHITE = (1.0, 1.0, 1.0)
+    TL    = _blend(T, 0.82)
+    TM    = _blend(T, 0.50)
+    AL    = _blend(A, 0.75)
+    BGL   = _blend(BG, -0.03) if BG[0] > 0.5 else _blend(BG, 0.15)
 
     is_interactive = data.get("interactive",
                                _tier_conf.get("interactive", True))
@@ -1639,14 +1948,18 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     if undated:
         planner_year = dt_date.today().year
 
-    sections        = data.get("include_sections",
-                                _tier_conf.get("sections",
-                                ["monthly", "weekly", "habit_tracker", "goals", "notes"]))
+    _style_sects    = _style_conf.get("sections",
+                       _tier_conf.get("sections",
+                       ["monthly", "weekly", "habit_tracker", "goals", "notes"]))
+    sections        = data.get("include_sections", _style_sects)
     weekly_layout   = data.get("weekly_layout", "horizontal")
     cal_integration = data.get("calendar_integration",
-                                _tier_conf.get("calendar_integration", "none"))
+                                _style_conf.get("calendar_integration",
+                                _tier_conf.get("calendar_integration", "none")))
     title    = data["planner_title"]
-    subtitle = data.get("subtitle", _tier_conf.get("subtitle_default", ""))
+    subtitle = data.get("subtitle",
+                         _style_conf.get("subtitle",
+                         _tier_conf.get("subtitle_default", "")))
 
     # Tab color override (5 options: scheme default, white, light_pink, brown, olive, black)
     _TAB_COLOR_MAP = {
@@ -1706,10 +2019,9 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     def page_bg():
         rect(0, 0, PW, PH, f=BG)
         if _design == 1:
-            # Tier 1: thin left accent strip — clean and simple
             rect(0, 0, 3, PH, f=_blend(T, 0.55))
         elif _design == 3:
-            # Tier 3: subtle full-page dot grid (premium texture)
+            # Tier 3: subtle full-page dot grid
             _dp = 20; _dr = 0.42
             _gx = ML + _dp
             while _gx <= PW - MR - TAB_W - 4:
@@ -1718,8 +2030,45 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                     circle(_gx, _gy, _dr, f=LIGHT)
                     _gy += _dp
                 _gx += _dp
-            # Thin left accent bar in accent color
             rect(0, 0, 3, PH, f=A)
+
+        # ── Variant-specific page decorations ────────────────────────────────
+        if _variant == "botanical":
+            # Tiny leaf motifs in two corners
+            for _lx, _ly, _flip in [(ML+6, PH-MT-10, 1), (ML+6, MB+10, -1)]:
+                for _i in range(4):
+                    _lbx = _lx + _i * 6; _lby = _ly
+                    c.saveState()
+                    c.translate(_lbx, _lby)
+                    c.scale(1, _flip)
+                    c.setFillColorRGB(*_blend(T, 0.55))
+                    c.setLineWidth(0.3)
+                    c.setStrokeColorRGB(*_blend(T, 0.4))
+                    p = c.beginPath()
+                    p.moveTo(0, 0); p.curveTo(4, 5, 6, 8, 3, 10)
+                    p.curveTo(1, 8, -2, 5, 0, 0)
+                    c.drawPath(p, fill=1, stroke=0)
+                    c.restoreState()
+        elif _variant in ("fun", "rainbow_fun"):
+            # Small decorative circles scattered in margins
+            import random as _r; _rng = _r.Random(42)
+            for _ in range(6):
+                _rx = ML/2 - 4 + _rng.random() * 20
+                _ry = MB + _rng.random() * (PH - MT - MB)
+                _rr = 2 + _rng.random() * 4
+                _rc = [T, A, AL, TM][int(_rng.random()*4)]
+                circle(_rx, _ry, _rr, f=_blend(_rc, 0.6))
+        elif _variant == "spiritual":
+            # Small star motifs in right margin
+            _star_x = PW - MR/2 - 2
+            for _si in range(5):
+                _star_y = MB + 60 + _si * ((PH - MT - MB - 120) / 4)
+                font("Helvetica-Bold", 7); fill(_blend(A, 0.55))
+                c.drawCentredString(_star_x, _star_y, "*")
+        elif _variant in ("premium", "ultra_premium"):
+            # Thin double-rule inside top margin for refined look
+            hline(ML, PW - MR - TAB_W - 4, PH - MT + 10, _blend(A, 0.35), 0.3)
+            hline(ML, PW - MR - TAB_W - 4, PH - MT + 13, _blend(A, 0.20), 0.2)
 
     def page_footer(label=""):
         hline(ML, PW - MR - TAB_W - 4, MB - 6, LIGHT, 0.4)
@@ -2937,6 +3286,258 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         page_footer(f"NOTES  {page_num}")
         c.showPage()
 
+    # ── COLOR SCHEME SELECTOR PAGE ───────────────────────────────────────────
+    def draw_color_selector_page():
+        c.bookmarkPage("color_themes")
+        c.addOutlineEntry("Color Themes", "color_themes", level=0)
+        page_bg()
+        content_w = CW - TAB_W - 4
+
+        rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
+        rect(0, PH - MT - 48, 5, 48 + MT, f=A)
+        font("Helvetica-Bold", 18); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 30, "COLOR THEMES")
+        font("Helvetica", 7.5); fill(_blend(WHITE, 0.45))
+        c.drawRightString(PW - TAB_W - 10, PH - MT - 30,
+                          "This planner is available in all themes shown below")
+        rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=A)
+
+        note_y = PH - MT - 62
+        font("Helvetica", 7); fill(MID)
+        c.drawCentredString((PW - TAB_W) / 2, note_y,
+                            "Order any color theme by leaving your preference at checkout · OnBrandCraftz")
+
+        # Grid: 5 columns
+        cols = 5; pad = 7
+        sw = (content_w - pad * (cols + 1)) / cols
+        sh = sw * 1.25
+        sx0 = ML + pad
+        sy0 = note_y - 14
+
+        schemes_list = list(COLOR_SCHEMES.items())
+        for i, (key, sch) in enumerate(schemes_list):
+            ci = i % cols; ri = i // cols
+            x = sx0 + ci * (sw + pad)
+            y_top = sy0 - ri * (sh + pad + 12)
+            y_bot = y_top - sh
+
+            # Mini planner-cover preview
+            split = sh * 0.40
+            rect(x, y_bot, sw, split, f=sch["bg"])
+            rect(x, y_bot + split, sw, sh - split, f=sch["theme"])
+            rect(x, y_bot + split - 1.5, sw, 2.5, f=sch["accent"])
+            # Mini title lines
+            rect(x + sw*0.15, y_bot + sh*0.68, sw*0.70, 2, f=_blend(sch["theme"], 0.55))
+            rect(x + sw*0.25, y_bot + sh*0.60, sw*0.50, 1.5, f=_blend(sch["theme"], 0.45))
+            # Border (thicker if current scheme)
+            is_cur = (key == scheme_key)
+            rect(x, y_bot, sw, sh, s=T if is_cur else _blend(LIGHT, -0.05),
+                 lwidth=1.4 if is_cur else 0.3)
+            # Label
+            font("Helvetica-Bold" if is_cur else "Helvetica", 5.5)
+            fill(T if is_cur else DARK)
+            c.drawCentredString(x + sw/2, y_bot - 7, sch["label"])
+
+        page_footer("Color Themes")
+        draw_nav_tabs()
+        c.showPage()
+
+    # ── VISION BOARD PAGE ────────────────────────────────────────────────────
+    def draw_vision_board_page():
+        c.bookmarkPage("vision_board")
+        c.addOutlineEntry("Vision Board", "vision_board", level=0)
+        page_bg()
+        content_w = CW - TAB_W - 4
+
+        rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
+        rect(0, PH - MT - 48, 5, 48 + MT, f=A)
+        font("Helvetica-BoldOblique", 20); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 30, "VISION BOARD")
+        font("Helvetica", 7.5); fill(_blend(WHITE, 0.40))
+        c.drawRightString(PW - TAB_W - 10, PH - MT - 30, "dream it · plan it · live it")
+        rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=A)
+
+        top_y = PH - MT - 60
+        # Intention banner
+        font("Helvetica-BoldOblique", 8); fill(T)
+        c.drawCentredString(ML + content_w/2, top_y - 4, "MY INTENTION FOR THIS YEAR")
+        text_field(ML, top_y - 28, content_w, 18, "vision_intention",
+                   multiline=False, font_size=9)
+
+        # Four decorative photo frames in 2×2 grid
+        gutter = 10; top_frames_y = top_y - 38
+        fw = (content_w - gutter) / 2
+        fh = fw * 0.72
+        frame_defs = [
+            (ML,        top_frames_y - fh, fw, fh, "DREAM"),
+            (ML+fw+gutter, top_frames_y - fh, fw, fh, "ACHIEVE"),
+            (ML,        top_frames_y - fh*2 - gutter, fw, fh, "BECOME"),
+            (ML+fw+gutter, top_frames_y - fh*2 - gutter, fw, fh, "ATTRACT"),
+        ]
+        for fx, fy, fw2, fh2, lbl in frame_defs:
+            rect(fx, fy, fw2, fh2, f=_blend(T, 0.94))
+            rect(fx, fy, fw2, fh2, s=_blend(T, 0.35), lwidth=0.7)
+            rect(fx+4, fy+4, fw2-8, fh2-8, s=_blend(A, 0.50), lwidth=0.4)
+            font("Helvetica-BoldOblique", 9); fill(_blend(T, 0.45))
+            c.drawCentredString(fx + fw2/2, fy + fh2/2 - 2, lbl)
+            font("Helvetica", 6); fill(_blend(T, 0.55))
+            c.drawCentredString(fx + fw2/2, fy + fh2/2 - 13, "Add photo · sketch · collage here")
+
+        # Affirmation field
+        aff_y = top_frames_y - fh*2 - gutter - 14
+        if aff_y > MB + 30:
+            font("Helvetica-Bold", 7); fill(T)
+            c.drawString(ML, aff_y, "MY DAILY AFFIRMATION")
+            text_field(ML, aff_y - 22, content_w, 16, "vision_affirmation",
+                       multiline=False, font_size=9)
+
+        page_footer("VISION BOARD")
+        draw_nav_tabs()
+        c.showPage()
+
+    # ── MOOD TRACKER PAGE ────────────────────────────────────────────────────
+    def draw_mood_tracker_page():
+        c.bookmarkPage("mood_tracker")
+        c.addOutlineEntry("Mood Tracker", "mood_tracker", level=0)
+        page_bg()
+        content_w = CW - TAB_W - 4
+
+        rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
+        rect(0, PH - MT - 48, 5, 48 + MT, f=A)
+        font("Helvetica-Bold", 18); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 30, "ANNUAL MOOD TRACKER")
+        rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=A)
+
+        # Mood legend
+        moods = [
+            ("AMAZING",  A),
+            ("GOOD",     _blend(A, 0.55)),
+            ("OKAY",     _blend(T, 0.55)),
+            ("LOW",      _blend(T, 0.35)),
+            ("ROUGH",    (0.72, 0.40, 0.40)),
+        ]
+        leg_y = PH - MT - 62; lx = ML + 4
+        font("Helvetica-Bold", 6.5); fill(DARK)
+        c.drawString(lx, leg_y, "COLOR KEY:")
+        lx += 50
+        for m_label, m_color in moods:
+            circle(lx + 5, leg_y + 2, 5, f=m_color)
+            font("Helvetica", 6); fill(DARK)
+            c.drawString(lx + 13, leg_y - 1, m_label)
+            lx += 13 + c.stringWidth(m_label, "Helvetica", 6) + 8
+
+        # 12-month circle grid
+        row_h   = (PH - MT - 74 - MB - 16) / 12
+        circ_r  = min(5.5, (row_h - 4) / 2)
+        sp      = (content_w - 38) / 31   # spacing per day
+        top_y2  = PH - MT - 74
+
+        for mi, mname in enumerate(MONTHS):
+            ry = top_y2 - mi * row_h - row_h / 2
+            font("Helvetica-Bold", 6.5); fill(T)
+            c.drawString(ML + 2, ry - 2, mname[:3].upper())
+            days_in = (cal_mod.monthrange(planner_year, mi+1)[1]
+                       if not undated else 31)
+            for di in range(days_in):
+                dx = ML + 38 + di * sp + sp/2
+                circle(dx, ry, circ_r, s=_blend(T, 0.38), lwidth=0.4)
+                font("Helvetica", 4.5); fill(_blend(T, 0.55))
+                c.drawCentredString(dx, ry - 2, str(di + 1))
+
+        page_footer("ANNUAL MOOD TRACKER")
+        draw_nav_tabs()
+        c.showPage()
+
+    # ── STICKER PACK PAGES ───────────────────────────────────────────────────
+    def draw_sticker_pack_page(pack_idx=1):
+        bm = f"stickers_{pack_idx}"
+        c.bookmarkPage(bm)
+        if pack_idx == 1:
+            c.addOutlineEntry("Sticker Packs", bm, level=0)
+        else:
+            c.addOutlineEntry(f"Sticker Pack {pack_idx}", bm, level=1)
+        page_bg()
+        content_w = CW - TAB_W - 4
+
+        pack_names = {1: "PRODUCTIVITY", 2: "WELLNESS & MOOD", 3: "CELEBRATIONS"}
+        pname = pack_names.get(pack_idx, "STICKERS")
+
+        rect(0, PH - MT - 48, PW - TAB_W - 2, 48 + MT, f=T)
+        rect(0, PH - MT - 48, 5, 48 + MT, f=A)
+        font("Helvetica-Bold", 16); fill(WHITE)
+        c.drawString(ML + 14, PH - MT - 30, f"STICKER PACK · {pname}")
+        font("Helvetica", 7); fill(_blend(WHITE, 0.45))
+        c.drawRightString(PW - TAB_W - 10, PH - MT - 30,
+                          "Screenshot & import as stickers in GoodNotes · Notability")
+        rect(0, PH - MT - 52, PW - TAB_W - 2, 4, f=A)
+
+        inst_y = PH - MT - 62
+        font("Helvetica-Oblique", 6.5); fill(MID)
+        c.drawCentredString((PW - TAB_W) / 2, inst_y,
+                            "Tip: take a screenshot of this page in your PDF app, then import as a custom sticker sheet")
+
+        # Sticker definitions: (label, color_key, symbol, bg_blend)
+        _G = (0.31, 0.68, 0.43)   # green
+        _Y = (0.92, 0.75, 0.18)   # yellow
+        _R = (0.85, 0.32, 0.32)   # red
+        _P = (0.60, 0.35, 0.80)   # purple
+        _O = (0.92, 0.52, 0.22)   # orange
+
+        packs = {
+            1: [  # Productivity
+                ("DONE",    _G,  "✓", 0.82), ("GOAL",   T,   "◎", 0.82),
+                ("WIN",     _Y,  "★", 0.78), ("FOCUS",  T,   "●", 0.85),
+                ("IDEA",    _Y,  "!",  0.78), ("URGENT", _R, "!!",0.78),
+                ("NOTE",    _P,  "✎", 0.82), ("DUE",    _O, "→", 0.80),
+                ("PLAN",    T,   "◈", 0.85), ("NEXT",   A,  "▶", 0.82),
+                ("REVIEW",  _P,  "↺", 0.82), ("START",  _G, "▷", 0.82),
+            ],
+            2: [  # Wellness & Mood
+                ("AMAZING",  A,   "☺", 0.78), ("GOOD",   _G, "♡", 0.82),
+                ("OKAY",    MID,  "—", 0.88), ("LOW",    T,  "~", 0.88),
+                ("WATER",   (0.35,0.65,0.90), "~", 0.80),
+                ("SLEEP",   _P,  "Zzz",0.82), ("MOVE",   _G, "↑", 0.82),
+                ("GRATEFUL",A,   "♥", 0.78), ("CALM",   _P, "◉", 0.82),
+                ("ENERGY",  _O,  "⚡",0.80), ("REST",   _P, "○", 0.85),
+                ("JOY",      A,  "★", 0.78),
+            ],
+            3: [  # Celebrations
+                ("YAY!",    A,   "★", 0.78), ("WINNING",_Y, "♦", 0.80),
+                ("DONE!",   _G,  "✓", 0.82), ("WOW",    T,  "!!", 0.82),
+                ("GOAL MET",A,   "◎", 0.78), ("1st",    _Y, "#1",0.80),
+                ("LOVE IT", _R,  "♥", 0.80), ("HERO",   T,  "★★",0.82),
+                ("NEW!",    A,   "▶", 0.82), ("EPIC",   _O, "◆", 0.80),
+                ("YES!",    _G,  "✔", 0.82), ("PARTY",   A, "♦♦",0.80),
+            ],
+        }
+        stickers = packs.get(pack_idx, packs[1])
+
+        # 4-column × 3-row grid
+        cols = 4; rows = 3; gutter = 10
+        sw = (content_w - gutter * (cols - 1)) / cols
+        sh = sw * 0.90
+        sx0 = ML; sy0 = inst_y - 16
+
+        for si, (lbl, col, sym, blend_v) in enumerate(stickers[:cols*rows]):
+            ci = si % cols; ri = si // cols
+            sx = sx0 + ci * (sw + gutter)
+            sy = sy0 - ri * (sh + gutter) - sh
+
+            # Sticker rounded background
+            rect(sx, sy, sw, sh, f=_blend(col, blend_v), radius=10)
+            # Thin border
+            rect(sx, sy, sw, sh, s=_blend(col, blend_v - 0.15), lwidth=0.6, radius=10)
+            # Symbol
+            font("Helvetica-Bold", 22); fill(col)
+            c.drawCentredString(sx + sw/2, sy + sh*0.48, sym)
+            # Label
+            font("Helvetica-Bold", 7.5); fill(_blend(col, 0.3))
+            c.drawCentredString(sx + sw/2, sy + 8, lbl)
+
+        page_footer(f"STICKER PACK · {pname}")
+        draw_nav_tabs()
+        c.showPage()
+
     # ── CALENDAR SYNC GUIDE (tier 3 only) ────────────────────────────────────
     def draw_calendar_sync_page():
         c.bookmarkPage("cal_sync")
@@ -3019,6 +3620,12 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     draw_how_to_use();  page_count += 1
     if cal_integration in ("google", "apple", "both"):
         draw_calendar_sync_page(); page_count += 1
+    if "color_selector" in _extras:
+        draw_color_selector_page(); page_count += 1
+    if "vision_board" in _extras:
+        draw_vision_board_page(); page_count += 1
+    if "mood_tracker" in _extras:
+        draw_mood_tracker_page(); page_count += 1
 
     if "monthly" in sections or "weekly" in sections:
         draw_yearly_overview(); page_count += 1
@@ -3061,6 +3668,10 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     if "notes" in sections:
         for ni in range(4):
             draw_notes_page(ni + 1); page_count += 1
+
+    if "sticker_pack" in _extras:
+        for _pi in range(1, 4):
+            draw_sticker_pack_page(_pi); page_count += 1
 
     c.save()
     file_size_kb = os.path.getsize(file_path) // 1024
@@ -3155,5 +3766,5 @@ def _save_product(product: dict, store: DataStore) -> None:
         if p["id"] == product["id"]:
             products[i] = product
             break
-    store.set(products, "digital_products")
+    store.set("digital_products", products)
     store.save()
