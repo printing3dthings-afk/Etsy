@@ -4,6 +4,7 @@ Supply Chain Tools — manages materials inventory, supplier contacts, and reord
 Tracks filament, paint, packaging, and all consumables used in production.
 Separate from print_production_tools: that module tracks jobs; this one tracks stock and suppliers.
 """
+from __future__ import annotations
 
 import json
 from datetime import date

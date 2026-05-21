@@ -18,6 +18,7 @@ Outlook / Office 365 setup:
   SMTP_HOST=smtp.office365.com  SMTP_PORT=587
   Use your regular password, or an App Password if MFA is enabled on the account.
 """
+from __future__ import annotations
 
 import json
 import os

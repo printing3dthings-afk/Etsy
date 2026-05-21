@@ -3,6 +3,8 @@ Web Research Tools — live market intelligence for data-driven agent decisions.
 Fetches Etsy search results, design trends, keyword data, and competitor insights.
 Every agent inherits these via BaseAgent and should use them before making decisions.
 """
+from __future__ import annotations
+
 import json
 import re
 from datetime import datetime

@@ -23,6 +23,7 @@ For OAuth (order management, listing edits):
   5. Set ETSY_CLIENT_ID and ETSY_CLIENT_SECRET in .env
   6. Run tools/etsy_oauth.py to complete the OAuth flow
 """
+from __future__ import annotations
 
 import os
 import json

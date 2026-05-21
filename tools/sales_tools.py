@@ -1,4 +1,5 @@
 """Tool definitions and implementations for the Sales Agent."""
+from __future__ import annotations
 
 import json
 from datetime import date, timedelta

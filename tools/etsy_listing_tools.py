@@ -5,6 +5,7 @@ Wraps the existing EtsyAPIClient (tools/etsy_api.py).
 Publishing listings requires ETSY_ACCESS_TOKEN (OAuth). Run tools/etsy_oauth.py first.
 Without OAuth the agent can draft listings locally and report what would be published.
 """
+from __future__ import annotations
 
 import json
 import os

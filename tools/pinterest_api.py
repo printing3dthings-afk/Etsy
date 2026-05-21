@@ -14,6 +14,7 @@ Setup (one-time):
 
 After setup, the Social Media Agent can post pins directly.
 """
+from __future__ import annotations
 
 import os
 import json

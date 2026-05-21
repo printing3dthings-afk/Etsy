@@ -9,6 +9,7 @@ Requires for full functionality:
 Without an OpenAI key the agent operates in "design-brief" mode: it saves a
 detailed text concept that can be sent to any image-generation service manually.
 """
+from __future__ import annotations
 
 import json
 import os

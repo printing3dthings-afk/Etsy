@@ -10,6 +10,7 @@ Etsy digital product requirements:
   - Recommended print DPI: 300+
   - Recommended min resolution for prints: 3000px on shortest side
 """
+from __future__ import annotations
 
 import json
 import os

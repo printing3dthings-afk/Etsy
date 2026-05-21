@@ -8,6 +8,7 @@ Etsy fee structure (as of 2025):
   Offsite Ads:          12% (shops > $10k/yr revenue) or 15% (under $10k)
   Regulatory fee:       varies by country (US: not applicable in most states)
 """
+from __future__ import annotations
 
 import json
 from datetime import date, datetime

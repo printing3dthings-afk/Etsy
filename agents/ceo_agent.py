@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from agents.base_agent import BaseAgent
 from agents.sales_agent import SalesAgent
 from agents.product_agent import ProductAgent

@@ -9,6 +9,7 @@ Key facts:
   - Etsy sends a 1099-K if you receive $600+ in gross sales in a calendar year (as of 2024 IRS rules)
   - Business expenses reduce your taxable income
 """
+from __future__ import annotations
 
 import json
 from datetime import date
