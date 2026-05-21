@@ -12,10 +12,18 @@ sys.path.insert(0, os.path.dirname(__file__))
 from config import ANTHROPIC_API_KEY
 from agents.client_intake_agent import ClientIntakeAgent
 from agents.copywriter_agent import CopywriterAgent
+from agents.audit_agent import AuditAgent
+from agents.seo_agent import SEOAgent
+from agents.report_agent import ReportAgent
+from agents.package_manager_agent import PackageManagerAgent
 
 AGENTS = {
-    "intake": ("Client Intake Agent", ClientIntakeAgent),
-    "copy": ("Copywriter Agent", CopywriterAgent),
+    "manager": ("Package Manager", PackageManagerAgent),
+    "intake":  ("Client Intake Agent", ClientIntakeAgent),
+    "copy":    ("Copywriter Agent", CopywriterAgent),
+    "audit":   ("Audit Agent", AuditAgent),
+    "seo":     ("SEO Agent", SEOAgent),
+    "report":  ("Report Agent", ReportAgent),
 }
 
 HELP_TEXT = """
@@ -29,11 +37,15 @@ HELP_TEXT = """
 ║  quit / exit    Exit the hub                                 ║
 ║                                                              ║
 ║  AGENTS                                                      ║
-║  intake         Client Intake Agent — onboard new clients    ║
-║  copy           Copywriter Agent — write content for clients ║
+║  manager  Package Manager — orchestrates full workflows      ║
+║  intake   Client Intake Agent — onboard new clients          ║
+║  audit    Audit Agent — digital presence gap analysis        ║
+║  seo      SEO Agent — keyword research & local SEO           ║
+║  copy     Copywriter Agent — social posts, newsletters, ads  ║
+║  report   Report Agent — monthly/weekly client reports       ║
 ║                                                              ║
 ║  PACKAGES                                                    ║
-║  starter  $299/mo  12 social posts, 1 newsletter, audit      ║
+║  starter  $299/mo  12 posts, 1 newsletter, audit, report     ║
 ║  growth   $599/mo  20 posts, 2 newsletters, SEO, report      ║
 ║  pro     $1,199/mo 30 posts, 4 newsletters, ads, weekly rpt  ║
 ╚══════════════════════════════════════════════════════════════╝
@@ -53,7 +65,8 @@ def print_banner():
     print("   Marketing Packages Hub")
     print("   Powered by Claude AI Agents")
     print("=" * 62)
-    print("Type 'help' for commands or 'agent intake' to onboard a client.\n")
+    print("Type 'help' for commands, 'agent manager' to run a full workflow,")
+    print("or 'agent intake' to onboard a new client.\n")
 
 
 def list_clients_summary():
