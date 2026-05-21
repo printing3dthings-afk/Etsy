@@ -6,6 +6,8 @@ from .analytics_agent import AnalyticsAgent
 from .customer_service_agent import CustomerServiceAgent
 from .social_media_agent import SocialMediaAgent
 from .ceo_agent import CEOAgent
+from .client_intake_agent import ClientIntakeAgent
+from .copywriter_agent import CopywriterAgent
 
 __all__ = [
     "BaseAgent",
@@ -16,4 +18,6 @@ __all__ = [
     "CustomerServiceAgent",
     "SocialMediaAgent",
     "CEOAgent",
+    "ClientIntakeAgent",
+    "CopywriterAgent",
 ]
