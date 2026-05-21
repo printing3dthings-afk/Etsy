@@ -397,7 +397,7 @@ def _publish_digital_listing(data: dict, store: DataStore) -> str:
         listing_data = {
             "title": draft["title"],
             "description": draft["description"],
-            "price": {"amount": int(draft["price"] * 100), "divisor": 100, "currency_code": "USD"},
+            "price": float(draft["price"]),
             "quantity": draft["quantity"],
             "who_made": "i_did",
             "is_supply": False,

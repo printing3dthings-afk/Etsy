@@ -46,14 +46,19 @@ class EtsyAPIClient:
 
     def __init__(self, api_key: str = "", access_token: str = ""):
         self.api_key = api_key or os.getenv("ETSY_API_KEY", "")
+        self.client_id = os.getenv("ETSY_CLIENT_ID", self.api_key)
+        self.client_secret = os.getenv("ETSY_CLIENT_SECRET", "")
         self.access_token = access_token or os.getenv("ETSY_ACCESS_TOKEN", "")
-        self.shop_id = os.getenv("ETSY_SHOP_ID", "")
+        self.shop_id = os.getenv("ETSY_SHOP_ID_NUMERIC") or os.getenv("ETSY_SHOP_ID", "")
 
     def _build_request(self, method: str, url: str, body: dict | None) -> urllib.request.Request:
         headers = {"Content-Type": "application/json"}
         if not self.api_key and not self.access_token:
             raise EtsyAPIError(0, "No API key or access token configured. Add ETSY_API_KEY to your .env file.")
-        if self.api_key:
+        # Etsy v3 requires x-api-key as "{client_id}:{client_secret}" for authenticated calls
+        if self.access_token and self.client_secret:
+            headers["x-api-key"] = f"{self.client_id}:{self.client_secret}"
+        elif self.api_key:
             headers["x-api-key"] = self.api_key
         if self.access_token:
             headers["Authorization"] = f"Bearer {self.access_token}"
@@ -239,9 +244,11 @@ class EtsyAPIClient:
         body = b'\r\n'.join(body_parts)
 
         url = f"{BASE_URL}/shops/{self.shop_id}/listings/{listing_id}/images"
+        api_key_header = f"{self.client_id}:{self.client_secret}" if self.client_secret else self.api_key
         headers = {
             "Content-Type": f"multipart/form-data; boundary={boundary}",
             "Authorization": f"Bearer {self.access_token}",
+            "x-api-key": api_key_header,
         }
         req = urllib.request.Request(url, data=body, headers=headers, method="POST")
         try:
@@ -268,6 +275,7 @@ class EtsyAPIClient:
         boundary = "----FormBoundary" + os.urandom(8).hex()
         body_parts = []
         body_parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="rank"\r\n\r\n{rank}'.encode())
+        body_parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="name"\r\n\r\n{filename}'.encode())
         body_parts.append(
             f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\nContent-Type: application/octet-stream\r\n\r\n'.encode()
             + file_data
@@ -276,9 +284,11 @@ class EtsyAPIClient:
         body = b'\r\n'.join(body_parts)
 
         url = f"{BASE_URL}/shops/{self.shop_id}/listings/{listing_id}/files"
+        api_key_header = f"{self.client_id}:{self.client_secret}" if self.client_secret else self.api_key
         headers = {
             "Content-Type": f"multipart/form-data; boundary={boundary}",
             "Authorization": f"Bearer {self.access_token}",
+            "x-api-key": api_key_header,
         }
         req = urllib.request.Request(url, data=body, headers=headers, method="POST")
         try:
