@@ -1,7 +1,9 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
-from tools import trend_forecasting_tools, learning_tools
+from tools import trend_forecasting_tools, learning_tools, competitor_intel_tools
 from config import FAST_MODEL
+
+_COMPETITOR_TOOL_NAMES = {t["name"] for t in competitor_intel_tools.TOOL_DEFINITIONS}
 
 SYSTEM_PROMPT = """You are the Trend Forecasting Agent for OnBrandCraftz. Your job is to identify Etsy trends 8–16 weeks before they peak so the Art Creation Agent can produce winning products BEFORE the competition saturates the market.
 
@@ -38,13 +40,19 @@ class TrendForecastingAgent(BaseAgent):
     def __init__(self):
         self._store = DataStore()
         super().__init__(
-            name="Trend Forecasting Agent",
+            name="Market Intelligence Agent",
             system_prompt=SYSTEM_PROMPT,
-            tool_definitions=trend_forecasting_tools.TOOL_DEFINITIONS + learning_tools.TOOL_DEFINITIONS,
+            tool_definitions=(
+                trend_forecasting_tools.TOOL_DEFINITIONS
+                + learning_tools.TOOL_DEFINITIONS
+                + competitor_intel_tools.TOOL_DEFINITIONS
+            ),
             model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
         if tool_name in learning_tools.TOOL_NAMES:
             return learning_tools.execute_tool(tool_name, tool_input, agent_name="Trend Forecasting Agent")
+        if tool_name in _COMPETITOR_TOOL_NAMES:
+            return competitor_intel_tools.execute_tool(tool_name, tool_input, self._store)
         return trend_forecasting_tools.execute_tool(tool_name, tool_input, self._store)

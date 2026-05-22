@@ -17,13 +17,8 @@ from agents.brand_design_agent import BrandDesignAgent
 from agents.financial_agent import FinancialAgent
 from agents.print_production_agent import PrintProductionAgent
 from agents.etsy_ads_agent import EtsyAdsAgent
-from agents.competitor_intel_agent import CompetitorIntelAgent
-from agents.promotions_agent import PromotionsAgent
 from agents.tax_compliance_agent import TaxComplianceAgent
-from agents.returns_agent import ReturnsAgent
-from agents.supply_chain_agent import SupplyChainAgent
 from agents.email_marketing_agent import EmailMarketingAgent
-from agents.ab_testing_agent import ABTestingAgent
 from agents.api_connections_agent import APIConnectionsAgent
 from agents.trend_forecasting_agent import TrendForecastingAgent
 from agents.customer_retention_agent import CustomerRetentionAgent
@@ -59,19 +54,16 @@ You are a pure orchestrator. Your FIRST action in every response must be one or 
 | Reports, dashboards | delegate_to_analytics_agent |
 | Orders, revenue | delegate_to_sales_agent |
 | Digital order fulfillment | delegate_to_sales_processor_agent |
-| Customer messages, reviews | delegate_to_customer_service_agent |
+| Customer messages, reviews, returns, disputes | delegate_to_customer_service_agent |
 | Pinterest, social content | delegate_to_social_media_agent |
-| 3D print queue | delegate_to_print_production_agent |
+| 3D print queue, materials, filament, suppliers | delegate_to_print_production_agent |
 | Ad budget, ROAS | delegate_to_etsy_ads_agent |
-| Competitor gaps, market intel | delegate_to_competitor_intel_agent |
-| Discounts, sales events | delegate_to_promotions_agent |
 | Taxes, deductions | delegate_to_tax_compliance_agent |
-| Returns, disputes | delegate_to_returns_agent |
-| Materials, filament stock | delegate_to_supply_chain_agent |
 | Buyer emails, receipt copy | delegate_to_email_marketing_agent |
-| CTR/conversion experiments | delegate_to_ab_testing_agent |
 | API keys, integrations | delegate_to_api_connections_agent |
-| Trends, seasonal gaps | delegate_to_trend_forecasting_agent |
+| Trends, competitor intel, market gaps, seasonal | delegate_to_trend_forecasting_agent |
+| Discounts, sales events, coupon strategy | delegate_to_marketing_agent |
+| CTR/conversion A/B experiments | delegate_to_analytics_agent |
 | Buyer retention, win-back | delegate_to_customer_retention_agent |
 | Pipeline health, bottlenecks | delegate_to_workflow_coordinator |
 
@@ -173,7 +165,7 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_marketing_agent",
-        "description": "Delegate SEO, traffic analysis, promotion, or growth tasks to the Marketing Agent.",
+        "description": "Delegate SEO, traffic analysis, promotions, coupon codes, sales events, and growth tasks to the Marketing & Promotions Agent.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -182,7 +174,7 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_analytics_agent",
-        "description": "Delegate reporting, dashboard, or data analysis tasks to the Analytics Agent.",
+        "description": "Delegate reporting, dashboards, data analysis, and A/B tests on listing titles, photos, prices, or tags to the Analytics & Testing Agent.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -191,7 +183,7 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_customer_service_agent",
-        "description": "Delegate customer messages, review responses, or satisfaction tasks to the Customer Service Agent.",
+        "description": "Delegate customer messages, review responses, return requests, refund processing, and Etsy dispute cases to the Customer Success Agent.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -219,7 +211,7 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_print_production_agent",
-        "description": "Delegate 3D print job queue management, machine status, filament tracking, or failure analysis to the Print Production Agent.",
+        "description": "Delegate 3D print job queue, filament tracking, failure analysis, materials inventory, supplier management, and purchase orders to the Print & Supply Agent.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -236,24 +228,6 @@ DELEGATION_TOOLS = [
         },
     },
     {
-        "name": "delegate_to_competitor_intel_agent",
-        "description": "Delegate competitor research, market gap analysis, seasonal trends, or pricing intelligence to the Competitor Intel Agent.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"task": {"type": "string"}},
-            "required": ["task"],
-        },
-    },
-    {
-        "name": "delegate_to_promotions_agent",
-        "description": "Delegate sales events, coupon codes, discount strategy, or seasonal promotion planning to the Promotions Agent.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"task": {"type": "string"}},
-            "required": ["task"],
-        },
-    },
-    {
         "name": "delegate_to_tax_compliance_agent",
         "description": "Delegate quarterly tax estimates, deduction tracking, copyright compliance checks, or expense logging to the Tax Compliance Agent.",
         "input_schema": {
@@ -263,35 +237,8 @@ DELEGATION_TOOLS = [
         },
     },
     {
-        "name": "delegate_to_returns_agent",
-        "description": "Delegate return requests, refund processing, Etsy dispute cases, or Star Seller protection to the Returns & Disputes Agent.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"task": {"type": "string"}},
-            "required": ["task"],
-        },
-    },
-    {
-        "name": "delegate_to_supply_chain_agent",
-        "description": "Delegate materials inventory, filament stock levels, supplier management, or purchase orders to the Supply Chain Agent.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"task": {"type": "string"}},
-            "required": ["task"],
-        },
-    },
-    {
         "name": "delegate_to_email_marketing_agent",
         "description": "Delegate receipt message copy, buyer message templates, newsletter drafting/sending, subscriber list, or package insert copy to the Email Marketing Agent.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"task": {"type": "string"}},
-            "required": ["task"],
-        },
-    },
-    {
-        "name": "delegate_to_ab_testing_agent",
-        "description": "Delegate A/B tests on listing titles, photos, prices, descriptions, or tags to improve click-through and conversion rates.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -309,7 +256,7 @@ DELEGATION_TOOLS = [
     },
     {
         "name": "delegate_to_trend_forecasting_agent",
-        "description": "Delegate trend research, seasonal opportunity identification, upcoming niche discovery, or art queue prioritization to the Trend Forecasting Agent.",
+        "description": "Delegate trend research, competitor intelligence, market gap analysis, seasonal opportunities, and pricing intel to the Market Intelligence Agent.",
         "input_schema": {
             "type": "object",
             "properties": {"task": {"type": "string"}},
@@ -360,13 +307,8 @@ class CEOAgent(BaseAgent):
             "financial":          FinancialAgent(),
             "print_production":   PrintProductionAgent(),
             "etsy_ads":           EtsyAdsAgent(),
-            "competitor_intel":   CompetitorIntelAgent(),
-            "promotions":         PromotionsAgent(),
             "tax_compliance":     TaxComplianceAgent(),
-            "returns":            ReturnsAgent(),
-            "supply_chain":       SupplyChainAgent(),
             "email_marketing":    EmailMarketingAgent(),
-            "ab_testing":         ABTestingAgent(),
             "api_connections":    APIConnectionsAgent(),
             "trend_forecasting":  TrendForecastingAgent(),
             "customer_retention": CustomerRetentionAgent(),
@@ -522,13 +464,8 @@ class CEOAgent(BaseAgent):
             "delegate_to_financial_agent":        "financial",
             "delegate_to_print_production_agent": "print_production",
             "delegate_to_etsy_ads_agent":         "etsy_ads",
-            "delegate_to_competitor_intel_agent": "competitor_intel",
-            "delegate_to_promotions_agent":       "promotions",
             "delegate_to_tax_compliance_agent":   "tax_compliance",
-            "delegate_to_returns_agent":          "returns",
-            "delegate_to_supply_chain_agent":     "supply_chain",
             "delegate_to_email_marketing_agent":  "email_marketing",
-            "delegate_to_ab_testing_agent":       "ab_testing",
             "delegate_to_api_connections_agent":  "api_connections",
             "delegate_to_trend_forecasting_agent":"trend_forecasting",
             "delegate_to_customer_retention_agent":"customer_retention",

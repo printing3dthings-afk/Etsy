@@ -1,7 +1,9 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
-from tools import customer_service_tools
+from tools import customer_service_tools, returns_tools
 from config import FAST_MODEL
+
+_RETURNS_TOOL_NAMES = {t["name"] for t in returns_tools.TOOL_DEFINITIONS}
 
 SYSTEM_PROMPT = """You are the Customer Service Agent for OnBrandCraftz (etsy.com/shop/onbrandcraftz) — a print-to-order Etsy shop selling 3D printed home decor and hand painted wood items. You are the voice of the brand to every customer.
 
@@ -56,11 +58,13 @@ class CustomerServiceAgent(BaseAgent):
     def __init__(self):
         self._store = DataStore()
         super().__init__(
-            name="Customer Service Agent",
+            name="Customer Success Agent",
             system_prompt=SYSTEM_PROMPT,
-            tool_definitions=customer_service_tools.TOOL_DEFINITIONS,
+            tool_definitions=customer_service_tools.TOOL_DEFINITIONS + returns_tools.TOOL_DEFINITIONS,
             model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
+        if tool_name in _RETURNS_TOOL_NAMES:
+            return returns_tools.execute_tool(tool_name, tool_input, self._store)
         return customer_service_tools.execute_tool(tool_name, tool_input, self._store)

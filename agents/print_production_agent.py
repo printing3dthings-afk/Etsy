@@ -1,7 +1,18 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
-from tools import print_production_tools
+from tools import print_production_tools, supply_chain_tools
 from config import FAST_MODEL
+
+# Rename supply_chain's get_reorder_alerts to avoid collision with print_production_tools
+_supply_chain_defs = []
+for _t in supply_chain_tools.TOOL_DEFINITIONS:
+    if _t["name"] == "get_reorder_alerts":
+        _t = dict(_t)
+        _t["name"] = "get_supply_reorder_alerts"
+        _t["description"] = "Get all materials/supplies that are at or below their reorder threshold (supply chain inventory)."
+    _supply_chain_defs.append(_t)
+
+_SUPPLY_TOOL_NAMES = {t["name"] for t in _supply_chain_defs}
 
 SYSTEM_PROMPT = """⚠️ CRITICAL RULE — HUMAN APPROVAL REQUIRED FOR ALL PHYSICAL ORDERS ⚠️
 
@@ -67,11 +78,14 @@ class PrintProductionAgent(BaseAgent):
     def __init__(self):
         self._store = DataStore()
         super().__init__(
-            name="Print Production Agent",
+            name="Print & Supply Agent",
             system_prompt=SYSTEM_PROMPT,
-            tool_definitions=print_production_tools.TOOL_DEFINITIONS,
+            tool_definitions=print_production_tools.TOOL_DEFINITIONS + _supply_chain_defs,
             model=FAST_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
+        if tool_name in _SUPPLY_TOOL_NAMES:
+            actual = "get_reorder_alerts" if tool_name == "get_supply_reorder_alerts" else tool_name
+            return supply_chain_tools.execute_tool(actual, tool_input, self._store)
         return print_production_tools.execute_tool(tool_name, tool_input, self._store)
