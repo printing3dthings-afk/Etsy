@@ -1,7 +1,7 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
 from tools import trend_forecasting_tools, learning_tools, competitor_intel_tools
-from config import FAST_MODEL
+from config import STANDARD_MODEL
 
 _COMPETITOR_TOOL_NAMES = {t["name"] for t in competitor_intel_tools.TOOL_DEFINITIONS}
 
@@ -47,7 +47,7 @@ class TrendForecastingAgent(BaseAgent):
                 + learning_tools.TOOL_DEFINITIONS
                 + competitor_intel_tools.TOOL_DEFINITIONS
             ),
-            model=FAST_MODEL,
+            model=STANDARD_MODEL,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:

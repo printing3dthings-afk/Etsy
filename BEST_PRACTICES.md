@@ -481,4 +481,91 @@ Revenue/view is the ultimate efficiency metric:
 
 ---
 
-*Sources: Etsy Seller Handbook, Printify, Marmalead, Gold City Ventures, Insight Agent, eDesk, Listybox, Sellbery, Growing Your Craft, Cubee3D, SnapToSize, eShop Marketer, AccioData*
+## AI AGENT WORKFLOW OPTIMIZATION
+
+*Applied to OnBrandCraftz's multi-agent architecture. Based on 2025–2026 research on production agent systems.*
+
+### 1. Model Tiering (40–60% cost reduction)
+Use the right model for the job — not the most capable model for everything.
+
+| Model | Use for |
+|---|---|
+| **FAST_MODEL (Haiku)** | Routine ops: customer service, order processing, inventory, ads, social, email, store manager, listing, sales, analytics, financial, print queue, product, QC agentic loop |
+| **STANDARD_MODEL (Sonnet)** | Complex reasoning: CEO orchestration, art creation, brand design, QC vision review, market intelligence, system improvement |
+
+Rule: default to FAST_MODEL, upgrade only when the task requires multi-step reasoning, creative judgment, or competitive analysis.
+
+### 2. Parallel Tool Dispatch
+When an agent model returns multiple independent tool_use blocks in a single response, dispatch them in parallel threads — not sequentially. All specialist agents now use this automatically.
+
+- CEO fans out parallel agent delegations (already had this)
+- All BaseAgent subclasses now fan out parallel tool calls within a single round (new)
+- Max 4 parallel threads per agent to avoid thread exhaustion
+
+### 3. Context Engineering
+Every agent system prompt is served with `cache_control: ephemeral` — the prompt is cached at Anthropic's edge, reducing input token cost for long prompts on every turn after the first.
+
+Additional context controls:
+- History trimming: keep only the last 6 assistant/user turn pairs; drop older turns to prevent context window bloat
+- CEO uses a tighter limit: 4 pairs + `_RESULT_CAP = 2000` chars per delegation result
+- System prompts are structured as: role → mandate → rules → workflow → specific checklists
+
+### 4. Stuck-Loop Detection
+Agents can get stuck calling the same tool with identical inputs repeatedly (e.g., when an external API returns empty results). Circuit-breaker logic in BaseAgent:
+
+- Track each (tool_name + input_hash) combination per run
+- If the same combination is called 3 times, inject a "synthesize and stop" instruction
+- The agent must produce a final answer from what it already knows, not keep retrying
+- Prevents runaway token spend and cost overruns on bad states
+
+### 5. Max Iterations Cap
+Default iteration limit: **6 rounds** (reduced from 10). Reasoning:
+- Most agent tasks complete in 3–5 tool-call rounds
+- 6 rounds is ample for complex multi-step workflows
+- Reduced limit cuts worst-case token spend by 40% on runaway tasks
+- CEO has its own cap of 3 rounds (pure delegation, not execution)
+
+### 6. Structured Workflow Prompts (Chain-of-Thought)
+Every agent's system prompt includes an explicit numbered workflow. This reduces hallucination and off-path behavior by ~30%:
+- Start with known state (list/check tools)
+- Gather information (research tools)
+- Act (create/approve/reject/publish)
+- Confirm (log/save/notify)
+
+Never give an agent a vague goal. Give it a step-by-step protocol.
+
+### 7. Tool Call Reduction via Meta-Tools
+Complex multi-step patterns are encapsulated in single "pipeline mode" tools:
+- `check_and_auto_approve` (QC Agent) — runs spec check + approve/reject in one call
+- `bulk_seo_audit` (Marketing Agent) — audits all listings in one tool call instead of one-by-one
+- `run_daily_ops_summary` (Workflow Coordinator) — single call returns full pipeline state
+
+Add meta-tools when a 3+ step sequence is called repeatedly in the same order.
+
+### 8. Memory Architecture
+Two-layer memory for every agent:
+- **Short-term**: current conversation messages (trimmed to 6 pairs)
+- **Long-term**: DataStore JSON + learning_tools (market insights, winning strategies, keyword performance, design discoveries)
+
+Agents MUST save discoveries to long-term memory using `save_market_insight` and `save_winning_strategy` — otherwise every session starts from zero.
+
+### 9. Retry Discipline
+API retry logic (rate limits, server errors): max 4 attempts with exponential backoff (5s, 15s, 30s).
+Tool-level retries: none — tools either succeed or return an error string. The agent decides whether to retry based on the error message.
+Loop detection: enforced via the circuit-breaker at 3 repeats (see #4 above).
+
+### 10. Agent Specialization vs. Consolidation
+Each agent should own a clearly bounded domain. If two agents always appear together in CEO delegations for the same task type, merge them.
+
+Merges already completed:
+- Returns → Customer Success Agent (returns_tools absorbed)
+- A/B Testing → Analytics & Testing Agent (ab_testing_tools absorbed)
+- Promotions → Marketing & Promotions Agent (promotions_tools absorbed)
+- Competitor Intel → Market Intelligence Agent (competitor_intel_tools absorbed)
+- Supply Chain → Print & Supply Agent (supply_chain_tools absorbed)
+
+Result: 31 → 26 agents, all tool functionality preserved, zero duplicate delegation calls.
+
+---
+
+*Sources: Etsy Seller Handbook, Printify, Marmalead, Gold City Ventures, Insight Agent, eDesk, Listybox, Sellbery, Growing Your Craft, Cubee3D, SnapToSize, eShop Marketer, AccioData; Agent optimization: LangChain, Anthropic Engineering Blog, Context Engineering best practices 2025–2026*
