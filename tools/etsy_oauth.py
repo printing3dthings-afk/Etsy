@@ -137,8 +137,8 @@ def main():
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     try:
-        with urllib.request.urlopen(req) as resp:
-            tokens = json.loads(resp.read())
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            tokens = json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         print(f"Token exchange failed: {e.read().decode()}")
         sys.exit(1)

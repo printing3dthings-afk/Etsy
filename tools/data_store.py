@@ -98,27 +98,33 @@ class DataStore:
 
     @property
     def shop(self) -> dict:
-        return self._data.get("shop", {})
+        with self._lock:
+            return self._data.get("shop", {})
 
     @property
     def listings(self) -> list:
-        return self._data.get("listings", [])
+        with self._lock:
+            return self._data.get("listings", [])
 
     @property
     def orders(self) -> list:
-        return self._data.get("orders", [])
+        with self._lock:
+            return self._data.get("orders", [])
 
     @property
     def messages(self) -> list:
-        return self._data.get("messages", [])
+        with self._lock:
+            return self._data.get("messages", [])
 
     @property
     def reviews(self) -> list:
-        return self._data.get("reviews", [])
+        with self._lock:
+            return self._data.get("reviews", [])
 
     @property
     def analytics(self) -> dict:
-        return self._data.get("analytics", {})
+        with self._lock:
+            return self._data.get("analytics", {})
 
     def find_listing(self, listing_id: str) -> dict | None:
         return next((l for l in self.listings if l["id"] == listing_id), None)

@@ -168,7 +168,10 @@ class EtsyAPIClient:
     def get_orders(self, limit: int = 25, status: str = "open") -> dict:
         """Get shop orders. Requires OAuth access token."""
         self._require_oauth()
-        return self._request("GET", f"shops/{self.shop_id}/receipts", params={"limit": limit, "was_paid": True})
+        params: dict = {"limit": limit, "was_paid": True}
+        if status != "open":
+            params["status"] = status
+        return self._request("GET", f"shops/{self.shop_id}/receipts", params=params)
 
     def get_messages(self, limit: int = 25) -> dict:
         """Get shop conversations/messages. Requires OAuth access token."""

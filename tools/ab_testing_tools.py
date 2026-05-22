@@ -232,7 +232,10 @@ def _get_active_tests(store: DataStore) -> str:
     today = date.today()
 
     for t in active:
-        end = date.fromisoformat(t["end_date"])
+        try:
+            end = date.fromisoformat(t["end_date"])
+        except (ValueError, KeyError):
+            end = today
         days_remaining = (end - today).days
         t["days_remaining"] = days_remaining
         if days_remaining < 0:
@@ -335,9 +338,8 @@ def _analyze_test_results(test_id: str, store: DataStore) -> str:
     if metric in ("click_through_rate", "conversion_rate", "favorites"):
         n_a = va["impressions"] if metric in ("click_through_rate", "favorites") else va["clicks"]
         n_b = vb["impressions"] if metric in ("click_through_rate", "favorites") else vb["clicks"]
-        p_pool = safe_rate(va.get("clicks" if metric == "click_through_rate" else "orders", 0) +
-                           vb.get("clicks" if metric == "click_through_rate" else "orders", 0),
-                           n_a + n_b) if (n_a + n_b) > 0 else 0
+        _key = "clicks" if metric == "click_through_rate" else ("favorites" if metric == "favorites" else "orders")
+        p_pool = safe_rate(va.get(_key, 0) + vb.get(_key, 0), n_a + n_b) if (n_a + n_b) > 0 else 0
         se = math.sqrt(p_pool * (1 - p_pool) * (1 / n_a + 1 / n_b)) if (n_a > 0 and n_b > 0 and p_pool > 0) else 0
         z = abs(score_b - score_a) / se if se > 0 else 0
         # Approximate confidence from z
@@ -352,8 +354,12 @@ def _analyze_test_results(test_id: str, store: DataStore) -> str:
         else:
             confidence = round(z / 1.282 * 80, 0)
 
-    days_run = (date.today() - date.fromisoformat(test["start_date"])).days
-    days_remaining = (date.fromisoformat(test["end_date"]) - date.today()).days
+    try:
+        days_run = (date.today() - date.fromisoformat(test["start_date"])).days
+        days_remaining = (date.fromisoformat(test["end_date"]) - date.today()).days
+    except (ValueError, KeyError):
+        days_run = 0
+        days_remaining = 0
 
     recommendation = "Continue testing — not enough data yet."
     if confidence and confidence >= 95 and score_b > score_a:

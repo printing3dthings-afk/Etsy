@@ -99,7 +99,8 @@ def main():
         sys.exit(1)
 
     # Exchange code for tokens
-    credentials = urllib.parse.quote(f"{APP_ID}:{APP_SECRET}")
+    import base64
+    credentials = base64.b64encode(f"{APP_ID}:{APP_SECRET}".encode()).decode()
     token_data = urllib.parse.urlencode({
         "grant_type": "authorization_code",
         "code": _auth_code,
@@ -115,8 +116,8 @@ def main():
         },
     )
     try:
-        with urllib.request.urlopen(req) as resp:
-            tokens = json.loads(resp.read())
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            tokens = json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         print(f"Token exchange failed: {e.read().decode()}")
         sys.exit(1)

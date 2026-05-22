@@ -171,7 +171,7 @@ def _get_unfulfilled_digital_orders(store: DataStore) -> str:
                     "customer_name": order.get("buyer_name", "Customer"),
                     "customer_email": order.get("buyer_email", ""),
                     "product_id": prod_id or item.get("digital_product_id"),
-                    "product_title": item.get("title", order.get("items", [{}])[0].get("title", "")),
+                    "product_title": item.get("title", items[0].get("title", "") if items else ""),
                     "order_date": order.get("created_at", ""),
                     "amount_paid": order.get("total", 0),
                 })

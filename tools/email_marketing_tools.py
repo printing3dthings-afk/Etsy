@@ -329,8 +329,9 @@ def _send_newsletter(data: dict, store: DataStore) -> str:
                     msg.attach(MIMEText(draft["html_body"], "html"))
                     server.send_message(msg)
                     sent += 1
-                except Exception:
+                except Exception as _e:
                     failed += 1
+                    print(f"  Failed to send to {sub.get('email', '?')}: {_e}")
     except Exception as exc:
         return json.dumps({"error": f"SMTP connection failed: {exc}"})
 

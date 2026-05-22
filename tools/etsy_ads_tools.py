@@ -304,7 +304,12 @@ def _get_roas_report(period: str, store: DataStore) -> str:
         "all_time": date(2000, 1, 1),
     }
     cutoff = period_map.get(period, date(2000, 1, 1))
-    filtered = [e for e in spend_log if date.fromisoformat(e.get("date", str(today))) >= cutoff]
+    def _safe_date(s: str) -> date:
+        try:
+            return date.fromisoformat(s)
+        except (ValueError, TypeError):
+            return date(2000, 1, 1)
+    filtered = [e for e in spend_log if _safe_date(e.get("date", str(today))) >= cutoff]
 
     total_spend = sum(e.get("spend_usd", 0) for e in filtered)
     total_revenue = sum(e.get("revenue_from_ads", 0) for e in filtered)
