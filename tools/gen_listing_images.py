@@ -1133,6 +1133,11 @@ def process_listing(pid: str, do_upload: bool) -> dict:
     existing = get_image_ranks(lid)
     print(f"  Existing ranks: {sorted(existing.keys())}")
 
+    # Size guide rank: just after the last lifestyle slot, but never before rank 6
+    # Old listings (lifestyle at 6,7): size guide → 8
+    # New listings (lifestyle at 1,2): size guide → 6
+    sg_rank = max(rB, 5) + 1
+
     upload_map = []
     if result['lifestyle_A']:
         upload_map.append((rA, path_A))
@@ -1141,7 +1146,7 @@ def process_listing(pid: str, do_upload: bool) -> dict:
     for rank_offset, mp in enumerate(mockup_paths):
         upload_map.append((3 + rank_offset, mp))
     if result['size_guide']:
-        upload_map.append((6, sg_path))
+        upload_map.append((sg_rank, sg_path))
 
     for rank, path in upload_map:
         old_id = existing.get(rank)
