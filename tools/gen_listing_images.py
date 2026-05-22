@@ -437,7 +437,7 @@ def delete_image(listing_id, image_id):
         print(f"  DELETE {image_id}: {e.code}"); return False
 
 def upload_image(listing_id, img_path, rank):
-    for attempt in range(3):
+    for attempt in range(4):
         try:
             result = client.upload_listing_image(listing_id, img_path, rank=rank)
             print(f"  rank {rank} → id={result.get('listing_image_id')}")
@@ -445,8 +445,15 @@ def upload_image(listing_id, img_path, rank):
         except EtsyAPIError as e:
             if e.status == 401: refresh()
             elif e.status == 429: time.sleep(15)
-            elif e.status == 500 and attempt < 2: time.sleep(5)
+            elif e.status == 500 and attempt < 3: time.sleep(5)
             else: print(f"  rank {rank} FAILED: {e}"); return False
+        except Exception as e:
+            if attempt < 3:
+                print(f"  rank {rank} retry {attempt+1}: {e}")
+                time.sleep(8 * (attempt + 1))
+            else:
+                print(f"  rank {rank} FAILED: {e}")
+                return False
     return False
 
 def upload_file(listing_id, file_path, rank=1):
@@ -1196,7 +1203,13 @@ def main():
         if pid not in LISTINGS:
             print(f"Unknown listing: {pid}")
             continue
-        results[pid] = process_listing(pid, do_upload)
+        try:
+            results[pid] = process_listing(pid, do_upload)
+        except Exception as e:
+            print(f"\nERROR processing {pid}: {e}")
+            results[pid] = {'errors': [str(e)], 'uploaded': 0,
+                            'lifestyle_A': False, 'lifestyle_B': False,
+                            'mockups': 0, 'size_guide': False, 'download_zip': False}
 
     print('\n\n' + '=' * 60)
     print('SUMMARY')
