@@ -5,6 +5,64 @@
 
 ---
 
+## TOP 10 DESIGN PRINCIPLES FOR DIGITAL ART
+
+Applied to every piece created for OnBrandCraftz. These are not guidelines — they are production standards.
+
+| # | Principle | Rule |
+|---|---|---|
+| 1 | **Clear Focal Point** | Every composition has ONE dominant element the eye lands on first — use size contrast, color contrast, and negative space to isolate it |
+| 2 | **Rule of Thirds Composition** | Never mechanically center subjects — place the focal point at one of the four rule-of-thirds grid intersections |
+| 3 | **Visual Hierarchy** | Viewer reads: primary (largest/highest contrast) → secondary (supporting) → background (atmospheric/receding) |
+| 4 | **Intentional Color Harmony** | Use only complementary, analogous, or triadic palettes — 4–6 colors maximum — from the shop's defined palette system |
+| 5 | **Full Value Range** | Every piece needs at least one near-white and one near-black area — squint test: focal point must still be clear at thumbnail size |
+| 6 | **Intentional Negative Space** | Background space is active design, not emptiness — it gives the subject presence and prevents the composition from feeling claustrophobic |
+| 7 | **Medium Authenticity** | Name the exact medium + specific technique in every prompt — creates the hand-crafted feel that separates premium art from generic AI output |
+| 8 | **Directional Lighting** | Every piece has a described light source: direction + quality + temperature — flat undirected light creates flat lifeless art |
+| 9 | **Specificity Over Generality** | Replace every vague adjective with specific nouns: named species, hex colors, named techniques, exact surface descriptions |
+| 10 | **Unique Conceptual Framing** | Add ONE unexpected element per composition that no generic prompt would produce — unexpected scale, angle, combination, or material |
+
+---
+
+## ORIGINALITY & COPYRIGHT SAFETY STANDARDS
+
+### Absolute Prohibitions (zero tolerance — violation = listing removal + shop risk)
+- No Disney, Marvel, DC, Star Wars, Nintendo, Pokémon, Harry Potter, or ANY licensed IP — even "inspired by"
+- No trademarked logos, wordmarks, or brand identities of any kind
+- No living artist name-drops in prompts — reference aesthetic movements instead
+- No copyrighted quotes, song lyrics, or brand slogans as text in art
+- No near-duplicate recreations of famous existing artworks
+- No copyrighted modern architectural IP
+
+### Reference What You CAN Use
+- ✅ General aesthetic movements: "Impressionism," "Art Nouveau," "Japandi," "risograph aesthetic"
+- ✅ Historical art traditions (>70 years old): "Dutch Golden Age still life tradition," "Victorian botanical illustration"
+- ✅ Medium and technique descriptions: "thick palette knife impasto," "loose gestural watercolor"
+- ✅ Named color palettes from the shop's own palette system
+- ✅ Our own previously created art as style references
+
+### Originality Verification Process (every piece, before listing)
+1. **Prompt review**: scan for banned content before generating
+2. **Visual check**: after generating — does it resemble any specific artist's signature work?
+3. **Distinctiveness test**: could this exact image exist on 10 other Etsy shops? If yes, add unique conceptual element and regenerate
+4. **Provenance logging**: record in data store: exact prompt used, creation date, unique element description, IP clearance confirmation
+
+### Reverse Image Search (for any uncertain cases)
+Tools to verify originality if a generated piece looks too similar to something known:
+- **TinEye** (tineye.com): finds exact and near-exact matches, creates image "fingerprint"
+- **Google Lens** (images.google.com): finds visually similar images across the web
+- **Berify**: simultaneously searches Google, Bing, Yandex, TinEye, and its 800M+ image index
+Run a reverse image search on any piece that looks "too familiar" before listing it.
+
+### Protecting Our Own Original Art
+- Copyright exists from the moment art is created — no registration needed to own it
+- Document all creation: prompt used, generation date, product record in data store
+- Add shop metadata to all exported files (creator: OnBrandCraftz, date, description)
+- Report any discovered infringement via DMCA takedown notice
+- US Copyright Office registration: optional but enables statutory damages ($750–$30,000 per work) if someone steals our art
+
+---
+
 ## OVERARCHING PRINCIPLES
 
 1. **Quality over quantity, always.** The 2026 market is flooded with AI-generated content. The "Human Premium" wins — products that are curated, polished, and intentional command higher prices and better reviews.

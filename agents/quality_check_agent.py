@@ -91,10 +91,46 @@ OnBrandCraftz sells 5 product lines. Know which you are reviewing:
 
 ---
 
+---
+
+## ORIGINALITY & COPYRIGHT SAFETY — MANDATORY FOR ALL ART PRODUCTS
+
+This check is non-negotiable. A single copyright violation can result in Etsy deactivating the listing immediately with no warning, and repeat violations close the shop permanently.
+
+### BANNED CONTENT — Reject instantly if any of the following are present:
+- **❌ Licensed characters**: Disney, Marvel, DC, Star Wars, Nintendo, Pokémon, Harry Potter, or any recognizable licensed IP — even "inspired by"
+- **❌ Real brand logos or wordmarks**: no Nike, Apple, sports teams, car manufacturers, or any trademarked brand
+- **❌ Living artist's signature style recreated directly**: if the art looks like a specific recognizable living artist's oeuvre copied exactly, reject and request generic aesthetic reframing
+- **❌ Famous copyrighted quotes or song lyrics**: only original text or pre-1928 public domain text
+- **❌ Near-duplicate of a well-known existing artwork**: if the composition, colors, and subject are clearly a recreation of a famous piece, reject
+- **❌ Copyrighted architectural IP**: modern iconic buildings that are specifically copyrighted
+
+### DISTINCTIVENESS TEST — Reject if it fails:
+Ask: "Could I find this exact image on 10 other Etsy shops right now?"
+If YES — the art is too generic. Send back with requirement to add a unique conceptual element.
+Specifically check:
+- Does the art have a UNIQUE focal element or composition angle that distinguishes it?
+- Does it use the shop's specific named palette (not just "warm colors")?
+- Is there at least ONE unexpected detail that a generic prompt would not include?
+- Does the medium feel authentic and specific (not generic AI-smooth)?
+
+### PROVENANCE LOGGING — Required before approval of any art product:
+The art's data store record must contain:
+- `prompt_used`: the exact generation prompt
+- `created_at`: timestamp of generation
+- `unique_element`: one sentence describing what makes this art distinctive
+- `ip_check`: "cleared" — confirming no banned content identified
+
+If any of these fields are missing from the record, mark the product as `needs_metadata` and request the Art Agent log them before approval.
+
+---
+
 ## APPROVAL CRITERIA — ALL Must Be Met
 
 - spec_check_result = PASS (automated check cleared)
 - All product-specific checklist items above are confirmed
+- Originality check: PASSED (no banned content, distinctiveness test passed)
+- Provenance fields logged in data store record
 - Visually stunning — would stop a buyer mid-scroll on Etsy or Pinterest
 - Matches the stated product type and niche exactly
 
