@@ -15,43 +15,42 @@ from agents import (
     AnalyticsAgent, CustomerServiceAgent, SocialMediaAgent,
     ArtCreationAgent, PlannerDesignAgent, QualityCheckAgent, EtsyListingAgent,
     StoreManagerAgent, SalesProcessorAgent, BrandDesignAgent,
-    FinancialAgent, PrintProductionAgent, EtsyAdsAgent,
-    CompetitorIntelAgent, PromotionsAgent, TaxComplianceAgent,
-    ReturnsAgent, SupplyChainAgent, EmailMarketingAgent, ABTestingAgent,
+    FinancialAgent, PrintProductionAgent, EtsyAdsAgent, TaxComplianceAgent,
+    EmailMarketingAgent, TrendForecastingAgent, CustomerRetentionAgent,
+    WorkflowCoordinatorAgent, APIConnectionsAgent,
 )
 
 AGENTS = {
     # ── Orchestrator ────────────────────────────────────────────────────────
-    "ceo":       ("CEO Agent",                lambda: CEOAgent()),
+    "ceo":         ("CEO Agent",                    lambda: CEOAgent()),
 
     # ── Digital Product Pipeline ─────────────────────────────────────────────
-    "brand":     ("Brand Design Agent",       lambda: BrandDesignAgent()),
-    "art":       ("Art Creation Agent",       lambda: ArtCreationAgent()),
-    "planner":   ("Planner Design Agent",     lambda: PlannerDesignAgent()),
-    "qc":        ("Quality Check Agent",      lambda: QualityCheckAgent()),
-    "listing":   ("Etsy Listing Agent",       lambda: EtsyListingAgent()),
-    "store":     ("Store Manager Agent",      lambda: StoreManagerAgent()),
-    "delivery":  ("Sales Processor Agent",    lambda: SalesProcessorAgent()),
+    "brand":       ("Brand Design Agent",           lambda: BrandDesignAgent()),
+    "art":         ("Art Creation Agent",           lambda: ArtCreationAgent()),
+    "planner":     ("Planner Design Agent",         lambda: PlannerDesignAgent()),
+    "qc":          ("Quality Check Agent",          lambda: QualityCheckAgent()),
+    "listing":     ("Etsy Listing Agent",           lambda: EtsyListingAgent()),
+    "store":       ("Store Manager Agent",          lambda: StoreManagerAgent()),
+    "delivery":    ("Sales Processor Agent",        lambda: SalesProcessorAgent()),
 
     # ── Shop Operations ──────────────────────────────────────────────────────
-    "sales":     ("Sales Agent",              lambda: SalesAgent()),
-    "product":   ("Product Agent",            lambda: ProductAgent()),
-    "marketing": ("Marketing Agent",          lambda: MarketingAgent()),
-    "analytics": ("Analytics Agent",          lambda: AnalyticsAgent()),
-    "cs":        ("Customer Service Agent",   lambda: CustomerServiceAgent()),
-    "social":    ("Social Media Agent",       lambda: SocialMediaAgent()),
+    "sales":       ("Sales Agent",                  lambda: SalesAgent()),
+    "product":     ("Product Agent",                lambda: ProductAgent()),
+    "marketing":   ("Marketing & Promotions Agent", lambda: MarketingAgent()),
+    "analytics":   ("Analytics & Testing Agent",    lambda: AnalyticsAgent()),
+    "cs":          ("Customer Success Agent",        lambda: CustomerServiceAgent()),
+    "social":      ("Social Media Agent",           lambda: SocialMediaAgent()),
+    "retention":   ("Customer Retention Agent",     lambda: CustomerRetentionAgent()),
 
     # ── Business Infrastructure ──────────────────────────────────────────────
-    "finance":   ("Financial Agent",          lambda: FinancialAgent()),
-    "print":     ("Print Production Agent",   lambda: PrintProductionAgent()),
-    "ads":       ("Etsy Ads Agent",           lambda: EtsyAdsAgent()),
-    "intel":     ("Competitor Intel Agent",   lambda: CompetitorIntelAgent()),
-    "promos":    ("Promotions Agent",         lambda: PromotionsAgent()),
-    "tax":       ("Tax Compliance Agent",     lambda: TaxComplianceAgent()),
-    "returns":   ("Returns & Disputes Agent", lambda: ReturnsAgent()),
-    "supply":    ("Supply Chain Agent",       lambda: SupplyChainAgent()),
-    "email":     ("Email Marketing Agent",    lambda: EmailMarketingAgent()),
-    "abt":       ("A/B Testing Agent",        lambda: ABTestingAgent()),
+    "finance":     ("Financial Agent",              lambda: FinancialAgent()),
+    "print":       ("Print & Supply Agent",         lambda: PrintProductionAgent()),
+    "ads":         ("Etsy Ads Agent",               lambda: EtsyAdsAgent()),
+    "tax":         ("Tax Compliance Agent",         lambda: TaxComplianceAgent()),
+    "email":       ("Email Marketing Agent",        lambda: EmailMarketingAgent()),
+    "intel":       ("Market Intelligence Agent",    lambda: TrendForecastingAgent()),
+    "coordinator": ("Workflow Coordinator",         lambda: WorkflowCoordinatorAgent()),
+    "api":         ("API Connections Agent",        lambda: APIConnectionsAgent()),
 }
 
 DAILY_BRIEFING_PROMPT = """Run a complete daily briefing for the shop owner. Delegate to all relevant agents:
@@ -65,14 +64,13 @@ DIGITAL PIPELINE:
 OPERATIONS:
 5. Sales Processor Agent — any unfulfilled digital orders needing email delivery?
 6. Sales Agent — today's revenue and pending physical orders
-7. Customer Service Agent — unread messages and unresponded reviews
-8. Returns & Disputes Agent — any open cases needing urgent response?
-9. Analytics Agent — this week's traffic and top performers
-10. Marketing Agent — one key marketing opportunity for today
+7. Customer Success Agent — unread messages, unresponded reviews, and any open return or dispute cases
+8. Analytics & Testing Agent — this week's traffic and top performers
+9. Marketing & Promotions Agent — one key marketing opportunity for today
 
 INFRASTRUCTURE:
-11. Supply Chain Agent — any materials running low?
-12. Print Production Agent — print queue status and machine health
+10. Print & Supply Agent — print queue status, machine health, and filament/material levels
+11. Workflow Coordinator — any pipeline bottlenecks or stuck tasks?
 
 Synthesize everything into an executive daily briefing. Lead with the most urgent items first."""
 
@@ -88,7 +86,7 @@ HELP_TEXT = """
 |  quit / exit   Exit the hub                                              |
 |                                                                          |
 |  AGENTS - Orchestrator                                                   |
-|  ceo           CEO Agent (orchestrates all 22 agents)                    |
+|  ceo           CEO Agent (orchestrates 22 specialist agents)             |
 |                                                                          |
 |  AGENTS - Digital Product Pipeline                                       |
 |  brand         Brand Design Agent (logo, banner, brand identity)         |
@@ -102,22 +100,21 @@ HELP_TEXT = """
 |  AGENTS - Shop Operations                                                |
 |  sales         Sales Agent (physical orders, revenue, shipping)          |
 |  product       Product Agent (physical listings, inventory)              |
-|  marketing     Marketing Agent (SEO, promotions, traffic)                |
-|  analytics     Analytics Agent (reports, dashboard)                      |
-|  cs            Customer Service Agent (messages, reviews)                |
+|  marketing     Marketing & Promotions Agent (SEO, promos, traffic)       |
+|  analytics     Analytics & Testing Agent (reports, A/B tests)            |
+|  cs            Customer Success Agent (messages, reviews, returns)       |
 |  social        Social Media Agent (Pinterest strategy)                   |
+|  retention     Customer Retention Agent (win-back, lifetime value)       |
 |                                                                          |
 |  AGENTS - Business Infrastructure                                        |
 |  finance       Financial Agent (profit, fees, COGS, cash flow)          |
-|  print         Print Production Agent (print queue, machines, filament)  |
+|  print         Print & Supply Agent (print queue, filament, suppliers)   |
 |  ads           Etsy Ads Agent (budget, ROAS, promoted listings)          |
-|  intel         Competitor Intel Agent (research, gaps, trends)           |
-|  promos        Promotions Agent (sales events, coupons, discounts)       |
 |  tax           Tax Compliance Agent (taxes, deductions, copyright)       |
-|  returns       Returns & Disputes Agent (refunds, Etsy cases)            |
-|  supply        Supply Chain Agent (materials, suppliers, orders)         |
 |  email         Email Marketing Agent (newsletters, receipt messages)     |
-|  abt           A/B Testing Agent (listing experiments, CTR/conversion)   |
+|  intel         Market Intelligence Agent (trends, competitors, gaps)     |
+|  coordinator   Workflow Coordinator (pipeline health, bottlenecks)       |
+|  api           API Connections Agent (integrations, key management)      |
 +=========================================================================+
 """
 

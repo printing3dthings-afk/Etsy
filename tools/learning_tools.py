@@ -4,8 +4,11 @@ Insights, strategies, keywords, and design discoveries are saved across sessions
 Agents MUST check their knowledge base before acting and save learnings after research.
 """
 import json
+import logging
 import os
 from datetime import datetime
+
+_logger = logging.getLogger("learning_tools")
 
 KB_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "knowledge_base")
 
@@ -210,13 +213,31 @@ def _load(filename: str) -> list:
     p = _path(filename)
     if not os.path.exists(p):
         return []
-    with open(p) as f:
-        return json.load(f)
+    try:
+        with open(p) as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        _logger.error("Corrupted knowledge base file: %s — returning empty list", filename)
+        return []
+    except OSError as e:
+        _logger.error("Cannot read %s: %s", filename, e)
+        return []
 
 
 def _dump(filename: str, data: list) -> None:
-    with open(_path(filename), "w") as f:
-        json.dump(data, f, indent=2)
+    """Atomic write: write to .tmp then rename into place to prevent partial writes."""
+    p = _path(filename)
+    tmp = p + ".tmp"
+    try:
+        with open(tmp, "w") as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp, p)
+    except OSError as e:
+        _logger.error("Failed to save %s: %s", filename, e)
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
 
 
 # ── Tool dispatcher ────────────────────────────────────────────────────────────

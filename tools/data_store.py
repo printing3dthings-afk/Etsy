@@ -7,15 +7,33 @@ import threading
 from typing import Any
 from config import SHOP_DATA_FILE
 
+# Double-checked locking guard for singleton creation.
+_SINGLETON_LOCK = threading.Lock()
+
 
 class DataStore:
     """Shared in-memory data store backed by shop_data.json.
 
-    Thread-safe: all public read/write methods acquire a reentrant lock so
-    concurrent agent threads cannot corrupt each other's modifications.
+    Implemented as a singleton — every `DataStore()` call in every agent
+    returns the same instance, so parallel CEO delegations all share one
+    in-memory copy and the last-write-wins race condition is eliminated.
+
+    Thread-safe: all public read/write methods acquire a reentrant lock.
     """
 
-    def __init__(self):
+    _instance: "DataStore | None" = None
+
+    def __new__(cls) -> "DataStore":
+        if cls._instance is None:
+            with _SINGLETON_LOCK:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        if getattr(self, "_initialized", False):
+            return  # Already set up — skip on every call after the first
+        self._initialized = True
         self._lock = threading.RLock()
         self._data: dict = {}
         self._load()
