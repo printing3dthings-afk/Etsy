@@ -369,6 +369,7 @@ if __name__ == '__main__':
     parser.add_argument('--test-listing', default='DP1018', help='Which listing to test (default: DP1018)')
     parser.add_argument('--full-run', action='store_true', help='Run the full loop for all listings')
     parser.add_argument('--composite-only', action='store_true', help='Recomposite existing bg images without regenerating')
+    parser.add_argument('--listings', nargs='+', metavar='PID', help='Only process these listing IDs (e.g. --listings DP1020 DP1021)')
     args = parser.parse_args()
 
     if args.test_only:
@@ -397,10 +398,11 @@ if __name__ == '__main__':
                     continue
                 composite(bg_path, info['art_file'], comp_path, info['frame_color'])
 
-    elif args.full_run:
+    elif args.full_run or args.listings:
         refresh()
         results = {}
-        for pid, info in LISTINGS.items():
+        listing_subset = {k: v for k, v in LISTINGS.items() if not args.listings or k in args.listings}
+        for pid, info in listing_subset.items():
             lid = info['listing_id']
             out_dir = info['out_dir']
             os.makedirs(out_dir, exist_ok=True)
@@ -455,4 +457,4 @@ if __name__ == '__main__':
             ok = 'OK' if r['uploaded'] == 2 and not r['errors'] else 'FAIL'
             print(f'{ok} {pid}: generated={r["generated"]}/2  uploaded={r["uploaded"]}/2  errors={r["errors"] or "none"}')
     else:
-        print("Use --test-only, --composite-only, or --full-run")
+        print("Use --test-only, --composite-only, --full-run, or --listings DP1020 DP1021 ...")
