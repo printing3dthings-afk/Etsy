@@ -31,12 +31,16 @@ class DataStore:
         return cls._instance
 
     def __init__(self) -> None:
-        if getattr(self, "_initialized", False):
-            return  # Already set up — skip on every call after the first
-        self._initialized = True
-        self._lock = threading.RLock()
-        self._data: dict = {}
-        self._load()
+        # Hold the singleton lock for the entire initialization so that if
+        # multiple threads call DataStore() simultaneously before the first
+        # init completes, they all block here and only one runs the body.
+        with _SINGLETON_LOCK:
+            if getattr(self, "_initialized", False):
+                return
+            self._initialized = True
+            self._lock = threading.RLock()
+            self._data: dict = {}
+            self._load()
 
     def _load(self) -> None:
         if not os.path.exists(SHOP_DATA_FILE):
