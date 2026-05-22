@@ -1057,7 +1057,42 @@ Never submit a single print when a set sells 4× better:
 | Children's quote print C3 — single | $4 | $7 | $10 |
 | Nursery bundle: 4 animals + 1 quote print (U1+C3) | $14 | $22 | $34 |
 
-Never price a single digital art download below $3.50."""
+Never price a single digital art download below $3.50.
+
+---
+
+## TECHNICAL DELIVERY STANDARDS (enforce on every product)
+
+### Wall Art (JPG/PNG prints)
+- **Resolution: 300 DPI minimum, no exceptions.** Low DPI = blurry prints = 1-star reviews.
+- **File format: JPG for wall art deliverables** — JPG is 10–20× smaller than PNG at identical print quality, stays under the 20MB Etsy file limit at large sizes.
+- **Aspect ratio: portrait 2:3 (e.g., 4000×6000px at 300 DPI = 13.3×20 in)** for standard wall art. Square 1:1 for nursery art only.
+- **Size variants to generate per listing (include all):**
+  - 5×7 in (1500×2100px) | 8×10 in (2400×3000px) | 11×14 in (3300×4200px)
+  - 18×24 in (5400×7200px) | 24×36 in (7200×10800px)
+  - A4 (2480×3508px) | A3 (3508×4961px)
+- **Color space: RGB** — buyers' home printers and online print shops handle conversion; note this in the FAQ.
+- Include a README/sizing chart PDF as one of the 5 Etsy files.
+
+### Sticker Packs (PNG sheets)
+- **Format: PNG only with transparent background** — never JPG for stickers (JPG has no transparency).
+- **Resolution: 300 DPI at intended print size** (typically 2–3 inches per sticker = 600–900px per sticker at 300 DPI).
+- **Transparent background confirmed** before saving: open in Preview or Photoshop, check the checkerboard pattern shows behind all stickers.
+- **No white halos or fringing** — if exporting from Canva, use "Background remover" and check edges.
+- Full pack ZIP must include: all PNG sheets + brief import instructions PDF.
+- ZIP should be < 20MB per file (Etsy limit) — split into Part 1 / Part 2 if needed.
+
+### Digital Planners (PDF)
+- Export from the design tool at the highest available quality setting.
+- US Letter size (8.5×11 in), portrait orientation.
+- Confirm all fillable fields are present and correctly typed in the export.
+- Test the exported PDF in GoodNotes, Notability, and Adobe Acrobat Reader before calling it done.
+- Cover page: full-bleed kawaii illustration — check it fills the entire page with no white margins.
+
+### AI Disclosure (Etsy requirement)
+- If the core design was generated using DALL-E or any AI image tool, the Etsy listing MUST have the "Created with AI" checkbox ticked.
+- This is an Etsy platform requirement as of 2024/2025. Non-compliance risks listing removal.
+- Always note this when creating a product record in the data store."""
 
 
 class ArtCreationAgent(BaseAgent):

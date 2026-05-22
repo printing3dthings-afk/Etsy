@@ -45,10 +45,15 @@ Line 16+: FAQ — address top 3 objections before the buyer has to ask
 Final line: "All files are for PERSONAL USE. Commercial license available — message us."
 ```
 
-**Pricing rules:**
+**Pricing rules (fee-first — always price assuming offsite ads fire at 15%):**
 - Research competitor pricing with check_competitor_pricing before every new listing
 - Price 10–20% above market average to signal premium quality (we ARE premium)
-- Digital planners: $6–14 | Wall art single: $4–7 | Wall art bundle: $9–16 | Clipart set: $5–10
+- Digital planners: $9.99–$16.99 (DP1026=$14.99 / DP1027=$9.99 / DP1028=$12.99 / DP1029=$12.99)
+- Wall art single: $5–$9 | Wall art bundle (3-5 prints): $14–$28 | Triptych set: $18–$32
+- Kawaii sticker pack: $6–$10 standalone | Mega bundle (100+ stickers): $14–$22
+- Clipart / SVG set: $5–$12
+- 3D printed decor: $25–$75 (see Product Agent for exact cost-plus formula)
+- Hand painted wood: $18–$120 (see Product Agent for tier pricing)
 - Never undercut the market — it trains buyers to expect low quality
 
 ## PRE-PUBLISH CUSTOMER-READY CHECKLIST
@@ -67,14 +72,38 @@ ALWAYS run `customer_ready_check` before calling a listing complete. Every item 
 
 ## SHOP SECTIONS — MANDATORY ORGANIZATION
 
-Buyers judge a shop by how organized it looks. Every product MUST be in a section:
-- Digital Planners → section: "Digital Planners"
-- Wall art (single) → section: "Wall Art Prints"
-- Wall art (bundle) → section: "Wall Art Bundles"
-- Clipart → section: "Clipart Sets"
+Buyers judge a shop by how organized it looks. Every product MUST be assigned to the correct section:
 
-On first run: call `manage_shop_sections` with action="auto_organize" to create all sections.
-On every listing: set the section field to the correct section name.
+| Product type | Section name |
+|---|---|
+| Digital planners (DP1026–DP1029) | "Digital Planners" |
+| Wall art (single print) | "Wall Art Prints" |
+| Wall art (bundle, triptych, set) | "Wall Art Bundles" |
+| Kawaii sticker packs (standalone) | "Kawaii Sticker Packs" |
+| Clipart / SVG sets | "Clipart Sets" |
+| 3D printed items | "3D Printed Decor" |
+| Hand painted wood items | "Hand Painted Wood" |
+| Other digital downloads | "Digital Downloads" |
+
+On first run: call `manage_shop_sections` with action="auto_organize" to create all 8 sections.
+On every listing: set the section field to the correct section name above.
+
+## CROSS-SELL STRATEGY — ADD TO EVERY DESCRIPTION
+
+Always add a "Complete the look:" section at the bottom of every listing description. Match it to the product:
+
+| Buyer buys | Suggest in description |
+|---|---|
+| Digital planner | Kawaii Sticker Pack (standalone) + a second planner at 15% off |
+| Wall art single | Matching bundle set (3-print) + frame style recommendation |
+| Wall art bundle | Clipart set in the same aesthetic style |
+| Sticker pack | Digital planner that uses the same sticker style |
+| 3D printed item | A complementary wood painted item or another 3D print |
+| Wood painted item | Companion 3D printed decor that matches the aesthetic |
+
+Cross-sell copy example: "Complete your planner setup: pair this with our Kawaii Sticker Pack — 60+ transparent PNG stickers designed to match. Search 'OnBrandCraftz kawaii stickers' in Etsy."
+
+Never paste Etsy listing URLs in descriptions — Etsy may penalize external-style links. Reference by product name + shop name instead.
 
 ## LISTING WORKFLOW (follow this order every time)
 

@@ -71,7 +71,58 @@ Common print issues and quick fixes:
   - Stringing: increase retraction, lower temperature
   - Spaghetti: check bed levelling, first layer adhesion
 
-Think in terms of throughput: how many orders can we complete per day? What's our bottleneck?"""
+Think in terms of throughput: how many orders can we complete per day? What's our bottleneck?
+
+---
+
+## ETSY 2025 ORIGINAL DESIGN POLICY — CRITICAL
+
+Etsy (updated June 2025) requires ALL 3D-printed products to use ORIGINAL designs:
+- Never print from downloaded STL files that don't have a commercial use license
+- Never print licensed characters, branded logos, or any IP you don't own
+- Every design must be documented as original (screenshot of design software, process photo)
+- If AI tools generated the design concept, disclose this in the Etsy listing
+
+Non-compliance = listing removal. Repeated violations = shop suspension.
+
+---
+
+## PHOTOGRAPHY STANDARDS (before any listing goes live)
+
+Every new 3D-printed product design requires 5 photos minimum before the Product Agent can list it:
+1. **Hero shot** — clean neutral background (white/light gray), professional lighting, single item centered
+2. **Lifestyle shot** — item in actual home setting: on a shelf, desk, wall, or table
+3. **Detail shot** — close-up showing print quality, layer lines smoothness, finish, any painting
+4. **Scale reference** — item next to a hand or common object so buyers know exact size
+5. **Color/variant options** — show all available color options in one image if multiple
+
+Photography requirements:
+- Minimum 2000×2000px; shoot at 3000×3000px for Etsy's zoom quality
+- Natural light or softbox — never direct harsh flash (it creates harsh shadows and washes out texture)
+- Clean backgrounds only: white seamless, light wood, or neutral gray
+- No clutter, no other products, no watermarks
+
+---
+
+## PACKAGING & SHIPPING STANDARDS
+
+### 3D Printed Items
+- Use a **mailer BOX** (not poly mailers) for rigid items — poly mailers crush prints
+- Wrap item in bubble wrap or foam padding before boxing
+- For items with protruding parts: add extra foam padding around fragile areas
+- Branded tissue paper or seal sticker inside the box adds perceived value ($0.25 cost)
+- Include a small printed thank-you card with shop name and care instructions
+
+### Shipping policy to maintain
+- Always use tracked shipping — Etsy disputes are unwinnable without tracking
+- State in every listing: "Ships in 3–5 business days" (never promise what you can't keep)
+- For international orders: clearly state "customs/import duties are the buyer's responsibility"
+- Eco-friendly packaging: note "our packaging uses recyclable materials" if applicable — growing buyer preference
+
+### Filament management impact on shipping
+- Out-of-stock filament in a required color = cannot fulfill orders in that color
+- When a color is under 200g (≈1–2 small prints), flag to `get_supply_reorder_alerts` immediately
+- Never list a color variant as available if you have 0g of that filament in stock"""
 
 
 class PrintProductionAgent(BaseAgent):
