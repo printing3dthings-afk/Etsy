@@ -683,6 +683,252 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 
 ---
 
+## Digital Planner Excellence Standards
+*Research-backed standards from analyzing top Etsy bestsellers and buyer reviews (2025–2026). Every new product and every update to existing planners should meet these benchmarks.*
+
+---
+
+### Page Architecture — Every Planner Must Include
+
+**Navigation Foundation (3 required pages before any content):**
+
+1. **Welcome / Setup Page** — Page 1 of every planner. Include:
+   - Branded title + kawaii cover art thumbnail
+   - "How to download your files" (3 bullet steps)
+   - "How to import into GoodNotes / Notability" (3 bullet steps with app icon)
+   - Link to tutorial YouTube video (or placeholder text: "Watch setup tutorial → [link]")
+   - Customer support email (Printing3dthings@outlook.com)
+   - Top sellers that include a welcome page see 30–40% fewer support messages
+
+2. **Dashboard / Home Page** — Page 2. A central hub that hyperlinks to every section. Design like an app home screen:
+   - Product name + color theme + year 2026
+   - Tappable section buttons: Yearly Overview · Monthly · Weekly · [Specialty Section] · Habit Tracker · Goals · Notes · Stickers
+   - "BACK TO HOME" button hyperlinked from the footer of every subsequent page
+   - Color-coded section buttons matching the tab color for that section
+
+3. **Planner Index** — Page 3. A text-based list of every section with clickable page numbers. Useful for GoodNotes table of contents mode.
+
+**Dated + Undated Bundle (sell both in one listing — major differentiator):**
+- The 2026 dated version for buyers who want a fresh start
+- An undated "evergreen" version for mid-year buyers — sells all year, not just January
+- Export as two separate PDFs, zip together as the deliverable
+- Add "2026 + Undated Version Included" to every listing title
+
+**Daily Pages (currently missing — highest requested feature):**
+- Top competitors include Daily Spreads × 365 in addition to weekly
+- Add daily page sections to DP1026 (life planner) and DP1027 (student) first
+- Daily layout: date header, top 3 priorities, hour-by-hour schedule (6am–10pm), notes, gratitude box, water tracker
+- Daily pages increase total page count and justify higher price point
+
+**Multiple Weekly Layout Options:**
+- Include 2 weekly layout variations (buyers hate having only one choice)
+- Option A: Horizontal time-blocked (Mon–Sun with morning/afternoon/evening rows)
+- Option B: Vertical column layout (7 equal columns, hour blocks)
+- Let buyers choose by hyperlink from a "Choose Your Layout" page
+
+---
+
+### Hyperlink Architecture — Complete Navigation Map
+
+Every page in the planner must have these navigation elements:
+
+**Side Tab System (persistent on every page):**
+- Tabs in the same position on every single page — never shift their location
+- Clicking any tab always returns to the first page of that section
+- Tab labels: YR (yearly) · JAN through DEC (monthly) · WK (weekly) · [niche section] · HAB (habits) · GOAL · NOTE · ✦ (stickers)
+- Color-coded: each section gets a distinct accent color from the product palette
+
+**Footer Navigation Bar (on every page):**
+- ← PREV | 🏠 HOME | NEXT → (three small tappable areas)
+- HOME always links back to the Dashboard (page 2)
+- PREV / NEXT scroll within the current section
+
+**Cross-section Deep Links:**
+- Monthly page → hyperlinks to each week within that month
+- Weekly page → hyperlinks to each daily page (when daily pages exist)
+- Every specialty page (budget, habit, meal) → links back to its monthly parent
+- Sticker library pages → "BACK" link to wherever the user came from
+
+**External Calendar Integration (premium feature — adds perceived value):**
+- Include a dedicated "Add to Calendar" button on monthly pages
+- Links to: `webcal://` Apple Calendar (pre-populated with month name) or a Google Calendar URL
+- Note in listing description: "Tap to add important dates to your Apple or Google Calendar"
+
+---
+
+### Cover System — Minimum Standard
+
+Current state: 1 cover per product.
+Bestsellers on Etsy: 100+ covers.
+**Our target: 10 covers per product (minimum 5 at launch).**
+
+**Required cover set for each product:**
+1. **Primary (current)** — The main kawaii illustrated cover
+2. **Seasonal Spring** — Cherry blossoms, soft green accents
+3. **Seasonal Fall** — Pumpkins, warm amber tones
+4. **Dark Mode** — Same kawaii art on deep charcoal / navy background (trending!)
+5. **Minimalist** — Clean typography, no illustration, just the product color theme
+6. **Bonus: Custom Name Cover** — "Add your name" cover with a fillable name field
+
+**How to implement:**
+- All covers are Page 1 of the PDF (one active, others in an appendix "Cover Gallery")
+- Buyers cut-paste their preferred cover to Page 1 in GoodNotes
+- Add "10 cover designs included" to every listing title and description
+- Cover gallery page is hyperlinked from the Dashboard
+
+---
+
+### Sticker Pack Standards — Expansion Roadmap
+
+Current state: 3 sheets × ~20 stickers = ~60 total stickers.
+Bestsellers: 3,500+ stickers.
+**Our target: 5 sheets × 40 stickers = 200+ stickers.**
+
+**Expand to 5 sticker sheets (replacing/expanding the current 3):**
+
+1. **Functional Headers & Banners** *(NEW — most requested type)*
+   - Section headers: "This Week", "Top 3", "Don't Forget", "Today's Goals", "Gratitude"
+   - Ribbon banners, flag labels, scrolls, tag shapes
+   - All in the product's color palette, kawaii-styled typography
+
+2. **Mood & Wellness Trackers** *(NEW — high demand)*
+   - Mood faces (happy, tired, anxious, excited, calm, meh) — kawaii circle faces
+   - Energy level meters (battery icon 0–100%)
+   - Sleep quality (moon phases: full/crescent/quarter)
+   - Water droplet counters (fill in daily)
+
+3. **Planner & Stationery** *(existing — keep and expand)*
+   - Notebooks, pens, pencil cases, washi tape, stars, coffee cups
+   - Expand with: highlighters, paper clips, sticky notes, bookmarks
+
+4. **Cozy Lifestyle** *(existing — keep and expand)*
+   - Candles, mugs, books, fairy lights, sleeping cat
+   - Expand with: ramen bowl, matcha latte, headphones, cozy blanket, plants
+
+5. **Seasonal & Holiday** *(existing — keep and expand)*
+   - Cherry blossoms, pumpkins, snowflakes, valentines
+   - Expand with: summer sun, back-to-school pencil, new year fireworks, Christmas tree, Halloween bat
+
+**Sticker PNG specs:**
+- 300 DPI minimum
+- Transparent background (PNG, not JPG)
+- Individual stickers: 300–600px each at 300 DPI
+- Sheet size: 3000×3000px per sheet
+- Include both a sheet PNG (for reference) and individual cut stickers in a subfolder
+
+---
+
+### UX Design Principles
+
+**Readability standards:**
+- Minimum font size for fillable fields: 11pt (touch-friendly)
+- Section header labels: 14–16pt bold kawaii font
+- Tab labels: 9–11pt, must be legible at actual iPad screen scale
+- Line height in weekly/daily boxes: minimum 0.5 inches for handwriting space
+
+**Color system consistency:**
+- Maximum 4 colors per planner (primary, accent, neutral, black)
+- All text on light background (dark-on-light), all text on dark backgrounds white
+- Section color coding: use the product's accent color as a hue — vary saturation per section
+- Weekday vs. weekend: weekend columns slightly lighter to distinguish at a glance
+
+**Layout density:**
+- Leave 15% empty/breathing space on every page — never cram
+- Generous tap targets: buttons and tabs minimum 44×44pt (Apple HIG standard)
+- Fillable areas need visible field boundaries (light box or underline)
+
+**Functional design principles:**
+- Every decorative element has a practical twin: the kawaii coffee cup sticker doubles as a "coffee break" mood marker
+- Sections flow logically: big-picture → detailed (yearly → monthly → weekly → daily)
+- The planner should work equally well typed and handwritten (both use cases are buyers)
+
+---
+
+### Niche Enhancement Guide (per product)
+
+**DP1026 — Ultimate Life Planner (Lavender Dreams)**
+- Primary audience: women 18–35, productivity-focused
+- Add: Pomodoro focus timer sheet, brain dump page, vision board page
+- Add: "Year in Pixels" mood tracker (12-month grid, one colored box per day)
+- Cover expansion priority: dark mode + minimalist covers first
+- Future version: "DP1026 Landscape Edition" — same content, horizontal iPad orientation
+
+**DP1027 — Student Planner (Cotton Candy)**
+- Primary audience: high school + college students
+- **ADHD-friendly features to add** (booming niche on Etsy):
+  - Time-blocking layout with visual chunking
+  - Pomodoro focus sheet (25-min work / 5-min break timer boxes)
+  - "Brain Dump" free-write page before each week
+  - Priority matrix (Urgent/Important 2×2 grid)
+  - "3 Wins Today" celebration box on every daily page
+- Add: Class schedule template, exam countdown tracker, reading log
+- Future version: "DP1027 ADHD Edition" as a separate product (massive market)
+
+**DP1028 — Budget Planner (Midnight Blue)**
+- Primary audience: adults budgeting, Dave Ramsey followers, debt payoff community
+- Add: Debt Payoff Tracker (snowball/avalanche method visual progress bar)
+- Add: Savings Goal Tracker (visual thermometer fill-in)
+- Add: Bill Payment Checklist (monthly recurring bills check-off)
+- Add: Annual Net Worth snapshot page
+- Cover expansion priority: professional dark mode cover (navy professionals love dark themes)
+- Future version: "DP1028 Zero-Based Budget Edition" with envelope method pages
+
+**DP1029 — Fitness Planner (Coral Peach)**
+- Primary audience: beginners starting a wellness journey
+- Add: Progress Photos log page (before/after date headers with measurement fields)
+- Add: Water intake monthly tracker (30-day glass-fill illustration)
+- Add: Sleep quality log
+- Add: Supplement + medication tracker
+- Add: "Non-Scale Victory" celebration journal page
+- Cover expansion priority: energetic gradient sunrise cover + dark athletic cover
+- Future version: "DP1029 30-Day Challenge Edition" — 30 consecutive daily layouts
+
+---
+
+### Product Roadmap
+
+**Phase 1 — Upgrade Existing 4 Products (highest ROI)**
+Priority order based on sales impact:
+1. Add Welcome page + Dashboard to all 4 planners
+2. Add "BACK TO HOME" footer on every page
+3. Add undated version to all 4 (double the product value, minimal work)
+4. Expand sticker packs to 5 sheets (200+ stickers)
+5. Add 5 cover options to each product
+
+**Phase 2 — New Products**
+| ID | Product | Color | Rationale |
+|----|---------|-------|-----------|
+| DP1030 | ADHD Digital Planner 2026 | Soft Mint (#7EC8A4) | Fastest-growing niche on Etsy, low competition with kawaii aesthetic |
+| DP1031 | Undated Life Planner (Evergreen) | Sage Green (#8BA888) | Sells year-round, no 2026 expiry, recurring annual revenue |
+| DP1032 | Dark Mode Planner Bundle | Charcoal (#2D2D2D) | Trending dark aesthetic, stand out from all-pastel competition |
+| DP1033 | Teacher Planner 2026–2027 | Warm Yellow (#F5C842) | Academic year (Aug–Jul), back-to-school peak season |
+
+**Phase 3 — Premium Tier**
+- Landscape editions of DP1026 and DP1027 (charged at $2–4 premium)
+- "Bundle all planners" listing ($29.99 for all 4 — anchors individual prices)
+- Customizable name covers as a paid add-on ($5–8 via custom order)
+
+---
+
+### Competitor Benchmarks (know what you're competing against)
+
+| Feature | Our Current | Mid-Tier Competitors | Top Sellers |
+|---------|-------------|---------------------|-------------|
+| Covers included | 1 | 5–10 | 100–240 |
+| Sticker count | ~60 | 200–500 | 3,500+ |
+| Total pages | 88–102 | 150–300 | 500–700+ |
+| Orientations | Portrait only | Portrait + Landscape | Portrait + Landscape + A4 |
+| Daily pages | No | Sometimes | Yes (365+) |
+| Dated + Undated | Dated only | Sometimes both | Always both |
+| Welcome page | No | Sometimes | Always |
+| Tutorial video link | No | Sometimes | Always |
+| Cover variety | 1 | 5–10 | 100+ |
+| Calendar integration | No | Rare | Yes (Apple/Google) |
+
+**Our competitive advantage:** Kawaii aesthetic + kawaii sticker pack in the *same* download. Most competitors do not bundle a coordinated sticker pack. This is our main differentiator — lean into it hard in all copy and photos.
+
+---
+
 ## Image Generation Notes (for gpt-image-1 / DALL-E)
 
 Generate all 10 images at **2400×2400px square**. Never put text overlays in the AI-generated image — add all text callouts separately in Canva after generation. No hands or people visible (AI renders these unnaturally). Use the product's color theme as the accent color for props and backgrounds.
@@ -884,18 +1130,49 @@ overlays. Square format.
 ---
 
 ## Quality Check Checklist (before listing)
+
+### PDF / File Quality
 - [ ] PDF opens in GoodNotes without errors
-- [ ] All fillable fields work
-- [ ] Hyperlinked tabs navigate correctly
-- [ ] Sticker library pages display correctly (3 pages)
-- [ ] Sticker PNG sheets have transparent backgrounds
-- [ ] File size < 20MB (Etsy limit per file)
-- [ ] PDF page count matches spec
-- [ ] Cover image displays correctly (full-page kawaii illustration)
-- [ ] Footer shows STICKERS button on every planner page
+- [ ] PDF opens in Notability without errors
+- [ ] PDF opens in Adobe Acrobat Reader (desktop) without errors
+- [ ] All fillable fields work (tap to type in GoodNotes)
+- [ ] Hyperlinked side tabs navigate correctly to the right section
+- [ ] "BACK TO HOME" footer link works on every page
+- [ ] Dashboard / Home page (page 2) links to all sections correctly
+- [ ] Welcome / Setup page is page 1 with correct contact info
+- [ ] Sticker library pages display correctly (minimum 3 pages)
+- [ ] Sticker PNG sheets have transparent backgrounds (not white)
+- [ ] Footer STICKERS button works (for Acrobat/Xodo users)
+- [ ] All cross-section deep links tested (monthly → weekly, weekly → daily)
+- [ ] File size: PDF < 20MB · Sticker ZIP < 20MB (Etsy per-file limit)
+- [ ] PDF page count matches the product spec
+- [ ] Dated version: all 2026 dates are correct (Jan 1 falls on correct weekday)
+- [ ] Undated version: no year-specific dates remain
+- [ ] Cover image renders correctly at full screen on iPad
+
+### UX / Design Standards
+- [ ] Tabs in consistent position on every page (never shift location)
+- [ ] Minimum font size 11pt in fillable fields
+- [ ] All section headers ≥ 14pt
+- [ ] Every page has visible fillable field boundaries
+- [ ] Color coding consistent across all sections
+- [ ] Weekend columns visually distinct from weekdays (lighter shade)
+
+### Content Completeness
+- [ ] Welcome/Setup page included (page 1)
+- [ ] Dashboard/Home page included (page 2) with all section links
+- [ ] Planner index page included (page 3)
+- [ ] Product-specific specialty pages present (budget, fitness log, study schedule, etc.)
+- [ ] All 5 sticker sheets present in ZIP (functional headers, mood trackers, planner, cozy, seasonal)
+
+### Listing Materials
 - [ ] All 10 listing photos generated at 2400×2400px
 - [ ] Hero photo (Photo 1) reviewed — does it stop the scroll?
 - [ ] Text callouts added in Canva for Photos 2, 6, 7 (not baked into AI image)
-- [ ] Tags verified: all 13 used, each ≤ 20 chars, no special characters
-- [ ] Title verified: primary keyword in first 40 chars, total ≤ 140 chars
-- [ ] Description: primary keyword appears in sentence 1 or 2
+- [ ] Tags: all 13 used, each ≤ 20 chars, no special characters
+- [ ] Title: primary keyword in first 40 chars, total ≤ 140 chars
+- [ ] Title mentions: year (2026), app (GoodNotes/Notability), "Instant Download"
+- [ ] Description: primary keyword in sentence 1 or 2
+- [ ] Description: all 9 required sections present in order
+- [ ] "2026 + Undated Version Included" noted in description (once undated added)
+- [ ] Price matches pricing strategy table
