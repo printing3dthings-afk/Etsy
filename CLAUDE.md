@@ -1418,6 +1418,235 @@ overlays. Square format.
 
 ---
 
+## Sticker Pack Design Standards
+*Research-backed system for producing sticker packs that outperform top Etsy sellers. Top shops offer 3,500+ stickers; our minimum target is 200+ stickers per planner bundle with 5 themed sheets. Every sticker pack must be functional first, beautiful second.*
+
+---
+
+### Functional Sticker Types — Required in Every Pack
+
+All packs must include stickers from each of these functional categories so buyers can actually use them in their planning workflow:
+
+| Category | Examples | Purpose |
+|---|---|---|
+| **Headers & Banners** | "This Week", "Monthly Goals", "Habit Tracker", "Don't Forget", wide horizontal bars | Section labels that match planner sections |
+| **Checklists & To-Do Boxes** | Open checkbox sets (3, 5, 7 boxes), checklist strips, priority flags | Planning workflow — the #1 most-requested functional sticker |
+| **Action Flags & Arrows** | "→ Due", "Star" priority star, attention flag, action arrow, "!" urgent | Drawing attention to tasks and deadlines |
+| **Time & Appointment Icons** | Clock, alarm, calendar pin, appointment dot, "AM/PM" tag | Time-blocking and scheduling |
+| **Mood Trackers** | 5-face emotion row (😢→😊), weather moods (rainy/cloudy/partly/sunny), moon phases | Daily emotional check-in, mindfulness journaling |
+| **Habit & Water Trackers** | 8-cup water grid widget, 7-circle weekly streak bubbles, 30-day dot grid habit tracker | Tracking recurring behaviors |
+| **Date Dots & Numbers** | Filled circle numbers 1–31, date badges, month name tags | Undated planner customization |
+| **Labels & Category Dots** | Color-coded circle labels in 8 colors, subject tags (Math, English, etc.), bill labels | Categorization and color coding |
+| **Monthly Tab Dividers** | Jan–Dec abbreviated tab stickers, Q1–Q4 quarter tabs | Navigating undated layouts |
+| **Widget Stickers** | Sleep tracker widget (8 bubbles), steps counter widget, mood + energy combo widget, weekly summary widget | Drop-in trackers that work inside any open space on a page |
+| **Sticky Notes & Page Flags** | Mini sticky note (lined), page flag (5 colors), bookmark tab | Temporary annotations and page marking |
+| **Motivational Banners** | "You've Got This", "Progress Not Perfection", "Rest is Productive" — in matching font/palette | Inspiration without being generic |
+| **Seasonal Markers** | Holiday icons (12 major holidays), season change banners, birthday cake, anniversary heart | Calendar customization |
+| **Washi Tape Strips** | 3 pattern strips (floral, geometric, solid), 2 lengths (half-page, full-page) | Decorative borders and section dividers |
+
+---
+
+### Sticker Sheet Architecture — 5-Sheet System
+
+**Minimum 5 sheets per product (200+ total stickers). Each sheet is 3000×3000px PNG, 300 DPI, transparent background.**
+
+| Sheet | Name | Sticker Count | Contents |
+|---|---|---|---|
+| **Sheet 1** | Functional Planning | 50+ | Headers, checklists, flags, action arrows, date dots, labels — pure workflow utility |
+| **Sheet 2** | Widget Trackers | 40+ | Mood tracker widget, water intake widget, sleep tracker, habit tracker, weekly summary — drop-in mini-trackers |
+| **Sheet 3** | Planner & Stationery | 40+ | Miniature notebooks, pens, washi tape, paper clips, sticky notes, scissors, ruler — classic kawaii planner icons |
+| **Sheet 4** | Cozy Lifestyle | 40+ | Mugs, candles, books, plants, fairy lights, sleeping cat, cozy blanket, rain window — lifestyle/mood imagery |
+| **Sheet 5** | Seasonal & Holiday | 40+ | Cherry blossoms (spring), sunflowers (summer), pumpkins (fall), snowflakes (winter), 12 major holiday icons |
+
+**GoodNotes delivery format:**
+- Package ALL 5 sheets as a GoodNotes sticker book (single `.goodnotes` file) — this is the most-requested format
+- Also include 5 individual PNG sheet files for Notability / PDF Expert / Acrobat users
+- Also include a folder of 200+ individual pre-cropped PNG stickers for advanced users who want selective import
+- ZIP structure: `[ProductID]_sticker_pack.zip` → `goodnotes_sticker_book/`, `png_sheets/`, `individual_stickers/`
+
+---
+
+### Per-Product Sticker Customization
+
+Each product gets themed sticker content layered on top of the 5-sheet base system. The theme color palette must match the planner's color scheme exactly.
+
+**DP1026 — Ultimate Life Planner (Lavender Dreams `#8666AA`):**
+- Sheet 1 extra: "Self-Care Sunday", "New Month New Goals", "Gratitude" banners; moon phase icons
+- Sheet 2 extra: Monthly goals tracker widget, gratitude log widget
+- Bonus individual stickers: 20 affirmation banners ("I am enough", "Choose joy", etc.) in lavender palette
+- Prop stickers: lavender sprigs, amethyst crystal, butterfly, dream catcher
+
+**DP1027 — Student Planner (Cotton Candy `#DE97C6`):**
+- Sheet 1 extra: Subject tab stickers (Math, Science, English, History, PE, Art, free), "Due Date ⚠️", "Test Day", "Study Group" flags
+- Sheet 2 extra: Study session timer widget, grade tracker widget, exam countdown widget
+- Bonus individual stickers: 20 study motivational banners ("Focus Mode ON", "Nailed It!", "Coffee + Study")
+- Prop stickers: graduation cap, pencil case, backpack, apple for teacher, calculator, diploma scroll
+
+**DP1028 — Budget Planner (Midnight Blue `#1B2568`):**
+- Sheet 1 extra: "Payday!", "Bill Due ⚡", "Savings Goal", "Debt Payoff", "No Spend Day" labels; budget category icons (groceries, rent, dining, entertainment)
+- Sheet 2 extra: Net worth snapshot widget, debt payoff thermometer widget, savings jar fill widget
+- Bonus individual stickers: 15 financial win banners ("Debt Free!", "Goal Reached!", "Emergency Fund Full")
+- Prop stickers: gold coin stack, credit card scissors (debt-free symbol), piggy bank, bar chart, dollar sign wreath
+
+**DP1029 — Fitness Planner (Coral Peach `#FD6C49`):**
+- Sheet 1 extra: "Workout Done ✓", "Rest Day", "Meal Prep Sunday", "Hydration Goal", "PR!" (personal record) labels; exercise icons (run, lift, yoga, swim, bike, stretch)
+- Sheet 2 extra: Weekly workout summary widget, macro tracking widget, energy level scale widget
+- Bonus individual stickers: 15 fitness win banners ("New PR!", "Week Streak!", "Gym Check ✓")
+- Prop stickers: dumbbell, yoga mat, water bottle, salad bowl, running shoe, heart rate monitor
+
+---
+
+### Kawaii Illustration Standards
+
+Every sticker must follow these visual rules for brand consistency and professional quality:
+
+**Chibi/Kawaii Character Proportions:**
+- Head-to-body ratio: 1.5:1 to 2:1 (head is always larger than body)
+- Eyes: oversized, occupy 40–50% of face height, single catch-light dot in each eye
+- Mouth: small dot or tiny curved smile — never open/teeth unless celebrating
+- Cheeks: small blush circles in a slightly pinker shade of skin tone
+- Arms/legs: stubby, rounded, no fingers visible on items under 200px
+- Expressions: calm default, happy with star eyes, excited with open mouth, sleepy with half-moon eyes
+
+**Color Rules:**
+- Every sticker pack uses exactly 5 colors from the planner's palette (primary, accent, mid-tone, neutral, text)
+- Add one "pop" accent only for functional flags/alerts (warm red `#E84040` or amber `#FFB347`) — never change the base palette
+- Shadows: single direction (bottom-right), 15% opacity black, offset 3–4px — never harsh
+- Outlines: consistent 2px line weight, same near-black (`#1A1A1A`) — never pure black
+
+**Sizing Consistency:**
+- Decorative icon stickers: 200×200px (at 300 DPI = ~0.67 inch)
+- Header/banner stickers: 800×200px (full-width label)
+- Widget stickers: 400×400px to 600×600px
+- Washi tape strips: 2400×120px (full-width half-page), 2400×80px (full-width narrow)
+- All sizes refer to final export dimensions at 300 DPI
+
+**File Export Protocol:**
+- Individual stickers: PNG, transparent background, exact crop (1–5px transparent padding)
+- Sticker sheets: PNG 3000×3000px, transparent background, 300 DPI
+- GoodNotes sticker book: bundle all sheets as `.goodnotes` package
+- Naming convention: `[ProductID]_S[sheet#]_[category]_sheet.png` and `[ProductID]_[sticker_name].png`
+
+---
+
+### GoodNotes Sticker Book Setup
+
+GoodNotes Elements is the premium import format — it creates a persistent sticker library panel accessible from any document.
+
+**Creating a GoodNotes Sticker Book:**
+1. Each sheet file named `[Pack Name] — Sheet [N].png` (the name becomes the library tab label)
+2. Import sequence for buyers: GoodNotes → Elements → Stickers → + → select all 5 PNG files
+3. Stickers appear as a scrollable grid in the sticker library — tap any to place on current page
+4. Stickers are reusable unlimited times from the library
+
+**Creating a `.goodnotes` package (advanced delivery format):**
+- Use GoodNotes' "Export as GoodNotes" feature on a sticker-book-style document
+- Pre-organized pages: one page per sticker sheet category
+- Buyers open once → stickers auto-populate Elements library
+- This format is referenced and requested by 35%+ of Etsy digital sticker buyers
+
+**Buyer instructions (include in product description and listing FAQ):**
+1. Download and unzip the sticker pack
+2. Open GoodNotes 6 → tap the Elements button (diamond icon, bottom toolbar)
+3. Tap the Stickers tab → tap "+" → select all 5 PNG sheet files
+4. Done — all stickers appear in your library and can be dragged onto any page, unlimited times
+
+---
+
+### Sticker Pack Pricing & Bundling Strategy
+
+**Standalone sticker pack listings (separate from planner):**
+- Individual pack (1 theme, 5 sheets, 200+ stickers): $4.99–$6.99
+- Bundle (4 packs / all 4 planner themes): $12.99–$14.99 (implies 55–65% discount)
+- Mega bundle (all themes + bonus seasonal pack): $17.99–$19.99
+- **Research finding**: A $8 bundle of 10 sticker sheets dramatically outperforms ten $1 individual sticker listings in both conversion and revenue per visitor
+
+**Bundling as planner bonus (included with planner purchase):**
+- Mention sticker pack prominently in title: "Fillable PDF + Sticker Pack"
+- List sticker count in description ("200+ kawaii stickers, 5 sheets")
+- Show sticker sheet photo as Photo 5 in every listing
+- Buyers scan "what's included" first — sticker count is a conversion booster
+
+**Upsell cross-listing strategy:**
+- Each planner listing should reference: "Also available: the matching standalone sticker pack — search OnBrandCraftz"
+- Create one standalone sticker pack listing per theme (4 listings) + one bundle listing
+- Use "Frequently Bought Together" positioning in description FAQ
+
+---
+
+### Sticker Pack SEO — Tags & Title Formula
+
+**Title structure for standalone sticker pack listings:**
+`[Theme] Kawaii Planner Stickers | GoodNotes Sticker Book | Planner Sticker Pack | Instant Download | [Product Type]`
+
+**Tags for all sticker pack listings (13 required):**
+`goodnotes stickers`, `planner sticker pack`, `kawaii stickers`, `digital stickers`, `goodnotes elements`, `notability stickers`, `ipad stickers`, `planner stickers`, `kawaii sticker book`, `digital planner kit`, `printable stickers`, `instant download`, `functional stickers`
+
+**Per-theme additional tag swaps (swap 2–3 generic tags):**
+- DP1026 (Lavender): swap in `lavender planner kit`, `life planner stickers`, `wellness stickers`
+- DP1027 (Cotton Candy): swap in `student stickers`, `school planner kit`, `study stickers`
+- DP1028 (Midnight Blue): swap in `budget planner kit`, `finance stickers`, `money planner`
+- DP1029 (Coral Peach): swap in `fitness stickers`, `wellness planner kit`, `habit tracker kit`
+
+---
+
+### Sticker Pack Photo Requirements (10 slots)
+
+Apply the same 2400×2400px square format and composition rules as planner photos. Each photo sells one benefit of the sticker pack.
+
+| Slot | Purpose | Content |
+|---|---|---|
+| 1 | Hero flat lay | All 5 sticker sheets fanned on cream background with a few loose stickers scattered — lifestyle props in product color (washi tape, pen, dried flower) |
+| 2 | GoodNotes library preview | iPad screenshot showing all 5 sheets loaded in GoodNotes Elements panel with sticker grid visible |
+| 3 | In-use mockup | iPad with a planner page open, 5–8 stickers placed on it — shows the "after" result of using the pack |
+| 4 | Sheet 1 close-up (Functional) | Flat overhead of Sheet 1 showing headers, checklists, flags — magnified inset showing 5–6 individual stickers clearly |
+| 5 | Sheet 2 close-up (Widgets) | Flat overhead of Sheet 2 showing widget stickers — call out specific popular widgets (mood tracker, water tracker) |
+| 6 | Sheet 3+4 lifestyle (Kawaii icons) | Two sheets overlapping, kawaii stationery and cozy lifestyle stickers clearly visible |
+| 7 | Sheet 5 seasonal | All seasonal sticker sheet, individual stickers labeled by season with small Canva text callouts |
+| 8 | GoodNotes import how-to | 3-step infographic (same 3-panel format as planner how-to guide photo) |
+| 9 | Sample planner page styled | Before/after split: blank weekly page left, same page with 10 stickers placed right — shows transformation |
+| 10 | What's included summary | Flat lay with product breakdown: "5 PNG Sheets", "200+ Stickers", "GoodNotes Ready", "Instant Download" text callouts added in Canva |
+
+---
+
+### Competitive Benchmark — What Top Sellers Offer
+
+Use this table to verify every sticker pack release meets or exceeds the market standard:
+
+| Feature | Our Current | Top Etsy Sellers | Our Target |
+|---|---|---|---|
+| Total stickers per pack | ~60 (3 sheets) | 200–3,500+ | **200+ (5 sheets)** |
+| GoodNotes sticker book format | No | Yes (top sellers) | **Yes — .goodnotes + PNG** |
+| Individual pre-cropped PNGs | No | Yes (premium sellers) | **Yes — 200+ individual files** |
+| Functional sticker types | Decorative only | 14 functional types | **All 14 types covered** |
+| Widget stickers | No | Yes (top 10% sellers) | **Yes — Sheet 2 dedicated** |
+| Per-product theme customization | Partial | Fully themed | **Full theme per product** |
+| Standalone sticker pack listing | No | Yes | **4 listings + 1 bundle** |
+| Seasonal sticker updates | No | Annual or quarterly | **Annual seasonal refresh** |
+
+---
+
+### Sticker Pack QC Checklist
+
+Before publishing any sticker pack:
+
+- [ ] All 5 PNG sheets are 3000×3000px at 300 DPI
+- [ ] All sheets have transparent backgrounds (no white fill)
+- [ ] Each sheet contains 40+ stickers with consistent art style
+- [ ] All 14 functional sticker categories covered across the 5 sheets
+- [ ] Widget stickers on Sheet 2 match planner color palette exactly
+- [ ] Individual pre-cropped PNGs exported for all 200+ stickers
+- [ ] GoodNotes sticker book (`.goodnotes`) file tested and opens correctly
+- [ ] Sticker naming convention followed: `[ProductID]_[name].png`
+- [ ] ZIP file structure: `goodnotes_sticker_book/`, `png_sheets/`, `individual_stickers/`
+- [ ] ZIP file size < 20MB (Etsy per-file limit) — compress PNGs with TinyPNG if needed
+- [ ] Line weight consistent across all stickers in the pack (2px outline)
+- [ ] Color palette matches the planner's 5-color palette exactly
+- [ ] Product-specific bonus stickers present (functional labels, prop stickers, win banners)
+- [ ] GoodNotes import instructions tested end-to-end on actual GoodNotes 6 app
+
+---
+
 ## Quality Check Checklist (before listing)
 
 ### PDF / File Quality
