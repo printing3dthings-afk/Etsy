@@ -65,6 +65,295 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 
 ---
 
+## Color Design System & Theme Catalog
+*Research-backed color system based on 2026 design trends (Pantone, WGSN, Envato), color psychology studies, Etsy market analysis, and competitor research. Every new planner product must be built from this palette system.*
+
+---
+
+### Color Psychology — What Each Color Does
+
+| Color Family | Psychological Effect | Best Used For |
+|---|---|---|
+| **Blue / Indigo** | Focus, calm, trust, creativity. University of Washington study: 12% productivity increase | Finance planners, study planners, work planners |
+| **Green / Sage** | Growth, success, calm, emotional stability. Triggers "achievement" feeling | Wellness, habit trackers, goal planners |
+| **Purple / Lavender** | Creativity, mindfulness, spirituality, luxury | Life planners, journaling, artistic audiences |
+| **Pink / Rose** | Warmth, nurturing, optimism, fun | Kawaii, student, self-care, bridal |
+| **Orange / Coral** | Motivation, energy, combats fatigue. Orange at low saturation increases productivity | Fitness, fitness beginners, high-energy audiences |
+| **Yellow / Gold** | Optimism, alertness, serotonin boost, focus | Happiness journals, productivity planners |
+| **Brown / Mocha** | Comfort, sophistication, warmth, grounded stability | Budget, professional, premium audiences |
+| **Charcoal / Black** | Power, elegance, focus, reduces visual noise | Dark mode, professionals, premium tier |
+| **Teal / Aqua** | Balance of calm (blue) + growth (green), futuristic, fresh | Wellness, ADHD calming, modern aesthetics |
+| **Cream / Off-White** | Clarity, serenity, "blank canvas" creativity. Pantone 2026 CoY | Minimalist, journaling, mature audiences |
+
+---
+
+### 2026 Color Trend Authorities
+
+**Pantone Color of the Year 2026:** Cloud Dancer `#F4F0EA` — soft airy off-white between warm and cool. Radiates calm, clarity, serenity. "Blank canvas for creativity."
+
+**WGSN 2026 Key Color:** Transformative Teal `#3B8E8A` — fusion of dependable dark blue and aquatic green. Grounded yet futuristic, represents change and connection with nature.
+
+**Trending 2026 Macro Palettes (Envato/Adobe research):**
+- **Sunwashed Soft** — peachy warm pastels, sun-faded warmth (peach, cream, warm sand)
+- **Mermaidcore** — shimmering aqua, seafoam, pearl, iridescent violet
+- **Clubroom Contrast** — bold black + gold luxury (underserved in planner market!)
+- **Warm Earth Revival** — taupe, sandy beige, deep chocolate, chestnut (brown having a major moment)
+- **Spring Vivid Brights** — Alexandrite purple, Lava Falls red-orange, Fuchsia, Mint (bold and punchy)
+- **Deep Botanical** — forest green, terracotta, sage, warm botanical greens
+
+---
+
+### Current Product Color Schemes
+
+| Product | Theme Name | Primary | Accent | Neutral | Status |
+|---|---|---|---|---|---|
+| DP1026 | Lavender Dreams | `#8666AA` muted purple | `#C4A8D4` soft lavender | `#FAF7FF` cream-white | ✅ Live |
+| DP1027 | Cotton Candy | `#DE97C6` bubblegum pink | `#97C6DE` sky blue | `#FFF6FC` blush white | ✅ Live |
+| DP1028 | Midnight Blue | `#1B2568` deep royal blue | `#7BA7C2` ice blue | `#F0F5FF` cloud white | ✅ Live |
+| DP1029 | Coral Peach | `#FD6C49` warm coral | `#F5B878` peach-gold | `#FFF8F4` warm cream | ✅ Live |
+
+---
+
+### New Theme Catalog — 12 Designs Ready to Build
+
+Each theme includes: name, hex palette, target aesthetic, target buyer, and the emotion it should evoke.
+
+---
+
+#### 🌸 Theme 01 — Cherry Blossom
+**Tagline:** *"Soft as spring, organized as ever"*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#F4A7B9` | sakura pink |
+| Accent | `#F9D0DB` | petal blush |
+| Deep accent | `#C4607A` | rose petal |
+| Neutral | `#FFF5F7` | cherry cream |
+| Text | `#3D1A24` | deep rose-black |
+- **Aesthetic:** Japanese sakura, soft spring, feminine, delicate
+- **Kawaii motifs:** cherry blossom branches, tiny petals falling, bunnies in flower fields, spring birds
+- **Target buyer:** Women 18–30, spring new-year-fresh-start buyers, Japan-aesthetic lovers
+- **Best product:** DP1026 Life Planner cover variant, standalone spring sticker pack
+- **Trend alignment:** Seasonal spring, evergreen kawaii aesthetic
+
+---
+
+#### 🌿 Theme 02 — Sage Garden
+**Tagline:** *"Grounded. Calm. Growing."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#8BA888` | muted sage green |
+| Accent | `#C8DDB5` | soft fern |
+| Deep accent | `#556B50` | forest sage |
+| Neutral | `#F6F8F2` | morning dew |
+| Text | `#2C3828` | deep forest |
+- **Aesthetic:** Cottagecore, botanical, garden, calm nature
+- **Kawaii motifs:** tiny mushrooms, herb sprigs, watering cans, garden snails, flower pots, bees
+- **Target buyer:** Cottagecore/nature lovers, wellness community, gardeners, women 25–40
+- **Best product:** DP1029 Fitness/Wellness cover variant, DP1031 Undated Evergreen planner
+- **Trend alignment:** Pantone spring palette, Deep Botanical macro trend, cottagecore Etsy niche
+
+---
+
+#### 🌙 Theme 03 — Celestial Night
+**Tagline:** *"Plan by the stars"*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#1E1B4B` | deep indigo |
+| Accent | `#C9A84C` | starlight gold |
+| Mid tone | `#6B5FA5` | twilight purple |
+| Neutral | `#F0EEF8` | moonbeam white |
+| Text on dark | `#F9F6FF` | pearl white |
+- **Aesthetic:** Celestial, astrology, moon phases, stars, mystical kawaii
+- **Kawaii motifs:** crescent moons, stars, constellations, sleeping moon faces, tiny planets, comets, crystal balls
+- **Target buyer:** Astrology community (massive on Etsy), witchy aesthetic, Gen Z, spiritual wellness buyers
+- **Best product:** DP1032 Dark Mode Planner (celestial variant), standalone celestial sticker pack
+- **Trend alignment:** Dark mode trend, Y3K aesthetic, celestial Etsy niche (consistently top 5 planner aesthetic)
+
+---
+
+#### ☕ Theme 04 — Mocha Latte
+**Tagline:** *"Sophisticated. Warm. Ready for anything."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#8B5E3C` | warm mocha |
+| Accent | `#D4A96A` | caramel |
+| Mid tone | `#C8A882` | latte beige |
+| Neutral | `#FDF8F0` | cream foam |
+| Text | `#2C1A0E` | espresso |
+- **Aesthetic:** Café aesthetic, warm brown luxury, sophisticated minimalist
+- **Kawaii motifs:** coffee cups with cream swirls, croissants, tiny café scenes, autumn leaves, cozy mugs
+- **Target buyer:** Coffee lovers, women 25–40, VSCO/aesthetic crowd, mature planner buyers
+- **Best product:** DP1026 Life Planner, DP1028 Budget Planner (premium feel)
+- **Trend alignment:** 2026 Warm Earth Revival macro trend, brown is having a major moment in design
+
+---
+
+#### 🧜 Theme 05 — Mermaidcore
+**Tagline:** *"Deep-sea dreams, surface-level organized"*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#4ABFBF` | ocean teal |
+| Accent | `#B8A9D9` | sea lavender |
+| Shimmer | `#A8E6CF` | seafoam |
+| Neutral | `#F0FAFF` | pearl mist |
+| Text | `#1A3A4A` | deep ocean |
+- **Aesthetic:** Mermaid, ocean, iridescent, fantasy kawaii
+- **Kawaii motifs:** mermaid tails, shells, bubbles, starfish, pearls, seahorses, coral
+- **Target buyer:** Fantasy/ocean lovers, Gen Z, creative dreamers, summer buyers
+- **Best product:** DP1031 Undated Evergreen (fresh + timeless), summer seasonal release
+- **Trend alignment:** Mermaidcore is one of the top 3 macro design trends for 2026 (Envato research)
+
+---
+
+#### 🍂 Theme 06 — Dark Academia
+**Tagline:** *"Knowledge is power. Plan accordingly."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#3B2A1A` | aged leather brown |
+| Accent | `#9B7D3A` | antique gold |
+| Mid tone | `#7A5C3F` | warm mahogany |
+| Neutral | `#F5EDD6` | aged parchment |
+| Text | `#1C1208` | ink black |
+- **Aesthetic:** Dark academia, vintage library, Victorian stationery, moody intellectual
+- **Kawaii motifs:** tiny books, quill pens, ink bottles, hourglasses, candles, dried flowers, keys
+- **Target buyer:** Students (especially college), book lovers, aesthetic Tumblr/Pinterest crowd, dark aesthetic buyers
+- **Best product:** DP1027 Student Planner cover variant, DP1033 Teacher Planner
+- **Trend alignment:** Dark academia is a top-performing Etsy aesthetic with dedicated buyer communities
+
+---
+
+#### 🌺 Theme 07 — Tropical Hibiscus
+**Tagline:** *"Bright energy. Big plans."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#FF6B9D` | hot pink |
+| Accent | `#FFD166` | sunshine yellow |
+| Mid tone | `#06D6A0` | tropical mint |
+| Neutral | `#FFFAF0` | ivory |
+| Text | `#3D0029` | deep berry |
+- **Aesthetic:** Tropical, maximalist, Gen Z, bold & colorful (rejects minimalism)
+- **Kawaii motifs:** tropical flowers, pineapples, flamingos, parrots, watermelon slices, suns
+- **Target buyer:** Gen Z buyers, bold personality types, summer seasonal, "Play Haus" aesthetic crowd
+- **Best product:** DP1027 Student Planner, DP1029 Fitness Planner (high-energy niche match)
+- **Trend alignment:** "Play Haus" 2026 trend (Gen Z's colorful rejection of minimalism), Spring Vivid Brights
+
+---
+
+#### ✨ Theme 08 — Rose Gold Luxe
+**Tagline:** *"You deserve gold. And a good plan."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#B76E79` | dusty rose gold |
+| Accent | `#D4AF7A` | champagne gold |
+| Mid tone | `#F2C4CE` | blush |
+| Neutral | `#FDF8F8` | pearl white |
+| Text | `#4A2030` | deep wine |
+- **Aesthetic:** Luxury, aspirational, rose gold glam, feminine premium
+- **Kawaii motifs:** tiny diamonds, hearts with crowns, champagne flutes, makeup brushes, perfume bottles, stars
+- **Target buyer:** Women 25–40, aspirational buyers, bridal/wedding planners, hustle culture crowd
+- **Best product:** DP1026 Ultimate Life Planner (premium tier), DP1028 Budget Planner (financial goals)
+- **Trend alignment:** Rose gold is perennially strong for premium digital products, Clubroom Contrast luxury aesthetic
+
+---
+
+#### 🌊 Theme 09 — Ocean Breeze
+**Tagline:** *"Clear mind. Calm days. Clear goals."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#3B8E8A` | transformative teal |
+| Accent | `#7EC8C8` | seafoam |
+| Mid tone | `#A8D8D8` | aqua mist |
+| Neutral | `#F0FAFA` | morning sea |
+| Text | `#0D3535` | deep teal |
+- **Aesthetic:** Coastal, clean, fresh, calming, modern minimalist
+- **Kawaii motifs:** waves, seashells, sailboats, jellyfish, sea glass, beach umbrellas, lighthouses
+- **Target buyer:** Wellness-focused buyers, adults 30–45, productivity minimalists, coastal aesthetic
+- **Best product:** DP1029 Wellness Planner, DP1028 Budget Planner (calm & focused)
+- **Trend alignment:** WGSN's Transformative Teal is the #1 key color for 2026 — this is on-trend at the highest level
+
+---
+
+#### 🔮 Theme 10 — Midnight Kawaii (Dark Mode)
+**Tagline:** *"Cute goes dark."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#1A1A2E` | deep midnight |
+| Accent | `#E040FB` | electric violet |
+| Pop accent | `#00E5FF` | neon aqua |
+| Mid tone | `#2D2B55` | space purple |
+| Text | `#F0E6FF` | starlight |
+- **Aesthetic:** Dark kawaii, Y3K, futuristic, neon-on-dark
+- **Kawaii motifs:** glowing stars, neon-outlined cats, holographic elements, pixel art kawaii, spaceship chibi
+- **Target buyer:** Dark aesthetic Gen Z, gamers, night-owl planners, tech-forward buyers
+- **Best product:** DP1032 Dark Mode Planner (primary), great for ADHD planner (less visual overwhelm on dark bg)
+- **Trend alignment:** Dark mode is standard in competitors; "Mood Mode" / Y3K neon accents are 2026-specific
+
+---
+
+#### 🌼 Theme 11 — Sunflower Studio
+**Tagline:** *"Growth season. Every day."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#F4C430` | sunflower yellow |
+| Accent | `#4A7C59` | stem green |
+| Mid tone | `#F8E08E` | soft gold |
+| Neutral | `#FFFDF0` | cream petal |
+| Text | `#2A1A00` | seed brown |
+- **Aesthetic:** Bright botanical, positive, cheerful, nature + sunshine
+- **Kawaii motifs:** sunflowers, bees, garden tools, butterflies, ladybugs, seeds sprouting
+- **Target buyer:** Positive-mindset community, spring/summer buyers, gardening niche, teachers
+- **Best product:** DP1033 Teacher Planner, DP1026 Life Planner (positivity focus)
+- **Trend alignment:** Yellow is scientifically proven for optimism and serotonin, Deep Botanical trend
+
+---
+
+#### 🍵 Theme 12 — Matcha Serenity
+**Tagline:** *"Slow down. Sip. Succeed."*
+| Role | Hex | Description |
+|---|---|---|
+| Primary | `#6B8F5E` | matcha green |
+| Accent | `#B8CC8E` | pale chartreuse |
+| Mid tone | `#E8F0D8` | green tea cream |
+| Neutral | `#F7F9F3` | rice paper |
+| Text | `#1E2D18` | deep forest |
+- **Aesthetic:** Japanese minimalist, matcha café, slow living, mindfulness
+- **Kawaii motifs:** matcha cups, bamboo, koi fish, zen stones, lotus flowers, tiny bento boxes
+- **Target buyer:** Mindfulness/slow living community, Japan aesthetic lovers, wellness buyers, women 22–35
+- **Best product:** DP1029 Wellness Planner, DP1030 ADHD Planner (calming tones reduce overwhelm)
+- **Trend alignment:** Sage green / botanical tones are 2026 Deep Botanical macro trend, mindfulness is evergreen
+
+---
+
+### Theme-to-Product Mapping
+
+| Product | Launch Theme | Phase 2 Covers to Add |
+|---|---|---|
+| DP1026 Life Planner | Lavender Dreams ✅ | Cherry Blossom · Mocha Latte · Rose Gold Luxe · Dark Academia |
+| DP1027 Student Planner | Cotton Candy ✅ | Dark Academia · Tropical Hibiscus · Matcha Serenity · Ocean Breeze |
+| DP1028 Budget Planner | Midnight Blue ✅ | Mocha Latte · Rose Gold Luxe · Ocean Breeze · Celestial Night |
+| DP1029 Fitness Planner | Coral Peach ✅ | Sage Garden · Tropical Hibiscus · Matcha Serenity · Sunflower Studio |
+| DP1030 ADHD Planner | Matcha Serenity | Ocean Breeze · Midnight Kawaii · Sage Garden |
+| DP1031 Undated Evergreen | Sage Garden | Cherry Blossom · Mocha Latte · Mermaidcore |
+| DP1032 Dark Mode Bundle | Midnight Kawaii | Celestial Night · Dark Academia |
+| DP1033 Teacher Planner | Sunflower Studio | Sage Garden · Cherry Blossom · Mocha Latte |
+
+---
+
+### Color Design Rules (apply to every planner built)
+
+1. **Maximum 4 colors per planner** — Primary + Accent + Mid-tone + Neutral (plus black for text)
+2. **60-30-10 rule** — 60% neutral/background, 30% primary color, 10% accent pops
+3. **Minimum contrast ratio 4.5:1** — text on background (WCAG AA accessibility standard)
+4. **Never pure black (#000000)** — use deep tinted black matching the palette (e.g., `#2C1810` for mocha, `#1C1208` for dark academia)
+5. **Never pure white (#FFFFFF)** — use a cream/tinted neutral (e.g., `#FDF8F0`, `#F7F9F3`)
+6. **Dark mode backgrounds** — use `#1A1A2E` to `#2D2D2D` range, never pure black
+7. **Tab color coding** — assign one hue from the palette to each section, vary by saturation
+8. **Weekend vs weekday** — weekend calendar cells should be 15% lighter than weekday cells
+9. **Cover design rule** — the kawaii illustration accent color must match the primary hex exactly
+10. **Consistency across all 10 listing photos** — props, backgrounds, and accent items must match the product's color theme
+
+---
+
 ## What Customers Receive (Digital Download)
 Etsy delivers files instantly at checkout — no shipping. Each listing includes:
 - **File 1**: The planner PDF (interactive, fillable, hyperlinked)
