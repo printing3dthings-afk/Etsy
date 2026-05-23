@@ -2,16 +2,16 @@
 Financial & Accounting Tools — tracks real profit, Etsy fees, COGS, and P&L.
 
 Etsy fee structure (as of 2025):
-  Listing fee:          $0.20 per listing (every 4 months)
+  Listing fee:          $0.20 per listing (every 4 months, or per-sale auto-renewal)
   Transaction fee:      6.5% of item price + shipping charged
   Payment processing:   3% + $0.25 per transaction (Etsy Payments)
-  Offsite Ads:          12% (shops > $10k/yr revenue) or 15% (under $10k)
+  Offsite Ads:          12% (shops >= $10k/yr revenue) or 15% (under $10k)
   Regulatory fee:       varies by country (US: not applicable in most states)
 """
 from __future__ import annotations
 
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from tools.data_store import DataStore
@@ -22,6 +22,23 @@ ETSY_PAYMENT_PROCESSING_PCT = 0.030
 ETSY_PAYMENT_PROCESSING_FLAT = 0.25
 ETSY_OFFSITE_ADS_PCT_LOW = 0.15   # < $10k/yr revenue
 ETSY_OFFSITE_ADS_PCT_HIGH = 0.12  # >= $10k/yr revenue
+ETSY_OFFSITE_ADS_THRESHOLD = 10_000  # annual revenue threshold for lower rate
+
+# Seasonal promotion calendar — updated every month automatically
+_SEASONAL = {
+    1:  ("January",   "New Year planners, goal-setting printables, fresh start journals, 2026 planner bundles"),
+    2:  ("February",  "Valentine's Day printables, love wall art, galentines gifts, romantic home decor"),
+    3:  ("March",     "Spring wall art, St. Patrick's Day, spring home decor, spring planner"),
+    4:  ("April",     "Easter printables, spring planner, earth day nature art, garden wall art"),
+    5:  ("May",       "Mother's Day gifts, personalized items, floral wall art, spring home decor"),
+    6:  ("June",      "Father's Day printables, summer wall art, boho summer decor, graduation gifts"),
+    7:  ("July",      "Fourth of July printables, mid-year reset planner, summer digital downloads"),
+    8:  ("August",    "Back to school planner, student organizer, academic planner 2026"),
+    9:  ("September", "Fall home decor, autumn wall art, fall planner, cozy season printables"),
+    10: ("October",   "Halloween printables, spooky digital download, fall decor, pumpkin art"),
+    11: ("November",  "Black Friday sale, Thanksgiving printables, holiday gift guides, winter prep"),
+    12: ("December",  "Christmas printables, holiday gift digital, winter wall art, New Year planner"),
+}
 
 TOOL_DEFINITIONS: list[dict] = [
     {
@@ -142,7 +159,7 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
     if tool_name == "get_profit_report":
         return _get_profit_report(tool_input["period"], store)
     if tool_name == "calculate_etsy_fees":
-        return _calculate_etsy_fees(tool_input)
+        return _calculate_etsy_fees(tool_input, store)
     if tool_name == "calculate_cogs":
         return _calculate_cogs(tool_input, store)
     if tool_name == "get_profit_per_product":
@@ -158,26 +175,74 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
     return f"Unknown financial tool: {tool_name}"
 
 
+# ── Period helpers ─────────────────────────────────────────────────────────────
+
+def _period_cutoff(period: str) -> str | None:
+    """Return ISO date string for the start of the period, or None for all_time."""
+    today = date.today()
+    if period == "today":
+        return today.isoformat()
+    if period == "this_week":
+        return (today - timedelta(days=today.weekday())).isoformat()  # Monday
+    if period == "this_month":
+        return today.replace(day=1).isoformat()
+    if period == "this_year":
+        return today.replace(month=1, day=1).isoformat()
+    return None  # all_time
+
+
+def _orders_in_period(orders: list, period: str) -> list:
+    """Return completed orders whose completion/creation date falls within the period."""
+    cutoff = _period_cutoff(period)
+    result = [o for o in orders if o.get("status") == "complete"]
+    if cutoff:
+        result = [
+            o for o in result
+            if o.get("completed_at", o.get("created_at", ""))[:10] >= cutoff
+        ]
+    return result
+
+
+def _expenses_in_period(expenses: list, period: str) -> list:
+    cutoff = _period_cutoff(period)
+    if not cutoff:
+        return expenses
+    return [e for e in expenses if e.get("date", "")[:10] >= cutoff]
+
+
+def _orders_in_month(orders: list, year: int, month: int) -> list:
+    """Return completed orders in a specific calendar month."""
+    prefix = f"{year}-{month:02d}"
+    return [
+        o for o in orders
+        if o.get("status") == "complete"
+        and o.get("completed_at", o.get("created_at", ""))[:7] == prefix
+    ]
+
+
+# ── Tool implementations ───────────────────────────────────────────────────────
+
 def _get_profit_report(period: str, store: DataStore) -> str:
     revenue_data = store.analytics.get("revenue", {})
     gross = revenue_data.get(period, 0)
-    orders = store.orders
+    all_orders = store.orders
 
-    # Filter orders by period (simplified — use all completed orders)
-    completed = [o for o in orders if o.get("status") == "complete"]
+    # Filter orders AND expenses to the same period so fee/COGS estimates match
+    completed = _orders_in_period(all_orders, period)
     total_items = sum(len(o.get("items", [1])) for o in completed)
 
-    # Fee estimates
+    # Etsy fee estimates
     transaction_fees = gross * ETSY_TRANSACTION_FEE_PCT
     payment_fees = gross * ETSY_PAYMENT_PROCESSING_PCT + (ETSY_PAYMENT_PROCESSING_FLAT * len(completed))
-    listing_fees = total_items * ETSY_LISTING_FEE
+    listing_fees = total_items * ETSY_LISTING_FEE   # $0.20 per-sale auto-renewal
     total_fees = transaction_fees + payment_fees + listing_fees
 
-    # Expenses for period
-    expenses = store.get("financial_data", "expenses", default=[])
-    expense_total = sum(e["amount"] for e in expenses)
+    # Expenses filtered to same period
+    all_expenses = store.get("financial_data", "expenses", default=[])
+    period_expenses = _expenses_in_period(all_expenses, period)
+    expense_total = sum(e["amount"] for e in period_expenses)
 
-    # COGS estimate (from rates)
+    # COGS estimate from configured rates
     rates = store.get("financial_data", "cogs_rates", default=_default_rates())
     avg_cogs_per_order = (
         rates.get("filament_cost_per_gram", 0.02) * 50 +
@@ -195,27 +260,32 @@ def _get_profit_report(period: str, store: DataStore) -> str:
         "etsy_fees": {
             "transaction_6.5pct": round(transaction_fees, 2),
             "payment_processing": round(payment_fees, 2),
-            "listing_fees": round(listing_fees, 2),
+            "listing_fees_renewal": round(listing_fees, 2),
             "total_fees": round(total_fees, 2),
         },
         "estimated_cogs": round(estimated_cogs, 2),
         "other_expenses": round(expense_total, 2),
         "net_profit": round(net_profit, 2),
         "profit_margin_pct": margin_pct,
-        "completed_orders": len(completed),
+        "completed_orders_in_period": len(completed),
         "note": "COGS is estimated from rates. Use update_cogs_rates to set accurate per-product costs.",
     }, indent=2)
 
 
-def _calculate_etsy_fees(data: dict) -> str:
+def _calculate_etsy_fees(data: dict, store: DataStore) -> str:
     price = data["item_price"]
     shipping = data.get("shipping_charged", 0)
     offsite = data.get("offsite_ads_sale", False)
 
+    # Apply the correct offsite ads rate based on shop's annual revenue
+    annual_revenue = store.analytics.get("revenue", {}).get("this_year", 0)
+    offsite_rate = ETSY_OFFSITE_ADS_PCT_HIGH if annual_revenue >= ETSY_OFFSITE_ADS_THRESHOLD else ETSY_OFFSITE_ADS_PCT_LOW
+    rate_label = "12% (shop >= $10k/yr)" if annual_revenue >= ETSY_OFFSITE_ADS_THRESHOLD else "15% (shop < $10k/yr)"
+
     subtotal = price + shipping
     transaction_fee = subtotal * ETSY_TRANSACTION_FEE_PCT
     payment_fee = subtotal * ETSY_PAYMENT_PROCESSING_PCT + ETSY_PAYMENT_PROCESSING_FLAT
-    offsite_fee = price * ETSY_OFFSITE_ADS_PCT_LOW if offsite else 0
+    offsite_fee = price * offsite_rate if offsite else 0
     listing_fee = ETSY_LISTING_FEE
     total_fees = transaction_fee + payment_fee + offsite_fee + listing_fee
     net = price - total_fees
@@ -224,14 +294,16 @@ def _calculate_etsy_fees(data: dict) -> str:
         "item_price": price,
         "shipping_charged": shipping,
         "fees": {
-            "listing_fee": round(listing_fee, 2),
+            "listing_fee_renewal": round(listing_fee, 2),
             "transaction_fee_6.5pct": round(transaction_fee, 2),
-            "payment_processing": round(payment_fee, 2),
-            "offsite_ads_15pct": round(offsite_fee, 2) if offsite else "N/A",
+            "payment_processing_3pct_plus_25c": round(payment_fee, 2),
+            "offsite_ads": round(offsite_fee, 2) if offsite else "N/A (not an offsite sale)",
+            "offsite_ads_rate_applied": rate_label if offsite else "N/A",
             "total_fees": round(total_fees, 2),
             "fees_as_pct_of_price": f"{round(total_fees / price * 100, 1)}%",
         },
         "net_after_fees": round(net, 2),
+        "annual_revenue_on_file": round(annual_revenue, 2),
         "tip": "This does NOT include your COGS (materials, labour). Subtract those from net_after_fees for true profit.",
     }, indent=2)
 
@@ -263,6 +335,8 @@ def _calculate_cogs(data: dict, store: DataStore) -> str:
 
 def _get_profit_per_product(sort_by: str, store: DataStore) -> str:
     listings = store.listings
+    annual_revenue = store.analytics.get("revenue", {}).get("this_year", 0)
+    offsite_rate = ETSY_OFFSITE_ADS_PCT_HIGH if annual_revenue >= ETSY_OFFSITE_ADS_THRESHOLD else ETSY_OFFSITE_ADS_PCT_LOW
     rates = store.get("financial_data", "cogs_rates", default=_default_rates())
     default_cogs = (
         rates.get("filament_cost_per_gram", 0.02) * 50 +
@@ -280,16 +354,21 @@ def _get_profit_per_product(sort_by: str, store: DataStore) -> str:
             price * ETSY_PAYMENT_PROCESSING_PCT + ETSY_PAYMENT_PROCESSING_FLAT +
             ETSY_LISTING_FEE
         )
+        # Also show worst-case (with offsite ads)
+        fees_with_offsite = fees + price * offsite_rate
         cogs = l.get("cogs", default_cogs)
         profit = price - fees - cogs
+        profit_offsite = price - fees_with_offsite - cogs
         rows.append({
             "id": l["id"],
             "title": l["title"][:50],
             "price": price,
             "etsy_fees": round(fees, 2),
+            "etsy_fees_with_offsite_ads": round(fees_with_offsite, 2),
             "cogs": round(cogs, 2),
             "profit_dollars": round(profit, 2),
             "profit_pct": round(profit / price * 100, 1) if price else 0,
+            "profit_pct_with_offsite": round(profit_offsite / price * 100, 1) if price else 0,
             "type": l.get("type", "physical"),
         })
 
@@ -305,6 +384,7 @@ def _get_profit_per_product(sort_by: str, store: DataStore) -> str:
 
     return json.dumps({
         "products": rows,
+        "offsite_ads_rate_used": f"{int(offsite_rate * 100)}%",
         "high_margin_winners": [r["id"] for r in winners],
         "low_margin_concern": [r["id"] for r in losers],
         "note": "COGS uses estimates. Set per-listing 'cogs' field or use update_cogs_rates for accuracy.",
@@ -355,28 +435,60 @@ def _get_monthly_pl(year: int | None, store: DataStore) -> str:
     year = year or date.today().year
     fin = store.get("financial_data", default={"expenses": []})
     expenses = fin.get("expenses", [])
+    all_orders = store.orders
+    rates = store.get("financial_data", "cogs_rates", default=_default_rates())
+    avg_cogs_per_order = (
+        rates.get("filament_cost_per_gram", 0.02) * 50 +
+        rates.get("electricity_cost_per_hour", 0.12) * 3 +
+        rates.get("packaging_cost", 0.50)
+    )
+
+    # Determine offsite ads rate from annual revenue
+    annual_revenue_est = store.analytics.get("revenue", {}).get("this_year", 0)
+    offsite_rate = ETSY_OFFSITE_ADS_PCT_HIGH if annual_revenue_est >= ETSY_OFFSITE_ADS_THRESHOLD else ETSY_OFFSITE_ADS_PCT_LOW
 
     monthly: list[dict] = []
     for month in range(1, 13):
         month_str = f"{year}-{month:02d}"
+        month_orders = _orders_in_month(all_orders, year, month)
         month_expenses = sum(e["amount"] for e in expenses if e.get("date", "").startswith(month_str))
+
+        # Revenue: sum order totals if available, else estimate from analytics
+        gross = sum(o.get("total_price", o.get("price", 0)) for o in month_orders)
+
+        # Etsy fee estimates
+        transaction_fees = gross * ETSY_TRANSACTION_FEE_PCT
+        payment_fees = gross * ETSY_PAYMENT_PROCESSING_PCT + ETSY_PAYMENT_PROCESSING_FLAT * len(month_orders)
+        listing_fees = len(month_orders) * ETSY_LISTING_FEE
+        total_fees = transaction_fees + payment_fees + listing_fees
+
+        # COGS estimate
+        cogs = avg_cogs_per_order * len(month_orders)
+
+        net = gross - total_fees - cogs - month_expenses
         monthly.append({
             "month": month_str,
-            "gross_revenue": 0,
-            "etsy_fees_est": 0,
-            "cogs_est": 0,
+            "gross_revenue": round(gross, 2),
+            "order_count": len(month_orders),
+            "etsy_fees_est": round(total_fees, 2),
+            "cogs_est": round(cogs, 2),
             "other_expenses": round(month_expenses, 2),
-            "net_profit": round(-month_expenses, 2),
-            "note": "Connect Etsy API to populate revenue. Expenses tracked locally.",
+            "net_profit": round(net, 2),
         })
 
+    totals = {
+        "gross_revenue": round(sum(m["gross_revenue"] for m in monthly), 2),
+        "total_fees_est": round(sum(m["etsy_fees_est"] for m in monthly), 2),
+        "total_cogs_est": round(sum(m["cogs_est"] for m in monthly), 2),
+        "total_expenses": round(sum(m["other_expenses"] for m in monthly), 2),
+        "net_profit": round(sum(m["net_profit"] for m in monthly), 2),
+    }
     return json.dumps({
         "year": year,
+        "offsite_ads_rate": f"{int(offsite_rate * 100)}% (based on annual revenue on file)",
         "monthly_pl": monthly,
-        "annual_totals": {
-            "total_expenses": round(sum(m["other_expenses"] for m in monthly), 2),
-        },
-        "tip": "Revenue data populates automatically once Etsy OAuth is configured.",
+        "annual_totals": totals,
+        "note": "Revenue from order history. Fees/COGS are estimates — use update_cogs_rates for accuracy.",
     }, indent=2)
 
 
