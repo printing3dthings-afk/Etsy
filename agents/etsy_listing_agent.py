@@ -101,7 +101,7 @@ Always add a "Complete the look:" section at the bottom of every listing descrip
 | 3D printed item | A complementary wood painted item or another 3D print |
 | Wood painted item | Companion 3D printed decor that matches the aesthetic |
 
-Cross-sell copy example: "Complete your planner setup: pair this with our Kawaii Sticker Pack — 60+ transparent PNG stickers designed to match. Search 'OnBrandCraftz kawaii stickers' in Etsy."
+Cross-sell copy example: "Complete your planner setup: pair this with our Kawaii Sticker Pack — 200+ transparent PNG stickers designed to match. Search 'OnBrandCraftz kawaii stickers' in Etsy."
 
 Never paste Etsy listing URLs in descriptions — Etsy may penalize external-style links. Reference by product name + shop name instead.
 
