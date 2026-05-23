@@ -25,40 +25,52 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 ## Product Catalog
 
 ### DP1026 — Ultimate Digital Life Planner (Lavender Dreams)
-- **File**: `data/digital_products/product_files/DP1026.pdf` (~15MB, 102 pages)
+- **File**: `data/digital_products/product_files/DP1026.pdf` (~15MB, 104 pages)
+- **Undated**: `DP1026U.pdf` (~8MB, 104 pages) — perpetual, sells year-round
 - **Color scheme**: Lavender Dreams (muted purple #8666AA, soft lavender accent)
 - **Cover**: Full-page kawaii illustrated cover (DALL-E, portrait 1024×1536)
+- **Structure**: Cover → Welcome/Setup (p2) → Dashboard/Home (p3) → Index (p4) → How-to → Content
 - **Sections**: Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Habit Tracker, Goals, Budget, Meal Plan, Notes × 4
-- **Sticker Library**: 3 pages — Planner & Stationery, Cozy Lifestyle, Seasonal & Holiday
-- **Sticker Pack ZIP**: `DP1026_sticker_pack.zip` (3 PNG sheets, transparent background)
-- **Interactive**: Yes — fillable fields, hyperlinked tabs, JS popup sticker menu (Acrobat/Xodo)
+- **Sticker Library**: 5 pages — Functional Planning, Widget Trackers, Planner & Stationery, Cozy Lifestyle, Seasonal & Holiday
+- **Sticker Pack ZIP**: `DP1026_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
+- **Interactive**: Yes — fillable fields, hyperlinked tabs, Dashboard home page, JS popup sticker menu (Acrobat/Xodo)
+- **Footer**: ‹ INDEX + 🏠 HOME buttons on every page
 - **Compatible apps**: GoodNotes 5/6, Notability, PDF Expert, Xodo, Adobe Acrobat Reader
 - **Target price**: $14.99–$16.99
 - **Target audience**: Women 18–35, planner lovers, stationery enthusiasts, productivity
 
 ### DP1027 — Student & School Planner 2026 (Cotton Candy)
-- **File**: `data/digital_products/product_files/DP1027.pdf` (~13MB, 88 pages)
+- **File**: `data/digital_products/product_files/DP1027.pdf` (~14MB, 90 pages)
+- **Undated**: `DP1027U.pdf` (~7MB, 90 pages)
 - **Color scheme**: Cotton Candy (pink #DE97C6, sky blue accent)
+- **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Monthly × 12, Monthly Review × 12, Weekly × 52, Habit Tracker, Goals, Notes × 4
-- **Sticker Library**: 3 pages (same kawaii sticker system)
+- **Sticker Library**: 5 pages (same 5-sheet system)
+- **Sticker Pack ZIP**: `DP1027_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
 - **Interactive**: Yes
 - **Target price**: $9.99–$12.99
 - **Target audience**: High school/college students, back to school, study planners
 
 ### DP1028 — Budget & Finance Planner 2026 (Midnight Blue)
-- **File**: `data/digital_products/product_files/DP1028.pdf` (~14MB, 100 pages)
+- **File**: `data/digital_products/product_files/DP1028.pdf` (~15MB, 102 pages)
+- **Undated**: `DP1028U.pdf` (~8MB, 102 pages)
 - **Color scheme**: Midnight Blue (deep royal blue #1B2568, ice-blue accent)
+- **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Budget, Goals, Notes × 4
-- **Sticker Library**: 3 pages
+- **Sticker Library**: 5 pages
+- **Sticker Pack ZIP**: `DP1028_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
 - **Interactive**: Yes
 - **Target price**: $12.99–$14.99
 - **Target audience**: Adults tracking finances, budgeters, Dave Ramsey followers, debt payoff community
 
 ### DP1029 — Fitness & Wellness Planner 2026 (Coral Peach)
-- **File**: `data/digital_products/product_files/DP1029.pdf` (~14MB, 89 pages)
+- **File**: `data/digital_products/product_files/DP1029.pdf` (~14MB, 91 pages)
+- **Undated**: `DP1029U.pdf` (~7MB, 91 pages)
 - **Color scheme**: Coral Peach (warm coral #FD6C49, peach-gold accent)
+- **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Monthly × 12, Monthly Review × 12, Weekly × 52, Habit Tracker, Meal Plan, Goals, Notes × 4
-- **Sticker Library**: 3 pages
+- **Sticker Library**: 5 pages
+- **Sticker Pack ZIP**: `DP1029_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
 - **Interactive**: Yes
 - **Target price**: $12.99–$14.99
 - **Target audience**: Fitness beginners, wellness journey, weight loss, healthy eating, self-care

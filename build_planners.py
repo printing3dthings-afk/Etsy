@@ -134,3 +134,62 @@ build({
 })
 
 print("\n\nAll planners built successfully!")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# UNDATED (EVERGREEN) VERSIONS — year=0 produces perpetual planners
+# ─────────────────────────────────────────────────────────────────────────────
+print("\n\n--- Building undated evergreen versions ---\n")
+
+get_or_create_product("DP1026U", "Ultimate Digital Life Planner — Undated (Lavender Dreams)")
+build({
+    "product_id":       "DP1026U",
+    "planner_title":    "Ultimate Digital Life Planner",
+    "subtitle":         "Undated · Fillable PDF · GoodNotes · Notability · Xodo",
+    "color_scheme":     "lavender_dreams",
+    "planner_tier":     3,
+    "interactive":      True,
+    "include_sections": ["monthly", "monthly_review", "month_at_a_glance",
+                         "weekly", "habit_tracker", "goals", "budget", "meal_plan", "notes"],
+    "year":             0,
+})
+
+get_or_create_product("DP1027U", "Student Planner Undated — Kawaii Academic Organizer")
+build({
+    "product_id":       "DP1027U",
+    "planner_title":    "Student Planner",
+    "subtitle":         "Undated · Academic · Study · School · GoodNotes · Notability",
+    "color_scheme":     "cotton_candy",
+    "planner_tier":     3,
+    "interactive":      True,
+    "include_sections": ["monthly", "monthly_review", "weekly",
+                         "habit_tracker", "goals", "notes"],
+    "year":             0,
+})
+
+get_or_create_product("DP1028U", "Budget & Finance Planner Undated — Money Management Organizer")
+build({
+    "product_id":       "DP1028U",
+    "planner_title":    "Budget & Finance Planner",
+    "subtitle":         "Undated · Monthly Budget · Bill Tracker · Savings Goals",
+    "color_scheme":     "midnight_blue",
+    "planner_tier":     3,
+    "interactive":      True,
+    "include_sections": ["monthly", "monthly_review", "month_at_a_glance",
+                         "weekly", "budget", "goals", "notes"],
+    "year":             0,
+})
+
+get_or_create_product("DP1029U", "Fitness & Wellness Planner Undated — Health & Habit Tracker")
+build({
+    "product_id":       "DP1029U",
+    "planner_title":    "Fitness & Wellness Planner",
+    "subtitle":         "Undated · Workout Log · Meal Plan · Habit Tracker · Mindfulness",
+    "color_scheme":     "coral_peach",
+    "planner_tier":     3,
+    "interactive":      True,
+    "include_sections": ["monthly", "monthly_review", "weekly",
+                         "habit_tracker", "meal_plan", "goals", "notes"],
+    "year":             0,
+})
+
+print("\n\nAll undated versions built successfully!")

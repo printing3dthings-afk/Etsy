@@ -625,14 +625,16 @@ TOOL_DEFINITIONS: list[dict] = [
                         "midnight_purple", "deep_ocean", "art_deco_bk", "rosewood",
                         "peach_cream", "sky_breeze", "autumn_harvest",
                         "mint_chip", "ocean_mist",
+                        "midnight_blue", "coral_peach", "sage_green",
                     ],
                     "description": (
-                        "27 color schemes. Neutral/classic: sage_cream, dusty_rose, midnight_navy, terracotta, "
+                        "30 color schemes. Neutral/classic: sage_cream, dusty_rose, midnight_navy, terracotta, "
                         "lavender_dreams, dark_academia, blush_gold, minimal_mono, mocha_latte, wine_burgundy, "
                         "ice_blue, forest_deep, ocean_mist. "
                         "Fun/bold: cotton_candy, bubblegum, lemon_zest, neon_pop, retro_sunset, tropical, "
                         "spring_blossom, sky_breeze, peach_cream, mint_chip, autumn_harvest. "
                         "Dark/premium: midnight_purple, deep_ocean, art_deco_bk, rosewood. "
+                        "OnBrandCraftz planners: midnight_blue (DP1028), coral_peach (DP1029), sage_green. "
                         "Default: sage_cream."
                     ),
                     "default": "sage_cream",
@@ -2250,7 +2252,7 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
     def page_footer(label=""):
         hline(ML, PW - MR - TAB_W - 4, MB - 6, LIGHT, 0.4)
 
-        # Back-to-index pill button (tier 1 gets simpler style)
+        # Back-to-index pill button
         _bw = 50; _bh = 14; _bx = ML; _by = MB - 22
         _btn_fill = _blend(T, 0.90) if _design == 1 else _blend(T, 0.85)
         rect(_bx, _by, _bw, _bh, f=_btn_fill, radius=3)
@@ -2258,6 +2260,14 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
         c.drawCentredString(_bx + _bw / 2, _by + 4, "‹ INDEX")
         c.linkAbsolute("Back to Index", "index",
                        (_bx, _by, _bx + _bw, _by + _bh))
+
+        # HOME button (links to dashboard overview page)
+        _hw = 44; _hx = _bx + _bw + 5
+        rect(_hx, _by, _hw, _bh, f=_blend(A, 0.75), radius=3)
+        font("Helvetica-Bold", 6.5); fill(DARK)
+        c.drawCentredString(_hx + _hw / 2, _by + 4, "🏠 HOME")
+        c.linkAbsolute("Back to Home", "dashboard",
+                       (_hx, _by, _hx + _hw, _by + _bh))
 
         # Persistent STICKERS panel button — always visible on every page (Tier 3)
         if _design == 3 and "sticker_pack" in _extras:
@@ -2831,6 +2841,227 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                 hline(ML + 28, PW - MR - 4, sy - step_h + 8, LIGHT, 0.4)
 
         page_footer("HOW TO USE")
+        c.showPage()
+
+    # ── WELCOME / SETUP PAGE ─────────────────────────────────────────────────
+    def draw_welcome_page():
+        c.bookmarkPage("welcome")
+        c.addOutlineEntry("Welcome & Setup", "welcome", level=0)
+        rect(0, 0, PW, PH, f=BG)
+        if _design == 3:
+            _dp = 20; _dr = 0.38
+            _gx = ML + _dp
+            while _gx <= PW - MR - TAB_W - 4:
+                _gy = MB + _dp
+                while _gy <= PH - MT - _dp:
+                    circle(_gx, _gy, _dr, f=LIGHT)
+                    _gy += _dp
+                _gx += _dp
+
+        cx = PW / 2
+        content_w = CW - TAB_W - 4
+
+        # ── Header bar ──────────────────────────────────────────────────────
+        rect(0, PH - MT - 54, PW - TAB_W - 2, 54 + MT, f=T)
+        rect(0, PH - MT - 54, 7, 54 + MT, f=A)
+        rect(0, PH - MT - 58, PW - TAB_W - 2, 4, f=A)
+        font("Helvetica-Bold", 22); fill(WHITE)
+        c.drawString(ML + 18, PH - MT - 32, f"Welcome to {title}")
+        font("Helvetica", 8.5); fill(_blend(WHITE, 0.50))
+        c.drawString(ML + 18, PH - MT - 47, "OnBrandCraftz  ·  Printing3dthings@outlook.com")
+
+        y = PH - MT - 84
+
+        # ── DOWNLOAD YOUR FILES ─────────────────────────────────────────────
+        rect(ML, y - 2, content_w, 20, f=_blend(T, 0.88), radius=3)
+        font("Helvetica-Bold", 8.5); fill(T)
+        c.drawString(ML + 10, y + 5, "📥  HOW TO DOWNLOAD YOUR FILES")
+        y -= 22
+
+        download_steps = [
+            "Go to your Etsy account → Purchases & Reviews",
+            "Find this order → click Download Files",
+            "Save the PDF and the Sticker Pack ZIP to your device",
+        ]
+        for i, step in enumerate(download_steps):
+            circle(ML + 12, y - 6, 8, f=T)
+            font("Helvetica-Bold", 7); fill(WHITE)
+            c.drawCentredString(ML + 12, y - 8.5, str(i + 1))
+            font("Helvetica", 8); fill(DARK)
+            c.drawString(ML + 26, y - 10, step)
+            y -= 18
+
+        y -= 10
+
+        # ── GOODNOTES / NOTABILITY SETUP ────────────────────────────────────
+        rect(ML, y - 2, content_w, 20, f=_blend(A, 0.50), radius=3)
+        font("Helvetica-Bold", 8.5); fill(DARK)
+        c.drawString(ML + 10, y + 5, "📱  OPEN IN GOODNOTES 6 OR NOTABILITY")
+        y -= 22
+
+        app_steps = [
+            "GoodNotes 6: tap + (New Document) → Import → select the PDF",
+            "Notability: tap + → Import → select the PDF from Files",
+            "iPad tip: use the Files app to access your Downloads folder",
+        ]
+        for i, step in enumerate(app_steps):
+            circle(ML + 12, y - 6, 8, f=_blend(A, 0.80))
+            font("Helvetica-Bold", 7); fill(WHITE)
+            c.drawCentredString(ML + 12, y - 8.5, str(i + 1))
+            font("Helvetica", 8); fill(DARK)
+            c.drawString(ML + 26, y - 10, step)
+            y -= 18
+
+        y -= 10
+
+        # ── STICKER PACK SETUP ──────────────────────────────────────────────
+        rect(ML, y - 2, content_w, 20, f=_blend(T, 0.88), radius=3)
+        font("Helvetica-Bold", 8.5); fill(T)
+        c.drawString(ML + 10, y + 5, "🎨  IMPORT YOUR STICKER PACK")
+        y -= 22
+
+        sticker_steps = [
+            "Unzip the Sticker Pack ZIP file on your device",
+            "GoodNotes 6: Elements (◇) → Stickers → + → select all 5 PNG sheets",
+            "Stickers appear in your library — drag onto any page, unlimited times!",
+        ]
+        for i, step in enumerate(sticker_steps):
+            circle(ML + 12, y - 6, 8, f=T)
+            font("Helvetica-Bold", 7); fill(WHITE)
+            c.drawCentredString(ML + 12, y - 8.5, str(i + 1))
+            font("Helvetica", 8); fill(DARK)
+            c.drawString(ML + 26, y - 10, step)
+            y -= 18
+
+        y -= 16
+
+        # ── Compatible apps ─────────────────────────────────────────────────
+        font("Helvetica-Bold", 7); fill(MID)
+        c.drawString(ML, y, "WORKS WITH:")
+        y -= 12
+        apps_row = ["GoodNotes 6", "Notability", "PDF Expert", "Xodo", "Acrobat Reader", "Print-ready"]
+        apps_x = ML
+        for app in apps_row:
+            _aw = c.stringWidth(app, _fn("regular"), 7.5) + 12
+            rect(apps_x, y - 12, _aw, 14, f=_blend(T, 0.88), radius=3)
+            font("Helvetica", 7.5); fill(T)
+            c.drawString(apps_x + 6, y - 8, app)
+            apps_x += _aw + 5
+            if apps_x > ML + content_w - 80:
+                break
+
+        y -= 26
+
+        # ── Dashboard button ────────────────────────────────────────────────
+        _dbw = 160; _dbh = 24; _dbx = cx - _dbw / 2; _dby = y - _dbh
+        rect(_dbx, _dby, _dbw, _dbh, f=T, radius=6)
+        font("Helvetica-Bold", 9); fill(WHITE)
+        c.drawCentredString(cx, _dby + 8, "GO TO PLANNER DASHBOARD  →")
+        c.linkAbsolute("Dashboard", "dashboard", (_dbx, _dby, _dbx + _dbw, _dby + _dbh))
+
+        # ── Support footer ──────────────────────────────────────────────────
+        font("Helvetica", 7); fill(MID)
+        c.drawCentredString(cx, MB + 6,
+            "Questions? Email Printing3dthings@outlook.com  ·  OnBrandCraftz on Etsy")
+
+        draw_nav_tabs("welcome")
+        c.showPage()
+
+    # ── DASHBOARD / HOME PAGE ────────────────────────────────────────────────
+    def draw_dashboard_page():
+        c.bookmarkPage("dashboard")
+        c.addOutlineEntry("Dashboard", "dashboard", level=0)
+        rect(0, 0, PW, PH, f=BG)
+        if _design == 3:
+            _dp = 20; _dr = 0.38
+            _gx = ML + _dp
+            while _gx <= PW - MR - TAB_W - 4:
+                _gy = MB + _dp
+                while _gy <= PH - MT - _dp:
+                    circle(_gx, _gy, _dr, f=LIGHT)
+                    _gy += _dp
+                _gx += _dp
+
+        cx = PW / 2
+        content_w = CW - TAB_W - 4
+
+        # ── Header bar ──────────────────────────────────────────────────────
+        rect(0, PH - MT - 60, PW - TAB_W - 2, 60 + MT, f=T)
+        rect(0, PH - MT - 60, 7, 60 + MT, f=A)
+        rect(0, PH - MT - 64, PW - TAB_W - 2, 4, f=A)
+
+        year_tag = "UNDATED" if undated else str(planner_year)
+        font("Helvetica-Bold", 24); fill(WHITE)
+        c.drawString(ML + 18, PH - MT - 36, title)
+        font("Helvetica", 8.5); fill(_blend(WHITE, 0.55))
+        c.drawString(ML + 18, PH - MT - 54,
+                     f"{cs['label']}  ·  {year_tag}  ·  OnBrandCraftz")
+
+        y = PH - MT - 86
+
+        # ── Section navigation buttons grid ─────────────────────────────────
+        _DASH_SECTIONS = []
+        if "monthly" in sections or "weekly" in sections:
+            _DASH_SECTIONS.append(("📅", "Year Overview",  "yearly"))
+        if "monthly" in sections:
+            _DASH_SECTIONS.append(("🗓", "Monthly",        "month_jan"))
+        if "monthly_review" in sections:
+            _DASH_SECTIONS.append(("🔁", "Monthly Review", "monthly_review_0"))
+        if "month_at_a_glance" in sections:
+            _DASH_SECTIONS.append(("👁", "Month at a Glance", "month_glance_0"))
+        if "weekly" in sections:
+            _DASH_SECTIONS.append(("📋", "Weekly Planner", "weekly_start"))
+        if "habit_tracker" in sections:
+            _DASH_SECTIONS.append(("✅", "Habit Tracker",  "habits"))
+        if "goals" in sections:
+            _DASH_SECTIONS.append(("🎯", "Goals",          "goals"))
+        if "budget" in sections:
+            _DASH_SECTIONS.append(("💰", "Budget",         "budget"))
+        if "meal_plan" in sections:
+            _DASH_SECTIONS.append(("🥗", "Meal Planner",   "meal_plan"))
+        if "notes" in sections:
+            _DASH_SECTIONS.append(("📝", "Notes",          "notes"))
+        if "sticker_pack" in _extras:
+            _DASH_SECTIONS.append(("✨", "Sticker Library","sticker_picker"))
+        _DASH_SECTIONS.append(("📖", "How to Use",     "how_to_use"))
+        _DASH_SECTIONS.append(("📑", "Index",          "index"))
+
+        cols = 3
+        btn_w = (content_w - (cols - 1) * 8) / cols
+        btn_h = 38
+        gutter = 8
+
+        for idx, (icon, label_txt, bm) in enumerate(_DASH_SECTIONS):
+            col = idx % cols
+            row = idx // cols
+            bx = ML + col * (btn_w + gutter)
+            by = y - row * (btn_h + gutter) - btn_h
+            if by < MB + 30:
+                break
+
+            # Button background — alternate theme shades
+            btn_bg = _blend(T, 0.88) if idx % 2 == 0 else _blend(A, 0.55)
+            rect(bx, by, btn_w, btn_h, f=btn_bg, radius=6)
+            # Left accent stripe
+            rect(bx, by, 4, btn_h, f=T, radius=2)
+
+            # Icon + label
+            font("Helvetica-Bold", 13); fill(T)
+            c.drawString(bx + 12, by + btn_h * 0.56, icon)
+            font("Helvetica-Bold", 8); fill(DARK)
+            c.drawString(bx + 30, by + btn_h * 0.56, label_txt)
+            font("Helvetica", 6.5); fill(MID)
+            c.drawString(bx + 30, by + btn_h * 0.25, "tap to jump →")
+
+            # Clickable link
+            c.linkAbsolute(label_txt, bm, (bx, by, bx + btn_w, by + btn_h))
+
+        # ── Bottom instruction strip ─────────────────────────────────────────
+        font("Helvetica", 7); fill(MID)
+        c.drawCentredString(cx, MB + 10,
+            "Tap any button to jump to that section  ·  Use ‹ INDEX or 🏠 HOME in the footer to return here")
+
+        draw_nav_tabs("dashboard")
         c.showPage()
 
     # ── YEARLY OVERVIEW ──────────────────────────────────────────────────────
@@ -3973,6 +4204,26 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             ("GLOW UP",     _STK_PK,  "star"),    ("DREAM BIG", _STK_LV,  "heart"),
             ("BE KIND",     _STK_PK,  "heart"),   ("GOOD VIBES",_STK_Y,   "speech"),
         ]),
+        ("FUNCTIONAL PLANNING", T, [
+            ("THIS WEEK",   T,        "pill"),    ("MONTHLY",   A,        "pill"),
+            ("HABIT TRACK", _STK_G,   "pill"),    ("DON'T FORGET",_STK_O, "speech"),
+            ("TOP 3",       _STK_GD,  "star"),    ("BRAIN DUMP",_STK_P,   "pill"),
+            ("CHECKLIST",   _STK_B,   "circle"),  ("NEXT STEPS",_STK_TL,  "pill"),
+            ("IN PROGRESS", _STK_O,   "pill"),    ("COMPLETE ✓",_STK_G,   "pill"),
+            ("NO SPEND",    _STK_TL,  "circle"),  ("PAYDAY! 🎉",_STK_GD,  "star"),
+            ("NOTES",       MID,      "pill"),    ("ACTION",    T,        "speech"),
+            ("PRIORITY!",   _STK_R,   "star"),    ("TODAY",     A,        "circle"),
+        ]),
+        ("WIDGET TRACKERS", _STK_TL, [
+            ("MOOD 😊",     _STK_Y,   "star"),    ("WATER 💧",  _STK_B,   "circle"),
+            ("SLEEP 🌙",    _STK_LV,  "circle"),  ("ENERGY ⚡", _STK_O,   "star"),
+            ("STEPS 👟",    _STK_G,   "pill"),    ("WORKOUT ✓", _STK_TL,  "circle"),
+            ("GRATEFUL ♡", _STK_PK,  "heart"),   ("STREAK 🔥", _STK_O,   "star"),
+            ("FOCUS 🍅",    _STK_R,   "circle"),  ("WINS 🏆",   _STK_GD,  "star"),
+            ("MEDS 💊",     _STK_B,   "pill"),    ("MEALS 🥗",  _STK_G,   "circle"),
+            ("WEIGHT",      _STK_TL,  "circle"),  ("JOURNAL",   _STK_LV,  "pill"),
+            ("SELF CARE",   _STK_PK,  "heart"),   ("REFLECT",   _STK_P,   "pill"),
+        ]),
     ]
 
     # ── Kawaii drawing primitives ─────────────────────────────────────────────
@@ -4135,7 +4386,63 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
     # ── DALL-E sticker sheet image generation ────────────────────────────────
     _STICKER_SHEET_PROMPTS = [
-        # Sheet 1 — Planner girl & stationery objects
+        # Sheet 1 — Functional Planning (headers, checklists, labels)
+        ("Kawaii functional planner sticker sheet, pure white background. "
+         "20-22 individual illustrated kawaii stickers loosely arranged — not in a grid. "
+         "Every sticker: VERY THICK black outline (4px), pastel fills, kawaii faces on object stickers. "
+         "This sheet focuses on PLANNING FUNCTIONALITY — things planners write every day. "
+         "Include these sticker types: "
+         "(1) HERO — a wide banner ribbon sticker reading 'THIS WEEK' in bold kawaii lettering, "
+         "pastel theme color background, star accents, center of page, large; "
+         "(2) banner sticker 'MONTHLY GOALS' with arrow pointing right; "
+         "(3) banner sticker 'HABIT TRACKER' with checkmark icon; "
+         "(4) banner sticker 'DON'T FORGET' in coral/orange with exclamation kawaii face; "
+         "(5) three open square checkboxes in a vertical strip labeled 'TO DO'; "
+         "(6) five open square checkboxes strip labeled 'CHECKLIST'; "
+         "(7) priority star flag sticker '★ PRIORITY' in gold; "
+         "(8) urgent arrow sticker '!! URGENT' in red-coral; "
+         "(9) due date clock sticker '⏰ DUE DATE' in teal; "
+         "(10) meeting calendar pin sticker 'MEETING' in sky blue; "
+         "(11) 'NOTES' label banner in lavender with pencil icon; "
+         "(12) 'BRAIN DUMP' label with zigzag border, fun purple; "
+         "(13) 'TOP 3' label with three stars in gold/pink; "
+         "(14) 'IN PROGRESS' pill label with arrow in mint green; "
+         "(15) 'COMPLETE ✓' pill label with checkmark in sage green; "
+         "(16) 'NO SPEND DAY' label with piggy bank icon in mint; "
+         "(17) 'PAYDAY! 🎉' celebration banner in gold; "
+         "(18) 'SELF CARE' heart banner in blush pink; "
+         "(19) small date dot — a filled circle with number '15' for undated planners; "
+         "(20) washi tape strip design — horizontal decorative strip with floral pattern. "
+         "Style: premium kawaii flat illustration, thick outlines, soft pastel palette matching planner theme, "
+         "white glow drop-shadow. Pure white background. NO extra text beyond labels shown. NO watermarks."),
+        # Sheet 2 — Widget Trackers (drop-in tracker widgets)
+        ("Kawaii tracker widget sticker sheet, pure white background. "
+         "12-15 individual illustrated planner widget stickers loosely arranged — not in a grid. "
+         "These are FUNCTIONAL TRACKER WIDGETS — self-contained mini-trackers a planner user drops "
+         "onto any open page space to track habits, moods, water, sleep, and energy. "
+         "Every widget has: THICK black outline (3-4px), pastel fills, kawaii accents. "
+         "Include these widgets: "
+         "(1) HERO — MOOD TRACKER widget (large, center): a 5-bubble horizontal row with tiny kawaii faces "
+         "from sad (blue tear) to happy (yellow star eyes), labeled 'MOOD TODAY', larger than others; "
+         "(2) WATER INTAKE tracker: 8 droplet shapes in a 2×4 grid, empty outlines to fill in, "
+         "labeled 'DAILY WATER 💧'; "
+         "(3) SLEEP TRACKER: 4 moon phase icons (new moon → crescent → half → full) "
+         "in a row, labeled 'SLEEP QUALITY 🌙'; "
+         "(4) ENERGY LEVEL: 5 lightning bolt icons in ascending size, labeled 'ENERGY ⚡'; "
+         "(5) WEEKLY HABIT STREAK: 7 circle bubbles labeled MON TUE WED THU FRI SAT SUN, "
+         "to color in when done, labeled 'HABIT STREAK'; "
+         "(6) STEPS COUNTER: simple rectangle widget with shoe icon, number field, "
+         'labeled "STEPS TODAY 👟"; '
+         "(7) GRATITUDE LOG: small widget with 3 blank lined rows and heart icon, "
+         "labeled 'GRATEFUL FOR ♡'; "
+         "(8) DAILY WINS: 3 trophy/star bullet rows, labeled 'TODAY'S WINS 🏆'; "
+         "(9) WORKOUT LOG: dumbbell icon + type/duration fields, labeled 'WORKOUT ✓'; "
+         "(10) FOCUS TIMER: Pomodoro-style tomato icon with 25-min circle, labeled 'FOCUS 🍅'; "
+         "(11) WEEKLY SUMMARY: small box widget with Revenue/Spend/Saved fields for budget users; "
+         "(12) MOOD + ENERGY COMBO: side-by-side smiley + lightning in one compact widget. "
+         "Style: premium kawaii flat illustration, rounded widget borders, pastel fills, "
+         "drop shadows, clear label typography. Pure white background. NO watermarks."),
+        # Sheet 3 — Planner girl & stationery objects
         ("Kawaii planner girl stationery sticker clipart sheet, pure white background. "
          "18-20 individual adorable illustrated stickers loosely arranged on the page — "
          "NOT in a grid, scattered naturally like a real premium sticker sheet you'd peel off. "
@@ -4267,13 +4574,14 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             '}catch(e){app.alert("Works in Adobe Acrobat Reader, PDF Expert & Xodo.",1);}'
         )
 
-        for pg_idx in range(3):
+        for pg_idx in range(5):
             bm = "sticker_picker" if pg_idx == 0 else f"sticker_picker_{pg_idx + 1}"
             c.bookmarkPage(bm)
             if pg_idx == 0:
                 c.addOutlineEntry("✨ Sticker Library", bm, level=0)
             else:
-                sheet_names = ["", "Cozy Lifestyle", "Seasonal & Holiday"]
+                sheet_names = ["", "Widget Trackers", "Planner & Stationery",
+                               "Cozy Lifestyle", "Seasonal & Holiday"]
                 c.addOutlineEntry(f"✨ Stickers — {sheet_names[pg_idx]}", bm, level=1)
 
             # ── Cream page background ─────────────────────────────────────────
@@ -4287,13 +4595,14 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             rect(0, PH - hdr_h, PW - TAB_W - 2, hdr_h, f=T)
             rect(0, PH - hdr_h - 2, PW - TAB_W - 2, 2, f=A)
             rect(0, PH - hdr_h, 7, hdr_h, f=A)
-            _sheet_subtitles = ["Planner & Stationery", "Cozy Lifestyle", "Seasonal & Holiday"]
+            _sheet_subtitles = ["Functional Planning", "Widget Trackers",
+                                "Planner & Stationery", "Cozy Lifestyle", "Seasonal & Holiday"]
             font("Helvetica-Bold", 22); fill(WHITE)
             c.drawString(ML + 12, PH - hdr_h + 14,
                          f"✨  Kawaii Sticker Library — {_sheet_subtitles[pg_idx]}")
             font("Helvetica", 8); fill(_blend(WHITE, 0.32))
             c.drawRightString(PW - TAB_W - 12, PH - hdr_h + 28,
-                              f"Page {pg_idx + 1} of 3")
+                              f"Page {pg_idx + 1} of 5")
 
             # ── How-to pills ──────────────────────────────────────────────────
             tip_y = PH - hdr_h - 7
@@ -4495,9 +4804,11 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
 
     # ── ASSEMBLE ──────────────────────────────────────────────────────────────
     page_count = 0
-    draw_cover();       page_count += 1
-    draw_index_page();  page_count += 1
-    draw_how_to_use();  page_count += 1
+    draw_cover();          page_count += 1
+    draw_welcome_page();   page_count += 1
+    draw_dashboard_page(); page_count += 1
+    draw_index_page();     page_count += 1
+    draw_how_to_use();     page_count += 1
     if cal_integration in ("google", "apple", "both"):
         draw_calendar_sync_page(); page_count += 1
     if "color_selector" in _extras:
@@ -4555,7 +4866,7 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
             draw_sticker_picker_page(); page_count += 1
         else:
             # Tier 1/2: three separate screenshottable sticker pack pages
-            for _pi in range(1, 4):
+            for _pi in range(1, 6):
                 draw_sticker_pack_page(_pi); page_count += 1
 
     c.save()
