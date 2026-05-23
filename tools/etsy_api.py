@@ -267,6 +267,16 @@ class EtsyAPIClient:
                 msg = body_text
             raise EtsyAPIError(e.code, msg)
 
+    def get_listing_images(self, listing_id: int | str) -> list[dict]:
+        """Get all images for a listing. Returns list of image records with listing_image_id."""
+        result = self._request("GET", f"listings/{listing_id}/images")
+        return result.get("results", [])
+
+    def delete_listing_image(self, listing_id: int | str, listing_image_id: int | str) -> None:
+        """Delete a specific image from a listing. Requires OAuth access token."""
+        self._require_oauth()
+        self._request("DELETE", f"shops/{self.shop_id}/listings/{listing_id}/images/{listing_image_id}")
+
     # ── Digital file upload ───────────────────────────────────────────────────
 
     def upload_listing_file(self, listing_id: int | str, file_path: str, rank: int = 1) -> dict:

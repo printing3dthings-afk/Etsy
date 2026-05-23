@@ -218,6 +218,25 @@ TOOL_DEFINITIONS: list[dict] = [
         },
     },
     {
+        "name": "clear_listing_images",
+        "description": (
+            "Remove all photos from an Etsy listing. Use this when photos are incorrect, "
+            "placeholder, or below standard — until new photos can be generated with DALL-E. "
+            "Pass listing_id (the numeric Etsy listing ID) or product_id (DP-prefixed) to target "
+            "one listing, or pass clear_all=true to remove photos from ALL listings at once. "
+            "Requires Etsy OAuth to be configured (run tools/etsy_oauth.py first)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {"type": "string", "description": "Numeric Etsy listing ID"},
+                "product_id": {"type": "string", "description": "DP-prefixed product ID"},
+                "clear_all": {"type": "boolean", "description": "Set true to clear photos from every active listing"},
+            },
+            "required": [],
+        },
+    },
+    {
         "name": "get_planner_listing_template",
         "description": (
             "Get the complete pre-written Etsy listing content (title, description, tags, price, "
@@ -268,6 +287,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _customer_ready_check(tool_input["product_id"], store)
     if tool_name == "get_planner_listing_template":
         return _get_planner_listing_template(tool_input.get("product_id", ""))
+    if tool_name == "clear_listing_images":
+        return _clear_listing_images(tool_input, store)
     return f"Unknown Etsy listing tool: {tool_name}"
 
 
@@ -1622,6 +1643,95 @@ def _add_to_main_listings(product: dict, draft: dict, etsy_listing_id: str, stor
         "listed_at": str(date.today()),
     })
     store.save()
+
+
+def _clear_listing_images(data: dict, store: DataStore) -> str:
+    """Remove all photos from one or all Etsy listings and clear local photo records."""
+    from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+
+    client = EtsyAPIClient()
+    oauth_ready = bool(client.access_token)
+
+    # Build list of (listing_id, title) to clear
+    targets: list[tuple[str, str]] = []
+
+    if data.get("clear_all"):
+        listings = store.get("listings", default=[])
+        for l in listings:
+            lid = str(l.get("id", ""))
+            if lid:
+                targets.append((lid, l.get("title", lid)[:60]))
+    elif data.get("listing_id"):
+        listings = store.get("listings", default=[])
+        lid = str(data["listing_id"])
+        title = next((l.get("title", lid)[:60] for l in listings if str(l.get("id")) == lid), lid)
+        targets.append((lid, title))
+    elif data.get("product_id"):
+        # digital product — look up etsy_listing_id from digital_products
+        product = _find_product(data["product_id"], store)
+        if not product:
+            return json.dumps({"error": f"Product {data['product_id']} not found"})
+        lid = str(product.get("etsy_listing_id", ""))
+        if not lid:
+            return json.dumps({"error": f"Product {data['product_id']} has no Etsy listing ID yet"})
+        targets.append((lid, product.get("title", lid)[:60]))
+    else:
+        return json.dumps({"error": "Provide listing_id, product_id, or set clear_all=true"})
+
+    results = []
+    local_cleared = 0
+    api_cleared = 0
+    api_errors = []
+
+    listings = store.get("listings", default=[])
+
+    for listing_id, title in targets:
+        # Always clear the local data store record
+        for l in listings:
+            if str(l.get("id")) == listing_id:
+                l["images"] = 0
+                l.pop("main_image", None)
+                local_cleared += 1
+                break
+
+        if oauth_ready:
+            try:
+                images = client.get_listing_images(listing_id)
+                deleted_count = 0
+                for img in images:
+                    img_id = img.get("listing_image_id")
+                    if img_id:
+                        client.delete_listing_image(listing_id, img_id)
+                        deleted_count += 1
+                api_cleared += deleted_count
+                results.append({"listing_id": listing_id, "title": title, "photos_deleted": deleted_count})
+            except EtsyAPIError as e:
+                api_errors.append({"listing_id": listing_id, "error": str(e)})
+                results.append({"listing_id": listing_id, "title": title, "error": str(e)})
+        else:
+            results.append({"listing_id": listing_id, "title": title, "local_cleared": True, "etsy_pending": True})
+
+    store.set(listings, "listings")
+    store.save()
+
+    if oauth_ready:
+        return json.dumps({
+            "success": True,
+            "listings_processed": len(targets),
+            "local_records_cleared": local_cleared,
+            "etsy_photos_deleted": api_cleared,
+            "errors": api_errors if api_errors else None,
+            "results": results,
+        }, indent=2)
+    else:
+        return json.dumps({
+            "success": "partial",
+            "listings_processed": len(targets),
+            "local_records_cleared": local_cleared,
+            "etsy_action": "PENDING — OAuth not configured",
+            "next_step": "Run `python tools/etsy_oauth.py` to authorize Etsy, then call clear_listing_images again to delete photos from the live Etsy listings.",
+            "results": results,
+        }, indent=2)
 
 
 # ── HELPERS ───────────────────────────────────────────────────────────────────
