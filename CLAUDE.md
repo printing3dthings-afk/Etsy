@@ -16,7 +16,8 @@
 - `SMTP_USER` / `SMTP_PASSWORD` — Outlook email for digital delivery
 
 ## Etsy OAuth Status
-**Not yet authorized.** Run `python tools/etsy_oauth.py` to complete OAuth 2.0 + PKCE flow.
+**Authorized.** Access token and refresh token are set in `.env`. API calls to OnBrandCraftz are live.
+If the token expires, run `python tools/etsy_oauth.py` to re-authorize.
 Redirect URI registered: `http://localhost:3003/callback`
 Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, profile_r, email_r, feedback_r, address_r
 
