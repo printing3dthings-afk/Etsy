@@ -4,8 +4,136 @@
 - **Name**: OnBrandCraftz
 - **Etsy Shop ID**: `onbrandcraftz`
 - **Owner email**: Printing3dthings@outlook.com
-- **Niche**: Digital planners, kawaii sticker packs, printable digital products
+- **Niche**: Digital planners, kawaii sticker packs, printable digital products, 3D printed physical products
 - **Brand aesthetic**: Kawaii illustrated, pastel colors, cute/fun but polished
+
+---
+
+## 3D Printer — Bambu Lab P1S
+
+The physical 3D printed products sold in the shop are printed on a **Bambu Lab P1S**.
+
+### Core Specifications
+| Spec | Value |
+|---|---|
+| Build Volume | 256 × 256 × 256 mm (~10×10×10 in) |
+| Max Print Speed | 500 mm/s rated · 220–260 mm/s practical |
+| Max Acceleration | 20,000 mm/s² |
+| Max Hotend Temp | 300°C (572°F) |
+| Max Bed Temp | 100°C (212°F) |
+| Passive Chamber Temp | ~40°C (enables ABS/ASA without warping) |
+| Noise Level | ~45 dB |
+| Motion System | CoreXY |
+| Layer Heights | 0.05mm / 0.1mm / 0.2mm |
+| Overhang Angle | Up to 55° without supports |
+
+### Key Hardware Features
+- **Full enclosure** — passive chamber heating enables engineering filaments (ABS, ASA, PA, PC)
+- **Activated carbon + HEPA filtration** — fume/particle capture, safe for indoor use
+- **Auto bed leveling** — consistent first layers across every print
+- **Input shaping / vibration compensation** — eliminates ringing/ghosting at high speeds
+- **Self-cleaning tool head** — purges nozzle before print starts
+- **Textured + smooth PEI flex plate** — pops off build plate when cooled
+- **Built-in camera** — remote monitoring via Bambu Handy app
+- **2.8" monochrome LCD touchscreen**
+- **Bambu Studio slicer** — proprietary but full-featured, updated regularly
+
+### AMS — Automatic Material System
+- Each AMS unit holds **4 filament spools**
+- Up to **4 AMS units** can be chained = **16 colors / materials** per print
+- **AMS 2 Pro** (latest generation) is compatible with P1S
+- Enables automatic filament switching for multi-color and multi-material prints
+- Combo (P1S + AMS): $650–$750 | Printer alone: $399–$449
+
+### Supported Materials
+| Material | Use Case | Notes |
+|---|---|---|
+| **PLA / PLA+** | Most decorative products — vases, signs, holders, figurines | Easiest to print, sharpest details, low failure rate |
+| **Silk PLA** | Premium-look products — metallic/shiny finish | Eye-catching for display items; great for koozies |
+| **High-Speed PLA** | Production runs where speed matters | AMS compatible |
+| **PETG** | Functional/durable parts, outdoor-adjacent use | Better heat + impact resistance than PLA |
+| **PETG-CF** | Strong functional parts | Requires hardened steel nozzle |
+| **TPU** | Flexible products (koozies, grips, gaskets) | Flexible, bouncy, impact resistant |
+| **ABS** | Heat-resistant functional parts | Enclosure required — P1S handles natively |
+| **ASA** | Outdoor-safe, UV resistant | Enclosure required |
+| **PA / Nylon** | Engineering parts, high wear resistance | Needs drying; 80°C 12+ hrs |
+| **PA-CF / PLA-CF** | Strongest prints, stiff and light | Requires hardened steel nozzle |
+| **PC (Polycarbonate)** | Highest-strength functional parts | Max temp required |
+| **PVA** | Dissolvable support material | Pairs with PLA |
+
+### Nozzle Types
+- **Stock brass 0.4mm** — PLA, PETG, TPU, Silk (standard materials only; CF filaments destroy brass fast)
+- **Hardened steel 0.4mm** — Required for any carbon fiber or glass fiber filament
+- **0.2mm nozzle** — Ultra-fine detail; slow
+- **0.6mm / 0.8mm nozzle** — Faster production, less detail
+
+### Build Plate Guide
+| Plate | Best For | Avoid |
+|---|---|---|
+| Textured PEI | PETG, ABS, ASA, PA | Pure PLA can be hard to remove |
+| Smooth PEI | PLA, Silk PLA | PETG bonds too strongly — can damage plate |
+
+---
+
+### Production Quality Settings (for selling products)
+
+**The single most important rule: slow down the outer wall. Customers only see the outside.**
+
+| Setting | Value | Why |
+|---|---|---|
+| Outer wall speed | 50 mm/s or lower | Prevents vibration artifacts, ringing, blobs |
+| Outer wall acceleration | 3,000–5,000 mm/s² | Eliminates ghosting on curves |
+| Wall order | Outer → Inner | Outer wall printed first = crisper edges |
+| Wall generator | Arachne | Better variable-width walls for curved surfaces |
+| Precise Wall | On | Dimensional accuracy |
+| Seam position | Aligned | Consistent, predictable scar location |
+| Seam painting | On hidden edge | Drag seam to back/bottom of model before slicing |
+| Ironing | On flat tops | Glass-smooth top surfaces for display items |
+| Avoid crossing walls | On | Prevents travel blobs on outer surface |
+| Flow Dynamics calibration | Run per filament | Eliminates bulging corners and blobs |
+| Flow Rate calibration | Run per filament | Fixes over/under extrusion |
+
+### Filament Preparation (must dry before production runs)
+| Filament | Dry Temp | Dry Time |
+|---|---|---|
+| PLA / PLA+ / Silk | 45°C | 6–8 hours |
+| PETG | 65°C | 6–8 hours |
+| ABS / ASA | 60°C | 4–6 hours |
+| PA / Nylon | 80°C | 12+ hours |
+| PC | 80°C | 12+ hours |
+*Wet filament = stringing, popping, micro-voids, surface blobs. Never skip drying for sell-worthy prints.*
+
+### Filament Best Picks by Product Type
+| Product Type | Recommended Filament | Reason |
+|---|---|---|
+| Decorative vases | Silk PLA or Matte PLA | Premium finish, no post-processing |
+| Can koozies | TPU or Silk PLA | Flexibility (TPU) or premium look (Silk) |
+| Lamps / light holders | Translucent PLA or white PLA | Light diffusion |
+| Signs / wall art | Silk PLA or dual-color PLA | Visual impact |
+| Desk organizers / holders | PLA+ or PETG | Durability for daily use |
+| Planters / pots | PETG | Moisture resistance |
+| Candle holders | PETG or ABS | Heat tolerance near flame |
+| Centerpieces | Silk PLA | Display quality finish |
+
+### Bambu Handy App / Remote Monitoring
+- Monitor live via camera from phone
+- Start/pause/stop prints remotely
+- Receive completion notifications
+- View print history and statistics
+
+### Known Limitations
+- Proprietary Bambu Studio slicer (less flexible than open-source, but excellent for the ecosystem)
+- No heated chamber for ultra-high-temp materials (PEEK, ULTEM)
+- Repair ecosystem still maturing vs. established brands
+- AMS can have occasional jams with flexible/abrasive filaments
+
+### Competitive Position (2026)
+- Delivers ~90% of the flagship X1 Carbon's performance at ~60% of the cost
+- Farm-grade reliability — trusted by professional print farms
+- P1P (open-frame sibling) is being retired; **P1S will continue to be manufactured**
+- Receives regular firmware updates from Bambu Lab
+
+---
 
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
