@@ -81,7 +81,8 @@ class EtsyAPIClient:
             try:
                 req = self._build_request(method, url, body)
                 with urllib.request.urlopen(req, timeout=15) as resp:
-                    return json.loads(resp.read().decode())
+                    raw = resp.read().decode()
+                    return json.loads(raw) if raw.strip() else {}
             except urllib.error.HTTPError as e:
                 if e.code == 401 and self.access_token and self.refresh_access_token():
                     # Token refreshed — retry once immediately (not counted as a backoff attempt)
