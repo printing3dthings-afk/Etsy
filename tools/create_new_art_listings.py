@@ -14,6 +14,7 @@ with open('/home/user/Etsy/.env') as f:
             os.environ.setdefault(k.strip(), v.strip())
 
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+from tools.art_creation_tools import enrich_prompt_with_medium, random_painting_medium, HAND_PAINTED_STYLES
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 
 client = EtsyAPIClient()
@@ -649,8 +650,13 @@ def run_full():
         if not os.path.exists(art_path):
             print(f"  Generating art for {pid}...")
             try:
-                gen_image(info['art_prompt'], art_path, size=info['art_size'])
+                medium = info.get('hand_painted_medium') or random_painting_medium()
+                final_prompt = enrich_prompt_with_medium(info['art_prompt'], medium)
+                if medium:
+                    print(f"  Hand-painted style: {HAND_PAINTED_STYLES[medium]['label']}")
+                gen_image(final_prompt, art_path, size=info['art_size'])
                 results[pid]['generated'] = True
+                results[pid]['hand_painted_medium'] = medium
             except Exception as e:
                 print(f"  ERROR generating art: {e}")
                 results[pid]['errors'].append(f'art gen: {e}')

@@ -25,6 +25,146 @@ from tools.idea_tools import SUBMIT_IDEA_DEFINITION, handle_submit_idea
 DIGITAL_PRODUCTS_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "digital_products")
 PRODUCT_FILES_DIR = os.path.join(DIGITAL_PRODUCTS_DIR, "product_files")
 
+# ── Hand-painted medium system ────────────────────────────────────────────────
+# When a product or pipeline entry has `hand_painted_medium` set to one of these
+# keys, enrich_prompt_with_medium() wraps the base DALL-E prompt with authentic
+# visual-language modifiers so the output looks like real hand-painted artwork.
+# random_painting_medium() assigns a medium (or None = digital) at ~40% rate.
+
+import random as _random
+
+HAND_PAINTED_STYLES: dict[str, dict] = {
+    "watercolor": {
+        "label": "Watercolor",
+        "prompt_prefix": (
+            "Original-looking watercolor painting, authentic hand-painted artwork. "
+        ),
+        "prompt_suffix": (
+            " Painted on cold-press watercolor paper — subtle grain and tooth visible "
+            "throughout. Wet-on-wet blooms and soft color bleeds where washes meet. "
+            "Granulation in heavier pigment pools. Unpredictable fluid edges — never "
+            "sharp or mechanical. Transparent luminous washes layered for depth. "
+            "Preserved white paper highlights. Happy accidents and small imperfections "
+            "that only real watercolor has. Looks genuinely hand-painted, not digital."
+        ),
+        "title_suffix": "Watercolor Art Print",
+        "medium_note": "Printed from an original hand-painted watercolor artwork",
+        "extra_tags": ["watercolor art print", "watercolor painting", "hand painted art", "watercolor poster"],
+    },
+    "oil_painting": {
+        "label": "Oil Painting",
+        "prompt_prefix": (
+            "Original-looking oil painting on canvas, authentic hand-painted artwork. "
+        ),
+        "prompt_suffix": (
+            " Canvas weave texture visible through thin paint areas. Thick impasto "
+            "brushstrokes with dimensional ridges catching light. Rich saturated color "
+            "with deep velvety shadows and luminous highlights. Wet-into-wet color "
+            "mixing at edge transitions. Palette knife marks in textured passages. "
+            "Glazing layers creating translucent depth over dried underlayers. "
+            "The surface reads as real oil paint on stretched canvas. "
+            "Looks genuinely hand-painted, not digital."
+        ),
+        "title_suffix": "Oil Painting Print",
+        "medium_note": "Printed from an original hand-painted oil painting",
+        "extra_tags": ["oil painting print", "oil painting art", "canvas art print", "hand painted art"],
+    },
+    "acrylic": {
+        "label": "Acrylic Painting",
+        "prompt_prefix": (
+            "Original-looking acrylic painting, authentic hand-painted artwork. "
+        ),
+        "prompt_suffix": (
+            " Bold opaque color with visible brush texture throughout. Flat matte "
+            "areas contrasting with expressive impasto marks. Clean graphic edges "
+            "mixed with gestural passages. Acrylic paint body and slight sheen "
+            "visible. Dried paint pooling at edges. Strong direct color — "
+            "vibrant and immediate. Looks genuinely hand-painted with acrylics, not digital."
+        ),
+        "title_suffix": "Acrylic Art Print",
+        "medium_note": "Printed from an original hand-painted acrylic artwork",
+        "extra_tags": ["acrylic art print", "acrylic painting print", "hand painted art", "original art print"],
+    },
+    "gouache": {
+        "label": "Gouache",
+        "prompt_prefix": (
+            "Original-looking gouache painting, authentic hand-painted artwork. "
+        ),
+        "prompt_suffix": (
+            " Distinctive chalky matte finish of gouache paint — no gloss anywhere. "
+            "Opaque flat color areas with clean graphic silhouettes. Subtle "
+            "brushstroke texture in larger fields. Slight paint drag marks at edges. "
+            "Dried paint texture and slight surface variation in color fields. "
+            "Rich saturated palette but completely matte and velvety. "
+            "Looks genuinely hand-painted with gouache, not digital."
+        ),
+        "title_suffix": "Gouache Art Print",
+        "medium_note": "Printed from an original hand-painted gouache artwork",
+        "extra_tags": ["gouache art print", "gouache painting print", "hand painted art", "flat art print"],
+    },
+    "ink_wash": {
+        "label": "Ink Wash",
+        "prompt_prefix": (
+            "Original-looking ink wash painting, sumi-e inspired authentic hand-painted artwork. "
+        ),
+        "prompt_suffix": (
+            " Fluid ink washes ranging from dilute pale gray to dense velvety black. "
+            "Expressive gestural brushwork — confident fast strokes with dry-brush "
+            "texture where the brush runs dry. Bleeding ink edges where wash meets "
+            "damp paper. Rice paper or washi texture showing through thin washes. "
+            "Negative space used deliberately. Spontaneous and uncontrived — the "
+            "beauty of accidents and imperfect marks. Looks genuinely hand-painted "
+            "with ink on paper, not digital."
+        ),
+        "title_suffix": "Ink Wash Print",
+        "medium_note": "Printed from an original hand-painted ink wash artwork",
+        "extra_tags": ["ink wash print", "sumi-e art print", "brush painting print", "hand painted art"],
+    },
+    "pastel": {
+        "label": "Soft Pastel",
+        "prompt_prefix": (
+            "Original-looking soft pastel artwork, authentic hand-drawn pastel painting. "
+        ),
+        "prompt_suffix": (
+            " Soft chalky blended pastel marks — colors merge with gentle transitions. "
+            "Textured pastel paper grain visible throughout, especially in lighter "
+            "areas. Powdery matte quality with layered pastel strokes. Light areas "
+            "have a warm luminous glow from pigment catching paper texture. "
+            "Edges are soft and blended, never sharp. Colors overlap and blend "
+            "organically. Looks genuinely hand-drawn with soft pastels, not digital."
+        ),
+        "title_suffix": "Pastel Art Print",
+        "medium_note": "Printed from an original hand-drawn soft pastel artwork",
+        "extra_tags": ["pastel art print", "soft pastel print", "pastel painting print", "hand drawn art"],
+    },
+}
+
+# Weighted draw: ~40% chance of a hand-painted medium, 60% stays digital (None).
+_MEDIUM_POOL = (
+    [None] * 60
+    + ["watercolor"] * 15
+    + ["oil_painting"] * 10
+    + ["acrylic"] * 6
+    + ["gouache"] * 5
+    + ["ink_wash"] * 2
+    + ["pastel"] * 2
+)
+
+
+def random_painting_medium(seed: int | None = None) -> str | None:
+    """Return a random hand-painted medium name, or None (keep digital). ~40% painted."""
+    rng = _random.Random(seed)
+    return rng.choice(_MEDIUM_POOL)
+
+
+def enrich_prompt_with_medium(base_prompt: str, medium: str | None) -> str:
+    """Wrap base_prompt with hand-painted visual-language modifiers for the given medium."""
+    if not medium or medium not in HAND_PAINTED_STYLES:
+        return base_prompt
+    style = HAND_PAINTED_STYLES[medium]
+    return style["prompt_prefix"] + base_prompt + style["prompt_suffix"]
+
+
 # ── Color scheme presets — 8 complete packages ────────────────────────────────
 # Each scheme: theme, accent, bg, dark, mid, light (all normalized 0–1 RGB tuples)
 COLOR_SCHEMES: dict[str, dict] = {
@@ -1936,9 +2076,14 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
         valid_sizes = {"1024x1024", "1536x1024", "1024x1536"}
         size = raw_size if raw_size in valid_sizes else "1024x1536"
 
+        # Apply hand-painted medium enrichment if set on product or in call data
+        base_prompt = data["dalle_prompt"]
+        medium = data.get("hand_painted_medium") or product.get("hand_painted_medium")
+        final_prompt = enrich_prompt_with_medium(base_prompt, medium)
+
         request_body = json.dumps({
             "model": "gpt-image-1",
-            "prompt": data["dalle_prompt"],
+            "prompt": final_prompt,
             "size": size,
             "quality": "high",
             "n": 1,
@@ -1980,9 +2125,11 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
         product["file_size_kb"] = file_size_kb
         product["status"] = "qc_pending"
         product["updated_at"] = str(date.today())
+        if medium:
+            product["hand_painted_medium"] = medium
         _save_product(product, store)
 
-        return json.dumps({
+        result_payload: dict = {
             "success": True,
             "product_id": product_id,
             "file_path": file_path,
@@ -1990,7 +2137,14 @@ def _generate_digital_art(data: dict, store: DataStore) -> str:
             "dimensions": "3000px min-side JPEG 95% @ 300 DPI (print-ready)",
             "status": "qc_pending",
             "next_step": "Send to Quality Check Agent for review.",
-        }, indent=2)
+        }
+        if medium:
+            style_info = HAND_PAINTED_STYLES[medium]
+            result_payload["hand_painted_medium"] = medium
+            result_payload["medium_label"] = style_info["label"]
+            result_payload["title_suffix"] = style_info["title_suffix"]
+            result_payload["extra_tags"] = style_info["extra_tags"]
+        return json.dumps(result_payload, indent=2)
 
     except urllib.error.HTTPError as e:
         error_body = e.read().decode()
