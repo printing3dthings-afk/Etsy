@@ -358,6 +358,61 @@ def print_dashboard() -> None:
 
     print(f"\n{_hr}\n")
 
+    # ── Action Items ──────────────────────────────────────────────────────────
+    _print_action_items(summary, latest)
+
+
+def _print_action_items(summary: dict, latest: dict) -> None:
+    """Print prioritized action items based on current shop state."""
+    _hr = "=" * 58
+    listings = latest.get("listings", [])
+
+    actions = []
+
+    # Check for planners with 0 reviews (proxy: 0 favorites and low views)
+    planner_ids = {4509179201, 4509184958, 4509184962, 4509184968}
+    zero_review_planners = [
+        l for l in listings
+        if l.get("listing_id") in planner_ids and l.get("num_favorers", 0) == 0
+    ]
+    if zero_review_planners:
+        actions.append(("🔴 URGENT", f"{len(zero_review_planners)} planners have 0 favorites/reviews — set up post-purchase message in Etsy Settings"))
+
+    # Check for ads-ready listings (5+ favorites = proxy for reviews)
+    ads_ready = [l for l in listings if l.get("num_favorers", 0) >= 5]
+    if ads_ready:
+        for l in ads_ready[:3]:
+            actions.append(("🟡 ADS", f"Run $5/day Etsy Ads on: {l['title'][:50]}… ({l['num_favorers']}♥)"))
+    else:
+        actions.append(("⚪ ADS", "Not yet — wait for 5+ reviews on a listing before starting Etsy Ads"))
+
+    # Zero view listings
+    zero_views = summary.get("listings_with_zero_views", [])
+    if zero_views:
+        actions.append(("🟠 SEO", f"{len(zero_views)} listings getting 0 views — check tags and hero photo"))
+
+    # Star Seller readiness
+    total_favs = summary.get("total_favorites_across_shop", 0)
+    if total_favs < 5:
+        actions.append(("⚪ STAR", f"Star Seller badge needs 5+ orders + 4.8 rating — currently {total_favs} shop favorites"))
+    else:
+        actions.append(("🟢 STAR", "Star Seller eligible — confirm 95% message response rate in Shop Manager"))
+
+    # Pinterest reminder
+    actions.append(("📌 PIN", "Enable Rich Pins: Etsy Shop Manager → Marketing → Pinterest → Enable Rich Pins"))
+
+    # Coupons reminder
+    actions.append(("🎁 CPN", "Set up abandoned cart (10% off) + thank-you (15% off) coupons in Shop Manager → Marketing"))
+
+    if actions:
+        print(f"\n  {'─' * 54}")
+        print("  ACTION ITEMS")
+        print(f"  {'─' * 54}")
+        for priority, msg in actions:
+            print(f"  {priority}: {msg}")
+
+    print(f"\n{_hr}\n")
+
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
