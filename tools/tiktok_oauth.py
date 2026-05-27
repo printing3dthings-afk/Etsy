@@ -19,6 +19,8 @@ Re-run this script whenever the access token expires (or run tiktok_refresh.py f
 """
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import os
 import secrets
@@ -42,6 +44,12 @@ TOKEN_URL  = "https://open.tiktokapis.com/v2/oauth/token/"
 
 _code_holder: dict = {}
 _state = secrets.token_urlsafe(16)
+
+# PKCE
+_code_verifier  = secrets.token_urlsafe(64)
+_code_challenge = base64.urlsafe_b64encode(
+    hashlib.sha256(_code_verifier.encode()).digest()
+).rstrip(b"=").decode()
 
 
 class _CallbackHandler(BaseHTTPRequestHandler):
@@ -79,6 +87,7 @@ def _exchange_code(code: str) -> dict:
         "code":           code,
         "grant_type":     "authorization_code",
         "redirect_uri":   REDIRECT_URI,
+        "code_verifier":  _code_verifier,
     }).encode()
     req = urllib.request.Request(
         TOKEN_URL,
@@ -123,11 +132,13 @@ def main() -> None:
     print("=" * 60)
 
     params = {
-        "client_key":     CLIENT_KEY,
-        "response_type":  "code",
-        "scope":          SCOPES,
-        "redirect_uri":   REDIRECT_URI,
-        "state":          _state,
+        "client_key":            CLIENT_KEY,
+        "response_type":         "code",
+        "scope":                 SCOPES,
+        "redirect_uri":          REDIRECT_URI,
+        "state":                 _state,
+        "code_challenge":        _code_challenge,
+        "code_challenge_method": "S256",
     }
     auth_url = AUTH_URL + "?" + urllib.parse.urlencode(params)
 
