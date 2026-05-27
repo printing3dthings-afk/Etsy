@@ -1,6 +1,6 @@
 {
   "generated": "2026-05-27",
-  "description": "MakerWorld model specs for all 13 active 3D printed Etsy listings. Designers confirmed as animuL67 and HpInvent.",
+  "description": "MakerWorld model specs for all 13 active 3D printed Etsy listings. Primary designers: animuL67 (koozies) and HpInvent (home decor). Coffee sign by tpubcom.",
   "creators": {
     "animuL67": {
       "makerworld_url": "https://makerworld.com/en/@animuL67",
@@ -150,18 +150,19 @@
       "listing_id": "4497385915",
       "etsy_title": "3D Printed Table Centerpiece | Boho Dining Table Decor | Arch Decor",
       "creator": "HpInvent",
-      "makerworld_model": "Charcoal / Wood Clock (decorative arch-style decor)",
-      "makerworld_url": "https://makerworld.com/en/models/844893",
-      "dimensions_mm": "~225 × 200 × 12mm (large); ~160 × 150 × 12mm (medium); ~98 × 95 × 12mm (small)",
-      "recommended_filament": "Wood-look PLA or matte brown/tan PLA for boho wood aesthetic",
+      "makerworld_model": "Striaris — Capturing the pulse of linear grace",
+      "makerworld_url": "PENDING — share the model URL from the MakerWorld app share button",
+      "model_id_note": "4-piece fluted decor ensemble: tall ribbed vase, lidded jar, candle holder, round tray. 585 bookmarks, 162 likes, 204 downloads.",
+      "dimensions_mm": "Multi-piece set — tall vase ~120mm, lidded jar ~80mm, tray ~200mm diameter",
+      "recommended_filament": "Matte PLA in terracotta, clay, or warm neutral tones; Silk PLA for premium sheen",
       "layer_height_mm": 0.2,
       "infill_pct": 15,
       "walls": 3,
       "supports": false,
-      "estimated_print_time_hrs": "2-4",
+      "estimated_print_time_hrs": "8-14 (full 4-piece set)",
       "nozzle_mm": 0.4,
       "build_plate": "smooth PEI",
-      "p1s_notes": "Flat profile prints fast. Wood-look filament or matte earthy tones sell best for boho aesthetic. Print set of 3 sizes for a tiered centerpiece arrangement — strong upsell opportunity in listing photos.",
+      "p1s_notes": "Vertical fluting on all 4 pieces creates cohesive visual set. Print all 4 pieces for a complete centerpiece listing photo. Terracotta or warm clay matte PLA matches the styling in the hero photo. Strong upsell: sell as a set or offer individual pieces.",
       "hardware_required": null
     },
     {
@@ -203,20 +204,20 @@
     {
       "listing_id": "4488666558",
       "etsy_title": "3D Printed Coffee Bar Sign | Funny Cat Kitchen Decor",
-      "creator": "HpInvent",
-      "makerworld_model": "Charcoal / Wood Clock — decorative wall sign variant",
-      "makerworld_url": "https://makerworld.com/en/models/844893",
-      "dimensions_mm": "~200 × 150 × 8mm (wall-mounted flat sign)",
-      "recommended_filament": "Matte black + cream PLA (two-color) or wood-look PLA",
+      "creator": "tpubcom",
+      "makerworld_model": "Crazy Cat Coffee Sign — Ready To Brew",
+      "makerworld_url": "https://makerworld.com/en/models/761874",
+      "dimensions_mm": "~150 × 120 × 8mm (flat upright sign)",
+      "recommended_filament": "White or cream PLA for the sign face (crazy cat illustration reads best on light background)",
       "layer_height_mm": 0.2,
       "infill_pct": 10,
       "walls": 2,
       "supports": false,
-      "estimated_print_time_hrs": "2-4",
+      "estimated_print_time_hrs": "1.5-2.5",
       "nozzle_mm": 0.4,
       "build_plate": "smooth PEI",
-      "p1s_notes": "Flat sign prints face-down for cleanest front surface. AMS two-color (black background + cream/white text) for maximum readability. Funny cat kitchen theme sells well year-round as gift item.",
-      "hardware_required": "Wall mount hardware (3M strips or small screws)"
+      "p1s_notes": "Flat sign — print face-down for smoothest front surface. White or cream PLA makes the crazy cat illustration pop. Part of tpubcom's cat design series (other cat variants available). Sells well as a gift, coffee bar decor, and kitchen humor niche.",
+      "hardware_required": null
     },
     {
       "listing_id": "4488532602",
