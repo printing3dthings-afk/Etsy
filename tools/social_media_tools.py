@@ -144,6 +144,13 @@ BOARDS = [
     {"name": "Digital Art Printables", "focus": "All instant download art prints from the Etsy shop", "pins": 0},
     {"name": "Travel & Paris Art Prints", "focus": "Eiffel Tower, Paris, and travel destination art", "pins": 0},
     {"name": "Minimalist & Japandi Decor", "focus": "Minimalist, Japandi, and zen-inspired wall art", "pins": 0},
+    # ── Digital Planner boards ────────────────────────────────────────────────
+    {"name": "Digital Planners & Printables", "focus": "All digital planners — GoodNotes, Notability, iPad", "pins": 0},
+    {"name": "Kawaii Planner & Stationery", "focus": "Kawaii-themed planners, sticker packs, cute organization", "pins": 0},
+    {"name": "iPad Planner & GoodNotes Tips", "focus": "GoodNotes and Notability planner tips, digital planning", "pins": 0},
+    {"name": "Budget & Finance Planning", "focus": "Budget planners, savings trackers, money organization", "pins": 0},
+    {"name": "Fitness & Wellness Planner", "focus": "Health, fitness, habit tracking, wellness planning", "pins": 0},
+    {"name": "Student & Study Planner", "focus": "Student planners, study tips, academic organization", "pins": 0},
 ]
 
 LISTING_BOARD_MAP = {
@@ -182,6 +189,11 @@ LISTING_BOARD_MAP = {
     "DP1035": ["Botanical & Floral Art Prints", "Coastal & Landscape Art", "Wall Art Prints & Decor", "Digital Art Printables"],
     "DP1036": ["Abstract & Modern Art Prints", "Wall Art Prints & Decor", "Unique Gift Ideas for Home", "Digital Art Printables"],
     "DP1037": ["Kitchen & Food Wall Art", "Travel & Paris Art Prints", "Wall Art Prints & Decor", "Digital Art Printables"],
+    # Digital Planner listings
+    "DP1026": ["Digital Planners & Printables", "Kawaii Planner & Stationery", "iPad Planner & GoodNotes Tips", "OnBrandCraftz Etsy Shop"],
+    "DP1027": ["Digital Planners & Printables", "Student & Study Planner", "Kawaii Planner & Stationery", "iPad Planner & GoodNotes Tips"],
+    "DP1028": ["Digital Planners & Printables", "Budget & Finance Planning", "Kawaii Planner & Stationery", "iPad Planner & GoodNotes Tips"],
+    "DP1029": ["Digital Planners & Printables", "Fitness & Wellness Planner", "Kawaii Planner & Stationery", "iPad Planner & GoodNotes Tips"],
 }
 
 PIN_DESCRIPTIONS = {
@@ -318,6 +330,23 @@ PIN_DESCRIPTIONS = {
     "L010": {
         "description": "💎 Organize your jewelry in style! This hand painted boho wooden jewelry organizer has the prettiest floral details. Makes the most thoughtful gift for any occasion! 🌸 Shop link in bio!\n\n#JewelryOrganizer #HandPainted #BohoDecor #JewelryStorage #GiftForHer #WoodJewelryBox #HandmadeGifts #EtsyShop #UniqueGifts #JewelryBox",
         "title": "Hand Painted Boho Wood Jewelry Organizer | Decorative Storage with Drawers",
+    },
+    # ── Digital Planner listings ──────────────────────────────────────────────
+    "DP1026": {
+        "title": "Kawaii Digital Life Planner 2026 | GoodNotes iPad Planner | 104 Pages + Sticker Pack",
+        "description": "✨ Stay cute AND organized! This kawaii digital life planner for GoodNotes has EVERYTHING — 104 pages, 52 weekly spreads, monthly calendars, budget tracker, habit tracker, meal plan, and 200+ kawaii stickers included FREE! 🌸 Instant download, works on iPad + iPhone!\n\n#DigitalPlanner #GoodNotesPlanner #KawaiiPlanner #IPadPlanner #DigitalDownload #NotabilityPlanner #2026Planner #PlannerGirl #KawaiiStickers #FillablePlanner #InstantDownload #PlannerCommunity #DigitalPlannerGirl",
+    },
+    "DP1027": {
+        "title": "Kawaii Student Planner 2026 | GoodNotes School Planner | Academic Planner iPad",
+        "description": "🎓 Make school actually fun! This adorable kawaii student planner for GoodNotes is the study upgrade you didn't know you needed — 90 pages, weekly layouts, monthly calendars, habit tracker, and 200+ kawaii stickers! 💕 Instant download for iPad!\n\n#StudentPlanner #DigitalPlanner #GoodNotesPlanner #SchoolPlanner #KawaiiPlanner #StudyPlanner #AcademicPlanner #BackToSchool #IPadPlanner #DigitalDownload #KawaiiStickers #NotabilityPlanner #StudyWithMe",
+    },
+    "DP1028": {
+        "title": "Kawaii Budget Planner 2026 | Digital Finance Planner GoodNotes | Money Tracker iPad",
+        "description": "💰 Glow up your finances! This kawaii digital budget planner makes money management actually enjoyable — 102 pages with monthly budgets, savings trackers, debt payoff pages, and 200+ kawaii stickers! ✨ Instant download for GoodNotes + Notability!\n\n#BudgetPlanner #DigitalPlanner #FinancePlanner #GoodNotesPlanner #MoneyPlanner #SavingsTracker #DebtPayoff #KawaiiPlanner #IPadPlanner #DigitalDownload #BudgetTracker #FillablePlanner #FinanceGirl",
+    },
+    "DP1029": {
+        "title": "Kawaii Fitness Planner 2026 | Wellness Planner GoodNotes | Habit Tracker iPad",
+        "description": "🌸 Your glow-up starts NOW! This kawaii fitness + wellness planner for GoodNotes has everything you need — 91 pages with workout logs, meal planning, habit tracker, monthly reviews, and 200+ kawaii stickers! 💪 Instant download for iPad!\n\n#FitnessPlanner #WellnessPlanner #DigitalPlanner #GoodNotesPlanner #HabitTracker #MealPlanner #HealthPlanner #KawaiiPlanner #IPadPlanner #DigitalDownload #SelfCarePlanner #FitnessJourney #GlowUp",
     },
 }
 
