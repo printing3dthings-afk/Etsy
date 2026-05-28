@@ -121,6 +121,78 @@ def create_room_composite(art_path, room_key, out_path):
     print(f"  Composite ({room_key}): {os.path.basename(out_path)}")
 
 
+def composite_into_ai_room(bg_path, art_path, out_path, frame_color=(139, 110, 80),
+                            art_pct=0.36, top_pct=0.08):
+    """Composite real art into an AI-generated empty-wall room background.
+
+    Places a realistically framed version of the art centered horizontally,
+    positioned in the upper (empty wall) portion of the room scene.
+    """
+    CANVAS = 1024
+    room = Image.open(bg_path).convert('RGB').resize((CANVAS, CANVAS), Image.LANCZOS)
+    art = Image.open(art_path).convert('RGB')
+
+    art_w = int(CANVAS * art_pct)
+    art_h = int(art_w * art.height / art.width)
+    art_resized = art.resize((art_w, art_h), Image.LANCZOS)
+
+    mat_w, frame_w = 30, 14
+    full_w = art_w + 2 * mat_w + 2 * frame_w
+    full_h = art_h + 2 * mat_w + 2 * frame_w
+
+    px = (CANVAS - full_w) // 2
+    py = int(CANVAS * top_pct)
+
+    # Ambient occlusion / wall darkening behind frame
+    ao = Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0))
+    for pad in range(40, 0, -4):
+        alpha = int(40 * (1 - (pad / 40) ** 1.5))
+        ImageDraw.Draw(ao).rectangle(
+            [px-pad, py-pad, px+full_w+pad, py+full_h+pad], fill=(0, 0, 0, alpha))
+    ao = ao.filter(ImageFilter.GaussianBlur(radius=22))
+    room = Image.alpha_composite(room.convert('RGBA'), ao).convert('RGB')
+
+    # Drop shadow
+    shadow = Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).rectangle(
+        [px+10, py+14, px+full_w+10, py+full_h+14], fill=(0, 0, 0, 80))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=14))
+    room = Image.alpha_composite(room.convert('RGBA'), shadow).convert('RGB')
+
+    draw = ImageDraw.Draw(room)
+
+    # Frame with bevel highlights
+    draw.rectangle([px, py, px+full_w, py+full_h], fill=frame_color)
+    fc_hi = tuple(min(255, c + 45) for c in frame_color)
+    fc_sh = tuple(max(0, c - 45) for c in frame_color)
+    bv = 4
+    draw.polygon([px, py, px+full_w, py, px+full_w-bv, py+bv, px+bv, py+bv], fill=fc_hi)
+    draw.polygon([px, py, px, py+full_h, px+bv, py+full_h-bv, px+bv, py+bv], fill=fc_hi)
+    draw.polygon([px+full_w, py, px+full_w, py+full_h, px+full_w-bv, py+full_h-bv,
+                  px+full_w-bv, py+bv], fill=fc_sh)
+    draw.polygon([px, py+full_h, px+full_w, py+full_h, px+full_w-bv, py+full_h-bv,
+                  px+bv, py+full_h-bv], fill=fc_sh)
+
+    # White mat
+    mx, my = px + frame_w, py + frame_w
+    draw.rectangle([mx, my, mx + art_w + 2*mat_w, my + art_h + 2*mat_w], fill=(253, 251, 248))
+
+    # Inner shadow on mat edge
+    inner = Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0))
+    art_x, art_y = mx + mat_w, my + mat_w
+    ImageDraw.Draw(inner).rectangle(
+        [art_x-3, art_y-3, art_x+art_w+3, art_y+art_h+3], fill=(0, 0, 0, 30))
+    inner = inner.filter(ImageFilter.GaussianBlur(radius=6))
+    room = Image.alpha_composite(room.convert('RGBA'), inner).convert('RGB')
+
+    # Paste actual art (slightly dimmed for realism)
+    art_final = ImageEnhance.Brightness(art_resized).enhance(0.93)
+    room.paste(art_final, (art_x, art_y))
+
+    room.save(out_path, 'JPEG', quality=93)
+    print(f"  Composite (AI room): {os.path.basename(out_path)}")
+
+
 def create_size_guide(art_path, out_path):
     """Simple 3-size guide: show art at 3 scale sizes on a neutral background."""
     canvas_size = 1200
@@ -438,33 +510,29 @@ LISTING = {
         "Museum-quality botanical wildlife watercolor. No text."
     ),
     'art_size': '1024x1536',
+    'frame_color': (139, 110, 80),   # warm natural wood
 
-    # Scene A: wide room shot, art described to match
+    # Scene A bg: wide room shot with EMPTY wall — real art composited in after
     'scene_a_prompt': (
-        "Professional interior design photography, square format. "
+        "Etsy product mockup photography, square format. "
         "A warm rustic living room with cream linen walls and honey-toned oak flooring. "
-        "Centered on the wall: a large framed watercolor painting of a red fox sitting in an "
-        "autumn birch woodland — vibrant rust-orange fur, golden autumn leaves, misty forest "
-        "atmosphere, warm amber and sienna watercolor palette. "
-        "Natural warm wood frame, wide white mat. "
-        "Below: a cream linen tuxedo sofa with two autumn-toned throw pillows in rust and warm gold. "
+        "Bottom 45%: a cream linen tuxedo sofa with two autumn-toned throw pillows in rust and warm gold. "
         "To the right: a tall rattan floor lamp glowing softly. To the left: a terracotta pot "
         "with dried autumn branches. "
+        "Top 55%: smooth warm cream wall, completely bare and empty — no art, no frames, no objects on the wall. "
         "Warm golden afternoon light. Cozy, nature-lover's home aesthetic. "
         "35mm, f/2.8, photorealistic, organic modern home. No text overlays."
     ),
-    # Scene B: styled vignette / second room
+    # Scene B bg: styled vignette with EMPTY wall — real art composited in after
     'scene_b_prompt': (
-        "Professional interior design photography, square format. "
-        "A cozy rustic reading nook or cabin bedroom with warm sage green walls and a "
-        "natural wood floating shelf. "
-        "Hung on the wall above the shelf: a large framed watercolor illustration of a red fox "
-        "in an autumn birch forest — luminous warm orange and amber watercolor fur, pale birch trees, "
-        "fallen copper and gold leaves. Natural wood frame, wide white mat. "
-        "On the shelf below: a stack of well-loved hardcover books, a small glazed ceramic fox "
-        "figurine, a vanilla candle in a dark clay holder, and a tiny dried wildflower bunch. "
+        "Etsy product mockup photography, square format. "
+        "A cozy rustic reading nook with warm sage green walls and a natural wood floating shelf. "
+        "Bottom 40%: a slim natural wood floating shelf with a stack of well-loved hardcover books, "
+        "a small glazed ceramic fox figurine, a vanilla candle in a dark clay holder, and a tiny "
+        "dried wildflower bunch. Below the shelf: soft cream linen chair back visible. "
+        "Top 60%: smooth warm sage green wall, completely bare and empty — no art, no frames, no objects on the wall. "
         "Warm soft lamp light and filtered natural light. "
-        "Cottagecore, nature-lover's reading retreat aesthetic. 50mm, photorealistic. No text overlays."
+        "Cottagecore, nature-lover's reading retreat. 50mm, photorealistic. No text overlays."
     ),
 
     'description': """🦊 Bring the magic of autumn into your home — this luminous watercolor fox print captures a majestic red fox at rest among golden birch trees and copper autumn leaves, painted in rich, transparent watercolor washes that glow from within.
@@ -566,27 +634,39 @@ def run(post_to_etsy=False, pid_override=None):
     else:
         print(f"  Art already exists: {art_path}")
 
-    # ── Step 2: AI lifestyle scene A ─────────────────────────────────────────
+    # ── Step 2: AI lifestyle scene A (empty wall bg + composite real art) ────
     print(f"\n[2/7] Generating lifestyle scene A...")
+    bg_a = os.path.join(out_dir, 'bg_lifestyle_scene_A.jpg')
     scene_a = os.path.join(out_dir, 'lifestyle_scene_A.jpg')
-    if not os.path.exists(scene_a):
-        ok = gen_image(info['scene_a_prompt'], scene_a, size="1024x1024", quality="high")
+    if not os.path.exists(bg_a):
+        ok = gen_image(info['scene_a_prompt'], bg_a, size="1024x1024", quality="high")
         if not ok:
-            print("  WARNING: scene A failed")
+            print("  WARNING: scene A background failed")
         time.sleep(3)
     else:
-        print(f"  Scene A exists.")
+        print(f"  Scene A background exists.")
+    if os.path.exists(bg_a):
+        composite_into_ai_room(bg_a, art_path, scene_a,
+                               frame_color=info.get('frame_color', (139, 110, 80)))
+    else:
+        print(f"  WARNING: scene A missing — skipping composite")
 
-    # ── Step 3: AI lifestyle scene B ─────────────────────────────────────────
+    # ── Step 3: AI lifestyle scene B (empty wall bg + composite real art) ────
     print(f"\n[3/7] Generating lifestyle scene B...")
+    bg_b = os.path.join(out_dir, 'bg_lifestyle_scene_B.jpg')
     scene_b = os.path.join(out_dir, 'lifestyle_scene_B.jpg')
-    if not os.path.exists(scene_b):
-        ok = gen_image(info['scene_b_prompt'], scene_b, size="1024x1024", quality="high")
+    if not os.path.exists(bg_b):
+        ok = gen_image(info['scene_b_prompt'], bg_b, size="1024x1024", quality="high")
         if not ok:
-            print("  WARNING: scene B failed")
+            print("  WARNING: scene B background failed")
         time.sleep(3)
     else:
-        print(f"  Scene B exists.")
+        print(f"  Scene B background exists.")
+    if os.path.exists(bg_b):
+        composite_into_ai_room(bg_b, art_path, scene_b,
+                               frame_color=info.get('frame_color', (139, 110, 80)))
+    else:
+        print(f"  WARNING: scene B missing — skipping composite")
 
     # ── Step 4: Room composites ───────────────────────────────────────────────
     print(f"\n[4/7] Creating room composites...")
@@ -736,13 +816,50 @@ if __name__ == '__main__':
                         help='Generate images only — do not post to Etsy')
     parser.add_argument('--post', action='store_true',
                         help='Generate images AND create/activate Etsy listing')
+    parser.add_argument('--regen-scenes', action='store_true',
+                        help='Regenerate only lifestyle scenes A and B (re-composite with real art)')
     parser.add_argument('--pid', default=None,
                         help='Override product ID (default: DP1038)')
     args = parser.parse_args()
 
-    if not args.preview and not args.post:
+    if not args.preview and not args.post and not args.regen_scenes:
         parser.print_help()
         sys.exit(1)
+
+    if args.regen_scenes:
+        # Just redo the two lifestyle scenes for the product
+        info = LISTING.copy()
+        if args.pid:
+            info['product_id'] = args.pid
+        pid = info['product_id']
+        out_dir = os.path.join(ART_DIR, f'{pid}_listing_images')
+        art_path = os.path.join(ART_DIR, f'{pid}.jpg')
+        os.makedirs(out_dir, exist_ok=True)
+
+        print(f"Regenerating lifestyle scenes for {pid}...")
+        for label, bg_name, scene_name in [
+            ('A', 'bg_lifestyle_scene_A.jpg', 'lifestyle_scene_A.jpg'),
+            ('B', 'bg_lifestyle_scene_B.jpg', 'lifestyle_scene_B.jpg'),
+        ]:
+            prompt_key = f'scene_{label.lower()}_prompt'
+            bg_path = os.path.join(out_dir, bg_name)
+            scene_path = os.path.join(out_dir, scene_name)
+            # Delete old bg to force regeneration
+            if os.path.exists(bg_path):
+                os.remove(bg_path)
+                print(f"  Deleted old {bg_name}")
+            prompt = info[prompt_key]
+            print(f"  Generating scene {label} background...")
+            ok = gen_image(prompt, bg_path, size="1024x1024", quality="high")
+            if ok and os.path.exists(art_path):
+                composite_into_ai_room(bg_path, art_path, scene_path,
+                                       frame_color=info.get('frame_color', (139, 110, 80)))
+                print(f"  ✓ {scene_name}")
+            else:
+                print(f"  FAILED scene {label}")
+            time.sleep(3)
+        print("Done.")
+        sys.exit(0)
 
     result = run(post_to_etsy=args.post, pid_override=args.pid)
     if result:
