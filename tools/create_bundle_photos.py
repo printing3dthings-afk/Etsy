@@ -64,7 +64,7 @@ WEEKLY = {
     'DP1028': os.path.join(ART_DIR, 'DP1028_listing_images', '04_weekly_spread.jpg'),
     'DP1029': os.path.join(ART_DIR, 'DP1029_listing_images', '04_weekly_spread.jpg'),
 }
-STICKER_SHEET = {pid: os.path.join(ART_DIR, f'{pid}_sticker_sheet_1.jpg') for pid in PIDS}
+STICKER_SHEET = {pid: os.path.join(ART_DIR, f'{pid}_sticker_sheet_4.jpg') for pid in PIDS}
 APP_COMPAT_SRC = os.path.join(ART_DIR, 'DP1028_listing_images', '07_app_compatibility.jpg')
 
 
@@ -214,29 +214,81 @@ def make_grid(src_dict, title_top, title_bottom, out_path):
 # ── Photo 05: Sticker Showcase ─────────────────────────────────────────────────
 
 def make_sticker_showcase(out_path):
-    bg = Image.new('RGB', (CANVAS, CANVAS), (255, 253, 250))
+    bg = Image.new('RGB', (CANVAS, CANVAS), (255, 252, 248))
     draw = ImageDraw.Draw(bg)
-    pos = grid_positions()
+
+    # Header banner
+    draw.rectangle([0, 0, CANVAS, 200], fill=(134, 102, 170))
+    font_hdr = find_font(90)
+    draw.text((CANVAS//2, 100), "800+ KAWAII STICKERS INCLUDED",
+              font=font_hdr, fill=(255, 255, 255), anchor='mm')
+
+    # Arrange 4 sticker sheets in a 2×2 grid with slight rotation and drop shadow
+    # Sheet size: 1000×1000, placed in a loose 2×2 with small gaps
+    sheet_size = 1000
+    positions = [
+        (100,  230),   # TL
+        (1300, 230),   # TR
+        (100,  1300),  # BL
+        (1300, 1300),  # BR
+    ]
+    rotations = [-3, 2, 2, -2]
     labels = ['Lavender Dreams', 'Cotton Candy', 'Midnight Blue', 'Coral Peach']
+
     for i, pid in enumerate(PIDS):
-        x, y = pos[i]
+        x, y = positions[i]
+        rot = rotations[i]
         color = THEME_COLORS[pid]
-        draw.rectangle([x-6, y-6, x+CELL+6, y+CELL+6], fill=color)
-        # sticker sheet is a square PNG
         sheet_path = STICKER_SHEET[pid]
-        if os.path.exists(sheet_path):
-            paste_fit(bg, sheet_path, x, y, CELL, CELL)
+        if not os.path.exists(sheet_path):
+            continue
+
+        # Load and resize sheet
+        sheet = Image.open(sheet_path).convert('RGBA')
+        sheet = sheet.resize((sheet_size, sheet_size), Image.LANCZOS)
+
+        # Drop shadow
+        shadow_layer = Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0))
+        shadow_block = Image.new('RGBA', (sheet_size, sheet_size), (0, 0, 0, 60))
+        shadow_layer.paste(shadow_block, (x + 14, y + 14))
+        shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(radius=18))
+        bg = Image.alpha_composite(bg.convert('RGBA'), shadow_layer).convert('RGB')
+
+        # White card behind sheet
+        card = Image.new('RGBA', (sheet_size + 20, sheet_size + 20), (255, 255, 255, 255))
+        # Colored top strip
+        card_draw = ImageDraw.Draw(card)
+        card_draw.rectangle([0, 0, sheet_size + 20, 18], fill=color + (255,))
+
+        # Rotate if needed
+        if rot != 0:
+            card_r = card.rotate(rot, expand=True, resample=Image.BICUBIC)
+            sheet_r = sheet.rotate(rot, expand=True, resample=Image.BICUBIC)
+            # Paste rotated card then sheet
+            bg_rgba = bg.convert('RGBA')
+            bg_rgba.paste(card_r, (x - 10, y - 10), card_r)
+            bg_rgba.paste(sheet_r, (x, y + 18), sheet_r)
+            bg = bg_rgba.convert('RGB')
         else:
-            # fallback: colored placeholder
-            draw.rectangle([x, y, x+CELL, y+CELL], fill=(230,230,230))
-        # Label
-        font = find_font(36)
-        draw.text((x + CELL//2, y + CELL - 40), labels[i],
-                  font=font, fill=color, anchor='mm',
-                  stroke_width=3, stroke_fill=(255,255,255))
-    font_title = find_font(72)
-    draw.text((CANVAS//2, CANVAS - 48), "800+ KAWAII STICKERS INCLUDED",
-              font=font_title, fill=(60,40,80), anchor='mb')
+            bg_rgba = bg.convert('RGBA')
+            bg_rgba.paste(card, (x - 10, y - 10), card)
+            bg_rgba.paste(sheet, (x, y + 18), sheet)
+            bg = bg_rgba.convert('RGB')
+
+        # Label below sheet
+        draw = ImageDraw.Draw(bg)
+        font_lbl = find_font(46)
+        lbl_y = y + sheet_size + 40
+        draw.text((x + sheet_size // 2, lbl_y), labels[i],
+                  font=font_lbl, fill=color, anchor='mm')
+
+    # Footer note
+    draw = ImageDraw.Draw(bg)
+    font_ft = find_font_reg(52)
+    draw.text((CANVAS // 2, CANVAS - 30),
+              "5 sheets × 4 planners  •  PNG with transparent backgrounds  •  GoodNotes ready",
+              font=font_ft, fill=(140, 120, 160), anchor='mb')
+
     bg.save(out_path, 'JPEG', quality=93)
     print("  05_sticker_showcase.jpg saved")
 
