@@ -42,12 +42,14 @@ MASTER_PROMPT_TEMPLATE = """Create a complete advertising package for the follow
 COMPANY BRIEF:
 {brief}
 
-Follow the mandatory 5-phase workflow:
+Follow the mandatory workflow — START with Phase 0:
+  Phase 0: Company Intelligence (live web research of the actual company)
   Phase 1: Market Research → QC review
   Phase 2: Brand Strategy → QC review
   Phase 3: Copywriting + Creative Direction → QC review
   Phase 4: Social Media Content + Digital Marketing → QC review
-  Phase 5: Assemble all 3 packages (Launch, Scale, Dominate)
+  Phase 5: Web Design (landing page + full website)→ QC review
+  Phase 6: Assemble all 3 packages (Launch, Scale, Dominate)
 
 This is a real client. Produce the highest quality advertising work your team is capable of. \
 Every deliverable should be specific to THIS company, THIS audience, and THESE goals — never generic."""
@@ -122,9 +124,9 @@ def run_agency(brief: CompanyBrief, output_dir: str | None = None) -> PackageSto
     print(f"{SECTION_DIVIDER}")
     print("  CEO is coordinating the full team...\n")
     print("  Phase sequence:")
-    print("    1 → Market Research   2 → Brand Strategy   3 → Copy + Creative")
-    print("    4 → Social + Digital  5 → Web Design       6 → QC Reviews")
-    print("    7 → Package Assembly\n")
+    print("    0 → Company Intel     1 → Market Research  2 → Brand Strategy")
+    print("    3 → Copy + Creative   4 → Social + Digital 5 → Web Design")
+    print("    6 → QC Reviews        7 → Package Assembly\n")
 
     start = time.time()
     result = ceo.run(master_task)
@@ -163,6 +165,10 @@ def _export_packages(store: PackageStore, brief: CompanyBrief, output_dir: str) 
             path = os.path.join(company_dir, f"package_{tier}.txt")
             store.export_section(key, path)
 
+    store.export_section(
+        "company_intelligence",
+        os.path.join(company_dir, "00_company_intelligence.txt"),
+    )
     store.export_section(
         PackageStore.MARKET_RESEARCH,
         os.path.join(company_dir, "01_market_research.txt"),

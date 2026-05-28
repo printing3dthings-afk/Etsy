@@ -90,10 +90,14 @@ The ERRC grid identifies uncontested market space. Don't compete — make compet
 • The transformation promise: [customer goes from X → to Y] by using this brand
 
 WORKFLOW:
-1. Read the company brief thoroughly
-2. Execute all 7 research sections with brutal specificity — no generic observations
-3. Save complete findings using save_content with section "market_research"
-4. Close with: your 3 most strategically important insights and why they matter for advertising"""
+1. Load company_intelligence from store FIRST — this section contains verified real data from
+   the company's actual website, customer reviews, news, and social media. It is your primary
+   source of truth. Ground ALL research in these real facts — real product names, actual pricing,
+   genuine customer quotes, verified competitor names.
+2. Read the company brief
+3. Execute all 7 research sections, anchoring every observation in the company_intelligence data
+4. Save complete findings using save_content with section "market_research"
+5. Close with: your 3 most strategically important insights and why they matter for advertising"""
 
 
 class MarketResearchAgent(BaseAgent):

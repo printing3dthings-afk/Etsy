@@ -1,4 +1,5 @@
 from agents.base_agent import BaseAgent
+from advertising.agents.company_intelligence_agent import CompanyIntelligenceAgent
 from advertising.agents.market_research_agent import MarketResearchAgent
 from advertising.agents.brand_strategy_agent import BrandStrategyAgent
 from advertising.agents.copywriter_agent import CopywriterAgent
@@ -16,6 +17,7 @@ You orchestrate a world-class team of specialists and your final deliverable is 
 three complete, production-ready advertising packages — each distinct, powerful, and immediately deployable.
 
 ━━━ YOUR TEAM ━━━
+  0. Company Intelligence Agent — live web search of the actual company: real products, real prices, real customer quotes, real reviews, real competitors, social presence, news
   1. Market Research Agent    — JTBD analysis, psychographic depth, Blue Ocean ERRC, awareness stage mapping
   2. Brand Strategy Agent     — Messaging pyramid, category design, positioning, 8 taglines, psychological trigger map
   3. Copywriter Agent         — 20 hooks, 20 headlines, hybrid frameworks (AIDA/PAS/BAB/PASTOR/FAB/DR), video scripts, UGC copy
@@ -27,9 +29,17 @@ three complete, production-ready advertising packages — each distinct, powerfu
 
 ━━━ MANDATORY WORKFLOW — FOLLOW THIS SEQUENCE EXACTLY ━━━
 
+PHASE 0 — COMPANY INTELLIGENCE (always first, always)
+  Step 0: delegate_to_company_intelligence_agent
+    Task: "Research [company name] exhaustively online. Website: [include URL if provided, or 'search for it'].
+    Find and fetch: their actual website (homepage + about + products/pricing pages), customer reviews
+    on Trustpilot/G2/Yelp/Google, news and press from 2025–2026, social media presence, and top competitors.
+    Extract: their exact tagline, real product names with pricing, genuine customer quotes (positive and negative),
+    competitor names and positioning. Save everything to company_intelligence."
+
 PHASE 1 — RESEARCH
   Step 1: delegate_to_market_research_agent
-    Task: "Conduct complete market research. Include JTBD analysis, psychographic depth, awareness stage mapping, Blue Ocean ERRC analysis, and competitive landscape. Company brief: [include full brief]"
+    Task: "Conduct complete market research. Load company_intelligence from store first — it contains verified real data from the company's website and reviews. Include JTBD analysis, psychographic depth, awareness stage mapping, Blue Ocean ERRC analysis, and competitive landscape. Company brief: [include full brief]"
   Step 2: delegate_to_qc_agent
     Task: "Review market_research section. Check for: JTBD job statement present, psychographic depth beyond demographics, awareness stage identified, Blue Ocean ERRC completed, competitive white space defined."
 
@@ -225,6 +235,27 @@ You are the final decision-maker. Synthesize, curate, and elevate everything you
 
 DELEGATION_TOOLS = [
     {
+        "name": "delegate_to_company_intelligence_agent",
+        "description": (
+            "Delegate live web research to the Company Intelligence Agent. "
+            "This agent searches the internet for the actual company — their real website, "
+            "actual products and pricing, genuine customer reviews (with quotes), "
+            "recent news, social media presence, and named competitors. "
+            "Always run this FIRST before any other agent. "
+            "Results are saved to 'company_intelligence' in the store."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "task": {
+                    "type": "string",
+                    "description": "Include company name, website URL if known, and what to prioritize finding",
+                }
+            },
+            "required": ["task"],
+        },
+    },
+    {
         "name": "delegate_to_market_research_agent",
         "description": "Delegate market research including JTBD, psychographics, Blue Ocean ERRC, and awareness stage mapping.",
         "input_schema": {
@@ -304,6 +335,7 @@ class AdCEOAgent(BaseAgent):
     def __init__(self, store: PackageStore):
         self._store = store
         self._agents = {
+            "company_intelligence": CompanyIntelligenceAgent(store),
             "market_research": MarketResearchAgent(store),
             "brand_strategy": BrandStrategyAgent(store),
             "copywriter": CopywriterAgent(store),
@@ -324,6 +356,7 @@ class AdCEOAgent(BaseAgent):
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
         task = tool_input.get("task", "")
         agent_map = {
+            "delegate_to_company_intelligence_agent": "company_intelligence",
             "delegate_to_market_research_agent": "market_research",
             "delegate_to_brand_strategy_agent": "brand_strategy",
             "delegate_to_copywriter_agent": "copywriter",

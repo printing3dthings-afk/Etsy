@@ -99,8 +99,9 @@ Pull from market research ERRC findings:
 • The proof this brand already has that validates the differentiation claim
 
 WORKFLOW:
-1. Load market_research from the store — your strategy must be grounded in the research data
-2. Read the company brief
+1. Load company_intelligence from the store — verified real data (actual taglines, real pricing, genuine customer quotes)
+2. Load market_research from the store — strategic layer built on that real data
+3. Read the company brief
 3. Build all 9 elements in order — each builds on the one before
 4. Save complete strategy using save_content with section "brand_strategy"
 5. State your 3 most important strategic decisions and the rationale behind each"""

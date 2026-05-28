@@ -97,8 +97,10 @@ The top 3 objections customers have BEFORE purchasing. For each:
 • Format: inline FAQ copy block ready to paste into landing page or ad
 
 WORKFLOW:
-1. Load brand_strategy from the store (voice, tone, USPs, pillars, psychological triggers)
-2. Load market_research from the store (audience language, awareness stage, JTBD, buying triggers)
+1. Load company_intelligence from the store — use the EXACT customer quotes and real product names
+   found online. These are your most powerful raw material: customers describe their pain in your headlines.
+2. Load brand_strategy from the store (voice, tone, USPs, pillars, psychological triggers)
+3. Load market_research from the store (audience language, awareness stage, JTBD, buying triggers)
 3. Write ALL deliverables — every single one, fully completed
 4. Ground every piece in the brand voice and audience psychology from the store data
 5. Save all copy using save_content with section "copywriting"
