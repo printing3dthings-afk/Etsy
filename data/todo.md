@@ -41,8 +41,8 @@
 ## 🛍️ ETSY SHOP SETUP (manual steps in Etsy)
 
 - [ ] **Post-purchase message** — run `python tools/etsy_messages.py` to get text → paste into Shop Manager → Settings → Info & Appearance → Message to Buyers
-- [ ] **Abandoned cart coupon (COMEBACK10)** — Shop Manager → Marketing → Sales & Discounts → Create Offer → Abandoned Cart → 10% off, 24-hour delay
-- [ ] **Thank-you coupon (THANKYOU15)** — Shop Manager → Marketing → Sales & Discounts → Create Offer → Thank You → 15% off, 30-day expiry
+- [x] **Abandoned cart coupon (COMEBACK10)** — 10% off, 24-hour delay ✓
+- [x] **Thank-you coupon (THANKYOU15)** — 15% off, 30-day expiry ✓
 - [ ] **Shop announcement** — add email list signup link + current promotion
 - [ ] **Shop video** — record a 5-15 second screen recording flipping through a planner → upload to any active planner listing
 
@@ -122,3 +122,8 @@
 - [x] Analytics dashboard with action items (`python tools/analytics_tracker.py`)
 - [x] TikTok developer app created (Client Key + Secret saved to .env)
 - [x] All listing photos now use real product renders (no AI-generated fictional planner content)
+- [x] All 4 planner listings have 10 real-product photos uploaded (rendered from actual PDFs)
+- [x] All 6 sticker pack listings have photos uploaded (real sticker sheet images)
+- [x] All 4 Planners Bundle listing activated (live on Etsy, ID: 4512188970)
+- [x] Abandoned cart coupon COMEBACK10 created (10% off, 24-hour delay)
+- [x] Thank-you coupon THANKYOU15 created (15% off, 30-day expiry)
