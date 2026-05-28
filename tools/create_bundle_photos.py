@@ -213,81 +213,90 @@ def make_grid(src_dict, title_top, title_bottom, out_path):
 
 # ── Photo 05: Sticker Showcase ─────────────────────────────────────────────────
 
+def drop_shadow(canvas_rgba, x, y, w, h, blur=20, opacity=70):
+    layer = Image.new('RGBA', (CANVAS, CANVAS), (0,0,0,0))
+    ImageDraw.Draw(layer).rectangle([x+12, y+12, x+w+12, y+h+12], fill=(0,0,0,opacity))
+    layer = layer.filter(ImageFilter.GaussianBlur(radius=blur))
+    return Image.alpha_composite(canvas_rgba, layer)
+
+
 def make_sticker_showcase(out_path):
-    bg = Image.new('RGB', (CANVAS, CANVAS), (255, 252, 248))
-    draw = ImageDraw.Draw(bg)
+    # Warm cream gradient background
+    bg = Image.new('RGB', (CANVAS, CANVAS), (255, 252, 247))
+    # Subtle gradient
+    for y in range(CANVAS):
+        shade = int(255 - y * 8 / CANVAS)
+        ImageDraw.Draw(bg).line([(0, y), (CANVAS, y)], fill=(shade, shade - 4, shade - 10))
 
-    # Header banner
-    draw.rectangle([0, 0, CANVAS, 200], fill=(134, 102, 170))
-    font_hdr = find_font(90)
-    draw.text((CANVAS//2, 100), "800+ KAWAII STICKERS INCLUDED",
-              font=font_hdr, fill=(255, 255, 255), anchor='mm')
+    bg = bg.convert('RGBA')
 
-    # Arrange 4 sticker sheets in a 2×2 grid with slight rotation and drop shadow
-    # Sheet size: 1000×1000, placed in a loose 2×2 with small gaps
-    sheet_size = 1000
-    positions = [
-        (100,  230),   # TL
-        (1300, 230),   # TR
-        (100,  1300),  # BL
-        (1300, 1300),  # BR
+    # ── Hero sheet: DP1027 sheet_4 (cleanest cozy lifestyle) ────────────────
+    # Show it large and centered-left so individual stickers are clearly visible
+    hero_size = 1680
+    hero_x = (CANVAS - hero_size) // 2
+    hero_y = 280
+
+    # White card with rounded shadow
+    bg = drop_shadow(bg, hero_x - 20, hero_y - 20, hero_size + 40, hero_size + 40, blur=30, opacity=60)
+    card = Image.new('RGBA', (hero_size + 40, hero_size + 40), (255, 255, 255, 255))
+    mask = Image.new('L', (hero_size + 40, hero_size + 40), 0)
+    ImageDraw.Draw(mask).rounded_rectangle([0, 0, hero_size + 39, hero_size + 39], radius=28, fill=255)
+    card.putalpha(mask)
+    bg.paste(card, (hero_x - 20, hero_y - 20), card)
+
+    hero = Image.open(STICKER_SHEET['DP1027']).convert('RGBA').resize((hero_size, hero_size), Image.LANCZOS)
+    bg.paste(hero, (hero_x, hero_y), hero)
+
+    # ── Three small sheets fanned behind the hero (top-left, top-right, bottom) ─
+    small_size = 480
+    small_sheets = [
+        (os.path.join(ART_DIR, 'DP1026_sticker_sheet_4.jpg'), -18, 60,  140),
+        (os.path.join(ART_DIR, 'DP1028_sticker_sheet_4.jpg'),  12, CANVAS - small_size - 140, 140),
+        (os.path.join(ART_DIR, 'DP1029_sticker_sheet_3.jpg'),  -8, CANVAS//2 - small_size//2, CANVAS - small_size - 140),
     ]
-    rotations = [-3, 2, 2, -2]
-    labels = ['Lavender Dreams', 'Cotton Candy', 'Midnight Blue', 'Coral Peach']
-
-    for i, pid in enumerate(PIDS):
-        x, y = positions[i]
-        rot = rotations[i]
-        color = THEME_COLORS[pid]
-        sheet_path = STICKER_SHEET[pid]
-        if not os.path.exists(sheet_path):
-            continue
-
-        # Load and resize sheet
-        sheet = Image.open(sheet_path).convert('RGBA')
-        sheet = sheet.resize((sheet_size, sheet_size), Image.LANCZOS)
-
-        # Drop shadow
-        shadow_layer = Image.new('RGBA', (CANVAS, CANVAS), (0, 0, 0, 0))
-        shadow_block = Image.new('RGBA', (sheet_size, sheet_size), (0, 0, 0, 60))
-        shadow_layer.paste(shadow_block, (x + 14, y + 14))
-        shadow_layer = shadow_layer.filter(ImageFilter.GaussianBlur(radius=18))
-        bg = Image.alpha_composite(bg.convert('RGBA'), shadow_layer).convert('RGB')
-
-        # White card behind sheet
-        card = Image.new('RGBA', (sheet_size + 20, sheet_size + 20), (255, 255, 255, 255))
-        # Colored top strip
-        card_draw = ImageDraw.Draw(card)
-        card_draw.rectangle([0, 0, sheet_size + 20, 18], fill=color + (255,))
-
-        # Rotate if needed
+    for sheet_path, rot, sx, sy in small_sheets:
+        sheet = Image.open(sheet_path).convert('RGBA').resize((small_size, small_size), Image.LANCZOS)
+        card_s = Image.new('RGBA', (small_size + 16, small_size + 16), (255, 255, 255, 245))
+        mask_s = Image.new('L', (small_size + 16, small_size + 16), 0)
+        ImageDraw.Draw(mask_s).rounded_rectangle([0, 0, small_size + 15, small_size + 15], radius=16, fill=255)
+        card_s.putalpha(mask_s)
         if rot != 0:
-            card_r = card.rotate(rot, expand=True, resample=Image.BICUBIC)
+            card_r = card_s.rotate(rot, expand=True, resample=Image.BICUBIC)
             sheet_r = sheet.rotate(rot, expand=True, resample=Image.BICUBIC)
-            # Paste rotated card then sheet
-            bg_rgba = bg.convert('RGBA')
-            bg_rgba.paste(card_r, (x - 10, y - 10), card_r)
-            bg_rgba.paste(sheet_r, (x, y + 18), sheet_r)
-            bg = bg_rgba.convert('RGB')
+            bg.paste(card_r, (sx, sy), card_r)
+            bg.paste(sheet_r, (sx + 8, sy + 8), sheet_r)
         else:
-            bg_rgba = bg.convert('RGBA')
-            bg_rgba.paste(card, (x - 10, y - 10), card)
-            bg_rgba.paste(sheet, (x, y + 18), sheet)
-            bg = bg_rgba.convert('RGB')
+            bg.paste(card_s, (sx, sy), card_s)
+            bg.paste(sheet, (sx + 8, sy + 8), sheet)
 
-        # Label below sheet
-        draw = ImageDraw.Draw(bg)
-        font_lbl = find_font(46)
-        lbl_y = y + sheet_size + 40
-        draw.text((x + sheet_size // 2, lbl_y), labels[i],
-                  font=font_lbl, fill=color, anchor='mm')
-
-    # Footer note
+    bg = bg.convert('RGB')
     draw = ImageDraw.Draw(bg)
-    font_ft = find_font_reg(52)
-    draw.text((CANVAS // 2, CANVAS - 30),
-              "5 sheets × 4 planners  •  PNG with transparent backgrounds  •  GoodNotes ready",
-              font=font_ft, fill=(140, 120, 160), anchor='mb')
+
+    # ── Top header ────────────────────────────────────────────────────────────
+    font_h1  = find_font(88)
+    font_h2  = find_font_reg(52)
+    draw.text((CANVAS//2, 100), "800+ KAWAII STICKERS INCLUDED",
+              font=font_h1, fill=(80, 50, 110), anchor='mm')
+    draw.text((CANVAS//2, 190), "5 illustrated sheets per planner  ·  4 planners",
+              font=font_h2, fill=(150, 120, 180), anchor='mm')
+
+    # ── Bottom pill badges ────────────────────────────────────────────────────
+    badges = [
+        ("Cozy Lifestyle",     THEME_COLORS['DP1026']),
+        ("Seasonal & Holiday", THEME_COLORS['DP1027']),
+        ("Functional Planning",THEME_COLORS['DP1028']),
+        ("GoodNotes Ready",    THEME_COLORS['DP1029']),
+    ]
+    badge_w, badge_h = 480, 72
+    total_badge_w = len(badges) * badge_w + (len(badges)-1) * 24
+    bx = (CANVAS - total_badge_w) // 2
+    by = CANVAS - 110
+    for label, color in badges:
+        draw.rounded_rectangle([bx, by, bx+badge_w, by+badge_h], radius=36, fill=color)
+        font_b = find_font(34)
+        draw.text((bx + badge_w//2, by + badge_h//2), label,
+                  font=font_b, fill=(255,255,255), anchor='mm')
+        bx += badge_w + 24
 
     bg.save(out_path, 'JPEG', quality=93)
     print("  05_sticker_showcase.jpg saved")
