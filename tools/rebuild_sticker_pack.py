@@ -27,34 +27,54 @@ auth_headers = {
 
 ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
 
-SHEET_NAMES = {
-    1:  'sheet_01_functional_planning',
-    2:  'sheet_02_widget_trackers',
-    3:  'sheet_03_planner_stationery',
-    4:  'sheet_04_cozy_lifestyle',
-    5:  'sheet_05_seasonal_holiday',
-    6:  'sheet_06_self_care_wellness',
-    7:  'sheet_07_affirmations_milestones',
-    8:  'sheet_08_moon_celestial',
-    9:  'sheet_09_plants_botanical',
-    10: 'sheet_10_sweet_treats',
-    11: 'sheet_11_cozy_home',
-    12: 'sheet_12_school_study',
-    13: 'sheet_13_subject_icons',
-    14: 'sheet_14_campus_life',
-    15: 'sheet_15_study_motivation',
-    16: 'sheet_16_back_to_school',
-    17: 'sheet_17_money_finance',
-    18: 'sheet_18_savings_goals',
-    19: 'sheet_19_debt_payoff',
-    20: 'sheet_20_budget_categories',
-    21: 'sheet_21_financial_wins',
-    22: 'sheet_22_fitness_workout',
-    23: 'sheet_23_healthy_food',
-    24: 'sheet_24_wellness_self_care',
-    25: 'sheet_25_sports_activities',
-    26: 'sheet_26_progress_wins',
+SHEET_NAMES_BASE = {
+    1: 'sheet_01_functional_planning',
+    2: 'sheet_02_widget_trackers',
+    3: 'sheet_03_planner_stationery',
+    4: 'sheet_04_cozy_lifestyle',
+    5: 'sheet_05_seasonal_holiday',
 }
+
+SHEET_NAMES_BY_PID = {
+    'DP1026': {
+        6:  'sheet_06_self_care_wellness',
+        7:  'sheet_07_affirmations_milestones',
+        8:  'sheet_08_moon_celestial',
+        9:  'sheet_09_plants_botanical',
+        10: 'sheet_10_sweet_treats',
+        11: 'sheet_11_cozy_home',
+    },
+    'DP1027': {
+        6:  'sheet_06_school_supplies',
+        7:  'sheet_07_subject_icons',
+        8:  'sheet_08_campus_life',
+        9:  'sheet_09_study_motivation',
+        10: 'sheet_10_back_to_school',
+        11: 'sheet_11_academic_achievement',
+    },
+    'DP1028': {
+        6:  'sheet_06_money_finance',
+        7:  'sheet_07_savings_goals',
+        8:  'sheet_08_debt_payoff',
+        9:  'sheet_09_budget_categories',
+        10: 'sheet_10_financial_wins',
+        11: 'sheet_11_smart_shopping',
+    },
+    'DP1029': {
+        6:  'sheet_06_workout_exercise',
+        7:  'sheet_07_healthy_food',
+        8:  'sheet_08_wellness_self_care',
+        9:  'sheet_09_progress_tracking',
+        10: 'sheet_10_sports_activities',
+        11: 'sheet_11_fitness_wins',
+    },
+}
+
+def get_sheet_name(pid, n):
+    if n <= 5:
+        return SHEET_NAMES_BASE.get(n, f'sheet_{n:02d}')
+    pid_names = SHEET_NAMES_BY_PID.get(pid, {})
+    return pid_names.get(n, f'sheet_{n:02d}')
 
 HOW_TO = """HOW TO USE YOUR STICKERS
 ========================
@@ -87,7 +107,7 @@ def rebuild_zip(pid, num_sheets):
         zf.writestr('HOW_TO_USE_STICKERS.txt', HOW_TO)
 
         for n in range(1, num_sheets + 1):
-            sheet_name = SHEET_NAMES.get(n, f'sheet_{n:02d}')
+            sheet_name = get_sheet_name(pid, n)
             # Try JPG first (newer sheets), then PNG (original sheets)
             for ext, arcext in [('.jpg', 'jpg'), ('.png', 'png')]:
                 src = os.path.join(ART_DIR, f'{pid}_sticker_sheet_{n}{ext}')
