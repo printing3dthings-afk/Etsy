@@ -4,7 +4,7 @@ Etsy post-purchase messaging & coupon strategy for OnBrandCraftz.
 THREE automated touchpoints that drive reviews and repeat buyers:
 
   1. Post-purchase thank-you message  — sent automatically after every order
-     → Delivers download instructions + asks for review (review ask #1)
+     → Personalized per product type + review ask (review ask #1)
 
   2. Abandoned cart / favorited coupon — Etsy sends 10% off after buyer saves item
      → Set up in: Shop Manager → Marketing → Sales & Discounts → Abandoned Cart
@@ -15,6 +15,11 @@ THREE automated touchpoints that drive reviews and repeat buyers:
 Research: Products with 5+ reviews sell 270% more than products with zero.
 These three touchpoints are the fastest path to the Star Seller badge.
 
+SET UP THE MESSAGE TO BUYERS:
+  Etsy.com → Shop Manager → Settings → Info & Appearance → "Message to Buyers"
+  Use POST_PURCHASE_MESSAGE_DIGITAL for a digital-products-only shop,
+  or POST_PURCHASE_MESSAGE_UNIVERSAL if you sell both digital and physical.
+
 Usage:
   python tools/etsy_messages.py           # print all message templates
   python tools/etsy_messages.py --setup   # print Etsy setup instructions
@@ -23,40 +28,148 @@ from __future__ import annotations
 
 # ── Message Templates ─────────────────────────────────────────────────────────
 
-# Sent immediately after purchase (Etsy: Shop Manager → Settings → Info & Appearance → Message to buyers)
+# ★ UNIVERSAL — works for every product type (digital planners, stickers, wall art, 3D prints)
+# Paste this into: Etsy → Shop Manager → Settings → Info & Appearance → Message to Buyers
 POST_PURCHASE_MESSAGE = """\
-Hi {buyer_name}! ✨
+Hi {buyer_name}! 🌸
 
-Thank you SO much for your order — you're going to love it! 🌸
+Oh my gosh, THANK YOU for your order — it genuinely means the world to me! 💕
 
-━━━━━━━━━━━━━━━━━━━━━━━
-📥 HOW TO DOWNLOAD YOUR FILES
-━━━━━━━━━━━━━━━━━━━━━━━
+I'm a small one-person shop and every single purchase helps me keep creating, so \
+thank you for choosing OnBrandCraftz.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📥 FOR DIGITAL DOWNLOADS
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Your files are ready right now!
 1. Go to Etsy.com → Account → Purchases and Reviews
 2. Click "Download Files" next to your order
-3. Save the ZIP file to your device, then unzip it
-   → You'll find your PDF planner + sticker pack ZIP inside
+3. Save + unzip — your PDF and sticker pack are inside ✨
 
-━━━━━━━━━━━━━━━━━━━━━━━
-📱 OPENING IN GOODNOTES 6
-━━━━━━━━━━━━━━━━━━━━━━━
-1. Open GoodNotes 6 → tap the + button → Import
-2. Select your PDF file → it opens as a new notebook
-3. Tap any text field to start typing — all fields are fillable!
-4. For stickers: tap Elements → Stickers → + → import the 5 PNG sheets
-   Your stickers appear in your library and can be dragged onto any page ✨
+Opening in GoodNotes 6? Tap + → Import → select your PDF.
+For stickers: Elements → Stickers → + → import the 5 PNG sheets.
+Your stickers live in your library forever and can be dragged onto any page!
 
-━━━━━━━━━━━━━━━━━━━━━━━
-📧 NEED HELP?
-━━━━━━━━━━━━━━━━━━━━━━━
-Reply to this message anytime — I'm happy to help!
-Email: Printing3dthings@outlook.com
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 FOR 3D PRINTED ORDERS
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Your item is being printed now and I'll send tracking as soon as it ships!
+Every piece is printed to order just for you — quality checked before it leaves. 🙏
 
-If you love your planner, a review means the world to a small shop like mine 💕
-It only takes 30 seconds: Etsy → Purchases and Reviews → Leave a Review
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+🖼️ FOR WALL ART PRINTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Download your high-resolution files from Etsy → Purchases and Reviews.
+Print at any local print shop or online (Walgreens, Costco, Canva Print, Printful).
+Tip: choose "fit to page" at your selected print size for perfect results!
 
-Thank you again! Happy planning! 🌟
-— OnBrandCraftz
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+💬 NEED ANYTHING?
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+Just reply here and I'll get back to you fast — usually same day! 🌟
+
+And if you love what you got, a quick review would make my whole week 💕
+Etsy → Purchases and Reviews → Leave a Review (takes 30 seconds!)
+
+Thank you again, {buyer_name} — enjoy every bit of it! ✨
+— Jesse @ OnBrandCraftz
+"""
+
+# ── PRODUCT-SPECIFIC PERSONALIZED MESSAGES ───────────────────────────────────
+# Used by order_notifier.py to generate per-order custom messages.
+# These are sent manually by the shop owner via Etsy's message system.
+
+PERSONAL_MESSAGE_DIGITAL_PLANNER = """\
+Hi {buyer_name}! 🌸
+
+Just wanted to send you a personal note — thank you SO much for picking up \
+{product_title}! I put a lot of love into designing it and I really hope it \
+helps you stay organized and feel good every single day. 💕
+
+A couple of quick tips to get the most out of it:
+• Open it in GoodNotes 6 or Notability for the best experience
+• Import the sticker PNG sheets into your Elements/Stickers library first
+• The side tabs are hyperlinked — tap any tab to jump to that section instantly
+• Every page has a 🏠 HOME button that brings you back to the dashboard
+
+If anything feels confusing or something isn't working, just reply here — \
+I'm always happy to help and I check messages every day!
+
+Enjoy your new planner, {first_name}! 🌟
+— Jesse @ OnBrandCraftz
+"""
+
+PERSONAL_MESSAGE_WALL_ART = """\
+Hi {buyer_name}! 🎨
+
+Thank you so much for your order of {product_title} — I hope you absolutely \
+love it on your wall! It's one of my favorites. 💕
+
+To get the best print quality:
+• Take the file to any print shop or upload to Canva Print, Printful, or Walgreens
+• Choose your frame size FIRST, then ask them to print to match
+• "Fit to page" or "fill page" gives the cleanest result
+• 300 DPI means it'll look sharp at any size up to 24×36"
+
+If you ever need a different size or want a custom color version, just message \
+me — I love doing custom work! 🌸
+
+Thank you again, {first_name}! Enjoy it!
+— Jesse @ OnBrandCraftz
+"""
+
+PERSONAL_MESSAGE_3D_PRINT = """\
+Hi {buyer_name}! 🎉
+
+Thank you for your order of {product_title}! I'm printing it now on my Bambu \
+Lab P1S and making sure it comes out perfect before it ships. 🙏
+
+A few things to know:
+• Most orders ship within 2–4 business days
+• I'll send your tracking number as soon as it's on its way
+• Everything is printed to order just for you — no pre-made inventory here!
+
+If you have any special requests (color swap, size tweak, etc.) message me \
+NOW before it prints and I'll do my best to accommodate! 🌟
+
+Thanks so much, {first_name}!
+— Jesse @ OnBrandCraftz
+"""
+
+PERSONAL_MESSAGE_STICKER_PACK = """\
+Hi {buyer_name}! ✨
+
+Thank you for grabbing {product_title} — sticker packs are honestly my \
+favorite things to design! I hope you have SO much fun with them. 🌸
+
+Quick how-to for GoodNotes 6:
+1. Unzip the download and find the 5 PNG sheet files
+2. In GoodNotes: tap the Elements button (diamond icon) → Stickers tab → +
+3. Select all 5 PNG files — they'll load into your library instantly
+4. Drag any sticker onto any page, unlimited times, forever! ✨
+
+For Notability: use Photo Stickers → import the PNGs.
+For Acrobat/Xodo: the built-in STICKERS button in the PDF footer works too!
+
+Enjoy them, {first_name}! 💕
+— Jesse @ OnBrandCraftz
+"""
+
+# Fallback for any product type not matched above
+PERSONAL_MESSAGE_GENERIC = """\
+Hi {buyer_name}! 🌸
+
+Just a quick personal note to say THANK YOU for your order of {product_title}! \
+It means so much to me as a small shop owner. 💕
+
+I hope you absolutely love it! If you have any questions at all, just reply \
+here and I'll get back to you same day.
+
+And if you're happy with your purchase, leaving a review would make my whole \
+week — it really does make a difference for small shops like mine. 🌟
+
+Thanks again, {first_name}!
+— Jesse @ OnBrandCraftz
 """
 
 # Etsy auto-sends this to favorited/cart-saved items (set up in Etsy dashboard)
