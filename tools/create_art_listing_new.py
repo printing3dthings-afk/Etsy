@@ -122,7 +122,7 @@ def create_room_composite(art_path, room_key, out_path):
 
 
 def composite_into_ai_room(bg_path, art_path, out_path, frame_color=(139, 110, 80),
-                            art_pct=0.36, top_pct=0.08):
+                            art_pct=0.25, top_pct=0.06):
     """Composite real art into an AI-generated empty-wall room background.
 
     Places a realistically framed version of the art centered horizontally,
@@ -514,25 +514,28 @@ LISTING = {
 
     # Scene A bg: wide room shot with EMPTY wall — real art composited in after
     'scene_a_prompt': (
-        "Etsy product mockup photography, square format. "
+        "Interior design product photography, square format. "
         "A warm rustic living room with cream linen walls and honey-toned oak flooring. "
-        "Bottom 45%: a cream linen tuxedo sofa with two autumn-toned throw pillows in rust and warm gold. "
-        "To the right: a tall rattan floor lamp glowing softly. To the left: a terracotta pot "
-        "with dried autumn branches. "
-        "Top 55%: smooth warm cream wall, completely bare and empty — no art, no frames, no objects on the wall. "
-        "Warm golden afternoon light. Cozy, nature-lover's home aesthetic. "
-        "35mm, f/2.8, photorealistic, organic modern home. No text overlays."
+        "CRITICAL LAYOUT: The TOP 65% of the image is a completely bare, smooth cream wall — "
+        "no art, no shelves, no frames, no objects of any kind on the upper wall. "
+        "ONLY the BOTTOM 35% contains furniture: a cream linen sofa with rust and warm gold throw pillows, "
+        "a tall rattan floor lamp to the right, a terracotta clay pot with dried amber branches to the left. "
+        "The upper wall must be clean and empty to allow digital art placement. "
+        "Warm golden afternoon window light from the left. Organic modern, cottagecore home. "
+        "35mm, f/2.8, photorealistic. No text."
     ),
     # Scene B bg: styled vignette with EMPTY wall — real art composited in after
     'scene_b_prompt': (
-        "Etsy product mockup photography, square format. "
-        "A cozy rustic reading nook with warm sage green walls and a natural wood floating shelf. "
-        "Bottom 40%: a slim natural wood floating shelf with a stack of well-loved hardcover books, "
-        "a small glazed ceramic fox figurine, a vanilla candle in a dark clay holder, and a tiny "
-        "dried wildflower bunch. Below the shelf: soft cream linen chair back visible. "
-        "Top 60%: smooth warm sage green wall, completely bare and empty — no art, no frames, no objects on the wall. "
-        "Warm soft lamp light and filtered natural light. "
-        "Cottagecore, nature-lover's reading retreat. 50mm, photorealistic. No text overlays."
+        "Interior design product photography, square format. "
+        "A cozy rustic cabin reading nook with warm sage green walls and warm wood accents. "
+        "CRITICAL LAYOUT: The TOP 65% of the image is a completely bare, smooth sage green wall — "
+        "no art, no shelves, no frames, no objects of any kind on the upper wall. "
+        "ONLY the BOTTOM 35% contains decor: a slim natural oak floating shelf holding a stack of "
+        "hardcover books, a small ceramic fox figurine, a glowing pillar candle, and dried wildflowers. "
+        "Below the shelf a soft armchair is partially visible at the very bottom edge. "
+        "The upper wall must be completely empty for digital art placement. "
+        "Warm lamp glow and soft natural light. Cottagecore reading retreat. "
+        "50mm, photorealistic. No text."
     ),
 
     'description': """🦊 Bring the magic of autumn into your home — this luminous watercolor fox print captures a majestic red fox at rest among golden birch trees and copper autumn leaves, painted in rich, transparent watercolor washes that glow from within.
