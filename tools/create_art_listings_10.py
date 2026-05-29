@@ -24,6 +24,7 @@ with open('/home/user/Etsy/.env') as f:
             os.environ.setdefault(k.strip(), v.strip())
 
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+from tools.lifestyle_composite import composite_smart, scene_prompt as _scene_prompt
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 
 client = EtsyAPIClient()
@@ -720,14 +721,7 @@ A: This license covers personal use only. Contact us for commercial licensing.
 # ── Scene prompt helpers ──────────────────────────────────────────────────────
 
 def scene_prompt(room_desc, wall_color, furniture_desc, lighting, style, focal="50mm"):
-    return (
-        "Interior design product photography, square format. "
-        f"{room_desc} with {wall_color} walls. "
-        f"CRITICAL LAYOUT: The TOP 65% of the image is a completely bare, smooth {wall_color} wall — "
-        "no art, no shelves, no frames, no objects of any kind on the upper wall. "
-        f"ONLY the BOTTOM 35% contains: {furniture_desc}. "
-        f"{lighting} {style} {focal}, photorealistic. No text."
-    )
+    return _scene_prompt(room_desc, wall_color, furniture_desc, lighting, style, focal=focal)
 
 
 # ── Individual listing definitions ───────────────────────────────────────────
@@ -1653,7 +1647,7 @@ def run_listing(pid, info, post_to_etsy=True):
     else:
         print(f"  Background exists.")
     if os.path.exists(bg_a):
-        composite_into_ai_room(bg_a, art_path, scene_a, frame_color=info.get('frame_color', (139,110,80)))
+        composite_smart(bg_a, art_path, scene_a, frame_color=info.get('frame_color', (139,110,80)))
 
     # 3. Scene B
     print(f"\n[3] Scene B...")
@@ -1665,7 +1659,7 @@ def run_listing(pid, info, post_to_etsy=True):
     else:
         print(f"  Background exists.")
     if os.path.exists(bg_b):
-        composite_into_ai_room(bg_b, art_path, scene_b, frame_color=info.get('frame_color', (139,110,80)))
+        composite_smart(bg_b, art_path, scene_b, frame_color=info.get('frame_color', (139,110,80)))
 
     # 4. Room templates
     print(f"\n[4] Room composites...")
