@@ -1,5 +1,15 @@
 # OnBrandCraftz — Etsy Automation Hub
 
+## Mission Statement
+> **"Providing the best and most accurate transaction for our customers so we can grow responsibly."**
+
+Every product, every image, every price, every line of code must serve this mission.
+- **Best and most accurate transaction** = listings show the REAL product, every claim is verified, customers never have to ask what they bought
+- **Grow responsibly** = quality never decreases as volume increases; no listing goes live that fails a quality gate; metrics are tracked weekly so decline is caught before damage is done
+- Full operating standards: `data/knowledge_base/business_standards.md`
+
+---
+
 ## Store
 - **Name**: OnBrandCraftz
 - **Etsy Shop ID**: `onbrandcraftz`
