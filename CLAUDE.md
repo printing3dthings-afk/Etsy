@@ -1920,9 +1920,283 @@ Before publishing any sticker pack:
 - [ ] Hero photo (Photo 1) reviewed — does it stop the scroll?
 - [ ] Text callouts added in Canva for Photos 2, 6, 7 (not baked into AI image)
 - [ ] Tags: all 13 used, each ≤ 20 chars, no special characters
-- [ ] Title: primary keyword in first 40 chars, total ≤ 140 chars
+- [ ] Title: primary keyword in first 40 chars, total ≤ 70 chars (2026 algorithm: >70 chars = mobile ranking penalty)
 - [ ] Title mentions: year (2026), app (GoodNotes/Notability), "Instant Download"
 - [ ] Description: primary keyword in sentence 1 or 2
 - [ ] Description: all 9 required sections present in order
 - [ ] "2026 + Undated Version Included" noted in title and description
 - [ ] Price matches pricing strategy table
+
+---
+
+## Business Structure & Tax — Research-Backed Rules (2026)
+
+### Legal Structure
+- **Now (under ~$50k net profit):** Sole proprietor + single-member LLC. LLC = same Schedule C filing, zero extra tax complexity, but gives liability protection for 3D-printed physical goods.
+- **S-Corp election threshold:** $50,000–$80,000+ in *consistent annual net profit* (not gross revenue). Filing: Form 2553 within 75 days of desired effective date.
+- **S-Corp math at $100k net:** SE tax as sole prop ≈ $14,130 → S-Corp with $50k salary ≈ $7,650 payroll taxes → ~$6,480 gross savings → net savings after compliance ≈ $2,500–$4,500/yr.
+- **3D printing adjustment:** COGS from filament/materials reduces net profit, so gross revenue threshold to hit $50k net is higher than a pure-digital seller.
+
+### 1099-K Thresholds (One Big Beautiful Bill Act, signed July 4, 2025)
+- **Federal threshold permanently restored:** $20,000 AND 200+ transactions
+- All Etsy income is taxable regardless — the 1099-K is informational only
+- State thresholds vary; check your state separately
+
+### Key Deductions
+| Expense | Where on Schedule C |
+|---|---|
+| Filament, resin, materials | COGS, Part III, Line 36 |
+| Bambu P1S, AMS, upgrades | Section 179 (2026 limit: $2.56M) or 100% bonus depreciation |
+| Canva Pro, Adobe, AI subscriptions (Claude, OpenAI) | Line 27a |
+| Etsy fees (6.5% + 3%+$0.25) | Line 10 |
+| Home studio dedicated space | Form 8829 or $5/sq ft simplified |
+| Quality print samples photographed | Line 22 (advertising) — NOT COGS |
+| Vehicle mileage (post office runs) | $0.725/mile (2026 rate) |
+
+### Hobby vs. Business (OBBBA Made This Permanent)
+Hobby sellers now pay tax on **gross revenue with zero deductions**. Protect business status: separate bank account, maintain bookkeeping, document pricing adjustments based on sales data, show profit in 3 of last 5 years.
+
+---
+
+## SKU Naming Convention & Version Control
+
+All product files must follow this naming pattern:
+```
+[ProductLine][ProductID]_[ThemeName]_v[N].[ext]
+
+Examples:
+DP1026_LavenderDreams_v2.pdf          ← dated planner, version 2
+DP1026U_LavenderDreams_v2.pdf         ← undated version
+DP1026_LavenderDreams_CherryBlossom.pdf  ← cover variant
+DP1026_S01_FunctionalHeaders.png      ← sticker sheet 1
+BOHO-SET_DP1000_v1.jpg                ← wall art product file
+```
+
+Rules:
+- Increment `_v#` on every file re-uploaded to buyers
+- Keep `_archive/` subfolder — never overwrite old versions
+- Maintain `product_catalog.json` as source of truth (product_id, etsy_listing_id, price, file_paths, status, version, last_updated)
+- Automation scripts read from catalog — never hardcode listing IDs or file paths
+
+---
+
+## Automation Stack — What to Automate vs. Keep Manual
+
+### Automate
+| Task | Tool |
+|---|---|
+| AI disclosure on new listings | `tools/add_ai_disclosure.py` |
+| Image generation for listings | Python tools (existing) |
+| Listing creation from templates | Etsy API scripts (existing) |
+| Post-purchase buyer message | Etsy native auto-messages (set in dashboard) |
+| Shipping label generation | Pirate Ship (free, 15–30% USPS savings) |
+| Financial tracking / COGS per print | Craftybase |
+| Social post scheduling | Buffer or Tailwind |
+| Shop health snapshots | `tools/shop_health_check.py` |
+
+### Keep Manual (human judgment required)
+- Review responses — tone matters; script = damage
+- Custom order pricing and feasibility
+- Pricing changes (requires market analysis)
+- New product launch decisions
+- Negative review responses
+- Cover art quality approval before publishing
+
+### The One Automation Most Sellers Skip
+Etsy allows exactly **one** post-delivery buyer message. Set it to:
+> "Hope you love your [product name]! If you have 30 seconds, a review means everything to a small shop 🙏"
+Set this in Etsy Dashboard → Shop Manager → Messages → Auto-reply.
+
+---
+
+## Weekly & Monthly Operational Cadence
+
+### Weekly (Friday, 30 min)
+- Check Etsy Search Visibility Dashboard — fix any flagged listings immediately
+- Review 7-day conversion rate per listing (Etsy Analytics → Listings)
+- Respond to any outstanding messages or reviews
+- Check 3D print queue — what sold, what needs restocking
+
+### Monthly (1st of month, 2 hours)
+- Run `python tools/shop_health_check.py` — full snapshot
+- Compare conversion rates, views, revenue vs. prior month
+- Identify listings with high views but low conversion (photo or price problem)
+- Update seasonal keywords in top 10 listings (update 6 weeks before peak season)
+- Export orders for COGS/Craftybase reconciliation
+
+### Quarterly
+- Estimated tax payment (Jan 15, Apr 15, Jun 15, Sep 15)
+- New product launch or existing product upgrade decision
+- Review competitor pricing in top 3 niches
+- S-Corp salary draw if applicable
+
+### Seasonal Keyword Calendar (6 weeks before each peak)
+| Peak Season | Update By | Keywords to Add |
+|---|---|---|
+| Back to school | Mid-July | student planner 2026, school planner, academic planner |
+| Holiday gifting / New Year | Mid-October | new year planner, 2027 planner, gift for planner lover |
+| Valentine's Day | Early January | valentine gift, love journal, self care |
+| Spring reset | Mid-January | spring planner, fresh start, habit tracker |
+
+---
+
+## Etsy 2026 Algorithm — Confirmed Changes
+
+### Change 1: Title Length Cap (CRITICAL — affects all listings)
+- **Titles > 70 characters face mobile ranking penalty**
+- Mobile = 70%+ of Etsy traffic in 2026
+- Listings that shortened to <70 chars saw +34% mobile CTR and avg +4.2 position ranking boost
+- **Formula:** Lead with product noun → include top 3 keywords → keep buyer-friendly language
+- Example: `Kawaii Digital Planner 2026 | GoodNotes iPad | Sticker Pack` (61 chars) ✓
+
+### Change 2: Shipping Cost Penalty
+- US listings with shipping above **$6** face reduced search visibility
+- Action for digital products: shipping = free, already optimal
+- Action for 3D printed physical products: absorb shipping into price, offer free shipping or cap at $5.99 flat
+
+### Change 3: Search Visibility Dashboard (new tool)
+- Etsy now shows exactly which listings have reduced visibility and why
+- Flags: title quality, shipping cost, missing attributes, photo quality
+- Check weekly — bulk edit directly from the dashboard
+
+### Ongoing Ranking Factors (Priority Order)
+1. Click-through rate from search (most important — hero photo drives this)
+2. Add-to-cart and purchase rates relative to impressions
+3. Keyword relevance (title, tags, attributes, description first paragraph)
+4. Star Seller status — now carries measurable lift across entire catalog
+5. Free shipping
+6. Listing recency (new listing boost: ~14–21 days now, down from 30)
+7. Semantic intent matching (exact keywords less critical than intent)
+
+### Digital Product Specific
+- Category attributes and description completeness matter MORE than for physical (no fulfillment signal)
+- Fill every attribute field completely
+- For digital product thumbnails: **clean, high-contrast image on neutral background can outperform lifestyle mockup** for CTR — test both
+
+---
+
+## gpt-image-1 Prompt Engineering (Verified Techniques)
+
+### Core Architecture
+gpt-image-1 is an **instruction-tuned model** — NOT a diffusion model. Midjourney prompting won't transfer. It reads your prompt like a sentence and responds to photography vocabulary extremely well.
+
+### The 5-Slot Prompt Formula
+```
+[Subject + Material + Color] on/in [Surface/Scene + Context],
+[Light source + direction + quality],
+[Camera + lens + angle],
+[Finish descriptor],
+[Constraint clause]
+```
+
+**Example (iPad lifestyle shot):**
+```
+Silver iPad Pro 12.9-inch at a 30-degree angle on a cream linen-textured desk,
+screen displaying a lavender kawaii monthly planner spread with fillable day cells.
+Soft diffused window light from the left, warm white balance, gentle shadow to the right.
+50mm lens, eye-level angle, subject fills 65% of frame.
+Sharp commercial photography, slight depth of field on background.
+The image contains only the iPad, an Apple Pencil resting diagonally at lower right,
+and a small eucalyptus sprig in a ceramic bud vase. No hands, no text overlays,
+no visible studio equipment.
+```
+
+### The Wall-Art Composite Rule (Critical)
+gpt-image-1 **hallucinates art content** when asked to render specific art on a wall — never use AI generation for room scenes with product art in them. Instead:
+1. Use gpt-image-1 to generate **empty rooms only** (no art on walls)
+2. Composite actual product art using `composite_smart()` in Python/PIL
+3. Result: photorealistic room + 100% accurate product
+
+### Empty Room Prompt Templates
+
+**Sofa / Living Room (boho/cream):**
+```
+Photorealistic interior photography. Empty living room with a warm cream textured
+plaster wall, a boucle fabric sofa with sage green and terracotta throw pillows,
+natural oak hardwood floors, a rattan side table with a small terracotta ceramic pot.
+Soft diffused natural window light from the left, morning atmosphere, warm white balance.
+The upper 60% of the wall is completely empty and plain — no art, no shelves, no objects.
+35mm lens, eye-level, wide shot. IKEA catalog lifestyle photography style.
+No people, no text.
+```
+
+**Bedroom (Japandi/warm minimal):**
+```
+Photorealistic bedroom interior photography. Off-white linen wall, low platform bed
+frame in natural light oak with cream linen bedding, a small ceramic bedside lamp
+emitting warm amber glow, a trailing pothos plant on a windowsill.
+Evening atmosphere, warm ambient light, shadows soft.
+Upper 65% of the far wall is completely bare and empty — no art, no decor.
+35mm lens, eye-level. Japandi aesthetic. No people, no text, no studio equipment visible.
+```
+
+**Home Office (clean/modern):**
+```
+Photorealistic home office interior photography. Warm white wall with subtle linen
+texture, a light oak floating desk, a matte black adjustable lamp, a small succulent
+in a white ceramic pot, minimal books stacked flat. Bright clean natural daylight
+from a window on the left, cool-neutral white balance, even illumination.
+Upper 60% of the back wall is completely empty and blank. 50mm lens, eye-level.
+No people, no art on walls, no text.
+```
+
+### Negative Prompting — gpt-image-1 Has No Negative Field
+**Never** copy Midjourney negative prompts. Instead use positive constraint clauses at the end of every prompt:
+
+```
+"The image contains only [list exact elements].
+No hands are visible. No text overlays. No watermarks.
+No studio lighting equipment visible. No other objects appear in the frame."
+```
+
+| To exclude | Write |
+|---|---|
+| Hands/people | "No hands, no people, no human figures visible." |
+| Text in image | "No text, labels, or typography appears anywhere in the image." |
+| Fake art on walls | "All walls are completely bare and empty — no art, no prints, no decor hung on walls." |
+| Clutter | "Exactly three props are visible: [list them]. No other objects appear." |
+| Wrong colors | "The color palette is strictly [X] — no other dominant colors appear." |
+
+### Style Consistency Across a Batch (No Seed Parameter)
+Build a `STYLE_ANCHOR` string and paste it identically into every prompt in the batch:
+
+```python
+STYLE_ANCHOR = (
+    "Photography style: bright airy editorial Etsy lifestyle photography. "
+    "Warm cream and natural linen tones throughout. Soft diffused window light "
+    "from the left, warm white balance, gentle shadows to the right. "
+    "Camera at eye level, 50mm lens equivalent, slight depth of field on background. "
+    "No hands, no people, no text overlays, no studio equipment visible."
+)
+```
+
+For maximum consistency: pass the first accepted image as `@image1` in subsequent calls with:
+`"Maintain identical lighting, color temperature, surface texture, and photography style as Image 1. Change only [specific element]."`
+
+### Material Vocabulary That Works
+| Material | Vocabulary |
+|---|---|
+| Linen | "natural linen texture, visible weave pattern, slightly rumpled, warm off-white" |
+| Rattan | "natural rattan weave, warm honey-brown tones, slightly matte finish" |
+| Ceramic | "matte ceramic surface, subtle micro-texture, slightly imperfect handmade quality" |
+| Wood (oak) | "natural light oak, visible wood grain, matte satin finish, warm golden undertone" |
+| Boucle | "boucle fabric texture, looped cream-white pile, soft sculptural surface" |
+| Terracotta | "terracotta clay surface, slightly dusty matte texture, warm burnt orange tone" |
+
+### Lighting Vocabulary
+| Effect | Prompt |
+|---|---|
+| Morning lifestyle | "soft diffused window light from the left, warm white balance, gentle shadow to the right, morning atmosphere" |
+| Cozy evening | "warm amber lamp glow from upper right, soft ceiling ambient light, intimate evening atmosphere, no harsh shadows" |
+| Clean product | "bright even natural daylight, diffused overhead, cool-neutral white balance, no shadows on product" |
+| Golden hour | "golden hour backlighting, warm orange-yellow light from upper right, long soft shadows forward" |
+
+### gpt-image-1 Quirks
+- **Iterate, don't overload:** Start with clean base prompt → refine with single-change follow-ups
+- **No "8K ultra-detailed":** Camera/lens vocabulary beats generic quality modifiers. Use `"sharp commercial product photography"` not `"8K UHD photorealistic"`
+- **Text rendering:** Put literal text in quotes or ALL CAPS. Even then, composite text in Canva — don't trust in-image text
+- **Hands:** Even with "no hands visible," generation can slip. Regenerate rather than edit — editing creates worse artifacts
+- **Color drift:** Re-specify hex or descriptive colors in every prompt (model doesn't remember previous calls)
+- **Bedroom content filters:** Use "interior photography" language, not "photoshoot" language. Describe furniture, not atmosphere
+- **Quality setting for production:** `quality="high"` for hero images; `quality="medium"` for background generation (composited anyway)
+- **`input_fidelity="high"`:** Use when editing an existing image to preserve composition while changing one element
