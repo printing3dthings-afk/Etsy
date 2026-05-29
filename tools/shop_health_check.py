@@ -17,7 +17,7 @@ Usage:
   python tools/shop_health_check.py --full    # include per-listing stats
 """
 
-import os, sys, json, urllib.request, time, argparse
+import os, sys, json, urllib.request, time, argparse, pathlib
 from datetime import datetime, timezone
 sys.path.insert(0, '/home/user/Etsy')
 with open('/home/user/Etsy/.env') as f:
@@ -39,6 +39,47 @@ STANDARDS = {
     'photo_slots_minimum':       7,     # fewer = opportunity missed
     'photo_slots_target':        10,
 }
+
+
+SNAPSHOT_FILE = pathlib.Path('/home/user/Etsy/data/performance/weekly_snapshots.json')
+
+# Early-warning thresholds — ordered from most critical to least
+EARLY_WARNINGS = [
+    # (metric_key, operator, threshold, severity, message)
+    ('conversion_rate', '<', 0.01, 'CRITICAL', 'Conversion rate below 1% — photo/price emergency'),
+    ('conversion_rate', '<', 0.03, 'WARN',     'Conversion rate below 3% — review hero image + title'),
+    ('review_avg',      '<', 4.9,  'CRITICAL', 'Review average below 4.9 — read all recent reviews now'),
+    ('sales_7d',        '==', 0,   'WARN',     'Zero sales in the past 7 days — check listings'),
+    ('views_drop_pct',  '>', 40,   'CRITICAL', 'Views dropped 40%+ vs last week — possible shadow ban'),
+    ('msg_unanswered_hrs', '>', 10, 'CRITICAL', 'Unanswered message over 10 hours — Star Seller at risk'),
+    ('new_listing_views_7d', '==', 0, 'WARN',  'New listing has 0 views after 7 days — fix SEO/tags'),
+    ('photo_count_min', '<', 7,    'WARN',     'Listing(s) below minimum 7 photos'),
+]
+
+
+def _save_weekly_snapshot(snapshot: dict) -> None:
+    """Append a snapshot dict to the rolling weekly JSON array."""
+    SNAPSHOT_FILE.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        existing = json.loads(SNAPSHOT_FILE.read_text()) if SNAPSHOT_FILE.exists() else []
+    except Exception:
+        existing = []
+    existing.append(snapshot)
+    # Keep last 104 weeks (2 years) — prune oldest if over limit
+    if len(existing) > 104:
+        existing = existing[-104:]
+    SNAPSHOT_FILE.write_text(json.dumps(existing, indent=2))
+
+
+def _load_prev_snapshot() -> dict | None:
+    """Load the most recent previous snapshot for trend comparison."""
+    if not SNAPSHOT_FILE.exists():
+        return None
+    try:
+        data = json.loads(SNAPSHOT_FILE.read_text())
+        return data[-1] if data else None
+    except Exception:
+        return None
 
 
 def _get(client, url):
@@ -221,7 +262,7 @@ def check_shop(client):
     print(f"                      for our customers so we can grow responsibly.")
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
-    return {
+    result = {
         'sales': sales,
         'rung': rung,
         'reviews': rev_c,
@@ -229,8 +270,24 @@ def check_shop(client):
         'active_listings': active,
         'alerts': len(alerts),
         'photo_warnings': len(photo_warnings),
+        'unanswered_reviews': len(unanswered),
         'checked_at': datetime.now(timezone.utc).isoformat(),
     }
+
+    # ── Trend comparison vs last snapshot ─────────────────────────────────────
+    prev = _load_prev_snapshot()
+    if prev:
+        prev_sales = prev.get('sales', sales)
+        if prev_sales and sales < prev_sales:
+            print(f"  TREND: Sales dropped from {prev_sales} to {sales} since last check")
+        prev_avg = prev.get('review_avg', rev_a)
+        if prev_avg and rev_a and rev_a < prev_avg:
+            print(f"  TREND: Review average dropped {prev_avg} → {rev_a} — investigate")
+
+    # ── Save this week's snapshot for regression tracking ─────────────────────
+    _save_weekly_snapshot(result)
+
+    return result
 
 
 def main():

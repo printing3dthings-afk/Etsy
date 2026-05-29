@@ -28,6 +28,7 @@ from __future__ import annotations
 import os
 import json
 import time
+import random
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -72,12 +73,15 @@ class EtsyAPIClient:
             url = f"{url}?{urllib.parse.urlencode(params)}"
 
         retryable_http = {429, 503}
-        delays = [2, 4]  # sleep durations between attempts 1→2 and 2→3
+        base_delays = [2, 4]  # exponential backoff base: 2s then 4s
+
+        def _jittered(base: float) -> float:
+            return base * (0.75 + random.random() * 0.5)  # ±25% jitter
 
         last_exc: Exception | None = None
         for attempt in range(3):
             if attempt > 0:
-                time.sleep(delays[attempt - 1])
+                time.sleep(_jittered(base_delays[attempt - 1]))
             try:
                 req = self._build_request(method, url, body)
                 with urllib.request.urlopen(req, timeout=15) as resp:
@@ -99,6 +103,13 @@ class EtsyAPIClient:
                             msg = body_text
                         raise EtsyAPIError(e2.code, msg)
                 if e.code in retryable_http:
+                    # Honour the server's retry-after header when present
+                    retry_after = e.headers.get("retry-after") or e.headers.get("Retry-After")
+                    if retry_after:
+                        try:
+                            time.sleep(float(retry_after) * (0.75 + random.random() * 0.5))
+                        except ValueError:
+                            pass
                     last_exc = e
                     continue  # retry with backoff
                 # Non-retryable HTTP error (including 4xx auth errors other than 401)
@@ -180,9 +191,80 @@ class EtsyAPIClient:
         return self._request("GET", f"shops/{self.shop_id}/conversations", params={"limit": limit})
 
     def create_listing(self, listing_data: dict) -> dict:
-        """Create a new listing. Requires OAuth access token."""
+        """Create a new listing. Requires OAuth access token.
+
+        Automatically enforces required Etsy fields and injects AI disclosure
+        (mandatory since June 10, 2025 for AI-assisted listings).
+        """
         self._require_oauth()
-        return self._request("POST", f"shops/{self.shop_id}/listings", body=listing_data)
+        data = dict(listing_data)
+        # Required production fields — missing these causes Etsy moderation flags
+        data.setdefault("who_made", "i_did")
+        data.setdefault("when_made", "made_to_order")
+        data.setdefault("is_supply", False)
+        # AI disclosure — required for all listings using AI-generated imagery or copy
+        desc = data.get("description", "")
+        _DISCLOSURE = (
+            "\n\n---\n"
+            "This product was created with AI assistance (DALL-E image generation "
+            "for cover/lifestyle artwork). All content has been reviewed and finalized "
+            "by the seller."
+        )
+        if desc and "AI assistance" not in desc:
+            data["description"] = desc + _DISCLOSURE
+        return self._request("POST", f"shops/{self.shop_id}/listings", body=data)
+
+    @staticmethod
+    def pre_publish_gate(listing_data: dict) -> list[str]:
+        """Run quality gate checks before publishing. Returns list of failure reasons (empty = pass).
+
+        Call this before create_listing() and abort if any failures are returned.
+        Enforces OnBrandCraftz quality standards per business_standards.md.
+        """
+        failures = []
+        title = listing_data.get("title", "")
+        desc = listing_data.get("description", "")
+        tags = listing_data.get("tags", [])
+        price = listing_data.get("price", 0)
+
+        # Title checks
+        if not title:
+            failures.append("Missing title")
+        elif len(title) > 140:
+            failures.append(f"Title too long: {len(title)}/140 chars")
+        elif len(title) < 40:
+            failures.append("Title too short — lead keyword must be at least 40 chars")
+
+        # Keyword checks in title
+        if title and "instant download" not in title.lower():
+            failures.append("Title missing 'Instant Download'")
+
+        # Tags
+        if len(tags) < 13:
+            failures.append(f"Only {len(tags)}/13 tags — fill all 13 slots")
+        for tag in tags:
+            if len(tag) > 20:
+                failures.append(f"Tag too long (>{len(tag)} chars): '{tag}'")
+
+        # Description
+        if not desc:
+            failures.append("Missing description")
+        elif len(desc) < 300:
+            failures.append("Description too short — expand with what's included, apps, FAQ")
+
+        # Price floor enforcement
+        price_cents = int(price) if isinstance(price, (int, float)) else 0
+        price_usd = price_cents / 100 if price_cents > 100 else price_cents
+        if price_usd and price_usd < 7.99:
+            failures.append(f"Price ${price_usd:.2f} is below minimum floor $7.99")
+
+        # Required Etsy production fields
+        if listing_data.get("who_made", "i_did") not in ("i_did", "collective", "someone_else"):
+            failures.append("Invalid who_made value")
+        if listing_data.get("is_supply") is True:
+            failures.append("is_supply should be False for finished products")
+
+        return failures
 
     def update_listing(self, listing_id: int | str, updates: dict) -> dict:
         """Update an existing listing. Requires OAuth access token."""
