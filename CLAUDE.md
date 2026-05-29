@@ -561,11 +561,17 @@ Research-backed rules that must be applied to every listing:
 - FAQ section reduces pre-purchase questions and refund requests
 
 **Photos — the #1 conversion factor:**
-- Lifestyle thumbnail → 314% higher CTR than flat white background (A/B test data)
+- **46% of Etsy purchases are on mobile app** (Q4 2025 official data) — every photo decision is mobile-first
+- Lifestyle thumbnail → 2–3x higher CTR than flat white background (verified; "314%" claim is inflated)
 - Use all 10 photo slots — each additional image increases conversion rate
-- Recommended size: **2400×2400px square** (outperforms 2000px by 7–12% CTR)
+- Recommended size: **2400×2400px square** (outperforms 2000px by estimated 7–12% CTR)
 - Keep subject in center **70% of frame** — Etsy crops thumbnails on mobile
-- Add 5% white padding around edges — recovered 19% CTR in seller testing
+- Add **5% neutral-tone padding** around edges — prevents mobile thumbnail cropping
+- **Show art in 2 different rooms** — buyers shop by room first, then by art style
+- **Include a gallery wall image** — buyers who see grouped art are 40% more likely to buy multiple
+- **Include a size reference shot** — art shown against sofa with furniture context removes #1 question
+- **3 props max per scene** — more than 3 clutters; fewer than 3 looks staged and flat
+- Full research: `data/knowledge_base/lifestyle_photo_mastery.md`
 
 ---
 
@@ -1389,6 +1395,54 @@ Priority order based on sales impact:
 ## Image Generation Notes (for gpt-image-1 / DALL-E)
 
 Generate all 10 images at **2400×2400px square**. Never put text overlays in the AI-generated image — add all text callouts separately in Canva after generation. No hands or people visible (AI renders these unnaturally). Use the product's color theme as the accent color for props and backgrounds.
+
+### Wall Art Lifestyle Photo Rules (research-validated, May 2026)
+
+These rules apply to every wall art listing photo generated. Violating them costs CTR and conversion.
+
+**THE 4-LAYER ROOM FORMULA (every lifestyle shot must have all 4):**
+1. **Backdrop (60% of frame):** Warm cream, sage green, terracotta, or warm white wall. Textured plaster preferred. Upper 65%+ is ALWAYS completely plain wall — NOTHING in upper portion.
+2. **The Art (25–35% visual weight):** Real product, properly framed, thick white mat (2.5–3 inch). Center of frame, upper-middle position.
+3. **Anchor Furniture (lower 25–30%):** ONE piece — sofa, console, bed frame, shelf. Natural materials: wood, rattan, linen, marble.
+4. **Accent Props (3 items max):** Curated, intentional. Each belongs to the same "world" as the art. One large + one medium + one small.
+
+**TOP 5 ROOMS BY CONVERSION (in order):**
+1. Living room (sofa + art = broadest buyer pool)
+2. Bedroom (highest emotional purchase driver)
+3. Home office (fast growing, underserved by competitors)
+4. Dining room / kitchen (niche but decisive buyers)
+5. Entryway / hallway (high-intent "new home" buyers)
+
+**ALWAYS show art in 2 different room types per listing.** Buyers shop by room first, art style second. Two rooms = double the buyer pool.
+
+**2026 INTERIOR DESIGN AESTHETICS TO USE IN BACKGROUNDS:**
+- **Warm cream/creme neutrals** — warm beige walls, natural oak, rattan, cream linen (default for most scenes)
+- **Verdant/biophilic** — plants everywhere, terracotta pots, earthy greens (include plant in 60%+ of shots)
+- **Curated maximalism** — layered textures, thick frames, vintage-feeling props, "collected over time" feel
+- **Japandi** — low furniture, white linen, ceramic, stone, zen calm (bedroom scenes)
+- **English cottage / dark moody** — deep-toned walls (navy, forest green), books, candles, dried flowers
+
+**LIGHTING MOODS:**
+- Daytime living room / bedroom: "soft diffused window light from left, warm white balance, gentle shadow to right, morning light"
+- Evening bedroom / study: "warm amber bedside lamp glow, soft ceiling ambient light, intimate evening atmosphere"
+- Office / kitchen / minimal: "bright clean natural daylight, even illumination, no harsh shadows, cool-neutral"
+
+**MOBILE THUMBNAIL RULES (46% of purchases are on mobile):**
+- High contrast between frame edge and wall — never light frame on light wall
+- Subject centered in top-center 60% of frame
+- 5% neutral-tone edge padding on every shot
+- No text in main lifestyle images — invisible at 200px thumbnail size
+- Warm-toned backgrounds outperform cool-gray in the mobile search grid
+
+**PROP PAIRINGS BY ART SUBJECT:**
+- Watercolor floral → ceramic vase + dried pampas + folded linen
+- Abstract landscape → terracotta vase + trailing pothos + stone bowl
+- Typography quote → ceramic mug + small succulent + gold pen holder
+- Ocean/coastal → sea glass dish + driftwood piece + dried lavender
+- Food/kitchen art → ceramic pitcher + fresh herbs in pot + linen cloth
+- Dark/moody → crystal + taper candle in brass + dark hardcover book
+
+Full research reference: `data/knowledge_base/lifestyle_photo_mastery.md`
 
 **Color theme reference for prompts:**
 - DP1026: lavender purple (#8666AA), soft lavender accents, cream/white surfaces
