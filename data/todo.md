@@ -97,6 +97,9 @@
 
 ## 🔧 TECHNICAL / CLEANUP
 
+- [ ] **Activate art posting cron job** — run `crontab -e` and add this line to post new art every other day at 10am:
+  `0 10 */2 * * cd /home/user/Etsy && python3 tools/post_scheduled_art.py >> logs/art_schedule.log 2>&1`
+  Run `python tools/post_scheduled_art.py --preview` first to verify image quality before activating.
 - [ ] Delete planner backup files: `data/digital_products/product_files/*.orig_backup` (86.3 MB) — after verifying planners work in GoodNotes
 
 ---
