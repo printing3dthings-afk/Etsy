@@ -13,31 +13,23 @@ Check off items as you complete them. Everything below requires manual action �
 - [x] Fixed Paris Skyline listing photos — art now shows as wide landscape frame
 - [x] Fixed Autumn Fox listing photo — frame hangs above shelf with proper clearance
 - [x] Saved competitor research report (`data/knowledge_base/competitor_research_2026.md`)
+- [x] Upscaled 29 undersized art files (1,024px → 4,096×6,144px via Lanczos + sharpening)
+- [x] Generated multi-size ZIPs for all 52 art files (10 sizes: 4×6 through 16×24", A4/A3, squares)
+- [x] Uploaded ZIPs to all 38 listings — buyers now receive 10 print sizes instead of 1 JPG
+- [x] Audited and fixed tags on 40/49 listings — duplicate title phrases replaced with buyer-intent phrases
 
 ---
 
-## PRIORITY 1 — Do This Week (Blocking Everything Else)
+## PRIORITY 1 — Up Next (Manual Only)
 
-### File Quality
-- [ ] **Install Real-ESRGAN** (free) or Topaz Gigapixel ($99/yr) for AI upscaling
-  - Real-ESRGAN: https://github.com/xinntao/Real-ESRGAN (free, open source)
-  - Topaz Gigapixel: better quality, easier UI, paid
-- [ ] **Upscale all 50 art files** to minimum 4,800×6,000px (supports 16×20" at 300 DPI)
-  - Run upscaler on each file in `data/digital_products/product_files/`
-  - Save upscaled versions in a new subfolder: `product_files/upscaled/`
-  - Do the top 20 listings by views first (check Etsy Analytics → Listings → sort by Views)
-- [ ] **Create multi-size ZIP for each listing** after upscaling
-  - Each ZIP needs: 2:3 folder, 4:5 folder, A-series folder, square folder, README.pdf
-  - File naming: `fox-watercolor_8x10_300dpi.jpg` (not IMG_4456.jpg)
-  - Keep ZIP under 20MB (TinyPNG to compress if needed)
-  - Re-upload ZIP to each Etsy listing as the digital file delivery
-
-### Listing Tags Audit
-- [ ] **Audit all 50 listing tags** — open each listing in Etsy and check:
-  - Are all 13 tag slots used? (empty = lost ranking)
-  - Does any tag repeat a phrase already in the title word-for-word? (wasted slot — replace it)
-  - Replace duplicates with: room type (bedroom wall art), occasion (housewarming gift), recipient (gift for her), aesthetic (boho decor), use case (gallery wall)
-  - Every tag must be 2–3 words, max 20 characters
+### Listing Photo Improvements
+- [ ] **Add second room type photo to top 10 listings by views**
+  - Check Etsy Analytics → Listings → sort by Views — note the top 10
+  - Each of those listings should show art in 2 different rooms (most currently show 1)
+  - Just reply here and I'll generate the second room photos automatically
+- [ ] **Add a gallery wall grouping photo to any listing without one**
+  - Buyers who see grouped art are 40% more likely to buy multiple
+  - Reply here and I'll generate these automatically too
 
 ---
 
