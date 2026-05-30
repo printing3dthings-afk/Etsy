@@ -30,5 +30,15 @@
     "task": "Run weekly deep-dive analytics: per-listing profitability table, traffic sources, conversion funnel, best/worst categories. Compare against 30-day revenue targets. Log all metrics to knowledge base. Provide 3 specific revenue-growing recommendations.",
     "cron": "0 10 * * 0",
     "enabled": false
+  },
+  {
+    "id": "auto_art_poster",
+    "label": "Auto Art Poster (Every Other Day)",
+    "agent": null,
+    "task": "Post one new wall art listing to Etsy. Cycles through 20 art categories in order. State tracked in data/art_schedule.json.",
+    "cron": "0 10 */2 * *",
+    "script": "tools/post_scheduled_art.py",
+    "enabled": true,
+    "notes": "Run manually: python tools/post_scheduled_art.py --force\nPreview only: python tools/post_scheduled_art.py --preview\nCheck queue: python tools/post_scheduled_art.py --status"
   }
 ]
