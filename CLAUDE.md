@@ -1402,6 +1402,175 @@ Priority order based on sales impact:
 
 ---
 
+## Wall Art Production Pipeline — Mandatory Standards
+*Every new wall art listing must pass ALL of these gates before going live. No exceptions.*
+
+---
+
+### Gate 1: Art File Resolution (HARD REQUIREMENT)
+**Minimum accepted master file: 3,000×4,500px (2:3 portrait) or equivalent area for other ratios.**
+Any file below this is rejected from the production pipeline — do NOT create a listing from it.
+
+| Accepted | Rejected |
+|---|---|
+| 3,000×4,500px or larger | 1,024×1,536px (AI raw output) |
+| 3,000×3,875px or larger (4:5) | Any file under 3,000px on the short edge |
+
+**Upscaling workflow for undersized files:**
+1. Run `tools/upscale_art.py` — applies 4× Lanczos + UnsharpMask (radius=2, percent=150, threshold=3)
+2. Output saved to `data/digital_products/product_files/upscaled/`
+3. Verify output is ≥4,000px on the short edge before proceeding
+
+**Color space:** Export all final files as **sRGB**. Never AdobeRGB or CMYK — Etsy auto-converts and color shifts on print are a top-3 review complaint.
+
+---
+
+### Gate 2: Multi-Size ZIP Delivery (HARD REQUIREMENT)
+**Never upload a single JPG as the Etsy digital file.** Buyers expect multiple print sizes. Single-file listings generate the most "wrong size" complaints and refund requests.
+
+**Run `tools/generate_print_sizes.py` for every new art file.** This produces a ZIP with:
+
+| Folder | Sizes Included |
+|---|---|
+| `2x3/` | 4×6", 8×12", 12×18", 16×24" at 300 DPI |
+| `4x5/` | 8×10", 16×20" at 300 DPI |
+| `a_series/` | A4, A3 at 300 DPI |
+| `square/` | 8×8", 12×12" at 300 DPI |
+| root | `README.txt` with printing instructions |
+
+- File naming: `DP1030_8x10_300dpi.jpg` (never IMG_4456.jpg)
+- ZIP max size: 20MB (Etsy hard limit). Script auto-reduces JPEG quality to stay under.
+- ZIP saved to: `data/digital_products/print_zips/DP####_print_sizes.zip`
+- Upload ZIP to Etsy listing via `EtsyAPIClient.upload_listing_file()`
+
+---
+
+### Gate 3: Title — 2026 Algorithm Rules (HARD REQUIREMENT)
+**Maximum 70 characters.** Titles over 70 chars receive a mobile ranking penalty (70%+ of Etsy traffic is mobile).
+
+**Formula:**
+```
+[Primary search phrase] Printable Wall Art, Instant Download, [Style/room]
+```
+
+Rules:
+- First 20–30 characters = highest algorithm weight — lead with the exact phrase buyers type
+- Must include: "printable" AND "instant download"
+- Use comma separators, not pipes
+- Target: 55–70 characters
+- **Do NOT repeat title phrases in tags** (wastes ranking slots — see Gate 4)
+
+**Validation:** Run `len(title)` before publishing. Hard reject if > 70.
+
+---
+
+### Gate 4: Tags — 13 Slots, Zero Wasted (HARD REQUIREMENT)
+- Use all 13 tag slots — every empty slot is a missed ranking opportunity
+- **No tag may duplicate a phrase already in the title** — this is the #1 tag mistake and costs ranking coverage
+- Every tag must be 2–3 words, max 20 characters including spaces
+- Cover all 6 intent categories across the 13 tags:
+
+| Category | Example Tags |
+|---|---|
+| Style/aesthetic | `boho wall art`, `dark academia`, `cottagecore art` |
+| Room type | `bedroom wall art`, `living room art`, `office wall decor` |
+| Art medium | `watercolor print`, `line art print`, `botanical print` |
+| Occasion/use | `housewarming gift`, `gallery wall art`, `new home gift` |
+| Recipient | `gift for her`, `nature lover gift`, `art lover gift` |
+| Format | `printable poster`, `digital art print`, `downloadable art` |
+
+**Automated audit:** Run `tools/audit_fix_wall_art_tags.py` after any batch of new listings.
+
+---
+
+### Gate 5: Listing Photos — 2 Rooms Minimum (HARD REQUIREMENT)
+Every wall art listing must have photos showing art in **at least 2 different room types**.
+Buyers shop by room first, art style second. Two rooms doubles the buyer pool.
+
+**Required photo sequence (use all 10 slots):**
+1. Living room or bedroom hero — lifestyle composite via `tools/lifestyle_composite.py`
+2. Second room type (office, bedroom, entryway — different from photo 1)
+3. Close-up art detail shot (shows quality)
+4. Gallery wall grouping (3 coordinated prints on one wall — 40% higher multi-purchase rate)
+5. Size reference shot (art shown next to furniture with scale context)
+6. All formats flat lay (what's in the ZIP — multiple size files fanned out)
+7. Second lifestyle angle or color variant
+8. Frame style options (black, white, natural wood)
+9. What's included graphic (Canva text overlay listing the sizes)
+10. Bundle/collection cross-sell
+
+**Compositing rules:**
+- Use `composite_smart()` from `tools/lifestyle_composite.py` — never place art manually
+- Always pass `min_clearance=70` minimum; use `min_clearance=150` for bedroom/shelf scenes
+- For landscape art files: run pixel analysis first to detect actual drawing bounds, crop tight, then composite
+- Verify frame does not overlap furniture before uploading — zoom in on the furniture line
+
+**Photo specs:** 2400×2400px square, subject centered in 70% of frame, 5% neutral padding at edges.
+
+---
+
+### Gate 6: Description — First Sentence Rule
+The first sentence of every wall art listing description must:
+1. Contain the primary keyword naturally (for Google indexing)
+2. State that this is an instant/digital download
+
+**Required preamble (use verbatim or close variant):**
+> "Instant download printable wall art — digital download delivered immediately after purchase, ready to print at home or at any print shop."
+
+This is the only text mobile buyers see before the fold.
+
+---
+
+### Gate 7: Pricing Tiers
+| Type | Price | Notes |
+|---|---|---|
+| Single print | $4.99–$7.99 | Impulse tier — .99 endings outperform round numbers |
+| Set of 3 matching | $12.99–$19.99 | Most purchased bundle unit |
+| Gallery wall set of 5–7 | $19.99–$39.99 | Highest revenue per transaction |
+| Pick Any 3 bundle | $14.97 | Highest favorites-to-views ratio |
+| Complete collection | $24.99 | Algorithm anchor — generates catalog-wide signal |
+
+Always use .99 or .49/.97 endings — never round numbers.
+
+---
+
+### New Listing Production Checklist (Wall Art)
+
+Run through this in order for every new wall art product:
+
+**Art File**
+- [ ] Master file ≥ 3,000px on short edge (if not, run `tools/upscale_art.py` first)
+- [ ] File exported as sRGB color space
+- [ ] Run `tools/generate_print_sizes.py` → ZIP created in `print_zips/`
+- [ ] ZIP verified under 20MB
+
+**Listing Content**
+- [ ] Title: 55–70 characters, leads with buyer search phrase, includes "printable" + "instant download"
+- [ ] Title: does NOT use pipe separators (use commas)
+- [ ] Description: first sentence contains primary keyword + states instant download
+- [ ] Description: all required sections present (hook, what's included, specs, FAQ)
+- [ ] Tags: all 13 slots used
+- [ ] Tags: zero tags duplicate title phrases
+- [ ] Tags: cover all 6 intent categories (style, room, medium, occasion, recipient, format)
+- [ ] Price: uses .99/.97/.49 ending, matches tier table above
+
+**Photos**
+- [ ] Photo 1: hero lifestyle room — art composited with `composite_smart()`
+- [ ] Photo 2: second different room type
+- [ ] Photo 3: close-up art detail
+- [ ] Photo 4: gallery wall grouping (3 prints)
+- [ ] Photo 5: size reference with furniture scale
+- [ ] Photo 6: ZIP contents flat lay
+- [ ] Frame does not overlap any furniture (zoom check before upload)
+- [ ] All photos 2400×2400px
+
+**Publishing**
+- [ ] Upload ZIP to listing via `EtsyAPIClient.upload_listing_file()`
+- [ ] Run `tools/audit_fix_wall_art_tags.py` to verify tags pass audit
+- [ ] Check listing live on mobile — does the thumbnail stop the scroll?
+
+---
+
 ## Image Generation Notes (for gpt-image-1 / DALL-E)
 
 Generate all 10 images at **2400×2400px square**. Never put text overlays in the AI-generated image — add all text callouts separately in Canva after generation. No hands or people visible (AI renders these unnaturally). Use the product's color theme as the accent color for props and backgrounds.
@@ -1881,6 +2050,30 @@ Before publishing any sticker pack:
 
 ## Quality Check Checklist (before listing)
 
+### Wall Art File Quality
+- [ ] Master art file ≥ 3,000px on short edge (if not, run `tools/upscale_art.py`)
+- [ ] File is sRGB color space (not AdobeRGB or CMYK)
+- [ ] Multi-size ZIP created via `tools/generate_print_sizes.py`
+- [ ] ZIP contains 2:3, 4:5, A-series, and square subfolders + README.txt
+- [ ] ZIP is under 20MB (Etsy hard limit)
+- [ ] ZIP uploaded to listing via `EtsyAPIClient.upload_listing_file()`
+- [ ] Files named descriptively: `DP1030_8x10_300dpi.jpg` (not IMG_4456.jpg)
+
+### Wall Art Listing Quality
+- [ ] Title is 55–70 characters (hard reject above 70 — mobile ranking penalty)
+- [ ] Title leads with buyer search phrase in first 20–30 characters
+- [ ] Title uses comma separators (not pipes)
+- [ ] Title includes "printable" AND "instant download"
+- [ ] All 13 tag slots used
+- [ ] No tag duplicates a phrase from the title
+- [ ] Tags cover all 6 intent categories: style, room, medium, occasion, recipient, format
+- [ ] First description sentence contains primary keyword + states instant/digital download
+- [ ] Price uses .99/.97/.49 ending
+- [ ] Minimum 2 lifestyle room photos (different rooms)
+- [ ] Gallery wall grouping photo included
+- [ ] All frames verified above furniture line — no overlap
+- [ ] Listing checked on mobile: thumbnail readable and scroll-stopping
+
 ### PDF / File Quality
 - [ ] PDF opens in GoodNotes without errors
 - [ ] PDF opens in Notability without errors
@@ -1988,6 +2181,9 @@ Rules:
 | AI disclosure on new listings | `tools/add_ai_disclosure.py` |
 | Image generation for listings | Python tools (existing) |
 | Listing creation from templates | Etsy API scripts (existing) |
+| **Upscale undersized art files** | `tools/upscale_art.py` — run before creating any listing from AI-generated art |
+| **Multi-size print ZIP creation** | `tools/generate_print_sizes.py` — run after upscaling, before uploading to Etsy |
+| **Tags audit + fix** | `tools/audit_fix_wall_art_tags.py` — run after any batch of new listings |
 | Post-purchase buyer message | Etsy native auto-messages (set in dashboard) |
 | Shipping label generation | Pirate Ship (free, 15–30% USPS savings) |
 | Financial tracking / COGS per print | Craftybase |
