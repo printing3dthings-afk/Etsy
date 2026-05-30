@@ -1555,7 +1555,8 @@ Run through this in order for every new wall art product:
 - [ ] Price: uses .99/.97/.49 ending, matches tier table above
 
 **Photos**
-- [ ] Photo 1: hero lifestyle room — art composited with `composite_smart()`
+- [ ] **CARDINAL CHECK: every photo contains the REAL product — not an AI-generated stand-in**
+- [ ] Photo 1: hero lifestyle room — art composited with `composite_smart()` (real art file in real room)
 - [ ] Photo 2: second different room type
 - [ ] Photo 3: close-up art detail
 - [ ] Photo 4: gallery wall grouping (3 prints)
@@ -2109,6 +2110,7 @@ Before publishing any sticker pack:
 - [ ] All 5 sticker sheets present in ZIP (functional headers, mood trackers, planner, cozy, seasonal)
 
 ### Listing Materials
+- [ ] **CARDINAL CHECK: every photo shows the REAL product — no AI-generated product stand-ins**
 - [ ] All 10 listing photos generated at 2400×2400px
 - [ ] Hero photo (Photo 1) reviewed — does it stop the scroll?
 - [ ] Text callouts added in Canva for Photos 2, 6, 7 (not baked into AI image)
@@ -2296,6 +2298,20 @@ The image contains only the iPad, an Apple Pencil resting diagonally at lower ri
 and a small eucalyptus sprig in a ceramic bud vase. No hands, no text overlays,
 no visible studio equipment.
 ```
+
+### THE CARDINAL RULE — Every Listing Photo Must Show the REAL Product (NEVER VIOLATE)
+**Every single listing photo must contain the actual product — no exceptions, no substitutes.**
+- For wall art: composite the real art file into the room using `composite_smart()` — never let AI hallucinate the art
+- For 3D printed physical products: composite a real photo of the printed item into the lifestyle scene — never let AI generate a stand-in object
+- AI-generated lifestyle rooms with AI-generated products are BANNED — they show the customer something they will NOT receive
+- This rule enforces the mission statement: "Best and most accurate transaction — listings show the REAL product"
+- A lifestyle image that looks beautiful but does not contain the actual product is worse than no lifestyle image at all
+
+**Workflow for every product type:**
+1. Start with the REAL product: an actual photo of the 3D print, or the actual art file JPG
+2. Generate an empty lifestyle room scene with gpt-image-1 (no product in it)
+3. Composite the real product into the room using PIL
+4. The customer sees exactly what they will receive
 
 ### The Wall-Art Composite Rule (Critical)
 gpt-image-1 **hallucinates art content** when asked to render specific art on a wall — never use AI generation for room scenes with product art in them. Instead:
