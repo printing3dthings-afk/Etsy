@@ -13,64 +13,27 @@ Check off items as you complete them. Everything below requires manual action �
 - [x] Fixed Paris Skyline listing photos — art now shows as wide landscape frame
 - [x] Fixed Autumn Fox listing photo — frame hangs above shelf with proper clearance
 - [x] Saved competitor research report (`data/knowledge_base/competitor_research_2026.md`)
-- [x] Upscaled 29 undersized art files (1,024px → 4,096×6,144px via Lanczos + sharpening)
-- [x] Generated multi-size ZIPs for all 52 art files (10 sizes: 4×6 through 16×24", A4/A3, squares)
+- [x] Upscaled 29 undersized art files (1,024px → 4,096×6,144px)
+- [x] Generated multi-size ZIPs for all 52 art files (10 sizes each, 300 DPI)
 - [x] Uploaded ZIPs to all 38 listings — buyers now receive 10 print sizes instead of 1 JPG
-- [x] Audited and fixed tags on 40/49 listings — duplicate title phrases replaced with buyer-intent phrases
+- [x] Audited and fixed tags on 40/49 listings — duplicate title phrases replaced
+- [x] Created Coastal Gallery Wall Set of 5 listing ($24.99, listing 4513713044)
+- [x] Created Botanical Gallery Wall Set of 5 listing ($24.99, listing 4513713106)
+- [x] Created Woodland Animal Gallery Wall Set of 5 listing ($24.99, listing 4513713142)
+- [x] Created 5 Black & White listings ($4.99 each) — Botanical, Japandi, Vintage, Paris, Moon Phases
+- [x] Created 5 Nursery listings ($9.99 each) — Fox, Bear, Owl, Fox Watercolor, Hummingbird
+- [x] Added gallery wall grouping photo to top 9 listings by views
 
 ---
 
 ## PRIORITY 1 — Up Next (Manual Only)
 
-### Listing Photo Improvements
-- [ ] **Add second room type photo to top 10 listings by views**
-  - Check Etsy Analytics → Listings → sort by Views — note the top 10
-  - Each of those listings should show art in 2 different rooms (most currently show 1)
-  - Just reply here and I'll generate the second room photos automatically
-- [ ] **Add a gallery wall grouping photo to any listing without one**
-  - Buyers who see grouped art are 40% more likely to buy multiple
-  - Reply here and I'll generate these automatically too
+- [ ] **Check Etsy Search Visibility Dashboard** — fix any listings flagged for reduced visibility
+- [ ] **Verify new listings look correct on mobile** — check thumbnail appearance for the 13 new listings created
 
 ---
 
-## PRIORITY 2 — Do This Month
-
-### New Listings Using Existing Art (No New Art Needed)
-
-- [ ] **Create 8–10 Nursery Listings** using existing animal art files (fox, owl, bear, deer, rabbit)
-  - Title formula: `[Animal] Nursery Wall Art, Printable Instant Download, Woodland` (≤70 chars)
-  - Tags to use: `nursery wall art`, `woodland nursery`, `baby room decor`, `printable nursery`, `animal nursery art`, `kids room decor`, `gender neutral`, `baby shower gift`, `woodland animals`, `nursery prints`, `printable art`, `instant download`, `infant room art`
-  - Price: $8.99–$12.99
-  - Note in description: "Perfect for a woodland nursery, gender-neutral baby room, or toddler's bedroom."
-
-- [ ] **Create 5–8 Black & White Listings** (convert existing color art to grayscale)
-  - In Photoshop or Preview: Image → Mode → Grayscale (or use PIL script)
-  - Best candidates: architectural art, line drawings, botanical illustrations
-  - Title formula: `Minimalist Black White Print, Printable Wall Art, Instant Download` (65 chars)
-  - Tags: `black white print`, `minimalist wall art`, `black white art`, `modern wall decor`, `monochrome print`, `printable poster`, `instant download`, `line art print`, `gallery wall`, `bedroom wall art`, `office wall decor`, `abstract print`, `minimalist print`
-  - Price: $4.99–$7.99 (impulse tier)
-
-- [ ] **Create 3 Gallery Wall Sets of 5** (bundle cohesive art into one listing)
-  - Identify 3 groups from existing catalog:
-    - Coastal/ocean set (blues, water, horizon art)
-    - Botanical/nature set (plants, flowers, garden art)
-    - Woodland/animal set (fox, deer, owl, rabbit, bear)
-  - One listing per set — all 5 files in the ZIP
-  - Title formula: `Gallery Wall Set of 5, Printable [Theme] Prints, Instant Download` (≤70 chars)
-  - Price: $19.99–$29.99 (20–30% discount vs. sum of individual prices)
-  - Tags: `gallery wall set`, `set of 5 prints`, `printable set`, `wall art bundle`, `gallery wall art`, `printable art set`, `instant download`, `living room art`, `bedroom gallery`, `art set download`, `boho wall art`, `[theme] prints`, `wall art prints`
-
-### Listing Photo Improvements
-
-- [ ] **Add second room type photo to top 10 listings** (buyers shop by room first)
-  - Check Etsy Analytics → which 10 listings have highest views
-  - Each listing should show art in 2 different rooms — currently most show only 1
-  - Generate second room using the existing `tools/lifestyle_composite.py` script
-  - Second room options: bedroom if current is living room, office if current is bedroom
-
-- [ ] **Add a gallery wall grouping photo to any listing without one**
-  - Arrange 3 coordinated prints on one wall in a composite image
-  - Buyers who see grouped art are 40% more likely to buy multiple
+## PRIORITY 2 — This Quarter
 
 ---
 
