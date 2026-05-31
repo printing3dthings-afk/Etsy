@@ -2,41 +2,40 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>Next Chapter Graduation SVG</title>
   <rect width="800" height="800" fill="none"/>
-  <path d="M 400,320 Q 360,310 200,320 L 180,520 Q 220,530 400,510 Z" fill="black"/>
-  <path d="M 400,320 Q 440,310 600,320 L 620,520 Q 580,530 400,510 Z" fill="black"/>
-  <path d="M 400,320 L 400,510" stroke="white" stroke-width="5" fill="none"/>
-  <line x1="215" y1="360" x2="375" y2="368" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="215" y1="388" x2="375" y2="396" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="215" y1="416" x2="375" y2="424" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="215" y1="444" x2="375" y2="452" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="215" y1="472" x2="375" y2="480" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="215" y1="500" x2="375" y2="508" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="425" y1="368" x2="585" y2="360" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="425" y1="396" x2="585" y2="388" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="425" y1="424" x2="585" y2="416" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="425" y1="452" x2="585" y2="444" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="425" y1="480" x2="585" y2="472" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <line x1="425" y1="508" x2="585" y2="500" stroke="white" stroke-width="1.5" opacity="0.4"/>
-  <path d="M 400.000,200.000 C 400.000,212.800 440.000,206.000 440.000,200.000 C 440.000,194.000 400.000,187.200 400.000,200.000 Z" fill="black"/>
-  <path d="M 400.000,200.000 C 390.949,209.051 424.042,232.527 428.284,228.284 C 432.527,224.042 409.051,190.949 400.000,200.000 Z" fill="black"/>
-  <path d="M 400.000,200.000 C 387.200,200.000 394.000,240.000 400.000,240.000 C 406.000,240.000 412.800,200.000 400.000,200.000 Z" fill="black"/>
-  <path d="M 400.000,200.000 C 390.949,190.949 367.473,224.042 371.716,228.284 C 375.958,232.527 409.051,209.051 400.000,200.000 Z" fill="black"/>
-  <path d="M 400.000,200.000 C 400.000,187.200 360.000,194.000 360.000,200.000 C 360.000,206.000 400.000,212.800 400.000,200.000 Z" fill="black"/>
-  <path d="M 400.000,200.000 C 409.051,190.949 375.958,167.473 371.716,171.716 C 367.473,175.958 390.949,209.051 400.000,200.000 Z" fill="black"/>
-  <path d="M 400.000,200.000 C 412.800,200.000 406.000,160.000 400.000,160.000 C 394.000,160.000 387.200,200.000 400.000,200.000 Z" fill="black"/>
-  <path d="M 400.000,200.000 C 409.051,209.051 432.527,175.958 428.284,171.716 C 424.042,167.473 390.949,190.949 400.000,200.000 Z" fill="black"/>
-  <circle cx="400" cy="200" r="10" fill="white"/>
-  <path d="M 455.000,195.200 Q 447.000,195.200 455.000,216.000 Q 463.000,195.200 455.000,195.200 Z" fill="black"/>
-  <path d="M 442.285,235.497 Q 436.628,229.840 427.577,250.205 Q 447.942,241.154 442.285,235.497 Z" fill="black"/>
-  <path d="M 404.800,255.000 Q 404.800,247.000 384.000,255.000 Q 404.800,263.000 404.800,255.000 Z" fill="black"/>
-  <path d="M 364.503,242.285 Q 370.160,236.628 349.795,227.577 Q 358.846,247.942 364.503,242.285 Z" fill="black"/>
-  <path d="M 345.000,204.800 Q 353.000,204.800 345.000,184.000 Q 337.000,204.800 345.000,204.800 Z" fill="black"/>
-  <path d="M 357.715,164.503 Q 363.372,170.160 372.423,149.795 Q 352.058,158.846 357.715,164.503 Z" fill="black"/>
-  <path d="M 395.200,145.000 Q 395.200,153.000 416.000,145.000 Q 395.200,137.000 395.200,145.000 Z" fill="black"/>
-  <path d="M 435.497,157.715 Q 429.840,163.372 450.205,172.423 Q 441.154,152.058 435.497,157.715 Z" fill="black"/>
-  <text x="400" y="595" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="black" letter-spacing="4">NEXT</text>
-  <text x="400" y="652" text-anchor="middle" font-family="Georgia, serif" font-size="72" font-weight="bold" fill="black" letter-spacing="3">CHAPTER</text>
-  <text x="400" y="695" text-anchor="middle" font-family="Georgia, serif" font-size="17" fill="black" letter-spacing="6">CLASS OF 2026</text>
-  <line x1="120" y1="565" x2="680" y2="565" stroke="black" stroke-width="3"/>
-  <line x1="120" y1="572" x2="680" y2="572" stroke="black" stroke-width="1"/>
+  <path d="M 400,120 Q 370,105 150,113 L 150,300 Q 370,305 400,290 Z" fill="black"/>
+  <path d="M 400,120 Q 430,105 650,113 L 650,300 Q 430,305 400,290 Z" fill="black"/>
+  <line x1="400" y1="120" x2="400" y2="290" stroke="white" stroke-width="5"/>
+  <line x1="180" y1="150" x2="370" y2="152" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="430" y1="152" x2="620" y2="150" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="180" y1="187" x2="370" y2="189" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="430" y1="189" x2="620" y2="187" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="180" y1="223" x2="370" y2="225" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="430" y1="225" x2="620" y2="223" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="180" y1="260" x2="370" y2="262" stroke="white" stroke-width="2" opacity="0.4"/>
+  <line x1="430" y1="262" x2="620" y2="260" stroke="white" stroke-width="2" opacity="0.4"/>
+  <path d="M 400.0,72.0 C 400.0,79.8 428.0,74.8 428.0,72.0 C 428.0,69.2 400.0,64.2 400.0,72.0 Z" fill="black"/>
+  <path d="M 400.0,72.0 C 394.5,77.5 417.8,93.8 419.8,91.8 C 421.8,89.8 405.5,66.5 400.0,72.0 Z" fill="black"/>
+  <path d="M 400.0,72.0 C 392.2,72.0 397.2,100.0 400.0,100.0 C 402.8,100.0 407.8,72.0 400.0,72.0 Z" fill="black"/>
+  <path d="M 400.0,72.0 C 394.5,66.5 378.2,89.8 380.2,91.8 C 382.2,93.8 405.5,77.5 400.0,72.0 Z" fill="black"/>
+  <path d="M 400.0,72.0 C 400.0,64.2 372.0,69.2 372.0,72.0 C 372.0,74.8 400.0,79.8 400.0,72.0 Z" fill="black"/>
+  <path d="M 400.0,72.0 C 405.5,66.5 382.2,50.2 380.2,52.2 C 378.2,54.2 394.5,77.5 400.0,72.0 Z" fill="black"/>
+  <path d="M 400.0,72.0 C 407.8,72.0 402.8,44.0 400.0,44.0 C 397.2,44.0 392.2,72.0 400.0,72.0 Z" fill="black"/>
+  <path d="M 400.0,72.0 C 405.5,77.5 421.8,54.2 419.8,52.2 C 417.8,50.2 394.5,66.5 400.0,72.0 Z" fill="black"/>
+  <circle cx="400" cy="72" r="7" fill="white"/>
+  <path d="M 438.0,68.9 Q 431.8,68.9 438.0,86.0 Q 444.2,68.9 438.0,68.9 Z" fill="black"/>
+  <path d="M 429.0,96.7 Q 424.7,92.3 417.0,108.8 Q 433.4,101.0 429.0,96.7 Z" fill="black"/>
+  <path d="M 403.1,110.0 Q 403.1,103.8 386.0,110.0 Q 403.1,116.2 403.1,110.0 Z" fill="black"/>
+  <path d="M 375.3,101.0 Q 379.7,96.7 363.2,89.0 Q 371.0,105.4 375.3,101.0 Z" fill="black"/>
+  <path d="M 362.0,75.1 Q 368.2,75.1 362.0,58.0 Q 355.8,75.1 362.0,75.1 Z" fill="black"/>
+  <path d="M 371.0,47.3 Q 375.3,51.7 383.0,35.2 Q 366.6,43.0 371.0,47.3 Z" fill="black"/>
+  <path d="M 396.9,34.0 Q 396.9,40.2 414.0,34.0 Q 396.9,27.8 396.9,34.0 Z" fill="black"/>
+  <path d="M 424.7,43.0 Q 420.3,47.3 436.8,55.0 Q 429.0,38.6 424.7,43.0 Z" fill="black"/>
+  <line x1="170" y1="340" x2="630" y2="340" stroke="black" stroke-width="2.8"/>
+  <line x1="170" y1="347" x2="630" y2="347" stroke="black" stroke-width="1.2"/>
+  <polygon points="161,343.5 168,340 175,343.5 168,347" fill="black"/>
+  <polygon points="639,343.5 646,340 653,343.5 646,347" fill="black"/>
+  <text x="400" y="413" text-anchor="middle" font-family="Georgia,serif" font-size="52" fill="black" letter-spacing="12">NEXT</text>
+  <text x="400" y="504" text-anchor="middle" font-family="Georgia,serif" font-size="78" font-weight="bold" fill="black" letter-spacing="3">CHAPTER</text>
+  <text x="400" y="575" text-anchor="middle" font-family="Georgia,serif" font-size="36" font-weight="bold" fill="black" letter-spacing="6">CLASS OF 2026</text>
+  <text x="400" y="632" text-anchor="middle" font-family="Georgia,serif" font-size="18" fill="black" letter-spacing="7">SENIOR GRADUATE</text>
 </svg>

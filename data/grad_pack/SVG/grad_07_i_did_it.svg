@@ -2,28 +2,97 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>I Did It Graduation SVG</title>
   <rect width="800" height="800" fill="none"/>
-  <path d="M 755.000,386.000 L 758.527,395.146 L 768.315,395.674 L 760.706,401.854 L 763.229,411.326 L 755.000,406.000 L 746.771,411.326 L 749.294,401.854 L 741.685,395.674 L 751.473,395.146 Z" fill="black"/>
-  <path d="M 727.977,521.853 L 731.504,530.999 L 741.292,531.526 L 733.684,537.707 L 736.206,547.179 L 727.977,541.853 L 719.748,547.179 L 722.271,537.707 L 714.662,531.526 L 724.451,530.999 Z" fill="black"/>
-  <path d="M 651.023,637.023 L 654.550,646.169 L 664.338,646.697 L 656.729,652.877 L 659.252,662.349 L 651.023,657.023 L 642.794,662.349 L 645.317,652.877 L 637.708,646.697 L 647.496,646.169 Z" fill="black"/>
-  <path d="M 535.853,713.977 L 539.379,723.123 L 549.167,723.651 L 541.559,729.831 L 544.082,739.303 L 535.853,733.977 L 527.624,739.303 L 530.146,729.831 L 522.538,723.651 L 532.326,723.123 Z" fill="black"/>
-  <path d="M 400.000,741.000 L 403.527,750.146 L 413.315,750.674 L 405.706,756.854 L 408.229,766.326 L 400.000,761.000 L 391.771,766.326 L 394.294,756.854 L 386.685,750.674 L 396.473,750.146 Z" fill="black"/>
-  <path d="M 264.147,713.977 L 267.674,723.123 L 277.462,723.651 L 269.854,729.831 L 272.376,739.303 L 264.147,733.977 L 255.918,739.303 L 258.441,729.831 L 250.833,723.651 L 260.621,723.123 Z" fill="black"/>
-  <path d="M 148.977,637.023 L 152.504,646.169 L 162.292,646.697 L 154.683,652.877 L 157.206,662.349 L 148.977,657.023 L 140.748,662.349 L 143.271,652.877 L 135.662,646.697 L 145.450,646.169 Z" fill="black"/>
-  <path d="M 72.023,521.853 L 75.549,530.999 L 85.338,531.526 L 77.729,537.707 L 80.252,547.179 L 72.023,541.853 L 63.794,547.179 L 66.316,537.707 L 58.708,531.526 L 68.496,530.999 Z" fill="black"/>
-  <path d="M 45.000,386.000 L 48.527,395.146 L 58.315,395.674 L 50.706,401.854 L 53.229,411.326 L 45.000,406.000 L 36.771,411.326 L 39.294,401.854 L 31.685,395.674 L 41.473,395.146 Z" fill="black"/>
-  <path d="M 72.023,250.147 L 75.549,259.293 L 85.338,259.821 L 77.729,266.001 L 80.252,275.474 L 72.023,270.147 L 63.794,275.474 L 66.316,266.001 L 58.708,259.821 L 68.496,259.293 Z" fill="black"/>
-  <path d="M 148.977,134.977 L 152.504,144.123 L 162.292,144.651 L 154.683,150.831 L 157.206,160.303 L 148.977,154.977 L 140.748,160.303 L 143.271,150.831 L 135.662,144.651 L 145.450,144.123 Z" fill="black"/>
-  <path d="M 264.147,58.023 L 267.674,67.169 L 277.462,67.697 L 269.854,73.877 L 272.376,83.349 L 264.147,78.023 L 255.918,83.349 L 258.441,73.877 L 250.833,67.697 L 260.621,67.169 Z" fill="black"/>
-  <path d="M 400.000,31.000 L 403.527,40.146 L 413.315,40.674 L 405.706,46.854 L 408.229,56.326 L 400.000,51.000 L 391.771,56.326 L 394.294,46.854 L 386.685,40.674 L 396.473,40.146 Z" fill="black"/>
-  <path d="M 535.853,58.023 L 539.379,67.169 L 549.167,67.697 L 541.559,73.877 L 544.082,83.349 L 535.853,78.023 L 527.624,83.349 L 530.146,73.877 L 522.538,67.697 L 532.326,67.169 Z" fill="black"/>
-  <path d="M 651.023,134.977 L 654.550,144.123 L 664.338,144.651 L 656.729,150.831 L 659.252,160.303 L 651.023,154.977 L 642.794,160.303 L 645.317,150.831 L 637.708,144.651 L 647.496,144.123 Z" fill="black"/>
-  <path d="M 727.977,250.147 L 731.504,259.293 L 741.292,259.821 L 733.684,266.001 L 736.206,275.474 L 727.977,270.147 L 719.748,275.474 L 722.271,266.001 L 714.662,259.821 L 724.451,259.293 Z" fill="black"/>
-  <circle cx="400" cy="400" r="330" fill="none" stroke="black" stroke-width="4"/>
-  <circle cx="400" cy="400" r="310" fill="none" stroke="black" stroke-width="1.5"/>
-  <defs><path id="topArc7" d="M 105,400 A 295,295 0 0,1 695,400"/><path id="botArc7" d="M 125,420 A 275,275 0 0,0 675,420"/></defs>
-  <text font-family="Georgia, serif" font-size="34" font-weight="bold" fill="black" letter-spacing="8"><textPath href="#topArc7" startOffset="50%" text-anchor="middle">CONGRATULATIONS</textPath></text>
-  <text font-family="Georgia, serif" font-size="18" fill="black" letter-spacing="5"><textPath href="#botArc7" startOffset="50%" text-anchor="middle">PROUD GRADUATE ★ 2026</textPath></text>
-  <path d="M 308.0,315.0 L 492.0,315.0 L 492.0,385.0 L 308.0,385.0 Z" fill="black" opacity="0.12"/>
-  <text x="400" y="380" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="black" letter-spacing="3">I</text>
-  <text x="400" y="455" text-anchor="middle" font-family="Georgia, serif" font-size="96" font-weight="bold" fill="black">DID IT</text>
+  <circle cx="755.0" cy="400.0" r="2.5" fill="black"/>
+  <circle cx="753.6" cy="430.9" r="2.5" fill="black"/>
+  <circle cx="749.6" cy="461.6" r="2.5" fill="black"/>
+  <circle cx="742.9" cy="491.9" r="2.5" fill="black"/>
+  <circle cx="733.6" cy="521.4" r="2.5" fill="black"/>
+  <circle cx="721.7" cy="550.0" r="2.5" fill="black"/>
+  <circle cx="707.4" cy="577.5" r="2.5" fill="black"/>
+  <circle cx="690.8" cy="603.6" r="2.5" fill="black"/>
+  <circle cx="671.9" cy="628.2" r="2.5" fill="black"/>
+  <circle cx="651.0" cy="651.0" r="2.5" fill="black"/>
+  <circle cx="628.2" cy="671.9" r="2.5" fill="black"/>
+  <circle cx="603.6" cy="690.8" r="2.5" fill="black"/>
+  <circle cx="577.5" cy="707.4" r="2.5" fill="black"/>
+  <circle cx="550.0" cy="721.7" r="2.5" fill="black"/>
+  <circle cx="521.4" cy="733.6" r="2.5" fill="black"/>
+  <circle cx="491.9" cy="742.9" r="2.5" fill="black"/>
+  <circle cx="461.6" cy="749.6" r="2.5" fill="black"/>
+  <circle cx="430.9" cy="753.6" r="2.5" fill="black"/>
+  <circle cx="400.0" cy="755.0" r="2.5" fill="black"/>
+  <circle cx="369.1" cy="753.6" r="2.5" fill="black"/>
+  <circle cx="338.4" cy="749.6" r="2.5" fill="black"/>
+  <circle cx="308.1" cy="742.9" r="2.5" fill="black"/>
+  <circle cx="278.6" cy="733.6" r="2.5" fill="black"/>
+  <circle cx="250.0" cy="721.7" r="2.5" fill="black"/>
+  <circle cx="222.5" cy="707.4" r="2.5" fill="black"/>
+  <circle cx="196.4" cy="690.8" r="2.5" fill="black"/>
+  <circle cx="171.8" cy="671.9" r="2.5" fill="black"/>
+  <circle cx="149.0" cy="651.0" r="2.5" fill="black"/>
+  <circle cx="128.1" cy="628.2" r="2.5" fill="black"/>
+  <circle cx="109.2" cy="603.6" r="2.5" fill="black"/>
+  <circle cx="92.6" cy="577.5" r="2.5" fill="black"/>
+  <circle cx="78.3" cy="550.0" r="2.5" fill="black"/>
+  <circle cx="66.4" cy="521.4" r="2.5" fill="black"/>
+  <circle cx="57.1" cy="491.9" r="2.5" fill="black"/>
+  <circle cx="50.4" cy="461.6" r="2.5" fill="black"/>
+  <circle cx="46.4" cy="430.9" r="2.5" fill="black"/>
+  <circle cx="45.0" cy="400.0" r="2.5" fill="black"/>
+  <circle cx="46.4" cy="369.1" r="2.5" fill="black"/>
+  <circle cx="50.4" cy="338.4" r="2.5" fill="black"/>
+  <circle cx="57.1" cy="308.1" r="2.5" fill="black"/>
+  <circle cx="66.4" cy="278.6" r="2.5" fill="black"/>
+  <circle cx="78.3" cy="250.0" r="2.5" fill="black"/>
+  <circle cx="92.6" cy="222.5" r="2.5" fill="black"/>
+  <circle cx="109.2" cy="196.4" r="2.5" fill="black"/>
+  <circle cx="128.1" cy="171.8" r="2.5" fill="black"/>
+  <circle cx="149.0" cy="149.0" r="2.5" fill="black"/>
+  <circle cx="171.8" cy="128.1" r="2.5" fill="black"/>
+  <circle cx="196.4" cy="109.2" r="2.5" fill="black"/>
+  <circle cx="222.5" cy="92.6" r="2.5" fill="black"/>
+  <circle cx="250.0" cy="78.3" r="2.5" fill="black"/>
+  <circle cx="278.6" cy="66.4" r="2.5" fill="black"/>
+  <circle cx="308.1" cy="57.1" r="2.5" fill="black"/>
+  <circle cx="338.4" cy="50.4" r="2.5" fill="black"/>
+  <circle cx="369.1" cy="46.4" r="2.5" fill="black"/>
+  <circle cx="400.0" cy="45.0" r="2.5" fill="black"/>
+  <circle cx="430.9" cy="46.4" r="2.5" fill="black"/>
+  <circle cx="461.6" cy="50.4" r="2.5" fill="black"/>
+  <circle cx="491.9" cy="57.1" r="2.5" fill="black"/>
+  <circle cx="521.4" cy="66.4" r="2.5" fill="black"/>
+  <circle cx="550.0" cy="78.3" r="2.5" fill="black"/>
+  <circle cx="577.5" cy="92.6" r="2.5" fill="black"/>
+  <circle cx="603.6" cy="109.2" r="2.5" fill="black"/>
+  <circle cx="628.2" cy="128.1" r="2.5" fill="black"/>
+  <circle cx="651.0" cy="149.0" r="2.5" fill="black"/>
+  <circle cx="671.9" cy="171.8" r="2.5" fill="black"/>
+  <circle cx="690.8" cy="196.4" r="2.5" fill="black"/>
+  <circle cx="707.4" cy="222.5" r="2.5" fill="black"/>
+  <circle cx="721.7" cy="250.0" r="2.5" fill="black"/>
+  <circle cx="733.6" cy="278.6" r="2.5" fill="black"/>
+  <circle cx="742.9" cy="308.1" r="2.5" fill="black"/>
+  <circle cx="749.6" cy="338.4" r="2.5" fill="black"/>
+  <circle cx="753.6" cy="369.1" r="2.5" fill="black"/>
+  <circle cx="400" cy="400" r="335" fill="none" stroke="black" stroke-width="4.5"/>
+  <circle cx="400" cy="400" r="315" fill="none" stroke="black" stroke-width="1.5"/>
+  <polygon points="628.4,616.4 631.3,624.4 639.8,624.7 633.2,629.9 635.4,638.1 628.4,633.4 621.3,638.1 623.6,629.9 617.0,624.7 625.5,624.4" fill="black"/>
+  <polygon points="171.6,616.4 174.5,624.4 183.0,624.7 176.4,629.9 178.7,638.1 171.6,633.4 164.6,638.1 166.8,629.9 160.2,624.7 168.7,624.4" fill="black"/>
+  <polygon points="171.6,159.6 174.5,167.6 183.0,167.9 176.4,173.1 178.7,181.3 171.6,176.6 164.6,181.3 166.8,173.1 160.2,167.9 168.7,167.6" fill="black"/>
+  <polygon points="628.4,159.6 631.3,167.6 639.8,167.9 633.2,173.1 635.4,181.3 628.4,176.6 621.3,181.3 623.6,173.1 617.0,167.9 625.5,167.6" fill="black"/>
+  <rect x="100" y="100" width="600" height="52" rx="6" fill="black"/>
+  <text x="400" y="134" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="bold" fill="white" letter-spacing="4">CONGRATULATIONS</text>
+  <rect x="100" y="648" width="600" height="52" rx="6" fill="black"/>
+  <text x="400" y="682" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="bold" fill="white" letter-spacing="6">CLASS OF 2026</text>
+  <line x1="140" y1="185" x2="660" y2="185" stroke="black" stroke-width="2.8"/>
+  <line x1="140" y1="192" x2="660" y2="192" stroke="black" stroke-width="1.2"/>
+  <polygon points="131,188.5 138,185 145,188.5 138,192" fill="black"/>
+  <polygon points="669,188.5 676,185 683,188.5 676,192" fill="black"/>
+  <text x="400" y="265" text-anchor="middle" font-family="Georgia,serif" font-size="52" fill="black" letter-spacing="10">I</text>
+  <text x="400" y="390" text-anchor="middle" font-family="Georgia,serif" font-size="96" font-weight="bold" fill="black" letter-spacing="3">DID IT</text>
+  <text x="400" y="475" text-anchor="middle" font-family="Georgia,serif" font-size="40" fill="black" letter-spacing="5">GRADUATE</text>
+  <line x1="140" y1="510" x2="660" y2="510" stroke="black" stroke-width="2.8"/>
+  <line x1="140" y1="517" x2="660" y2="517" stroke="black" stroke-width="1.2"/>
+  <polygon points="131,513.5 138,510 145,513.5 138,517" fill="black"/>
+  <polygon points="669,513.5 676,510 683,513.5 676,517" fill="black"/>
 </svg>
