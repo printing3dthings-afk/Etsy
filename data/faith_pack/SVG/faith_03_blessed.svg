@@ -71,5 +71,5 @@
   <path d="M 400.000,272.000 L 402.828,277.172 L 408.000,280.000 L 402.828,282.828 L 400.000,288.000 L 397.172,282.828 L 392.000,280.000 L 397.172,277.172 Z" fill="black"/>
   <path d="M 484.853,307.147 L 487.681,312.319 L 492.853,315.147 L 487.681,317.976 L 484.853,323.147 L 482.024,317.976 L 476.853,315.147 L 482.024,312.319 Z" fill="black"/>
   <text x="400" y="427" text-anchor="middle" font-family="Oswald, Georgia, serif"
-        font-size="82" fill="black" letter-spacing="1">BLESSED</text>
+        font-size="72" fill="black" letter-spacing="1">BLESSED</text>
 </svg>
