@@ -2,6 +2,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>With God All Things Are Possible SVG</title>
   <rect width="800" height="800" fill="none"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'DancingScript'; src: url('/usr/local/share/fonts/DancingScript-Bold.ttf'); }
+      @font-face { font-family: 'Oswald'; src: url('/usr/local/share/fonts/Oswald-Bold.ttf'); }
+      @font-face { font-family: 'Playfair'; src: url('/usr/local/share/fonts/PlayfairDisplay-Bold.ttf'); }
+      @font-face { font-family: 'PlayfairItalic'; src: url('/usr/local/share/fonts/PlayfairDisplay-Italic.ttf'); }
+    </style>
+  </defs>
   <circle cx="497.6" cy="56.3" r="2.1" fill="black"/>
   <circle cx="206.2" cy="234.1" r="2.9" fill="black"/>
   <circle cx="674.5" cy="71.7" r="2.3" fill="black"/>
@@ -63,7 +71,7 @@
   <circle cx="400" cy="170" r="32" fill="black"/>
   <circle cx="400" cy="170" r="22" fill="white"/>
   <rect x="80" y="630" width="640" height="130" rx="12" fill="none" stroke="black" stroke-width="2"/>
-  <text x="400" y="677" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="black" letter-spacing="1">WITH GOD</text>
-  <text x="400" y="718" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-weight="bold" fill="black" letter-spacing="3">ALL THINGS</text>
-  <text x="400" y="748" text-anchor="middle" font-family="Georgia, serif" font-size="16" fill="black" letter-spacing="5">ARE POSSIBLE  ·  MATTHEW 19:26</text>
+  <text x="400" y="674" text-anchor="middle" font-family="DancingScript, cursive" font-size="27" fill="black">With God</text>
+  <text x="400" y="718" text-anchor="middle" font-family="Oswald, Georgia, serif" font-size="40" fill="black" letter-spacing="3">ALL THINGS</text>
+  <text x="400" y="748" text-anchor="middle" font-family="PlayfairItalic, Georgia, serif" font-size="15" fill="black" letter-spacing="3">ARE POSSIBLE  ·  MATTHEW 19:26</text>
 </svg>

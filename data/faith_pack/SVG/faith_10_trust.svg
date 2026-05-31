@@ -2,6 +2,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>Trust In The Lord SVG</title>
   <rect width="800" height="800" fill="none"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'DancingScript'; src: url('/usr/local/share/fonts/DancingScript-Bold.ttf'); }
+      @font-face { font-family: 'Oswald'; src: url('/usr/local/share/fonts/Oswald-Bold.ttf'); }
+      @font-face { font-family: 'Playfair'; src: url('/usr/local/share/fonts/PlayfairDisplay-Bold.ttf'); }
+      @font-face { font-family: 'PlayfairItalic'; src: url('/usr/local/share/fonts/PlayfairDisplay-Italic.ttf'); }
+    </style>
+  </defs>
   <path d="M 400,40 L 760,400 L 400,760 L 40,400 Z" fill="black"/>
   <path d="M 400,80 L 720,400 L 400,720 L 80,400 Z" fill="white"/>
   <path d="M 605.061,605.061 C 605.061,612.761 627.061,608.361 627.061,605.061 C 627.061,601.761 605.061,597.361 605.061,605.061 Z" fill="black"/>
@@ -34,9 +42,9 @@
   <circle cx="605.1" cy="194.9" r="6" fill="white"/>
   <path d="M 400,120 L 680,400 L 400,680 L 120,400 Z" fill="none" stroke="black" stroke-width="2"/>
   <path d="M 400,135 L 665,400 L 400,665 L 135,400 Z" fill="none" stroke="black" stroke-width="1"/>
-  <text x="400" y="315" text-anchor="middle" font-family="Georgia, serif" font-size="26" fill="black" letter-spacing="4">TRUST IN</text>
-  <text x="400" y="370" text-anchor="middle" font-family="Georgia, serif" font-size="30" fill="black" letter-spacing="3">THE LORD</text>
-  <text x="400" y="428" text-anchor="middle" font-family="Georgia, serif" font-size="58" font-weight="bold" fill="black">WITH ALL</text>
-  <text x="400" y="488" text-anchor="middle" font-family="Georgia, serif" font-size="28" fill="black" letter-spacing="4">YOUR HEART</text>
-  <text x="400" y="545" text-anchor="middle" font-family="Georgia, serif" font-size="14" fill="black" letter-spacing="5">PROVERBS  3:5</text>
+  <text x="400" y="315" text-anchor="middle" font-family="Playfair, Georgia, serif" font-size="24" fill="black" letter-spacing="5">TRUST IN</text>
+  <text x="400" y="370" text-anchor="middle" font-family="DancingScript, cursive" font-size="36" fill="black">the Lord</text>
+  <text x="400" y="432" text-anchor="middle" font-family="Oswald, Georgia, serif" font-size="62" fill="black" letter-spacing="2">WITH ALL</text>
+  <text x="400" y="488" text-anchor="middle" font-family="Playfair, Georgia, serif" font-size="26" fill="black" letter-spacing="3">YOUR HEART</text>
+  <text x="400" y="544" text-anchor="middle" font-family="PlayfairItalic, Georgia, serif" font-size="13" fill="black" letter-spacing="4">PROVERBS  3:5</text>
 </svg>
