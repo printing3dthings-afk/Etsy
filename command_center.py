@@ -594,8 +594,19 @@ def run_command():
 
 
 if __name__ == "__main__":
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        local_ip = "your-computer-ip"
+
     print("\n" + "="*55)
     print("  OnBrandCraftz Command Center")
-    print("  Open your browser to: http://localhost:5055")
+    print(f"  This computer:  http://localhost:5055")
+    print(f"  Phone / tablet: http://{local_ip}:5055")
+    print("  (Both devices must be on the same Wi-Fi)")
     print("="*55 + "\n")
-    app.run(host="127.0.0.1", port=5055, debug=False, threaded=True)
+    app.run(host="0.0.0.0", port=5055, debug=False, threaded=True)
