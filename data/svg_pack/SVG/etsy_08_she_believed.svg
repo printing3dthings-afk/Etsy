@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="800" height="800" viewBox="0 0 800 800">
+  <title>She Believed She Could So She Did</title>
+  <rect width="800" height="800" fill="white"/>
+  <rect x="40" y="40" width="720" height="720" fill="none" stroke="#1a1a1a" stroke-width="3" rx="4"/>
+  <rect x="50" y="50" width="700" height="700" fill="none" stroke="#1a1a1a" stroke-width="1.2" rx="2"/>
+  <path d="M 40.00,40.00 C 44.95,44.95 55.06,34.84 55.56,24.44 C 45.16,24.94 35.05,35.05 40.00,40.00 Z" fill="#1a1a1a"/>
+  <path d="M 40.00,40.00 C 35.05,44.95 45.16,55.06 55.56,55.56 C 55.06,45.16 44.95,35.05 40.00,40.00 Z" fill="#1a1a1a"/>
+  <path d="M 40.00,40.00 C 35.05,35.05 24.94,45.16 24.44,55.56 C 34.84,55.06 44.95,44.95 40.00,40.00 Z" fill="#1a1a1a"/>
+  <path d="M 40.00,40.00 C 44.95,35.05 34.84,24.94 24.44,24.44 C 24.94,34.84 35.05,44.95 40.00,40.00 Z" fill="#1a1a1a"/>
+  <circle cx="40.00" cy="40.00" r="7.00" fill="#1a1a1a"/>
+  <path d="M 760.00,40.00 C 755.05,35.05 744.94,45.16 744.44,55.56 C 754.84,55.06 764.95,44.95 760.00,40.00 Z" fill="#1a1a1a"/>
+  <path d="M 760.00,40.00 C 764.95,35.05 754.84,24.94 744.44,24.44 C 744.94,34.84 755.05,44.95 760.00,40.00 Z" fill="#1a1a1a"/>
+  <path d="M 760.00,40.00 C 764.95,44.95 775.06,34.84 775.56,24.44 C 765.16,24.94 755.05,35.05 760.00,40.00 Z" fill="#1a1a1a"/>
+  <path d="M 760.00,40.00 C 755.05,44.95 765.16,55.06 775.56,55.56 C 775.06,45.16 764.95,35.05 760.00,40.00 Z" fill="#1a1a1a"/>
+  <circle cx="760.00" cy="40.00" r="7.00" fill="#1a1a1a"/>
+  <path d="M 40.00,760.00 C 44.95,755.05 34.84,744.94 24.44,744.44 C 24.94,754.84 35.05,764.95 40.00,760.00 Z" fill="#1a1a1a"/>
+  <path d="M 40.00,760.00 C 44.95,764.95 55.06,754.84 55.56,744.44 C 45.16,744.94 35.05,755.05 40.00,760.00 Z" fill="#1a1a1a"/>
+  <path d="M 40.00,760.00 C 35.05,764.95 45.16,775.06 55.56,775.56 C 55.06,765.16 44.95,755.05 40.00,760.00 Z" fill="#1a1a1a"/>
+  <path d="M 40.00,760.00 C 35.05,755.05 24.94,765.16 24.44,775.56 C 34.84,775.06 44.95,764.95 40.00,760.00 Z" fill="#1a1a1a"/>
+  <circle cx="40.00" cy="760.00" r="7.00" fill="#1a1a1a"/>
+  <path d="M 760.00,760.00 C 764.95,764.95 775.06,754.84 775.56,744.44 C 765.16,744.94 755.05,755.05 760.00,760.00 Z" fill="#1a1a1a"/>
+  <path d="M 760.00,760.00 C 755.05,764.95 765.16,775.06 775.56,775.56 C 775.06,765.16 764.95,755.05 760.00,760.00 Z" fill="#1a1a1a"/>
+  <path d="M 760.00,760.00 C 755.05,755.05 744.94,765.16 744.44,775.56 C 754.84,775.06 764.95,764.95 760.00,760.00 Z" fill="#1a1a1a"/>
+  <path d="M 760.00,760.00 C 764.95,755.05 754.84,744.94 744.44,744.44 C 744.94,754.84 755.05,764.95 760.00,760.00 Z" fill="#1a1a1a"/>
+  <circle cx="760.00" cy="760.00" r="7.00" fill="#1a1a1a"/>
+  <path d="M 70,110 C 240,80 320,130 400,100 C 480,70 560,130 730,110" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="269.60" cy="90.00" rx="7.20" ry="4.48" transform="rotate(0.0,269.60,90.00)" fill="#1a1a1a"/>
+  <ellipse cx="262.97" cy="99.13" rx="7.20" ry="4.48" transform="rotate(72.0,262.97,99.13)" fill="#1a1a1a"/>
+  <ellipse cx="252.23" cy="95.64" rx="7.20" ry="4.48" transform="rotate(144.0,252.23,95.64)" fill="#1a1a1a"/>
+  <ellipse cx="252.23" cy="84.36" rx="7.20" ry="4.48" transform="rotate(216.0,252.23,84.36)" fill="#1a1a1a"/>
+  <ellipse cx="262.97" cy="80.87" rx="7.20" ry="4.48" transform="rotate(288.0,262.97,80.87)" fill="#1a1a1a"/>
+  <circle cx="260.00" cy="90.00" r="5.00" fill="#1a1a1a"/>
+  <ellipse cx="409.60" cy="100.00" rx="7.20" ry="4.48" transform="rotate(0.0,409.60,100.00)" fill="#1a1a1a"/>
+  <ellipse cx="402.97" cy="109.13" rx="7.20" ry="4.48" transform="rotate(72.0,402.97,109.13)" fill="#1a1a1a"/>
+  <ellipse cx="392.23" cy="105.64" rx="7.20" ry="4.48" transform="rotate(144.0,392.23,105.64)" fill="#1a1a1a"/>
+  <ellipse cx="392.23" cy="94.36" rx="7.20" ry="4.48" transform="rotate(216.0,392.23,94.36)" fill="#1a1a1a"/>
+  <ellipse cx="402.97" cy="90.87" rx="7.20" ry="4.48" transform="rotate(288.0,402.97,90.87)" fill="#1a1a1a"/>
+  <circle cx="400.00" cy="100.00" r="5.00" fill="#1a1a1a"/>
+  <ellipse cx="549.60" cy="92.00" rx="7.20" ry="4.48" transform="rotate(0.0,549.60,92.00)" fill="#1a1a1a"/>
+  <ellipse cx="542.97" cy="101.13" rx="7.20" ry="4.48" transform="rotate(72.0,542.97,101.13)" fill="#1a1a1a"/>
+  <ellipse cx="532.23" cy="97.64" rx="7.20" ry="4.48" transform="rotate(144.0,532.23,97.64)" fill="#1a1a1a"/>
+  <ellipse cx="532.23" cy="86.36" rx="7.20" ry="4.48" transform="rotate(216.0,532.23,86.36)" fill="#1a1a1a"/>
+  <ellipse cx="542.97" cy="82.87" rx="7.20" ry="4.48" transform="rotate(288.0,542.97,82.87)" fill="#1a1a1a"/>
+  <circle cx="540.00" cy="92.00" r="5.00" fill="#1a1a1a"/>
+  <path d="M 319.10,123.56 Q 329.25,117.99 329.00,106.41 Q 318.85,111.99 319.10,123.56 Z" fill="#1a1a1a"/>
+  <path d="M 479.10,118.44 Q 478.85,130.01 489.00,135.59 Q 489.25,124.01 479.10,118.44 Z" fill="#1a1a1a"/>
+  <text x="400" y="255" font-family="Georgia, 'Times New Roman', serif" font-size="96" font-style="italic" font-weight="bold" text-anchor="middle" fill="#1a1a1a">She</text>
+  <path d="M 400,290 C 340,265 280,300 230,285" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+  <path d="M 300.00,287.60 Q 306.00,278.80 300.00,270.00 Q 294.00,278.80 300.00,287.60 Z" fill="#1a1a1a"/>
+  <ellipse cx="237.20" cy="285.00" rx="5.40" ry="3.36" transform="rotate(0.0,237.20,285.00)" fill="#1a1a1a"/>
+  <ellipse cx="232.22" cy="291.85" rx="5.40" ry="3.36" transform="rotate(72.0,232.22,291.85)" fill="#1a1a1a"/>
+  <ellipse cx="224.18" cy="289.23" rx="5.40" ry="3.36" transform="rotate(144.0,224.18,289.23)" fill="#1a1a1a"/>
+  <ellipse cx="224.18" cy="280.77" rx="5.40" ry="3.36" transform="rotate(216.0,224.18,280.77)" fill="#1a1a1a"/>
+  <ellipse cx="232.22" cy="278.15" rx="5.40" ry="3.36" transform="rotate(288.0,232.22,278.15)" fill="#1a1a1a"/>
+  <circle cx="230.00" cy="285.00" r="4.00" fill="#1a1a1a"/>
+  <path d="M 400,290 C 460,265 520,300 570,285" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+  <path d="M 500.00,284.40 Q 494.00,293.20 500.00,302.00 Q 506.00,293.20 500.00,284.40 Z" fill="#1a1a1a"/>
+  <ellipse cx="577.20" cy="285.00" rx="5.40" ry="3.36" transform="rotate(0.0,577.20,285.00)" fill="#1a1a1a"/>
+  <ellipse cx="572.22" cy="291.85" rx="5.40" ry="3.36" transform="rotate(72.0,572.22,291.85)" fill="#1a1a1a"/>
+  <ellipse cx="564.18" cy="289.23" rx="5.40" ry="3.36" transform="rotate(144.0,564.18,289.23)" fill="#1a1a1a"/>
+  <ellipse cx="564.18" cy="280.77" rx="5.40" ry="3.36" transform="rotate(216.0,564.18,280.77)" fill="#1a1a1a"/>
+  <ellipse cx="572.22" cy="278.15" rx="5.40" ry="3.36" transform="rotate(288.0,572.22,278.15)" fill="#1a1a1a"/>
+  <circle cx="570.00" cy="285.00" r="4.00" fill="#1a1a1a"/>
+  <text x="400" y="360" font-family="Georgia, 'Times New Roman', serif" font-size="68" font-style="italic" text-anchor="middle" fill="#1a1a1a">Believed</text>
+  <text x="400" y="440" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-style="italic" text-anchor="middle" fill="#1a1a1a">She Could</text>
+  <line x1="370" y1="468" x2="240" y2="468" stroke="#1a1a1a" stroke-width="2"/>
+  <line x1="430" y1="468" x2="560" y2="468" stroke="#1a1a1a" stroke-width="2"/>
+  <path d="M 372,468 Q 400,454 428,468" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+  <text x="400" y="540" font-family="Georgia, 'Times New Roman', serif" font-size="78" font-weight="bold" font-style="italic" text-anchor="middle" fill="#1a1a1a">So She Did</text>
+  <path d="M 70,680 C 240,710 320,660 400,690 C 480,720 560,660 730,680" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="269.60" cy="698.00" rx="7.20" ry="4.48" transform="rotate(0.0,269.60,698.00)" fill="#1a1a1a"/>
+  <ellipse cx="262.97" cy="707.13" rx="7.20" ry="4.48" transform="rotate(72.0,262.97,707.13)" fill="#1a1a1a"/>
+  <ellipse cx="252.23" cy="703.64" rx="7.20" ry="4.48" transform="rotate(144.0,252.23,703.64)" fill="#1a1a1a"/>
+  <ellipse cx="252.23" cy="692.36" rx="7.20" ry="4.48" transform="rotate(216.0,252.23,692.36)" fill="#1a1a1a"/>
+  <ellipse cx="262.97" cy="688.87" rx="7.20" ry="4.48" transform="rotate(288.0,262.97,688.87)" fill="#1a1a1a"/>
+  <circle cx="260.00" cy="698.00" r="5.00" fill="#1a1a1a"/>
+  <ellipse cx="409.60" cy="690.00" rx="7.20" ry="4.48" transform="rotate(0.0,409.60,690.00)" fill="#1a1a1a"/>
+  <ellipse cx="402.97" cy="699.13" rx="7.20" ry="4.48" transform="rotate(72.0,402.97,699.13)" fill="#1a1a1a"/>
+  <ellipse cx="392.23" cy="695.64" rx="7.20" ry="4.48" transform="rotate(144.0,392.23,695.64)" fill="#1a1a1a"/>
+  <ellipse cx="392.23" cy="684.36" rx="7.20" ry="4.48" transform="rotate(216.0,392.23,684.36)" fill="#1a1a1a"/>
+  <ellipse cx="402.97" cy="680.87" rx="7.20" ry="4.48" transform="rotate(288.0,402.97,680.87)" fill="#1a1a1a"/>
+  <circle cx="400.00" cy="690.00" r="5.00" fill="#1a1a1a"/>
+  <ellipse cx="549.60" cy="696.00" rx="7.20" ry="4.48" transform="rotate(0.0,549.60,696.00)" fill="#1a1a1a"/>
+  <ellipse cx="542.97" cy="705.13" rx="7.20" ry="4.48" transform="rotate(72.0,542.97,705.13)" fill="#1a1a1a"/>
+  <ellipse cx="532.23" cy="701.64" rx="7.20" ry="4.48" transform="rotate(144.0,532.23,701.64)" fill="#1a1a1a"/>
+  <ellipse cx="532.23" cy="690.36" rx="7.20" ry="4.48" transform="rotate(216.0,532.23,690.36)" fill="#1a1a1a"/>
+  <ellipse cx="542.97" cy="686.87" rx="7.20" ry="4.48" transform="rotate(288.0,542.97,686.87)" fill="#1a1a1a"/>
+  <circle cx="540.00" cy="696.00" r="5.00" fill="#1a1a1a"/>
+  <path d="M 319.10,666.44 Q 318.85,678.01 329.00,683.59 Q 329.25,672.01 319.10,666.44 Z" fill="#1a1a1a"/>
+  <path d="M 479.10,671.56 Q 489.25,665.99 489.00,654.41 Q 478.85,659.99 479.10,671.56 Z" fill="#1a1a1a"/>
+</svg>
