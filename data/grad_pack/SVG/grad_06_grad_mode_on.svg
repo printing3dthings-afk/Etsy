@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Grad Mode On SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <polygon points="729.1,590.0 400.0,780.0 70.9,590.0 70.9,210.0 400.0,20.0 729.1,210.0" fill="black"/>
+  <polygon points="707.4,577.5 400.0,755.0 92.6,577.5 92.6,222.5 400.0,45.0 707.4,222.5" fill="none" stroke="white" stroke-width="3"/>
+  <path d="M 400,237.85 L 452.0,245 L 400,252.15 L 348.0,245 Z" fill="white"/>
+  <path d="M 370.75,249.29 L 429.25,249.29 L 435.75,278.53999999999996 L 364.25,278.53999999999996 Z" fill="white"/>
+  <line x1="436.4" y1="245" x2="436.4" y2="295" stroke="white" stroke-width="3"/>
+  <line x1="428.4" y1="297" x2="426.4" y2="318" stroke="white" stroke-width="2"/>
+  <line x1="432.4" y1="297" x2="430.4" y2="318" stroke="white" stroke-width="2"/>
+  <line x1="436.4" y1="297" x2="434.4" y2="318" stroke="white" stroke-width="2"/>
+  <line x1="440.4" y1="297" x2="438.4" y2="318" stroke="white" stroke-width="2"/>
+  <line x1="444.4" y1="297" x2="442.4" y2="318" stroke="white" stroke-width="2"/>
+  <path d="M 140.192,228.000 L 145.482,242.719 L 161.116,243.202 L 148.752,252.781 L 153.124,267.798 L 140.192,259.000 L 127.261,267.798 L 131.633,252.781 L 119.269,243.202 L 134.902,242.719 Z" fill="white"/>
+  <path d="M 659.808,228.000 L 665.098,242.719 L 680.731,243.202 L 668.367,252.781 L 672.739,267.798 L 659.808,259.000 L 646.876,267.798 L 651.248,252.781 L 638.884,243.202 L 654.518,242.719 Z" fill="white"/>
+  <line x1="130" y1="345" x2="670" y2="345" stroke="white" stroke-width="2"/>
+  <line x1="130" y1="352" x2="670" y2="352" stroke="white" stroke-width="0.8"/>
+  <text x="400" y="415" text-anchor="middle" font-family="Georgia, serif" font-size="88" font-weight="bold" fill="white" letter-spacing="2">GRAD</text>
+  <text x="400" y="470" text-anchor="middle" font-family="Georgia, serif" font-size="44" fill="white" letter-spacing="10">MODE</text>
+  <text x="400" y="530" text-anchor="middle" font-family="Georgia, serif" font-size="88" font-weight="bold" fill="white" letter-spacing="4">ON</text>
+  <line x1="130" y1="552" x2="670" y2="552" stroke="white" stroke-width="2"/>
+  <text x="400" y="595" text-anchor="middle" font-family="Georgia, serif" font-size="18" fill="white" letter-spacing="8">CLASS OF 2026</text>
+</svg>

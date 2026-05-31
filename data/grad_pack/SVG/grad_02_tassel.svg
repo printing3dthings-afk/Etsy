@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Tassel Worth Hassle SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <path d="M 400,300.2 L 544.0,320 L 400,339.8 L 256.0,320 Z" fill="black"/>
+  <path d="M 319.0,331.88 L 481.0,331.88 L 499.0,412.88 L 301.0,412.88 Z" fill="black"/>
+  <line x1="500.8" y1="320" x2="500.8" y2="480" stroke="black" stroke-width="4"/>
+  <circle cx="500.8" cy="480" r="9" fill="black"/>
+  <line x1="480.8" y1="488" x2="476.8" y2="530" stroke="black" stroke-width="2.5"/>
+  <line x1="485.8" y1="488" x2="481.8" y2="530" stroke="black" stroke-width="2.5"/>
+  <line x1="490.8" y1="488" x2="486.8" y2="530" stroke="black" stroke-width="2.5"/>
+  <line x1="495.8" y1="488" x2="491.8" y2="530" stroke="black" stroke-width="2.5"/>
+  <line x1="500.8" y1="488" x2="496.8" y2="530" stroke="black" stroke-width="2.5"/>
+  <line x1="505.8" y1="488" x2="501.8" y2="530" stroke="black" stroke-width="2.5"/>
+  <line x1="510.8" y1="488" x2="506.8" y2="530" stroke="black" stroke-width="2.5"/>
+  <line x1="515.8" y1="488" x2="511.79999999999995" y2="530" stroke="black" stroke-width="2.5"/>
+  <line x1="520.8" y1="488" x2="516.8" y2="530" stroke="black" stroke-width="2.5"/>
+  <text x="400" y="590" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="black" letter-spacing="3">THE TASSEL WAS</text>
+  <text x="400" y="635" text-anchor="middle" font-family="Georgia, serif" font-size="48" font-weight="bold" fill="black" letter-spacing="2">WORTH THE</text>
+  <text x="400" y="685" text-anchor="middle" font-family="Georgia, serif" font-size="48" font-weight="bold" fill="black" letter-spacing="2">HASSLE</text>
+  <line x1="100" y1="555" x2="700" y2="555" stroke="black" stroke-width="3"/>
+  <line x1="100" y1="562" x2="700" y2="562" stroke="black" stroke-width="1"/>
+</svg>

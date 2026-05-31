@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Next Chapter Graduation SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <path d="M 400,320 Q 360,310 200,320 L 180,520 Q 220,530 400,510 Z" fill="black"/>
+  <path d="M 400,320 Q 440,310 600,320 L 620,520 Q 580,530 400,510 Z" fill="black"/>
+  <path d="M 400,320 L 400,510" stroke="white" stroke-width="5" fill="none"/>
+  <line x1="215" y1="360" x2="375" y2="368" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="215" y1="388" x2="375" y2="396" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="215" y1="416" x2="375" y2="424" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="215" y1="444" x2="375" y2="452" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="215" y1="472" x2="375" y2="480" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="215" y1="500" x2="375" y2="508" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="425" y1="368" x2="585" y2="360" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="425" y1="396" x2="585" y2="388" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="425" y1="424" x2="585" y2="416" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="425" y1="452" x2="585" y2="444" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="425" y1="480" x2="585" y2="472" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <line x1="425" y1="508" x2="585" y2="500" stroke="white" stroke-width="1.5" opacity="0.4"/>
+  <path d="M 400.000,200.000 C 400.000,212.800 440.000,206.000 440.000,200.000 C 440.000,194.000 400.000,187.200 400.000,200.000 Z" fill="black"/>
+  <path d="M 400.000,200.000 C 390.949,209.051 424.042,232.527 428.284,228.284 C 432.527,224.042 409.051,190.949 400.000,200.000 Z" fill="black"/>
+  <path d="M 400.000,200.000 C 387.200,200.000 394.000,240.000 400.000,240.000 C 406.000,240.000 412.800,200.000 400.000,200.000 Z" fill="black"/>
+  <path d="M 400.000,200.000 C 390.949,190.949 367.473,224.042 371.716,228.284 C 375.958,232.527 409.051,209.051 400.000,200.000 Z" fill="black"/>
+  <path d="M 400.000,200.000 C 400.000,187.200 360.000,194.000 360.000,200.000 C 360.000,206.000 400.000,212.800 400.000,200.000 Z" fill="black"/>
+  <path d="M 400.000,200.000 C 409.051,190.949 375.958,167.473 371.716,171.716 C 367.473,175.958 390.949,209.051 400.000,200.000 Z" fill="black"/>
+  <path d="M 400.000,200.000 C 412.800,200.000 406.000,160.000 400.000,160.000 C 394.000,160.000 387.200,200.000 400.000,200.000 Z" fill="black"/>
+  <path d="M 400.000,200.000 C 409.051,209.051 432.527,175.958 428.284,171.716 C 424.042,167.473 390.949,190.949 400.000,200.000 Z" fill="black"/>
+  <circle cx="400" cy="200" r="10" fill="white"/>
+  <path d="M 455.000,195.200 Q 447.000,195.200 455.000,216.000 Q 463.000,195.200 455.000,195.200 Z" fill="black"/>
+  <path d="M 442.285,235.497 Q 436.628,229.840 427.577,250.205 Q 447.942,241.154 442.285,235.497 Z" fill="black"/>
+  <path d="M 404.800,255.000 Q 404.800,247.000 384.000,255.000 Q 404.800,263.000 404.800,255.000 Z" fill="black"/>
+  <path d="M 364.503,242.285 Q 370.160,236.628 349.795,227.577 Q 358.846,247.942 364.503,242.285 Z" fill="black"/>
+  <path d="M 345.000,204.800 Q 353.000,204.800 345.000,184.000 Q 337.000,204.800 345.000,204.800 Z" fill="black"/>
+  <path d="M 357.715,164.503 Q 363.372,170.160 372.423,149.795 Q 352.058,158.846 357.715,164.503 Z" fill="black"/>
+  <path d="M 395.200,145.000 Q 395.200,153.000 416.000,145.000 Q 395.200,137.000 395.200,145.000 Z" fill="black"/>
+  <path d="M 435.497,157.715 Q 429.840,163.372 450.205,172.423 Q 441.154,152.058 435.497,157.715 Z" fill="black"/>
+  <text x="400" y="595" text-anchor="middle" font-family="Georgia, serif" font-size="22" fill="black" letter-spacing="4">NEXT</text>
+  <text x="400" y="652" text-anchor="middle" font-family="Georgia, serif" font-size="72" font-weight="bold" fill="black" letter-spacing="3">CHAPTER</text>
+  <text x="400" y="695" text-anchor="middle" font-family="Georgia, serif" font-size="17" fill="black" letter-spacing="6">CLASS OF 2026</text>
+  <line x1="120" y1="565" x2="680" y2="565" stroke="black" stroke-width="3"/>
+  <line x1="120" y1="572" x2="680" y2="572" stroke="black" stroke-width="1"/>
+</svg>

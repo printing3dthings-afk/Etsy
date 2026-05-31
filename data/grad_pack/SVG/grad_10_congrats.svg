@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Congrats Grad SVG Pennant</title>
+  <rect width="800" height="800" fill="none"/>
+  <polygon points="60,80 200,80 130,170" fill="black"/>
+  <polygon points="60,80 200,80 130,165" fill="none" stroke="white" stroke-width="1.5"/>
+  <polygon points="230,80 370,80 300,170" fill="black"/>
+  <polygon points="230,80 370,80 300,165" fill="none" stroke="white" stroke-width="1.5"/>
+  <polygon points="400,80 540,80 470,170" fill="black"/>
+  <polygon points="400,80 540,80 470,165" fill="none" stroke="white" stroke-width="1.5"/>
+  <polygon points="570,80 710,80 640,170" fill="black"/>
+  <polygon points="570,80 710,80 640,165" fill="none" stroke="white" stroke-width="1.5"/>
+  <polygon points="740,80 880,80 810,170" fill="black"/>
+  <polygon points="740,80 880,80 810,165" fill="none" stroke="white" stroke-width="1.5"/>
+  <line x1="60" y1="80" x2="740" y2="80" stroke="black" stroke-width="3"/>
+  <path d="M 400,345.7 L 504.0,360 L 400,374.3 L 296.0,360 Z" fill="black"/>
+  <path d="M 341.5,368.58 L 458.5,368.58 L 471.5,427.08 L 328.5,427.08 Z" fill="black"/>
+  <line x1="472.8" y1="360" x2="472.8" y2="450" stroke="black" stroke-width="4"/>
+  <circle cx="472.8" cy="452" r="7" fill="black"/>
+  <line x1="457.8" y1="457" x2="454.8" y2="485" stroke="black" stroke-width="2.5"/>
+  <line x1="462.8" y1="457" x2="459.8" y2="485" stroke="black" stroke-width="2.5"/>
+  <line x1="467.8" y1="457" x2="464.8" y2="485" stroke="black" stroke-width="2.5"/>
+  <line x1="472.8" y1="457" x2="469.8" y2="485" stroke="black" stroke-width="2.5"/>
+  <line x1="477.8" y1="457" x2="474.8" y2="485" stroke="black" stroke-width="2.5"/>
+  <line x1="482.8" y1="457" x2="479.8" y2="485" stroke="black" stroke-width="2.5"/>
+  <line x1="487.8" y1="457" x2="484.8" y2="485" stroke="black" stroke-width="2.5"/>
+  <text x="400" y="555" text-anchor="middle" font-family="Georgia, serif" font-size="62" font-weight="bold" fill="black" letter-spacing="2">CONGRATS</text>
+  <text x="400" y="615" text-anchor="middle" font-family="Georgia, serif" font-size="62" font-weight="bold" fill="black" letter-spacing="6">GRAD</text>
+  <text x="400" y="665" text-anchor="middle" font-family="Georgia, serif" font-size="20" fill="black" letter-spacing="8">CLASS OF 2026</text>
+  <path d="M 320.000,690.000 L 322.645,696.359 L 329.511,696.910 L 324.280,701.391 L 325.878,708.090 L 320.000,704.500 L 314.122,708.090 L 315.720,701.391 L 310.489,696.910 L 317.355,696.359 Z" fill="black"/>
+  <path d="M 360.000,690.000 L 362.645,696.359 L 369.511,696.910 L 364.280,701.391 L 365.878,708.090 L 360.000,704.500 L 354.122,708.090 L 355.720,701.391 L 350.489,696.910 L 357.355,696.359 Z" fill="black"/>
+  <path d="M 400.000,690.000 L 402.645,696.359 L 409.511,696.910 L 404.280,701.391 L 405.878,708.090 L 400.000,704.500 L 394.122,708.090 L 395.720,701.391 L 390.489,696.910 L 397.355,696.359 Z" fill="black"/>
+  <path d="M 440.000,690.000 L 442.645,696.359 L 449.511,696.910 L 444.280,701.391 L 445.878,708.090 L 440.000,704.500 L 434.122,708.090 L 435.720,701.391 L 430.489,696.910 L 437.355,696.359 Z" fill="black"/>
+  <path d="M 480.000,690.000 L 482.645,696.359 L 489.511,696.910 L 484.280,701.391 L 485.878,708.090 L 480.000,704.500 L 474.122,708.090 L 475.720,701.391 L 470.489,696.910 L 477.355,696.359 Z" fill="black"/>
+</svg>
