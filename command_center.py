@@ -1003,9 +1003,11 @@ def svg_converter_page():
 def convert_svg():
     try:
         import vtracer
-        from PIL import Image
+        import re as _re
+        from PIL import Image, ImageFilter
+        import numpy as np
     except ImportError as e:
-        return jsonify({"error": f"Missing dependency: {e}. Run: pip install vtracer Pillow"}), 500
+        return jsonify({"error": f"Missing dependency: {e}. Run: pip install vtracer Pillow numpy"}), 500
 
     if "image" not in request.files:
         return jsonify({"error": "No image provided"}), 400
@@ -1017,7 +1019,7 @@ def convert_svg():
         raw_bytes = f.read()
         img = Image.open(io.BytesIO(raw_bytes))
 
-        # Resize very large images for performance (vtracer is slow on 4K+)
+        # Resize very large images (vtracer is slow on 4K+)
         max_side = 2000
         if max(img.size) > max_side:
             ratio = max_side / max(img.size)
@@ -1026,39 +1028,74 @@ def convert_svg():
                 Image.LANCZOS
             )
 
-        # Normalize to PNG for vtracer
-        buf = io.BytesIO()
-        if img.mode in ("RGBA", "LA", "P"):
-            img.convert("RGBA").save(buf, "PNG")
-        else:
-            img.convert("RGB").save(buf, "PNG")
-        png_bytes = buf.getvalue()
-
         width, height = img.size
 
         if mode == "bw":
+            buf = io.BytesIO()
+            img.convert("RGB").save(buf, "PNG")
+            png_bytes = buf.getvalue()
             params = dict(
                 colormode="binary", hierarchical="cutout", mode="spline",
                 filter_speckle=4, color_precision=8, layer_difference=16,
                 corner_threshold=60, length_threshold=4.0,
                 max_iterations=10, splice_threshold=45, path_precision=8
             )
+            svg_str = vtracer.convert_raw_image_to_svg(png_bytes, img_format="png", **params)
+
         elif mode == "silhouette":
+            buf = io.BytesIO()
+            img.convert("RGB").save(buf, "PNG")
+            png_bytes = buf.getvalue()
             params = dict(
                 colormode="binary", hierarchical="cutout", mode="spline",
                 filter_speckle=16, color_precision=8, layer_difference=16,
                 corner_threshold=60, length_threshold=4.0,
                 max_iterations=10, splice_threshold=45, path_precision=6
             )
-        else:  # color — maximum quality
-            params = dict(
+            svg_str = vtracer.convert_raw_image_to_svg(png_bytes, img_format="png", **params)
+
+        else:  # color — maximum quality pipeline with 3x upscale
+            arr = np.array(img.convert("RGB"))
+            r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
+            # Quantize to the dominant color clusters to remove JPEG compression noise
+            # Use vtracer's own color quantization at high precision
+            # Then 3x NEAREST upscale so vtracer fits smoother bezier curves
+            buf_orig = io.BytesIO()
+            img.convert("RGB").save(buf_orig, "PNG")
+            png_orig = buf_orig.getvalue()
+
+            # First pass: get quantized flat-color version
+            svg_q = vtracer.convert_raw_image_to_svg(
+                png_orig, img_format="png",
                 colormode="color", hierarchical="stacked", mode="spline",
-                filter_speckle=4, color_precision=8, layer_difference=16,
-                corner_threshold=60, length_threshold=4.0,
+                filter_speckle=16, color_precision=4, layer_difference=22,
+                corner_threshold=80, length_threshold=8.0,
                 max_iterations=10, splice_threshold=45, path_precision=8
             )
 
-        svg_str = vtracer.convert_raw_image_to_svg(png_bytes, img_format="png", **params)
+            # Second pass: 3x upscale of a median-filtered version → smoother curves
+            from PIL import ImageFilter as _IF
+            img_med = img.convert("RGB").filter(_IF.MedianFilter(3))
+            W3, H3 = width * 3, height * 3
+            img_3x = img_med.resize((W3, H3), Image.NEAREST)
+            buf_3x = io.BytesIO()
+            img_3x.save(buf_3x, "PNG")
+            png_3x = buf_3x.getvalue()
+
+            svg_str = vtracer.convert_raw_image_to_svg(
+                png_3x, img_format="png",
+                colormode="color", hierarchical="stacked", mode="spline",
+                filter_speckle=4, color_precision=4, layer_difference=22,
+                corner_threshold=85, length_threshold=24,
+                max_iterations=10, splice_threshold=45, path_precision=8
+            )
+            # Fix SVG dimensions: paths are in 3x space, display at original size
+            svg_str = _re.sub(
+                r'<svg[^>]*>',
+                f'<svg version="1.1" xmlns="http://www.w3.org/2000/svg" '
+                f'viewBox="0 0 {W3} {H3}" width="{width}" height="{height}">',
+                svg_str, count=1
+            )
 
         return jsonify({
             "svg": svg_str,
