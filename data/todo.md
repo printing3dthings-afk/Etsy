@@ -101,6 +101,12 @@
   `0 10 */2 * * cd /home/user/Etsy && python3 tools/post_scheduled_art.py >> logs/art_schedule.log 2>&1`
   Run `python tools/post_scheduled_art.py --preview` first to verify image quality before activating.
 - [ ] Delete planner backup files: `data/digital_products/product_files/*.orig_backup` (86.3 MB) — after verifying planners work in GoodNotes
+- [ ] **Deploy Command Center to Railway** (cloud access from iPhone, no computer needed):
+  1. Go to **railway.app** → sign up with GitHub
+  2. New Project → Deploy from GitHub repo → select `printing3dthings-afk/Etsy` → branch `claude/etsy-automation-agents-WFAPU`
+  3. Variables tab → add: `CENTER_PASSWORD` (pick a password), `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `ETSY_CLIENT_ID` (`v874xp0m0r4yoh72btmux151`), `ETSY_CLIENT_SECRET` (`hjyq1cmrog`), `ETSY_ACCESS_TOKEN`, `ETSY_REFRESH_TOKEN`
+  4. Settings → Domains → Generate Domain → open the URL on your iPhone
+  5. Free tier: ~500 hrs/month. Hobby plan $5/mo for unlimited uptime.
 
 ---
 

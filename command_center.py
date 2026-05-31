@@ -11,7 +11,8 @@ Cloud:  deployed to Railway       →  https://your-app.up.railway.app
 import subprocess
 import os
 import json
-from flask import Flask, Response, request, render_template_string, session, redirect
+import io
+from flask import Flask, Response, request, render_template_string, session, redirect, jsonify
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -265,6 +266,21 @@ COMMANDS = [
             },
         ]
     },
+    # ── IMAGE TOOLS ──────────────────────────────────────────────────────────
+    {
+        "category": "Image Tools",
+        "color": "#7B1FA2",
+        "icon": "🖼️",
+        "commands": [
+            {
+                "id": "svg_converter",
+                "label": "SVG Converter",
+                "cmd": "",
+                "tool_url": "/svg",
+                "desc": "Convert any photo or image to a high-quality scalable SVG. Paste, drag & drop, or browse. Three modes: Full Color, Black & White, Silhouette (Cricut/laser cut).",
+            },
+        ]
+    },
     # ── AI AGENTS (HUB) ───────────────────────────────────────────────────────
     {
         "category": "AI Agents (Town Hub)",
@@ -464,17 +480,24 @@ HTML = """<!DOCTYPE html>
             {% if is_local %}<span class="local-badge">💻 Local PC</span>{% endif %}
           </div>
           <div class="card-desc">{{ cmd.desc }}</div>
+          {% if not cmd.tool_url %}
           <div class="card-cmd" onclick="copyCmd(this, '{{ cmd.cmd }}')" title="Click to copy">
             <span>{{ cmd.cmd }}</span>
             <span class="copy-hint">📋 copy</span>
           </div>
+          {% endif %}
           {% if cmd.flags %}
           <div class="flags">
             Variants: {% for f in cmd.flags %}<span title="{{ f.desc }}">{{ f.flag }}</span>{% endfor %}
           </div>
           {% endif %}
           <br>
-          {% if is_local %}
+          {% if cmd.tool_url %}
+          <a class="btn-run" style="--c:{{ section.color }};text-decoration:none"
+             href="{{ cmd.tool_url }}" target="_blank">
+            🔗 Open Tool →
+          </a>
+          {% elif is_local %}
           <button class="btn-local" disabled title="Requires local computer — run this on your PC">
             💻 Needs Local PC
           </button>
@@ -678,6 +701,375 @@ def run_command():
 
     return Response(generate(), mimetype="text/event-stream",
                     headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+# ── SVG Converter page & API ──────────────────────────────────────────────────
+
+SVG_PAGE_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SVG Converter — OnBrandCraftz</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         background:#f0ede9;color:#222;min-height:100vh}
+    .topbar{background:#1a1a1a;color:#fff;padding:14px 28px;display:flex;
+            align-items:center;gap:16px;position:sticky;top:0;z-index:100;
+            box-shadow:0 2px 8px rgba(0,0,0,.3)}
+    .back-btn{color:#aaa;text-decoration:none;font-size:13px;white-space:nowrap;
+              display:flex;align-items:center;gap:5px;transition:color .15s}
+    .back-btn:hover{color:#fff}
+    .container{max-width:1100px;margin:0 auto;padding:28px}
+    .drop-zone{border:2.5px dashed #c5b8d4;border-radius:14px;padding:60px 40px;
+               text-align:center;cursor:pointer;transition:all .2s;
+               background:#fff;margin-bottom:20px}
+    .drop-zone:hover,.drop-zone.drag-over{border-color:#7B1FA2;background:#faf5ff}
+    .drop-zone.has-image{padding:18px;border-style:solid;border-color:#7B1FA2}
+    .drop-icon{font-size:44px;margin-bottom:10px;display:block}
+    .drop-title{font-size:17px;font-weight:600;color:#333;margin-bottom:6px}
+    .drop-sub{font-size:13px;color:#888;line-height:1.6}
+    .drop-sub kbd{background:#f0ede9;border:1px solid #ddd;border-radius:4px;
+                  padding:1px 7px;font-size:12px}
+    .controls{background:#fff;border-radius:12px;padding:20px 24px;
+              border:1px solid #e5e0da;margin-bottom:20px}
+    .controls h3{font-size:14px;font-weight:700;margin-bottom:14px;color:#333}
+    .mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+    .mode-btn{padding:14px 12px;border:2px solid #e5e0da;border-radius:10px;
+              cursor:pointer;text-align:center;transition:all .2s;background:#fff;
+              user-select:none}
+    .mode-btn:hover{border-color:#7B1FA2;background:#faf5ff}
+    .mode-btn.active{border-color:#7B1FA2;background:#f3e5f5}
+    .mode-icon{font-size:22px;margin-bottom:5px;display:block}
+    .mode-name{font-size:13px;font-weight:700;color:#333;margin-bottom:3px}
+    .mode-desc{font-size:11px;color:#888;line-height:1.4}
+    .btn-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .btn-convert{display:inline-flex;align-items:center;gap:8px;background:#7B1FA2;
+                 color:#fff;border:none;border-radius:8px;padding:12px 26px;
+                 font-size:14px;font-weight:700;cursor:pointer;transition:filter .15s}
+    .btn-convert:hover{filter:brightness(1.12)}
+    .btn-convert:disabled{background:#aaa;cursor:not-allowed;filter:none}
+    .btn-download{display:inline-flex;align-items:center;gap:8px;background:#4CAF50;
+                  color:#fff;border:none;border-radius:8px;padding:12px 26px;
+                  font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;
+                  transition:filter .15s}
+    .btn-download:hover{filter:brightness(1.1)}
+    .status-bar{border-radius:8px;padding:12px 16px;font-size:13px;
+                margin-bottom:16px;display:none;align-items:center;gap:10px}
+    .status-bar.show{display:flex}
+    .status-bar.loading{background:#ede7f6;color:#4a148c}
+    .status-bar.success{background:#e8f5e9;color:#1b5e20}
+    .status-bar.error{background:#ffebee;color:#b71c1c}
+    .spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,.15);
+             border-top-color:currentColor;border-radius:50%;flex-shrink:0;
+             animation:spin .7s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+    .preview-box{background:#fff;border-radius:12px;border:1px solid #e5e0da;overflow:hidden}
+    .preview-label{padding:10px 16px;font-size:12px;font-weight:700;color:#555;
+                   background:#f7f5f2;border-bottom:1px solid #e5e0da;
+                   display:flex;justify-content:space-between;align-items:center}
+    .preview-meta{font-weight:400;color:#aaa;font-size:11px}
+    .preview-content{display:flex;align-items:center;justify-content:center;
+                     min-height:200px;padding:16px;max-height:400px;overflow:auto;
+                     background:#fafafa}
+    .preview-content img{max-width:100%;max-height:360px;object-fit:contain;display:block}
+    .preview-placeholder{color:#ccc;font-size:13px;text-align:center;line-height:1.7}
+    .stats{display:flex;gap:18px;flex-wrap:wrap}
+    .stat{font-size:12px;color:#666}.stat strong{color:#333;font-weight:700}
+    @media(max-width:700px){
+      .preview-grid{grid-template-columns:1fr}
+      .mode-grid{grid-template-columns:1fr}
+      .container{padding:16px}
+      .drop-zone{padding:36px 20px}
+    }
+  </style>
+</head>
+<body>
+<div class="topbar">
+  <a href="/" class="back-btn">← Command Center</a>
+  <div>
+    <div style="font-size:17px;font-weight:700">🖼️ SVG Converter</div>
+    <div style="font-size:12px;color:#aaa;margin-top:2px">Convert any image to a scalable vector SVG</div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+    <span class="drop-icon" id="drop-icon">🖼️</span>
+    <div class="drop-title" id="drop-title">Paste, drag, or click to load an image</div>
+    <div class="drop-sub" id="drop-sub">
+      <kbd>Ctrl+V</kbd> paste from clipboard &nbsp;·&nbsp;
+      Drag &amp; drop a file &nbsp;·&nbsp;
+      Click to browse<br>
+      PNG · JPG · WEBP · BMP · GIF
+    </div>
+    <input type="file" id="file-input" accept="image/*" style="display:none">
+  </div>
+
+  <div class="status-bar" id="status-bar">
+    <div class="spinner" id="status-spinner" style="display:none"></div>
+    <span id="status-text"></span>
+  </div>
+
+  <div class="controls">
+    <h3>Conversion Mode</h3>
+    <div class="mode-grid">
+      <div class="mode-btn active" onclick="setMode('color',this)">
+        <span class="mode-icon">🎨</span>
+        <div class="mode-name">Full Color</div>
+        <div class="mode-desc">Maximum color fidelity. Best for photos, illustrations, and detailed artwork.</div>
+      </div>
+      <div class="mode-btn" onclick="setMode('bw',this)">
+        <span class="mode-icon">◑</span>
+        <div class="mode-name">Black &amp; White</div>
+        <div class="mode-desc">Clean B&amp;W paths. Best for logos, sketches, and typography.</div>
+      </div>
+      <div class="mode-btn" onclick="setMode('silhouette',this)">
+        <span class="mode-icon">⬟</span>
+        <div class="mode-name">Silhouette</div>
+        <div class="mode-desc">Simplified solid shape. Best for sticker cut files, Cricut, and laser cutting.</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-convert" id="btn-convert" onclick="doConvert()" disabled>
+        ✦ Convert to SVG
+      </button>
+      <a class="btn-download" id="btn-download" style="display:none" download="converted.svg">
+        ↓ Download SVG
+      </a>
+      <div class="stats" id="stats" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="preview-grid">
+    <div class="preview-box">
+      <div class="preview-label">
+        Original Image
+        <span class="preview-meta" id="orig-meta"></span>
+      </div>
+      <div class="preview-content" id="orig-preview">
+        <div class="preview-placeholder">Your image will appear here</div>
+      </div>
+    </div>
+    <div class="preview-box">
+      <div class="preview-label">
+        SVG Output
+        <span class="preview-meta" id="svg-meta"></span>
+      </div>
+      <div class="preview-content" id="svg-preview">
+        <div class="preview-placeholder">SVG preview will appear here<br>after conversion</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentMode = 'color';
+let currentFile = null;
+
+function setMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function fmt(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(2) + ' MB';
+}
+
+function setStatus(type, text, spinner) {
+  const bar = document.getElementById('status-bar');
+  bar.className = 'status-bar show ' + type;
+  document.getElementById('status-spinner').style.display = spinner ? 'block' : 'none';
+  document.getElementById('status-text').textContent = text;
+}
+function clearStatus() { document.getElementById('status-bar').className = 'status-bar'; }
+
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    setStatus('error', 'Please provide an image file (PNG, JPG, WEBP, BMP, GIF).', false);
+    return;
+  }
+  currentFile = file;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dz = document.getElementById('drop-zone');
+    dz.classList.add('has-image');
+    document.getElementById('drop-icon').textContent = '✓';
+    document.getElementById('drop-title').textContent = file.name;
+    document.getElementById('drop-sub').textContent = fmt(file.size) + ' · Click to change image';
+
+    const img = new Image();
+    img.src = e.target.result;
+    img.onload = function() {
+      const p = document.getElementById('orig-preview');
+      p.innerHTML = '';
+      p.appendChild(img);
+      document.getElementById('orig-meta').textContent =
+        img.naturalWidth + '×' + img.naturalHeight + ' · ' + fmt(file.size);
+    };
+    document.getElementById('btn-convert').disabled = false;
+    document.getElementById('btn-download').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById('svg-meta').textContent = '';
+    document.getElementById('svg-preview').innerHTML =
+      '<div class="preview-placeholder">Click "Convert to SVG" to generate</div>';
+    clearStatus();
+  };
+  reader.readAsDataURL(file);
+}
+
+document.addEventListener('paste', function(e) {
+  for (const item of e.clipboardData.items) {
+    if (item.type.startsWith('image/')) { loadFile(item.getAsFile()); return; }
+  }
+});
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) loadFile(e.dataTransfer.files[0]);
+});
+document.getElementById('file-input').addEventListener('change', e => {
+  if (e.target.files.length) loadFile(e.target.files[0]);
+});
+
+async function doConvert() {
+  if (!currentFile) return;
+  const btn = document.getElementById('btn-convert');
+  btn.disabled = true;
+  btn.textContent = '⏳ Converting…';
+  setStatus('loading', 'Converting — this takes a few seconds for detailed images…', true);
+  document.getElementById('btn-download').style.display = 'none';
+  document.getElementById('stats').style.display = 'none';
+  document.getElementById('svg-preview').innerHTML =
+    '<div class="preview-placeholder">Converting…</div>';
+
+  try {
+    const form = new FormData();
+    form.append('image', currentFile);
+    form.append('mode', currentMode);
+    const res = await fetch('/api/convert-svg', { method: 'POST', body: form });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const blob = new Blob([data.svg], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.src = url;
+    img.style.cssText = 'max-width:100%;max-height:360px;display:block';
+    const svgPrev = document.getElementById('svg-preview');
+    svgPrev.innerHTML = '';
+    svgPrev.appendChild(img);
+    document.getElementById('svg-meta').textContent = fmt(data.svg_size);
+
+    const dlBtn = document.getElementById('btn-download');
+    dlBtn.href = URL.createObjectURL(blob);
+    dlBtn.download = currentFile.name.replace(/\\.[^.]+$/, '') + '.svg';
+    dlBtn.style.display = 'inline-flex';
+
+    const statsEl = document.getElementById('stats');
+    statsEl.style.display = 'flex';
+    statsEl.innerHTML =
+      '<div class="stat">Original: <strong>' + fmt(data.orig_size) + '</strong></div>' +
+      '<div class="stat">SVG: <strong>' + fmt(data.svg_size) + '</strong></div>' +
+      '<div class="stat">Dimensions: <strong>' + data.width + '×' + data.height + 'px</strong></div>';
+
+    setStatus('success', '✓ SVG ready! Click "Download SVG" to save.', false);
+  } catch(err) {
+    setStatus('error', 'Conversion failed: ' + err.message, false);
+    document.getElementById('svg-preview').innerHTML =
+      '<div class="preview-placeholder" style="color:#e53935">Conversion failed — try a different image or mode</div>';
+  }
+  btn.disabled = false;
+  btn.textContent = '✦ Convert to SVG';
+}
+</script>
+</body>
+</html>"""
+
+
+@app.route("/svg")
+def svg_converter_page():
+    return render_template_string(SVG_PAGE_HTML)
+
+
+@app.route("/api/convert-svg", methods=["POST"])
+def convert_svg():
+    try:
+        import vtracer
+        from PIL import Image
+    except ImportError as e:
+        return jsonify({"error": f"Missing dependency: {e}. Run: pip install vtracer Pillow"}), 500
+
+    if "image" not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+
+    f = request.files["image"]
+    mode = request.form.get("mode", "color")
+
+    try:
+        raw_bytes = f.read()
+        img = Image.open(io.BytesIO(raw_bytes))
+
+        # Resize very large images for performance (vtracer is slow on 4K+)
+        max_side = 2000
+        if max(img.size) > max_side:
+            ratio = max_side / max(img.size)
+            img = img.resize(
+                (int(img.width * ratio), int(img.height * ratio)),
+                Image.LANCZOS
+            )
+
+        # Normalize to PNG for vtracer
+        buf = io.BytesIO()
+        if img.mode in ("RGBA", "LA", "P"):
+            img.convert("RGBA").save(buf, "PNG")
+        else:
+            img.convert("RGB").save(buf, "PNG")
+        png_bytes = buf.getvalue()
+
+        width, height = img.size
+
+        if mode == "bw":
+            params = dict(
+                colormode="binary", hierarchical="cutout", mode="spline",
+                filter_speckle=4, color_precision=8, layer_difference=16,
+                corner_threshold=60, length_threshold=4.0,
+                max_iterations=10, splice_threshold=45, path_precision=8
+            )
+        elif mode == "silhouette":
+            params = dict(
+                colormode="binary", hierarchical="cutout", mode="spline",
+                filter_speckle=16, color_precision=8, layer_difference=16,
+                corner_threshold=60, length_threshold=4.0,
+                max_iterations=10, splice_threshold=45, path_precision=6
+            )
+        else:  # color — maximum quality
+            params = dict(
+                colormode="color", hierarchical="stacked", mode="spline",
+                filter_speckle=4, color_precision=8, layer_difference=16,
+                corner_threshold=60, length_threshold=4.0,
+                max_iterations=10, splice_threshold=45, path_precision=8
+            )
+
+        svg_str = vtracer.convert_raw_image_to_svg(png_bytes, img_format="png", **params)
+
+        return jsonify({
+            "svg": svg_str,
+            "svg_size": len(svg_str.encode("utf-8")),
+            "orig_size": len(raw_bytes),
+            "width": width,
+            "height": height,
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
