@@ -3,11 +3,13 @@
   <title>With God All Things Are Possible SVG</title>
   <rect width="800" height="800" fill="none"/>
   <defs>
-    <style>
-      @font-face { font-family: 'DancingScript'; src: url('/usr/local/share/fonts/DancingScript-Bold.ttf'); }
-      @font-face { font-family: 'Oswald'; src: url('/usr/local/share/fonts/Oswald-Bold.ttf'); }
-      @font-face { font-family: 'Playfair'; src: url('/usr/local/share/fonts/PlayfairDisplay-Bold.ttf'); }
-      @font-face { font-family: 'PlayfairItalic'; src: url('/usr/local/share/fonts/PlayfairDisplay-Italic.ttf'); }
+        <style>
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+      @font-face { font-family: 'CinzelDecReg'; src: url('/usr/local/share/fonts/CinzelDecorative-Regular.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
   <circle cx="497.6" cy="56.3" r="2.1" fill="black"/>
@@ -71,7 +73,7 @@
   <circle cx="400" cy="170" r="32" fill="black"/>
   <circle cx="400" cy="170" r="22" fill="white"/>
   <rect x="80" y="630" width="640" height="130" rx="12" fill="none" stroke="black" stroke-width="2"/>
-  <text x="400" y="674" text-anchor="middle" font-family="DancingScript, cursive" font-size="27" fill="black">With God</text>
-  <text x="400" y="718" text-anchor="middle" font-family="Oswald, Georgia, serif" font-size="40" fill="black" letter-spacing="3">ALL THINGS</text>
-  <text x="400" y="748" text-anchor="middle" font-family="PlayfairItalic, Georgia, serif" font-size="15" fill="black" letter-spacing="3">ARE POSSIBLE  ·  MATTHEW 19:26</text>
+  <text x="400" y="674" text-anchor="middle" font-family="GreatVibes, cursive" font-size="22" fill="black">With God</text>
+  <text x="400" y="718" text-anchor="middle" font-family="CinzelDec, serif" font-size="36" fill="black" letter-spacing="3">ALL THINGS</text>
+  <text x="400" y="748" text-anchor="middle" font-family="CormorantItalic, serif" font-size="16" fill="black" letter-spacing="3">ARE POSSIBLE  ·  MATTHEW 19:26</text>
 </svg>

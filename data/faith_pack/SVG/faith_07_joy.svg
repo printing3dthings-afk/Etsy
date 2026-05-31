@@ -3,11 +3,13 @@
   <title>Joy of the Lord SVG</title>
   <rect width="800" height="800" fill="none"/>
   <defs>
-    <style>
-      @font-face { font-family: 'DancingScript'; src: url('/usr/local/share/fonts/DancingScript-Bold.ttf'); }
-      @font-face { font-family: 'Oswald'; src: url('/usr/local/share/fonts/Oswald-Bold.ttf'); }
-      @font-face { font-family: 'Playfair'; src: url('/usr/local/share/fonts/PlayfairDisplay-Bold.ttf'); }
-      @font-face { font-family: 'PlayfairItalic'; src: url('/usr/local/share/fonts/PlayfairDisplay-Italic.ttf'); }
+        <style>
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+      @font-face { font-family: 'CinzelDecReg'; src: url('/usr/local/share/fonts/CinzelDecorative-Regular.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
   <path d="M 400.000,400.000 C 400.000,492.400 730.000,449.500 730.000,400.000 C 730.000,350.500 400.000,307.600 400.000,400.000 Z" fill="black"/>
@@ -93,9 +95,9 @@
   <path d="M 509.602,290.398 C 513.845,287.948 504.420,277.224 502.602,278.274 C 500.783,279.324 505.358,292.848 509.602,290.398 Z" fill="black"/>
   <path d="M 509.602,290.398 C 513.845,292.848 518.420,279.324 516.602,278.274 C 514.783,277.224 505.358,287.948 509.602,290.398 Z" fill="black"/>
   <circle cx="509.6" cy="290.4" r="4" fill="white"/>
-  <text x="400" y="332" text-anchor="middle" font-family="Playfair, Georgia, serif" font-size="22" fill="black" letter-spacing="6">THE</text>
-  <text x="400" y="400" text-anchor="middle" font-family="Oswald, Georgia, serif" font-size="76" fill="black" letter-spacing="2">JOY</text>
-  <text x="400" y="444" text-anchor="middle" font-family="Playfair, Georgia, serif" font-size="22" fill="black" letter-spacing="3">OF THE LORD</text>
-  <text x="400" y="474" text-anchor="middle" font-family="Playfair, Georgia, serif" font-size="17" fill="black" letter-spacing="2">IS MY STRENGTH</text>
-  <text x="400" y="504" text-anchor="middle" font-family="PlayfairItalic, Georgia, serif" font-size="13" fill="black" letter-spacing="3">NEHEMIAH  8:10</text>
+  <text x="400" y="332" text-anchor="middle" font-family="Cormorant, serif" font-size="22" fill="black" letter-spacing="6">THE</text>
+  <text x="400" y="400" text-anchor="middle" font-family="CinzelDec, serif" font-size="68" fill="black" letter-spacing="2">JOY</text>
+  <text x="400" y="444" text-anchor="middle" font-family="Cormorant, serif" font-size="22" fill="black" letter-spacing="3">OF THE LORD</text>
+  <text x="400" y="474" text-anchor="middle" font-family="Cormorant, serif" font-size="18" fill="black" letter-spacing="2">IS MY STRENGTH</text>
+  <text x="400" y="504" text-anchor="middle" font-family="CormorantItalic, serif" font-size="14" fill="black" letter-spacing="3">NEHEMIAH  8:10</text>
 </svg>

@@ -3,11 +3,13 @@
   <title>I Can Do All Things SVG</title>
   <rect width="800" height="800" fill="none"/>
   <defs>
-    <style>
-      @font-face { font-family: 'DancingScript'; src: url('/usr/local/share/fonts/DancingScript-Bold.ttf'); }
-      @font-face { font-family: 'Oswald'; src: url('/usr/local/share/fonts/Oswald-Bold.ttf'); }
-      @font-face { font-family: 'Playfair'; src: url('/usr/local/share/fonts/PlayfairDisplay-Bold.ttf'); }
-      @font-face { font-family: 'PlayfairItalic'; src: url('/usr/local/share/fonts/PlayfairDisplay-Italic.ttf'); }
+        <style>
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+      @font-face { font-family: 'CinzelDecReg'; src: url('/usr/local/share/fonts/CinzelDecorative-Regular.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
     <path id="topArc" d="M 140,400 A 260,260 0 0,1 660,400"/>
     <path id="botArc" d="M 140,400 A 260,260 0 0,0 660,400"/>
@@ -20,13 +22,13 @@
   <path d="M 400.000,690.000 L 403.182,696.818 L 410.000,700.000 L 403.182,703.182 L 400.000,710.000 L 396.818,703.182 L 390.000,700.000 L 396.818,696.818 Z" fill="black"/>
   <path d="M 100.000,390.000 L 103.182,396.818 L 110.000,400.000 L 103.182,403.182 L 100.000,410.000 L 96.818,403.182 L 90.000,400.000 L 96.818,396.818 Z" fill="black"/>
   <path d="M 400.000,90.000 L 403.182,96.818 L 410.000,100.000 L 403.182,103.182 L 400.000,110.000 L 396.818,103.182 L 390.000,100.000 L 396.818,96.818 Z" fill="black"/>
-  <text font-family="Oswald, Georgia, serif" font-size="28" fill="black" letter-spacing="4">
+  <text font-family="Cinzel, serif" font-size="22" fill="black" letter-spacing="4">
     <textPath href="#topArc" startOffset="50%" text-anchor="middle">I CAN DO ALL THINGS</textPath>
   </text>
-  <text font-family="PlayfairItalic, Georgia, serif" font-size="17" fill="black" letter-spacing="2">
+  <text font-family="CormorantItalic, serif" font-size="18" fill="black" letter-spacing="2">
     <textPath href="#botArc" startOffset="50%" text-anchor="middle">PHILIPPIANS 4:13</textPath>
   </text>
-  <text x="400" y="355" text-anchor="middle" font-family="Playfair, Georgia, serif" font-size="22" fill="black" letter-spacing="4">THROUGH CHRIST</text>
-  <text x="400" y="412" text-anchor="middle" font-family="Oswald, Georgia, serif" font-size="58" fill="black" letter-spacing="2">WHO</text>
-  <text x="400" y="462" text-anchor="middle" font-family="Playfair, Georgia, serif" font-size="26" fill="black" letter-spacing="4">STRENGTHENS ME</text>
+  <text x="400" y="355" text-anchor="middle" font-family="Cormorant, serif" font-size="22" fill="black" letter-spacing="4">THROUGH CHRIST</text>
+  <text x="400" y="412" text-anchor="middle" font-family="CinzelDec, serif" font-size="52" fill="black" letter-spacing="2">WHO</text>
+  <text x="400" y="462" text-anchor="middle" font-family="Cormorant, serif" font-size="26" fill="black" letter-spacing="4">STRENGTHENS ME</text>
 </svg>

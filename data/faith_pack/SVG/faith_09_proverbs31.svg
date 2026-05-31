@@ -3,11 +3,13 @@
   <title>Proverbs 31 Woman SVG</title>
   <rect width="800" height="800" fill="none"/>
   <defs>
-    <style>
-      @font-face { font-family: 'DancingScript'; src: url('/usr/local/share/fonts/DancingScript-Bold.ttf'); }
-      @font-face { font-family: 'Oswald'; src: url('/usr/local/share/fonts/Oswald-Bold.ttf'); }
-      @font-face { font-family: 'Playfair'; src: url('/usr/local/share/fonts/PlayfairDisplay-Bold.ttf'); }
-      @font-face { font-family: 'PlayfairItalic'; src: url('/usr/local/share/fonts/PlayfairDisplay-Italic.ttf'); }
+        <style>
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+      @font-face { font-family: 'CinzelDecReg'; src: url('/usr/local/share/fonts/CinzelDecorative-Regular.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
   <!-- Wreath ring -->
@@ -54,10 +56,10 @@
   <circle cx="400" cy="400" r="190" fill="none" stroke="black" stroke-width="3"/>
   <circle cx="400" cy="400" r="178" fill="none" stroke="black" stroke-width="1"/>
   <!-- Text -->
-  <text x="400" y="353" text-anchor="middle" font-family="Playfair, Georgia, serif" font-size="18" fill="black" letter-spacing="5">PROVERBS 31</text>
+  <text x="400" y="353" text-anchor="middle" font-family="Cormorant, serif" font-size="18" fill="black" letter-spacing="5">PROVERBS 31</text>
   <line x1="300" y1="366" x2="500" y2="366" stroke="black" stroke-width="1.5"/>
-  <text x="400" y="442" text-anchor="middle" font-family="Oswald, Georgia, serif" font-size="76" fill="black" letter-spacing="1">WOMAN</text>
+  <text x="400" y="442" text-anchor="middle" font-family="CinzelDec, serif" font-size="68" fill="black" letter-spacing="1">WOMAN</text>
   <line x1="280" y1="456" x2="520" y2="456" stroke="black" stroke-width="1.5"/>
-  <text x="400" y="483" text-anchor="middle" font-family="DancingScript, cursive" font-size="21" fill="black">virtuous · strong · chosen</text>
-  <text x="400" y="511" text-anchor="middle" font-family="PlayfairItalic, Georgia, serif" font-size="13" fill="black" letter-spacing="3">PROVERBS  31:10</text>
+  <text x="400" y="483" text-anchor="middle" font-family="GreatVibes, cursive" font-size="18" fill="black">virtuous · strong · chosen</text>
+  <text x="400" y="511" text-anchor="middle" font-family="CormorantItalic, serif" font-size="14" fill="black" letter-spacing="3">PROVERBS  31:10</text>
 </svg>

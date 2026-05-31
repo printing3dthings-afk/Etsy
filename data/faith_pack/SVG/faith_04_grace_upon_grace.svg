@@ -3,11 +3,13 @@
   <title>Grace Upon Grace SVG</title>
   <rect width="800" height="800" fill="none"/>
   <defs>
-    <style>
-      @font-face { font-family: 'DancingScript'; src: url('/usr/local/share/fonts/DancingScript-Bold.ttf'); }
-      @font-face { font-family: 'Oswald'; src: url('/usr/local/share/fonts/Oswald-Bold.ttf'); }
-      @font-face { font-family: 'Playfair'; src: url('/usr/local/share/fonts/PlayfairDisplay-Bold.ttf'); }
-      @font-face { font-family: 'PlayfairItalic'; src: url('/usr/local/share/fonts/PlayfairDisplay-Italic.ttf'); }
+        <style>
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+      @font-face { font-family: 'CinzelDecReg'; src: url('/usr/local/share/fonts/CinzelDecorative-Regular.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
   <path d="M 135.000,135.000 C 135.000,154.250 190.000,143.250 190.000,135.000 C 190.000,126.750 135.000,115.750 135.000,135.000 Z" fill="black"/>
@@ -82,8 +84,8 @@
   <path d="M 729.804,443.000 Q 734.804,451.660 752.321,430.000 Q 724.804,434.340 729.804,443.000 Z" fill="black"/>
   <path d="M 729.804,503.000 Q 734.804,511.660 752.321,490.000 Q 724.804,494.340 729.804,503.000 Z" fill="black"/>
   <path d="M 729.804,563.000 Q 734.804,571.660 752.321,550.000 Q 724.804,554.340 729.804,563.000 Z" fill="black"/>
-  <text x="400" y="332" text-anchor="middle" font-family="DancingScript, cursive" font-size="36" fill="black">grace</text>
-  <text x="400" y="416" text-anchor="middle" font-family="Oswald, Georgia, serif" font-size="82" fill="black" letter-spacing="4">UPON</text>
-  <text x="400" y="476" text-anchor="middle" font-family="DancingScript, cursive" font-size="36" fill="black">grace</text>
-  <text x="400" y="522" text-anchor="middle" font-family="PlayfairItalic, Georgia, serif" font-size="15" fill="black" letter-spacing="5">JOHN  1:16</text>
+  <text x="400" y="332" text-anchor="middle" font-family="GreatVibes, cursive" font-size="30" fill="black">grace</text>
+  <text x="400" y="416" text-anchor="middle" font-family="CinzelDec, serif" font-size="74" fill="black" letter-spacing="4">UPON</text>
+  <text x="400" y="476" text-anchor="middle" font-family="GreatVibes, cursive" font-size="30" fill="black">grace</text>
+  <text x="400" y="522" text-anchor="middle" font-family="CormorantItalic, serif" font-size="16" fill="black" letter-spacing="5">JOHN  1:16</text>
 </svg>
