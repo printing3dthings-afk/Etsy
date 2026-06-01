@@ -176,7 +176,7 @@ TAGS = [
     "motivational svg",
     "inspirational svg",
     "positive quote svg",
-    "funny quote svg",
+    "positive svg bundle",
     "retro svg bundle",
     "shirt svg design",
     "tumbler svg wrap",
@@ -335,7 +335,9 @@ try:
     file_result = client.upload_listing_file(listing_id, ZIP_PATH, rank=1)
     print(f"   ✓ ZIP uploaded: {file_result.get('filename', ZIP_PATH)}")
 except EtsyAPIError as e:
-    print(f"   ✗ File upload failed: {e}")
+    print(f"   ✗ File upload FAILED: {e}")
+    print(f"   ⛔ Aborting activation — listing {listing_id} kept as draft to prevent selling without a download file.")
+    sys.exit(1)
 
 # ─── Step 8: Activate listing ────────────────────────────────────────────────
 print("\n✅ Activating listing...")

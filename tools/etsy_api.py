@@ -230,8 +230,11 @@ class EtsyAPIClient:
         # Title checks
         if not title:
             failures.append("Missing title")
-        elif len(title) > 140:
-            failures.append(f"Title too long: {len(title)}/140 chars")
+        elif len(title) > 70:
+            failures.append(
+                f"Title too long: {len(title)}/70 chars — "
+                f"Etsy 2026 algorithm penalizes titles >70 chars on mobile (70%+ of traffic)"
+            )
         elif len(title) < 40:
             failures.append("Title too short — lead keyword must be at least 40 chars")
 

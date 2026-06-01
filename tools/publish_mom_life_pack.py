@@ -290,6 +290,7 @@ LISTING_DATA = {
     "when_made": "made_to_order",
     "is_supply": False,
     "state": "draft",
+    "shop_section_id": 58769490,  # SVG Cut Files section
 }
 
 # ─── Step 4: API client + gate ───────────────────────────────────────────────
@@ -323,11 +324,15 @@ for rank, photo_path in enumerate(photos_ordered, start=1):
 
 # ─── Step 7: Upload digital file ─────────────────────────────────────────────
 print("\n📁 Uploading digital ZIP file...")
+zip_uploaded = False
 try:
     file_result = client.upload_listing_file(listing_id, ZIP_PATH, rank=1)
+    zip_uploaded = True
     print(f"   ✓ ZIP uploaded: {file_result.get('filename', ZIP_PATH)}")
 except EtsyAPIError as e:
-    print(f"   ✗ File upload failed: {e}")
+    print(f"   ✗ File upload FAILED: {e}")
+    print(f"   ⛔ Aborting activation — listing {listing_id} kept as draft to prevent selling without a download file.")
+    sys.exit(1)
 
 # ─── Step 8: Activate listing ────────────────────────────────────────────────
 print("\n✅ Activating listing...")
@@ -340,6 +345,7 @@ try:
 except EtsyAPIError as e:
     print(f"   ✗ Activation failed: {e}")
     print(f"   Listing ID {listing_id} saved as draft — activate manually in Etsy dashboard")
+    url = f"https://www.etsy.com/listing/{listing_id}"
 
 # ─── Save record ─────────────────────────────────────────────────────────────
 record = {
