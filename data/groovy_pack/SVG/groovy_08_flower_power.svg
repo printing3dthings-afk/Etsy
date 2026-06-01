@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>Flower Power</title>
-  <rect width="800" height="800" fill="#FF6B51"/>
+  <rect width="800" height="800" fill="#FFFFFF"/>
   <defs>
     <style>
       @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
@@ -10,68 +10,21 @@
       @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
-  <ellipse cx="400" cy="332" rx="42" ry="73" fill="#F5D030" transform="rotate(0.0,400,400)"/>
-  <ellipse cx="400" cy="332" rx="42" ry="73" fill="#F5D030" transform="rotate(45.0,400,400)"/>
-  <ellipse cx="400" cy="332" rx="42" ry="73" fill="#F5D030" transform="rotate(90.0,400,400)"/>
-  <ellipse cx="400" cy="332" rx="42" ry="73" fill="#F5D030" transform="rotate(135.0,400,400)"/>
-  <ellipse cx="400" cy="332" rx="42" ry="73" fill="#F5D030" transform="rotate(180.0,400,400)"/>
-  <ellipse cx="400" cy="332" rx="42" ry="73" fill="#F5D030" transform="rotate(225.0,400,400)"/>
-  <ellipse cx="400" cy="332" rx="42" ry="73" fill="#F5D030" transform="rotate(270.0,400,400)"/>
-  <ellipse cx="400" cy="332" rx="42" ry="73" fill="#F5D030" transform="rotate(315.0,400,400)"/>
-  <circle cx="400.0" cy="400.0" r="38.0" fill="#E84B8A"/>
-  <ellipse cx="200" cy="163" rx="23" ry="40" fill="#FFFFFF" transform="rotate(0.0,200,200)"/>
-  <ellipse cx="200" cy="163" rx="23" ry="40" fill="#FFFFFF" transform="rotate(60.0,200,200)"/>
-  <ellipse cx="200" cy="163" rx="23" ry="40" fill="#FFFFFF" transform="rotate(120.0,200,200)"/>
-  <ellipse cx="200" cy="163" rx="23" ry="40" fill="#FFFFFF" transform="rotate(180.0,200,200)"/>
-  <ellipse cx="200" cy="163" rx="23" ry="40" fill="#FFFFFF" transform="rotate(240.0,200,200)"/>
-  <ellipse cx="200" cy="163" rx="23" ry="40" fill="#FFFFFF" transform="rotate(300.0,200,200)"/>
-  <circle cx="200.0" cy="200.0" r="22.0" fill="#F5D030"/>
-  <ellipse cx="600" cy="163" rx="23" ry="40" fill="#F0A020" transform="rotate(0.0,600,200)"/>
-  <ellipse cx="600" cy="163" rx="23" ry="40" fill="#F0A020" transform="rotate(60.0,600,200)"/>
-  <ellipse cx="600" cy="163" rx="23" ry="40" fill="#F0A020" transform="rotate(120.0,600,200)"/>
-  <ellipse cx="600" cy="163" rx="23" ry="40" fill="#F0A020" transform="rotate(180.0,600,200)"/>
-  <ellipse cx="600" cy="163" rx="23" ry="40" fill="#F0A020" transform="rotate(240.0,600,200)"/>
-  <ellipse cx="600" cy="163" rx="23" ry="40" fill="#F0A020" transform="rotate(300.0,600,200)"/>
-  <circle cx="600.0" cy="200.0" r="22.0" fill="#FFFFFF"/>
-  <ellipse cx="200" cy="563" rx="23" ry="40" fill="#F5D030" transform="rotate(0.0,200,600)"/>
-  <ellipse cx="200" cy="563" rx="23" ry="40" fill="#F5D030" transform="rotate(60.0,200,600)"/>
-  <ellipse cx="200" cy="563" rx="23" ry="40" fill="#F5D030" transform="rotate(120.0,200,600)"/>
-  <ellipse cx="200" cy="563" rx="23" ry="40" fill="#F5D030" transform="rotate(180.0,200,600)"/>
-  <ellipse cx="200" cy="563" rx="23" ry="40" fill="#F5D030" transform="rotate(240.0,200,600)"/>
-  <ellipse cx="200" cy="563" rx="23" ry="40" fill="#F5D030" transform="rotate(300.0,200,600)"/>
-  <circle cx="200.0" cy="600.0" r="22.0" fill="#1B9E8A"/>
-  <ellipse cx="600" cy="563" rx="23" ry="40" fill="#FFFFFF" transform="rotate(0.0,600,600)"/>
-  <ellipse cx="600" cy="563" rx="23" ry="40" fill="#FFFFFF" transform="rotate(60.0,600,600)"/>
-  <ellipse cx="600" cy="563" rx="23" ry="40" fill="#FFFFFF" transform="rotate(120.0,600,600)"/>
-  <ellipse cx="600" cy="563" rx="23" ry="40" fill="#FFFFFF" transform="rotate(180.0,600,600)"/>
-  <ellipse cx="600" cy="563" rx="23" ry="40" fill="#FFFFFF" transform="rotate(240.0,600,600)"/>
-  <ellipse cx="600" cy="563" rx="23" ry="40" fill="#FFFFFF" transform="rotate(300.0,600,600)"/>
-  <circle cx="600.0" cy="600.0" r="22.0" fill="#E84B8A"/>
-  <ellipse cx="400" cy="102" rx="17" ry="30" fill="#F0A020" transform="rotate(0.0,400,130)"/>
-  <ellipse cx="400" cy="102" rx="17" ry="30" fill="#F0A020" transform="rotate(72.0,400,130)"/>
-  <ellipse cx="400" cy="102" rx="17" ry="30" fill="#F0A020" transform="rotate(144.0,400,130)"/>
-  <ellipse cx="400" cy="102" rx="17" ry="30" fill="#F0A020" transform="rotate(216.0,400,130)"/>
-  <ellipse cx="400" cy="102" rx="17" ry="30" fill="#F0A020" transform="rotate(288.0,400,130)"/>
-  <circle cx="400.0" cy="130.0" r="18.0" fill="#FFFFFF"/>
-  <ellipse cx="400" cy="642" rx="17" ry="30" fill="#FFFFFF" transform="rotate(0.0,400,670)"/>
-  <ellipse cx="400" cy="642" rx="17" ry="30" fill="#FFFFFF" transform="rotate(72.0,400,670)"/>
-  <ellipse cx="400" cy="642" rx="17" ry="30" fill="#FFFFFF" transform="rotate(144.0,400,670)"/>
-  <ellipse cx="400" cy="642" rx="17" ry="30" fill="#FFFFFF" transform="rotate(216.0,400,670)"/>
-  <ellipse cx="400" cy="642" rx="17" ry="30" fill="#FFFFFF" transform="rotate(288.0,400,670)"/>
-  <circle cx="400.0" cy="670.0" r="18.0" fill="#F0A020"/>
-  <ellipse cx="130" cy="372" rx="17" ry="30" fill="#E84B8A" transform="rotate(0.0,130,400)"/>
-  <ellipse cx="130" cy="372" rx="17" ry="30" fill="#E84B8A" transform="rotate(72.0,130,400)"/>
-  <ellipse cx="130" cy="372" rx="17" ry="30" fill="#E84B8A" transform="rotate(144.0,130,400)"/>
-  <ellipse cx="130" cy="372" rx="17" ry="30" fill="#E84B8A" transform="rotate(216.0,130,400)"/>
-  <ellipse cx="130" cy="372" rx="17" ry="30" fill="#E84B8A" transform="rotate(288.0,130,400)"/>
-  <circle cx="130.0" cy="400.0" r="18.0" fill="#F5D030"/>
-  <ellipse cx="670" cy="372" rx="17" ry="30" fill="#F5D030" transform="rotate(0.0,670,400)"/>
-  <ellipse cx="670" cy="372" rx="17" ry="30" fill="#F5D030" transform="rotate(72.0,670,400)"/>
-  <ellipse cx="670" cy="372" rx="17" ry="30" fill="#F5D030" transform="rotate(144.0,670,400)"/>
-  <ellipse cx="670" cy="372" rx="17" ry="30" fill="#F5D030" transform="rotate(216.0,670,400)"/>
-  <ellipse cx="670" cy="372" rx="17" ry="30" fill="#F5D030" transform="rotate(288.0,670,400)"/>
-  <circle cx="670.0" cy="400.0" r="18.0" fill="#E84B8A"/>
-  <circle cx="400.0" cy="400.0" r="90.0" fill="#FFFFFF"/>
-  <text x="400" y="382" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="34" fill="#E84B8A" letter-spacing="2">FLOWER</text>
-  <text x="400" y="426" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="34" fill="#F0A020" letter-spacing="2">POWER</text>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#E84B8A"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#1B9E8A"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#E84B8A"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#1B9E8A"/>
+  <text x="400" y="310" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="110" fill="#E84B8A">Flower</text>
+  <rect x="250" y="340" width="300" height="5" fill="#E84B8A" rx="2"/>
+  <text x="400" y="440" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="100" fill="#1B9E8A" letter-spacing="6">POWER</text>
+  <circle cx="288.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="316.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="344.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="372.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="400.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="428.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="456.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="484.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="512.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <text x="400" y="548" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="20" fill="#AAAAAA" letter-spacing="3">peace · love · plants</text>
 </svg>

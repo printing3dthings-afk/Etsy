@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>Stay Groovy</title>
-  <rect width="800" height="800" fill="#5B2080"/>
+  <rect width="800" height="800" fill="#FFFFFF"/>
   <defs>
     <style>
       @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
@@ -10,87 +10,18 @@
       @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
-  <path d="M 400,400 L 400.0,-20.0 A 420,420 0 0,1 481.9,-11.9 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 481.9,-11.9 A 420,420 0 0,1 560.7,12.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 560.7,12.0 A 420,420 0 0,1 633.3,50.8 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 633.3,50.8 A 420,420 0 0,1 697.0,103.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 697.0,103.0 A 420,420 0 0,1 749.2,166.7 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 749.2,166.7 A 420,420 0 0,1 788.0,239.3 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 788.0,239.3 A 420,420 0 0,1 811.9,318.1 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 811.9,318.1 A 420,420 0 0,1 820.0,400.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 820.0,400.0 A 420,420 0 0,1 811.9,481.9 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 811.9,481.9 A 420,420 0 0,1 788.0,560.7 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 788.0,560.7 A 420,420 0 0,1 749.2,633.3 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 749.2,633.3 A 420,420 0 0,1 697.0,697.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 697.0,697.0 A 420,420 0 0,1 633.3,749.2 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 633.3,749.2 A 420,420 0 0,1 560.7,788.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 560.7,788.0 A 420,420 0 0,1 481.9,811.9 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 481.9,811.9 A 420,420 0 0,1 400.0,820.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 400.0,820.0 A 420,420 0 0,1 318.1,811.9 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 318.1,811.9 A 420,420 0 0,1 239.3,788.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 239.3,788.0 A 420,420 0 0,1 166.7,749.2 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 166.7,749.2 A 420,420 0 0,1 103.0,697.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 103.0,697.0 A 420,420 0 0,1 50.8,633.3 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 50.8,633.3 A 420,420 0 0,1 12.0,560.7 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 12.0,560.7 A 420,420 0 0,1 -11.9,481.9 Z" fill="#F5D030"/>
-  <path d="M 400,400 L -11.9,481.9 A 420,420 0 0,1 -20.0,400.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L -20.0,400.0 A 420,420 0 0,1 -11.9,318.1 Z" fill="#F5D030"/>
-  <path d="M 400,400 L -11.9,318.1 A 420,420 0 0,1 12.0,239.3 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 12.0,239.3 A 420,420 0 0,1 50.8,166.7 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 50.8,166.7 A 420,420 0 0,1 103.0,103.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 103.0,103.0 A 420,420 0 0,1 166.7,50.8 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 166.7,50.8 A 420,420 0 0,1 239.3,12.0 Z" fill="#F0A020"/>
-  <path d="M 400,400 L 239.3,12.0 A 420,420 0 0,1 318.1,-11.9 Z" fill="#F5D030"/>
-  <path d="M 400,400 L 318.1,-11.9 A 420,420 0 0,1 400.0,-20.0 Z" fill="#F0A020"/>
-  <circle cx="400.0" cy="400.0" r="280.0" fill="#5B2080"/>
-  <circle cx="400.0" cy="400.0" r="265.0" fill="#F5D030" stroke="#F5D030" stroke-width="0"/>
-  <circle cx="665.0" cy="400.0" r="5.0" fill="#F5D030"/>
-  <circle cx="661.0" cy="446.0" r="5.0" fill="#F5D030"/>
-  <circle cx="649.0" cy="490.6" r="5.0" fill="#F5D030"/>
-  <circle cx="629.5" cy="532.5" r="5.0" fill="#F5D030"/>
-  <circle cx="603.0" cy="570.3" r="5.0" fill="#F5D030"/>
-  <circle cx="570.3" cy="603.0" r="5.0" fill="#F5D030"/>
-  <circle cx="532.5" cy="629.5" r="5.0" fill="#F5D030"/>
-  <circle cx="490.6" cy="649.0" r="5.0" fill="#F5D030"/>
-  <circle cx="446.0" cy="661.0" r="5.0" fill="#F5D030"/>
-  <circle cx="400.0" cy="665.0" r="5.0" fill="#F5D030"/>
-  <circle cx="354.0" cy="661.0" r="5.0" fill="#F5D030"/>
-  <circle cx="309.4" cy="649.0" r="5.0" fill="#F5D030"/>
-  <circle cx="267.5" cy="629.5" r="5.0" fill="#F5D030"/>
-  <circle cx="229.7" cy="603.0" r="5.0" fill="#F5D030"/>
-  <circle cx="197.0" cy="570.3" r="5.0" fill="#F5D030"/>
-  <circle cx="170.5" cy="532.5" r="5.0" fill="#F5D030"/>
-  <circle cx="151.0" cy="490.6" r="5.0" fill="#F5D030"/>
-  <circle cx="139.0" cy="446.0" r="5.0" fill="#F5D030"/>
-  <circle cx="135.0" cy="400.0" r="5.0" fill="#F5D030"/>
-  <circle cx="139.0" cy="354.0" r="5.0" fill="#F5D030"/>
-  <circle cx="151.0" cy="309.4" r="5.0" fill="#F5D030"/>
-  <circle cx="170.5" cy="267.5" r="5.0" fill="#F5D030"/>
-  <circle cx="197.0" cy="229.7" r="5.0" fill="#F5D030"/>
-  <circle cx="229.7" cy="197.0" r="5.0" fill="#F5D030"/>
-  <circle cx="267.5" cy="170.5" r="5.0" fill="#F5D030"/>
-  <circle cx="309.4" cy="151.0" r="5.0" fill="#F5D030"/>
-  <circle cx="354.0" cy="139.0" r="5.0" fill="#F5D030"/>
-  <circle cx="400.0" cy="135.0" r="5.0" fill="#F5D030"/>
-  <circle cx="446.0" cy="139.0" r="5.0" fill="#F5D030"/>
-  <circle cx="490.6" cy="151.0" r="5.0" fill="#F5D030"/>
-  <circle cx="532.5" cy="170.5" r="5.0" fill="#F5D030"/>
-  <circle cx="570.3" cy="197.0" r="5.0" fill="#F5D030"/>
-  <circle cx="603.0" cy="229.7" r="5.0" fill="#F5D030"/>
-  <circle cx="629.5" cy="267.5" r="5.0" fill="#F5D030"/>
-  <circle cx="649.0" cy="309.4" r="5.0" fill="#F5D030"/>
-  <circle cx="661.0" cy="354.0" r="5.0" fill="#F5D030"/>
-  <circle cx="400.0" cy="400.0" r="255.0" fill="#5B2080"/>
-  <polygon points="400.0,120.0 404.7,133.5 419.0,133.8 407.6,142.5 411.8,156.2 400.0,148.0 388.2,156.2 392.4,142.5 381.0,133.8 395.3,133.5" fill="#F0A020"/>
-  <polygon points="400.0,640.0 404.7,653.5 419.0,653.8 407.6,662.5 411.8,676.2 400.0,668.0 388.2,676.2 392.4,662.5 381.0,653.8 395.3,653.5" fill="#F0A020"/>
-  <polygon points="140.0,380.0 144.7,393.5 159.0,393.8 147.6,402.5 151.8,416.2 140.0,408.0 128.2,416.2 132.4,402.5 121.0,393.8 135.3,393.5" fill="#E84B8A"/>
-  <polygon points="660.0,380.0 664.7,393.5 679.0,393.8 667.6,402.5 671.8,416.2 660.0,408.0 648.2,416.2 652.4,402.5 641.0,393.8 655.3,393.5" fill="#E84B8A"/>
-  <polygon points="205.0,189.0 208.5,200.1 220.2,200.1 210.7,206.9 214.4,217.9 205.0,211.0 195.6,217.9 199.3,206.9 189.8,200.1 201.5,200.1" fill="#F5D030"/>
-  <polygon points="595.0,189.0 598.5,200.1 610.2,200.1 600.7,206.9 604.4,217.9 595.0,211.0 585.6,217.9 589.3,206.9 579.8,200.1 591.5,200.1" fill="#F5D030"/>
-  <polygon points="205.0,579.0 208.5,590.1 220.2,590.1 210.7,596.9 214.4,607.9 205.0,601.0 195.6,607.9 199.3,596.9 189.8,590.1 201.5,590.1" fill="#F5D030"/>
-  <polygon points="595.0,579.0 598.5,590.1 610.2,590.1 600.7,596.9 604.4,607.9 595.0,601.0 585.6,607.9 589.3,596.9 579.8,590.1 591.5,590.1" fill="#F5D030"/>
-  <text x="400" y="340" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="58" fill="#E84B8A">stay</text>
-  <text x="400" y="418" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="90" fill="#F5D030" letter-spacing="2">GROOVY</text>
-  <text x="400" y="462" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="40" fill="#FFFFFF">baby</text>
-  <text x="400" y="500" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="16" fill="#F0A020" letter-spacing="1">✦  good times only  ✦</text>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#E8A020"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#1B9E8A"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#E8A020"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#1B9E8A"/>
+  <text x="400" y="248" text-anchor="middle" font-family="Cormorant, sans-serif" font-size="28" fill="#1B9E8A" letter-spacing="14">S T A Y</text>
+  <rect x="320" y="269" width="160" height="3" fill="#1B9E8A" rx="1"/>
+  <text x="400" y="408" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="118" fill="#E8A020">Groovy</text>
+  <rect x="260" y="434" width="280" height="5" fill="#E8A020" rx="2"/>
+  <text x="400" y="500" text-anchor="middle" font-family="Cormorant, sans-serif" font-size="26" fill="#1B9E8A" letter-spacing="14">B A B Y</text>
+  <circle cx="336.0" cy="548.0" r="7" fill="#E8A020"/>
+  <circle cx="368.0" cy="548.0" r="7" fill="#E8A020"/>
+  <circle cx="400.0" cy="548.0" r="7" fill="#E8A020"/>
+  <circle cx="432.0" cy="548.0" r="7" fill="#E8A020"/>
+  <circle cx="464.0" cy="548.0" r="7" fill="#E8A020"/>
 </svg>

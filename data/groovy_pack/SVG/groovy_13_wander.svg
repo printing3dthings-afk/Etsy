@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>Wander Often Wonder Always</title>
-  <rect width="800" height="800" fill="#1B9E8A"/>
+  <rect width="800" height="800" fill="#FFFFFF"/>
   <defs>
     <style>
       @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
@@ -10,84 +10,19 @@
       @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
-  <path d="M 400,400 L 400.0,-20.0 A 420,420 0 0,1 508.7,-5.7 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 508.7,-5.7 A 420,420 0 0,1 610.0,36.3 Z" fill="#148070"/>
-  <path d="M 400,400 L 610.0,36.3 A 420,420 0 0,1 697.0,103.0 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 697.0,103.0 A 420,420 0 0,1 763.7,190.0 Z" fill="#148070"/>
-  <path d="M 400,400 L 763.7,190.0 A 420,420 0 0,1 805.7,291.3 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 805.7,291.3 A 420,420 0 0,1 820.0,400.0 Z" fill="#148070"/>
-  <path d="M 400,400 L 820.0,400.0 A 420,420 0 0,1 805.7,508.7 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 805.7,508.7 A 420,420 0 0,1 763.7,610.0 Z" fill="#148070"/>
-  <path d="M 400,400 L 763.7,610.0 A 420,420 0 0,1 697.0,697.0 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 697.0,697.0 A 420,420 0 0,1 610.0,763.7 Z" fill="#148070"/>
-  <path d="M 400,400 L 610.0,763.7 A 420,420 0 0,1 508.7,805.7 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 508.7,805.7 A 420,420 0 0,1 400.0,820.0 Z" fill="#148070"/>
-  <path d="M 400,400 L 400.0,820.0 A 420,420 0 0,1 291.3,805.7 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 291.3,805.7 A 420,420 0 0,1 190.0,763.7 Z" fill="#148070"/>
-  <path d="M 400,400 L 190.0,763.7 A 420,420 0 0,1 103.0,697.0 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 103.0,697.0 A 420,420 0 0,1 36.3,610.0 Z" fill="#148070"/>
-  <path d="M 400,400 L 36.3,610.0 A 420,420 0 0,1 -5.7,508.7 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L -5.7,508.7 A 420,420 0 0,1 -20.0,400.0 Z" fill="#148070"/>
-  <path d="M 400,400 L -20.0,400.0 A 420,420 0 0,1 -5.7,291.3 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L -5.7,291.3 A 420,420 0 0,1 36.3,190.0 Z" fill="#148070"/>
-  <path d="M 400,400 L 36.3,190.0 A 420,420 0 0,1 103.0,103.0 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 103.0,103.0 A 420,420 0 0,1 190.0,36.3 Z" fill="#148070"/>
-  <path d="M 400,400 L 190.0,36.3 A 420,420 0 0,1 291.3,-5.7 Z" fill="#1B9E8A"/>
-  <path d="M 400,400 L 291.3,-5.7 A 420,420 0 0,1 400.0,-20.0 Z" fill="#148070"/>
-  <circle cx="400.0" cy="400.0" r="300.0" fill="#F07A1A"/>
-  <circle cx="400.0" cy="400.0" r="284.0" fill="#1B9E8A"/>
-  <polygon points="400,180 424,290 400,400 376,290" fill="#FFFFFF"/>
-  <polygon points="400,400 424,510 400,620 376,510" fill="#FFFFFF"/>
-  <polygon points="290,376 400,400 290,424 180,400" fill="#FFFFFF"/>
-  <polygon points="510,376 620,400 510,424 400,400" fill="#FFFFFF"/>
-  <circle cx="400.0" cy="400.0" r="36.0" fill="#F07A1A"/>
-  <circle cx="400.0" cy="400.0" r="22.0" fill="#FFFFFF"/>
-  <polygon points="306,292 320,306 306,320 292,306" fill="#F5D030"/>
-  <polygon points="494,292 508,306 494,320 480,306" fill="#F5D030"/>
-  <polygon points="306,480 320,494 306,508 292,494" fill="#F5D030"/>
-  <polygon points="494,480 508,494 494,508 480,494" fill="#F5D030"/>
-  <circle cx="660.0" cy="400.0" r="5.0" fill="#F5D030"/>
-  <circle cx="656.1" cy="445.1" r="5.0" fill="#F5D030"/>
-  <circle cx="644.3" cy="488.9" r="5.0" fill="#F5D030"/>
-  <circle cx="625.2" cy="530.0" r="5.0" fill="#F5D030"/>
-  <circle cx="599.2" cy="567.1" r="5.0" fill="#F5D030"/>
-  <circle cx="567.1" cy="599.2" r="5.0" fill="#F5D030"/>
-  <circle cx="530.0" cy="625.2" r="5.0" fill="#F5D030"/>
-  <circle cx="488.9" cy="644.3" r="5.0" fill="#F5D030"/>
-  <circle cx="445.1" cy="656.1" r="5.0" fill="#F5D030"/>
-  <circle cx="400.0" cy="660.0" r="5.0" fill="#F5D030"/>
-  <circle cx="354.9" cy="656.1" r="5.0" fill="#F5D030"/>
-  <circle cx="311.1" cy="644.3" r="5.0" fill="#F5D030"/>
-  <circle cx="270.0" cy="625.2" r="5.0" fill="#F5D030"/>
-  <circle cx="232.9" cy="599.2" r="5.0" fill="#F5D030"/>
-  <circle cx="200.8" cy="567.1" r="5.0" fill="#F5D030"/>
-  <circle cx="174.8" cy="530.0" r="5.0" fill="#F5D030"/>
-  <circle cx="155.7" cy="488.9" r="5.0" fill="#F5D030"/>
-  <circle cx="143.9" cy="445.1" r="5.0" fill="#F5D030"/>
-  <circle cx="140.0" cy="400.0" r="5.0" fill="#F5D030"/>
-  <circle cx="143.9" cy="354.9" r="5.0" fill="#F5D030"/>
-  <circle cx="155.7" cy="311.1" r="5.0" fill="#F5D030"/>
-  <circle cx="174.8" cy="270.0" r="5.0" fill="#F5D030"/>
-  <circle cx="200.8" cy="232.9" r="5.0" fill="#F5D030"/>
-  <circle cx="232.9" cy="200.8" r="5.0" fill="#F5D030"/>
-  <circle cx="270.0" cy="174.8" r="5.0" fill="#F5D030"/>
-  <circle cx="311.1" cy="155.7" r="5.0" fill="#F5D030"/>
-  <circle cx="354.9" cy="143.9" r="5.0" fill="#F5D030"/>
-  <circle cx="400.0" cy="140.0" r="5.0" fill="#F5D030"/>
-  <circle cx="445.1" cy="143.9" r="5.0" fill="#F5D030"/>
-  <circle cx="488.9" cy="155.7" r="5.0" fill="#F5D030"/>
-  <circle cx="530.0" cy="174.8" r="5.0" fill="#F5D030"/>
-  <circle cx="567.1" cy="200.8" r="5.0" fill="#F5D030"/>
-  <circle cx="599.2" cy="232.9" r="5.0" fill="#F5D030"/>
-  <circle cx="625.2" cy="270.0" r="5.0" fill="#F5D030"/>
-  <circle cx="644.3" cy="311.1" r="5.0" fill="#F5D030"/>
-  <circle cx="656.1" cy="354.9" r="5.0" fill="#F5D030"/>
-  <text x="400" y="186" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="46" fill="#FFFFFF" letter-spacing="4">WANDER</text>
-  <text x="400" y="218" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="46" fill="#F5D030" letter-spacing="4">OFTEN</text>
-  <text x="400" y="594" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="46" fill="#FFFFFF" letter-spacing="4">WONDER</text>
-  <text x="400" y="626" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="46" fill="#F5D030" letter-spacing="4">ALWAYS</text>
-  <polygon points="80.0,60.0 84.7,73.5 99.0,73.8 87.6,82.5 91.8,96.2 80.0,88.0 68.2,96.2 72.4,82.5 61.0,73.8 75.3,73.5" fill="#F5D030"/>
-  <polygon points="720.0,60.0 724.7,73.5 739.0,73.8 727.6,82.5 731.8,96.2 720.0,88.0 708.2,96.2 712.4,82.5 701.0,73.8 715.3,73.5" fill="#FFFFFF"/>
-  <polygon points="80.0,700.0 84.7,713.5 99.0,713.8 87.6,722.5 91.8,736.2 80.0,728.0 68.2,736.2 72.4,722.5 61.0,713.8 75.3,713.5" fill="#FFFFFF"/>
-  <polygon points="720.0,700.0 724.7,713.5 739.0,713.8 727.6,722.5 731.8,736.2 720.0,728.0 708.2,736.2 712.4,722.5 701.0,713.8 715.3,713.5" fill="#F5D030"/>
+  <polygon points="80.0,66.0 83.5,76.5 94.0,80.0 83.5,83.5 80.0,94.0 76.5,83.5 66.0,80.0 76.5,76.5" fill="#F07A1A"/>
+  <polygon points="720.0,66.0 723.5,76.5 734.0,80.0 723.5,83.5 720.0,94.0 716.5,83.5 706.0,80.0 716.5,76.5" fill="#1B9E8A"/>
+  <polygon points="80.0,706.0 83.5,716.5 94.0,720.0 83.5,723.5 80.0,734.0 76.5,723.5 66.0,720.0 76.5,716.5" fill="#F07A1A"/>
+  <polygon points="720.0,706.0 723.5,716.5 734.0,720.0 723.5,723.5 720.0,734.0 716.5,723.5 706.0,720.0 716.5,716.5" fill="#1B9E8A"/>
+  <text x="400" y="262" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#F07A1A" letter-spacing="5">WANDER</text>
+  <rect x="280" y="286" width="240" height="4" fill="#F07A1A" rx="2"/>
+  <text x="400" y="376" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#F07A1A">often</text>
+  <circle cx="352.0" cy="408.0" r="5" fill="#1B9E8A"/>
+  <circle cx="376.0" cy="408.0" r="5" fill="#1B9E8A"/>
+  <circle cx="400.0" cy="408.0" r="5" fill="#1B9E8A"/>
+  <circle cx="424.0" cy="408.0" r="5" fill="#1B9E8A"/>
+  <circle cx="448.0" cy="408.0" r="5" fill="#1B9E8A"/>
+  <text x="400" y="494" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#1B9E8A">wonder</text>
+  <rect x="280" y="524" width="240" height="4" fill="#1B9E8A" rx="2"/>
+  <text x="400" y="564" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#1B9E8A" letter-spacing="5">ALWAYS</text>
 </svg>

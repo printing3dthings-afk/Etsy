@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>You Are a Rainbow</title>
-  <rect width="800" height="800" fill="#F0F8FF"/>
+  <rect width="800" height="800" fill="#FFFFFF"/>
   <defs>
     <style>
       @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
@@ -10,47 +10,20 @@
       @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
-  <circle cx="110.0" cy="620.0" r="70.0" fill="#FFFFFF"/>
-  <circle cx="61.0" cy="639.6" r="45.5" fill="#FFFFFF"/>
-  <circle cx="159.0" cy="639.6" r="45.5" fill="#FFFFFF"/>
-  <circle cx="83.4" cy="649.4" r="56.0" fill="#FFFFFF"/>
-  <circle cx="136.6" cy="649.4" r="56.0" fill="#FFFFFF"/>
-  <circle cx="690.0" cy="620.0" r="70.0" fill="#FFFFFF"/>
-  <circle cx="641.0" cy="639.6" r="45.5" fill="#FFFFFF"/>
-  <circle cx="739.0" cy="639.6" r="45.5" fill="#FFFFFF"/>
-  <circle cx="663.4" cy="649.4" r="56.0" fill="#FFFFFF"/>
-  <circle cx="716.6" cy="649.4" r="56.0" fill="#FFFFFF"/>
-  <path d="M 6.0,620 A 394.0,394.0 0 0,1 794.0,620 L 742.0,620 A 342.0,342.0 0 0,0 58.0,620 Z" fill="#D93030"/>
-  <path d="M 58.0,620 A 342.0,342.0 0 0,1 742.0,620 L 690.0,620 A 290.0,290.0 0 0,0 110.0,620 Z" fill="#E87B2A"/>
-  <path d="M 110.0,620 A 290.0,290.0 0 0,1 690.0,620 L 638.0,620 A 238.0,238.0 0 0,0 162.0,620 Z" fill="#F5D030"/>
-  <path d="M 162.0,620 A 238.0,238.0 0 0,1 638.0,620 L 586.0,620 A 186.0,186.0 0 0,0 214.0,620 Z" fill="#2B8A3E"/>
-  <path d="M 214.0,620 A 186.0,186.0 0 0,1 586.0,620 L 534.0,620 A 134.0,134.0 0 0,0 266.0,620 Z" fill="#1E6FCC"/>
-  <path d="M 266.0,620 A 134.0,134.0 0 0,1 534.0,620 L 482.0,620 A 82.0,82.0 0 0,0 318.0,620 Z" fill="#7B35B0"/>
-  <path d="M 318.0,620 A 82.0,82.0 0 0,1 482.0,620 L 430.0,620 A 30.0,30.0 0 0,0 370.0,620 Z" fill="#E84B8A"/>
-  <circle cx="400.0" cy="620.0" r="30.0" fill="#F5F5FF"/>
-  <circle cx="400.0" cy="280.0" r="56.0" fill="#FFFFFF"/>
-  <circle cx="360.8" cy="295.7" r="36.4" fill="#FFFFFF"/>
-  <circle cx="439.2" cy="295.7" r="36.4" fill="#FFFFFF"/>
-  <circle cx="378.7" cy="303.5" r="44.8" fill="#FFFFFF"/>
-  <circle cx="421.3" cy="303.5" r="44.8" fill="#FFFFFF"/>
-  <polygon points="80.0,76.0 85.3,92.7 102.8,92.6 88.6,102.8 94.1,119.4 80.0,109.0 65.9,119.4 71.4,102.8 57.2,92.6 74.7,92.7" fill="#F5D030"/>
-  <polygon points="720.0,78.0 725.3,92.7 740.9,93.2 728.6,102.8 732.9,117.8 720.0,109.0 707.1,117.8 711.4,102.8 699.1,93.2 714.7,92.7" fill="#E84B8A"/>
-  <polygon points="80.0,634.0 83.5,645.1 95.2,645.1 85.7,651.9 89.4,662.9 80.0,656.0 70.6,662.9 74.3,651.9 64.8,645.1 76.5,645.1" fill="#1E6FCC"/>
-  <polygon points="720.0,634.0 723.5,645.1 735.2,645.1 725.7,651.9 729.4,662.9 720.0,656.0 710.6,662.9 714.3,651.9 704.8,645.1 716.5,645.1" fill="#D93030"/>
-  <polygon points="400.0,70.0 404.7,83.5 419.0,83.8 407.6,92.5 411.8,106.2 400.0,98.0 388.2,106.2 392.4,92.5 381.0,83.8 395.3,83.5" fill="#7B35B0"/>
-  <circle cx="80.5" cy="283.7" r="4.0" fill="#F5D030"/>
-  <circle cx="111.7" cy="219.8" r="4.0" fill="#F5D030"/>
-  <circle cx="155.4" cy="163.8" r="4.0" fill="#F5D030"/>
-  <circle cx="209.9" cy="118.1" r="4.0" fill="#F5D030"/>
-  <circle cx="272.6" cy="84.8" r="4.0" fill="#F5D030"/>
-  <circle cx="341.0" cy="65.2" r="4.0" fill="#F5D030"/>
-  <circle cx="411.9" cy="60.2" r="4.0" fill="#F5D030"/>
-  <circle cx="482.3" cy="70.1" r="4.0" fill="#F5D030"/>
-  <circle cx="549.0" cy="94.4" r="4.0" fill="#F5D030"/>
-  <circle cx="609.3" cy="132.1" r="4.0" fill="#F5D030"/>
-  <circle cx="660.5" cy="181.5" r="4.0" fill="#F5D030"/>
-  <circle cx="700.2" cy="240.4" r="4.0" fill="#F5D030"/>
-  <text x="400" y="540" text-anchor="middle" font-family="Cormorant, sans-serif" font-size="26" fill="#1A1A2E" letter-spacing="6">YOU ARE A</text>
-  <text x="400" y="618" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#D93030" letter-spacing="3">RAINBOW</text>
-  <text x="400" y="672" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="26" fill="#7B35B0">brilliant, bold, and full of color</text>
+  <polygon points="80.0,66.0 83.5,76.5 94.0,80.0 83.5,83.5 80.0,94.0 76.5,83.5 66.0,80.0 76.5,76.5" fill="#D93030"/>
+  <polygon points="720.0,66.0 723.5,76.5 734.0,80.0 723.5,83.5 720.0,94.0 716.5,83.5 706.0,80.0 716.5,76.5" fill="#E87B2A"/>
+  <polygon points="80.0,706.0 83.5,716.5 94.0,720.0 83.5,723.5 80.0,734.0 76.5,723.5 66.0,720.0 76.5,716.5" fill="#2B8A3E"/>
+  <polygon points="720.0,706.0 723.5,716.5 734.0,720.0 723.5,723.5 720.0,734.0 716.5,723.5 706.0,720.0 716.5,716.5" fill="#1E6FCC"/>
+  <text x="400" y="234" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#D93030">you</text>
+  <text x="400" y="330" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#2B8A3E">are</text>
+  <text x="400" y="426" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#1E6FCC">a</text>
+  <text x="400" y="524" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#7B35B0">rainbow</text>
+  <circle cx="322.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="348.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="374.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="400.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="426.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="452.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="478.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <text x="400" y="624" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="18" fill="#BBBBBB" letter-spacing="3">brilliant · bold · colorful</text>
 </svg>

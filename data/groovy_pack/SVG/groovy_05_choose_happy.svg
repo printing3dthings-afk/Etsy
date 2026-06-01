@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>Choose Happy</title>
-  <rect width="800" height="800" fill="#F07A1A"/>
+  <rect width="800" height="800" fill="#FFFFFF"/>
   <defs>
     <style>
       @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
@@ -10,93 +10,24 @@
       @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
-  <path d="M 400.0,180.0 L 400.0,0.0 A 400,400 0 0,1 523.6,19.6 L 468.0,190.8 A 220,220 0 0,0 400.0,180.0 Z" fill="#F5D030"/>
-  <path d="M 468.0,190.8 L 523.6,19.6 A 400,400 0 0,1 635.1,76.4 L 529.3,222.0 A 220,220 0 0,0 468.0,190.8 Z" fill="#FFE870"/>
-  <path d="M 529.3,222.0 L 635.1,76.4 A 400,400 0 0,1 723.6,164.9 L 578.0,270.7 A 220,220 0 0,0 529.3,222.0 Z" fill="#F5D030"/>
-  <path d="M 578.0,270.7 L 723.6,164.9 A 400,400 0 0,1 780.4,276.4 L 609.2,332.0 A 220,220 0 0,0 578.0,270.7 Z" fill="#FFE870"/>
-  <path d="M 609.2,332.0 L 780.4,276.4 A 400,400 0 0,1 800.0,400.0 L 620.0,400.0 A 220,220 0 0,0 609.2,332.0 Z" fill="#F5D030"/>
-  <path d="M 620.0,400.0 L 800.0,400.0 A 400,400 0 0,1 780.4,523.6 L 609.2,468.0 A 220,220 0 0,0 620.0,400.0 Z" fill="#FFE870"/>
-  <path d="M 609.2,468.0 L 780.4,523.6 A 400,400 0 0,1 723.6,635.1 L 578.0,529.3 A 220,220 0 0,0 609.2,468.0 Z" fill="#F5D030"/>
-  <path d="M 578.0,529.3 L 723.6,635.1 A 400,400 0 0,1 635.1,723.6 L 529.3,578.0 A 220,220 0 0,0 578.0,529.3 Z" fill="#FFE870"/>
-  <path d="M 529.3,578.0 L 635.1,723.6 A 400,400 0 0,1 523.6,780.4 L 468.0,609.2 A 220,220 0 0,0 529.3,578.0 Z" fill="#F5D030"/>
-  <path d="M 468.0,609.2 L 523.6,780.4 A 400,400 0 0,1 400.0,800.0 L 400.0,620.0 A 220,220 0 0,0 468.0,609.2 Z" fill="#FFE870"/>
-  <path d="M 400.0,620.0 L 400.0,800.0 A 400,400 0 0,1 276.4,780.4 L 332.0,609.2 A 220,220 0 0,0 400.0,620.0 Z" fill="#F5D030"/>
-  <path d="M 332.0,609.2 L 276.4,780.4 A 400,400 0 0,1 164.9,723.6 L 270.7,578.0 A 220,220 0 0,0 332.0,609.2 Z" fill="#FFE870"/>
-  <path d="M 270.7,578.0 L 164.9,723.6 A 400,400 0 0,1 76.4,635.1 L 222.0,529.3 A 220,220 0 0,0 270.7,578.0 Z" fill="#F5D030"/>
-  <path d="M 222.0,529.3 L 76.4,635.1 A 400,400 0 0,1 19.6,523.6 L 190.8,468.0 A 220,220 0 0,0 222.0,529.3 Z" fill="#FFE870"/>
-  <path d="M 190.8,468.0 L 19.6,523.6 A 400,400 0 0,1 0.0,400.0 L 180.0,400.0 A 220,220 0 0,0 190.8,468.0 Z" fill="#F5D030"/>
-  <path d="M 180.0,400.0 L 0.0,400.0 A 400,400 0 0,1 19.6,276.4 L 190.8,332.0 A 220,220 0 0,0 180.0,400.0 Z" fill="#FFE870"/>
-  <path d="M 190.8,332.0 L 19.6,276.4 A 400,400 0 0,1 76.4,164.9 L 222.0,270.7 A 220,220 0 0,0 190.8,332.0 Z" fill="#F5D030"/>
-  <path d="M 222.0,270.7 L 76.4,164.9 A 400,400 0 0,1 164.9,76.4 L 270.7,222.0 A 220,220 0 0,0 222.0,270.7 Z" fill="#FFE870"/>
-  <path d="M 270.7,222.0 L 164.9,76.4 A 400,400 0 0,1 276.4,19.6 L 332.0,190.8 A 220,220 0 0,0 270.7,222.0 Z" fill="#F5D030"/>
-  <path d="M 332.0,190.8 L 276.4,19.6 A 400,400 0 0,1 400.0,0.0 L 400.0,180.0 A 220,220 0 0,0 332.0,190.8 Z" fill="#FFE870"/>
-  <circle cx="400.0" cy="400.0" r="218.0" fill="#F5D030"/>
-  <circle cx="356.0" cy="376.0" r="18.0" fill="#E07A00"/>
-  <circle cx="444.0" cy="376.0" r="18.0" fill="#E07A00"/>
-  <path d="M 340,430 Q 400,475 460,430" stroke="#E07A00" stroke-width="9" fill="none" stroke-linecap="round"/>
-  <circle cx="330.0" cy="418.0" r="22.0" fill="#FFB3A0"/>
-  <circle cx="470.0" cy="418.0" r="22.0" fill="#FFB3A0"/>
-  <circle cx="760.0" cy="400.0" r="5.0" fill="#F07A1A"/>
-  <circle cx="757.7" cy="440.3" r="5.0" fill="#F07A1A"/>
-  <circle cx="751.0" cy="480.1" r="5.0" fill="#F07A1A"/>
-  <circle cx="739.8" cy="518.9" r="5.0" fill="#F07A1A"/>
-  <circle cx="724.3" cy="556.2" r="5.0" fill="#F07A1A"/>
-  <circle cx="704.8" cy="591.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="681.5" cy="624.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="654.6" cy="654.6" r="5.0" fill="#F07A1A"/>
-  <circle cx="624.5" cy="681.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="591.5" cy="704.8" r="5.0" fill="#F07A1A"/>
-  <circle cx="556.2" cy="724.3" r="5.0" fill="#F07A1A"/>
-  <circle cx="518.9" cy="739.8" r="5.0" fill="#F07A1A"/>
-  <circle cx="480.1" cy="751.0" r="5.0" fill="#F07A1A"/>
-  <circle cx="440.3" cy="757.7" r="5.0" fill="#F07A1A"/>
-  <circle cx="400.0" cy="760.0" r="5.0" fill="#F07A1A"/>
-  <circle cx="359.7" cy="757.7" r="5.0" fill="#F07A1A"/>
-  <circle cx="319.9" cy="751.0" r="5.0" fill="#F07A1A"/>
-  <circle cx="281.1" cy="739.8" r="5.0" fill="#F07A1A"/>
-  <circle cx="243.8" cy="724.3" r="5.0" fill="#F07A1A"/>
-  <circle cx="208.5" cy="704.8" r="5.0" fill="#F07A1A"/>
-  <circle cx="175.5" cy="681.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="145.4" cy="654.6" r="5.0" fill="#F07A1A"/>
-  <circle cx="118.5" cy="624.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="95.2" cy="591.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="75.7" cy="556.2" r="5.0" fill="#F07A1A"/>
-  <circle cx="60.2" cy="518.9" r="5.0" fill="#F07A1A"/>
-  <circle cx="49.0" cy="480.1" r="5.0" fill="#F07A1A"/>
-  <circle cx="42.3" cy="440.3" r="5.0" fill="#F07A1A"/>
-  <circle cx="40.0" cy="400.0" r="5.0" fill="#F07A1A"/>
-  <circle cx="42.3" cy="359.7" r="5.0" fill="#F07A1A"/>
-  <circle cx="49.0" cy="319.9" r="5.0" fill="#F07A1A"/>
-  <circle cx="60.2" cy="281.1" r="5.0" fill="#F07A1A"/>
-  <circle cx="75.7" cy="243.8" r="5.0" fill="#F07A1A"/>
-  <circle cx="95.2" cy="208.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="118.5" cy="175.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="145.4" cy="145.4" r="5.0" fill="#F07A1A"/>
-  <circle cx="175.5" cy="118.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="208.5" cy="95.2" r="5.0" fill="#F07A1A"/>
-  <circle cx="243.8" cy="75.7" r="5.0" fill="#F07A1A"/>
-  <circle cx="281.1" cy="60.2" r="5.0" fill="#F07A1A"/>
-  <circle cx="319.9" cy="49.0" r="5.0" fill="#F07A1A"/>
-  <circle cx="359.7" cy="42.3" r="5.0" fill="#F07A1A"/>
-  <circle cx="400.0" cy="40.0" r="5.0" fill="#F07A1A"/>
-  <circle cx="440.3" cy="42.3" r="5.0" fill="#F07A1A"/>
-  <circle cx="480.1" cy="49.0" r="5.0" fill="#F07A1A"/>
-  <circle cx="518.9" cy="60.2" r="5.0" fill="#F07A1A"/>
-  <circle cx="556.2" cy="75.7" r="5.0" fill="#F07A1A"/>
-  <circle cx="591.5" cy="95.2" r="5.0" fill="#F07A1A"/>
-  <circle cx="624.5" cy="118.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="654.6" cy="145.4" r="5.0" fill="#F07A1A"/>
-  <circle cx="681.5" cy="175.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="704.8" cy="208.5" r="5.0" fill="#F07A1A"/>
-  <circle cx="724.3" cy="243.8" r="5.0" fill="#F07A1A"/>
-  <circle cx="739.8" cy="281.1" r="5.0" fill="#F07A1A"/>
-  <circle cx="751.0" cy="319.9" r="5.0" fill="#F07A1A"/>
-  <circle cx="757.7" cy="359.7" r="5.0" fill="#F07A1A"/>
-  <polygon points="120.0,96.0 125.3,112.7 142.8,112.6 128.6,122.8 134.1,139.4 120.0,129.0 105.9,139.4 111.4,122.8 97.2,112.6 114.7,112.7" fill="#D93030"/>
-  <polygon points="680.0,96.0 685.3,112.7 702.8,112.6 688.6,122.8 694.1,139.4 680.0,129.0 665.9,139.4 671.4,122.8 657.2,112.6 674.7,112.7" fill="#5B2080"/>
-  <polygon points="120.0,658.0 125.3,672.7 140.9,673.2 128.6,682.8 132.9,697.8 120.0,689.0 107.1,697.8 111.4,682.8 99.1,673.2 114.7,672.7" fill="#5B2080"/>
-  <polygon points="680.0,658.0 685.3,672.7 700.9,673.2 688.6,682.8 692.9,697.8 680.0,689.0 667.1,697.8 671.4,682.8 659.1,673.2 674.7,672.7" fill="#D93030"/>
-  <text x="400" y="560" text-anchor="middle" font-family="Cormorant, sans-serif" font-size="22" fill="#1A1A2E" letter-spacing="10">CHOOSE</text>
-  <text x="400" y="636" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="78" fill="#D93030" letter-spacing="4">HAPPY</text>
-  <text x="400" y="682" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="28" fill="#5B2080">every single day</text>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#E8A020"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#E8455A"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#E8A020"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#E8455A"/>
+  <text x="400" y="252" text-anchor="middle" font-family="Cormorant, sans-serif" font-size="24" fill="#BBBBBB" letter-spacing="12">C H O O S E</text>
+  <circle cx="348.0" cy="278.0" r="5" fill="#E8A020"/>
+  <circle cx="374.0" cy="278.0" r="5" fill="#E8A020"/>
+  <circle cx="400.0" cy="278.0" r="5" fill="#E8A020"/>
+  <circle cx="426.0" cy="278.0" r="5" fill="#E8A020"/>
+  <circle cx="452.0" cy="278.0" r="5" fill="#E8A020"/>
+  <text x="400" y="420" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="120" fill="#E8A020">Happy</text>
+  <rect x="240" y="450" width="320" height="5" fill="#E8455A" rx="2"/>
+  <text x="400" y="514" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="22" fill="#E8455A" letter-spacing="3">every single day</text>
+  <circle cx="316.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="344.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="372.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="400.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="428.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="456.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="484.0" cy="562.0" r="6" fill="#E8A020"/>
 </svg>

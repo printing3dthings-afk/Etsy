@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
   <title>Soul on Fire</title>
-  <rect width="800" height="800" fill="#1A0808"/>
+  <rect width="800" height="800" fill="#FFFFFF"/>
   <defs>
     <style>
       @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
@@ -10,49 +10,18 @@
       @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
     </style>
   </defs>
-  <path d="M 400,680 C 260.0,536.0 344.0,320.0 400,200.0 C 456.0,320.0 540.0,536.0 400,680 Z" fill="#8B1A1A"/>
-  <path d="M 360,680 C 260.0,560.0 320.0,380.0 360,280.0 C 400.0,380.0 460.0,560.0 360,680 Z" fill="#C43020"/>
-  <path d="M 440,680 C 340.0,563.0 400.0,387.5 440,290.0 C 480.0,387.5 540.0,563.0 440,680 Z" fill="#C43020"/>
-  <path d="M 390,680 C 310.0,548.0 358.0,350.0 390,240.0 C 422.0,350.0 470.0,548.0 390,680 Z" fill="#E06020"/>
-  <path d="M 410,680 C 330.0,551.0 378.0,357.5 410,250.0 C 442.0,357.5 490.0,551.0 410,680 Z" fill="#E06020"/>
-  <path d="M 400,680 C 340.0,542.0 376.0,335.0 400,220.0 C 424.0,335.0 460.0,542.0 400,680 Z" fill="#F5A020"/>
-  <path d="M 400,680 C 360.0,536.0 384.0,320.0 400,200.0 C 416.0,320.0 440.0,536.0 400,680 Z" fill="#F5D030"/>
-  <circle cx="400.0" cy="480.0" r="195.0" fill="#1A0808"/>
-  <circle cx="400.0" cy="480.0" r="180.0" fill="#8B1A1A"/>
-  <circle cx="580.0" cy="480.0" r="5.0" fill="#F5A020"/>
-  <circle cx="575.5" cy="520.1" r="5.0" fill="#F5A020"/>
-  <circle cx="562.2" cy="558.1" r="5.0" fill="#F5A020"/>
-  <circle cx="540.7" cy="592.2" r="5.0" fill="#F5A020"/>
-  <circle cx="512.2" cy="620.7" r="5.0" fill="#F5A020"/>
-  <circle cx="478.1" cy="642.2" r="5.0" fill="#F5A020"/>
-  <circle cx="440.1" cy="655.5" r="5.0" fill="#F5A020"/>
-  <circle cx="400.0" cy="660.0" r="5.0" fill="#F5A020"/>
-  <circle cx="359.9" cy="655.5" r="5.0" fill="#F5A020"/>
-  <circle cx="321.9" cy="642.2" r="5.0" fill="#F5A020"/>
-  <circle cx="287.8" cy="620.7" r="5.0" fill="#F5A020"/>
-  <circle cx="259.3" cy="592.2" r="5.0" fill="#F5A020"/>
-  <circle cx="237.8" cy="558.1" r="5.0" fill="#F5A020"/>
-  <circle cx="224.5" cy="520.1" r="5.0" fill="#F5A020"/>
-  <circle cx="220.0" cy="480.0" r="5.0" fill="#F5A020"/>
-  <circle cx="224.5" cy="439.9" r="5.0" fill="#F5A020"/>
-  <circle cx="237.8" cy="401.9" r="5.0" fill="#F5A020"/>
-  <circle cx="259.3" cy="367.8" r="5.0" fill="#F5A020"/>
-  <circle cx="287.8" cy="339.3" r="5.0" fill="#F5A020"/>
-  <circle cx="321.9" cy="317.8" r="5.0" fill="#F5A020"/>
-  <circle cx="359.9" cy="304.5" r="5.0" fill="#F5A020"/>
-  <circle cx="400.0" cy="300.0" r="5.0" fill="#F5A020"/>
-  <circle cx="440.1" cy="304.5" r="5.0" fill="#F5A020"/>
-  <circle cx="478.1" cy="317.8" r="5.0" fill="#F5A020"/>
-  <circle cx="512.2" cy="339.3" r="5.0" fill="#F5A020"/>
-  <circle cx="540.7" cy="367.8" r="5.0" fill="#F5A020"/>
-  <circle cx="562.2" cy="401.9" r="5.0" fill="#F5A020"/>
-  <circle cx="575.5" cy="439.9" r="5.0" fill="#F5A020"/>
-  <circle cx="400.0" cy="480.0" r="170.0" fill="#1A0808"/>
-  <polygon points="120.0,100.0 124.7,113.5 139.0,113.8 127.6,122.5 131.8,136.2 120.0,128.0 108.2,136.2 112.4,122.5 101.0,113.8 115.3,113.5" fill="#F5D030"/>
-  <polygon points="680.0,100.0 684.7,113.5 699.0,113.8 687.6,122.5 691.8,136.2 680.0,128.0 668.2,136.2 672.4,122.5 661.0,113.8 675.3,113.5" fill="#E06020"/>
-  <polygon points="120.0,664.0 123.5,675.1 135.2,675.1 125.7,681.9 129.4,692.9 120.0,686.0 110.6,692.9 114.3,681.9 104.8,675.1 116.5,675.1" fill="#F5A020"/>
-  <polygon points="680.0,664.0 683.5,675.1 695.2,675.1 685.7,681.9 689.4,692.9 680.0,686.0 670.6,692.9 674.3,681.9 664.8,675.1 676.5,675.1" fill="#F5D030"/>
-  <text x="400" y="432" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="72" fill="#F5D030" letter-spacing="3">SOUL</text>
-  <text x="400" y="490" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="40" fill="#F5A020">on</text>
-  <text x="400" y="540" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="72" fill="#F0603A" letter-spacing="3">FIRE</text>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#C43020"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#E8A020"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#C43020"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#E8A020"/>
+  <circle cx="348.0" cy="216.0" r="6" fill="#E8A020"/>
+  <circle cx="374.0" cy="216.0" r="6" fill="#E8A020"/>
+  <circle cx="400.0" cy="216.0" r="6" fill="#E8A020"/>
+  <circle cx="426.0" cy="216.0" r="6" fill="#E8A020"/>
+  <circle cx="452.0" cy="216.0" r="6" fill="#E8A020"/>
+  <text x="400" y="352" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="116" fill="#C43020">Soul</text>
+  <rect x="280" y="380" width="240" height="5" fill="#E8A020" rx="2"/>
+  <text x="400" y="454" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="88" fill="#E8A020" letter-spacing="6">ON FIRE</text>
+  <rect x="280" y="484" width="240" height="4" fill="#C43020" rx="2"/>
+  <text x="400" y="548" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="22" fill="#AAAAAA" letter-spacing="3">burning bright</text>
 </svg>
