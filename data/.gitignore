@@ -12,8 +12,8 @@ shop_data.json
 improvement_log.json
 schedule.json
 
-# Knowledge base — agent-generated, machine-local runtime state
-knowledge_base/
+# Knowledge base — standards and research are committed (business rules)
+# knowledge_base/  ← intentionally tracked; DO NOT re-ignore
 
 # Generated product files — binary, large, machine-local
 digital_products/

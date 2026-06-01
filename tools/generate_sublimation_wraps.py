@@ -370,22 +370,97 @@ Print-ready quality.
 ]
 
 
-def generate_and_save(client, design: dict, sizes=("20oz",)) -> list[Path]:
+def _quality_gate(img_path: Path) -> tuple[bool, list[str]]:
+    """
+    Enforces sublimation standards from data/knowledge_base/sublimation_standards.md.
+    Returns (passed: bool, failures: list[str]).
+    HARD requirements — any failure rejects the image.
+    """
+    from PIL import Image as PILImage
+
+    failures = []
+    img = PILImage.open(img_path).convert("RGB")
+    w, h = img.size
+
+    # 1. Dimension check — must be at least 2000px on the short edge
+    if min(w, h) < 2000:
+        failures.append(f"Resolution too low: {w}×{h} (min 2000px short edge)")
+
+    # 2. Background darkness — sample all 4 corners (30×30px each)
+    #    Reject if any corner luminance > 217/255 (~85% brightness = too pale)
+    sample = 30
+    corners = [
+        img.crop((0, 0, sample, sample)),
+        img.crop((w - sample, 0, w, sample)),
+        img.crop((0, h - sample, sample, h)),
+        img.crop((w - sample, h - sample, w, h)),
+    ]
+    for i, corner in enumerate(corners):
+        pixels = list(corner.getdata())
+        avg_lum = sum(0.299 * p[0] + 0.587 * p[1] + 0.114 * p[2] for p in pixels) / len(pixels)
+        if avg_lum > 217:
+            failures.append(
+                f"Corner {i+1} too light (lum={avg_lum:.0f}/255) — pale/white background will "
+                f"look washed out on sublimation press. Regenerate with darker palette."
+            )
+
+    # 3. Edge continuity — left vs right column average color difference
+    #    Sample 20px-wide strips; flag if average color diff > 60 (visible seam)
+    left_strip  = img.crop((0, 0, 20, h))
+    right_strip = img.crop((w - 20, 0, w, h))
+    lp = list(left_strip.getdata())
+    rp = list(right_strip.getdata())
+    avg_diff = sum(
+        abs(lp[i][0] - rp[i][0]) + abs(lp[i][1] - rp[i][1]) + abs(lp[i][2] - rp[i][2])
+        for i in range(0, len(lp), max(1, len(lp) // 100))
+    ) / 100
+    if avg_diff > 80:
+        failures.append(
+            f"Edge seam mismatch (avg diff {avg_diff:.0f}/255 per channel) — "
+            f"left/right edges don't match; seam will be visible on wrapped tumbler."
+        )
+
+    passed = len(failures) == 0
+    return passed, failures
+
+
+def generate_and_save(client, design: dict, sizes=("20oz",), max_retries: int = 2) -> list[Path]:
     from PIL import Image
 
     print(f"  [{design['id']}] Generating {design['name']}...")
 
-    response = client.images.generate(
-        model="gpt-image-1",
-        prompt=design["prompt"],
-        size=GEN_SIZE,
-        quality="high",
-        n=1,
-        output_format="png",
-    )
+    for attempt in range(1, max_retries + 2):
+        response = client.images.generate(
+            model="gpt-image-1",
+            prompt=design["prompt"],
+            size=GEN_SIZE,
+            quality="high",
+            n=1,
+            output_format="png",
+        )
 
-    img_bytes = base64.b64decode(response.data[0].b64_json)
-    src_img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+        img_bytes = base64.b64decode(response.data[0].b64_json)
+        src_img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+
+        # Save at full gen resolution temporarily for quality gate
+        tmp_path = OUTPUT_DIR / f"_tmp_{design['id']}.png"
+        src_img.save(tmp_path, "PNG")
+
+        passed, failures = _quality_gate(tmp_path)
+        if passed:
+            print(f"    ✓ Quality gate passed (attempt {attempt})")
+            break
+        else:
+            print(f"    ✗ Quality gate FAILED (attempt {attempt}/{max_retries + 1}):")
+            for f in failures:
+                print(f"        {f}")
+            if attempt <= max_retries:
+                print(f"    Regenerating...")
+            else:
+                print(f"    Max retries reached — saving with warnings. Review manually.")
+                tmp_path.unlink(missing_ok=True)
+                break
+        tmp_path.unlink(missing_ok=True)
 
     paths = []
     for size_key in sizes:
