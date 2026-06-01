@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Nap Time SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+    </style>
+  </defs>
+
+  <rect x="38" y="38" width="724" height="724" fill="none" stroke="black" stroke-width="2"/>
+<rect x="55" y="55" width="690" height="690" fill="none" stroke="black" stroke-width="1"/>
+<polygon points="38,28 48,38 38,48 28,38" fill="black"/>
+<polygon points="762,28 772,38 762,48 752,38" fill="black"/>
+<polygon points="762,752 772,762 762,772 752,762" fill="black"/>
+<polygon points="38,752 48,762 38,772 28,762" fill="black"/>
+  <path d="M 86,60 L 60,60 L 60,86" fill="none" stroke="black" stroke-width="1.5"/>
+<circle cx="60" cy="60" r="3" fill="black"/>
+<path d="M 714,60 L 740,60 L 740,86" fill="none" stroke="black" stroke-width="1.5"/>
+<circle cx="740" cy="60" r="3" fill="black"/>
+<path d="M 714,740 L 740,740 L 740,714" fill="none" stroke="black" stroke-width="1.5"/>
+<circle cx="740" cy="740" r="3" fill="black"/>
+<path d="M 86,740 L 60,740 L 60,714" fill="none" stroke="black" stroke-width="1.5"/>
+<circle cx="60" cy="740" r="3" fill="black"/>
+  <text x="400" y="196" text-anchor="middle" font-family="Cormorant, serif" font-size="22" fill="black" letter-spacing="6">IS IT</text>
+  <line x1="330.0" y1="215" x2="390" y2="215" stroke="black" stroke-width="1"/><polygon points="400,209 406,215 400,221 394,215" fill="black"/><line x1="410" y1="215" x2="470.0" y2="215" stroke="black" stroke-width="1"/>
+  <text x="400" y="300" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="86" fill="black" letter-spacing="2">NAP TIME</text>
+  <text x="400" y="356" text-anchor="middle" font-family="GreatVibes, cursive" font-size="56" fill="black">yet?</text>
+  <line x1="300.0" y1="376" x2="390" y2="376" stroke="black" stroke-width="1"/><polygon points="400,370 406,376 400,382 394,376" fill="black"/><line x1="410" y1="376" x2="500.0" y2="376" stroke="black" stroke-width="1"/>
+  <text x="400" y="432" text-anchor="middle" font-family="Cormorant, serif" font-size="20" fill="black" letter-spacing="5">ASKING FOR THE MOM</text>
+  <circle cx="290.0" cy="454" r="2" fill="black"/>
+<circle cx="326.7" cy="454" r="2" fill="black"/>
+<circle cx="363.3" cy="454" r="2" fill="black"/>
+<circle cx="400.0" cy="454" r="2" fill="black"/>
+<circle cx="436.7" cy="454" r="2" fill="black"/>
+<circle cx="473.3" cy="454" r="2" fill="black"/>
+<circle cx="510.0" cy="454" r="2" fill="black"/>
+  <text x="400" y="500" text-anchor="middle" font-family="CormorantItalic, serif" font-size="18" fill="black" letter-spacing="4">who is also the kids</text>
+  <text x="400" y="530" text-anchor="middle" font-family="CormorantItalic, serif" font-size="18" fill="black" letter-spacing="4">who needs the nap</text>
+  <circle cx="330.0" cy="554" r="2" fill="black"/>
+<circle cx="365.0" cy="554" r="2" fill="black"/>
+<circle cx="400.0" cy="554" r="2" fill="black"/>
+<circle cx="435.0" cy="554" r="2" fill="black"/>
+<circle cx="470.0" cy="554" r="2" fill="black"/>
+  <text x="400" y="590" text-anchor="middle" font-family="Cormorant, serif" font-size="14" fill="black" letter-spacing="4">· same, mom, same ·</text>
+
+</svg>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Minivan Mama SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+    </style>
+  </defs>
+
+  <circle cx="400" cy="400" r="325" fill="none" stroke="black" stroke-width="2.5"/>
+<circle cx="400" cy="400" r="307" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="405.0,110.0 401.4,111.4 400.0,115.0 398.6,111.4 395.0,110.0 398.6,108.6 400.0,105.0 401.4,108.6" fill="black"/>
+<polygon points="516.0,132.1 512.4,133.5 511.0,137.1 509.6,133.5 506.0,132.1 509.6,130.7 511.0,127.1 512.4,130.7" fill="black"/>
+<polygon points="610.1,194.9 606.5,196.4 605.1,199.9 603.6,196.4 600.1,194.9 603.6,193.5 605.1,189.9 606.5,193.5" fill="black"/>
+<polygon points="672.9,289.0 669.3,290.4 667.9,294.0 666.5,290.4 662.9,289.0 666.5,287.6 667.9,284.0 669.3,287.6" fill="black"/>
+<polygon points="695.0,400.0 691.4,401.4 690.0,405.0 688.6,401.4 685.0,400.0 688.6,398.6 690.0,395.0 691.4,398.6" fill="black"/>
+<polygon points="672.9,511.0 669.3,512.4 667.9,516.0 666.5,512.4 662.9,511.0 666.5,509.6 667.9,506.0 669.3,509.6" fill="black"/>
+<polygon points="610.1,605.1 606.5,606.5 605.1,610.1 603.6,606.5 600.1,605.1 603.6,603.6 605.1,600.1 606.5,603.6" fill="black"/>
+<polygon points="516.0,667.9 512.4,669.3 511.0,672.9 509.6,669.3 506.0,667.9 509.6,666.5 511.0,662.9 512.4,666.5" fill="black"/>
+<polygon points="405.0,690.0 401.4,691.4 400.0,695.0 398.6,691.4 395.0,690.0 398.6,688.6 400.0,685.0 401.4,688.6" fill="black"/>
+<polygon points="294.0,667.9 290.4,669.3 289.0,672.9 287.6,669.3 284.0,667.9 287.6,666.5 289.0,662.9 290.4,666.5" fill="black"/>
+<polygon points="199.9,605.1 196.4,606.5 194.9,610.1 193.5,606.5 189.9,605.1 193.5,603.6 194.9,600.1 196.4,603.6" fill="black"/>
+<polygon points="137.1,511.0 133.5,512.4 132.1,516.0 130.7,512.4 127.1,511.0 130.7,509.6 132.1,506.0 133.5,509.6" fill="black"/>
+<polygon points="115.0,400.0 111.4,401.4 110.0,405.0 108.6,401.4 105.0,400.0 108.6,398.6 110.0,395.0 111.4,398.6" fill="black"/>
+<polygon points="137.1,289.0 133.5,290.4 132.1,294.0 130.7,290.4 127.1,289.0 130.7,287.6 132.1,284.0 133.5,287.6" fill="black"/>
+<polygon points="199.9,194.9 196.4,196.4 194.9,199.9 193.5,196.4 189.9,194.9 193.5,193.5 194.9,189.9 196.4,193.5" fill="black"/>
+<polygon points="294.0,132.1 290.4,133.5 289.0,137.1 287.6,133.5 284.0,132.1 287.6,130.7 289.0,127.1 290.4,130.7" fill="black"/>
+  <text x="400" y="238" text-anchor="middle" font-family="GreatVibes, cursive" font-size="38" fill="black">riding in style in my</text>
+  <line x1="300.0" y1="257" x2="390" y2="257" stroke="black" stroke-width="1"/><polygon points="400,251 406,257 400,263 394,257" fill="black"/><line x1="410" y1="257" x2="500.0" y2="257" stroke="black" stroke-width="1"/>
+  <text x="400" y="334" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="74" fill="black" letter-spacing="2">MINIVAN</text>
+  <line x1="300.0" y1="353" x2="390" y2="353" stroke="black" stroke-width="1"/><polygon points="400,347 406,353 400,359 394,353" fill="black"/><line x1="410" y1="353" x2="500.0" y2="353" stroke="black" stroke-width="1"/>
+  <text x="400" y="414" text-anchor="middle" font-family="GreatVibes, cursive" font-size="64" fill="black">Mama</text>
+  <text x="400" y="458" text-anchor="middle" font-family="Cormorant, serif" font-size="19" fill="black" letter-spacing="4">SNACKS · CHAOS · LOVE</text>
+  <circle cx="310.0" cy="478" r="2" fill="black"/>
+<circle cx="355.0" cy="478" r="2" fill="black"/>
+<circle cx="400.0" cy="478" r="2" fill="black"/>
+<circle cx="445.0" cy="478" r="2" fill="black"/>
+<circle cx="490.0" cy="478" r="2" fill="black"/>
+  <text x="400" y="522" text-anchor="middle" font-family="CormorantItalic, serif" font-size="16" fill="black" letter-spacing="3">the ultimate family hauler</text>
+
+</svg>

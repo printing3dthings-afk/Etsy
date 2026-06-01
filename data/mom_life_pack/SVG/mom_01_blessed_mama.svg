@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Blessed Mama SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+    </style>
+  </defs>
+
+  <rect x="40" y="40" width="720" height="720" fill="none" stroke="black" stroke-width="2"/>
+<rect x="56" y="56" width="688" height="688" fill="none" stroke="black" stroke-width="1"/>
+<polygon points="40,30 50,40 40,50 30,40" fill="black"/>
+<polygon points="760,30 770,40 760,50 750,40" fill="black"/>
+<polygon points="760,750 770,760 760,770 750,760" fill="black"/>
+<polygon points="40,750 50,760 40,770 30,760" fill="black"/>
+  <path d="M 82,60 L 60,60 L 60,82" fill="none" stroke="black" stroke-width="1.5"/>
+<circle cx="60" cy="60" r="3" fill="black"/>
+<path d="M 718,60 L 740,60 L 740,82" fill="none" stroke="black" stroke-width="1.5"/>
+<circle cx="740" cy="60" r="3" fill="black"/>
+<path d="M 718,740 L 740,740 L 740,718" fill="none" stroke="black" stroke-width="1.5"/>
+<circle cx="740" cy="740" r="3" fill="black"/>
+<path d="M 82,740 L 60,740 L 60,718" fill="none" stroke="black" stroke-width="1.5"/>
+<circle cx="60" cy="740" r="3" fill="black"/>
+  <text x="400" y="220" text-anchor="middle" font-family="Cormorant, serif" font-size="22" fill="black" letter-spacing="8">✦  EST. THE MOMENT  ✦</text>
+  <text x="400" y="256" text-anchor="middle" font-family="Cormorant, serif" font-size="22" fill="black" letter-spacing="8">I BECAME YOUR MOM</text>
+  <line x1="240.0" y1="278" x2="390" y2="278" stroke="black" stroke-width="1"/><polygon points="400,272 406,278 400,284 394,278" fill="black"/><line x1="410" y1="278" x2="560.0" y2="278" stroke="black" stroke-width="1"/>
+  <text x="400" y="370" text-anchor="middle" font-family="GreatVibes, cursive" font-size="110" fill="black">Blessed</text>
+  <text x="400" y="430" text-anchor="middle" font-family="GreatVibes, cursive" font-size="70" fill="black">Mama</text>
+  <line x1="240.0" y1="452" x2="390" y2="452" stroke="black" stroke-width="1"/><polygon points="400,446 406,452 400,458 394,452" fill="black"/><line x1="410" y1="452" x2="560.0" y2="452" stroke="black" stroke-width="1"/>
+  <text x="400" y="508" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="32" fill="black" letter-spacing="6">GRATEFUL · LOVED · CHOSEN</text>
+  <text x="400" y="548" text-anchor="middle" font-family="CormorantItalic, serif" font-size="18" fill="black" letter-spacing="3">motherhood is my greatest blessing</text>
+
+</svg>
