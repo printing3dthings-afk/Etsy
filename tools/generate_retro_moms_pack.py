@@ -227,89 +227,7 @@ def small_stars_row(cx, cy, n, spacing, size, fill):
     return s
 
 
-# ─────────────── 20 designs ───────────────
-
-def d01_football_mom():
-    """FOOTBALL MOM — filled green ring badge. Research-validated design:
-    - Filled colored ring (not just outlines) — pro badge standard
-    - Cubic-bezier football (G1-continuous, no kink/lips shape)
-    - Stars at arc text endpoints (pro badge separator standard)
-    - Large football fills ~55% of interior width
-    - Defense text replaces year
-    """
-    body = ""
-
-    # ── FILLED GREEN RING (outer circle fill + white inner fill) ──────────────
-    body += f'<circle cx="400" cy="400" r="330" fill="#2D5A27"/>'
-    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
-    body += circle_arc(400, 400, 330, stroke="#142B12", sw=3)
-    body += circle_arc(400, 400, 286, stroke="#142B12", sw=2.5)
-    # Thin gold accent ring inside the white area
-    body += circle_arc(400, 400, 268, stroke="#C9952A", sw=1.8)
-
-    # ── DECORATIVE STARS at arc endpoints (pro badge separator) ───────────────
-    for deg in (210, 330):   # top arc endpoints
-        sx = 400 + 308 * math.cos(math.radians(deg))
-        sy = 400 + 308 * math.sin(math.radians(deg))
-        body += star(sx, sy, 7, "#FFFFFF")
-    for deg in (150, 30):    # bottom arc endpoints
-        sx = 400 + 308 * math.cos(math.radians(deg))
-        sy = 400 + 308 * math.sin(math.radians(deg))
-        body += star(sx, sy, 7, "#C9952A")
-
-    # ── TOP ARCH: white on green ring ─────────────────────────────────────────
-    # r=304: baseline at y=96, cap-top y=76 (6px inside outer ring), correct centering
-    body += arc_text(400, 400, 304, "FOOTBALL MOM", "BebasNeue", 30, "#FFFFFF",
-                     start_deg=212, end_deg=328, upward=True, ls=5)
-
-    # ── INTERIOR CONTENT ──────────────────────────────────────────────────────
-    body += hline(214, 240, 560, "#2D5A27", 2)
-
-    # Football: w=256 = 256/572px interior = 45% of interior — large and prominent
-    body += football(400, 316, w=256, h=167)
-
-    body += hline(462, 240, 560, "#C9952A", 2)
-
-    body += small_stars_row(400, 504, 5, 36, 9, "#C9952A")
-    body += txt(400, 548, "DEFENSE WINS GAMES", "BebasNeue", 27, "#2D5A27", ls=3)
-
-    # ── BOTTOM ARCH: gold on green ring ───────────────────────────────────────
-    # r=308: baseline at y=708, ascenders toward center, sits in ring ✓
-    body += arc_text(400, 400, 308, "ALWAYS CHEERING", "BebasNeue", 27, "#C9952A",
-                     start_deg=148, end_deg=32, upward=False, ls=4)
-    return wrap("football_mom", body)
-
-
-def d02_baseball_mama():
-    """BASEBALL MAMA — filled navy ring badge."""
-    body = ""
-    body += f'<circle cx="400" cy="400" r="330" fill="#1B2A6B"/>'
-    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
-    body += circle_arc(400, 400, 330, stroke="#0E1840", sw=3)
-    body += circle_arc(400, 400, 286, stroke="#0E1840", sw=2.5)
-    body += circle_arc(400, 400, 268, stroke="#CC2200", sw=1.8)
-
-    for deg in (213, 327):
-        body += star(400 + 308 * math.cos(math.radians(deg)),
-                     400 + 308 * math.sin(math.radians(deg)), 7, "#FFFFFF")
-    for deg in (150, 30):
-        body += star(400 + 308 * math.cos(math.radians(deg)),
-                     400 + 308 * math.sin(math.radians(deg)), 7, "#CC2200")
-
-    body += arc_text(400, 400, 304, "BASEBALL MAMA", "BebasNeue", 30, "#FFFFFF",
-                     start_deg=215, end_deg=325, upward=True, ls=5)
-
-    body += hline(214, 240, 560, "#1B2A6B", 2)
-    body += baseball(400, 330, r=90)
-    body += hline(474, 240, 560, "#CC2200", 2)
-
-    body += txt(400, 524, "BATTER UP", "BebasNeue", 42, "#1B2A6B", ls=6)
-    body += dot_row(400, 562, 5, 36, 5, "#CC2200")
-
-    body += arc_text(400, 400, 308, "DUGOUT CREW SINCE 2019", "BebasNeue", 24, "#CC2200",
-                     start_deg=148, end_deg=32, upward=False, ls=3)
-    return wrap("baseball_mama", body)
-
+# ─────────────── 16 designs (badge format removed) ───────────────
 
 def d03_cheer_mom():
     """CHEER MOM — hot pink, retro pom-pom stars design."""
@@ -329,44 +247,6 @@ def d03_cheer_mom():
     body += txt(400, 510, "FOREVER LOUD", "BebasNeue", 44, "#CC1F6A", ls=6)
     body += txt(400, 565, "FOREVER PROUD", "BebasNeue", 36, "#FF6BAD", ls=5)
     return wrap("cheer_mom", body)
-
-
-def d04_soccer_mama():
-    """SOCCER MAMA — filled teal ring badge."""
-    body = ""
-    body += f'<circle cx="400" cy="400" r="330" fill="#0A7A5E"/>'
-    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
-    body += circle_arc(400, 400, 330, stroke="#054D3C", sw=3)
-    body += circle_arc(400, 400, 286, stroke="#054D3C", sw=2.5)
-    body += circle_arc(400, 400, 268, stroke="#A0D82B", sw=1.8)
-
-    for deg in (214, 326):
-        body += star(400 + 308 * math.cos(math.radians(deg)),
-                     400 + 308 * math.sin(math.radians(deg)), 7, "#FFFFFF")
-    for deg in (150, 30):
-        body += star(400 + 308 * math.cos(math.radians(deg)),
-                     400 + 308 * math.sin(math.radians(deg)), 7, "#A0D82B")
-
-    body += arc_text(400, 400, 304, "SOCCER MAMA", "BebasNeue", 30, "#FFFFFF",
-                     start_deg=216, end_deg=324, upward=True, ls=5)
-    body += hline(214, 240, 560, "#0A7A5E", 2)
-
-    bx, by, br = 400, 326, 92
-    body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="white" stroke="#222" stroke-width="2.5"/>'
-    body += f'<circle cx="{bx}" cy="{by}" r="30" fill="#1A1A1A"/>'
-    for i in range(5):
-        ang = math.radians(i * 72 - 90)
-        body += (f'<circle cx="{bx + 53*math.cos(ang):.1f}" cy="{by + 53*math.sin(ang):.1f}" '
-                 f'r="21" fill="#1A1A1A"/>')
-    body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="none" stroke="#BBB" stroke-width="1"/>'
-
-    body += hline(470, 240, 560, "#A0D82B", 2)
-    body += txt(400, 518, "GAME DAY READY", "BebasNeue", 34, "#0A7A5E", ls=4)
-    body += dot_row(400, 558, 5, 36, 5, "#A0D82B")
-
-    body += arc_text(400, 400, 308, "WIN OR LOSE WE CHEER", "BebasNeue", 25, "#A0D82B",
-                     start_deg=148, end_deg=32, upward=False, ls=3)
-    return wrap("soccer_mama", body)
 
 
 def d05_teacher_fuel():
@@ -657,29 +537,91 @@ def d20_mini_mom_badge():
     return wrap("mini_mom_badge", body)
 
 
-# ─────────────── Generate all ───────────────
+# ─────────────── RESERVED — badge designs for a future sports-badge pack ───────────────
+# d02_baseball_mama, d04_soccer_mama, d20_mini_mom_badge are preserved below.
+# Not included in the active designs list. Activate when building a badge-format pack.
+
+def _reserved_d02_baseball_mama():
+    """BASEBALL MAMA — filled navy ring badge. Reserved for future badge pack."""
+    body = ""
+    body += f'<circle cx="400" cy="400" r="330" fill="#1B2A6B"/>'
+    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
+    body += circle_arc(400, 400, 330, stroke="#0E1840", sw=3)
+    body += circle_arc(400, 400, 286, stroke="#0E1840", sw=2.5)
+    body += circle_arc(400, 400, 268, stroke="#CC2200", sw=1.8)
+    for deg in (213, 327):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#FFFFFF")
+    for deg in (150, 30):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#CC2200")
+    body += arc_text(400, 400, 304, "BASEBALL MAMA", "BebasNeue", 30, "#FFFFFF",
+                     start_deg=215, end_deg=325, upward=True, ls=5)
+    body += hline(214, 240, 560, "#1B2A6B", 2)
+    body += baseball(400, 330, r=90)
+    body += hline(474, 240, 560, "#CC2200", 2)
+    body += txt(400, 524, "BATTER UP", "BebasNeue", 42, "#1B2A6B", ls=6)
+    body += dot_row(400, 562, 5, 36, 5, "#CC2200")
+    body += arc_text(400, 400, 308, "DUGOUT CREW SINCE 2019", "BebasNeue", 24, "#CC2200",
+                     start_deg=148, end_deg=32, upward=False, ls=3)
+    return wrap("baseball_mama", body)
+
+
+def _reserved_d04_soccer_mama():
+    """SOCCER MAMA — filled teal ring badge. Reserved for future badge pack."""
+    body = ""
+    body += f'<circle cx="400" cy="400" r="330" fill="#0A7A5E"/>'
+    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
+    body += circle_arc(400, 400, 330, stroke="#054D3C", sw=3)
+    body += circle_arc(400, 400, 286, stroke="#054D3C", sw=2.5)
+    body += circle_arc(400, 400, 268, stroke="#A0D82B", sw=1.8)
+    for deg in (214, 326):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#FFFFFF")
+    for deg in (150, 30):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#A0D82B")
+    body += arc_text(400, 400, 304, "SOCCER MAMA", "BebasNeue", 30, "#FFFFFF",
+                     start_deg=216, end_deg=324, upward=True, ls=5)
+    body += hline(214, 240, 560, "#0A7A5E", 2)
+    bx, by, br = 400, 326, 92
+    body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="white" stroke="#222" stroke-width="2.5"/>'
+    body += f'<circle cx="{bx}" cy="{by}" r="30" fill="#1A1A1A"/>'
+    for i in range(5):
+        ang = math.radians(i * 72 - 90)
+        body += (f'<circle cx="{bx + 53*math.cos(ang):.1f}" cy="{by + 53*math.sin(ang):.1f}" '
+                 f'r="21" fill="#1A1A1A"/>')
+    body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="none" stroke="#BBB" stroke-width="1"/>'
+    body += hline(470, 240, 560, "#A0D82B", 2)
+    body += txt(400, 518, "GAME DAY READY", "BebasNeue", 34, "#0A7A5E", ls=4)
+    body += dot_row(400, 558, 5, 36, 5, "#A0D82B")
+    body += arc_text(400, 400, 308, "WIN OR LOSE WE CHEER", "BebasNeue", 25, "#A0D82B",
+                     start_deg=148, end_deg=32, upward=False, ls=3)
+    return wrap("soccer_mama", body)
+
+
+# d20_mini_mom_badge is defined above — also reserved (remove _ prefix to activate)
+
+
+# ─────────────── Generate all (16 active designs) ───────────────
 
 designs = [
-    ("retro_01_football_mom", d01_football_mom),
-    ("retro_02_baseball_mama", d02_baseball_mama),
-    ("retro_03_cheer_mom", d03_cheer_mom),
-    ("retro_04_soccer_mama", d04_soccer_mama),
-    ("retro_05_teacher_fuel", d05_teacher_fuel),
-    ("retro_06_nurse_life", d06_nurse_life),
-    ("retro_07_mama_mode", d07_mama_mode),
-    ("retro_08_in_my_mama_era", d08_in_my_mama_era),
-    ("retro_09_in_my_teacher_era", d09_in_my_teacher_era),
-    ("retro_10_game_day_vibes", d10_game_day_vibes),
-    ("retro_11_blessed_mama", d11_blessed_mama),
-    ("retro_12_dog_mom", d12_dog_mom),
+    ("retro_03_cheer_mom",          d03_cheer_mom),
+    ("retro_05_teacher_fuel",       d05_teacher_fuel),
+    ("retro_06_nurse_life",         d06_nurse_life),
+    ("retro_07_mama_mode",          d07_mama_mode),
+    ("retro_08_in_my_mama_era",     d08_in_my_mama_era),
+    ("retro_09_in_my_teacher_era",  d09_in_my_teacher_era),
+    ("retro_10_game_day_vibes",     d10_game_day_vibes),
+    ("retro_11_blessed_mama",       d11_blessed_mama),
+    ("retro_12_dog_mom",            d12_dog_mom),
     ("retro_13_sunshine_hurricane", d13_sunshine_hurricane),
-    ("retro_14_too_peopley", d14_it_too_peopley),
-    ("retro_15_boho_christian", d15_boho_christian_svg),
-    ("retro_16_girl_mom", d16_girl_mom),
-    ("retro_17_boy_mom", d17_boy_mom),
-    ("retro_18_bonus_mom", d18_bonus_mom),
-    ("retro_19_chaos_coordinator", d19_chaos_coordinator),
-    ("retro_20_mini_mom_badge", d20_mini_mom_badge),
+    ("retro_14_too_peopley",        d14_it_too_peopley),
+    ("retro_15_boho_christian",     d15_boho_christian_svg),
+    ("retro_16_girl_mom",           d16_girl_mom),
+    ("retro_17_boy_mom",            d17_boy_mom),
+    ("retro_18_bonus_mom",          d18_bonus_mom),
+    ("retro_19_chaos_coordinator",  d19_chaos_coordinator),
 ]
 
 for fname, fn in designs:
