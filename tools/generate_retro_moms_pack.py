@@ -43,12 +43,10 @@ def txt(x, y, text, font, size, fill, anchor="middle", ls=0, weight="normal"):
             f'style="{style}">{text}</text>')
 
 
-def arc_text(cx, cy, r, text, font, size, fill, start_deg=200, end_deg=340, upward=True):
-    """Render text along an arc path."""
-    # Convert to radians for path
+def arc_text(cx, cy, r, text, font, size, fill, start_deg=200, end_deg=340, upward=True, ls=4):
+    """Render text along an arc path. ls = letter-spacing in px."""
     start_rad = math.radians(start_deg)
-    end_rad = math.radians(end_deg)
-    # Large arc flag
+    end_rad   = math.radians(end_deg)
     large = 1 if (end_deg - start_deg) > 180 else 0
     sx = cx + r * math.cos(start_rad)
     sy = cy + r * math.sin(start_rad)
@@ -56,11 +54,11 @@ def arc_text(cx, cy, r, text, font, size, fill, start_deg=200, end_deg=340, upwa
     ey = cy + r * math.sin(end_rad)
     sweep = 1 if upward else 0
     path_d = f"M {sx:.1f},{sy:.1f} A {r},{r} 0 {large},{sweep} {ex:.1f},{ey:.1f}"
-    pid = f"arc_{abs(hash(text)) % 99999}"
+    pid = f"arc_{abs(hash(text + str(r) + str(start_deg))) % 99999}"
     return (
         f'<defs><path id="{pid}" d="{path_d}"/></defs>'
         f'<text style="font-family:\'{font}\',sans-serif;font-size:{size}px;'
-        f'fill:{fill};font-weight:bold;letter-spacing:4px;">'
+        f'fill:{fill};font-weight:bold;letter-spacing:{ls}px;">'
         f'<textPath href="#{pid}" startOffset="50%" text-anchor="middle">{text}</textPath>'
         f'</text>'
     )
@@ -94,31 +92,51 @@ def star(cx, cy, r, fill, n=5, inner_ratio=0.4):
 
 
 def football(cx, cy, w=160, h=105, fill="#7B3F00"):
-    """Detailed American football — pointed oval with stripe and laces."""
+    """American football — 4-segment CUBIC bezier for smooth G1-continuous shape.
+
+    The old quadratic (Q) approach had 4 segments meeting at cusps/kinks,
+    creating a lips/mouth silhouette. Cubic beziers with matched tangents at
+    every junction give a smooth prolate-spheroid shape:
+      - vertical tangent at both tips (sharp points)
+      - horizontal tangent at top and bottom belly
+    """
     rx, ry = w / 2, h / 2
-    # Pointed oval using bezier curves for realistic football shape
-    shape = (f'<path d="M{cx - rx:.1f},{cy:.1f} '
-             f'Q{cx - rx * 0.35:.1f},{cy - ry * 1.18:.1f} {cx:.1f},{cy - ry:.1f} '
-             f'Q{cx + rx * 0.35:.1f},{cy - ry * 1.18:.1f} {cx + rx:.1f},{cy:.1f} '
-             f'Q{cx + rx * 0.35:.1f},{cy + ry * 1.18:.1f} {cx:.1f},{cy + ry:.1f} '
-             f'Q{cx - rx * 0.35:.1f},{cy + ry * 1.18:.1f} {cx - rx:.1f},{cy:.1f} Z" '
-             f'fill="{fill}"/>')
-    # White horizontal seam bands (two curved arcs, top and bottom half)
-    shape += (f'<path d="M{cx - rx * 0.8:.1f},{cy:.1f} '
-              f'Q{cx:.1f},{cy - ry * 0.42:.1f} {cx + rx * 0.8:.1f},{cy:.1f}" '
-              f'fill="none" stroke="#F5F0E8" stroke-width="6"/>')
-    shape += (f'<path d="M{cx - rx * 0.8:.1f},{cy:.1f} '
-              f'Q{cx:.1f},{cy + ry * 0.42:.1f} {cx + rx * 0.8:.1f},{cy:.1f}" '
-              f'fill="none" stroke="#F5F0E8" stroke-width="6"/>')
-    # Center lace stitching
-    lace_h = ry * 0.62
-    shape += (f'<line x1="{cx:.1f}" y1="{cy - lace_h:.1f}" '
-              f'x2="{cx:.1f}" y2="{cy + lace_h:.1f}" '
-              f'stroke="#F5F0E8" stroke-width="3"/>')
-    for dy in [-lace_h * 0.5, 0, lace_h * 0.5]:
-        shape += (f'<line x1="{cx - 16:.1f}" y1="{cy + dy:.1f}" '
-                  f'x2="{cx + 16:.1f}" y2="{cy + dy:.1f}" '
-                  f'stroke="#F5F0E8" stroke-width="4" stroke-linecap="round"/>')
+    k = 0.40  # shape factor: 0 = diamond, 0.5523 = ellipse, 0.40 = pointed football
+
+    # 4 cubic bezier segments, fully G1-continuous at all junctions
+    path = (
+        f'M {cx-rx:.1f},{cy:.1f} '
+        # upper-left: left tip → top belly  (CP1 straight up, CP2 straight left of top)
+        f'C {cx-rx:.1f},{cy-ry*k:.1f} {cx-rx*k:.1f},{cy-ry:.1f} {cx:.1f},{cy-ry:.1f} '
+        # upper-right: top belly → right tip  (CP1 straight right of top, CP2 straight up)
+        f'C {cx+rx*k:.1f},{cy-ry:.1f} {cx+rx:.1f},{cy-ry*k:.1f} {cx+rx:.1f},{cy:.1f} '
+        # lower-right: right tip → bottom belly
+        f'C {cx+rx:.1f},{cy+ry*k:.1f} {cx+rx*k:.1f},{cy+ry:.1f} {cx:.1f},{cy+ry:.1f} '
+        # lower-left: bottom belly → left tip
+        f'C {cx-rx*k:.1f},{cy+ry:.1f} {cx-rx:.1f},{cy+ry*k:.1f} {cx-rx:.1f},{cy:.1f} Z'
+    )
+    shape = f'<path d="{path}" fill="{fill}" stroke="#4A2200" stroke-width="2.5"/>'
+
+    # White seam stripes — two cubic curves that follow the panel contour
+    sw = ry * 0.25
+    for sign in (-1, 1):
+        shape += (
+            f'<path d="M {cx-rx*0.70:.1f},{cy+sign*sw:.1f} '
+            f'C {cx-rx*0.28:.1f},{cy+sign*sw*0.38:.1f} '
+            f'{cx+rx*0.28:.1f},{cy+sign*sw*0.38:.1f} '
+            f'{cx+rx*0.70:.1f},{cy+sign*sw:.1f}" '
+            f'fill="none" stroke="#EDE8DC" stroke-width="5" stroke-linecap="round"/>'
+        )
+
+    # Lacing: vertical spine + 4 horizontal stitches
+    lh = ry * 0.62
+    lw = rx * 0.175
+    shape += (f'<line x1="{cx:.1f}" y1="{cy-lh:.1f}" x2="{cx:.1f}" y2="{cy+lh:.1f}" '
+              f'stroke="#EDE8DC" stroke-width="3.5"/>')
+    for t in (-0.54, -0.18, 0.18, 0.54):
+        ly = cy + t * lh * 1.74
+        shape += (f'<line x1="{cx-lw:.1f}" y1="{ly:.1f}" x2="{cx+lw:.1f}" y2="{ly:.1f}" '
+                  f'stroke="#EDE8DC" stroke-width="4.5" stroke-linecap="round"/>')
     return shape
 
 
@@ -212,52 +230,84 @@ def small_stars_row(cx, cy, n, spacing, size, fill):
 # ─────────────── 20 designs ───────────────
 
 def d01_football_mom():
-    """FOOTBALL MOM — badge layout. r_outer=330, r_inner=286, gap=44px."""
-    body = badge_circle(400, 400, 330, 286, "#2D5A27", sw=3)
+    """FOOTBALL MOM — filled green ring badge. Research-validated design:
+    - Filled colored ring (not just outlines) — pro badge standard
+    - Cubic-bezier football (G1-continuous, no kink/lips shape)
+    - Stars at arc text endpoints (pro badge separator standard)
+    - Large football fills ~55% of interior width
+    - Defense text replaces year
+    """
+    body = ""
 
-    # TOP arch: clockwise from upper-left (212°) through 270° (top) to upper-right (328°)
-    # sweep=1 (upward=True) → path passes through TOP → text reads L→R ✓
-    body += arc_text(400, 400, 308, "FOOTBALL MOM", "BebasNeue", 32, "#2D5A27",
-                     start_deg=212, end_deg=328, upward=True)
+    # ── FILLED GREEN RING (outer circle fill + white inner fill) ──────────────
+    body += f'<circle cx="400" cy="400" r="330" fill="#2D5A27"/>'
+    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
+    body += circle_arc(400, 400, 330, stroke="#142B12", sw=3)
+    body += circle_arc(400, 400, 286, stroke="#142B12", sw=2.5)
+    # Thin gold accent ring inside the white area
+    body += circle_arc(400, 400, 268, stroke="#C9952A", sw=1.8)
 
-    body += hline(200, 210, 590, "#2D5A27", 1.5)
+    # ── DECORATIVE STARS at arc endpoints (pro badge separator) ───────────────
+    for deg in (210, 330):   # top arc endpoints
+        sx = 400 + 308 * math.cos(math.radians(deg))
+        sy = 400 + 308 * math.sin(math.radians(deg))
+        body += star(sx, sy, 7, "#FFFFFF")
+    for deg in (150, 30):    # bottom arc endpoints
+        sx = 400 + 308 * math.cos(math.radians(deg))
+        sy = 400 + 308 * math.sin(math.radians(deg))
+        body += star(sx, sy, 7, "#C9952A")
 
-    # Football graphic — larger to fill the badge interior
-    body += football(400, 328, w=248, h=163)
+    # ── TOP ARCH: white on green ring ─────────────────────────────────────────
+    # r=304: baseline at y=96, cap-top y=76 (6px inside outer ring), correct centering
+    body += arc_text(400, 400, 304, "FOOTBALL MOM", "BebasNeue", 30, "#FFFFFF",
+                     start_deg=212, end_deg=328, upward=True, ls=5)
 
-    body += hline(468, 210, 590, "#2D5A27", 1.5)
+    # ── INTERIOR CONTENT ──────────────────────────────────────────────────────
+    body += hline(214, 240, 560, "#2D5A27", 2)
 
-    body += small_stars_row(400, 508, 5, 38, 10, "#C9952A")
-    body += txt(400, 558, "EST. 2016", "BebasNeue", 34, "#2D5A27", ls=6)
+    # Football: w=256 = 256/572px interior = 45% of interior — large and prominent
+    body += football(400, 316, w=256, h=167)
 
-    # BOTTOM arch: counterclockwise from lower-left (148°) through 90° (bottom) to lower-right (32°)
-    # sweep=0 (upward=False) → path passes through BOTTOM → text reads L→R ✓
-    body += arc_text(400, 400, 308, "ALWAYS CHEERING", "BebasNeue", 28, "#C9952A",
-                     start_deg=148, end_deg=32, upward=False)
+    body += hline(462, 240, 560, "#C9952A", 2)
+
+    body += small_stars_row(400, 504, 5, 36, 9, "#C9952A")
+    body += txt(400, 548, "DEFENSE WINS GAMES", "BebasNeue", 27, "#2D5A27", ls=3)
+
+    # ── BOTTOM ARCH: gold on green ring ───────────────────────────────────────
+    # r=308: baseline at y=708, ascenders toward center, sits in ring ✓
+    body += arc_text(400, 400, 308, "ALWAYS CHEERING", "BebasNeue", 27, "#C9952A",
+                     start_deg=148, end_deg=32, upward=False, ls=4)
     return wrap("football_mom", body)
 
 
 def d02_baseball_mama():
-    """BASEBALL MAMA — navy/red badge. r_outer=330, r_inner=286, gap=44px."""
-    body = badge_circle(400, 400, 330, 286, "#1B2A6B", sw=3)
+    """BASEBALL MAMA — filled navy ring badge."""
+    body = ""
+    body += f'<circle cx="400" cy="400" r="330" fill="#1B2A6B"/>'
+    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
+    body += circle_arc(400, 400, 330, stroke="#0E1840", sw=3)
+    body += circle_arc(400, 400, 286, stroke="#0E1840", sw=2.5)
+    body += circle_arc(400, 400, 268, stroke="#CC2200", sw=1.8)
 
-    # TOP arch: clockwise through 270° (top) → text reads L→R ✓
-    body += arc_text(400, 400, 308, "BASEBALL MAMA", "BebasNeue", 32, "#1B2A6B",
-                     start_deg=215, end_deg=325, upward=True)
+    for deg in (213, 327):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#FFFFFF")
+    for deg in (150, 30):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#CC2200")
 
-    body += hline(200, 210, 590, "#1B2A6B", 1.5)
+    body += arc_text(400, 400, 304, "BASEBALL MAMA", "BebasNeue", 30, "#FFFFFF",
+                     start_deg=215, end_deg=325, upward=True, ls=5)
 
-    # Baseball graphic — larger
-    body += baseball(400, 335, r=88)
+    body += hline(214, 240, 560, "#1B2A6B", 2)
+    body += baseball(400, 330, r=90)
+    body += hline(474, 240, 560, "#CC2200", 2)
 
-    body += hline(478, 210, 590, "#CC2200", 2)
+    body += txt(400, 524, "BATTER UP", "BebasNeue", 42, "#1B2A6B", ls=6)
+    body += dot_row(400, 562, 5, 36, 5, "#CC2200")
 
-    body += txt(400, 528, "BATTER UP", "BebasNeue", 44, "#1B2A6B", ls=6)
-    body += dot_row(400, 568, 5, 36, 5, "#CC2200")
-
-    # BOTTOM arch: counterclockwise through 90° (bottom) → text reads L→R ✓
     body += arc_text(400, 400, 308, "DUGOUT CREW SINCE 2019", "BebasNeue", 24, "#CC2200",
-                     start_deg=145, end_deg=35, upward=False)
+                     start_deg=148, end_deg=32, upward=False, ls=3)
     return wrap("baseball_mama", body)
 
 
@@ -282,33 +332,40 @@ def d03_cheer_mom():
 
 
 def d04_soccer_mama():
-    """SOCCER MAMA — teal/lime badge. r_outer=330, r_inner=286, gap=44px."""
-    body = badge_circle(400, 400, 330, 286, "#0A7A5E", sw=3)
+    """SOCCER MAMA — filled teal ring badge."""
+    body = ""
+    body += f'<circle cx="400" cy="400" r="330" fill="#0A7A5E"/>'
+    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
+    body += circle_arc(400, 400, 330, stroke="#054D3C", sw=3)
+    body += circle_arc(400, 400, 286, stroke="#054D3C", sw=2.5)
+    body += circle_arc(400, 400, 268, stroke="#A0D82B", sw=1.8)
 
-    # TOP arch: clockwise through 270° (top) → text reads L→R ✓
-    body += arc_text(400, 400, 308, "SOCCER MAMA", "BebasNeue", 34, "#0A7A5E",
-                     start_deg=216, end_deg=324, upward=True)
-    body += hline(200, 210, 590, "#0A7A5E", 1.5)
+    for deg in (214, 326):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#FFFFFF")
+    for deg in (150, 30):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#A0D82B")
 
-    # Soccer ball — larger
-    bx, by, br = 400, 330, 90
+    body += arc_text(400, 400, 304, "SOCCER MAMA", "BebasNeue", 30, "#FFFFFF",
+                     start_deg=216, end_deg=324, upward=True, ls=5)
+    body += hline(214, 240, 560, "#0A7A5E", 2)
+
+    bx, by, br = 400, 326, 92
     body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="white" stroke="#222" stroke-width="2.5"/>'
-    body += f'<circle cx="{bx}" cy="{by}" r="29" fill="#1A1A1A"/>'
+    body += f'<circle cx="{bx}" cy="{by}" r="30" fill="#1A1A1A"/>'
     for i in range(5):
         ang = math.radians(i * 72 - 90)
-        px = bx + 52 * math.cos(ang)
-        py = by + 52 * math.sin(ang)
-        body += f'<circle cx="{px:.1f}" cy="{py:.1f}" r="21" fill="#1A1A1A"/>'
-    body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="none" stroke="#CCC" stroke-width="1"/>'
+        body += (f'<circle cx="{bx + 53*math.cos(ang):.1f}" cy="{by + 53*math.sin(ang):.1f}" '
+                 f'r="21" fill="#1A1A1A"/>')
+    body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="none" stroke="#BBB" stroke-width="1"/>'
 
-    body += hline(470, 210, 590, "#A0D82B", 2)
+    body += hline(470, 240, 560, "#A0D82B", 2)
+    body += txt(400, 518, "GAME DAY READY", "BebasNeue", 34, "#0A7A5E", ls=4)
+    body += dot_row(400, 558, 5, 36, 5, "#A0D82B")
 
-    body += txt(400, 520, "GAME DAY READY", "BebasNeue", 36, "#0A7A5E", ls=5)
-    body += dot_row(400, 562, 5, 36, 5, "#A0D82B")
-
-    # BOTTOM arch: counterclockwise through 90° (bottom) → text reads L→R ✓
-    body += arc_text(400, 400, 308, "WIN OR LOSE WE CHEER", "BebasNeue", 26, "#A0D82B",
-                     start_deg=145, end_deg=35, upward=False)
+    body += arc_text(400, 400, 308, "WIN OR LOSE WE CHEER", "BebasNeue", 25, "#A0D82B",
+                     start_deg=148, end_deg=32, upward=False, ls=3)
     return wrap("soccer_mama", body)
 
 
@@ -569,25 +626,34 @@ def d19_chaos_coordinator():
 
 
 def d20_mini_mom_badge():
-    """MINI ME MAMA — badge, r_outer=330, r_inner=286, gap=44px."""
-    body = badge_circle(400, 400, 330, 286, "#CC1F6A", sw=3)
+    """MINI ME MAMA — filled pink ring badge."""
+    body = ""
+    body += f'<circle cx="400" cy="400" r="330" fill="#CC1F6A"/>'
+    body += f'<circle cx="400" cy="400" r="286" fill="#FFFFFF"/>'
+    body += circle_arc(400, 400, 330, stroke="#8C1249", sw=3)
+    body += circle_arc(400, 400, 286, stroke="#8C1249", sw=2.5)
+    body += circle_arc(400, 400, 268, stroke="#FF9DC8", sw=1.8)
 
-    # TOP arch: clockwise through 270° (top) → text reads L→R ✓
-    body += arc_text(400, 400, 308, "RAISING MY MINI ME", "BebasNeue", 30, "#CC1F6A",
-                     start_deg=215, end_deg=325, upward=True)
-    body += hline(200, 210, 590, "#CC1F6A", 1.5)
+    for deg in (213, 327):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#FFFFFF")
+    for deg in (150, 30):
+        body += star(400 + 308 * math.cos(math.radians(deg)),
+                     400 + 308 * math.sin(math.radians(deg)), 7, "#FF9DC8")
 
-    # Large heart graphic
-    body += heart(400, 328, size=152, fill="#CC1F6A")
+    body += arc_text(400, 400, 304, "RAISING MY MINI ME", "BebasNeue", 28, "#FFFFFF",
+                     start_deg=215, end_deg=325, upward=True, ls=4)
+    body += hline(214, 240, 560, "#CC1F6A", 2)
 
-    body += hline(468, 210, 590, "#CC1F6A", 1.5)
+    body += heart(400, 322, size=158, fill="#CC1F6A")
 
-    body += small_stars_row(400, 508, 5, 38, 9, "#FF6BAD")
-    body += txt(400, 558, "MAMA &amp; MINI", "BebasNeue", 44, "#CC1F6A", ls=6)
+    body += hline(464, 240, 560, "#CC1F6A", 2)
 
-    # BOTTOM arch: counterclockwise through 90° (bottom) → text reads L→R ✓
-    body += arc_text(400, 400, 308, "TWINNING IS WINNING", "BebasNeue", 28, "#FF6BAD",
-                     start_deg=145, end_deg=35, upward=False)
+    body += small_stars_row(400, 504, 5, 38, 9, "#FF9DC8")
+    body += txt(400, 548, "MAMA &amp; MINI", "BebasNeue", 42, "#CC1F6A", ls=5)
+
+    body += arc_text(400, 400, 308, "TWINNING IS WINNING", "BebasNeue", 27, "#FF9DC8",
+                     start_deg=148, end_deg=32, upward=False, ls=4)
     return wrap("mini_mom_badge", body)
 
 
