@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Magic Happens Here</title>
+  <rect width="800" height="800" fill="#4A1A80"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <path d="M 400,400 L 400.0,-20.0 A 420,420 0 0,1 465.7,-14.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 465.7,-14.8 A 420,420 0 0,1 529.8,0.6 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 529.8,0.6 A 420,420 0 0,1 590.7,25.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 590.7,25.8 A 420,420 0 0,1 646.9,60.2 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 646.9,60.2 A 420,420 0 0,1 697.0,103.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 697.0,103.0 A 420,420 0 0,1 739.8,153.1 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 739.8,153.1 A 420,420 0 0,1 774.2,209.3 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 774.2,209.3 A 420,420 0 0,1 799.4,270.2 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 799.4,270.2 A 420,420 0 0,1 814.8,334.3 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 814.8,334.3 A 420,420 0 0,1 820.0,400.0 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 820.0,400.0 A 420,420 0 0,1 814.8,465.7 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 814.8,465.7 A 420,420 0 0,1 799.4,529.8 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 799.4,529.8 A 420,420 0 0,1 774.2,590.7 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 774.2,590.7 A 420,420 0 0,1 739.8,646.9 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 739.8,646.9 A 420,420 0 0,1 697.0,697.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 697.0,697.0 A 420,420 0 0,1 646.9,739.8 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 646.9,739.8 A 420,420 0 0,1 590.7,774.2 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 590.7,774.2 A 420,420 0 0,1 529.8,799.4 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 529.8,799.4 A 420,420 0 0,1 465.7,814.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 465.7,814.8 A 420,420 0 0,1 400.0,820.0 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 400.0,820.0 A 420,420 0 0,1 334.3,814.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 334.3,814.8 A 420,420 0 0,1 270.2,799.4 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 270.2,799.4 A 420,420 0 0,1 209.3,774.2 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 209.3,774.2 A 420,420 0 0,1 153.1,739.8 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 153.1,739.8 A 420,420 0 0,1 103.0,697.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 103.0,697.0 A 420,420 0 0,1 60.2,646.9 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 60.2,646.9 A 420,420 0 0,1 25.8,590.7 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 25.8,590.7 A 420,420 0 0,1 0.6,529.8 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 0.6,529.8 A 420,420 0 0,1 -14.8,465.7 Z" fill="#F5D030"/>
+  <path d="M 400,400 L -14.8,465.7 A 420,420 0 0,1 -20.0,400.0 Z" fill="#E8A020"/>
+  <path d="M 400,400 L -20.0,400.0 A 420,420 0 0,1 -14.8,334.3 Z" fill="#F5D030"/>
+  <path d="M 400,400 L -14.8,334.3 A 420,420 0 0,1 0.6,270.2 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 0.6,270.2 A 420,420 0 0,1 25.8,209.3 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 25.8,209.3 A 420,420 0 0,1 60.2,153.1 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 60.2,153.1 A 420,420 0 0,1 103.0,103.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 103.0,103.0 A 420,420 0 0,1 153.1,60.2 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 153.1,60.2 A 420,420 0 0,1 209.3,25.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 209.3,25.8 A 420,420 0 0,1 270.2,0.6 Z" fill="#E8A020"/>
+  <path d="M 400,400 L 270.2,0.6 A 420,420 0 0,1 334.3,-14.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 334.3,-14.8 A 420,420 0 0,1 400.0,-20.0 Z" fill="#E8A020"/>
+  <circle cx="400.0" cy="400.0" r="290.0" fill="#4A1A80"/>
+  <circle cx="672.0" cy="400.0" r="5.0" fill="#F5D030"/>
+  <circle cx="669.2" cy="438.7" r="5.0" fill="#F5D030"/>
+  <circle cx="661.0" cy="476.6" r="5.0" fill="#F5D030"/>
+  <circle cx="647.4" cy="513.0" r="5.0" fill="#F5D030"/>
+  <circle cx="628.8" cy="547.1" r="5.0" fill="#F5D030"/>
+  <circle cx="605.6" cy="578.1" r="5.0" fill="#F5D030"/>
+  <circle cx="578.1" cy="605.6" r="5.0" fill="#F5D030"/>
+  <circle cx="547.1" cy="628.8" r="5.0" fill="#F5D030"/>
+  <circle cx="513.0" cy="647.4" r="5.0" fill="#F5D030"/>
+  <circle cx="476.6" cy="661.0" r="5.0" fill="#F5D030"/>
+  <circle cx="438.7" cy="669.2" r="5.0" fill="#F5D030"/>
+  <circle cx="400.0" cy="672.0" r="5.0" fill="#F5D030"/>
+  <circle cx="361.3" cy="669.2" r="5.0" fill="#F5D030"/>
+  <circle cx="323.4" cy="661.0" r="5.0" fill="#F5D030"/>
+  <circle cx="287.0" cy="647.4" r="5.0" fill="#F5D030"/>
+  <circle cx="252.9" cy="628.8" r="5.0" fill="#F5D030"/>
+  <circle cx="221.9" cy="605.6" r="5.0" fill="#F5D030"/>
+  <circle cx="194.4" cy="578.1" r="5.0" fill="#F5D030"/>
+  <circle cx="171.2" cy="547.1" r="5.0" fill="#F5D030"/>
+  <circle cx="152.6" cy="513.0" r="5.0" fill="#F5D030"/>
+  <circle cx="139.0" cy="476.6" r="5.0" fill="#F5D030"/>
+  <circle cx="130.8" cy="438.7" r="5.0" fill="#F5D030"/>
+  <circle cx="128.0" cy="400.0" r="5.0" fill="#F5D030"/>
+  <circle cx="130.8" cy="361.3" r="5.0" fill="#F5D030"/>
+  <circle cx="139.0" cy="323.4" r="5.0" fill="#F5D030"/>
+  <circle cx="152.6" cy="287.0" r="5.0" fill="#F5D030"/>
+  <circle cx="171.2" cy="252.9" r="5.0" fill="#F5D030"/>
+  <circle cx="194.4" cy="221.9" r="5.0" fill="#F5D030"/>
+  <circle cx="221.9" cy="194.4" r="5.0" fill="#F5D030"/>
+  <circle cx="252.9" cy="171.2" r="5.0" fill="#F5D030"/>
+  <circle cx="287.0" cy="152.6" r="5.0" fill="#F5D030"/>
+  <circle cx="323.4" cy="139.0" r="5.0" fill="#F5D030"/>
+  <circle cx="361.3" cy="130.8" r="5.0" fill="#F5D030"/>
+  <circle cx="400.0" cy="128.0" r="5.0" fill="#F5D030"/>
+  <circle cx="438.7" cy="130.8" r="5.0" fill="#F5D030"/>
+  <circle cx="476.6" cy="139.0" r="5.0" fill="#F5D030"/>
+  <circle cx="513.0" cy="152.6" r="5.0" fill="#F5D030"/>
+  <circle cx="547.1" cy="171.2" r="5.0" fill="#F5D030"/>
+  <circle cx="578.1" cy="194.4" r="5.0" fill="#F5D030"/>
+  <circle cx="605.6" cy="221.9" r="5.0" fill="#F5D030"/>
+  <circle cx="628.8" cy="252.9" r="5.0" fill="#F5D030"/>
+  <circle cx="647.4" cy="287.0" r="5.0" fill="#F5D030"/>
+  <circle cx="661.0" cy="323.4" r="5.0" fill="#F5D030"/>
+  <circle cx="669.2" cy="361.3" r="5.0" fill="#F5D030"/>
+  <circle cx="400.0" cy="400.0" r="262.0" fill="#4A1A80"/>
+  <polygon points="400.0,150.0 405.7,174.3 430.0,180.0 405.7,185.7 400.0,210.0 394.3,185.7 370.0,180.0 394.3,174.3" fill="#F5D030"/>
+  <polygon points="400.0,590.0 405.7,614.3 430.0,620.0 405.7,625.7 400.0,650.0 394.3,625.7 370.0,620.0 394.3,614.3" fill="#F5D030"/>
+  <polygon points="180.0,370.0 185.7,394.3 210.0,400.0 185.7,405.7 180.0,430.0 174.3,405.7 150.0,400.0 174.3,394.3" fill="#E84B8A"/>
+  <polygon points="620.0,370.0 625.7,394.3 650.0,400.0 625.7,405.7 620.0,430.0 614.3,405.7 590.0,400.0 614.3,394.3" fill="#E84B8A"/>
+  <polygon points="240.0,218.0 244.2,235.8 262.0,240.0 244.2,244.2 240.0,262.0 235.8,244.2 218.0,240.0 235.8,235.8" fill="#F5D030"/>
+  <polygon points="560.0,218.0 564.2,235.8 582.0,240.0 564.2,244.2 560.0,262.0 555.8,244.2 538.0,240.0 555.8,235.8" fill="#E84B8A"/>
+  <polygon points="240.0,538.0 244.2,555.8 262.0,560.0 244.2,564.2 240.0,582.0 235.8,564.2 218.0,560.0 235.8,555.8" fill="#E84B8A"/>
+  <polygon points="560.0,538.0 564.2,555.8 582.0,560.0 564.2,564.2 560.0,582.0 555.8,564.2 538.0,560.0 555.8,555.8" fill="#F5D030"/>
+  <polygon points="160.0,298.0 162.8,307.2 172.0,310.0 162.8,312.8 160.0,322.0 157.2,312.8 148.0,310.0 157.2,307.2" fill="#F5D030"/>
+  <polygon points="640.0,298.0 642.8,307.2 652.0,310.0 642.8,312.8 640.0,322.0 637.2,312.8 628.0,310.0 637.2,307.2" fill="#E84B8A"/>
+  <polygon points="160.0,478.0 162.8,487.2 172.0,490.0 162.8,492.8 160.0,502.0 157.2,492.8 148.0,490.0 157.2,487.2" fill="#E84B8A"/>
+  <polygon points="640.0,478.0 642.8,487.2 652.0,490.0 642.8,492.8 640.0,502.0 637.2,492.8 628.0,490.0 637.2,487.2" fill="#F5D030"/>
+  <text x="400" y="334" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="76" fill="#F5D030" letter-spacing="3">MAGIC</text>
+  <text x="400" y="394" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="56" fill="#E84B8A">happens</text>
+  <text x="400" y="440" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="76" fill="#FFFFFF" letter-spacing="3">HERE</text>
+  <text x="400" y="486" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="18" fill="#F5D030" letter-spacing="3">✦  believe  ✦</text>
+</svg>

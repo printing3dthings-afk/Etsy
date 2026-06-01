@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Happy Chaos</title>
+  <rect width="800" height="800" fill="#F5D030"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="40" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="80" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="120" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="160" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="200" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="240" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="280" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="320" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="360" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="400" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="440" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="480" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="520" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="560" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="600" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="640" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="680" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="720" y="0" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="0" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="40" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="40" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="80" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="80" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="120" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="120" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="160" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="160" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="200" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="200" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="240" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="240" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="280" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="280" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="320" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="320" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="360" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="360" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="400" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="400" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="440" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="440" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="480" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="480" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="520" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="520" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="560" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="560" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="600" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="600" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="640" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="640" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="680" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="680" width="40" height="40" fill="#E84B8A"/>
+  <rect x="0" y="720" width="40" height="40" fill="#E84B8A"/>
+  <rect x="760" y="720" width="40" height="40" fill="#F5D030"/>
+  <rect x="0" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="40" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="80" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="120" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="160" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="200" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="240" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="280" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="320" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="360" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="400" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="440" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="480" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="520" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="560" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="600" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="640" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="680" y="760" width="40" height="40" fill="#E84B8A"/>
+  <rect x="720" y="760" width="40" height="40" fill="#F5D030"/>
+  <rect x="760" y="760" width="40" height="40" fill="#E84B8A"/>
+  <circle cx="200.0" cy="200.0" r="44.0" fill="#1B9E8A"/>
+  <circle cx="600.0" cy="200.0" r="38.0" fill="#D93030"/>
+  <circle cx="180.0" cy="600.0" r="40.0" fill="#7B35B0"/>
+  <circle cx="620.0" cy="600.0" r="42.0" fill="#F07A1A"/>
+  <circle cx="400.0" cy="180.0" r="32.0" fill="#E84B8A"/>
+  <circle cx="400.0" cy="620.0" r="32.0" fill="#1B9E8A"/>
+  <circle cx="170.0" cy="400.0" r="36.0" fill="#F5D030"/>
+  <circle cx="630.0" cy="400.0" r="36.0" fill="#D93030"/>
+  <polygon points="280.0,252.0 286.5,271.1 306.6,271.3 290.5,283.4 296.5,302.7 280.0,291.0 263.5,302.7 269.5,283.4 253.4,271.3 273.5,271.1" fill="#D93030"/>
+  <polygon points="520.0,254.0 525.9,271.9 544.7,272.0 529.5,283.1 535.3,301.0 520.0,290.0 504.7,301.0 510.5,283.1 495.3,272.0 514.1,271.9" fill="#7B35B0"/>
+  <polygon points="280.0,494.0 285.9,511.9 304.7,512.0 289.5,523.1 295.3,541.0 280.0,530.0 264.7,541.0 270.5,523.1 255.3,512.0 274.1,511.9" fill="#F07A1A"/>
+  <polygon points="520.0,492.0 526.5,511.1 546.6,511.3 530.5,523.4 536.5,542.7 520.0,531.0 503.5,542.7 509.5,523.4 493.4,511.3 513.5,511.1" fill="#1B9E8A"/>
+  <circle cx="400.0" cy="400.0" r="210.0" fill="#FAFAFA"/>
+  <text x="400" y="358" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="70" fill="#E84B8A" letter-spacing="3">HAPPY</text>
+  <text x="400" y="418" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="72" fill="#F07A1A">chaos</text>
+  <text x="400" y="466" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="18" fill="#1A1A2E" letter-spacing="2">it's my superpower</text>
+</svg>

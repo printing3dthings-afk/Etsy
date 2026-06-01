@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Peace Love Joy</title>
+  <rect width="800" height="800" fill="#7CC644"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <path d="M 400,400 L 400.0,-20.0 A 420,420 0 0,1 443.9,-17.7 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 443.9,-17.7 A 420,420 0 0,1 487.3,-10.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 487.3,-10.8 A 420,420 0 0,1 529.8,0.6 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 529.8,0.6 A 420,420 0 0,1 570.8,16.3 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 570.8,16.3 A 420,420 0 0,1 610.0,36.3 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 610.0,36.3 A 420,420 0 0,1 646.9,60.2 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 646.9,60.2 A 420,420 0 0,1 681.0,87.9 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 681.0,87.9 A 420,420 0 0,1 712.1,119.0 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 712.1,119.0 A 420,420 0 0,1 739.8,153.1 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 739.8,153.1 A 420,420 0 0,1 763.7,190.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 763.7,190.0 A 420,420 0 0,1 783.7,229.2 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 783.7,229.2 A 420,420 0 0,1 799.4,270.2 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 799.4,270.2 A 420,420 0 0,1 810.8,312.7 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 810.8,312.7 A 420,420 0 0,1 817.7,356.1 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 817.7,356.1 A 420,420 0 0,1 820.0,400.0 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 820.0,400.0 A 420,420 0 0,1 817.7,443.9 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 817.7,443.9 A 420,420 0 0,1 810.8,487.3 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 810.8,487.3 A 420,420 0 0,1 799.4,529.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 799.4,529.8 A 420,420 0 0,1 783.7,570.8 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 783.7,570.8 A 420,420 0 0,1 763.7,610.0 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 763.7,610.0 A 420,420 0 0,1 739.8,646.9 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 739.8,646.9 A 420,420 0 0,1 712.1,681.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 712.1,681.0 A 420,420 0 0,1 681.0,712.1 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 681.0,712.1 A 420,420 0 0,1 646.9,739.8 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 646.9,739.8 A 420,420 0 0,1 610.0,763.7 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 610.0,763.7 A 420,420 0 0,1 570.8,783.7 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 570.8,783.7 A 420,420 0 0,1 529.8,799.4 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 529.8,799.4 A 420,420 0 0,1 487.3,810.8 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 487.3,810.8 A 420,420 0 0,1 443.9,817.7 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 443.9,817.7 A 420,420 0 0,1 400.0,820.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 400.0,820.0 A 420,420 0 0,1 356.1,817.7 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 356.1,817.7 A 420,420 0 0,1 312.7,810.8 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 312.7,810.8 A 420,420 0 0,1 270.2,799.4 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 270.2,799.4 A 420,420 0 0,1 229.2,783.7 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 229.2,783.7 A 420,420 0 0,1 190.0,763.7 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 190.0,763.7 A 420,420 0 0,1 153.1,739.8 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 153.1,739.8 A 420,420 0 0,1 119.0,712.1 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 119.0,712.1 A 420,420 0 0,1 87.9,681.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 87.9,681.0 A 420,420 0 0,1 60.2,646.9 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 60.2,646.9 A 420,420 0 0,1 36.3,610.0 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 36.3,610.0 A 420,420 0 0,1 16.3,570.8 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 16.3,570.8 A 420,420 0 0,1 0.6,529.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 0.6,529.8 A 420,420 0 0,1 -10.8,487.3 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L -10.8,487.3 A 420,420 0 0,1 -17.7,443.9 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L -17.7,443.9 A 420,420 0 0,1 -20.0,400.0 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L -20.0,400.0 A 420,420 0 0,1 -17.7,356.1 Z" fill="#F5D030"/>
+  <path d="M 400,400 L -17.7,356.1 A 420,420 0 0,1 -10.8,312.7 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L -10.8,312.7 A 420,420 0 0,1 0.6,270.2 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 0.6,270.2 A 420,420 0 0,1 16.3,229.2 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 16.3,229.2 A 420,420 0 0,1 36.3,190.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 36.3,190.0 A 420,420 0 0,1 60.2,153.1 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 60.2,153.1 A 420,420 0 0,1 87.9,119.0 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 87.9,119.0 A 420,420 0 0,1 119.0,87.9 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 119.0,87.9 A 420,420 0 0,1 153.1,60.2 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 153.1,60.2 A 420,420 0 0,1 190.0,36.3 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 190.0,36.3 A 420,420 0 0,1 229.2,16.3 Z" fill="#7B35B0"/>
+  <path d="M 400,400 L 229.2,16.3 A 420,420 0 0,1 270.2,0.6 Z" fill="#E84B8A"/>
+  <path d="M 400,400 L 270.2,0.6 A 420,420 0 0,1 312.7,-10.8 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 312.7,-10.8 A 420,420 0 0,1 356.1,-17.7 Z" fill="#1B9E8A"/>
+  <path d="M 400,400 L 356.1,-17.7 A 420,420 0 0,1 400.0,-20.0 Z" fill="#7B35B0"/>
+  <circle cx="400.0" cy="400.0" r="290.0" fill="#7CC644"/>
+  <circle cx="673.0" cy="400.0" r="6.0" fill="#FFFFFF"/>
+  <circle cx="670.7" cy="435.6" r="6.0" fill="#FFFFFF"/>
+  <circle cx="663.7" cy="470.7" r="6.0" fill="#FFFFFF"/>
+  <circle cx="652.2" cy="504.5" r="6.0" fill="#FFFFFF"/>
+  <circle cx="636.4" cy="536.5" r="6.0" fill="#FFFFFF"/>
+  <circle cx="616.6" cy="566.2" r="6.0" fill="#FFFFFF"/>
+  <circle cx="593.0" cy="593.0" r="6.0" fill="#FFFFFF"/>
+  <circle cx="566.2" cy="616.6" r="6.0" fill="#FFFFFF"/>
+  <circle cx="536.5" cy="636.4" r="6.0" fill="#FFFFFF"/>
+  <circle cx="504.5" cy="652.2" r="6.0" fill="#FFFFFF"/>
+  <circle cx="470.7" cy="663.7" r="6.0" fill="#FFFFFF"/>
+  <circle cx="435.6" cy="670.7" r="6.0" fill="#FFFFFF"/>
+  <circle cx="400.0" cy="673.0" r="6.0" fill="#FFFFFF"/>
+  <circle cx="364.4" cy="670.7" r="6.0" fill="#FFFFFF"/>
+  <circle cx="329.3" cy="663.7" r="6.0" fill="#FFFFFF"/>
+  <circle cx="295.5" cy="652.2" r="6.0" fill="#FFFFFF"/>
+  <circle cx="263.5" cy="636.4" r="6.0" fill="#FFFFFF"/>
+  <circle cx="233.8" cy="616.6" r="6.0" fill="#FFFFFF"/>
+  <circle cx="207.0" cy="593.0" r="6.0" fill="#FFFFFF"/>
+  <circle cx="183.4" cy="566.2" r="6.0" fill="#FFFFFF"/>
+  <circle cx="163.6" cy="536.5" r="6.0" fill="#FFFFFF"/>
+  <circle cx="147.8" cy="504.5" r="6.0" fill="#FFFFFF"/>
+  <circle cx="136.3" cy="470.7" r="6.0" fill="#FFFFFF"/>
+  <circle cx="129.3" cy="435.6" r="6.0" fill="#FFFFFF"/>
+  <circle cx="127.0" cy="400.0" r="6.0" fill="#FFFFFF"/>
+  <circle cx="129.3" cy="364.4" r="6.0" fill="#FFFFFF"/>
+  <circle cx="136.3" cy="329.3" r="6.0" fill="#FFFFFF"/>
+  <circle cx="147.8" cy="295.5" r="6.0" fill="#FFFFFF"/>
+  <circle cx="163.6" cy="263.5" r="6.0" fill="#FFFFFF"/>
+  <circle cx="183.4" cy="233.8" r="6.0" fill="#FFFFFF"/>
+  <circle cx="207.0" cy="207.0" r="6.0" fill="#FFFFFF"/>
+  <circle cx="233.8" cy="183.4" r="6.0" fill="#FFFFFF"/>
+  <circle cx="263.5" cy="163.6" r="6.0" fill="#FFFFFF"/>
+  <circle cx="295.5" cy="147.8" r="6.0" fill="#FFFFFF"/>
+  <circle cx="329.3" cy="136.3" r="6.0" fill="#FFFFFF"/>
+  <circle cx="364.4" cy="129.3" r="6.0" fill="#FFFFFF"/>
+  <circle cx="400.0" cy="127.0" r="6.0" fill="#FFFFFF"/>
+  <circle cx="435.6" cy="129.3" r="6.0" fill="#FFFFFF"/>
+  <circle cx="470.7" cy="136.3" r="6.0" fill="#FFFFFF"/>
+  <circle cx="504.5" cy="147.8" r="6.0" fill="#FFFFFF"/>
+  <circle cx="536.5" cy="163.6" r="6.0" fill="#FFFFFF"/>
+  <circle cx="566.2" cy="183.4" r="6.0" fill="#FFFFFF"/>
+  <circle cx="593.0" cy="207.0" r="6.0" fill="#FFFFFF"/>
+  <circle cx="616.6" cy="233.8" r="6.0" fill="#FFFFFF"/>
+  <circle cx="636.4" cy="263.5" r="6.0" fill="#FFFFFF"/>
+  <circle cx="652.2" cy="295.5" r="6.0" fill="#FFFFFF"/>
+  <circle cx="663.7" cy="329.3" r="6.0" fill="#FFFFFF"/>
+  <circle cx="670.7" cy="364.4" r="6.0" fill="#FFFFFF"/>
+  <circle cx="400.0" cy="400.0" r="262.0" fill="#7CC644"/>
+  <circle cx="400.0" cy="400.0" r="150.0" fill="#FFFFFF"/>
+  <line x1="400" y1="250" x2="400" y2="550" stroke="#7CC644" stroke-width="14" stroke-linecap="round"/>
+  <line x1="400" y1="400" x2="294" y2="503" stroke="#7CC644" stroke-width="14" stroke-linecap="round"/>
+  <line x1="400" y1="400" x2="506" y2="503" stroke="#7CC644" stroke-width="14" stroke-linecap="round"/>
+  <text x="400" y="308" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="36" fill="#FFFFFF" letter-spacing="4">PEACE</text>
+  <text x="400" y="372" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="32" fill="#F5D030">·  LOVE  ·</text>
+  <text x="400" y="418" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="36" fill="#FFFFFF" letter-spacing="4">JOY</text>
+  <polygon points="80.0,58.0 84.5,72.2 99.1,69.0 89.0,80.0 99.1,91.0 84.5,87.8 80.0,102.0 75.5,87.8 60.9,91.0 71.0,80.0 60.9,69.0 75.5,72.2" fill="#F5D030"/>
+  <polygon points="720.0,58.0 724.5,72.2 739.1,69.0 729.0,80.0 739.1,91.0 724.5,87.8 720.0,102.0 715.5,87.8 700.9,91.0 711.0,80.0 700.9,69.0 715.5,72.2" fill="#E84B8A"/>
+  <polygon points="80.0,698.0 84.5,712.2 99.1,709.0 89.0,720.0 99.1,731.0 84.5,727.8 80.0,742.0 75.5,727.8 60.9,731.0 71.0,720.0 60.9,709.0 75.5,712.2" fill="#E84B8A"/>
+  <polygon points="720.0,698.0 724.5,712.2 739.1,709.0 729.0,720.0 739.1,731.0 724.5,727.8 720.0,742.0 715.5,727.8 700.9,731.0 711.0,720.0 700.9,709.0 715.5,712.2" fill="#F5D030"/>
+</svg>

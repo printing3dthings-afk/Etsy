@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Sun Child</title>
+  <rect width="800" height="800" fill="#D44A1A"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <path d="M 400,400 L 400.0,-20.0 A 420,420 0 0,1 560.7,12.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 560.7,12.0 A 420,420 0 0,1 697.0,103.0 Z" fill="#FFE870"/>
+  <path d="M 400,400 L 697.0,103.0 A 420,420 0 0,1 788.0,239.3 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 788.0,239.3 A 420,420 0 0,1 820.0,400.0 Z" fill="#FFE870"/>
+  <path d="M 400,400 L 820.0,400.0 A 420,420 0 0,1 788.0,560.7 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 788.0,560.7 A 420,420 0 0,1 697.0,697.0 Z" fill="#FFE870"/>
+  <path d="M 400,400 L 697.0,697.0 A 420,420 0 0,1 560.7,788.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 560.7,788.0 A 420,420 0 0,1 400.0,820.0 Z" fill="#FFE870"/>
+  <path d="M 400,400 L 400.0,820.0 A 420,420 0 0,1 239.3,788.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 239.3,788.0 A 420,420 0 0,1 103.0,697.0 Z" fill="#FFE870"/>
+  <path d="M 400,400 L 103.0,697.0 A 420,420 0 0,1 12.0,560.7 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 12.0,560.7 A 420,420 0 0,1 -20.0,400.0 Z" fill="#FFE870"/>
+  <path d="M 400,400 L -20.0,400.0 A 420,420 0 0,1 12.0,239.3 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 12.0,239.3 A 420,420 0 0,1 103.0,103.0 Z" fill="#FFE870"/>
+  <path d="M 400,400 L 103.0,103.0 A 420,420 0 0,1 239.3,12.0 Z" fill="#F5D030"/>
+  <path d="M 400,400 L 239.3,12.0 A 420,420 0 0,1 400.0,-20.0 Z" fill="#FFE870"/>
+  <circle cx="400.0" cy="400.0" r="250.0" fill="#D44A1A"/>
+  <circle cx="633.0" cy="400.0" r="5.0" fill="#F5D030"/>
+  <circle cx="629.5" cy="440.5" r="5.0" fill="#F5D030"/>
+  <circle cx="618.9" cy="479.7" r="5.0" fill="#F5D030"/>
+  <circle cx="601.8" cy="516.5" r="5.0" fill="#F5D030"/>
+  <circle cx="578.5" cy="549.8" r="5.0" fill="#F5D030"/>
+  <circle cx="549.8" cy="578.5" r="5.0" fill="#F5D030"/>
+  <circle cx="516.5" cy="601.8" r="5.0" fill="#F5D030"/>
+  <circle cx="479.7" cy="618.9" r="5.0" fill="#F5D030"/>
+  <circle cx="440.5" cy="629.5" r="5.0" fill="#F5D030"/>
+  <circle cx="400.0" cy="633.0" r="5.0" fill="#F5D030"/>
+  <circle cx="359.5" cy="629.5" r="5.0" fill="#F5D030"/>
+  <circle cx="320.3" cy="618.9" r="5.0" fill="#F5D030"/>
+  <circle cx="283.5" cy="601.8" r="5.0" fill="#F5D030"/>
+  <circle cx="250.2" cy="578.5" r="5.0" fill="#F5D030"/>
+  <circle cx="221.5" cy="549.8" r="5.0" fill="#F5D030"/>
+  <circle cx="198.2" cy="516.5" r="5.0" fill="#F5D030"/>
+  <circle cx="181.1" cy="479.7" r="5.0" fill="#F5D030"/>
+  <circle cx="170.5" cy="440.5" r="5.0" fill="#F5D030"/>
+  <circle cx="167.0" cy="400.0" r="5.0" fill="#F5D030"/>
+  <circle cx="170.5" cy="359.5" r="5.0" fill="#F5D030"/>
+  <circle cx="181.1" cy="320.3" r="5.0" fill="#F5D030"/>
+  <circle cx="198.2" cy="283.5" r="5.0" fill="#F5D030"/>
+  <circle cx="221.5" cy="250.2" r="5.0" fill="#F5D030"/>
+  <circle cx="250.2" cy="221.5" r="5.0" fill="#F5D030"/>
+  <circle cx="283.5" cy="198.2" r="5.0" fill="#F5D030"/>
+  <circle cx="320.3" cy="181.1" r="5.0" fill="#F5D030"/>
+  <circle cx="359.5" cy="170.5" r="5.0" fill="#F5D030"/>
+  <circle cx="400.0" cy="167.0" r="5.0" fill="#F5D030"/>
+  <circle cx="440.5" cy="170.5" r="5.0" fill="#F5D030"/>
+  <circle cx="479.7" cy="181.1" r="5.0" fill="#F5D030"/>
+  <circle cx="516.5" cy="198.2" r="5.0" fill="#F5D030"/>
+  <circle cx="549.8" cy="221.5" r="5.0" fill="#F5D030"/>
+  <circle cx="578.5" cy="250.2" r="5.0" fill="#F5D030"/>
+  <circle cx="601.8" cy="283.5" r="5.0" fill="#F5D030"/>
+  <circle cx="618.9" cy="320.3" r="5.0" fill="#F5D030"/>
+  <circle cx="629.5" cy="359.5" r="5.0" fill="#F5D030"/>
+  <circle cx="400.0" cy="400.0" r="222.0" fill="#D44A1A"/>
+  <circle cx="400.0" cy="350.0" r="140.0" fill="#F5D030"/>
+  <circle cx="362.0" cy="326.0" r="16.0" fill="#D44A1A"/>
+  <circle cx="438.0" cy="326.0" r="16.0" fill="#D44A1A"/>
+  <path d="M 356,372 Q 400,404 444,372" stroke="#D44A1A" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <circle cx="336.0" cy="360.0" r="18.0" fill="#F0A020"/>
+  <circle cx="464.0" cy="360.0" r="18.0" fill="#F0A020"/>
+  <text x="400" y="548" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="70" fill="#F5D030" letter-spacing="4">SUN</text>
+  <text x="400" y="606" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="70" fill="#FFFFFF" letter-spacing="4">CHILD</text>
+  <polygon points="90.0,66.0 95.3,82.7 112.8,82.6 98.6,92.8 104.1,109.4 90.0,99.0 75.9,109.4 81.4,92.8 67.2,82.6 84.7,82.7" fill="#F5D030"/>
+  <polygon points="710.0,66.0 715.3,82.7 732.8,82.6 718.6,92.8 724.1,109.4 710.0,99.0 695.9,109.4 701.4,92.8 687.2,82.6 704.7,82.7" fill="#FFFFFF"/>
+  <polygon points="90.0,688.0 95.3,702.7 110.9,703.2 98.6,712.8 102.9,727.8 90.0,719.0 77.1,727.8 81.4,712.8 69.1,703.2 84.7,702.7" fill="#FFFFFF"/>
+  <polygon points="710.0,688.0 715.3,702.7 730.9,703.2 718.6,712.8 722.9,727.8 710.0,719.0 697.1,727.8 701.4,712.8 689.1,703.2 704.7,702.7" fill="#F5D030"/>
+</svg>

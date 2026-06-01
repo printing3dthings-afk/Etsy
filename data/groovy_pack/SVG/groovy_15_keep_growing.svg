@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Keep Growing</title>
+  <rect width="800" height="800" fill="#6B8A5E"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <path d="M 400,400 L 400.0,-20.0 A 420,420 0 0,1 493.5,-9.5 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 493.5,-9.5 A 420,420 0 0,1 582.2,21.6 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 582.2,21.6 A 420,420 0 0,1 661.9,71.6 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 661.9,71.6 A 420,420 0 0,1 728.4,138.1 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 728.4,138.1 A 420,420 0 0,1 778.4,217.8 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 778.4,217.8 A 420,420 0 0,1 809.5,306.5 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 809.5,306.5 A 420,420 0 0,1 820.0,400.0 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 820.0,400.0 A 420,420 0 0,1 809.5,493.5 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 809.5,493.5 A 420,420 0 0,1 778.4,582.2 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 778.4,582.2 A 420,420 0 0,1 728.4,661.9 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 728.4,661.9 A 420,420 0 0,1 661.9,728.4 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 661.9,728.4 A 420,420 0 0,1 582.2,778.4 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 582.2,778.4 A 420,420 0 0,1 493.5,809.5 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 493.5,809.5 A 420,420 0 0,1 400.0,820.0 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 400.0,820.0 A 420,420 0 0,1 306.5,809.5 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 306.5,809.5 A 420,420 0 0,1 217.8,778.4 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 217.8,778.4 A 420,420 0 0,1 138.1,728.4 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 138.1,728.4 A 420,420 0 0,1 71.6,661.9 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 71.6,661.9 A 420,420 0 0,1 21.6,582.2 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 21.6,582.2 A 420,420 0 0,1 -9.5,493.5 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L -9.5,493.5 A 420,420 0 0,1 -20.0,400.0 Z" fill="#8BA888"/>
+  <path d="M 400,400 L -20.0,400.0 A 420,420 0 0,1 -9.5,306.5 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L -9.5,306.5 A 420,420 0 0,1 21.6,217.8 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 21.6,217.8 A 420,420 0 0,1 71.6,138.1 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 71.6,138.1 A 420,420 0 0,1 138.1,71.6 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 138.1,71.6 A 420,420 0 0,1 217.8,21.6 Z" fill="#6B8A5E"/>
+  <path d="M 400,400 L 217.8,21.6 A 420,420 0 0,1 306.5,-9.5 Z" fill="#8BA888"/>
+  <path d="M 400,400 L 306.5,-9.5 A 420,420 0 0,1 400.0,-20.0 Z" fill="#6B8A5E"/>
+  <circle cx="400.0" cy="400.0" r="290.0" fill="#F5EDD6"/>
+  <circle cx="673.0" cy="400.0" r="5.0" fill="#8BA888"/>
+  <circle cx="670.2" cy="438.9" r="5.0" fill="#8BA888"/>
+  <circle cx="661.9" cy="476.9" r="5.0" fill="#8BA888"/>
+  <circle cx="648.3" cy="513.4" r="5.0" fill="#8BA888"/>
+  <circle cx="629.7" cy="547.6" r="5.0" fill="#8BA888"/>
+  <circle cx="606.3" cy="578.8" r="5.0" fill="#8BA888"/>
+  <circle cx="578.8" cy="606.3" r="5.0" fill="#8BA888"/>
+  <circle cx="547.6" cy="629.7" r="5.0" fill="#8BA888"/>
+  <circle cx="513.4" cy="648.3" r="5.0" fill="#8BA888"/>
+  <circle cx="476.9" cy="661.9" r="5.0" fill="#8BA888"/>
+  <circle cx="438.9" cy="670.2" r="5.0" fill="#8BA888"/>
+  <circle cx="400.0" cy="673.0" r="5.0" fill="#8BA888"/>
+  <circle cx="361.1" cy="670.2" r="5.0" fill="#8BA888"/>
+  <circle cx="323.1" cy="661.9" r="5.0" fill="#8BA888"/>
+  <circle cx="286.6" cy="648.3" r="5.0" fill="#8BA888"/>
+  <circle cx="252.4" cy="629.7" r="5.0" fill="#8BA888"/>
+  <circle cx="221.2" cy="606.3" r="5.0" fill="#8BA888"/>
+  <circle cx="193.7" cy="578.8" r="5.0" fill="#8BA888"/>
+  <circle cx="170.3" cy="547.6" r="5.0" fill="#8BA888"/>
+  <circle cx="151.7" cy="513.4" r="5.0" fill="#8BA888"/>
+  <circle cx="138.1" cy="476.9" r="5.0" fill="#8BA888"/>
+  <circle cx="129.8" cy="438.9" r="5.0" fill="#8BA888"/>
+  <circle cx="127.0" cy="400.0" r="5.0" fill="#8BA888"/>
+  <circle cx="129.8" cy="361.1" r="5.0" fill="#8BA888"/>
+  <circle cx="138.1" cy="323.1" r="5.0" fill="#8BA888"/>
+  <circle cx="151.7" cy="286.6" r="5.0" fill="#8BA888"/>
+  <circle cx="170.3" cy="252.4" r="5.0" fill="#8BA888"/>
+  <circle cx="193.7" cy="221.2" r="5.0" fill="#8BA888"/>
+  <circle cx="221.2" cy="193.7" r="5.0" fill="#8BA888"/>
+  <circle cx="252.4" cy="170.3" r="5.0" fill="#8BA888"/>
+  <circle cx="286.6" cy="151.7" r="5.0" fill="#8BA888"/>
+  <circle cx="323.1" cy="138.1" r="5.0" fill="#8BA888"/>
+  <circle cx="361.1" cy="129.8" r="5.0" fill="#8BA888"/>
+  <circle cx="400.0" cy="127.0" r="5.0" fill="#8BA888"/>
+  <circle cx="438.9" cy="129.8" r="5.0" fill="#8BA888"/>
+  <circle cx="476.9" cy="138.1" r="5.0" fill="#8BA888"/>
+  <circle cx="513.4" cy="151.7" r="5.0" fill="#8BA888"/>
+  <circle cx="547.6" cy="170.3" r="5.0" fill="#8BA888"/>
+  <circle cx="578.8" cy="193.7" r="5.0" fill="#8BA888"/>
+  <circle cx="606.3" cy="221.2" r="5.0" fill="#8BA888"/>
+  <circle cx="629.7" cy="252.4" r="5.0" fill="#8BA888"/>
+  <circle cx="648.3" cy="286.6" r="5.0" fill="#8BA888"/>
+  <circle cx="661.9" cy="323.1" r="5.0" fill="#8BA888"/>
+  <circle cx="670.2" cy="361.1" r="5.0" fill="#8BA888"/>
+  <circle cx="400.0" cy="400.0" r="263.0" fill="#F5EDD6"/>
+  <ellipse cx="600" cy="400" rx="18" ry="36" fill="#6B8A5E" transform="rotate(90,600,400)"/>
+  <ellipse cx="562" cy="518" rx="18" ry="36" fill="#6B8A5E" transform="rotate(126,562,518)"/>
+  <ellipse cx="462" cy="590" rx="18" ry="36" fill="#6B8A5E" transform="rotate(162,462,590)"/>
+  <ellipse cx="338" cy="590" rx="18" ry="36" fill="#6B8A5E" transform="rotate(198,338,590)"/>
+  <ellipse cx="238" cy="518" rx="18" ry="36" fill="#6B8A5E" transform="rotate(234,238,518)"/>
+  <ellipse cx="200" cy="400" rx="18" ry="36" fill="#6B8A5E" transform="rotate(270,200,400)"/>
+  <ellipse cx="238" cy="282" rx="18" ry="36" fill="#6B8A5E" transform="rotate(306,238,282)"/>
+  <ellipse cx="338" cy="210" rx="18" ry="36" fill="#6B8A5E" transform="rotate(342,338,210)"/>
+  <ellipse cx="462" cy="210" rx="18" ry="36" fill="#6B8A5E" transform="rotate(378,462,210)"/>
+  <ellipse cx="562" cy="282" rx="18" ry="36" fill="#6B8A5E" transform="rotate(414,562,282)"/>
+  <circle cx="400.0" cy="400.0" r="175.0" fill="#F5EDD6"/>
+  <text x="400" y="344" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="64" fill="#6B8A5E" letter-spacing="3">KEEP</text>
+  <text x="400" y="408" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="68" fill="#C4634F">growing</text>
+  <text x="400" y="460" text-anchor="middle" font-family="Cormorant, sans-serif" font-size="14" fill="#6B8A5E" letter-spacing="3">BLOOM WHERE YOU'RE PLANTED</text>
+  <circle cx="100.0" cy="100.0" r="14.0" fill="#C4634F"/>
+  <circle cx="700.0" cy="100.0" r="14.0" fill="#C4634F"/>
+  <circle cx="100.0" cy="700.0" r="14.0" fill="#C4634F"/>
+  <circle cx="700.0" cy="700.0" r="14.0" fill="#C4634F"/>
+  <polygon points="400.0,58.0 404.1,70.3 417.1,70.4 406.7,78.2 410.6,90.6 400.0,83.0 389.4,90.6 393.3,78.2 382.9,70.4 395.9,70.3" fill="#C4634F"/>
+  <polygon points="76.0,382.0 80.1,394.3 93.1,394.4 82.7,402.2 86.6,414.6 76.0,407.0 65.4,414.6 69.3,402.2 58.9,394.4 71.9,394.3" fill="#C4634F"/>
+  <polygon points="724.0,382.0 728.1,394.3 741.1,394.4 730.7,402.2 734.6,414.6 724.0,407.0 713.4,414.6 717.3,402.2 706.9,394.4 719.9,394.3" fill="#C4634F"/>
+  <polygon points="400.0,706.0 404.1,718.3 417.1,718.4 406.7,726.2 410.6,738.6 400.0,731.0 389.4,738.6 393.3,726.2 382.9,718.4 395.9,718.3" fill="#C4634F"/>
+</svg>
