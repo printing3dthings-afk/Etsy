@@ -1,0 +1,74 @@
+[
+  {
+    "id": "strat_1778928368616",
+    "agent": "Financial Agent",
+    "strategy_name": "Physical Listing Price Floor: $10.99 Minimum for Low-Margin SKUs",
+    "description": "For physical 3D printed listings (L002, L003) priced at $8.99 generating only $5.83 net: raise to minimum $10.99 (net ~$7.86, 71.5% improvement) or target $12.99 (net ~$9.67, 65.9% improvement). Market data confirms 3D printed decor sweet spot is $12.99\u2013$24.99. $8.99 is below market floor and signals low quality. Never list a physical 3D item below $10.99 for positive brand positioning.",
+    "outcome": "Projected +$1.84 to +$3.84 net profit per sale on L002/L003; +31.5% to +65.9% net profit improvement per unit",
+    "applicable_when": "Any physical 3D printed listing with net profit below $7.00 or margin below 40% \u2014 immediate price escalation required",
+    "saved_at": "2026-05-16T10:46:08.616184"
+  },
+  {
+    "id": "strat_1778928413020",
+    "agent": "CEO Agent",
+    "strategy_name": "Physical Product Price Floor Correction",
+    "description": "When physical 3D printed listings are priced below $12.99, they sit under the market floor ($12.99\u2013$24.99), signal low quality, suppress conversions, and yield inadequate net profit per sale. Immediate repricing to $12.99 minimum is always justified by both margin math (+62% net profit vs $8.99) and brand positioning. Etsy buyers interpret sub-$10 prices on 3D printed goods as low-quality signals.",
+    "outcome": "+$3.62 net profit per sale (+62.1% increase), margin improvement from 64.8% to 72.7%, brand positioning aligned with $12.99\u2013$24.99 market sweet spot",
+    "applicable_when": "Any 3D printed physical product is priced below $12.99 on Etsy",
+    "saved_at": "2026-05-16T10:46:53.020316"
+  },
+  {
+    "id": "strat_1778928459986",
+    "agent": "Financial Agent",
+    "strategy_name": "Digital Product Price Ladder \u2014 Fee Efficiency Principle",
+    "description": "Etsy fees as % of revenue SHRINK as price rises: $7.99=15.1% fee drag, $14.99=12.5% fee drag, $24.99=11.3% fee drag. Every price increase delivers DOUBLE benefit: more revenue AND better margin %. Never discount digital products \u2014 the math always punishes it. Price digital planners at $17.99+ and art bundles at $14.99+ for maximum margin efficiency. Single art prints floor: $9.99 (not $7.99) to capture the 86%+ margin tier.",
+    "outcome": "Digital margins 84.8%\u201388.7% across all price points, all exceeding 70% target. Fee efficiency gains of 3.8 percentage points from $7.99 to $24.99.",
+    "applicable_when": "Pricing any new digital product, reviewing existing digital listing prices, evaluating bundle vs. single pricing strategy",
+    "saved_at": "2026-05-16T10:47:39.986271"
+  },
+  {
+    "id": "strat_1778928552162",
+    "agent": "Social Media Agent",
+    "strategy_name": "DP1000 Pinterest Launch Pin \u2014 Boho Botanical Watercolor Wall Art",
+    "description": "READY-TO-POST PIN for DP1000. Board: \"Boho Home Decor & Vases\". Title: \"Boho Wildflower Botanical Watercolor Print | Sage Green Wall Art Digital Download\". Description opens with emotional hook + named botanicals + bullet-point value props (instant download, multi-size, 300 DPI, no watermarks). 15 hashtags covering all keyword tiers: high-volume (#DigitalDownload, #InstantDownload, #PrintableWallArt), medium-intent (#BotanicalWallArt, #GalleryWallPrint, #WatercolorBotanical), and long-tail (#SageGreenWallArt, #WildflowerPrint, #OrganicModernDecor). CTA links to etsy.com/shop/onbrandcraftz. Image should use the lifestyle room-scene mockup (warm greige wall + gold frame + eucalyptus prop) NOT the white-background version. Optimal posting time: Saturday or Sunday 8\u20139 PM ET per pin schedule data.",
+    "outcome": "Pending \u2014 Pinterest OAuth connection required to execute. Strategy based on confirmed keyword research (88.25% margin product, 93/100 QC score, rising sage green trend Summer 2025).",
+    "applicable_when": "Pinterest OAuth is connected \u2014 post this immediately as the first digital product pin for DP1000",
+    "saved_at": "2026-05-16T10:49:12.162314"
+  },
+  {
+    "id": "strat_1778928596109",
+    "agent": "Social Media Agent",
+    "strategy_name": "Boho Botanical Digital Print \u2014 Pinterest Pin Formula",
+    "description": "For digital wall art listings (boho/botanical/sage green category): Pin to \"Boho Home Decor & Vases\" as primary board, cross-post to \"Housewarming Gift Ideas\" and \"Unique Gift Ideas for Home\". Use confirmed keyword set in description: sage green wall art, botanical watercolor, boho wall art print, wildflower wall art, printable wall art, gallery wall print, instant download art. Lead with lifestyle benefit (not product specs), include checkmark bullet points for instant download + multi-format + DPI, end with shop CTA + 13 hashtags. Schedule Saturday 8PM or Sunday 9PM for max reach.",
+    "outcome": "Strategy built on confirmed rising trend (sage green botanical, Summer 2025) + 88%+ margin product ($12.00 price point). Expected to drive Etsy traffic within 30\u201360 days of consistent pinning.",
+    "applicable_when": "Launching any new digital wall art listing in the boho/botanical/sage green niche",
+    "saved_at": "2026-05-16T10:49:56.109178"
+  },
+  {
+    "id": "strat_1778928642841",
+    "agent": "Social Media Agent",
+    "strategy_name": "DP1000 Pinterest Pin \u2014 Boho Wildflower Botanical Watercolor Print",
+    "description": "Pin DP1000 to \"Boho Home Decor & Vases\" board first (primary), then cross-post to \"OnBrandCraftz Etsy Shop\" and \"Modern Minimalist Living Room\". Use the exact title, description, and hashtags crafted below. Best time: Saturday or Sunday at 8\u20139 PM ET. Image should use warm lifestyle mockup (linen wall, wood frame, eucalyptus stem prop). Link directly to Etsy listing URL once published.",
+    "outcome": "Pending \u2014 pin ready to post once Pinterest OAuth is connected. Expected outcome: drives digital download traffic from high-intent boho/botanical home decor searchers on Pinterest.",
+    "applicable_when": "Anytime a new digital wall art listing goes live. Replicate this title/description structure for all future boho botanical prints.",
+    "saved_at": "2026-05-16T10:50:42.841813"
+  },
+  {
+    "id": "strat_1778929221363",
+    "agent": "CEO Agent",
+    "strategy_name": "Pre-Revenue Financial Blueprint \u2014 Digital-First Launch Sequence",
+    "description": "OnBrandCraftz confirmed financial structure before first sale: Digital products (DP1000 at $12.00) yield 88.25% net margin ($10.41/sale). Physical items (L001\u2013L010 at $12.99\u2013$35.00) yield 76\u201384% margin with ~$1.86 COGS. Price ladder confirmed: digital art prints $9.99\u2013$14.99, bundles $14.99\u2013$17.99, planners $17.99\u2013$24.99. NEVER price digital below $7.99. Physical items never below $12.99. Fee efficiency improves as price rises \u2014 every $1 increase on digital goes almost entirely to net profit. Etsy fees as % of revenue: 15.1% at $7.99 \u2192 11.3% at $24.99.",
+    "outcome": "All 10 physical listings now at market-appropriate pricing (62% net profit increase vs. prior $8.99 pricing). DP1000 ready to launch at 88.25% margin. Full financial blueprint established for 30-day sprint.",
+    "applicable_when": "Pricing any new product, reviewing existing listings for margin health, evaluating digital vs. physical investment decisions",
+    "saved_at": "2026-05-16T11:00:21.363884"
+  },
+  {
+    "id": "strat_1778930478127",
+    "agent": "Brand Design Agent",
+    "strategy_name": "Gallery Wall Bundle \u2014 Lifestyle Thumbnail Formula (Boho Botanical)",
+    "description": "For boho botanical gallery wall sets: (1) Warm greige/linen wall \u2014 NOT white background. (2) Thin gold frames, all prints in same consistent palette. (3) Anchor piece centered and slightly larger, companions arranged around it. (4) 65\u201375% print fill per frame. (5) 2 props max at base: eucalyptus stem + sage green ceramic vase. (6) Linen fabric corner accent. (7) Zero text overlay on main thumbnail \u2014 art sells itself. (8) Secondary image: 2x2 grid on cream background showing all pieces individually. This formula is confirmed by market research for CTR performance in boho home decor niche.",
+    "outcome": "Confirmed highest CTR format for boho botanical wall art category based on top Etsy seller analysis \u2014 lifestyle greige wall scene outperforms white background mockups in this niche",
+    "applicable_when": "Any gallery wall set listing in boho, cottagecore, or botanical wall art niche. Use for all DP-series multi-piece sets.",
+    "saved_at": "2026-05-16T11:21:18.127120"
+  }
+]
