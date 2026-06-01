@@ -2,30 +2,32 @@
 """
 generate_tumbler_mockups.py
 
-Generates realistic 20oz skinny tumbler lifestyle mockup photos for Etsy listings.
-Shows the design on a real-looking tumbler in a lifestyle setting — critical for
-conversion (flat PNG previews as hero images are a confirmed conversion killer).
+Generates magazine-quality 20oz tumbler lifestyle mockups using gpt-image-1's
+image editing endpoint. The actual flat design is passed as input — the model
+renders it physically wrapped on the tumbler with proper cylinder curvature,
+metallic reflections, and natural lighting as a single coherent render.
 
-Workflow:
-  1. Generate empty tumbler on lifestyle background via gpt-image-1
-  2. Crop and perspective-warp the flat design to fit the tumbler face
-  3. Composite the actual design onto the tumbler (showing the REAL product)
-  4. Output: 2400×2400px JPEG at 300 DPI
+This is the correct approach for catalog-level realism. The old PIL composite
+method (perspective warp onto a separately generated background) was discarded
+because it looked AI-generated. The edit approach treats the design as source
+material and produces a photorealistic output.
 
 Usage:
-  python tools/generate_tumbler_mockups.py                     # all designs in samples dir
-  python tools/generate_tumbler_mockups.py football_mom        # specific design(s)
+  python tools/generate_tumbler_mockups.py                   # all 8 designs
+  python tools/generate_tumbler_mockups.py football_mom      # one design
+  python tools/generate_tumbler_mockups.py football_mom dog_mom nurse_life
 """
 
-import re, base64, io, sys, math
+import re, base64, io, sys
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image
 
 OUTPUT_DIR  = Path("data/sublimation_mockups")
 SAMPLES_DIR = Path("data/sublimation_samples")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-MOCKUP_SIZE = 2400  # square output
+MOCKUP_SIZE = 2400   # square JPEG output
+INPUT_MAX_W = 1536   # resize input to this width before sending to API
 
 
 def load_env() -> dict:
@@ -38,265 +40,229 @@ def load_env() -> dict:
     return env
 
 
-# ── Per-design lifestyle scene descriptions ───────────────────────────────────
-# Each prompt describes the EMPTY scene only — no design on the tumbler.
-# The actual design is composited in step 2.
-# The scene description should complement each design's color palette.
+# ── Per-design edit prompts ───────────────────────────────────────────────────
+# Structure:
+#   "design_description" — what's ON the wrap (helps model render accurately)
+#   "scene"              — lifestyle context (surface, props, background, light)
+# Both feed into the final edit prompt template at the bottom of this file.
 
-SCENE_PROMPTS = {
-    "football_mom": (
-        "forest green", "autumn",
-        "Photorealistic lifestyle product photography, square format. "
-        "A plain white 20oz skinny stainless steel tumbler standing upright on a rustic "
-        "dark oak wood surface. Autumn scene: dried pampas grass in a terracotta vase to "
-        "the left, two mini orange pumpkins on the right, a soft plaid blanket corner "
-        "visible at bottom edge. Background: warm cream textured plaster wall. "
-        "Soft window light from the left, warm amber tones. The tumbler occupies the center "
-        "60% of the frame, clearly lit with even illumination showing the full tumbler surface. "
-        "No design on the tumbler — the tumbler surface is plain white. "
-        "No hands, no people, no text, no watermarks."
-    ),
-    "cheer_mom": (
-        "deep purple", "glam",
-        "Photorealistic lifestyle product photography, square format. "
-        "A plain white 20oz skinny stainless steel tumbler standing upright on a smooth "
-        "dark purple velvet surface. Scene: scattered gold confetti pieces, two gold "
-        "star-shaped small decorations, a mini pom-pom in hot pink at the lower right. "
-        "Background: deep charcoal-black with a subtle bokeh glow. "
-        "Studio glamour lighting from above, metallic highlights on the tumbler. "
-        "The tumbler occupies the center 60% of the frame, clearly lit. "
-        "No design on the tumbler — the tumbler surface is plain white. "
-        "No hands, no people, no text, no watermarks."
-    ),
-    "dog_mom": (
-        "terracotta", "boho",
-        "Photorealistic lifestyle product photography, square format. "
-        "A plain white 20oz skinny stainless steel tumbler standing upright on a natural "
-        "linen cloth surface. Scene: a small terracotta ceramic pot with a trailing pothos "
-        "plant to the left, a golden retriever dog collar or paw-print tag charm to the right, "
-        "a dried flower sprig. Background: warm cream textured wall. "
-        "Soft morning window light from the left, warm earthy tones. "
-        "The tumbler occupies the center 60% of the frame, clearly lit. "
-        "No design on the tumbler — the tumbler surface is plain white. "
-        "No hands, no people, no text, no watermarks."
-    ),
-    "nurse_life": (
-        "navy and teal", "professional",
-        "Photorealistic lifestyle product photography, square format. "
-        "A plain white 20oz skinny stainless steel tumbler standing upright on a clean "
-        "white marble surface. Scene: a stethoscope casually coiled to the left, a small "
-        "succulent in a white ceramic pot to the right, a folded teal scrub fabric corner. "
-        "Background: clean white hospital-adjacent wall with subtle texture. "
-        "Bright clean professional light from above and left. "
-        "The tumbler occupies the center 60% of the frame, clearly lit. "
-        "No design on the tumbler — the tumbler surface is plain white. "
-        "No hands, no people, no text, no watermarks."
-    ),
-    "teacher_life": (
-        "golden yellow", "classroom",
-        "Photorealistic lifestyle product photography, square format. "
-        "A plain white 20oz skinny stainless steel tumbler standing upright on a light "
-        "wood teacher's desk surface. Scene: a shiny red apple to the left, two sharpened "
-        "colored pencils (red and yellow) leaning against the tumbler, a small chalkboard "
-        "eraser in the background. Background: warm cream wall. "
-        "Bright cheerful classroom light. "
-        "The tumbler occupies the center 60% of the frame, clearly lit. "
-        "No design on the tumbler — the tumbler surface is plain white. "
-        "No hands, no people, no text, no watermarks."
-    ),
-    "girl_mom": (
-        "deep plum", "romantic",
-        "Photorealistic lifestyle product photography, square format. "
-        "A plain white 20oz skinny stainless steel tumbler standing upright on a soft "
-        "dusty rose fabric surface. Scene: scattered rose petals in blush pink, a small "
-        "butterfly ornament, a gold ribbon tied in a bow at the base. "
-        "Background: deep plum-purple wall with soft texture. "
-        "Romantic soft window light from left, warm rosy tones. "
-        "The tumbler occupies the center 60% of the frame, clearly lit. "
-        "No design on the tumbler — the tumbler surface is plain white. "
-        "No hands, no people, no text, no watermarks."
-    ),
-    "boy_mom": (
-        "midnight navy", "adventure",
-        "Photorealistic lifestyle product photography, square format. "
-        "A plain white 20oz skinny stainless steel tumbler standing upright on a rough "
-        "reclaimed wood surface. Scene: a small toy dinosaur to the right, a few scattered "
-        "stars and arrow-shaped decorative elements, a miniature compass. "
-        "Background: dark navy textured wall. "
-        "Moody cool-toned side lighting, dramatic shadows. "
-        "The tumbler occupies the center 60% of the frame, clearly lit. "
-        "No design on the tumbler — the tumbler surface is plain white. "
-        "No hands, no people, no text, no watermarks."
-    ),
-    "mama_mode": (
-        "burnt sienna", "retro",
-        "Photorealistic lifestyle product photography, square format. "
-        "A plain white 20oz skinny stainless steel tumbler standing upright on a warm "
-        "mustard yellow ceramic tile surface. Scene: a retro-style sunflower to the left, "
-        "two small daisy sprigs, a vintage-looking woven coaster. "
-        "Background: warm sienna-orange textured plaster wall. "
-        "Warm retro golden-hour lighting from the left. "
-        "The tumbler occupies the center 60% of the frame, clearly lit. "
-        "No design on the tumbler — the tumbler surface is plain white. "
-        "No hands, no people, no text, no watermarks."
-    ),
+DESIGNS = {
+
+    "football_mom": {
+        "design_description": (
+            "deep forest green background with tiny scattered gold footballs and autumn maple "
+            "leaves, a large brown leather football with white lace stitching in the center "
+            "surrounded by lush autumn wildflowers in gold, rust orange, and burgundy, "
+            "bold cream varsity-font 'FOOTBALL MOM' lettering above the football, "
+            "'Always Cheering' in flowing gold script below"
+        ),
+        "scene": (
+            "rustic dark oak wood surface, dried pampas grass in a terracotta vase to the left, "
+            "two small orange pumpkins to the right, a folded plaid blanket corner at the bottom, "
+            "warm cream textured plaster wall background, soft warm amber window light from left"
+        ),
+    },
+
+    "cheer_mom": {
+        "design_description": (
+            "deep royal purple background with tiny hot pink megaphones and gold star pattern, "
+            "two large crossed cheerleader pom-poms — one hot pink, one bright gold — with "
+            "metallic sheen, radiating gold starburst behind the pom-poms, "
+            "bold gold metallic 'CHEER MOM' lettering, "
+            "'Louder Than Your Loudest Fan' in hot pink handwritten script below"
+        ),
+        "scene": (
+            "smooth dark purple velvet surface, scattered small gold confetti pieces, "
+            "a mini hot pink pom-pom to the lower right, a small gold star decoration, "
+            "deep charcoal background with subtle bokeh glow, "
+            "glamour studio lighting from above with metallic highlights"
+        ),
+    },
+
+    "dog_mom": {
+        "design_description": (
+            "rich terracotta background with scattered cream paw prints and botanical sprigs, "
+            "a charming kawaii golden retriever face with warm amber eyes and floppy ears "
+            "in the center framed by a lush boho floral wreath of dried pampas, peach roses, "
+            "eucalyptus, and cream daisies, bold cream serif 'DOG MOM' lettering above, "
+            "'Fur Baby Mama' in dusty rose handwritten script below"
+        ),
+        "scene": (
+            "natural linen cloth surface, small terracotta pot with trailing pothos to the left, "
+            "a dried flower sprig and a golden retriever collar tag charm to the right, "
+            "warm cream textured wall background, "
+            "soft morning window light from the left, warm earthy tones"
+        ),
+    },
+
+    "nurse_life": {
+        "design_description": (
+            "deep navy blue background with thin electric teal EKG heartbeat lines and tiny "
+            "cross icons scattered throughout, a large bold electric teal medical cross with "
+            "white inner glow in the center surrounded by roses, lavender, and wildflowers, "
+            "bold white 'NURSE LIFE' lettering with teal glow outline, "
+            "'Saving Lives & Sipping Coffee' in electric teal handwritten script below"
+        ),
+        "scene": (
+            "clean white marble surface, a stethoscope casually coiled to the left, "
+            "a small succulent in a white ceramic pot to the right, "
+            "a folded teal scrub fabric corner at the base, "
+            "clean white professional background, bright even natural light"
+        ),
+    },
+
+    "teacher_life": {
+        "design_description": (
+            "warm golden yellow background with tiny red apples, pencils, and star icons, "
+            "a large shiny red apple with a green leaf and golden highlight in the center, "
+            "open books and colorful pencils radiating outward, ABC block letter accents, "
+            "bold retro blackboard-style 'TEACHER LIFE' lettering in deep charcoal with "
+            "white chalk texture and red drop shadow, "
+            "'Shaping Futures One Kid at a Time' in white chalkboard script below"
+        ),
+        "scene": (
+            "light wood teacher's desk surface, a shiny red apple to the left, "
+            "two sharpened pencils (red and yellow) leaning against the tumbler, "
+            "a small chalkboard eraser in the background, "
+            "warm cream wall, bright cheerful classroom light"
+        ),
+    },
+
+    "girl_mom": {
+        "design_description": (
+            "deep plum berry background with tiny rosebuds and gold sparkle dots, "
+            "a lush abundant bouquet of garden roses, peonies, and wildflowers in blush pink, "
+            "dusty rose, cream, and lavender tied with a flowing gold ribbon in the center, "
+            "small pink butterflies with gold wing edges among the flowers, "
+            "elegant antique gold 'GIRL MOM' serif lettering above, "
+            "'Raising Wildflowers' in graceful blush pink handwritten script below"
+        ),
+        "scene": (
+            "soft dusty rose fabric surface, scattered blush rose petals, "
+            "a small butterfly ornament, a gold ribbon bow at the tumbler base, "
+            "deep plum-purple wall with soft texture, "
+            "romantic soft window light from the left, warm rosy tones"
+        ),
+    },
+
+    "boy_mom": {
+        "design_description": (
+            "midnight navy blue background with tiny lightning bolts, arrows, and mountain "
+            "silhouettes, a large antique brass compass rose or adventure badge emblem "
+            "with electric blue center, pine trees and mountain peaks surrounding it, "
+            "small rocket and dinosaur accent icons, bold orange 'BOY MOM' lettering with "
+            "white stroke, 'Blessed & Exhausted' in electric blue handwritten script below"
+        ),
+        "scene": (
+            "rough reclaimed dark wood surface, a small toy dinosaur to the right, "
+            "scattered decorative star and arrow elements, a miniature compass, "
+            "dark navy textured wall background, "
+            "cool-toned moody side lighting with dramatic shadows"
+        ),
+    },
+
+    "mama_mode": {
+        "design_description": (
+            "warm burnt sienna background with groovy retro wavy lines, tiny sunburst icons, "
+            "and daisy flowers in mustard yellow and cream, a large retro medallion badge "
+            "with scalloped mustard yellow border, a kawaii smiling sunflower with big eyes "
+            "and rosy cheeks inside the badge, flanking monstera leaves and sunflower sprigs, "
+            "groovy rounded serif 'MAMA MODE' lettering in cream with rust shadow, "
+            "'ON & Absolutely Unhinged' in 70s mustard yellow script below"
+        ),
+        "scene": (
+            "warm mustard yellow ceramic tile surface, a retro-style sunflower to the left, "
+            "two small daisy sprigs, a vintage-looking woven coaster, "
+            "warm sienna-orange textured plaster wall background, "
+            "golden-hour warm lighting from the left"
+        ),
+    },
+
 }
 
-DEFAULT_SCENE = (
-    "cream", "lifestyle",
-    "Photorealistic lifestyle product photography, square format. "
-    "A plain white 20oz skinny stainless steel tumbler standing upright on a "
-    "light cream linen-textured desk. Background: warm white textured wall. "
-    "Soft diffused window light from the left, warm white balance. "
-    "The tumbler occupies the center 60% of the frame, clearly lit. "
-    "No design on the tumbler — plain white surface. "
-    "No hands, no people, no text, no watermarks."
-)
+
+# ── Core generation function ──────────────────────────────────────────────────
+
+EDIT_PROMPT_TEMPLATE = """\
+This image is a flat sublimation tumbler wrap design. \
+Render it as a single photorealistic product photograph at professional catalog quality \
+(think Yeti, Stanley, or RTIC product catalog photography).
+
+The wrap design shows: {design_description}
+
+Transform this flat wrap so it is physically wrapped around a 20oz skinny stainless \
+steel tumbler. The tumbler is upright, centered in frame. Requirements:
+— The EXACT design from this image must appear on the tumbler with all colors, \
+text, and illustrated elements preserved accurately
+— Proper cylinder curvature: the design wraps realistically around the round tumbler body
+— Natural metallic highlights and shadows on the stainless steel tumbler lid and base
+— The design has subtle ambient reflections where the curved tumbler catches light
+— The brushed stainless steel lid and base are visible above and below the wrap
+
+Scene: {scene}
+
+Photography direction: soft natural window light from the left, warm white balance, \
+gentle shadow to the right, slight depth of field on background props. \
+Sharp commercial product photography. The tumbler fills the center 65% of the frame. \
+Completely photorealistic — no AI artifact look, no cartoon rendering. \
+No hands, no people, no watermarks, no text outside the design itself.\
+"""
 
 
-# ── Step 1: Generate empty tumbler background ─────────────────────────────────
+def generate_mockup(client, design_id: str, design_path: Path, retries: int = 2) -> Path | None:
+    if design_id not in DESIGNS:
+        print(f"  [{design_id}] No scene config — using generic prompt")
+        design_cfg = {
+            "design_description": "a colorful tumbler wrap design",
+            "scene": "clean cream surface with soft natural props, warm light from the left"
+        }
+    else:
+        design_cfg = DESIGNS[design_id]
 
-def generate_empty_tumbler(client, design_id: str) -> Image.Image:
-    _, _, prompt = SCENE_PROMPTS.get(design_id, DEFAULT_SCENE)
-    print(f"    Generating lifestyle background for {design_id}...")
+    prompt = EDIT_PROMPT_TEMPLATE.format(**design_cfg)
 
-    response = client.images.generate(
-        model="gpt-image-1",
-        prompt=prompt,
-        size="1024x1024",
-        quality="high",
-        n=1,
-        output_format="png",
-    )
-    img_bytes = base64.b64decode(response.data[0].b64_json)
-    return Image.open(io.BytesIO(img_bytes)).convert("RGBA")
-
-
-# ── Step 2: Warp flat design to simulate cylinder face ────────────────────────
-
-def warp_design_to_cylinder(design_img: Image.Image, face_w: int, face_h: int) -> Image.Image:
-    """
-    Approximates the visible front face of a cylinder:
-    - Crops the center 42% of the design (visible arc of ~150° out of 360°)
-    - Applies mild horizontal perspective compression at edges to simulate curvature
-    - Resizes to (face_w, face_h) to fit the tumbler face area
-    """
+    # Resize design for API input
+    design_img = Image.open(design_path).convert("RGB")
     dw, dh = design_img.size
-    crop_start = int(dw * 0.29)
-    crop_end   = int(dw * 0.71)
-    face_crop  = design_img.crop((crop_start, 0, crop_end, dh))
+    scale = min(INPUT_MAX_W / dw, 1024 / dh, 1.0)
+    if scale < 1.0:
+        design_img = design_img.resize((int(dw * scale), int(dh * scale)), Image.LANCZOS)
 
-    # Perspective warp: squish the left and right edges inward slightly
-    # This simulates the way a cylinder curves away at the edges
-    src_w, src_h = face_crop.size
-    compression = 0.12  # 12% edge compression
+    buf = io.BytesIO()
+    design_img.save(buf, "PNG")
+    buf.seek(0)
 
-    # Four-point perspective transform
-    src_pts = [
-        (0, 0), (src_w, 0),
-        (src_w, src_h), (0, src_h)
-    ]
-    offset = int(src_w * compression)
-    dst_pts = [
-        (offset, 0), (src_w - offset, 0),
-        (src_w - offset, src_h), (offset, src_h)
-    ]
+    for attempt in range(1, retries + 2):
+        print(f"  [{design_id}] Generating mockup (attempt {attempt})...")
+        try:
+            response = client.images.edit(
+                model="gpt-image-1",
+                image=("design.png", buf, "image/png"),
+                prompt=prompt,
+                size="1024x1024",
+                quality="high",
+                output_format="png",
+            )
+            buf.seek(0)  # reset for potential retry
 
-    # PIL perspective needs 8 coefficients — compute via least squares
-    coeffs = _find_perspective_coeffs(src_pts, dst_pts)
-    warped = face_crop.transform(
-        (src_w, src_h), Image.PERSPECTIVE, coeffs, Image.BICUBIC
-    )
+            img_bytes = base64.b64decode(response.data[0].b64_json)
+            result = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+            result = result.resize((MOCKUP_SIZE, MOCKUP_SIZE), Image.LANCZOS)
 
-    # Resize to the target face area
-    resized = warped.resize((face_w, face_h), Image.LANCZOS)
-    return resized
+            out_path = OUTPUT_DIR / f"mockup_{design_id}_20oz.jpg"
+            result.save(out_path, "JPEG", quality=95, dpi=(300, 300))
+            kb = out_path.stat().st_size // 1024
+            print(f"    ✓ Saved: {out_path.name} ({kb} KB)")
+            return out_path
 
+        except Exception as e:
+            print(f"    Attempt {attempt} failed: {e}")
+            if attempt >= retries + 1:
+                print(f"    Giving up on {design_id}")
+                return None
+            buf.seek(0)
 
-def _find_perspective_coeffs(src_pts, dst_pts):
-    """Compute 8-coefficient perspective transform matrix (PIL PERSPECTIVE format)."""
-    import numpy as np
-    A, b = [], []
-    for (x, y), (X, Y) in zip(src_pts, dst_pts):
-        A.append([X, Y, 1, 0, 0, 0, -x * X, -x * Y])
-        A.append([0, 0, 0, X, Y, 1, -y * X, -y * Y])
-        b.append(x)
-        b.append(y)
-    A = np.array(A, dtype=float)
-    b = np.array(b, dtype=float)
-    coeffs, *_ = np.linalg.lstsq(A, b, rcond=None)
-    return list(coeffs)
-
-
-# ── Step 3: Composite design onto tumbler ─────────────────────────────────────
-
-def composite_design_on_tumbler(
-    bg_img: Image.Image,
-    design_img: Image.Image,
-    design_id: str,
-) -> Image.Image:
-    """
-    Locates the tumbler face in bg_img and composites the warped design onto it.
-    The tumbler is expected to be centered in the bg_img.
-
-    Strategy: the tumbler face occupies approximately:
-      - horizontal: bg center ± 14% of width  (28% total)
-      - vertical:   12% from top to 88% from top (76% of height)
-    These are approximate and work well for center-framed tumbler photos.
-    """
-    bg = bg_img.convert("RGBA").resize((MOCKUP_SIZE, MOCKUP_SIZE), Image.LANCZOS)
-    bw, bh = bg.size
-
-    # Tumbler face bounding box (approximate — centered composition)
-    face_x1 = int(bw * 0.36)
-    face_x2 = int(bw * 0.64)
-    face_y1 = int(bh * 0.10)
-    face_y2 = int(bh * 0.90)
-    face_w  = face_x2 - face_x1
-    face_h  = face_y2 - face_y1
-
-    # Warp the design to fit the tumbler face
-    flat_design = design_img.convert("RGBA")
-    warped = warp_design_to_cylinder(flat_design, face_w, face_h)
-
-    # Create soft-edge mask to blend edges realistically
-    mask = Image.new("L", (face_w, face_h), 0)
-    draw = ImageDraw.Draw(mask)
-    draw.rounded_rectangle([0, 0, face_w - 1, face_h - 1], radius=face_w // 12, fill=255)
-    # Feather the mask edges
-    mask = mask.filter(ImageFilter.GaussianBlur(radius=6))
-
-    # Composite: paste warped design onto bg using the mask
-    # Use 75% opacity to let the underlying tumbler highlights/shadows show through
-    warped_with_alpha = warped.copy()
-    r, g, b, a = warped_with_alpha.split()
-    a_adjusted = a.point(lambda p: int(p * 0.82))  # slight transparency for realism
-    warped_with_alpha.putalpha(a_adjusted)
-
-    bg.paste(warped_with_alpha, (face_x1, face_y1), mask)
-
-    return bg.convert("RGB")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
-
-def generate_mockup(client, design_id: str, design_path: Path) -> Path | None:
-    print(f"\n  [{design_id}] Building tumbler mockup...")
-
-    try:
-        bg = generate_empty_tumbler(client, design_id)
-    except Exception as e:
-        print(f"    ERROR generating background: {e}")
-        return None
-
-    design_img = Image.open(design_path).convert("RGBA")
-    result = composite_design_on_tumbler(bg, design_img, design_id)
-
-    out_path = OUTPUT_DIR / f"mockup_{design_id}_20oz.jpg"
-    result.save(out_path, "JPEG", quality=92, dpi=(300, 300))
-    kb = out_path.stat().st_size // 1024
-    print(f"    Saved: {out_path.name} ({kb} KB)")
-    return out_path
+    return None
 
 
 def main(ids: list[str] | None = None):
@@ -304,7 +270,6 @@ def main(ids: list[str] | None = None):
     import openai
     client = openai.OpenAI(api_key=env["OPENAI_API_KEY"])
 
-    # Find all design PNGs
     all_designs = {
         p.stem.replace("sublimation_", "").replace("_20oz", ""): p
         for p in SAMPLES_DIR.glob("sublimation_*_20oz.png")
@@ -312,10 +277,10 @@ def main(ids: list[str] | None = None):
 
     targets = {k: v for k, v in all_designs.items() if ids is None or k in ids}
     if not targets:
-        print(f"No designs found. Checked: {SAMPLES_DIR}")
+        print(f"No designs found in {SAMPLES_DIR}")
         return
 
-    print(f"Generating {len(targets)} tumbler mockups → {OUTPUT_DIR.absolute()}\n")
+    print(f"Generating {len(targets)} catalog-quality tumbler mockups\n")
     results = []
     for design_id, design_path in sorted(targets.items()):
         out = generate_mockup(client, design_id, design_path)
@@ -323,7 +288,8 @@ def main(ids: list[str] | None = None):
 
     print("\n─── Summary ───────────────────────────────")
     for design_id, status, path in results:
-        print(f"  {design_id}: {status}")
+        mark = "✓" if status == "OK" else "✗"
+        print(f"  {mark} {design_id}: {status}")
         if path:
             print(f"    → {path}")
 
