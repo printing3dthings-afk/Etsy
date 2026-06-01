@@ -212,61 +212,52 @@ def small_stars_row(cx, cy, n, spacing, size, fill):
 # ─────────────── 20 designs ───────────────
 
 def d01_football_mom():
-    """FOOTBALL MOM — badge layout. Strict zone separation:
-       Top arc (text) | Divider | Graphic (football) | Divider | Bottom text | Bottom arc
-    """
-    body = badge_circle(400, 400, 310, 278, "#2D5A27", sw=3)
+    """FOOTBALL MOM — badge layout. r_outer=330, r_inner=286, gap=44px."""
+    body = badge_circle(400, 400, 330, 286, "#2D5A27", sw=3)
 
-    # ZONE 1 — top arch text (sits in ring between r=278 and r=310, top half)
-    body += arc_text(400, 400, 294, "FOOTBALL MOM", "BebasNeue", 40, "#2D5A27",
-                     start_deg=212, end_deg=328, upward=False)
+    # TOP arch: clockwise from upper-left (212°) through 270° (top) to upper-right (328°)
+    # sweep=1 (upward=True) → path passes through TOP → text reads L→R ✓
+    body += arc_text(400, 400, 308, "FOOTBALL MOM", "BebasNeue", 32, "#2D5A27",
+                     start_deg=212, end_deg=328, upward=True)
 
-    # Thin divider line separating text zone from graphic zone
-    body += hline(195, 200, 600, "#2D5A27", 1.5)
+    body += hline(200, 210, 590, "#2D5A27", 1.5)
 
-    # ZONE 2 — football graphic, centered vertically in upper half of badge interior
-    # Badge interior spans y=90 to y=710 (r=310 from center y=400)
-    # Graphic zone: y=195 to y=460 (upper interior, well below arch text)
-    body += football(400, 330, w=200, h=132)
+    # Football graphic — larger to fill the badge interior
+    body += football(400, 328, w=248, h=163)
 
-    # Thin divider below football
-    body += hline(460, 200, 600, "#2D5A27", 1.5)
+    body += hline(468, 210, 590, "#2D5A27", 1.5)
 
-    # ZONE 3 — bottom text, clearly below football and divider
-    body += small_stars_row(400, 505, 5, 38, 10, "#C9952A")
+    body += small_stars_row(400, 508, 5, 38, 10, "#C9952A")
     body += txt(400, 558, "EST. 2016", "BebasNeue", 34, "#2D5A27", ls=6)
 
-    # ZONE 4 — bottom arch text
-    body += arc_text(400, 400, 294, "ALWAYS CHEERING", "BebasNeue", 33, "#C9952A",
-                     start_deg=32, end_deg=148, upward=True)
+    # BOTTOM arch: counterclockwise from lower-left (148°) through 90° (bottom) to lower-right (32°)
+    # sweep=0 (upward=False) → path passes through BOTTOM → text reads L→R ✓
+    body += arc_text(400, 400, 308, "ALWAYS CHEERING", "BebasNeue", 28, "#C9952A",
+                     start_deg=148, end_deg=32, upward=False)
     return wrap("football_mom", body)
 
 
 def d02_baseball_mama():
-    """BASEBALL MAMA — navy/red badge. Clear 4-zone layout."""
-    body = badge_circle(400, 400, 310, 278, "#1B2A6B", sw=3)
+    """BASEBALL MAMA — navy/red badge. r_outer=330, r_inner=286, gap=44px."""
+    body = badge_circle(400, 400, 330, 286, "#1B2A6B", sw=3)
 
-    # ZONE 1 — top arch text
-    body += arc_text(400, 400, 294, "BASEBALL MAMA", "BebasNeue", 39, "#1B2A6B",
-                     start_deg=215, end_deg=325, upward=False)
+    # TOP arch: clockwise through 270° (top) → text reads L→R ✓
+    body += arc_text(400, 400, 308, "BASEBALL MAMA", "BebasNeue", 32, "#1B2A6B",
+                     start_deg=215, end_deg=325, upward=True)
 
-    # Thin divider below arch text zone
-    body += hline(195, 200, 600, "#1B2A6B", 1.5)
+    body += hline(200, 210, 590, "#1B2A6B", 1.5)
 
-    # ZONE 2 — baseball graphic, upper interior
-    # Baseball centered at y=340, r=75 → top edge y=265, bottom edge y=415
-    body += baseball(400, 340, r=75)
+    # Baseball graphic — larger
+    body += baseball(400, 335, r=88)
 
-    # Divider below graphic zone (below baseball bottom + 50px clearance)
-    body += hline(475, 200, 600, "#CC2200", 2)
+    body += hline(478, 210, 590, "#CC2200", 2)
 
-    # ZONE 3 — bottom text zone, clearly below baseball
-    body += txt(400, 528, "BATTER UP", "BebasNeue", 46, "#1B2A6B", ls=6)
-    body += dot_row(400, 570, 5, 36, 5, "#CC2200")
+    body += txt(400, 528, "BATTER UP", "BebasNeue", 44, "#1B2A6B", ls=6)
+    body += dot_row(400, 568, 5, 36, 5, "#CC2200")
 
-    # ZONE 4 — bottom arch text
-    body += arc_text(400, 400, 294, "DUGOUT CREW SINCE 2019", "BebasNeue", 27, "#CC2200",
-                     start_deg=35, end_deg=145, upward=True)
+    # BOTTOM arch: counterclockwise through 90° (bottom) → text reads L→R ✓
+    body += arc_text(400, 400, 308, "DUGOUT CREW SINCE 2019", "BebasNeue", 24, "#CC2200",
+                     start_deg=145, end_deg=35, upward=False)
     return wrap("baseball_mama", body)
 
 
@@ -291,38 +282,33 @@ def d03_cheer_mom():
 
 
 def d04_soccer_mama():
-    """SOCCER MAMA — teal/lime badge. Clean 4-zone layout."""
-    body = badge_circle(400, 400, 310, 278, "#0A7A5E", sw=3)
+    """SOCCER MAMA — teal/lime badge. r_outer=330, r_inner=286, gap=44px."""
+    body = badge_circle(400, 400, 330, 286, "#0A7A5E", sw=3)
 
-    # ZONE 1 — top arch text
-    body += arc_text(400, 400, 294, "SOCCER MAMA", "BebasNeue", 42, "#0A7A5E",
-                     start_deg=216, end_deg=324, upward=False)
-    body += hline(195, 200, 600, "#0A7A5E", 1.5)
+    # TOP arch: clockwise through 270° (top) → text reads L→R ✓
+    body += arc_text(400, 400, 308, "SOCCER MAMA", "BebasNeue", 34, "#0A7A5E",
+                     start_deg=216, end_deg=324, upward=True)
+    body += hline(200, 210, 590, "#0A7A5E", 1.5)
 
-    # ZONE 2 — soccer ball graphic (classic black/white pentagon pattern)
-    bx, by, br = 400, 335, 82
-    # White base circle
+    # Soccer ball — larger
+    bx, by, br = 400, 330, 90
     body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="white" stroke="#222" stroke-width="2.5"/>'
-    # Center black pentagon (hexagon approx as circle)
-    body += f'<circle cx="{bx}" cy="{by}" r="26" fill="#1A1A1A"/>'
-    # 5 surrounding black patches (pentagons approximated as circles)
+    body += f'<circle cx="{bx}" cy="{by}" r="29" fill="#1A1A1A"/>'
     for i in range(5):
         ang = math.radians(i * 72 - 90)
-        px = bx + 47 * math.cos(ang)
-        py = by + 47 * math.sin(ang)
-        body += f'<circle cx="{px:.1f}" cy="{py:.1f}" r="19" fill="#1A1A1A"/>'
-    # Outer ring seam
+        px = bx + 52 * math.cos(ang)
+        py = by + 52 * math.sin(ang)
+        body += f'<circle cx="{px:.1f}" cy="{py:.1f}" r="21" fill="#1A1A1A"/>'
     body += f'<circle cx="{bx}" cy="{by}" r="{br}" fill="none" stroke="#CCC" stroke-width="1"/>'
 
-    body += hline(460, 200, 600, "#A0D82B", 2)
+    body += hline(470, 210, 590, "#A0D82B", 2)
 
-    # ZONE 3 — bottom text
-    body += txt(400, 518, "GAME DAY READY", "BebasNeue", 36, "#0A7A5E", ls=5)
+    body += txt(400, 520, "GAME DAY READY", "BebasNeue", 36, "#0A7A5E", ls=5)
     body += dot_row(400, 562, 5, 36, 5, "#A0D82B")
 
-    # ZONE 4 — bottom arch text
-    body += arc_text(400, 400, 294, "WIN OR LOSE WE CHEER", "BebasNeue", 28, "#A0D82B",
-                     start_deg=35, end_deg=145, upward=True)
+    # BOTTOM arch: counterclockwise through 90° (bottom) → text reads L→R ✓
+    body += arc_text(400, 400, 308, "WIN OR LOSE WE CHEER", "BebasNeue", 26, "#A0D82B",
+                     start_deg=145, end_deg=35, upward=False)
     return wrap("soccer_mama", body)
 
 
@@ -583,26 +569,25 @@ def d19_chaos_coordinator():
 
 
 def d20_mini_mom_badge():
-    """MINI ME MAMA — badge, clean 4-zone layout."""
-    body = badge_circle(400, 400, 310, 278, "#CC1F6A", sw=3)
+    """MINI ME MAMA — badge, r_outer=330, r_inner=286, gap=44px."""
+    body = badge_circle(400, 400, 330, 286, "#CC1F6A", sw=3)
 
-    # ZONE 1 — top arch
-    body += arc_text(400, 400, 294, "RAISING MY MINI ME", "BebasNeue", 35, "#CC1F6A",
-                     start_deg=215, end_deg=325, upward=False)
-    body += hline(195, 200, 600, "#CC1F6A", 1.5)
+    # TOP arch: clockwise through 270° (top) → text reads L→R ✓
+    body += arc_text(400, 400, 308, "RAISING MY MINI ME", "BebasNeue", 30, "#CC1F6A",
+                     start_deg=215, end_deg=325, upward=True)
+    body += hline(200, 210, 590, "#CC1F6A", 1.5)
 
-    # ZONE 2 — large heart graphic, upper interior
-    body += heart(400, 330, size=140, fill="#CC1F6A")
+    # Large heart graphic
+    body += heart(400, 328, size=152, fill="#CC1F6A")
 
-    body += hline(460, 200, 600, "#CC1F6A", 1.5)
+    body += hline(468, 210, 590, "#CC1F6A", 1.5)
 
-    # ZONE 3 — text below heart
-    body += small_stars_row(400, 502, 5, 38, 9, "#FF6BAD")
-    body += txt(400, 555, "MAMA &amp; MINI", "BebasNeue", 46, "#CC1F6A", ls=6)
+    body += small_stars_row(400, 508, 5, 38, 9, "#FF6BAD")
+    body += txt(400, 558, "MAMA &amp; MINI", "BebasNeue", 44, "#CC1F6A", ls=6)
 
-    # ZONE 4 — bottom arch
-    body += arc_text(400, 400, 294, "TWINNING IS WINNING", "BebasNeue", 30, "#FF6BAD",
-                     start_deg=35, end_deg=145, upward=True)
+    # BOTTOM arch: counterclockwise through 90° (bottom) → text reads L→R ✓
+    body += arc_text(400, 400, 308, "TWINNING IS WINNING", "BebasNeue", 28, "#FF6BAD",
+                     start_deg=145, end_deg=35, upward=False)
     return wrap("mini_mom_badge", body)
 
 
