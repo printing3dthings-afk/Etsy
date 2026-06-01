@@ -252,9 +252,9 @@ class EtsyAPIClient:
         elif len(desc) < 300:
             failures.append("Description too short — expand with what's included, apps, FAQ")
 
-        # Price floor enforcement
-        price_cents = int(price) if isinstance(price, (int, float)) else 0
-        price_usd = price_cents / 100 if price_cents > 100 else price_cents
+        # Price floor enforcement (price may be float dollars or int cents)
+        price_val = float(price) if isinstance(price, (int, float)) else 0.0
+        price_usd = price_val / 100 if price_val > 100 else price_val
         if price_usd and price_usd < 7.99:
             failures.append(f"Price ${price_usd:.2f} is below minimum floor $7.99")
 
