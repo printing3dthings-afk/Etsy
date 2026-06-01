@@ -14,15 +14,29 @@
   <polygon points="720.0,66.0 723.5,76.5 734.0,80.0 723.5,83.5 720.0,94.0 716.5,83.5 706.0,80.0 716.5,76.5" fill="#1B9E8A"/>
   <polygon points="80.0,706.0 83.5,716.5 94.0,720.0 83.5,723.5 80.0,734.0 76.5,723.5 66.0,720.0 76.5,716.5" fill="#F07A1A"/>
   <polygon points="720.0,706.0 723.5,716.5 734.0,720.0 723.5,723.5 720.0,734.0 716.5,723.5 706.0,720.0 716.5,716.5" fill="#1B9E8A"/>
-  <text x="400" y="262" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#F07A1A" letter-spacing="5">WANDER</text>
-  <rect x="280" y="286" width="240" height="4" fill="#F07A1A" rx="2"/>
-  <text x="400" y="376" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#F07A1A">often</text>
-  <circle cx="352.0" cy="408.0" r="5" fill="#1B9E8A"/>
-  <circle cx="376.0" cy="408.0" r="5" fill="#1B9E8A"/>
-  <circle cx="400.0" cy="408.0" r="5" fill="#1B9E8A"/>
-  <circle cx="424.0" cy="408.0" r="5" fill="#1B9E8A"/>
-  <circle cx="448.0" cy="408.0" r="5" fill="#1B9E8A"/>
-  <text x="400" y="494" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#1B9E8A">wonder</text>
-  <rect x="280" y="524" width="240" height="4" fill="#1B9E8A" rx="2"/>
-  <text x="400" y="564" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#1B9E8A" letter-spacing="5">ALWAYS</text>
+  <text x="400" y="200" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#F07A1A" letter-spacing="5">WANDER</text>
+  <circle cx="334.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="356.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="378.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="400.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="422.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="444.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="466.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <text x="400" y="360" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#F07A1A">often</text>
+  <circle cx="334.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="356.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="378.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="400.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="422.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="444.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="466.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <text x="400" y="522" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#1B9E8A">wonder</text>
+  <circle cx="334.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="356.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="378.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="400.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="422.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="444.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="466.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <text x="400" y="636" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#1B9E8A" letter-spacing="5">ALWAYS</text>
 </svg>

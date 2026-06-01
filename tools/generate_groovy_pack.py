@@ -226,13 +226,13 @@ def d12_dream_chaser():
 def d13_wander():
     return wrap("Wander Often Wonder Always", "\n".join([
         corner_stars(14, ["#F07A1A", "#1B9E8A"]),
-        txt(400, 262, "WANDER", "BebasNeue", 80, "#F07A1A", ls=5),
-        hline(400, 288, 240, "#F07A1A", 4),
-        txt(400, 376, "often", "GreatVibes", 88, "#F07A1A"),
-        dot_row(400, 408, 5, 24, 5, "#1B9E8A"),
-        txt(400, 494, "wonder", "GreatVibes", 88, "#1B9E8A"),
-        hline(400, 526, 240, "#1B9E8A", 4),
-        txt(400, 564, "ALWAYS", "BebasNeue", 80, "#1B9E8A", ls=5),
+        txt(400, 200, "WANDER", "BebasNeue", 80, "#F07A1A", ls=5),
+        dot_row(400, 232, 7, 22, 5, "#F07A1A"),
+        txt(400, 360, "often", "GreatVibes", 88, "#F07A1A"),
+        dot_row(400, 402, 7, 22, 5, "#1B9E8A"),
+        txt(400, 522, "wonder", "GreatVibes", 88, "#1B9E8A"),
+        dot_row(400, 564, 7, 22, 5, "#F07A1A"),
+        txt(400, 636, "ALWAYS", "BebasNeue", 80, "#1B9E8A", ls=5),
     ]))
 
 
