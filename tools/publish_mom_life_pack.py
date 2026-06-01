@@ -48,7 +48,14 @@ assert zip_mb < 20, f"ZIP too large: {zip_mb:.1f} MB (Etsy limit 20 MB)"
 print("\n🖼  Building listing photos...")
 
 previews = sorted(f for f in os.listdir(PREV_DIR) if f.endswith(".png"))
-pil_imgs = {f: Image.open(os.path.join(PREV_DIR, f)).convert("RGB") for f in previews}
+def _load_on_white(path):
+    """Composite RGBA image onto white — prevents transparent → black artifacts."""
+    img = Image.open(path).convert("RGBA")
+    bg = Image.new("RGBA", img.size, (255, 255, 255, 255))
+    bg.paste(img, mask=img.split()[3])
+    return bg.convert("RGB")
+
+pil_imgs = {f: _load_on_white(os.path.join(PREV_DIR, f)) for f in previews}
 
 TARGET = 2400  # square px
 
