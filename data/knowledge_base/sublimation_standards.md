@@ -1,223 +1,302 @@
 # Sublimation Design Production Standards
-## OnBrandCraftz — Quality Gate Reference
+## OnBrandCraftz — Quality Gate Reference (Updated from Deep Research, June 2026)
 
-*These standards are enforced programmatically before any sublimation product goes live.
-Violating any HARD REQUIREMENT = design is rejected from the pipeline.*
+*Every rule below is research-validated. HARD REQUIREMENTS halt the pipeline. SOFT REQUIREMENTS
+trigger a warning. No listing goes live until all HARD gates pass.*
 
 ---
 
 ## Technical Specifications (HARD REQUIREMENTS)
 
+### Exact Dimensions by Blank Type
+
+| Blank | Dimensions (inches) | Pixels @ 300 DPI | Print Paper |
+|---|---|---|---|
+| **20oz Skinny Straight** | 9.325" × 8.125" | **2,798 × 2,438 px** | 8.5×11" |
+| **20oz Skinny Thick wall** | 11.2" × 7.725" | 3,360 × 2,318 px | 8.5×14" |
+| **30oz Skinny** | 10.3" × 9.6" | 3,090 × 2,880 px | 11×17" |
+| **30oz Thick wall** | 11.2" × 8.85" | 3,360 × 2,655 px | 11×17" |
+| **40oz Tapered (top band)** | 12.9" × 5.75" | 3,870 × 1,725 px | 8.5×14" |
+| **40oz Tapered (bottom band)** | 10.3" × 3.6" | 3,090 × 1,080 px | — |
+| **11oz Mug** | 8.5" × 3.5" | 2,550 × 1,050 px | 8.5×11" |
+| **15oz Mug** | 9.0" × 4.0" | 2,700 × 1,200 px | 8.5×11" |
+| **12oz Camper Mug** | 11.35" × 4.35" | 3,405 × 1,305 px | 8.5×14" |
+
+**Critical — 40oz tapered tumblers**: The 40oz blank is tapered (wider at top). A flat rectangular
+wrap WILL NOT wrap correctly. Separate top-band and bottom-band template files are required,
+OR a trapezoid-shaped single file. Never sell a 40oz wrap listing without both components.
+This is the #1 cause of 1-star reviews in the sublimation category.
+
 ### File Format
-| Spec | Requirement | Why |
+| Format | Use | Quality Setting |
 |---|---|---|
-| **Format** | PNG for master files; JPEG (quality ≥ 85) for ZIP delivery | PNG = lossless master; JPEG compresses well for delivery |
-| **Color profile** | **sRGB IEC61966-2.1** — never AdobeRGB, never CMYK | Sublimation printers and Sawgrass/Epson drivers expect sRGB. AdobeRGB = muddy, washed-out print |
-| **DPI** | 300 DPI minimum (embedded in file metadata) | Below 300 = pixelated print, guaranteed refund requests |
-| **Bit depth** | 8-bit per channel (24-bit RGB) | 16-bit is ignored by most sublimation RIP software |
-| **Background** | NO transparent/alpha channel in delivery files | Sublimation prints on white blanks — transparency = white = no color transfer |
+| **PNG** | Master files AND delivery — lossless, preserves transparency | N/A |
+| **JPEG** | ZIP delivery alternative (smaller file) — acceptable for full-bleed designs | quality ≥ 90, subsampling=0 (`4:4:4`) |
+| **PDF** | NOT used for sublimation — leave this to planners/wall art | — |
 
-### 20oz Skinny Tumbler (primary product)
-| Dimension | Value |
+**Rule**: Always deliver PNG. JPEG acceptable as secondary/ZIP format only.
+If JPEG: quality 90+ and subsampling=0 to prevent color fringing on edges and fine text.
+
+### Color Profile (HARD REQUIREMENT)
+- **sRGB IEC61966-2.1** — always. Never AdobeRGB, never CMYK
+- Buyers open PNGs in Canva, Photoshop, or Silhouette — these all default to sRGB
+- AdobeRGB files opened in sRGB-default apps appear washed out before the buyer even presses
+- Monitor calibration: design on gamma 2.2, sRGB working space
+- ICC profiles are the printer operator's (buyer's) responsibility, not the file seller's
+
+### DPI (HARD REQUIREMENT)
+- **300 DPI minimum, native** — not upscaled
+- Upscaling a 72 DPI source to 300 DPI creates large files with no added detail — prints soft
+- gpt-image-1 generates at screen resolution; always resize to 300 DPI dimensions using Lanczos
+- Embed DPI metadata in PNG (PIL: `save(..., dpi=(300, 300))`)
+
+### Heat Press Parameters (include in every ZIP README)
+| Setting | Value |
 |---|---|
-| Width | 9.33 inches = **2799 pixels** at 300 DPI |
-| Height | 8.33 inches = **2499 pixels** at 300 DPI |
-| Aspect ratio | ~1.12:1 (slightly wider than tall) |
-| Bleed | Design must fill edge-to-edge — no white borders |
-| Seam | Left edge must match right edge (seamless wrap) |
+| Temperature | 375°F–400°F (191°C–204°C) |
+| Time | 60–120 seconds (add 30–60 sec for double-wall tumblers) |
+| Pre-press | 3–5 seconds to remove blank surface moisture |
+| Pressure | Medium to medium-firm |
+| Print | **Mirror the image before printing** — sublimation prints in reverse |
+| Humidity | Optimal 45–55% RH; above 60% causes blues to go dusty |
 
-### Other Blank Sizes (include in README, resize to order)
-| Blank | Dimensions | Pixels @ 300 DPI |
-|---|---|---|
-| 30oz Tumbler | 9.5" × 9.1" | 2850 × 2730 |
-| 40oz Tumbler | 9.5" × 12.0" | 2850 × 3600 |
-| 11oz Mug | 8.5" × 3.8" | 2550 × 1140 |
-| 15oz Mug | 9.5" × 4.2" | 2850 × 1260 |
-| 20oz Straight Tumbler | 8.5" × 9.3" | 2550 × 2790 |
-| 12oz Can Cooler | 9.3" × 5.75" | 2790 × 1725 |
-
-### ZIP Delivery Requirements
-- **Max ZIP size: 20MB** (Etsy hard limit per file)
-- Always include README.txt with: file list, specifications, how-to-print steps, resize guide, license
-- File naming: `[theme]_[size].jpg` — no spaces, no special characters
-- JPEG quality 85–90 (≥85 preserves print quality; >90 bloats file size unnecessarily)
-- Use subsampling=0 (`4:4:4`) — prevents color fringing on fine text and edges
+**CRITICAL**: Every README must include "MIRROR YOUR IMAGE BEFORE PRINTING" in bold.
+Failure to mirror = the buyer gets a reversed design. This is the #1 beginner mistake.
 
 ---
 
 ## Design Quality Standards (HARD REQUIREMENTS)
 
-### Color Saturation
-- **All backgrounds must be DARK and SATURATED** — light/pastel backgrounds look washed out after sublimation
-- Target minimum background saturation: HSL saturation ≥ 60%
-- Sublimation shifts colors ~15–20% toward lighter/more muted — design for this by over-saturating
-- AVOID: pastels, pale tones, white backgrounds, light grey backgrounds
-- PREFER: deep navy, forest green, burgundy, terracotta, plum, charcoal, black
+### Color Saturation — Sublimation Color Shift Compensation
+Sublimation output is approximately 10–15% less saturated than the digital file on screen.
+**Compensate by over-saturating designs 10–15% beyond "correct."**
 
-### Text Legibility on Curved Surface
-- **Minimum effective font size for 20oz wrap: 140pt at print resolution** (equivalent to ~190px at 300 DPI)
-- Text must have HIGH CONTRAST against background — minimum 4.5:1 contrast ratio
-- Avoid placing critical text within 0.5" of left or right edges (wrap seam area)
-- Avoid placing text at extreme top or bottom edges (rolled under base/lid on press)
-- Curved tumblers compress side edges slightly — keep focal design in CENTER 60% of width
+| Color | Known shift | Design fix |
+|---|---|---|
+| Blacks | Often print brown | Use near-black `#1A1A1A`, never pure `#000000` |
+| Reds | Shift orange at high temp | Shift reds slightly toward magenta |
+| Blues | Appear dusty at high humidity | Increase blue saturation +10–15% |
+| Pastels | Extremely hard to reproduce | **Avoid pastels entirely in designs** |
+| Whites | ARE the blank substrate (ink is transparent when pressed) | White in design = white on tumbler |
 
-### Seamless Edge Rule
-- Left edge pixel column must visually match right edge pixel column (±10% tolerance)
-- Background pattern must tile seamlessly — buyers notice seam lines on finished tumbler
-- Always verify seam by loading design in image editor and duplicating side-by-side
+**Rule**: No pastel or light backgrounds. HSL saturation of background region must be ≥ 60%.
+Pure black (#000000) is banned. Pure white (#FFFFFF) in background is banned.
 
-### Bleed and Safe Zone
-```
-┌─────────────────────────────────┐
-│ 0.25" BLEED (no critical design │
-│ ─────────────────────────────── │
-│                                 │
-│   SAFE ZONE (focal + text)     │
-│   center 8.83" × 7.83"         │
-│                                 │
-│ ─────────────────────────────── │
-│ 0.25" BLEED (no critical design │
-└─────────────────────────────────┘
-```
+### Text Safe Zone (HARD REQUIREMENT)
+- The main readable text must stay within the **center 3 inches** of the wrap width
+- On a 20oz wrap (9.33" wide): safe zone = ~3.17" to 6.17" from the left edge = px 1020–1980
+- Text outside this zone wraps to the back or side of the tumbler and becomes unreadable
+- Minimum text size for readability after sublimation transfer: **24pt equivalent** = ~100px at 300 DPI
 
-### Background Coverage
-- Background must be 100% covered — no white or near-white areas (anything > L*90 in LAB space)
-- Solid dark color OR dense pattern — either is acceptable
-- Gradient backgrounds: must go from dark to dark (never dark to near-white)
+### Seamless Edge Rule (HARD REQUIREMENT)
+- Left edge column must match right edge column visually — pattern must tile
+- The quality gate corner-luminance check runs automatically in `generate_sublimation_wraps.py`
+- The edge seam check runs automatically (avg diff ≤ 80/255 per channel)
+- Any seam visible as a hard line = auto-reject
+
+### Background Coverage (HARD REQUIREMENT)
+- 100% of background must be covered — no plain white or near-white areas
+- Corner luminance check: all 4 corners must have average luminance ≤ 217/255
+
+### Bleed
+- Design must fill edge-to-edge on all 4 sides — no borders, no white margins
+- Top and bottom edges: acceptable to leave a 0.25" clear zone at extreme top/bottom
+  ONLY if the specific blank has a metal rim that would cover it
 
 ---
 
-## Design Style Quality Standards
+## Listing Quality Standards (HARD REQUIREMENTS)
 
-### What Converts on Etsy (research-validated)
-1. **Boho floral wraps** — #1 selling style. Florals with dark background consistently outsell minimal designs 3:1
-2. **Retro/vintage typography** — bold, slightly distressed fonts with drop shadows
-3. **Sports mom + occupation themes** — highest search volume; lowest buyer decision friction
-4. **Kawaii/cute character wraps** — strong differentiation; low competition in sublimation
-5. **Faith/Christian themes** — extremely loyal buyer community, high repeat purchase rate
+### Photos — THE #1 Conversion Factor
+**CRITICAL FINDING: Showing a flat PNG file as Photo 1 is a conversion killer.**
+Every high-revenue sublimation listing uses a realistic tumbler mockup as the hero photo.
 
-### Illustration Quality Requirements
-- Focal element must have DEPTH: shadows, highlights, texture — flat clipart ≠ premium
-- Minimum 3 distinct design layers: background pattern + mid elements + focal design + typography
-- Typography must feel INTENTIONAL — not default system fonts
-- All botanical/floral elements: painterly, loose, natural — never rigid clipart
-- Character illustrations: kawaii proportions (large head, expressive eyes, rosy cheeks)
+**Required photo sequence:**
+1. **[HERO] Tumbler Mockup** — the design composited onto a realistic 20oz tumbler,
+   shown in a lifestyle setting. This is what buyers need to visualize the finished product.
+   Generate using `tools/generate_tumbler_mockups.py`
+2. **[BUNDLE] All designs on tumblers** — small grid of all designs in the bundle on tumblers
+3. **[DETAIL] Flat design close-up** — the flat PNG with design details clearly visible
+4. **[HOW-TO] Print instructions graphic** — temperature, time, mirror print, 3-panel steps
+5. **[SPECS] What's included card** — file count, DPI, dimensions, size compatibility
+6. **[SINGLE 1]** Individual design showcase on tumbler (photo 6–10: one per design in bundle)
 
-### Prompting Quality Gates (gpt-image-1)
-Every sublimation wrap prompt MUST specify:
-1. `"full bleed horizontal composition, seamless left-to-right edges"`
-2. `"vibrant saturated colors, deep [COLOR] background"` — never pastels
-3. `"no white or pale areas in background"` — prevents blank areas on tumbler
-4. The specific color palette with hex values
-5. `"print-ready quality, no watermarks, no studio equipment"`
-6. Art style as the FIRST sentence (sets generation direction before visual details)
-
----
-
-## Listing Quality Gates (HARD REQUIREMENTS)
-
-### Title
-- **Maximum 70 characters** (Etsy 2026 mobile ranking penalty above 70)
-- Must include: "sublimation" + "tumbler wrap" + "PNG" + "instant download" (or close variants)
-- Lead with the most-searched term first
-- Validated formula: `[Theme] Sublimation Tumbler Wrap Bundle PNG [Size] Instant Download`
-
-### Tags (all 13 required)
-Top performing tags for sublimation (validated Q4 2025):
+### Title Formula (Etsy 2026 Algorithm)
+**Noun first** — what the item IS, then descriptors:
 ```
-sublimation tumbler   (19 chars)
-tumbler wrap png      (16 chars)
-sublimation design    (18 chars)
-20oz tumbler wrap     (17 chars)
-sublimation bundle    (18 chars)
-mom life sublimation  (20 chars)
-instant download png  (20 chars)
-tumbler design        (14 chars)
-sublimation wrap      (16 chars)
-png sublimation       (15 chars)
-tumbler sublimation   (19 chars)
-[theme tag, e.g. "dog mom sublimation"]
-[niche tag, e.g. "nurse sublimation"]
+[Size + Product Type + Format] | [Niche/Theme] | [Quantity if bundle] | Instant Download
 ```
-No tag may duplicate a phrase in the title.
+Max 70 characters (mobile ranking penalty above 70).
+Example: `20oz Tumbler Wrap PNG | Mom Life Bundle 8 Designs | Instant Download` (67 chars)
 
-### Price Tiers
+### Tags (all 13 required, HARD)
+| Slot | Tag | Intent |
+|---|---|---|
+| 1 | `sublimation tumbler` | product type |
+| 2 | `tumbler wrap png` | format + product |
+| 3 | `20oz tumbler wrap` | size + product |
+| 4 | `sublimation design` | technique |
+| 5 | `sublimation bundle` | bundle format |
+| 6 | `instant download png` | format + delivery |
+| 7 | `[niche] sublimation` | niche audience |
+| 8 | `[niche] tumbler wrap` | niche + product |
+| 9 | `tumbler design` | alternate search |
+| 10 | `png sublimation` | format |
+| 11 | `skinny tumbler` | size spec |
+| 12 | `[niche] gift` | occasion/gifting |
+| 13 | `[seasonal or niche]` | trend/occasion |
+
+Zero tags may duplicate an exact phrase already in the title.
+
+### Pricing Tiers
 | Bundle Size | Price | Notes |
 |---|---|---|
-| 1–2 designs | $3.99–$4.99 | Loss leader / impulse buy |
-| 4–6 designs | $6.99–$8.99 | Sweet spot for new shops |
-| 8–12 designs | $9.99–$12.99 | **Best revenue per conversion** |
-| 15–20 designs | $14.99–$19.99 | Premium tier after review base established |
-| Mega bundle 30+ | $24.99–$34.99 | Catalog anchor price |
+| 1 design | $3.99–$4.99 | Entry point / search discovery |
+| 5 designs | $9.99–$11.99 | Sweet spot conversion |
+| 8–10 designs | $12.99–$14.99 | **Best revenue per sale** |
+| 15–20 designs | $17.99–$19.99 | For established shops with reviews |
+| 25–50 designs | $22.99–$27.99 | Catalog anchor |
 
-### Photos (10 slots, all required)
-1. Hero collage — ALL designs visible at thumbnail size, dark background, bundle name
-2–9. Individual design showcases — one per design, centered, labeled with spec line
-10. Specs card — what's included, file specs, compatibility icons
+Always use .99 or .97 endings. Net per $14.99 bundle after Etsy fees ≈ $13.32.
+Target for $5K/month net: **376 bundle sales/month = 12 per day average.**
 
 ---
 
-## Production Pipeline (enforced workflow — no skipping steps)
+## Copyright & Trademark (HARD REQUIREMENTS — violations = shop removal)
+
+### Banned Content (zero exceptions)
+- Any NFL, NBA, MLB, NHL team logos, names, or color combinations paired with team names
+- Disney/Marvel/Star Wars characters, silhouettes, character names, or recognizable likenesses
+- Any professional sports team identity (college teams included)
+- Any TV show, movie, or video game IP elements
+- Brand logos, mascots, or trade dress
+
+### The "30% Rule" Is a Legal Myth
+There is no legal standard that says modifying 30% of a design makes it original.
+"Fan art" has no commercial safe harbor. Selling derivative works of copyrighted material
+is infringement regardless of modification percentage.
+
+### Etsy June 2025 Creativity Standards (CRITICAL — enforcement active)
+Etsy updated its Creativity Standards effective June 10, 2025:
+- Items produced using computerized tools must be based on the seller's OWN original design
+- Purchasing commercial-license clipart bundles and re-selling them as sublimation wraps = VIOLATION
+- PLR (Private Label Rights) content re-sold as sublimation wraps = VIOLATION
+- Template-based designs where only colors/fonts were changed = may be flagged
+- AI-generated designs: compliant IF you prompted and meaningfully directed the output
+- Enforcement is automated — listings can be removed without warning
+
+**OnBrandCraftz compliance**: All designs are generated via gpt-image-1 with original prompts
+written by OnBrandCraftz. This meets the "seller created using digital tools" standard.
+Every listing includes the standard AI disclosure statement.
+
+### Safe Sources
+- gpt-image-1 with original prompts (current workflow — compliant)
+- Designs built from scratch in Photoshop/Illustrator/Canva (compliant)
+- Public domain art (pre-1927 publications, Smithsonian Open Access, CC0 license) with
+  meaningful original additions (compliant)
+
+---
+
+## Top Niche Prioritization (Research-Validated, 2026)
+
+### Tier 1 — Build here first (highest loyalty, repeat purchase, least seasonal risk)
+1. **Teacher** — top profession niche on all Etsy analytics platforms. Sub-niches:
+   kindergarten, preschool, school counselor, librarian, art teacher, PE teacher.
+   Peak: back-to-school (Aug–Sep). LaurieBethBoutique: $51,914 total revenue on teacher tumblers.
+2. **Nurse/Healthcare** — confirmed top 2 profession niche. Sub-niches: NICU nurse, ER nurse,
+   L&D nurse, CNA, medical assistant, pediatric nurse. Each sub-niche = separate listing.
+3. **Sports Mom** — football, baseball, soccer, volleyball, cheer, wrestling, swim, basketball,
+   hockey. Breed-specific (per sport) lowers competition dramatically vs. "sports mom generic."
+4. **Dog/Cat Mom** — breed-specific designs 3–5× better than generic "dog mom."
+   Best: golden retriever, labrador, bernedoodle, French bulldog, doodle.
+
+### Tier 2 — Add after Tier 1 catalog is established (20+ listings)
+5. **Faith/Christian** — "under-optimized" relative to demand. Cross, scripture, "Blessed."
+   Year-round with Christmas/Easter peaks.
+6. **Patriotic** — 4th of July, Memorial Day, Veterans Day spikes. Avoid specific military insignia.
+7. **Grandma/Grandpa** — high gifting intent, Mother's/Father's Day peak.
+8. **Fishing/Hunting** — underrepresented in the otherwise female-dominant sublimation market.
+   Father's Day spike.
+
+### Tier 3 — Trend-responsive, add when trending
+9. **BookTok/Dark Romance** — growing Gen Z buyer base. Lower competition in 2025.
+10. **Western/Boho** — cowhide, turquoise, cactus. TikTok-driven.
+11. **Coquette** — bows, ribbons, pearls. Sharp upward trend confirmed by eRank Fall 2025.
+12. **ADHD/Neurodiverse** — "My ADHD Brain Needs Coffee" style. Growing awareness.
+
+---
+
+## Niche Validation Rule
+Before entering any new niche: search Etsy for the specific phrase.
+- < 200 results with some recent sales = blue ocean — enter immediately
+- 500–5,000 results = competitive but viable with strong mockups and SEO
+- 10,000+ results = need hyper-specific angle (breed-specific, sub-occupation, etc.)
+- Example: "nurse tumbler wrap" → saturated. "NICU nurse tumbler wrap png" → low competition.
+
+---
+
+## Production Pipeline (enforced — no skipping steps)
 
 ```
-STEP 1: GENERATE
-  └─ Run generate_sublimation_wraps.py with detailed per-theme prompt
-  └─ Quality gate: verify no white/pale background areas (auto-check LAB lightness)
-  └─ Quality gate: verify dimensions are 2799×2499 at 300 DPI
+STEP 1: DESIGN GENERATION
+  └─ Run generate_sublimation_wraps.py with full detailed prompt
+  └─ QG: corner luminance ≤ 217/255 on all 4 corners
+  └─ QG: edge seam diff ≤ 80/255 per channel
+  └─ QG: image dimensions ≥ 2000px short edge
+  └─ Auto-retry up to 2× on gate failure
 
-STEP 2: REVIEW
-  └─ HUMAN or AGENT reviews all designs for: seamless edges, text legibility,
-     composition quality, color depth
-  └─ Reject threshold: any design scoring below 7/10 on all 4 criteria
-  └─ Regen rejected designs with improved prompt
+STEP 2: MOCKUP GENERATION
+  └─ Run generate_tumbler_mockups.py for every approved design
+  └─ Generate realistic lifestyle tumbler mockup for Photo 1
+  └─ Required BEFORE creating listing — no listing without tumbler mockup
 
-STEP 3: BUILD
-  └─ Convert masters to JPEG quality=88, subsampling=0
-  └─ Build ZIP with README.txt
-  └─ Verify ZIP < 20MB
-  └─ Generate 10 listing photos (collage + individual showcases + specs card)
+STEP 3: ZIP BUILD
+  └─ Convert masters to JPEG quality=90, subsampling=0 (or keep PNG if ZIP < 20MB)
+  └─ Add README.txt with: specs, mirror print warning, resize guide, heat press settings, license
+  └─ QG: ZIP size < 20MB (Etsy hard limit)
 
-STEP 4: PUBLISH
-  └─ Validate title ≤ 70 chars
-  └─ Validate all 13 tags ≤ 20 chars each
-  └─ Validate no tag duplicates title phrase
-  └─ Create listing (draft state)
+STEP 4: LISTING CONTENT
+  └─ QG: title ≤ 70 chars, noun first, includes size + format + niche
+  └─ QG: all 13 tags filled, each ≤ 20 chars
+  └─ QG: zero tags duplicate exact title phrases
+  └─ QG: description first sentence = primary keyword + what's included
+  └─ Price uses .99/.97 ending
+
+STEP 5: PUBLISH
+  └─ Upload tumbler mockup as Photo 1
   └─ Upload all 10 photos
   └─ Upload ZIP file
   └─ Activate listing
+  └─ Log to data/pipeline_state.json
 
-STEP 5: MONITOR (weekly)
-  └─ Check views, favorites, conversions per listing
-  └─ Flag listings with views > 100 but conversion < 1% for photo/price fix
-  └─ Flag listings with 0 views after 30 days for tag/title revision
+STEP 6: MONITOR (weekly)
+  └─ Run business_pipeline.py --mode monitor
+  └─ Flag low-view listings (< 10 views after 30 days) → title/tag fix
+  └─ Flag high-view/no-conversion listings → photo or price fix
 ```
 
 ---
 
-## Commercial Use License — Required Language
+## Quality Scoring Rubric (score before every publish — minimum 7/10 all four)
 
-Every sublimation listing MUST include this license language verbatim:
-
-```
-✅ You MAY sell finished physical products (tumblers, mugs, shirts, can coolers)
-   made with these designs — unlimited production runs
-✅ You MAY use for small business and craft fair production
-❌ You may NOT resell, redistribute, or share the digital PNG/JPEG files
-❌ You may NOT use to create other digital products for resale
-❌ You may NOT claim these designs as your own original artwork
-```
-
-Commercial use license is a key conversion factor — buyers want to know they can sell finished tumblers before they purchase.
-
----
-
-## Quality Scoring Rubric (use before every publish decision)
-
-Score each design 1–10 on each criterion. Minimum 7/10 required on ALL four to publish.
-
-| Criterion | 1–3 (Reject) | 4–6 (Revise) | 7–10 (Accept) |
+| Criterion | 1–3 (Reject) | 4–6 (Revise) | 7–10 (Publish) |
 |---|---|---|---|
-| **Background depth** | White/pale/pastel | Medium saturation, not dark enough | Deep, saturated, full coverage |
-| **Focal design quality** | Clipart-level flat | Decent illustration, limited depth | Rich, layered, professional illustration |
-| **Typography** | Default system font, poor contrast | Decent font, could be bolder | Bold, intentional, high contrast, drop shadow |
-| **Seamless edges** | Obvious seam line | Near-seamless, slight mismatch | Perfect edge-to-edge continuity |
+| **Background depth** | Pastel/pale/white | Medium saturation | Deep, saturated, full coverage |
+| **Focal design quality** | Flat clipart | Decent, limited depth | Rich, layered, professional |
+| **Typography** | Default font, poor contrast | OK font, could be bolder | Bold, intentional, high-contrast with shadow |
+| **Seamless edges** | Visible seam line | Near-seamless | Perfect edge continuity |
+
+---
+
+## Competitive Benchmark — Top Performers (EtsyHunt Data, 2026)
+
+| Shop | Weekly Sales | Strategy |
+|---|---|---|
+| WhatADesignUS | 104 | Patriotic/holiday, trend-chasing |
+| TrendQuestCo | 98 | Retro patriotic bundles, rapid trend response |
+| ZazzyDigitalDesigns | 61 | Sparklecore, glitter, seasonal |
+| ScorpiosArtVN | 38 | **Premium pricing, highest revenue** ($3,474 total) |
+| LaurieBethBoutique | 78 | Physical teacher tumblers ($51,914 total) |
+
+Key pattern: **ScorpiosArtVN generates the most total revenue with the fewest sales** — premium
+bundle pricing with excellent mockups outperforms race-to-the-bottom single-design pricing.

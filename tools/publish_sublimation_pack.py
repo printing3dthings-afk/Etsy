@@ -91,7 +91,7 @@ seamless wrap with rich saturated colors built to look gorgeous after sublimatio
 ✅ Boy Mom — midnight navy with adventure badge & lightning bolts
 ✅ Mama Mode — burnt sienna 70s groovy with kawaii sunflower badge
 
-Each file: PNG, 2799×2499px (9.33×8.33 inches), 300 DPI, sRGB, ready to print.
+Each file: PNG, 2798×2438px (9.325×8.125 inches), 300 DPI, sRGB, ready to print.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📐 SIZING & COMPATIBILITY
@@ -122,7 +122,7 @@ Each file: PNG, 2799×2499px (9.33×8.33 inches), 300 DPI, sRGB, ready to print.
 📄 TECHNICAL DETAILS
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Format: PNG (8 files)
-• Size: 2799 × 2499 px (9.33 × 8.33 inches)
+• Size: 2798 × 2438 px (9.325 × 8.125 inches) — MakerFlo / standard 20oz straight template
 • Resolution: 300 DPI
 • Color profile: sRGB
 • Delivery: Instant digital download via Etsy — ZIP file
@@ -142,8 +142,11 @@ A: Absolutely — commercial use is included. Sell unlimited finished physical p
 Q: What's NOT included?
 A: Physical tumblers, sublimation paper, ink, or heat press equipment. Digital file only.
 
+Q: Do I need to mirror the image before printing?
+A: Yes! Always mirror/flip your image horizontally before printing on sublimation paper. This is true for ALL sublimation designs — the transfer reverses the image during pressing.
+
 Q: I'm new to sublimation — will these work with my setup?
-A: Yes! These files are sized to the standard 20oz skinny template. If you can print and press, these will work.
+A: Yes! These files are sized to the standard 20oz skinny template. If you can print and press, these will work. Remember to mirror-print before pressing.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 © COPYRIGHT

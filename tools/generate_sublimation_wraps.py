@@ -23,8 +23,12 @@ OUTPUT_DIR = Path("data/sublimation_samples")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 SIZES = {
-    "20oz": (2799, 2499),
-    "30oz": (2850, 2730),
+    "20oz":      (2798, 2438),   # 9.325" × 8.125" @ 300 DPI — MakerFlo standard straight
+    "20oz_thick": (3360, 2318),  # 11.2"  × 7.725" @ 300 DPI — thick-wall variant
+    "30oz":      (3090, 2880),   # 10.3"  × 9.6"   @ 300 DPI
+    "30oz_thick": (3360, 2655),  # 11.2"  × 8.85"  @ 300 DPI — thick-wall variant
+    "11oz_mug":  (2550, 1050),   # 8.5"   × 3.5"   @ 300 DPI
+    "15oz_mug":  (2700, 1200),   # 9.0"   × 4.0"   @ 300 DPI
 }
 
 GEN_SIZE = "1536x1024"
