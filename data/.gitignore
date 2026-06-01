@@ -17,6 +17,7 @@ schedule.json
 
 # Generated product files — binary, large, machine-local
 digital_products/
+svg_test/
 
 # Automated backups — local only
 backups/
