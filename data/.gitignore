@@ -19,6 +19,20 @@ schedule.json
 digital_products/
 svg_test/
 
+# SVG bundle outputs — ZIPs, PNGs, SVGs, mockups are machine-local binaries
+# Manifests (manifest.json) ARE committed as state tracking
+svg_bundles/*/PNG/
+svg_bundles/*/SVG/
+svg_bundles/*/mockups/
+svg_bundles/*/listing_photos/
+svg_bundles/*.zip
+svg_bundles/*/*.zip
+
+# Sublimation generated outputs — large binaries
+sublimation_samples/
+sublimation_mockups/
+sublimation_pack/
+
 # Automated backups — local only
 backups/
 
