@@ -312,18 +312,49 @@ def _generate_sublimation_theme(theme_id: str, theme_name: str):
 
 
 def run_weekly():
-    """Full weekly cycle: monitor → generate 2 new designs → quality gate → queue for publish."""
+    """Full weekly cycle: health check → monitor → generate → report → summary."""
     print("=" * 60)
     print(f"OnBrandCraftz Weekly Pipeline — {date.today()}")
     print("=" * 60)
 
-    print("\n[1/3] Performance Monitor")
+    # ── Step 0: Health check — abort if critical issues ──────────────────────
+    print("\n[0/4] Daily Health Check")
+    try:
+        import health_check
+        exit_code = health_check.run(quiet=True)
+        if exit_code != 0:
+            print("  🚨 CRITICAL health issues found — pipeline paused.")
+            print("     Fix the issues above and re-run.")
+            log_event("pipeline_abort", {"reason": "health_check_critical", "date": date.today().isoformat()})
+            return
+        print("  ✓ All systems healthy")
+    except Exception as e:
+        print(f"  ⚠  Health check failed to run: {e} — continuing anyway")
+
+    # ── Step 1: Performance monitor ──────────────────────────────────────────
+    print("\n[1/4] Performance Monitor")
     report = run_monitor()
 
-    print("\n[2/3] Generate New Products (2 per week = 8/month = 96/year)")
+    # ── Step 2: Generate new products ────────────────────────────────────────
+    print("\n[2/4] Generate New Products (2 per week)")
     run_generate(n=2)
 
-    print("\n[3/3] Weekly Summary")
+    # ── Step 3: Weekly business report ───────────────────────────────────────
+    print("\n[3/4] Generating Weekly Business Report")
+    try:
+        import weekly_report
+        weekly_report.run(save_only=True)
+        weekly_report.log_decision(
+            "weekly_pipeline_run",
+            f"Weekly pipeline completed — {date.today().isoformat()}",
+            {"mode": "weekly"},
+        )
+        print("  ✓ Report saved to data/reports/")
+    except Exception as e:
+        print(f"  ⚠  Report generation failed: {e}")
+
+    # ── Step 4: Summary ──────────────────────────────────────────────────────
+    print("\n[4/4] Weekly Summary")
     state = load_state()
     state["last_weekly_run"] = date.today().isoformat()
     save_state(state)
@@ -331,9 +362,8 @@ def run_weekly():
     print(f"  Themes completed: {len(state.get('completed_themes', []))}")
     remaining = len([t for t in PRODUCT_BACKLOG if t[1] not in state.get("completed_themes", [])])
     print(f"  Themes remaining in backlog: {remaining}")
-    weeks_to_backlog_clear = remaining / 2
-    print(f"  Weeks to clear backlog at current pace: {weeks_to_backlog_clear:.0f}")
-    print("\nNext run: next Monday (or run manually: python tools/agents/business_pipeline.py --mode weekly)")
+    print(f"  Weeks to clear backlog at current pace: {remaining // 2}")
+    print("\nNext run: next Sunday 9am (cron) or: python tools/agents/business_pipeline.py --mode weekly")
 
 
 # ── Main ─────────────────────────────────────────────────────────────────────

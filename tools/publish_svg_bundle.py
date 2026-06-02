@@ -35,7 +35,7 @@ BUNDLES_DIR = Path("data/svg_bundles")
 LISTING_CONTENT = {
 
     "western": {
-        "title": "Western SVG Bundle 20 Designs Cricut Silhouette Cut Files Instant Download",
+        "title": "Western SVG Bundle Cricut Cut Files Cowgirl Instant Download",
         "tags": [
             "western svg bundle",   "cricut svg files",      "silhouette cut file",
             "western cut file",     "cowgirl svg",           "country svg bundle",
@@ -121,7 +121,7 @@ A: Yes, up to 100 finished physical items per design. You cannot resell the digi
     },
 
     "floral_wreath": {
-        "title": "Floral Wreath SVG Bundle 20 Designs Cricut Botanical Cut Files Instant Download",
+        "title": "Floral Wreath SVG Bundle Cricut Botanical Cut Files Instant Download",
         "tags": [
             "floral wreath svg",    "botanical svg bundle",  "cricut svg files",
             "silhouette cut file",  "flower wreath svg",     "boho svg bundle",
@@ -207,7 +207,7 @@ A: Yes, up to 100 finished physical items per design. You cannot resell the digi
     },
 
     "mama_scripts": {
-        "title": "Mama SVG Bundle 20 Mom Life Designs Cricut Silhouette Cut Files Instant Download",
+        "title": "Mama SVG Bundle Cricut Mom Life Cut Files Instant Download",
         "tags": [
             "mama svg bundle",      "mom life svg",          "cricut svg files",
             "silhouette cut file",  "mama cut file",         "mom svg bundle",
@@ -290,7 +290,7 @@ A: No — digital download only. ZIP file delivered instantly after purchase.
     },
 
     "retro_groovy": {
-        "title": "Retro Groovy SVG Bundle 20 Vintage 70s Cut Files Cricut Silhouette Instant Download",
+        "title": "Retro Groovy SVG Bundle 70s Vintage Cricut Cut Files Instant Download",
         "tags": [
             "retro svg bundle",     "groovy svg",            "cricut svg files",
             "silhouette cut file",  "vintage svg bundle",    "70s retro svg",
@@ -373,7 +373,7 @@ A: No — digital download only. ZIP file delivered instantly after purchase.
     },
 
     "dark_floral": {
-        "title": "Dark Floral Gothic SVG Bundle 20 Cut Files Cricut Silhouette Instant Download",
+        "title": "Dark Floral SVG Bundle Gothic Cricut Cut Files Instant Download",
         "tags": [
             "dark floral svg",      "gothic svg bundle",     "cricut svg files",
             "silhouette cut file",  "dark rose svg",         "gothic cut file",
