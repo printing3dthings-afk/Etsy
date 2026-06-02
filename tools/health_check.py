@@ -106,8 +106,8 @@ def check_active_listings() -> dict:
                                  params={"limit": 100})
         active = result.get("results", [])
 
-        draft_result = client._request("GET", f"shops/{client.shop_id}/listings/draft",
-                                       params={"limit": 25})
+        draft_result = client._request("GET", f"shops/{client.shop_id}/listings",
+                                       params={"state": "draft", "limit": 25})
         drafts = draft_result.get("results", [])
 
         detail = f"{len(active)} active, {len(drafts)} drafts"

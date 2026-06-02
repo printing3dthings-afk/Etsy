@@ -1,0 +1,246 @@
+[
+  {
+    "product_id": "DP1026",
+    "name": "Ultimate Digital Life Planner (Lavender Dreams)",
+    "etsy_listing_id": "4509179201",
+    "price": 14.99,
+    "category": "digital_planner",
+    "status": "active",
+    "files": [
+      "data/digital_products/product_files/DP1026.pdf",
+      "data/digital_products/product_files/DP1026U.pdf",
+      "data/digital_products/product_files/DP1026_sticker_pack.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1027",
+    "name": "Student & School Planner 2026 (Cotton Candy)",
+    "etsy_listing_id": "4509184958",
+    "price": 9.99,
+    "category": "digital_planner",
+    "status": "active",
+    "files": [
+      "data/digital_products/product_files/DP1027.pdf",
+      "data/digital_products/product_files/DP1027U.pdf",
+      "data/digital_products/product_files/DP1027_sticker_pack.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1028",
+    "name": "Budget & Finance Planner 2026 (Midnight Blue)",
+    "etsy_listing_id": "4509184962",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "active",
+    "files": [
+      "data/digital_products/product_files/DP1028.pdf",
+      "data/digital_products/product_files/DP1028U.pdf",
+      "data/digital_products/product_files/DP1028_sticker_pack.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1029",
+    "name": "Fitness & Wellness Planner 2026 (Coral Peach)",
+    "etsy_listing_id": "4509184968",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "active",
+    "files": [
+      "data/digital_products/product_files/DP1029.pdf",
+      "data/digital_products/product_files/DP1029U.pdf",
+      "data/digital_products/product_files/DP1029_sticker_pack.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1030",
+    "name": "ADHD Digital Planner (Matcha Serenity)",
+    "etsy_listing_id": "",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "pending_generation",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1031",
+    "name": "Undated Life Planner — Evergreen (Sage Garden)",
+    "etsy_listing_id": "",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "pending_generation",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1032",
+    "name": "Dark Mode Planner Bundle (Midnight Kawaii)",
+    "etsy_listing_id": "",
+    "price": 14.99,
+    "category": "digital_planner",
+    "status": "pending_generation",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1033",
+    "name": "Teacher Planner 2026-2027 (Sunflower Studio)",
+    "etsy_listing_id": "",
+    "price": 14.99,
+    "category": "digital_planner",
+    "status": "pending_generation",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "BUNDLE_PLANNERS",
+    "name": "All 4 Planners Bundle",
+    "etsy_listing_id": "4512188970",
+    "price": 39.99,
+    "category": "digital_planner_bundle",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SVG_FLORAL",
+    "name": "Floral Botanical SVG Bundle",
+    "etsy_listing_id": "4514130045",
+    "price": 9.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [
+      "data/svg_pack/FlowerBotanical_Bundle.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SVG_CHRISTIAN",
+    "name": "Christian Faith SVG Bundle",
+    "etsy_listing_id": "4514134583",
+    "price": 9.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [
+      "data/faith_pack/ChristianFaith_SVG_Bundle.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SVG_GRAD",
+    "name": "Graduation 2026 SVG Bundle",
+    "etsy_listing_id": "4514136783",
+    "price": 9.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [
+      "data/grad_pack/Graduation2026_SVG_Bundle.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SVG_MOM_LIFE",
+    "name": "Mom Life SVG Bundle — 20 Designs",
+    "etsy_listing_id": "4514392281",
+    "price": 9.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [
+      "data/mom_life_pack/OnBrandCraftz_MomLife_SVG_Bundle_20_Designs.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SVG_GOOD_VIBES",
+    "name": "Good Vibes SVG Bundle",
+    "etsy_listing_id": "4514536935",
+    "price": 9.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SVG_WESTERN",
+    "name": "Western SVG Bundle — 12 Designs",
+    "etsy_listing_id": "",
+    "price": 9.99,
+    "category": "svg_bundle",
+    "status": "incomplete",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SUBLIM_MOM_LIFE",
+    "name": "Mom Life Tumbler Wrap Sublimation",
+    "etsy_listing_id": "4514777212",
+    "price": 4.99,
+    "category": "sublimation",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_DP1026",
+    "name": "Kawaii Sticker Pack — Lavender Dreams",
+    "etsy_listing_id": "4512254015",
+    "price": 2.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_DP1027",
+    "name": "Kawaii Sticker Pack — Cotton Candy",
+    "etsy_listing_id": "4512254027",
+    "price": 2.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_DP1028",
+    "name": "Kawaii Sticker Pack — Midnight Blue",
+    "etsy_listing_id": "4512255514",
+    "price": 2.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_DP1029",
+    "name": "Kawaii Sticker Pack — Coral Peach",
+    "etsy_listing_id": "4512255536",
+    "price": 2.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_BUNDLE",
+    "name": "Kawaii Sticker Pack Bundle — All 4 Themes",
+    "etsy_listing_id": "4512254035",
+    "price": 7.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_FREE",
+    "name": "Free Kawaii Sticker Pack Sampler",
+    "etsy_listing_id": "4512255508",
+    "price": 0.00,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  }
+]
