@@ -578,6 +578,38 @@ class EtsyAPIClient:
             })
         return orders
 
+    def get_reviews(self, limit: int = 25, min_created: int | None = None) -> dict:
+        """Get shop reviews/feedback. Returns dict with 'results' list and 'count'.
+
+        Each review includes: review_id, listing_id, rating (1-5), review (text),
+        create_timestamp, update_timestamp, seller_feedback (your reply).
+        """
+        self._require_oauth()
+        params: dict = {"limit": min(limit, 100)}
+        if min_created is not None:
+            params["min_created"] = min_created
+        return self._request("GET", f"shops/{self.shop_id}/reviews", params=params)
+
+    def get_shop_listings_all(self, state: str = "active", limit: int = 100) -> list[dict]:
+        """Fetch all listings for the shop (paginates automatically). Returns list of listing dicts."""
+        self._require_oauth()
+        results = []
+        offset = 0
+        while True:
+            resp = self._request(
+                "GET",
+                f"shops/{self.shop_id}/listings",
+                params={"state": state, "limit": min(limit, 100), "offset": offset, "includes": "images"},
+            )
+            batch = resp.get("results", [])
+            results.extend(batch)
+            if len(batch) < min(limit, 100):
+                break
+            offset += len(batch)
+            if offset >= resp.get("count", 0):
+                break
+        return results
+
     def _require_oauth(self) -> None:
         if not self.access_token:
             raise EtsyAPIError(
