@@ -31,48 +31,41 @@ from __future__ import annotations
 # ★ UNIVERSAL — works for every product type (digital planners, stickers, wall art, 3D prints)
 # Paste this into: Etsy → Shop Manager → Settings → Info & Appearance → Message to Buyers
 POST_PURCHASE_MESSAGE = """\
-Hi {buyer_name}! 🌸
+Hi {buyer_name},
 
-Oh my gosh, THANK YOU for your order — it genuinely means the world to me! 💕
+Thank you so much for your order — it genuinely means the world to me!
 
-I'm a small one-person shop and every single purchase helps me keep creating, so \
-thank you for choosing OnBrandCraftz.
+I'm a small one-person shop and every single purchase helps me keep creating, \
+so thank you for choosing OnBrandCraftz.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-📥 FOR DIGITAL DOWNLOADS
+FOR DIGITAL DOWNLOADS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Your files are ready right now!
 1. Go to Etsy.com → Account → Purchases and Reviews
 2. Click "Download Files" next to your order
-3. Save + unzip — your PDF and sticker pack are inside ✨
+3. Save + unzip — your PDF and sticker pack are inside
 
 Opening in GoodNotes 6? Tap + → Import → select your PDF.
 For stickers: Elements → Stickers → + → import the 5 PNG sheets.
 Your stickers live in your library forever and can be dragged onto any page!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-📦 FOR 3D PRINTED ORDERS
+FOR 3D PRINTED ORDERS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
 Your item is being printed now and I'll send tracking as soon as it ships!
-Every piece is printed to order just for you — quality checked before it leaves. 🙏
+Every piece is printed to order just for you — quality checked before it leaves.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-🖼️ FOR WALL ART PRINTS
+NEED ANYTHING?
 ━━━━━━━━━━━━━━━━━━━━━━━━━━
-Download your high-resolution files from Etsy → Purchases and Reviews.
-Print at any local print shop or online (Walgreens, Costco, Canva Print, Printful).
-Tip: choose "fit to page" at your selected print size for perfect results!
+Just reply here and I'll get back to you fast — usually same day!
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-💬 NEED ANYTHING?
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-Just reply here and I'll get back to you fast — usually same day! 🌟
-
-And if you love what you got, a quick review would make my whole week 💕
+And if you love what you got, a quick review would make my whole week.
 Etsy → Purchases and Reviews → Leave a Review (takes 30 seconds!)
 
-Thank you again, {buyer_name} — enjoy every bit of it! ✨
-— Jesse @ OnBrandCraftz
+Thank you again, {buyer_name} — enjoy every bit of it!
+— Scott @ OnBrandCraftz
 """
 
 # ── PRODUCT-SPECIFIC PERSONALIZED MESSAGES ───────────────────────────────────
@@ -96,7 +89,7 @@ If anything feels confusing or something isn't working, just reply here — \
 I'm always happy to help and I check messages every day!
 
 Enjoy your new planner, {first_name}! 🌟
-— Jesse @ OnBrandCraftz
+— Scott @ OnBrandCraftz
 """
 
 PERSONAL_MESSAGE_WALL_ART = """\
@@ -115,7 +108,7 @@ If you ever need a different size or want a custom color version, just message \
 me — I love doing custom work! 🌸
 
 Thank you again, {first_name}! Enjoy it!
-— Jesse @ OnBrandCraftz
+— Scott @ OnBrandCraftz
 """
 
 PERSONAL_MESSAGE_3D_PRINT = """\
@@ -133,7 +126,7 @@ If you have any special requests (color swap, size tweak, etc.) message me \
 NOW before it prints and I'll do my best to accommodate! 🌟
 
 Thanks so much, {first_name}!
-— Jesse @ OnBrandCraftz
+— Scott @ OnBrandCraftz
 """
 
 PERSONAL_MESSAGE_STICKER_PACK = """\
@@ -152,7 +145,7 @@ For Notability: use Photo Stickers → import the PNGs.
 For Acrobat/Xodo: the built-in STICKERS button in the PDF footer works too!
 
 Enjoy them, {first_name}! 💕
-— Jesse @ OnBrandCraftz
+— Scott @ OnBrandCraftz
 """
 
 # Fallback for any product type not matched above
@@ -169,7 +162,7 @@ And if you're happy with your purchase, leaving a review would make my whole \
 week — it really does make a difference for small shops like mine. 🌟
 
 Thanks again, {first_name}!
-— Jesse @ OnBrandCraftz
+— Scott @ OnBrandCraftz
 """
 
 # Etsy auto-sends this to favorited/cart-saved items (set up in Etsy dashboard)
@@ -208,7 +201,7 @@ New products drop regularly — check back anytime 💕
 https://www.etsy.com/shop/onbrandcraftz
 
 Thank you again for supporting OnBrandCraftz! 🙏
-— Jesse
+— Scott
 """
 
 # ── Coupon Codes to Create in Etsy Dashboard ─────────────────────────────────

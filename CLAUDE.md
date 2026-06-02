@@ -13,6 +13,7 @@ Every product, every image, every price, every line of code must serve this miss
 ## Store
 - **Name**: OnBrandCraftz
 - **Etsy Shop ID**: `onbrandcraftz`
+- **Owner**: Scott
 - **Owner email**: Printing3dthings@outlook.com
 - **Niche**: Digital planners, kawaii sticker packs, printable digital products, 3D printed physical products
 - **Brand aesthetic**: Kawaii illustrated, pastel colors, cute/fun but polished
