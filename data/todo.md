@@ -27,7 +27,8 @@
 | 6 | **Test SMTP from your real machine** — `python tools/ads_monitor.py` and check if email arrives at Printing3dthings@outlook.com | 5 min | SMTP fails in this environment (network issue), needs test from your machine |
 | 7 | **Etsy re-auth every 90 days** — next due ~September 1, 2026 — run: `python tools/etsy_oauth.py` | 2 min | Refresh token expires 90 days after last auth |
 | 8 | **Back-to-school keyword update** — by July 4, 2026 — run: `python tools/seasonal_keywords.py --push` | 5 min | Updates keywords on planners + student-adjacent listings for back-to-school season |
-| 9 | **Add shop video** — Etsy Shop Manager → any active planner listing → Add Video → upload a 5–15 sec screen recording of planner in use | 10 min | Video in listing = ranking boost |
+| 9 | **Install dashboard desktop icon** — run `setup_desktop_shortcut.bat` (one time) — creates purple shopping bag icon on Desktop that opens the dashboard with fresh Etsy data on every click | 1 min | Already built, just needs to be run once on your Windows machine |
+| 10 | **Add shop video** — Etsy Shop Manager → any active planner listing → Add Video → upload a 5–15 sec screen recording of planner in use | 10 min | Video in listing = ranking boost |
 | 10 | **Connect Buffer.com for TikTok** (after #4) — go to Buffer.com (free), connect TikTok, schedule posts from `data/tiktok_content_calendar.json` | 10 min | 30 days of TikTok content already pre-written |
 | 11 | **Email list (future)** — create free Mailchimp account → connect to `tools/email_leadmagnet.py` | 20 min | Lead magnet system already built, just needs Mailchimp API key |
 
