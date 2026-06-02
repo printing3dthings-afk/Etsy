@@ -316,6 +316,9 @@ def generate_html(etsy: dict, health: dict, catalog: list, svg_status: list,
     .header .sub {{ color: #a5b4fc; font-size: 12px; margin-top: 2px; }}
     .header .refresh {{ color: #64748b; font-size: 11px; }}
     .status-badge {{ display: inline-flex; align-items: center; background: {overall_color}22; border: 1px solid {overall_color}44; color: {overall_color}; border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600; }}
+    .refresh-btn {{ background: #6366f1; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 8px; display: inline-block; text-decoration: none; }}
+    .refresh-btn:hover {{ background: #4f46e5; }}
+    .stale-banner {{ background: #451a03; border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 16px; color: #fbbf24; font-size: 13px; margin-bottom: 16px; }}
     .container {{ max-width: 1400px; margin: 0 auto; padding: 24px 32px; }}
     .kpi-grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }}
     .kpi-card {{ background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px 20px; }}
@@ -346,10 +349,22 @@ def generate_html(etsy: dict, health: dict, catalog: list, svg_status: list,
   </div>
   <div style="text-align:right">
     <div class="status-badge">{status_dot(overall)}{overall}</div>
-    <div class="refresh" style="margin-top:8px">Last updated: {now}</div>
-    <div class="refresh">Run <code>python tools/generate_dashboard.py</code> to refresh</div>
+    <div class="refresh" style="margin-top:8px" id="updated-time">Last updated: {now}</div>
+    <div class="refresh">Double-click <strong>OnBrandCraftz Dashboard</strong> to refresh</div>
   </div>
 </div>
+
+<script>
+  // Show a banner if dashboard data is older than 26 hours
+  var updated = new Date("{datetime.now().isoformat()}");
+  var hours = (new Date() - updated) / 3600000;
+  if (hours > 26) {{
+    var banner = document.createElement("div");
+    banner.className = "stale-banner";
+    banner.innerHTML = "&#9888; This dashboard was last refreshed " + Math.round(hours) + " hours ago. Double-click <strong>OnBrandCraftz Dashboard</strong> on your computer to get fresh data.";
+    document.querySelector(".container").insertBefore(banner, document.querySelector(".container").firstChild);
+  }}
+</script>
 
 <div class="container">
 
