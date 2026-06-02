@@ -151,5 +151,162 @@
         "detail": "All checked titles within 70-char limit"
       }
     ]
+  },
+  {
+    "timestamp": "2026-06-02T14:57:21.125549Z",
+    "overall": "WARN",
+    "results": [
+      {
+        "name": "Active listings",
+        "status": "WARN",
+        "detail": "Could not check: Etsy API 404: Resource not found"
+      },
+      {
+        "name": "SVG bundle ZIPs",
+        "status": "WARN",
+        "detail": "floral_wreath: only 0/20 designs \u2014 incomplete bundle marked ready; dark_floral: only 0/20 designs \u2014 incomplete bundle marked ready; western: only 12/20 designs \u2014 incomplete bundle marked ready; retro_groovy: only 0/20 designs \u2014 incomplete bundle marked ready; mama_scripts: only 0/20 designs \u2014 incomplete bundle marked ready"
+      },
+      {
+        "name": "Decision log",
+        "status": "WARN",
+        "detail": "No decision log yet \u2014 will be created on first weekly run"
+      },
+      {
+        "name": "Weekly report freshness",
+        "status": "WARN",
+        "detail": "Reports directory missing \u2014 no reports generated yet"
+      },
+      {
+        "name": ".env completeness",
+        "status": "OK",
+        "detail": "All required API keys present"
+      },
+      {
+        "name": "Etsy OAuth token",
+        "status": "OK",
+        "detail": "Token valid \u2014 authenticated API call succeeded"
+      },
+      {
+        "name": "OpenAI API",
+        "status": "OK",
+        "detail": "API reachable and billing active"
+      },
+      {
+        "name": "Sublimation ZIPs",
+        "status": "OK",
+        "detail": "2 ZIP(s) all within 20MB limit"
+      },
+      {
+        "name": "Listing title lengths (\u226470 chars)",
+        "status": "OK",
+        "detail": "All checked titles within 70-char limit"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-06-02T15:03:13.729278Z",
+    "overall": "WARN",
+    "results": [
+      {
+        "name": "Active listings",
+        "status": "WARN",
+        "detail": "93 active, 3 drafts \u2014 drafts: Complete Wall Art Bundle 50 Prints, Prin; Pick Any 3 Prints, Printable Wall Art Bu; Test Digital Art Print | Test Listing Pl",
+        "active_count": 93,
+        "draft_count": 3
+      },
+      {
+        "name": "SVG bundle ZIPs",
+        "status": "WARN",
+        "detail": "western: only 12/20 designs \u2014 incomplete bundle marked ready"
+      },
+      {
+        "name": "Decision log",
+        "status": "WARN",
+        "detail": "No decision log yet \u2014 will be created on first weekly run"
+      },
+      {
+        "name": "Weekly report freshness",
+        "status": "WARN",
+        "detail": "No weekly reports found \u2014 run: python tools/weekly_report.py"
+      },
+      {
+        "name": ".env completeness",
+        "status": "OK",
+        "detail": "All required API keys present"
+      },
+      {
+        "name": "Etsy OAuth token",
+        "status": "OK",
+        "detail": "Token valid \u2014 authenticated API call succeeded"
+      },
+      {
+        "name": "OpenAI API",
+        "status": "OK",
+        "detail": "API reachable and billing active"
+      },
+      {
+        "name": "Sublimation ZIPs",
+        "status": "OK",
+        "detail": "2 ZIP(s) all within 20MB limit"
+      },
+      {
+        "name": "Listing title lengths (\u226470 chars)",
+        "status": "OK",
+        "detail": "All checked titles within 70-char limit"
+      }
+    ]
+  },
+  {
+    "timestamp": "2026-06-02T15:03:27.122304Z",
+    "overall": "WARN",
+    "results": [
+      {
+        "name": "Active listings",
+        "status": "WARN",
+        "detail": "93 active, 3 drafts \u2014 drafts: Complete Wall Art Bundle 50 Prints, Prin; Pick Any 3 Prints, Printable Wall Art Bu; Test Digital Art Print | Test Listing Pl",
+        "active_count": 93,
+        "draft_count": 3
+      },
+      {
+        "name": "Decision log",
+        "status": "WARN",
+        "detail": "No decision log yet \u2014 will be created on first weekly run"
+      },
+      {
+        "name": "Weekly report freshness",
+        "status": "WARN",
+        "detail": "No weekly reports found \u2014 run: python tools/weekly_report.py"
+      },
+      {
+        "name": ".env completeness",
+        "status": "OK",
+        "detail": "All required API keys present"
+      },
+      {
+        "name": "Etsy OAuth token",
+        "status": "OK",
+        "detail": "Token valid \u2014 authenticated API call succeeded"
+      },
+      {
+        "name": "OpenAI API",
+        "status": "OK",
+        "detail": "API reachable and billing active"
+      },
+      {
+        "name": "SVG bundle ZIPs",
+        "status": "OK",
+        "detail": "5 ZIP(s) all within 20MB limit"
+      },
+      {
+        "name": "Sublimation ZIPs",
+        "status": "OK",
+        "detail": "2 ZIP(s) all within 20MB limit"
+      },
+      {
+        "name": "Listing title lengths (\u226470 chars)",
+        "status": "OK",
+        "detail": "All checked titles within 70-char limit"
+      }
+    ]
   }
 ]
