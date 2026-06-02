@@ -2258,19 +2258,108 @@ Set this in Etsy Dashboard → Shop Manager → Messages → Auto-reply.
 - Flags: title quality, shipping cost, missing attributes, photo quality
 - Check weekly — bulk edit directly from the dashboard
 
+### Two-Phase Algorithm System
+Etsy's search operates in two distinct phases:
+1. **Query Matching** — checks titles, tags, categories, attributes, and description keywords. If you don't match the query, you never enter the ranking pool.
+2. **Ranking** — once matched, Etsy ranks results using engagement signals + personalization. This phase is where the real differentiation happens.
+
+**Personalization (2025–2026 structural shift):** Etsy ranks results based on each shopper's individual behavior history — past clicks, favorites, purchases, preferred price ranges. Two shoppers searching the same keyword see different results. You cannot optimize for "the algorithm" — you optimize for the best possible signal from any shopper who lands on your listing.
+
 ### Ongoing Ranking Factors (Priority Order)
 1. Click-through rate from search (most important — hero photo drives this)
 2. Add-to-cart and purchase rates relative to impressions
-3. Keyword relevance (title, tags, attributes, description first paragraph)
-4. Star Seller status — now carries measurable lift across entire catalog
-5. Free shipping
-6. Listing recency (new listing boost: ~14–21 days now, down from 30)
-7. Semantic intent matching (exact keywords less critical than intent)
+3. **Dwell time** (2026 new factor) — how long a shopper stays on your listing after clicking; staying to read the description or watch a video boosts your score
+4. Keyword relevance (title, tags, attributes, description first paragraph — NLP-based, not exact match)
+5. Star Seller status — confirmed algorithmic weight; Star Sellers see more listing views and sales than comparable non-Star Sellers
+6. Free shipping
+7. Listing recency (new listing boost: **a few hours to a few days**, variable by search volume — NOT weeks)
+8. Semantic intent matching (exact keywords less critical than intent; NLP understands synonyms)
+
+**New listing boost — CORRECTED:** Etsy gives new listings a temporary boost so the algorithm can quickly learn how shoppers interact with them. Duration is a few hours to a few days depending on search volume in that category. This is NOT a 14-30 day window. Regularly renewing listings just for the boost is ineffective — focus on improving conversion rate instead.
+
+**Ranking drop causes:**
+- Policy violations reduce shop quality score, which drags ranking of ALL remaining listings
+- Editing a listing can temporarily reduce its search visibility (expect 2–3 weeks to recover)
+- Titles >70 chars (mobile penalty), shipping >$6 (US domestic penalty)
+- Seasonal shifts in buyer demand (looks like a drop but is just category-level traffic change)
+
+**Recovery timeline after fixes:** Most sellers see views recovering within 2–3 weeks after optimizing titles/tags. Compliance violations take weeks to months because the algorithm needs to see consistent positive signals before trusting the shop again.
 
 ### Digital Product Specific
 - Category attributes and description completeness matter MORE than for physical (no fulfillment signal)
 - Fill every attribute field completely
 - For digital product thumbnails: **clean, high-contrast image on neutral background can outperform lifestyle mockup** for CTR — test both
+
+### Star Seller Requirements (Digital Products)
+| Requirement | Threshold | Digital Product Notes |
+|---|---|---|
+| Message response rate | 95%+ within 24 hours | **Main challenge** — autoresponder helps (see `tools/etsy_autoresponder.py`) |
+| On-time shipping | 95%+ | **Auto-pass** — instant digital delivery = 100% on time, always |
+| Average rating | 4.8+ stars | Need 5+ orders in the review window |
+| Minimum orders | 5 orders, $300+ total | Over the past 3 months |
+
+Star Seller status is the path to catalog-wide ranking lift. For OnBrandCraftz, message response rate is the only real challenge — all other criteria are effectively free for digital products.
+
+---
+
+## Etsy Ads Strategy (Research-Backed, 2025–2026)
+
+### ROAS Benchmarks
+| Product Type | Typical ROAS | Breakeven ROAS | Top Performer |
+|---|---|---|---|
+| Digital products | 4.0–8.0x | 1.1–1.5x (near-zero COGS) | 12.0x+ |
+| Physical products | 2.0–4.0x | 1.5–2.0x | 6.0x+ |
+| Etsy-wide average | 2.8x | varies | — |
+
+Digital products have enormous margin advantage — with zero COGS, even a 1.5x ROAS is profitable. Target 4x+ as the threshold to scale.
+
+### Budget & Bidding
+- **Starting budget:** $3–5/day for new shops — sufficient to generate data without burning money
+- **Average CPC:** ~$0.50 per click → $5/day = ~10 clicks/day
+- **Scale rule:** Once a listing hits ROAS > 4x consistently, raise budget by 20–30% per week (never double overnight — confuses the algorithm)
+- **Run time before judging:** Minimum 30 days — Etsy's algorithm needs time to learn your ideal customer
+
+### Which Listings to Advertise
+1. **Only advertise listings with proof of life** — at least a few favorites, saves, or one organic sale before adding ads
+2. **Best candidates:** Listings that already convert well organically (high conversion rate relative to views)
+3. **Never spread ads across the entire catalog** — burns money without learning; pick 3–5 max to start
+4. **Stop promoting** any listing that spends >$30 with zero orders
+5. **Keep running** any listing with ROAS > 2x for 30+ days, then assess
+
+### Kill Thresholds
+- Kill immediately: listing spends $30+ with zero orders (not converting at all)
+- Kill after 30 days: listing ROAS < 1.5x with no upward trend
+- Pause and fix: listing gets clicks but zero purchases (photo or price problem, not ads problem)
+
+---
+
+## Review Generation Strategy (Research-Backed)
+
+### Review Milestones — Impact on Conversion
+| Reviews | Effect |
+|---|---|
+| 0 | Buyers 270% less likely to purchase (Capital One Shopping research) |
+| 5+ | Significant trust signal established — the first critical milestone |
+| 20+ | 47% of consumers hesitate to buy from shops with <20 reviews; this threshold removes that hesitation |
+| 25+ | Reviews stop being a limiting factor on conversion |
+| 50+ | Competitive with established sellers in most digital product niches |
+
+### Legal Constraint — FTC Consumer Reviews Rule (CRITICAL)
+**NEVER offer incentives for reviews.** The FTC Consumer Reviews Rule (effective Oct 2024) prohibits:
+- Discounts or coupons in exchange for a review
+- Free product in exchange for a review
+- Any conditional reward tied to reviewing
+
+Penalty: **up to $53,088 per violation.** The ONLY legal review strategy is:
+1. Deliver an exceptional product (quality does all the heavy lifting)
+2. Send the Etsy post-delivery auto-message asking for a review (set this in Shop Manager)
+3. Include a clean reminder in the post-purchase message — no conditions, just a request
+
+### Legal Review Tactics
+- **Post-purchase message** (already set): Signed Scott, no emoji, professional tone — this is correct
+- **Etsy auto-message after delivery:** Set in Shop Manager → Messages → "Message to buyers" → check "Send after delivery" — one sentence: "Hope you love your planner! A quick review means everything to a small shop — Scott @ OnBrandCraftz"
+- **Reply to all reviews** — responding to reviews (especially negative ones) shows future buyers you care, which has secondary conversion impact
+- **Quality drives reviews:** The #1 review driver is a product that works flawlessly out of the box. Every support message is a review that didn't happen.
 
 ---
 
