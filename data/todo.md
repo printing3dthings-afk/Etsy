@@ -1,138 +1,125 @@
 # OnBrandCraftz — Master TODO List
-*Last updated: 2026-05-28*
+*Last updated: 2026-06-02*
 
 ---
 
-## 🔴 DO RIGHT NOW (You do these — takes 10 minutes)
+## 🔴 YOUR ACTIONS (only you can do these)
 
-- [ ] **Activate bundle listing** — Etsy Shop Manager → Listings → ID 4512188970 → change to Active (photos + files are uploaded and ready)
-- [ ] **Activate 6 sticker pack listings** — same process for all 6 drafts below
-- [ ] **Turn on Etsy Ads** — $5/day on Puffer Koozie (7♥) and Boho Centerpiece (5♥) in Etsy app
-- [ ] **Get first 5 reviews** — ask friends/family to buy the $0.20 free sticker sheet (listing 4512255508) and leave a review
-
----
-
-## 🆕 DRAFT LISTINGS — READY TO ACTIVATE (just flip to active)
-
-| Listing | ID | Price | What's needed |
+| # | Task | Time | Blocks |
 |---|---|---|---|
-| Free Kawaii Sticker Sheet | 4512255508 | $0.20 | Add photos → activate |
-| Lavender Dreams Sticker Pack | 4512255514 | $4.99 | Add photos → activate |
-| Cotton Candy Sticker Pack | 4512254015 | $4.99 | Add photos → activate |
-| Midnight Blue Sticker Pack | 4512255536 | $4.99 | Add photos → activate |
-| Coral Peach Sticker Pack | 4512254027 | $4.99 | Add photos → activate |
-| All 4 Sticker Packs Bundle | 4512254035 | $12.99 | Add photos → activate |
-| All 4 Planners Bundle | 4512188970 | $39.99 | **Photos + files uploaded ✓ — just activate** |
+| 1 | **Top up OpenAI billing** — platform.openai.com → Billing → Add $100, enable auto-recharge | 5 min | Everything below |
+| 2 | **Refresh Etsy token** — `python tools/etsy_oauth.py` (browser pops open, click Allow) | 2 min | Publishing |
+| 3 | **Set up weekly cron job** — `crontab -e` → add line below | 2 min | Automation |
+| 4 | **Post-purchase message** — Etsy Shop Manager → Settings → Message to Buyers → paste from `python tools/etsy_messages.py` | 3 min | Review rate |
+| 5 | **Activate 6 sticker pack listings** — Etsy Shop Manager → Listings → flip each draft to Active | 5 min | Revenue |
+| 6 | **Turn on Etsy Ads** — $5/day on Mom Life Sublimation Bundle (listing 4514777212) | 2 min | Visibility |
+
+Cron line for item 3:
+```
+0 9 * * 0 cd /home/user/Etsy && python tools/agents/business_pipeline.py --mode weekly >> data/pipeline_log.txt 2>&1
+```
 
 ---
 
-## 📸 LISTING PHOTOS NEEDED
-*(Can build with real PDF renders — no OpenAI needed for planner pages)*
+## 🤖 AUTOMATED (runs after billing is topped up — no action needed from you)
 
-- [ ] Generate 10 photos for DP1026 Life Planner (listing 4509179201)
-- [ ] Generate 10 photos for DP1027 Student Planner (listing 4509184958)
-- [ ] Generate 10 photos for DP1028 Budget Planner (listing 4509184962)
-- [ ] Generate 10 photos for DP1029 Fitness Planner (listing 4509184968)
-- [ ] Generate photos for all 6 sticker pack listings
-  - Note: sticker sheet images (real) already exist — just need listing photo composites
+### 1. SVG Bundles — finish western, then all 4 remaining
+```bash
+python tools/generate_svg_designs.py western        # resumes at design 13/20
+python tools/generate_svg_designs.py floral_wreath
+python tools/generate_svg_designs.py mama_scripts
+python tools/generate_svg_designs.py retro_groovy
+python tools/generate_svg_designs.py dark_floral
+python tools/publish_svg_bundle.py --all
+```
+**Status:** western 12/20 done, SVGs traced. 8 designs + all mockups + 4 bundles pending.
+**Cost:** ~$20 OpenAI credits for all 5 complete.
 
----
+### 2. Wall Art Mockups — regenerate all 27 listings to new standard
+```bash
+python tools/generate_wall_art_mockups.py
+```
+**Status:** Tool built (images.edit, real art placed into existing frame in room). NOT run yet.
+Will replace old PIL composite photos on all DP1000–DP1026 listings.
 
-## 🛍️ ETSY SHOP SETUP (manual steps in Etsy)
-
-- [ ] **Post-purchase message** — run `python tools/etsy_messages.py` to get text → paste into Shop Manager → Settings → Info & Appearance → Message to Buyers
-- [x] **Abandoned cart coupon (COMEBACK10)** — 10% off, 24-hour delay ✓
-- [x] **Thank-you coupon (THANKYOU15)** — 15% off, 30-day expiry ✓
-- [ ] **Shop announcement** — add email list signup link + current promotion
-- [ ] **Shop video** — record a 5-15 second screen recording flipping through a planner → upload to any active planner listing
-
----
-
-## 📱 SOCIAL MEDIA SETUP (manual steps needed)
-
-- [ ] **Pinterest** — token expires daily, run `python tools/pinterest_oauth.py` to refresh. 95 pins queued ready to fire.
-- [ ] **TikTok** — add Login Kit + Content Posting API to developer app, configure redirect URI → run `python tools/tiktok_oauth.py` (needs browser)
-- [ ] **TikTok alternative** — sign up for Buffer.com (free), connect @onbrandcraftz, schedule from `data/tiktok_content_calendar.json`
-- [ ] **Instagram** — set up Meta developer app → get INSTAGRAM_ACCESS_TOKEN → `tools/instagram_api.py` is ready
-
----
-
-## 📧 EMAIL LIST (Mailchimp — manual setup)
-
-- [ ] Create free Mailchimp account → create audience "OnBrandCraftz VIP List"
-- [ ] Create signup form → add URL to `.env` as `MAILCHIMP_SIGNUP_URL`
-- [ ] Upload one sticker sheet to Google Drive (public) → add link to `.env` as `LEAD_MAGNET_URL`
-- [ ] Set up Welcome automation email (`python tools/email_leadmagnet.py --templates`)
-- [ ] Add signup link to TikTok/Pinterest/Instagram bios + Etsy shop announcement
-- [ ] Create coupon VIP10 in Etsy (10% off, permanent, for email subscribers)
+### 3. Sublimation — Teacher Life + Nurse Life bundles
+Add design configs to `generate_sublimation_wraps.py`, then:
+```bash
+python tools/generate_sublimation_wraps.py teacher_life nurse_life
+python tools/generate_tumbler_mockups.py teacher_life nurse_life
+python tools/publish_sublimation_pack.py --bundle teacher_life
+python tools/publish_sublimation_pack.py --bundle nurse_life
+```
+**Status:** Mom Life bundle live. Teacher + Nurse design configs not yet written.
 
 ---
 
-## 🆕 NEW PRODUCTS TO BUILD
+## 📋 BACKLOG (future automated runs)
 
-| Product | ID | Theme | Priority | Reason |
+### More sublimation niches
+- Faith/Christian — cross, scripture, floral
+- Sports Mom — baseball, soccer, basketball
+- Seasonal — Christmas, Valentine's (evergreen text only, no dates)
+
+### More SVG bundles (after first 5 complete)
+- Faith & Inspirational
+- Nurse / Healthcare
+- Teacher Life
+- Sports Mom
+
+### New digital planners
+| ID | Product | Theme | Priority | Reason |
 |---|---|---|---|---|
-| ADHD Planner | DP1030 | Matcha Serenity | 🔴 High | Fastest growing niche on Etsy, low competition |
-| Teacher Planner | DP1033 | Sunflower Studio | 🔴 High | August back-to-school peak — build NOW |
-| Undated Life Planner | DP1031 | Sage Garden | 🟡 Medium | Sells year-round, no 2026 expiry |
-| Dark Mode Bundle | DP1032 | Midnight Kawaii | 🟡 Medium | Trending dark aesthetic |
+| DP1030 | ADHD Planner | Matcha Serenity | 🔴 High | Fastest growing niche, low competition |
+| DP1033 | Teacher Planner 2026–2027 | Sunflower Studio | 🔴 High | Back-to-school peak — build before August |
+| DP1031 | Undated Life Planner | Sage Garden | 🟡 Medium | Sells year-round |
+| DP1032 | Dark Mode Bundle | Midnight Kawaii | 🟡 Medium | Trending aesthetic |
+
+### Planner improvements
+- Add 5 cover options to each planner (competitors have 100+)
+- Add daily pages to DP1026 and DP1027 (most requested feature)
+- Add multiple weekly layout options
 
 ---
 
-## 🎨 PRODUCT IMPROVEMENTS
+## 🛍️ MANUAL ETSY / SOCIAL (your tasks, low urgency)
 
-- [ ] Add 5 cover options to each planner (currently 1 each) — competitors have 100+
-- [ ] Add daily pages to DP1026 and DP1027 (top requested feature)
-
----
-
-## 💰 ADS STRATEGY
-
-- [ ] Turn on Etsy Ads at $5/day for Puffer Koozie (7♥)
-- [ ] Turn on Etsy Ads at $5/day for Boho Centerpiece (5♥)
-- [ ] Once planners reach 5+ reviews → turn on Etsy Ads for each planner at $5/day
-- [ ] After 30 days of ad data → increase budget on best performers only
-
----
-
-## 🔧 TECHNICAL / CLEANUP
-
-- [ ] **Activate art posting cron job** — run `crontab -e` and add this line to post new art every other day at 10am:
-  `0 10 */2 * * cd /home/user/Etsy && python3 tools/post_scheduled_art.py >> logs/art_schedule.log 2>&1`
-  Run `python tools/post_scheduled_art.py --preview` first to verify image quality before activating.
-- [ ] Delete planner backup files: `data/digital_products/product_files/*.orig_backup` (86.3 MB) — after verifying planners work in GoodNotes
-- [ ] **Deploy Command Center to Railway** (cloud access from iPhone, no computer needed):
-  1. Go to **railway.app** → sign up with GitHub
-  2. New Project → Deploy from GitHub repo → select `printing3dthings-afk/Etsy` → branch `claude/etsy-automation-agents-WFAPU`
-  3. Variables tab → add: `CENTER_PASSWORD` (pick a password), `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `ETSY_CLIENT_ID` (`v874xp0m0r4yoh72btmux151`), `ETSY_CLIENT_SECRET` (`hjyq1cmrog`), `ETSY_ACCESS_TOKEN`, `ETSY_REFRESH_TOKEN`
-  4. Settings → Domains → Generate Domain → open the URL on your iPhone
-  5. Free tier: ~500 hrs/month. Hobby plan $5/mo for unlimited uptime.
+- [ ] **Shop announcement** — add current promotion + social links in Etsy Shop Manager
+- [ ] **Shop video** — 5–15 sec screen recording of planner in use → upload to any active planner listing
+- [ ] **Pinterest** — token expires daily: `python tools/pinterest_oauth.py` to refresh (95 pins queued)
+- [ ] **TikTok** — use Buffer.com (free) to schedule posts from `data/tiktok_content_calendar.json`
+- [ ] **Email list** — create free Mailchimp account, set up welcome automation (`tools/email_leadmagnet.py` is ready)
 
 ---
 
 ## ✅ COMPLETED
 
-- [x] 4 digital planner listings live on Etsy (DP1026, DP1027, DP1028, DP1029)
-- [x] All 4 planners have: Welcome page, Dashboard, Index, undated version, hyperlinked tabs, HOME footer
-- [x] Tag fixes applied to all 4 planners + 4 wall art listings
-- [x] Bundle listing created, photos uploaded, digital files uploaded (ID: 4512188970) — just needs activating
-- [x] 6 sticker pack listings created as drafts with digital files uploaded
-- [x] **Sticker packs expanded to 200+ stickers** — each planner now has 11 unique illustrated sheets
-- [x] All listing descriptions accurate — no false sticker count claims
-- [x] Sticker pack ZIPs rebuilt with correct per-planner sheet names
-- [x] Standalone sticker pack listings updated with new 11-sheet ZIPs (200+ stickers each)
-- [x] All 4 Planners Bundle description updated to 800+ stickers
+### Pipeline & infrastructure
+- [x] Sublimation full pipeline — design gen, tumbler mockups via images.edit, ZIP, Etsy publisher
+- [x] Wall art mockup generator — images.edit approach built, 27 products configured (`tools/generate_wall_art_mockups.py`)
+- [x] SVG bundle generator — 5 bundles × 20 designs, vtracer SVG tracing, 3-product mockups, publisher
+- [x] Business pipeline — monitor, weekly run, quality gates (`tools/agents/business_pipeline.py`)
+- [x] Sublimation standards knowledge base — committed and tracked in git
+- [x] Git hygiene — large binary outputs gitignored, state manifests tracked
+
+### Live Etsy listings
+- [x] 4 digital planners live (DP1026–DP1029) with 10 real-product photos each
+- [x] All 4 Planners Bundle live (ID: 4512188970, $39.99)
+- [x] Mom Life Sublimation Tumbler Bundle live (ID: 4514777212, $9.99, 8 designs)
+- [x] 20+ wall art listings live (photos to be upgraded by wall art mockup runner)
+- [x] 6 sticker pack draft listings — files uploaded, need activating
+
+### Quality standards locked in
+- [x] No dates / no "est." / no specific years in any design — universal buyer appeal
+- [x] All listing photos use real art file via images.edit — no fictional AI renders
+- [x] Title ≤70 chars enforced (mobile ranking rule)
+- [x] 13 tags, ≤20 chars, no tag duplicates title phrases
+- [x] ZIP files under Etsy 20MB limit
+
+### Marketing
+- [x] Abandoned cart coupon COMEBACK10 (10% off, 24-hour delay)
+- [x] Thank-you coupon THANKYOU15 (15% off, 30-day expiry)
 - [x] Post-purchase message templates written (`tools/etsy_messages.py`)
-- [x] Coupon strategy documented (COMEBACK10, THANKYOU15, BUNDLE20)
-- [x] Pinterest boards + pin descriptions set up (95 pins queued)
-- [x] TikTok 30-day content calendar built (`data/tiktok_content_calendar.json`)
+- [x] Pinterest 95 pins queued
+- [x] TikTok 30-day content calendar built
 - [x] Email lead magnet system built (`tools/email_leadmagnet.py`)
-- [x] TikTok OAuth + poster scripts built (`tools/tiktok_oauth.py`, `tools/tiktok_poster.py`)
-- [x] Analytics dashboard with action items (`python tools/analytics_tracker.py`)
-- [x] TikTok developer app created (Client Key + Secret saved to .env)
-- [x] All listing photos now use real product renders (no AI-generated fictional planner content)
-- [x] All 4 planner listings have 10 real-product photos uploaded (rendered from actual PDFs)
-- [x] All 6 sticker pack listings have photos uploaded (real sticker sheet images)
-- [x] All 4 Planners Bundle listing activated (live on Etsy, ID: 4512188970)
-- [x] Abandoned cart coupon COMEBACK10 created (10% off, 24-hour delay)
-- [x] Thank-you coupon THANKYOU15 created (15% off, 30-day expiry)
