@@ -207,10 +207,16 @@ class EtsyAPIClient:
     def create_listing(self, listing_data: dict) -> dict:
         """Create a new listing. Requires OAuth access token.
 
-        Automatically enforces required Etsy fields and injects AI disclosure
+        Automatically runs pre_publish_gate before any API call — raises EtsyAPIError(400)
+        if any quality check fails. This cannot be bypassed.
+        Also enforces required Etsy fields and injects AI disclosure
         (mandatory since June 10, 2025 for AI-assisted listings).
         """
         self._require_oauth()
+        failures = EtsyAPIClient.pre_publish_gate(listing_data)
+        if failures:
+            msg = "Quality gate FAILED — listing not published:\n" + "\n".join(f"  ✗ {f}" for f in failures)
+            raise EtsyAPIError(400, msg)
         data = dict(listing_data)
         # Required production fields — missing these causes Etsy moderation flags
         data.setdefault("who_made", "i_did")
@@ -232,54 +238,74 @@ class EtsyAPIClient:
     def pre_publish_gate(listing_data: dict) -> list[str]:
         """Run quality gate checks before publishing. Returns list of failure reasons (empty = pass).
 
-        Call this before create_listing() and abort if any failures are returned.
-        Enforces OnBrandCraftz quality standards per business_standards.md.
+        Automatically called by create_listing() — any failures raise EtsyAPIError(400).
+        Enforces OnBrandCraftz 2026 algorithm standards from CLAUDE.md.
         """
+        import re as _re
         failures = []
         title = listing_data.get("title", "")
-        desc = listing_data.get("description", "")
-        tags = listing_data.get("tags", [])
+        desc  = listing_data.get("description", "")
+        tags  = listing_data.get("tags", [])
         price = listing_data.get("price", 0)
 
-        # Title checks
+        # ── Title ──────────────────────────────────────────────────────────────
         if not title:
-            failures.append("Missing title")
+            failures.append("TITLE: missing")
         elif len(title) > 70:
             failures.append(
-                f"Title too long: {len(title)}/70 chars — "
-                f"Etsy 2026 algorithm penalizes titles >70 chars on mobile (70%+ of traffic)"
+                f"TITLE: {len(title)}/70 chars — Etsy 2026 algorithm penalizes titles >70 chars "
+                f"on mobile (70%+ of traffic). Shorten to ≤70."
             )
-        elif len(title) < 40:
-            failures.append("Title too short — lead keyword must be at least 40 chars")
-
-        # Keyword checks in title
+        if title and len(title) < 30:
+            failures.append("TITLE: under 30 chars — too few keywords, Etsy won't rank this")
         if title and "instant download" not in title.lower():
-            failures.append("Title missing 'Instant Download'")
+            failures.append("TITLE: missing 'Instant Download' — required phrase for digital products")
 
-        # Tags
+        # ── Tags ───────────────────────────────────────────────────────────────
         if len(tags) < 13:
-            failures.append(f"Only {len(tags)}/13 tags — fill all 13 slots")
+            failures.append(f"TAGS: only {len(tags)}/13 — every empty slot is a missed ranking opportunity")
+        elif len(tags) > 13:
+            failures.append(f"TAGS: {len(tags)} tags provided — Etsy accepts exactly 13, remove extras")
+
+        _SPECIAL = _re.compile(r"[,;!?@#$%^&*()\[\]{}'\"<>/\\|=+]")
+        title_lower = title.lower()
         for tag in tags:
+            tag = tag.strip()
             if len(tag) > 20:
-                failures.append(f"Tag too long (>{len(tag)} chars): '{tag}'")
+                failures.append(f"TAGS: '{tag}' is {len(tag)} chars (max 20)")
+            if _SPECIAL.search(tag):
+                failures.append(f"TAGS: '{tag}' contains special characters — Etsy rejects these")
+            # Tag must not duplicate a phrase already in the title (wastes a ranking slot)
+            if len(tag.split()) >= 2 and tag.lower() in title_lower:
+                failures.append(
+                    f"TAGS: '{tag}' duplicates a title phrase — wasted slot. "
+                    f"Use a phrase NOT in your title to cover more search queries."
+                )
 
-        # Description
+        # ── Description ────────────────────────────────────────────────────────
         if not desc:
-            failures.append("Missing description")
+            failures.append("DESC: missing description")
         elif len(desc) < 300:
-            failures.append("Description too short — expand with what's included, apps, FAQ")
+            failures.append(f"DESC: {len(desc)} chars — too short (minimum 300). Add what's included, apps, FAQ.")
 
-        # Price floor enforcement (price may be float dollars or int cents)
+        # ── Price ──────────────────────────────────────────────────────────────
         price_val = float(price) if isinstance(price, (int, float)) else 0.0
         price_usd = price_val / 100 if price_val > 100 else price_val
-        if price_usd and price_usd < 7.99:
-            failures.append(f"Price ${price_usd:.2f} is below minimum floor $7.99")
+        if price_usd and price_usd < 4.99:
+            failures.append(f"PRICE: ${price_usd:.2f} is below the $4.99 floor")
+        if price_usd > 0:
+            cents = round((price_usd * 100) % 100)
+            if cents not in (99, 97, 49):
+                failures.append(
+                    f"PRICE: ${price_usd:.2f} doesn't end in .99/.97/.49 — "
+                    f"psychological pricing endings meaningfully improve conversion rate"
+                )
 
-        # Required Etsy production fields
+        # ── Required Etsy production fields ────────────────────────────────────
         if listing_data.get("who_made", "i_did") not in ("i_did", "collective", "someone_else"):
-            failures.append("Invalid who_made value")
+            failures.append("FIELD: invalid who_made value")
         if listing_data.get("is_supply") is True:
-            failures.append("is_supply should be False for finished products")
+            failures.append("FIELD: is_supply must be False for finished products")
 
         return failures
 

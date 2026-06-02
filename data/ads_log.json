@@ -1,0 +1,13 @@
+[
+  {
+    "date": "2026-06-02",
+    "days_running": 1,
+    "daily_budget": 1.3,
+    "total_spend": 1.3,
+    "order_count": 0,
+    "total_revenue": 0,
+    "roas": 0.0,
+    "avg_order": 0.0,
+    "recommendation": "MONITOR \u2014 Only 1 days in, need 30 days of data before kill decision."
+  }
+]
