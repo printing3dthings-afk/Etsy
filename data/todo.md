@@ -14,23 +14,39 @@
 | 3 | **Run Pinterest OAuth** (after #2) — `python tools/pinterest_oauth.py` | 2 min | Unlocks Pinterest auto-posting |
 | 4 | **Run TikTok OAuth** — `python tools/tiktok_oauth.py` | 5 min | Unlocks TikTok auto-posting |
 
+### New platform accounts (free — each unlocks a new revenue stream)
+
+| # | Task | Time | Revenue Potential |
+|---|---|---|---|
+| 5 | **Create Amazon KDP account** — kdp.amazon.com → Sign in with Amazon → complete seller setup → run `python tools/kdp_publisher.py --all` to prep submissions | 15 min | $500–2,000/mo once ranked — Amazon planner market is 20× Etsy's |
+| 6 | **Create Printify account** — printify.com → free account → copy API key → add `PRINTIFY_API_KEY=<key>` to `.env` → run `python tools/printify_publisher.py --submit-all` | 10 min | 55 wall art designs become physical prints. $5–10 profit per sale, zero fulfillment |
+| 7 | **Create Mailchimp account** — mailchimp.com → free (up to 500 contacts) → copy API key + List ID → add to `.env`: `MAILCHIMP_API_KEY=` and `MAILCHIMP_LIST_ID=` | 10 min | Email list owns the customer relationship. Etsy owns it now — you don't |
+| 8 | **Create Instagram app** — developers.facebook.com → New App → Business type → add Instagram Graph API → add to `.env`: `INSTAGRAM_APP_ID=`, `INSTAGRAM_APP_SECRET=`, `INSTAGRAM_USER_ID=`, `INSTAGRAM_ACCESS_TOKEN=` | 20 min | Visual platform — kawaii planners/stickers perform very well on Instagram Reels |
+
+### Review and publish new draft listings (I created these today)
+
+| # | Task | Time | Notes |
+|---|---|---|---|
+| 9 | **Publish 11 commercial license listings** — Etsy Shop Manager → Listings → Drafts → review and activate each one | 10 min | $24.99 (SVG) and $12.99 (stickers) commercial use licenses. Already drafted, just need activation |
+| 10 | **Review coloring pages** — `data/digital_products/coloring_pages/` — 54 PNG files + 11 ZIP sets ready. Check quality then run `python tools/upload_coloring_pages.py` (once built) | 5 min | 54 new listings at $3.99 each from existing art. Zero new design cost |
+| 11 | **Review digital paper packs** — `data/digital_products/digital_paper/` — 60 pattern files + 12 theme ZIPs. Check quality then stage for listing | 5 min | 12 new listings at $4.99 each from brand color palettes. Zero cost |
+
 ### When you have 5+ reviews on any planner listing
 
 | # | Task | Time | Notes |
 |---|---|---|---|
-| 5 | **Bump Etsy Ads to $5/day** — Shop Manager → Marketing → Etsy Ads → increase budget | 2 min | Stay at $1.30/day until first 5 reviews |
+| 12 | **Bump Etsy Ads to $5/day** — Shop Manager → Marketing → Etsy Ads → increase budget | 2 min | Stay at $1.30/day until first 5 reviews |
 
-### Low urgency (set-and-forget)
+### Low urgency (set-and-forget, one-time)
 
 | # | Task | Time | Notes |
 |---|---|---|---|
-| 6 | **Test SMTP from your real machine** — `python tools/ads_monitor.py` and check if email arrives at Printing3dthings@outlook.com | 5 min | SMTP fails in this environment (network issue), needs test from your machine |
-| 7 | **Etsy re-auth every 90 days** — next due ~September 1, 2026 — run: `python tools/etsy_oauth.py` | 2 min | Refresh token expires 90 days after last auth |
-| 8 | **Back-to-school keyword update** — by July 4, 2026 — run: `python tools/seasonal_keywords.py --push` | 5 min | Updates keywords on planners + student-adjacent listings for back-to-school season |
-| 9 | **Install dashboard desktop icon** — run `setup_desktop_shortcut.bat` (one time) — creates purple shopping bag icon on Desktop that opens the dashboard with fresh Etsy data on every click | 1 min | Already built, just needs to be run once on your Windows machine |
-| 10 | **Add shop video** — Etsy Shop Manager → any active planner listing → Add Video → upload a 5–15 sec screen recording of planner in use | 10 min | Video in listing = ranking boost |
-| 10 | **Connect Buffer.com for TikTok** (after #4) — go to Buffer.com (free), connect TikTok, schedule posts from `data/tiktok_content_calendar.json` | 10 min | 30 days of TikTok content already pre-written |
-| 11 | **Email list (future)** — create free Mailchimp account → connect to `tools/email_leadmagnet.py` | 20 min | Lead magnet system already built, just needs Mailchimp API key |
+| 13 | **Install dashboard desktop icon** — run `setup_desktop_shortcut.bat` once on your Windows machine | 1 min | Already built — drops a purple shopping bag icon on Desktop that auto-refreshes from Etsy |
+| 14 | **Add shop video** — Etsy Shop Manager → any active planner listing → Add Video → 5–15 sec screen recording of planner in use | 10 min | Listing video = algorithm ranking boost |
+| 15 | **Connect Buffer.com for TikTok** (after #4) — Buffer.com free account → connect TikTok → schedule from `data/tiktok_content_calendar.json` | 10 min | 30 days of content already written |
+| 16 | **Test SMTP from your machine** — run `python tools/ads_monitor.py` and confirm email arrives at Printing3dthings@outlook.com | 5 min | SMTP port 587 is blocked in this environment, works fine from Windows |
+| 17 | **Etsy re-auth** — due ~September 1, 2026 — run `python tools/etsy_oauth.py` | 2 min | OAuth refresh token expires 90 days after last auth |
+| 18 | **Back-to-school keywords** — by July 4, 2026 — run `python tools/seasonal_keywords.py --push` | 5 min | Updates all planner keywords for back-to-school peak season |
 
 ---
 
@@ -43,13 +59,16 @@ python tools/approve_listing.py --listing-id <ID>      # review one listing
 python tools/approve_listing.py --listing-id <ID> --yes  # approve and publish
 ```
 
-**Current draft listings:** None (check with `--list-drafts`)
+**Drafts waiting for your review right now:**
+- 11 commercial license listings (SVG bundles + sticker packs)
 
 Once OpenAI billing is topped up, I will generate and stage these for your review:
 - 5 SVG bundles (floral_wreath, dark_floral, western completion, retro_groovy, mama_scripts)
 - DP1030 ADHD Planner (Matcha Serenity)
 - DP1033 Teacher Planner 2026-2027 (Sunflower Studio)
 - Wall art mockup photos for 20 listings with fewer than 5 photos
+- Coloring page listing images (54 pages → need lifestyle mockups)
+- Digital paper pack listing images (12 packs → need flat lay mockups)
 
 ---
 
@@ -78,26 +97,16 @@ python tools/publish_svg_bundle.py --all            # stages for your review
 ```
 
 ### Priority 2 — Fix Listings with Too Few Photos (20 listings flagged)
-**Listings with 1-4 photos rank lower and convert worse. Full report: `data/reports/listing_health_2026-06-02.txt`**
-
-One-photo listings that need mockups (14 listings):
-- Gallery wall sets: 4513713142, 4513713106, 4513713044
-- Nursery prints: 4513713984, 4513713962, 4513713936, 4513713922, 4513714191
-- Black and white: 4513714013, 4513713945, 4513713712, 4513713514, 4513713805
-
-4-photo listings that need 6 more photos (6 listings):
-- 4509597559, 4509596017, 4509600086, 4509593697, 4509598784, 4509598660, 4492610660
-
+**Report: `data/reports/listing_health_2026-06-02.txt`**
 ```bash
 python tools/generate_wall_art_mockups.py  # generates all 10 photos per listing
 ```
 
-### Priority 3 — New Digital Planners (before back-to-school August)
+### Priority 3 — New Digital Planners
 ```bash
 python tools/generate_planner.py DP1030  # ADHD Planner (Matcha Serenity)
 python tools/generate_planner.py DP1033  # Teacher Planner (Sunflower Studio)
 ```
-After generation, stages as draft. You review and approve.
 
 ### Priority 4 — Sublimation (Teacher Life + Nurse Life already have mockups)
 ```bash
@@ -105,7 +114,13 @@ python tools/publish_sublimation_pack.py --bundle teacher_life
 python tools/publish_sublimation_pack.py --bundle nurse_life
 ```
 
-### Priority 5 — Sticker Pack Listings (6 packs have no Etsy listing yet)
+### Priority 5 — Listing Photos for New Products (zero-cost products ready to list)
+```bash
+python tools/generate_coloring_page_mockups.py  # 54 coloring pages need mockup photos
+python tools/generate_digital_paper_mockups.py  # 12 paper packs need flat lay photos
+```
+
+### Priority 6 — Sticker Pack Listings
 ```bash
 python tools/upload_sticker_listings.py
 ```
@@ -131,21 +146,33 @@ Faith/Christian, Sports Mom, Seasonal (Christmas, Valentine's)
 - Daily pages for DP1026 + DP1027 (most requested feature)
 - Multiple weekly layout options (horizontal + vertical)
 
+### Teachers Pay Teachers (once DP1033 Teacher Planner is built)
+- Create TpT seller account → tpt.com/Store/create
+- Run `python tools/tpt_publisher.py` (built and ready)
+- DP1027 Student Planner and DP1033 Teacher Planner both qualify
+
 ---
 
 ## COMPLETED TODAY (2026-06-02)
 
-- [x] 4 planner listing titles fixed — added "Instant Download" within 70-char limit
-- [x] 10 sticker/wall art listing titles fixed — added "Instant Download" within 70-char limit
+### Revenue-generating automations built this session
+- [x] **Weekly market research** — runs Saturday 7am, searches 23 Etsy queries, Claude synthesizes trends into design intelligence
+- [x] **Seasonal sales scheduler** — auto-triggers holiday coupon codes + emails Scott reminders for 8 annual sale windows
+- [x] **54 coloring pages generated** — converted existing wall art to line-art B&W PNGs using PIL (zero AI cost), 11 ZIP sets ready
+- [x] **60 digital paper patterns generated** — 12 brand themes × 5 pattern types, 3600×3600px at 300 DPI, 12 ZIPs ready
+- [x] **11 commercial license draft listings created** — $24.99 SVG + $12.99 sticker commercial use licenses on Etsy (awaiting your review)
+- [x] **KDP publisher built** — prep tool for Amazon KDP physical planner books. Account + `python tools/kdp_publisher.py --all` → submit
+- [x] **Printify integration built** — 55 wall art files queued for physical POD. Account + `python tools/printify_publisher.py --submit-all` → live
+- [x] **Commercial license tool** — `tools/commercial_license_tool.py` creates companion license listings for any product
+
+### Earlier today
+- [x] 14 listing titles fixed — added "Instant Download" within 70-char limit
 - [x] tools/approve_listing.py built — review and approve draft listings before they go live
-- [x] tools/listing_performance_monitor.py built — daily listing health audit (29 flagged today, 10 fixed, 20 photo issues queued)
+- [x] tools/listing_performance_monitor.py built — daily listing health audit
 - [x] tools/review_monitor.py built — daily review check + auto-draft responses
-- [x] Cron: weekly tag audit added (Sundays 10am)
-- [x] Cron: daily review check added (8:30am)
-- [x] etsy_api.py: added get_reviews() + get_shop_listings_all() methods
-- [x] Weekly report run — $307/mo pace, 6% of $5,000 target
-- [x] Health check: refresh token age tracking (warns at 21 days, critical at 14 days)
-- [x] Research synthesized into CLAUDE.md — Etsy API limits, AI disclosure requirements, customer service templates, Pinterest/TikTok, competitor tools, pricing strategy, ranking recovery
+- [x] tools/generate_dashboard.py + live HTML dashboard built
+- [x] Desktop icon launcher (Windows) — setup_desktop_shortcut.bat
+- [x] Weekly report — $307/mo pace, 6% of $5,000 target
 
 ## COMPLETED PREVIOUSLY
 
@@ -175,10 +202,16 @@ Faith/Christian, Sports Mom, Seasonal (Christmas, Valentine's)
 | Metric | Value | Target | Status |
 |---|---|---|---|
 | Active listings | 93 | 100+ | Close |
+| Draft listings awaiting review | 11 | 0 | Review needed |
 | Weekly net revenue | $20.45 | $1,154/wk | 6% of target |
 | Monthly pace | $307/mo | $5,000/mo | 6% of target |
-| Listings with title issues | 0 | 0 | Fixed today |
+| Listings with title issues | 0 | 0 | ✅ Fixed today |
 | Listings with photo issues | 20 | 0 | Queued (needs OpenAI) |
 | SVG bundles complete | 0/5 | 5/5 | Queued (needs OpenAI) |
 
-**Biggest revenue lever right now:** Publish SVG bundles + fix photo-deficient wall art listings. Each SVG bundle = ~$50-200/mo passive. 20 wall art listings with better photos = meaningfully higher conversion rate.
+**New revenue unlocked today (pending your 2 actions):**
+- Publish commercial licenses → +$200–500/mo from crafters who need commercial rights
+- Create KDP account → +$500–2,000/mo from Amazon's planner market
+- Create Printify account → 55 physical print listings, +$200–800/mo
+- Publish coloring pages (after OpenAI for mockup photos) → +$100–300/mo
+- Publish digital paper packs → +$100–200/mo

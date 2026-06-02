@@ -67,7 +67,7 @@
   },
   {
     "product_id": "DP1031",
-    "name": "Undated Life Planner — Evergreen (Sage Garden)",
+    "name": "Undated Life Planner \u2014 Evergreen (Sage Garden)",
     "etsy_listing_id": "",
     "price": 12.99,
     "category": "digital_planner",
@@ -143,7 +143,7 @@
   },
   {
     "product_id": "SVG_MOM_LIFE",
-    "name": "Mom Life SVG Bundle — 20 Designs",
+    "name": "Mom Life SVG Bundle \u2014 20 Designs",
     "etsy_listing_id": "4514392281",
     "price": 9.99,
     "category": "svg_bundle",
@@ -165,7 +165,7 @@
   },
   {
     "product_id": "SVG_WESTERN",
-    "name": "Western SVG Bundle — 12 Designs",
+    "name": "Western SVG Bundle \u2014 12 Designs",
     "etsy_listing_id": "",
     "price": 9.99,
     "category": "svg_bundle",
@@ -185,7 +185,7 @@
   },
   {
     "product_id": "STICKER_DP1026",
-    "name": "Kawaii Sticker Pack — Lavender Dreams",
+    "name": "Kawaii Sticker Pack \u2014 Lavender Dreams",
     "etsy_listing_id": "4512254015",
     "price": 2.99,
     "category": "sticker_pack",
@@ -195,7 +195,7 @@
   },
   {
     "product_id": "STICKER_DP1027",
-    "name": "Kawaii Sticker Pack — Cotton Candy",
+    "name": "Kawaii Sticker Pack \u2014 Cotton Candy",
     "etsy_listing_id": "4512254027",
     "price": 2.99,
     "category": "sticker_pack",
@@ -205,7 +205,7 @@
   },
   {
     "product_id": "STICKER_DP1028",
-    "name": "Kawaii Sticker Pack — Midnight Blue",
+    "name": "Kawaii Sticker Pack \u2014 Midnight Blue",
     "etsy_listing_id": "4512255514",
     "price": 2.99,
     "category": "sticker_pack",
@@ -215,7 +215,7 @@
   },
   {
     "product_id": "STICKER_DP1029",
-    "name": "Kawaii Sticker Pack — Coral Peach",
+    "name": "Kawaii Sticker Pack \u2014 Coral Peach",
     "etsy_listing_id": "4512255536",
     "price": 2.99,
     "category": "sticker_pack",
@@ -225,7 +225,7 @@
   },
   {
     "product_id": "STICKER_BUNDLE",
-    "name": "Kawaii Sticker Pack Bundle — All 4 Themes",
+    "name": "Kawaii Sticker Pack Bundle \u2014 All 4 Themes",
     "etsy_listing_id": "4512254035",
     "price": 7.99,
     "category": "sticker_pack",
@@ -237,10 +237,120 @@
     "product_id": "STICKER_FREE",
     "name": "Free Kawaii Sticker Pack Sampler",
     "etsy_listing_id": "4512255508",
-    "price": 0.00,
+    "price": 0.0,
     "category": "sticker_pack",
     "status": "active",
     "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_FLORAL",
+    "name": "Commercial License | Floral Botanical SVG Bundle | Instant Download",
+    "etsy_listing_id": "4515439743",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "draft",
+    "source_product_id": "SVG_FLORAL",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_CHRISTIAN",
+    "name": "Commercial License | Christian Faith SVG Bundle | Instant Download",
+    "etsy_listing_id": "4515439751",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "draft",
+    "source_product_id": "SVG_CHRISTIAN",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_GRAD",
+    "name": "Commercial License | Graduation 2026 SVG Bundle | Instant Download",
+    "etsy_listing_id": "4515439755",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "draft",
+    "source_product_id": "SVG_GRAD",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_MOM_LIFE",
+    "name": "Commercial License | Mom Life SVG Bundle 20 Designs | Instant Download",
+    "etsy_listing_id": "4515437432",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "draft",
+    "source_product_id": "SVG_MOM_LIFE",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_GOOD_VIBES",
+    "name": "Commercial License | Good Vibes SVG Bundle | Instant Download",
+    "etsy_listing_id": "4515439763",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "draft",
+    "source_product_id": "SVG_GOOD_VIBES",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_WESTERN",
+    "name": "Commercial License | Western SVG Bundle 12 Designs | Instant Download",
+    "etsy_listing_id": "4515437442",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "draft",
+    "source_product_id": "SVG_WESTERN",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_DP1026",
+    "name": "Commercial License | Kawaii Sticker Pack Lavender D | Instant Download",
+    "etsy_listing_id": "4515437452",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "draft",
+    "source_product_id": "STICKER_DP1026",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_DP1027",
+    "name": "Commercial License | Kawaii Sticker Pack Cotton Can | Instant Download",
+    "etsy_listing_id": "4515437456",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "draft",
+    "source_product_id": "STICKER_DP1027",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_DP1028",
+    "name": "Commercial License | Kawaii Sticker Pack Midnight B | Instant Download",
+    "etsy_listing_id": "4515437464",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "draft",
+    "source_product_id": "STICKER_DP1028",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_DP1029",
+    "name": "Commercial License | Kawaii Sticker Pack Coral Peac | Instant Download",
+    "etsy_listing_id": "4515439799",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "draft",
+    "source_product_id": "STICKER_DP1029",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_BUNDLE",
+    "name": "Commercial License | Kawaii Sticker Pack Bundle All | Instant Download",
+    "etsy_listing_id": "4515439809",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "draft",
+    "source_product_id": "STICKER_BUNDLE",
     "last_updated": "2026-06-02"
   }
 ]
