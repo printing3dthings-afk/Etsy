@@ -100,5 +100,56 @@
         "detail": "All checked titles within 70-char limit"
       }
     ]
+  },
+  {
+    "timestamp": "2026-06-02T13:39:19.589504Z",
+    "overall": "WARN",
+    "results": [
+      {
+        "name": "Active listings",
+        "status": "WARN",
+        "detail": "Could not check: Etsy API 404: Resource not found"
+      },
+      {
+        "name": "SVG bundle ZIPs",
+        "status": "WARN",
+        "detail": "western: only 12/20 designs \u2014 incomplete bundle marked ready"
+      },
+      {
+        "name": "Decision log",
+        "status": "WARN",
+        "detail": "No decision log yet \u2014 will be created on first weekly run"
+      },
+      {
+        "name": "Weekly report freshness",
+        "status": "WARN",
+        "detail": "Reports directory missing \u2014 no reports generated yet"
+      },
+      {
+        "name": ".env completeness",
+        "status": "OK",
+        "detail": "All required API keys present"
+      },
+      {
+        "name": "Etsy OAuth token",
+        "status": "OK",
+        "detail": "Token valid \u2014 authenticated API call succeeded"
+      },
+      {
+        "name": "OpenAI API",
+        "status": "OK",
+        "detail": "API reachable and billing active"
+      },
+      {
+        "name": "Sublimation ZIPs",
+        "status": "OK",
+        "detail": "2 ZIP(s) all within 20MB limit"
+      },
+      {
+        "name": "Listing title lengths (\u226470 chars)",
+        "status": "OK",
+        "detail": "All checked titles within 70-char limit"
+      }
+    ]
   }
 ]
