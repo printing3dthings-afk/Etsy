@@ -35,6 +35,15 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+# Parse .env manually — never use load_dotenv()
+_env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+with open(_env_path) as _f:
+    for _line in _f:
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 CLIENT_ID = os.getenv("ETSY_CLIENT_ID", "")
 CLIENT_SECRET = os.getenv("ETSY_CLIENT_SECRET", "")
 REDIRECT_URI = "http://localhost:3003/callback"
