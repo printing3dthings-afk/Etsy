@@ -257,11 +257,38 @@ def check_env_keys() -> dict:
             "detail": "All required API keys present"}
 
 
+def check_refresh_token_age() -> dict:
+    """Warn when the OAuth refresh token is approaching its 90-day expiry."""
+    token_date_str = os.environ.get("ETSY_TOKEN_ISSUED_DATE", "")
+    if not token_date_str:
+        return {"name": "Refresh token age", "status": "WARN",
+                "detail": "ETSY_TOKEN_ISSUED_DATE not set in .env — add it after each re-auth so expiry can be tracked (refresh token expires after 90 days)"}
+    try:
+        issued = date.fromisoformat(token_date_str)
+        days_old = (date.today() - issued).days
+        days_left = 90 - days_old
+        if days_left <= 0:
+            return {"name": "Refresh token age", "status": "CRITICAL",
+                    "detail": f"Refresh token is {abs(days_left)} days PAST expiry — run: python tools/etsy_oauth.py NOW"}
+        if days_left <= 14:
+            return {"name": "Refresh token age", "status": "CRITICAL",
+                    "detail": f"Refresh token expires in {days_left} days — run: python tools/etsy_oauth.py before it expires"}
+        if days_left <= 21:
+            return {"name": "Refresh token age", "status": "WARN",
+                    "detail": f"Refresh token expires in {days_left} days — schedule re-auth soon"}
+        return {"name": "Refresh token age", "status": "OK",
+                "detail": f"Refresh token issued {days_old} days ago, {days_left} days remaining"}
+    except ValueError:
+        return {"name": "Refresh token age", "status": "WARN",
+                "detail": f"ETSY_TOKEN_ISSUED_DATE has invalid format '{token_date_str}' — use YYYY-MM-DD"}
+
+
 # ── Runner ────────────────────────────────────────────────────────────────────
 
 ALL_CHECKS = [
     check_env_keys,
     check_etsy_token,
+    check_refresh_token_age,
     check_openai_api,
     check_active_listings,
     check_svg_zips,

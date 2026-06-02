@@ -477,6 +477,9 @@ class EtsyAPIClient:
 
         # Update in-memory token
         self.access_token = new_access
+        os.environ["ETSY_ACCESS_TOKEN"] = new_access
+        if new_refresh != refresh_token:
+            os.environ["ETSY_REFRESH_TOKEN"] = new_refresh
 
         # Persist to .env file
         env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
@@ -504,6 +507,20 @@ class EtsyAPIClient:
                 new_lines.append(f"ETSY_ACCESS_TOKEN={new_access}\n")
             if not updated["ETSY_REFRESH_TOKEN"]:
                 new_lines.append(f"ETSY_REFRESH_TOKEN={new_refresh}\n")
+            # Track when tokens were issued so health_check can warn before 90-day expiry
+            from datetime import date as _d
+            today_str = str(_d.today())
+            found_date = False
+            new_lines2 = []
+            for line in new_lines:
+                if line.startswith("ETSY_TOKEN_ISSUED_DATE="):
+                    new_lines2.append(f"ETSY_TOKEN_ISSUED_DATE={today_str}\n")
+                    found_date = True
+                else:
+                    new_lines2.append(line)
+            if not found_date:
+                new_lines2.append(f"ETSY_TOKEN_ISSUED_DATE={today_str}\n")
+            new_lines = new_lines2
 
             with open(env_path, "w") as fh:
                 fh.writelines(new_lines)

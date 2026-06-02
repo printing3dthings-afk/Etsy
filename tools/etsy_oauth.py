@@ -139,11 +139,15 @@ def step2_exchange(callback_url: str):
         print(f"Token exchange failed: {e.read().decode()}")
         sys.exit(1)
 
-    _update_env("ETSY_ACCESS_TOKEN",  tokens.get("access_token", ""))
-    _update_env("ETSY_REFRESH_TOKEN", tokens.get("refresh_token", ""))
+    _update_env("ETSY_ACCESS_TOKEN",   tokens.get("access_token", ""))
+    _update_env("ETSY_REFRESH_TOKEN",  tokens.get("refresh_token", ""))
+    # Track issue date so health_check.py can warn before 90-day refresh token expiry
+    from datetime import date as _date
+    _update_env("ETSY_TOKEN_ISSUED_DATE", str(_date.today()))
 
     os.remove(STATE_FILE)
     print("Success! Tokens saved to .env — Etsy API is now authorized.")
+    print(f"Refresh token expires in 90 days — next re-auth needed by: {_date.today().replace(day=_date.today().day)}")
 
 
 if __name__ == "__main__":

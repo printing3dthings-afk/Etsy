@@ -2502,3 +2502,398 @@ For maximum consistency: pass the first accepted image as `@image1` in subsequen
 - **Bedroom content filters:** Use "interior photography" language, not "photoshoot" language. Describe furniture, not atmosphere
 - **Quality setting for production:** `quality="high"` for hero images; `quality="medium"` for background generation (composited anyway)
 - **`input_fidelity="high"`:** Use when editing an existing image to preserve composition while changing one element
+
+---
+
+## Etsy API v3 — Technical Reference for Autonomous Operation
+
+### Hard Limits (Cannot Be Coded Around)
+
+| Limit | Value | Notes |
+|---|---|---|
+| **Digital files per listing** | 5 maximum | Hard platform limit — ZIP bundles to work around |
+| **File size per digital file** | 20 MB per file | Hard limit — compress PDFs before upload |
+| **Access token lifetime** | 1 hour (3600s) | Must refresh automatically before expiry |
+| **Refresh token lifetime** | 90 days | After 90 days, Scott must re-authorize via `python tools/etsy_oauth.py` |
+| **Rate limit — per second** | ~150 QPS (example) | Varies per app; check x-limit-per-second header |
+| **Rate limit — per day** | ~100,000 QPD (example) | Sliding window (not fixed 24h reset); check x-limit-per-day header |
+| **Rate limit exceeded** | HTTP 429 + `retry-after` header | Always implement exponential backoff; honor the retry-after value |
+| **Scopes** | Immutable after authorization | Cannot elevate permissions without full re-auth |
+
+### OAuth Token Auto-Refresh (Required for Autonomous Operation)
+
+Tokens expire every **1 hour**. The refresh flow:
+```
+POST /oauth/token
+  grant_type=refresh_token
+  client_id=<ETSY_CLIENT_ID>
+  refresh_token=<ETSY_REFRESH_TOKEN>
+```
+- Returns a new access token AND a new refresh token (90-day clock restarts)
+- Does NOT require user action — fully automatable
+- Write new tokens back to `.env` immediately after refresh
+- **Must implement token refresh before any batch operation** — check token age and pre-refresh if within 10 minutes of expiry
+- **Refresh token expires after 90 days** — Scott must manually re-run `python tools/etsy_oauth.py` every 90 days or when a 401 is returned on the refresh endpoint
+
+### Rate Limiting Response Headers (Read These on Every Request)
+
+```
+x-limit-per-second       → your total QPS allocation
+x-remaining-this-second  → calls left this second
+x-limit-per-day          → your total daily allocation
+x-remaining-today        → calls left in rolling 24-hour window
+```
+
+**Autonomous batch strategy:** Check `x-remaining-this-second` before each call. If ≤ 2, sleep 1 second. If 429 received, read `retry-after` and wait exactly that many seconds before retrying.
+
+### Known API Quirks and Workarounds
+
+| Issue | Workaround |
+|---|---|
+| Non-deterministic 403 on `PATCH listings/{id}` ("listing is not editable") | Implement 3-attempt retry with 2s delay — it's a server-side race condition, not a real permission error |
+| `GET listings/draft` returns 404 | Correct endpoint: `GET shops/{shop_id}/listings?state=draft` |
+| `getListingImageDeprecated` returns 404 | Use `getListingImages` (current endpoint) |
+| Duplicate image rank on rapid upload | Add 2s delay between sequential image uploads to same listing |
+| Fixed (Q1 2026): Listings created via API couldn't be activated via API | Now resolved — `state=active` works on PUT |
+
+### Suspension Triggers — What to Never Do
+
+- **Identical descriptions across listings** — Etsy's spam detection flags templated text applied to many listings
+- **High-velocity bulk listing creation** — ramp up gradually (max 10–20 new listings per day)
+- **Testing transactions on a live production account** — use a separate test account for API transaction tests
+- **API tools banned by Etsy** — AutoDS, ShineOn, CJDropshipping had API access revoked May 2024; never use these
+- **Trademark terms in titles/tags** — even accidental use triggers shop quality score penalty affecting ALL listings
+
+### Cascade Penalty — How One Violation Hurts Everything
+
+Etsy uses a **shop quality score** that aggregates across all listings. When a single listing gets flagged:
+1. The flagged listing is removed
+2. Your shop quality score drops
+3. Every other listing in the shop ranks lower
+4. Lower rankings → lower conversion → further algorithmic downranking
+
+**Recovery:** Not automatic. Requires consistent positive engagement signals over weeks to months. Removing the violation stops further damage but does not restore ranking immediately.
+
+**Triggering violations:** Trademark terms in tags, undisclosed AI content, undisclosed production partners, keyword stuffing, missing return policies.
+
+---
+
+## AI-Generated Content — Mandatory Disclosure Protocol
+
+### What Etsy Currently Requires (Updated June 10, 2025)
+
+Etsy's Creativity Standards (etsy.com/legal/creativity) were updated June 10, 2025 to explicitly require:
+
+1. **Disclosure in the listing description** — Must include a statement that AI tools were used
+2. **Correct "who made it" categorization** — List as "Designed by a seller" (not "Made by a seller")
+3. **API field values**: `who_made: "i_did"`, `when_made: "made_to_order"`, `is_supply: false`
+
+**Required disclosure language (add to every listing description — bottom, before copyright):**
+```
+━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 ABOUT THIS DESIGN
+━━━━━━━━━━━━━━━━━━━━━━━━
+This product was designed using AI image generation tools, with original prompts, 
+curation, and finishing by the seller. All products are reviewed for quality before listing.
+```
+
+### What Gets Flagged and Removed
+
+- Listings that **look AI-generated but have no AI disclosure** — automated detection catches these
+- Over **17,000 listings removed** in early 2025 for disclosure violations
+- Single violation = listing removal; repeated violations = account suspension
+- Detection methods: automated image analysis + member reports + manual moderation
+
+### What Is Allowed
+
+- Using AI tools to generate art/designs = allowed WITH disclosure
+- Using Canva templates = allowed WITH disclosure (June 2025 update banned minimally-modified templates without disclosure)
+- SVG files, digital planners, wall art — all digital products are covered by the June 2025 update
+- Seller still must be the designer — using someone else's prompts without modification is not allowed
+
+### Pre-Publish Checklist for AI-Generated Products
+
+- [ ] AI disclosure paragraph added to listing description
+- [ ] `who_made` field set to `"i_did"`
+- [ ] Product categorized as "Designed by a seller" in Etsy dashboard
+- [ ] Original prompts used (not copied from another seller)
+- [ ] Seller has reviewed and approved the output before publishing
+
+---
+
+## Customer Service — Autonomous Response System
+
+### What Etsy's Built-In System Actually Supports
+
+| Feature | What It Does | Star Seller Credit? |
+|---|---|---|
+| **Quick Replies** | Saved templates, manually sent by seller | Yes — counts as a reply |
+| **Temporary Auto-Reply** | Active for up to 5 days (vacation, busy period) | Yes — counts as first reply |
+| **Weekly Auto-Reply** | Fires outside set business hours for first message only | Yes — counts as first reply |
+| **AI Writing Assistant** | Drafts suggested responses (US sellers only) | N/A — still requires manual send |
+
+**Critical:** Etsy has NO fully automated trigger-based replies that fire without seller action. All Star Seller credit requires either a manual send or one of the two built-in auto-reply modes being active.
+
+**Quick Reply character limit:** 2,000 characters. Keep templates to 2–4 short paragraphs.
+
+### Required Quick Reply Templates (Set Up in Shop Manager)
+
+**Template 1 — File Won't Open:**
+```
+Hi! Thanks for reaching out about your download. For PDF planners, I recommend:
+
+1. Download the file to your device first (don't open directly from browser)
+2. Open in GoodNotes 6, Notability, or Adobe Acrobat Reader (free)
+3. For GoodNotes: File > Import → select the PDF
+
+If using a laptop, Adobe Acrobat Reader (free download) opens everything perfectly. Let me know if you're still having trouble and I'll send step-by-step screenshots for your specific app!
+
+— Scott @ OnBrandCraftz
+```
+
+**Template 2 — Didn't Receive Download:**
+```
+Hi! Etsy delivers all digital files instantly — they should be in your Purchases page right now.
+
+To find them: Etsy app → Account → Purchases & Reviews → find this order → tap "Download Files"
+
+On desktop: etsy.com → Account → Purchases & Reviews → Download
+
+If you still can't find the files, let me know and I'll look into your order directly.
+
+— Scott @ OnBrandCraftz
+```
+
+**Template 3 — Wrong File Format:**
+```
+Hi! All OnBrandCraftz planners are delivered as interactive fillable PDFs — they work in GoodNotes 6, Notability, PDF Expert, Xodo, and Adobe Acrobat Reader.
+
+If you were expecting a different format (like .pages or .docx), PDF is unfortunately the only format that supports the hyperlinked navigation tabs and interactive sticker menu. 
+
+Is there a specific app you're trying to use? I'm happy to walk you through the best setup for it!
+
+— Scott @ OnBrandCraftz
+```
+
+**Template 4 — Refund Request:**
+```
+Hi! I'm sorry the product didn't meet your expectations.
+
+Because digital files are delivered instantly and can't be "returned" once downloaded, I'm not able to issue automatic refunds — but I genuinely want you to be happy with your purchase.
+
+Can you tell me what specifically isn't working or isn't what you expected? In most cases I can either walk you through a fix or send an alternative file that works better for you.
+
+— Scott @ OnBrandCraftz
+```
+
+**Template 5 — Sharing / License Question:**
+```
+Hi! The license included with your purchase is for personal use only — one person, unlimited use of the planner for yourself.
+
+It doesn't cover: sharing the files with others, using in a classroom/group setting, or reselling/redistributing.
+
+If you need a multi-user license (e.g. for a class or team), please send me a custom order request and I'll put something together for you!
+
+— Scott @ OnBrandCraftz
+```
+
+### Digital Product Refund Policy — Legal Framework
+
+- Sellers can set a **no-refund policy** for digital products — this is fully legal and supported by Etsy
+- Etsy does NOT force refunds for digital downloads as a default
+- **Exception:** Etsy Purchase Protection (effective May 7, 2026) may cover buyer claims up to $250 on "qualified orders" — but this applies to physical goods fulfillment disputes, not digital download disputes
+- **When Etsy overrides seller policy:** If a buyer files a case claiming the listing description was materially inaccurate, Etsy may issue a refund regardless of seller policy — this is why every listing description must be 100% accurate (supports the mission statement)
+- **Best practice:** Offer to troubleshoot before refusing — most "I want a refund" situations are actually tech support issues that can be resolved
+
+### When Human (Scott) Must Respond — Non-Automatable Situations
+
+- Buyer received wrong product (mismatch between listing and delivery)
+- Buyer alleges listing was deceptive or inaccurate
+- Negative review left — must craft personalized, empathetic response
+- Custom order requests (pricing, feasibility, timeline)
+- Etsy has opened a case/dispute against the shop
+- Any message that cannot be resolved with one of the 5 templates above after 2 attempts
+
+---
+
+## Social Media Automation — Verified 2026 Data
+
+### Pinterest — Confirmed Working Setup
+
+**Rich Pins for Etsy are ACTIVE and working in 2025-2026:**
+- Automatically activate within 24 hours for Etsy-hosted listings — no code required
+- Enable via: Etsy Dashboard → Marketing → Pinterest → Enable Rich Pins
+- Rich Pins auto-pull price, availability, and product description — they update when you update the listing
+- Connect Etsy account under Pinterest "Claimed accounts" to support Rich Pin functionality
+
+**Pinterest API v5 Automation Capabilities:**
+- ✅ Create pins (POST `/v5/pins`) — image URL, title, description, link, board assignment
+- ✅ Create and list boards
+- ✅ Schedule via Tailwind (recommended) or directly via API
+- ❌ Cannot auto-repin others' content via API
+- ❌ Cannot see others' analytics
+
+**Anti-Spam Rules (Hard Limits):**
+| Rule | Limit |
+|---|---|
+| Maximum pins per day | **50 pins/day** — exceeding this triggers spam filters |
+| Evergreen content repost interval | **30 days minimum** between repins of the same content |
+| Seasonal content repost interval | **7–14 days** |
+
+**Recommended board structure for OnBrandCraftz:**
+1. `Digital Planners 2026 — Kawaii GoodNotes` (primary)
+2. `Kawaii Sticker Packs — GoodNotes Elements`
+3. `Printable Wall Art — Instant Download`
+4. `SVG Cut Files — Cricut Silhouette`
+5. `Etsy Digital Downloads` (broad catch-all)
+6. Seasonal boards: `Back to School Planner Ideas`, `New Year Planning 2027`
+
+**Automation workflow using `tools/pinterest_api.py`:**
+- Post hero image + description + Etsy listing URL to the relevant board
+- Space out posts: max 10/day for a new account, up to 25/day once established
+- Use Tailwind's SmartSchedule for optimal timing if manual scheduling is preferred
+
+### TikTok — Verified as Etsy Ranking Signal
+
+**Confirmed:** External traffic from TikTok acts as a "vote of confidence" for Etsy listings and boosts organic search visibility. Etsy's algorithm registers external traffic sources as a brand authority signal.
+
+**TikTok Algorithm 2026 Requirements:**
+- Minimum **70% video completion rate** to enter virality pool (up from 50% in 2024)
+- Watch time + completion rate = **40–50% of algorithm weight**
+- Content for planners: process videos, planning setup, "plan with me" formats perform best
+
+**TikTok Shop for digital products:** Not viable — TikTok Shop requires physical fulfillment; digital files cannot be listed as products. Use TikTok only for Etsy traffic, not as a sales channel.
+
+**Realistic expectations:**
+- Etsy conversion rate average: 1–3%
+- TikTok Live shopping conversion: 7.4% (but not applicable to digital products)
+- Organic TikTok → Etsy: treat as brand awareness + algorithmic signal, not direct sales driver
+
+---
+
+## Competitor Intelligence — Tool Comparison
+
+| Tool | Price | Best For | Data Quality |
+|---|---|---|---|
+| **EtsyHunt** | Free + Pro $3.99/mo | Deep competitor data, shop analyzer, Chrome extension | Good — best value |
+| **eRank** | From $5.99/mo | Keyword research, listing grades, bulk analysis | Estimated search volumes |
+| **Sale Samurai** | $9.99/mo | Accurate search volume, AI keyword suggestions | Accurate search volume |
+| **Marmalead** | $19/mo (or $190/yr) | 30-day keyword trend forecasting (95% accuracy) | Best for trend direction; search volume estimates less reliable |
+
+**Recommended for OnBrandCraftz:** Start with **EtsyHunt Pro ($3.99/mo)** for competitor monitoring + Chrome extension, add **Sale Samurai ($9.99/mo)** once revenue justifies for accurate keyword volume data.
+
+**What competitor tools can show:**
+- ✅ Competitor listing titles, tags, prices, photo count
+- ✅ Estimated monthly sales (rough estimate — treat as directional)
+- ✅ Search volume trends for keywords
+- ✅ Niche saturation signals (competition level scores)
+- ❌ Cannot see actual conversion rates of competitors
+- ❌ Cannot see competitor ad spend or ROAS
+
+**Niche saturation signals to watch:**
+- Average monthly sales per top-20 listing dropping over 3+ months
+- Rapid increase in listing count for a keyword (eRank "competition" score rising)
+- New sellers flooding with identical products at lower prices
+
+---
+
+## Pricing Strategy — Research-Verified 2026
+
+### Does Price Affect Etsy Algorithm Ranking?
+
+**No direct effect.** Price is NOT an explicit Etsy ranking signal. However:
+- Price affects **conversion rate**, which directly affects ranking
+- Higher prices can **increase perceived quality** and actually improve conversion for some product types (especially planners — buyers associate higher price with more content)
+- Lowering prices to compete on cost typically hurts perceived value without proportional conversion gain for digital planners
+
+### When to Change Prices
+
+- **Never change price on a ranked listing during its first 30 days** — the algorithm is learning from conversion data; a price change resets this signal
+- **After 30+ days:** Test price changes in increments of $1–2, wait 3–4 weeks to see conversion rate impact before further changes
+- **Edit in small batches:** Never change more than 5–10 listings' prices in the same week — bulk changes look like an automated sweep and can trigger review
+
+### Etsy Sales and Coupons — Optimal Timing
+
+| Strategy | Best Timing | Notes |
+|---|---|---|
+| Weekend flash sale | Friday 6pm → Sunday 11pm (buyer's time zone) | Weekends + evenings are peak Etsy browsing |
+| 24-hour sale | Creates urgency — 24h outperforms 7-day for conversion spike | Don't overuse; trains buyers to wait |
+| Seasonal sale | 2 weeks before each seasonal peak | Pair with seasonal keyword updates |
+| Discount range | 10–70% allowed; 20–25% is sweet spot | Enough to trigger urgency without devaluing the product |
+| Max duration | 30 days (Etsy platform limit) | |
+| Repeat sales | No more than monthly | Too frequent = buyers wait for sales; undermines regular price |
+
+**"Sale" badge CTR impact:** Listings with a sale badge display higher CTR in search — exact % not published by Etsy, but seller reports consistently show CTR lifts. The badge appears prominently on both desktop and mobile search thumbnails.
+
+---
+
+## Ranking Recovery Playbook
+
+### After a Listing Edit (Non-Compliance)
+
+- Expect a **2–3 week dip** while Etsy re-indexes the updated listing
+- Updated listings optimized for 2026 algorithm typically **outperform the original within 2–3 weeks**
+- **Do not edit the same listing again during this window** — compound edits extend the recovery period
+- Edit no more than 10 listings per week to avoid triggering bulk-change detection
+
+### After a Policy Violation
+
+- Removing the violating listing **stops further damage** but does not immediately restore ranking
+- Shop quality score recovery requires **weeks to months** of consistent positive engagement
+- There is **no trick to accelerate** this — only organic sales, favorites, and positive reviews rebuild the score
+- During recovery: focus on new listings rather than editing existing ones
+
+### Holiday Mode Re-Index Trick
+
+When Etsy seems to have "forgotten" your shop (sudden zero views with no edits or violations):
+1. Go to Shop Manager → Settings → Vacation Mode → Enable (put shop in "Holiday Mode")
+2. Wait 10 minutes
+3. Disable Holiday Mode
+4. Wait 30–60 minutes
+5. Check search visibility — this forces Etsy to re-index the shop
+
+**Use sparingly** — holiday mode signals to buyers that the shop is closed; don't run sales during this window.
+
+### After 90-Day Refresh Token Expiry
+
+When any API call returns 401 and the refresh endpoint also returns 401:
+1. Scott must run: `python tools/etsy_oauth.py`
+2. Follow the browser authorization flow
+3. New access + refresh tokens are written to `.env` automatically
+4. All automation resumes without any other changes
+
+---
+
+## Autonomy Boundaries — What Claude Can Do vs. What Requires Scott
+
+### Fully Autonomous (No Approval Needed)
+
+- Monitor ROAS daily and log snapshots
+- Run health checks and detect issues
+- Generate new listing content (titles, tags, descriptions) from templates
+- Generate art files using gpt-image-1 and composite into lifestyle scenes
+- Run seasonal keyword reports and dry-run previews
+- Send Quick Reply templates for Tier 1 support (file won't open, didn't receive download)
+- Refresh OAuth access tokens (within 90-day window)
+- Update SVG manifests and catalog files
+- Run weekly reports and log decisions
+
+### Requires Scott's Review Before Action
+
+- **Publishing any listing to Etsy** — Scott reviews all 10 photos, title, description, price before going live
+- **Pushing keyword updates** — `seasonal_keywords.py --push` runs only after Scott confirms
+- **Responding to refund requests** — use Template 4 first; escalate if buyer pushes back
+- **Responding to negative reviews** — always human-crafted, empathetic, personalized
+- **Price changes on existing ranked listings** — present recommendation, wait for approval
+- **Any bulk edit touching more than 10 listings** — confirm scope before running
+- **Custom order requests** — pricing and feasibility require Scott's judgment
+- **Re-authorization (OAuth)** — requires Scott to complete browser flow every 90 days
+
+### Hard Stops — Never Do Without Explicit Permission
+
+- Push to production Etsy without Scott's final review of photos + listing content
+- Issue a refund or close a case
+- Delete any listing (active or draft)
+- Change prices on more than 5 listings in a single session
+- Post to social media accounts
+- Contact buyers directly about anything other than the 5 Quick Reply templates
