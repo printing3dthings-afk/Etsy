@@ -1,0 +1,315 @@
+{
+  "research_date": "2026-06-02",
+  "categories": {
+    "wall_art": {
+      "category": "wall_art",
+      "total_listings_sampled": 250,
+      "top_title_words": [
+        [
+          "art",
+          418
+        ],
+        [
+          "wall",
+          374
+        ],
+        [
+          "decor",
+          133
+        ],
+        [
+          "abstract",
+          73
+        ],
+        [
+          "set",
+          57
+        ],
+        [
+          "poster",
+          57
+        ],
+        [
+          "modern",
+          49
+        ],
+        [
+          "minimalist",
+          49
+        ],
+        [
+          "prints",
+          48
+        ],
+        [
+          "nursery",
+          47
+        ],
+        [
+          "botanical",
+          44
+        ],
+        [
+          "quote",
+          42
+        ],
+        [
+          "vintage",
+          42
+        ],
+        [
+          "home",
+          38
+        ],
+        [
+          "boho",
+          37
+        ],
+        [
+          "gallery",
+          37
+        ],
+        [
+          "dark",
+          37
+        ],
+        [
+          "watercolor",
+          36
+        ],
+        [
+          "download)",
+          32
+        ],
+        [
+          "(digital",
+          31
+        ],
+        [
+          "painting",
+          30
+        ],
+        [
+          "neutral",
+          29
+        ],
+        [
+          "academia",
+          28
+        ],
+        [
+          "inspirational",
+          25
+        ],
+        [
+          "floral",
+          24
+        ],
+        [
+          "room",
+          21
+        ],
+        [
+          "flower",
+          15
+        ],
+        [
+          "gift",
+          15
+        ],
+        [
+          "pink",
+          15
+        ],
+        [
+          "gothic",
+          14
+        ]
+      ],
+      "top_tags": [
+        [
+          "printable wall art",
+          82
+        ],
+        [
+          "digital download",
+          62
+        ],
+        [
+          "instant download",
+          60
+        ],
+        [
+          "printable art",
+          32
+        ],
+        [
+          "abstract wall art",
+          29
+        ],
+        [
+          "wall art",
+          27
+        ],
+        [
+          "minimalist wall art",
+          26
+        ],
+        [
+          "gallery wall set",
+          25
+        ],
+        [
+          "home decor",
+          23
+        ],
+        [
+          "botanical wall art",
+          22
+        ],
+        [
+          "wall decor",
+          19
+        ],
+        [
+          "digital print",
+          17
+        ],
+        [
+          "inspirational quote",
+          15
+        ],
+        [
+          "digital download art",
+          15
+        ],
+        [
+          "neutral wall art",
+          15
+        ],
+        [
+          "nursery wall art",
+          15
+        ],
+        [
+          "digital wall art",
+          14
+        ],
+        [
+          "modern wall art",
+          14
+        ],
+        [
+          "living room decor",
+          13
+        ],
+        [
+          "minimalist print",
+          13
+        ],
+        [
+          "digital prints",
+          12
+        ],
+        [
+          "boho wall art",
+          12
+        ],
+        [
+          "instant download art",
+          11
+        ],
+        [
+          "botanical print",
+          11
+        ],
+        [
+          "bedroom wall art",
+          10
+        ],
+        [
+          "contemporary art",
+          10
+        ],
+        [
+          "living room wall art",
+          10
+        ],
+        [
+          "nursery decor",
+          10
+        ],
+        [
+          "floral wall art",
+          9
+        ],
+        [
+          "downloadable art",
+          8
+        ]
+      ],
+      "price_distribution": {
+        "under_3": 20,
+        "3_to_6": 72,
+        "6_to_10": 62,
+        "10_to_20": 41,
+        "over_20": 55
+      },
+      "avg_price": 33.68,
+      "median_price": 7.99,
+      "top_performers": [
+        {
+          "title": "Vintage Owl Painting, Dark Academia Wall Art Print, Gothic Owl, Moody Wall Decor, Rustic Bird, Forestcore, Cottagecore, Animal 6-GOT042",
+          "price": 17.95,
+          "favorites": 1442
+        },
+        {
+          "title": "Bunny Nursery Wall Art, Digital Download Nursery Print, Instant Download, Kids Prints, Animal Nursery Art, Gray Nursery Decor, Kids Wall Art",
+          "price": 7.0,
+          "favorites": 1066
+        },
+        {
+          "title": "Beige Geometric Watercolor Print, Abstract Boho Wall Art (Digital Print)",
+          "price": 4.2,
+          "favorites": 739
+        },
+        {
+          "title": "Set of 4 Print, Gallery Wall Set, Printable Wall Art, Gallery Wall Prints, Set of Prints, Abstract Art, Watercolor Wall Art, Abstract Art",
+          "price": 16.0,
+          "favorites": 625
+        },
+        {
+          "title": "Difference Maker Definition Print: Minimalist Wall Art (Instant Download)",
+          "price": 3.6,
+          "favorites": 367
+        },
+        {
+          "title": "Inspirational Quote Print, Wall Art Printable Quote, Digital Download Art, Wall Print Quote, Typography Wall Art, Motivational Quote Art",
+          "price": 6.0,
+          "favorites": 295
+        },
+        {
+          "title": "Blue Green Abstract Wall Art, Printable Abstract Art, Blue Green Print, Square Print, Neutral Modern Art, DIGITAL DOWNLOAD",
+          "price": 6.0,
+          "favorites": 224
+        },
+        {
+          "title": "Brush Stroke Print Abstract Watercolor Wall Art Prints Downloadable Art Teal Green Blush Pink Ochre Art Modern Large Wall Art Bedroom Decor",
+          "price": 5.94,
+          "favorites": 221
+        },
+        {
+          "title": "Vintage Muted Seascape Gallery Wall Set, Printable Seacoast Neutral Gallery Wall, Coastal Gallery Art Print Set of 10, Digital Download",
+          "price": 13.25,
+          "favorites": 218
+        },
+        {
+          "title": "Your Mental Health Matters | Classroom Decor, Mental Health Awareness, Boho Wall Art, Digital Print Child Art, Mental Health Matters",
+          "price": 4.99,
+          "favorites": 199
+        }
+      ]
+    }
+  },
+  "synthesis_available": true
+}
