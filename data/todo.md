@@ -14,8 +14,13 @@
 | 5 | **Activate 6 sticker pack listings** — Etsy Shop Manager → Listings → flip each draft to Active | 5 min | Revenue |
 | 6 | **Turn on Etsy Ads** — $5/day on Mom Life Sublimation Bundle (listing 4514777212) | 2 min | Visibility |
 
-Cron line for item 3:
+Cron lines for item 3 (add both):
 ```
+# Daily health check + message autoresponder (8am every day)
+0 8 * * * cd /home/user/Etsy && python tools/health_check.py --quiet >> data/pipeline_log.txt 2>&1
+0 8 * * * cd /home/user/Etsy && python tools/etsy_autoresponder.py >> data/pipeline_log.txt 2>&1
+
+# Weekly business pipeline (9am every Sunday)
 0 9 * * 0 cd /home/user/Etsy && python tools/agents/business_pipeline.py --mode weekly >> data/pipeline_log.txt 2>&1
 ```
 

@@ -190,6 +190,20 @@ class EtsyAPIClient:
         self._require_oauth()
         return self._request("GET", f"shops/{self.shop_id}/conversations", params={"limit": limit})
 
+    def get_conversation(self, conversation_id: int) -> dict:
+        """Get a single conversation with all messages."""
+        self._require_oauth()
+        return self._request("GET", f"shops/{self.shop_id}/conversations/{conversation_id}")
+
+    def send_message(self, conversation_id: int, message: str) -> dict:
+        """Send a reply to a conversation. Requires OAuth access token."""
+        self._require_oauth()
+        return self._request(
+            "POST",
+            f"shops/{self.shop_id}/conversations/{conversation_id}/messages",
+            body={"message": message},
+        )
+
     def create_listing(self, listing_data: dict) -> dict:
         """Create a new listing. Requires OAuth access token.
 
