@@ -104,12 +104,23 @@ FLOW 5 — BROWSE ABANDONMENT (triggered by page view without purchase):
   Email 1 (2 hours): "Noticed you were looking at [X]" — relevant, non-creepy personalization
   Email 2 (24 hours): Social proof for the specific product category they viewed
 
+PERSONALIZATION STRATEGY (2026 best practice):
+  • Product-name personalization is MORE powerful than first-name personalization:
+    "Your [Exact Product Name] is still waiting..." outperforms "Hi [First Name], ..." every time
+    because it triggers specific memory and relevance, not just familiarity
+  • Behavioral triggers beat schedule: send based on actions taken (viewed, added, purchased)
+    rather than fixed calendar schedules — relevance beats frequency every time
+  • Predictive send-time optimization: use your ESP's send-time-optimization feature to deliver
+    to each subscriber when they are individually most active (typically +18–26% open rate lift)
+  • Dynamic product blocks: show the specific items browsed or purchased in automated flows
+
 BROADCAST CAMPAIGN STRATEGY:
   • Optimal send: 2–3x per week (crossing 3x/week triggers 44% unsubscribe spike)
-  • Best send times: Tuesday/Thursday 10am or 7–9pm subscriber timezone
-  • Segmentation: segment by purchase history, engagement, acquisition source — segments drive 760% more revenue
-  • Subject line optimal length: 30–50 characters
+  • Best send times: Tuesday/Thursday 10am or 7–9pm subscriber timezone (or use predictive timing)
+  • Segmentation: by purchase history, engagement score, acquisition source — segments drive 760% more revenue
+  • Subject line optimal length: 30–50 characters — lead with the point, no teasing that requires opening
   • Preview text: 40–90 characters — always write it, never leave blank
+  • List hygiene: remove subscribers with 0 opens in 180 days to protect deliverability score
 
 ━━━ SECTION 4 — SEO & CONTENT STRATEGY ━━━
 2026 SEO: Intent-first. Keywords are signals, not targets. Answer WHY someone searches before matching the phrase.
@@ -136,11 +147,11 @@ Form optimization: Reduce to 3–4 fields max. Each additional field reduces con
 Message match: The landing page must mirror the ad's promise — same language, same offer, same feeling.
 
 LANDING PAGE STRUCTURE (copy for each section):
-HERO (above fold — must load in under 2 seconds):
-  Headline: [benefit-driven, clear, matches the ad that brought them here]
+HERO (above fold — LCP must fire in under 2.5 seconds — Largest Contentful Paint; 1s delay = 7% CVR drop):
+  Headline: [benefit-driven, clear, matches the ad that brought them here — message match is critical]
   Subheadline: [expand the headline claim, add specificity or proof]
   Primary CTA button: [action verb + specific benefit] — above the fold always
-  Trust micro-elements: [3 stats, badges, or "as seen in" logos]
+  Trust micro-element: "Trusted by [X,XXX]+ [customers/brands/companies]" — named count beats logo strip by 14 pts
 
 BENEFITS SECTION:
   3 benefit blocks: [Benefit-led title (not feature)] + [2 sentences of proof/explanation]
@@ -151,8 +162,11 @@ HOW IT WORKS:
   End with: [timeframe] + [first result] they'll experience
 
 SOCIAL PROOF SECTION (place near CTA for 15–30% lift):
-  2 detailed testimonials (include: specific result + timeframe + who they were before)
-  1 stat block: X customers, Y average result, Z satisfaction rate
+  VIDEO TESTIMONIAL PLACEHOLDER: a 15–45 second customer video embed near the primary CTA
+    converts 30–50% better than written testimonials — direct clients to collect these immediately
+    Placeholder: [Name], [Role/Company], [Specific result they achieved in specific timeframe]
+  2 written testimonials as backup: specific result + timeframe + who they were before
+  1 stat block: [X,XXX]+ customers, [Y%] average result, [Z/5] satisfaction rating from [N] reviews
 
 OBJECTION HANDLER (FAQ format):
   3 FAQs using the customer's exact words for the objection

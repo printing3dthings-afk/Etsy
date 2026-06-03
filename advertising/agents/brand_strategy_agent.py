@@ -98,13 +98,51 @@ Pull from market research ERRC findings:
 • Why competitors can't easily follow (switching cost, capability gap, brand equity required)
 • The proof this brand already has that validates the differentiation claim
 
+━━━ BRAND STRATEGY ELEMENT 10 — TRUST ARCHITECTURE ━━━
+Trust is the most underrated marketing asset. It compounds over time. A brand that earns trust converts \
+ads at 3x the rate of an equivalent brand that doesn't — because trust removes the hesitation that kills \
+conversions. Map exactly how this brand earns and maintains trust at every buyer journey stage.
+
+TRUST AUDIT — Current Trust Position:
+• What trust signals does this brand currently have or should prioritize building?
+  (Number of verified reviews + average rating, press mentions, customer count claimed, certifications held,
+   strength of guarantee, team visibility, UGC presence, video testimonials existing or potential)
+• What trust GAP exists? What would a skeptical prospect search for and NOT find?
+• Single biggest trust barrier to first purchase: the one thing that makes prospects hesitate
+
+THE PROOF HIERARCHY (for THIS brand + THIS audience — informed by market_research Section 8):
+  Based on how this audience verifies claims, rank from most to least powerful:
+  1. [Highest-trust proof format for this audience] — why it works, how to make it the centerpiece
+  2. [Second-highest] — how to execute it in this brand context
+  3. [Third-highest] — quick wins to build this immediately
+
+TRUST-BUILDING ROADMAP:
+  Week 1–2 (Quick wins): [e.g., "Collect 5 video testimonials from existing customers with specific outcomes"]
+  Month 1 (Foundation): [e.g., "Publish first case study with real numbers: problem → action → measurable result"]
+  Month 2–3 (Authority signals): [e.g., "Reach 50 verified reviews at 4.8+ stars, secure 2 press placements"]
+
+ANTI-SKEPTICISM COPY PRINCIPLES:
+  Non-negotiable writing standards that make every claim unassailable:
+  • Specificity over vagueness: "great results" → "47% increase in revenue in 90 days"
+  • Real assets over stock photos: actual customer photos and team faces, never models
+  • Bounded guarantees over hollow promises: "If you don't [specific outcome] in [time], we'll [specific action]"
+  • Strategic honesty markers: "This is NOT right for [specific situation]" — deliberate exclusion builds massive trust
+  • Process transparency: detailed "how it works" shows nothing to hide
+  • Named attribution: real names + roles on testimonials, never anonymous
+
+THE TRUST-TO-CONVERSION BRIDGE:
+  The exact sequence that moves a skeptical prospect from distrust to purchase for THIS brand:
+  [First trust signal] → [Trust deepens] → [Risk removal] → [Low-friction CTA] → [Purchase]
+  Example: "Video testimonial in ad → Specific stat on landing page → 30-day money-back → Free signup"
+  Map this specifically for this brand's sales flow and audience trust level.
+
 WORKFLOW:
 1. Load company_intelligence from the store — verified real data (actual taglines, real pricing, genuine customer quotes)
-2. Load market_research from the store — strategic layer built on that real data
+2. Load market_research from the store — strategic layer including Section 8: Trust & Verification Behavior
 3. Read the company brief
-3. Build all 9 elements in order — each builds on the one before
-4. Save complete strategy using save_content with section "brand_strategy"
-5. State your 3 most important strategic decisions and the rationale behind each"""
+4. Build all 10 elements in order — each builds on the one before
+5. Save complete strategy using save_content with section "brand_strategy"
+6. State your 3 most important strategic decisions and the rationale behind each"""
 
 
 class BrandStrategyAgent(BaseAgent):

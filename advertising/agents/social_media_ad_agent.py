@@ -89,6 +89,67 @@ VIDEO CONCEPTS (4, each with 3 hook variants):
 For each: [Hook A/B/C] + [Beat-by-Beat Script (action every 2s)] + [Trending audio direction] + [On-screen captions] + [Caption + 5 hashtags]
 Script timing: 45–60 seconds total = 120–160 words spoken. Fast-paced cutting is essential.
 
+────────────── YOUTUBE SHORTS ──────────────
+YouTube Shorts is the fastest-growing discovery channel in 2026. Unlike TikTok, Shorts appear on the \
+YouTube homepage feed where users scroll WITHOUT SOUND — your hook must work visually from frame 1.
+
+PLATFORM RULES FOR SHORTS:
+  • Brand name or logo must appear in the first 5 seconds — 42% higher recall vs. delayed branding
+  • Hook must carry the message via on-screen text, not voiceover (many viewers scroll with audio off)
+  • Optimal length: 30–59 seconds (algorithm rewards high completion rates)
+  • Add #Shorts to caption to trigger homepage feed recommendation
+  • Aspect ratio: 9:16, 1080×1920px
+  • End screen: hold a final frame 2–3 seconds with your CTA visible
+
+SHORTS CONCEPTS (3 concepts with 3 hook variants each):
+  Concept 1 — Educational "Did you know?": teach one surprising thing in 30–45s
+    [Hook A: surprising statistic or fact as on-screen text]
+    [Hook B: counterintuitive contrarian claim]
+    [Hook C: question the viewer has definitely wondered]
+    [Beat-by-beat visual script — new scene/cut every 2–3s]
+    [On-screen text overlay every scene — carries narrative for silent viewers]
+    [Brand watermark/name visible in first 4 seconds — top-right or bottom-left]
+    [Final 3s: CTA frame — subscribe/link/comment direction]
+
+  Concept 2 — Product Demo / Transformation: before → process → after in under 60s
+    [Hook A: show the "after" first, then cut to "before" — reversal creates curiosity]
+    [Hook B: bold text claim about the transformation]
+    [Hook C: relatable frustrating "before" scenario opens the loop]
+    [Visual beats: brand mark appears by second 3 / result reveal in final 10s]
+
+  Concept 3 — POV / Relatable Scenario: "POV: You finally found [Brand]..."
+    [Hook A/B/C: POV text variants tailored to 3 different pain points]
+    [Authentic feel: phone-shot direction, no studio lighting, natural environment]
+    [On-screen text carries the full narrative — no audio dependency]
+    [Brand shown organically within the scenario, not as an ad insert]
+
+━━━ LO-FI PERFORMANCE CREATIVE STRATEGY ━━━
+2026 research is unambiguous: raw, authentic, lo-fi content regularly outperforms $50,000 productions. \
+Some of the highest-performing ads of 2025–2026 were shot on iPhones with no music, no graphics, \
+and no editing — and they won because they broke through ad blindness by not looking like ads.
+
+THE LO-FI BRIEF (ready to hand to a team member or creator — no agency needed):
+  FORMAT: Filmed on phone, portrait orientation, natural setting (not a studio)
+  LIGHTING: Window light or outdoor shade — never ring light or artificial setups (they signal "ad")
+  PERSON: Real customer, team member, or founder — never a model or actor
+  BACKGROUND: Real environment relevant to the product (office desk, kitchen, outdoors, workshop)
+  SCRIPTING: 3–5 conversational bullet points — NOT word-for-word scripted (scripted = stiff)
+  HOOK: First 1–2 seconds = direct-to-camera statement, relatable frustration, or surprising claim
+  AUTHENTICITY MARKERS: Small imperfections increase trust — a slight pause, a genuine laugh, an edit
+    that isn't perfectly smooth. Don't over-polish. "Perfect" = fake in 2026.
+  CAPTIONS: First line = hook, body = relatable problem-solution story, end = low-friction CTA
+    ("Comment 'YES' for the link" or "Link in bio" or "Share if this is you")
+
+3 LO-FI CONCEPTS for this brand:
+  Concept 1 — "Real customer moment": [brief concept — what the person says, what they show, specific CTA]
+  Concept 2 — "Behind the scenes / how it's made": [brief concept — what's revealed, trust moment]
+  Concept 3 — "Honest take on [product/category]": [brief concept — contrarian or surprising truth]
+
+TESTING PROTOCOL: Run lo-fi versions AGAINST polished versions in split tests.
+  Track: 3-second hold rate (aim for >60%) and cost-per-result vs. polished version.
+  If lo-fi wins: scale budget to lo-fi, deprioritize studio production.
+  Most common result in 2025–2026 testing: lo-fi wins 60–70% of tests in direct-to-consumer categories.
+
 ━━━ CREATIVE TESTING FRAMEWORK ━━━
 The Creative Iteration System — how to test and improve over time:
   Week 1: Launch 3 hook variants per creative (keep body/CTA identical)

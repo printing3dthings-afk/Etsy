@@ -130,11 +130,132 @@ VOICEOVER DIRECTION: [gender/age/accent of VO, delivery energy, pace]
 TEXT ANIMATION: [how on-screen text appears — instant / typewriter / slide / fade]
 THUMBNAIL DESIGN: [what makes a high-CTR thumbnail for this brand — specific visual formula]
 
+━━━ CREATIVE SYSTEM 7 — COMPLETE BRAND IDENTITY SYSTEM ━━━
+This deliverable gives clients a production-ready brand kit they can hand to any designer, \
+developer, printer, or contractor and get perfectly on-brand results. Every specification must \
+be exact and complete — approximate is not good enough here.
+
+LOGO SYSTEM — 5 Variant Concepts:
+Describe each with enough precision that a graphic designer can execute it without a briefing call:
+
+  VARIANT 1 — Primary Horizontal (default usage):
+    [Icon/mark to the left of wordmark — relative size ratio, spacing between them, overall feel]
+    [Describe the icon concept: what shape/symbol, what it represents, how it connects to brand meaning]
+    [Describe the wordmark: font personality, weight, any custom letterform adjustments]
+
+  VARIANT 2 — Primary Stacked (square applications):
+    [Icon centered above wordmark — spacing rules, how proportion changes from horizontal]
+    [When to use: social profile images, square print materials, favicon backgrounds]
+
+  VARIANT 3 — Icon/Mark Only (small applications):
+    [The simplified symbol alone, without wordmark — must be recognizable at 32×32px]
+    [Where this appears: app icon, browser favicon, embossed packaging, embroidery, watermark]
+
+  VARIANT 4 — Reversed/White (dark backgrounds):
+    [What changes when placed on dark: which elements go white, what stays, any color adjustments]
+    [Minimum contrast ratio requirement for backgrounds]
+
+  VARIANT 5 — Monochrome (single-color applications):
+    [How the logo renders in pure black or single brand color]
+    [For: rubber stamps, single-color print, black-and-white media]
+
+  Clear space rule: minimum clear space = [X]× the cap-height of the wordmark on ALL sides
+  Minimum sizes: [Xpx digital minimum] / [Xmm print minimum — smaller and the wordmark becomes unreadable]
+
+  5 Logo Misuse Rules (visual violations to never commit):
+    1. Never stretch or distort — proportions are locked
+    2. Never apply drop shadow, outer glow, emboss, or bevel effects
+    3. Never use on a busy photo without a clear space buffer or semi-transparent overlay
+    4. Never recreate the wordmark in a different font — the approved file only
+    5. Never use outdated versions — only the current approved file
+
+EXACT COLOR PALETTE:
+  PRIMARY PALETTE (the 3 dominant brand colors — appear in 80%+ of brand materials):
+    [Color Name 1]: HEX #XXXXXX | RGB (RRR, GGG, BBB) | Usage: primary CTAs, nav bar, dominant brand element
+    [Color Name 2]: HEX #XXXXXX | RGB (RRR, GGG, BBB) | Usage: secondary elements, hover states, section backgrounds
+    [Color Name 3]: HEX #XXXXXX | RGB (RRR, GGG, BBB) | Usage: large background areas, breathing room, card backgrounds
+
+  NEUTRAL PALETTE (grays for text and UI — must pass WCAG AA contrast with all primary colors):
+    Dark gray: HEX #XXXXXX — primary body text, headings (meets 4.5:1 contrast on white)
+    Medium gray: HEX #XXXXXX — secondary text, captions, meta info, placeholder text
+    Light gray: HEX #XXXXXX — subtle borders, dividers, table stripes
+    Off-white: HEX #XXXXXX — page backgrounds, card backgrounds (not pure white — slightly warmer/cooler)
+
+  SEMANTIC / FUNCTIONAL COLORS:
+    Success green: HEX #XXXXXX — positive states, form confirmations, "approved" badges
+    Warning amber: HEX #XXXXXX — caution states, limited availability, important notices
+    Error red: HEX #XXXXXX — form errors, alerts, critical warnings
+
+  Color Proportion Rules:
+    • Primary Color 1: 60% of any composition (dominant — backgrounds, headers)
+    • Primary Color 2: 30% (secondary — CTAs, key elements)
+    • Primary Color 3 + accents: 10% (sparingly — maximum visual impact)
+    • Semantic colors: only in their functional context — never decorative
+
+TYPOGRAPHY SPECIFICATION:
+  DISPLAY / HEADLINE FONT (the brand's visual voice in large format):
+    Exact font name: [Google Fonts name — e.g., "Inter", "Playfair Display", "Space Grotesk"]
+    Weight(s) used: [700 Bold for standard headlines, 900 Black for hero/impact]
+    Style: [Normal only / Italic for emphasis]
+    Letter-spacing: [e.g., -0.03em tight / 0em normal / 0.05em airy]
+    Line-height: [1.05–1.15 for display sizes — tighter = more authority]
+    Transform: [Title case / ALL CAPS for short labels only / sentence case]
+    Usage contexts: H1 hero, H2 section headers, ad headlines, pull quotes, OOH/billboard
+
+  BODY / READING FONT (the brand's voice in sustained copy):
+    Exact font name: [Google Fonts name]
+    Weight(s): [400 Regular for body, 500 Medium for strong emphasis, 600 SemiBold for subheadings]
+    Letter-spacing: [0 to 0.01em — body copy needs no artificial spacing]
+    Line-height: [1.6–1.75 — readability is the only goal here]
+    Usage: paragraphs, email body, captions, descriptions, form labels, anything read at length
+
+  UI / FUNCTIONAL FONT (buttons, labels, navigation — may be same as body or distinct):
+    Exact font name: [same as body OR a condensed/mono variant for contrast]
+    Weight: [600 SemiBold for buttons and CTAs]
+    Letter-spacing: [0.06–0.1em for ALL CAPS labels — tracking improves legibility at small sizes]
+    Usage: CTA buttons, navigation links, category tags, form labels, badge text
+
+  Type Scale (exact pixel values for implementation):
+    Hero/Display: 64–80px desktop / 40–56px mobile
+    H1: 48–56px desktop / 32–40px mobile
+    H2: 36–44px desktop / 24–32px mobile
+    H3: 24–30px desktop / 20–24px mobile
+    H4/Subheading: 18–22px
+    Body large: 18px
+    Body standard: 16px
+    Caption/meta: 12–14px
+    Button text: 14–16px (600 weight)
+
+SPACING & GRID SYSTEM:
+  Base unit: 8px (all spacing is a multiple of 8 — creates invisible harmony)
+  Spacing scale: 4, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192px
+  Content max-width: [1140px or 1280px — specify which]
+  Page horizontal padding: 16–24px mobile / 40–48px tablet / 80–120px desktop
+  Section vertical padding: 64–96px desktop / 48–64px mobile
+  Component internal padding: 24–32px (cards, boxes, panels)
+  Grid: 12 columns / 16px gutters desktop / 8px gutters mobile
+  Border radius standard: [4px utility / 8px cards / 16px feature cards / 9999px pills/badges]
+
+BRAND GUIDELINES QUICK-REFERENCE CARD (condensed to under 1 page — usable by non-designers):
+  Brand name: [full legal name + short/common name]
+  Tagline: [chosen tagline from Element 7 portfolio — the winner]
+  Our category: [the category this brand owns, from Element 1]
+  Primary colors: [Color 1 name: #HEX] + [Color 2 name: #HEX] + [Color 3 name: #HEX]
+  Headline font: [font name, weight]
+  Body font: [font name, weight]
+  Voice in 3 words: [from brand_strategy Element 6]
+  Logo: always use the provided file — never recreate
+  Top 3 visual dos: [most important]
+  Top 3 visual don'ts: [most important violations]
+  Imagery: [2-sentence description of what photos/visuals feel right]
+  Tone in 1 sentence: [the distilled voice guide from brand_strategy]
+  Document version: v1.0 | [Month Year]
+
 WORKFLOW:
 1. Load brand_strategy from store — themes must bring the positioning and pillars to life
 2. Load market_research from store — visual direction must resonate with the audience psychology
 3. Load copywriting from store — visual themes must complement (not compete with) the copy
-4. Develop all 6 creative systems in full
+4. Develop all 7 creative systems in full
 5. Save complete creative direction using save_content with section "creative_direction"
 6. State the ONE visual decision that will most dramatically differentiate this brand from competitors"""
 

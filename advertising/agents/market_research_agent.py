@@ -89,13 +89,55 @@ The ERRC grid identifies uncontested market space. Don't compete — make compet
 • The functional lead benefit (the rational proof that validates the emotional claim)
 • The transformation promise: [customer goes from X → to Y] by using this brand
 
+━━━ RESEARCH SECTION 8 — TRUST & VERIFICATION BEHAVIOR ━━━
+In 2026, trust is a premium asset. AI-generated content, deepfakes, and fake reviews mean every purchase \
+includes an unspoken question: "Can I believe this brand?" Understanding HOW this audience verifies claims \
+tells you exactly what proof must appear in the advertising — and what format that proof must take.
+
+• WHERE does this audience fact-check before buying? Be platform-specific:
+  (Reddit threads? Google Reviews? YouTube "honest review" searches? Trustpilot/G2/Yelp?
+   Industry forums? Ask friends on social? Check LinkedIn company page? Look for "About" page?)
+  This determines where social proof must be BUILT, not just referenced in ads.
+
+• WHAT PROOF FORMAT does this audience trust most? Rank these for THIS category:
+  1. Video testimonials — seeing a real person on camera = highest perceived authenticity
+  2. Named case studies with specific numbers ("X company achieved Y in Z days")
+  3. User-generated content — customer photos/videos in natural settings, not staged
+  4. Statistical evidence with named sources ("73% of customers report X — internal data")
+  5. Expert/authority endorsements — professional credentials, industry certifications
+  6. Press and media coverage — "As seen in [Publication]"
+  7. Review count + star rating — quantity signals popularity, quality signals trust
+
+• TRUST THRESHOLD: How much proof does this audience need before purchasing?
+  High-trust buyers (decide quickly if the offer looks right) need emotional resonance.
+  High-skepticism buyers (research extensively before buying) need layered evidence.
+  Which is this audience, and what does that mean for the ad approach?
+
+• SKEPTICISM TRIGGERS: What signals immediately destroy trust with THIS audience?
+  (Stock photo people, overly polished production, no visible reviews, vague unverifiable claims,
+   no pricing visible, no real team faces, no "About" page, hidden refund policy, AI-written feel)
+
+• VERIFICATION SEQUENCE: What does this audience DO in the 5 minutes before clicking "buy"?
+  Map it: e.g., "Google '[brand name] reviews' → scan first 3 results → check Instagram → look for guarantee → buy"
+  Mapping this sequence identifies which trust signals to build first and where they must live.
+
+• TRUST ACCELERATORS: What shortcut signals allow them to skip extensive research?
+  (Familiar brand associations, money-back guarantee removing financial risk, free trial offer,
+   social proof from someone exactly like them, specific professional certification, recognized media logo)
+
+• THE PROOF HIERARCHY FOR THIS BRAND:
+  Given everything above — the 3 most powerful proof types to lead with in advertising:
+  Proof Type 1: [format] — why it works for this specific audience
+  Proof Type 2: [format] — how to execute it quickly
+  Proof Type 3: [format] — what quick wins build this immediately
+
 WORKFLOW:
 1. Load company_intelligence from store FIRST — this section contains verified real data from
    the company's actual website, customer reviews, news, and social media. It is your primary
    source of truth. Ground ALL research in these real facts — real product names, actual pricing,
    genuine customer quotes, verified competitor names.
 2. Read the company brief
-3. Execute all 7 research sections, anchoring every observation in the company_intelligence data
+3. Execute all 8 research sections, anchoring every observation in the company_intelligence data
 4. Save complete findings using save_content with section "market_research"
 5. Close with: your 3 most strategically important insights and why they matter for advertising"""
 
