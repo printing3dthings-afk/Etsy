@@ -308,6 +308,10 @@ def build_calendar(listings: list[dict], days: int = 30) -> list[dict]:
     random.shuffle(pool)
     pool = pool[:days]
 
+    if len(pool) < days:
+        print(f"  Warning: only {len(pool)} unique listings available for a {days}-day calendar "
+              f"(add more listings to fill the calendar)")
+
     calendar = []
     today = date.today()
     styles = ["preview", "community", "share"]
@@ -325,9 +329,10 @@ def build_calendar(listings: list[dict], days: int = 30) -> list[dict]:
 
 
 def render_markdown(calendar: list[dict]) -> str:
+    today = date.today()  # capture once — avoid midnight race between header and week calculation
     lines = [
         "# OnBrandCraftz — Social Content Calendar",
-        f"Generated: {date.today().isoformat()}",
+        f"Generated: {today.isoformat()}",
         f"Shop: {SHOP_URL}",
         "",
         "---",
@@ -343,7 +348,7 @@ def render_markdown(calendar: list[dict]) -> str:
     current_week = None
     for post in calendar:
         d = date.fromisoformat(post["date"])
-        week_num = (d - date.today()).days // 7 + 1
+        week_num = (d - today).days // 7 + 1
         if week_num != current_week:
             current_week = week_num
             lines.append(f"## Week {week_num}")

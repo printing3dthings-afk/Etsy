@@ -256,6 +256,7 @@ def fade_clip(clip: VideoClip, fade_in: float = 0.4,
             alpha = t / fade_in
         elif t > dur - fade_out:
             alpha = (dur - t) / fade_out
+        alpha = max(0.0, min(1.0, alpha))  # clamp — t can slightly exceed dur at clip boundaries
         if alpha < 1.0:
             frame = (frame * alpha).astype(np.uint8)
         return frame
@@ -330,7 +331,7 @@ def build_new_drop(images: list[Image.Image], title: str,
 
 def build_feature(images: list[Image.Image], title: str,
                   labels: list[str] | None = None,
-                  is_digital: bool = True) -> VideoClip:
+                  is_digital: bool = True, **kwargs) -> VideoClip:
     """Each photo gets a feature label at the bottom."""
     per_photo    = 3.5
     default_lbls = [
@@ -382,9 +383,11 @@ STYLES = {
 
 # ── Etsy data fetching ────────────────────────────────────────────────────────
 
-def fetch_listing_images(listing_id: int, client) -> tuple[list[Image.Image], dict]:
-    listing = client.get_listing(listing_id)
-    images  = client.get_listing_images(listing_id)
+def fetch_listing_images(listing_id: int, client,
+                         listing: dict | None = None) -> tuple[list[Image.Image], dict]:
+    if listing is None:
+        listing = client.get_listing(listing_id)
+    images = client.get_listing_images(listing_id)
     imgs    = []
     for img_data in sorted(images, key=lambda x: x.get("rank", 99)):
         url = img_data.get("url_fullxfull", "")
@@ -517,25 +520,30 @@ def main() -> None:
         sys.exit(1)
 
     if args.listing:
-        listing_ids = [args.listing]
-        batch_mode  = False
+        batch_mode = False
     else:
         batch_type  = "3d" if args.batch_3d else "planners"
         listings    = get_batch_listings(client, batch_type)
-        listing_ids = [l["listing_id"] for l in listings]
         batch_mode  = True
-        print(f"Batch mode: {len(listing_ids)} {batch_type} listings\n")
+        print(f"Batch mode: {len(listings)} {batch_type} listings\n")
 
     styles = list(STYLES.keys()) if args.all_styles else [args.style]
 
-    for i, lid in enumerate(listing_ids):
+    # In single-listing mode, build a minimal list to unify the loop
+    if not batch_mode:
+        listings = [{"listing_id": args.listing}]
+
+    for i, listing_stub in enumerate(listings):
+        lid = listing_stub["listing_id"]
         if batch_mode:
-            print(f"[{i+1}/{len(listing_ids)}] Listing {lid}")
+            print(f"[{i+1}/{len(listings)}] Listing {lid}")
         else:
             print(f"Listing {lid}")
 
         try:
-            images, listing = fetch_listing_images(lid, client)
+            # Pass pre-fetched listing dict in batch mode to avoid redundant API call
+            prefetched = listing_stub if batch_mode and "title" in listing_stub else None
+            images, listing = fetch_listing_images(lid, client, listing=prefetched)
         except Exception as e:
             print(f"  ERROR fetching listing {lid}: {e}")
             continue
