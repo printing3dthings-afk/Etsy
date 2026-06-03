@@ -1,5 +1,5 @@
 # OnBrandCraftz — Master TODO List
-*Last updated: 2026-06-02*
+*Last updated: 2026-06-03*
 
 ---
 
@@ -19,7 +19,7 @@
 | # | Task | Time | Revenue Potential |
 |---|---|---|---|
 | 5 | **Create Amazon KDP account** — kdp.amazon.com → Sign in with Amazon → complete seller setup → run `python tools/kdp_publisher.py --all` to prep submissions | 15 min | $500–2,000/mo once ranked — Amazon planner market is 20× Etsy's |
-| 6 | **Create Printify account** — printify.com → free account → copy API key → add `PRINTIFY_API_KEY=<key>` to `.env` → run `python tools/printify_publisher.py --submit-all` | 10 min | 55 wall art designs become physical prints. $5–10 profit per sale, zero fulfillment |
+| ~~6~~ | ~~Create Printify account~~ | ~~Done~~ | ✅ **COMPLETE** — 52 products live, 156 variants, orders auto-route |
 | 7 | **Create Mailchimp account** — mailchimp.com → free (up to 500 contacts) → copy API key + List ID → add to `.env`: `MAILCHIMP_API_KEY=` and `MAILCHIMP_LIST_ID=` | 10 min | Email list owns the customer relationship. Etsy owns it now — you don't |
 | 8 | **Create Instagram app** — developers.facebook.com → New App → Business type → add Instagram Graph API → add to `.env`: `INSTAGRAM_APP_ID=`, `INSTAGRAM_APP_SECRET=`, `INSTAGRAM_USER_ID=`, `INSTAGRAM_ACCESS_TOKEN=` | 20 min | Visual platform — kawaii planners/stickers perform very well on Instagram Reels |
 
@@ -27,7 +27,7 @@
 
 | # | Task | Time | Notes |
 |---|---|---|---|
-| 9 | **Publish 11 commercial license listings** — Etsy Shop Manager → Listings → Drafts → review and activate each one | 10 min | $24.99 (SVG) and $12.99 (stickers) commercial use licenses. Already drafted, just need activation |
+| ~~9~~ | ~~Publish 11 commercial license listings~~ | ~~Done~~ | ✅ **COMPLETE** — 11 listings live ($24.99 SVG + $12.99 stickers) |
 | 10 | **Review coloring pages** — `data/digital_products/coloring_pages/` — 54 PNG files + 11 ZIP sets ready. Check quality then run `python tools/upload_coloring_pages.py` (once built) | 5 min | 54 new listings at $3.99 each from existing art. Zero new design cost |
 | 11 | **Review digital paper packs** — `data/digital_products/digital_paper/` — 60 pattern files + 12 theme ZIPs. Check quality then stage for listing | 5 min | 12 new listings at $4.99 each from brand color palettes. Zero cost |
 
@@ -60,7 +60,7 @@ python tools/approve_listing.py --listing-id <ID> --yes  # approve and publish
 ```
 
 **Drafts waiting for your review right now:**
-- 11 commercial license listings (SVG bundles + sticker packs)
+- None — all current drafts have been published ✅
 
 Once OpenAI billing is topped up, I will generate and stage these for your review:
 - 5 SVG bundles (floral_wreath, dark_floral, western completion, retro_groovy, mama_scripts)
@@ -202,16 +202,16 @@ Faith/Christian, Sports Mom, Seasonal (Christmas, Valentine's)
 | Metric | Value | Target | Status |
 |---|---|---|---|
 | Active listings | 93 | 100+ | Close |
-| Draft listings awaiting review | 11 | 0 | Review needed |
+| Draft listings awaiting review | 0 | 0 | ✅ All published |
 | Weekly net revenue | $20.45 | $1,154/wk | 6% of target |
 | Monthly pace | $307/mo | $5,000/mo | 6% of target |
 | Listings with title issues | 0 | 0 | ✅ Fixed today |
 | Listings with photo issues | 20 | 0 | Queued (needs OpenAI) |
 | SVG bundles complete | 0/5 | 5/5 | Queued (needs OpenAI) |
 
-**New revenue unlocked today (pending your 2 actions):**
-- Publish commercial licenses → +$200–500/mo from crafters who need commercial rights
-- Create KDP account → +$500–2,000/mo from Amazon's planner market
-- Create Printify account → 55 physical print listings, +$200–800/mo
-- Publish coloring pages (after OpenAI for mockup photos) → +$100–300/mo
-- Publish digital paper packs → +$100–200/mo
+**Revenue streams now live (as of 2026-06-03):**
+- ✅ Commercial licenses live → +$200–500/mo from crafters who need commercial rights
+- ✅ Printify physical prints live → 52 products × 3 sizes, +$200–800/mo
+- ⏳ Coloring pages (waiting on OpenAI for mockup photos) → +$100–300/mo
+- ⏳ Digital paper packs (waiting on OpenAI for mockup photos) → +$100–200/mo
+- ⏳ KDP (deferred until Etsy has more sales) → +$500–2,000/mo
