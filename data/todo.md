@@ -10,8 +10,7 @@
 | # | Task | Time | Why It's Blocked |
 |---|---|---|---|
 | 1 | **Top up OpenAI billing** — platform.openai.com → Billing → Add $100, raise hard limit, enable auto-recharge | 5 min | Blocks all SVG generation, photo generation, new planner creation |
-| 2 | **Add Pinterest Client ID to .env** — Pinterest Developer Console → your app → App ID → `PINTEREST_CLIENT_ID=<id>` in `.env` | 5 min | Pinterest auto-posting currently broken (token can't refresh without it) |
-| 3 | **Run Pinterest OAuth** (after #2) — `python tools/pinterest_oauth.py` | 2 min | Unlocks Pinterest auto-posting |
+| 2 | **Pinterest — waiting on app approval** — support ticket submitted. When approved: add `PINTEREST_CLIENT_ID=` to `.env` then run `python tools/pinterest_oauth.py` | Waiting | Pinterest developer app stuck in pending — support ticket filed 2026-06-03 |
 | 4 | **Run TikTok OAuth** — `python tools/tiktok_oauth.py` | 5 min | Unlocks TikTok auto-posting |
 
 ### New platform accounts (free — each unlocks a new revenue stream)
