@@ -1,5 +1,5 @@
 {
-  "generated_date": "2026-06-02",
+  "generated_date": "2026-06-03",
   "total_products": 52,
   "ready_for_submission": 23,
   "needs_upscale": 29,
@@ -26,8 +26,8 @@
     }
   },
   "blueprint_ids": {
-    "prodigi_poster": 461,
-    "enhanced_matte_poster": 6,
+    "prodigi_poster": 804,
+    "enhanced_matte_poster": 282,
     "note": "Verify at https://api.printify.com/v1/catalog/blueprints.json"
   },
   "products": [
@@ -49,8 +49,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -102,7 +102,7 @@
       "printify_api_payload_template": {
         "title": "Boho Botanical Floral Art Print",
         "description": "Bring this boho botanical floral art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -149,8 +149,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -202,7 +202,7 @@
       "printify_api_payload_template": {
         "title": "Minimalist Line Art Art Print",
         "description": "Bring this minimalist line art art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -249,8 +249,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -302,7 +302,7 @@
       "printify_api_payload_template": {
         "title": "Abstract Watercolor Art Print",
         "description": "Bring this abstract watercolor art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -349,8 +349,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -402,7 +402,7 @@
       "printify_api_payload_template": {
         "title": "Cottagecore Botanical Art Print",
         "description": "Bring this cottagecore botanical art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -449,8 +449,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -502,7 +502,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Celestial Art Print",
         "description": "Bring this kawaii celestial art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -549,8 +549,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -602,7 +602,7 @@
       "printify_api_payload_template": {
         "title": "Pastel Abstract Art Print",
         "description": "Bring this pastel abstract art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -649,8 +649,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -702,7 +702,7 @@
       "printify_api_payload_template": {
         "title": "Modern Geometric Art Print",
         "description": "Bring this modern geometric art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -749,8 +749,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -802,7 +802,7 @@
       "printify_api_payload_template": {
         "title": "Watercolor Floral Art Print",
         "description": "Bring this watercolor floral art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -849,8 +849,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -902,7 +902,7 @@
       "printify_api_payload_template": {
         "title": "Boho Mandala Art Print",
         "description": "Bring this boho mandala art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -951,8 +951,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1004,7 +1004,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Character Art Print",
         "description": "Bring this kawaii character art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1051,8 +1051,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1104,7 +1104,7 @@
       "printify_api_payload_template": {
         "title": "Tropical Botanical Art Print",
         "description": "Bring this tropical botanical art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1151,8 +1151,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1204,7 +1204,7 @@
       "printify_api_payload_template": {
         "title": "Minimalist Typography Art Print",
         "description": "Bring this minimalist typography art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1251,8 +1251,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1304,7 +1304,7 @@
       "printify_api_payload_template": {
         "title": "Abstract Landscape Art Print",
         "description": "Bring this abstract landscape art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1351,8 +1351,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1404,7 +1404,7 @@
       "printify_api_payload_template": {
         "title": "Floral Wreath Art Print",
         "description": "Bring this floral wreath art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1451,8 +1451,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1504,7 +1504,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Stationery Art Print",
         "description": "Bring this kawaii stationery art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1551,8 +1551,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1604,7 +1604,7 @@
       "printify_api_payload_template": {
         "title": "Pastel Celestial Art Print",
         "description": "Bring this pastel celestial art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1651,8 +1651,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1704,7 +1704,7 @@
       "printify_api_payload_template": {
         "title": "Modern Abstract Art Print",
         "description": "Bring this modern abstract art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1751,8 +1751,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1804,7 +1804,7 @@
       "printify_api_payload_template": {
         "title": "Botanical Herbs Art Print",
         "description": "Bring this botanical herbs art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1851,8 +1851,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -1904,7 +1904,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Animals Art Print",
         "description": "Bring this kawaii animals art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -1951,8 +1951,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2004,7 +2004,7 @@
       "printify_api_payload_template": {
         "title": "Boho Dreamcatcher Art Print",
         "description": "Bring this boho dreamcatcher art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2051,8 +2051,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2104,7 +2104,7 @@
       "printify_api_payload_template": {
         "title": "Wildflower Meadow Art Print",
         "description": "Bring this wildflower meadow art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2151,8 +2151,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2204,7 +2204,7 @@
       "printify_api_payload_template": {
         "title": "Vintage Botanical Art Print",
         "description": "Bring this vintage botanical art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2251,8 +2251,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2304,7 +2304,7 @@
       "printify_api_payload_template": {
         "title": "Celestial Moon Art Print",
         "description": "Bring this celestial moon art print to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2351,8 +2351,8 @@
         "issues": [],
         "warnings": []
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2404,7 +2404,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1026",
         "description": "Bring this kawaii art print design 1026 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2453,8 +2453,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2506,7 +2506,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1030",
         "description": "Bring this kawaii art print design 1030 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2555,8 +2555,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2608,7 +2608,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1031",
         "description": "Bring this kawaii art print design 1031 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2657,8 +2657,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2710,7 +2710,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1032",
         "description": "Bring this kawaii art print design 1032 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2759,8 +2759,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2812,7 +2812,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1033",
         "description": "Bring this kawaii art print design 1033 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2861,8 +2861,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -2914,7 +2914,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1034",
         "description": "Bring this kawaii art print design 1034 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -2963,8 +2963,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3016,7 +3016,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1035",
         "description": "Bring this kawaii art print design 1035 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3065,8 +3065,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3118,7 +3118,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1036",
         "description": "Bring this kawaii art print design 1036 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3167,8 +3167,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3220,7 +3220,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1037",
         "description": "Bring this kawaii art print design 1037 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3269,8 +3269,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3322,7 +3322,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1038",
         "description": "Bring this kawaii art print design 1038 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3371,8 +3371,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3424,7 +3424,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1039",
         "description": "Bring this kawaii art print design 1039 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3473,8 +3473,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3526,7 +3526,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1040",
         "description": "Bring this kawaii art print design 1040 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3575,8 +3575,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3628,7 +3628,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1041",
         "description": "Bring this kawaii art print design 1041 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3677,8 +3677,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3730,7 +3730,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1042",
         "description": "Bring this kawaii art print design 1042 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3779,8 +3779,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3832,7 +3832,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1043",
         "description": "Bring this kawaii art print design 1043 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3881,8 +3881,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -3934,7 +3934,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1044",
         "description": "Bring this kawaii art print design 1044 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -3983,8 +3983,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4036,7 +4036,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1045",
         "description": "Bring this kawaii art print design 1045 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4085,8 +4085,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4138,7 +4138,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1046",
         "description": "Bring this kawaii art print design 1046 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4187,8 +4187,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4240,7 +4240,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1047",
         "description": "Bring this kawaii art print design 1047 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4289,8 +4289,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4342,7 +4342,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1048",
         "description": "Bring this kawaii art print design 1048 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4391,8 +4391,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4444,7 +4444,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1049",
         "description": "Bring this kawaii art print design 1049 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4493,8 +4493,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4546,7 +4546,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1050",
         "description": "Bring this kawaii art print design 1050 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4595,8 +4595,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4648,7 +4648,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1051",
         "description": "Bring this kawaii art print design 1051 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4697,8 +4697,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4750,7 +4750,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1052",
         "description": "Bring this kawaii art print design 1052 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4799,8 +4799,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4852,7 +4852,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1053",
         "description": "Bring this kawaii art print design 1053 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -4901,8 +4901,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -4954,7 +4954,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1054",
         "description": "Bring this kawaii art print design 1054 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -5003,8 +5003,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -5056,7 +5056,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1055",
         "description": "Bring this kawaii art print design 1055 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -5105,8 +5105,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -5158,7 +5158,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1056",
         "description": "Bring this kawaii art print design 1056 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [
@@ -5207,8 +5207,8 @@
           "Short edge 1024px < 2400px minimum for 300 DPI quality. Run: python tools/upscale_art.py"
         ]
       },
-      "printify_blueprint_id": 461,
-      "printify_blueprint_note": "Blueprint 461 = Prodigi Poster (color matte). Alternative: Blueprint 6 = Enhanced Matte Poster. Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json",
+      "printify_blueprint_id": 804,
+      "printify_blueprint_note": "Blueprint 804 = Fine Art Posters (Print Clever, provider 72). Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03.",
       "variants": [
         {
           "size": "8x10 in",
@@ -5260,7 +5260,7 @@
       "printify_api_payload_template": {
         "title": "Kawaii Art Print Design 1057",
         "description": "Bring this kawaii art print design 1057 to life on your walls!\n\nThis listing is for a PHYSICAL PRINT shipped directly to you \u2014 no printing or downloading needed. Just order and it arrives at your door.\n\nPrinted on premium matte paper at 300 DPI for crisp, gallery-quality results. Part of the OnBrandCraftz kawaii wall art collection.\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\udcd0 AVAILABLE SIZES\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2705 8x10 in \u2014 $19.99\n\u2705 12x16 in \u2014 $27.99\n\u2705 18x24 in \u2014 $39.99\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83d\uddbc PRINT DETAILS\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\u2022 Premium matte photo paper\n\u2022 300 DPI professional print quality\n\u2022 Ships in a sturdy protective mailer\n\u2022 No frame included \u2014 fits any standard frame\n\u2022 Printed and shipped by our certified print partner\n\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\ud83e\udd16 ABOUT THIS DESIGN\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nThis design was created using AI image generation tools, with original prompts, curation, and finishing by the seller.\n\n\u00a9 OnBrandCraftz. Personal use only. Not for resale or redistribution.",
-        "blueprint_id": 461,
+        "blueprint_id": 804,
         "print_provider_id": "(resolved at submission time)",
         "variants": "(resolved at submission time from Printify variant catalog)",
         "print_areas": [

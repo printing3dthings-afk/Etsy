@@ -1,5 +1,5 @@
 # Printify Setup Guide — OnBrandCraftz
-*Generated 2026-06-02 by printify_publisher.py*
+*Generated 2026-06-03 by printify_publisher.py*
 
 Printify is a free print-on-demand platform. Buyers order on Etsy, Printify prints
 and ships, you keep the margin. Zero inventory, zero fulfillment overhead.
@@ -56,8 +56,8 @@ Printify uses "blueprints" — product templates. For wall art posters:
 
 | Blueprint | ID   | Type                  | Notes                  |
 |-----------|------|-----------------------|------------------------|
-| Prodigi   | 461  | Color matte poster    | Most popular for art   |
-| Matte     | 6   | Enhanced matte poster | Printify Choice        |
+| Prodigi   | 804  | Color matte poster    | Most popular for art   |
+| Matte     | 282   | Enhanced matte poster | Printify Choice        |
 
 Verify current IDs at: https://api.printify.com/v1/catalog/blueprints.json
 

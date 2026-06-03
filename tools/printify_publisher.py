@@ -61,10 +61,10 @@ def _parse_env() -> dict[str, str]:
 PRINTIFY_BASE_URL = "https://api.printify.com/v1"
 
 # Poster blueprint IDs on Printify
-# Blueprint 461 = "Poster" (Prodigi) — most popular for wall art
-# Blueprint 6   = "Enhanced Matte Paper Poster" (Printify Choice)
-BLUEPRINT_POSTER_PRODIGI = 461
-BLUEPRINT_POSTER_MATTE = 6
+# Blueprint 804 = "Fine Art Posters" (Print Clever, provider 72) — verified live 2026-06-03
+# Variants: 8x10=75288, 12x16=75290, 18x24=100938
+BLUEPRINT_POSTER_PRODIGI = 804
+BLUEPRINT_POSTER_MATTE = 282  # Matte Vertical Posters (Printify Choice)
 
 # Standard print sizes: width_in, height_in, label, sku_suffix, sell_price, cost_est
 PRINT_SIZES = [
@@ -244,9 +244,8 @@ def build_printify_product(art: dict[str, Any], inspection: dict[str, Any]) -> d
         "image_inspection": inspection,
         "printify_blueprint_id": BLUEPRINT_POSTER_PRODIGI,
         "printify_blueprint_note": (
-            f"Blueprint {BLUEPRINT_POSTER_PRODIGI} = Prodigi Poster (color matte). "
-            f"Alternative: Blueprint {BLUEPRINT_POSTER_MATTE} = Enhanced Matte Poster. "
-            "Verify current IDs at https://api.printify.com/v1/catalog/blueprints.json"
+            f"Blueprint {BLUEPRINT_POSTER_PRODIGI} = Fine Art Posters (Print Clever, provider 72). "
+            "Variants: 8x10=75288, 12x16=75290, 18x24=100938. Verified 2026-06-03."
         ),
         "variants": variants,
         "total_variants": len(variants),
@@ -385,15 +384,26 @@ def _resolve_blueprint_variants(client: PrintifyClient, blueprint_id: int) -> di
     variants_data = client.get_variants(blueprint_id, provider_id)
     variants = variants_data.get("variants", [])
 
+    # Hardcoded variant IDs for blueprint 804 (Fine Art Posters, Print Clever id=72)
+    # Verified 2026-06-03 via /catalog/blueprints/804/print_providers/72/variants.json
+    BLUEPRINT_804_VARIANT_MAP = {
+        "8x10": 75288,   # 8″ x 10″ (Vertical) / Matte
+        "12x16": 75290,  # 12″ x 16″ (Vertical) / Matte
+        "18x24": 100938, # 18″ x 24″ (Vertical) / Matte
+    }
+
     size_to_variant: dict[str, int] = {}
-    for variant in variants:
-        opts = variant.get("options", {})
-        size_label = opts.get("size", "").lower()
-        for our_size in PRINT_SIZES:
-            needle = our_size["sku_suffix"].lower()
-            if needle in size_label.replace('"', "").replace(" ", "").replace("×", "x"):
-                size_to_variant[our_size["sku_suffix"]] = variant["id"]
-                break
+    if blueprint_id == 804:
+        size_to_variant = BLUEPRINT_804_VARIANT_MAP.copy()
+    else:
+        for variant in variants:
+            opts = variant.get("options", {})
+            size_label = opts.get("size", variant.get("title", "")).lower()
+            for our_size in PRINT_SIZES:
+                needle = our_size["sku_suffix"].lower()
+                if needle in size_label.replace('"', "").replace(" ", "").replace("×", "x"):
+                    size_to_variant[our_size["sku_suffix"]] = variant["id"]
+                    break
 
     return {
         "provider_id": provider_id,
