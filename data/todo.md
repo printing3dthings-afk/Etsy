@@ -20,7 +20,7 @@
 |---|---|---|---|
 | 5 | **Create Amazon KDP account** — kdp.amazon.com → Sign in with Amazon → complete seller setup → run `python tools/kdp_publisher.py --all` to prep submissions | 15 min | $500–2,000/mo once ranked — Amazon planner market is 20× Etsy's |
 | ~~6~~ | ~~Create Printify account~~ | ~~Done~~ | ✅ **COMPLETE** — 52 products live, 156 variants, orders auto-route |
-| 7 | **Create Mailchimp account** — mailchimp.com → free (up to 500 contacts) → copy API key + List ID → add to `.env`: `MAILCHIMP_API_KEY=` and `MAILCHIMP_LIST_ID=` | 10 min | Email list owns the customer relationship. Etsy owns it now — you don't |
+| 7 | ~~**Create Mailchimp account**~~ | Deferred | Not free — revisit when monthly revenue justifies the cost |
 | 8 | **Create Instagram app** — developers.facebook.com → New App → Business type → add Instagram Graph API → add to `.env`: `INSTAGRAM_APP_ID=`, `INSTAGRAM_APP_SECRET=`, `INSTAGRAM_USER_ID=`, `INSTAGRAM_ACCESS_TOKEN=` | 20 min | Visual platform — kawaii planners/stickers perform very well on Instagram Reels |
 
 ### Review and publish new draft listings (I created these today)
