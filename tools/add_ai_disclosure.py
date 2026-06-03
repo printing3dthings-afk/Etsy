@@ -90,15 +90,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--dry-run', action='store_true', help='Preview only — no changes')
     parser.add_argument('--lid', type=int, help='Target a single listing ID')
+    parser.add_argument('--auto', action='store_true', help='Cron mode: silent when compliant, log prefix when fixing')
     args = parser.parse_args()
 
     client = EtsyAPIClient()
     client.refresh_access_token()
 
-    print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    print("  AI Disclosure Compliance Tool")
-    print("  Etsy Creativity Standards (effective June 10, 2025)")
-    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+    if not args.auto:
+        print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("  AI Disclosure Compliance Tool")
+        print("  Etsy Creativity Standards (effective June 10, 2025)")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
     if args.lid:
         headers = {
@@ -127,11 +129,13 @@ def main():
         else:
             needs_update.append(lst)
 
-    print(f"  Compliant:     {len(already_ok)} listings (no action needed)")
-    print(f"  Needs update:  {len(needs_update)} listings\n")
+    if not args.auto:
+        print(f"  Compliant:     {len(already_ok)} listings (no action needed)")
+        print(f"  Needs update:  {len(needs_update)} listings\n")
 
     if not needs_update:
-        print("  ✓ All listings are compliant. Nothing to do.")
+        if not args.auto:
+            print("  ✓ All listings are compliant. Nothing to do.")
         return
 
     updated = 0
@@ -143,15 +147,16 @@ def main():
         desc = lst.get('description') or ''
         new_desc = desc + AI_DISCLOSURE
 
+        prefix = "[ai-disclosure] " if args.auto else "  "
         if args.dry_run:
-            print(f"  [DRY RUN] Would update [{lid}] {title}")
+            print(f"{prefix}[DRY RUN] Would update [{lid}] {title}")
         else:
             ok = patch_description(client, lid, new_desc)
             if ok:
-                print(f"  ✓ Updated [{lid}] {title}")
+                print(f"{prefix}✓ Updated [{lid}] {title}")
                 updated += 1
             else:
-                print(f"  ✗ Failed  [{lid}] {title}")
+                print(f"{prefix}✗ Failed  [{lid}] {title}")
                 failed += 1
             time.sleep(0.5)  # stay well within rate limits
 

@@ -1,0 +1,19 @@
+{
+  "last_check": "2026-06-03T13:54:15.811141+00:00",
+  "last_fix": "2026-06-03T13:54:15.811141+00:00",
+  "fix_count": 1,
+  "drift_events": [
+    {
+      "timestamp": "2026-06-03T13:54:15.811141+00:00",
+      "drifted_count": 1,
+      "fixed": 1,
+      "errors": 0,
+      "listings": [
+        {
+          "id": 4509259354,
+          "title": "Minimalist Botanical Line Art Print, Boho Decor, Instant Dow"
+        }
+      ]
+    }
+  ]
+}
