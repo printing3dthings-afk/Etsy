@@ -94,8 +94,8 @@ def zero_out_destinations(client: EtsyAPIClient, profile_id: int) -> int:
     return zeroed
 
 
-def get_drifted_listings(client: EtsyAPIClient, free_pid: int) -> list[dict]:
-    """Return Printify listings that have drifted to a non-free shipping profile."""
+def get_drifted_listings(client: EtsyAPIClient, free_pid: int) -> tuple[list[dict], list[dict]]:
+    """Return (drifted, all_printify) — drifted listings have non-free shipping profile."""
     all_listings = client.get_shop_listings_all(state="active")
     printify = [l for l in all_listings if is_printify_listing(l)]
     drifted = [l for l in printify if l.get("shipping_profile_id") != free_pid]

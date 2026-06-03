@@ -77,7 +77,7 @@ def _save_state(state: dict) -> None:
     STATE_FILE.write_text(json.dumps(state, indent=2))
 
 
-def check_listing_drop(client: EtsyAPIClient, state: dict) -> list[str]:
+def check_listing_drop(client: EtsyAPIClient, state: dict) -> tuple[list[str], list[dict]]:
     """Compare today's active listing IDs against baseline. Return list of alert messages."""
     alerts = []
     listings = client.get_shop_listings_all(state="active")
@@ -94,7 +94,7 @@ def check_listing_drop(client: EtsyAPIClient, state: dict) -> list[str]:
         state["baseline_count"] = today_count
         state["baseline_date"] = now
         print(f"[listing-drop] Baseline established: {today_count} active listings")
-        return []
+        return [], listings
 
     drop = baseline_count - today_count
     disappeared = sorted(baseline_ids - today_ids)
@@ -129,7 +129,7 @@ def check_listing_drop(client: EtsyAPIClient, state: dict) -> list[str]:
         state["drop_events"] = state["drop_events"][-20:]
 
     else:
-        # No significant drop — silently update baseline to today's IDs
+        # No significant drop — update baseline to today's IDs
         # (handles new listings being added over time)
         if today_count > baseline_count:
             added = today_count - baseline_count
@@ -137,10 +137,11 @@ def check_listing_drop(client: EtsyAPIClient, state: dict) -> list[str]:
         else:
             print(f"[listing-drop] OK — {today_count} active listings (no suspicious drops)")
 
-    # Always refresh baseline to today's state
-    state["baseline_ids"] = list(today_ids)
-    state["baseline_count"] = today_count
-    state["baseline_date"] = now
+        # Only refresh baseline when healthy — preserve alert state so drops
+        # are re-flagged on every subsequent run until manually resolved.
+        state["baseline_ids"] = list(today_ids)
+        state["baseline_count"] = today_count
+        state["baseline_date"] = now
 
     return alerts, listings
 

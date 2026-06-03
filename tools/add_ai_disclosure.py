@@ -94,7 +94,9 @@ def main():
     args = parser.parse_args()
 
     client = EtsyAPIClient()
-    client.refresh_access_token()
+    if not client.refresh_access_token():
+        print("[ai-disclosure] ERROR: Could not refresh OAuth token — aborting")
+        sys.exit(1)
 
     if not args.auto:
         print("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -113,9 +115,11 @@ def main():
             listing = json.loads(resp.read())
         listings = [listing]
     else:
-        print("  Fetching all active listings...")
+        if not args.auto:
+            print("  Fetching all active listings...")
         listings = fetch_all_active(client)
-        print(f"  Found {len(listings)} active listings\n")
+        if not args.auto:
+            print(f"  Found {len(listings)} active listings\n")
 
     needs_update = []
     already_ok = []
@@ -160,14 +164,17 @@ def main():
                 failed += 1
             time.sleep(0.5)  # stay well within rate limits
 
-    print(f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    prefix = "[ai-disclosure] " if args.auto else "  "
+    if not args.auto:
+        print(f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     if args.dry_run:
-        print(f"  DRY RUN complete — {len(needs_update)} listings would be updated")
+        print(f"{prefix}DRY RUN complete — {len(needs_update)} listings would be updated")
     else:
-        print(f"  Updated: {updated}   Failed: {failed}")
+        print(f"{prefix}Updated: {updated}   Failed: {failed}")
         if failed == 0:
-            print("  ✓ All listings now compliant with Etsy AI disclosure policy")
-    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+            print(f"{prefix}All listings now compliant with Etsy AI disclosure policy")
+    if not args.auto:
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
 
 
 if __name__ == '__main__':
