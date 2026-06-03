@@ -610,6 +610,41 @@ class EtsyAPIClient:
                 break
         return results
 
+    # ── Shipping profiles ─────────────────────────────────────────────────────
+
+    def get_shipping_profiles(self) -> list[dict]:
+        """Get all shipping profiles for the shop."""
+        self._require_oauth()
+        result = self._request("GET", f"shops/{self.shop_id}/shipping-profiles")
+        return result.get("results", [])
+
+    def create_shipping_profile(
+        self,
+        title: str,
+        origin_country: str = "US",
+        primary_cost: float = 0.0,
+        secondary_cost: float = 0.0,
+        min_processing: int = 3,
+        max_processing: int = 14,
+        processing_unit: str = "business_days",
+    ) -> dict:
+        """Create a shipping profile. Returns the created profile including shipping_profile_id."""
+        self._require_oauth()
+        return self._request(
+            "POST",
+            f"shops/{self.shop_id}/shipping-profiles",
+            body={
+                "title": title,
+                "origin_country_iso": origin_country,
+                "primary_cost": primary_cost,
+                "secondary_cost": secondary_cost,
+                "destination_region": "everywhere",
+                "min_processing_time": min_processing,
+                "max_processing_time": max_processing,
+                "processing_time_unit": processing_unit,
+            },
+        )
+
     def _require_oauth(self) -> None:
         if not self.access_token:
             raise EtsyAPIError(
