@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OnBrandCraftz — Pinterest Pin Scheduler</title>
+<style>
+  :root {
+    --red: #E60023;
+    --red-dark: #ad081b;
+    --bg: #f8f0f5;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #767676;
+    --border: #e0d6e0;
+    --green: #2ecc71;
+    --teal: #4ECDC4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* NAV */
+  nav { background: #fff; border-bottom: 1px solid var(--border); padding: 14px 32px;
+        display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; }
+  .logo-dot { width: 32px; height: 32px; background: var(--red); border-radius: 50%;
+              display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; font-weight: 900; }
+  .nav-status { background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px;
+                font-size: 0.78rem; font-weight: 600; border: 1px solid #ffc107; }
+  .nav-status.connected { background: #d4edda; color: #155724; border-color: var(--green); }
+
+  /* SCREENS */
+  .screen { display: none; max-width: 900px; margin: 0 auto; padding: 40px 20px; }
+  .screen.active { display: block; }
+
+  /* LOGIN SCREEN */
+  .login-card { background: var(--card); border-radius: 16px; padding: 48px 40px;
+                text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); max-width: 420px; margin: 60px auto; }
+  .login-card h1 { font-size: 1.6rem; margin-bottom: 8px; }
+  .login-card p { color: var(--muted); margin-bottom: 32px; font-size: 0.95rem; line-height: 1.5; }
+  .btn-pinterest { background: var(--red); color: white; border: none; padding: 14px 28px;
+                   border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+                   display: flex; align-items: center; gap: 10px; margin: 0 auto 16px;
+                   transition: background 0.2s; }
+  .btn-pinterest:hover { background: var(--red-dark); }
+  .btn-pinterest svg { width: 20px; height: 20px; fill: white; }
+  .login-note { font-size: 0.78rem; color: var(--muted); }
+
+  /* OAUTH SCREEN */
+  .oauth-card { background: var(--card); border-radius: 16px; padding: 40px;
+                text-align: center; box-shadow: 0 2px 16px rgba(0,0,0,0.08); max-width: 460px; margin: 60px auto; }
+  .oauth-logo { background: var(--red); width: 56px; height: 56px; border-radius: 50%;
+                display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .oauth-logo svg { width: 28px; height: 28px; fill: white; }
+  .oauth-card h2 { font-size: 1.3rem; margin-bottom: 8px; }
+  .oauth-card p { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .perms { background: #f8f4ff; border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; text-align: left; }
+  .perms h4 { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .perm { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 0.9rem; }
+  .perm-icon { color: var(--green); font-size: 1rem; }
+  .btn-allow { background: var(--red); color: white; border: none; padding: 12px 32px;
+               border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+               width: 100%; transition: background 0.2s; margin-bottom: 10px; }
+  .btn-allow:hover { background: var(--red-dark); }
+  .btn-deny { background: none; border: 1px solid var(--border); color: var(--muted); padding: 10px;
+              border-radius: 8px; font-size: 0.9rem; cursor: pointer; width: 100%; }
+
+  /* DASHBOARD */
+  .dash-header { margin-bottom: 28px; }
+  .dash-header h1 { font-size: 1.5rem; }
+  .dash-header p { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .stat-card { background: var(--card); border-radius: 12px; padding: 18px 20px;
+               box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .stat-card .num { font-size: 1.8rem; font-weight: 700; }
+  .stat-card .label { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+  .stat-card .trend { font-size: 0.78rem; color: var(--green); margin-top: 4px; }
+
+  /* PIN QUEUE TABLE */
+  .section-card { background: var(--card); border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); overflow: hidden; margin-bottom: 24px; }
+  .section-header { padding: 18px 24px; border-bottom: 1px solid var(--border);
+                    display: flex; align-items: center; justify-content: space-between; }
+  .section-header h2 { font-size: 1rem; font-weight: 600; }
+  .btn-small { background: var(--red); color: white; border: none; padding: 7px 16px;
+               border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #faf7fa; padding: 10px 20px; text-align: left; font-size: 0.78rem;
+       text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); border-bottom: 1px solid var(--border); }
+  td { padding: 12px 20px; border-bottom: 1px solid #f0eaf0; font-size: 0.88rem; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .pin-thumb { width: 44px; height: 44px; border-radius: 6px; object-fit: cover;
+               background: linear-gradient(135deg, #f4a7b9, #c4a8d4); display: inline-block; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .badge.queued { background: #e3f2fd; color: #1565c0; }
+  .badge.posted { background: #d4edda; color: #155724; }
+  .badge.scheduled { background: #fff3cd; color: #856404; }
+
+  /* API LOG */
+  .api-log { background: #1a1a2e; border-radius: 0 0 12px 12px; padding: 16px 20px; font-family: monospace; font-size: 0.8rem; max-height: 220px; overflow-y: auto; }
+  .log-line { padding: 3px 0; }
+  .log-line.req { color: #7EC8C8; }
+  .log-line.res { color: #a8e6cf; }
+  .log-line.err { color: #ff6b6b; }
+  .log-line.muted { color: #555; }
+
+  /* RESPONSE PANEL */
+  .json-panel { background: #1a1a2e; color: #a8e6cf; font-family: monospace; font-size: 0.82rem;
+                border-radius: 10px; padding: 20px; overflow-x: auto; white-space: pre; line-height: 1.6; }
+
+  /* BOARDS */
+  .boards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 20px; }
+  .board-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; cursor: pointer;
+                transition: box-shadow 0.15s; }
+  .board-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .board-thumb { height: 80px; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+  .board-info { padding: 10px 12px; }
+  .board-info strong { font-size: 0.85rem; display: block; }
+  .board-info span { font-size: 0.75rem; color: var(--muted); }
+
+  /* LOADING */
+  .loading { display: inline-block; width: 18px; height: 18px; border: 2px solid #e0d6e0;
+             border-top-color: var(--red); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* STEPS */
+  .step-bar { display: flex; gap: 0; margin-bottom: 32px; }
+  .step { flex: 1; padding: 10px; text-align: center; font-size: 0.8rem; font-weight: 600;
+          border-bottom: 3px solid var(--border); color: var(--muted); }
+  .step.active { border-bottom-color: var(--red); color: var(--red); }
+  .step.done { border-bottom-color: var(--green); color: var(--green); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-dot">P</div>
+    OnBrandCraftz Pin Scheduler
+  </div>
+  <div id="navStatus" class="nav-status">Not connected</div>
+</nav>
+
+<!-- SCREEN 1: LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="login-card">
+    <div style="font-size:3rem;margin-bottom:16px;">📌</div>
+    <h1>OnBrandCraftz<br>Pin Scheduler</h1>
+    <p>Automatically create and schedule Pinterest pins for your Etsy product listings. Connect your Pinterest account to get started.</p>
+    <button class="btn-pinterest" onclick="showOAuth()">
+      <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+      Connect Pinterest Account
+    </button>
+    <p class="login-note">You'll be redirected to Pinterest to authorize access.<br>Only OnBrandCraftz boards and pins are affected.</p>
+  </div>
+</div>
+
+<!-- SCREEN 2: OAUTH -->
+<div id="screen-oauth" class="screen">
+  <div class="oauth-card">
+    <div class="oauth-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+    </div>
+    <h2>Pinterest wants to connect</h2>
+    <p><strong>OnBrandCraftz Pin Scheduler</strong> is requesting access to your Pinterest account.</p>
+    <div class="perms">
+      <h4>Permissions requested</h4>
+      <div class="perm"><span class="perm-icon">✓</span> Read your pins and boards</div>
+      <div class="perm"><span class="perm-icon">✓</span> Create new pins on your boards</div>
+      <div class="perm"><span class="perm-icon">✓</span> Create and manage boards</div>
+      <div class="perm"><span class="perm-icon">✗</span> Access your personal profile — <em>not requested</em></div>
+      <div class="perm"><span class="perm-icon">✗</span> Manage ads — <em>not requested</em></div>
+    </div>
+    <button class="btn-allow" onclick="oauthSuccess()">Allow Access</button>
+    <button class="btn-deny" onclick="showScreen('screen-login')">Deny</button>
+  </div>
+</div>
+
+<!-- SCREEN 3: DASHBOARD -->
+<div id="screen-dashboard" class="screen">
+  <div class="dash-header">
+    <h1>Pinterest Pin Scheduler</h1>
+    <p>Connected as <strong>printing3dthings</strong> · OnBrandCraftz</p>
+  </div>
+
+  <div class="step-bar">
+    <div class="step done">1 · Connect</div>
+    <div class="step done">2 · Import listings</div>
+    <div class="step active">3 · Review queue</div>
+    <div class="step">4 · Schedule</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num" style="color:var(--red)">157</div>
+      <div class="label">Pins in queue</div>
+      <div class="trend">↑ From 157 Etsy listings</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:var(--teal)">6</div>
+      <div class="label">Boards configured</div>
+      <div class="trend">Ready to post</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color:var(--green)">0</div>
+      <div class="label">Pins posted</div>
+      <div class="trend">Start posting below</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">50</div>
+      <div class="label">Daily pin limit</div>
+      <div class="trend">Pinterest guideline</div>
+    </div>
+  </div>
+
+  <!-- Pin Queue -->
+  <div class="section-card">
+    <div class="section-header">
+      <h2>📌 Pin Queue — Next 5 pins ready</h2>
+      <button class="btn-small" onclick="postPin()">Post Next Pin</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Board</th>
+          <th>Status</th>
+          <th>Scheduled</th>
+        </tr>
+      </thead>
+      <tbody id="pinTable">
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px"><div class="pin-thumb" style="background:linear-gradient(135deg,#8666AA,#C4A8D4)"></div><div><strong>Kawaii Digital Planner 2026</strong><br><span style="color:var(--muted);font-size:0.8rem">DP1026 · $14.99</span></div></div></td>
+          <td>Digital Planners 2026</td>
+          <td><span class="badge queued">Queued</span></td>
+          <td>Today</td>
+        </tr>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px"><div class="pin-thumb" style="background:linear-gradient(135deg,#DE97C6,#97C6DE)"></div><div><strong>Kawaii Student Planner 2026</strong><br><span style="color:var(--muted);font-size:0.8rem">DP1027 · $9.99</span></div></div></td>
+          <td>Digital Planners 2026</td>
+          <td><span class="badge queued">Queued</span></td>
+          <td>Jun 4</td>
+        </tr>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px"><div class="pin-thumb" style="background:linear-gradient(135deg,#1B2568,#7BA7C2)"></div><div><strong>Digital Budget Planner 2026</strong><br><span style="color:var(--muted);font-size:0.8rem">DP1028 · $12.99</span></div></div></td>
+          <td>Digital Planners 2026</td>
+          <td><span class="badge queued">Queued</span></td>
+          <td>Jun 5</td>
+        </tr>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px"><div class="pin-thumb" style="background:linear-gradient(135deg,#FD6C49,#F5B878)"></div><div><strong>Kawaii Fitness Planner 2026</strong><br><span style="color:var(--muted);font-size:0.8rem">DP1029 · $12.99</span></div></div></td>
+          <td>Digital Planners 2026</td>
+          <td><span class="badge queued">Queued</span></td>
+          <td>Jun 6</td>
+        </tr>
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px"><div class="pin-thumb" style="background:linear-gradient(135deg,#4ECDC4,#45b7d1)"></div><div><strong>Puffer Jacket Can Koozie</strong><br><span style="color:var(--muted);font-size:0.8rem">3D Print · $18.99</span></div></div></td>
+          <td>3D Printed Decor & Gifts</td>
+          <td><span class="badge queued">Queued</span></td>
+          <td>Jun 7</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- API Response Panel -->
+  <div class="section-card">
+    <div class="section-header">
+      <h2>🔌 API Activity Log</h2>
+      <span id="apiSpinner" style="display:none"><div class="loading"></div></span>
+    </div>
+    <div class="api-log" id="apiLog">
+      <div class="log-line muted">// Ready — click "Post Next Pin" to see a live API call demo</div>
+    </div>
+  </div>
+
+  <!-- Boards -->
+  <div class="section-card">
+    <div class="section-header"><h2>📋 Configured Boards</h2></div>
+    <div class="boards-grid">
+      <div class="board-card"><div class="board-thumb" style="background:linear-gradient(135deg,#f4a7b9,#c4a8d4)">📅</div><div class="board-info"><strong>Digital Planners 2026</strong><span>Kawaii GoodNotes Planners</span></div></div>
+      <div class="board-card"><div class="board-thumb" style="background:linear-gradient(135deg,#a8e6cf,#7EC8C8)">⬇️</div><div class="board-info"><strong>Printable Wall Art</strong><span>Instant Download Art</span></div></div>
+      <div class="board-card"><div class="board-thumb" style="background:linear-gradient(135deg,#4ECDC4,#45b7d1)">🖨️</div><div class="board-info"><strong>3D Printed Decor & Gifts</strong><span>Bambu Lab P1S Prints</span></div></div>
+      <div class="board-card"><div class="board-thumb" style="background:linear-gradient(135deg,#DE97C6,#f4a7b9)">✂️</div><div class="board-info"><strong>SVG Cut Files</strong><span>Cricut &amp; Silhouette</span></div></div>
+      <div class="board-card"><div class="board-thumb" style="background:linear-gradient(135deg,#FFE66D,#FD6C49)">😊</div><div class="board-info"><strong>Kawaii Sticker Packs</strong><span>GoodNotes Stickers</span></div></div>
+      <div class="board-card"><div class="board-thumb" style="background:linear-gradient(135deg,#1B2568,#8666AA)">🛍️</div><div class="board-info"><strong>Etsy Digital Downloads</strong><span>All digital products</span></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showOAuth() {
+  showScreen('screen-oauth');
+}
+
+function oauthSuccess() {
+  document.getElementById('navStatus').textContent = '✓ Connected: printing3dthings';
+  document.getElementById('navStatus').className = 'nav-status connected';
+  showScreen('screen-dashboard');
+}
+
+let postCount = 0;
+const products = [
+  { title: 'Kawaii Digital Planner 2026', id: '4507290284', board: 'Digital Planners 2026 — Kawaii GoodNotes', color: '#8666AA' },
+  { title: 'Kawaii Student Planner 2026', id: '4507290112', board: 'Digital Planners 2026 — Kawaii GoodNotes', color: '#DE97C6' },
+  { title: 'Digital Budget Planner 2026', id: '4507289998', board: 'Digital Planners 2026 — Kawaii GoodNotes', color: '#1B2568' },
+];
+
+function log(msg, type='req') {
+  const log = document.getElementById('apiLog');
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  line.textContent = msg;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function postPin() {
+  if (postCount >= products.length) { postCount = 0; }
+  const p = products[postCount++];
+  const spinner = document.getElementById('apiSpinner');
+  spinner.style.display = 'inline-block';
+
+  log('');
+  log(`→ POST https://api.pinterest.com/v5/pins`, 'req');
+  log(`  Authorization: Bearer pina_*****************`, 'muted');
+  log(`  Content-Type: application/json`, 'muted');
+  log('', 'muted');
+  log(`  {`, 'muted');
+  log(`    "board_id": "printing3dthings/${p.board.toLowerCase().replace(/ /g,'-').replace(/[^a-z0-9-]/g,'')}",`, 'muted');
+  log(`    "title": "${p.title}",`, 'muted');
+  log(`    "description": "✨ ${p.title} — instant download...",`, 'muted');
+  log(`    "link": "https://www.etsy.com/listing/${p.id}",`, 'muted');
+  log(`    "media_source": { "source_type": "image_url", "url": "..." }`, 'muted');
+  log(`  }`, 'muted');
+
+  setTimeout(() => {
+    log('', 'req');
+    log(`← 201 Created`, 'res');
+    log(`  {`, 'res');
+    log(`    "id": "9876543${Math.floor(Math.random()*10000)}",`, 'res');
+    log(`    "created_at": "${new Date().toISOString()}",`, 'res');
+    log(`    "board_id": "printing3dthings/${p.id}",`, 'res');
+    log(`    "title": "${p.title}",`, 'res');
+    log(`    "link": "https://www.etsy.com/listing/${p.id}"`, 'res');
+    log(`  }`, 'res');
+    log(`  ✓ Pin created successfully`, 'res');
+    spinner.style.display = 'none';
+
+    // Update table row
+    const rows = document.querySelectorAll('#pinTable tr');
+    if (rows[postCount-1]) {
+      rows[postCount-1].querySelector('.badge').className = 'badge posted';
+      rows[postCount-1].querySelector('.badge').textContent = 'Posted';
+      rows[postCount-1].cells[3].textContent = 'Just now';
+    }
+  }, 1800);
+}
+</script>
+</body>
+</html>
