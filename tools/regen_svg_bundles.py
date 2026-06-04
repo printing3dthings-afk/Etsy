@@ -652,7 +652,7 @@ def png_to_svg(png_path: Path, svg_path: Path) -> bool:
         img_q = img.quantize(colors=8, method=Image.Quantize.FASTOCTREE).convert("RGB")
 
         # Save preprocessed PNG
-        proc_path = png_path.with_suffix("_proc.png")
+        proc_path = png_path.parent / (png_path.stem + "_proc.png")
         img_q.save(str(proc_path))
 
         # Vectorize with vtracer
@@ -685,7 +685,7 @@ def png_to_svg(png_path: Path, svg_path: Path) -> bool:
         print(f"    [ERROR] vtracer failed on {png_path.name}: {e}")
         # Try to clean up proc file if it exists
         try:
-            proc_path = png_path.with_suffix("_proc.png")
+            proc_path = png_path.parent / (png_path.stem + "_proc.png")
             proc_path.unlink(missing_ok=True)
         except Exception:
             pass
