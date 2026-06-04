@@ -83,12 +83,12 @@ BUNDLES = {
             {"id": "11", "name": "Free Spirit",      "elements": "dreamcatcher with long flowing feathers, 'FREE SPIRIT' script inside the dreamcatcher ring, small arrow accents on each side, tiny star dots"},
             {"id": "12", "name": "Ranch Wife",       "elements": "barn silhouette centered, large heart shape above the barn roof, wildflowers framing the sides, 'RANCH WIFE' in rustic lettering below"},
             {"id": "13", "name": "Country Roads",    "elements": "winding dirt road disappearing into the horizon, lone tree on each side, sun rays at the top, 'COUNTRY ROADS' curved lettering in an arch"},
-            {"id": "14", "name": "Sunflower Farm",   "elements": "windmill centered and tall, two large sunflowers on each side of the windmill, simple fence rail at the bottom, 'SUNFLOWER FARM' banner below"},
+            {"id": "14", "name": "Sunflower Farm",   "elements": "windmill centered and tall, two large sunflowers on each side of the windmill, simple fence rail at the bottom, 'SUNFLOWER FARM' banner below", "mono": True},
             {"id": "15", "name": "Wild and Free",    "elements": "large eagle in flight with wings spread wide, mountain silhouette below, 'WILD AND FREE' bold arch lettering above the eagle, star accents"},
-            {"id": "16", "name": "Roping Hearts",    "elements": "lasso rope shaped into a large heart, lone star inside the rope heart, 'ROPING HEARTS' script banner below, small horseshoe at the top"},
+            {"id": "16", "name": "Roping Hearts",    "elements": "lasso rope shaped into a large heart, lone star inside the rope heart, 'ROPING HEARTS' script banner below, small horseshoe at the top", "mono": True},
             {"id": "17", "name": "Simple Life",      "elements": "mason jar filled with wildflowers and sunflowers, small butterfly on the rim, 'SIMPLE LIFE' script on a banner ribbon below the jar"},
-            {"id": "18", "name": "Good Ol Days",     "elements": "retro oval badge shape, sunburst rays filling the badge background, 'GOOD OL DAYS' bold retro font inside, small stars and checkered border"},
-            {"id": "19", "name": "True Grit",        "elements": "shield badge with crossed arrows inside, feathers hanging from the bottom of the shield, 'TRUE GRIT' bold carved font in the shield center"},
+            {"id": "18", "name": "Good Ol Days",     "elements": "retro oval badge shape, sunburst rays filling the badge background, 'GOOD OL DAYS' bold retro font inside, small stars and checkered border", "mono": True},
+            {"id": "19", "name": "True Grit",        "elements": "shield badge with crossed arrows inside, feathers hanging from the bottom of the shield, 'TRUE GRIT' bold carved font in the shield center", "mono": True},
             {"id": "20", "name": "Home Grown",       "elements": "symmetrical leaf and vine wreath ring, small garden trowel and seed packet inside the wreath, 'HOME GROWN' flowing script, tiny carrot and tomato icons"},
         ],
     },
@@ -236,6 +236,14 @@ BUNDLES = {
 
 
 # ── Prompt templates ──────────────────────────────────────────────────────────
+#
+# Two templates:
+#   DESIGN_PROMPT_TEMPLATE      — multi-color designs (up to 4 flat colors)
+#   MONO_DESIGN_PROMPT_TEMPLATE — single-color black on white (classic vinyl cut style)
+#
+# Each design in BUNDLES may carry "mono": True to use the monochrome template.
+# Target: ~4-5 mono designs per 20-design bundle (roughly half/half per CLAUDE.md
+# instruction: mix makes the grid more interesting and mirrors real Etsy SVG bundles).
 
 DESIGN_PROMPT_TEMPLATE = """\
 Professional SVG cut file design for Cricut and Silhouette cutting machines, \
@@ -253,6 +261,25 @@ Style requirements (MUST follow exactly for cut file compatibility):
 - {text_style}
 - NO dates, NO years, NO 'est.', NO specific numbers anywhere in the design
 - No photographic effects, no drop shadows, no textures — pure flat graphic art
+- Design must be readable and cuttable at 4 inches wide\
+"""
+
+MONO_DESIGN_PROMPT_TEMPLATE = """\
+Professional SVG cut file design for Cricut and Silhouette cutting machines, \
+{aesthetic} style.
+
+Design concept — {name}: {elements}
+
+Style requirements (MUST follow exactly for cut file compatibility):
+- Clean single-color black design on pure white background. No colors. Bold black art, white background.
+- Crisp clean edges throughout — NO soft gradients, NO blurs, NO glow effects, NO gray tones
+- Bold outline stroke (2–3px) around all design elements for clean vinyl cutting
+- Clean negative space — all shapes clearly defined and separable
+- Centered composition with even white space border on all sides
+- Square 1:1 format, high contrast black-and-white vector illustration aesthetic
+- {text_style}
+- NO dates, NO years, NO 'est.', NO specific numbers anywhere in the design
+- No photographic effects, no drop shadows, no textures — pure flat black graphic art
 - Design must be readable and cuttable at 4 inches wide\
 """
 
@@ -329,13 +356,21 @@ BUNDLE_MOCKUP_SETTINGS = {
 
 def generate_design_png(client, bundle_id: str, design: dict, bundle_cfg: dict, out_dir: Path) -> Path | None:
     sg = bundle_cfg["style_guide"]
-    prompt = DESIGN_PROMPT_TEMPLATE.format(
-        aesthetic=sg["aesthetic"],
-        name=design["name"],
-        elements=design["elements"],
-        colors=sg["colors"],
-        text_style=sg["text_style"],
-    )
+    if design.get("mono"):
+        prompt = MONO_DESIGN_PROMPT_TEMPLATE.format(
+            aesthetic=sg["aesthetic"],
+            name=design["name"],
+            elements=design["elements"],
+            text_style=sg["text_style"],
+        )
+    else:
+        prompt = DESIGN_PROMPT_TEMPLATE.format(
+            aesthetic=sg["aesthetic"],
+            name=design["name"],
+            elements=design["elements"],
+            colors=sg["colors"],
+            text_style=sg["text_style"],
+        )
 
     png_path = out_dir / "PNG" / f"{bundle_id}_{design['id']}_{design['name'].lower().replace(' ','_')}.png"
     if png_path.exists():
