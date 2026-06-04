@@ -38,40 +38,50 @@ DARK_STRIP = "#2C2C2C"
 FONT_BOLD   = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FONT_REG    = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
 
-BASE_PRODUCT_PATHS = {
-    "tshirt": Path("/tmp/base_tshirt.png"),
-    "hoodie": Path("/tmp/base_hoodie.png"),
-    "tote":   Path("/tmp/base_tote.png"),
-}
-
-# Design placement on 750×750px product crops (cx, cy of design center)
-DESIGN_PLACEMENT = {
-    "tshirt": (375, 280),
-    "hoodie": (375, 300),
-    "tote":   (375, 380),
-}
-
-PRODUCT_PROMPTS = {
+# Prompts for images.edit() — we pass the SVG design PNG and ask for a realistic product photo
+PRODUCT_EDIT_PROMPTS = {
     "tshirt": (
-        "Professional product flat lay photography. A white cotton crew neck t-shirt laid "
-        "perfectly flat on a warm cream linen surface. The shirt is smooth with no wrinkles, "
-        "front facing up. The center chest area is completely plain and empty. No designs, "
-        "logos, text or graphics on the shirt. Clean even natural daylight from above. "
-        "Minimal style. No people. Square format, product centered, 20% margin around edges."
+        "Take the graphic design shown in this image and apply it as a screen-printed or "
+        "heat-transfer vinyl graphic onto a plain cream-white crew-neck t-shirt laid flat. "
+        "PLACEMENT RULES (must follow exactly): "
+        "(1) The design must be horizontally centered on the shirt chest. "
+        "(2) The design must sit at mid-chest — the vertical center of the design should be "
+        "approximately 45% down from the top collar, NOT near the neckline or shoulders. "
+        "(3) The design should be about 35-40% of the shirt width. "
+        "Reproduce all design colors, text, and graphic elements exactly as shown — do not alter "
+        "or simplify the design. "
+        "Product setting: flat lay photography on warm cream linen surface, soft even natural "
+        "daylight from above, no harsh shadows. Fabric cotton texture visible. Realistic "
+        "screen-printed appearance — not floating or pasted. No hands, no mannequin. "
+        "Professional Etsy product photography."
     ),
     "hoodie": (
-        "Professional product flat lay photography. A white pullover hoodie laid perfectly "
-        "flat on a warm cream linen surface. Front facing up, hood folded neatly at top. "
-        "Center chest area is completely plain and empty. No designs, logos, text or graphics. "
-        "Clean even natural daylight from above. Minimal style. No people. Square format, "
-        "product centered, 20% margin around edges."
+        "Take the graphic design shown in this image and apply it as a screen-printed or "
+        "heat-transfer vinyl graphic onto a plain cream-white pullover hoodie laid flat "
+        "with the hood folded at the top. "
+        "PLACEMENT RULES (must follow exactly): "
+        "(1) The design must be horizontally centered on the hoodie chest. "
+        "(2) The design must sit at mid-chest level — the vertical center of the design should "
+        "be approximately 50-55% down from the very top of the folded hood, well below the hood "
+        "opening and kangaroo pocket. NOT near the collar, NOT near the hood. "
+        "(3) The design should be about 35-40% of the hoodie width. "
+        "Reproduce all design colors, text, and graphic elements exactly as shown. "
+        "Product setting: flat lay photography on warm cream linen surface, soft even natural "
+        "daylight from above. Fleece fabric texture visible. Realistic screen-printed "
+        "appearance. No hands, no mannequin. Professional Etsy product photography."
     ),
     "tote": (
-        "Professional product flat lay photography. A natural undyed canvas tote bag lying "
-        "flat on a warm cream linen surface. Front face up, handles folded down. The front "
-        "panel is completely plain and empty. No designs, logos, text or graphics. Clean even "
-        "natural daylight from above. Minimal style. No people. Square format, product "
-        "centered, 20% margin around edges."
+        "Take the graphic design shown in this image and apply it as a screen-printed or "
+        "vinyl design onto the front panel of a natural canvas tote bag. "
+        "PLACEMENT RULES (must follow exactly): "
+        "(1) The design must be horizontally centered on the tote front panel. "
+        "(2) The design must be vertically centered on the main body of the bag — centered "
+        "between the bottom seam and the handle attachment points, NOT near the handles. "
+        "(3) The design should fill about 55-65% of the bag panel width. "
+        "Reproduce all design colors, text, and graphic elements exactly as shown. "
+        "Product setting: tote bag upright on warm cream linen surface, handles hanging "
+        "naturally, soft natural side-lighting from the left. Woven canvas texture visible. "
+        "Realistic screen-printed appearance. No hands. Professional Etsy product photography."
     ),
 }
 
@@ -141,46 +151,75 @@ def load_font(path: str, size: int) -> ImageFont.FreeTypeFont:
         return ImageFont.load_default()
 
 
-def generate_base_product(product_type: str) -> bool:
-    """Call gpt-image-1 to generate a blank product flat lay. Returns True on success."""
-    out_path = BASE_PRODUCT_PATHS[product_type]
-    if out_path.exists():
-        print(f"  [SKIP] Base {product_type} already exists at {out_path}")
-        return True
+def generate_product_panel(svg_path: Path, product_type: str, panel_idx: int, slug: str) -> Image.Image | None:
+    """
+    Use gpt-image-1 images.edit() to generate a realistic product photo with the SVG
+    design centered and integrated into the fabric — NOT PIL-pasted at hardcoded coords.
+    Returns a 1024×1024 PIL Image or None on failure.
+    """
+    # Render SVG to PNG bytes
+    try:
+        png_bytes = cairosvg.svg2png(url=str(svg_path), output_width=800, output_height=800)
+    except Exception as e:
+        print(f"    [ERROR] cairosvg failed on {svg_path.name}: {e}")
+        return None
 
-    print(f"  Generating base {product_type} via gpt-image-1 …")
-    prompt = PRODUCT_PROMPTS[product_type]
-    payload = json.dumps({
-        "model": "gpt-image-1",
-        "prompt": prompt,
-        "n": 1,
-        "size": "1024x1024",
-        "quality": "high",
-        "output_format": "png",
-    }).encode()
+    prompt = PRODUCT_EDIT_PROMPTS[product_type]
+
+    import io as _io
+    import multipart as _mp  # not available; use manual multipart
+
+    # Build multipart form data manually
+    boundary = b"----FormBoundary7MA4YWxkTrZu0gW"
+
+    def field(name, value):
+        return (
+            b"--" + boundary + b"\r\n"
+            b'Content-Disposition: form-data; name="' + name.encode() + b'"\r\n\r\n'
+            + value.encode() + b"\r\n"
+        )
+
+    def file_field(name, filename, content_type, data):
+        return (
+            b"--" + boundary + b"\r\n"
+            + f'Content-Disposition: form-data; name="{name}"; filename="{filename}"\r\n'.encode()
+            + f"Content-Type: {content_type}\r\n\r\n".encode()
+            + data + b"\r\n"
+        )
+
+    body = (
+        field("model", "gpt-image-1")
+        + field("prompt", prompt)
+        + field("size", "1024x1024")
+        + field("quality", "high")
+        + field("output_format", "png")
+        + file_field("image", "design.png", "image/png", png_bytes)
+        + b"--" + boundary + b"--\r\n"
+    )
 
     req = urllib.request.Request(
-        "https://api.openai.com/v1/images/generations",
-        data=payload,
+        "https://api.openai.com/v1/images/edits",
+        data=body,
         headers={
-            "Content-Type": "application/json",
             "Authorization": f"Bearer {OPENAI_KEY}",
+            "Content-Type": f"multipart/form-data; boundary={boundary.decode()}",
         },
         method="POST",
     )
+
     for attempt in range(3):
         try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
+            with urllib.request.urlopen(req, timeout=180) as resp:
                 data = json.loads(resp.read())
             img_bytes = base64.b64decode(data["data"][0]["b64_json"])
-            out_path.write_bytes(img_bytes)
-            print(f"    Saved: {out_path} ({len(img_bytes)//1024} KB)")
-            return True
+            img = Image.open(BytesIO(img_bytes)).convert("RGB")
+            print(f"    Panel {panel_idx} ({product_type}): generated via images.edit()")
+            return img
         except Exception as e:
-            print(f"    Attempt {attempt+1}/3 failed: {e}")
+            print(f"    Attempt {attempt+1}/3 failed for panel {panel_idx}: {e}")
             if attempt < 2:
-                time.sleep(5)
-    return False
+                time.sleep(8)
+    return None
 
 
 def render_svg(svg_path: Path, size: int) -> Image.Image | None:
@@ -202,122 +241,65 @@ def remove_white_bg(img: Image.Image, threshold: int = 240) -> Image.Image:
     return Image.fromarray(data, "RGBA")
 
 
-def composite_design_onto_product(
-    product_img: Image.Image,
-    svg_img: Image.Image,
-    product_type: str,
-    panel_size: int = 750,
-) -> Image.Image:
-    """
-    Resize product to panel_size×panel_size, place SVG design at the correct chest/front
-    position, return the composited image in RGBA.
-    """
-    product = product_img.convert("RGBA").resize((panel_size, panel_size), Image.LANCZOS)
-
-    # Design size: ~250px for chest area
-    design_size = 250
-    cx, cy = DESIGN_PLACEMENT[product_type]
-
-    # Fit design into design_size×design_size preserving aspect ratio
-    dw, dh = svg_img.size
-    scale = min(design_size / dw, design_size / dh)
-    new_w, new_h = int(dw * scale), int(dh * scale)
-    design = svg_img.resize((new_w, new_h), Image.LANCZOS)
-    design = remove_white_bg(design)
-
-    # Center design at placement point
-    px = cx - new_w // 2
-    py = cy - new_h // 2
-
-    product.paste(design, (px, py), design)
-    return product
-
-
-# ── Phase 1: Generate base product images ────────────────────────────────────
-
-def phase1_generate_bases() -> bool:
-    print("\n" + "=" * 60)
-    print("PHASE 1 — Generating base product images")
-    print("=" * 60)
-    all_ok = True
-    for ptype in ["tshirt", "hoodie", "tote"]:
-        ok = generate_base_product(ptype)
-        if not ok:
-            print(f"  [ERROR] Failed to generate base {ptype}")
-            all_ok = False
-    return all_ok
-
-
-# ── Phase 2: Build hero flat-lay composite ────────────────────────────────────
+# ── Phase 2: Build hero flat-lay composite via images.edit() ─────────────────
 
 def build_hero(bundle: dict) -> Path | None:
-    """Build 2400×2400 3-product flat lay hero. Returns path or None."""
-    slug = bundle["slug"]
-    name = bundle["name"]
-    svg_dir = REPO_ROOT / bundle["svg_dir"]
-    products = bundle["products"]     # e.g. ["tote", "tshirt", "hoodie"]
-    indices  = bundle["design_idx"]   # e.g. [0, 3, 6]
+    """
+    Build 2400×2400 3-product hero using gpt-image-1 images.edit() for each panel.
+    Each panel is a realistic product photo generated by passing the actual SVG design
+    to the API — designs are centered at mid-chest, fabric-integrated, not PIL-pasted.
+    """
+    slug     = bundle["slug"]
+    name     = bundle["name"]
+    svg_dir  = REPO_ROOT / bundle["svg_dir"]
+    products = bundle["products"]   # e.g. ["tote", "tshirt", "hoodie"]
+    indices  = bundle["design_idx"] # e.g. [0, 3, 6]
 
     print(f"\n  [HERO] {name}")
 
     all_svgs = sorted(svg_dir.glob("*.svg"))
-    if len(all_svgs) == 0:
+    if not all_svgs:
         print(f"    [ERROR] No SVG files found in {svg_dir}")
         return None
 
-    # Load base product images
-    bases = {}
-    for ptype in set(products):
-        p = BASE_PRODUCT_PATHS[ptype]
-        if not p.exists():
-            print(f"    [ERROR] Base image missing: {p}")
-            return None
-        bases[ptype] = Image.open(p).convert("RGBA")
+    # Generate 3 product panels via images.edit()
+    panels = []
+    for i in range(3):
+        ptype = products[i]
+        idx   = min(indices[i], len(all_svgs) - 1)
+        svg_path = all_svgs[idx]
+        print(f"    Panel {i}: {ptype} ← {svg_path.name}")
 
-    # Canvas: 2400×2400, cream background
+        panel_img = generate_product_panel(svg_path, ptype, i, slug)
+        if panel_img is None:
+            # Try next SVG as fallback
+            for fi in range(len(all_svgs)):
+                if fi == idx:
+                    continue
+                panel_img = generate_product_panel(all_svgs[fi], ptype, i, slug)
+                if panel_img is not None:
+                    print(f"    Used fallback SVG: {all_svgs[fi].name}")
+                    break
+        if panel_img is None:
+            print(f"    [ERROR] Could not generate panel {i} for {name}")
+            return None
+
+        panels.append(panel_img)
+        time.sleep(2)  # avoid burst rate limiting between panels
+
+    # Composite 3 panels into 2400×2400 canvas
+    # Each panel resized to 800×800, arranged side by side (800×3=2400)
+    panel_size = 800
     bg = hex_to_rgb(BG_COLOR)
     canvas = Image.new("RGB", (CANVAS, CANVAS), bg)
 
-    panel_size = 750
-    gap = 75
-    # 3 panels × 750px + 2 gaps × 75px + side margins = 3×750 + 2×75 = 2400 → perfect
-    # side margin = (2400 - 3*750 - 2*75) / 2 = (2400 - 2250 - 150) / 2 = 0
-    # So panels start at x=0, 825, 1650 with 75px gaps
-    panel_xs = [0, panel_size + gap, 2 * (panel_size + gap)]
-    panel_y  = (CANVAS - panel_size) // 2  # vertically centered (= 825)
+    caption_h = 100
+    available_h = CANVAS - caption_h
+    panel_y = (available_h - panel_size) // 2  # vertically centered in non-caption area
 
-    caption_h = 120
-    # We'll draw the caption strip at the bottom
-
-    for i in range(3):
-        ptype = products[i]
-        idx   = indices[i]
-
-        if idx >= len(all_svgs):
-            print(f"    [WARN] Index {idx} out of range ({len(all_svgs)} SVGs), using last")
-            idx = len(all_svgs) - 1
-        svg_path = all_svgs[idx]
-
-        # Render SVG
-        svg_img = render_svg(svg_path, 350)
-        if svg_img is None:
-            # Try adjacent indices
-            for fallback_idx in range(len(all_svgs)):
-                svg_img = render_svg(all_svgs[fallback_idx], 350)
-                if svg_img is not None:
-                    print(f"    Using fallback SVG: {all_svgs[fallback_idx].name}")
-                    break
-        if svg_img is None:
-            print(f"    [ERROR] No SVG could be rendered for panel {i}")
-            return None
-
-        print(f"    Panel {i}: {ptype} + {svg_path.name}")
-
-        panel = composite_design_onto_product(bases[ptype], svg_img, ptype, panel_size)
-
-        x = panel_xs[i]
-        y = panel_y
-        canvas.paste(panel.convert("RGB"), (x, y))
+    for i, panel_img in enumerate(panels):
+        resized = panel_img.resize((panel_size, panel_size), Image.LANCZOS)
+        canvas.paste(resized, (i * panel_size, panel_y))
 
     # Caption strip
     draw = ImageDraw.Draw(canvas)
@@ -493,12 +475,6 @@ def main():
         print("Etsy token refreshed OK")
     except Exception as e:
         print(f"[WARN] Token refresh: {e}")
-
-    # Phase 1: Generate base product images (once, reused across all bundles)
-    bases_ok = phase1_generate_bases()
-    if not bases_ok:
-        print("\n[FATAL] Could not generate all base product images — aborting")
-        sys.exit(1)
 
     results = {}  # slug → {"hero": bool, "grid": bool, "uploads": int}
 
