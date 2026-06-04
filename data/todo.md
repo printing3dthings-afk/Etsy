@@ -1,5 +1,5 @@
 # OnBrandCraftz — Master TODO List
-*Last updated: 2026-06-03*
+*Last updated: 2026-06-04*
 
 ---
 
@@ -10,7 +10,8 @@
 | # | Task | Time | Why It's Blocked |
 |---|---|---|---|
 | 1 | **Top up OpenAI billing** — platform.openai.com → Billing → Add $100, raise hard limit, enable auto-recharge | 5 min | Blocks all SVG generation, photo generation, new planner creation |
-| 2 | **Pinterest — waiting on app approval** — support ticket submitted. When approved: add `PINTEREST_CLIENT_ID=` to `.env` then run `python tools/pinterest_oauth.py` | Waiting | Pinterest developer app stuck in pending — support ticket filed 2026-06-03 |
+| 2 | **Pinterest — resubmit with demo** — prototype built at `pinterest_app_demo/index.html`. Screen-record it (2 min), upload to YouTube unlisted, resubmit app with video link + privacy policy URL. When approved: copy App Secret from developers.pinterest.com into `.env` then run `python tools/pinterest_oauth.py` | 20 min | Trial denied twice — needs mockup video per Pinterest community guidance |
+| 3 | **Photograph filament tags** — send photos of filament spools tonight so I can log them into `tools/filament_tracker.py`. Include the spool used for OBC-3DRK-002 (Skinny Can Koozie) | Tonight | Needed to track COGS per product |
 | 4 | **Run TikTok OAuth** — `python tools/tiktok_oauth.py` | 5 min | Unlocks TikTok auto-posting |
 
 ### New platform accounts (free — each unlocks a new revenue stream)
@@ -196,7 +197,7 @@ Faith/Christian, Sports Mom, Seasonal (Christmas, Valentine's)
 
 ---
 
-## CURRENT SHOP HEALTH (2026-06-02)
+## CURRENT SHOP HEALTH (2026-06-04)
 
 | Metric | Value | Target | Status |
 |---|---|---|---|
