@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "sales": 4,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 157,
+    "alerts": 78,
+    "photo_warnings": 77,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-04T12:35:07.822853+00:00"
+  }
+]
