@@ -590,6 +590,15 @@ class EtsyAPIClient:
             params["min_created"] = min_created
         return self._request("GET", f"shops/{self.shop_id}/reviews", params=params)
 
+    def create_review_response(self, review_id: int, response_text: str) -> dict:
+        """Post a public seller response to a review."""
+        self._require_oauth()
+        return self._request(
+            "POST",
+            f"shops/{self.shop_id}/reviews/{review_id}/response",
+            json={"response": response_text},
+        )
+
     def get_shop_listings_all(self, state: str = "active", limit: int = 100) -> list[dict]:
         """Fetch all listings for the shop (paginates automatically). Returns list of listing dicts."""
         self._require_oauth()
