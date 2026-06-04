@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OnBrandCraftz — Art Ownership Review</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f4f1;
+    color: #222;
+    padding: 24px;
+  }
+  h1 { font-size: 22px; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 28px; }
+  .toolbar {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 24px; align-items: center;
+  }
+  .toolbar button {
+    padding: 8px 16px; border: none; border-radius: 6px;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+  }
+  #btn-export { background: #c0392b; color: #fff; }
+  #btn-clear  { background: #ddd; color: #333; }
+  #count-label { font-size: 14px; color: #555; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: box-shadow 0.2s, border 0.2s;
+    border: 3px solid transparent;
+  }
+  .card.flagged {
+    border-color: #e74c3c;
+    box-shadow: 0 2px 16px rgba(231,76,60,0.25);
+  }
+  .cb-wrap {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px 8px;
+    cursor: pointer;
+  }
+  .cb-wrap input { width: 18px; height: 18px; cursor: pointer; accent-color: #e74c3c; }
+  .cb-label { font-size: 13px; font-weight: 600; color: #c0392b; }
+  .card img {
+    width: 100%; display: block;
+    max-height: 260px; object-fit: cover;
+  }
+  .no-img {
+    height: 180px; display: flex; align-items: center; justify-content: center;
+    background: #eee; color: #999; font-size: 13px;
+  }
+  .meta {
+    padding: 10px 14px 14px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .title  { font-size: 13px; font-weight: 600; line-height: 1.35; }
+  .lid    { font-size: 11px; color: #999; }
+  .etsy-link {
+    font-size: 12px; color: #e06c1a; text-decoration: none; margin-top: 4px;
+  }
+  .etsy-link:hover { text-decoration: underline; }
+  #export-box {
+    display: none; margin-top: 28px;
+    background: #fff; border-radius: 10px;
+    padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  #export-box h2 { font-size: 16px; margin-bottom: 12px; }
+  #export-box textarea {
+    width: 100%; height: 160px; font-family: monospace; font-size: 13px;
+    padding: 10px; border: 1px solid #ccc; border-radius: 6px; resize: vertical;
+  }
+</style>
+</head>
+<body>
+<h1>🎨 OnBrandCraftz — Art Ownership Review</h1>
+<p class="subtitle">
+  Check any listing whose art is <strong>NOT yours</strong>. These 24 listings
+  have no local art file on disk — their photos were sourced from their own Etsy CDN images.
+  Confirm each one is art you created or licensed.
+</p>
+
+<div class="toolbar">
+  <button id="btn-export" onclick="exportFlagged()">Export Flagged List</button>
+  <button id="btn-clear"  onclick="clearAll()">Clear All</button>
+  <span id="count-label">0 flagged</span>
+</div>
+
+<div class="grid">
+        <div class="card" id="card-4513713984">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513713984" onchange="mark('4513713984')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/5b590d/8078788434/il_570xN.8078788434_1kyc.jpg" alt="Hummingbird Nursery Print, Printable Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Hummingbird Nursery Print, Printable Wall Art</span>
+            <span class="lid">Listing ID: 4513713984</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513713984" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513714013">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513714013" onchange="mark('4513714013')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/b72c4a/8126708267/il_570xN.8126708267_1str.jpg" alt="Paris Skyline Print, Black White Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Paris Skyline Print, Black White Wall Art</span>
+            <span class="lid">Listing ID: 4513714013</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513714013" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513714191">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513714191" onchange="mark('4513714191')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/b4ae52/8078788078/il_570xN.8078788078_g1d9.jpg" alt="Fox Nursery Wall Art, Printable Instant Download" loading="lazy">
+          <div class="meta">
+            <span class="title">Fox Nursery Wall Art, Printable Instant Download</span>
+            <span class="lid">Listing ID: 4513714191</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513714191" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4509193231">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4509193231" onchange="mark('4509193231')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/d33e0d/8070682020/il_570xN.8070682020_c0rc.jpg" alt="Sage Lavender Botanical Print, Dusty Rose Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Sage Lavender Botanical Print, Dusty Rose Wall Art</span>
+            <span class="lid">Listing ID: 4509193231</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4509193231" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4509193237">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4509193237" onchange="mark('4509193237')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/7b6630/8070682134/il_570xN.8070682134_d2fb.jpg" alt="Pampas Grass Printable Wall Art, Boho" loading="lazy">
+          <div class="meta">
+            <span class="title">Pampas Grass Printable Wall Art, Boho</span>
+            <span class="lid">Listing ID: 4509193237</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4509193237" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4509198434">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4509198434" onchange="mark('4509198434')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/7b9da6/8070681724/il_570xN.8070681724_3tef.jpg" alt="Boho Wildflower Printable Wall Art, Sage" loading="lazy">
+          <div class="meta">
+            <span class="title">Boho Wildflower Printable Wall Art, Sage</span>
+            <span class="lid">Listing ID: 4509198434</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4509198434" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4509198446">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4509198446" onchange="mark('4509198446')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/7df0a3/8118602693/il_570xN.8118602693_6bsa.jpg" alt="Eucalyptus Branch Printable Wall Art, Botanical" loading="lazy">
+          <div class="meta">
+            <span class="title">Eucalyptus Branch Printable Wall Art, Botanical</span>
+            <span class="lid">Listing ID: 4509198446</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4509198446" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4512768771">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4512768771" onchange="mark('4512768771')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/cbb8dd/8122639095/il_570xN.8122639095_f8pb.jpg" alt="Sunflower Watercolor Print, Botanical Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Sunflower Watercolor Print, Botanical Wall Art</span>
+            <span class="lid">Listing ID: 4512768771</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4512768771" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4512768858">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4512768858" onchange="mark('4512768858')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/c2dfeb/8071780824/il_570xN.8071780824_fkxd.jpg" alt="Cherry Blossom Watercolor Print, Spring Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Cherry Blossom Watercolor Print, Spring Wall Art</span>
+            <span class="lid">Listing ID: 4512768858</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4512768858" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4512770031">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4512770031" onchange="mark('4512770031')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/7c281e/8074705108/il_570xN.8074705108_8s8y.jpg" alt="Autumn Maple Printable Wall Art, Fall" loading="lazy">
+          <div class="meta">
+            <span class="title">Autumn Maple Printable Wall Art, Fall</span>
+            <span class="lid">Listing ID: 4512770031</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4512770031" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4512772452">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4512772452" onchange="mark('4512772452')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/ac34cc/8074705392/il_570xN.8074705392_oi4q.jpg" alt="Winter Birch Printable Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Winter Birch Printable Wall Art</span>
+            <span class="lid">Listing ID: 4512772452</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4512772452" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4512772539">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4512772539" onchange="mark('4512772539')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/197512/8119735319/il_570xN.8119735319_9u0z.jpg" alt="Sea Turtle Printable Wall Art, Ocean" loading="lazy">
+          <div class="meta">
+            <span class="title">Sea Turtle Printable Wall Art, Ocean</span>
+            <span class="lid">Listing ID: 4512772539</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4512772539" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4512774863">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4512774863" onchange="mark('4512774863')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/f89295/8122574845/il_570xN.8122574845_rizd.jpg" alt="Lighthouse Printable Wall Art, Coastal" loading="lazy">
+          <div class="meta">
+            <span class="title">Lighthouse Printable Wall Art, Coastal</span>
+            <span class="lid">Listing ID: 4512774863</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4512774863" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4512776173">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4512776173" onchange="mark('4512776173')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/3b3aa6/8071837232/il_570xN.8071837232_7yzq.jpg" alt="Coral Reef Printable Wall Art, Ocean" loading="lazy">
+          <div class="meta">
+            <span class="title">Coral Reef Printable Wall Art, Ocean</span>
+            <span class="lid">Listing ID: 4512776173</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4512776173" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4512780614">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4512780614" onchange="mark('4512780614')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/344b62/8122623929/il_570xN.8122623929_ny2l.jpg" alt="Pelican Watercolor Print, Coastal Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Pelican Watercolor Print, Coastal Art</span>
+            <span class="lid">Listing ID: 4512780614</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4512780614" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513713514">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513713514" onchange="mark('4513713514')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/f7c64c/8126707497/il_570xN.8126707497_ajc8.jpg" alt="Japandi Tree Print, Black White Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Japandi Tree Print, Black White Wall Art</span>
+            <span class="lid">Listing ID: 4513713514</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513713514" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513713712">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513713712" onchange="mark('4513713712')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/d0a2fd/8078787370/il_570xN.8078787370_ltug.jpg" alt="Moon Phases Print, Black White Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Moon Phases Print, Black White Wall Art</span>
+            <span class="lid">Listing ID: 4513713712</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513713712" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513713805">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513713805" onchange="mark('4513713805')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/e1df2d/8126707231/il_570xN.8126707231_dykg.jpg" alt="Minimalist Botanical Print, Black White Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Minimalist Botanical Print, Black White Wall Art</span>
+            <span class="lid">Listing ID: 4513713805</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513713805" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513713922">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513713922" onchange="mark('4513713922')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/c6d5a9/8126708487/il_570xN.8126708487_atxk.jpg" alt="Bear Nursery Wall Art, Printable Instant Download" loading="lazy">
+          <div class="meta">
+            <span class="title">Bear Nursery Wall Art, Printable Instant Download</span>
+            <span class="lid">Listing ID: 4513713922</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513713922" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513713936">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513713936" onchange="mark('4513713936')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/c59110/8126708583/il_570xN.8126708583_ny08.jpg" alt="Owl Nursery Wall Art, Printable Instant Download" loading="lazy">
+          <div class="meta">
+            <span class="title">Owl Nursery Wall Art, Printable Instant Download</span>
+            <span class="lid">Listing ID: 4513713936</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513713936" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513713945">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513713945" onchange="mark('4513713945')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/6b6563/8126708003/il_570xN.8126708003_fv1o.jpg" alt="Vintage Botanical Print, Black White Wall Art" loading="lazy">
+          <div class="meta">
+            <span class="title">Vintage Botanical Print, Black White Wall Art</span>
+            <span class="lid">Listing ID: 4513713945</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513713945" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4513713962">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4513713962" onchange="mark('4513713962')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/5cd8eb/8078788338/il_570xN.8078788338_9eau.jpg" alt="Watercolor Fox Nursery Print, Printable Instant Download" loading="lazy">
+          <div class="meta">
+            <span class="title">Watercolor Fox Nursery Print, Printable Instant Download</span>
+            <span class="lid">Listing ID: 4513713962</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4513713962" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4515674042">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4515674042" onchange="mark('4515674042')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/5c9704/8140453933/il_570xN.8140453933_svqh.jpg" alt="Minimalist Line Art Print | Modern Wall Decor" loading="lazy">
+          <div class="meta">
+            <span class="title">Minimalist Line Art Print | Modern Wall Decor</span>
+            <span class="lid">Listing ID: 4515674042</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4515674042" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+        <div class="card" id="card-4515676301">
+          <label class="cb-wrap">
+            <input type="checkbox" id="cb-4515676301" onchange="mark('4515676301')">
+            <span class="cb-label">Mark as INCORRECT / Not My Art</span>
+          </label>
+          <img src="https://i.etsystatic.com/65012858/r/il/9d48ae/8140443465/il_570xN.8140443465_8lwn.jpg" alt="Floral Wreath Art Print | Botanical Wall Decor" loading="lazy">
+          <div class="meta">
+            <span class="title">Floral Wreath Art Print | Botanical Wall Decor</span>
+            <span class="lid">Listing ID: 4515676301</span>
+            <a class="etsy-link" href="https://www.etsy.com/listing/4515676301" target="_blank">
+              View on Etsy ↗
+            </a>
+          </div>
+        </div>
+</div>
+
+<div id="export-box">
+  <h2>Flagged listings (copy this list):</h2>
+  <textarea id="export-text" readonly></textarea>
+</div>
+
+<script>
+  const flagged = new Set();
+
+  function mark(lid) {
+    const cb   = document.getElementById('cb-' + lid);
+    const card = document.getElementById('card-' + lid);
+    if (cb.checked) {
+      flagged.add(lid);
+      card.classList.add('flagged');
+    } else {
+      flagged.delete(lid);
+      card.classList.remove('flagged');
+    }
+    document.getElementById('count-label').textContent =
+      flagged.size + ' flagged';
+  }
+
+  function exportFlagged() {
+    const box = document.getElementById('export-box');
+    const txt = document.getElementById('export-text');
+    if (flagged.size === 0) {
+      alert('No listings flagged yet.');
+      return;
+    }
+    const lines = Array.from(flagged).map(lid => {
+      const title = document.querySelector('#card-' + lid + ' .title').textContent;
+      return lid + '  ' + title;
+    });
+    txt.value = lines.join('\n');
+    box.style.display = 'block';
+    txt.select();
+  }
+
+  function clearAll() {
+    flagged.clear();
+    document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('flagged'));
+    document.getElementById('count-label').textContent = '0 flagged';
+    document.getElementById('export-box').style.display = 'none';
+  }
+</script>
+</body>
+</html>
