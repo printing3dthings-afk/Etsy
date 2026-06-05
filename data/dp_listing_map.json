@@ -800,53 +800,60 @@
     "type": "sublimation",
     "notes": "OnBrandCraftz_MomLife_Sublimation_Bundle.zip"
   },
-  "REVIEW_NEEDED_DP1070_BOTANICAL_HERBS": {
+  "DP1094": {
     "listing_id": 4515674594,
-    "title": "Botanical Herbs Art Print | Kitchen Wall Decor",
-    "type": "review_needed",
-    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file. Needs correct individual art file.",
-    "attached_file": "DP1070_print_sizes.zip"
+    "title": "Botanical Wildflower Poppy Art Print | Orange Red Yellow Floral Wall Decor",
+    "type": "wall_art",
+    "file": "DP1094_print_sizes.zip",
+    "source_art": "upscaled/DP1094.jpg",
+    "dp_file_id": 1491358907300
   },
-  "REVIEW_NEEDED_DP1070_BOHO_BOTANICAL": {
+  "DP1095": {
     "listing_id": 4515674144,
-    "title": "Boho Botanical Floral Wall Art Print",
-    "type": "review_needed",
-    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
-    "attached_file": "DP1070_print_sizes.zip"
+    "title": "Boho Botanical Floral Wall Art Print | Watercolor Pampas Bouquet",
+    "type": "wall_art",
+    "file": "DP1095_print_sizes.zip",
+    "source_art": "upscaled/DP1095.jpg",
+    "dp_file_id": 1491358913902
   },
-  "REVIEW_NEEDED_DP1070_TROPICAL": {
+  "DP1096": {
     "listing_id": 4515673064,
-    "title": "Tropical Botanical Art Print | Jungle Wall Decor",
-    "type": "review_needed",
-    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
-    "attached_file": "DP1070_print_sizes.zip"
+    "title": "Tropical Peach Flowers Art Print | Teal Botanical Wall Decor",
+    "type": "wall_art",
+    "file": "DP1096_print_sizes.zip",
+    "source_art": "upscaled/DP1096.jpg",
+    "dp_file_id": 1492522694195
   },
-  "REVIEW_NEEDED_DP1070_TYPOGRAPHY": {
+  "DP1097": {
     "listing_id": 4515672972,
-    "title": "Minimalist Typography Art Print | Quote Wall Decor",
-    "type": "review_needed",
-    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
-    "attached_file": "DP1070_print_sizes.zip"
+    "title": "Good Things Take Time Typography Print | Motivational Quote Wall Art",
+    "type": "wall_art",
+    "file": "DP1097_print_sizes.zip",
+    "source_art": "upscaled/DP1097.jpg",
+    "dp_file_id": 1492522699255
   },
-  "REVIEW_NEEDED_DP1070_KAWAII_STATIONERY": {
+  "DP1098": {
     "listing_id": 4515676185,
-    "title": "Kawaii Stationery Art Print | Cute Desk Decor",
-    "type": "review_needed",
-    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
-    "attached_file": "DP1070_print_sizes.zip"
+    "title": "Bold Black and White Flower Line Art Print | Modern Minimalist Wall Decor",
+    "type": "wall_art",
+    "file": "DP1098_print_sizes.zip",
+    "source_art": "upscaled/DP1098.jpg",
+    "dp_file_id": 1492522704243
   },
-  "REVIEW_NEEDED_DP1070_PASTEL_CELESTIAL": {
+  "DP1099": {
     "listing_id": 4515672588,
-    "title": "Pastel Celestial Art Print | Moon Stars Decor",
-    "type": "review_needed",
-    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
-    "attached_file": "DP1070_print_sizes.zip"
+    "title": "Minimalist Bare Tree Golden Sun Art Print | Modern Nature Wall Decor",
+    "type": "wall_art",
+    "file": "DP1099_print_sizes.zip",
+    "source_art": "upscaled/DP1099.jpg",
+    "dp_file_id": 1492522710843
   },
-  "REVIEW_NEEDED_DP1084_LINE_ART": {
+  "DP1100": {
     "listing_id": 4515674042,
-    "title": "Minimalist Line Art Print | Modern Wall Decor",
-    "type": "review_needed",
-    "issue": "DP1084 (Mom Life SVG Bundle) attached \u2014 completely wrong product type. Wall art listing has SVG bundle attached.",
-    "attached_file": "DP1084_print_sizes.zip"
+    "title": "Watercolor Eucalyptus Branch Art Print | Minimalist Botanical Wall Decor",
+    "type": "wall_art",
+    "file": "DP1100_print_sizes.zip",
+    "source_art": "upscaled/DP1100.jpg",
+    "dp_file_id": 1491358943112
   }
 }
