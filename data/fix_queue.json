@@ -102,5 +102,66 @@
       "fix_notes": ""
     }
   ],
-  "reviewed_batches": [1, 2, 3, 4, 5, 6, 7, 8]
+    {
+      "listing_id": 4513713922,
+      "title": "Bear Nursery Wall Art, Printable Instant Download, Woodland",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513713936,
+      "title": "Owl Nursery Wall Art, Printable Instant Download, Woodland",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513713945,
+      "title": "Vintage Botanical Print, Black White Wall Art, Instant Download",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513713962,
+      "title": "Watercolor Fox Nursery Print, Printable Instant Download",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513713984,
+      "title": "Hummingbird Nursery Print, Printable Wall Art, Instant Download",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513714013,
+      "title": "Paris Skyline Print, Black White Wall Art, Instant Download",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513714191,
+      "title": "Fox Nursery Wall Art, Printable Instant Download, Woodland",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4514130045,
+      "title": "Floral SVG Bundle Cricut, Botanical Cut Files, Instant Download",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4514134583,
+      "title": "Christian SVG Bundle, Faith Cut Files Cricut, Instant Download",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4514136783,
+      "title": "Graduation SVG Bundle 2026, Senior Cut Files Cricut, Instant Download",
+      "flagged_in_batch": 9,
+      "fix_notes": ""
+    }
+  ],
+  "reviewed_batches": [1, 2, 3, 4, 5, 6, 7, 8, 9]
 }
