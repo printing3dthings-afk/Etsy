@@ -186,8 +186,8 @@
       "listing_id": 4514392281,
       "title": "Mom Life SVG Bundle, 20 Designs Cricut Silhouette, Instant Download",
       "flagged_in_batch": 10,
-      "fix_notes": "",
-      "status": "pending"
+      "fix_notes": "Deleted photos 4,5,7-17. Kept 1,2,3,6. Added 6 composites. Photo 2 off-center clothing pending. Photo 6 style noted (3rd confirmation) for SVG batch. DP1084.",
+      "status": "done"
     },
     {
       "listing_id": 4514536935,
@@ -309,6 +309,11 @@
       "note": "Listing #26 photo 6 \u2014 user loves this SVG style (same as #25). Confirmed request: create new SVG cut files with this font/saying aesthetic. Reference listing 4514136783 photo 6.",
       "date": "2026-06-05",
       "status": "idea"
+    },
+    {
+      "note": "Listing #27 photo 6 \u2014 3rd confirmation user wants SVG cut files in this style. Priority design task after fix queue complete. Reference listings 4514130045, 4514134583, 4514136783, 4514392281 photo 6.",
+      "date": "2026-06-05",
+      "status": "priority"
     }
   ]
 }
