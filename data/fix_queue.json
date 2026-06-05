@@ -52,5 +52,18 @@
       "fix_notes": ""
     }
   ],
-  "reviewed_batches": [1, 2, 3, 4, 5, 6]
+    {
+      "listing_id": 4512763302,
+      "title": "Rooster Kitchen Printable Wall Art, Instant Download, Farm",
+      "flagged_in_batch": 7,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4512768858,
+      "title": "Cherry Blossom Watercolor Print, Spring Wall Art, Instant Download",
+      "flagged_in_batch": 7,
+      "fix_notes": ""
+    }
+  ],
+  "reviewed_batches": [1, 2, 3, 4, 5, 6, 7]
 }
