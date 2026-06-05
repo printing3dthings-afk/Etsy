@@ -586,12 +586,13 @@ Research-backed rules that must be applied to every listing:
 
 ---
 
-### Titles (max 140 chars)
-- Lead with the PRIMARY search keyword buyers type
+### Titles (max 70 chars — ALL listing types)
+- **Hard limit: 70 characters.** Etsy's 2026 algorithm applies a mobile ranking penalty above 70 chars. 70%+ of Etsy traffic is mobile.
+- Lead with the PRIMARY search keyword buyers type in first 20-30 characters
+- Use comma separators, not pipes
 - Include year (2026) or "Undated" for evergreen
-- Include app compatibility (GoodNotes, Notability)
-- Include "Instant Download" and "PDF"
-- Example: `Kawaii Digital Planner 2026 | GoodNotes Notability iPad | Fillable PDF Planner | Instant Download | Kawaii Sticker Pack Included`
+- Include app compatibility (GoodNotes) in first 40 chars
+- Example: `Digital Planner 2026 Undated, GoodNotes iPad, Instant Download` (62 chars)
 
 ### Descriptions — Required Sections in Order
 1. **Hook** (1–2 sentences): Emotion-first + primary keyword in sentence 1 for Google indexing
@@ -718,8 +719,8 @@ When asked to list a planner on Etsy:
 
 ### DP1026 — Ultimate Digital Life Planner
 
-**Title** (139 chars):
-`Kawaii Digital Planner 2026 + Undated | GoodNotes Notability iPad | Fillable PDF + Sticker Pack | Instant Download | Life Planner Bundle`
+**Title** (62 chars — 2026 70-char mobile rule):
+`Digital Planner 2026 Undated, GoodNotes iPad, Instant Download`
 
 **Tags**:
 `digital planner`, `goodnotes planner`, `notability planner`, `ipad planner`, `kawaii planner`, `fillable planner`, `2026 life planner`, `kawaii sticker pack`, `instant download`, `printable planner`, `daily planner pdf`, `planner bundle`, `habit tracker pdf`
@@ -830,8 +831,8 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 
 ### DP1027 — Student & School Planner
 
-**Title** (131 chars):
-`Kawaii Student Planner 2026 + Undated | School Planner GoodNotes | Fillable PDF + Sticker Pack | Academic Planner Instant Download`
+**Title** (61 chars — 2026 70-char mobile rule):
+`Kawaii Student Planner 2026, GoodNotes iPad, Instant Download`
 
 **Tags**:
 `student planner`, `digital planner`, `school planner`, `goodnotes planner`, `notability planner`, `ipad planner`, `academic planner`, `study planner`, `kawaii planner`, `fillable planner`, `back to school`, `instant download`, `kawaii sticker pack`
@@ -939,8 +940,8 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 
 ### DP1028 — Budget & Finance Planner
 
-**Title** (136 chars):
-`Digital Budget Planner 2026 + Undated | Finance Planner GoodNotes | Fillable PDF + Sticker Pack | Kawaii Money Planner Instant Download`
+**Title** (64 chars — 2026 70-char mobile rule):
+`Digital Budget Planner 2026 Undated, GoodNotes, Instant Download`
 
 **Tags**:
 `budget planner`, `finance planner`, `digital planner`, `goodnotes planner`, `money planner`, `ipad planner`, `fillable planner`, `savings planner`, `debt payoff planner`, `kawaii planner`, `instant download`, `budget tracker`, `2026 budget plan`
@@ -1049,8 +1050,8 @@ A: This license is for personal use only. If your partner wants a copy, they'll 
 
 ### DP1029 — Fitness & Wellness Planner
 
-**Title** (137 chars):
-`Kawaii Fitness Planner 2026 + Undated | Wellness Planner GoodNotes | Fillable PDF + Sticker Pack | Health Habit Tracker Instant Download`
+**Title** (65 chars — 2026 70-char mobile rule):
+`Digital Fitness Planner 2026 Undated, GoodNotes, Instant Download`
 
 **Tags**:
 `fitness planner`, `wellness planner`, `digital planner`, `goodnotes planner`, `health planner`, `ipad planner`, `habit tracker`, `meal planner pdf`, `kawaii planner`, `fillable planner`, `instant download`, `self care planner`, `2026 fitness plan`
