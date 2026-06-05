@@ -193,8 +193,8 @@
       "listing_id": 4514536935,
       "title": "Good Vibes SVG Bundle, 20 Designs Cricut, Instant Download",
       "flagged_in_batch": 10,
-      "fix_notes": "",
-      "status": "pending"
+      "fix_notes": "Deleted photo 5 (duplicate of 3). Photo 6 style noted (4th confirmation) for SVG design batch. DP1085.",
+      "status": "done"
     },
     {
       "listing_id": 4515437432,
@@ -312,6 +312,11 @@
     },
     {
       "note": "Listing #27 photo 6 \u2014 3rd confirmation user wants SVG cut files in this style. Priority design task after fix queue complete. Reference listings 4514130045, 4514134583, 4514136783, 4514392281 photo 6.",
+      "date": "2026-06-05",
+      "status": "priority"
+    },
+    {
+      "note": "Listing #28 photo 6 \u2014 4th confirmation. User explicitly said \"I want ones like those.\" Priority SVG design task: create new cut file bundles in the style shown in photo 6 across listings #24-#28.",
       "date": "2026-06-05",
       "status": "priority"
     }
