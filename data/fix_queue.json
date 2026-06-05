@@ -172,8 +172,8 @@
       "listing_id": 4514134583,
       "title": "Christian SVG Bundle, Faith Cut Files Cricut, Instant Download",
       "flagged_in_batch": 9,
-      "fix_notes": "",
-      "status": "pending"
+      "fix_notes": "Deleted 4,5,7-17 (old SVG + duplicates). Kept 1,2,3,6. Added 6 room composites. Photo 2 off-center clothing - pending. Photo 6 style flagged for future SVG design. DP1082.",
+      "status": "done"
     },
     {
       "listing_id": 4514136783,
@@ -298,5 +298,12 @@
     14,
     15,
     16
+  ],
+  "design_notes": [
+    {
+      "note": "Listing #25 photo 6 \u2014 user loved the font/saying style. Explore making new SVG cut files with that aesthetic (script font, inspirational/faith sayings). Reference listing 4514134583 photo 6.",
+      "date": "2026-06-05",
+      "status": "idea"
+    }
   ]
 }
