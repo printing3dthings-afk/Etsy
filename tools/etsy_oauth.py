@@ -37,7 +37,7 @@ CLIENT_ID    = os.getenv("ETSY_CLIENT_ID", "")
 REDIRECT_URI = "http://localhost:3003/callback"
 AUTH_URL     = "https://www.etsy.com/oauth/connect"
 TOKEN_URL    = "https://api.etsy.com/v3/public/oauth/token"
-SCOPES       = "shops_r shops_w listings_r listings_w transactions_r billing_r profile_r email_r feedback_r address_r"
+SCOPES       = "shops_r shops_w listings_r listings_w listings_d transactions_r billing_r profile_r email_r feedback_r address_r"
 ENV_FILE     = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 STATE_FILE   = os.path.join(tempfile.gettempdir(), "etsy_oauth_state.json")
 
