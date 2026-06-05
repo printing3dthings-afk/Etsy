@@ -1,0 +1,57 @@
+{
+  "action": "delete_mystery_listings",
+  "date": "2026-06-05",
+  "reason": "Listings contained DALL-E-generated lifestyle photos with no real product art composited in. Violated CLAUDE.md cardinal rule: every listing photo must show the REAL product. DP1065 file was incorrectly attached to all 10 during a prior bulk fix.",
+  "listings_deleted": [
+    {
+      "listing_id": 4515678904,
+      "title": "Wildflower Meadow Art Print",
+      "status": "already_removed"
+    },
+    {
+      "listing_id": 4515678828,
+      "title": "Celestial Moon Art Print",
+      "status": "deleted"
+    },
+    {
+      "listing_id": 4515682265,
+      "title": "Vintage Botanical Art Print",
+      "status": "deleted"
+    },
+    {
+      "listing_id": 4515674696,
+      "title": "Modern Abstract Art Print",
+      "status": "deleted"
+    },
+    {
+      "listing_id": 4515674486,
+      "title": "Kawaii Animals Art Print",
+      "status": "deleted"
+    },
+    {
+      "listing_id": 4515674340,
+      "title": "Boho Dreamcatcher Art Print",
+      "status": "deleted"
+    },
+    {
+      "listing_id": 4515673940,
+      "title": "Abstract Watercolor Art Print",
+      "status": "deleted"
+    },
+    {
+      "listing_id": 4515677207,
+      "title": "Kawaii Celestial Art Print",
+      "status": "deleted"
+    },
+    {
+      "listing_id": 4515676711,
+      "title": "Kawaii Character Art Print",
+      "status": "deleted"
+    },
+    {
+      "listing_id": 4515672864,
+      "title": "Abstract Landscape Art Print",
+      "status": "deleted"
+    }
+  ]
+}

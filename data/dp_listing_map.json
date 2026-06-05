@@ -6,7 +6,8 @@
       "DP1052.jpg",
       "DP1052.jpg"
     ],
-    "kawaii_listing_id": 4515672499
+    "kawaii_listing_id": 4515672499,
+    "individual_listing_id": 4512772539
   },
   "DP1053": {
     "listing_id": 4512784817,
@@ -15,7 +16,8 @@
       "DP1053.jpg",
       "DP1053.jpg"
     ],
-    "kawaii_listing_id": 4515672435
+    "kawaii_listing_id": 4515672435,
+    "individual_listing_id": 4512774863
   },
   "DP1054": {
     "listing_id": 4512784817,
@@ -24,7 +26,8 @@
       "DP1054.jpg",
       "DP1054.jpg"
     ],
-    "kawaii_listing_id": 4515672331
+    "kawaii_listing_id": 4515672331,
+    "individual_listing_id": 4512776173
   },
   "DP1055": {
     "listing_id": 4512784817,
@@ -33,7 +36,8 @@
       "DP1055.jpg",
       "DP1055.jpg"
     ],
-    "kawaii_listing_id": 4515668698
+    "kawaii_listing_id": 4515668698,
+    "individual_listing_id": 4512780614
   },
   "DP1048": {
     "listing_id": 4512784922,
@@ -51,7 +55,8 @@
       "DP1049.jpg",
       "DP1049.jpg"
     ],
-    "kawaii_listing_id": 4515669370
+    "kawaii_listing_id": 4515669370,
+    "individual_listing_id": 4512768771
   },
   "DP1050": {
     "listing_id": 4512784922,
@@ -60,7 +65,8 @@
       "DP1050.jpg",
       "DP1050.jpg"
     ],
-    "kawaii_listing_id": 4515669246
+    "kawaii_listing_id": 4515669246,
+    "individual_listing_id": 4512770031
   },
   "DP1051": {
     "listing_id": 4512784922,
@@ -69,7 +75,8 @@
       "DP1051.jpg",
       "DP1051.jpg"
     ],
-    "kawaii_listing_id": 4515669140
+    "kawaii_listing_id": 4515669140,
+    "individual_listing_id": 4512772452
   },
   "DP1057": {
     "listing_id": 4512783077,
@@ -394,7 +401,9 @@
     "files": [
       "upscaled/DP1058.jpg"
     ],
-    "status": "active"
+    "status": "active",
+    "secondary_listing_id": 4515673828,
+    "secondary_title": "Cottagecore Botanical Art Print"
   },
   "DP1059": {
     "listing_id": 4509193237,
@@ -482,7 +491,9 @@
     "files": [
       "upscaled/DP1069.jpg"
     ],
-    "status": "active"
+    "status": "active",
+    "individual_listing_id": 4515676301,
+    "individual_title": "Floral Wreath Art Print, Botanical Wall Decor"
   },
   "DP1070": {
     "listing_id": 4512784922,
@@ -677,6 +688,165 @@
   "DP1026": {
     "listing_id": 4515682147,
     "title": "Kawaii Art Print No.1026",
-    "files": []
+    "files": [],
+    "planner_listing_id": 4509179201,
+    "planner_title": "Digital Planner 2026 Undated, GoodNotes iPad"
+  },
+  "DP1027": {
+    "planner_listing_id": 4509184958,
+    "planner_title": "Kawaii Student Planner 2026, GoodNotes iPad"
+  },
+  "DP1028": {
+    "planner_listing_id": 4509184962,
+    "planner_title": "Digital Budget Planner 2026 Undated, GoodNotes"
+  },
+  "DP1029": {
+    "planner_listing_id": 4509184968,
+    "planner_title": "Digital Fitness Planner 2026 Undated, GoodNotes"
+  },
+  "BUNDLE_PLANNER_ALL4": {
+    "listing_id": 4512188970,
+    "title": "Kawaii Planner Bundle 2026, All 4 Planners",
+    "type": "bundle",
+    "notes": "Contains DP1026.pdf, DP1027.pdf, DP1028.pdf, DP1029.pdf, All_4_Sticker_Packs.zip"
+  },
+  "BUNDLE_GALLERY_WOODLAND": {
+    "listing_id": 4513713142,
+    "title": "Woodland Animal Gallery Wall Set of 5",
+    "type": "gallery_bundle",
+    "notes": "DP1038, DP1040, DP1046, DP1056, DP1039"
+  },
+  "BUNDLE_GALLERY_BOTANICAL": {
+    "listing_id": 4513713106,
+    "title": "Botanical Gallery Wall Set of 5",
+    "type": "gallery_bundle",
+    "notes": "DP1032, DP1042, DP1045, DP1001, DP1003"
+  },
+  "BUNDLE_GALLERY_COASTAL": {
+    "listing_id": 4513713044,
+    "title": "Coastal Gallery Wall Set of 5",
+    "type": "gallery_bundle",
+    "notes": "DP1022, DP1044, DP1039, DP1045, DP1031"
+  },
+  "STICKER_FREE": {
+    "listing_id": 4512255508,
+    "title": "FREE Kawaii Sticker Sheet PNG, GoodNotes",
+    "type": "sticker_pack",
+    "notes": "DP1026_sticker_pack.zip \u2014 free lead magnet listing"
+  },
+  "STICKER_BUNDLE_ALL4": {
+    "listing_id": 4512254035,
+    "title": "Kawaii Sticker Bundle All 4 Themes, GoodNotes",
+    "type": "sticker_bundle",
+    "notes": "DP1026-DP1029 all sticker packs"
+  },
+  "STICKER_CORAL_PEACH": {
+    "listing_id": 4512254027,
+    "title": "Kawaii Sticker Pack PNG, GoodNotes, Coral Peach",
+    "type": "sticker_pack",
+    "notes": "DP1029_sticker_pack.zip"
+  },
+  "STICKER_MIDNIGHT_BLUE": {
+    "listing_id": 4512255536,
+    "title": "Kawaii Sticker Pack PNG, GoodNotes, Midnight Blue",
+    "type": "sticker_pack",
+    "notes": "DP1028_sticker_pack.zip"
+  },
+  "STICKER_COTTON_CANDY": {
+    "listing_id": 4512254015,
+    "title": "Kawaii Sticker Pack PNG, GoodNotes, Cotton Candy",
+    "type": "sticker_pack",
+    "notes": "DP1027_sticker_pack.zip"
+  },
+  "STICKER_LAVENDER": {
+    "listing_id": 4512255514,
+    "title": "Kawaii Sticker Pack PNG, GoodNotes, Lavender Dreams",
+    "type": "sticker_pack",
+    "notes": "DP1026_sticker_pack.zip"
+  },
+  "COMMERCIAL_STICKER_BUNDLE": {
+    "listing_id": 4515439809,
+    "title": "Commercial License, Kawaii Sticker Pack Bundle All",
+    "type": "commercial_license",
+    "notes": "All_4_Sticker_Packs.zip \u2014 commercial use license"
+  },
+  "COMMERCIAL_STICKER_CORAL": {
+    "listing_id": 4515439799,
+    "title": "Commercial License, Kawaii Sticker Pack Coral Peach",
+    "type": "commercial_license",
+    "notes": "DP1029_sticker_pack.zip"
+  },
+  "COMMERCIAL_STICKER_MIDNIGHT": {
+    "listing_id": 4515437464,
+    "title": "Commercial License, Kawaii Sticker Pack Midnight Blue",
+    "type": "commercial_license",
+    "notes": "DP1028_sticker_pack.zip"
+  },
+  "COMMERCIAL_STICKER_COTTON": {
+    "listing_id": 4515437456,
+    "title": "Commercial License, Kawaii Sticker Pack Cotton Candy",
+    "type": "commercial_license",
+    "notes": "DP1027_sticker_pack.zip"
+  },
+  "COMMERCIAL_STICKER_LAVENDER": {
+    "listing_id": 4515437452,
+    "title": "Commercial License, Kawaii Sticker Pack Lavender Dreams",
+    "type": "commercial_license",
+    "notes": "DP1026_sticker_pack.zip"
+  },
+  "SUBLIMATION_MOM_LIFE": {
+    "listing_id": 4514777212,
+    "title": "Mom Life Sublimation Tumbler Wrap Bundle PNG 20oz",
+    "type": "sublimation",
+    "notes": "OnBrandCraftz_MomLife_Sublimation_Bundle.zip"
+  },
+  "REVIEW_NEEDED_DP1070_BOTANICAL_HERBS": {
+    "listing_id": 4515674594,
+    "title": "Botanical Herbs Art Print | Kitchen Wall Decor",
+    "type": "review_needed",
+    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file. Needs correct individual art file.",
+    "attached_file": "DP1070_print_sizes.zip"
+  },
+  "REVIEW_NEEDED_DP1070_BOHO_BOTANICAL": {
+    "listing_id": 4515674144,
+    "title": "Boho Botanical Floral Wall Art Print",
+    "type": "review_needed",
+    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
+    "attached_file": "DP1070_print_sizes.zip"
+  },
+  "REVIEW_NEEDED_DP1070_TROPICAL": {
+    "listing_id": 4515673064,
+    "title": "Tropical Botanical Art Print | Jungle Wall Decor",
+    "type": "review_needed",
+    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
+    "attached_file": "DP1070_print_sizes.zip"
+  },
+  "REVIEW_NEEDED_DP1070_TYPOGRAPHY": {
+    "listing_id": 4515672972,
+    "title": "Minimalist Typography Art Print | Quote Wall Decor",
+    "type": "review_needed",
+    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
+    "attached_file": "DP1070_print_sizes.zip"
+  },
+  "REVIEW_NEEDED_DP1070_KAWAII_STATIONERY": {
+    "listing_id": 4515676185,
+    "title": "Kawaii Stationery Art Print | Cute Desk Decor",
+    "type": "review_needed",
+    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
+    "attached_file": "DP1070_print_sizes.zip"
+  },
+  "REVIEW_NEEDED_DP1070_PASTEL_CELESTIAL": {
+    "listing_id": 4515672588,
+    "title": "Pastel Celestial Art Print | Moon Stars Decor",
+    "type": "review_needed",
+    "issue": "DP1070 (Four Seasons Set of 4) attached \u2014 wrong file.",
+    "attached_file": "DP1070_print_sizes.zip"
+  },
+  "REVIEW_NEEDED_DP1084_LINE_ART": {
+    "listing_id": 4515674042,
+    "title": "Minimalist Line Art Print | Modern Wall Decor",
+    "type": "review_needed",
+    "issue": "DP1084 (Mom Life SVG Bundle) attached \u2014 completely wrong product type. Wall art listing has SVG bundle attached.",
+    "attached_file": "DP1084_print_sizes.zip"
   }
 }
