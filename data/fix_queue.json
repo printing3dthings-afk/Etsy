@@ -1,4 +1,23 @@
 {
-  "flagged": [],
-  "reviewed_batches": []
+  "flagged": [
+    {
+      "listing_id": 4509193231,
+      "title": "Sage Lavender Botanical Print, Dusty Rose Wall Art, Instant Download",
+      "flagged_in_batch": 2,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4509193237,
+      "title": "Pampas Grass Printable Wall Art, Boho, Instant Download",
+      "flagged_in_batch": 2,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4509198434,
+      "title": "Boho Wildflower Printable Wall Art, Instant Download, Sage",
+      "flagged_in_batch": 2,
+      "fix_notes": ""
+    }
+  ],
+  "reviewed_batches": [1, 2]
 }
