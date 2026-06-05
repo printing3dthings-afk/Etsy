@@ -1,1184 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OnBrandCraftz — Product Browser</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #0f1117;
-      color: #e2e8f0;
-      min-height: 100vh;
-      padding: 0 0 60px 0;
-    }
-    /* ── Header ── */
-    .header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      border-bottom: 1px solid #2d3748;
-      padding: 32px 40px 28px;
-    }
-    .header h1 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #f7fafc;
-      letter-spacing: -0.02em;
-    }
-    .header h1 span { color: #9f7aea; }
-    .header .meta {
-      margin-top: 6px;
-      font-size: 0.8rem;
-      color: #718096;
-    }
-    .header .meta strong { color: #a0aec0; }
-    /* ── Layout ── */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-    /* ── Section headers ── */
-    .section-header {
-      margin: 40px 0 10px;
-      padding: 16px 20px;
-      background: #1a202c;
-      border-left: 4px solid #9f7aea;
-      border-radius: 0 8px 8px 0;
-    }
-    .section-header h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #e2e8f0;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-    }
-    .section-sub {
-      margin-top: 4px;
-      font-size: 0.78rem;
-      color: #718096;
-    }
-    /* ── Tables ── */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-    thead th {
-      text-align: left;
-      padding: 10px 14px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #718096;
-      background: #161b27;
-      border-bottom: 1px solid #2d3748;
-    }
-    tbody tr {
-      border-bottom: 1px solid #1a2035;
-      transition: background 0.12s;
-    }
-    tbody tr:hover { background: #1a2035; }
-    tbody td {
-      padding: 10px 14px;
-      vertical-align: middle;
-    }
-    .id-cell {
-      font-family: "SF Mono", "Fira Code", monospace;
-      font-size: 0.78rem;
-      color: #9f7aea;
-      white-space: nowrap;
-      width: 90px;
-    }
-    .type-cell {
-      color: #a0aec0;
-      font-size: 0.78rem;
-      white-space: nowrap;
-      width: 110px;
-    }
-    .size-cell {
-      color: #68d391;
-      font-family: "SF Mono", "Fira Code", monospace;
-      font-size: 0.78rem;
-      white-space: nowrap;
-      width: 80px;
-    }
-    .link-cell {
-      width: 80px;
-      text-align: right;
-    }
-    .link-cell a {
-      display: inline-block;
-      padding: 4px 12px;
-      background: #2d3748;
-      color: #90cdf4;
-      text-decoration: none;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      transition: background 0.15s, color 0.15s;
-    }
-    .link-cell a:hover {
-      background: #4a5568;
-      color: #bee3f8;
-    }
-    em.theme {
-      color: #718096;
-      font-style: normal;
-      font-size: 0.8em;
-    }
-    /* ── Badges ── */
-    .badge {
-      display: inline-block;
-      padding: 2px 7px;
-      border-radius: 3px;
-      font-size: 0.68rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      vertical-align: middle;
-      margin-left: 4px;
-    }
-    .badge-2026-dated  { background: #2c7a7b; color: #81e6d9; }
-    .badge-undated     { background: #553c9a; color: #d6bcfa; }
-    /* ── Info box (upscaled summary) ── */
-    .info-box {
-      margin: 10px 0 0;
-      padding: 14px 20px;
-      background: #1a202c;
-      border: 1px solid #2d3748;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-    .info-box .count {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #9f7aea;
-      line-height: 1;
-    }
-    .info-box .desc {
-      font-size: 0.83rem;
-      color: #a0aec0;
-    }
-    .info-box .desc strong { color: #e2e8f0; }
-    .info-box a {
-      margin-left: auto;
-      display: inline-block;
-      padding: 6px 16px;
-      background: #2d3748;
-      color: #90cdf4;
-      text-decoration: none;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-    .info-box a:hover { background: #4a5568; }
-    /* ── Section color variants ── */
-    .section-header.green  { border-left-color: #48bb78; }
-    .section-header.blue   { border-left-color: #63b3ed; }
-    .section-header.gray   { border-left-color: #718096; }
-    .section-header.orange { border-left-color: #ed8936; }
-    .section-header.teal   { border-left-color: #38b2ac; }
-    .section-header.red    { border-left-color: #fc8181; }
-    /* ── Count badge in section header ── */
-    .section-header .count-badge {
-      display: inline-block;
-      margin-left: 10px;
-      padding: 2px 8px;
-      background: #2d3748;
-      color: #a0aec0;
-      border-radius: 10px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      vertical-align: middle;
-    }
-    /* ── Footer ── */
-    .footer {
-      margin-top: 48px;
-      padding: 20px 40px;
-      text-align: center;
-      font-size: 0.75rem;
-      color: #4a5568;
-      border-top: 1px solid #1a202c;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OnBrandCraftz — Product Browser</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;min-height:100vh;padding-bottom:80px}
+a{color:#58a6ff;text-decoration:none}
+code{font-family:"SF Mono","Fira Code",monospace;font-size:.82em;background:#161b22;padding:1px 5px;border-radius:3px;color:#8b949e}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#161b22 0%,#0d1117 60%,#0d2137 100%);border-bottom:1px solid #30363d;padding:28px 40px 24px}
+.header h1{font-size:1.6rem;font-weight:700;color:#f0f6fc;letter-spacing:-.02em}
+.header h1 .shop{color:#9f7aea}
+.header .meta{margin-top:6px;font-size:.78rem;color:#6e7681}
+.header .meta strong{color:#8b949e}
+
+/* LAYOUT */
+.body{max-width:1200px;margin:0 auto;padding:0 24px}
+
+/* SECTION HEADERS */
+.sec-hdr{margin:36px 0 0;padding:14px 18px;border-left:3px solid #9f7aea;border-radius:0 6px 6px 0;background:#161b22}
+.sec-hdr.green{border-left-color:#3fb950}
+.sec-hdr.teal{border-left-color:#39c5cf}
+.sec-hdr.blue{border-left-color:#58a6ff}
+.sec-hdr.gray{border-left-color:#6e7681}
+.sec-hdr.orange{border-left-color:#e3b341}
+.sec-hdr.red{border-left-color:#f85149}
+.sec-hdr.purple{border-left-color:#bc8cff}
+.sec-hdr.pink{border-left-color:#f778ba}
+.sec-hdr.lime{border-left-color:#7ee787}
+.sec-hdr.gold{border-left-color:#d29922}
+.sec-hdr h2{font-size:.88rem;font-weight:600;color:#e6edf3;text-transform:uppercase;letter-spacing:.07em}
+.sec-hdr .sub{margin-top:4px;font-size:.76rem;color:#6e7681}
+.pill{display:inline-block;margin-left:8px;padding:1px 7px;background:#21262d;color:#8b949e;border-radius:10px;font-size:.7rem;font-weight:500;vertical-align:middle;text-transform:none;letter-spacing:0}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:0}
+thead tr{background:#161b22;border-bottom:1px solid #30363d}
+th{text-align:left;padding:8px 12px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:#6e7681}
+tbody tr{border-bottom:1px solid #21262d;transition:background .1s}
+tbody tr:hover{background:#161b22}
+td{padding:9px 12px;vertical-align:middle}
+td.id{font-family:"SF Mono","Fira Code",monospace;font-size:.76rem;color:#9f7aea;white-space:nowrap;width:90px}
+td.type{color:#8b949e;font-size:.76rem;white-space:nowrap;width:120px}
+td.size{color:#3fb950;font-family:"SF Mono","Fira Code",monospace;font-size:.76rem;white-space:nowrap;width:75px}
+td.btn{width:80px;text-align:right}
+td.btn a{display:inline-block;padding:4px 11px;background:#21262d;color:#58a6ff;border-radius:4px;font-size:.73rem;font-weight:500;border:1px solid #30363d;transition:background .12s,border-color .12s}
+td.btn a:hover{background:#30363d;border-color:#58a6ff}
+td.na{color:#6e7681;font-size:.76rem}
+em.theme{color:#6e7681;font-style:normal;font-size:.82em}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;vertical-align:middle;margin-left:4px}
+.badge-2026-dated{background:#133d2b;color:#3fb950;border:1px solid #1b4d32}
+.badge-undated{background:#2e1a57;color:#bc8cff;border:1px solid #3d2370}
+
+/* INFO BOX */
+.info-box{margin-top:0;padding:16px 20px;background:#161b22;border:1px solid #30363d;border-radius:0 0 6px 6px;display:flex;align-items:center;gap:16px}
+.info-box .big{font-size:2.4rem;font-weight:700;color:#9f7aea;line-height:1}
+.info-box .desc{font-size:.8rem;color:#8b949e;flex:1}
+.info-box .desc strong{color:#c9d1d9}
+.info-box a{display:inline-block;padding:6px 14px;background:#21262d;color:#58a6ff;border-radius:4px;font-size:.78rem;font-weight:500;border:1px solid #30363d;white-space:nowrap}
+.info-box a:hover{background:#30363d}
+
+/* FOOTER */
+.footer{margin-top:56px;padding:18px 40px;text-align:center;font-size:.73rem;color:#6e7681;border-top:1px solid #21262d}
+</style>
 </head>
 <body>
 
 <div class="header">
-  <h1><span>OnBrandCraftz</span> — Product Browser</h1>
-  <p class="meta">Generated: <strong>5 June 2026, 10:08 PM</strong> &nbsp;·&nbsp; Click any row to open the file &nbsp;·&nbsp; All paths relative to <code>/home/user/Etsy/</code></p>
+  <h1><span class="shop">OnBrandCraftz</span> — Product Browser</h1>
+  <p class="meta">Generated <strong>5 June 2026, 10:10 PM</strong> &nbsp;&middot;&nbsp; Click <em>Open &rarr;</em> to launch any file in your browser &nbsp;&middot;&nbsp; All paths relative to <code>/home/user/Etsy/</code></p>
 </div>
 
-<div class="container">
+<div class="body">
 
-  <!-- ═══════════════════════════════════════════════
-       ACTIVE PLANNERS
-  ═══════════════════════════════════════════════ -->
-  <div class="section-header green">
-    <h2>Active Planners <span class="count-badge">4 products · 8 files</span></h2>
-    <p class="section-sub">The 4 live Etsy products. Each has a 2026 dated version and a perpetual undated version.</p>
+<div class="sec-hdr green"><h2>Active Planners <span class="pill">4 products &middot; 8 files</span></h2><p class="sub">The 4 live Etsy products. Each has a 2026 dated version + an undated evergreen version.</p></div>
+
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>DP1026</td><td>Ultimate Digital Life Planner 2026 <em class="theme">(Lavender Dreams)</em> <span class="badge badge-2026-dated">2026 Dated</span></td><td class='type'>PDF · 104 pp</td><td class='size'>16.4 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1026.pdf" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1026U</td><td>Ultimate Digital Life Planner 2026 — Undated <em class="theme">(Lavender Dreams)</em> <span class="badge badge-undated">Undated</span></td><td class='type'>PDF · 104 pp</td><td class='size'>8.4 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1026U.pdf" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1027</td><td>Student & School Planner 2026 <em class="theme">(Cotton Candy)</em> <span class="badge badge-2026-dated">2026 Dated</span></td><td class='type'>PDF · 90 pp</td><td class='size'>15.6 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1027.pdf" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1027U</td><td>Student & School Planner 2026 — Undated <em class="theme">(Cotton Candy)</em> <span class="badge badge-undated">Undated</span></td><td class='type'>PDF · 90 pp</td><td class='size'>7.7 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1027U.pdf" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1028</td><td>Budget & Finance Planner 2026 <em class="theme">(Midnight Blue)</em> <span class="badge badge-2026-dated">2026 Dated</span></td><td class='type'>PDF · 102 pp</td><td class='size'>16.0 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1028.pdf" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1028U</td><td>Budget & Finance Planner 2026 — Undated <em class="theme">(Midnight Blue)</em> <span class="badge badge-undated">Undated</span></td><td class='type'>PDF · 102 pp</td><td class='size'>8.1 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1028U.pdf" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1029</td><td>Fitness & Wellness Planner 2026 <em class="theme">(Coral Peach)</em> <span class="badge badge-2026-dated">2026 Dated</span></td><td class='type'>PDF · 91 pp</td><td class='size'>15.5 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1029.pdf" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1029U</td><td>Fitness & Wellness Planner 2026 — Undated <em class="theme">(Coral Peach)</em> <span class="badge badge-undated">Undated</span></td><td class='type'>PDF · 91 pp</td><td class='size'>7.7 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1029U.pdf" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
+
+<div class="sec-hdr teal"><h2>Kawaii Sticker Packs <span class="pill">5 ZIPs</span></h2><p class="sub">5 PNG sticker sheets (200+ stickers) per theme pack. Themed to match each planner.</p></div>
+
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>DP1026</td><td>Lavender Dreams Sticker Pack</td><td class='type'>ZIP</td><td class='size'>1.8 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1026_sticker_pack.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1027</td><td>Cotton Candy Sticker Pack</td><td class='type'>ZIP</td><td class='size'>1.8 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1027_sticker_pack.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1028</td><td>Midnight Blue Sticker Pack</td><td class='type'>ZIP</td><td class='size'>1.8 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1028_sticker_pack.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1029</td><td>Coral Peach Sticker Pack</td><td class='type'>ZIP</td><td class='size'>1.8 MB</td><td class='btn'><a href="data/digital_products/product_files/DP1029_sticker_pack.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>ALL</td><td>All 4 Sticker Packs Bundle</td><td class='type'>ZIP</td><td class='size'>7.2 MB</td><td class='btn'><a href="data/digital_products/product_files/All_4_Sticker_Packs.zip" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
+
+<div class="sec-hdr blue"><h2>Wall Art &mdash; Color Print ZIPs <span class="pill">79 ZIPs</span></h2><p class="sub">Multi-size 300 DPI ZIPs (2&times;3, 4&times;5, A-series, square). Ready for Etsy digital file upload.</p></div>
+
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>DP1000</td><td>DP1000 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1000_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1001</td><td>DP1001 Print Sizes</td><td class='type'>ZIP</td><td class='size'>13.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1001_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1002</td><td>DP1002 Print Sizes</td><td class='type'>ZIP</td><td class='size'>14.3 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1002_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1003</td><td>DP1003 Print Sizes</td><td class='type'>ZIP</td><td class='size'>14.0 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1003_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1007</td><td>DP1007 Print Sizes</td><td class='type'>ZIP</td><td class='size'>19.9 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1007_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1008</td><td>DP1008 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.0 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1008_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1009</td><td>DP1009 Print Sizes</td><td class='type'>ZIP</td><td class='size'>15.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1009_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1010</td><td>DP1010 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1010_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1011</td><td>DP1011 Print Sizes</td><td class='type'>ZIP</td><td class='size'>15.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1011_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1012</td><td>DP1012 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.1 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1012_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1013</td><td>DP1013 Print Sizes</td><td class='type'>ZIP</td><td class='size'>17.0 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1013_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1014</td><td>DP1014 Print Sizes</td><td class='type'>ZIP</td><td class='size'>12.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1014_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1015</td><td>DP1015 Print Sizes</td><td class='type'>ZIP</td><td class='size'>15.3 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1015_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1016</td><td>DP1016 Print Sizes</td><td class='type'>ZIP</td><td class='size'>13.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1016_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1017</td><td>DP1017 Print Sizes</td><td class='type'>ZIP</td><td class='size'>13.7 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1017_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1018</td><td>DP1018 Print Sizes</td><td class='type'>ZIP</td><td class='size'>18.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1018_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1019</td><td>DP1019 Print Sizes</td><td class='type'>ZIP</td><td class='size'>17.1 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1019_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1020</td><td>DP1020 Print Sizes</td><td class='type'>ZIP</td><td class='size'>19.0 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1020_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1021</td><td>DP1021 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.9 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1021_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1022</td><td>DP1022 Print Sizes</td><td class='type'>ZIP</td><td class='size'>18.9 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1022_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1023</td><td>DP1023 Print Sizes</td><td class='type'>ZIP</td><td class='size'>9.0 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1023_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1024</td><td>DP1024 Print Sizes</td><td class='type'>ZIP</td><td class='size'>8.9 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1024_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1025</td><td>DP1025 Print Sizes</td><td class='type'>ZIP</td><td class='size'>18.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1025_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1026</td><td>DP1026 Print Sizes</td><td class='type'>ZIP</td><td class='size'>17.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1026_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1030</td><td>DP1030 Print Sizes</td><td class='type'>ZIP</td><td class='size'>10.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1030_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1031</td><td>DP1031 Print Sizes</td><td class='type'>ZIP</td><td class='size'>18.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1031_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1032</td><td>DP1032 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1032_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1033</td><td>DP1033 Print Sizes</td><td class='type'>ZIP</td><td class='size'>5.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1033_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1034</td><td>DP1034 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1034_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1035</td><td>DP1035 Print Sizes</td><td class='type'>ZIP</td><td class='size'>13.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1035_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1036</td><td>DP1036 Print Sizes</td><td class='type'>ZIP</td><td class='size'>8.6 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1036_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1037</td><td>DP1037 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.9 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1037_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1038</td><td>DP1038 Print Sizes</td><td class='type'>ZIP</td><td class='size'>14.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1038_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1039</td><td>DP1039 Print Sizes</td><td class='type'>ZIP</td><td class='size'>17.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1039_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1040</td><td>DP1040 Print Sizes</td><td class='type'>ZIP</td><td class='size'>13.7 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1040_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1041</td><td>DP1041 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1041_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1042</td><td>DP1042 Print Sizes</td><td class='type'>ZIP</td><td class='size'>14.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1042_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1043</td><td>DP1043 Print Sizes</td><td class='type'>ZIP</td><td class='size'>17.3 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1043_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1044</td><td>DP1044 Print Sizes</td><td class='type'>ZIP</td><td class='size'>16.0 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1044_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1045</td><td>DP1045 Print Sizes</td><td class='type'>ZIP</td><td class='size'>17.9 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1045_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1046</td><td>DP1046 Print Sizes</td><td class='type'>ZIP</td><td class='size'>13.7 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1046_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1047</td><td>DP1047 Print Sizes</td><td class='type'>ZIP</td><td class='size'>15.9 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1047_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1048</td><td>DP1048 Print Sizes</td><td class='type'>ZIP</td><td class='size'>9.6 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1048_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1049</td><td>DP1049 Print Sizes</td><td class='type'>ZIP</td><td class='size'>14.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1049_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1050</td><td>DP1050 Print Sizes</td><td class='type'>ZIP</td><td class='size'>15.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1050_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1051</td><td>DP1051 Print Sizes</td><td class='type'>ZIP</td><td class='size'>12.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1051_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1052</td><td>DP1052 Print Sizes</td><td class='type'>ZIP</td><td class='size'>19.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1052_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1053</td><td>DP1053 Print Sizes</td><td class='type'>ZIP</td><td class='size'>17.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1053_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1054</td><td>DP1054 Print Sizes</td><td class='type'>ZIP</td><td class='size'>17.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1054_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1055</td><td>DP1055 Print Sizes</td><td class='type'>ZIP</td><td class='size'>15.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1055_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1056</td><td>DP1056 Print Sizes</td><td class='type'>ZIP</td><td class='size'>14.7 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1056_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1057</td><td>DP1057 Print Sizes</td><td class='type'>ZIP</td><td class='size'>13.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1057_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1058</td><td>DP1058 Print Sizes</td><td class='type'>ZIP</td><td class='size'>4.0 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1058_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1059</td><td>DP1059 Print Sizes</td><td class='type'>ZIP</td><td class='size'>5.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1059_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1060</td><td>DP1060 Print Sizes</td><td class='type'>ZIP</td><td class='size'>9.3 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1060_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1061</td><td>DP1061 Print Sizes</td><td class='type'>ZIP</td><td class='size'>6.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1061_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1062</td><td>DP1062 Print Sizes</td><td class='type'>ZIP</td><td class='size'>9.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1062_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1063</td><td>DP1063 Print Sizes</td><td class='type'>ZIP</td><td class='size'>9.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1063_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1064</td><td>DP1064 Print Sizes</td><td class='type'>ZIP</td><td class='size'>10.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1064_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1065</td><td>DP1065 Print Sizes</td><td class='type'>ZIP</td><td class='size'>3.6 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1065_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1066</td><td>DP1066 Print Sizes</td><td class='type'>ZIP</td><td class='size'>12.1 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1066_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1067</td><td>DP1067 Print Sizes</td><td class='type'>ZIP</td><td class='size'>4.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1067_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1068</td><td>DP1068 Print Sizes</td><td class='type'>ZIP</td><td class='size'>6.1 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1068_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1069</td><td>DP1069 Print Sizes</td><td class='type'>ZIP</td><td class='size'>6.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1069_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1070</td><td>DP1070 Print Sizes</td><td class='type'>ZIP</td><td class='size'>5.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1070_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1071</td><td>DP1071 Print Sizes</td><td class='type'>ZIP</td><td class='size'>18.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1071_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1072</td><td>DP1072 Print Sizes</td><td class='type'>ZIP</td><td class='size'>12.7 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1072_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1073</td><td>DP1073 Print Sizes</td><td class='type'>ZIP</td><td class='size'>19.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1073_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1074</td><td>DP1074 Print Sizes</td><td class='type'>ZIP</td><td class='size'>7.5 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1074_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1075</td><td>DP1075 Print Sizes</td><td class='type'>ZIP</td><td class='size'>12.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1075_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1076</td><td>DP1076 Print Sizes</td><td class='type'>ZIP</td><td class='size'>11.8 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1076_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1077</td><td>DP1077 Print Sizes</td><td class='type'>ZIP</td><td class='size'>8.0 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1077_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1078</td><td>DP1078 Print Sizes</td><td class='type'>ZIP</td><td class='size'>8.9 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1078_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1079</td><td>DP1079 Print Sizes</td><td class='type'>ZIP</td><td class='size'>6.1 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1079_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1080</td><td>DP1080 Print Sizes</td><td class='type'>ZIP</td><td class='size'>9.1 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1080_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1082</td><td>DP1082 Print Sizes</td><td class='type'>ZIP</td><td class='size'>5.1 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1082_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1084</td><td>DP1084 Print Sizes</td><td class='type'>ZIP</td><td class='size'>5.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1084_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1092</td><td>DP1092 Print Sizes</td><td class='type'>ZIP</td><td class='size'>5.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1092_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>DP1093</td><td>DP1093 Print Sizes</td><td class='type'>ZIP</td><td class='size'>5.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/DP1093_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
+
+<div class="sec-hdr gray"><h2>Wall Art &mdash; Black &amp; White Print ZIPs <span class="pill">5 ZIPs</span></h2><p class="sub">B&amp;W variants of select color designs.</p></div>
+
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>BW_DP1017</td><td>BW_DP1017 Print Sizes (B&W)</td><td class='type'>ZIP</td><td class='size'>15.4 MB</td><td class='btn'><a href="data/digital_products/print_zips/BW_DP1017_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>BW_DP1018</td><td>BW_DP1018 Print Sizes (B&W)</td><td class='type'>ZIP</td><td class='size'>18.2 MB</td><td class='btn'><a href="data/digital_products/print_zips/BW_DP1018_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>BW_DP1030</td><td>BW_DP1030 Print Sizes (B&W)</td><td class='type'>ZIP</td><td class='size'>8.7 MB</td><td class='btn'><a href="data/digital_products/print_zips/BW_DP1030_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>BW_DP1032</td><td>BW_DP1032 Print Sizes (B&W)</td><td class='type'>ZIP</td><td class='size'>14.6 MB</td><td class='btn'><a href="data/digital_products/print_zips/BW_DP1032_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>BW_DP1033</td><td>BW_DP1033 Print Sizes (B&W)</td><td class='type'>ZIP</td><td class='size'>4.7 MB</td><td class='btn'><a href="data/digital_products/print_zips/BW_DP1033_print_sizes.zip" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
+
+<div class="sec-hdr orange"><h2>Upscaled Source Art &mdash; Master JPGs <span class="pill">62 files</span></h2><p class="sub">Original art files after 4&times; Lanczos upscaling. Source images used to generate print ZIPs.</p></div>
+
+<div class="info-box">
+  <div class="big">62</div>
+  <div class="desc">
+    <strong>JPG master files</strong> in <code>data/digital_products/product_files/upscaled/</code><br>
+    Upscaled to &ge;4,000 px (short edge) via <code>tools/upscale_art.py</code> before print ZIP generation.
   </div>
-  <table>
-    <thead><tr>
-      <th>ID</th><th>Product Name</th><th>Type</th><th>Size</th><th></th>
-    </tr></thead>
-    <tbody>
+  <a href="data/digital_products/product_files/upscaled/" target="_blank">Browse folder &rarr;</a>
+</div>
 
-    <tr>
-      <td class="id-cell">DP1026</td>
-      <td>Ultimate Digital Life Planner 2026 <em class='theme'>(Lavender Dreams)</em> <span class="badge badge-2026-dated">2026 Dated</span></td>
-      <td class="type-cell">PDF · 104 pp</td>
-      <td class="size-cell">16.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1026.pdf" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1026U</td>
-      <td>Ultimate Digital Life Planner 2026 — Undated <em class='theme'>(Lavender Dreams)</em> <span class="badge badge-undated">Undated</span></td>
-      <td class="type-cell">PDF · 104 pp</td>
-      <td class="size-cell">8.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1026U.pdf" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1027</td>
-      <td>Student & School Planner 2026 <em class='theme'>(Cotton Candy)</em> <span class="badge badge-2026-dated">2026 Dated</span></td>
-      <td class="type-cell">PDF · 104 pp</td>
-      <td class="size-cell">15.6 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1027.pdf" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1027U</td>
-      <td>Student & School Planner 2026 — Undated <em class='theme'>(Cotton Candy)</em> <span class="badge badge-undated">Undated</span></td>
-      <td class="type-cell">PDF · 104 pp</td>
-      <td class="size-cell">7.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1027U.pdf" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1028</td>
-      <td>Budget & Finance Planner 2026 <em class='theme'>(Midnight Blue)</em> <span class="badge badge-2026-dated">2026 Dated</span></td>
-      <td class="type-cell">PDF · 104 pp</td>
-      <td class="size-cell">16.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1028.pdf" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1028U</td>
-      <td>Budget & Finance Planner 2026 — Undated <em class='theme'>(Midnight Blue)</em> <span class="badge badge-undated">Undated</span></td>
-      <td class="type-cell">PDF · 104 pp</td>
-      <td class="size-cell">8.1 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1028U.pdf" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1029</td>
-      <td>Fitness & Wellness Planner 2026 <em class='theme'>(Coral Peach)</em> <span class="badge badge-2026-dated">2026 Dated</span></td>
-      <td class="type-cell">PDF · 104 pp</td>
-      <td class="size-cell">15.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1029.pdf" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1029U</td>
-      <td>Fitness & Wellness Planner 2026 — Undated <em class='theme'>(Coral Peach)</em> <span class="badge badge-undated">Undated</span></td>
-      <td class="type-cell">PDF · 104 pp</td>
-      <td class="size-cell">7.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1029U.pdf" target="_blank">Open &rarr;</a></td>
-    </tr>
-    </tbody>
-  </table>
+<div class="sec-hdr orange"><h2>Sublimation Pack <span class="pill">1 file</span></h2><p class="sub">Physical sublimation printing bundle.</p></div>
 
-  <!-- ═══════════════════════════════════════════════
-       STICKER PACKS
-  ═══════════════════════════════════════════════ -->
-  <div class="section-header teal">
-    <h2>Kawaii Sticker Packs <span class="count-badge">5 ZIPs</span></h2>
-    <p class="section-sub">5 PNG sticker sheets (200+ stickers) per pack. Themed to match each planner product.</p>
-  </div>
-  <table>
-    <thead><tr>
-      <th>ID</th><th>Pack Name</th><th>Type</th><th>Size</th><th></th>
-    </tr></thead>
-    <tbody>
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>SUBLI</td><td>OnBrandCraftz MomLife Sublimation Bundle</td><td class='type'>ZIP</td><td class='size'>14.3 MB</td><td class='btn'><a href="data/sublimation_pack/OnBrandCraftz_MomLife_Sublimation_Bundle.zip" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
 
-    <tr>
-      <td class="id-cell">DP1026</td>
-      <td>Lavender Dreams Sticker Pack</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">1.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1026_sticker_pack.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1027</td>
-      <td>Cotton Candy Sticker Pack</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">1.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1027_sticker_pack.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1028</td>
-      <td>Midnight Blue Sticker Pack</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">1.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1028_sticker_pack.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1029</td>
-      <td>Coral Peach Sticker Pack</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">1.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/DP1029_sticker_pack.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">ALL</td>
-      <td>All 4 Sticker Packs Bundle</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">7.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/product_files/All_4_Sticker_Packs.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    </tbody>
-  </table>
+<div class="sec-hdr purple"><h2>SVG Pack — Floral &amp; Botanical (svg_pack) <span class="pill">10 SVGs</span></h2><p class="sub">Production SVGs in <code>data/svg_pack/SVG/</code>. Florals, wreaths, mandalas.</p></div>
 
-  <!-- ═══════════════════════════════════════════════
-       WALL ART PRINT ZIPS (COLOR)
-  ═══════════════════════════════════════════════ -->
-  <div class="section-header blue">
-    <h2>Wall Art — Color Print ZIPs <span class="count-badge">79 files</span></h2>
-    <p class="section-sub">Multi-size print ZIPs (2×3, 4×5, A-series, square) at 300 DPI. Ready for Etsy upload.</p>
-  </div>
-  <table>
-    <thead><tr>
-      <th>ID</th><th>Product</th><th>Type</th><th>Size</th><th></th>
-    </tr></thead>
-    <tbody>
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>—</td><td>Etsy 01 Floral Wreath</td><td class='type'>SVG</td><td class='size'>207 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_01_floral_wreath.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 02 Sunflower Wreath</td><td class='type'>SVG</td><td class='size'>86 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_02_sunflower_wreath.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 03 Wildflower Bouquet</td><td class='type'>SVG</td><td class='size'>80 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_03_wildflower_bouquet.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 04 Floral Heart</td><td class='type'>SVG</td><td class='size'>237 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_04_floral_heart.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 05 Botanical Border</td><td class='type'>SVG</td><td class='size'>493 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_05_botanical_border.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 06 Mandala Bloom</td><td class='type'>SVG</td><td class='size'>109 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_06_mandala_bloom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 07 Bloom Quote</td><td class='type'>SVG</td><td class='size'>152 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_07_bloom_quote.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 08 Gather Floral</td><td class='type'>SVG</td><td class='size'>32 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_08_gather_floral.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 09 Butterfly Floral</td><td class='type'>SVG</td><td class='size'>125 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_09_butterfly_floral.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Etsy 10 Monogram Frame</td><td class='type'>SVG</td><td class='size'>166 KB</td><td class='btn'><a href="data/svg_pack/SVG/etsy_10_monogram_frame.svg" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
 
-    <tr>
-      <td class="id-cell">DP1000</td>
-      <td>DP1000 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1000_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1001</td>
-      <td>DP1001 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">13.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1001_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1002</td>
-      <td>DP1002 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">14.3 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1002_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1003</td>
-      <td>DP1003 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">14.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1003_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1007</td>
-      <td>DP1007 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">19.9 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1007_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1008</td>
-      <td>DP1008 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1008_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1009</td>
-      <td>DP1009 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">15.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1009_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1010</td>
-      <td>DP1010 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1010_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1011</td>
-      <td>DP1011 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">15.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1011_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1012</td>
-      <td>DP1012 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.1 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1012_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1013</td>
-      <td>DP1013 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">17.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1013_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1014</td>
-      <td>DP1014 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">12.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1014_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1015</td>
-      <td>DP1015 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">15.3 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1015_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1016</td>
-      <td>DP1016 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">13.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1016_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1017</td>
-      <td>DP1017 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">13.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1017_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1018</td>
-      <td>DP1018 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">18.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1018_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1019</td>
-      <td>DP1019 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">17.1 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1019_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1020</td>
-      <td>DP1020 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">19.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1020_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1021</td>
-      <td>DP1021 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.9 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1021_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1022</td>
-      <td>DP1022 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">18.9 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1022_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1023</td>
-      <td>DP1023 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">9.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1023_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1024</td>
-      <td>DP1024 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">8.9 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1024_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1025</td>
-      <td>DP1025 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">18.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1025_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1026</td>
-      <td>DP1026 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">17.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1026_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1030</td>
-      <td>DP1030 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">10.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1030_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1031</td>
-      <td>DP1031 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">18.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1031_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1032</td>
-      <td>DP1032 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1032_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1033</td>
-      <td>DP1033 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">5.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1033_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1034</td>
-      <td>DP1034 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1034_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1035</td>
-      <td>DP1035 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">13.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1035_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1036</td>
-      <td>DP1036 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">8.6 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1036_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1037</td>
-      <td>DP1037 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.9 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1037_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1038</td>
-      <td>DP1038 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">14.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1038_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1039</td>
-      <td>DP1039 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">17.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1039_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1040</td>
-      <td>DP1040 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">13.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1040_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1041</td>
-      <td>DP1041 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1041_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1042</td>
-      <td>DP1042 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">14.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1042_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1043</td>
-      <td>DP1043 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">17.3 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1043_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1044</td>
-      <td>DP1044 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">16.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1044_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1045</td>
-      <td>DP1045 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">17.9 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1045_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1046</td>
-      <td>DP1046 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">13.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1046_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1047</td>
-      <td>DP1047 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">15.9 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1047_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1048</td>
-      <td>DP1048 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">9.6 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1048_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1049</td>
-      <td>DP1049 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">14.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1049_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1050</td>
-      <td>DP1050 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">15.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1050_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1051</td>
-      <td>DP1051 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">12.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1051_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1052</td>
-      <td>DP1052 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">19.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1052_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1053</td>
-      <td>DP1053 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">17.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1053_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1054</td>
-      <td>DP1054 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">17.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1054_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1055</td>
-      <td>DP1055 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">15.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1055_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1056</td>
-      <td>DP1056 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">14.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1056_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1057</td>
-      <td>DP1057 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">13.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1057_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1058</td>
-      <td>DP1058 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">4.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1058_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1059</td>
-      <td>DP1059 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">5.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1059_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1060</td>
-      <td>DP1060 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">9.3 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1060_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1061</td>
-      <td>DP1061 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">6.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1061_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1062</td>
-      <td>DP1062 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">9.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1062_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1063</td>
-      <td>DP1063 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">9.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1063_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1064</td>
-      <td>DP1064 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">10.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1064_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1065</td>
-      <td>DP1065 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">3.6 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1065_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1066</td>
-      <td>DP1066 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">12.1 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1066_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1067</td>
-      <td>DP1067 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">4.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1067_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1068</td>
-      <td>DP1068 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">6.1 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1068_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1069</td>
-      <td>DP1069 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">6.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1069_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1070</td>
-      <td>DP1070 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">5.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1070_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1071</td>
-      <td>DP1071 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">18.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1071_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1072</td>
-      <td>DP1072 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">12.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1072_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1073</td>
-      <td>DP1073 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">19.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1073_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1074</td>
-      <td>DP1074 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">7.5 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1074_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1075</td>
-      <td>DP1075 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">12.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1075_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1076</td>
-      <td>DP1076 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">11.8 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1076_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1077</td>
-      <td>DP1077 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">8.0 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1077_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1078</td>
-      <td>DP1078 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">8.9 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1078_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1079</td>
-      <td>DP1079 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">6.1 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1079_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1080</td>
-      <td>DP1080 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">9.1 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1080_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1082</td>
-      <td>DP1082 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">5.1 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1082_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1084</td>
-      <td>DP1084 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">5.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1084_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1092</td>
-      <td>DP1092 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">5.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1092_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">DP1093</td>
-      <td>DP1093 Print Sizes</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">5.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/DP1093_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    </tbody>
-  </table>
+<div class="sec-hdr purple"><h2>SVG Pack — Graduation (grad_pack) <span class="pill">10 SVGs</span></h2><p class="sub">Production SVGs in <code>data/grad_pack/SVG/</code>.</p></div>
 
-  <!-- ═══════════════════════════════════════════════
-       BLACK & WHITE WALL ART
-  ═══════════════════════════════════════════════ -->
-  <div class="section-header gray">
-    <h2>Wall Art — Black &amp; White Print ZIPs <span class="count-badge">5 files</span></h2>
-    <p class="section-sub">B&amp;W variants of select color designs.</p>
-  </div>
-  <table>
-    <thead><tr>
-      <th>ID</th><th>Product</th><th>Type</th><th>Size</th><th></th>
-    </tr></thead>
-    <tbody>
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>—</td><td>Grad 01 Class Of 2026</td><td class='type'>SVG</td><td class='size'>43 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_01_class_of_2026.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 02 Tassel Worth</td><td class='type'>SVG</td><td class='size'>61 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_02_tassel_worth.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 03 Future Bright</td><td class='type'>SVG</td><td class='size'>58 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_03_future_bright.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 04 Senior 2026</td><td class='type'>SVG</td><td class='size'>116 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_04_senior_2026.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 05 She Did It</td><td class='type'>SVG</td><td class='size'>45 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_05_she_did_it.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 06 Grad Mode On</td><td class='type'>SVG</td><td class='size'>31 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_06_grad_mode_on.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 07 Level Unlocked</td><td class='type'>SVG</td><td class='size'>50 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_07_level_unlocked.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 08 Diploma Frame</td><td class='type'>SVG</td><td class='size'>196 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_08_diploma_frame.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 09 Next Chapter</td><td class='type'>SVG</td><td class='size'>50 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_09_next_chapter.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Grad 10 Congrats Grad</td><td class='type'>SVG</td><td class='size'>86 KB</td><td class='btn'><a href="data/grad_pack/SVG/grad_10_congrats_grad.svg" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
 
-    <tr>
-      <td class="id-cell">BW_DP1017</td>
-      <td>BW_DP1017 Print Sizes (B&W)</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">15.4 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/BW_DP1017_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">BW_DP1018</td>
-      <td>BW_DP1018 Print Sizes (B&W)</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">18.2 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/BW_DP1018_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">BW_DP1030</td>
-      <td>BW_DP1030 Print Sizes (B&W)</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">8.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/BW_DP1030_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">BW_DP1032</td>
-      <td>BW_DP1032 Print Sizes (B&W)</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">14.6 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/BW_DP1032_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">BW_DP1033</td>
-      <td>BW_DP1033 Print Sizes (B&W)</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">4.7 MB</td>
-      <td class="link-cell"><a href="data/digital_products/print_zips/BW_DP1033_print_sizes.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    </tbody>
-  </table>
+<div class="sec-hdr purple"><h2>SVG Pack — Faith (faith_pack) <span class="pill">10 SVGs</span></h2><p class="sub">Production SVGs in <code>data/faith_pack/SVG/</code>.</p></div>
 
-  <!-- ═══════════════════════════════════════════════
-       UPSCALED SOURCE ART
-  ═══════════════════════════════════════════════ -->
-  <div class="section-header orange">
-    <h2>Upscaled Source Art JPGs <span class="count-badge">62 files</span></h2>
-    <p class="section-sub">Master art files after 4× Lanczos upscaling. These are the source images used to generate print ZIPs.</p>
-  </div>
-  <div class="info-box">
-    <div class="count">62</div>
-    <div class="desc">
-      <strong>JPG source files</strong> in <code>data/digital_products/product_files/upscaled/</code><br>
-      All upscaled to &ge;4,000 px short edge via <code>tools/upscale_art.py</code>. Click to browse the folder.
-    </div>
-    <a href="data/digital_products/product_files/upscaled/" target="_blank">Browse folder &rarr;</a>
-  </div>
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>—</td><td>Faith 01 Be Still</td><td class='type'>SVG</td><td class='size'>35 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_01_be_still.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 02 Faith Over Fear</td><td class='type'>SVG</td><td class='size'>91 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_02_faith_over_fear.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 03 Blessed</td><td class='type'>SVG</td><td class='size'>42 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_03_blessed.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 04 Grace Upon Grace</td><td class='type'>SVG</td><td class='size'>180 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_04_grace_upon_grace.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 05 She Is Clothed</td><td class='type'>SVG</td><td class='size'>140 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_05_she_is_clothed.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 06 With God</td><td class='type'>SVG</td><td class='size'>96 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_06_with_god.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 07 Joy</td><td class='type'>SVG</td><td class='size'>55 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_07_joy.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 08 Pray First</td><td class='type'>SVG</td><td class='size'>82 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_08_pray_first.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 09 Amazing Grace</td><td class='type'>SVG</td><td class='size'>59 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_09_amazing_grace.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Faith 10 Trust</td><td class='type'>SVG</td><td class='size'>59 KB</td><td class='btn'><a href="data/faith_pack/SVG/faith_10_trust.svg" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
 
-  <!-- ═══════════════════════════════════════════════
-       SUBLIMATION
-  ═══════════════════════════════════════════════ -->
-  <div class="section-header orange">
-    <h2>Sublimation Pack <span class="count-badge">1 file</span></h2>
-    <p class="section-sub">Sublimation design bundle for physical product printing.</p>
-  </div>
-  <table>
-    <thead><tr>
-      <th>ID</th><th>Product</th><th>Type</th><th>Size</th><th></th>
-    </tr></thead>
-    <tbody>
+<div class="sec-hdr pink"><h2>SVG Pack — Groovy (groovy_pack) <span class="pill">20 SVGs</span></h2><p class="sub">Production SVGs in <code>data/groovy_pack/SVG/</code>. 70s-inspired positive vibes.</p></div>
 
-    <tr>
-      <td class="id-cell">SUBLI</td>
-      <td>OnBrandCraftz MomLife Sublimation Bundle</td>
-      <td class="type-cell">ZIP</td>
-      <td class="size-cell">14.3 MB</td>
-      <td class="link-cell"><a href="data/sublimation_pack/OnBrandCraftz_MomLife_Sublimation_Bundle.zip" target="_blank">Open &rarr;</a></td>
-    </tr>
-    </tbody>
-  </table>
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>—</td><td>Groovy 01 Good Vibes</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_01_good_vibes.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 02 Stay Groovy</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_02_stay_groovy.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 03 Spread Love</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_03_spread_love.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 04 Be Weird</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_04_be_weird.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 05 Choose Happy</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_05_choose_happy.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 06 Wild Free</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_06_wild_free.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 07 Good Things</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_07_good_things.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 08 Flower Power</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_08_flower_power.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 09 Peace Love</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_09_peace_love.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 10 Radiate</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_10_radiate.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 11 Soul Fire</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_11_soul_fire.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 12 Dream Chaser</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_12_dream_chaser.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 13 Wander</td><td class='type'>SVG</td><td class='size'>3 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_13_wander.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 14 Life Colorful</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_14_life_colorful.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 15 Keep Growing</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_15_keep_growing.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 16 Magic Happens</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_16_magic_happens.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 17 Happy Chaos</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_17_happy_chaos.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 18 Sun Child</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_18_sun_child.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 19 Bloom</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_19_bloom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Groovy 20 Rainbow</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/groovy_pack/SVG/groovy_20_rainbow.svg" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
 
-  <!-- ═══════════════════════════════════════════════
-       SVG TEST & DEV FILES
-  ═══════════════════════════════════════════════ -->
-  <div class="section-header red">
-    <h2>SVG Test &amp; Dev Files <span class="count-badge">23 files</span></h2>
-    <p class="section-sub">Test files and iteration versions in <code>data/</code>. Not production products — dev/experiment artifacts.</p>
-  </div>
-  <table>
-    <thead><tr>
-      <th>ID</th><th>Filename</th><th>Type</th><th>Size</th><th></th>
-    </tr></thead>
-    <tbody>
+<div class="sec-hdr pink"><h2>SVG Pack — Mom Life (mom_life_pack) <span class="pill">20 SVGs</span></h2><p class="sub">Production SVGs in <code>data/mom_life_pack/SVG/</code>.</p></div>
 
-    <tr>
-      <td class="id-cell">—</td>
-      <td>Floral Wreath (Etsy test)</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">22 KB</td>
-      <td class="link-cell"><a href="data/etsy_floral_wreath.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>Mandala (Etsy test)</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">18 KB</td>
-      <td class="link-cell"><a href="data/etsy_mandala.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>Quote Design (Etsy test)</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">12 KB</td>
-      <td class="link-cell"><a href="data/etsy_quote_design.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>Test Convert</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">10 KB</td>
-      <td class="link-cell"><a href="data/test_convert.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>Yankees NY</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">262 KB</td>
-      <td class="link-cell"><a href="data/yankees_ny.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ Layered Design</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">692 KB</td>
-      <td class="link-cell"><a href="data/sj_layered_design.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ Layered Design FINAL</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">159 KB</td>
-      <td class="link-cell"><a href="data/sj_layered_design_FINAL.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v2</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">382 KB</td>
-      <td class="link-cell"><a href="data/sj_v2.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v3</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">3.7 MB</td>
-      <td class="link-cell"><a href="data/sj_v3.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v4</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">2.3 MB</td>
-      <td class="link-cell"><a href="data/sj_v4.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v5</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">4.2 MB</td>
-      <td class="link-cell"><a href="data/sj_v5.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v6</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">193 KB</td>
-      <td class="link-cell"><a href="data/sj_v6.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v7</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">149 KB</td>
-      <td class="link-cell"><a href="data/sj_v7.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v8</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">332 KB</td>
-      <td class="link-cell"><a href="data/sj_v8.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v9 Contour</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">39 KB</td>
-      <td class="link-cell"><a href="data/sj_v9_contour.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v10 Bilateral</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">333 KB</td>
-      <td class="link-cell"><a href="data/sj_v10_bilateral.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v11 Split</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">162 KB</td>
-      <td class="link-cell"><a href="data/sj_v11_split.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v12 Spline</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">92 KB</td>
-      <td class="link-cell"><a href="data/sj_v12_spline.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v13 3x</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">260 KB</td>
-      <td class="link-cell"><a href="data/sj_v13_3x.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v14 Best</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">360 KB</td>
-      <td class="link-cell"><a href="data/sj_v14_best.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v15 Per-Color</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">110 KB</td>
-      <td class="link-cell"><a href="data/sj_v15_percolor.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v16 Bilinear</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">475 KB</td>
-      <td class="link-cell"><a href="data/sj_v16_bilinear.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    <tr>
-      <td class="id-cell">—</td>
-      <td>SJ v17 Exact Colors</td>
-      <td class="type-cell">SVG</td>
-      <td class="size-cell">550 KB</td>
-      <td class="link-cell"><a href="data/sj_v17_exact_colors.svg" target="_blank">Open &rarr;</a></td>
-    </tr>
-    </tbody>
-  </table>
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>—</td><td>Mom 01 Blessed Mama</td><td class='type'>SVG</td><td class='size'>46 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_01_blessed_mama.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 02 Coffee Chaos</td><td class='type'>SVG</td><td class='size'>46 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_02_coffee_chaos.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 03 Messy Bun</td><td class='type'>SVG</td><td class='size'>277 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_03_messy_bun.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 04 Boy Mom</td><td class='type'>SVG</td><td class='size'>55 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_04_boy_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 05 Girl Mom</td><td class='type'>SVG</td><td class='size'>31 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_05_girl_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 06 Mama Bear</td><td class='type'>SVG</td><td class='size'>146 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_06_mama_bear.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 07 Soccer Mom</td><td class='type'>SVG</td><td class='size'>47 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_07_soccer_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 08 Minivan Mama</td><td class='type'>SVG</td><td class='size'>42 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_08_minivan_mama.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 09 Tired Blessed</td><td class='type'>SVG</td><td class='size'>40 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_09_tired_blessed.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 10 Wine Time</td><td class='type'>SVG</td><td class='size'>45 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_10_wine_time.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 11 Fur Mama</td><td class='type'>SVG</td><td class='size'>42 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_11_fur_mama.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 12 Hot Mess</td><td class='type'>SVG</td><td class='size'>40 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_12_hot_mess.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 13 Nap Time</td><td class='type'>SVG</td><td class='size'>193 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_13_nap_time.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 14 Motherhood</td><td class='type'>SVG</td><td class='size'>55 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_14_motherhood.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 15 Chaos Coordinator</td><td class='type'>SVG</td><td class='size'>43 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_15_chaos_coordinator.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 16 Plant Mama</td><td class='type'>SVG</td><td class='size'>44 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_16_plant_mama.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 17 Mom Tribe</td><td class='type'>SVG</td><td class='size'>152 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_17_mom_tribe.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 18 Super Mom</td><td class='type'>SVG</td><td class='size'>81 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_18_super_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 19 Raising Arrows</td><td class='type'>SVG</td><td class='size'>60 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_19_raising_arrows.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Mom 20 Mama Needs Coffee</td><td class='type'>SVG</td><td class='size'>62 KB</td><td class='btn'><a href="data/mom_life_pack/SVG/mom_20_mama_needs_coffee.svg" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
+
+<div class="sec-hdr pink"><h2>SVG Pack — Retro Moms (retro_moms_pack) <span class="pill">16 SVGs</span></h2><p class="sub">Production SVGs in <code>data/retro_moms_pack/SVG/</code>.</p></div>
+
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>—</td><td>Retro 03 Cheer Mom</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_03_cheer_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 05 Teacher Fuel</td><td class='type'>SVG</td><td class='size'>1 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_05_teacher_fuel.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 06 Nurse Life</td><td class='type'>SVG</td><td class='size'>938 B</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_06_nurse_life.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 07 Mama Mode</td><td class='type'>SVG</td><td class='size'>1 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_07_mama_mode.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 08 In My Mama Era</td><td class='type'>SVG</td><td class='size'>1 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_08_in_my_mama_era.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 09 In My Teacher Era</td><td class='type'>SVG</td><td class='size'>1 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_09_in_my_teacher_era.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 10 Game Day Vibes</td><td class='type'>SVG</td><td class='size'>3 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_10_game_day_vibes.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 11 Blessed Mama</td><td class='type'>SVG</td><td class='size'>870 B</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_11_blessed_mama.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 12 Dog Mom</td><td class='type'>SVG</td><td class='size'>1 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_12_dog_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 13 Sunshine Hurricane</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_13_sunshine_hurricane.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 14 Too Peopley</td><td class='type'>SVG</td><td class='size'>1 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_14_too_peopley.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 15 Boho Christian</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_15_boho_christian.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 16 Girl Mom</td><td class='type'>SVG</td><td class='size'>3 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_16_girl_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 17 Boy Mom</td><td class='type'>SVG</td><td class='size'>974 B</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_17_boy_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 18 Bonus Mom</td><td class='type'>SVG</td><td class='size'>2 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_18_bonus_mom.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Retro 19 Chaos Coordinator</td><td class='type'>SVG</td><td class='size'>1 KB</td><td class='btn'><a href="data/retro_moms_pack/SVG/retro_19_chaos_coordinator.svg" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
+
+<div class="sec-hdr gold"><h2>SVG Bundle — Western (svg_bundles/western) <span class="pill">12 SVGs</span></h2><p class="sub">Production SVGs in <code>data/svg_bundles/western/SVG/</code>.</p></div>
+
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>—</td><td>Western 01 Wild Heart</td><td class='type'>SVG</td><td class='size'>149 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_01_wild_heart.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 02 Yeehaw</td><td class='type'>SVG</td><td class='size'>170 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_02_yeehaw.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 03 Cowgirl Up</td><td class='type'>SVG</td><td class='size'>204 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_03_cowgirl_up.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 04 Desert Rose</td><td class='type'>SVG</td><td class='size'>193 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_04_desert_rose.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 05 Prairie Girl</td><td class='type'>SVG</td><td class='size'>147 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_05_prairie_girl.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 06 Southern Soul</td><td class='type'>SVG</td><td class='size'>142 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_06_southern_soul.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 07 Rodeo Queen</td><td class='type'>SVG</td><td class='size'>179 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_07_rodeo_queen.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 08 Boot Scootin</td><td class='type'>SVG</td><td class='size'>140 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_08_boot_scootin.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 09 Blessed Country</td><td class='type'>SVG</td><td class='size'>72 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_09_blessed_country.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 10 Howdy</td><td class='type'>SVG</td><td class='size'>71 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_10_howdy.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 11 Free Spirit</td><td class='type'>SVG</td><td class='size'>103 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_11_free_spirit.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Western 12 Ranch Wife</td><td class='type'>SVG</td><td class='size'>139 KB</td><td class='btn'><a href="data/svg_bundles/western/SVG/western_12_ranch_wife.svg" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
+
+<div class="sec-hdr red"><h2>SVG — Test &amp; Dev Files <span class="pill">7 files</span></h2><p class="sub">Experimental / iteration files. Not production products.</p></div>
+
+<table><thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Size</th><th></th></tr>
+<tr><td class='id'>—</td><td>Design Dark Floral <em class="theme">(svg_test/)</em></td><td class='type'>SVG</td><td class='size'>147 KB</td><td class='btn'><a href="data/svg_test/design_dark_floral.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Design Floral Wreath <em class="theme">(svg_test/)</em></td><td class='type'>SVG</td><td class='size'>676 KB</td><td class='btn'><a href="data/svg_test/design_floral_wreath.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Design Mama Script <em class="theme">(svg_test/)</em></td><td class='type'>SVG</td><td class='size'>125 KB</td><td class='btn'><a href="data/svg_test/design_mama_script.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Design Mama Script V2 <em class="theme">(svg_test/)</em></td><td class='type'>SVG</td><td class='size'>187 KB</td><td class='btn'><a href="data/svg_test/design_mama_script_v2.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Design Western <em class="theme">(svg_test/)</em></td><td class='type'>SVG</td><td class='size'>183 KB</td><td class='btn'><a href="data/svg_test/design_western.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Sj Layered Design Final <em class="theme">(data/ (loose))</em></td><td class='type'>SVG</td><td class='size'>159 KB</td><td class='btn'><a href="data/sj_layered_design_FINAL.svg" target="_blank">Open &rarr;</a></td></tr>
+<tr><td class='id'>—</td><td>Yankees Ny <em class="theme">(data/ (loose))</em></td><td class='type'>SVG</td><td class='size'>262 KB</td><td class='btn'><a href="data/yankees_ny.svg" target="_blank">Open &rarr;</a></td></tr>
+</thead><tbody></tbody></table>
 
 </div>
 
 <div class="footer">
-  OnBrandCraftz &nbsp;·&nbsp; 5 June 2026, 10:08 PM &nbsp;·&nbsp; Etsy Shop: onbrandcraftz &nbsp;·&nbsp; Owner: Scott
+  OnBrandCraftz &nbsp;&middot;&nbsp; 5 June 2026, 10:10 PM &nbsp;&middot;&nbsp; Etsy: onbrandcraftz &nbsp;&middot;&nbsp; Scott &mdash; Printing3dthings@outlook.com
 </div>
-
 </body>
 </html>
