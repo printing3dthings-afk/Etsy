@@ -65,5 +65,42 @@
       "fix_notes": ""
     }
   ],
-  "reviewed_batches": [1, 2, 3, 4, 5, 6, 7]
+    {
+      "listing_id": 4512783077,
+      "title": "Paris Café Printable Wall Art, Instant Download, French",
+      "flagged_in_batch": 8,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4512784817,
+      "title": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
+      "flagged_in_batch": 8,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4512784922,
+      "title": "Four Seasons Set of 4, Printable Wall Art, Instant Download",
+      "flagged_in_batch": 8,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513713514,
+      "title": "Japandi Tree Print, Black White Wall Art, Instant Download",
+      "flagged_in_batch": 8,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513713712,
+      "title": "Moon Phases Print, Black White Wall Art, Instant Download",
+      "flagged_in_batch": 8,
+      "fix_notes": ""
+    },
+    {
+      "listing_id": 4513713805,
+      "title": "Minimalist Botanical Print, Black White Wall Art, Instant Download",
+      "flagged_in_batch": 8,
+      "fix_notes": ""
+    }
+  ],
+  "reviewed_batches": [1, 2, 3, 4, 5, 6, 7, 8]
 }
