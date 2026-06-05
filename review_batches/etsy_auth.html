@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Authorize Etsy</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #1a1a1a; color: #eee;
+         display: flex; flex-direction: column; align-items: center;
+         justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+  h1 { font-size: 22px; color: #fff; text-align: center; margin-bottom: 10px; }
+  p { font-size: 14px; color: #aaa; text-align: center; margin-bottom: 30px; }
+  a.btn { background: #f1641e; color: #fff; text-decoration: none; padding: 18px 36px;
+           border-radius: 8px; font-size: 20px; font-weight: bold; display: block;
+           text-align: center; }
+  .steps { font-size: 13px; color: #888; margin-top: 30px; line-height: 1.8; text-align: left; max-width: 320px; }
+</style>
+</head>
+<body>
+  <h1>Authorize OnBrandCraftz</h1>
+  <p>Tap the button below to allow listing deletion access on Etsy.</p>
+  <a class="btn" href="https://www.etsy.com/oauth/connect?response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3003%2Fcallback&scope=shops_r+shops_w+listings_r+listings_w+listings_d+transactions_r+billing_r+profile_r+email_r+feedback_r+address_r&client_id=v874xp0m0r4yoh72btmux151&state=h0NkrxYKhgrjNkB3DMheHg&code_challenge=x19rAlQ1BYXblNAO0bu9Rz2Z5dyI-tue7luRYzctXlA&code_challenge_method=S256">Tap to Authorize on Etsy</a>
+  <div class="steps">
+    <b>After tapping Allow:</b><br>
+    1. Page will go blank or say "can't connect"<br>
+    2. Copy the full URL from your address bar<br>
+    3. Paste it back to Claude
+  </div>
+</body>
+</html>
