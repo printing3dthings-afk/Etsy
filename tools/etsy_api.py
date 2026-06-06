@@ -36,11 +36,131 @@ from typing import Any
 
 BASE_URL = "https://openapi.etsy.com/v3/application"
 
+# Etsy hard limit: 20 MB per digital file
+MAX_DIGITAL_FILE_BYTES = 20 * 1024 * 1024
+
+# Magic-byte signatures used to confirm a file's real type matches its extension.
+# Catches the catastrophic failure mode where a raw image (e.g. a lifestyle room
+# scene) gets renamed/uploaded as the product the customer downloads.
+_FILE_MAGIC = {
+    ".pdf":  [b"%PDF"],
+    ".zip":  [b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08"],  # incl. empty/spanned
+    ".jpg":  [b"\xff\xd8\xff"],
+    ".jpeg": [b"\xff\xd8\xff"],
+    ".png":  [b"\x89PNG\r\n\x1a\n"],
+}
+
+# A planner PDF that generates correctly is 80+ pages; anything in single digits is
+# the near-empty-PDF failure (broken page routing). 10 is a safe floor for any PDF.
+MIN_PDF_PAGES = 10
+
 
 class EtsyAPIError(Exception):
     def __init__(self, status: int, message: str):
         self.status = status
         super().__init__(f"Etsy API {status}: {message}")
+
+
+class FileContentError(Exception):
+    """Raised when a digital file fails the pre-upload content gate.
+
+    This is intentionally NOT an EtsyAPIError — it fires *before* any network
+    call so a bad/empty/mislabeled file never reaches a buyer's download.
+    """
+
+
+def validate_digital_file(
+    file_path: str,
+    expected_ext: str | None = None,
+    min_pdf_pages: int = MIN_PDF_PAGES,
+) -> dict:
+    """Inspect a digital file before upload. Raises FileContentError on any problem.
+
+    Checks (in order):
+      1. File exists and is non-empty
+      2. Size is within Etsy's 20 MB per-file limit
+      3. Extension is a known digital type (and matches expected_ext if given)
+      4. Magic bytes match the extension — the real content type is what it claims
+      5. ZIP: opens cleanly, passes CRC, contains real content (not a lone image
+         mislabeled as a pack), no path traversal entries
+      6. PDF: parses and has at least `min_pdf_pages` pages (catches near-empty PDFs)
+
+    Returns a small dict of facts about the file on success.
+    """
+    import zipfile
+
+    if not os.path.exists(file_path):
+        raise FileContentError(f"file does not exist: {file_path}")
+    size = os.path.getsize(file_path)
+    if size == 0:
+        raise FileContentError(f"file is empty (0 bytes): {file_path}")
+    if size > MAX_DIGITAL_FILE_BYTES:
+        raise FileContentError(
+            f"file is {size/1048576:.1f} MB — exceeds Etsy's 20 MB per-file limit: {file_path}"
+        )
+
+    ext = os.path.splitext(file_path)[1].lower()
+    if expected_ext and ext != expected_ext.lower():
+        raise FileContentError(
+            f"expected a {expected_ext} file but got {ext or 'no extension'}: {file_path}"
+        )
+    if ext not in _FILE_MAGIC:
+        raise FileContentError(
+            f"unsupported digital file type '{ext or 'none'}' "
+            f"(allowed: {', '.join(sorted(_FILE_MAGIC))}): {file_path}"
+        )
+
+    with open(file_path, "rb") as fh:
+        head = fh.read(16)
+    if not any(head.startswith(sig) for sig in _FILE_MAGIC[ext]):
+        raise FileContentError(
+            f"content does not match a {ext} file — header is {head[:8]!r}. "
+            f"A mislabeled or corrupt file would ship the wrong product: {file_path}"
+        )
+
+    facts: dict[str, Any] = {"path": file_path, "ext": ext, "size_bytes": size}
+
+    if ext == ".zip":
+        try:
+            with zipfile.ZipFile(file_path) as zf:
+                bad = zf.testzip()
+                if bad is not None:
+                    raise FileContentError(f"ZIP failed CRC check on member '{bad}': {file_path}")
+                names = [n for n in zf.namelist() if not n.endswith("/")]
+                if not names:
+                    raise FileContentError(f"ZIP is empty (no files inside): {file_path}")
+                for n in names:
+                    if n.startswith("/") or ".." in n.split("/"):
+                        raise FileContentError(f"ZIP contains unsafe path '{n}': {file_path}")
+                # A pack must contain real deliverables, not be a single mislabeled image
+                content = [n for n in names
+                           if os.path.splitext(n)[1].lower()
+                           in (".png", ".jpg", ".jpeg", ".pdf", ".svg", ".txt", ".goodnotes")]
+                if not content:
+                    raise FileContentError(
+                        f"ZIP has no recognizable product files (png/jpg/pdf/svg): {file_path}"
+                    )
+                facts["zip_members"] = len(names)
+        except zipfile.BadZipFile:
+            raise FileContentError(f"file is not a valid ZIP archive: {file_path}")
+
+    elif ext == ".pdf":
+        try:
+            from PyPDF2 import PdfReader
+            reader = PdfReader(file_path)
+            pages = len(reader.pages)
+        except FileContentError:
+            raise
+        except Exception as e:
+            raise FileContentError(f"PDF could not be parsed ({e}): {file_path}")
+        if pages < min_pdf_pages:
+            raise FileContentError(
+                f"PDF has only {pages} page(s) — expected at least {min_pdf_pages}. "
+                f"This is the near-empty-PDF failure; do not ship it: {file_path}"
+            )
+        facts["pdf_pages"] = pages
+
+    return facts
 
 
 class EtsyAPIClient:
@@ -405,8 +525,27 @@ class EtsyAPIClient:
 
     # ── Digital file upload ───────────────────────────────────────────────────
 
-    def upload_listing_file(self, listing_id: int | str, file_path: str, rank: int = 1) -> dict:
-        """Attach a digital file to a listing for instant Etsy download."""
+    def upload_listing_file(
+        self,
+        listing_id: int | str,
+        file_path: str,
+        rank: int = 1,
+        expected_ext: str | None = None,
+        min_pdf_pages: int = MIN_PDF_PAGES,
+        skip_validation: bool = False,
+    ) -> dict:
+        """Attach a digital file to a listing for instant Etsy download.
+
+        Before uploading, the file passes through validate_digital_file() — a content
+        gate that rejects empty, oversized, corrupt, mislabeled, or near-empty files so
+        a buyer never downloads the wrong product. Pass skip_validation=True only for
+        a deliberate, reviewed exception.
+        """
+        if not skip_validation:
+            facts = validate_digital_file(file_path, expected_ext=expected_ext,
+                                          min_pdf_pages=min_pdf_pages)
+            detail = ", ".join(f"{k}={v}" for k, v in facts.items() if k != "path")
+            print(f"  ✓ content gate passed: {os.path.basename(file_path)} ({detail})")
         self._require_oauth()
         filename = os.path.basename(file_path)
         with open(file_path, "rb") as f:
