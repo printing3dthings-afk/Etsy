@@ -226,12 +226,22 @@ def process_file(src_path: Path, dp_id: str) -> dict:
     try:
         zip_bytes = make_zip(dp_id, src_path, JPEG_QUALITY_PRIMARY)
 
+        # Step quality down until the ZIP fits Etsy's 20 MB limit. Detailed/large art can
+        # blow past it even at the first fallback, so loop rather than try a single level.
+        for q in (JPEG_QUALITY_FALLBACK, 70, 65, 60, 55, 50):
+            if len(zip_bytes) <= MAX_ZIP_BYTES:
+                break
+            print(f" {len(zip_bytes)/(1024*1024):.1f} MB > 20 MB, retrying at q={q} ...",
+                  end="", flush=True)
+            zip_bytes = make_zip(dp_id, src_path, q)
+
+        size_mb = len(zip_bytes) / (1024 * 1024)
         if len(zip_bytes) > MAX_ZIP_BYTES:
-            print(f" {len(zip_bytes)/(1024*1024):.1f} MB > 20 MB, retrying at q=75 ...", end="", flush=True)
-            zip_bytes = make_zip(dp_id, src_path, JPEG_QUALITY_FALLBACK)
+            print(f" still {size_mb:.1f} MB after max compression — NOT saved")
+            return {"id": dp_id, "status": "error",
+                    "error": f"cannot fit under 20 MB ({size_mb:.1f} MB at q=50)"}
 
         zip_path.write_bytes(zip_bytes)
-        size_mb = len(zip_bytes) / (1024 * 1024)
         print(f" done  ({size_mb:.1f} MB)")
         return {"id": dp_id, "status": "created", "zip_path": zip_path, "size_mb": size_mb}
 
