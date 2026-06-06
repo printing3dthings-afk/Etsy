@@ -213,20 +213,37 @@ def check_ai_disclosure(description: str) -> list[dict]:
     return []
 
 
+_PHOTO_CACHE = None
+
+
+def _get_photo_cache():
+    global _PHOTO_CACHE
+    if _PHOTO_CACHE is None:
+        from tools.photo_hash_cache import PhotoHashCache
+        _PHOTO_CACHE = PhotoHashCache()
+    return _PHOTO_CACHE
+
+
 def _photo_hashes(images: list[dict]) -> dict[str, str]:
-    """Download every listing photo and return {rank: hash}. --full mode only."""
+    """Return {rank: hash} for every listing photo. --full mode only.
+
+    Uses a persistent URL->hash cache so a photo is only downloaded the first time
+    it is ever seen — repeat runs are near-instant and add no rate-limit pressure.
+    """
+    cache = _get_photo_cache()
     out: dict[str, str] = {}
     for img in sorted(images, key=lambda x: x.get("rank", 99)):
         rank = str(img.get("rank", "?"))
         url = img.get("url_fullxfull") or img.get("url_570xN") or ""
         if not url:
             continue
-        data = fetch_url(url)
-        if data:
-            h = dhash16(data)
-            if h:
-                out[rank] = h
-        time.sleep(0.15)
+        was_cached = cache.get(url) is not None
+        h = cache.get_or_compute(url, fetch_url, dhash16)
+        if h:
+            out[rank] = h
+        if not was_cached:
+            time.sleep(0.15)  # only pace real network fetches, not cache hits
+    cache.save()
     return out
 
 

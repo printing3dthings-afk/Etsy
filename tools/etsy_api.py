@@ -172,6 +172,45 @@ class EtsyAPIClient:
         self.client_secret = os.getenv("ETSY_CLIENT_SECRET", "")
         self.access_token = access_token or os.getenv("ETSY_ACCESS_TOKEN", "")
         self.shop_id = os.getenv("ETSY_SHOP_ID_NUMERIC") or os.getenv("ETSY_SHOP_ID", "")
+        # Rate-limit state, refreshed from response headers on every call. Lets us
+        # throttle BEFORE hitting 429 instead of only reacting to it.
+        self.rate_limit = {
+            "limit_per_second": None,
+            "remaining_this_second": None,
+            "limit_per_day": None,
+            "remaining_today": None,
+        }
+
+    def _record_rate_limit(self, headers) -> None:
+        """Capture Etsy's x-limit / x-remaining headers from a response."""
+        def _int(name):
+            v = headers.get(name)
+            try:
+                return int(v) if v is not None else None
+            except (TypeError, ValueError):
+                return None
+        rl = self.rate_limit
+        rl["limit_per_second"] = _int("x-limit-per-second") or rl["limit_per_second"]
+        rl["limit_per_day"] = _int("x-limit-per-day") or rl["limit_per_day"]
+        sec = _int("x-remaining-this-second")
+        day = _int("x-remaining-today")
+        if sec is not None:
+            rl["remaining_this_second"] = sec
+        if day is not None:
+            rl["remaining_today"] = day
+
+    def _throttle_if_needed(self) -> None:
+        """Pre-emptively pace requests based on the last seen rate-limit headers.
+
+        Per CLAUDE.md: if remaining-this-second is low, sleep ~1s before the next call.
+        Stops the 'death by 429' loop where a batch hammers the per-second cap.
+        """
+        rl = self.rate_limit
+        if rl["remaining_today"] is not None and rl["remaining_today"] <= 0:
+            raise EtsyAPIError(429, "daily rate limit exhausted (x-remaining-today=0)")
+        sec = rl["remaining_this_second"]
+        if sec is not None and sec <= 2:
+            time.sleep(1.0)
 
     def _build_request(self, method: str, url: str, body: dict | None) -> urllib.request.Request:
         headers = {"Content-Type": "application/json"}
@@ -202,17 +241,21 @@ class EtsyAPIClient:
         for attempt in range(3):
             if attempt > 0:
                 time.sleep(_jittered(base_delays[attempt - 1]))
+            self._throttle_if_needed()
             try:
                 req = self._build_request(method, url, body)
                 with urllib.request.urlopen(req, timeout=15) as resp:
+                    self._record_rate_limit(resp.headers)
                     raw = resp.read().decode()
                     return json.loads(raw) if raw.strip() else {}
             except urllib.error.HTTPError as e:
+                self._record_rate_limit(e.headers)
                 if e.code == 401 and self.access_token and self.refresh_access_token():
                     # Token refreshed — retry once immediately (not counted as a backoff attempt)
                     try:
                         req = self._build_request(method, url, body)
                         with urllib.request.urlopen(req, timeout=15) as resp:
+                            self._record_rate_limit(resp.headers)
                             return json.loads(resp.read().decode())
                     except urllib.error.HTTPError as e2:
                         body_text = e2.read().decode()
