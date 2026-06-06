@@ -368,8 +368,8 @@
     "expected_files": [
       "DP1062_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:03:23.128215+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:14:16.145446+00:00",
     "listing_roles": {
       "DP1021": "listing_id",
       "DP1062": "listing_id"
@@ -3208,7 +3208,7 @@
       "DP1094_print_sizes.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:03:23.128385+00:00",
+    "last_verified": "2026-06-06T02:14:17.019635+00:00",
     "listing_roles": {
       "DP1094": "listing_id"
     },
