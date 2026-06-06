@@ -9,6 +9,7 @@ UnsharpMask sharpening. Results saved to .../upscaled/ with the same filename.
 import os
 import sys
 import re
+import numpy as np
 from pathlib import Path
 from PIL import Image, ImageFilter
 
@@ -24,6 +25,38 @@ UNSHARP_RADIUS = 2
 UNSHARP_PERCENT = 150
 UNSHARP_THRESHOLD = 3
 JPEG_QUALITY = 95       # High quality for the upscaled master
+
+
+def is_lifestyle_composite(img: Image.Image) -> tuple[bool, str]:
+    """
+    Detect if an image is a lifestyle room scene composite rather than raw printable art.
+    Returns (is_composite: bool, reason: str).
+
+    Lifestyle composites have: large warm/cream wall area in top half + darker furniture
+    band at bottom + the subject art appears only as a small framed element on the wall.
+    Raw art fills the frame with the actual subject.
+    """
+    arr = np.array(img.convert('RGB'), dtype=float)
+    h, w = arr.shape[:2]
+
+    top = arr[:h//2]
+    bot = arr[3*h//4:]
+
+    # Warm/cream wall pixels: R>190, G>165, B>120, and R > B (warm not cool)
+    warm_mask = (top[:,:,0] > 190) & (top[:,:,1] > 165) & (top[:,:,2] > 120) & (top[:,:,0] > top[:,:,2])
+    warm_ratio = float(warm_mask.mean())
+
+    # Dark furniture/floor pixels in bottom quarter: mean brightness < 140
+    bot_bright = arr[3*h//4:].mean(axis=2)
+    dark_ratio = float((bot_bright < 140).mean())
+
+    # Low variance in top half = plain wall (uniform color)
+    top_std = float(arr[:h//2].mean(axis=2).std())
+
+    # Flag if: mostly warm wall above + furniture below + low variance
+    is_composite = warm_ratio > 0.40 and dark_ratio > 0.25 and top_std < 65
+    reason = f"warm_top={warm_ratio:.2f}, dark_bot={dark_ratio:.2f}, top_std={top_std:.1f}"
+    return is_composite, reason
 
 
 def upscale_file(src_path: Path, dst_path: Path) -> tuple[int, int]:
@@ -81,6 +114,16 @@ def main():
         if width >= MIN_WIDTH:
             print(f"  SKIP  {src_path.name}  ({width}x{height} — already ≥ {MIN_WIDTH}px wide)")
             skipped_count += 1
+            continue
+
+        # GATE: reject lifestyle composite room scenes before upscaling
+        with Image.open(src_path) as check_img:
+            flagged, reason = is_lifestyle_composite(check_img)
+        if flagged:
+            print(f"  BLOCKED {src_path.name} — looks like a lifestyle composite (room scene), "
+                  f"not raw art. {reason}")
+            print(f"          Fix: save the raw art file (no room/furniture) then re-run.")
+            error_files.append((src_path.name, f"lifestyle composite detected: {reason}"))
             continue
 
         print(f"  Upscaling {src_path.name}  ({width}x{height} → ", end="", flush=True)

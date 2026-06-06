@@ -18,6 +18,7 @@ import sys
 import zipfile
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
 
 # ---------------------------------------------------------------------------
@@ -95,6 +96,33 @@ NOTES
 Questions? Email: Printing3dthings@outlook.com
 © OnBrandCraftz — Personal use only. Not for resale or redistribution.
 """
+
+
+def is_lifestyle_composite(img: Image.Image) -> tuple[bool, str]:
+    """
+    Detect if an image is a lifestyle room scene rather than raw printable art.
+    Returns (is_composite: bool, reason: str).
+    Blocks room scenes from being used as print source files.
+    """
+    arr = np.array(img.convert('RGB'), dtype=float)
+    h, w = arr.shape[:2]
+
+    top = arr[:h//2]
+
+    # Warm/cream wall pixels: R>190, G>165, B>120, and R > B (warm not cool)
+    warm_mask = (top[:,:,0] > 190) & (top[:,:,1] > 165) & (top[:,:,2] > 120) & (top[:,:,0] > top[:,:,2])
+    warm_ratio = float(warm_mask.mean())
+
+    # Dark furniture/floor pixels in bottom quarter: mean brightness < 140
+    bot_bright = arr[3*h//4:].mean(axis=2)
+    dark_ratio = float((bot_bright < 140).mean())
+
+    # Low variance in top half = plain wall (uniform color)
+    top_std = float(arr[:h//2].mean(axis=2).std())
+
+    is_composite = warm_ratio > 0.40 and dark_ratio > 0.25 and top_std < 65
+    reason = f"warm_top={warm_ratio:.2f}, dark_bot={dark_ratio:.2f}, top_std={top_std:.1f}"
+    return is_composite, reason
 
 
 def get_canvas_dims(label: str, w_in, h_in) -> tuple[int, int]:
@@ -178,6 +206,16 @@ def process_file(src_path: Path, dp_id: str) -> dict:
             size_mb = zip_path.stat().st_size / (1024 * 1024)
             print(f"  SKIP  {dp_id}  (ZIP up-to-date, {size_mb:.1f} MB)")
             return {"id": dp_id, "status": "skipped", "zip_path": zip_path, "size_mb": size_mb}
+
+    # GATE: reject lifestyle composite room scenes before generating print ZIPs
+    with Image.open(src_path) as check_img:
+        flagged, reason = is_lifestyle_composite(check_img)
+    if flagged:
+        msg = f"lifestyle composite detected: {reason}"
+        print(f"  BLOCKED {dp_id} — source file looks like a lifestyle room scene, not raw art.")
+        print(f"          {reason}")
+        print(f"          Fix: replace {src_path.name} with the actual raw art file, then re-run.")
+        return {"id": dp_id, "status": "error", "error": msg}
 
     print(f"  Processing {dp_id}  (source: {src_path.name}) ...", end="", flush=True)
 
