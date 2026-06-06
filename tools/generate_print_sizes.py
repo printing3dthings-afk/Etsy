@@ -172,9 +172,12 @@ def make_zip(dp_id: str, source_path: Path, quality: int) -> bytes:
     """Build the ZIP in memory and return the raw bytes."""
     buf = io.BytesIO()
 
+    from tools.srgb import ensure_srgb, SRGB_ICC
+
     with Image.open(source_path) as art:
-        if art.mode != "RGB":
-            art = art.convert("RGB")
+        # True ICC -> sRGB transform (NOT a bare convert) so AdobeRGB/CMYK sources don't
+        # color-shift at the print lab — the top-3 review complaint per CLAUDE.md Gate 1.
+        art = ensure_srgb(art)
         art_w, art_h = art.size
 
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -185,9 +188,10 @@ def make_zip(dp_id: str, source_path: Path, quality: int) -> bytes:
                 canvas_w, canvas_h = get_canvas_dims(label, w_in, h_in)
                 output = fit_art_to_canvas(art, canvas_w, canvas_h)
 
-                # Encode to JPEG in memory
+                # Encode to JPEG in memory, embedding the sRGB profile
                 img_buf = io.BytesIO()
-                output.save(img_buf, "JPEG", quality=quality, dpi=(300, 300))
+                output.save(img_buf, "JPEG", quality=quality, dpi=(300, 300),
+                            icc_profile=SRGB_ICC)
                 img_bytes = img_buf.getvalue()
 
                 filename = f"{subfolder}/{dp_id}_{label}.jpg"
