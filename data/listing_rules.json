@@ -7,7 +7,7 @@
     "file_pattern": "_print_sizes.zip",
     "art_photo_check": true,
     "art_min_photo_matches": 1,
-    "art_match_threshold": 80,
+    "art_match_threshold": 90,
     "required_description_keywords": [
       "instant download",
       "printable"
@@ -16,7 +16,7 @@
       "AI_DISCLOSURE"
     ],
     "photo_sequence_required": false,
-    "notes": "Each listing needs exactly 1 print ZIP. At least 1 of the 10 photos must show the source art (hash distance <=80).",
+    "notes": "Each listing needs exactly 1 print ZIP. At least 1 of the 10 photos must show the source art (hash distance <=90). Threshold raised from 80→90 to account for JPEG compression drift in flat preview photos.",
     "fulfillment": "digital"
   },
   "planner": {

@@ -32,10 +32,25 @@ MAP_PATH = BASE_DIR / "data" / "dp_listing_map.json"
 
 
 def dhash16(image_bytes: bytes) -> str | None:
+    """
+    Compute dhash16 of an image, square-normalizing first.
+
+    All wall art source files are portrait (2:3). Listing photos are square (1:1).
+    Computing dhash on a portrait vs a square produces high distances even when the
+    art is the same — the 17×16 grid captures different content at different aspect
+    ratios. Square-normalizing both sides before hashing gives distances of 0-10 for
+    matching art, vs 90+ for unrelated images or room-scene composites.
+    """
     if not PIL_OK:
         return None
     try:
         with Image.open(io.BytesIO(image_bytes)) as img:
+            # Center-crop to square before hashing (normalizes portrait vs square comparison)
+            w, h = img.size
+            s = min(w, h)
+            left = (w - s) // 2
+            top = (h - s) // 2
+            img = img.crop((left, top, left + s, top + s))
             gray = img.convert("L").resize((17, 16), Image.Resampling.LANCZOS)
             pixels = list(gray.getdata())
             bits = []

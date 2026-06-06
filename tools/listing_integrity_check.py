@@ -85,10 +85,22 @@ def _load_json(path: Path) -> dict:
 # ---------------------------------------------------------------------------
 
 def dhash16(image_bytes: bytes) -> str | None:
+    """
+    Compute dhash16, square-normalizing first.
+    Source art is portrait (2:3); listing photos are square (1:1). Without
+    normalization, even correct art produces distances of 90-130. Center-cropping
+    both to square before hashing gives 0-10 for matching art, 90+ for mismatches.
+    Must match the implementation in build_art_registry.py exactly.
+    """
     if not PIL_OK:
         return None
     try:
         with Image.open(io.BytesIO(image_bytes)) as img:
+            w, h = img.size
+            s = min(w, h)
+            left = (w - s) // 2
+            top = (h - s) // 2
+            img = img.crop((left, top, left + s, top + s))
             gray = img.convert("L").resize((17, 16), Image.Resampling.LANCZOS)
             pixels = list(gray.getdata())
             bits = []
