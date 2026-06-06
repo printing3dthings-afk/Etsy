@@ -479,9 +479,10 @@ def generate_and_save(client, design: dict, sizes=("20oz",), max_retries: int = 
     return paths
 
 
-def main(ids: list[str] | None = None):
+def main(ids: list[str] | None = None, workers: int = 4):
     env = load_env()
     import openai
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     client = openai.OpenAI(api_key=env["OPENAI_API_KEY"])
 
@@ -490,15 +491,28 @@ def main(ids: list[str] | None = None):
         print(f"No matching designs for ids: {ids}")
         return
 
-    print(f"Generating {len(targets)} sublimation designs → {OUTPUT_DIR.absolute()}\n")
-    results = []
-    for design in targets:
+    print(f"Generating {len(targets)} sublimation designs with {workers} worker(s) "
+          f"→ {OUTPUT_DIR.absolute()}\n")
+
+    def _one(design):
+        # The openai client is thread-safe, so designs generate concurrently.
         try:
             paths = generate_and_save(client, design, sizes=["20oz"])
-            results.append((design["name"], "OK", paths))
-        except Exception as e:
-            print(f"  ERROR: {e}")
-            results.append((design["name"], str(e), []))
+            return (design["name"], "OK", paths)
+        except Exception as e:  # noqa: BLE001 — record per-design, never crash the batch
+            print(f"  ERROR ({design['name']}): {e}")
+            return (design["name"], str(e), [])
+
+    if workers <= 1:
+        results = [_one(d) for d in targets]
+    else:
+        results = []
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            futures = [ex.submit(_one, d) for d in targets]
+            for fut in as_completed(futures):
+                results.append(fut.result())
+        order = [d["name"] for d in targets]
+        results.sort(key=lambda r: order.index(r[0]))
 
     print("\n─── Summary ───────────────────────────────")
     for name, status, paths in results:
@@ -510,6 +524,17 @@ def main(ids: list[str] | None = None):
 if __name__ == "__main__":
     # Pass design IDs as args to run a subset, e.g.:
     #   python tools/generate_sublimation_wraps.py football_mom dog_mom
-    # Run with no args to generate all designs.
-    ids = sys.argv[1:] or None
-    main(ids)
+    # Optional: --workers N  (default 4; use --workers 1 for sequential)
+    # Run with no positional args to generate all designs.
+    argv = sys.argv[1:]
+    workers = 4
+    if "--workers" in argv:
+        i = argv.index("--workers")
+        try:
+            workers = int(argv[i + 1])
+            del argv[i:i + 2]
+        except (IndexError, ValueError):
+            print("--workers requires an integer")
+            sys.exit(1)
+    ids = argv or None
+    main(ids, workers=workers)

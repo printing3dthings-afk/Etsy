@@ -266,12 +266,32 @@ def process_one(artwork: dict) -> dict:
 
 
 def main():
-    print(f"Processing {len(ARTWORKS)} DP codes\n{'='*60}")
-    results = []
-    for artwork in ARTWORKS:
-        print(f"\n--- {artwork['code']} ---")
-        r = process_one(artwork)
-        results.append(r)
+    import argparse
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    ap = argparse.ArgumentParser(description="Generate raw printable wall art batch")
+    ap.add_argument("--workers", type=int, default=4,
+                    help="Parallel workers (default 4; use 1 for sequential)")
+    args = ap.parse_args()
+
+    print(f"Processing {len(ARTWORKS)} DP codes with {args.workers} worker(s)\n{'='*60}")
+
+    # process_one() is self-contained and I/O-bound (API + image work), so a small
+    # thread pool cuts wall-clock time roughly Nx without changing results.
+    if args.workers <= 1:
+        results = [process_one(a) for a in ARTWORKS]
+    else:
+        results = []
+        with ThreadPoolExecutor(max_workers=args.workers) as ex:
+            futures = {ex.submit(process_one, a): a["code"] for a in ARTWORKS}
+            for fut in as_completed(futures):
+                code = futures[fut]
+                try:
+                    results.append(fut.result())
+                except Exception as e:  # noqa: BLE001 — record, never crash the batch
+                    results.append({"code": code, "status": "error", "errors": [str(e)]})
+                print(f"  [{code}] done ({sum(1 for r in results)}/{len(ARTWORKS)})")
+        results.sort(key=lambda r: [a["code"] for a in ARTWORKS].index(r["code"]))
 
     print(f"\n{'='*60}")
     print("SUMMARY")
