@@ -200,12 +200,12 @@ def make_zip(dp_id: str, source_path: Path, quality: int) -> bytes:
     return buf.getvalue()
 
 
-def process_file(src_path: Path, dp_id: str) -> dict:
+def process_file(src_path: Path, dp_id: str, force: bool = False) -> dict:
     """Create the print-size ZIP for one art file. Returns a result dict."""
     zip_path = PRINT_ZIPS_DIR / f"{dp_id}_print_sizes.zip"
 
-    # Skip if ZIP is newer than source
-    if zip_path.exists():
+    # Skip if ZIP is newer than source (bypass with --force)
+    if not force and zip_path.exists():
         if zip_path.stat().st_mtime >= src_path.stat().st_mtime:
             size_mb = zip_path.stat().st_size / (1024 * 1024)
             print(f"  SKIP  {dp_id}  (ZIP up-to-date, {size_mb:.1f} MB)")
@@ -251,6 +251,14 @@ def process_file(src_path: Path, dp_id: str) -> dict:
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="Generate multi-size print ZIPs for wall art.")
+    ap.add_argument("--force", action="store_true",
+                    help="Regenerate ZIPs even when they appear up-to-date (bypasses mtime check)")
+    ap.add_argument("--only", nargs="+", metavar="DP_ID",
+                    help="Process only these IDs (e.g. --only DP1007 DP1008)")
+    args = ap.parse_args()
+
     PRINT_ZIPS_DIR.mkdir(parents=True, exist_ok=True)
 
     # Discover all base art files matching the naming convention
@@ -258,6 +266,10 @@ def main():
         p for p in PRODUCT_FILES_DIR.glob("*.jpg")
         if re.match(r"^DP1\d+\.jpg$", p.name)
     )
+
+    if args.only:
+        only_set = set(args.only)
+        candidates = [p for p in candidates if p.stem in only_set]
 
     results = []
     for src_path in candidates:
@@ -267,7 +279,7 @@ def main():
         upscaled_path = UPSCALED_DIR / src_path.name
         effective_source = upscaled_path if upscaled_path.exists() else src_path
 
-        result = process_file(effective_source, dp_id)
+        result = process_file(effective_source, dp_id, force=args.force)
         results.append(result)
 
     # Summary
