@@ -1,0 +1,537 @@
+======================================================================
+LISTING INTEGRITY REPORT
+Generated: 2026-06-06 00:18 UTC
+======================================================================
+
+SUMMARY: 131 listings audited in 67s
+  ✓ PASS: 0   ⚠ WARN: 0   ✗ FAIL: 131
+
+——————————————————————————————————————————————————————————————————————
+✗ FAIL (131 listings)
+——————————————————————————————————————————————————————————————————————
+
+  [4509179201] DP1026 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509184958] DP1027 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509184962] DP1028 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509184968] DP1029 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509193231] DP1058 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509193237] DP1059 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509198434] DP1060 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509198446] DP1061 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509213345] DP1014 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509213533] DP1015 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509213667] DP1016 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509214051] DP1019 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509214237] DP1020 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509214477] DP1021, DP1062 — 
+  Type: gallery_set | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509214803] DP1023 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509215145] DP1025 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509218152] DP1007 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509218860] DP1018 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509219594] DP1022 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509219904] DP1024 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509258172] DP1012 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509258700] DP1013, DP1063 — 
+  Type: gallery_set | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509259354] DP1017 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509593487] DP1032 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509593623] DP1033 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509593697] DP1034 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509596017] DP1036 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509597559] DP1037 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509598660] DP1030 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509598784] DP1031 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4509600086] DP1035, DP1064 — 
+  Type: gallery_set | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512188970] BUNDLE_PLANNER_ALL4 — 
+  Type: bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512254015] STICKER_COTTON_CANDY — 
+  Type: sticker_pack | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512254027] STICKER_CORAL_PEACH — 
+  Type: sticker_pack | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512254035] STICKER_BUNDLE_ALL4 — 
+  Type: sticker_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512255508] STICKER_FREE — 
+  Type: sticker_pack | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512255514] STICKER_LAVENDER — 
+  Type: sticker_pack | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512255536] STICKER_MIDNIGHT_BLUE — 
+  Type: sticker_pack | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512301880] DP1003, DP1002, DP1001, DP1000, DP1065 — 
+  Type: gallery_set | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512747600] DP1038 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512750191] DP1039 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512753302] DP1040 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512755568] DP1041 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512756952] DP1042 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512758123] DP1044 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512758458] DP1043 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512760671] DP1046 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512760918] DP1045 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512763302] DP1047, DP1066 — 
+  Type: gallery_set | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512768771] DP1049 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512768858] DP1067 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512770031] DP1050 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512772452] DP1051 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512772539] DP1052 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512774863] DP1053 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512776173] DP1054 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512780614] DP1055 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512780869] DP1056 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512783077] DP1057, DP1068 — 
+  Type: gallery_set | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512784817] DP1052, DP1053, DP1054, DP1055, DP1069 — 
+  Type: gallery_set | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4512784922] DP1048, DP1049, DP1050, DP1051, DP1070 — 
+  Type: gallery_set | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713044] BUNDLE_GALLERY_COASTAL — 
+  Type: gallery_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713106] BUNDLE_GALLERY_BOTANICAL — 
+  Type: gallery_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713142] BUNDLE_GALLERY_WOODLAND — 
+  Type: gallery_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713514] DP1071 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713712] DP1072 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713805] DP1073 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713922] DP1074 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713936] DP1075 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713945] DP1076 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713962] DP1077 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513713984] DP1078 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513714013] DP1079 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4513714191] DP1080 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4514130045] DP1081 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4514134583] DP1082 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4514136783] DP1083 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4514392281] DP1084 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4514536935] DP1085 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4514777212] SUBLIMATION_MOM_LIFE — 
+  Type: sublimation | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515437432] DP1086 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515437442] DP1087 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515437452] COMMERCIAL_STICKER_LAVENDER — 
+  Type: commercial_license | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515437456] COMMERCIAL_STICKER_COTTON — 
+  Type: commercial_license | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515437464] COMMERCIAL_STICKER_MIDNIGHT — 
+  Type: commercial_license | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515439743] DP1088 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515439751] DP1089 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515439755] DP1090 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515439763] DP1091 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515439799] COMMERCIAL_STICKER_CORAL — 
+  Type: commercial_license | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515439809] COMMERCIAL_STICKER_BUNDLE — 
+  Type: commercial_license | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515668698] DP1055 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515669140] DP1051 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515669246] DP1050 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515669370] DP1049 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515669596] DP1047 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515670946] DP1046 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515671216] DP1045 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515671336] DP1044 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515671458] DP1043 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515671558] DP1042 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515671764] DP1040 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515671951] DP1057 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672065] DP1056 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672204] DP1036 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672331] DP1054 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672435] DP1053 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672496] DP1033 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672499] DP1052 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672588] DP1099 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672895] DP1048 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515672972] DP1097 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515673064] DP1096 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515673828] DP1058 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515674042] DP1100 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515674144] DP1095 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515674250] DP1092 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515674594] DP1094 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515675145] DP1041 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515675373] DP1039 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515675481] DP1038 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515675583] DP1037 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515675813] DP1035 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515675887] DP1034 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515676185] DP1098 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515676301] DP1069 — 
+  Type: wall_art | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515676915] DP1093 — 
+  Type: svg_bundle | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515678198] DP1032 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515678344] DP1031 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515682013] DP1030 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+  [4515682147] DP1026 — 
+  Type: planner | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 400: Invalid value (tags) for enum(shipping, images, shop, user, translations, inventory, videos, personalization, buyerprice)
+
+======================================================================
