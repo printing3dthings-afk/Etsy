@@ -20,8 +20,8 @@
       "DP1026.pdf",
       "DP1026_sticker_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922653+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128159+00:00",
     "listing_roles": {
       "DP1026": "planner_listing_id"
     },
@@ -46,7 +46,7 @@
       "DP1027_sticker_pack.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-06T00:28:57.922685+00:00",
+    "last_verified": "2026-06-06T02:03:23.128176+00:00",
     "listing_roles": {
       "DP1027": "planner_listing_id"
     },
@@ -70,8 +70,8 @@
       "DP1028.pdf",
       "DP1028_sticker_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922690+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128182+00:00",
     "listing_roles": {
       "DP1028": "planner_listing_id"
     },
@@ -95,8 +95,8 @@
       "DP1029.pdf",
       "DP1029_sticker_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922694+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128185+00:00",
     "listing_roles": {
       "DP1029": "planner_listing_id"
     },
@@ -123,7 +123,7 @@
       "DP1058_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922698+00:00",
+    "last_verified": "2026-06-06T02:03:23.128188+00:00",
     "listing_roles": {
       "DP1058": "listing_id"
     },
@@ -149,8 +149,8 @@
     "expected_files": [
       "DP1059_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922701+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128192+00:00",
     "listing_roles": {
       "DP1059": "listing_id"
     },
@@ -176,8 +176,8 @@
     "expected_files": [
       "DP1060_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922706+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128195+00:00",
     "listing_roles": {
       "DP1060": "listing_id"
     },
@@ -203,8 +203,8 @@
     "expected_files": [
       "DP1061_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922711+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128198+00:00",
     "listing_roles": {
       "DP1061": "listing_id"
     },
@@ -230,8 +230,8 @@
     "expected_files": [
       "DP1014_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922715+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128200+00:00",
     "listing_roles": {
       "DP1014": "listing_id"
     },
@@ -257,8 +257,8 @@
     "expected_files": [
       "DP1015_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922719+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128203+00:00",
     "listing_roles": {
       "DP1015": "listing_id"
     },
@@ -284,8 +284,8 @@
     "expected_files": [
       "DP1016_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922723+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128206+00:00",
     "listing_roles": {
       "DP1016": "listing_id"
     },
@@ -311,8 +311,8 @@
     "expected_files": [
       "DP1019_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922726+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128209+00:00",
     "listing_roles": {
       "DP1019": "listing_id"
     },
@@ -338,8 +338,8 @@
     "expected_files": [
       "DP1020_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922729+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128213+00:00",
     "listing_roles": {
       "DP1020": "listing_id"
     },
@@ -368,8 +368,8 @@
     "expected_files": [
       "DP1062_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922733+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128215+00:00",
     "listing_roles": {
       "DP1021": "listing_id",
       "DP1062": "listing_id"
@@ -396,8 +396,8 @@
     "expected_files": [
       "DP1023_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922737+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128218+00:00",
     "listing_roles": {
       "DP1023": "listing_id"
     },
@@ -423,8 +423,8 @@
     "expected_files": [
       "DP1025_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922741+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128220+00:00",
     "listing_roles": {
       "DP1025": "listing_id"
     },
@@ -450,8 +450,8 @@
     "expected_files": [
       "DP1007_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922745+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128223+00:00",
     "listing_roles": {
       "DP1007": "listing_id"
     },
@@ -477,8 +477,8 @@
     "expected_files": [
       "DP1018_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922748+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128226+00:00",
     "listing_roles": {
       "DP1018": "listing_id"
     },
@@ -504,8 +504,8 @@
     "expected_files": [
       "DP1022_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922752+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128229+00:00",
     "listing_roles": {
       "DP1022": "listing_id"
     },
@@ -531,8 +531,8 @@
     "expected_files": [
       "DP1024_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922755+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128232+00:00",
     "listing_roles": {
       "DP1024": "listing_id"
     },
@@ -558,8 +558,8 @@
     "expected_files": [
       "DP1012_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922759+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128234+00:00",
     "listing_roles": {
       "DP1012": "listing_id"
     },
@@ -588,8 +588,8 @@
     "expected_files": [
       "DP1063_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922762+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128237+00:00",
     "listing_roles": {
       "DP1013": "listing_id",
       "DP1063": "listing_id"
@@ -616,8 +616,8 @@
     "expected_files": [
       "DP1017_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922766+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128239+00:00",
     "listing_roles": {
       "DP1017": "listing_id"
     },
@@ -643,8 +643,8 @@
     "expected_files": [
       "DP1032_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922769+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128241+00:00",
     "listing_roles": {
       "DP1032": "listing_id"
     },
@@ -670,8 +670,8 @@
     "expected_files": [
       "DP1033_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922773+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128242+00:00",
     "listing_roles": {
       "DP1033": "listing_id"
     },
@@ -697,8 +697,8 @@
     "expected_files": [
       "DP1034_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922776+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128243+00:00",
     "listing_roles": {
       "DP1034": "listing_id"
     },
@@ -724,8 +724,8 @@
     "expected_files": [
       "DP1036_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922780+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128246+00:00",
     "listing_roles": {
       "DP1036": "listing_id"
     },
@@ -751,8 +751,8 @@
     "expected_files": [
       "DP1037_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922785+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128247+00:00",
     "listing_roles": {
       "DP1037": "listing_id"
     },
@@ -779,7 +779,7 @@
       "DP1030_print_sizes.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-06T00:28:57.922788+00:00",
+    "last_verified": "2026-06-06T02:03:23.128249+00:00",
     "listing_roles": {
       "DP1030": "listing_id"
     },
@@ -805,8 +805,8 @@
     "expected_files": [
       "DP1031_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922792+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128250+00:00",
     "listing_roles": {
       "DP1031": "listing_id"
     },
@@ -835,8 +835,8 @@
     "expected_files": [
       "DP1064_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922795+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128252+00:00",
     "listing_roles": {
       "DP1035": "listing_id",
       "DP1064": "listing_id"
@@ -867,8 +867,8 @@
       "DP1028.pdf",
       "DP1029.pdf"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922799+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128254+00:00",
     "listing_roles": {
       "BUNDLE_PLANNER_ALL4": "listing_id"
     },
@@ -891,7 +891,7 @@
       "DP1027_sticker_pack.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922802+00:00",
+    "last_verified": "2026-06-06T02:03:23.128255+00:00",
     "listing_roles": {
       "STICKER_COTTON_CANDY": "listing_id"
     },
@@ -914,7 +914,7 @@
       "DP1029_sticker_pack.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922805+00:00",
+    "last_verified": "2026-06-06T02:03:23.128257+00:00",
     "listing_roles": {
       "STICKER_CORAL_PEACH": "listing_id"
     },
@@ -943,7 +943,7 @@
       "DP1029_sticker_pack.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922808+00:00",
+    "last_verified": "2026-06-06T02:03:23.128258+00:00",
     "listing_roles": {
       "STICKER_BUNDLE_ALL4": "listing_id"
     },
@@ -966,7 +966,7 @@
       "DP1026_sticker_pack.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922812+00:00",
+    "last_verified": "2026-06-06T02:03:23.128260+00:00",
     "listing_roles": {
       "STICKER_FREE": "listing_id"
     },
@@ -989,7 +989,7 @@
       "DP1026_sticker_pack.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922815+00:00",
+    "last_verified": "2026-06-06T02:03:23.128261+00:00",
     "listing_roles": {
       "STICKER_LAVENDER": "listing_id"
     },
@@ -1012,7 +1012,7 @@
       "DP1028_sticker_pack.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922819+00:00",
+    "last_verified": "2026-06-06T02:03:23.128263+00:00",
     "listing_roles": {
       "STICKER_MIDNIGHT_BLUE": "listing_id"
     },
@@ -1050,8 +1050,8 @@
     "expected_files": [
       "DP1065_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922822+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128264+00:00",
     "listing_roles": {
       "DP1000": "listing_id",
       "DP1001": "listing_id",
@@ -1081,8 +1081,8 @@
     "expected_files": [
       "DP1038_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922826+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128265+00:00",
     "listing_roles": {
       "DP1038": "listing_id"
     },
@@ -1108,8 +1108,8 @@
     "expected_files": [
       "DP1039_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922830+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128267+00:00",
     "listing_roles": {
       "DP1039": "listing_id"
     },
@@ -1135,8 +1135,8 @@
     "expected_files": [
       "DP1040_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922833+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128269+00:00",
     "listing_roles": {
       "DP1040": "listing_id"
     },
@@ -1162,8 +1162,8 @@
     "expected_files": [
       "DP1041_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922837+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128270+00:00",
     "listing_roles": {
       "DP1041": "listing_id"
     },
@@ -1189,8 +1189,8 @@
     "expected_files": [
       "DP1042_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922840+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128273+00:00",
     "listing_roles": {
       "DP1042": "listing_id"
     },
@@ -1216,8 +1216,8 @@
     "expected_files": [
       "DP1044_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922843+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128274+00:00",
     "listing_roles": {
       "DP1044": "listing_id"
     },
@@ -1243,8 +1243,8 @@
     "expected_files": [
       "DP1043_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922846+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128276+00:00",
     "listing_roles": {
       "DP1043": "listing_id"
     },
@@ -1270,8 +1270,8 @@
     "expected_files": [
       "DP1046_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922852+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128279+00:00",
     "listing_roles": {
       "DP1046": "listing_id"
     },
@@ -1297,8 +1297,8 @@
     "expected_files": [
       "DP1045_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922855+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128280+00:00",
     "listing_roles": {
       "DP1045": "listing_id"
     },
@@ -1327,8 +1327,8 @@
     "expected_files": [
       "DP1066_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922857+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128282+00:00",
     "listing_roles": {
       "DP1047": "listing_id",
       "DP1066": "listing_id"
@@ -1355,8 +1355,8 @@
     "expected_files": [
       "DP1049_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922861+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128283+00:00",
     "listing_roles": {
       "DP1049": "individual_listing_id"
     },
@@ -1382,8 +1382,8 @@
     "expected_files": [
       "DP1067_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922864+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128285+00:00",
     "listing_roles": {
       "DP1067": "listing_id"
     },
@@ -1409,8 +1409,8 @@
     "expected_files": [
       "DP1050_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922868+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128287+00:00",
     "listing_roles": {
       "DP1050": "individual_listing_id"
     },
@@ -1436,8 +1436,8 @@
     "expected_files": [
       "DP1051_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922871+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128288+00:00",
     "listing_roles": {
       "DP1051": "individual_listing_id"
     },
@@ -1463,8 +1463,8 @@
     "expected_files": [
       "DP1052_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922874+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128290+00:00",
     "listing_roles": {
       "DP1052": "individual_listing_id"
     },
@@ -1490,8 +1490,8 @@
     "expected_files": [
       "DP1053_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922877+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128291+00:00",
     "listing_roles": {
       "DP1053": "individual_listing_id"
     },
@@ -1517,8 +1517,8 @@
     "expected_files": [
       "DP1054_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922882+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128293+00:00",
     "listing_roles": {
       "DP1054": "individual_listing_id"
     },
@@ -1544,8 +1544,8 @@
     "expected_files": [
       "DP1055_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922885+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128295+00:00",
     "listing_roles": {
       "DP1055": "individual_listing_id"
     },
@@ -1571,8 +1571,8 @@
     "expected_files": [
       "DP1056_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922889+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128296+00:00",
     "listing_roles": {
       "DP1056": "listing_id"
     },
@@ -1601,8 +1601,8 @@
     "expected_files": [
       "DP1068_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922893+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128298+00:00",
     "listing_roles": {
       "DP1057": "listing_id",
       "DP1068": "listing_id"
@@ -1641,8 +1641,8 @@
     "expected_files": [
       "DP1069_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922896+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128299+00:00",
     "listing_roles": {
       "DP1052": "listing_id",
       "DP1053": "listing_id",
@@ -1684,8 +1684,8 @@
     "expected_files": [
       "DP1070_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922899+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128301+00:00",
     "listing_roles": {
       "DP1048": "listing_id",
       "DP1049": "listing_id",
@@ -1720,7 +1720,7 @@
       "DP1045_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922903+00:00",
+    "last_verified": "2026-06-06T02:03:23.128303+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_COASTAL": "listing_id"
     },
@@ -1751,7 +1751,7 @@
       "DP1045_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922906+00:00",
+    "last_verified": "2026-06-06T02:03:23.128304+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_BOTANICAL": "listing_id"
     },
@@ -1782,7 +1782,7 @@
       "DP1056_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922909+00:00",
+    "last_verified": "2026-06-06T02:03:23.128305+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_WOODLAND": "listing_id"
     },
@@ -1809,7 +1809,7 @@
       "DP1071_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922913+00:00",
+    "last_verified": "2026-06-06T02:03:23.128307+00:00",
     "listing_roles": {
       "DP1071": "listing_id"
     },
@@ -1836,7 +1836,7 @@
       "DP1072_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922917+00:00",
+    "last_verified": "2026-06-06T02:03:23.128308+00:00",
     "listing_roles": {
       "DP1072": "listing_id"
     },
@@ -1863,7 +1863,7 @@
       "DP1073_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922921+00:00",
+    "last_verified": "2026-06-06T02:03:23.128310+00:00",
     "listing_roles": {
       "DP1073": "listing_id"
     },
@@ -1890,7 +1890,7 @@
       "DP1074_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922924+00:00",
+    "last_verified": "2026-06-06T02:03:23.128311+00:00",
     "listing_roles": {
       "DP1074": "listing_id"
     },
@@ -1917,7 +1917,7 @@
       "DP1075_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922927+00:00",
+    "last_verified": "2026-06-06T02:03:23.128312+00:00",
     "listing_roles": {
       "DP1075": "listing_id"
     },
@@ -1944,7 +1944,7 @@
       "DP1076_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922931+00:00",
+    "last_verified": "2026-06-06T02:03:23.128314+00:00",
     "listing_roles": {
       "DP1076": "listing_id"
     },
@@ -1971,7 +1971,7 @@
       "DP1077_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922935+00:00",
+    "last_verified": "2026-06-06T02:03:23.128316+00:00",
     "listing_roles": {
       "DP1077": "listing_id"
     },
@@ -1998,7 +1998,7 @@
       "DP1078_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922938+00:00",
+    "last_verified": "2026-06-06T02:03:23.128317+00:00",
     "listing_roles": {
       "DP1078": "listing_id"
     },
@@ -2025,7 +2025,7 @@
       "DP1079_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922941+00:00",
+    "last_verified": "2026-06-06T02:03:23.128318+00:00",
     "listing_roles": {
       "DP1079": "listing_id"
     },
@@ -2052,7 +2052,7 @@
       "DP1080_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T00:28:57.922944+00:00",
+    "last_verified": "2026-06-06T02:03:23.128320+00:00",
     "listing_roles": {
       "DP1080": "listing_id"
     },
@@ -2078,8 +2078,8 @@
     "expected_files": [
       "FlowerBotanical_Bundle.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922947+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128321+00:00",
     "listing_roles": {
       "DP1081": "listing_id"
     },
@@ -2105,8 +2105,8 @@
     "expected_files": [
       "DP1082_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922953+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128323+00:00",
     "listing_roles": {
       "DP1082": "listing_id"
     },
@@ -2132,8 +2132,8 @@
     "expected_files": [
       "Graduation2026_SVG_Bundle.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922956+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128325+00:00",
     "listing_roles": {
       "DP1083": "listing_id"
     },
@@ -2159,8 +2159,8 @@
     "expected_files": [
       "OnBrandCraftz_MomLife_SVG_Bundle_20_Designs.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922960+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128326+00:00",
     "listing_roles": {
       "DP1084": "listing_id"
     },
@@ -2182,8 +2182,8 @@
     "expected_files": [
       "OnBrandCraftz_GoodVibes_SVG_Bundle_20_Designs.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922963+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128328+00:00",
     "listing_roles": {
       "DP1085": "listing_id"
     },
@@ -2206,7 +2206,7 @@
       "OnBrandCraftz_MomLife_Sublimation_Bundle.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922966+00:00",
+    "last_verified": "2026-06-06T02:03:23.128329+00:00",
     "listing_roles": {
       "SUBLIMATION_MOM_LIFE": "listing_id"
     },
@@ -2232,8 +2232,8 @@
     "expected_files": [
       "OnBrandCraftz_MomLife_SVG_Bundle_20_Designs.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922970+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128331+00:00",
     "listing_roles": {
       "DP1086": "listing_id"
     },
@@ -2259,8 +2259,8 @@
     "expected_files": [
       "OnBrandCraftz_western_SVG_Bundle.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922973+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128332+00:00",
     "listing_roles": {
       "DP1087": "listing_id"
     },
@@ -2282,8 +2282,8 @@
     "expected_files": [
       "DP1026_sticker_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922976+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128334+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_LAVENDER": "listing_id"
     },
@@ -2305,8 +2305,8 @@
     "expected_files": [
       "DP1027_sticker_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922979+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128335+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_COTTON": "listing_id"
     },
@@ -2328,8 +2328,8 @@
     "expected_files": [
       "DP1028_sticker_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922984+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128337+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_MIDNIGHT": "listing_id"
     },
@@ -2355,8 +2355,8 @@
     "expected_files": [
       "FlowerBotanical_Bundle.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922988+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128339+00:00",
     "listing_roles": {
       "DP1088": "listing_id"
     },
@@ -2382,8 +2382,8 @@
     "expected_files": [
       "ChristianFaith_SVG_Bundle.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922992+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128340+00:00",
     "listing_roles": {
       "DP1089": "listing_id"
     },
@@ -2409,8 +2409,8 @@
     "expected_files": [
       "Graduation2026_SVG_Bundle.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922996+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128342+00:00",
     "listing_roles": {
       "DP1090": "listing_id"
     },
@@ -2436,8 +2436,8 @@
     "expected_files": [
       "OnBrandCraftz_GoodVibes_SVG_Bundle_20_Designs.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.922999+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128343+00:00",
     "listing_roles": {
       "DP1091": "listing_id"
     },
@@ -2459,8 +2459,8 @@
     "expected_files": [
       "DP1029_sticker_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923002+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128344+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_CORAL": "listing_id"
     },
@@ -2482,8 +2482,8 @@
     "expected_files": [
       "All_4_Sticker_Packs.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923006+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-06T02:03:23.128346+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_BUNDLE": "listing_id"
     },
@@ -2509,8 +2509,8 @@
     "expected_files": [
       "DP1055_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923010+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128348+00:00",
     "listing_roles": {
       "DP1055": "kawaii_listing_id"
     },
@@ -2536,8 +2536,8 @@
     "expected_files": [
       "DP1051_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923013+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128349+00:00",
     "listing_roles": {
       "DP1051": "kawaii_listing_id"
     },
@@ -2563,8 +2563,8 @@
     "expected_files": [
       "DP1050_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923017+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128350+00:00",
     "listing_roles": {
       "DP1050": "kawaii_listing_id"
     },
@@ -2590,8 +2590,8 @@
     "expected_files": [
       "DP1049_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923020+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128352+00:00",
     "listing_roles": {
       "DP1049": "kawaii_listing_id"
     },
@@ -2617,8 +2617,8 @@
     "expected_files": [
       "DP1047_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923023+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128353+00:00",
     "listing_roles": {
       "DP1047": "kawaii_listing_id"
     },
@@ -2644,8 +2644,8 @@
     "expected_files": [
       "DP1046_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923026+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128354+00:00",
     "listing_roles": {
       "DP1046": "kawaii_listing_id"
     },
@@ -2671,8 +2671,8 @@
     "expected_files": [
       "DP1045_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923029+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128356+00:00",
     "listing_roles": {
       "DP1045": "kawaii_listing_id"
     },
@@ -2698,8 +2698,8 @@
     "expected_files": [
       "DP1044_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923031+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128357+00:00",
     "listing_roles": {
       "DP1044": "kawaii_listing_id"
     },
@@ -2725,8 +2725,8 @@
     "expected_files": [
       "DP1043_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923035+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128358+00:00",
     "listing_roles": {
       "DP1043": "kawaii_listing_id"
     },
@@ -2752,8 +2752,8 @@
     "expected_files": [
       "DP1042_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923038+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128360+00:00",
     "listing_roles": {
       "DP1042": "kawaii_listing_id"
     },
@@ -2779,8 +2779,8 @@
     "expected_files": [
       "DP1040_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923042+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128361+00:00",
     "listing_roles": {
       "DP1040": "kawaii_listing_id"
     },
@@ -2806,8 +2806,8 @@
     "expected_files": [
       "DP1057_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923045+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128363+00:00",
     "listing_roles": {
       "DP1057": "kawaii_listing_id"
     },
@@ -2833,8 +2833,8 @@
     "expected_files": [
       "DP1056_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923049+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128364+00:00",
     "listing_roles": {
       "DP1056": "kawaii_listing_id"
     },
@@ -2860,8 +2860,8 @@
     "expected_files": [
       "DP1036_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923053+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128365+00:00",
     "listing_roles": {
       "DP1036": "kawaii_listing_id"
     },
@@ -2887,8 +2887,8 @@
     "expected_files": [
       "DP1054_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923057+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128367+00:00",
     "listing_roles": {
       "DP1054": "kawaii_listing_id"
     },
@@ -2914,8 +2914,8 @@
     "expected_files": [
       "DP1053_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923060+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128368+00:00",
     "listing_roles": {
       "DP1053": "kawaii_listing_id"
     },
@@ -2941,8 +2941,8 @@
     "expected_files": [
       "DP1033_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923064+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128370+00:00",
     "listing_roles": {
       "DP1033": "kawaii_listing_id"
     },
@@ -2968,8 +2968,8 @@
     "expected_files": [
       "DP1052_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923067+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128372+00:00",
     "listing_roles": {
       "DP1052": "kawaii_listing_id"
     },
@@ -2995,8 +2995,8 @@
     "expected_files": [
       "DP1099_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923071+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128373+00:00",
     "listing_roles": {
       "DP1099": "listing_id"
     },
@@ -3022,8 +3022,8 @@
     "expected_files": [
       "DP1048_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923074+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128375+00:00",
     "listing_roles": {
       "DP1048": "kawaii_listing_id"
     },
@@ -3049,8 +3049,8 @@
     "expected_files": [
       "DP1097_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923077+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128376+00:00",
     "listing_roles": {
       "DP1097": "listing_id"
     },
@@ -3076,8 +3076,8 @@
     "expected_files": [
       "DP1096_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923081+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128377+00:00",
     "listing_roles": {
       "DP1096": "listing_id"
     },
@@ -3103,8 +3103,8 @@
     "expected_files": [
       "DP1058_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923084+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128380+00:00",
     "listing_roles": {
       "DP1058": "secondary_listing_id"
     },
@@ -3130,8 +3130,8 @@
     "expected_files": [
       "DP1100_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923089+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128381+00:00",
     "listing_roles": {
       "DP1100": "listing_id"
     },
@@ -3157,8 +3157,8 @@
     "expected_files": [
       "DP1095_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923092+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128383+00:00",
     "listing_roles": {
       "DP1095": "listing_id"
     },
@@ -3180,8 +3180,8 @@
     "expected_files": [
       "DP1092_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923095+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128384+00:00",
     "listing_roles": {
       "DP1092": "listing_id"
     },
@@ -3207,8 +3207,8 @@
     "expected_files": [
       "DP1094_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923099+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128385+00:00",
     "listing_roles": {
       "DP1094": "listing_id"
     },
@@ -3234,8 +3234,8 @@
     "expected_files": [
       "DP1041_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923101+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128387+00:00",
     "listing_roles": {
       "DP1041": "kawaii_listing_id"
     },
@@ -3261,8 +3261,8 @@
     "expected_files": [
       "DP1039_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923104+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128388+00:00",
     "listing_roles": {
       "DP1039": "kawaii_listing_id"
     },
@@ -3288,8 +3288,8 @@
     "expected_files": [
       "DP1038_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923108+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128390+00:00",
     "listing_roles": {
       "DP1038": "kawaii_listing_id"
     },
@@ -3315,8 +3315,8 @@
     "expected_files": [
       "DP1037_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923112+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128392+00:00",
     "listing_roles": {
       "DP1037": "kawaii_listing_id"
     },
@@ -3342,8 +3342,8 @@
     "expected_files": [
       "DP1035_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923116+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128393+00:00",
     "listing_roles": {
       "DP1035": "kawaii_listing_id"
     },
@@ -3369,8 +3369,8 @@
     "expected_files": [
       "DP1034_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923121+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128394+00:00",
     "listing_roles": {
       "DP1034": "kawaii_listing_id"
     },
@@ -3396,8 +3396,8 @@
     "expected_files": [
       "DP1098_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923125+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128396+00:00",
     "listing_roles": {
       "DP1098": "listing_id"
     },
@@ -3423,8 +3423,8 @@
     "expected_files": [
       "DP1069_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923128+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128397+00:00",
     "listing_roles": {
       "DP1069": "individual_listing_id"
     },
@@ -3446,8 +3446,8 @@
     "expected_files": [
       "DP1093_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923131+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128398+00:00",
     "listing_roles": {
       "DP1093": "listing_id"
     },
@@ -3473,8 +3473,8 @@
     "expected_files": [
       "DP1032_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923134+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128400+00:00",
     "listing_roles": {
       "DP1032": "kawaii_listing_id"
     },
@@ -3500,8 +3500,8 @@
     "expected_files": [
       "DP1031_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923137+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128401+00:00",
     "listing_roles": {
       "DP1031": "kawaii_listing_id"
     },
@@ -3527,8 +3527,8 @@
     "expected_files": [
       "DP1030_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923141+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128403+00:00",
     "listing_roles": {
       "DP1030": "kawaii_listing_id"
     },
@@ -3554,8 +3554,8 @@
     "expected_files": [
       "DP1026_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T00:28:57.923144+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-06T02:03:23.128404+00:00",
     "listing_roles": {
       "DP1026": "listing_id"
     },
