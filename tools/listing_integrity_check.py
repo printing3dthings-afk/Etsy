@@ -301,10 +301,14 @@ def check_approval(listing_id: str, title: str, tags: list, file_names: list,
     return issues
 
 
+# Unambiguous physical-fulfillment phrases. NOTE: deliberately excludes
+# "physical item" — that appears in the standard digital FAQ line
+# ("Q: Is this a physical item? A: No — digital download only") and would
+# false-positive every correct listing.
 PHYSICAL_PHRASES = [
     "physical print shipped", "shipped directly to you", "arrives at your door",
     "no printing or downloading", "no downloading needed", "ships in",
-    "physical item", "will be shipped", "arrives at your",
+    "will be shipped", "shipped to you", "ships to your",
 ]
 
 
