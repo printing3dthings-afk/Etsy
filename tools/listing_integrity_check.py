@@ -4,12 +4,20 @@ listing_integrity_check.py
 Audits every active Etsy listing against data/listing_manifest.json.
 
 FAST mode (default): API-only — title length, tag count, file names,
-photo count. Completes in 2-5 minutes for the full shop.
+photo count, description keywords, and approval drift (title/files).
+Completes in 2-5 minutes for the full shop.
 
-FULL mode (--full): also downloads the hero photo for each listing,
-computes its perceptual hash, and compares it to the registered art
-hash. Catches "wrong art in listing photo" at the pixel level.
-Runs in 15-30 minutes depending on connection speed.
+FULL mode (--full): downloads EVERY listing photo, hashes each one, and
+verifies the registered downloadable art appears in at least one photo
+(art_match_threshold per listing type, default 80). Also detects approved
+photos that have changed. This is the anti-mismatch guarantee: a listing
+fails if the file you sell isn't shown in any of its photos.
+Runs longer (~131 listings × ~10 photos of downloads).
+
+Rules per listing type live in data/listing_rules.json.
+Approved snapshots (locked by approve_listing.py) live in
+data/listing_approvals.json. Source-art hashes live in
+data/product_art_registry.json (built by build_art_registry.py).
 
 Usage:
     python tools/listing_integrity_check.py           # fast audit, all listings
@@ -53,12 +61,23 @@ from etsy_api import EtsyAPIClient
 
 MANIFEST_PATH = BASE_DIR / "data" / "listing_manifest.json"
 MAP_PATH = BASE_DIR / "data" / "dp_listing_map.json"
+RULES_PATH = BASE_DIR / "data" / "listing_rules.json"
+APPROVALS_PATH = BASE_DIR / "data" / "listing_approvals.json"
+REGISTRY_PATH = BASE_DIR / "data" / "product_art_registry.json"
 REPORT_DIR = BASE_DIR / "review_batches"
 
 TITLE_MAX = 70
 TAG_MAX_CHARS = 20
 TAGS_REQUIRED = 13
-HASH_TOLERANCE = 25   # Hamming distance threshold; <25 = same image
+DEFAULT_ART_THRESHOLD = 80   # Hamming distance; ≤ this means the art IS present in a photo
+APPROVAL_DRIFT_TOLERANCE = 10  # photo hash distance above which an approved photo "changed"
+
+
+def _load_json(path: Path) -> dict:
+    if path.exists():
+        with open(path) as f:
+            return json.load(f)
+    return {}
 
 
 # ---------------------------------------------------------------------------
@@ -182,50 +201,135 @@ def check_ai_disclosure(description: str) -> list[dict]:
     return []
 
 
-def check_photo_hash(images: list[dict], art_hashes: dict) -> list[dict]:
-    """Download hero image and compare hash to registered art. --full mode only."""
-    if not PIL_OK or not art_hashes:
+def _photo_hashes(images: list[dict]) -> dict[str, str]:
+    """Download every listing photo and return {rank: hash}. --full mode only."""
+    out: dict[str, str] = {}
+    for img in sorted(images, key=lambda x: x.get("rank", 99)):
+        rank = str(img.get("rank", "?"))
+        url = img.get("url_fullxfull") or img.get("url_570xN") or ""
+        if not url:
+            continue
+        data = fetch_url(url)
+        if data:
+            h = dhash16(data)
+            if h:
+                out[rank] = h
+        time.sleep(0.15)
+    return out
+
+
+def check_art_in_photos(photo_hashes: dict[str, str], dp_codes: list[str],
+                        registry: dict, threshold: int) -> list[dict]:
+    """Verify the downloadable art appears in AT LEAST ONE listing photo.
+
+    Cross-references the registered source-art hash for each DP code against
+    EVERY listing photo. The art is "present" if any photo is within `threshold`
+    Hamming distance of the source art. This is the core anti-mismatch check.
+    """
+    if not PIL_OK or not registry:
         return []
-    if not images:
-        return [{
-            "severity": "FAIL",
-            "check": "photo_hash",
-            "detail": "No listing images to verify"
-        }]
-
-    # Get hero image (rank 1)
-    hero = sorted(images, key=lambda x: x.get("rank", 99))[0]
-    url = hero.get("url_fullxfull") or hero.get("url_570xN") or ""
-    if not url:
+    # Only DP codes that actually have registered art can be checked
+    checkable = [dp for dp in dp_codes if registry.get(dp, {}).get("source_hash")]
+    if not checkable:
         return []
+    if not photo_hashes:
+        return [{"severity": "FAIL", "check": "art_in_photos",
+                 "detail": "No listing photos could be downloaded to verify art"}]
 
-    img_bytes = fetch_url(url)
-    if not img_bytes:
-        return [{"severity": "WARN", "check": "photo_hash", "detail": "Could not download hero image"}]
-
-    actual_hash = dhash16(img_bytes)
-    if not actual_hash:
-        return []
-
-    # Compare against each registered art hash
-    best_distance = 999
+    best_overall = 999
     best_dp = None
-    for dp_code, expected_hash in art_hashes.items():
-        d = hamming(actual_hash, expected_hash)
-        if d < best_distance:
-            best_distance = d
-            best_dp = dp_code
+    best_slot = None
+    # Each registered DP code must be found in at least one photo
+    failures = []
+    for dp in checkable:
+        art_hash = registry[dp]["source_hash"]
+        best_for_dp, best_slot_dp = 999, None
+        for slot, ph in photo_hashes.items():
+            d = hamming(ph, art_hash)
+            if d < best_for_dp:
+                best_for_dp, best_slot_dp = d, slot
+        if best_for_dp < best_overall:
+            best_overall, best_dp, best_slot = best_for_dp, dp, best_slot_dp
+        if best_for_dp > threshold:
+            failures.append(
+                f"{dp} art not found in any of {len(photo_hashes)} photos "
+                f"(closest: slot {best_slot_dp}, distance {best_for_dp} > {threshold})"
+            )
 
-    if best_distance <= HASH_TOLERANCE:
-        return []  # Match found — photo is correct
+    if failures:
+        return [{"severity": "FAIL", "check": "art_in_photos",
+                 "detail": "; ".join(failures)}]
+    return [{"severity": "INFO", "check": "art_in_photos",
+             "detail": f"Art verified in photos (best: {best_dp} slot {best_slot}, distance {best_overall})"}]
 
-    return [{
-        "severity": "FAIL",
-        "check": "photo_hash",
-        "detail": (f"Hero photo hash does not match registered art "
-                   f"(best match {best_dp} has Hamming distance {best_distance}, "
-                   f"threshold {HASH_TOLERANCE}). Wrong art in listing photo.")
-    }]
+
+def check_approval(listing_id: str, title: str, tags: list, file_names: list,
+                   photo_hashes: dict[str, str], approvals: dict) -> list[dict]:
+    """If a listing was locked in as approved, FAIL on any drift from that snapshot."""
+    rec = approvals.get(str(listing_id))
+    if not rec:
+        return []
+    issues = []
+
+    if rec.get("title") and title != rec["title"]:
+        issues.append({"severity": "FAIL", "check": "approval_drift",
+                       "detail": f"Title changed since approval. Approved: '{rec['title'][:50]}…' Now: '{title[:50]}…'"})
+
+    approved_files = set(rec.get("file_names", []))
+    current_files = set(file_names)
+    if approved_files and approved_files != current_files:
+        added = current_files - approved_files
+        removed = approved_files - current_files
+        detail = "Files changed since approval."
+        if removed:
+            detail += f" Removed: {sorted(removed)}."
+        if added:
+            detail += f" Added: {sorted(added)}."
+        issues.append({"severity": "FAIL", "check": "approval_drift", "detail": detail})
+
+    # Photo drift — only checkable in --full mode (photo_hashes populated)
+    approved_hashes = rec.get("photo_hashes", {})
+    if photo_hashes and approved_hashes:
+        for slot, app_hash in approved_hashes.items():
+            cur = photo_hashes.get(slot)
+            if cur is None:
+                issues.append({"severity": "FAIL", "check": "approval_drift",
+                               "detail": f"Approved photo slot {slot} is missing"})
+            elif hamming(cur, app_hash) > APPROVAL_DRIFT_TOLERANCE:
+                issues.append({"severity": "FAIL", "check": "approval_drift",
+                               "detail": f"Approved photo slot {slot} changed (distance {hamming(cur, app_hash)})"})
+    return issues
+
+
+PHYSICAL_PHRASES = [
+    "physical print shipped", "shipped directly to you", "arrives at your door",
+    "no printing or downloading", "no downloading needed", "ships in",
+    "physical item", "will be shipped", "arrives at your",
+]
+
+
+def check_fulfillment_match(description: str, fulfillment: str) -> list[dict]:
+    """For digital listings, FAIL if the description claims a physical/shipped item.
+    This catches the #1 mismatch: a downloadable file sold under a 'ships to your
+    door' description (guaranteed refunds + policy risk)."""
+    if fulfillment != "digital":
+        return []
+    desc_lower = description.lower()
+    hits = [p for p in PHYSICAL_PHRASES if p in desc_lower]
+    if hits:
+        return [{"severity": "FAIL", "check": "fulfillment_mismatch",
+                 "detail": (f"Digital listing but description claims physical/shipped item "
+                            f"(matched: {hits}). Buyer gets a download, not a shipped print.")}]
+    return []
+
+
+def check_description_keywords(description: str, required: list[str]) -> list[dict]:
+    desc_lower = description.lower()
+    missing = [kw for kw in required if kw.lower() not in desc_lower]
+    if missing:
+        return [{"severity": "WARN", "check": "description_keywords",
+                 "detail": f"Description missing expected keyword(s): {missing}"}]
+    return []
 
 
 # ---------------------------------------------------------------------------
@@ -233,11 +337,15 @@ def check_photo_hash(images: list[dict], art_hashes: dict) -> list[dict]:
 # ---------------------------------------------------------------------------
 
 def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
+                  rules: dict, approvals: dict, registry: dict,
                   full_mode: bool = False) -> dict:
+    ptype = manifest_entry.get("type", "unknown")
+    rule = rules.get(ptype, rules.get("unknown", {}))
+
     result = {
         "listing_id": listing_id,
         "dp_codes": manifest_entry["dp_codes"],
-        "type": manifest_entry["type"],
+        "type": ptype,
         "issues": [],
         "status": "PASS",
         "title": "",
@@ -275,7 +383,20 @@ def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
 
     result["issues"].extend(check_title(title))
     result["issues"].extend(check_tags(tags))
-    result["issues"].extend(check_ai_disclosure(description))
+
+    # AI disclosure only enforced when the rule requires it
+    if "AI_DISCLOSURE" in rule.get("required_description_sections", []):
+        result["issues"].extend(check_ai_disclosure(description))
+
+    # Description keyword coverage (per-type rule)
+    result["issues"].extend(
+        check_description_keywords(description, rule.get("required_description_keywords", []))
+    )
+
+    # Fulfillment match — digital listing must not claim "shipped physical item"
+    result["issues"].extend(
+        check_fulfillment_match(description, rule.get("fulfillment", "digital"))
+    )
 
     # -- Fetch files --
     try:
@@ -283,6 +404,7 @@ def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
         files = files_resp.get("results", [])
     except Exception:
         files = []
+    file_names = [f.get("filename", "") for f in files]
 
     result["file_count"] = len(files)
     result["issues"].extend(check_files(
@@ -300,12 +422,23 @@ def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
         images = []
 
     result["photo_count"] = len(images)
-    result["issues"].extend(check_photos(images, manifest_entry.get("min_photo_count", 3)))
+    result["issues"].extend(check_photos(images, rule.get("min_photos", 3)))
 
-    # -- Photo hash (full mode only) --
-    if full_mode and manifest_entry.get("art_hashes"):
-        result["issues"].extend(check_photo_hash(images, manifest_entry["art_hashes"]))
-        time.sleep(0.3)  # Respectful pause after image download
+    # -- Photo-dependent checks (full mode downloads & hashes every photo) --
+    photo_hashes: dict[str, str] = {}
+    if full_mode:
+        photo_hashes = _photo_hashes(images)
+        # Art-in-photos check (only for types that opt in, e.g. wall_art)
+        if rule.get("art_photo_check"):
+            threshold = rule.get("art_match_threshold", DEFAULT_ART_THRESHOLD)
+            result["issues"].extend(
+                check_art_in_photos(photo_hashes, result["dp_codes"], registry, threshold)
+            )
+
+    # -- Approval drift (title/files always; photos only in full mode) --
+    result["issues"].extend(
+        check_approval(listing_id, title, tags, file_names, photo_hashes, approvals)
+    )
 
     # Compute final status
     severities = [i["severity"] for i in result["issues"]]
@@ -389,6 +522,16 @@ def main():
     with open(MANIFEST_PATH) as f:
         manifest = json.load(f)
 
+    rules = _load_json(RULES_PATH)
+    approvals = _load_json(APPROVALS_PATH)
+    registry = _load_json(REGISTRY_PATH)
+
+    if not rules:
+        print("WARNING: data/listing_rules.json not found — using built-in defaults.")
+    if args.full and not registry:
+        print("WARNING: data/product_art_registry.json not found — art-in-photos check disabled.")
+        print("         Run: python tools/build_art_registry.py")
+
     api = EtsyAPIClient()
 
     # Filter manifest entries
@@ -411,7 +554,8 @@ def main():
     failed_titles: list[tuple[str, str, str]] = []  # (listing_id, title, truncated)
 
     for i, (listing_id, entry) in enumerate(to_audit.items(), 1):
-        r = audit_listing(api, listing_id, entry, full_mode=args.full)
+        r = audit_listing(api, listing_id, entry, rules, approvals, registry,
+                          full_mode=args.full)
         results.append(r)
 
         # Progress indicator

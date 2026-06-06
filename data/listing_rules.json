@@ -1,0 +1,176 @@
+{
+  "wall_art": {
+    "min_photos": 10,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "file_pattern": "_print_sizes.zip",
+    "art_photo_check": true,
+    "art_min_photo_matches": 1,
+    "art_match_threshold": 80,
+    "required_description_keywords": [
+      "instant download",
+      "printable"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "photo_sequence_required": false,
+    "notes": "Each listing needs exactly 1 print ZIP. At least 1 of the 10 photos must show the source art (hash distance <=80).",
+    "fulfillment": "digital"
+  },
+  "planner": {
+    "min_photos": 8,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 2,
+    "file_pattern": ".pdf",
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "goodnotes",
+      "instant download",
+      "fillable"
+    ],
+    "required_description_sections": [
+      "WHAT_INCLUDED",
+      "COMPATIBLE_APPS",
+      "FAQ",
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Planner listings must have at least 2 files (dated PDF + sticker ZIP). Undated PDF adds a 3rd. Photo check skipped since we have no planner art source file to hash.",
+    "fulfillment": "digital"
+  },
+  "sticker_pack": {
+    "min_photos": 8,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "file_pattern": "_sticker_pack.zip",
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "goodnotes",
+      "instant download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "One sticker ZIP per listing.",
+    "fulfillment": "digital"
+  },
+  "svg_bundle": {
+    "min_photos": 8,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "file_pattern": ".zip",
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download",
+      "cricut"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "SVG bundles are for Cricut/Silhouette. One ZIP per listing.",
+    "fulfillment": "digital"
+  },
+  "commercial_license": {
+    "min_photos": 2,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "commercial license",
+      "instant download"
+    ],
+    "required_description_sections": [],
+    "notes": "Commercial license listings \u2014 minimal photo requirement.",
+    "fulfillment": "digital"
+  },
+  "gallery_bundle": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 3,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download",
+      "printable"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Gallery bundle = set of multiple prints in one listing, multiple ZIP files.",
+    "fulfillment": "digital"
+  },
+  "gallery_set": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Gallery set = multiple DP codes but one shared listing/ZIP.",
+    "fulfillment": "digital"
+  },
+  "bundle": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 2,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [],
+    "notes": "Generic bundle listing.",
+    "fulfillment": "digital"
+  },
+  "sticker_bundle": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 2,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Multi-pack sticker bundle.",
+    "fulfillment": "digital"
+  },
+  "sublimation": {
+    "min_photos": 3,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [],
+    "notes": "Sublimation design files.",
+    "fulfillment": "digital"
+  },
+  "unknown": {
+    "min_photos": 3,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [],
+    "notes": "Fallback rules for unclassified listing types.",
+    "fulfillment": "digital"
+  }
+}
