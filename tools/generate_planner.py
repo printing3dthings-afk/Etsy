@@ -1371,40 +1371,13 @@ def _make_cover_page(cfg: dict, cover_image_path: str | None) -> bytes:
 
 
 def _generate_cover_image(cfg: dict, out_path: str) -> bool:
-    openai_key = os.getenv("OPENAI_API_KEY", "")
-    if not openai_key:
-        print("    [generate_planner] No OpenAI API key — skipping cover generation")
-        return False
+    from tools.image_gen import generate_image, ImageGenError, PORTRAIT
+    prompt = cfg.get("cover_prompt", "Kawaii digital planner cover illustration")
     try:
-        import urllib.request
-        import base64
-        prompt = cfg.get("cover_prompt", "Kawaii digital planner cover illustration")
-        request_body = json.dumps({
-            "model":   "gpt-image-1",
-            "prompt":  prompt,
-            "size":    "1024x1536",
-            "quality": "high",
-        }).encode()
-        req = urllib.request.Request(
-            "https://api.openai.com/v1/images/generations",
-            data=request_body,
-            headers={"Content-Type": "application/json", "Authorization": f"Bearer {openai_key}"},
-        )
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            result = json.loads(resp.read())
-        image_data = result["data"][0]
-        if "b64_json" in image_data:
-            img_bytes = base64.b64decode(image_data["b64_json"])
-        elif "url" in image_data:
-            with urllib.request.urlopen(image_data["url"], timeout=30) as r:
-                img_bytes = r.read()
-        else:
-            return False
-        with open(out_path, "wb") as f:
-            f.write(img_bytes)
+        generate_image(prompt, out_path, size=PORTRAIT, quality="high")
         print(f"    Cover image saved → {out_path}")
         return True
-    except Exception as e:
+    except ImageGenError as e:
         print(f"    [generate_planner] Cover generation failed: {e}")
         return False
 

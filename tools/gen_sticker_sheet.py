@@ -464,37 +464,16 @@ def gen_sticker_sheet(pid, sheet_num):
     print(f"\nGenerating {pid} Sheet {sheet_num}: {name}")
     print(f"Output: {out_path}")
 
-    payload = json.dumps({
-        "model": "gpt-image-1",
-        "prompt": prompt,
-        "n": 1,
-        "size": "1024x1024",
-        "quality": "high",
-        "output_format": "jpeg"
-    }).encode()
-
-    req = urllib.request.Request(
-        "https://api.openai.com/v1/images/generations",
-        data=payload,
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {OPENAI_KEY}"},
-        method="POST"
-    )
-    for attempt in range(3):
-        try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                data = json.loads(resp.read())
-            img_bytes = base64.b64decode(data["data"][0]["b64_json"])
-            with open(out_path, "wb") as f:
-                f.write(img_bytes)
-            print(f"  Saved: {os.path.basename(out_path)} ({len(img_bytes)//1024}KB)")
-            return out_path
-        except Exception as e:
-            if attempt < 2:
-                print(f"  Retry {attempt+1}: {e}")
-                time.sleep(20)
-            else:
-                print(f"  FAILED: {e}")
-                return None
+    # Sticker sheets are square; gpt-image-1's max square is 1024 — process_sticker_sheets.py
+    # upscales to 3000px afterward. Shared helper gives consistent quality + retry/backoff.
+    from tools.image_gen import generate_image, ImageGenError, SQUARE
+    try:
+        generate_image(prompt, out_path, size=SQUARE, quality="high", output_format="jpeg")
+        print(f"  Saved: {os.path.basename(out_path)} ({os.path.getsize(out_path)//1024}KB)")
+        return out_path
+    except ImageGenError as e:
+        print(f"  FAILED: {e}")
+        return None
 
 
 if __name__ == '__main__':
