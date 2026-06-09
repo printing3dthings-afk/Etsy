@@ -352,5 +352,55 @@
     "status": "active",
     "source_product_id": "STICKER_BUNDLE",
     "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1008",
+    "name": "Mediterranean Lemon Window, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4519185019",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "data/digital_products/print_zips/DP1008_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-09"
+  },
+  {
+    "product_id": "DP1009",
+    "name": "Amalfi Coast Village Print, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4519185199",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "data/digital_products/print_zips/DP1009_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-09"
+  },
+  {
+    "product_id": "DP1010",
+    "name": "Mediterranean Terrace Print, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4519185236",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "data/digital_products/print_zips/DP1010_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-09"
+  },
+  {
+    "product_id": "BUNDLE_MED",
+    "name": "Mediterranean Series \u2014 Set of 3",
+    "etsy_listing_id": "4519185376",
+    "price": 14.97,
+    "category": "wall_art_bundle",
+    "status": "active",
+    "files": [
+      "data/digital_products/print_zips/DP1008_print_sizes.zip",
+      "data/digital_products/print_zips/DP1009_print_sizes.zip",
+      "data/digital_products/print_zips/DP1010_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-09"
   }
 ]
