@@ -72,7 +72,7 @@
     },
     {
       "listing_id": 4512783077,
-      "title": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
+      "title": "Paris Café Printable Wall Art, Instant Download, French",
       "flagged_in_batch": 8,
       "fix_notes": "Deleted bad composite #1 (hero); uploaded clean living_room composite as new hero using DP1068 art source",
       "status": "done"
@@ -165,7 +165,7 @@
       "listing_id": 4514130045,
       "title": "Floral SVG Bundle Cricut, Botanical Cut Files, Instant Download",
       "flagged_in_batch": 9,
-      "fix_notes": "Deleted photos 7-17 (old SVG). Generated 4 room composites. Photos 2,4 off-center clothing \u2014 pending user decision. DP1081. Download file: FlowerBotanical_Bundle.zip",
+      "fix_notes": "Deleted photos 7-17 (old SVG). Generated 4 room composites. Photos 2,4 off-center clothing — pending user decision. DP1081. Download file: FlowerBotanical_Bundle.zip",
       "status": "done"
     },
     {
@@ -242,14 +242,14 @@
       "listing_id": 4515673288,
       "title": "Boho Mandala Art Print | Spiritual Wall Decor | Multiple Sizes",
       "flagged_in_batch": 13,
-      "fix_notes": "Listing deleted \u2014 art not recognized as ours, no digital files attached.",
+      "fix_notes": "Listing deleted — art not recognized as ours, no digital files attached.",
       "status": "done"
     },
     {
       "listing_id": 4515673500,
       "title": "Modern Geometric Art Print | Minimal Wall Decor | Multiple Sizes",
       "flagged_in_batch": 13,
-      "fix_notes": "Listing deleted \u2014 art not ours. Lifestyle room shots saved as reference templates in data/digital_products/product_files/room_references/.",
+      "fix_notes": "Listing deleted — art not ours. Lifestyle room shots saved as reference templates in data/digital_products/product_files/room_references/.",
       "status": "done"
     },
     {
@@ -270,7 +270,7 @@
       "listing_id": 4515677081,
       "title": "Pastel Abstract Art Print | Kawaii Wall Decor | Multiple Sizes",
       "flagged_in_batch": 15,
-      "fix_notes": "Listing deleted \u2014 art not ours.",
+      "fix_notes": "Listing deleted — art not ours.",
       "status": "done"
     },
     {
@@ -301,29 +301,29 @@
   ],
   "design_notes": [
     {
-      "note": "Listing #25 photo 6 \u2014 user loved the font/saying style. Explore making new SVG cut files with that aesthetic (script font, inspirational/faith sayings). Reference listing 4514134583 photo 6.",
+      "note": "Listing #25 photo 6 — user loved the font/saying style. Explore making new SVG cut files with that aesthetic (script font, inspirational/faith sayings). Reference listing 4514134583 photo 6.",
       "date": "2026-06-05",
       "status": "idea"
     },
     {
-      "note": "Listing #26 photo 6 \u2014 user loves this SVG style (same as #25). Confirmed request: create new SVG cut files with this font/saying aesthetic. Reference listing 4514136783 photo 6.",
+      "note": "Listing #26 photo 6 — user loves this SVG style (same as #25). Confirmed request: create new SVG cut files with this font/saying aesthetic. Reference listing 4514136783 photo 6.",
       "date": "2026-06-05",
       "status": "idea"
     },
     {
-      "note": "Listing #27 photo 6 \u2014 3rd confirmation user wants SVG cut files in this style. Priority design task after fix queue complete. Reference listings 4514130045, 4514134583, 4514136783, 4514392281 photo 6.",
+      "note": "Listing #27 photo 6 — 3rd confirmation user wants SVG cut files in this style. Priority design task after fix queue complete. Reference listings 4514130045, 4514134583, 4514136783, 4514392281 photo 6.",
       "date": "2026-06-05",
       "status": "priority"
     },
     {
-      "note": "Listing #28 photo 6 \u2014 4th confirmation. User explicitly said \"I want ones like those.\" Priority SVG design task: create new cut file bundles in the style shown in photo 6 across listings #24-#28.",
+      "note": "Listing #28 photo 6 — 4th confirmation. User explicitly said \"I want ones like those.\" Priority SVG design task: create new cut file bundles in the style shown in photo 6 across listings #24-#28.",
       "date": "2026-06-05",
       "status": "priority"
     },
     {
-      "note": "Regenerated raw art + sRGB print ZIPs for 3 live listings flagged with bad sources (staged LOCALLY, NOT yet uploaded to Etsy -- needs Scott review): DP1092 (Boho Botanical Floral) and DP1093 (Watercolor Floral) generated fresh via gpt-image-1 (no source existed). DP1069 (Coastal Set of 4) split into 4 per-design ZIPs -- DP1069_seaturtle/lighthouse/coralreef/pelican_print_sizes.zip -- because all 4 designs x 10 sizes exceed Etsy 20MB/file; the old labeled-grid ZIP was archived to print_zips/_archive/DP1069_print_sizes_GRID_wrong.zip. NEXT: regenerate matching lifestyle room composites + upload as drafts for review.",
+      "note": "Regenerated raw art + sRGB print ZIPs for 3 live listings flagged with bad sources (staged LOCALLY, NOT yet uploaded to Etsy -- needs Scott review): DP1092 (Boho Botanical Floral) and DP1093 (Watercolor Floral) generated fresh via gpt-image-1 (no source existed). DP1069 (Coastal Set of 4) split into 4 per-design ZIPs -- DP1069_seaturtle/lighthouse/coralreef/pelican_print_sizes.zip -- because all 4 designs x 10 sizes exceed Etsy 20MB/file; the old labeled-grid ZIP was archived to print_zips/_archive/DP1069_print_sizes_GRID_wrong.zip. NEXT: regenerate matching lifestyle room composites + upload as drafts for review. UPDATE 2026-06-09: lifestyle room composites generated from the new real art (composite_smart, real art file in real empty room) and staged at product_files/staged_lifestyle/: DP1092 (living+bedroom), DP1093 (living+bedroom), DP1069 4 designs (seaturtle/coralreef in coastal living, lighthouse/pelican in coastal office). All visually verified frame-clears-furniture. Ready for Scott review + Etsy draft upload.",
       "date": "2026-06-09",
-      "status": "art_done_pending_photos_and_upload"
+      "status": "art_and_photos_done_pending_upload"
     },
     {
       "note": "DP1063 was flagged by the lifestyle-composite gate but is actually GOOD raw art (orange-flower watercolor) -- a gate false positive on cream paper + teal foliage. No regeneration needed; added to VERIFIED_RAW_ART bypass and reissued its sRGB ZIP. Same false-positive class fixed for orphans DP1038 (fox) and DP1020 (wildflowers).",
