@@ -34,6 +34,18 @@ import urllib.parse
 import urllib.error
 from typing import Any
 
+# Auto-load .env on import so every consumer (scripts, ad-hoc python -c, agents)
+# gets credentials without copy-pasting a parser. setdefault never overrides
+# values already in the environment.
+_ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
+if os.path.exists(_ENV_PATH):
+    with open(_ENV_PATH) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 BASE_URL = "https://openapi.etsy.com/v3/application"
 
 # Etsy hard limit: 20 MB per digital file
@@ -161,6 +173,47 @@ def validate_digital_file(
         facts["pdf_pages"] = pages
 
     return facts
+
+
+def _dp_code_listing_mismatch(listing_id: int | str, file_path: str) -> str | None:
+    """Return an error message if file_path's DP code belongs to a different listing.
+
+    Looks up dp_listing_map.json (listing_id, individual_listing_id,
+    bundle_listing_id, planner_listing_id all count as ownership). If the file
+    carries a DP code and the target listing is owned by a different code,
+    the upload is blocked. Returns None when no conflict can be proven
+    (unknown listing, no DP code in filename, or map unreadable).
+    """
+    import re as _re
+    m = _re.search(r"(DP\d{4})", os.path.basename(file_path).upper())
+    if not m:
+        return None
+    file_code = m.group(1)
+
+    map_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "data", "dp_listing_map.json")
+    try:
+        with open(map_path) as fh:
+            dp_map = json.load(fh)
+    except Exception:
+        return None
+
+    lid = str(listing_id)
+    owners = set()
+    for code, entry in dp_map.items():
+        if not isinstance(entry, dict):
+            continue
+        for key in ("listing_id", "individual_listing_id", "bundle_listing_id", "planner_listing_id"):
+            if str(entry.get(key)) == lid:
+                owners.add(code.upper())
+    if owners and file_code not in owners:
+        return (
+            f"DP code mismatch: file {os.path.basename(file_path)} carries {file_code} "
+            f"but listing {lid} belongs to {sorted(owners)} per dp_listing_map.json. "
+            f"This is the wrong-file-shipped-to-customer failure. Fix the file or the "
+            f"listing, or pass skip_validation=True after manual review."
+        )
+    return None
 
 
 class EtsyAPIClient:
@@ -581,14 +634,19 @@ class EtsyAPIClient:
 
         Before uploading, the file passes through validate_digital_file() — a content
         gate that rejects empty, oversized, corrupt, mislabeled, or near-empty files so
-        a buyer never downloads the wrong product. Pass skip_validation=True only for
-        a deliberate, reviewed exception.
+        a buyer never downloads the wrong product. It also cross-checks the DP code in
+        the filename against dp_listing_map.json: attaching DP1062's ZIP to DP1021's
+        listing is blocked (the exact failure that shipped a customer the wrong art).
+        Pass skip_validation=True only for a deliberate, reviewed exception.
         """
         if not skip_validation:
             facts = validate_digital_file(file_path, expected_ext=expected_ext,
                                           min_pdf_pages=min_pdf_pages)
             detail = ", ".join(f"{k}={v}" for k, v in facts.items() if k != "path")
             print(f"  ✓ content gate passed: {os.path.basename(file_path)} ({detail})")
+            mismatch = _dp_code_listing_mismatch(listing_id, file_path)
+            if mismatch:
+                raise FileContentError(mismatch)
         self._require_oauth()
         filename = os.path.basename(file_path)
         with open(file_path, "rb") as f:
@@ -773,12 +831,16 @@ class EtsyAPIClient:
         return self._request("GET", f"shops/{self.shop_id}/reviews", params=params)
 
     def create_review_response(self, review_id: int, response_text: str) -> dict:
-        """Post a public seller response to a review."""
-        self._require_oauth()
-        return self._request(
-            "POST",
-            f"shops/{self.shop_id}/reviews/{review_id}/response",
-            body={"response": response_text},
+        """DEPRECATED — Etsy v3 has no review-response endpoint or feedback_w scope.
+
+        Confirmed 2026-06-09: the OAuth server rejects feedback_w as invalid_scope
+        and this POST path returns 404. Review responses must be posted manually
+        in Shop Manager or the Etsy Seller app.
+        """
+        raise EtsyAPIError(
+            0,
+            "Review responses cannot be posted via the Etsy v3 API (no feedback_w "
+            "scope exists). Respond manually: Etsy Seller app → Reviews → Respond.",
         )
 
     def get_shop_listings_all(self, state: str = "active", limit: int = 100) -> list[dict]:
