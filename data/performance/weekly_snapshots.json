@@ -42,5 +42,38 @@
     "photo_warnings": 10,
     "unanswered_reviews": 3,
     "checked_at": "2026-06-09T19:04:07.109635+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 17,
+    "alerts": 50,
+    "photo_warnings": 13,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:47:53.981573+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 17,
+    "alerts": 15,
+    "photo_warnings": 13,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:49:42.905470+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 17,
+    "alerts": 15,
+    "photo_warnings": 13,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:51:43.003398+00:00"
   }
 ]

@@ -10,6 +10,7 @@ Import this module instead of copy-pasting composite_into_ai_room everywhere.
 """
 
 import os
+import re
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageEnhance
 
@@ -162,6 +163,12 @@ def _draw_framed_art(room, art_path, px, py, art_w, art_h, mat_w, frame_w,
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
+def _dp_code(path: str) -> str | None:
+    """Extract 'DP1063' style code from a file path, or None if not found."""
+    m = re.search(r'(DP\d{4})', os.path.basename(path), re.IGNORECASE)
+    return m.group(1).upper() if m else None
+
+
 def composite_smart(bg_path, art_path, out_path,
                     frame_color=(100, 85, 65),
                     art_pct=0.25,
@@ -175,6 +182,18 @@ def composite_smart(bg_path, art_path, out_path,
 
     Returns (success: bool, furniture_y: int, frame_bottom_y: int).
     """
+    # Cardinal guard: art code in source must appear in output path.
+    # Prevents wrong-art-in-listing mistakes at generation time.
+    art_code = _dp_code(art_path)
+    out_code = _dp_code(out_path)
+    if art_code and out_code and art_code != out_code:
+        raise ValueError(
+            f"composite_smart code mismatch: art_path contains {art_code} "
+            f"but out_path contains {out_code}. "
+            f"You are about to write {art_code}'s art to a {out_code} file. "
+            f"Fix the out_path or the art_path."
+        )
+
     CANVAS = 1024
     room = Image.open(bg_path).convert('RGB').resize((CANVAS, CANVAS), Image.LANCZOS)
     arr  = np.array(room)

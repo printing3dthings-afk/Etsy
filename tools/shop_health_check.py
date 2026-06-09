@@ -17,7 +17,7 @@ Usage:
   python tools/shop_health_check.py --full    # include per-listing stats
 """
 
-import os, sys, json, urllib.request, time, argparse, pathlib
+import os, sys, json, re, io, urllib.request, time, argparse, pathlib
 from datetime import datetime, timezone
 sys.path.insert(0, '/home/user/Etsy')
 with open('/home/user/Etsy/.env') as f:
@@ -27,7 +27,35 @@ with open('/home/user/Etsy/.env') as f:
             k, v = line.split('=', 1)
             os.environ.setdefault(k.strip(), v.strip())
 
+from PIL import Image
 from tools.etsy_api import EtsyAPIClient
+
+UPSCALED_DIR = pathlib.Path('/home/user/Etsy/data/digital_products/product_files/upscaled')
+PRODUCT_FILES_DIR = pathlib.Path('/home/user/Etsy/data/digital_products/product_files')
+
+
+def _dhash(img: Image.Image, size: int = 8) -> int:
+    """Difference hash — fast perceptual fingerprint. Returns int bitmask."""
+    grey = img.convert('L').resize((size + 1, size), Image.LANCZOS)
+    px   = list(grey.getdata())
+    bits = 0
+    for row in range(size):
+        for col in range(size):
+            bits = (bits << 1) | (1 if px[row * (size+1) + col] > px[row * (size+1) + col + 1] else 0)
+    return bits
+
+
+def _hamming(a: int, b: int) -> int:
+    return bin(a ^ b).count('1')
+
+
+def _source_art_path(code: str) -> pathlib.Path | None:
+    """Return the upscaled or product_files source art path for a DP code, or None."""
+    for p in [UPSCALED_DIR / f"{code}.jpg",
+              PRODUCT_FILES_DIR / f"{code}.jpg"]:
+        if p.exists():
+            return p
+    return None
 
 STANDARDS = {
     'response_rate_target':      100,   # % messages replied to within 24h
@@ -171,6 +199,99 @@ def check_shop(client):
         alerts.extend(photo_warnings)
     else:
         print(f"  ✓ All {len(listings)} listings meet minimum photo count")
+
+    # ── Hero-art audit — cardinal check ──────────────────────────────────────
+    # Two-pronged approach:
+    #   1. Cross-listing duplicate detection: if two separate products share an
+    #      identical hero thumbnail, one of them likely has the wrong art.
+    #   2. Manifest drift detection: if a listing's current hero hash differs
+    #      from the hash recorded when photos were last uploaded, flag it.
+    # Note: comparing composite photos to raw art hashes does NOT work reliably —
+    # the room scene fills ~75% of the frame, making every composite look different
+    # from the raw art even when the correct art is used. The composite_smart()
+    # guard in lifestyle_composite.py prevents wrong-art generation at source.
+    print("\nHERO-ART AUDIT")
+    MANIFEST_PATH = pathlib.Path('/home/user/Etsy/data/listing_image_manifest.json')
+    hero_warns    = []
+    hero_hashes: dict[str, tuple[str, int]] = {}  # lid → (title_short, hash)
+
+    manifest = {}
+    if MANIFEST_PATH.exists():
+        try:
+            manifest = json.loads(MANIFEST_PATH.read_text())
+        except Exception:
+            pass
+
+    for lst in listings:
+        lid_str = str(lst.get('listing_id', ''))
+        title   = lst.get('title', '')[:40]
+        try:
+            img_url  = f"https://openapi.etsy.com/v3/application/listings/{lid_str}/images"
+            img_data = _get(client, img_url)
+            images   = img_data.get('results', [])
+            if not images:
+                continue
+            hero      = next((i for i in images if i.get('rank') == 1), images[0])
+            thumb_url = hero.get('url_570xN') or hero.get('url_fullxfull') or ''
+            if not thumb_url:
+                continue
+            raw      = urllib.request.urlopen(thumb_url, timeout=10).read()
+            h        = _dhash(Image.open(io.BytesIO(raw)))
+            hero_hashes[lid_str] = (title, h)
+            time.sleep(0.3)
+        except Exception:
+            pass
+
+    # 1. Cross-listing duplicate detection
+    # dist=0: exact same file uploaded to two listings → wrong art guaranteed
+    # dist=1-3: near-identical thumbnails → may be same background room + similar art
+    #           buyers cannot distinguish these listings in search results; also
+    #           raises suspicion that one listing received the wrong composite.
+    # dist≥4: visually distinct enough; not flagged.
+    lids = list(hero_hashes.keys())
+    for i in range(len(lids)):
+        for j in range(i + 1, len(lids)):
+            lid_a, lid_b = lids[i], lids[j]
+            title_a, h_a = hero_hashes[lid_a]
+            title_b, h_b = hero_hashes[lid_b]
+            dist = _hamming(h_a, h_b)
+            if dist < 4:
+                severity = "WRONG ART" if dist == 0 else "nearly identical thumbnails"
+                hero_warns.append(
+                    f"  [{lid_a}] \"{title_a}\" and [{lid_b}] \"{title_b}\" "
+                    f"— {severity} in hero (pHash dist={dist}/64). "
+                    f"{'Exact duplicate uploaded — check immediately.' if dist == 0 else 'Verify both show correct art; use different room backgrounds to distinguish in search.'}"
+                )
+
+    # 2. Manifest drift detection
+    for lid_str, (title, h) in hero_hashes.items():
+        stored = manifest.get(lid_str, {}).get('hero_hash')
+        if stored is not None and _hamming(stored, h) > 8:
+            hero_warns.append(
+                f"  [{lid_str}] \"{title}\" hero has changed since last upload "
+                f"(stored hash differs by {_hamming(stored, h)} bits) — verify it shows the correct art"
+            )
+
+    # Update manifest with current hashes
+    for lid_str, (title, h) in hero_hashes.items():
+        if lid_str not in manifest:
+            manifest[lid_str] = {}
+        manifest[lid_str]['hero_hash']       = h
+        manifest[lid_str]['hero_checked_at'] = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    try:
+        MANIFEST_PATH.write_text(json.dumps(manifest, indent=2))
+    except Exception:
+        pass
+
+    if hero_warns:
+        print(f"\n  ⚠  {len(hero_warns)} hero-art issue(s) found:")
+        for w in hero_warns:
+            print(w)
+        alerts.extend(hero_warns)
+    elif hero_hashes:
+        print(f"  ✓ {len(hero_hashes)} hero thumbnails checked — no duplicates or drift detected")
+    else:
+        print("  (could not fetch hero thumbnails)")
 
     # ── Reviews — check for unanswered ───────────────────────────────────────
     print("\nREVIEW CHECK")
