@@ -1,33 +1,18 @@
 {
   "DP1052": {
-    "listing_id": 4512784817,
-    "title": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
-    "files": [
-      "DP1052.jpg",
-      "DP1052.jpg"
-    ],
-    "kawaii_listing_id": 4515672499,
-    "individual_listing_id": 4512772539
+    "individual_listing_id": 4512772539,
+    "status": "edit_draft",
+    "note": "ZIPs uploaded, photos ready. Needs Scott review before activation."
   },
   "DP1053": {
-    "listing_id": 4512784817,
-    "title": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
-    "files": [
-      "DP1053.jpg",
-      "DP1053.jpg"
-    ],
-    "kawaii_listing_id": 4515672435,
-    "individual_listing_id": 4512774863
+    "individual_listing_id": 4512774863,
+    "status": "edit_draft",
+    "note": "ZIPs uploaded, photos ready. Needs Scott review before activation."
   },
   "DP1054": {
-    "listing_id": 4512784817,
-    "title": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
-    "files": [
-      "DP1054.jpg",
-      "DP1054.jpg"
-    ],
-    "kawaii_listing_id": 4515672331,
-    "individual_listing_id": 4512776173
+    "individual_listing_id": 4512776173,
+    "status": "edit_draft",
+    "note": "ZIPs uploaded, photos ready. Needs Scott review before activation."
   },
   "DP1055": {
     "listing_id": 4512784817,
@@ -493,7 +478,11 @@
     ],
     "status": "active",
     "individual_listing_id": 4515676301,
-    "individual_title": "Floral Wreath Art Print, Botanical Wall Decor"
+    "individual_title": "Floral Wreath Art Print, Botanical Wall Decor",
+    "bundle_listing_id": 4512784817,
+    "bundle_title": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
+    "bundle_file_slots_used": 4,
+    "bundle_slots_remaining": 1
   },
   "DP1070": {
     "listing_id": 4512784922,

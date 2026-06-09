@@ -778,7 +778,7 @@ class EtsyAPIClient:
         return self._request(
             "POST",
             f"shops/{self.shop_id}/reviews/{review_id}/response",
-            json={"response": response_text},
+            body={"response": response_text},
         )
 
     def get_shop_listings_all(self, state: str = "active", limit: int = 100) -> list[dict]:
