@@ -320,7 +320,9 @@
     "files": [
       "DP1021_PrintReady.zip",
       "DP1021.jpg"
-    ]
+    ],
+    "status": "inactive_file_fixed",
+    "note": "File corrected 2026-06-09 \u2014 DP1021_print_sizes.zip now attached. Activate when ready."
   },
   "DP1020": {
     "listing_id": 4509214237,
@@ -412,12 +414,13 @@
     "status": "active"
   },
   "DP1062": {
-    "listing_id": 4509214477,
+    "listing_id": null,
     "title": "Funny Dog Printable Wall Art, Instant Download, Golden Retriever",
     "files": [
       "upscaled/DP1062.jpg"
     ],
-    "status": "active"
+    "status": "needs_own_listing",
+    "note": "Was wrongly assigned to DP1021 dog listing. DP1062 art needs its own listing."
   },
   "DP1063": {
     "listing_id": 4509258700,
