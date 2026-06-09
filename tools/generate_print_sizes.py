@@ -62,6 +62,13 @@ JPEG_QUALITY_PRIMARY = 85
 JPEG_QUALITY_FALLBACK = 75
 MAX_ZIP_BYTES = 20 * 1024 * 1024  # 20 MB
 
+# Codes the lifestyle-composite gate flags as room scenes but which are actually raw
+# printable art. The color heuristic can't tell warm nature/floral art on cream paper
+# (vivid flowers + green foliage) apart from a warm wall + dark furniture — every metric
+# overlaps. These were each opened and visually confirmed to be real art, so they bypass
+# the gate. (DP1063 orange floral, DP1038 autumn fox, DP1020 wildflower folk art.)
+VERIFIED_RAW_ART = {"DP1020", "DP1038", "DP1063"}
+
 
 README_TEXT = """\
 PRINT SIZES — OnBrandCraftz
@@ -211,9 +218,13 @@ def process_file(src_path: Path, dp_id: str, force: bool = False) -> dict:
             print(f"  SKIP  {dp_id}  (ZIP up-to-date, {size_mb:.1f} MB)")
             return {"id": dp_id, "status": "skipped", "zip_path": zip_path, "size_mb": size_mb}
 
-    # GATE: reject lifestyle composite room scenes before generating print ZIPs
-    with Image.open(src_path) as check_img:
-        flagged, reason = is_lifestyle_composite(check_img)
+    # GATE: reject lifestyle composite room scenes before generating print ZIPs.
+    # Visually-verified raw art bypasses the heuristic (see VERIFIED_RAW_ART).
+    if dp_id in VERIFIED_RAW_ART:
+        flagged, reason = False, "verified raw art (gate bypassed)"
+    else:
+        with Image.open(src_path) as check_img:
+            flagged, reason = is_lifestyle_composite(check_img)
     if flagged:
         msg = f"lifestyle composite detected: {reason}"
         print(f"  BLOCKED {dp_id} — source file looks like a lifestyle room scene, not raw art.")
@@ -261,23 +272,20 @@ def main():
 
     PRINT_ZIPS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Discover all base art files matching the naming convention
-    candidates = sorted(
-        p for p in PRODUCT_FILES_DIR.glob("*.jpg")
-        if re.match(r"^DP1\d+\.jpg$", p.name)
-    )
+    # Discover art codes from both product_files/ and upscaled/. Some codes only have an
+    # upscaled source (no base JPG), so a base-only scan would silently skip them.
+    codes = {p.stem for p in PRODUCT_FILES_DIR.glob("*.jpg") if re.match(r"^DP1\d+\.jpg$", p.name)}
+    codes |= {p.stem for p in UPSCALED_DIR.glob("*.jpg") if re.match(r"^DP1\d+\.jpg$", p.name)}
 
     if args.only:
-        only_set = set(args.only)
-        candidates = [p for p in candidates if p.stem in only_set]
+        codes &= set(args.only)
 
     results = []
-    for src_path in candidates:
-        dp_id = src_path.stem  # e.g. "DP1030"
-
-        # Prefer the upscaled version if it exists
-        upscaled_path = UPSCALED_DIR / src_path.name
-        effective_source = upscaled_path if upscaled_path.exists() else src_path
+    for dp_id in sorted(codes):
+        # Prefer the upscaled version if it exists, else fall back to the base file
+        upscaled_path = UPSCALED_DIR / f"{dp_id}.jpg"
+        base_path = PRODUCT_FILES_DIR / f"{dp_id}.jpg"
+        effective_source = upscaled_path if upscaled_path.exists() else base_path
 
         result = process_file(effective_source, dp_id, force=args.force)
         results.append(result)
