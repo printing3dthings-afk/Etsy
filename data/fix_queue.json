@@ -334,6 +334,11 @@
       "note": "ORPHAN room scenes (NOT on any live listing -- absent from catalog, shop_data, and fix_queue flagged list): DP1008/DP1009/DP1010 are the same Mediterranean lemon-window painting composited into 3 rooms, saved as the base product file. Their print ZIPs still lack sRGB because no raw art source exists. Left as-is (out of scope); needs real raw art before they could ever ship.",
       "date": "2026-06-09",
       "status": "flagged_needs_art"
+    },
+    {
+      "note": "DP1008/DP1009/DP1010 orphan room-scenes RESOLVED: generated a cohesive \"Mediterranean impressionist\" 3-piece series — DP1008 lemon window (matches the painting shown in the old room scenes), DP1009 Amalfi cliffside village, DP1010 terrace with lemons. All upscaled to 4096x6144, sRGB print ZIPs built (18.7/19.7/19.4 MB). Old room-scene base files archived to product_files/_archive_room_scenes/. Also staged: detail close-up crops (DP1092/1093/1008/1069-seaturtle), gallery-wall composites (DP1069 4-print coastal, DP1092+DP1093 boho duo, DP1008/09/10 Mediterranean trio) in staged_lifestyle/. QC sweep now 0 FAIL / 6 WARN (all 6 are the DP1027/28/29 page counts awaiting Scott approval of pending_listing_updates.json). sRGB coverage: 91/91 print ZIPs.",
+      "date": "2026-06-09",
+      "status": "done_pending_scott_review"
     }
   ]
 }
