@@ -319,6 +319,21 @@
       "note": "Listing #28 photo 6 \u2014 4th confirmation. User explicitly said \"I want ones like those.\" Priority SVG design task: create new cut file bundles in the style shown in photo 6 across listings #24-#28.",
       "date": "2026-06-05",
       "status": "priority"
+    },
+    {
+      "note": "Regenerated raw art + sRGB print ZIPs for 3 live listings flagged with bad sources (staged LOCALLY, NOT yet uploaded to Etsy -- needs Scott review): DP1092 (Boho Botanical Floral) and DP1093 (Watercolor Floral) generated fresh via gpt-image-1 (no source existed). DP1069 (Coastal Set of 4) split into 4 per-design ZIPs -- DP1069_seaturtle/lighthouse/coralreef/pelican_print_sizes.zip -- because all 4 designs x 10 sizes exceed Etsy 20MB/file; the old labeled-grid ZIP was archived to print_zips/_archive/DP1069_print_sizes_GRID_wrong.zip. NEXT: regenerate matching lifestyle room composites + upload as drafts for review.",
+      "date": "2026-06-09",
+      "status": "art_done_pending_photos_and_upload"
+    },
+    {
+      "note": "DP1063 was flagged by the lifestyle-composite gate but is actually GOOD raw art (orange-flower watercolor) -- a gate false positive on cream paper + teal foliage. No regeneration needed; added to VERIFIED_RAW_ART bypass and reissued its sRGB ZIP. Same false-positive class fixed for orphans DP1038 (fox) and DP1020 (wildflowers).",
+      "date": "2026-06-09",
+      "status": "done"
+    },
+    {
+      "note": "ORPHAN room scenes (NOT on any live listing -- absent from catalog, shop_data, and fix_queue flagged list): DP1008/DP1009/DP1010 are the same Mediterranean lemon-window painting composited into 3 rooms, saved as the base product file. Their print ZIPs still lack sRGB because no raw art source exists. Left as-is (out of scope); needs real raw art before they could ever ship.",
+      "date": "2026-06-09",
+      "status": "flagged_needs_art"
     }
   ]
 }
