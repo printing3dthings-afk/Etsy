@@ -4,7 +4,7 @@
       "DP1026": "efe68fe83ff45fc4f747da87dd9f321f3a73d883371e3e6e770d073f31a7e4c6"
     },
     "art_sources": {
-      "DP1026": "data/digital_products/product_files/DP1026.jpg"
+      "DP1026": "data/digital_products/product_files/DP1026_kawaii_cover.jpg"
     },
     "baseline_captured": "2026-06-06T00:26:55.576518+00:00",
     "baseline_files": [
@@ -572,12 +572,11 @@
       "DP1063": "0006060e0d4e0d4e0d460d460d460c460706d9f299b091ad883ba818fc07fc07"
     },
     "art_sources": {
-      "DP1013": "data/digital_products/product_files/DP1013.jpg",
-      "DP1063": "data/digital_products/product_files/upscaled/DP1063.jpg"
+      "DP1013": "data/digital_products/product_files/DP1013.jpg"
     },
     "baseline_captured": "2026-06-06T00:26:29.979930+00:00",
     "baseline_files": [
-      "DP1063_print_sizes.zip"
+      "DP1013_print_sizes.zip"
     ],
     "baseline_photo_count": 10,
     "dp_codes": [
@@ -586,7 +585,7 @@
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1063_print_sizes.zip"
+      "DP1013_print_sizes.zip"
     ],
     "last_status": "WARN",
     "last_verified": "2026-06-06T02:42:24.820039+00:00",
@@ -3540,11 +3539,11 @@
       "DP1026": "efe68fe83ff45fc4f747da87dd9f321f3a73d883371e3e6e770d073f31a7e4c6"
     },
     "art_sources": {
-      "DP1026": "data/digital_products/product_files/DP1026.jpg"
+      "WA1026": "data/digital_products/product_files/WA1026.jpg"
     },
     "baseline_captured": "2026-06-06T00:26:55.027007+00:00",
     "baseline_files": [
-      "DP1026_print_sizes.zip"
+      "WA1026_print_sizes.zip"
     ],
     "baseline_photo_count": 10,
     "dp_codes": [
@@ -3552,7 +3551,7 @@
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1026_print_sizes.zip"
+      "WA1026_print_sizes.zip"
     ],
     "last_status": "WARN",
     "last_verified": "2026-06-06T02:42:24.820331+00:00",

@@ -269,11 +269,12 @@
   },
   "DP1013": {
     "listing_id": 4509258700,
-    "title": "Watercolor Botanical Print | Soft Pastel Flower Wall Art",
+    "title": "Watercolor Botanical Print, Soft Pastel Flower Art, Instant Download",
     "files": [
-      "DP1013_PrintReady.zip",
-      "DP1013.jpg"
-    ]
+      "DP1013_print_sizes.zip"
+    ],
+    "status": "active",
+    "note": "Restored 2026-06-09: DP1063 had hijacked this listing (zip + 2 photos). Now fully DP1013."
   },
   "DP1012": {
     "listing_id": 4509258172,
@@ -415,20 +416,17 @@
   },
   "DP1062": {
     "listing_id": null,
-    "title": "Funny Dog Printable Wall Art, Instant Download, Golden Retriever",
-    "files": [
-      "upscaled/DP1062.jpg"
-    ],
-    "status": "needs_own_listing",
-    "note": "Was wrongly assigned to DP1021 dog listing. DP1062 art needs its own listing."
+    "status": "duplicate_no_listing",
+    "note": "Near-duplicate variant of DP1021 Golden Retriever painting. NOT orange botanical (old note was wrong). No listing needed."
   },
   "DP1063": {
-    "listing_id": 4509258700,
-    "title": "Watercolor Botanical Print, Soft Pastel Flower Art, Instant Download",
+    "listing_id": 4519288171,
+    "title": "Orange Flower Print, Botanical Printable Wall Art, Instant Download",
     "files": [
-      "upscaled/DP1063.jpg"
+      "DP1063_print_sizes.zip"
     ],
-    "status": "active"
+    "status": "draft_pending_review",
+    "note": "Own listing created 2026-06-09 after being removed from DP1013 listing. Scott to review + activate."
   },
   "DP1064": {
     "listing_id": 4509600086,
@@ -675,9 +673,6 @@
     "status": "active"
   },
   "DP1026": {
-    "listing_id": 4515682147,
-    "title": "Kawaii Art Print No.1026",
-    "files": [],
     "planner_listing_id": 4509179201,
     "planner_title": "Digital Planner 2026 Undated, GoodNotes iPad"
   },
@@ -844,5 +839,11 @@
     "file": "DP1100_print_sizes.zip",
     "source_art": "upscaled/DP1100.jpg",
     "dp_file_id": 1491358943112
+  },
+  "WA1026": {
+    "listing_id": 4515682147,
+    "title": "Kawaii Art Print No.1026",
+    "files": [],
+    "note": "Renamed from DP1026 wall art 2026-06-09 \u2014 DP1026 is the planner; WA prefix = wall art."
   }
 }

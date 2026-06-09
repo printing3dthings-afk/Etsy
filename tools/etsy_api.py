@@ -185,7 +185,7 @@ def _dp_code_listing_mismatch(listing_id: int | str, file_path: str) -> str | No
     (unknown listing, no DP code in filename, or map unreadable).
     """
     import re as _re
-    m = _re.search(r"(DP\d{4})", os.path.basename(file_path).upper())
+    m = _re.search(r"((?:DP|WA)\d{4})", os.path.basename(file_path).upper())
     if not m:
         return None
     file_code = m.group(1)

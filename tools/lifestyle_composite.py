@@ -164,8 +164,8 @@ def _draw_framed_art(room, art_path, px, py, art_w, art_h, mat_w, frame_w,
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def _dp_code(path: str) -> str | None:
-    """Extract 'DP1063' style code from a file path, or None if not found."""
-    m = re.search(r'(DP\d{4})', os.path.basename(path), re.IGNORECASE)
+    """Extract 'DP1063' / 'WA1026' style code from a file path, or None if not found."""
+    m = re.search(r'((?:DP|WA)\d{4})', os.path.basename(path), re.IGNORECASE)
     return m.group(1).upper() if m else None
 
 

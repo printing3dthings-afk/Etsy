@@ -179,7 +179,12 @@ def make_zip(dp_id: str, source_path: Path, quality: int) -> bytes:
     """Build the ZIP in memory and return the raw bytes."""
     buf = io.BytesIO()
 
-    from tools.srgb import ensure_srgb, SRGB_ICC
+    try:
+        from tools.srgb import ensure_srgb, SRGB_ICC
+    except ModuleNotFoundError:
+        # Running as `python tools/generate_print_sizes.py` without PYTHONPATH set
+        sys.path.insert(0, str(Path(__file__).parent))
+        from srgb import ensure_srgb, SRGB_ICC
 
     with Image.open(source_path) as art:
         # True ICC -> sRGB transform (NOT a bare convert) so AdobeRGB/CMYK sources don't
@@ -274,8 +279,9 @@ def main():
 
     # Discover art codes from both product_files/ and upscaled/. Some codes only have an
     # upscaled source (no base JPG), so a base-only scan would silently skip them.
-    codes = {p.stem for p in PRODUCT_FILES_DIR.glob("*.jpg") if re.match(r"^DP1\d+\.jpg$", p.name)}
-    codes |= {p.stem for p in UPSCALED_DIR.glob("*.jpg") if re.match(r"^DP1\d+\.jpg$", p.name)}
+    # WA prefix = wall art renamed out of the DP planner namespace (e.g. WA1026)
+    codes = {p.stem for p in PRODUCT_FILES_DIR.glob("*.jpg") if re.match(r"^(DP|WA)1\d+\.jpg$", p.name)}
+    codes |= {p.stem for p in UPSCALED_DIR.glob("*.jpg") if re.match(r"^(DP|WA)1\d+\.jpg$", p.name)}
 
     if args.only:
         codes &= set(args.only)
