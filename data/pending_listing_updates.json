@@ -1,7 +1,8 @@
 {
   "generated": "2026-06-09",
-  "purpose": "Planner descriptions corrected: page counts updated to true PDF page count + new sections added to SECTIONS INCLUDED. STAGED FOR SCOTT REVIEW — NOT pushed to Etsy.",
-  "next_step": "Review new_description for each, then update via Etsy API (PATCH listing description) after approval.",
+  "applied": "2026-06-09",
+  "purpose": "Planner descriptions corrected: page counts updated to true PDF page count + new sections added to SECTIONS INCLUDED.",
+  "next_step": "DONE — all three listings PATCHed via Etsy API on 2026-06-09.",
   "listings": [
     {
       "listing_id": "4509184958",

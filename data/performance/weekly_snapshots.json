@@ -20,5 +20,27 @@
     "photo_warnings": 77,
     "unanswered_reviews": 3,
     "checked_at": "2026-06-04T12:52:01.627928+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 13,
+    "alerts": 11,
+    "photo_warnings": 10,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:03:56.292147+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 13,
+    "alerts": 11,
+    "photo_warnings": 10,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:04:07.109635+00:00"
   }
 ]
