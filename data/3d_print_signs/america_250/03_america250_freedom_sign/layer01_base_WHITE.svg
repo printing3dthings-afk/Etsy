@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="280mm" height="110mm"
+     viewBox="0 0 280 110">
+  <path fill="black" fill-rule="evenodd" d="M8.00,0.00H272.00Q280.00,0.00 280.00,8.00V102.00Q280.00,110.00 272.00,110.00H8.00Q0.00,110.00 0.00,102.00V8.00Q0.00,0.00 8.00,0.00Z"/>
+</svg>
