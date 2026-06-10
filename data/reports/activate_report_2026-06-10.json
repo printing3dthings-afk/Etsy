@@ -1,0 +1,817 @@
+{
+  "activated": [
+    {
+      "id": 4515682147,
+      "title": "Kawaii Art Print No.1026, Printable, Instant Download",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Kawaii Art Print No.1026'",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515682013,
+      "title": "Moon Phases Print, Celestial Wall Art, Lunar Cycle Astrono, Print",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Moon Phases Print | Celestial Wall Art | Lunar Cyc'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515678344,
+      "title": "Abstract Brushstroke Printable Art, Instant Download, Modern",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Abstract Brushstroke Printable Art, Instant Downlo'"
+      ]
+    },
+    {
+      "id": 4515678198,
+      "title": "Vintage Botanical Printable Wall Art, Instant Download, Herb",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Vintage Botanical Printable Wall Art, Instant Down'"
+      ]
+    },
+    {
+      "id": 4515674594,
+      "title": "Botanical Herbs Art Print, Kitchen Wall Decor, Multiple Sizes",
+      "fixes": [
+        "pipes \u2192 commas"
+      ]
+    },
+    {
+      "id": 4515674144,
+      "title": "Boho Botanical Floral Wall Art Print, Multiple Sizes, Printable",
+      "fixes": [
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515674042,
+      "title": "Minimalist Line Art Print, Modern Wall Decor, Multiple Sizes",
+      "fixes": [
+        "pipes \u2192 commas"
+      ]
+    },
+    {
+      "id": 4515673828,
+      "title": "Cottagecore Botanical Art Print, Nature Wall Decor, Multiple Size",
+      "fixes": [
+        "pipes \u2192 commas"
+      ]
+    },
+    {
+      "id": 4515673064,
+      "title": "Tropical Botanical Art Print, Jungle Wall Decor, Multiple Sizes",
+      "fixes": [
+        "pipes \u2192 commas"
+      ]
+    },
+    {
+      "id": 4515672972,
+      "title": "Minimalist Typography Art Print, Quote Wall Decor, Multiple Sizes",
+      "fixes": [
+        "pipes \u2192 commas"
+      ]
+    },
+    {
+      "id": 4515676301,
+      "title": "Floral Wreath Art Print, Botanical Wall Decor, Multiple Sizes",
+      "fixes": [
+        "pipes \u2192 commas"
+      ]
+    },
+    {
+      "id": 4515676185,
+      "title": "Kawaii Stationery Art Print, Cute Desk Decor, Multiple Sizes",
+      "fixes": [
+        "pipes \u2192 commas"
+      ]
+    },
+    {
+      "id": 4515672588,
+      "title": "Pastel Celestial Art Print, Moon Stars Decor, Multiple Sizes",
+      "fixes": [
+        "pipes \u2192 commas"
+      ]
+    },
+    {
+      "id": 4515672496,
+      "title": "Paris Skyline Printable Wall Art, Instant Download, Minimali",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Paris Skyline Printable Wall Art, Instant Download'"
+      ]
+    },
+    {
+      "id": 4515675887,
+      "title": "Grand Canyon Printable Wall Art, Instant Download, Vintage",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Grand Canyon Printable Wall Art, Instant Download,'"
+      ]
+    },
+    {
+      "id": 4515675813,
+      "title": "Tropical Leaves Print, Bold Monstera Palm Wall Art, Printable",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Tropical Leaves Print | Bold Monstera Palm Wall Ar'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515672204,
+      "title": "Abstract Woman Portrait Print, Feminist Line Art Wall Decor, Prin",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Abstract Woman Portrait Print | Feminist Line Art '",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515675583,
+      "title": "Italian Kitchen Printable Wall Art, Instant Download, Food",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Italian Kitchen Printable Wall Art, Instant Downlo'"
+      ]
+    },
+    {
+      "id": 4515675481,
+      "title": "Autumn Fox Printable Wall Art, Instant Download, Woodland",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Autumn Fox Printable Wall Art, Instant Download, W'"
+      ]
+    },
+    {
+      "id": 4515675373,
+      "title": "Hummingbird Watercolor Print, Botanical Bird Art, Floral W, Print",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Hummingbird Watercolor Print | Botanical Bird Art '",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515671764,
+      "title": "Baby Bear Nursery Print, Woodland Nursery Art, Printable",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Baby Bear Nursery Print | Woodland Nursery Art'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515675145,
+      "title": "Mountain Lake Printable Wall Art, Instant Download, Landscap",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Mountain Lake Printable Wall Art, Instant Download'"
+      ]
+    },
+    {
+      "id": 4515671558,
+      "title": "Wildflower Meadow Printable Wall Art, Instant Download, Bota",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Wildflower Meadow Printable Wall Art, Instant Down'"
+      ]
+    },
+    {
+      "id": 4515671458,
+      "title": "Cat Reading Printable Wall Art, Instant Download, Bookish",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Cat Reading Printable Wall Art, Instant Download, '"
+      ]
+    },
+    {
+      "id": 4515671336,
+      "title": "Ocean Wave Printable Wall Art, Instant Download, Coastal",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Ocean Wave Printable Wall Art, Instant Download, C'"
+      ]
+    },
+    {
+      "id": 4515671216,
+      "title": "Lavender Fields Watercolor Print, Provence Wall Art, Printable",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Lavender Fields Watercolor Print | Provence Wall A'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515670946,
+      "title": "Snowy Owl Printable Wall Art, Instant Download, Wildlife",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Snowy Owl Printable Wall Art, Instant Download, Wi'"
+      ]
+    },
+    {
+      "id": 4515669596,
+      "title": "Farmhouse Rooster Art Print, Kitchen Wall Decor, Country F, Print",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Farmhouse Rooster Art Print | Kitchen Wall Decor |'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515672895,
+      "title": "Four Seasons Wall Art Set, Set of 4 Watercolor Prints, Printable",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Four Seasons Wall Art Set | Set of 4 Watercolor Pr'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515669370,
+      "title": "Four Seasons Wall Art Set, Set of 4 Watercolor Prints, Printable",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Four Seasons Wall Art Set | Set of 4 Watercolor Pr'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515669246,
+      "title": "Four Seasons Wall Art Set, Set of 4 Watercolor Prints, Printable",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Four Seasons Wall Art Set | Set of 4 Watercolor Pr'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515669140,
+      "title": "Four Seasons Wall Art Set, Set of 4 Watercolor Prints, Printable",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Four Seasons Wall Art Set | Set of 4 Watercolor Pr'",
+        "pipes \u2192 commas",
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4515668698,
+      "title": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Coastal Art Set of 4, Printable Wall Art, Instant '"
+      ]
+    },
+    {
+      "id": 4515672065,
+      "title": "Fox Watercolor Printable Wall Art, Instant Download, Woodlan",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Fox Watercolor Printable Wall Art, Instant Downloa'"
+      ]
+    },
+    {
+      "id": 4515671951,
+      "title": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
+      "fixes": [
+        "renamed from generic No.XXXX \u2192 canonical 'Paris Caf\u00e9 Printable Wall Art, Instant Download, F'"
+      ]
+    },
+    {
+      "id": 4515437442,
+      "title": "Commercial License, Western SVG Bundle 12 Designs, Instant Downlo",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4515439763,
+      "title": "Commercial License, Good Vibes SVG Bundle, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4515437432,
+      "title": "Commercial License, Mom Life SVG Bundle 20 Designs, Instant Downl",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4515439755,
+      "title": "Commercial License, Graduation 2026 SVG Bundle, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4515439751,
+      "title": "Commercial License, Christian Faith SVG Bundle, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4515439743,
+      "title": "Commercial License, Floral Botanical SVG Bundle, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4514777212,
+      "title": "Mom Life Sublimation Tumbler Wrap Bundle PNG 20oz Instant Downloa",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4514536935,
+      "title": "Good Vibes SVG Bundle, 20 Designs Cricut, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4514392281,
+      "title": "Mom Life SVG Bundle, 20 Designs Cricut Silhouette, Instant Downlo",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4514136783,
+      "title": "Graduation SVG Bundle 2026, Senior Cut Files Cricut, Instant Down",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4514134583,
+      "title": "Christian SVG Bundle, Faith Cut Files Cricut, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4514130045,
+      "title": "Floral SVG Bundle Cricut, Botanical Cut Files, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4513713142,
+      "title": "Woodland Animal Gallery Wall Set of 5, Printable, Instant Downloa",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4513713106,
+      "title": "Botanical Gallery Wall Set of 5, Printable Prints, Instant Downlo",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4513713044,
+      "title": "Coastal Gallery Wall Set of 5, Printable Art, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4513713984,
+      "title": "Hummingbird Nursery Print, Printable Wall Art, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4513713962,
+      "title": "Watercolor Fox Nursery Print, Printable Instant Download",
+      "fixes": []
+    },
+    {
+      "id": 4513713936,
+      "title": "Owl Nursery Wall Art, Printable Instant Download, Woodland",
+      "fixes": []
+    },
+    {
+      "id": 4513713922,
+      "title": "Bear Nursery Wall Art, Printable Instant Download, Woodland",
+      "fixes": []
+    },
+    {
+      "id": 4513714191,
+      "title": "Fox Nursery Wall Art, Printable Instant Download, Woodland",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4513714013,
+      "title": "Paris Skyline Print, Black White Wall Art, Instant Download, Prin",
+      "fixes": [
+        "added missing keywords (Printable/Instant Download)",
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4513713945,
+      "title": "Vintage Botanical Print, Black White Wall Art, Instant Download",
+      "fixes": []
+    },
+    {
+      "id": 4513713712,
+      "title": "Moon Phases Print, Black White Wall Art, Instant Download, Printa",
+      "fixes": [
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4513713514,
+      "title": "Japandi Tree Print, Black White Wall Art, Instant Download, Print",
+      "fixes": [
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4513713805,
+      "title": "Minimalist Botanical Print, Black White Wall Art, Instant Downloa",
+      "fixes": []
+    },
+    {
+      "id": 4512188970,
+      "title": "Kawaii Planner Bundle 2026, All 4 Planners, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4512784922,
+      "title": "Four Seasons Set of 4, Printable Wall Art, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4512783077,
+      "title": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
+      "fixes": []
+    },
+    {
+      "id": 4512780869,
+      "title": "Fox Watercolor Printable Wall Art, Instant Download, Woodland",
+      "fixes": []
+    },
+    {
+      "id": 4512780614,
+      "title": "Pelican Watercolor Print, Coastal Art, Instant Download, Printabl",
+      "fixes": [
+        "added missing keywords (Printable/Instant Download)",
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4512772452,
+      "title": "Winter Birch Printable Wall Art, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4512770031,
+      "title": "Autumn Maple Printable Wall Art, Instant Download, Fall",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4512768771,
+      "title": "Sunflower Watercolor Print, Botanical Wall Art, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4512768858,
+      "title": "Cherry Blossom Watercolor Print, Spring Wall Art, Instant Downloa",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4512763302,
+      "title": "Rooster Kitchen Printable Wall Art, Instant Download, Farm",
+      "fixes": []
+    },
+    {
+      "id": 4512760671,
+      "title": "Snowy Owl Printable Wall Art, Instant Download, Wildlife",
+      "fixes": []
+    },
+    {
+      "id": 4512760918,
+      "title": "Lavender Fields Printable Wall Art, Instant Download, Provence",
+      "fixes": []
+    },
+    {
+      "id": 4512758123,
+      "title": "Ocean Wave Printable Wall Art, Instant Download, Coastal",
+      "fixes": []
+    },
+    {
+      "id": 4512758458,
+      "title": "Cat Reading Printable Wall Art, Instant Download, Bookish",
+      "fixes": []
+    },
+    {
+      "id": 4512756952,
+      "title": "Wildflower Meadow Printable Wall Art, Instant Download, Botanical",
+      "fixes": []
+    },
+    {
+      "id": 4512755568,
+      "title": "Mountain Lake Printable Wall Art, Instant Download, Landscape",
+      "fixes": []
+    },
+    {
+      "id": 4512753302,
+      "title": "Baby Bear Nursery Print, Woodland Animal Art, Instant Download",
+      "fixes": []
+    },
+    {
+      "id": 4512750191,
+      "title": "Hummingbird Watercolor Print, Botanical Bird Art, Floral Wall Dec",
+      "fixes": []
+    },
+    {
+      "id": 4512747600,
+      "title": "Autumn Fox Printable Wall Art, Instant Download, Woodland",
+      "fixes": []
+    },
+    {
+      "id": 4512301880,
+      "title": "Boho Botanical Set of 4, Printable Art, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4512255508,
+      "title": "FREE Kawaii Sticker Sheet PNG, GoodNotes, Instant Download, Print",
+      "fixes": [
+        "added missing keywords (Printable/Instant Download)"
+      ]
+    },
+    {
+      "id": 4512254035,
+      "title": "Kawaii Sticker Bundle All 4 Themes, GoodNotes, Instant Download",
+      "fixes": []
+    },
+    {
+      "id": 4512254027,
+      "title": "Kawaii Sticker Pack PNG, GoodNotes, Coral Peach, Instant Download",
+      "fixes": []
+    },
+    {
+      "id": 4512255536,
+      "title": "Kawaii Sticker Pack PNG, GoodNotes, Midnight Blue, Instant Downlo",
+      "fixes": []
+    },
+    {
+      "id": 4512254015,
+      "title": "Kawaii Sticker Pack PNG, GoodNotes, Cotton Candy, Instant Downloa",
+      "fixes": []
+    },
+    {
+      "id": 4512255514,
+      "title": "Kawaii Sticker Pack PNG, GoodNotes, Lavender Dreams, Instant Down",
+      "fixes": []
+    },
+    {
+      "id": 4509597559,
+      "title": "Italian Kitchen Printable Wall Art, Instant Download, Food",
+      "fixes": []
+    },
+    {
+      "id": 4509596017,
+      "title": "Abstract Woman Portrait Print, Feminist Line Art, Instant Downloa",
+      "fixes": []
+    },
+    {
+      "id": 4509600086,
+      "title": "Tropical Leaves Print, Bold Monstera Palm Wall Art, Printable",
+      "fixes": [
+        "added missing keywords (Printable/Instant Download)",
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509593697,
+      "title": "Grand Canyon Printable Wall Art, Instant Download, Vintage",
+      "fixes": []
+    },
+    {
+      "id": 4509593623,
+      "title": "Paris Skyline Printable Wall Art, Instant Download, Minimalist",
+      "fixes": []
+    },
+    {
+      "id": 4509593487,
+      "title": "Vintage Botanical Printable Wall Art, Instant Download, Herbarium",
+      "fixes": []
+    },
+    {
+      "id": 4509598784,
+      "title": "Abstract Brushstroke Printable Art, Instant Download, Modern",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509598660,
+      "title": "Moon Phases Print, Celestial Wall Art, Lunar Cycle, Instant Downl",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509259354,
+      "title": "Minimalist Botanical Line Art Print, Boho Decor, Instant Download",
+      "fixes": []
+    },
+    {
+      "id": 4509258172,
+      "title": "Checkerboard Floral Printable Wall Art, Instant Download, Bold",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509215145,
+      "title": "Day of the Dead Skull Print, Colorful Maximalist Wall Art, Printa",
+      "fixes": [
+        "added missing keywords (Printable/Instant Download)",
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509219904,
+      "title": "Muscle Car Printable Wall Art, Instant Download, Chevelle",
+      "fixes": []
+    },
+    {
+      "id": 4509214803,
+      "title": "Astronaut Space Printable Wall Art, Instant Download, Galaxy",
+      "fixes": []
+    },
+    {
+      "id": 4509219594,
+      "title": "Full Moon Ocean Printable Wall Art, Instant Download, Moody",
+      "fixes": []
+    },
+    {
+      "id": 4509214237,
+      "title": "Poppy Field Printable Wall Art, Instant Download, Impressionist",
+      "fixes": []
+    },
+    {
+      "id": 4509214051,
+      "title": "Mountain Meadow Printable Wall Art, Instant Download, Landscape",
+      "fixes": []
+    },
+    {
+      "id": 4509218860,
+      "title": "Japandi Tree Printable Wall Art, Instant Download, Zen",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509213667,
+      "title": "White Roses Printable Wall Art, Instant Download, Romantic",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509213533,
+      "title": "She Believed She Could, Empowerment Quote Wall Art, Instant Downl",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509213345,
+      "title": "Good Things Take Time Printable Art, Instant Download, Quote",
+      "fixes": []
+    },
+    {
+      "id": 4509218152,
+      "title": "Mediterranean Window Printable Art, Instant Download, Amalfi",
+      "fixes": []
+    },
+    {
+      "id": 4509193237,
+      "title": "Pampas Grass Printable Wall Art, Boho, Instant Download",
+      "fixes": []
+    },
+    {
+      "id": 4509193231,
+      "title": "Sage Lavender Botanical Print, Dusty Rose Wall Art, Instant Downl",
+      "fixes": []
+    },
+    {
+      "id": 4509198434,
+      "title": "Boho Wildflower Printable Wall Art, Instant Download, Sage",
+      "fixes": []
+    },
+    {
+      "id": 4509198446,
+      "title": "Eucalyptus Branch Printable Wall Art, Instant Download, Botanical",
+      "fixes": []
+    },
+    {
+      "id": 4509184968,
+      "title": "Digital Fitness Planner 2026 Undated, GoodNotes, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509184962,
+      "title": "Digital Budget Planner 2026 Undated, GoodNotes, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509184958,
+      "title": "Kawaii Student Planner 2026, GoodNotes iPad, Instant Download",
+      "fixes": [
+        "added AI disclosure"
+      ]
+    },
+    {
+      "id": 4509179201,
+      "title": "Digital Planner 2026 Undated, GoodNotes iPad, Instant Download",
+      "fixes": []
+    }
+  ],
+  "fixed_only": [
+    {
+      "id": 4515439809,
+      "title": "Commercial License, Kawaii Sticker Pack Bundle All, Instant Downl",
+      "reason": "only 3 photos"
+    },
+    {
+      "id": 4515439799,
+      "title": "Commercial License, Kawaii Sticker Pack Coral Peac, Instant Downl",
+      "reason": "only 3 photos"
+    },
+    {
+      "id": 4515437464,
+      "title": "Commercial License, Kawaii Sticker Pack Midnight B, Instant Downl",
+      "reason": "only 3 photos"
+    },
+    {
+      "id": 4515437456,
+      "title": "Commercial License, Kawaii Sticker Pack Cotton Can, Instant Downl",
+      "reason": "only 3 photos"
+    },
+    {
+      "id": 4515437452,
+      "title": "Commercial License, Kawaii Sticker Pack Lavender D, Instant Downl",
+      "reason": "only 3 photos"
+    }
+  ],
+  "skipped": [
+    {
+      "id": 4513637748,
+      "title": "Complete Wall Art Bundle 50 Prints, Printable Download",
+      "reason": "draft with 0 photos \u2014 needs photos before activating"
+    },
+    {
+      "id": 4513637740,
+      "title": "Pick Any 3 Prints, Printable Wall Art Bundle, Instant Download",
+      "reason": "draft with 0 photos \u2014 needs photos before activating"
+    },
+    {
+      "id": 4509593049,
+      "title": "Test Digital Art Print | Test Listing Please Ignore",
+      "reason": "draft with 0 photos \u2014 needs photos before activating"
+    },
+    {
+      "id": 4515672499,
+      "title": "Kawaii Art Print No.1052 | Kawaii Wall Decor | Multiple Sizes",
+      "reason": "duplicate of active listing for DP1052"
+    },
+    {
+      "id": 4515672435,
+      "title": "Kawaii Art Print No.1053 | Kawaii Wall Decor | Multiple Sizes",
+      "reason": "duplicate of active listing for DP1053"
+    },
+    {
+      "id": 4515672331,
+      "title": "Kawaii Art Print No.1054 | Kawaii Wall Decor | Multiple Sizes",
+      "reason": "duplicate of active listing for DP1054"
+    }
+  ],
+  "errors": []
+}
