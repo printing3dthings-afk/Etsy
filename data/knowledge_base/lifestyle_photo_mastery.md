@@ -370,4 +370,97 @@ Ranked by estimated impact on CTR and conversion:
 
 ---
 
-*Last updated: May 2026 | Sources: Etsy Seller Handbook, Marmalead, eRank, listybox.com, Decorilla, Emily Henderson, Printful, Nightjar.so, Outfy, InsightAgent, BuyWallArt, Digital Commerce 360, Etsy official data*
+## PART 13: THE 26-ROOM BACKGROUND LIBRARY
+
+Generated June 2026. All rooms located at `data/digital_products/product_files/empty_rooms/`.
+Full metadata: `data/knowledge_base/room_library.json`.
+Generate/regenerate rooms: `python tools/gen_room_library.py [--force] [--id ROOM_ID]`
+
+### Compositing Rule
+Always composite real product art into an empty room using `composite_smart()` from
+`tools/lifestyle_composite.py`. Never let AI render the product inside the room scene.
+
+### Room Selection Guide — Which Room for Which Art
+
+| Art Style | First Choice | Second Choice | Avoid |
+|-----------|-------------|---------------|-------|
+| Watercolor floral | `warm_living` | `romantic_bedroom` | `modern_office` |
+| Botanical print | `biophilic_living` | `cottage_living` | `art_deco_living` |
+| Abstract expressionist | `maximalist_living` | `japandi_living` | `rustic_kitchen` |
+| Ocean / coastal | `coastal_living` | `coastal_bedroom` | `dark_bedroom` |
+| Landscape / nature | `cottage_living` | `biophilic_living` | `art_deco_living` |
+| Typography / quote | `warm_office` | `modern_entryway` | `french_kitchen` |
+| Minimalist line art | `japandi_living` | `japandi_bedroom` | `maximalist_living` |
+| Dark / moody | `moody_living` | `dark_bedroom` | `japandi_living` |
+| Celestial / astrology | `moody_living` | `dark_bedroom` | `rustic_kitchen` |
+| Animal portrait | `cottage_living` | `warm_living` | `modern_office` |
+| Food / kitchen art | `rustic_kitchen` | `french_kitchen` | `dark_bedroom` |
+| Geometric / graphic | `modern_office` | `art_deco_living` | `cottage_living` |
+
+### All 26 Rooms — Quick Reference
+
+**Living Rooms (7)**
+| ID | Aesthetic | Lighting | Wall Color |
+|----|-----------|----------|------------|
+| `coastal_living` | Coastal | Clean bright | Soft blue-white |
+| `warm_living` | Warm boho | Soft window | Warm cream plaster |
+| `japandi_living` | Japandi | Clean bright | Soft white linen |
+| `moody_living` | Dark moody | Warm amber | Deep navy-green limewash |
+| `cottage_living` | English cottage | Warm afternoon | Warm off-white plaster |
+| `maximalist_living` | Curated maximalism | Soft window | Warm terracotta limewash |
+| `biophilic_living` | Biophilic | Soft window | Sage green matte |
+| `art_deco_living` | Art deco | Warm amber | Deep cream gold-tint |
+
+**Bedrooms (6)**
+| ID | Aesthetic | Lighting | Wall Color |
+|----|-----------|----------|------------|
+| `warm_bedroom` | Warm minimal | Warm ambient | Off-white linen |
+| `japandi_bedroom` | Japandi | Clean bright | Soft white plaster |
+| `romantic_bedroom` | Romantic maximalist | Warm amber | Dusty rose matte |
+| `dark_bedroom` | Dark moody | Warm amber | Deep forest green |
+| `boho_bedroom` | Boho | Soft window | Warm ivory plaster |
+| `coastal_bedroom` | Coastal | Soft window | Pale sea-blue |
+
+**Offices / Studies (5)**
+| ID | Aesthetic | Lighting | Wall Color |
+|----|-----------|----------|------------|
+| `coastal_office` | Coastal | Clean bright | Warm white linen |
+| `warm_office` | Warm minimal | Soft window | Warm cream-white plaster |
+| `dark_academia_study` | Dark academia | Warm amber | Warm charcoal-brown |
+| `biophilic_office` | Biophilic | Clean bright | Soft sage green |
+| `modern_office` | Modern minimal | Clean bright | Crisp white flat |
+
+**Kitchen / Dining (3)**
+| ID | Aesthetic | Lighting | Wall Color |
+|----|-----------|----------|------------|
+| `rustic_kitchen` | Farmhouse rustic | Soft window | Warm cream plaster |
+| `modern_dining` | Modern warm | Warm amber | Soft warm greige |
+| `french_kitchen` | French bistro | Soft window | Aged cream-yellow plaster |
+
+**Entryways (3)**
+| ID | Aesthetic | Lighting | Wall Color |
+|----|-----------|----------|------------|
+| `modern_entryway` | Modern minimal | Clean bright | Clean white flat |
+| `cottage_entryway` | English cottage | Soft window | Warm cream-white plaster |
+| `japandi_entryway` | Japandi | Clean bright | Soft warm white plaster |
+
+**Specialty (1)**
+| ID | Aesthetic | Lighting | Wall Color |
+|----|-----------|----------|------------|
+| `reading_nook` | Cozy cottage | Warm amber | Warm cream-ivory plaster |
+
+### 2026 Interior Authenticity Rules (Confirmed Mistakes to Avoid)
+
+From deep research on mockup authenticity (June 2026):
+
+1. **Shadow direction must match room lighting** — If light comes from the left in the room, the art frame's shadow must fall to the right. Mismatched shadows are the #1 signal that a photo is fake.
+2. **Perspective must match** — Art hung on a wall should share the same vanishing point as the wall and furniture. Slightly wrong angles (even 2–3°) read as "pasted on."
+3. **No halos around the art frame** — Light fringing around the frame edge shows the composite boundary. Use `min_clearance=100` minimum in `composite_smart()` to get clean edges into the wall.
+4. **Gray walls officially dead** — Cold gray backgrounds (Etsy 2019–2022 era) now test worse in the warm search grid. Never use gray as a background.
+5. **Dark walnut/cherry replacing light oak** — As of 2026, deep walnut and cherry are replacing the all-light-oak aesthetic. The moody, dark_academia, and art_deco rooms reflect this.
+6. **Green is the new neutral** — Sage green and forest green are now acceptable wall colors where buyers expect white, particularly for botanical and wellness art.
+7. **Biophilic props mandatory** — Buyers who see no plant in a lifestyle photo in 2026 subconsciously read the room as dated. Include at least one plant in 60%+ of living room and bedroom shots.
+
+---
+
+*Last updated: June 2026 | Sources: Etsy Seller Handbook, Marmalead, eRank, listybox.com, Decorilla, Emily Henderson, Printful, Nightjar.so, Outfy, InsightAgent, BuyWallArt, Digital Commerce 360, Etsy official data, OnBrandCraftz deep-research June 2026*
