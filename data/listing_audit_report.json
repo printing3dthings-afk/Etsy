@@ -1,370 +1,77 @@
 [
   {
-    "listing_id": 4515439809,
-    "title": "Commercial License | Kawaii Sticker Pack Bundle All | Instant Download",
+    "listing_id": 4519288171,
+    "title": "Orange Flower Print, Botanical Printable Wall Art, Instant Download",
+    "listing_type": "download",
+    "issues": [],
+    "issue_count": 0
+  },
+  {
+    "listing_id": 4519185376,
+    "title": "Mediterranean Print Set of 3, Printable Wall Art, Instant Download",
+    "listing_type": "download",
+    "issues": [
+      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
+    ],
+    "issue_count": 1
+  },
+  {
+    "listing_id": 4519185236,
+    "title": "Mediterranean Terrace Print, Printable Wall Art, Instant Download",
+    "listing_type": "download",
+    "issues": [
+      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
+    ],
+    "issue_count": 1
+  },
+  {
+    "listing_id": 4519185199,
+    "title": "Amalfi Coast Village Print, Printable Wall Art, Instant Download",
+    "listing_type": "download",
+    "issues": [
+      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
+    ],
+    "issue_count": 1
+  },
+  {
+    "listing_id": 4519185019,
+    "title": "Mediterranean Lemon Window, Printable Wall Art, Instant Download",
+    "listing_type": "download",
+    "issues": [
+      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
+    ],
+    "issue_count": 1
+  },
+  {
+    "listing_id": 4509214477,
+    "title": "Funny Dog Printable Wall Art, Instant Download, Golden Retriever",
+    "listing_type": "download",
+    "issues": [],
+    "issue_count": 0
+  },
+  {
+    "listing_id": 4515674250,
+    "title": "Boho Botanical Floral Wall Art Print | Multiple Sizes",
     "listing_type": "download",
     "issues": [
       "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
+      "TITLE missing product-type keyword (digital/printable/svg/pdf)",
+      "TAG DUPLICATES TITLE: 'floral wall art' \u2014 wastes ranking slot",
+      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
     ],
     "issue_count": 4
   },
   {
-    "listing_id": 4515439799,
-    "title": "Commercial License | Kawaii Sticker Pack Coral Peac | Instant Download",
+    "listing_id": 4515676915,
+    "title": "Watercolor Floral Art Print | Boho Wall Decor | Multiple Sizes",
     "listing_type": "download",
     "issues": [
       "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
+      "TITLE missing product-type keyword (digital/printable/svg/pdf)",
+      "TAG DUPLICATES TITLE: 'watercolor floral' \u2014 wastes ranking slot",
+      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
     ],
     "issue_count": 4
-  },
-  {
-    "listing_id": 4515437464,
-    "title": "Commercial License | Kawaii Sticker Pack Midnight B | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4515437456,
-    "title": "Commercial License | Kawaii Sticker Pack Cotton Can | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4515437452,
-    "title": "Commercial License | Kawaii Sticker Pack Lavender D | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4515437442,
-    "title": "Commercial License | Western SVG Bundle 12 Designs | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4515439763,
-    "title": "Commercial License | Good Vibes SVG Bundle | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4515437432,
-    "title": "Commercial License | Mom Life SVG Bundle 20 Designs | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4515439755,
-    "title": "Commercial License | Graduation 2026 SVG Bundle | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4515439751,
-    "title": "Commercial License | Christian Faith SVG Bundle | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4515439743,
-    "title": "Commercial License | Floral Botanical SVG Bundle | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 2/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4514777212,
-    "title": "Mom Life Sublimation Tumbler Wrap Bundle PNG 20oz Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'sublimation tumbler' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'mom life sublimation' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'tumbler wrap bundle' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4514536935,
-    "title": "Good Vibes SVG Bundle | 20 Designs Cricut | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'svg bundle' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4514392281,
-    "title": "Mom Life SVG Bundle | 20 Designs Cricut Silhouette | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TAG DUPLICATES TITLE: 'mom life svg' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'svg bundle' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
-    ],
-    "issue_count": 5
-  },
-  {
-    "listing_id": 4514136783,
-    "title": "Graduation SVG Bundle 2026, Senior Cut Files Cricut, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'graduation svg' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'svg bundle' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4514134583,
-    "title": "Christian SVG Bundle, Faith Cut Files Cricut, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'christian svg' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'svg bundle' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4514130045,
-    "title": "Floral SVG Bundle Cricut, Botanical Cut Files, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'svg bundle' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4513713142,
-    "title": "Woodland Animal Gallery Wall Set of 5, Printable, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'gallery wall set' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4513713106,
-    "title": "Botanical Gallery Wall Set of 5, Printable Prints, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'botanical gallery' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'gallery wall set' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 5
-  },
-  {
-    "listing_id": 4513713044,
-    "title": "Coastal Gallery Wall Set of 5, Printable Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'gallery wall set' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4513713984,
-    "title": "Hummingbird Nursery Print, Printable Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4513713962,
-    "title": "Watercolor Fox Nursery Print, Printable Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4513713936,
-    "title": "Owl Nursery Wall Art, Printable Instant Download, Woodland",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'nursery wall art' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4513713922,
-    "title": "Bear Nursery Wall Art, Printable Instant Download, Woodland",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'nursery wall art' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4513714191,
-    "title": "Fox Nursery Wall Art, Printable Instant Download, Woodland",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'nursery wall art' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4513714013,
-    "title": "Paris Skyline Print, Black White Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4513713945,
-    "title": "Vintage Botanical Print, Black White Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4513713712,
-    "title": "Moon Phases Print, Black White Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4513713514,
-    "title": "Japandi Tree Print, Black White Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4513713805,
-    "title": "Minimalist Botanical Print, Black White Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 1/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4512188970,
-    "title": "Kawaii Planner Bundle 2026, All 4 Planners | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TAG DUPLICATES TITLE: 'planner bundle' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'kawaii planner' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 6
   },
   {
     "listing_id": 4512784817,
@@ -372,640 +79,43 @@
     "listing_type": "download",
     "issues": [
       "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
+      "PHOTOS: only 6/10 images uploaded (use all 10 slots)",
+      "IMAGE CONTENT: MISMATCH: The image shows a single framed artwork of a turtle instead of a set of four coastal art prints."
     ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512784922,
-    "title": "Four Seasons Set of 4, Printable Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512783077,
-    "title": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512780869,
-    "title": "Fox Watercolor Printable Wall Art, Instant Download, Woodland",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512780614,
-    "title": "Pelican Watercolor Print, Coastal Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
+    "issue_count": 3
   },
   {
     "listing_id": 4512776173,
     "title": "Coral Reef Printable Wall Art, Instant Download, Ocean",
     "listing_type": "download",
     "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
+      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
     ],
-    "issue_count": 2
+    "issue_count": 1
   },
   {
     "listing_id": 4512774863,
     "title": "Lighthouse Printable Wall Art, Instant Download, Coastal",
     "listing_type": "download",
     "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
+      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
     ],
-    "issue_count": 2
+    "issue_count": 1
   },
   {
     "listing_id": 4512772539,
     "title": "Sea Turtle Printable Wall Art, Instant Download, Ocean",
     "listing_type": "download",
     "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512772452,
-    "title": "Winter Birch Printable Wall Art, Instant Download, Snow",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 9/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512770031,
-    "title": "Autumn Maple Printable Wall Art, Instant Download, Fall",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512768771,
-    "title": "Sunflower Watercolor Print, Botanical Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512768858,
-    "title": "Cherry Blossom Watercolor Print, Spring Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512763302,
-    "title": "Rooster Kitchen Printable Wall Art, Instant Download, Farm",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'printable wall art' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4512760671,
-    "title": "Snowy Owl Printable Wall Art, Instant Download, Wildlife",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512760918,
-    "title": "Lavender Fields Printable Wall Art, Instant Download, Provence",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512758123,
-    "title": "Ocean Wave Printable Wall Art, Instant Download, Coastal",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512758458,
-    "title": "Cat Reading Printable Wall Art, Instant Download, Bookish",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512756952,
-    "title": "Wildflower Meadow Printable Wall Art, Instant Download, Botanical",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512755568,
-    "title": "Mountain Lake Printable Wall Art, Instant Download, Landscape",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512753302,
-    "title": "Baby Bear Nursery Print, Woodland Animal Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'bear nursery print' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4512750191,
-    "title": "Hummingbird Watercolor Print | Botanical Bird Art | Floral Wall Decor",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TITLE missing product-type keyword (digital/printable/svg/pdf)",
-      "TAG DUPLICATES TITLE: 'botanical bird art' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'floral wall decor' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 6
-  },
-  {
-    "listing_id": 4512747600,
-    "title": "Autumn Fox Printable Wall Art, Instant Download, Woodland",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512301880,
-    "title": "Boho Botanical Set of 4, Printable Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'boho botanical set' \u2014 wastes ranking slot",
       "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)"
     ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4512255508,
-    "title": "FREE Kawaii Sticker Sheet PNG, GoodNotes, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 6/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4512254035,
-    "title": "Kawaii Sticker Bundle All 4 Themes, GoodNotes, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'sticker bundle' \u2014 wastes ranking slot",
-      "DESCRIPTION missing 'instant download' phrase (required by Gate 6)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 6/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 5
-  },
-  {
-    "listing_id": 4512254027,
-    "title": "Kawaii Sticker Pack PNG, GoodNotes, Coral Peach, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4512255536,
-    "title": "Kawaii Sticker Pack PNG, GoodNotes, Midnight Blue, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4512254015,
-    "title": "Kawaii Sticker Pack PNG, GoodNotes, Cotton Candy, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4512255514,
-    "title": "Kawaii Sticker Pack PNG, GoodNotes, Lavender Dreams, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509597559,
-    "title": "Italian Kitchen Printable Wall Art, Instant Download, Food",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509596017,
-    "title": "Abstract Woman Portrait Print, Feminist Line Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509600086,
-    "title": "Tropical Leaves Print | Bold Monstera Palm Wall Art",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TITLE missing product-type keyword (digital/printable/svg/pdf)",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4509593697,
-    "title": "Grand Canyon Printable Wall Art, Instant Download, Vintage",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509593623,
-    "title": "Paris Skyline Printable Wall Art, Instant Download, Minimalist",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'paris skyline print' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 5/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509593487,
-    "title": "Vintage Botanical Printable Wall Art, Instant Download, Herbarium",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'botanical' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 5/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509598784,
-    "title": "Abstract Brushstroke Printable Art, Instant Download, Modern",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'brushstroke print' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509598660,
-    "title": "Moon Phases Print, Celestial Wall Art, Lunar Cycle, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'moon phases print' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'celestial wall art' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 4/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 4
-  },
-  {
-    "listing_id": 4509259354,
-    "title": "Minimalist Botanical Line Art Print, Boho Decor, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'botanical line art' \u2014 wastes ranking slot",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
+    "issue_count": 1
   },
   {
     "listing_id": 4509258700,
     "title": "Watercolor Botanical Print, Soft Pastel Flower Art, Instant Download",
     "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509258172,
-    "title": "Checkerboard Floral Printable Wall Art, Instant Download, Bold",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'checkerboard floral' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509215145,
-    "title": "Day of the Dead Skull Print | Colorful Maximalist Wall Art",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TITLE missing product-type keyword (digital/printable/svg/pdf)",
-      "TAG DUPLICATES TITLE: 'colorful maximalist' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 6/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 5
-  },
-  {
-    "listing_id": 4509219904,
-    "title": "Muscle Car Printable Wall Art, Instant Download, Chevelle",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509214803,
-    "title": "Astronaut Space Printable Wall Art, Instant Download, Galaxy",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509219594,
-    "title": "Full Moon Ocean Printable Wall Art, Instant Download, Moody",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509214477,
-    "title": "Funny Dog Printable Wall Art, Instant Download, Golden Retriever",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509214237,
-    "title": "Poppy Field Printable Wall Art, Instant Download, Impressionist",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509214051,
-    "title": "Mountain Meadow Printable Wall Art, Instant Download, Landscape",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509218860,
-    "title": "Japandi Tree Printable Wall Art, Instant Download, Zen",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509213667,
-    "title": "White Roses Printable Wall Art, Instant Download, Romantic",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'roses printable' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509213533,
-    "title": "She Believed She Could, Empowerment Quote Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509213345,
-    "title": "Good Things Take Time Printable Art, Instant Download, Quote",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509218152,
-    "title": "Mediterranean Window Printable Art, Instant Download, Amalfi",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509193237,
-    "title": "Pampas Grass Printable Wall Art, Boho, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'pampas grass print' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509193231,
-    "title": "Sage Lavender Botanical Print, Dusty Rose Wall Art, Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509198434,
-    "title": "Boho Wildflower Printable Wall Art, Instant Download, Sage",
-    "listing_type": "download",
-    "issues": [
-      "TAG DUPLICATES TITLE: 'wildflower print' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 8/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 3
-  },
-  {
-    "listing_id": 4509198446,
-    "title": "Eucalyptus Branch Printable Wall Art, Instant Download, Botanical",
-    "listing_type": "download",
-    "issues": [
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "PHOTOS: only 7/10 images uploaded (use all 10 slots)"
-    ],
-    "issue_count": 2
-  },
-  {
-    "listing_id": 4509184968,
-    "title": "Digital Fitness Planner 2026 Undated | GoodNotes | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TAG DUPLICATES TITLE: 'fitness planner' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "DESCRIPTION: page count 91 not found in description"
-    ],
-    "issue_count": 5
-  },
-  {
-    "listing_id": 4509184962,
-    "title": "Digital Budget Planner 2026 Undated | GoodNotes | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TAG DUPLICATES TITLE: 'budget planner' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "DESCRIPTION: page count 102 not found in description"
-    ],
-    "issue_count": 5
-  },
-  {
-    "listing_id": 4509184958,
-    "title": "Kawaii Student Planner 2026 | GoodNotes iPad | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TAG DUPLICATES TITLE: 'student planner' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "DESCRIPTION: page count 90 not found in description"
-    ],
-    "issue_count": 5
-  },
-  {
-    "listing_id": 4509179201,
-    "title": "Digital Planner 2026 Undated | GoodNotes iPad | Instant Download",
-    "listing_type": "download",
-    "issues": [
-      "TITLE uses pipe separators (use commas \u2014 2026 algorithm rule)",
-      "TAG DUPLICATES TITLE: 'digital planner' \u2014 wastes ranking slot",
-      "TAG DUPLICATES TITLE: 'instant download' \u2014 wastes ranking slot",
-      "DESCRIPTION missing AI disclosure (Etsy Creativity Standards June 2025)",
-      "DESCRIPTION: page count 104 not found in description"
-    ],
-    "issue_count": 5
+    "issues": [],
+    "issue_count": 0
   }
 ]

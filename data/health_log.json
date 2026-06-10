@@ -366,5 +366,63 @@
         "detail": "All checked titles within 70-char limit"
       }
     ]
+  },
+  {
+    "timestamp": "2026-06-10T06:41:00.462602Z",
+    "overall": "WARN",
+    "results": [
+      {
+        "name": "Active listings",
+        "status": "WARN",
+        "detail": "26 active, 3 drafts \u2014 drafts: Complete Wall Art Bundle 50 Prints, Prin; Pick Any 3 Prints, Printable Wall Art Bu; Test Digital Art Print | Test Listing Pl",
+        "active_count": 26,
+        "draft_count": 3
+      },
+      {
+        "name": ".env completeness",
+        "status": "OK",
+        "detail": "All required API keys present"
+      },
+      {
+        "name": "Etsy OAuth token",
+        "status": "OK",
+        "detail": "Token valid \u2014 authenticated API call succeeded"
+      },
+      {
+        "name": "Refresh token age",
+        "status": "OK",
+        "detail": "Refresh token issued 1 days ago, 89 days remaining"
+      },
+      {
+        "name": "OpenAI API",
+        "status": "OK",
+        "detail": "API reachable and billing active"
+      },
+      {
+        "name": "SVG bundle ZIPs",
+        "status": "OK",
+        "detail": "5 ZIP(s) all within 20MB limit"
+      },
+      {
+        "name": "Sublimation ZIPs",
+        "status": "OK",
+        "detail": "2 ZIP(s) all within 20MB limit"
+      },
+      {
+        "name": "Listing title lengths (\u226470 chars)",
+        "status": "OK",
+        "detail": "All checked titles within 70-char limit"
+      },
+      {
+        "name": "Decision log",
+        "status": "OK",
+        "detail": "2 total entries, 2 in last 14 days"
+      },
+      {
+        "name": "Weekly report freshness",
+        "status": "OK",
+        "detail": "Latest report: 2026-06-02_weekly_report.md (8 days ago)"
+      }
+    ]
   }
 ]
