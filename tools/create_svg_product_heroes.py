@@ -132,6 +132,15 @@ BUNDLES = [
         "design_idx":   [0, 1, 3],
         "products":     ["tshirt", "hoodie", "tote"],
     },
+    {
+        "slug":         "western",
+        "name":         "Western SVG Bundle",
+        "svg_dir":      "data/svg_bundles/western/SVG",
+        "listing_id":   None,
+        "commercial_id": 4515437442,
+        "design_idx":   [0, 3, 7],
+        "products":     ["tshirt", "tote", "hoodie"],
+    },
 ]
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -437,6 +446,26 @@ def build_grid(bundle: dict) -> Path | None:
 
 # ── Phase 4: Upload to Etsy ───────────────────────────────────────────────────
 
+def clear_all_images(client: EtsyAPIClient, listing_id: int, label: str) -> None:
+    """Delete all existing images from a listing before uploading fresh ones."""
+    try:
+        images = client.get_listing_images(listing_id)
+        if not images:
+            print(f"      No existing images on {label} ({listing_id})")
+            return
+        print(f"      Clearing {len(images)} image(s) from {label} ({listing_id})")
+        for img in images:
+            img_id = img.get("listing_image_id")
+            if img_id:
+                try:
+                    client.delete_listing_image(listing_id, img_id)
+                    time.sleep(0.4)
+                except Exception as e:
+                    print(f"      [WARN] delete {img_id}: {e}")
+    except Exception as e:
+        print(f"      [WARN] clear_all_images failed for {label}: {e}")
+
+
 def upload_image(client: EtsyAPIClient, listing_id: int, image_path: Path, rank: int, label: str) -> bool:
     """Upload image to listing at given rank. Returns True on success."""
     for attempt in range(2):
@@ -476,7 +505,7 @@ def main():
     except Exception as e:
         print(f"[WARN] Token refresh: {e}")
 
-    results = {}  # slug → {"hero": bool, "grid": bool, "uploads": int}
+    results = {}  # slug → {"hero": bool, "grid": bool, "info": bool, "uploads": int}
 
     for bundle in BUNDLES:
         slug = bundle["slug"]
@@ -484,45 +513,82 @@ def main():
         print(f"\n{'=' * 60}")
         print(f"Bundle: {name}")
 
-        results[slug] = {"hero_ok": False, "grid_ok": False, "uploads": 0, "upload_total": 4}
+        results[slug] = {"hero_ok": False, "grid_ok": False, "info_ok": False,
+                         "uploads": 0, "upload_total": 0}
 
-        # Phase 2: Hero
-        hero_path = build_hero(bundle)
-        if hero_path is None:
-            print(f"  [SKIP] Hero build failed for {name}")
-        else:
+        # Phase 2: Hero — use cached file if already generated
+        hero_path = Path(f"/tmp/svg_hero_{slug}.jpg")
+        if hero_path.exists():
+            print(f"  [CACHE] Hero already at {hero_path} ({hero_path.stat().st_size // 1024} KB)")
             results[slug]["hero_ok"] = True
-
-        # Phase 3: Grid
-        grid_path = build_grid(bundle)
-        if grid_path is None:
-            print(f"  [SKIP] Grid build failed for {name}")
         else:
+            hero_path = build_hero(bundle)
+            if hero_path is None:
+                print(f"  [SKIP] Hero build failed for {name}")
+            else:
+                results[slug]["hero_ok"] = True
+
+        # Phase 3: Grid — use cached file if already generated
+        grid_path = Path(f"/tmp/svg_grid_{slug}.jpg")
+        if grid_path.exists():
+            print(f"  [CACHE] Grid already at {grid_path} ({grid_path.stat().st_size // 1024} KB)")
             results[slug]["grid_ok"] = True
+        else:
+            grid_path = build_grid(bundle)
+            if grid_path is None:
+                print(f"  [SKIP] Grid build failed for {name}")
+                grid_path = None
+            else:
+                results[slug]["grid_ok"] = True
+
+        # Phase 3b: Info card — re-use from fix_svg_listing_photos.py if available
+        info_path = Path(f"/tmp/svg_info_{slug}.jpg")
+        if info_path.exists():
+            print(f"  [CACHE] Info card at {info_path} ({info_path.stat().st_size // 1024} KB)")
+            results[slug]["info_ok"] = True
+        else:
+            info_path = None
+
+        # Count expected uploads (hero + grid + optional info, per listing)
+        img_count = sum([
+            hero_path is not None and results[slug]["hero_ok"],
+            grid_path is not None and results[slug]["grid_ok"],
+            info_path is not None,
+        ])
 
         # Phase 4: Upload to both listing IDs
-        print(f"\n  Uploading images …")
+        print(f"\n  Uploading {img_count} image(s) per listing …")
         listing_ids = [
-            (bundle["listing_id"],   "regular"),
+            (bundle["listing_id"],    "regular"),
             (bundle["commercial_id"], "commercial"),
         ]
 
         for lid, label in listing_ids:
             if lid is None:
-                results[slug]["upload_total"] -= 2
                 continue
+            results[slug]["upload_total"] += img_count
 
-            if hero_path is not None:
+            # Clear existing images first
+            clear_all_images(client, lid, label)
+            time.sleep(1)
+
+            if hero_path is not None and results[slug]["hero_ok"]:
                 ok = upload_image(client, lid, hero_path, rank=1, label=label)
                 if ok:
                     results[slug]["uploads"] += 1
-                time.sleep(1)
+                time.sleep(1.5)
 
-            if grid_path is not None:
+            if grid_path is not None and results[slug]["grid_ok"]:
                 ok = upload_image(client, lid, grid_path, rank=2, label=label)
                 if ok:
                     results[slug]["uploads"] += 1
-                time.sleep(1)
+                time.sleep(1.5)
+
+            if info_path is not None:
+                ok = upload_image(client, lid, info_path, rank=3, label=label)
+                if ok:
+                    results[slug]["uploads"] += 1
+                time.sleep(1.5)
 
     # Summary
     print(f"\n{'=' * 60}")
@@ -531,13 +597,14 @@ def main():
     for slug, r in results.items():
         hero_s = "OK" if r["hero_ok"] else "FAIL"
         grid_s = "OK" if r["grid_ok"] else "FAIL"
+        info_s = "OK" if r["info_ok"] else "no-cache"
         up = r["uploads"]
         total = r["upload_total"]
-        print(f"  {slug:20s}  hero={hero_s}  grid={grid_s}  uploads={up}/{total}")
+        print(f"  {slug:20s}  hero={hero_s}  grid={grid_s}  info={info_s}  uploads={up}/{total}")
 
     print("\nGenerated files:")
     for slug in [b["slug"] for b in BUNDLES]:
-        for prefix in ("svg_hero", "svg_grid"):
+        for prefix in ("svg_hero", "svg_grid", "svg_info"):
             p = Path(f"/tmp/{prefix}_{slug}.jpg")
             if p.exists():
                 print(f"  {p}  ({p.stat().st_size // 1024} KB)")
