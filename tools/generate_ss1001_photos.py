@@ -42,12 +42,22 @@ OUT_DIR = DESIGN_DIR / "listing_photos" / "final_v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 DESIGNS = {
+    # Vol 1 — original 5
     "america_bold": DESIGN_DIR / "01_america250_america_bold" / "preview.jpg",
     "star_badge":   DESIGN_DIR / "02_america250_star_badge"   / "preview.jpg",
     "freedom_sign": DESIGN_DIR / "03_america250_freedom_sign" / "preview.jpg",
     "happy_4th":    DESIGN_DIR / "04_america250_happy_4th"    / "preview.jpg",
     "land_free":    DESIGN_DIR / "05_america250_land_free"    / "preview.jpg",
+    # Vol 2 — additional 5
+    "flag_plaque":  DESIGN_DIR / "01_america250_flag_plaque"  / "preview.jpg",
+    "medallion":    DESIGN_DIR / "02_america250_medallion"    / "preview.jpg",
+    "freedom":      DESIGN_DIR / "03_america250_freedom"      / "preview.jpg",
+    "july_4th":     DESIGN_DIR / "04_america250_4th_of_july"  / "preview.jpg",
+    "shield":       DESIGN_DIR / "06_america250_shield"       / "preview.jpg",
 }
+
+DESIGNS_VOL1 = {k: v for k, v in list(DESIGNS.items())[:5]}
+DESIGNS_VOL2 = {k: v for k, v in list(DESIGNS.items())[5:]}
 
 FINAL_SIZE = 2400
 
@@ -183,55 +193,62 @@ def photo_05():
 # ── Photo 6 — Collection overview (PIL flat lay) ──────────────────────────────
 
 def photo_06():
-    """Pixel-perfect PIL flat lay of all 5 design previews on a neutral background."""
+    """Pixel-perfect PIL flat lay of all 10 design previews — 2 rows of 5."""
     out_path = OUT_DIR / "photo_06_collection_overview.jpg"
-    print(f"  Generating {out_path.name} (PIL flat lay)...")
+    print(f"  Generating {out_path.name} (PIL flat lay — 10 designs)...")
 
     BG_COLOR = (245, 240, 230)   # warm cream
+    NAVY = (27, 58, 104)
+    RED  = (178, 34, 52)
     CANVAS = FINAL_SIZE
-    BORDER = 60
-    GAP = 30
+    BORDER = 50
+    GAP = 18
 
     canvas = Image.new("RGB", (CANVAS, CANVAS), BG_COLOR)
     draw = ImageDraw.Draw(canvas)
 
-    designs_list = list(DESIGNS.values())
-
-    # Top row: 3 designs
-    top_w = (CANVAS - 2 * BORDER - 2 * GAP) // 3
-    top_h = int(top_w * 0.8)
-    y_top = BORDER
-
-    for i, p in enumerate(designs_list[:3]):
-        img = Image.open(p).convert("RGB")
-        img = img.resize((top_w, top_h), Image.LANCZOS)
-        x = BORDER + i * (top_w + GAP)
-        canvas.paste(img, (x, y_top))
-
-    # Bottom row: 2 designs centered
-    bot_w = int((CANVAS - 2 * BORDER - GAP) / 2)
-    bot_h = int(bot_w * 0.8)
-    y_bot = y_top + top_h + GAP * 2
-    x_start = (CANVAS - 2 * bot_w - GAP) // 2
-
-    for i, p in enumerate(designs_list[3:]):
-        img = Image.open(p).convert("RGB")
-        img = img.resize((bot_w, bot_h), Image.LANCZOS)
-        x = x_start + i * (bot_w + GAP)
-        canvas.paste(img, (x, y_bot))
-
-    # Small text label
+    # Header band
+    draw.rectangle([0, 0, CANVAS, 130], fill=NAVY)
     try:
-        font = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 48)
-        font_sm = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 32)
+        font_hdr = ImageFont.truetype("/usr/local/share/fonts/google/Anton-Regular.ttf", 70)
+        font_sub = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 36)
+        font_lbl = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 28)
     except Exception:
-        font = ImageFont.load_default()
-        font_sm = font
+        font_hdr = font_sub = font_lbl = ImageFont.load_default()
 
-    label = "5 DESIGNS INCLUDED"
-    sub = "America 250th Anniversary · 1776–2026"
-    draw.text((CANVAS // 2, CANVAS - 75), label, fill=(30, 30, 80), font=font, anchor="mm")
-    draw.text((CANVAS // 2, CANVAS - 35), sub, fill=(120, 80, 60), font=font_sm, anchor="mm")
+    draw.text((CANVAS // 2, 50), "10 DESIGNS INCLUDED",
+              fill="white", font=font_hdr, anchor="mm")
+    draw.text((CANVAS // 2, 105), "America 250th Anniversary · 1776–2026",
+              fill=RED, font=font_sub, anchor="mm")
+
+    designs_list = list(DESIGNS.values())
+    names_vol1 = ["America Bold", "Star Badge", "Freedom Sign", "Happy 4th", "Land of the Free"]
+    names_vol2 = ["Flag Plaque", "Medallion", "Freedom", "4th of July", "Shield"]
+
+    # 2 rows of 5
+    col_w = (CANVAS - 2 * BORDER - 4 * GAP) // 5
+    col_h = int(col_w * 0.75)
+    label_h = 40
+
+    for row in range(2):
+        y = 150 + row * (col_h + label_h + GAP + 20)
+        names = names_vol1 if row == 0 else names_vol2
+        vol_label = "VOL 1" if row == 0 else "VOL 2"
+        draw.text((BORDER, y - 5), vol_label, fill=RED, font=font_lbl)
+        for col in range(5):
+            idx = row * 5 + col
+            x = BORDER + col * (col_w + GAP)
+            img = Image.open(designs_list[idx]).convert("RGB")
+            img = img.resize((col_w, col_h), Image.LANCZOS)
+            canvas.paste(img, (x, y))
+            draw.text((x + col_w // 2, y + col_h + 22), names[col],
+                      fill=NAVY, font=font_lbl, anchor="mm")
+
+    # Footer
+    draw.rectangle([0, CANVAS - 80, CANVAS, CANVAS], fill=RED)
+    draw.text((CANVAS // 2, CANVAS - 40),
+              "Delivered in 2 ZIP files  ·  .3mf + SVG layers  ·  Instant Download",
+              fill="white", font=font_lbl, anchor="mm")
 
     canvas.save(out_path, "JPEG", quality=92)
     print(f"    → {out_path.stat().st_size // 1024} KB")
@@ -358,10 +375,10 @@ def photo_09():
               font=font_title, anchor="mm")
 
     items = [
-        ("✅", "5 America 250 Sign Designs", "America Bold · Star Badge · Freedom Sign\nHappy 4th · Land of the Free"),
-        ("✅", "5 × .3MF FILES", "Pre-assembled — open in Bambu Studio,\nassign AMS colors, slice & print"),
-        ("✅", "15 × LAYER SVG FILES", "3 color layers per design\n(base + red + blue) for custom sizing"),
-        ("✅", "README.TXT", "Full printing guide for both formats\n(.3mf and layer SVG workflows)"),
+        ("✅", "10 America 250 Sign Designs", "Vol 1: America Bold · Star Badge · Freedom Sign · Happy 4th · Land of the Free\nVol 2: Flag Plaque · Medallion · Freedom · 4th of July · Shield"),
+        ("✅", "10 × .3MF FILES", "Pre-assembled — open in Bambu Studio,\nassign AMS colors, slice & print"),
+        ("✅", "30 × LAYER SVG FILES", "3 color layers per design\n(base + red + blue) for custom sizing"),
+        ("✅", "2 ZIP FILES", "Vol 1 (designs 1–5) + Vol 2 (designs 6–10)\nBoth instantly downloaded"),
         ("❗", "DIGITAL DOWNLOAD ONLY", "No physical sign included.\nYou print it yourself on your 3D printer."),
     ]
 
@@ -415,47 +432,41 @@ def photo_10():
 
     # Header
     draw.rectangle([0, 0, FINAL_SIZE, 190], fill=NAVY)
-    draw.text((FINAL_SIZE // 2, 70), "5 DESIGNS IN THIS PACK",
+    draw.text((FINAL_SIZE // 2, 70), "10 DESIGNS IN THIS PACK",
               fill="white", font=font_title, anchor="mm")
     draw.text((FINAL_SIZE // 2, 150), "America 250th Anniversary  ·  1776–2026",
               fill=RED, font=font_sub, anchor="mm")
 
-    names = ["America Bold", "Star Badge", "Freedom Sign", "Happy 4th", "Land of the Free"]
+    all_names = [
+        "America Bold", "Star Badge", "Freedom Sign", "Happy 4th", "Land of the Free",
+        "Flag Plaque", "Medallion", "Freedom", "4th of July", "Shield",
+    ]
     designs_list = list(DESIGNS.values())
 
-    # Top row: 3 designs
-    BORDER = 60
-    GAP = 20
-    top_w = (FINAL_SIZE - 2 * BORDER - 2 * GAP) // 3
-    top_h = int(top_w * 0.75)
-    y_top = 210
+    # 2 rows of 5
+    BORDER = 50
+    GAP = 18
+    col_w = (FINAL_SIZE - 2 * BORDER - 4 * GAP) // 5
+    col_h = int(col_w * 0.75)
+    label_h = 38
 
-    for i in range(3):
-        img = Image.open(designs_list[i]).convert("RGB")
-        img = img.resize((top_w, top_h), Image.LANCZOS)
-        x = BORDER + i * (top_w + GAP)
-        canvas.paste(img, (x, y_top))
-        draw.text((x + top_w // 2, y_top + top_h + 28), names[i],
-                  fill=NAVY, font=font_name, anchor="mm")
-
-    # Bottom row: 2 centered
-    bot_w = int((FINAL_SIZE - 2 * BORDER - GAP) / 2)
-    bot_h = int(bot_w * 0.75)
-    y_bot = y_top + top_h + 75
-    x_start = (FINAL_SIZE - 2 * bot_w - GAP) // 2
-
-    for i in range(2):
-        img = Image.open(designs_list[3 + i]).convert("RGB")
-        img = img.resize((bot_w, bot_h), Image.LANCZOS)
-        x = x_start + i * (bot_w + GAP)
-        canvas.paste(img, (x, y_bot))
-        draw.text((x + bot_w // 2, y_bot + bot_h + 28), names[3 + i],
-                  fill=NAVY, font=font_name, anchor="mm")
+    for row in range(2):
+        y = 210 + row * (col_h + label_h + GAP)
+        row_label = "VOL 1 (Designs 1–5)" if row == 0 else "VOL 2 (Designs 6–10)"
+        draw.text((BORDER, y - 4), row_label, fill=RED, font=font_name)
+        for col in range(5):
+            idx = row * 5 + col
+            x = BORDER + col * (col_w + GAP)
+            img = Image.open(designs_list[idx]).convert("RGB")
+            img = img.resize((col_w, col_h), Image.LANCZOS)
+            canvas.paste(img, (x, y))
+            draw.text((x + col_w // 2, y + col_h + 22), all_names[idx],
+                      fill=NAVY, font=font_name, anchor="mm")
 
     # Footer
     draw.rectangle([0, FINAL_SIZE - 95, FINAL_SIZE, FINAL_SIZE], fill=RED)
     draw.text((FINAL_SIZE // 2, FINAL_SIZE - 48),
-              "All five included  ·  .3mf + SVG layers  ·  Instant Download",
+              "All ten included  ·  .3mf + SVG layers  ·  2 ZIP files  ·  Instant Download",
               fill="white", font=font_name, anchor="mm")
 
     canvas.save(out_path, "JPEG", quality=92)

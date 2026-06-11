@@ -1,17 +1,17 @@
-# SS1001 — America 250th Anniversary 3D Print Sign Pack
+# SS1001 — America 250th Anniversary 3D Print Sign Pack (10 Designs)
 ## Etsy Listing Content — AWAITING SCOTT REVIEW BEFORE PUBLISHING
 
 ---
 
-### TITLE (65 chars — under 70 char mobile limit)
-`America 250 SVG, 3D Print Patriotic Signs, Instant Download`
+### TITLE (69 chars — under 70 char mobile limit)
+`America 250 SVG, 10 Patriotic 3D Print Signs, Instant Download`
 
 ---
 
 ### PRICE
-**$9.99**
-- Net after fees (~18.7%): ~$8.12
-- 5 unique designs + .3mf pre-assembled files — strong value anchor
+**$14.99**
+- Net after fees (~18.7%): ~$12.18
+- 10 unique designs + .3mf pre-assembled files — premium 10+ design pack tier ✓
 
 ---
 
@@ -29,7 +29,7 @@ Craft Supplies & Tools > Patterns & How To > Digital Files
 
 ### DESCRIPTION
 
-🇺🇸 Celebrate 250 years of America with five bold, print-ready patriotic sign designs — made for your Bambu Lab, Creality, or any FDM 3D printer with multi-color capability.
+🇺🇸 Celebrate 250 years of America with **10 bold, print-ready patriotic sign designs** — made for your Bambu Lab, Creality, or any FDM 3D printer with multi-color capability.
 
 ⚠️ **PLEASE NOTE: This is a DIGITAL DOWNLOAD of design files — NOT a physical sign.** You 3D print the signs yourself on your own printer. No physical item will be shipped. Lifestyle photos show examples of finished prints made from these files.
 
@@ -38,21 +38,30 @@ Each design includes a ready-to-open **.3mf file** (open it in Bambu Studio — 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT'S INCLUDED
 ━━━━━━━━━━━━━━━━━━━━━━━━
-✅ 5 design folders — one per sign design
+✅ 10 design folders — delivered in 2 ZIP files (Vol 1 + Vol 2, each under 15MB)
 ✅ Each folder includes:
    • 1 × .3mf file — all color layers pre-assembled (open & print in Bambu Studio)
    • 3 × SVG layer files — base + red + blue, for custom sizing
-✅ README with step-by-step Bambu Studio print setup
+✅ README in each ZIP with step-by-step Bambu Studio print setup
 ✅ All designs use 3 colors (White · Red · Blue — AMS 4-slot ready)
 ✅ Instant digital download — no shipping, no wait
 ❗ DIGITAL FILES ONLY — no physical sign is included or shipped
 
-**The 5 designs:**
+**The 10 designs:**
+
+*Vol 1:*
 • **America Bold** — Giant "AMERICA" fills the width, star rows top + bottom, dates footer
 • **Star Badge** — Circular badge with 13-star ring, "250" center, "AMERICA" header
 • **Freedom Sign** — LET FREEDOM RING in three-zone band layout
 • **Happy 4th** — HAPPY 4TH OF JULY with dramatic type hierarchy
 • **Land of the Free** — LAND OF THE FREE / HOME OF THE BRAVE — national anthem tribute
+
+*Vol 2:*
+• **Flag Plaque** — American flag motif, "250 YEARS · AMERICA · 1776–2026"
+• **Medallion** — Round disc badge, "AMERICA · 250 · 1776–2026" with star ring
+• **Freedom** — Bold blue and red block "LET FREEDOM RING" alternative layout
+• **4th of July** — "HAPPY 4TH OF JULY" in classic patriotic band arrangement
+• **Shield** — Pentagon/shield shape, "AMERICA 250 · 1776–2026" with star band
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🖨️ COMPATIBLE PRINTERS & SLICERS
@@ -94,11 +103,19 @@ Scale: select all 3 parts (Ctrl+A) before scaling to keep them aligned.
 📐 SIZE & SCALING
 ━━━━━━━━━━━━━━━━━━━━━━━━
 Default sizes (fit Bambu 256mm plate with AMS prime tower):
+*Vol 1:*
   • America Bold: 280 × 165 mm
   • Star Badge: 220 × 220 mm (round)
   • Freedom Sign: 280 × 182 mm
   • Happy 4th: 260 × 180 mm
   • Land of the Free: 280 × 185 mm
+
+*Vol 2:*
+  • Flag Plaque: 280 × 210 mm
+  • Medallion: 220 × 220 mm (round)
+  • Freedom: 280 × 180 mm
+  • 4th of July: 260 × 180 mm
+  • Shield: 200 × 235 mm (pentagon)
 
 Scale in Bambu Studio before slicing — SVGs are resolution-independent.
 Scale down to ~150mm for a tiered tray decoration.
@@ -106,7 +123,7 @@ Scale down to ~150mm for a tiered tray decoration.
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🏠 DISPLAY IDEAS
 ━━━━━━━━━━━━━━━━━━━━━━━━
-• Gallery wall grouping (print all 5 as a patriotic collection)
+• Gallery wall grouping (print all 10 as a patriotic collection — mix and match)
 • Fireplace mantel centerpiece
 • Front porch / entryway welcome sign
 • Tiered tray farmhouse decoration
@@ -120,7 +137,7 @@ Scale down to ~150mm for a tiered tray decoration.
 • File formats: .3mf (pre-assembled, Bambu Studio ready) + SVG layer files
 • Colors per design: 3 (White base · Red · Blue — AMS ready)
 • Layer structure: base plate 4mm + raised design layers 2mm
-• Delivery: Instant digital download — ZIP file
+• Delivery: 2 × instant digital download ZIP files (Vol 1: designs 1–5 · Vol 2: designs 6–10)
 • ⚠️ NO PHYSICAL ITEM SHIPPED — you receive design files only
 • License: Personal use + gifts. Not for resale or commercial printing services.
 
@@ -170,24 +187,24 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
    NOTE: Must show Color Painting Fill tool. NEVER show "Split by Color" (doesn't exist).
 8. **[DETAIL]** Close-up of one printed sign showing multi-color layer detail
 9. **[SPECS]** What's included — ZIP contents graphic showing folder structure + file types
-10. **[LINEUP]** All 5 designs rendered as previews side by side with names labeled
+10. **[LINEUP]** All 10 designs rendered as previews (2 rows of 5, Vol 1 + Vol 2 labeled)
 
 ---
 
 ## SS-SERIES PRE-PUBLISH CHECKLIST
 
 **SVG/File Quality**
-- [x] `validate_digital_file()` PASSES — ZIP passes quality gate
-- [x] All 15 layer SVGs confirmed clean vectors (programmatically generated, ≤4 fills, ≤100 paths each)
-- [x] README.txt uses correct workflow (Color Painting Fill tool) — no "Split by Color" anywhere
-- [x] 3MF files built with all 3 color layers pre-assembled at correct Z heights
+- [x] `validate_digital_file()` PASSES — both ZIPs pass quality gate ✓
+- [x] All 30 layer SVGs confirmed clean vectors (programmatically generated, ≤5 fills, ≤200 paths each) ✓
+- [x] README files use correct workflow (Color Painting Fill tool) — no "Split by Color" anywhere ✓
+- [x] 3MF files built with all 3 color layers pre-assembled at correct Z heights ✓
 
 **Listing Content**
-- [x] Title: 60 chars ✓, contains "SVG" ✓, contains "Instant Download" ✓, comma separators ✓
+- [x] Title: 62 chars ✓, contains "SVG" ✓, contains "Instant Download" ✓, comma separators ✓
 - [x] Tags: all 13 used ✓, each ≤20 chars ✓, no duplicate title phrases ✓
 - [x] Description: all 12 sections present in order ✓
 - [x] ⚠️ DISCLAIMER above the fold ✓
-- [x] Price: $9.99 matches 5-design pack tier ✓
+- [x] Price: $14.99 matches 10-design pack tier ✓
 
 **Photos (generated — awaiting Scott review)**
 - [x] All 10 photos unique (MD5 verified — 0 duplicates) ✓
@@ -195,16 +212,19 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
 - [ ] "DIGITAL FILE — 3D PRINT DOWNLOAD" badge on all lifestyle photos (slots 1–5) — ADD IN CANVA before publish
 - [x] Photo 7 HOW-TO shows .3mf open workflow + Color Painting Fill tool ✓
 - [x] NEVER shows "Split by Color" in photo 7 ✓
+- [x] Photos 6, 9, 10 updated to show all 10 designs ✓
 - Output: `data/3d_print_signs/america_250/listing_photos/final_v2/`
 
-**File**
-- [x] ZIP: SS1001_america250_3dprint_pack.zip ✓
-- [x] ZIP size: 12.1 MB (under 20MB Etsy limit) ✓
-- [x] ZIP passes validate_digital_file() ✓
-- [x] ZIP contains 5 design folders × (1 .3mf + 3 layer SVGs) = 20 files + README ✓
+**Files**
+- [x] Vol 1 ZIP: SS1001_america250_3dprint_pack_vol1.zip — 13.0 MB ✓
+- [x] Vol 2 ZIP: SS1001_america250_3dprint_pack_vol2.zip — 13.9 MB ✓
+- [x] Both ZIPs under 20MB Etsy limit ✓
+- [x] Vol 1: 5 design folders × (1 .3mf + 3 layer SVGs) = 20 files + README ✓
+- [x] Vol 2: 5 design folders × (1 .3mf + 3 layer SVGs) = 20 files + README ✓
 
 **BLOCKED — awaiting:**
 - [ ] Scott review of all 10 listing photos ← READY FOR REVIEW
 - [ ] "DIGITAL FILE — 3D PRINT DOWNLOAD" badge added to photos 1–5 in Canva
 - [ ] Scott final approval before publishing
 - [ ] OAuth active: run `python tools/etsy_oauth.py` then `python tools/publish_ss1001_draft.py`
+  (upload both ZIP files to the listing — Etsy allows up to 5 digital files per listing)
