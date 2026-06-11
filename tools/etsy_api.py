@@ -81,6 +81,57 @@ class FileContentError(Exception):
     """
 
 
+def _validate_svgs_in_zip(zf, svg_names: list) -> list[str]:
+    """Check each SVG in an open ZipFile for clean vector art quality.
+
+    A traced raster masquerading as an SVG has 500+ unique fill colors and 500+
+    paths — it looks like an SVG but is pixel-data encoded as bezier segments.
+    Such a file cannot be used for 3D printing as a clean multi-color design.
+
+    Thresholds (per SVG):
+      - unique fill colors > 20  → traced raster, not a print-ready vector
+      - path elements > 200      → traced raster
+      - file size > 150 KB       → clean vector SVGs are typically < 50 KB
+    """
+    import re as _re
+    errors = []
+    for name in svg_names:
+        try:
+            content = zf.read(name).decode("utf-8", errors="replace")
+        except Exception as exc:
+            errors.append(f"{name}: could not read ({exc})")
+            continue
+        size_kb = len(content.encode()) / 1024
+
+        # Count path elements (handle namespace prefixes like ns0:path)
+        path_count = len(_re.findall(r"<(?:\w+:)?path[\s>]", content))
+
+        # Count unique hex fill colors
+        fills = _re.findall(r'fill="(#[0-9a-fA-F]{3,6})"', content)
+        unique_fills = len(set(f for f in fills if f.lower() != "none"))
+
+        problems = []
+        if unique_fills > 20:
+            problems.append(
+                f"{unique_fills} unique fill colors — clean 3D-print SVGs have ≤4. "
+                f"This is a traced raster image, not a vector design. "
+                f"Buyers cannot use the Color Painting Fill tool on this file."
+            )
+        if path_count > 200:
+            problems.append(
+                f"{path_count} path elements — clean vector designs have <50. "
+                f"This indicates auto-traced raster art."
+            )
+        if size_kb > 150:
+            problems.append(
+                f"{size_kb:.0f} KB — clean print-ready SVGs are typically <50 KB. "
+                f"Oversized SVG suggests raster-trace origin."
+            )
+        if problems:
+            errors.append(f"{name}: " + "; ".join(problems))
+    return errors
+
+
 def validate_digital_file(
     file_path: str,
     expected_ext: str | None = None,
@@ -153,6 +204,18 @@ def validate_digital_file(
                         f"ZIP has no recognizable product files (png/jpg/pdf/svg): {file_path}"
                     )
                 facts["zip_members"] = len(names)
+                # SVG pack validation — every SVG in the ZIP must be clean vector art,
+                # not a traced raster. Traced rasters have hundreds of unique fills and
+                # hundreds of paths; clean print-ready SVGs have very few of each.
+                svg_names = [n for n in names if os.path.splitext(n)[1].lower() == ".svg"]
+                if svg_names:
+                    svg_errors = _validate_svgs_in_zip(zf, svg_names)
+                    if svg_errors:
+                        raise FileContentError(
+                            f"ZIP contains SVG files that are NOT clean vector art:\n"
+                            + "\n".join(f"  ✗ {e}" for e in svg_errors)
+                        )
+                    facts["svg_count"] = len(svg_names)
         except zipfile.BadZipFile:
             raise FileContentError(f"file is not a valid ZIP archive: {file_path}")
 

@@ -1423,6 +1423,119 @@ Priority order based on sales impact:
 
 ---
 
+## 3D-Print SVG Pack Production Pipeline — Mandatory Standards (SS-Series)
+*Every new SVG pack listing must pass ALL of these gates before going live. No exceptions.*
+
+---
+
+### Universal Listing Rules (apply to ALL listing types — no exceptions)
+
+These rules apply regardless of product category. Violations block publishing.
+
+**No duplicate images.** All 10 photo slots must contain unique images. No photo may appear more than once in a listing. Verified by MD5 hash before upload.
+
+**Lifestyle photos must be generated with OpenAI images.edit using the actual downloadable product file as input.** No AI-generated stand-in products. No placeholder art. The exact files the customer downloads are passed to `images.edit` as the input image. This is the only method that guarantees the listing photo shows what the customer actually receives. See THE STANDARD LIFESTYLE METHOD in the Image Generation section.
+
+**Every listing undergoes a complete pre-publish checklist before going live.** A listing cannot be submitted for Scott's review unless every gate below for its category has been run and passed. "Looks good" is not a gate. The gate is code.
+
+---
+
+### SS-Series SVG Pack — Title
+- Max 70 chars (hard limit — mobile ranking penalty above)
+- Formula: `[Design Theme] SVG, 3D Print [Type], Instant Download`
+- Must contain "SVG" in the first 30 chars
+- Must end with "Instant Download"
+- Comma separators only — no pipes
+- Target: 60–70 chars
+
+### SS-Series SVG Pack — Tags (13 exactly, each ≤20 chars)
+- Zero tags may duplicate any phrase already in the title
+- Must cover: design/theme · print method · slicer · use case · format · audience
+- Always include at least one: `[theme] svg files`, `3d print svg`, `svg cut file`, `digital download`
+
+### SS-Series SVG Pack — Price
+- 5-design packs: **$9.99**
+- 10+ design packs: **$14.99**
+- Must end in `.99`, `.97`, or `.49`
+
+### SS-Series SVG Pack — Category
+- taxonomy_id: 2078 (Craft Supplies & Tools > Patterns & How To > Digital Files)
+- `type: "download"` | `who_made: "i_did"` | `when_made: "made_to_order"` | `is_supply: false`
+
+### SS-Series SVG Pack — Photos (10 slots)
+Slots 1–6: Lifestyle — all must carry the "DIGITAL FILE — SVG DOWNLOAD" badge (top-left corner)
+| # | Type | Content |
+|---|---|---|
+| 1 | HERO | Gallery wall — 2–3 signs displayed |
+| 2 | LIFESTYLE | Interior 1 (mantel, shelf, or living room) |
+| 3 | LIFESTYLE | Interior 2 (porch, entryway, or bedroom) |
+| 4 | LIFESTYLE | Tiered tray or small-scale display |
+| 5 | LIFESTYLE | Outdoor / yard / garden setting |
+| 6 | COLLECTION | All designs flat-lay or side-by-side overview |
+
+Slots 7–10: Informational (no badge required)
+| # | Type | Content |
+|---|---|---|
+| 7 | HOW-TO | Bambu Studio 3-step import — must show Color Painting Fill tool. NEVER show "Split by Color" (that menu does not exist) |
+| 8 | DETAIL | Close-up of one finished sign showing multi-color layer detail |
+| 9 | SPECS | What's included — ZIP contents graphic |
+| 10 | LINEUP | All N design previews rendered side by side |
+
+### SS-Series SVG Pack — Description (sections in this exact order)
+1. Hook — emoji opener, primary keyword in sentence 1
+2. ⚠️ DISCLAIMER (bold, above the fold) — "DIGITAL DOWNLOAD of SVG files — NOT a physical sign. No physical item will be shipped."
+3. Pack overview — design count, dimensions, colors per design, plate compatibility
+4. WHAT'S INCLUDED — bullet list including digital-only reminder
+5. COMPATIBLE PRINTERS & SLICERS — Bambu Lab P-series #1, then any FDM multi-color, single-color options
+6. HOW TO PRINT IN BAMBU STUDIO — 5 numbered steps: Import → Add filaments → Color Painting (press N) → Fill tool → Slice → Print. NEVER mention "Split by Color."
+7. SIZE & SCALING
+8. DISPLAY IDEAS
+9. TECHNICAL DETAILS — includes "NO PHYSICAL ITEM SHIPPED"
+10. FAQ — minimum 5 Qs: Is this physical? AMS required? Resize? Other slicers? License?
+11. ABOUT THIS DESIGN — AI disclosure paragraph
+12. COPYRIGHT — OnBrandCraftz, personal use + gifts only
+
+### SS-Series SVG Pack — File Packaging
+- **SVG file quality (hard requirement):** Every SVG in the ZIP must be a clean vector design. Tracked raster images exported as SVG are NOT acceptable. Quality thresholds enforced by `validate_digital_file()` in `etsy_api.py`:
+  - Unique fill colors per SVG: ≤ 20 (clean vectors have 1–4 discrete fills; traced rasters have 500+)
+  - Path elements per SVG: ≤ 200 (clean vectors have <50; traced rasters have 600–900)
+  - File size per SVG: ≤ 150 KB (clean vectors are typically <50 KB; traced rasters are 475–750 KB)
+- **Layer-based format (preferred):** Each design ships as N separate layer SVG files (one per color), each with a single fill color. Customer imports each layer, assigns filament color, stacks layers. This is the most reliable 3D printing workflow.
+- **Single-file format (acceptable):** One SVG per design with ≤ N discrete color regions. Must pass the SVG quality gate above.
+- ZIP naming: `[ProductID]_[theme]_SVG_pack.zip`
+- SVG naming: `[ProductID]_[theme]_[design_name]_layer[N]_[COLOR].svg` (layer format) or `[ProductID]_[theme]_[design_name].svg` (single-file format)
+- README.txt required in every ZIP — must include correct Bambu Studio workflow (Color Painting Fill tool)
+- ZIP size: under 20 MB (Etsy hard limit)
+
+### SS-Series SVG Pack — Pre-Publish Quality Gate Checklist
+Run through every item before submitting for Scott review. If any item fails, fix it. Do not submit with known failures.
+
+**SVG File Quality (most critical)**
+- [ ] Run `validate_digital_file(zip_path)` — must pass with zero errors
+- [ ] SVGs confirmed as clean vectors: ≤20 unique fills, ≤200 paths, ≤150 KB each
+- [ ] SVG dimensions match the stated product spec (e.g., 235×235mm for SS1001)
+- [ ] README.txt uses Color Painting Fill tool workflow — no "Split by Color" anywhere
+
+**Listing Content**
+- [ ] Title: 60–70 chars, contains "SVG", contains "Instant Download", comma separators
+- [ ] Tags: all 13 used, each ≤20 chars, zero duplicate title phrases
+- [ ] Description: all 12 sections present in order, ⚠️ disclaimer above the fold
+- [ ] Price: matches tier table, ends in .99/.97/.49
+
+**Photos**
+- [ ] All 10 photos unique — no duplicates (verify by MD5 hash)
+- [ ] Lifestyle photos (slots 1–6) generated with `images.edit` using actual downloadable SVG files as input
+- [ ] "DIGITAL FILE — SVG DOWNLOAD" badge present on all 6 lifestyle photos
+- [ ] Photo 7 HOW-TO shows Color Painting Fill tool — not "Split by Color"
+- [ ] All 10 photos are distinct scenes — no two show the same setting
+
+**File**
+- [ ] ZIP contains correct SVG files and README.txt
+- [ ] ZIP is under 20 MB
+- [ ] ZIP passes `validate_digital_file()` with zero errors
+
+---
+
 ## Wall Art Production Pipeline — Mandatory Standards
 *Every new wall art listing must pass ALL of these gates before going live. No exceptions.*
 
