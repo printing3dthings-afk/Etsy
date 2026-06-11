@@ -3,8 +3,8 @@
 
 ---
 
-### TITLE (67 chars — under 70 char mobile limit)
-`America 250 Sign SVG Files, 3D Print Patriotic Wall Signs, 5 Pack`
+### TITLE (64 chars — under 70 char mobile limit, includes required "Instant Download")
+`America 250 Sign SVG, 3D Print Patriotic Signs, Instant Download`
 
 ---
 
@@ -16,7 +16,7 @@
 ---
 
 ### TAGS (13/13 used, no tag duplicates title, all ≤20 chars)
-`patriotic svg files`, `3d print svg`, `america 250 sign`, `bambu studio svg`, `wall sign svg`, `patriotic wall decor`, `4th of july sign`, `svg cut file`, `america sign svg`, `printable sign`, `patriotic decor`, `3d wall sign`, `instant download`
+`patriotic svg files`, `3d print svg`, `250th anniversary`, `bambu studio svg`, `wall sign svg`, `patriotic wall decor`, `4th of july sign`, `svg cut file`, `america sign svg`, `printable sign`, `patriotic decor`, `3d wall sign`, `digital download`
 
 ---
 
