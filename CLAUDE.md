@@ -1500,21 +1500,25 @@ Slots 7–10: Informational (no badge required)
   - Unique fill colors per SVG: ≤ 20 (clean vectors have 1–4 discrete fills; traced rasters have 500+)
   - Path elements per SVG: ≤ 200 (clean vectors have <50; traced rasters have 600–900)
   - File size per SVG: ≤ 150 KB (clean vectors are typically <50 KB; traced rasters are 475–750 KB)
-- **Layer-based format (preferred):** Each design ships as N separate layer SVG files (one per color), each with a single fill color. Customer imports each layer, assigns filament color, stacks layers. This is the most reliable 3D printing workflow.
-- **Single-file format (acceptable):** One SVG per design with ≤ N discrete color regions. Must pass the SVG quality gate above.
-- ZIP naming: `[ProductID]_[theme]_SVG_pack.zip`
-- SVG naming: `[ProductID]_[theme]_[design_name]_layer[N]_[COLOR].svg` (layer format) or `[ProductID]_[theme]_[design_name].svg` (single-file format)
-- README.txt required in every ZIP — must include correct Bambu Studio workflow (Color Painting Fill tool)
+- **Primary format (required): .3mf per design** — all color layers pre-assembled at correct Z heights (base 0–4mm, raised layers 4–6mm). Customer opens one file in Bambu Studio, assigns AMS slots, slices. This is the gold standard — no manual positioning needed.
+- **Layer SVG format (also included):** Separate SVG per color layer (`layer01_base_WHITE.svg`, `layer02_red_RED.svg`, etc.), identical dimensions and origin. Included for advanced users who want to resize before printing. Customer imports each layer as a separate Part and manually positions in Z.
+- **IMPORTANT — Single-file SVG is INVALID for multi-color printing:** Bambu Studio merges all SVG paths into ONE object on import — per-color region assignment is impossible from a single SVG (GitHub Issue #8044, unfixed). Never deliver a single multi-color SVG as the primary file.
+- ZIP naming: `[ProductID]_[theme]_3dprint_pack.zip`
+- 3MF naming: `[ProductID]_[design_name].3mf` (one per design)
+- Layer SVG naming: `layer01_base_[COLOR].svg`, `layer02_[COLOR].svg`, etc. (same viewBox on all layers)
+- README.txt required in every ZIP — must document both 3MF and layer SVG workflows; no "Split by Color" anywhere
 - ZIP size: under 20 MB (Etsy hard limit)
 
 ### SS-Series SVG Pack — Pre-Publish Quality Gate Checklist
 Run through every item before submitting for Scott review. If any item fails, fix it. Do not submit with known failures.
 
-**SVG File Quality (most critical)**
+**File Quality (most critical)**
 - [ ] Run `validate_digital_file(zip_path)` — must pass with zero errors
-- [ ] SVGs confirmed as clean vectors: ≤20 unique fills, ≤200 paths, ≤150 KB each
-- [ ] SVG dimensions match the stated product spec (e.g., 235×235mm for SS1001)
-- [ ] README.txt uses Color Painting Fill tool workflow — no "Split by Color" anywhere
+- [ ] Layer SVGs confirmed as clean vectors: ≤20 unique fills, ≤200 paths, ≤150 KB each
+- [ ] All layer SVGs within a design share the same viewBox dimensions and origin point
+- [ ] 3MF files present — one per design, all color layers pre-assembled at correct Z heights
+- [ ] README.txt documents both 3MF and layer SVG workflows — no "Split by Color" anywhere
+- [ ] Build script: `tools/build_[product]_zip.py` generates and validates the ZIP
 
 **Listing Content**
 - [ ] Title: 60–70 chars, contains "SVG", contains "Instant Download", comma separators
