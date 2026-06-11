@@ -138,11 +138,30 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 - Repair ecosystem still maturing vs. established brands
 - AMS can have occasional jams with flexible/abrasive filaments
 
+### Current Bambu Lab Printer Lineup (mid-2026)
+- **P2S** — Successor to the P1S (2026). 5" color touchscreen, AI error detection, actively regulated 50°C chamber, 70% stronger extruder. Same enclosed CoreXY formula.
+- **P1S** — Previous generation, fully supported. All accessories compatible with P2S.
+- **X2D** — Successor to the X1 Carbon (X1C discontinued). Lower price than X1C with more features.
+- **A1 / A1 Mini** — Open-frame bedslinger, budget tier. Uses AMS Lite (4-slot per unit, up to 8 colors with 2 units).
+- **A2L** — New (2026). Larger format (330×320×325mm), optional cutting module. Compatible with AMS Lite and AMS 2 Pro.
+- **AMS 2 Pro** — Second-gen AMS. Compatible with P1S, P2S, X2D. 4 spools per unit; chain up to 4 = 16 colors.
+- **AMS Lite** — A-series only. Not compatible with P-series printers.
+
 ### Competitive Position (2026)
-- Delivers ~90% of the flagship X1 Carbon's performance at ~60% of the cost
 - Farm-grade reliability — trusted by professional print farms
-- P1P (open-frame sibling) is being retired; **P1S will continue to be manufactured**
 - Receives regular firmware updates from Bambu Lab
+- **MakerWorld** (Bambu's model-sharing platform): allows uploading 3D designs for free download or exclusive paid access. Exclusive Program pays creators Exclusive Points cashable at $100+ threshold. Complementary to Etsy (different audience), not a replacement.
+
+### Bambu Studio — SVG Import & Multi-Color Workflow (Verified June 2026)
+**IMPORTANT: "Split > By Color" does NOT exist for SVG imports.** This is a long-standing limitation — imported SVGs cannot be split into separate objects in Bambu Studio. The correct workflow is:
+
+1. Drag & drop the SVG into Bambu Studio (or File > Import). Studio extrudes it automatically — set height to 6–10mm.
+2. Add filament colors: in the Filament list (left panel), click "+" to add each color needed.
+3. Open the **Color Painting tool** (keyboard shortcut: **N**, or the paint-roller icon in the top toolbar).
+4. Select the **Fill tool** (bucket icon). Click each closed region of the design to assign its filament color. Clean SVG paths make this fast — an entire sign takes ~2 minutes.
+5. Slice. Bambu Studio auto-maps each painted region to the closest AMS slot. Verify the mapping in the print dialog, then print.
+
+**Bambu Handy app:** iOS/Android. Remote start/pause/stop, live camera feed, push notifications on completion, print history, filament tracking. Connects via LAN or Bambu Cloud.
 
 ---
 

@@ -53,7 +53,7 @@ This SVG pack gives you **5 unique America 250th Anniversary sign designs** size
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🖨️ COMPATIBLE PRINTERS & SLICERS
 ━━━━━━━━━━━━━━━━━━━━━━━━
-★ Bambu Lab P1S / X1C / A1 with AMS — BEST experience
+★ Bambu Lab P1S / P2S / X2D / A1 with AMS — BEST experience
 ★ Bambu Studio (direct SVG import)
 ★ Any FDM printer with multi-color capability
 ★ Creality / Prusa / Ender with multi-color upgrade
@@ -62,11 +62,11 @@ This SVG pack gives you **5 unique America 250th Anniversary sign designs** size
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🎨 HOW TO PRINT IN BAMBU STUDIO
 ━━━━━━━━━━━━━━━━━━━━━━━━
-1. File > Import > SVG → select your chosen design file
-2. Set total height to 6–10mm in the extrude dialog
-3. Right-click the model > Split > By Color — each color becomes a separate body
-4. Assign each body to an AMS filament slot (4 slots max)
-5. Slice and print!
+1. Drag & drop the SVG into Bambu Studio — it extrudes automatically; set height to 6mm
+2. Add your 4 filament colors in the Filament list (click +)
+3. Open the Color Painting tool (press N) → choose the FILL tool → click each region of the design to assign its color (takes ~2 minutes — regions are clean closed shapes)
+4. Slice — Bambu Studio auto-maps each color to the closest AMS slot (check the mapping in the print dialog)
+5. Print! (Pro tip: flip the model so the design face is DOWN on a textured plate for a perfectly flat, layer-line-free face)
 
 **Recommended filaments:** Navy Blue PLA · Deep Red PLA · Gold Silk PLA · Cream/White PLA
 (Gold Silk PLA gives a stunning metallic shimmer on the gold elements!)
@@ -74,7 +74,7 @@ This SVG pack gives you **5 unique America 250th Anniversary sign designs** size
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📐 SIZE & SCALING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Default: **235×235mm (~9.25×9.25 inches)** — slices on a Bambu P1S/X1C 256mm plate with prime tower, no warnings
+Default: **235×235mm (~9.25×9.25 inches)** — slices on a Bambu 256mm plate with AMS prime tower, no warnings
 Scale down to 150mm for a tiered tray decoration
 Scale up to ~250mm on a Bambu plate (relocate the prime tower), or larger on bigger printers
 Scaling is done in Bambu Studio before slicing — no editing needed

@@ -97,9 +97,9 @@ def photo_07():
     design_path = DESIGNS[0][1]
 
     steps = [
-        ("1", "IMPORT THE SVG", "File > Import > SVG"),
-        ("2", "SPLIT BY COLOR", "Right-click > Split > By Color"),
-        ("3", "ASSIGN AMS SLOTS", "1 color = 1 slot, then Slice!"),
+        ("1", "IMPORT THE SVG", "Drag & drop SVG · set height 6mm"),
+        ("2", "PAINT THE COLORS", "Press N → Fill tool → click each region"),
+        ("3", "ASSIGN AMS SLOTS", "Colors auto-map · check · Slice!"),
     ]
 
     for i, (num, title, sub) in enumerate(steps):
@@ -137,7 +137,7 @@ def photo_07():
                                     fill=(250, 248, 243, 255), outline=INK, width=3)
                 canvas.alpha_composite(layer, (gx + 10, gy + 10))
                 d = ImageDraw.Draw(canvas)
-            center_text(d, cx, gy0 + 2 * cell + 70, "4 separate color bodies",
+            center_text(d, cx, gy0 + 2 * cell + 70, "4 color regions — fill each",
                         font("Poppins-Regular.ttf", 36), INK)
         else:
             sw = 110
@@ -152,7 +152,7 @@ def photo_07():
 
     d = ImageDraw.Draw(canvas)
     center_text(d, C // 2, C - 240,
-                "Works on Bambu P1S · X1C · A1 with AMS  |  235×235mm, scale to any size",
+                "Works on any Bambu printer with AMS  |  235×235mm, scale to any size",
                 font("Poppins-SemiBold.ttf", 46), NAVY)
     center_text(d, C // 2, C - 150,
                 "Full written guide included in your download (README.txt)",
