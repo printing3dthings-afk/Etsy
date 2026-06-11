@@ -159,14 +159,14 @@ this image is faithfully reproduced on the sign face as a completely FLAT flush 
 inlaid graphic — no raised lettering, no embossing. The sign is perfectly upright and \
 centered in the overall frame.
 
-DETAIL ACCURACY — MOST IMPORTANT REQUIREMENT: reproduce the OUTER EDGE of the \
-source design exactly. The source image shows a cream/off-white outer margin, and \
-inside it a red stamp frame whose edge has a SCALLOPED PERFORATED postage-stamp \
-border — a row of small semicircular notch cutouts running along ALL FOUR sides, \
-like a real postage stamp torn from a sheet. This perforated bumpy edge MUST be \
-clearly visible in the render on all four sides of the red frame. Do NOT replace \
-it with a smooth straight border. Also preserve the thin gold inner pinstripe \
-frame and its corner details. Copy every design detail exactly as in the source.
+DETAIL ACCURACY — MOST IMPORTANT REQUIREMENT: reproduce the stamp border EXACTLY \
+as in the source image. The layering from outside in is: (1) cream/off-white outer \
+margin, (2) the red stamp frame, (3) a thin gold pinstripe frame with corner \
+details, (4) cream interior. The perforation notches are semicircular CREAM bites \
+cut INTO THE OUTSIDE EDGE of the red frame — the red frame's OUTER boundary is \
+bumpy/wavy with cream half-circles, while its INNER boundary (against the gold \
+pinstripe) is perfectly STRAIGHT. Do NOT invert this: no scallops on the inner \
+side, no straight outer edge. Copy the source image's border exactly.
 
 Photography: bright clean natural daylight, neutral-warm white balance, soft even \
 lighting. 50mm lens, eye-level. Square composition. No text overlays. No hands. \
