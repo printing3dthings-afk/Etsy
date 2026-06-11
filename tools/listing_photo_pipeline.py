@@ -43,7 +43,9 @@ from PIL import Image, ImageDraw, ImageFilter
 MOCKUP_SIZE   = 2400
 INPUT_MAX_DIM = 1024
 MAX_ATTEMPTS  = 3
-VISION_MODEL  = "gpt-4o-mini"   # cheap + good enough for text/color comparison
+EXTRACT_MODEL = "gpt-4o-mini"   # cheap, fine for reading text off a design
+VERIFY_MODEL  = "gpt-4o"        # mini hallucinated rejections AND missed a real
+                                # shape error in testing — verification needs 4o
 
 
 # ── Product physics templates ─────────────────────────────────────────────────
@@ -130,7 +132,7 @@ def extract_palette(design_path: Path, n: int = 5) -> list[str]:
 def extract_text(client, design_path: Path) -> str:
     """Every piece of text on the design, read by a vision model once."""
     resp = client.chat.completions.create(
-        model=VISION_MODEL,
+        model=EXTRACT_MODEL,
         messages=[{
             "role": "user",
             "content": [
@@ -166,7 +168,10 @@ def verify_render(client, design_paths: list[Path], render: Image.Image,
         "saturation shifts from scene lighting are NORMAL and pass.\n"
         "3. ELEMENTS: missing, added, or redesigned design elements (borders, stars, "
         "icons, edge details)\n"
-        "4. SURFACE: individual letters/shapes sticking UP out of the face as 3D "
+        "4. SHAPE: the product must keep the FULL canvas of the design file — a "
+        "square design means a square panel including its background color; the "
+        "design must NOT be cut out into a circle or other silhouette\n"
+        "5. SURFACE: individual letters/shapes sticking UP out of the face as 3D "
         "embossing. The panel itself having thickness, a drop shadow, or the "
         "described surface grain is NORMAL and passes.\n\n"
         "Perspective, viewing angle, scale, lighting, shadows, and scene context "
@@ -179,7 +184,7 @@ def verify_render(client, design_paths: list[Path], render: Image.Image,
         "url": f"data:image/jpeg;base64,{_b64(render)}"}})
 
     resp = client.chat.completions.create(
-        model=VISION_MODEL,
+        model=VERIFY_MODEL,
         messages=[{"role": "user", "content": content}],
         max_tokens=400,
     )
@@ -233,6 +238,9 @@ def generate_verified_photo(
         "- The EXACT design from the input image(s) appears on the product — same "
         "composition, same elements, same edge details. Do not redesign, simplify, "
         "restyle, or invent anything.\n"
+        "- The product keeps the FULL canvas of the design including its background "
+        "color: a square design file = a square product face, edge to edge. Never "
+        "cut the design out into a circle or silhouette shape.\n"
         + "\n".join(palette_lines) + "\n"
         + "\n".join(text_lines) + "\n"
         "Every text item must be reproduced character-for-character.\n\n"
