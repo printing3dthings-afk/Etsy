@@ -2,63 +2,55 @@
 """
 generate_sign_collection_photo.py
 
-Regenerates the SS1001 collection overview photo (photo_06) the CORRECT way:
-ALL FIVE actual design files are passed as input images to gpt-image-1's edit
-endpoint, so every sign in the flat lay is the real downloadable design —
-never an AI-invented stand-in.
+Builds the SS1001 collection overview photo (photo_06) with GUARANTEED design
+accuracy: the five actual design files are pasted pixel-perfect onto an
+AI-generated empty flat-lay background.
 
-CARDINAL RULE: every listing photo must show the real product. A multi-product
-photo must receive ALL product files as input.
+Why PIL here and images.edit everywhere else: a straight-overhead flat lay has
+ZERO perspective distortion, so a direct paste is geometrically exact and the
+design text is reproduced character-perfect. images.edit with 5 input designs
+garbles small text ("ANNIVERSARY", "FOREVER") — verified June 2026.
+
+The background is generated once (empty linen surface, no signs) and cached;
+pass --new-bg to force regeneration.
 """
 
-import re, base64, io
+import re, base64, io, sys
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter
 
 DESIGNS_DIR = Path("data/3d_print_signs/america_250/ai_generated")
+BG_PATH     = Path("data/3d_print_signs/america_250/listing_photos/flatlay_bg_empty.png")
 OUT_PATH    = Path("data/3d_print_signs/america_250/listing_photos/final/photo_06_collection_overview.jpg")
-MOCKUP_SIZE = 2400
+CANVAS      = 2400
 
-# Order matters — referenced by number in the prompt
 DESIGN_FILES = [
-    ("main eagle",       DESIGNS_DIR / "america250_ai_color_raw.jpg"),
-    ("medallion",        DESIGNS_DIR / "america250_design2_medallion.jpg"),
-    ("art deco",         DESIGNS_DIR / "america250_design3_artdeco.jpg"),
-    ("vintage stamp",    DESIGNS_DIR / "america250_design4_stamp.jpg"),
-    ("heraldic shield",  DESIGNS_DIR / "america250_design5_shield.jpg"),
+    DESIGNS_DIR / "america250_ai_color_raw.jpg",      # main eagle
+    DESIGNS_DIR / "america250_design2_medallion.jpg", # medallion
+    DESIGNS_DIR / "america250_design3_artdeco.jpg",   # art deco
+    DESIGNS_DIR / "america250_design4_stamp.jpg",     # vintage stamp
+    DESIGNS_DIR / "america250_design5_shield.jpg",    # heraldic shield
 ]
 
-PROMPT = """\
-These five images are the five flat graphics of a set of 3D-printed patriotic wall signs \
-called 'America 250th Anniversary Signs'. Render a single photorealistic overhead flat lay \
-product photograph showing ALL FIVE signs together.
+# Layout: 2-1-2 quincunx on a 2400x2400 canvas (x, y, size) per sign.
+# Rows are vertically separated so NO panel ever overlaps another —
+# overlap covers design content (caught June 2026: center panel hid "2026").
+PANEL_LAYOUT = [
+    (270,  110, 720),   # top-left     — main eagle
+    (1410, 110, 720),   # top-right    — medallion
+    (840,  840, 720),   # center       — art deco
+    (270,  1570, 720),  # bottom-left  — stamp
+    (1410, 1570, 720),  # bottom-right — shield
+]
 
-Each sign is a square 3D-printed panel made from colored PLA filament (Bambu Lab AMS \
-4-color printing), approximately 9.25x9.25 inches and 6mm thick, printed face-down on a \
-textured build plate. Each panel's front face is PERFECTLY FLAT — the design is NOT \
-raised, NOT embossed, NOT engraved; all colors sit flush in a single smooth plane like \
-an inlaid graphic, with a very fine uniform matte grain texture from the textured plate. \
-FDM layer lines are visible only on the thin side edges. Each panel's face must \
-reproduce its source image EXACTLY — identical colors, identical text, identical \
-composition, identical details. Do not redesign, restyle, simplify, or invent any sign. \
-The five signs are: image 1 (eagle design), image 2 (circular medallion), \
-image 3 (art deco sunburst), image 4 (vintage stamp), image 5 (heraldic shield).
-
-CRITICAL TEXT ACCURACY: every piece of lettering must be copied character-for-character \
-from the source images. The dates read exactly "1776" and "2026" — never 2028 or any \
-other year. The stamp's small bottom-right word reads exactly "FOREVER". \
-"AMERICA", "250", "UNITED STATES", "UNITED STATES OF AMERICA", "ANNIVERSARY" — \
-all spelled exactly as shown in the sources. No invented words, no garbled letters.
-
-Scene: the five square signs are laid flat on a clean white textured linen surface, \
-arranged neatly — one in the center, four around it (or a tidy 2-1-2 layout), evenly \
-spaced with small gaps. A few small decorative gold stars and a thin red-white-blue \
-ribbon accent the spaces between signs. Nothing covers any part of any sign face.
-
-Photography: directly overhead camera, bright even diffused lighting, pure neutral white \
-balance, soft minimal shadows under each plaque edge showing thickness. Square composition. \
-No text overlays, no hands, no people, no watermarks. Professional Etsy product catalog \
-flat lay. Completely photorealistic.\
+BG_PROMPT = """\
+Photorealistic overhead product photography background, square. A clean white \
+textured linen fabric surface fills the entire frame, photographed directly from \
+above. Scattered sparsely near the edges and corners: a few small gold star \
+confetti pieces and two short thin red-white-blue striped ribbon segments. \
+The CENTER 90% of the frame is completely EMPTY plain linen — no objects, no \
+props, nothing in the middle area. Bright even diffused overhead lighting, pure \
+neutral white balance, no harsh shadows. No text, no hands, no people, no products.\
 """
 
 
@@ -72,44 +64,74 @@ def load_env() -> dict:
     return env
 
 
-def prep_image(path: Path, max_dim: int = 1024) -> io.BytesIO:
-    img = Image.open(path).convert("RGB")
-    w, h = img.size
-    scale = min(max_dim / w, max_dim / h, 1.0)
-    if scale < 1.0:
-        img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
-    buf = io.BytesIO()
-    img.save(buf, "PNG")
-    buf.seek(0)
-    return buf
+def generate_background(client) -> Image.Image:
+    print("Generating empty flat-lay background...")
+    response = client.images.generate(
+        model="gpt-image-1",
+        prompt=BG_PROMPT,
+        size="1024x1024",
+        quality="high",
+        output_format="png",
+    )
+    img_bytes = base64.b64decode(response.data[0].b64_json)
+    bg = Image.open(io.BytesIO(img_bytes)).convert("RGB")
+    bg = bg.resize((CANVAS, CANVAS), Image.LANCZOS)
+    BG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    bg.save(BG_PATH)
+    print(f"  ✓ Background saved: {BG_PATH}")
+    return bg
+
+
+def panel_with_shadow(design_path: Path, size: int) -> tuple[Image.Image, Image.Image]:
+    """Return (panel RGBA, shadow RGBA) — flat sign panel with soft drop shadow."""
+    design = Image.open(design_path).convert("RGB")
+    design = design.resize((size, size), Image.LANCZOS)
+
+    # Rounded corners like a real printed panel (slight radius from slicer)
+    radius = size // 60
+    mask = Image.new("L", (size, size), 0)
+    d = ImageDraw.Draw(mask)
+    d.rounded_rectangle([0, 0, size - 1, size - 1], radius=radius, fill=255)
+
+    panel = Image.new("RGBA", (size, size))
+    panel.paste(design, (0, 0))
+    panel.putalpha(mask)
+
+    # Soft shadow (offset down-right, blurred) — conveys the 6mm panel thickness
+    pad = size // 12
+    shadow = Image.new("RGBA", (size + pad * 2, size + pad * 2), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow)
+    sd.rounded_rectangle([pad, pad, pad + size - 1, pad + size - 1],
+                         radius=radius, fill=(0, 0, 0, 90))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(size // 80))
+    return panel, shadow
 
 
 def main():
-    env = load_env()
-    import openai
-    client = openai.OpenAI(api_key=env["OPENAI_API_KEY"])
+    force_new_bg = "--new-bg" in sys.argv
 
-    images = []
-    for name, path in DESIGN_FILES:
-        if not path.exists():
-            raise FileNotFoundError(f"Missing design file: {path}")
-        print(f"Loading design: {name} ({path.name})")
-        images.append((f"{path.stem}.png", prep_image(path), "image/png"))
+    if BG_PATH.exists() and not force_new_bg:
+        print(f"Using cached background: {BG_PATH}")
+        bg = Image.open(BG_PATH).convert("RGB").resize((CANVAS, CANVAS), Image.LANCZOS)
+    else:
+        env = load_env()
+        import openai
+        client = openai.OpenAI(api_key=env["OPENAI_API_KEY"])
+        bg = generate_background(client)
 
-    print("Generating collection flat lay with ALL 5 real designs as input...")
-    response = client.images.edit(
-        model="gpt-image-1",
-        image=images,
-        prompt=PROMPT,
-        size="1024x1024",
-        quality="high",
-        input_fidelity="high",
-        output_format="png",
-    )
+    canvas = bg.convert("RGBA")
 
-    img_bytes = base64.b64decode(response.data[0].b64_json)
-    result = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-    result = result.resize((MOCKUP_SIZE, MOCKUP_SIZE), Image.LANCZOS)
+    for design_path, (x, y, size) in zip(DESIGN_FILES, PANEL_LAYOUT):
+        if not design_path.exists():
+            raise FileNotFoundError(f"Missing design file: {design_path}")
+        panel, shadow = panel_with_shadow(design_path, size)
+        pad = size // 12
+        offset = size // 90  # shadow offset down-right
+        canvas.alpha_composite(shadow, (x - pad + offset, y - pad + offset))
+        canvas.alpha_composite(panel, (x, y))
+        print(f"  ✓ Placed {design_path.stem} at ({x},{y}) size {size}")
+
+    result = canvas.convert("RGB")
     result.save(OUT_PATH, "JPEG", quality=95, dpi=(300, 300))
     print(f"✓ Saved: {OUT_PATH} ({OUT_PATH.stat().st_size // 1024} KB)")
 

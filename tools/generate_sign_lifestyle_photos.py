@@ -55,7 +55,8 @@ SIGN_DESCRIPTION = (
     "a square 3D-printed patriotic sign made from colored PLA filament on a "
     "Bambu Lab printer with 4-color AMS, printed face-down on a textured build plate. "
     "The entire front face is PERFECTLY FLAT — the design is NOT raised, NOT embossed, "
-    "NOT engraved; all colors (navy blue, deep red, gold, cream) are flush in a single "
+    "NOT engraved; all colors (use the EXACT colors from the input image — do not "
+    "substitute or re-palette any color) are flush in a single "
     "smooth plane, like an inlaid graphic. The flat face has a very fine uniform matte "
     "grain texture from the textured print plate. The sign is a thin flat panel about "
     "6mm thick and approximately 9.25×9.25 inches (235×235mm) square, with FDM layer lines "
@@ -130,6 +131,11 @@ The 3D-printed sign stands centered on the mantel, filling approximately 50% of 
 frame height. The design from this image is faithfully reproduced on the sign face \
 as a completely FLAT flush inlaid graphic — no raised lettering, no embossing. The sign is perfectly upright and centered.
 
+COLOR ACCURACY: the area of the sign face surrounding the circular medallion is \
+CREAM / OFF-WHITE exactly as in the source image — NOT navy, NOT dark. The square \
+panel background color is the same light cream as the source. Copy every color \
+region exactly as positioned in the source image.
+
 Photography: warm interior ambient light, soft shadows, warm white balance. 50mm lens, \
 slightly above eye-level angled down. Square composition. No text overlays. No hands. \
 Professional Etsy product listing photography style. Completely photorealistic.""",
@@ -153,6 +159,15 @@ this image is faithfully reproduced on the sign face as a completely FLAT flush 
 inlaid graphic — no raised lettering, no embossing. The sign is perfectly upright and \
 centered in the overall frame.
 
+DETAIL ACCURACY — MOST IMPORTANT REQUIREMENT: reproduce the OUTER EDGE of the \
+source design exactly. The source image shows a cream/off-white outer margin, and \
+inside it a red stamp frame whose edge has a SCALLOPED PERFORATED postage-stamp \
+border — a row of small semicircular notch cutouts running along ALL FOUR sides, \
+like a real postage stamp torn from a sheet. This perforated bumpy edge MUST be \
+clearly visible in the render on all four sides of the red frame. Do NOT replace \
+it with a smooth straight border. Also preserve the thin gold inner pinstripe \
+frame and its corner details. Copy every design detail exactly as in the source.
+
 Photography: bright clean natural daylight, neutral-warm white balance, soft even \
 lighting. 50mm lens, eye-level. Square composition. No text overlays. No hands. \
 Farmhouse kitchen Etsy lifestyle photography. Completely photorealistic.""",
@@ -173,6 +188,12 @@ in the background. Bright patriotic summer outdoor setting. Blue sky with light 
 The sign is upright on its stake, centered in the frame, filling approximately 55% \
 of the frame. The design from this image is faithfully reproduced on the sign face \
 as a completely FLAT flush inlaid graphic — no raised lettering, no embossing. The sign is perfectly upright and centered.
+
+COLOR ACCURACY: this design's palette is FOREST GREEN, GOLD, RED, and CREAM — \
+exactly as in the source image. The shield is forest green, the eagle and banners \
+are gold, the flag stripes are red and cream, and the panel background surrounding \
+the crest is light CREAM — NOT navy, NOT blue anywhere. Copy every color region \
+exactly as positioned in the source image.
 
 Photography: bright natural sunlight, slightly warm, gentle shadows. 50mm lens, \
 slightly below eye-level to show sky. Square composition. No text overlays. No hands. \

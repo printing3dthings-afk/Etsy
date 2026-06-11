@@ -30,6 +30,8 @@ Craft Supplies & Tools > Patterns & How To > Digital Files
 
 🇺🇸 Celebrate 250 years of America with five bold, print-ready patriotic sign designs — made for your Bambu Lab, Creality, or any FDM 3D printer with multi-color capability.
 
+⚠️ **PLEASE NOTE: This is a DIGITAL DOWNLOAD of SVG design files — NOT a physical sign.** You 3D print the signs yourself on your own printer. No physical item will be shipped. Lifestyle photos show examples of finished prints made from these files.
+
 This SVG pack gives you **5 unique America 250th Anniversary sign designs** sized at 235×235mm (~9.25×9.25 inches) — slices cleanly on a Bambu 256mm plate with the AMS prime tower, ready to import directly into Bambu Studio or your favorite slicer. Each design uses exactly **4 colors** — perfect for a 4-slot AMS system — and arrives as a clean vector SVG you can scale to any size.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -39,6 +41,7 @@ This SVG pack gives you **5 unique America 250th Anniversary sign designs** size
 ✅ README with Bambu Studio step-by-step print setup
 ✅ All designs use max 4 colors (AMS 4-slot ready)
 ✅ Instant digital download — no shipping, no wait
+❗ DIGITAL FILES ONLY — no physical sign is included or shipped
 
 **The 5 designs:**
 • **Main** — Bold eagle + "250" graphic (navy, red, gold, cream)
@@ -94,11 +97,15 @@ Scaling is done in Bambu Studio before slicing — no editing needed
 • Designed size: 235×235mm per sign (scales to any size)
 • Colors per design: 4 maximum (AMS 4-slot ready)
 • Delivery: Instant digital download — ZIP file with 5 SVGs + README
+• ⚠️ NO PHYSICAL ITEM SHIPPED — you receive design files only
 • License: Personal use + gifts. Not for resale or commercial printing services.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 ❓ FAQ
 ━━━━━━━━━━━━━━━━━━━━━━━━
+Q: Is this a physical product?
+A: No — this is a digital download. You receive SVG files to print yourself. No physical sign is shipped.
+
 Q: Do I need an AMS to print these?
 A: No! You can print single-color (one solid filament), use filament swaps at color change layers, or print each color body separately and assemble. AMS just makes it fully automatic.
 
@@ -107,9 +114,6 @@ A: Yes — scale to any size in Bambu Studio or your slicer before printing. The
 
 Q: Will these work in Cura or PrusaSlicer?
 A: SVG import support varies by slicer. Bambu Studio has native SVG import. For Cura/Prusa, convert to STL first using Inkscape (Extrude SVG extension) or Tinkercad.
-
-Q: Is this a physical product?
-A: No — this is a digital download. You receive SVG files to print yourself. No physical sign is shipped.
 
 Q: Can I sell signs I print from these files?
 A: Personal use and gifts only. Commercial printing/resale requires a commercial license — message me for pricing.
@@ -128,6 +132,8 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
 ---
 
 ## LISTING PHOTOS PLAN (10 slots)
+
+**Disclaimer overlays (Canva, before upload): add a small clean "DIGITAL FILE — SVG DOWNLOAD" corner badge to the hero photo and every lifestyle photo (slots 1–6). Lifestyle shots show printed examples, so each must carry the badge to prevent "where is my sign?" cases.**
 
 1. **[HERO]** Gallery wall — 3 signs displayed (main + artdeco + medallion)
 2. **[PRODUCT]** All 5 designs flat lay showing the complete pack
