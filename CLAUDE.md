@@ -2392,23 +2392,29 @@ no visible studio equipment.
 
 ### THE CARDINAL RULE — Every Listing Photo Must Show the REAL Product (NEVER VIOLATE)
 **Every single listing photo must contain the actual product — no exceptions, no substitutes.**
-- For wall art: composite the real art file into the room using `composite_smart()` — never let AI hallucinate the art
-- For 3D printed physical products: composite a real photo of the printed item into the lifestyle scene — never let AI generate a stand-in object
-- AI-generated lifestyle rooms with AI-generated products are BANNED — they show the customer something they will NOT receive
+- AI-generated lifestyle rooms with AI-generated stand-in products are BANNED — they show the customer something they will NOT receive
 - This rule enforces the mission statement: "Best and most accurate transaction — listings show the REAL product"
 - A lifestyle image that looks beautiful but does not contain the actual product is worse than no lifestyle image at all
+- **Multi-product photos (flat lays, collections, gallery walls): EVERY product file must be passed as input.** Feeding one design and prompting "show 5 variations" makes the AI invent products the customer doesn't get — this is a violation (caught and fixed June 2026 on SS1001 photo_06)
 
-**Workflow for every product type:**
-1. Start with the REAL product: an actual photo of the 3D print, or the actual art file JPG
-2. Generate an empty lifestyle room scene with gpt-image-1 (no product in it)
-3. Composite the real product into the room using PIL
-4. The customer sees exactly what they will receive
+### THE STANDARD LIFESTYLE METHOD — `images.edit` With the Real Product as Input (MANDATORY, ALL CATEGORIES)
+**Confirmed by Scott (June 2026): this is THE method for every lifestyle photo in every product category.**
+The real product file is passed to gpt-image-1's **edit endpoint** as the input image, and the prompt tells the model to render it physically in the lifestyle scene. The model handles perspective, curvature, lighting, shadows, and placement natively — no manual coordinate compositing.
 
-### The Wall-Art Composite Rule (Critical)
-gpt-image-1 **hallucinates art content** when asked to render specific art on a wall — never use AI generation for room scenes with product art in them. Instead:
-1. Use gpt-image-1 to generate **empty rooms only** (no art on walls)
-2. Composite actual product art using `composite_smart()` in Python/PIL
-3. Result: photorealistic room + 100% accurate product
+**Workflow (every product type, every scene):**
+1. Load the REAL product file(s): art JPG, design file, or photo of the 3D print — never a description alone
+2. Call `client.images.edit(model="gpt-image-1", image=<real file(s)>, prompt=<scene>, quality="high", input_fidelity="high")`
+3. Prompt structure: "This image is the flat design of [product]. Render it as a single photorealistic product photograph, [physically placed/mounted/wrapped] in [scene]. The EXACT design from this image must appear with all colors, text, and details preserved accurately."
+4. For multi-product shots, pass ALL product files as a list and reference each by number in the prompt
+5. **Verify the output against the source files before keeping** — zoom in and compare colors, text, and composition; regenerate on any drift
+6. Upscale to 2400×2400 for the listing
+
+**Reference implementations (use these as templates):**
+- `tools/generate_tumbler_mockups.py` — sublimation wraps rendered on 20oz tumblers
+- `tools/generate_sign_lifestyle_photos.py` — 3D-printed signs in room/porch/yard scenes
+- `tools/generate_sign_collection_photo.py` — multi-product flat lay with all files as input
+
+**Deprecated:** the old "generate empty room → PIL paste at coordinates" workflow (`composite_smart()` + empty room templates below). It produced off-center, out-of-place products and was retired June 2026. The empty-room prompt templates below are kept only as scene-vocabulary reference for edit prompts.
 
 ### Empty Room Prompt Templates
 
