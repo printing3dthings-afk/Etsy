@@ -37,9 +37,11 @@ OUT_ROOT.mkdir(parents=True, exist_ok=True)
 # ── Fonts ─────────────────────────────────────────────────────────────────────
 FONT_PATHS = {
     "anton":      "/usr/local/share/fonts/google/Anton-Regular.ttf",
-    "montserrat": "/usr/local/share/fonts/Montserrat-Bold.ttf",
-    "bebas":      "/usr/local/share/fonts/BebasNeue-Regular.ttf",
-    "cinzel":     "/usr/local/share/fonts/Cinzel-Regular.ttf",
+    "blackops":   "/usr/local/share/fonts/google/BlackOpsOne-Regular.ttf",
+    "bebas":      "/usr/local/share/fonts/google/BebasNeue-Regular.ttf",
+    "montserrat": "/usr/local/share/fonts/google/Montserrat-VF.ttf",
+    "archivo":    "/usr/local/share/fonts/google/ArchivoBlack-Regular.ttf",
+    "lilita":     "/usr/local/share/fonts/google/LilitaOne-Regular.ttf",
 }
 _fcache: dict = {}
 
@@ -339,91 +341,32 @@ A250_DIR = OUT_ROOT / "america_250"
 A250_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def make_a250_flag_plaque() -> Sign:
+def make_a250_america_bold() -> Sign:
     """
-    US-flag inspired horizontal plaque.
-    White base / Red stripes + AMERICA / Blue canton + stars + 250 YEARS + dates
-    Size: 260×190mm
+    Giant "AMERICA" fills the width — the simplest, most eye-catching format.
+    Star rows frame the text top and bottom. "1776 · 2026" sits below as the footer.
+    280 × 165 mm
     """
-    W, H = 260.0, 190.0
-    RX = 10.0
+    W, H, RX = 280.0, 165.0, 8.0
+    bw = 3.0
 
-    # ── Layer 1: White base plate ─────────────────────────────────────────────
     base = [_p(rrect(0, 0, W, H, RX))]
 
-    # ── Layer 2: RED — flag stripes + "AMERICA" text ──────────────────────────
+    # RED: top star row + bottom star row + dates footer
     red_els = []
-    canton_w = W * 0.40   # 104mm
-    canton_h = H * 0.58   # ~110mm — covers top 4 stripes
+    red_els.append(_p(star_row(11, 14.0, W, 5.5)))
+    red_els.append(_p(star_row(11, 151.0, W, 5.5)))
+    # Dates: cy=116 → baseline=123mm, cap_top=111mm
+    # AMERICA baseline=92mm → gap 19mm; star top at 145.5mm → gap 22.5mm ✓
+    red_els.append(_p(hcenter("1776  •  2026", "bebas", 14.0, W, 116.0)))
 
-    # 7 horizontal stripes (alt red/white), each H/7 ≈ 27mm
-    stripe_h = H / 7
-    red_stripe_rows = [0, 2, 4, 6]
-    for row in red_stripe_rows:
-        sy = row * stripe_h
-        sw = W if row >= 4 else W  # full width for bottom 3 red, full for bottom red
-        sx = 0
-        if row < 4:
-            # Top stripes: canton covers left portion — skip the canton area
-            sx = canton_w
-            sw = W - canton_w
-        # Use rrect for the stripe, with rx only on rightmost stripe ends
-        red_els.append(_p(f"M{sx:.2f},{sy:.2f}H{W:.2f}V{sy+stripe_h:.2f}H{sx:.2f}Z"))
-
-    # "AMERICA" Anton bold — big, centered in lower half below canton
-    america_size = 44.0
-    america_w = measure("AMERICA", "anton", america_size)
-    # Center in full width, place in lower portion
-    america_x = (W - america_w) / 2
-    america_y_center = canton_h + (H - canton_h) * 0.48
-    red_els.append(_p(text2path("AMERICA", "anton", america_size, america_x, america_y_center + america_size / 2)))
-
-    # ── Layer 3: BLUE — canton + stars + text ─────────────────────────────────
+    # BLUE: "AMERICA" giant 60mm + double border
+    # cy=62 → baseline=92mm, cap_top=40.4mm; star bottom=19.5mm → gap 20.9mm ✓
     blue_els = []
+    blue_els.append(_p(hcenter("AMERICA", "anton", 60.0, W, 62.0)))
+    blue_els.append(_p(rrect(0, 0, W, H, RX) + " " + rrect(bw, bw, W-2*bw, H-2*bw, RX-bw)))
 
-    # Canton rectangle (top-left) — even-odd with stars inside to punch them out
-    # Instead of punch-out, we do solid canton then add white stars on top...
-    # For multi-color print: canton = blue solid, stars will be WHITE stars on canton
-    # We use even-odd to carve stars from canton = white stars appear through to white base
-    canton_paths = rrect(0, 0, canton_w, canton_h, RX)
-    # Stars in canton: 5 rows of 5 stars (simplified, large)
-    star_r = 4.5
-    star_rows = 5
-    star_cols = 5
-    for row in range(star_rows):
-        n = star_cols if row % 2 == 0 else star_cols - 1
-        offset = (canton_w / star_cols) / 2
-        for col in range(n):
-            extra_off = 0 if row % 2 == 0 else (canton_w / star_cols) / 2
-            scx = extra_off + col * (canton_w / star_cols) + offset
-            scy = (row + 0.5) * (canton_h / star_rows)
-            canton_paths += " " + star(scx, scy, star_r)
-    blue_els.append(_p(canton_paths))
-
-    # "250 YEARS" text centered horizontally, in upper middle area
-    y250_size = 30.0
-    y250_text = "250 YEARS"
-    y250_w = measure(y250_text, "anton", y250_size)
-    # Place it to the right of the canton, centered in remaining width
-    right_x = canton_w
-    right_w = W - canton_w
-    y250_x = canton_w + (right_w - y250_w) / 2
-    y250_cy = canton_h * 0.42
-    blue_els.append(_p(text2path(y250_text, "anton", y250_size, y250_x, y250_cy + y250_size / 2)))
-
-    # "1776  ★  2026" centered full width, below AMERICA
-    dates_size = 16.0
-    dates_text = "1776  ★  2026"
-    dates_d = hcenter(dates_text, "montserrat", dates_size, W, H * 0.86)
-    blue_els.append(_p(dates_d))
-
-    # Thin border around entire sign
-    border_t = 2.0
-    border_d = (rrect(0, 0, W, H, RX) + " " +
-                rrect(border_t, border_t, W - 2*border_t, H - 2*border_t, RX - border_t))
-    blue_els.append(_p(border_d))
-
-    return Sign("01_america250_flag_plaque", W, H, [
+    return Sign("01_america250_america_bold", W, H, [
         Layer("base", "WHITE", base),
         Layer("red", "RED", red_els),
         Layer("blue", "BLUE", blue_els),
@@ -432,57 +375,39 @@ def make_a250_flag_plaque() -> Sign:
 
 def make_a250_star_badge() -> Sign:
     """
-    Circular badge — "AMERICA" top, huge "250" center, stars ring, dates.
-    Size: 220×220mm (circle)
+    Circular badge — "AMERICA" top, huge "250" center, 13-star ring, dates.
+    Horizontal bars removed — they were crossing through the "250" text.
+    220 × 220 mm
     """
     W = H = 220.0
-    CX, CY = W / 2, H / 2
+    CX, CY = W / 2, H / 2   # = 110
     R_OUTER = 107.0
+    R_IN = R_OUTER - 22.0    # inner radius = 85mm
 
-    # ── Layer 1: White circle base ────────────────────────────────────────────
     base = [_p(circle(CX, CY, R_OUTER))]
 
-    # ── Layer 2: RED — large "250", decorative ring, two horizontal bars ──────
+    # RED: large "250" — sole element, no bars, no subtitle
     red_els = []
-
-    # Large "250" centered — extremely bold
     big_size = 68.0
     big_w = measure("250", "anton", big_size)
     big_x = (W - big_w) / 2
-    big_cy = CY + 8
+    big_cy = CY - 2.0   # = 108mm
+    # baseline=142mm, cap_top=83.6mm — inside inner circle (25..195mm) ✓
     red_els.append(_p(text2path("250", "anton", big_size, big_x, big_cy + big_size / 2)))
 
-    # Two horizontal bars top and bottom of "250"
-    bar_t = 3.5
-    bar_margin = 20
-    red_els.append(_p(rrect(bar_margin, big_cy - 12, W - 2*bar_margin, bar_t)))
-    red_els.append(_p(rrect(bar_margin, big_cy + big_size + 4, W - 2*bar_margin, bar_t)))
-
-    # ── Layer 3: BLUE — "AMERICA", star ring, "1776 · 2026", outer ring ──────
+    # BLUE: outer ring border + "AMERICA" above + 13-star ring + dates below
     blue_els = []
-
-    # Outer ring border
     blue_els.append(_p(ring(CX, CY, R_OUTER, R_OUTER - 5.0)))
 
-    # "AMERICA" bold, centered, above the bars
-    am_size = 26.0
-    am_d = hcenter("AMERICA", "anton", am_size, W, CY - big_size * 0.68)
-    blue_els.append(_p(am_d))
+    # "AMERICA" — cy=56: baseline=68mm, cap_top=47mm; gap to 250 cap_top(83.6mm)=15.6mm ✓
+    blue_els.append(_p(hcenter("AMERICA", "anton", 24.0, W, 56.0)))
 
-    # Star ring (13 stars — one per original colony)
-    sring_d = star_ring(13, CX, CY, R_OUTER - 14, 5.0)
-    blue_els.append(_p(sring_d))
+    # 13 stars (one per original colony) carved white into ring via even-odd
+    blue_els.append(_p(star_ring(13, CX, CY, R_OUTER - 14, 5.0)))
 
-    # "1776  ·  2026" below the bars
-    dates_size = 15.0
-    dates_d = hcenter("1776  •  2026", "montserrat", dates_size, W,
-                      big_cy + big_size + 18)
-    blue_els.append(_p(dates_d))
-
-    # "YEARS OF FREEDOM" small subtitle between stars ring and bars
-    sub_size = 11.0
-    sub_d = hcenter("YEARS OF FREEDOM", "montserrat", sub_size, W, big_cy - 22)
-    blue_els.append(_p(sub_d))
+    # dates — cy=162: baseline=169.5mm, cap_top=156.6mm; gap to 250 baseline(142mm)=14.6mm ✓
+    # at y=169.5, hw=sqrt(85²-58.5²)=61.7mm → 123mm available, fits ✓
+    blue_els.append(_p(hcenter("1776  •  2026", "montserrat", 15.0, W, 162.0)))
 
     return Sign("02_america250_star_badge", W, H, [
         Layer("base", "WHITE", base),
@@ -493,48 +418,46 @@ def make_a250_star_badge() -> Sign:
 
 def make_a250_freedom_sign() -> Sign:
     """
-    Bold horizontal sign: FREEDOM / AMERICA / 1776-2026 with star accents.
-    Size: 280×110mm
+    LET FREEDOM RING — vintage poster energy.
+    Blue bands top/bottom carved white. Red FREEDOM hero center. Stars flanking.
+    280 × 182 mm
     """
-    W, H = 280.0, 110.0
-    RX = 8.0
+    W, H, RX = 280.0, 182.0, 8.0
+    bw = 2.5
+    top_h, bot_start = 55.0, 127.0   # blue bands; white zone = y 55..127 (72mm)
+    CY_white = (top_h + bot_start) / 2   # = 91mm
 
     base = [_p(rrect(0, 0, W, H, RX))]
 
-    # RED: "FREEDOM" massive + two flanking stars
+    # RED: "FREEDOM" Anton 58mm + 2 side stars flanking in white zone
     red_els = []
-    freedom_size = 46.0
-    freedom_d = hcenter("FREEDOM", "anton", freedom_size, W, H * 0.50)
-    red_els.append(_p(freedom_d))
+    # cy=91mm (center of white zone) → baseline=91+29=120mm, cap_top=120-49.8=70.2mm
+    # zone top=55mm → gap 15.2mm ✓; zone bottom=127mm → gap 7mm ✓
+    red_els.append(_p(hcenter("FREEDOM", "anton", 58.0, W, CY_white)))
+    red_els.append(_p(star(12.0, CY_white, 7.0)))
+    red_els.append(_p(star(268.0, CY_white, 7.0)))
 
-    # Two large stars flanking (left and right of FREEDOM text)
-    freedom_w = measure("FREEDOM", "anton", freedom_size)
-    left_x = (W - freedom_w) / 2 - 22
-    right_x = (W + freedom_w) / 2 + 10
-    for sx in [left_x, right_x]:
-        red_els.append(_p(star(sx, H / 2 + freedom_size * 0.1, 8.5)))
-
-    # BLUE: "AMERICA" subtitle, dates, double border, top star row
+    # BLUE: top band carved, bottom band carved, double border
     blue_els = []
 
+    # Top band: rrect top-only shape + "LET" BlackOps 34mm + flanking stars (even-odd)
+    # "LET" at 34mm BlackOps ≈ 101mm wide → left edge at (280-101)/2=89.5mm
+    # cy=top_h*0.46=25.3mm → baseline=25.3+17=42.3mm, cap_top=42.3-22.0=20.3mm ✓
+    band_top = rrect(0, 0, W, top_h, RX)
+    let_d = hcenter("LET", "blackops", 34.0, W, top_h * 0.46)
+    stars_top = star(42.0, top_h * 0.46, 7.0) + " " + star(238.0, top_h * 0.46, 7.0)
+    blue_els.append(_p(band_top + " " + let_d + " " + stars_top))
+
+    # Bottom band + "RING" carved + flanking stars
+    # "RING" BlackOps 34mm ≈ 122mm → left edge at (280-122)/2=79mm
+    # cy=bot_start+top_h*0.46=127+25.3=152.3mm → baseline=152.3+17=169.3mm, cap_top=147.3mm ✓
+    band_bot = rrect(0, bot_start, W, top_h, RX)
+    ring_d = hcenter("RING", "blackops", 34.0, W, bot_start + top_h * 0.46)
+    stars_bot = star(42.0, bot_start + top_h * 0.46, 7.0) + " " + star(238.0, bot_start + top_h * 0.46, 7.0)
+    blue_els.append(_p(band_bot + " " + ring_d + " " + stars_bot))
+
     # Double border
-    bw = 2.5
-    blue_els.append(_p(rrect(0, 0, W, H, RX) + " " +
-                       rrect(bw, bw, W-2*bw, H-2*bw, RX-bw)))
-
-    # "AMERICA" smaller, above FREEDOM
-    am_size = 18.0
-    am_d = hcenter("AMERICA", "montserrat", am_size, W, H * 0.17)
-    blue_els.append(_p(am_d))
-
-    # Thin divider line under AMERICA
-    div_y = H * 0.29
-    blue_els.append(_p(rrect(W*0.1, div_y, W*0.8, 1.8)))
-
-    # "1776  ★  2026" below FREEDOM
-    dates_size = 14.0
-    dates_d = hcenter("1776  ★  2026", "montserrat", dates_size, W, H * 0.86)
-    blue_els.append(_p(dates_d))
+    blue_els.append(_p(rrect(0, 0, W, H, RX) + " " + rrect(bw, bw, W-2*bw, H-2*bw, RX-bw)))
 
     return Sign("03_america250_freedom_sign", W, H, [
         Layer("base", "WHITE", base),
@@ -543,134 +466,104 @@ def make_a250_freedom_sign() -> Sign:
     ])
 
 
-def make_a250_welcome_patriotic() -> Sign:
+def make_a250_happy_4th() -> Sign:
     """
-    Round door hanger — WELCOME center, star ring border, patriotic colors.
-    Size: 210×240mm (circle 200mm + 40mm hanger slot at top)
+    HAPPY 4TH OF JULY — dramatic size hierarchy.
+    Red bands top/bottom carved white. Blue "4TH" dominates the center.
+    260 × 180 mm
     """
-    W = 210.0
-    H = 245.0
-    CX = W / 2
-    R = 100.0
-    CY = H - R - 5  # circle centered in lower portion
+    W, H, RX = 260.0, 180.0, 8.0
+    bw = 2.5
+    top_h = 46.0
+    bot_h = 42.0
+    bot_start = H - bot_h    # = 138mm; white zone y=46..138 (92mm)
+    CY_white = (top_h + bot_start) / 2   # = 92mm
 
-    # Layer 1: WHITE — circle + hanger
-    base = []
-    base.append(_p(circle(CX, CY, R)))
-    # Oval hanger slot
-    slot_w, slot_h = 22.0, 30.0
-    slot_cx = CX
-    slot_cy = CY - R - slot_h / 2 + 2
-    base.append(_p(rrect(slot_cx - slot_w/2, slot_cy - slot_h/2, slot_w, slot_h, slot_w/2)))
+    base = [_p(rrect(0, 0, W, H, RX))]
 
-    # Layer 2: BLUE — outer ring border + star ring + "WELCOME" arc band background
-    blue_els = []
-    # Outer ring (thick border)
-    blue_els.append(_p(ring(CX, CY, R, R - 12)))
-    # Star ring (inside the border band)
-    sring_d = star_ring(16, CX, CY, R - 6, 4.5)
-    blue_els.append(_p(sring_d))
-    # Bottom star row strip (bottom 20% of circle)
-    strip_y = CY + R * 0.60
-    strip_h = R * 0.40
-    # Clipped blue strip at bottom — arc chord shape approximated as rect
-    strip_path = f"M{CX-R*0.85:.2f},{strip_y:.2f}H{CX+R*0.85:.2f}V{strip_y+strip_h:.2f}H{CX-R*0.85:.2f}Z"
-    blue_els.append(_p(strip_path))
-    # Small stars on strip
-    for i in range(9):
-        scx = CX - R*0.8 + i * (R*1.6/8)
-        scy = strip_y + strip_h * 0.5
-        blue_els.append(_p(star(scx, scy, 4.0)))
-
-    # Layer 3: RED — "WELCOME" large text
+    # RED: top band "HAPPY" carved + flanking stars; bottom band "OF JULY" carved + flanking stars
     red_els = []
-    welcome_size = 28.0
-    ww = measure("WELCOME", "anton", welcome_size)
-    wx = (W - ww) / 2
-    wcy = CY - R * 0.05
-    red_els.append(_p(text2path("WELCOME", "anton", welcome_size, wx, wcy + welcome_size / 2)))
 
-    # "HOME" smaller below
-    home_size = 18.0
-    home_d = hcenter("HOME", "anton", home_size, W, CY + R * 0.25)
-    red_els.append(_p(home_d))
+    # "HAPPY" BlackOps 24mm ≈ 130mm → left edge at (260-130)/2=65mm
+    # cy=top_h*0.46=21.2mm → baseline=21.2+12=33.2mm, cap_top=33.2-15.5=17.7mm ✓
+    band_top = rrect(0, 0, W, top_h, RX)
+    happy_d = hcenter("HAPPY", "blackops", 24.0, W, top_h * 0.46)
+    stars_top = star(38.0, top_h * 0.46, 7.0) + " " + star(222.0, top_h * 0.46, 7.0)
+    red_els.append(_p(band_top + " " + happy_d + " " + stars_top))
 
-    return Sign("04_america250_welcome_patriotic", W, H, [
+    # "OF JULY" Anton 30mm ≈ 101mm → left edge at (260-101)/2=79.5mm
+    # cy=bot_start+bot_h*0.46=138+19.3=157.3mm → baseline=157.3+15=172.3mm, cap_top=146.5mm ✓
+    band_bot = rrect(0, bot_start, W, bot_h, RX)
+    ofjuly_d = hcenter("OF JULY", "anton", 30.0, W, bot_start + bot_h * 0.46)
+    stars_bot = star(38.0, bot_start + bot_h * 0.46, 7.0) + " " + star(222.0, bot_start + bot_h * 0.46, 7.0)
+    red_els.append(_p(band_bot + " " + ofjuly_d + " " + stars_bot))
+
+    # BLUE: "4TH" Anton 84mm solid + corner stars + double border
+    blue_els = []
+
+    # "4TH" at 84mm ≈ 136mm wide → left edge at (260-136)/2=62mm
+    # cy=CY_white=92mm → baseline=92+42=134mm, cap_top=134-72.1=61.9mm
+    # zone top=46mm → gap 15.9mm ✓; zone bottom=138mm → gap 4mm ✓
+    blue_els.append(_p(hcenter("4TH", "anton", 84.0, W, CY_white)))
+
+    # Corner stars at upper corners of white zone (above "4TH" cap_top)
+    # y=50: star bottom=58mm < cap_top(61.9mm) → 3.9mm gap ✓
+    blue_els.append(_p(star(18.0, 50.0, 8.0)))
+    blue_els.append(_p(star(242.0, 50.0, 8.0)))
+
+    # Double border
+    blue_els.append(_p(rrect(0, 0, W, H, RX) + " " + rrect(bw, bw, W-2*bw, H-2*bw, RX-bw)))
+
+    return Sign("04_america250_happy_4th", W, H, [
         Layer("base", "WHITE", base),
-        Layer("blue", "BLUE", blue_els),
         Layer("red", "RED", red_els),
+        Layer("blue", "BLUE", blue_els),
     ])
 
 
-def make_a250_happy_4th() -> Sign:
+def make_a250_land_free() -> Sign:
     """
-    Happy 4th of July — bold festive sign, rounded rect with fireworks.
-    Size: 250×200mm
+    LAND OF THE FREE / HOME OF THE BRAVE — opening of the national anthem.
+    Red top band / white "250" hero center / blue bottom band. Three-zone impact.
+    280 × 185 mm
     """
-    W, H = 250.0, 200.0
-    RX = 15.0
+    W, H, RX = 280.0, 185.0, 8.0
+    bw = 2.5
+    top_h = 60.0
+    bot_h = 55.0
+    bot_start = H - bot_h   # = 130mm; white zone y=60..130 (70mm)
 
-    # WHITE base
     base = [_p(rrect(0, 0, W, H, RX))]
 
-    # RED: "HAPPY" in arch banner top + "of JULY" bold bottom + firework bursts
+    # RED: top band "LAND OF THE FREE" carved + flanking stars + "250" hero in white zone
     red_els = []
 
-    # "HAPPY" arch banner
-    banner_w = W * 0.65
-    banner_h = 35.0
-    banner_y = 10.0
-    red_els.append(_p(banner_arch(W/2, banner_y, banner_w, banner_h)))
+    # "LAND OF THE FREE" Anton 18mm — wide phrase fills band
+    # cy=top_h*0.44=26.4mm → baseline=35.4mm, cap_top=19.9mm ✓
+    # Flanking stars clear of text (text ≈110mm wide, left edge ≈85mm; stars at x=52 and x=228) ✓
+    band_top = rrect(0, 0, W, top_h, RX)
+    lotf_d = hcenter("LAND OF THE FREE", "anton", 18.0, W, top_h * 0.44)
+    stars_top = star(52.0, top_h * 0.44, 6.0) + " " + star(228.0, top_h * 0.44, 6.0)
+    red_els.append(_p(band_top + " " + lotf_d + " " + stars_top))
 
-    # "HAPPY" in white-on-red — actually for 3D print, we skip reversed text
-    # Instead: "HAPPY" is the band itself, text carved from it via evenodd
-    happy_size = 24.0
-    happy_w = measure("HAPPY", "anton", happy_size)
-    happy_d = (banner_arch(W/2, banner_y, banner_w, banner_h) + " " +
-               text2path("HAPPY", "anton", happy_size,
-                        (W - happy_w)/2, banner_y + banner_h*0.5 + happy_size/2))
-    red_els.append(_p(happy_d))
+    # "250" Anton 64mm — hero element in white zone
+    # cy=92mm → baseline=124mm, cap_top=69.1mm; zone top=60mm → gap 9mm ✓; zone bot=130mm → gap 6mm ✓
+    red_els.append(_p(hcenter("250", "anton", 64.0, W, 92.0)))
 
-    # Large "JULY" at bottom
-    july_size = 38.0
-    july_d = hcenter("JULY", "anton", july_size, W, H * 0.80)
-    red_els.append(_p(july_d))
-
-    # Firework bursts — 4 of them in corners area
-    for (fx, fy, fr) in [(45, 100, 18), (205, 95, 15), (30, 155, 12), (220, 158, 14)]:
-        red_els.append(_p(firework(fx, fy, fr, fr*0.45, 8)))
-
-    # BLUE: "4TH" enormous + stars
+    # BLUE: bottom band "HOME OF THE BRAVE" carved + flanking stars + double border
     blue_els = []
 
-    # "4" huge
-    big4_size = 72.0
-    big4_w = measure("4", "anton", big4_size)
-    big4_x = W/2 - big4_w * 0.9
-    big4_y = H * 0.52
-    blue_els.append(_p(text2path("4", "anton", big4_size, big4_x, big4_y + big4_size / 2)))
+    # "HOME OF THE BRAVE" Anton 18mm
+    # cy=bot_start+bot_h*0.44=130+24.2=154.2mm → baseline=163.2mm, cap_top=147.7mm > 130mm ✓
+    band_bot = rrect(0, bot_start, W, bot_h, RX)
+    hotb_d = hcenter("HOME OF THE BRAVE", "anton", 18.0, W, bot_start + bot_h * 0.44)
+    stars_bot = star(52.0, bot_start + bot_h * 0.44, 6.0) + " " + star(228.0, bot_start + bot_h * 0.44, 6.0)
+    blue_els.append(_p(band_bot + " " + hotb_d + " " + stars_bot))
 
-    # "TH" superscript beside "4"
-    th_size = 28.0
-    th_x = W/2 + big4_w * 0.1
-    th_y = big4_y
-    blue_els.append(_p(text2path("TH", "anton", th_size, th_x, th_y + th_size / 2)))
+    # Double border
+    blue_els.append(_p(rrect(0, 0, W, H, RX) + " " + rrect(bw, bw, W-2*bw, H-2*bw, RX-bw)))
 
-    # "of" small script-style using montserrat italic-ish
-    of_size = 22.0
-    of_x = th_x + measure("TH", "anton", th_size) + 4
-    of_y = H * 0.57
-    blue_els.append(_p(text2path("of", "montserrat", of_size, of_x, of_y + of_size / 2)))
-
-    # Stars sprinkled around
-    for (sx, sy, sr) in [(18,50,7),(230,45,8),(25,180,6),(238,180,7),(125,175,5),(125,55,6)]:
-        blue_els.append(_p(star(sx, sy, sr)))
-
-    # Outer border
-    blue_els.append(_p(rrect(0, 0, W, H, RX) + " " +
-                       rrect(3, 3, W-6, H-6, RX-3)))
-
-    return Sign("05_america250_happy_4th", W, H, [
+    return Sign("05_america250_land_free", W, H, [
         Layer("base", "WHITE", base),
         Layer("red", "RED", red_els),
         Layer("blue", "BLUE", blue_els),
@@ -679,18 +572,18 @@ def make_a250_happy_4th() -> Sign:
 
 def make_a250_shield_badge() -> Sign:
     """
-    Patriotic shield/crest badge shape.
-    Size: 200×240mm
+    Patriotic shield. Blue top: "AMERICA" + 7 stars carved white (even-odd).
+    White zone: "250" red, sole hero — no vertical stripe crossing it.
+    200 × 240 mm
     """
     W, H = 200.0, 240.0
     CX = W / 2
 
     def shield(x0, y0, w, h, tip_y=None) -> str:
-        """Shield shape: flat top, angled sides, point at bottom."""
         if tip_y is None:
             tip_y = y0 + h
         rx = w * 0.08
-        x1, x2 = x0, x0 + w
+        x2 = x0 + w
         return (
             f"M{x0+rx:.2f},{y0:.2f}H{x2-rx:.2f}"
             f"Q{x2:.2f},{y0:.2f} {x2:.2f},{y0+rx:.2f}"
@@ -698,58 +591,48 @@ def make_a250_shield_badge() -> Sign:
             f"V{y0+rx:.2f}Q{x0:.2f},{y0:.2f} {x0+rx:.2f},{y0:.2f}Z"
         )
 
-    # WHITE: full shield
     base = [_p(shield(0, 0, W, H))]
 
-    # BLUE: upper half + star ring + "USA" + outer shield border
+    # BLUE: top band with "AMERICA" + 7 stars all carved white via even-odd + shield border
     blue_els = []
+    top_h = H * 0.40   # = 96mm
 
-    # Top blue band (upper 40% of shield)
-    top_h = H * 0.38
-    blue_band = (f"M{0+W*0.08:.2f},{0:.2f}H{W-W*0.08:.2f}"
-                 f"Q{W:.2f},{0:.2f} {W:.2f},{0+W*0.08:.2f}"
-                 f"V{top_h:.2f}H{0:.2f}V{0+W*0.08:.2f}"
-                 f"Q{0:.2f},{0:.2f} {0+W*0.08:.2f},{0:.2f}Z")
-    blue_els.append(_p(blue_band))
+    blue_band = (f"M{W*0.08:.2f},{0:.2f}H{W-W*0.08:.2f}"
+                 f"Q{W:.2f},{0:.2f} {W:.2f},{W*0.08:.2f}"
+                 f"V{top_h:.2f}H{0:.2f}V{W*0.08:.2f}"
+                 f"Q{0:.2f},{0:.2f} {W*0.08:.2f},{0:.2f}Z")
 
-    # Stars on blue band
-    for i in range(7):
-        scx = W * 0.12 + i * (W * 0.76 / 6)
-        scy = top_h * 0.48
-        blue_els.append(_p(star(scx, scy, 6.5)))
+    # "AMERICA" — cy=top_h*0.28=26.9mm → baseline=37.8mm, cap_top=18.8mm ✓
+    am_d = hcenter("AMERICA", "anton", 22.0, W, top_h * 0.28)
 
-    # "USA" centered in middle zone
-    usa_size = 40.0
-    usa_d = hcenter("USA", "anton", usa_size, W, H * 0.58)
-    blue_els.append(_p(usa_d))
+    # 7 stars carved into band — cy=top_h*0.70=67.2mm; gap from AMERICA baseline(37.8) = 23mm ✓
+    stars_d = " ".join(
+        star(W * 0.12 + i * (W * 0.76 / 6), top_h * 0.70, 6.5)
+        for i in range(7)
+    )
+    blue_els.append(_p(blue_band + " " + am_d + " " + stars_d))
 
-    # Outer shield border (thick)
-    outer = shield(0, 0, W, H)
-    inner = shield(5, 5, W-10, H-10, H-8)
-    blue_els.append(_p(outer + " " + inner))
+    # Shield border (even-odd outer+inner = frame)
+    blue_els.append(_p(shield(0, 0, W, H) + " " + shield(5, 5, W-10, H-10, H-8)))
 
-    # RED: center vertical stripe + "250" + date strip
+    # RED: "250" large + dates — no vertical stripe
     red_els = []
 
-    # Vertical center stripe (classic shield tricolor divider)
-    stripe_w = W * 0.22
-    red_els.append(_p(rrect(CX - stripe_w/2, top_h, stripe_w, H*0.30)))
+    # "250" 50mm — cy=top_h+(H-top_h)*0.35=146.4mm → baseline=171.4mm, cap_top=128.4mm > 96mm ✓
+    # At baseline y=171.4: shield width = 200-2*(171.4-132)/108*100 = 127mm > "250"(86mm) ✓
+    red_els.append(_p(hcenter("250", "anton", 50.0, W, top_h + (H - top_h) * 0.35)))
 
-    # "250" large, on white bands beside vertical stripe
-    n250_size = 28.0
-    n250_d = hcenter("250", "anton", n250_size, W, H * 0.54)
-    red_els.append(_p(n250_d))
-
-    # "1776 · 2026" at bottom of shield
-    dates_size = 13.0
-    dates_d = hcenter("1776  •  2026", "montserrat", dates_size, W, H * 0.85)
-    red_els.append(_p(dates_d))
+    # "1776 · 2026" 11mm — cy=top_h+(H-top_h)*0.60=182.4mm → baseline=187.9mm
+    # shield width at y=187.9: 96.5mm > "1776·2026"(~66mm) ✓
+    # gap from 250 baseline(171.4) to dates cap_top(178.4mm) = 7mm ✓
+    red_els.append(_p(hcenter("1776  •  2026", "montserrat", 11.0, W, top_h + (H - top_h) * 0.60)))
 
     return Sign("06_america250_shield_badge", W, H, [
         Layer("base", "WHITE", base),
         Layer("blue", "BLUE", blue_els),
         Layer("red", "RED", red_els),
     ])
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -946,11 +829,11 @@ def make_h_laundry_rules() -> Sign:
 def main():
     signs = [
         # America 250 package
-        (A250_DIR, make_a250_flag_plaque),
+        (A250_DIR, make_a250_america_bold),
         (A250_DIR, make_a250_star_badge),
         (A250_DIR, make_a250_freedom_sign),
-        (A250_DIR, make_a250_welcome_patriotic),
         (A250_DIR, make_a250_happy_4th),
+        (A250_DIR, make_a250_land_free),
         (A250_DIR, make_a250_shield_badge),
         # Home signs
         (HOME_DIR, make_h_welcome_bold),
