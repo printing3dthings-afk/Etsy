@@ -113,19 +113,28 @@ def _validate_svgs_in_zip(zf, svg_names: list) -> list[str]:
         problems = []
         if unique_fills > 20:
             problems.append(
-                f"{unique_fills} unique fill colors — clean 3D-print SVGs have ≤4. "
+                f"{unique_fills} unique fill colors — clean 3D-print SVGs have ≤4 discrete fills. "
                 f"This is a traced raster image, not a vector design. "
                 f"Buyers cannot use the Color Painting Fill tool on this file."
             )
         if path_count > 200:
             problems.append(
-                f"{path_count} path elements — clean vector designs have <50. "
+                f"{path_count} path elements — clean vector designs have <200. "
                 f"This indicates auto-traced raster art."
             )
-        if size_kb > 150:
+        # Size is only a red flag when combined with bad fills/paths.
+        # Single-file multi-color SVGs (4 color layers merged) legitimately run
+        # 200–400 KB; individual layer files should be <150 KB.
+        is_clean = unique_fills <= 20 and path_count <= 200
+        if size_kb > 500:
             problems.append(
-                f"{size_kb:.0f} KB — clean print-ready SVGs are typically <50 KB. "
-                f"Oversized SVG suggests raster-trace origin."
+                f"{size_kb:.0f} KB — even a multi-color single-file SVG should be <500 KB. "
+                f"Likely raster-trace origin."
+            )
+        elif size_kb > 150 and not is_clean:
+            problems.append(
+                f"{size_kb:.0f} KB — oversized for a layer SVG and has other quality problems. "
+                f"Likely raster-trace origin."
             )
         if problems:
             errors.append(f"{name}: " + "; ".join(problems))
