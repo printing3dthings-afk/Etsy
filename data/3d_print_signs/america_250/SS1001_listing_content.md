@@ -30,12 +30,12 @@ Craft Supplies & Tools > Patterns & How To > Digital Files
 
 🇺🇸 Celebrate 250 years of America with five bold, print-ready patriotic sign designs — made for your Bambu Lab, Creality, or any FDM 3D printer with multi-color capability.
 
-This SVG pack gives you **5 unique America 250th Anniversary sign designs** sized at 250×250mm (10×10 inches), ready to import directly into Bambu Studio or your favorite slicer. Each design uses exactly **4 colors** — perfect for a 4-slot AMS system — and arrives as a clean vector SVG you can scale to any size.
+This SVG pack gives you **5 unique America 250th Anniversary sign designs** sized at 235×235mm (~9.25×9.25 inches) — slices cleanly on a Bambu 256mm plate with the AMS prime tower, ready to import directly into Bambu Studio or your favorite slicer. Each design uses exactly **4 colors** — perfect for a 4-slot AMS system — and arrives as a clean vector SVG you can scale to any size.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT'S INCLUDED
 ━━━━━━━━━━━━━━━━━━━━━━━━
-✅ 5 SVG files — one per design, pre-sized at 250×250mm
+✅ 5 SVG files — one per design, pre-sized at 235×235mm (Bambu plate-ready)
 ✅ README with Bambu Studio step-by-step print setup
 ✅ All designs use max 4 colors (AMS 4-slot ready)
 ✅ Instant digital download — no shipping, no wait
@@ -71,9 +71,9 @@ This SVG pack gives you **5 unique America 250th Anniversary sign designs** size
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📐 SIZE & SCALING
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Default: **250×250mm (~10×10 inches)** — a bold statement piece
+Default: **235×235mm (~9.25×9.25 inches)** — slices on a Bambu P1S/X1C 256mm plate with prime tower, no warnings
 Scale down to 150mm for a tiered tray decoration
-Scale up to 300mm+ for a large entryway statement sign
+Scale up to ~250mm on a Bambu plate (relocate the prime tower), or larger on bigger printers
 Scaling is done in Bambu Studio before slicing — no editing needed
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -91,7 +91,7 @@ Scaling is done in Bambu Studio before slicing — no editing needed
 📄 TECHNICAL DETAILS
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • File format: SVG (scalable vector, works in any slicer)
-• Designed size: 250×250mm per sign
+• Designed size: 235×235mm per sign (scales to any size)
 • Colors per design: 4 maximum (AMS 4-slot ready)
 • Delivery: Instant digital download — ZIP file with 5 SVGs + README
 • License: Personal use + gifts. Not for resale or commercial printing services.

@@ -58,7 +58,7 @@ SIGN_DESCRIPTION = (
     "NOT engraved; all colors (navy blue, deep red, gold, cream) are flush in a single "
     "smooth plane, like an inlaid graphic. The flat face has a very fine uniform matte "
     "grain texture from the textured print plate. The sign is a thin flat panel about "
-    "6mm thick and approximately 10×10 inches (250×250mm) square, with FDM layer lines "
+    "6mm thick and approximately 9.25×9.25 inches (235×235mm) square, with FDM layer lines "
     "visible only on the thin side edges."
 )
 

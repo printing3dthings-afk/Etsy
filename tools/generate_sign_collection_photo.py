@@ -34,7 +34,7 @@ called 'America 250th Anniversary Signs'. Render a single photorealistic overhea
 product photograph showing ALL FIVE signs together.
 
 Each sign is a square 3D-printed panel made from colored PLA filament (Bambu Lab AMS \
-4-color printing), approximately 10x10 inches and 6mm thick, printed face-down on a \
+4-color printing), approximately 9.25x9.25 inches and 6mm thick, printed face-down on a \
 textured build plate. Each panel's front face is PERFECTLY FLAT — the design is NOT \
 raised, NOT embossed, NOT engraved; all colors sit flush in a single smooth plane like \
 an inlaid graphic, with a very fine uniform matte grain texture from the textured plate. \
