@@ -142,13 +142,13 @@ Professional Etsy product listing photography style. Completely photorealistic."
     },
 
     "tieredtray": {
-        "design_id": "stamp",
+        "design_id": "main",
         "out_name":  "photo_04_tieredtray_sign.jpg",
         "prompt": f"""\
 This is the flat graphic of a 3D-printed patriotic wall sign. Render it as a \
 single photorealistic product photograph of {SIGN_DESCRIPTION}
 
-Scene: A smaller version of the sign (scaled to about 6×6 inches / 150mm) is displayed \
+Scene: A smaller version of the sign (scaled to about 6x6 inches / 150mm) is displayed \
 on the middle tier of a three-tier farmhouse serving tray with black metal frame and \
 rustic wood tiers. The tray also holds: a small glass votive candle, a mini American \
 flag pick, and a few decorative stars. The tray sits on a cream-colored farmhouse \
@@ -156,17 +156,9 @@ kitchen counter. White shiplap wall background. Soft neutral farmhouse aesthetic
 
 The 3D-printed sign is centered on its tier, the most prominent item. The design from \
 this image is faithfully reproduced on the sign face as a completely FLAT flush \
-inlaid graphic — no raised lettering, no embossing. The sign is perfectly upright and \
-centered in the overall frame.
-
-DETAIL ACCURACY — MOST IMPORTANT REQUIREMENT: reproduce the stamp border EXACTLY \
-as in the source image. The layering from outside in is: (1) cream/off-white outer \
-margin, (2) the red stamp frame, (3) a thin gold pinstripe frame with corner \
-details, (4) cream interior. The perforation notches are semicircular CREAM bites \
-cut INTO THE OUTSIDE EDGE of the red frame — the red frame's OUTER boundary is \
-bumpy/wavy with cream half-circles, while its INNER boundary (against the gold \
-pinstripe) is perfectly STRAIGHT. Do NOT invert this: no scallops on the inner \
-side, no straight outer edge. Copy the source image's border exactly.
+inlaid graphic — no raised lettering, no embossing. Copy every color region, every \
+star, every text element exactly as positioned in the source image. The sign is \
+perfectly upright and centered in the overall frame.
 
 Photography: bright clean natural daylight, neutral-warm white balance, soft even \
 lighting. 50mm lens, eye-level. Square composition. No text overlays. No hands. \
