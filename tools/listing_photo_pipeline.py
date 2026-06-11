@@ -308,7 +308,7 @@ def generate_verified_photo(
             return PhotoResult(True, out_path, attempt, [])
 
         issues = verdict.get("issues", [])
-        reject = out_path.with_name(out_path.stem + f"_reject{attempt}.jpg")
+        reject = out_path.parent.parent / "_rejects" / f"{out_path.stem}_reject{attempt}.jpg"
         reject.parent.mkdir(parents=True, exist_ok=True)
         render.save(reject, "JPEG", quality=90)
         print(f"    ✗ verification failed: {issues}")
