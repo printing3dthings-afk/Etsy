@@ -128,6 +128,22 @@ def extract_palette(design_path: Path, n: int = 5) -> list[str]:
     return ["#%02X%02X%02X" % c for _, c in colors]
 
 
+# ── Step 1b: measure canvas facts (kills shape/background judgment errors) ───
+def canvas_facts(design_path: Path) -> str:
+    """Ground-truth facts about the design file, measured programmatically."""
+    img = Image.open(design_path).convert("RGB")
+    w, h = img.size
+    shape = "square" if abs(w - h) / max(w, h) < 0.05 else f"{w}:{h} rectangular"
+    # Background = median of the four corner patches
+    px = []
+    for cx, cy in [(10, 10), (w - 11, 10), (10, h - 11), (w - 11, h - 11)]:
+        patch = img.crop((cx - 8, cy - 8, cx + 8, cy + 8)).resize((1, 1))
+        px.append(patch.getpixel((0, 0)))
+    bg = tuple(sorted(c[i] for c in px)[len(px) // 2] for i in range(3))
+    return (f"the design file canvas is {shape}, and its background color "
+            f"(at the canvas corners/edges) is #%02X%02X%02X" % bg)
+
+
 # ── Step 2: auto-extract text (kills garbled lettering) ──────────────────────
 def extract_text(client, design_path: Path) -> str:
     """Every piece of text on the design, read by a vision model once."""
@@ -151,7 +167,7 @@ def extract_text(client, design_path: Path) -> str:
 
 # ── Step 3: verification (the automated eyeball) ─────────────────────────────
 def verify_render(client, design_paths: list[Path], render: Image.Image,
-                  physics_desc: str = "") -> dict:
+                  physics_desc: str = "", facts: str = "") -> dict:
     """Compare render against source design(s). Returns {pass: bool, issues: [...]}"""
     content = [{"type": "text", "text":
         "You are a product-photo QA inspector. The FIRST image(s) are the "
@@ -168,14 +184,19 @@ def verify_render(client, design_paths: list[Path], render: Image.Image,
         "saturation shifts from scene lighting are NORMAL and pass.\n"
         "3. ELEMENTS: missing, added, or redesigned design elements (borders, stars, "
         "icons, edge details)\n"
-        "4. SHAPE: the product must keep the FULL canvas of the design file — a "
-        "square design means a square panel including its background color; the "
-        "design must NOT be cut out into a circle or other silhouette\n"
+        f"4. SHAPE — use these measured ground-truth facts, do not judge by eye:\n"
+        f"{facts}\n"
+        "Fail SHAPE only if the photo's product face clearly contradicts those "
+        "facts (e.g. facts say square canvas but the panel is cut into a circle "
+        "or the background color region is absent).\n"
         "5. SURFACE: individual letters/shapes sticking UP out of the face as 3D "
         "embossing. The panel itself having thickness, a drop shadow, or the "
         "described surface grain is NORMAL and passes.\n\n"
         "Perspective, viewing angle, scale, lighting, shadows, and scene context "
         "are NEVER issues.\n"
+        "IMPORTANT: only report an issue if you can see it CLEARLY and are confident. "
+        "If you are uncertain whether something is an issue, do NOT report it — "
+        "uncertain observations are not defects.\n"
         'Respond with ONLY JSON: {"pass": true/false, "issues": ["specific issue", ...]}'}]
     for dp in design_paths:
         content.append({"type": "image_url", "image_url": {
@@ -220,12 +241,15 @@ def generate_verified_photo(
             raise FileNotFoundError(p)
 
     # Pre-extract ground truth from the actual files (never hand-typed)
-    palette_lines, text_lines = [], []
+    palette_lines, text_lines, fact_lines = [], [], []
     for i, dp in enumerate(design_paths, 1):
         palette = extract_palette(dp)
         palette_lines.append(f"Design {i} palette (exact): {', '.join(palette)}")
         text = extract_text(client, dp)
         text_lines.append(f"Design {i} contains exactly this text:\n{text}")
+        fact_lines.append(f"FACT (measured): for design {i}, {canvas_facts(dp)}. "
+                          "The product face is this FULL canvas — same outer shape, "
+                          "same background color, edge to edge.")
     print(f"  Extracted palette + text from {len(design_paths)} design(s)")
 
     n = len(design_paths)
@@ -241,6 +265,7 @@ def generate_verified_photo(
         "- The product keeps the FULL canvas of the design including its background "
         "color: a square design file = a square product face, edge to edge. Never "
         "cut the design out into a circle or silhouette shape.\n"
+        + "\n".join(fact_lines) + "\n"
         + "\n".join(palette_lines) + "\n"
         + "\n".join(text_lines) + "\n"
         "Every text item must be reproduced character-for-character.\n\n"
@@ -273,7 +298,8 @@ def generate_verified_photo(
             base64.b64decode(resp.data[0].b64_json))).convert("RGB")
 
         print(f"    verifying against source design(s)...")
-        verdict = verify_render(client, design_paths, render, PHYSICS[physics])
+        verdict = verify_render(client, design_paths, render, PHYSICS[physics],
+                                "\n".join(fact_lines))
         if verdict.get("pass"):
             final = render.resize((MOCKUP_SIZE, MOCKUP_SIZE), Image.LANCZOS)
             out_path.parent.mkdir(parents=True, exist_ok=True)
