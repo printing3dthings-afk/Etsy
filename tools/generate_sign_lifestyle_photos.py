@@ -46,13 +46,20 @@ DESIGN_FILES = {
 }
 
 # ── Sign description shared across all scenes ─────────────────────────────────
+# Real-world accuracy: these signs are printed FACE-DOWN on a textured PEI plate.
+# The visible face is PERFECTLY FLAT — every color sits flush in one single plane
+# (multi-color comes from filament swaps in the first layers). The face has a fine
+# uniform matte grain from the textured plate. NO raised lettering, NO embossing,
+# NO bevels, NO surface relief of any kind. Layer lines only on the side edges.
 SIGN_DESCRIPTION = (
-    "a square 3D-printed patriotic wall sign made from colored PLA filament, "
-    "printed with a Bambu Lab 3D printer using 4-color AMS system. "
-    "The sign has visible fine layer lines characteristic of FDM 3D printing, "
-    "a slightly matte surface texture, and a flat back. "
-    "Colors are bold navy blue, deep red, gold, and cream. "
-    "The sign is approximately 10×10 inches (250×250mm) square."
+    "a square 3D-printed patriotic sign made from colored PLA filament on a "
+    "Bambu Lab printer with 4-color AMS, printed face-down on a textured build plate. "
+    "The entire front face is PERFECTLY FLAT — the design is NOT raised, NOT embossed, "
+    "NOT engraved; all colors (navy blue, deep red, gold, cream) are flush in a single "
+    "smooth plane, like an inlaid graphic. The flat face has a very fine uniform matte "
+    "grain texture from the textured print plate. The sign is a thin flat panel about "
+    "6mm thick and approximately 10×10 inches (250×250mm) square, with FDM layer lines "
+    "visible only on the thin side edges."
 )
 
 # ── Scene configs ─────────────────────────────────────────────────────────────
@@ -75,8 +82,8 @@ the right. A few loose dried eucalyptus stems lean against the wall.
 The 3D-printed sign itself occupies the CENTER of the frame, filling approximately \
 60% of the image width. It is mounted flat against the wall with a subtle drop shadow \
 showing depth. The design from this image is faithfully reproduced on the sign face — \
-same colors, same composition, same details — rendered with the matte surface texture \
-of FDM-printed PLA plastic. The sign is perfectly centered and level.
+same colors, same composition, same details — rendered as a completely FLAT inlaid graphic \
+flush with the sign face — no raised or embossed elements. The sign is perfectly centered and level.
 
 Photography: warm cream and neutral tones, soft diffused natural window light from the \
 left, warm white balance, gentle shadow to the right. 50mm lens, eye-level, square \
@@ -98,8 +105,8 @@ plant sits on the porch floor. Bright summer daylight, American patriotic porch 
 
 The 3D-printed sign is mounted flat and level on the porch wall, centered in the frame, \
 filling approximately 55% of the image. The design from this image is faithfully \
-reproduced on the sign face with the matte FDM-printed PLA surface texture visible. \
-The sign is perfectly centered.
+reproduced on the sign face as a completely FLAT flush inlaid graphic — \
+no raised lettering, no embossing. The sign is perfectly centered.
 
 Photography: bright clean natural daylight, slightly warm white balance, no harsh \
 shadows. 35mm lens, eye-level. Square composition. No text overlays. No hands. \
@@ -121,7 +128,7 @@ is white-painted wood with classic molding. Soft warm interior lighting.
 
 The 3D-printed sign stands centered on the mantel, filling approximately 50% of the \
 frame height. The design from this image is faithfully reproduced on the sign face \
-with matte FDM-printed PLA surface texture. The sign is perfectly upright and centered.
+as a completely FLAT flush inlaid graphic — no raised lettering, no embossing. The sign is perfectly upright and centered.
 
 Photography: warm interior ambient light, soft shadows, warm white balance. 50mm lens, \
 slightly above eye-level angled down. Square composition. No text overlays. No hands. \
@@ -142,8 +149,9 @@ flag pick, and a few decorative stars. The tray sits on a cream-colored farmhous
 kitchen counter. White shiplap wall background. Soft neutral farmhouse aesthetic.
 
 The 3D-printed sign is centered on its tier, the most prominent item. The design from \
-this image is faithfully reproduced on the sign face with matte FDM-printed PLA surface \
-texture. The sign is perfectly upright and centered in the overall frame.
+this image is faithfully reproduced on the sign face as a completely FLAT flush \
+inlaid graphic — no raised lettering, no embossing. The sign is perfectly upright and \
+centered in the overall frame.
 
 Photography: bright clean natural daylight, neutral-warm white balance, soft even \
 lighting. 50mm lens, eye-level. Square composition. No text overlays. No hands. \
@@ -164,31 +172,11 @@ in the background. Bright patriotic summer outdoor setting. Blue sky with light 
 
 The sign is upright on its stake, centered in the frame, filling approximately 55% \
 of the frame. The design from this image is faithfully reproduced on the sign face \
-with matte FDM-printed PLA surface texture. The sign is perfectly upright and centered.
+as a completely FLAT flush inlaid graphic — no raised lettering, no embossing. The sign is perfectly upright and centered.
 
 Photography: bright natural sunlight, slightly warm, gentle shadows. 50mm lens, \
 slightly below eye-level to show sky. Square composition. No text overlays. No hands. \
 Outdoor garden Etsy product photography. Completely photorealistic.""",
-    },
-
-    "collection": {
-        "design_id": "main",
-        "out_name":  "photo_06_collection_overview.jpg",
-        "prompt": f"""\
-This is one of five 3D-printed patriotic wall sign designs in a set called \
-'America 250th Anniversary Signs'. Render a photorealistic flat lay product photograph.
-
-Scene: Five square 3D-printed signs (each {SIGN_DESCRIPTION}) are laid flat on \
-a clean white linen surface, arranged in a neat 2-3 grid or cross pattern. \
-They are evenly spaced with small gaps between them. The signs have slightly varying \
-patriotic designs (eagle, medallion, art deco sunburst, vintage stamp, heraldic shield) \
-but all use the same navy/red/gold/cream palette. A few scattered decorative gold stars \
-and a small American flag ribbon decorate the spaces between the signs. \
-The surface is clean white textured linen. Bright even overhead lighting.
-
-Photography: bright clean overhead diffused light, pure white balance, no shadows, \
-product catalog style. Camera directly overhead, square composition. No text overlays. \
-No hands. Professional Etsy multi-product flat lay. Completely photorealistic.""",
     },
 
 }

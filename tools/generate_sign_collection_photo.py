@@ -33,13 +33,22 @@ These five images are the five flat graphics of a set of 3D-printed patriotic wa
 called 'America 250th Anniversary Signs'. Render a single photorealistic overhead flat lay \
 product photograph showing ALL FIVE signs together.
 
-Each sign is a square 3D-printed plaque made from colored PLA filament (Bambu Lab AMS \
-4-color printing), approximately 10x10 inches, with a slightly matte surface texture and \
-visible fine FDM layer lines. Each plaque's face must reproduce its source image EXACTLY — \
-identical colors, identical text, identical composition, identical details. Do not redesign, \
-restyle, simplify, or invent any sign. The five signs are: image 1 (eagle design), \
-image 2 (circular medallion), image 3 (art deco sunburst), image 4 (vintage stamp), \
-image 5 (heraldic shield).
+Each sign is a square 3D-printed panel made from colored PLA filament (Bambu Lab AMS \
+4-color printing), approximately 10x10 inches and 6mm thick, printed face-down on a \
+textured build plate. Each panel's front face is PERFECTLY FLAT — the design is NOT \
+raised, NOT embossed, NOT engraved; all colors sit flush in a single smooth plane like \
+an inlaid graphic, with a very fine uniform matte grain texture from the textured plate. \
+FDM layer lines are visible only on the thin side edges. Each panel's face must \
+reproduce its source image EXACTLY — identical colors, identical text, identical \
+composition, identical details. Do not redesign, restyle, simplify, or invent any sign. \
+The five signs are: image 1 (eagle design), image 2 (circular medallion), \
+image 3 (art deco sunburst), image 4 (vintage stamp), image 5 (heraldic shield).
+
+CRITICAL TEXT ACCURACY: every piece of lettering must be copied character-for-character \
+from the source images. The dates read exactly "1776" and "2026" — never 2028 or any \
+other year. The stamp's small bottom-right word reads exactly "FOREVER". \
+"AMERICA", "250", "UNITED STATES", "UNITED STATES OF AMERICA", "ANNIVERSARY" — \
+all spelled exactly as shown in the sources. No invented words, no garbled letters.
 
 Scene: the five square signs are laid flat on a clean white textured linen surface, \
 arranged neatly — one in the center, four around it (or a tidy 2-1-2 layout), evenly \
