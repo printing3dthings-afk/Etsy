@@ -189,12 +189,13 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
 - [x] ⚠️ DISCLAIMER above the fold ✓
 - [x] Price: $9.99 matches 5-design pack tier ✓
 
-**Photos (PENDING — not yet generated)**
-- [ ] All 10 photos unique (MD5 verified)
-- [ ] Lifestyle photos (slots 1–5) generated with images.edit using actual design preview images as input
-- [ ] "DIGITAL FILE — 3D PRINT DOWNLOAD" badge on all lifestyle photos (slots 1–5)
-- [ ] Photo 7 HOW-TO shows .3mf open workflow + Color Painting Fill tool
-- [ ] NEVER shows "Split by Color" in photo 7
+**Photos (generated — awaiting Scott review)**
+- [x] All 10 photos unique (MD5 verified — 0 duplicates) ✓
+- [x] Lifestyle photos (slots 1–5) generated with images.edit using actual design preview images as input ✓
+- [ ] "DIGITAL FILE — 3D PRINT DOWNLOAD" badge on all lifestyle photos (slots 1–5) — ADD IN CANVA before publish
+- [x] Photo 7 HOW-TO shows .3mf open workflow + Color Painting Fill tool ✓
+- [x] NEVER shows "Split by Color" in photo 7 ✓
+- Output: `data/3d_print_signs/america_250/listing_photos/final_v2/`
 
 **File**
 - [x] ZIP: SS1001_america250_3dprint_pack.zip ✓
@@ -203,6 +204,7 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
 - [x] ZIP contains 5 design folders × (1 .3mf + 3 layer SVGs) = 20 files + README ✓
 
 **BLOCKED — awaiting:**
-- [ ] Scott review of all 10 listing photos (not yet generated)
+- [ ] Scott review of all 10 listing photos ← READY FOR REVIEW
+- [ ] "DIGITAL FILE — 3D PRINT DOWNLOAD" badge added to photos 1–5 in Canva
 - [ ] Scott final approval before publishing
 - [ ] OAuth active: run `python tools/etsy_oauth.py` then `python tools/publish_ss1001_draft.py`

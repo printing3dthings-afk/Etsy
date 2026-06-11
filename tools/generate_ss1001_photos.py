@@ -1,0 +1,508 @@
+#!/usr/bin/env python3
+"""
+Generate all 10 listing photos for SS1001 America 250 3D Sign Pack.
+
+Uses gpt-image-1 images.edit with the actual design previews as input
+(per CLAUDE.md cardinal rule: every photo must show the real product).
+
+Photos generated:
+  1. Hero gallery wall (3 signs)
+  2. Interior mantel / living room
+  3. Front porch / outdoor
+  4. Tiered tray farmhouse
+  5. Yard / garden stake sign
+  6. Collection overview (all 5 designs — PIL flat lay)
+  7. HOW-TO graphic (Bambu Studio workflow — PIL text)
+  8. Detail close-up (one sign)
+  9. What's included / specs (PIL text)
+  10. Design lineup (all 5 previews — PIL composite)
+
+Output: data/3d_print_signs/america_250/listing_photos/final_v2/
+"""
+
+from __future__ import annotations
+import base64
+import io
+import os
+import sys
+import textwrap
+from pathlib import Path
+
+from dotenv import load_dotenv
+load_dotenv()
+
+from openai import OpenAI
+from PIL import Image, ImageDraw, ImageFont
+
+client = OpenAI()
+
+ROOT = Path(__file__).parent.parent
+DESIGN_DIR = ROOT / "data" / "3d_print_signs" / "america_250"
+OUT_DIR = DESIGN_DIR / "listing_photos" / "final_v2"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+DESIGNS = {
+    "america_bold": DESIGN_DIR / "01_america250_america_bold" / "preview.jpg",
+    "star_badge":   DESIGN_DIR / "02_america250_star_badge"   / "preview.jpg",
+    "freedom_sign": DESIGN_DIR / "03_america250_freedom_sign" / "preview.jpg",
+    "happy_4th":    DESIGN_DIR / "04_america250_happy_4th"    / "preview.jpg",
+    "land_free":    DESIGN_DIR / "05_america250_land_free"    / "preview.jpg",
+}
+
+FINAL_SIZE = 2400
+
+# ── Shared language ────────────────────────────────────────────────────────────
+
+STYLE = (
+    "Photography style: bright warm editorial Etsy product photography. "
+    "Warm cream walls and natural linen/oak surfaces. "
+    "Soft diffused window light from the left, warm white balance, gentle shadow to right. "
+    "No people, no hands, no text overlays, no watermarks. Square 1:1 format."
+)
+
+SIGN_RENDER = (
+    "The input image shows the flat 2D design layout for a 3D printed wall sign. "
+    "Render it as a physical multi-color FDM 3D printed sign with these exact properties: "
+    "cream/off-white PLA base plate 4mm thick with a slight bevel on all edges; "
+    "the text and design elements are raised 2mm above the base in "
+    "deep navy blue PLA and deep patriotic red PLA, exactly matching the layout in the input image. "
+    "The face of the sign is perfectly smooth (printed face-down on textured PEI). "
+    "Subtle layer lines visible on the side edges only. "
+    "Preserve the EXACT design: same text content, same star positions, same color regions as the input."
+)
+
+
+# ── API helper ─────────────────────────────────────────────────────────────────
+
+def generate(images: list[Path], prompt: str, out_path: Path) -> Path:
+    """images.edit call → save at 2400×2400."""
+    print(f"  Generating {out_path.name}...")
+    img_files = [open(p, "rb") for p in images]
+    try:
+        result = client.images.edit(
+            model="gpt-image-1",
+            image=img_files if len(img_files) > 1 else img_files[0],
+            prompt=prompt,
+            size="1024x1024",
+        )
+    finally:
+        for f in img_files:
+            f.close()
+
+    raw = base64.b64decode(result.data[0].b64_json)
+    img = Image.open(io.BytesIO(raw)).convert("RGB")
+    img = img.resize((FINAL_SIZE, FINAL_SIZE), Image.LANCZOS)
+    img.save(out_path, "JPEG", quality=92)
+    print(f"    → {out_path.stat().st_size // 1024} KB")
+    return out_path
+
+
+# ── Photo 1 — Hero gallery wall ────────────────────────────────────────────────
+
+def photo_01():
+    return generate(
+        [DESIGNS["america_bold"], DESIGNS["star_badge"], DESIGNS["freedom_sign"]],
+        f"{SIGN_RENDER} "
+        "Render THREE 3D printed signs displayed as a gallery wall arrangement on a warm cream "
+        "textured plaster wall. LEFT: the rectangular AMERICA BOLD sign (wider, landscape). "
+        "CENTER: the circular STAR BADGE sign. RIGHT: the rectangular FREEDOM SIGN (wider, landscape). "
+        "Signs are mounted at the same height, evenly spaced, centered in the frame. "
+        "Below: a natural oak console table with one small terracotta vase containing dried pampas "
+        "grass on the left, and a folded dark navy linen cloth on the right. "
+        "Subject fills center 70% of frame. 5% neutral padding at all edges. "
+        f"{STYLE}",
+        OUT_DIR / "photo_01_hero_gallery_wall.jpg",
+    )
+
+
+# ── Photo 2 — Interior mantel ──────────────────────────────────────────────────
+
+def photo_02():
+    return generate(
+        [DESIGNS["land_free"]],
+        f"{SIGN_RENDER} "
+        "Render ONE 3D printed sign displayed on a fireplace mantel in a cozy living room. "
+        "The LAND OF THE FREE sign stands upright, centered on the mantel. "
+        "Mantel props: a small potted succulent on the left, a white ceramic pillar candle on the right. "
+        "Warm cream plaster wall behind. Warm ambient light. "
+        "Subject fills center 65% of frame. "
+        f"{STYLE}",
+        OUT_DIR / "photo_02_mantel_sign.jpg",
+    )
+
+
+# ── Photo 3 — Front porch ─────────────────────────────────────────────────────
+
+def photo_03():
+    return generate(
+        [DESIGNS["happy_4th"]],
+        f"{SIGN_RENDER} "
+        "Render ONE 3D printed sign mounted on a white painted wood front porch wall beside a door. "
+        "The HAPPY 4TH sign is hung at eye level on the exterior wall. "
+        "Props visible: a small potted red geranium on porch railing, American flag bunting hint in corner. "
+        "Bright natural outdoor summer daylight. "
+        "Subject fills center 65% of frame. "
+        f"{STYLE}",
+        OUT_DIR / "photo_03_porch_sign.jpg",
+    )
+
+
+# ── Photo 4 — Tiered tray ─────────────────────────────────────────────────────
+
+def photo_04():
+    return generate(
+        [DESIGNS["star_badge"]],
+        f"{SIGN_RENDER} "
+        "Render the circular STAR BADGE 3D printed sign displayed on the second tier of a white "
+        "farmhouse tiered tray on a kitchen counter. "
+        "The sign leans slightly against the tray back. "
+        "Other tray items: small American flag pick, a tiny red berry stem, a cream pillar candle. "
+        "Bright clean natural light. "
+        "Subject fills center 65% of frame. "
+        f"{STYLE}",
+        OUT_DIR / "photo_04_tieredtray_sign.jpg",
+    )
+
+
+# ── Photo 5 — Yard / stake sign ───────────────────────────────────────────────
+
+def photo_05():
+    return generate(
+        [DESIGNS["america_bold"]],
+        f"{SIGN_RENDER} "
+        "Render the AMERICA BOLD 3D printed sign mounted on a wooden garden stake in a front yard. "
+        "Sign is at standing height, green grass around the base of the stake, "
+        "suburban home with white porch slightly blurred in background. "
+        "Bright summer daylight. "
+        "Subject fills center 65% of frame. "
+        f"{STYLE}",
+        OUT_DIR / "photo_05_yard_sign.jpg",
+    )
+
+
+# ── Photo 6 — Collection overview (PIL flat lay) ──────────────────────────────
+
+def photo_06():
+    """Pixel-perfect PIL flat lay of all 5 design previews on a neutral background."""
+    out_path = OUT_DIR / "photo_06_collection_overview.jpg"
+    print(f"  Generating {out_path.name} (PIL flat lay)...")
+
+    BG_COLOR = (245, 240, 230)   # warm cream
+    CANVAS = FINAL_SIZE
+    BORDER = 60
+    GAP = 30
+
+    canvas = Image.new("RGB", (CANVAS, CANVAS), BG_COLOR)
+    draw = ImageDraw.Draw(canvas)
+
+    designs_list = list(DESIGNS.values())
+
+    # Top row: 3 designs
+    top_w = (CANVAS - 2 * BORDER - 2 * GAP) // 3
+    top_h = int(top_w * 0.8)
+    y_top = BORDER
+
+    for i, p in enumerate(designs_list[:3]):
+        img = Image.open(p).convert("RGB")
+        img = img.resize((top_w, top_h), Image.LANCZOS)
+        x = BORDER + i * (top_w + GAP)
+        canvas.paste(img, (x, y_top))
+
+    # Bottom row: 2 designs centered
+    bot_w = int((CANVAS - 2 * BORDER - GAP) / 2)
+    bot_h = int(bot_w * 0.8)
+    y_bot = y_top + top_h + GAP * 2
+    x_start = (CANVAS - 2 * bot_w - GAP) // 2
+
+    for i, p in enumerate(designs_list[3:]):
+        img = Image.open(p).convert("RGB")
+        img = img.resize((bot_w, bot_h), Image.LANCZOS)
+        x = x_start + i * (bot_w + GAP)
+        canvas.paste(img, (x, y_bot))
+
+    # Small text label
+    try:
+        font = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 48)
+        font_sm = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 32)
+    except Exception:
+        font = ImageFont.load_default()
+        font_sm = font
+
+    label = "5 DESIGNS INCLUDED"
+    sub = "America 250th Anniversary · 1776–2026"
+    draw.text((CANVAS // 2, CANVAS - 75), label, fill=(30, 30, 80), font=font, anchor="mm")
+    draw.text((CANVAS // 2, CANVAS - 35), sub, fill=(120, 80, 60), font=font_sm, anchor="mm")
+
+    canvas.save(out_path, "JPEG", quality=92)
+    print(f"    → {out_path.stat().st_size // 1024} KB")
+    return out_path
+
+
+# ── Photo 7 — How-To Bambu Studio (PIL) ───────────────────────────────────────
+
+def photo_07():
+    """3-step Bambu Studio workflow infographic."""
+    out_path = OUT_DIR / "photo_07_bambu_howto.jpg"
+    print(f"  Generating {out_path.name} (PIL infographic)...")
+
+    BG = (248, 245, 240)
+    NAVY = (27, 58, 104)
+    RED = (178, 34, 52)
+    CREAM = (245, 240, 230)
+
+    canvas = Image.new("RGB", (FINAL_SIZE, FINAL_SIZE), BG)
+    draw = ImageDraw.Draw(canvas)
+
+    try:
+        font_lg = ImageFont.truetype("/usr/local/share/fonts/google/Anton-Regular.ttf", 90)
+        font_md = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 56)
+        font_sm = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 44)
+        font_xs = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 34)
+    except Exception:
+        font_lg = font_md = font_sm = font_xs = ImageFont.load_default()
+
+    # Title
+    draw.text((FINAL_SIZE // 2, 110), "HOW TO PRINT IN BAMBU STUDIO",
+              fill=NAVY, font=font_md, anchor="mm")
+    draw.line([(200, 160), (FINAL_SIZE - 200, 160)], fill=RED, width=4)
+
+    # 3 step boxes
+    steps = [
+        ("1", "OPEN .3MF FILE", "File → Open → select\n[design].3mf\nAll 3 color parts appear,\npre-positioned at correct Z heights"),
+        ("2", "ASSIGN AMS COLORS", "Click each part in Objects panel:\n• base_WHITE → White PLA\n• layer_RED → Deep Red PLA\n• layer_BLUE → Navy Blue PLA"),
+        ("3", "SLICE & PRINT", "Click Slice → verify color\nmapping in print dialog\nPress Print!\n(Tip: flip face-down on\ntextured PEI for smooth face)"),
+    ]
+
+    box_w = 680
+    box_h = 800
+    y_box = 220
+    x_starts = [(FINAL_SIZE // 2) - box_w - 30,
+                (FINAL_SIZE // 2) - box_w // 2,
+                (FINAL_SIZE // 2) + 30]
+    # 3 columns
+    col_w = (FINAL_SIZE - 200) // 3
+    for i, (num, title, body) in enumerate(steps):
+        x0 = 100 + i * col_w
+        x_center = x0 + col_w // 2
+
+        # Circle number
+        r = 70
+        draw.ellipse([x_center - r, y_box, x_center + r, y_box + r * 2], fill=NAVY)
+        draw.text((x_center, y_box + r), num, fill="white", font=font_lg, anchor="mm")
+
+        # Title
+        draw.text((x_center, y_box + r * 2 + 50), title, fill=RED, font=font_sm, anchor="mm")
+
+        # Body
+        y_body = y_box + r * 2 + 120
+        for line in body.split("\n"):
+            draw.text((x_center, y_body), line.strip(), fill=(50, 50, 70),
+                      font=font_xs, anchor="mm")
+            y_body += 52
+
+    # Footer note
+    draw.line([(200, FINAL_SIZE - 180), (FINAL_SIZE - 200, FINAL_SIZE - 180)], fill=RED, width=3)
+    draw.text((FINAL_SIZE // 2, FINAL_SIZE - 130),
+              "✓ Use Color Painting Fill tool (press N) to adjust any color region",
+              fill=NAVY, font=font_xs, anchor="mm")
+    draw.text((FINAL_SIZE // 2, FINAL_SIZE - 75),
+              "America 250 · OnBrandCraftz",
+              fill=(150, 120, 90), font=font_xs, anchor="mm")
+
+    canvas.save(out_path, "JPEG", quality=92)
+    print(f"    → {out_path.stat().st_size // 1024} KB")
+    return out_path
+
+
+# ── Photo 8 — Detail close-up ────────────────────────────────────────────────
+
+def photo_08():
+    return generate(
+        [DESIGNS["star_badge"]],
+        f"{SIGN_RENDER} "
+        "Render a macro close-up photograph of the circular STAR BADGE 3D printed sign. "
+        "Sign fills 80% of the frame, photographed straight-on. "
+        "The raised navy blue and red design elements clearly show the 2mm height difference "
+        "above the cream base. Focus on the crisp layer detail and color separation. "
+        "Clean neutral cream background, extreme shallow depth of field at edges. "
+        f"{STYLE}",
+        OUT_DIR / "photo_08_detail_closeup.jpg",
+    )
+
+
+# ── Photo 9 — What's included (PIL) ──────────────────────────────────────────
+
+def photo_09():
+    """What's included specs graphic."""
+    out_path = OUT_DIR / "photo_09_whats_included.jpg"
+    print(f"  Generating {out_path.name} (PIL specs)...")
+
+    BG = (248, 245, 240)
+    NAVY = (27, 58, 104)
+    RED = (178, 34, 52)
+
+    canvas = Image.new("RGB", (FINAL_SIZE, FINAL_SIZE), BG)
+    draw = ImageDraw.Draw(canvas)
+
+    try:
+        font_title = ImageFont.truetype("/usr/local/share/fonts/google/Anton-Regular.ttf", 110)
+        font_lg = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 62)
+        font_md = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 50)
+        font_sm = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 40)
+    except Exception:
+        font_title = font_lg = font_md = font_sm = ImageFont.load_default()
+
+    # Header
+    draw.rectangle([0, 0, FINAL_SIZE, 200], fill=NAVY)
+    draw.text((FINAL_SIZE // 2, 100), "WHAT'S INCLUDED", fill="white",
+              font=font_title, anchor="mm")
+
+    items = [
+        ("✅", "5 America 250 Sign Designs", "America Bold · Star Badge · Freedom Sign\nHappy 4th · Land of the Free"),
+        ("✅", "5 × .3MF FILES", "Pre-assembled — open in Bambu Studio,\nassign AMS colors, slice & print"),
+        ("✅", "15 × LAYER SVG FILES", "3 color layers per design\n(base + red + blue) for custom sizing"),
+        ("✅", "README.TXT", "Full printing guide for both formats\n(.3mf and layer SVG workflows)"),
+        ("❗", "DIGITAL DOWNLOAD ONLY", "No physical sign included.\nYou print it yourself on your 3D printer."),
+    ]
+
+    y = 240
+    for icon, title, sub in items:
+        # Icon circle
+        draw.text((170, y + 40), icon, fill=NAVY, font=font_lg, anchor="mm")
+        # Title
+        draw.text((230, y + 10), title, fill=NAVY, font=font_md)
+        # Sub
+        for line in sub.split("\n"):
+            y += 50
+            draw.text((230, y + 10), line, fill=(80, 80, 100), font=font_sm)
+        y += 90
+        # Divider
+        if icon != "❗":
+            draw.line([(100, y - 20), (FINAL_SIZE - 100, y - 20)],
+                      fill=(200, 190, 180), width=2)
+
+    # Footer
+    draw.rectangle([0, FINAL_SIZE - 100, FINAL_SIZE, FINAL_SIZE], fill=RED)
+    draw.text((FINAL_SIZE // 2, FINAL_SIZE - 50),
+              "Instant Download · Personal Use + Gifts · OnBrandCraftz",
+              fill="white", font=font_sm, anchor="mm")
+
+    canvas.save(out_path, "JPEG", quality=92)
+    print(f"    → {out_path.stat().st_size // 1024} KB")
+    return out_path
+
+
+# ── Photo 10 — Design lineup (PIL) ───────────────────────────────────────────
+
+def photo_10():
+    """All 5 designs labeled side by side."""
+    out_path = OUT_DIR / "photo_10_design_lineup.jpg"
+    print(f"  Generating {out_path.name} (PIL lineup)...")
+
+    BG = (248, 245, 240)
+    NAVY = (27, 58, 104)
+    RED = (178, 34, 52)
+
+    canvas = Image.new("RGB", (FINAL_SIZE, FINAL_SIZE), BG)
+    draw = ImageDraw.Draw(canvas)
+
+    try:
+        font_title = ImageFont.truetype("/usr/local/share/fonts/google/Anton-Regular.ttf", 100)
+        font_sub = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 44)
+        font_name = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 38)
+    except Exception:
+        font_title = font_sub = font_name = ImageFont.load_default()
+
+    # Header
+    draw.rectangle([0, 0, FINAL_SIZE, 190], fill=NAVY)
+    draw.text((FINAL_SIZE // 2, 70), "5 DESIGNS IN THIS PACK",
+              fill="white", font=font_title, anchor="mm")
+    draw.text((FINAL_SIZE // 2, 150), "America 250th Anniversary  ·  1776–2026",
+              fill=RED, font=font_sub, anchor="mm")
+
+    names = ["America Bold", "Star Badge", "Freedom Sign", "Happy 4th", "Land of the Free"]
+    designs_list = list(DESIGNS.values())
+
+    # Top row: 3 designs
+    BORDER = 60
+    GAP = 20
+    top_w = (FINAL_SIZE - 2 * BORDER - 2 * GAP) // 3
+    top_h = int(top_w * 0.75)
+    y_top = 210
+
+    for i in range(3):
+        img = Image.open(designs_list[i]).convert("RGB")
+        img = img.resize((top_w, top_h), Image.LANCZOS)
+        x = BORDER + i * (top_w + GAP)
+        canvas.paste(img, (x, y_top))
+        draw.text((x + top_w // 2, y_top + top_h + 28), names[i],
+                  fill=NAVY, font=font_name, anchor="mm")
+
+    # Bottom row: 2 centered
+    bot_w = int((FINAL_SIZE - 2 * BORDER - GAP) / 2)
+    bot_h = int(bot_w * 0.75)
+    y_bot = y_top + top_h + 75
+    x_start = (FINAL_SIZE - 2 * bot_w - GAP) // 2
+
+    for i in range(2):
+        img = Image.open(designs_list[3 + i]).convert("RGB")
+        img = img.resize((bot_w, bot_h), Image.LANCZOS)
+        x = x_start + i * (bot_w + GAP)
+        canvas.paste(img, (x, y_bot))
+        draw.text((x + bot_w // 2, y_bot + bot_h + 28), names[3 + i],
+                  fill=NAVY, font=font_name, anchor="mm")
+
+    # Footer
+    draw.rectangle([0, FINAL_SIZE - 95, FINAL_SIZE, FINAL_SIZE], fill=RED)
+    draw.text((FINAL_SIZE // 2, FINAL_SIZE - 48),
+              "All five included  ·  .3mf + SVG layers  ·  Instant Download",
+              fill="white", font=font_name, anchor="mm")
+
+    canvas.save(out_path, "JPEG", quality=92)
+    print(f"    → {out_path.stat().st_size // 1024} KB")
+    return out_path
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+def main():
+    photos = [
+        ("01 Hero gallery wall",   photo_01),
+        ("02 Mantel interior",     photo_02),
+        ("03 Front porch",         photo_03),
+        ("04 Tiered tray",         photo_04),
+        ("05 Yard stake sign",     photo_05),
+        ("06 Collection overview", photo_06),
+        ("07 Bambu how-to",        photo_07),
+        ("08 Detail close-up",     photo_08),
+        ("09 What's included",     photo_09),
+        ("10 Design lineup",       photo_10),
+    ]
+
+    which = sys.argv[1:] if len(sys.argv) > 1 else []  # e.g. "1" "2" for specific photos
+
+    print(f"SS1001 Photo Generation — {len(photos)} photos")
+    print("=" * 60)
+    ok, fail = 0, []
+
+    for label, fn in photos:
+        num = label[:2]
+        if which and num not in which:
+            continue
+        try:
+            fn()
+            ok += 1
+        except Exception as e:
+            import traceback
+            print(f"  ERROR {label}: {e}")
+            traceback.print_exc()
+            fail.append(label)
+
+    print("=" * 60)
+    print(f"  ✓ {ok} photos generated → {OUT_DIR}")
+    if fail:
+        print(f"  ✗ {len(fail)} failed: {fail}")
+
+
+if __name__ == "__main__":
+    main()
