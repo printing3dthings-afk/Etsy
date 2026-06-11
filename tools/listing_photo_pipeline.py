@@ -148,21 +148,29 @@ def extract_text(client, design_path: Path) -> str:
 
 
 # ── Step 3: verification (the automated eyeball) ─────────────────────────────
-def verify_render(client, design_paths: list[Path], render: Image.Image) -> dict:
+def verify_render(client, design_paths: list[Path], render: Image.Image,
+                  physics_desc: str = "") -> dict:
     """Compare render against source design(s). Returns {pass: bool, issues: [...]}"""
     content = [{"type": "text", "text":
-        "You are a strict product-photo QA inspector. The FIRST image(s) are the "
+        "You are a product-photo QA inspector. The FIRST image(s) are the "
         "real product design file(s) a customer downloads. The LAST image is a "
-        "marketing lifestyle photo that must show the design with TOTAL fidelity.\n\n"
-        "Check, comparing only the product design as it appears in the photo:\n"
-        "1. TEXT: every word/number character-for-character identical (dates, small "
-        "print, everything)\n"
-        "2. COLORS: same palette, no substituted or re-colored regions (e.g. cream "
-        "background must stay cream, green must stay green)\n"
-        "3. ELEMENTS: no missing, added, or redesigned elements (borders, stars, "
-        "icons, edge details like perforations)\n"
-        "4. SURFACE: if the product should be flat, no raised/embossed 3D lettering\n\n"
-        "Perspective, lighting, scale, and scene context are fine and NOT issues.\n"
+        "marketing lifestyle photo that must show the design faithfully.\n\n"
+        f"The physical product is: {physics_desc}\n"
+        "Appearance traits described there (e.g. fine matte surface grain, panel "
+        "thickness, side edges, metallic lid) are INTENDED and are NOT defects.\n\n"
+        "FAIL only on MATERIAL fidelity errors:\n"
+        "1. TEXT: any word/number that is wrong, garbled, missing, or invented "
+        "(character-level check on dates and small print)\n"
+        "2. COLORS: a region changed to a different hue category (e.g. cream became "
+        "navy, green became blue). Lighting tint, white balance, mild exposure or "
+        "saturation shifts from scene lighting are NORMAL and pass.\n"
+        "3. ELEMENTS: missing, added, or redesigned design elements (borders, stars, "
+        "icons, edge details)\n"
+        "4. SURFACE: individual letters/shapes sticking UP out of the face as 3D "
+        "embossing. The panel itself having thickness, a drop shadow, or the "
+        "described surface grain is NORMAL and passes.\n\n"
+        "Perspective, viewing angle, scale, lighting, shadows, and scene context "
+        "are NEVER issues.\n"
         'Respond with ONLY JSON: {"pass": true/false, "issues": ["specific issue", ...]}'}]
     for dp in design_paths:
         content.append({"type": "image_url", "image_url": {
@@ -257,7 +265,7 @@ def generate_verified_photo(
             base64.b64decode(resp.data[0].b64_json))).convert("RGB")
 
         print(f"    verifying against source design(s)...")
-        verdict = verify_render(client, design_paths, render)
+        verdict = verify_render(client, design_paths, render, PHYSICS[physics])
         if verdict.get("pass"):
             final = render.resize((MOCKUP_SIZE, MOCKUP_SIZE), Image.LANCZOS)
             out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -266,7 +274,11 @@ def generate_verified_photo(
             return PhotoResult(True, out_path, attempt, [])
 
         issues = verdict.get("issues", [])
+        reject = out_path.with_name(out_path.stem + f"_reject{attempt}.jpg")
+        reject.parent.mkdir(parents=True, exist_ok=True)
+        render.save(reject, "JPEG", quality=90)
         print(f"    ✗ verification failed: {issues}")
+        print(f"      rejected render saved for audit: {reject}")
         corrections = (
             "\n\nPREVIOUS ATTEMPT HAD THESE ERRORS — FIX THEM:\n- "
             + "\n- ".join(issues)
