@@ -2409,10 +2409,21 @@ The real product file is passed to gpt-image-1's **edit endpoint** as the input 
 5. **Verify the output against the source files before keeping** — zoom in and compare colors, text, and composition; regenerate on any drift
 6. Upscale to 2400×2400 for the listing
 
-**Reference implementations (use these as templates):**
-- `tools/generate_tumbler_mockups.py` — sublimation wraps rendered on 20oz tumblers
-- `tools/generate_sign_lifestyle_photos.py` — 3D-printed signs in room/porch/yard scenes
-- `tools/generate_sign_collection_photo.py` — multi-product flat lay with all files as input
+**MANDATORY TOOL — `tools/listing_photo_pipeline.py` (use this, not ad-hoc scripts):**
+`generate_verified_photo()` automates the entire quality loop so photos come out right the FIRST time:
+1. **Palette auto-extraction** — dominant hex colors pulled from the actual design file and injected as constraints (never hand-type a palette into a prompt; a hardcoded navy palette caused color drift across an entire batch in June 2026)
+2. **Text auto-extraction** — a vision model reads every text item off the design once and injects it character-for-character into the prompt
+3. **Physics templates** — product surface reality is encoded per product type (`sign_flat`: face-down textured-PEI print = perfectly flat face, no raised lettering; `tumbler_wrap`, `framed_print`, `flat_paper`). Add new product types to the `PHYSICS` dict.
+4. **Automated verification** — after generating, a vision model compares the render against the source file(s): text character-level, colors, elements, edge details, surface flatness
+5. **Auto-retry with feedback** — failures feed the specific discrepancies back into the prompt and regenerate (max 3 attempts), then report unresolved issues
+
+`build_flat_lay()` — for overhead/collection shots (zero perspective): pixel-perfect PIL paste of the real files over an AI background. NEVER use images.edit for multi-design flat lays — with 5 designs as input it garbles small text ("ANNIVERSARY", "FOREVER" — verified June 2026).
+
+**Design-side rule (prevents unfixable shots):** tiny text and fine repeating edge geometry (e.g. postage-stamp perforations) cannot survive images.edit rendering — 3 attempts failed on SS1001's stamp. Designs with those features should appear in lifestyle scenes via a reliable sibling design, and be shown exactly in the pixel-perfect flat lay. For NEW designs intended for lifestyle renders, prefer bold shapes and ≥24pt-equivalent lettering.
+
+**Reference implementations:**
+- `tools/listing_photo_pipeline.py` — THE standard (self-verifying, all categories)
+- `tools/generate_tumbler_mockups.py`, `tools/generate_sign_lifestyle_photos.py`, `tools/generate_sign_collection_photo.py` — earlier per-product scripts; migrate their scenes to the pipeline when next touched
 
 **Deprecated:** the old "generate empty room → PIL paste at coordinates" workflow (`composite_smart()` + empty room templates below). It produced off-center, out-of-place products and was retired June 2026. The empty-room prompt templates below are kept only as scene-vocabulary reference for edit prompts.
 
