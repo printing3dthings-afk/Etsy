@@ -82,10 +82,56 @@ SIGN_RENDER = (
 )
 
 
-# ── API helper ─────────────────────────────────────────────────────────────────
+# ── Fonts ─────────────────────────────────────────────────────────────────────
 
-def generate(images: list[Path], prompt: str, out_path: Path) -> Path:
-    """images.edit call → save at 2400×2400."""
+def _fonts():
+    try:
+        lg  = ImageFont.truetype("/usr/local/share/fonts/google/Anton-Regular.ttf",  90)
+        md  = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf",  56)
+        sm  = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf",  44)
+        xs  = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf",  34)
+        bdg = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf",  42)
+    except Exception:
+        lg = md = sm = xs = bdg = ImageFont.load_default()
+    return lg, md, sm, xs, bdg
+
+
+# ── Badge overlay (required on every lifestyle slot 1-6) ──────────────────────
+
+def add_digital_badge(img: Image.Image) -> Image.Image:
+    """Stamp 'DIGITAL FILE — SVG DOWNLOAD' badge in top-left corner."""
+    draw = ImageDraw.Draw(img)
+    NAVY = (27, 58, 104)
+    _, _, _, _, bdg = _fonts()
+    text = "DIGITAL FILE — SVG DOWNLOAD"
+    bbox = draw.textbbox((0, 0), text, font=bdg)
+    pad_x, pad_y = 22, 12
+    w = (bbox[2] - bbox[0]) + 2 * pad_x
+    h = (bbox[3] - bbox[1]) + 2 * pad_y
+    draw.rectangle([28, 28, 28 + w, 28 + h], fill=NAVY)
+    draw.text((28 + pad_x, 28 + pad_y), text, fill="white", font=bdg)
+    return img
+
+
+# ── AI background generator (gpt-image-1 images.generate) ─────────────────────
+
+def generate_bg(prompt: str) -> Image.Image:
+    """Return a 2400×2400 AI-generated background image."""
+    result = client.images.generate(
+        model="gpt-image-1",
+        prompt=prompt,
+        size="1024x1024",
+        quality="medium",
+        n=1,
+    )
+    raw = base64.b64decode(result.data[0].b64_json)
+    return Image.open(io.BytesIO(raw)).convert("RGB").resize((FINAL_SIZE, FINAL_SIZE), Image.LANCZOS)
+
+
+# ── API helper (images.edit — lifestyle shots) ────────────────────────────────
+
+def generate(images: list[Path], prompt: str, out_path: Path, badge: bool = False) -> Path:
+    """images.edit call → save at 2400×2400. Set badge=True for lifestyle slots 1-6."""
     print(f"  Generating {out_path.name}...")
     img_files = [open(p, "rb") for p in images]
     try:
@@ -102,6 +148,8 @@ def generate(images: list[Path], prompt: str, out_path: Path) -> Path:
     raw = base64.b64decode(result.data[0].b64_json)
     img = Image.open(io.BytesIO(raw)).convert("RGB")
     img = img.resize((FINAL_SIZE, FINAL_SIZE), Image.LANCZOS)
+    if badge:
+        img = add_digital_badge(img)
     img.save(out_path, "JPEG", quality=92)
     print(f"    → {out_path.stat().st_size // 1024} KB")
     return out_path
@@ -122,6 +170,7 @@ def photo_01():
         "Subject fills center 70% of frame. 5% neutral padding at all edges. "
         f"{STYLE}",
         OUT_DIR / "photo_01_hero_gallery_wall.jpg",
+        badge=True,
     )
 
 
@@ -138,6 +187,7 @@ def photo_02():
         "Subject fills center 65% of frame. "
         f"{STYLE}",
         OUT_DIR / "photo_02_mantel_sign.jpg",
+        badge=True,
     )
 
 
@@ -154,6 +204,7 @@ def photo_03():
         "Subject fills center 65% of frame. "
         f"{STYLE}",
         OUT_DIR / "photo_03_porch_sign.jpg",
+        badge=True,
     )
 
 
@@ -171,6 +222,7 @@ def photo_04():
         "Subject fills center 65% of frame. "
         f"{STYLE}",
         OUT_DIR / "photo_04_tieredtray_sign.jpg",
+        badge=True,
     )
 
 
@@ -187,24 +239,27 @@ def photo_05():
         "Subject fills center 65% of frame. "
         f"{STYLE}",
         OUT_DIR / "photo_05_yard_sign.jpg",
+        badge=True,
     )
 
 
-# ── Photo 6 — Collection overview (PIL flat lay) ──────────────────────────────
+# ── Photo 6 — Collection overview (AI bg + PIL flat lay) ─────────────────────
 
 def photo_06():
-    """Pixel-perfect PIL flat lay of all 10 design previews — 2 rows of 5."""
+    """OpenAI background + PIL flat lay of all 10 design previews — 2 rows of 5."""
     out_path = OUT_DIR / "photo_06_collection_overview.jpg"
-    print(f"  Generating {out_path.name} (PIL flat lay — 10 designs)...")
+    print(f"  Generating {out_path.name} (AI bg + PIL flat lay — 10 designs)...")
 
-    BG_COLOR = (245, 240, 230)   # warm cream
     NAVY = (27, 58, 104)
     RED  = (178, 34, 52)
     CANVAS = FINAL_SIZE
     BORDER = 50
     GAP = 18
 
-    canvas = Image.new("RGB", (CANVAS, CANVAS), BG_COLOR)
+    canvas = generate_bg(
+        "Warm cream natural linen textured flat lay background, overhead photography, "
+        "soft even diffused lighting, no objects, no shadows. Square format."
+    )
     draw = ImageDraw.Draw(canvas)
 
     # Header band
@@ -215,6 +270,7 @@ def photo_06():
         font_lbl = ImageFont.truetype("/usr/local/share/fonts/google/Montserrat-VF.ttf", 28)
     except Exception:
         font_hdr = font_sub = font_lbl = ImageFont.load_default()
+    BG_COLOR = (245, 240, 230)  # fallback (not used when AI bg is active)
 
     draw.text((CANVAS // 2, 50), "10 DESIGNS INCLUDED",
               fill="white", font=font_hdr, anchor="mm")
@@ -250,24 +306,26 @@ def photo_06():
               "Delivered in 2 ZIP files  ·  .3mf + SVG layers  ·  Instant Download",
               fill="white", font=font_lbl, anchor="mm")
 
+    canvas = add_digital_badge(canvas)
     canvas.save(out_path, "JPEG", quality=92)
     print(f"    → {out_path.stat().st_size // 1024} KB")
     return out_path
 
 
-# ── Photo 7 — How-To Bambu Studio (PIL) ───────────────────────────────────────
+# ── Photo 7 — How-To Bambu Studio (AI bg + PIL overlay) ──────────────────────
 
 def photo_07():
-    """3-step Bambu Studio workflow infographic."""
+    """3-step Bambu Studio workflow infographic — OpenAI background + PIL text overlay."""
     out_path = OUT_DIR / "photo_07_bambu_howto.jpg"
-    print(f"  Generating {out_path.name} (PIL infographic)...")
+    print(f"  Generating {out_path.name} (AI bg + PIL HOW-TO)...")
 
-    BG = (248, 245, 240)
     NAVY = (27, 58, 104)
     RED = (178, 34, 52)
-    CREAM = (245, 240, 230)
 
-    canvas = Image.new("RGB", (FINAL_SIZE, FINAL_SIZE), BG)
+    canvas = generate_bg(
+        "Clean professional white and warm cream presentation background, subtle paper texture, "
+        "soft even lighting, no objects. Suitable for an instructional step-by-step infographic. Square format."
+    )
     draw = ImageDraw.Draw(canvas)
 
     try:
@@ -347,18 +405,20 @@ def photo_08():
     )
 
 
-# ── Photo 9 — What's included (PIL) ──────────────────────────────────────────
+# ── Photo 9 — What's included (AI bg + PIL overlay) ──────────────────────────
 
 def photo_09():
-    """What's included specs graphic."""
+    """What's included specs graphic — OpenAI background + PIL text overlay."""
     out_path = OUT_DIR / "photo_09_whats_included.jpg"
-    print(f"  Generating {out_path.name} (PIL specs)...")
+    print(f"  Generating {out_path.name} (AI bg + PIL specs)...")
 
-    BG = (248, 245, 240)
     NAVY = (27, 58, 104)
     RED = (178, 34, 52)
 
-    canvas = Image.new("RGB", (FINAL_SIZE, FINAL_SIZE), BG)
+    canvas = generate_bg(
+        "Clean cream white professional product spec sheet background, "
+        "subtle warm linen texture, soft even flat lighting, no objects. Square format."
+    )
     draw = ImageDraw.Draw(canvas)
 
     try:
@@ -409,18 +469,20 @@ def photo_09():
     return out_path
 
 
-# ── Photo 10 — Design lineup (PIL) ───────────────────────────────────────────
+# ── Photo 10 — Design lineup (AI bg + PIL) ────────────────────────────────────
 
 def photo_10():
-    """All 5 designs labeled side by side."""
+    """All 10 designs labeled side by side — OpenAI background + PIL paste."""
     out_path = OUT_DIR / "photo_10_design_lineup.jpg"
-    print(f"  Generating {out_path.name} (PIL lineup)...")
+    print(f"  Generating {out_path.name} (AI bg + PIL lineup)...")
 
-    BG = (248, 245, 240)
     NAVY = (27, 58, 104)
     RED = (178, 34, 52)
 
-    canvas = Image.new("RGB", (FINAL_SIZE, FINAL_SIZE), BG)
+    canvas = generate_bg(
+        "Warm cream natural linen textured flat lay background, overhead photography, "
+        "even diffused soft lighting, no objects, no shadows. Square format."
+    )
     draw = ImageDraw.Draw(canvas)
 
     try:
