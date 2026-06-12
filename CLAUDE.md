@@ -1,5 +1,37 @@
 # OnBrandCraftz — Etsy Automation Hub
 
+## ⛔ TOP PRIORITY RULE — ZERO TOLERANCE: NEVER LIE TO THE CUSTOMER
+
+> **This rule overrides everything else. No exception. No edge case. No shortcut.**
+
+A customer interacts with: listing photos, listing title, listing description, what's included, file specs, compatibility claims, tag keywords, post-purchase messages, and the digital files they receive.
+
+**Every single one of those touchpoints must be 100% truthful and verified against reality.**
+
+### What "lying" includes — all are hard stops:
+- A listing photo that shows a product the customer will NOT receive (AI stand-in, wrong color, wrong design)
+- A description that claims a file includes something it does not (wrong page count, wrong format, wrong sticker count)
+- A title keyword that misrepresents the product (wrong app, wrong year, wrong category)
+- A compatibility claim that has not been tested (e.g. "works in GoodNotes" must be verified)
+- A file spec (resolution, DPI, page size) that does not match the actual delivered file
+- A "200+ stickers" claim when the ZIP contains fewer
+- A "10 designs included" claim when only 9 exist in the ZIP
+- A photo showing a multi-color 3D print using colors not in the actual delivered SVG/3MF
+- Any description section copy-pasted from another listing without verifying it applies to THIS product
+
+### Quality gate rule (non-negotiable):
+Before any listing is submitted to Scott for review, an automated quality gate MUST verify:
+1. Every file referenced in the description exists on disk and opens without error
+2. Page counts, sticker counts, design counts, and file sizes match the description exactly
+3. All 10 listing photos were generated from the REAL product files — verified by cross-checking source files used
+4. Every compatibility claim (GoodNotes, Notability, Bambu Studio, etc.) has been tested or is an established verified standard
+5. Title character count ≤ 70, all 13 tags populated, price matches the tier table
+6. The ZIP delivered to the customer was validated by `validate_digital_file()` with zero errors
+
+**If any gate fails → listing is blocked. Fix first. Publish never comes before truth.**
+
+---
+
 ## Mission Statement
 > **"Providing the best and most accurate transaction for our customers so we can grow responsibly."**
 
