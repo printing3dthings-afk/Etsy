@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "OnBrandCraftz",
+    "slug": "onbrandcraftz-dashboard",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0D1B2A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.onbrandcraftz.dashboard"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0D1B2A"
+      },
+      "package": "com.onbrandcraftz.dashboard"
+    },
+    "platforms": ["ios", "android"]
+  }
+}
