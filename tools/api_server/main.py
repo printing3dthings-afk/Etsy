@@ -124,7 +124,7 @@ _WEB_UI = """<!DOCTYPE html>
   --nav:calc(60px + env(safe-area-inset-bottom,0px))
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
-header{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--hdr);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:flex-end;justify-content:space-between;padding:0 16px calc((var(--hdr) - 52px) / 2 + 14px)}
+header{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--hdr);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:flex-end;justify-content:space-between;padding:0 16px 14px}
 header h1{font-size:17px;font-weight:700;color:var(--gold)}
 header span{font-size:12px;color:var(--muted)}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:200;height:var(--nav);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:8px}
@@ -246,15 +246,23 @@ function showTab(tab, btn) {
     if (!ws) initWS();
   } else {
     document.getElementById('screen-' + tab).classList.add('active');
-    if (tab === 'listings') loadListings('active');
+    if (tab === 'listings') loadListings('active', document.querySelector('.toggle-btn'));
   }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fetchWithTimeout(url, opts, ms=12000){
+  const c=new AbortController();
+  const t=setTimeout(()=>c.abort(),ms);
+  return fetch(url,{...opts,signal:c.signal}).finally(()=>clearTimeout(t));
 }
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
 async function loadDash() {
   const el = document.getElementById('dash-content');
   try {
-    const r = await fetch(BASE + '/api/metrics', {headers:{Authorization:'Bearer '+TOKEN}});
+    const r = await fetchWithTimeout(BASE + '/api/metrics', {headers:{Authorization:'Bearer '+TOKEN}});
     const d = await r.json();
     const o = d.orders || {}, l = d.listings || {}, rev = d.reviews || {}, sh = d.shop || {};
     const hr = new Date().getHours();
@@ -272,7 +280,7 @@ async function loadDash() {
     }
     el.innerHTML = html;
   } catch(e) {
-    el.innerHTML = `<div class="empty">Failed to load — check API connection</div>`;
+    el.innerHTML = `<div class="empty">${e.name==='AbortError'?'Request timed out — try again':'Failed to load. Check connection.'}</div>`;
   }
 }
 
@@ -282,26 +290,33 @@ async function loadListings(state, btn) {
   if (btn) { document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
   _lastState = state;
   const el = document.getElementById('listings-content');
-  el.innerHTML = '<div class="empty"><div class="spinner"></div></div>';
+  el.innerHTML = '<div class="spinner"></div>';
   try {
-    const r = await fetch(BASE+'/api/listings?state='+state, {headers:{Authorization:'Bearer '+TOKEN}});
+    const r = await fetchWithTimeout(BASE+'/api/listings?state='+state, {headers:{Authorization:'Bearer '+TOKEN}});
     const d = await r.json();
     if (!d.listings || d.listings.length === 0) { el.innerHTML = '<div class="empty">No '+state+' listings</div>'; return; }
     el.innerHTML = d.listings.map(l => `
-      <div class="listing-item" onclick="window.open('${l.url}','_blank')">
-        ${l.thumbnail_url ? `<img class="thumb" src="${l.thumbnail_url}" loading="lazy">` : `<div class="thumb-placeholder">🏷️</div>`}
+      <div class="listing-item" onclick="window.open('${escHtml(l.url)}','_blank')">
+        ${l.thumbnail_url ? `<img class="thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy">` : `<div class="thumb-placeholder">🏷️</div>`}
         <div class="listing-info">
-          <div class="listing-title">${l.title}</div>
-          <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥<span class="badge ${l.state}">${l.state}</span></div>
+          <div class="listing-title">${escHtml(l.title)}</div>
+          <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥<span class="badge ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
         </div>
-        <div class="listing-price">$${l.price.toFixed(2)}</div>
+        <div class="listing-price">$${(+l.price||0).toFixed(2)}</div>
       </div>`).join('');
   } catch(e) {
-    el.innerHTML = `<div class="empty">Failed to load listings</div>`;
+    el.innerHTML = `<div class="empty">${e.name==='AbortError'?'Request timed out — try again':'Failed to load listings'}</div>`;
   }
 }
 
 // ── Chat ───────────────────────────────────────────────────────────────────
+function _clearStreaming(fallback) {
+  const s = document.getElementById('bot-streaming');
+  if (!s) return;
+  s.id = '';
+  s.classList.remove('typing');
+  if (!s.textContent.trim() && fallback) s.textContent = fallback;
+}
 function initWS() {
   ws = new WebSocket(WS_BASE + '/ws/chat?token=' + TOKEN);
   ws.onopen = () => { wsReady = true; if (pendingMsg) { ws.send(JSON.stringify({message:pendingMsg})); pendingMsg=null; } };
@@ -309,10 +324,15 @@ function initWS() {
     const d = JSON.parse(e.data);
     const bot = document.getElementById('bot-streaming');
     if (d.type === 'chunk' && bot) { bot.textContent += d.content; scrollMsgs(); }
-    else if (d.type === 'done') { if(bot) bot.id=''; scrollMsgs(); }
-    else if (d.type === 'error') { addBubble('Error: '+d.content,'bot'); }
+    else if (d.type === 'done') { _clearStreaming(); scrollMsgs(); }
+    else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
   };
-  ws.onclose = () => { wsReady=false; ws=null; };
+  ws.onerror = () => { _clearStreaming('(error)'); addBubble('Connection error — please reload the page', 'bot'); };
+  ws.onclose = e => {
+    wsReady = false; ws = null;
+    _clearStreaming('(disconnected)');
+    if (e.code === 4001) addBubble('Auth failed — reload to reconnect', 'bot');
+  };
 }
 function addBubble(text, who) {
   const el = document.createElement('div');
