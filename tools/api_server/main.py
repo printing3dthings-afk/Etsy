@@ -13,9 +13,11 @@ Deploy to Railway / Render: set env vars + point start command to this file.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -76,6 +78,25 @@ def _price_float(price_field) -> float:
         return float(price_field)
     except (TypeError, ValueError):
         return 0.0
+
+
+# ── In-process cache ───────────────────────────────────────────────────────────
+
+_cache: dict = {}
+_cache_lock = threading.Lock()
+
+
+def _cache_get(key: str, ttl: int = 60):
+    with _cache_lock:
+        entry = _cache.get(key)
+        if entry and time.time() - entry["ts"] < ttl:
+            return entry["data"]
+    return None
+
+
+def _cache_set(key: str, data) -> None:
+    with _cache_lock:
+        _cache[key] = {"data": data, "ts": time.time()}
 
 
 # ── CEO Agent system prompt ────────────────────────────────────────────────────
@@ -382,11 +403,24 @@ def health():
 
 
 @app.get("/api/metrics")
-def get_metrics(_token: str = Depends(_auth)):
-    """Pull live business snapshot from Etsy API."""
-    client = EtsyAPIClient()
+async def get_metrics(_token: str = Depends(_auth)):
+    """Pull live business snapshot. All 5 Etsy calls run in parallel; result cached 60 s."""
+    cached = _cache_get("metrics", ttl=60)
+    if cached is not None:
+        return cached
+
     now = int(time.time())
     day = 86_400
+
+    # Fire all five blocking calls at the same time in a thread pool
+    active_r, draft_r, orders_r, reviews_r, shop_r = await asyncio.gather(
+        asyncio.to_thread(lambda: EtsyAPIClient().get_shop_listings_all(state="active")),
+        asyncio.to_thread(lambda: EtsyAPIClient().get_shop_listings_all(state="draft")),
+        asyncio.to_thread(lambda: EtsyAPIClient().get_orders(limit=100)),
+        asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=50)),
+        asyncio.to_thread(lambda: EtsyAPIClient().get_shop()),
+        return_exceptions=True,
+    )
 
     out: dict = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -397,24 +431,23 @@ def get_metrics(_token: str = Depends(_auth)):
     }
 
     # ── Listings ────────────────────────────────────────────────────────────
-    try:
-        active = client.get_shop_listings_all(state="active")
-        out["listings"]["active_count"] = len(active)
-        out["listings"]["active_titles"] = [l.get("title", "")[:45] for l in active[:6]]
-    except Exception as exc:
-        out["listings"]["active_error"] = str(exc)
+    if isinstance(active_r, Exception):
+        out["listings"]["active_error"] = str(active_r)
+    else:
+        out["listings"]["active_count"] = len(active_r)
+        out["listings"]["active_titles"] = [l.get("title", "")[:45] for l in active_r[:6]]
 
-    try:
-        drafts = client.get_shop_listings_all(state="draft")
-        out["listings"]["draft_count"] = len(drafts)
-        out["listings"]["draft_titles"] = [l.get("title", "")[:45] for l in drafts[:3]]
-    except Exception as exc:
-        out["listings"]["draft_error"] = str(exc)
+    if isinstance(draft_r, Exception):
+        out["listings"]["draft_error"] = str(draft_r)
+    else:
+        out["listings"]["draft_count"] = len(draft_r)
+        out["listings"]["draft_titles"] = [l.get("title", "")[:45] for l in draft_r[:3]]
 
     # ── Orders / Revenue ─────────────────────────────────────────────────────
-    try:
-        resp = client.get_orders(limit=100)
-        orders = resp.get("results", [])
+    if isinstance(orders_r, Exception):
+        out["orders"]["error"] = str(orders_r)
+    else:
+        orders = orders_r.get("results", [])
 
         def _revenue(order_list):
             total = 0.0
@@ -427,42 +460,37 @@ def get_metrics(_token: str = Depends(_auth)):
 
         o7 = [o for o in orders if o.get("create_timestamp", 0) > now - 7 * day]
         o30 = [o for o in orders if o.get("create_timestamp", 0) > now - 30 * day]
-
         out["orders"] = {
             "last_7_days": len(o7),
             "last_30_days": len(o30),
             "revenue_7d": _revenue(o7),
             "revenue_30d": _revenue(o30),
         }
-    except Exception as exc:
-        out["orders"]["error"] = str(exc)
 
     # ── Reviews ──────────────────────────────────────────────────────────────
-    try:
-        rev_resp = client.get_reviews(limit=50)
-        reviews = rev_resp.get("results", [])
+    if isinstance(reviews_r, Exception):
+        out["reviews"]["error"] = str(reviews_r)
+    else:
+        reviews = reviews_r.get("results", [])
         ratings = [r["rating"] for r in reviews if r.get("rating")]
         out["reviews"] = {
-            "total_count": rev_resp.get("count", len(reviews)),
+            "total_count": reviews_r.get("count", len(reviews)),
             "avg_rating": round(sum(ratings) / len(ratings), 2) if ratings else 0,
             "five_star_pct": round(sum(1 for r in ratings if r == 5) / len(ratings) * 100) if ratings else 0,
-            "recent_sample": len(reviews),
         }
-    except Exception as exc:
-        out["reviews"]["error"] = str(exc)
 
     # ── Shop ─────────────────────────────────────────────────────────────────
-    try:
-        shop = client.get_shop()
+    if isinstance(shop_r, Exception):
+        out["shop"]["error"] = str(shop_r)
+    else:
         out["shop"] = {
-            "name": shop.get("shop_name", "OnBrandCraftz"),
-            "active_listing_count": shop.get("listing_active_count", 0),
-            "total_sales": shop.get("transaction_sold_count", 0),
-            "on_vacation": shop.get("is_vacation", False),
+            "name": shop_r.get("shop_name", "OnBrandCraftz"),
+            "active_listing_count": shop_r.get("listing_active_count", 0),
+            "total_sales": shop_r.get("transaction_sold_count", 0),
+            "on_vacation": shop_r.get("is_vacation", False),
         }
-    except Exception as exc:
-        out["shop"]["error"] = str(exc)
 
+    _cache_set("metrics", out)
     return out
 
 
@@ -470,13 +498,17 @@ def get_metrics(_token: str = Depends(_auth)):
 
 
 @app.get("/api/listings")
-def get_listings(state: str = "active", _token: str = Depends(_auth)):
-    """Return listings with thumbnail URLs for the mobile browser."""
+async def get_listings(state: str = "active", _token: str = Depends(_auth)):
+    """Return listings with thumbnail URLs. Result cached 30 s."""
     if state not in ("active", "draft", "inactive"):
         raise HTTPException(status_code=400, detail="state must be active, draft, or inactive")
 
-    client = EtsyAPIClient()
-    raw = client.get_shop_listings_all(state=state)
+    cache_key = f"listings_{state}"
+    cached = _cache_get(cache_key, ttl=30)
+    if cached is not None:
+        return cached
+
+    raw = await asyncio.to_thread(lambda: EtsyAPIClient().get_shop_listings_all(state=state))
 
     listings = []
     for l in raw:
@@ -504,7 +536,9 @@ def get_listings(state: str = "active", _token: str = Depends(_auth)):
             }
         )
 
-    return {"listings": listings, "count": len(listings), "state": state}
+    result = {"listings": listings, "count": len(listings), "state": state}
+    _cache_set(cache_key, result)
+    return result
 
 
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
