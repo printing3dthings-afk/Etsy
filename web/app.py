@@ -178,6 +178,7 @@ Synthesize into a concise executive briefing. Lead with the most urgent items.""
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
     print("\n  OnBrandCraftz Agent Hub")
-    print("  Open http://localhost:5000 in your browser\n")
-    app.run(debug=False, host="0.0.0.0", port=5000, threaded=True)
+    print(f"  Open http://localhost:{port} in your browser\n")
+    app.run(debug=False, host="0.0.0.0", port=port, threaded=True)
