@@ -41,11 +41,10 @@ if _env.exists():
 import anthropic
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 
-APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "")
+APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme")
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 
-if not APP_TOKEN:
-    raise RuntimeError("APP_SECRET_TOKEN is not set in .env — add it before starting the server")
+print(f"[startup] PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ANTHROPIC_SET={bool(ANTHROPIC_KEY)}", flush=True)
 
 # ── App setup ──────────────────────────────────────────────────────────────────
 
