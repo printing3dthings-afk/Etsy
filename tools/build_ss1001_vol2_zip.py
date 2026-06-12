@@ -24,11 +24,11 @@ DESIGNS_DIR = ROOT / "data" / "3d_print_signs" / "america_250"
 OUT_ZIP = DESIGNS_DIR / "SS1001_america250_3dprint_pack_vol2.zip"
 
 DESIGNS = [
-    ("01_america250_flag_plaque",  "Flag Plaque"),
-    ("02_america250_medallion",    "Medallion"),
-    ("03_america250_freedom",      "Freedom"),
-    ("04_america250_4th_of_july",  "4th of July"),
-    ("06_america250_shield",       "Shield"),
+    ("07_america250_banner_4c",  "America 250 Banner"),
+    ("08_america250_burst_4c",   "America 250 Burst"),
+    ("09_america250_seal_4c",    "America 250 Seal"),
+    ("10_america250_shield_4c",  "America 250 Shield"),
+    ("11_america250_stamp_4c",   "America 250 Stamp"),
 ]
 
 Z_BASE  = (0.0, 4.0)
@@ -152,13 +152,18 @@ SS1001 Vol 2 — America 250th Anniversary 3D Print Sign Pack (Designs 6–10)
 OnBrandCraftz — Personal use + gifts only. Not for commercial printing/resale.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-DESIGNS IN THIS VOLUME
-━━━━━━━━━━━━━━━━━━━━━━
-6. Flag Plaque     — American flag layout, "250 YEARS · AMERICA 1776–2026"
-7. Medallion       — Circular "AMERICA · 250 · 1776–2026" with star ring
-8. Freedom         — "LET FREEDOM RING" bold blue and red block layout
-9. 4th of July     — "HAPPY 4TH OF JULY" in patriotic band layout
-10. Shield         — Pentagon/shield shape, "AMERICA 250 · 1776–2026"
+DESIGNS IN THIS VOLUME  (4-color: Cream + Navy + Red + Gold)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 6. America 250 Banner  — Rectangular banner, NAVY base, GOLD border/"AMERICA",
+                          RED accent bands, CREAM "250" / dates
+ 7. America 250 Burst   — Sunburst / Art Deco disc, CREAM base, alternating
+                          NAVY & RED sunburst rays, GOLD "AMERICA" / "250"
+ 8. America 250 Seal    — Circular medallion/seal, CREAM disc, NAVY ring + stars,
+                          RED "AMERICA" rule lines, GOLD "250" / dates
+ 9. America 250 Shield  — Pentagon shield, NAVY base, GOLD "AMERICA" + eagle,
+                          RED star band + "250"
+10. America 250 Stamp   — Postage stamp silhouette, CREAM base, NAVY frame +
+                          Liberty silhouette, RED "AMERICA" / "250", GOLD "FOREVER"
 
 For designs 1–5 see the companion file: SS1001_america250_3dprint_pack_vol1.zip
 
@@ -166,56 +171,63 @@ For designs 1–5 see the companion file: SS1001_america250_3dprint_pack_vol1.zi
 WHAT'S IN THIS ZIP
 ━━━━━━━━━━━━━━━━━━
 5 design folders, each containing:
-  • [design].3mf  — EASIEST: all color layers pre-assembled, Z-heights set.
-                    Open in Bambu Studio, assign AMS slots, slice, print.
-  • layer01_base_WHITE.svg  — White base plate  (prints at 4mm tall)
-  • layer02_[COLOR].svg     — First design color  (prints at 2mm on top)
-  • layer03_[COLOR].svg     — Second design color (prints at 2mm on top)
+  • [design].3mf         — EASIEST: all 4 color layers pre-assembled, Z-heights set.
+                           Open in Bambu Studio, assign AMS slots, slice, print.
+  • layer01_base_[COLOR].svg  — Base plate (0–4 mm)
+  • layer02_[COLOR].svg       — Raised design layer 1 (4–6 mm)
+  • layer03_[COLOR].svg       — Raised design layer 2 (4–6 mm)
+  • layer04_[COLOR].svg       — Raised design layer 3 (4–6 mm)
 
-Note: Shield design has layer02_blue_BLUE + layer03_red_RED (reversed from other designs).
-The .3mf handles this automatically — just assign White/Red/Blue to the correct parts.
+⚠️ These are 4-COLOR designs. You need a Bambu AMS (or manual filament swaps at 4 mm)
+   to print all 4 colors. You can also simplify by loading only 2–3 layers.
 
 ━━━━━━━━━━━━━━━━━━
 OPTION 1 — EASIEST: USE THE .3MF FILE
 ━━━━━━━━━━━━━━━━━━
 1. Open Bambu Studio
 2. File → Open → select [design].3mf
-3. Three parts appear pre-positioned: base (0–4mm), color layer 1 (4–6mm), color layer 2 (4–6mm)
-4. In the Filament list (left panel), click "+" to add 3 colors
-5. Click each part in the Objects panel → assign to its filament color:
-     base_WHITE → White or Cream PLA
-     layer_RED  → Deep Red PLA
-     layer_BLUE → Navy Blue PLA
+3. Four parts appear pre-positioned in the Objects panel
+4. In the Filament list (left panel), click "+" to add each color needed:
+     Cream / Off-White PLA  (base)
+     Navy Blue PLA
+     Deep Red PLA
+     Gold / Antique Gold PLA
+5. Click each part → assign to its filament in the Objects panel
 6. Slice and print!
+
+The layer filenames include the color name (CREAM / NAVY / RED / GOLD)
+so it's easy to see which filament goes where.
 
 ━━━━━━━━━━━━━━━━━━
 OPTION 2 — SVG LAYERS (for custom sizing or other slicers)
 ━━━━━━━━━━━━━━━━━━
-1. In Bambu Studio, drag & drop layer01_base_WHITE.svg → set height 4mm
-2. Right-click the model → Add Part → drag the second layer SVG → set height 2mm
-   → In Object panel, set Z-offset to 4mm (so it sits on top of the base)
-3. Repeat for the third layer SVG: height 2mm, Z-offset 4mm
-4. Add 3 colors in Filament list, assign one color per SVG part
-5. Use the Color Painting tool (press N) if needed → Fill tool to refine regions
-6. Slice and print!
+1. In Bambu Studio, drag & drop layer01_base_[COLOR].svg → set height 4 mm
+2. Right-click the model → Add Part → drag layer02 SVG → height 2 mm → Z-offset 4 mm
+3. Repeat for layer03: height 2 mm, Z-offset 4 mm
+4. Repeat for layer04: height 2 mm, Z-offset 4 mm
+5. Add 4 colors in Filament list, assign one color per part
+6. Use the Color Painting tool (press N) → Fill tool if any region needs correction
+7. Slice and print!
 
-Scale tip: select all 3 parts (Ctrl+A) before scaling to keep them aligned.
+Scale tip: select all parts (Ctrl+A) before scaling to keep them aligned.
 
 ━━━━━━━━━━━━━━━━━━
 PRINTING TIPS
 ━━━━━━━━━━━━━━━━━━
 • FLIP THE MODEL so the design face is DOWN on a textured PEI plate.
-  This gives a perfectly smooth, layer-line-free front face.
   In Bambu Studio: right-click → Place on Face → select the top face.
+  This gives a perfectly smooth, layer-line-free front face.
 
 • Recommended filaments:
-    White/Cream PLA for the base
-    Deep Red PLA for the red layer
-    Navy Blue PLA for the blue layer
+    Cream / Off-White PLA for the base plate
+    Navy Blue PLA for navy elements
+    Deep Red PLA for red elements
+    Gold Silk PLA for gold elements (Silk PLA gives a beautiful metallic sheen!)
 
-• Layer height: 0.2mm recommended. Outer wall speed: 50mm/s for best quality.
+• Layer height: 0.2 mm recommended.  Outer wall speed: 50 mm/s for best quality.
 
-• No AMS? Use filament swaps at layer 4mm (the slicer will prompt you).
+• No AMS? Print 1–2 colors only by omitting some layers, or use manual filament
+  swaps at the 4 mm height change (the slicer will prompt you).
 
 ━━━━━━━━━━━━━━━━━━
 SUPPORT
@@ -268,14 +280,14 @@ def main() -> None:
 
         # ZIP folder name — use design number 6-10 for vol2
         vol2_nums = {
-            "01_america250_flag_plaque": 6,
-            "02_america250_medallion":   7,
-            "03_america250_freedom":     8,
-            "04_america250_4th_of_july": 9,
-            "06_america250_shield":      10,
+            "07_america250_banner_4c":  6,
+            "08_america250_burst_4c":   7,
+            "09_america250_seal_4c":    8,
+            "10_america250_shield_4c":  9,
+            "11_america250_stamp_4c":   10,
         }
         num = vol2_nums.get(slug, 0)
-        short_name = slug.split("america250_", 1)[-1]
+        short_name = slug.split("america250_", 1)[-1].replace("_4c", "")
         folder = f"SS1001_{num}_{short_name}"
 
         threemf_name = f"SS1001_{short_name}.3mf"

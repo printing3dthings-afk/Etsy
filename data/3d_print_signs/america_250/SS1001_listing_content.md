@@ -33,7 +33,7 @@ Craft Supplies & Tools > Patterns & How To > Digital Files
 
 ⚠️ **PLEASE NOTE: This is a DIGITAL DOWNLOAD of design files — NOT a physical sign.** You 3D print the signs yourself on your own printer. No physical item will be shipped. Lifestyle photos show examples of finished prints made from these files.
 
-Each design includes a ready-to-open **.3mf file** (open it in Bambu Studio — all 3 color layers are pre-positioned at the right Z heights, just assign AMS colors and slice!) plus **individual layer SVG files** for custom sizing on any printer.
+Each design includes a ready-to-open **.3mf file** (open it in Bambu Studio — all color layers are pre-positioned at the right Z heights, just assign AMS colors and slice!) plus **individual layer SVG files** for custom sizing on any printer.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT'S INCLUDED
@@ -41,27 +41,28 @@ Each design includes a ready-to-open **.3mf file** (open it in Bambu Studio — 
 ✅ 10 design folders — delivered in 2 ZIP files (Vol 1 + Vol 2, each under 15MB)
 ✅ Each folder includes:
    • 1 × .3mf file — all color layers pre-assembled (open & print in Bambu Studio)
-   • 3 × SVG layer files — base + red + blue, for custom sizing
+   • 3–4 × SVG layer files — color layers for custom sizing
 ✅ README in each ZIP with step-by-step Bambu Studio print setup
-✅ All designs use 3 colors (White · Red · Blue — AMS 4-slot ready)
+✅ Vol 1 (3-color): White · Red · Blue — AMS ready
+✅ Vol 2 (4-color): Cream · Navy · Red · Gold — AMS 4-slot, premium look
 ✅ Instant digital download — no shipping, no wait
 ❗ DIGITAL FILES ONLY — no physical sign is included or shipped
 
 **The 10 designs:**
 
-*Vol 1:*
+*Vol 1 (3-color: White · Red · Blue):*
 • **America Bold** — Giant "AMERICA" fills the width, star rows top + bottom, dates footer
 • **Star Badge** — Circular badge with 13-star ring, "250" center, "AMERICA" header
 • **Freedom Sign** — LET FREEDOM RING in three-zone band layout
 • **Happy 4th** — HAPPY 4TH OF JULY with dramatic type hierarchy
 • **Land of the Free** — LAND OF THE FREE / HOME OF THE BRAVE — national anthem tribute
 
-*Vol 2:*
-• **Flag Plaque** — American flag motif, "250 YEARS · AMERICA · 1776–2026"
-• **Medallion** — Round disc badge, "AMERICA · 250 · 1776–2026" with star ring
-• **Freedom** — Bold blue and red block "LET FREEDOM RING" alternative layout
-• **4th of July** — "HAPPY 4TH OF JULY" in classic patriotic band arrangement
-• **Shield** — Pentagon/shield shape, "AMERICA 250 · 1776–2026" with star band
+*Vol 2 (4-color: Cream · Navy · Red · Gold):*
+• **Banner** — Rectangular banner, Navy base, Gold "AMERICA" border & stars, Red accent bands, Cream "250"/dates
+• **Burst** — Sunburst / Art Deco disc, Cream base, alternating Navy & Red rays, Gold "AMERICA" / "250" center
+• **Seal** — Circular medallion seal, Cream disc, Navy ring + 13 stars, Red "AMERICA", Gold "250" / dates
+• **Shield** — Pentagon shield, Navy base, Gold "AMERICA" + eagle, Red star band + "250"
+• **Stamp** — Postage stamp silhouette, Cream base, Navy frame + Liberty silhouette, Red "AMERICA", Gold "FOREVER"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🖨️ COMPATIBLE PRINTERS & SLICERS
@@ -77,12 +78,11 @@ Each design includes a ready-to-open **.3mf file** (open it in Bambu Studio — 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 1. Open Bambu Studio
 2. File → Open → select the .3mf file for the design you want
-3. Three parts appear pre-positioned: base (0–4mm), red layer, blue layer
-4. Add 3 colors in the Filament list (click "+")
-5. Click each part in the Objects panel and assign its color:
-   • base_WHITE → White or Cream PLA
-   • layer_RED → Deep Red PLA
-   • layer_BLUE → Navy Blue PLA
+3. Parts appear pre-positioned (3–4 parts depending on design): base + design layers
+4. Add colors in the Filament list (click "+") — the layer file names tell you which color goes where
+   Vol 1 (3 colors): White/Cream PLA · Deep Red PLA · Navy Blue PLA
+   Vol 2 (4 colors): Cream PLA · Navy Blue PLA · Deep Red PLA · Gold Silk PLA
+5. Click each part in the Objects panel and assign its filament color
 6. Slice and print!
 
 Pro tip: flip the model so the design face is DOWN on a textured PEI plate — gives a perfectly smooth, layer-line-free front face.
@@ -90,14 +90,14 @@ Pro tip: flip the model so the design face is DOWN on a textured PEI plate — g
 ━━━━━━━━━━━━━━━━━━━━━━━━
 🎨 HOW TO PRINT — OPTION 2: SVG LAYERS (custom sizing)
 ━━━━━━━━━━━━━━━━━━━━━━━━
-1. Drag & drop layer01_base_WHITE.svg into Bambu Studio → set height 4mm
-2. Right-click model → Add Part → drag layer02_red_RED.svg → height 2mm, Z-offset 4mm
-3. Repeat for layer03_blue_BLUE.svg → height 2mm, Z-offset 4mm
-4. Add 3 colors in Filament list, assign one color per part
+1. Drag & drop layer01_base_[COLOR].svg into Bambu Studio → set height 4mm
+2. Right-click model → Add Part → drag layer02 SVG → height 2mm, Z-offset 4mm
+3. Repeat for each additional layer SVG → height 2mm, Z-offset 4mm
+4. Add one color per part in the Filament list
 5. Open the Color Painting tool (press N) → Fill tool to adjust any region if needed
 6. Slice → print!
 
-Scale: select all 3 parts (Ctrl+A) before scaling to keep them aligned.
+Scale: select all parts (Ctrl+A) before scaling to keep them aligned.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📐 SIZE & SCALING
@@ -110,12 +110,12 @@ Default sizes (fit Bambu 256mm plate with AMS prime tower):
   • Happy 4th: 260 × 180 mm
   • Land of the Free: 280 × 185 mm
 
-*Vol 2:*
-  • Flag Plaque: 280 × 210 mm
-  • Medallion: 220 × 220 mm (round)
-  • Freedom: 280 × 180 mm
-  • 4th of July: 260 × 180 mm
-  • Shield: 200 × 235 mm (pentagon)
+*Vol 2 (4-color designs):*
+  • Banner: 280 × 200 mm (rectangular)
+  • Burst: 260 × 260 mm (circular disc)
+  • Seal: 230 × 230 mm (circular medallion)
+  • Shield: 220 × 255 mm (pentagon)
+  • Stamp: 210 × 250 mm (postage stamp silhouette)
 
 Scale in Bambu Studio before slicing — SVGs are resolution-independent.
 Scale down to ~150mm for a tiered tray decoration.
@@ -135,8 +135,10 @@ Scale down to ~150mm for a tiered tray decoration.
 📄 TECHNICAL DETAILS
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • File formats: .3mf (pre-assembled, Bambu Studio ready) + SVG layer files
-• Colors per design: 3 (White base · Red · Blue — AMS ready)
+• Vol 1 colors: 3 (White base · Red · Blue — AMS ready)
+• Vol 2 colors: 4 (Cream base · Navy · Red · Gold — AMS 4-slot, premium Silk PLA finish)
 • Layer structure: base plate 4mm + raised design layers 2mm
+• Total layer SVG files: 34 (15 in Vol 1 + 19 in Vol 2)
 • Delivery: 2 × instant digital download ZIP files (Vol 1: designs 1–5 · Vol 2: designs 6–10)
 • ⚠️ NO PHYSICAL ITEM SHIPPED — you receive design files only
 • License: Personal use + gifts. Not for resale or commercial printing services.
@@ -148,7 +150,7 @@ Q: Is this a physical product?
 A: No — this is a digital download. You receive .3mf and SVG files to print yourself. No physical sign is shipped.
 
 Q: Do I need an AMS to print these?
-A: No! The .3mf has 3 separate parts. Without AMS, you can use filament swaps at Z=4mm (swap from white to your design color when prompted), or print in one color.
+A: No! Vol 1 designs use 3 colors; Vol 2 uses 4. Without AMS, use filament swaps at Z=4mm when prompted — or print in 1–2 colors by skipping extra layers. AMS makes it effortless, but it is not required.
 
 Q: Can I resize these?
 A: Yes — open the .3mf and scale all parts together in Bambu Studio. SVG layer files are resolution-independent and can be scaled to any size.
@@ -195,9 +197,10 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
 
 **SVG/File Quality**
 - [x] `validate_digital_file()` PASSES — both ZIPs pass quality gate ✓
-- [x] All 30 layer SVGs confirmed clean vectors (programmatically generated, ≤5 fills, ≤200 paths each) ✓
+- [x] All 34 layer SVGs confirmed clean vectors (programmatically generated, ≤5 fills, ≤200 paths each) ✓
 - [x] README files use correct workflow (Color Painting Fill tool) — no "Split by Color" anywhere ✓
-- [x] 3MF files built with all 3 color layers pre-assembled at correct Z heights ✓
+- [x] 3MF files built with all 3–4 color layers pre-assembled at correct Z heights ✓
+- [x] Vol 2 uses 4-color designs (Cream/Navy/Red/Gold) — all layer XY footprints non-overlapping ✓
 
 **Listing Content**
 - [x] Title: 62 chars ✓, contains "SVG" ✓, contains "Instant Download" ✓, comma separators ✓
@@ -217,10 +220,10 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
 
 **Files**
 - [x] Vol 1 ZIP: SS1001_america250_3dprint_pack_vol1.zip — 13.0 MB ✓
-- [x] Vol 2 ZIP: SS1001_america250_3dprint_pack_vol2.zip — 13.9 MB ✓
+- [x] Vol 2 ZIP: SS1001_america250_3dprint_pack_vol2.zip — 12.9 MB ✓
 - [x] Both ZIPs under 20MB Etsy limit ✓
 - [x] Vol 1: 5 design folders × (1 .3mf + 3 layer SVGs) = 20 files + README ✓
-- [x] Vol 2: 5 design folders × (1 .3mf + 3 layer SVGs) = 20 files + README ✓
+- [x] Vol 2: 5 design folders (Banner/Burst/Seal/Shield/Stamp) × (1 .3mf + 3–4 layer SVGs) = 24 files + README ✓
 
 **BLOCKED — awaiting:**
 - [ ] Scott review of all 10 listing photos ← READY FOR REVIEW

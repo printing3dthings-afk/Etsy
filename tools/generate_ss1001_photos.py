@@ -42,18 +42,18 @@ OUT_DIR = DESIGN_DIR / "listing_photos" / "final_v2"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 DESIGNS = {
-    # Vol 1 — original 5
+    # Vol 1 — original 5 (3-color: White/Navy/Red)
     "america_bold": DESIGN_DIR / "01_america250_america_bold" / "preview.jpg",
     "star_badge":   DESIGN_DIR / "02_america250_star_badge"   / "preview.jpg",
     "freedom_sign": DESIGN_DIR / "03_america250_freedom_sign" / "preview.jpg",
     "happy_4th":    DESIGN_DIR / "04_america250_happy_4th"    / "preview.jpg",
     "land_free":    DESIGN_DIR / "05_america250_land_free"    / "preview.jpg",
-    # Vol 2 — additional 5
-    "flag_plaque":  DESIGN_DIR / "01_america250_flag_plaque"  / "preview.jpg",
-    "medallion":    DESIGN_DIR / "02_america250_medallion"    / "preview.jpg",
-    "freedom":      DESIGN_DIR / "03_america250_freedom"      / "preview.jpg",
-    "july_4th":     DESIGN_DIR / "04_america250_4th_of_july"  / "preview.jpg",
-    "shield":       DESIGN_DIR / "06_america250_shield"       / "preview.jpg",
+    # Vol 2 — 4-color originals (Cream/Navy/Red/Gold)
+    "banner":       DESIGN_DIR / "07_america250_banner_4c"    / "preview.jpg",
+    "burst":        DESIGN_DIR / "08_america250_burst_4c"     / "preview.jpg",
+    "seal":         DESIGN_DIR / "09_america250_seal_4c"      / "preview.jpg",
+    "shield_4c":    DESIGN_DIR / "10_america250_shield_4c"    / "preview.jpg",
+    "stamp":        DESIGN_DIR / "11_america250_stamp_4c"     / "preview.jpg",
 }
 
 DESIGNS_VOL1 = {k: v for k, v in list(DESIGNS.items())[:5]}
@@ -223,7 +223,7 @@ def photo_06():
 
     designs_list = list(DESIGNS.values())
     names_vol1 = ["America Bold", "Star Badge", "Freedom Sign", "Happy 4th", "Land of the Free"]
-    names_vol2 = ["Flag Plaque", "Medallion", "Freedom", "4th of July", "Shield"]
+    names_vol2 = ["Banner", "Burst", "Seal", "Shield", "Stamp"]
 
     # 2 rows of 5
     col_w = (CANVAS - 2 * BORDER - 4 * GAP) // 5
@@ -375,9 +375,9 @@ def photo_09():
               font=font_title, anchor="mm")
 
     items = [
-        ("✅", "10 America 250 Sign Designs", "Vol 1: America Bold · Star Badge · Freedom Sign · Happy 4th · Land of the Free\nVol 2: Flag Plaque · Medallion · Freedom · 4th of July · Shield"),
+        ("✅", "10 America 250 Sign Designs", "Vol 1: America Bold · Star Badge · Freedom Sign · Happy 4th · Land of the Free\nVol 2 (4-color): Banner · Burst · Seal · Shield · Stamp"),
         ("✅", "10 × .3MF FILES", "Pre-assembled — open in Bambu Studio,\nassign AMS colors, slice & print"),
-        ("✅", "30 × LAYER SVG FILES", "3 color layers per design\n(base + red + blue) for custom sizing"),
+        ("✅", "35 × LAYER SVG FILES", "3–4 color layers per design\n(Cream/Navy/Red/Gold) for custom sizing"),
         ("✅", "2 ZIP FILES", "Vol 1 (designs 1–5) + Vol 2 (designs 6–10)\nBoth instantly downloaded"),
         ("❗", "DIGITAL DOWNLOAD ONLY", "No physical sign included.\nYou print it yourself on your 3D printer."),
     ]
@@ -439,7 +439,7 @@ def photo_10():
 
     all_names = [
         "America Bold", "Star Badge", "Freedom Sign", "Happy 4th", "Land of the Free",
-        "Flag Plaque", "Medallion", "Freedom", "4th of July", "Shield",
+        "Banner", "Burst", "Seal", "Shield", "Stamp",
     ]
     designs_list = list(DESIGNS.values())
 
