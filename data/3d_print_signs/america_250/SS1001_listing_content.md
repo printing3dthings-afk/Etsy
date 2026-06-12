@@ -59,9 +59,9 @@ Each design includes a ready-to-open **.3mf file** (open it in Bambu Studio — 
 
 *Vol 2 (4-color: Cream · Navy · Red · Gold):*
 • **Banner** — Rectangular banner, Navy base, Gold "AMERICA" border & stars, Red accent bands, Cream "250"/dates
-• **Burst** — Sunburst / Art Deco disc, Cream base, alternating Navy & Red rays, Gold "AMERICA" / "250" center
+• **Burst** — Art Deco sunburst disc, Navy base, 16 Gold rays radiating outward, Cream "AMERICA" + "250" center, Red dates
 • **Seal** — Circular medallion seal, Cream disc, Navy ring + 13 stars, Red "AMERICA", Gold "250" / dates
-• **Shield** — Pentagon shield, Navy base, Gold "AMERICA" + eagle, Red star band + "250"
+• **Shield** — Heraldic pentagon shield, Cream base, Navy border + eagle, Gold "AMERICA" ribbon, Red stars + "250"
 • **Stamp** — Postage stamp silhouette, Cream base, Navy frame + Liberty silhouette, Red "AMERICA", Gold "FOREVER"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
@@ -197,7 +197,7 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
 
 **SVG/File Quality**
 - [x] `validate_digital_file()` PASSES — both ZIPs pass quality gate ✓
-- [x] All 34 layer SVGs confirmed clean vectors (programmatically generated, ≤5 fills, ≤200 paths each) ✓
+- [x] All 35 layer SVGs confirmed clean vectors (programmatically generated, ≤5 fills, ≤200 paths each) ✓
 - [x] README files use correct workflow (Color Painting Fill tool) — no "Split by Color" anywhere ✓
 - [x] 3MF files built with all 3–4 color layers pre-assembled at correct Z heights ✓
 - [x] Vol 2 uses 4-color designs (Cream/Navy/Red/Gold) — all layer XY footprints non-overlapping ✓
@@ -208,26 +208,30 @@ curation, and finishing by the seller. All designs are reviewed for quality befo
 - [x] Description: all 12 sections present in order ✓
 - [x] ⚠️ DISCLAIMER above the fold ✓
 - [x] Price: $14.99 matches 10-design pack tier ✓
+- [x] Burst description corrected: Navy base (not Cream) ✓
+- [x] Shield description corrected: Cream base (not Navy) ✓
 
-**Photos (generated — awaiting Scott review)**
+**Photos**
 - [x] All 10 photos unique (MD5 verified — 0 duplicates) ✓
-- [x] Lifestyle photos (slots 1–5) generated with images.edit using actual design preview images as input ✓
-- [ ] "DIGITAL FILE — 3D PRINT DOWNLOAD" badge on all lifestyle photos (slots 1–5) — ADD IN CANVA before publish
-- [x] Photo 7 HOW-TO shows .3mf open workflow + Color Painting Fill tool ✓
-- [x] NEVER shows "Split by Color" in photo 7 ✓
-- [x] Photos 6, 9, 10 updated to show all 10 designs ✓
+- [x] All 10 photos 2400×2400px ✓
+- [x] Every photo generated via OpenAI gpt-image-1 (hard rule) ✓
+  - Lifestyle slots 1–5, 8: images.edit with real product file as input
+  - Flat lays 6, 10: images.generate for AI background + PIL paste of real designs
+  - Infographics 7, 9: images.generate for AI background + PIL text overlay
+- [x] "DIGITAL FILE — SVG DOWNLOAD" badge stamped programmatically on slots 1–6 ✓
+- [x] Photo 7 HOW-TO shows Color Painting Fill tool — no "Split by Color" ✓
+- [x] Vol 2 gpt-image-1 design previews (Banner/Burst/Seal/Shield/Stamp) regenerated at 4× resolution ✓
 - Output: `data/3d_print_signs/america_250/listing_photos/final_v2/`
 
 **Files**
-- [x] Vol 1 ZIP: SS1001_america250_3dprint_pack_vol1.zip — 13.0 MB ✓
-- [x] Vol 2 ZIP: SS1001_america250_3dprint_pack_vol2.zip — 12.9 MB ✓
+- [x] Vol 1 ZIP: SS1001_america250_3dprint_pack_vol1.zip — 12.1 MB ✓
+- [x] Vol 2 ZIP: SS1001_america250_3dprint_pack_vol2.zip — 11.0 MB ✓
 - [x] Both ZIPs under 20MB Etsy limit ✓
-- [x] Vol 1: 5 design folders × (1 .3mf + 3 layer SVGs) = 20 files + README ✓
-- [x] Vol 2: 5 design folders (Banner/Burst/Seal/Shield/Stamp) × (1 .3mf + 3–4 layer SVGs) = 24 files + README ✓
+- [x] Vol 1: 5 folders × (1 .3mf + 3 layer SVGs) + README = 21 files ✓
+- [x] Vol 2: 5 folders × (1 .3mf + 4 layer SVGs) + README = 26 files ✓
 
-**BLOCKED — awaiting:**
-- [ ] Scott review of all 10 listing photos ← READY FOR REVIEW
-- [ ] "DIGITAL FILE — 3D PRINT DOWNLOAD" badge added to photos 1–5 in Canva
-- [ ] Scott final approval before publishing
-- [ ] OAuth active: run `python tools/etsy_oauth.py` then `python tools/publish_ss1001_draft.py`
-  (upload both ZIP files to the listing — Etsy allows up to 5 digital files per listing)
+**READY FOR SCOTT REVIEW — final steps before publish:**
+- [ ] Scott reviews all 10 listing photos and gives approval
+- [ ] Run `python tools/etsy_oauth.py` if token expired (90-day limit)
+- [ ] Run `python tools/publish_ss1001_draft.py` to create draft listing
+- [ ] Upload both ZIPs to the listing (Etsy allows up to 5 digital files per listing)
