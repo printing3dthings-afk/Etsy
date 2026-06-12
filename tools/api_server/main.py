@@ -120,19 +120,19 @@ _WEB_UI = """<!DOCTYPE html>
 :root{
   --bg:#0D1B2A;--card:#162033;--border:#1e2d42;--gold:#C9A84C;--gold2:#e8c96a;
   --text:#e8edf2;--muted:#6b7d91;--green:#4caf82;--red:#e05555;
-  --tab-h:60px;--safe-b:env(safe-area-inset-bottom,0px)
+  --hdr:calc(52px + env(safe-area-inset-top,0px));
+  --nav:calc(60px + env(safe-area-inset-bottom,0px))
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
-#app{display:flex;flex-direction:column;height:100%}
-.screen{display:none;flex:1;overflow-y:auto;padding:16px 16px 8px;padding-top:calc(env(safe-area-inset-top,0px) + 56px)}
-.screen.active{display:block}
-header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;display:flex;align-items:center;justify-content:space-between}
+header{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--hdr);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:flex-end;justify-content:space-between;padding:0 16px calc((var(--hdr) - 52px) / 2 + 14px)}
 header h1{font-size:17px;font-weight:700;color:var(--gold)}
 header span{font-size:12px;color:var(--muted)}
-nav{display:flex;background:var(--card);border-top:1px solid var(--border);height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);flex-shrink:0}
-nav button{flex:1;background:none;border:none;color:var(--muted);font-size:10px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:color .15s}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:200;height:var(--nav);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:8px}
+nav button{flex:1;background:none;border:none;color:var(--muted);font-size:10px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:color .15s;height:44px;-webkit-tap-highlight-color:rgba(201,168,76,.15)}
 nav button.active{color:var(--gold)}
 nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.screen{position:fixed;top:var(--hdr);left:0;right:0;bottom:var(--nav);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:none;background:var(--bg)}
+.screen.active{display:block}
 .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
 .card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .metric{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
@@ -156,10 +156,9 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 .toggle-row{display:flex;gap:8px;margin-bottom:12px}
 .toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .toggle-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
-#chat-wrap{display:flex;flex-direction:column;height:100%;padding:0}
-#chat-wrap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);left:0;right:0;bottom:calc(var(--tab-h) + var(--safe-b));display:none}
-#chat-wrap.active{display:flex;flex-direction:column}
-#msgs{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+#chat-wrap{position:fixed;top:var(--hdr);left:0;right:0;bottom:var(--nav);z-index:100;display:none;flex-direction:column;background:var(--bg)}
+#chat-wrap.active{display:flex}
+#msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:0}
 .bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;word-break:break-word}
 .bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
 .bubble.bot{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px;white-space:pre-wrap}
@@ -167,43 +166,39 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 .chips{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;scrollbar-width:none;flex-shrink:0;border-top:1px solid var(--border)}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
-.chip:hover{border-color:var(--gold);color:var(--gold)}
+.chip:active{border-color:var(--gold);color:var(--gold)}
 .input-row{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0}
 #msg-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:10px 16px;color:var(--text);font-size:15px;outline:none}
 #msg-input:focus{border-color:var(--gold)}
 #send-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #send-btn svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:auto;display:block}
+.spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
 .star{color:var(--gold)}
 </style>
 </head>
 <body>
-<div id="app">
   <header>
     <h1>OnBrandCraftz</h1>
     <span id="hdr-sub">Dashboard</span>
   </header>
 
-  <!-- Dashboard -->
   <div id="screen-dash" class="screen active">
-    <div id="dash-content"><div class="empty"><div class="spinner"></div></div></div>
+    <div id="dash-content"><div class="spinner"></div></div>
   </div>
 
-  <!-- Listings -->
   <div id="screen-listings" class="screen">
     <div class="toggle-row">
       <button class="toggle-btn active" onclick="loadListings('active',this)">Active</button>
       <button class="toggle-btn" onclick="loadListings('draft',this)">Drafts</button>
     </div>
-    <div id="listings-content"><div class="empty"><div class="spinner"></div></div></div>
+    <div id="listings-content"><div class="spinner"></div></div>
   </div>
 
-  <!-- Chat (managed separately) -->
   <div id="chat-wrap">
     <div id="msgs"></div>
-    <div class="chips" id="chips">
+    <div class="chips">
       <span class="chip" onclick="sendChip(this)">What should I focus on?</span>
       <span class="chip" onclick="sendChip(this)">How are sales?</span>
       <span class="chip" onclick="sendChip(this)">What's my next listing?</span>
@@ -232,7 +227,6 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
       Listings
     </button>
   </nav>
-</div>
 
 <script>
 const BASE = location.origin;
@@ -246,13 +240,12 @@ function showTab(tab, btn) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('chat-wrap').classList.remove('active');
   btn.classList.add('active');
-  const subtitles = {dash:'Dashboard', chat:'Chat', listings:'Listings'};
-  document.getElementById('hdr-sub').textContent = subtitles[tab];
+  document.getElementById('hdr-sub').textContent = {dash:'Dashboard',chat:'Chat',listings:'Listings'}[tab];
   if (tab === 'chat') {
     document.getElementById('chat-wrap').classList.add('active');
     if (!ws) initWS();
   } else {
-    document.getElementById('screen-' + (tab === 'dash' ? 'dash' : 'listings')).classList.add('active');
+    document.getElementById('screen-' + tab).classList.add('active');
     if (tab === 'listings') loadListings('active');
   }
 }
