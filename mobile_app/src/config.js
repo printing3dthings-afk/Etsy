@@ -12,6 +12,6 @@
  * APP_TOKEN must match APP_SECRET_TOKEN in your server's .env
  */
 
-export const API_URL = 'http://localhost:8000';
-export const WS_URL  = 'ws://localhost:8000';
-export const APP_TOKEN = 'CHANGE-ME';
+export const API_URL = 'https://etsy-production-b2f1.up.railway.app';
+export const WS_URL  = 'wss://etsy-production-b2f1.up.railway.app';
+export const APP_TOKEN = '_Ll5RWPmAQae-YPtzhlDl7iC6mdiI-rF5Cv8Yb4084Q';
