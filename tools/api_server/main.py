@@ -23,6 +23,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Security, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 ROOT = Path(__file__).parent.parent.parent
@@ -104,6 +105,258 @@ Quality standards:
 
 Keep responses concise and scannable — Scott is reading on his phone.\
 """
+
+# ── Web UI ─────────────────────────────────────────────────────────────────────
+
+_WEB_UI = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>OnBrandCraftz</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0D1B2A;--card:#162033;--border:#1e2d42;--gold:#C9A84C;--gold2:#e8c96a;
+  --text:#e8edf2;--muted:#6b7d91;--green:#4caf82;--red:#e05555;
+  --tab-h:60px;--safe-b:env(safe-area-inset-bottom,0px)
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%}
+.screen{display:none;flex:1;overflow-y:auto;padding:16px 16px 8px;padding-top:calc(env(safe-area-inset-top,0px) + 56px)}
+.screen.active{display:block}
+header{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 12px;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:17px;font-weight:700;color:var(--gold)}
+header span{font-size:12px;color:var(--muted)}
+nav{display:flex;background:var(--card);border-top:1px solid var(--border);height:calc(var(--tab-h) + var(--safe-b));padding-bottom:var(--safe-b);flex-shrink:0}
+nav button{flex:1;background:none;border:none;color:var(--muted);font-size:10px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:color .15s}
+nav button.active{color:var(--gold)}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.metric .label{font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.metric .value{font-size:24px;font-weight:700;color:var(--text)}
+.metric .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.metric.gold .value{color:var(--gold)}
+.section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.banner{background:#1a2d1a;border:1px solid #2d5a2d;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#7ec87e}
+.listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.listing-item:last-child{border-bottom:none}
+.thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:var(--border);flex-shrink:0}
+.thumb-placeholder{width:52px;height:52px;border-radius:8px;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.listing-info{flex:1;min-width:0}
+.listing-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.listing-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.listing-price{font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:6px}
+.badge.draft{background:#1a2030;color:#6b8ab5;border:1px solid #2a3d5a}
+.badge.active{background:#1a2d1a;color:#4caf82;border:1px solid #2d5a2d}
+.toggle-row{display:flex;gap:8px;margin-bottom:12px}
+.toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.toggle-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+#chat-wrap{display:flex;flex-direction:column;height:100%;padding:0}
+#chat-wrap{position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);left:0;right:0;bottom:calc(var(--tab-h) + var(--safe-b));display:none}
+#chat-wrap.active{display:flex;flex-direction:column}
+#msgs{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;word-break:break-word}
+.bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
+.bubble.bot{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px;white-space:pre-wrap}
+.bubble.typing{color:var(--muted);font-style:italic}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;scrollbar-width:none;flex-shrink:0;border-top:1px solid var(--border)}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--gold);color:var(--gold)}
+.input-row{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0}
+#msg-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:10px 16px;color:var(--text);font-size:15px;outline:none}
+#msg-input:focus{border-color:var(--gold)}
+#send-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#send-btn svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:auto;display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+.star{color:var(--gold)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>OnBrandCraftz</h1>
+    <span id="hdr-sub">Dashboard</span>
+  </header>
+
+  <!-- Dashboard -->
+  <div id="screen-dash" class="screen active">
+    <div id="dash-content"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- Listings -->
+  <div id="screen-listings" class="screen">
+    <div class="toggle-row">
+      <button class="toggle-btn active" onclick="loadListings('active',this)">Active</button>
+      <button class="toggle-btn" onclick="loadListings('draft',this)">Drafts</button>
+    </div>
+    <div id="listings-content"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- Chat (managed separately) -->
+  <div id="chat-wrap">
+    <div id="msgs"></div>
+    <div class="chips" id="chips">
+      <span class="chip" onclick="sendChip(this)">What should I focus on?</span>
+      <span class="chip" onclick="sendChip(this)">How are sales?</span>
+      <span class="chip" onclick="sendChip(this)">What's my next listing?</span>
+      <span class="chip" onclick="sendChip(this)">Pricing advice</span>
+      <span class="chip" onclick="sendChip(this)">SEO tips</span>
+    </div>
+    <div class="input-row">
+      <input id="msg-input" type="text" placeholder="Ask your CEO agent…" autocomplete="off">
+      <button id="send-btn" onclick="sendMsg()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <nav>
+    <button class="active" onclick="showTab('dash',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <button onclick="showTab('chat',this)">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Chat
+    </button>
+    <button onclick="showTab('listings',this)">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Listings
+    </button>
+  </nav>
+</div>
+
+<script>
+const BASE = location.origin;
+const WS_BASE = BASE.replace(/^http/, 'ws');
+const TOKEN = '""" + APP_TOKEN + """';
+
+let ws = null, wsReady = false, pendingMsg = null;
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('chat-wrap').classList.remove('active');
+  btn.classList.add('active');
+  const subtitles = {dash:'Dashboard', chat:'Chat', listings:'Listings'};
+  document.getElementById('hdr-sub').textContent = subtitles[tab];
+  if (tab === 'chat') {
+    document.getElementById('chat-wrap').classList.add('active');
+    if (!ws) initWS();
+  } else {
+    document.getElementById('screen-' + (tab === 'dash' ? 'dash' : 'listings')).classList.add('active');
+    if (tab === 'listings') loadListings('active');
+  }
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+async function loadDash() {
+  const el = document.getElementById('dash-content');
+  try {
+    const r = await fetch(BASE + '/api/metrics', {headers:{Authorization:'Bearer '+TOKEN}});
+    const d = await r.json();
+    const o = d.orders || {}, l = d.listings || {}, rev = d.reviews || {}, sh = d.shop || {};
+    const hr = new Date().getHours();
+    const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+    let html = `<div style="margin-bottom:16px"><div style="font-size:22px;font-weight:700">${greet}, Scott 👋</div><div style="color:var(--muted);font-size:13px;margin-top:4px">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div></div>`;
+    if (l.draft_count > 0) html += `<div class="banner">📋 ${l.draft_count} draft listing${l.draft_count>1?'s':''} ready to review</div>`;
+    html += `<div class="section-title">Revenue</div><div class="card-row">`;
+    html += `<div class="metric gold"><div class="label">7-Day</div><div class="value">$${(o.revenue_7d||0).toFixed(2)}</div><div class="sub">${o.last_7_days||0} orders</div></div>`;
+    html += `<div class="metric gold"><div class="label">30-Day</div><div class="value">$${(o.revenue_30d||0).toFixed(2)}</div><div class="sub">${o.last_30_days||0} orders</div></div></div>`;
+    html += `<div class="section-title">Shop</div><div class="card-row">`;
+    html += `<div class="metric"><div class="label">Active</div><div class="value">${l.active_count||0}</div><div class="sub">listings</div></div>`;
+    html += `<div class="metric"><div class="label">All-Time</div><div class="value">${sh.total_sales||0}</div><div class="sub">sales</div></div></div>`;
+    if (rev.avg_rating) {
+      html += `<div class="section-title">Reviews</div><div class="card"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:36px;font-weight:700;color:var(--gold)">${rev.avg_rating}</div><div><div class="star">${'★'.repeat(Math.round(rev.avg_rating))}${'☆'.repeat(5-Math.round(rev.avg_rating))}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">${rev.total_count||0} reviews · ${rev.five_star_pct||0}% five-star</div></div></div></div>`;
+    }
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="empty">Failed to load — check API connection</div>`;
+  }
+}
+
+// ── Listings ───────────────────────────────────────────────────────────────
+let _lastState = 'active';
+async function loadListings(state, btn) {
+  if (btn) { document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  _lastState = state;
+  const el = document.getElementById('listings-content');
+  el.innerHTML = '<div class="empty"><div class="spinner"></div></div>';
+  try {
+    const r = await fetch(BASE+'/api/listings?state='+state, {headers:{Authorization:'Bearer '+TOKEN}});
+    const d = await r.json();
+    if (!d.listings || d.listings.length === 0) { el.innerHTML = '<div class="empty">No '+state+' listings</div>'; return; }
+    el.innerHTML = d.listings.map(l => `
+      <div class="listing-item" onclick="window.open('${l.url}','_blank')">
+        ${l.thumbnail_url ? `<img class="thumb" src="${l.thumbnail_url}" loading="lazy">` : `<div class="thumb-placeholder">🏷️</div>`}
+        <div class="listing-info">
+          <div class="listing-title">${l.title}</div>
+          <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥<span class="badge ${l.state}">${l.state}</span></div>
+        </div>
+        <div class="listing-price">$${l.price.toFixed(2)}</div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = `<div class="empty">Failed to load listings</div>`;
+  }
+}
+
+// ── Chat ───────────────────────────────────────────────────────────────────
+function initWS() {
+  ws = new WebSocket(WS_BASE + '/ws/chat?token=' + TOKEN);
+  ws.onopen = () => { wsReady = true; if (pendingMsg) { ws.send(JSON.stringify({message:pendingMsg})); pendingMsg=null; } };
+  ws.onmessage = e => {
+    const d = JSON.parse(e.data);
+    const bot = document.getElementById('bot-streaming');
+    if (d.type === 'chunk' && bot) { bot.textContent += d.content; scrollMsgs(); }
+    else if (d.type === 'done') { if(bot) bot.id=''; scrollMsgs(); }
+    else if (d.type === 'error') { addBubble('Error: '+d.content,'bot'); }
+  };
+  ws.onclose = () => { wsReady=false; ws=null; };
+}
+function addBubble(text, who) {
+  const el = document.createElement('div');
+  el.className = 'bubble ' + who;
+  el.textContent = text;
+  document.getElementById('msgs').appendChild(el);
+  scrollMsgs();
+  return el;
+}
+function scrollMsgs() { const m=document.getElementById('msgs'); m.scrollTop=m.scrollHeight; }
+function sendMsg() {
+  const inp = document.getElementById('msg-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  addBubble(text, 'user');
+  const bot = addBubble('', 'bot typing');
+  bot.id = 'bot-streaming';
+  bot.textContent = '';
+  if (wsReady) { ws.send(JSON.stringify({message:text})); }
+  else { pendingMsg = text; if(!ws) initWS(); }
+}
+function sendChip(el) { document.getElementById('msg-input').value = el.textContent; sendMsg(); }
+document.getElementById('msg-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadDash();
+</script>
+</body>
+</html>"""
+
+
+@app.get("/", response_class=HTMLResponse)
+def web_ui():
+    return HTMLResponse(content=_WEB_UI)
+
 
 # ── Health ─────────────────────────────────────────────────────────────────────
 
