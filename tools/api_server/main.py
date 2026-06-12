@@ -45,8 +45,10 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme")
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+_SERVER_START = datetime.now(timezone.utc)
+_BUILD_ID = "4938a78-v2"  # bump on each deploy to confirm Railway is using latest code
 
-print(f"[startup] PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ANTHROPIC_SET={bool(ANTHROPIC_KEY)}", flush=True)
+print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
 # ── App setup ──────────────────────────────────────────────────────────────────
 
@@ -282,9 +284,12 @@ function fetchWithTimeout(url, opts, ms=12000){
 // ── Dashboard ──────────────────────────────────────────────────────────────
 async function loadDash() {
   const el = document.getElementById('dash-content');
-  el.innerHTML = '<div class="spinner"></div>';
+  el.innerHTML = '<div class="spinner"></div><div id="dash-status" style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0">Connecting…</div>';
+  const setStatus = msg => { const s=document.getElementById('dash-status'); if(s) s.textContent=msg; };
   try {
+    setStatus('Loading shop data…');
     const r = await fetchWithTimeout(BASE + '/api/metrics', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    setStatus('Processing…');
     if (!r.ok) { const err = await r.json().catch(()=>({})); throw new Error(err.detail||'HTTP '+r.status); }
     const d = await r.json();
     const o = d.orders || {}, l = d.listings || {}, rev = d.reviews || {}, sh = d.shop || {};
@@ -391,15 +396,42 @@ loadDash();
 
 @app.get("/", response_class=HTMLResponse)
 def web_ui():
-    return HTMLResponse(content=_WEB_UI)
+    return HTMLResponse(
+        content=_WEB_UI,
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+    )
 
 
-# ── Health ─────────────────────────────────────────────────────────────────────
+# ── Health / Diagnostics ───────────────────────────────────────────────────────
 
 
 @app.get("/health")
 def health():
     return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get("/api/ping")
+def ping():
+    """Public diagnostic endpoint — no auth. Visit this URL to confirm server state."""
+    uptime_s = round((datetime.now(timezone.utc) - _SERVER_START).total_seconds())
+    etsy_shop_test: str
+    try:
+        shop = EtsyAPIClient().get_shop()
+        etsy_shop_test = f"ok — {shop.get('shop_name', '?')}"
+    except Exception as exc:
+        etsy_shop_test = f"error: {str(exc)[:120]}"
+    return {
+        "build": _BUILD_ID,
+        "uptime_seconds": uptime_s,
+        "env": {
+            "APP_SECRET_TOKEN": bool(os.getenv("APP_SECRET_TOKEN")),
+            "ETSY_ACCESS_TOKEN": bool(os.getenv("ETSY_ACCESS_TOKEN")),
+            "ETSY_REFRESH_TOKEN": bool(os.getenv("ETSY_REFRESH_TOKEN")),
+            "ETSY_API_KEY": bool(os.getenv("ETSY_API_KEY")),
+            "ANTHROPIC_API_KEY": bool(os.getenv("ANTHROPIC_API_KEY")),
+        },
+        "etsy_shop_test": etsy_shop_test,
+    }
 
 
 # ── Metrics endpoint ───────────────────────────────────────────────────────────
