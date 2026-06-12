@@ -1436,6 +1436,11 @@ These rules apply regardless of product category. Violations block publishing.
 
 **Lifestyle photos must be generated with OpenAI images.edit using the actual downloadable product file as input.** No AI-generated stand-in products. No placeholder art. The exact files the customer downloads are passed to `images.edit` as the input image. This is the only method that guarantees the listing photo shows what the customer actually receives. See THE STANDARD LIFESTYLE METHOD in the Image Generation section.
 
+**EVERY photo in EVERY listing must be generated with OpenAI gpt-image-1 — HARD RULE (Scott, June 2026).** This applies to all 10 slots, not just lifestyle shots. No PIL-only graphics, no plain solid-color backgrounds, no other image software unless a demonstrably better tool replaces OpenAI. Per-slot method:
+- Lifestyle / detail shots: `images.generate` is never acceptable here — use `images.edit` with the real product file(s) as input
+- Flat lays / collection shots with multiple designs: `images.generate` for the background + pixel-perfect PIL paste of the REAL design files on top (images.edit garbles small text with 5+ inputs)
+- Infographics / spec sheets / how-to graphics: `images.generate` for the background + PIL text overlay (AI cannot render reliable text)
+
 **Every listing undergoes a complete pre-publish checklist before going live.** A listing cannot be submitted for Scott's review unless every gate below for its category has been run and passed. "Looks good" is not a gate. The gate is code.
 
 ---
