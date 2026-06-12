@@ -1,25 +1,8 @@
 """
-Etsy OAuth 2.0 setup — run this once to authorize shop management.
-
-Usage:
-    python tools/etsy_oauth.py
-
-Requirements in .env:
-    ETSY_CLIENT_ID=your_keystring_from_etsy_developers
-    ETSY_CLIENT_SECRET=your_shared_secret_from_etsy_developers
-
-After completing the flow, ETSY_ACCESS_TOKEN and ETSY_REFRESH_TOKEN
-are written to your .env file. The agents will use them automatically.
-
-Scopes requested:
-    shops_r, shops_w          — read/write shop info
-    listings_r, listings_w    — read/write listings
-    transactions_r            — read orders
-    billing_r                 — read billing
-    profile_r                 — read profile
-    email_r                   — read email
-    feedback_r                — read reviews
-    address_r                 — read addresses (for order shipping)
+Etsy OAuth 2.0 setup — run once to authorize shop management.
+Usage: python tools/etsy_oauth.py
+Requires in .env: ETSY_CLIENT_ID, ETSY_CLIENT_SECRET
+Saves ETSY_ACCESS_TOKEN and ETSY_REFRESH_TOKEN to .env on success.
 """
 
 import os
@@ -41,18 +24,16 @@ REDIRECT_URI = "http://localhost:3003/callback"
 AUTH_URL = "https://www.etsy.com/oauth/connect"
 TOKEN_URL = "https://api.etsy.com/v3/public/oauth/token"
 SCOPES = "shops_r shops_w listings_r listings_w transactions_r billing_r profile_r email_r feedback_r address_r"
-
 ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 
-_auth_code: str = ""
-_state_received: str = ""
+_auth_code = ""
+_state_received = ""
 
 
 class CallbackHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         global _auth_code, _state_received
-        parsed = urllib.parse.urlparse(self.path)
-        params = urllib.parse.parse_qs(parsed.query)
+        params = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
         _auth_code = params.get("code", [""])[0]
         _state_received = params.get("state", [""])[0]
         self.send_response(200)
@@ -89,53 +70,32 @@ def _update_env(key: str, value: str) -> None:
 def main():
     if not CLIENT_ID:
         print("ERROR: ETSY_CLIENT_ID not set in .env")
-        print("Get your Keystring from https://www.etsy.com/developers/")
         sys.exit(1)
 
     verifier, challenge = _pkce()
     state = secrets.token_urlsafe(16)
-
     params = urllib.parse.urlencode({
-        "response_type": "code",
-        "redirect_uri": REDIRECT_URI,
-        "scope": SCOPES,
-        "client_id": CLIENT_ID,
-        "state": state,
-        "code_challenge": challenge,
-        "code_challenge_method": "S256",
+        "response_type": "code", "redirect_uri": REDIRECT_URI,
+        "scope": SCOPES, "client_id": CLIENT_ID, "state": state,
+        "code_challenge": challenge, "code_challenge_method": "S256",
     })
+    print("\n-- Etsy OAuth Setup ---")
+    print("Open this URL in your browser:\n")
+    print(f"{AUTH_URL}?{params}")
+    print("\nWaiting for Etsy callback...")
 
-    auth_link = f"{AUTH_URL}?{params}"
-    print("\n── Etsy OAuth Setup ─────────────────────────────────────")
-    print("Open this URL in your browser to authorize the hub:\n")
-    print(auth_link)
-    print("\nWaiting for Etsy to redirect back...")
+    HTTPServer(("localhost", 3003), CallbackHandler).handle_request()
 
-    server = HTTPServer(("localhost", 3003), CallbackHandler)
-    server.handle_request()
-
-    if not _auth_code:
-        print("ERROR: No authorization code received.")
+    if not _auth_code or _state_received != state:
+        print("ERROR: Auth failed.")
         sys.exit(1)
 
-    if _state_received != state:
-        print("ERROR: State mismatch — possible CSRF. Aborting.")
-        sys.exit(1)
-
-    # Exchange code for tokens
     token_data = urllib.parse.urlencode({
-        "grant_type": "authorization_code",
-        "client_id": CLIENT_ID,
-        "redirect_uri": REDIRECT_URI,
-        "code": _auth_code,
-        "code_verifier": verifier,
+        "grant_type": "authorization_code", "client_id": CLIENT_ID,
+        "redirect_uri": REDIRECT_URI, "code": _auth_code, "code_verifier": verifier,
     }).encode()
-
-    req = urllib.request.Request(
-        TOKEN_URL,
-        data=token_data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
+    req = urllib.request.Request(TOKEN_URL, data=token_data,
+                                  headers={"Content-Type": "application/x-www-form-urlencoded"})
     try:
         with urllib.request.urlopen(req) as resp:
             tokens = json.loads(resp.read())
@@ -143,14 +103,9 @@ def main():
         print(f"Token exchange failed: {e.read().decode()}")
         sys.exit(1)
 
-    access_token = tokens.get("access_token", "")
-    refresh_token = tokens.get("refresh_token", "")
-
-    _update_env("ETSY_ACCESS_TOKEN", access_token)
-    _update_env("ETSY_REFRESH_TOKEN", refresh_token)
-
+    _update_env("ETSY_ACCESS_TOKEN", tokens.get("access_token", ""))
+    _update_env("ETSY_REFRESH_TOKEN", tokens.get("refresh_token", ""))
     print("\nSuccess! Tokens saved to .env")
-    print("Your hub can now manage orders, listings, and messages directly on Etsy.")
 
 
 if __name__ == "__main__":

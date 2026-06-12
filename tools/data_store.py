@@ -5,8 +5,6 @@ from config import SHOP_DATA_FILE
 
 
 class DataStore:
-    """Shared in-memory data store backed by shop_data.json."""
-
     def __init__(self):
         self._data: dict = {}
         self._load()

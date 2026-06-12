@@ -28,7 +28,6 @@ class BaseAgent:
                 messages.append({"role": "user", "content": tool_results})
                 continue
 
-            # Unexpected stop reason — return whatever text exists
             return self._extract_text(response) or f"[{self.name}] Stopped: {response.stop_reason}"
 
         return f"[{self.name}] Reached max iterations ({max_iterations}) without completing."
