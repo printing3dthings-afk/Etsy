@@ -46,7 +46,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme")
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "4938a78-v2"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b8f1c3d-v3"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -204,7 +204,10 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 <body>
   <header>
     <h1>OnBrandCraftz</h1>
-    <span id="hdr-sub">Dashboard</span>
+    <div style="text-align:right;line-height:1.4">
+      <span id="hdr-sub">Dashboard</span>
+      <div style="font-size:9px;color:var(--border);margin-top:1px">""" + _BUILD_ID + """</div>
+    </div>
   </header>
 
   <div id="screen-dash" class="screen active">
@@ -282,34 +285,36 @@ function fetchWithTimeout(url, opts, ms=12000){
 }
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
-async function loadDash() {
-  const el = document.getElementById('dash-content');
-  el.innerHTML = '<div class="spinner"></div><div id="dash-status" style="text-align:center;color:var(--muted);font-size:12px;padding:4px 0">Connecting…</div>';
-  const setStatus = msg => { const s=document.getElementById('dash-status'); if(s) s.textContent=msg; };
+function _dashSkeleton() {
+  const hr = new Date().getHours();
+  const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  const ds = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  return `<div style="margin-bottom:16px"><div style="font-size:22px;font-weight:700">${greet}, Scott 👋</div><div style="color:var(--muted);font-size:13px;margin-top:4px">${ds}</div></div><div id="dash-err"></div><div class="section-title">Revenue</div><div class="card-row"><div class="metric gold"><div class="label">7-Day</div><div class="value" id="v-rev7">…</div><div class="sub" id="s-rev7">loading</div></div><div class="metric gold"><div class="label">30-Day</div><div class="value" id="v-rev30">…</div><div class="sub" id="s-rev30">loading</div></div></div><div class="section-title">Shop</div><div class="card-row"><div class="metric"><div class="label">Active</div><div class="value" id="v-active">…</div><div class="sub">listings</div></div><div class="metric"><div class="label">All-Time</div><div class="value" id="v-sales">…</div><div class="sub">sales</div></div></div><div id="m-reviews"></div><div id="dash-retry" style="display:none;text-align:center;margin-top:8px"><button onclick="fetchDashData()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+}
+async function fetchDashData() {
+  const setId = (id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
+  const setErr = msg=>{const e=document.getElementById('dash-err');if(e)e.innerHTML=msg?`<div style="background:#2d1a1a;border:1px solid #5a2d2d;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#e07070">${msg}</div>`:''};
+  const showRetry = v=>{const r=document.getElementById('dash-retry');if(r)r.style.display=v?'':'none';};
   try {
-    setStatus('Loading shop data…');
-    const r = await fetchWithTimeout(BASE + '/api/metrics', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
-    setStatus('Processing…');
-    if (!r.ok) { const err = await r.json().catch(()=>({})); throw new Error(err.detail||'HTTP '+r.status); }
+    const r = await fetchWithTimeout(BASE+'/api/metrics',{headers:{Authorization:'Bearer '+TOKEN}},15000);
+    if (!r.ok){const err=await r.json().catch(()=>({}));throw new Error(err.detail||'HTTP '+r.status);}
     const d = await r.json();
-    const o = d.orders || {}, l = d.listings || {}, rev = d.reviews || {}, sh = d.shop || {};
-    const hr = new Date().getHours();
-    const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
-    let html = `<div style="margin-bottom:16px"><div style="font-size:22px;font-weight:700">${greet}, Scott 👋</div><div style="color:var(--muted);font-size:13px;margin-top:4px">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div></div>`;
-    if (o.error || sh.error) html += `<div style="background:#2d1a1a;border:1px solid #5a2d2d;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#e07070">⚠️ Etsy data partially unavailable — tap Retry below</div>`;
-    html += `<div class="section-title">Revenue</div><div class="card-row">`;
-    html += `<div class="metric gold"><div class="label">7-Day</div><div class="value">$${(o.revenue_7d||0).toFixed(2)}</div><div class="sub">${o.last_7_days||0} orders</div></div>`;
-    html += `<div class="metric gold"><div class="label">30-Day</div><div class="value">$${(o.revenue_30d||0).toFixed(2)}</div><div class="sub">${o.last_30_days||0} orders</div></div></div>`;
-    html += `<div class="section-title">Shop</div><div class="card-row">`;
-    html += `<div class="metric"><div class="label">Active</div><div class="value">${sh.active_listing_count||l.active_count||0}</div><div class="sub">listings</div></div>`;
-    html += `<div class="metric"><div class="label">All-Time</div><div class="value">${sh.total_sales||0}</div><div class="sub">sales</div></div></div>`;
-    if (rev.avg_rating) {
-      html += `<div class="section-title">Reviews</div><div class="card"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:36px;font-weight:700;color:var(--gold)">${rev.avg_rating}</div><div><div class="star">${'★'.repeat(Math.round(rev.avg_rating))}${'☆'.repeat(5-Math.round(rev.avg_rating))}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">${rev.total_count||0} reviews · ${rev.five_star_pct||0}% five-star</div></div></div></div>`;
-    }
-    el.innerHTML = html;
+    const o=d.orders||{},l=d.listings||{},rev=d.reviews||{},sh=d.shop||{};
+    if(o.error||sh.error){setErr('⚠️ Etsy data partially unavailable');showRetry(true);}else{setErr('');showRetry(false);}
+    setId('v-rev7','$'+(o.revenue_7d||0).toFixed(2));setId('s-rev7',(o.last_7_days||0)+' orders');
+    setId('v-rev30','$'+(o.revenue_30d||0).toFixed(2));setId('s-rev30',(o.last_30_days||0)+' orders');
+    setId('v-active',sh.active_listing_count||l.active_count||0);setId('v-sales',sh.total_sales||0);
+    if(rev.avg_rating){const rEl=document.getElementById('m-reviews');if(rEl)rEl.innerHTML=`<div class="section-title">Reviews</div><div class="card"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:36px;font-weight:700;color:var(--gold)">${rev.avg_rating}</div><div><div class="star">${'★'.repeat(Math.round(rev.avg_rating))}${'☆'.repeat(5-Math.round(rev.avg_rating))}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">${rev.total_count||0} reviews · ${rev.five_star_pct||0}% five-star</div></div></div></div>`;}
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadDash()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    setErr('⚠️ '+(e.name==='AbortError'?'Request timed out — check connection':escHtml(e.message||'Failed to load')));
+    setId('v-rev7','—');setId('s-rev7','');setId('v-rev30','—');setId('s-rev30','');
+    setId('v-active','—');setId('v-sales','—');
+    showRetry(true);
   }
+}
+function loadDash() {
+  document.getElementById('dash-content').innerHTML = _dashSkeleton();
+  fetchDashData();
 }
 
 // ── Listings ───────────────────────────────────────────────────────────────
