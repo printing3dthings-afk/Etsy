@@ -282,26 +282,28 @@ function fetchWithTimeout(url, opts, ms=12000){
 // ── Dashboard ──────────────────────────────────────────────────────────────
 async function loadDash() {
   const el = document.getElementById('dash-content');
+  el.innerHTML = '<div class="spinner"></div>';
   try {
-    const r = await fetchWithTimeout(BASE + '/api/metrics', {headers:{Authorization:'Bearer '+TOKEN}});
+    const r = await fetchWithTimeout(BASE + '/api/metrics', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    if (!r.ok) { const err = await r.json().catch(()=>({})); throw new Error(err.detail||'HTTP '+r.status); }
     const d = await r.json();
     const o = d.orders || {}, l = d.listings || {}, rev = d.reviews || {}, sh = d.shop || {};
     const hr = new Date().getHours();
     const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
     let html = `<div style="margin-bottom:16px"><div style="font-size:22px;font-weight:700">${greet}, Scott 👋</div><div style="color:var(--muted);font-size:13px;margin-top:4px">${new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div></div>`;
-    if (l.draft_count > 0) html += `<div class="banner">📋 ${l.draft_count} draft listing${l.draft_count>1?'s':''} ready to review</div>`;
+    if (o.error || sh.error) html += `<div style="background:#2d1a1a;border:1px solid #5a2d2d;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#e07070">⚠️ Etsy data partially unavailable — tap Retry below</div>`;
     html += `<div class="section-title">Revenue</div><div class="card-row">`;
     html += `<div class="metric gold"><div class="label">7-Day</div><div class="value">$${(o.revenue_7d||0).toFixed(2)}</div><div class="sub">${o.last_7_days||0} orders</div></div>`;
     html += `<div class="metric gold"><div class="label">30-Day</div><div class="value">$${(o.revenue_30d||0).toFixed(2)}</div><div class="sub">${o.last_30_days||0} orders</div></div></div>`;
     html += `<div class="section-title">Shop</div><div class="card-row">`;
-    html += `<div class="metric"><div class="label">Active</div><div class="value">${l.active_count||0}</div><div class="sub">listings</div></div>`;
+    html += `<div class="metric"><div class="label">Active</div><div class="value">${sh.active_listing_count||l.active_count||0}</div><div class="sub">listings</div></div>`;
     html += `<div class="metric"><div class="label">All-Time</div><div class="value">${sh.total_sales||0}</div><div class="sub">sales</div></div></div>`;
     if (rev.avg_rating) {
       html += `<div class="section-title">Reviews</div><div class="card"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:36px;font-weight:700;color:var(--gold)">${rev.avg_rating}</div><div><div class="star">${'★'.repeat(Math.round(rev.avg_rating))}${'☆'.repeat(5-Math.round(rev.avg_rating))}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">${rev.total_count||0} reviews · ${rev.five_star_pct||0}% five-star</div></div></div></div>`;
     }
     el.innerHTML = html;
   } catch(e) {
-    el.innerHTML = `<div class="empty">${e.name==='AbortError'?'Request timed out — try again':'Failed to load. Check connection.'}</div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadDash()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -313,7 +315,8 @@ async function loadListings(state, btn) {
   const el = document.getElementById('listings-content');
   el.innerHTML = '<div class="spinner"></div>';
   try {
-    const r = await fetchWithTimeout(BASE+'/api/listings?state='+state, {headers:{Authorization:'Bearer '+TOKEN}});
+    const r = await fetchWithTimeout(BASE+'/api/listings?state='+state, {headers:{Authorization:'Bearer '+TOKEN}}, 20000);
+    if (!r.ok) { const err = await r.json().catch(()=>({})); throw new Error(err.detail||'HTTP '+r.status); }
     const d = await r.json();
     if (!d.listings || d.listings.length === 0) { el.innerHTML = '<div class="empty">No '+state+' listings</div>'; return; }
     el.innerHTML = d.listings.map(l => `
@@ -326,7 +329,7 @@ async function loadListings(state, btn) {
         <div class="listing-price">$${(+l.price||0).toFixed(2)}</div>
       </div>`).join('');
   } catch(e) {
-    el.innerHTML = `<div class="empty">${e.name==='AbortError'?'Request timed out — try again':'Failed to load listings'}</div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastState)" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -404,7 +407,7 @@ def health():
 
 @app.get("/api/metrics")
 async def get_metrics(_token: str = Depends(_auth)):
-    """Pull live business snapshot. All 5 Etsy calls run in parallel; result cached 60 s."""
+    """Pull live business snapshot. 3 Etsy calls run in parallel; result cached 60 s."""
     cached = _cache_get("metrics", ttl=60)
     if cached is not None:
         return cached
@@ -412,15 +415,19 @@ async def get_metrics(_token: str = Depends(_auth)):
     now = int(time.time())
     day = 86_400
 
-    # Fire all five blocking calls at the same time in a thread pool
-    active_r, draft_r, orders_r, reviews_r, shop_r = await asyncio.gather(
-        asyncio.to_thread(lambda: EtsyAPIClient().get_shop_listings_all(state="active")),
-        asyncio.to_thread(lambda: EtsyAPIClient().get_shop_listings_all(state="draft")),
-        asyncio.to_thread(lambda: EtsyAPIClient().get_orders(limit=100)),
-        asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=50)),
-        asyncio.to_thread(lambda: EtsyAPIClient().get_shop()),
-        return_exceptions=True,
-    )
+    # 3 parallel calls (shop gives us active count — no need to paginate listings)
+    try:
+        orders_r, reviews_r, shop_r = await asyncio.wait_for(
+            asyncio.gather(
+                asyncio.to_thread(lambda: EtsyAPIClient().get_orders(limit=100)),
+                asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=50)),
+                asyncio.to_thread(lambda: EtsyAPIClient().get_shop()),
+                return_exceptions=True,
+            ),
+            timeout=10.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
 
     out: dict = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -429,19 +436,6 @@ async def get_metrics(_token: str = Depends(_auth)):
         "reviews": {},
         "shop": {},
     }
-
-    # ── Listings ────────────────────────────────────────────────────────────
-    if isinstance(active_r, Exception):
-        out["listings"]["active_error"] = str(active_r)
-    else:
-        out["listings"]["active_count"] = len(active_r)
-        out["listings"]["active_titles"] = [l.get("title", "")[:45] for l in active_r[:6]]
-
-    if isinstance(draft_r, Exception):
-        out["listings"]["draft_error"] = str(draft_r)
-    else:
-        out["listings"]["draft_count"] = len(draft_r)
-        out["listings"]["draft_titles"] = [l.get("title", "")[:45] for l in draft_r[:3]]
 
     # ── Orders / Revenue ─────────────────────────────────────────────────────
     if isinstance(orders_r, Exception):
@@ -479,16 +473,18 @@ async def get_metrics(_token: str = Depends(_auth)):
             "five_star_pct": round(sum(1 for r in ratings if r == 5) / len(ratings) * 100) if ratings else 0,
         }
 
-    # ── Shop ─────────────────────────────────────────────────────────────────
+    # ── Shop (active count lives here — no separate listing pagination needed) ──
     if isinstance(shop_r, Exception):
         out["shop"]["error"] = str(shop_r)
     else:
+        active_count = shop_r.get("listing_active_count", 0)
         out["shop"] = {
             "name": shop_r.get("shop_name", "OnBrandCraftz"),
-            "active_listing_count": shop_r.get("listing_active_count", 0),
+            "active_listing_count": active_count,
             "total_sales": shop_r.get("transaction_sold_count", 0),
             "on_vacation": shop_r.get("is_vacation", False),
         }
+        out["listings"]["active_count"] = active_count
 
     _cache_set("metrics", out)
     return out
@@ -508,7 +504,13 @@ async def get_listings(state: str = "active", _token: str = Depends(_auth)):
     if cached is not None:
         return cached
 
-    raw = await asyncio.to_thread(lambda: EtsyAPIClient().get_shop_listings_all(state=state))
+    try:
+        raw = await asyncio.wait_for(
+            asyncio.to_thread(lambda: EtsyAPIClient().get_shop_listings_all(state=state)),
+            timeout=15.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
 
     listings = []
     for l in raw:
