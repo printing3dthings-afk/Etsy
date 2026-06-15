@@ -292,11 +292,15 @@ class EtsyAPIClient:
     """Lightweight Etsy Open API v3 client (no third-party dependencies)."""
 
     def __init__(self, api_key: str = "", access_token: str = ""):
-        self.api_key = api_key or os.getenv("ETSY_API_KEY", "")
-        self.client_id = os.getenv("ETSY_CLIENT_ID", self.api_key)
-        self.client_secret = os.getenv("ETSY_CLIENT_SECRET", "")
-        self.access_token = access_token or os.getenv("ETSY_ACCESS_TOKEN", "")
-        self.shop_id = os.getenv("ETSY_SHOP_ID_NUMERIC") or os.getenv("ETSY_SHOP_ID", "")
+        # .strip() every credential: Railway (and any dashboard-pasted env var)
+        # can carry trailing newlines/spaces. An embedded "\n" makes urllib raise
+        # "Invalid header value" and EVERY Etsy call fails. The .env parser strips
+        # values, but os.environ values set by the platform do not — so strip here.
+        self.api_key = (api_key or os.getenv("ETSY_API_KEY", "")).strip()
+        self.client_id = (os.getenv("ETSY_CLIENT_ID") or self.api_key).strip()
+        self.client_secret = os.getenv("ETSY_CLIENT_SECRET", "").strip()
+        self.access_token = (access_token or os.getenv("ETSY_ACCESS_TOKEN", "")).strip()
+        self.shop_id = (os.getenv("ETSY_SHOP_ID_NUMERIC") or os.getenv("ETSY_SHOP_ID", "")).strip()
         # Rate-limit state, refreshed from response headers on every call. Lets us
         # throttle BEFORE hitting 429 instead of only reacting to it.
         self.rate_limit = {
@@ -760,8 +764,8 @@ class EtsyAPIClient:
 
         Returns True on success, False on any failure.
         """
-        client_id = os.getenv("ETSY_CLIENT_ID", "")
-        refresh_token = os.getenv("ETSY_REFRESH_TOKEN", "")
+        client_id = os.getenv("ETSY_CLIENT_ID", "").strip()
+        refresh_token = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
         if not client_id or not refresh_token:
             return False
 
