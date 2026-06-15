@@ -53,7 +53,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v12"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v13"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -261,6 +261,50 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
     except Exception as exc:
         return {"error": str(exc)}
 
+# ── CEO Suggestions system prompt ─────────────────────────────────────────────────
+
+_SUGGESTIONS_SYSTEM = """\
+You are the CEO Agent for OnBrandCraftz running a FULL SHOP DIAGNOSTIC.
+
+You MUST follow these steps in order — no skipping:
+STEP 1: Call get_metrics to get revenue, orders, active listings, sales, and rating.
+STEP 2: Call list_listings with state="active" to inspect all live listings.
+STEP 3: Call list_listings with state="draft" to inspect all drafts.
+
+Only after completing all three tool calls, write your final response as a single
+valid JSON object. No markdown, no prose outside the JSON — just the object.
+
+JSON format (follow exactly):
+{
+  "headline": "one-sentence summary of where the shop stands right now, citing actual numbers",
+  "score": <integer 1–10 overall shop health>,
+  "top_win": "the single strongest thing working in the shop right now, with specifics",
+  "top_risk": "the single biggest gap or threat, with specifics",
+  "suggestions": [
+    {
+      "priority": "critical|high|medium|low",
+      "category": "seo|conversion|pricing|inventory|content|reviews|operations",
+      "title": "short action title (under 60 chars)",
+      "detail": "specific observation referencing actual data you just read — title, tag count, view count, revenue figure, etc.",
+      "action": "exact concrete next step Scott should take",
+      "impact": "what this unlocks — revenue, ranking, conversion",
+      "listing_id": <listing id integer if this is about a specific listing, else null>
+    }
+  ]
+}
+
+Rules for suggestions:
+- 5 to 8 suggestions total, ordered critical → high → medium → low
+- Every detail field must reference real data you read from the tools
+- No generic advice — name the specific listing, the specific tag count, the specific number
+- Prioritize by revenue impact and urgency
+- If a draft has been sitting unpublished, call it out specifically
+- If listings have 0 views after 7+ days, identify which ones and why
+- Tag gaps (<13 tags), title length violations (>70 chars), and zero-view listings are high priority
+\
+"""
+
+
 # ── Batch tag generation (one Claude call → 13 tags for N listings) ──────────────
 
 _BATCH_TAG_PROMPT = """\
@@ -451,6 +495,15 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
 .star{color:var(--gold)}
+#fab-top{position:fixed;bottom:calc(var(--nav) + 16px);right:16px;width:46px;height:46px;border-radius:50%;background:var(--gold);color:#0D1B2A;border:none;font-size:20px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.55);z-index:150;line-height:1}
+#fab-top.visible{display:flex}
+.sug-card{background:var(--card);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.sug-card .sug-p{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px;border:1px solid currentColor;display:inline-block}
+.sug-card .sug-title{font-size:14px;font-weight:600;margin:7px 0 4px;line-height:1.35}
+.sug-card .sug-detail{font-size:12px;color:var(--muted);line-height:1.45}
+.sug-card .sug-action{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.sug-card .sug-impact{font-size:11px;color:var(--muted);margin-top:5px}
+.ceo-btn{width:100%;background:linear-gradient(135deg,var(--card) 0%,#1a2440 100%);border:1px solid var(--gold);color:var(--gold);border-radius:12px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -464,6 +517,12 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 
   <div id="screen-dash" class="screen active">
     <div id="dash-content"><div class="spinner"></div></div>
+    <div style="margin-top:4px">
+      <button id="ceo-analyze-btn" class="ceo-btn" onclick="getCeoSuggestions(false)">
+        <span>🎯</span><span>Run CEO Analysis</span>
+      </button>
+      <div id="ceo-suggestions"></div>
+    </div>
   </div>
 
   <div id="screen-actions" class="screen">
@@ -507,6 +566,8 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
     </div>
   </div>
 
+  <button id="fab-top" aria-label="Back to top">↑</button>
+
   <nav>
     <button class="active" onclick="showTab('dash',this)">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -544,6 +605,8 @@ function showTab(tab, btn) {
   document.getElementById('chat-wrap').classList.remove('active');
   btn.classList.add('active');
   document.getElementById('hdr-sub').textContent = {dash:'Dashboard',actions:'Action Center',analytics:'Analytics',chat:'Chat',listings:'Listings'}[tab];
+  _onListings = (tab === 'listings');
+  if (!_onListings) { const fab=document.getElementById('fab-top'); if(fab)fab.classList.remove('visible'); }
   if (tab === 'chat') {
     document.getElementById('chat-wrap').classList.add('active');
     if (!ws) initWS();
@@ -649,7 +712,7 @@ async function loadActions() {
 function askActionFix(i) {
   const a = _actions[i];
   if (!a) return;
-  const chatBtn = document.querySelectorAll('nav button')[2]; // dash, actions, chat, listings
+  const chatBtn = document.querySelectorAll('nav button')[3]; // dash, actions, analytics, chat, listings
   showTab('chat', chatBtn);
   const q = 'How should I fix this? ' + a.title + ' — ' + a.detail;
   const inp = document.getElementById('msg-input');
@@ -880,6 +943,90 @@ async function loadAnalytics(days, btn) {
       '<div style="text-align:center;margin-top:8px"><button onclick="loadAnalytics()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
   }
 }
+
+// ── CEO Analysis (structured suggestion report) ────────────────────────────
+let _lastSuggestions = null;
+const _PCOLOR = {critical:'var(--red)',high:'#e08030',medium:'var(--gold)',low:'#7ba0c2'};
+const _PRANK  = {critical:0,high:1,medium:2,low:3};
+function _renderSuggestions(d) {
+  if (!d) return '';
+  if (d.raw) return '<div class="card" style="font-size:13px;white-space:pre-wrap;color:var(--muted)">'+escHtml(d.raw)+'</div>';
+  const ts = d.generated_at ? new Date(d.generated_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+  const score = d.score;
+  const scoreColor = score >= 7 ? 'var(--green)' : score >= 4 ? 'var(--gold)' : 'var(--red)';
+  const scoreBg = score >= 7 ? '#13241c' : score >= 4 ? '#2d2a1a' : '#241313';
+  let html = '<div class="card" style="margin-bottom:10px">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+  html += '<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">CEO Report · ' + ts + '</div>';
+  if (score) html += '<div style="background:'+scoreBg+';border:1px solid '+scoreColor+';border-radius:20px;padding:2px 10px;font-size:13px;font-weight:700;color:'+scoreColor+'">'+score+'/10</div>';
+  html += '</div>';
+  if (d.headline) html += '<div style="font-size:14px;line-height:1.5">'+escHtml(d.headline)+'</div>';
+  html += '</div>';
+  if (d.top_win || d.top_risk) {
+    html += '<div class="card-row">';
+    if (d.top_win)  html += '<div class="metric" style="background:#13241c;border-color:#2d5a44"><div class="label" style="color:#5fcf9e">✅ TOP WIN</div><div style="font-size:12px;line-height:1.45;margin-top:4px">'+escHtml(d.top_win)+'</div></div>';
+    if (d.top_risk) html += '<div class="metric" style="background:#241313;border-color:#5a2d2d"><div class="label" style="color:#e07070">⚠️ TOP RISK</div><div style="font-size:12px;line-height:1.45;margin-top:4px">'+escHtml(d.top_risk)+'</div></div>';
+    html += '</div>';
+  }
+  const sugs = (d.suggestions || []).slice().sort(function(a,b){ return (_PRANK[a.priority]||9)-(_PRANK[b.priority]||9); });
+  if (sugs.length) {
+    html += '<div class="section-title">Priorities</div>';
+    sugs.forEach(function(s,i) {
+      const pc = _PCOLOR[s.priority] || 'var(--muted)';
+      html += '<div class="sug-card" style="border-left-color:'+pc+'">';
+      html += '<span class="sug-p" style="color:'+pc+'">'+escHtml(s.priority||'medium')+'</span>';
+      if (s.category) html += '<span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-left:6px">'+escHtml(s.category)+'</span>';
+      html += '<div class="sug-title">'+escHtml(s.title)+'</div>';
+      html += '<div class="sug-detail">'+escHtml(s.detail)+'</div>';
+      if (s.action) html += '<div class="sug-action"><b style="color:var(--gold2)">→ </b>'+escHtml(s.action)+'</div>';
+      if (s.impact) html += '<div class="sug-impact">💡 '+escHtml(s.impact)+'</div>';
+      html += '<div class="act-btns">';
+      if (s.listing_id) html += '<a class="act-btn" href="https://www.etsy.com/listing/'+escHtml(String(s.listing_id))+'" target="_blank">Open Listing</a>';
+      html += '<button class="act-btn primary" onclick="askSuggestionFix('+i+')">Ask CEO</button>';
+      html += '</div></div>';
+    });
+  }
+  html += '<div style="text-align:center;margin:8px 0 4px"><button onclick="getCeoSuggestions(true)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 20px;font-size:12px;color:var(--muted);cursor:pointer">↻ Refresh analysis</button></div>';
+  return html;
+}
+async function getCeoSuggestions(forceRefresh) {
+  const btn = document.getElementById('ceo-analyze-btn');
+  const el  = document.getElementById('ceo-suggestions');
+  if (!el) return;
+  if (_lastSuggestions && !forceRefresh) { if(btn)btn.style.display='none'; el.innerHTML=_renderSuggestions(_lastSuggestions); return; }
+  if (btn) btn.style.display = 'none';
+  el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">CEO agent analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/suggestions', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 120000);
+    const d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    _lastSuggestions = d;
+    el.innerHTML = _renderSuggestions(d);
+  } catch(e) {
+    const msg = e.name==='AbortError' ? 'Analysis timed out — try again' : escHtml(e.message||'Failed');
+    el.innerHTML = '<div class="empty">'+msg+'</div><div style="text-align:center;margin-top:8px"><button onclick="getCeoSuggestions(true)" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Try Again</button></div>';
+    if (btn) btn.style.display = '';
+  }
+}
+function askSuggestionFix(i) {
+  if (!_lastSuggestions) return;
+  const s = (_lastSuggestions.suggestions||[])[i];
+  if (!s) return;
+  const chatBtn = document.querySelectorAll('nav button')[3]; // dash,actions,analytics,chat,listings
+  showTab('chat', chatBtn);
+  document.getElementById('msg-input').value = 'Help me fix this: '+s.title+' — '+s.detail;
+  sendMsg();
+}
+
+// ── Back to top (listings) ─────────────────────────────────────────────────
+let _onListings = false;
+(function(){
+  const fab = document.getElementById('fab-top');
+  const screen = document.getElementById('screen-listings');
+  if (!fab || !screen) return;
+  screen.addEventListener('scroll', function(){ fab.classList.toggle('visible', _onListings && screen.scrollTop > 200); }, {passive:true});
+  fab.addEventListener('click', function(){ screen.scrollTo({top:0,behavior:'smooth'}); });
+})();
 
 // ── Batch tag fix ──────────────────────────────────────────────────────────
 async function batchStageTags(btn) {
@@ -1403,6 +1550,91 @@ async def get_analytics(days: int = 30, _token: str = Depends(_auth)):
         "latest": rows[-1] if rows else {},
         "top_listings": top_listings,
     }
+
+
+@app.post("/api/suggestions")
+async def get_suggestions(_token: str = Depends(_auth)):
+    """CEO agent runs a 3-tool data-gathering pass (metrics + active + draft listings),
+    then synthesises a structured JSON suggestion report. Cached 5 minutes."""
+    cached = _cache_get("suggestions", ttl=300)
+    if cached is not None:
+        return cached
+
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    messages: list[dict] = [
+        {
+            "role": "user",
+            "content": (
+                "Run your full shop diagnostic now. "
+                "Call get_metrics, then list_listings(active), then list_listings(draft). "
+                "After all three tool calls complete, return the JSON report."
+            ),
+        }
+    ]
+
+    final_response = None
+    for _ in range(8):  # enough headroom for 3 forced tool round-trips
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                lambda: ai_client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=3500,
+                    system=_SUGGESTIONS_SYSTEM,
+                    tools=AGENT_TOOLS,
+                    messages=messages,
+                )
+            ),
+            timeout=60.0,
+        )
+        messages.append({"role": "assistant", "content": response.content})
+        final_response = response
+
+        if response.stop_reason != "tool_use":
+            break
+
+        tool_results = []
+        for block in response.content:
+            if getattr(block, "type", None) == "tool_use":
+                result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": json.dumps(result),
+                    }
+                )
+        messages.append({"role": "user", "content": tool_results})
+
+    # Extract the text from the final response
+    final_text = ""
+    if final_response:
+        for block in final_response.content:
+            if hasattr(block, "text"):
+                final_text += block.text
+
+    text = final_text.strip()
+    for fence in ("```json", "```JSON", "```"):
+        if text.startswith(fence):
+            text = text[len(fence):]
+            break
+    text = text.rstrip("`").strip()
+
+    try:
+        result = json.loads(text)
+    except json.JSONDecodeError:
+        result = {
+            "headline": "Analysis complete",
+            "suggestions": [],
+            "raw": final_text,
+            "error": "parse_failed",
+        }
+
+    result["generated_at"] = datetime.now(timezone.utc).isoformat()
+    _cache_set("suggestions", result)
+    return result
 
 
 @app.post("/api/snapshot")
