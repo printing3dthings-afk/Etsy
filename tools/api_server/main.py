@@ -50,7 +50,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c5d33e1-v5"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d7a44f2-v6"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -110,7 +110,8 @@ def _cache_set(key: str, data) -> None:
 _CEO_SYSTEM = """\
 You are the CEO Agent for OnBrandCraftz, an Etsy shop selling kawaii digital planners,
 sticker packs, and 3D-print SVG files. You are chatting with Scott, the shop owner,
-via his private mobile dashboard.
+via his private mobile dashboard. You are the operating brain of the business — Scott
+relies on you so he does NOT have to dig through data or call in an engineer for answers.
 
 Your role:
 - Answer questions about the business, products, listings, and growth strategy
@@ -118,6 +119,19 @@ Your role:
 - Recommend next actions and prioritize what matters most
 - Uphold the shop's #1 rule: never lie to customers — every listing claim must be
   verifiable against the actual files delivered
+
+LIVE DATA — you can read the real shop, do not guess:
+- Use the get_metrics tool for revenue (7d/30d), order counts, active listing count,
+  total sales, and review rating.
+- Use the list_listings tool to inspect listings (title, price, views, favorites, tags).
+- ALWAYS pull the real numbers with a tool before quoting any figure. Never invent data.
+  If a tool returns an error, say so plainly rather than guessing.
+
+How you operate (prepare, Scott approves):
+- You analyze, recommend, and can DRAFT changes (titles, tags, descriptions, photo plans,
+  quality-gate checklists). You do not publish, change prices, or edit live listings
+  yourself — you prepare the work and Scott approves it. Be explicit about what you'd
+  change and why, so a single yes is enough to act.
 
 Products live: DP1026 Life Planner ($14.99), DP1027 Student Planner ($9.99),
 DP1028 Budget Planner ($12.99), DP1029 Fitness Planner ($12.99).
@@ -131,6 +145,56 @@ Quality standards:
 
 Keep responses concise and scannable — Scott is reading on his phone.\
 """
+
+# ── CEO agent tools (read-only live data; the agent calls these mid-conversation) ─
+
+AGENT_TOOLS = [
+    {
+        "name": "get_metrics",
+        "description": (
+            "Live business snapshot from Etsy: revenue (7-day, 30-day), order counts, "
+            "active listing count, all-time sales, and review rating. Call this before "
+            "quoting any revenue, sales, or rating figure."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "list_listings",
+        "description": (
+            "List the shop's listings with title, price, views, favorites, and tags. "
+            "Use to inspect what's live or in draft, find low performers, or audit SEO."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "state": {
+                    "type": "string",
+                    "enum": ["active", "draft", "inactive"],
+                    "description": "Which listing state to fetch. Defaults to active.",
+                }
+            },
+        },
+    },
+]
+
+
+def _execute_agent_tool(name: str, tool_input: dict) -> dict:
+    """Run a CEO-agent tool and return a JSON-serializable result. Read-only."""
+    try:
+        if name == "get_metrics":
+            return _metrics_sync()
+        if name == "list_listings":
+            state = (tool_input or {}).get("state", "active")
+            data = _listings_sync(state)
+            # Trim payload for the model: drop thumbnail URLs, cap to 60 listings.
+            slim = [
+                {k: v for k, v in l.items() if k != "thumbnail_url"}
+                for l in data.get("listings", [])[:60]
+            ]
+            return {"count": data.get("count"), "state": data.get("state"), "listings": slim}
+        return {"error": f"unknown tool: {name}"}
+    except Exception as exc:
+        return {"error": str(exc)}
 
 # ── Web UI ─────────────────────────────────────────────────────────────────────
 
@@ -361,8 +425,14 @@ function initWS() {
   ws.onmessage = e => {
     const d = JSON.parse(e.data);
     const bot = document.getElementById('bot-streaming');
-    if (d.type === 'chunk' && bot) { bot.textContent += d.content; scrollMsgs(); }
-    else if (d.type === 'done') { _clearStreaming(); scrollMsgs(); }
+    if (d.type === 'tool' && bot) {
+      bot.classList.add('typing');
+      if (!bot.dataset.real) bot.textContent = '⚙ ' + d.content;
+      scrollMsgs();
+    } else if (d.type === 'chunk' && bot) {
+      if (!bot.dataset.real) { bot.textContent = ''; bot.dataset.real = '1'; bot.classList.remove('typing'); }
+      bot.textContent += d.content; scrollMsgs();
+    } else if (d.type === 'done') { _clearStreaming(); scrollMsgs(); }
     else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
   };
   ws.onerror = () => { _clearStreaming('(error)'); addBubble('Connection error — please reload the page', 'bot'); };
@@ -443,33 +513,14 @@ def ping():
     }
 
 
-# ── Metrics endpoint ───────────────────────────────────────────────────────────
+# ── Data layer (shared by REST endpoints AND the CEO agent's tools) ──────────────
 
 
-@app.get("/api/metrics")
-async def get_metrics(_token: str = Depends(_auth)):
-    """Pull live business snapshot. 3 Etsy calls run in parallel; result cached 60 s."""
-    cached = _cache_get("metrics", ttl=60)
-    if cached is not None:
-        return cached
-
+def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
+    """Pure transform of three raw Etsy responses into the dashboard snapshot.
+    Each input may be an Exception (one call failed) — handled per-section."""
     now = int(time.time())
     day = 86_400
-
-    # 3 parallel calls (shop gives us active count — no need to paginate listings)
-    try:
-        orders_r, reviews_r, shop_r = await asyncio.wait_for(
-            asyncio.gather(
-                asyncio.to_thread(lambda: EtsyAPIClient().get_orders(limit=100)),
-                asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=50)),
-                asyncio.to_thread(lambda: EtsyAPIClient().get_shop()),
-                return_exceptions=True,
-            ),
-            timeout=10.0,
-        )
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
-
     out: dict = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "listings": {},
@@ -478,7 +529,6 @@ async def get_metrics(_token: str = Depends(_auth)):
         "shop": {},
     }
 
-    # ── Orders / Revenue ─────────────────────────────────────────────────────
     if isinstance(orders_r, Exception):
         out["orders"]["error"] = str(orders_r)
     else:
@@ -502,7 +552,6 @@ async def get_metrics(_token: str = Depends(_auth)):
             "revenue_30d": _revenue(o30),
         }
 
-    # ── Reviews ──────────────────────────────────────────────────────────────
     if isinstance(reviews_r, Exception):
         out["reviews"]["error"] = str(reviews_r)
     else:
@@ -514,7 +563,6 @@ async def get_metrics(_token: str = Depends(_auth)):
             "five_star_pct": round(sum(1 for r in ratings if r == 5) / len(ratings) * 100) if ratings else 0,
         }
 
-    # ── Shop (active count lives here — no separate listing pagination needed) ──
     if isinstance(shop_r, Exception):
         out["shop"]["error"] = str(shop_r)
     else:
@@ -527,32 +575,44 @@ async def get_metrics(_token: str = Depends(_auth)):
         }
         out["listings"]["active_count"] = active_count
 
+    return out
+
+
+def _metrics_sync() -> dict:
+    """Cached business snapshot, blocking. Shared by the agent tool and the
+    async endpoint (which warms/uses the same 'metrics' cache key)."""
+    cached = _cache_get("metrics", ttl=60)
+    if cached is not None:
+        return cached
+    client = EtsyAPIClient()
+    orders_r = reviews_r = shop_r = None
+    try:
+        orders_r = client.get_orders(limit=100)
+    except Exception as exc:
+        orders_r = exc
+    try:
+        reviews_r = client.get_reviews(limit=50)
+    except Exception as exc:
+        reviews_r = exc
+    try:
+        shop_r = client.get_shop()
+    except Exception as exc:
+        shop_r = exc
+    out = _build_metrics(orders_r, reviews_r, shop_r)
     _cache_set("metrics", out)
     return out
 
 
-# ── Listings browse endpoint ───────────────────────────────────────────────────
-
-
-@app.get("/api/listings")
-async def get_listings(state: str = "active", _token: str = Depends(_auth)):
-    """Return listings with thumbnail URLs. Result cached 30 s."""
+def _listings_sync(state: str = "active") -> dict:
+    """Cached listing list (title/price/views/favorites/tags), blocking."""
     if state not in ("active", "draft", "inactive"):
-        raise HTTPException(status_code=400, detail="state must be active, draft, or inactive")
-
+        raise ValueError("state must be active, draft, or inactive")
     cache_key = f"listings_{state}"
     cached = _cache_get(cache_key, ttl=30)
     if cached is not None:
         return cached
 
-    try:
-        raw = await asyncio.wait_for(
-            asyncio.to_thread(lambda: EtsyAPIClient().get_shop_listings_all(state=state)),
-            timeout=15.0,
-        )
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
-
+    raw = EtsyAPIClient().get_shop_listings_all(state=state)
     listings = []
     for l in raw:
         images = l.get("images", [])
@@ -563,7 +623,6 @@ async def get_listings(state: str = "active", _token: str = Depends(_auth)):
                 or images[0].get("url_fullxfull")
                 or images[0].get("url_75x75", "")
             )
-
         listings.append(
             {
                 "listing_id": l.get("listing_id"),
@@ -572,24 +631,103 @@ async def get_listings(state: str = "active", _token: str = Depends(_auth)):
                 "state": l.get("state", state),
                 "views": l.get("views", 0),
                 "num_favorers": l.get("num_favorers", 0),
-                "tags": l.get("tags", [])[:5],
+                "tags": l.get("tags", [])[:13],
                 "thumbnail_url": thumb,
                 "url": f"https://www.etsy.com/listing/{l.get('listing_id')}",
                 "created_timestamp": l.get("creation_timestamp", 0),
             }
         )
-
     result = {"listings": listings, "count": len(listings), "state": state}
     _cache_set(cache_key, result)
     return result
 
 
+# ── REST endpoints (thin async wrappers over the data layer) ─────────────────────
+
+
+@app.get("/api/metrics")
+async def get_metrics(_token: str = Depends(_auth)):
+    """Live business snapshot. 3 Etsy calls in parallel; result cached 60 s."""
+    cached = _cache_get("metrics", ttl=60)
+    if cached is not None:
+        return cached
+    try:
+        orders_r, reviews_r, shop_r = await asyncio.wait_for(
+            asyncio.gather(
+                asyncio.to_thread(lambda: EtsyAPIClient().get_orders(limit=100)),
+                asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=50)),
+                asyncio.to_thread(lambda: EtsyAPIClient().get_shop()),
+                return_exceptions=True,
+            ),
+            timeout=10.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    out = _build_metrics(orders_r, reviews_r, shop_r)
+    _cache_set("metrics", out)
+    return out
+
+
+@app.get("/api/listings")
+async def get_listings(state: str = "active", _token: str = Depends(_auth)):
+    """Return listings with thumbnail URLs. Result cached 30 s."""
+    if state not in ("active", "draft", "inactive"):
+        raise HTTPException(status_code=400, detail="state must be active, draft, or inactive")
+    try:
+        return await asyncio.wait_for(asyncio.to_thread(_listings_sync, state), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+
+
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
+
+
+async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) -> None:
+    """One user turn: stream text, run any tools the model requests, repeat until
+    the model is done. Tool calls let the CEO agent read live shop data."""
+    for _ in range(6):  # safety cap on tool round-trips per turn
+        with ai_client.messages.stream(
+            model="claude-sonnet-4-6",
+            max_tokens=1500,
+            system=_CEO_SYSTEM,
+            tools=AGENT_TOOLS,
+            messages=history,
+        ) as stream:
+            for chunk in stream.text_stream:
+                await websocket.send_text(json.dumps({"type": "chunk", "content": chunk}))
+            final = stream.get_final_message()
+
+        # Record the assistant turn (text + any tool_use blocks) verbatim.
+        history.append({"role": "assistant", "content": final.content})
+
+        if final.stop_reason != "tool_use":
+            await websocket.send_text(json.dumps({"type": "done"}))
+            return
+
+        # Execute every requested tool, then feed results back for the next round.
+        tool_results = []
+        for block in final.content:
+            if getattr(block, "type", None) == "tool_use":
+                await websocket.send_text(
+                    json.dumps({"type": "tool", "content": f"Reading {block.name}…"})
+                )
+                result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
+                tool_results.append(
+                    {
+                        "type": "tool_result",
+                        "tool_use_id": block.id,
+                        "content": json.dumps(result),
+                    }
+                )
+        history.append({"role": "user", "content": tool_results})
+
+    # Exhausted the round-trip cap — close out gracefully.
+    await websocket.send_text(json.dumps({"type": "done"}))
 
 
 @app.websocket("/ws/chat")
 async def chat_ws(websocket: WebSocket):
-    """Streaming CEO agent chat. Auth via ?token= query param."""
+    """Streaming CEO agent chat with live-data tools. Auth via ?token= query param."""
     token = websocket.query_params.get("token", "")
     if token != APP_TOKEN:
         await websocket.close(code=4001)
@@ -609,22 +747,8 @@ async def chat_ws(websocket: WebSocket):
                 continue
 
             history.append({"role": "user", "content": user_text})
-            full = ""
-
             try:
-                with ai_client.messages.stream(
-                    model="claude-sonnet-4-6",
-                    max_tokens=1024,
-                    system=_CEO_SYSTEM,
-                    messages=history,
-                ) as stream:
-                    for chunk in stream.text_stream:
-                        full += chunk
-                        await websocket.send_text(json.dumps({"type": "chunk", "content": chunk}))
-
-                history.append({"role": "assistant", "content": full})
-                await websocket.send_text(json.dumps({"type": "done"}))
-
+                await _run_agent_turn(websocket, ai_client, history)
             except Exception as exc:
                 await websocket.send_text(json.dumps({"type": "error", "content": str(exc)}))
 
