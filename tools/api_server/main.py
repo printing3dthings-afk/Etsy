@@ -43,10 +43,14 @@ if _env.exists():
 import anthropic
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 
-APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme")
-ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+# .strip() is critical: Railway env vars set via the dashboard often carry a
+# trailing newline. APP_TOKEN is injected into an inline JS string literal
+# (const TOKEN = '...'); a newline inside it is a fatal SyntaxError that kills
+# the ENTIRE dashboard script — the page renders but no JS runs (frozen spinner).
+APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
+ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a2e9f04-v4"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c5d33e1-v5"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -257,7 +261,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 <script>
 const BASE = location.origin;
 const WS_BASE = BASE.replace(/^http/, 'ws');
-const TOKEN = '""" + APP_TOKEN + """';
+const TOKEN = """ + json.dumps(APP_TOKEN) + """;
 
 let ws = null, wsReady = false, pendingMsg = null;
 
