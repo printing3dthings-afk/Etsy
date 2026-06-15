@@ -50,7 +50,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d7a44f2-v6"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e1b8c50-v7"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -244,6 +244,22 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 .badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:6px}
 .badge.draft{background:#1a2030;color:#6b8ab5;border:1px solid #2a3d5a}
 .badge.active{background:#1a2d1a;color:#4caf82;border:1px solid #2d5a2d}
+.nav-badge{position:absolute;top:2px;margin-left:14px;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px}
+.act-card{background:var(--card);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.act-card.high{border-left-color:var(--red)}
+.act-card.medium{border-left-color:var(--gold)}
+.act-card.low{border-left-color:#4a6b8a}
+.act-sev{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px}
+.act-sev.high{background:#2d1a1a;color:#e07070}
+.act-sev.medium{background:#2d2a1a;color:var(--gold2)}
+.act-sev.low{background:#1a2330;color:#7ba0c2}
+.act-title{font-size:14px;font-weight:600;margin:7px 0 4px;line-height:1.35}
+.act-detail{font-size:12px;color:var(--muted);line-height:1.45}
+.act-sug{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.act-sug b{color:var(--gold2);font-weight:600}
+.act-btns{display:flex;gap:8px;margin-top:9px}
+.act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+.act-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
 .toggle-row{display:flex;gap:8px;margin-bottom:12px}
 .toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .toggle-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
@@ -282,6 +298,10 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
     <div id="dash-content"><div class="spinner"></div></div>
   </div>
 
+  <div id="screen-actions" class="screen">
+    <div id="actions-content"><div class="spinner"></div></div>
+  </div>
+
   <div id="screen-listings" class="screen">
     <div class="toggle-row">
       <button class="toggle-btn active" onclick="loadListings('active',this)">Active</button>
@@ -312,6 +332,10 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       Dashboard
     </button>
+    <button onclick="showTab('actions',this)">
+      <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span id="nav-badge" class="nav-badge" style="display:none">0</span>
+      Actions
+    </button>
     <button onclick="showTab('chat',this)">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Chat
@@ -334,13 +358,14 @@ function showTab(tab, btn) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('chat-wrap').classList.remove('active');
   btn.classList.add('active');
-  document.getElementById('hdr-sub').textContent = {dash:'Dashboard',chat:'Chat',listings:'Listings'}[tab];
+  document.getElementById('hdr-sub').textContent = {dash:'Dashboard',actions:'Action Center',chat:'Chat',listings:'Listings'}[tab];
   if (tab === 'chat') {
     document.getElementById('chat-wrap').classList.add('active');
     if (!ws) initWS();
   } else {
     document.getElementById('screen-' + tab).classList.add('active');
     if (tab === 'listings') loadListings('active', document.querySelector('.toggle-btn'));
+    if (tab === 'actions') loadActions();
   }
 }
 
@@ -350,6 +375,58 @@ function fetchWithTimeout(url, opts, ms=12000){
   const c=new AbortController();
   const t=setTimeout(()=>c.abort(),ms);
   return fetch(url,{...opts,signal:c.signal}).finally(()=>clearTimeout(t));
+}
+
+// ── Action Center ────────────────────────────────────────────────────────────
+let _actions = [];
+function setActionBadge(summary) {
+  const b = document.getElementById('nav-badge');
+  if (!b) return;
+  const n = (summary && summary.high) || 0;  // badge = urgent (high) items only
+  if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
+  else { b.style.display = 'none'; }
+}
+async function loadActions() {
+  const el = document.getElementById('actions-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/actions', {headers:{Authorization:'Bearer '+TOKEN}}, 25000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    _actions = d.actions || [];
+    setActionBadge(d.summary || {});
+    if (!_actions.length) { el.innerHTML = '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
+    const s = d.summary || {high:0,medium:0,low:0};
+    let html = `<div style="display:flex;gap:8px;margin-bottom:14px">`+
+      `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:var(--red);font-size:20px">${s.high}</div><div class="sub">high</div></div>`+
+      `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:var(--gold);font-size:20px">${s.medium}</div><div class="sub">medium</div></div>`+
+      `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:#7ba0c2;font-size:20px">${s.low}</div><div class="sub">low</div></div>`+
+      `</div>`;
+    html += _actions.map((a,i) => `
+      <div class="act-card ${escHtml(a.severity)}">
+        <span class="act-sev ${escHtml(a.severity)}">${escHtml(a.severity)}</span>
+        <div class="act-title">${escHtml(a.title)}</div>
+        <div class="act-detail">${escHtml(a.detail)}</div>
+        <div class="act-sug"><b>💡 Fix:</b> ${escHtml(a.suggestion)}</div>
+        <div class="act-btns">
+          <button class="act-btn primary" onclick="askActionFix(${i})">Ask CEO</button>
+          ${a.url ? `<a class="act-btn" href="${escHtml(a.url)}" target="_blank">Open on Etsy</a>` : ''}
+        </div>
+      </div>`).join('');
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function askActionFix(i) {
+  const a = _actions[i];
+  if (!a) return;
+  const chatBtn = document.querySelectorAll('nav button')[2]; // dash, actions, chat, listings
+  showTab('chat', chatBtn);
+  const q = 'How should I fix this? ' + a.title + ' — ' + a.detail;
+  const inp = document.getElementById('msg-input');
+  inp.value = q;
+  sendMsg();
 }
 
 // ── Dashboard ──────────────────────────────────────────────────────────────
@@ -468,6 +545,7 @@ document.getElementById('msg-input').addEventListener('keydown', e => { if(e.key
 
 // ── Init ───────────────────────────────────────────────────────────────────
 loadDash();
+setTimeout(loadActions, 1200);  // populate Action Center + nav badge without being asked
 </script>
 </body>
 </html>"""
@@ -677,6 +755,129 @@ async def get_listings(state: str = "active", _token: str = Depends(_auth)):
         return await asyncio.wait_for(asyncio.to_thread(_listings_sync, state), timeout=15.0)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+
+
+# ── Action Center (deterministic rules engine — surfaces priorities) ─────────────
+
+# Severity ordering for sorting (lower = more urgent).
+_SEVERITY_RANK = {"high": 0, "medium": 1, "low": 2}
+
+
+def _compute_actions() -> dict:
+    """Scan live drafts + active listings and return ranked action cards.
+
+    Pure deterministic rules over data Etsy already gives us — no LLM, no
+    guessing, so it is fast and never invents a problem. The CEO agent can be
+    asked to expand on any card. Rules align with CLAUDE.md's 2026 standards.
+    """
+    now = int(time.time())
+    day = 86_400
+    cards: list[dict] = []
+
+    def add(severity, category, title, detail, suggestion, listing=None):
+        lid = listing.get("listing_id") if listing else None
+        cards.append(
+            {
+                "id": f"{category}:{lid}" if lid else category,
+                "severity": severity,
+                "category": category,
+                "title": title,
+                "detail": detail,
+                "suggestion": suggestion,
+                "listing_id": lid,
+                "url": listing.get("url") if listing else None,
+                "impact": (listing or {}).get("views", 0),
+            }
+        )
+
+    # Drafts awaiting publish — highest leverage, they earn nothing in draft.
+    try:
+        drafts = _listings_sync("draft").get("listings", [])
+    except Exception as exc:
+        drafts = []
+        add("medium", "data_error",
+            "Couldn't load drafts",
+            f"Etsy draft fetch failed: {exc}",
+            "Retry shortly; if it persists, check the Etsy connection on /api/ping.")
+    for l in drafts:
+        add("high", "draft_unpublished",
+            f"Publish: {l['title'][:60]}" if l.get("title") else "Publish draft listing",
+            "This listing is in draft and earning nothing while live.",
+            "Run the pre-publish quality gate, then approve to publish.",
+            l)
+
+    # Active listings — SEO + conversion hygiene.
+    try:
+        active = _listings_sync("active").get("listings", [])
+    except Exception as exc:
+        active = []
+        add("medium", "data_error",
+            "Couldn't load active listings",
+            f"Etsy active fetch failed: {exc}",
+            "Retry shortly; if it persists, check the Etsy connection on /api/ping.")
+
+    for l in active:
+        title = l.get("title", "") or ""
+        tags = l.get("tags", []) or []
+        views = l.get("views", 0) or 0
+        favs = l.get("num_favorers", 0) or 0
+        created = l.get("created_timestamp", 0) or 0
+        age_days = (now - created) / day if created else 0
+
+        if len(title) > 70:
+            add("high", "title_too_long",
+                f"Title over 70 chars ({len(title)}): {title[:50]}",
+                f"Title is {len(title)} characters. Etsy applies a mobile ranking "
+                "penalty above 70, and 70%+ of traffic is mobile.",
+                "Trim to ≤70 chars, keeping the primary keyword in the first 40.",
+                l)
+
+        if len(tags) < 13:
+            add("medium", "tags_incomplete",
+                f"Only {len(tags)}/13 tags: {title[:50]}",
+                f"This listing uses {len(tags)} of 13 tag slots. Every empty slot "
+                "is a missed ranking opportunity.",
+                "Add multi-word buyer-intent tags to fill all 13 slots.",
+                l)
+
+        if views >= 25 and favs == 0:
+            add("medium", "low_conversion",
+                f"{views} views, 0 favorites: {title[:50]}",
+                f"{views} people viewed this but none favorited it — a photo, "
+                "price, or title problem, not a traffic problem.",
+                "Review the hero photo and title; ask the CEO agent for a fix.",
+                l)
+
+        if views == 0 and age_days > 7:
+            add("medium", "zero_views",
+                f"No views in {int(age_days)} days: {title[:50]}",
+                f"Live for {int(age_days)} days with 0 views — a visibility/SEO "
+                "problem (tags or title not matching searches).",
+                "Audit tags/title for buyer search terms; the agent can draft them.",
+                l)
+
+    cards.sort(key=lambda c: (_SEVERITY_RANK.get(c["severity"], 9), -c.get("impact", 0)))
+    summary = {
+        "high": sum(1 for c in cards if c["severity"] == "high"),
+        "medium": sum(1 for c in cards if c["severity"] == "medium"),
+        "low": sum(1 for c in cards if c["severity"] == "low"),
+        "total": len(cards),
+    }
+    return {"summary": summary, "actions": cards, "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get("/api/actions")
+async def get_actions(_token: str = Depends(_auth)):
+    """Ranked priorities computed from live listings. Cached 120 s."""
+    cached = _cache_get("actions", ttl=120)
+    if cached is not None:
+        return cached
+    try:
+        data = await asyncio.wait_for(asyncio.to_thread(_compute_actions), timeout=25.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    _cache_set("actions", data)
+    return data
 
 
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
