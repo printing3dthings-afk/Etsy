@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re as _re
 import sys
 import threading
 import time
@@ -52,7 +53,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v10"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v11"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -260,6 +261,99 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
     except Exception as exc:
         return {"error": str(exc)}
 
+# ── Batch tag generation (one Claude call → 13 tags for N listings) ──────────────
+
+_BATCH_TAG_PROMPT = """\
+You are the Etsy SEO specialist for OnBrandCraftz, a shop selling:
+- Kawaii digital planners (fillable PDF for GoodNotes, Notability, iPad) — $9.99–$14.99
+- Kawaii sticker packs (PNG sheets for GoodNotes Elements) — $4.99–$9.99
+- 3D-print SVG/3MF packs (multi-color Bambu Lab files) — $9.99–$14.99
+- Printable wall art & signs (instant download) — $2.99–$14.99
+
+Generate exactly 13 Etsy search tags for each listing below.
+
+STRICT TAG RULES (enforced by code — any violation is auto-rejected):
+1. Exactly 13 tags per listing
+2. Each tag: 2–4 words, MAXIMUM 20 characters including spaces
+3. No special characters, symbols, or punctuation
+4. Lowercase only
+5. Every tag must be unique within the listing
+6. Do NOT duplicate any phrase already in the listing title
+7. Use multi-word buyer-intent phrases — no single-word tags
+8. Cover all search angles: product type, style, app/tool, room/use case, occasion, format
+
+CANONICAL TAG SETS (use these exactly when the listing title matches):
+- Life/Ultimate planner → digital planner,goodnotes planner,notability planner,ipad planner,kawaii planner,fillable planner,2026 life planner,kawaii sticker pack,instant download,printable planner,daily planner pdf,planner bundle,habit tracker pdf
+- Student/School planner → student planner,digital planner,school planner,goodnotes planner,notability planner,ipad planner,academic planner,study planner,kawaii planner,fillable planner,back to school,instant download,kawaii sticker pack
+- Budget/Finance planner → budget planner,finance planner,digital planner,goodnotes planner,money planner,ipad planner,fillable planner,savings planner,debt payoff planner,kawaii planner,instant download,budget tracker,2026 budget plan
+- Fitness/Wellness planner → fitness planner,wellness planner,digital planner,goodnotes planner,health planner,ipad planner,habit tracker,meal planner pdf,kawaii planner,fillable planner,instant download,self care planner,2026 fitness plan
+
+PRODUCT-SPECIFIC GUIDANCE:
+- Digital planners: always include goodnotes planner, ipad planner, fillable planner, instant download, kawaii sticker pack
+- SVG packs / 3D prints: always include 3d print svg, svg cut file, digital download, bambu lab svg, multi color print + theme tags
+- Printable wall art: always include printable wall art, instant download, digital download + room/style/occasion tags
+- Sticker packs: always include goodnotes stickers, digital stickers, planner stickers, kawaii stickers, instant download
+
+Respond with ONLY a valid JSON array — no markdown, no explanation, no code fences:
+[{"listing_id": 123, "tags": ["tag one","tag two","tag three","tag four","tag five","tag six","tag seven","tag eight","tag nine","tag ten","tag eleven","tag twelve","tag thirteen"]}, ...]
+
+Each tags array MUST contain exactly 13 strings. Each string MUST be 20 characters or fewer.\
+"""
+
+
+def _clean_tag(tag: str) -> str:
+    """Normalise a tag: lowercase, strip special chars, collapse spaces, enforce 20-char limit."""
+    tag = str(tag).strip().lower()
+    tag = _re.sub(r"[^a-z0-9 ]", "", tag)
+    tag = _re.sub(r" +", " ", tag).strip()
+    if len(tag) > 20:
+        tag = tag[:20].rsplit(" ", 1)[0] if " " in tag[:20] else tag[:20]
+    return tag
+
+
+def _generate_tags_for_listings(listings: list[dict]) -> list[dict]:
+    """Call Claude once per batch-of-40 and return [{listing_id, tags:[13]}, ...].
+
+    Uses a single structured prompt that outputs clean JSON — no streaming needed.
+    Falls back to an empty list if no API key is set."""
+    if not ANTHROPIC_KEY or not listings:
+        return []
+
+    client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    results: list[dict] = []
+    batch_size = 40
+
+    for start in range(0, len(listings), batch_size):
+        batch = listings[start : start + batch_size]
+        rows = []
+        for l in batch:
+            ct = ",".join(l.get("tags", [])) or "(none)"
+            rows.append(
+                f'ID:{l["listing_id"]} TITLE:"{(l.get("title") or "")[:80]}" '
+                f'PRICE:${round(l.get("price", 0), 2)} TAGS:[{ct}]'
+            )
+        prompt = _BATCH_TAG_PROMPT + "\n\nListings:\n" + "\n".join(rows)
+
+        msg = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=8000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+
+        raw = msg.content[0].text.strip()
+        # Strip markdown code fences if the model wraps the JSON
+        for fence in ("```json", "```JSON", "```"):
+            if raw.startswith(fence):
+                raw = raw[len(fence) :]
+                break
+        raw = raw.rstrip("`").strip()
+
+        batch_results = json.loads(raw)
+        results.extend(batch_results)
+
+    return results
+
+
 # ── Web UI ─────────────────────────────────────────────────────────────────────
 
 _WEB_UI = """<!DOCTYPE html>
@@ -373,6 +467,9 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
   </div>
 
   <div id="screen-actions" class="screen">
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="batch-tag-btn" onclick="batchStageTags(this)" style="flex:1;background:var(--card);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:center">⚡ Stage All Tag Fixes</button>
+    </div>
     <div id="actions-content"><div class="spinner"></div></div>
   </div>
 
@@ -658,6 +755,27 @@ function sendMsg() {
 }
 function sendChip(el) { document.getElementById('msg-input').value = el.textContent; sendMsg(); }
 document.getElementById('msg-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+
+// ── Batch tag fix ──────────────────────────────────────────────────────────
+async function batchStageTags(btn) {
+  if (!confirm('Scan all active listings and stage tag fixes for every listing with fewer than 13 tags?\n\nThis may take up to 2 minutes. You review and approve each fix in this Action Center.')) return;
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Generating…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/batch/stage-tags', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 180000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const errNote = d.errors && d.errors.length ? `\n${d.errors.length} listing(s) had tag-length issues and were skipped.` : '';
+    alert('✅ ' + d.message + errNote);
+    loadActions();
+  } catch(e) {
+    alert('Error: ' + (e.name==='AbortError'?'Request timed out — the batch is still running server-side; check the Action Center in a moment':(e.message||e)));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
 
 // ── Init ───────────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
@@ -1208,6 +1326,93 @@ async def reject_action(action_id: int, _token: str = Depends(_auth)):
         raise HTTPException(status_code=409, detail=f"action already {a['status']}")
     await asyncio.to_thread(db.set_action_status, action_id, "rejected")
     return {"status": "rejected", "id": action_id}
+
+
+# ── Batch tag fix (one Claude call → staged approvals for every under-tagged listing) ─
+
+
+@app.post("/api/batch/stage-tags")
+async def batch_stage_tags(_token: str = Depends(_auth)):
+    """Stage tag-fix actions for every active listing that has fewer than 13 tags.
+
+    Calls Claude once (per batch of 40) to generate a corrected 13-tag set for
+    each listing, validates each against the 2026 quality gate, and enqueues the
+    passing ones as pending approvals. Scott reviews and approves from the Action
+    Center — nothing touches Etsy until he taps Approve."""
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    # Fresh fetch — bypass cache so we see the real current state.
+    with _cache_lock:
+        _cache.pop("listings_active", None)
+
+    try:
+        data = await asyncio.wait_for(asyncio.to_thread(_listings_sync, "active"), timeout=25.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout fetching listings")
+
+    listings = data.get("listings", [])
+    to_fix = [l for l in listings if len(l.get("tags", [])) < 13]
+
+    if not to_fix:
+        return {
+            "staged": 0,
+            "skipped": 0,
+            "total_checked": len(listings),
+            "errors": [],
+            "message": f"All {len(listings)} active listings already have 13 tags — nothing to fix!",
+        }
+
+    # One Claude API call per batch of 40 → structured JSON tag sets.
+    try:
+        tag_results = await asyncio.wait_for(
+            asyncio.to_thread(_generate_tags_for_listings, to_fix),
+            timeout=180.0,
+        )
+    except json.JSONDecodeError as exc:
+        raise HTTPException(status_code=502, detail=f"Tag generation returned invalid JSON: {exc}")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Tag generation failed: {exc}")
+
+    listing_map = {l["listing_id"]: l for l in to_fix}
+    staged = 0
+    skipped = 0
+    errors: list[dict] = []
+
+    for res in tag_results:
+        lid = res.get("listing_id")
+        raw_tags = res.get("tags", [])
+        listing = listing_map.get(lid, {})
+        title_short = (listing.get("title") or f"Listing {lid}")[:50]
+
+        # Normalise every tag: lowercase, strip specials, cap at 20 chars.
+        tags = [_clean_tag(t) for t in raw_tags if str(t).strip()]
+        # Deduplicate while preserving order.
+        seen: set[str] = set()
+        tags = [t for t in tags if t and not (t in seen or seen.add(t))]
+
+        candidate = {"type": "update_tags", "payload": {"listing_id": lid, "tags": tags}}
+        ok, msg_str = _validate_staged_action(candidate)
+        if not ok:
+            errors.append({"listing_id": lid, "title": title_short, "error": msg_str})
+            skipped += 1
+            continue
+
+        summary = f"Tag fix ({len(tags)}/13): {title_short}"
+        db.enqueue_action("update_tags", summary, {"listing_id": lid, "tags": tags})
+        staged += 1
+
+    # Bust cached action list so the Action Center refreshes.
+    with _cache_lock:
+        _cache.pop("actions", None)
+
+    return {
+        "staged": staged,
+        "skipped": skipped,
+        "total_checked": len(to_fix),
+        "errors": errors,
+        "message": f"Staged {staged} tag fixes — check the Action Center to approve them.",
+    }
 
 
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
