@@ -53,7 +53,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v17"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v18"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -753,6 +753,7 @@ function renderApproval(a) {
     <div class="act-detail">${preview}</div>
     <div class="act-btns">
       <button class="act-btn approve" onclick="approveAction(${a.id})">Approve &amp; Apply</button>
+      ${a.type === 'publish_listing' ? `<button class="act-btn" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix Draft</button>` : ''}
       <button class="act-btn reject" onclick="rejectAction(${a.id})">Reject</button>
     </div>
   </div>`;
@@ -772,6 +773,25 @@ async function rejectAction(id) {
     if (!r.ok) { const d = await r.json().catch(()=>({})); throw new Error(d.detail||'HTTP '+r.status); }
     loadActions();
   } catch(e) { alert('Could not reject: ' + (e.message||e)); }
+}
+async function fixDraftStage(listingId, actionId, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Fixing…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/autofix/draft/'+listingId,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},120000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const n = d.staged_count||0;
+    btn.textContent = n > 0 ? n+' fix'+(n>1?'es':'')+' staged ✅' : '⚠️ No auto-fixes';
+    if (n > 0) { btn.style.background='var(--green)'; btn.style.color='#06140d'; }
+    const errNote = (d.errors&&d.errors.length) ? '\\n\\nErrors: '+d.errors.join(', ') : '';
+    alert('Staged '+n+' fix'+(n!==1?'es':'')+'.\\nApprove the new fixes in Action Center, then come back to approve Publish.'+errNote);
+    loadActions();
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Could not fix draft: '+(e.message||e));
+  }
 }
 async function loadActions() {
   const el = document.getElementById('actions-content');
@@ -1183,6 +1203,42 @@ function fixChat(listingId, fixIdx) {
   inp.value = 'Fix the '+f.area+' for listing "'+title+'": '+f.finding+' — '+f.fix;
   sendMsg();
 }
+async function fixAllStageable(listingId, btn) {
+  const d = _convDiagnoses[listingId];
+  if (!d) return;
+  const fixes = (d._sortedFixes||[]).filter(function(f){return f.area==='tags'||f.area==='title';});
+  if (!fixes.length) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Staging…';
+  var staged = 0, failed = [];
+  for (var i = 0; i < fixes.length; i++) {
+    try {
+      var r = await fetchWithTimeout(BASE+'/api/autofix/'+fixes[i].area+'/'+listingId,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},90000);
+      var rd = await r.json().catch(function(){return {};});
+      if (!r.ok) throw new Error(rd.detail||'HTTP '+r.status);
+      staged++;
+    } catch(e) {
+      failed.push(fixes[i].area+': '+(e.message||e));
+    }
+  }
+  btn.textContent = staged+'/'+fixes.length+' staged ✅';
+  btn.style.background = 'var(--green)'; btn.style.color = '#06140d';
+  if (failed.length) alert('Some fixes could not be staged:\\n'+failed.join('\\n'));
+  setTimeout(loadActions, 1500);
+}
+function fixAllInChat(listingId) {
+  const d = _convDiagnoses[listingId];
+  if (!d) return;
+  const fixes = (d._sortedFixes||[]).filter(function(f){return f.area!=='tags'&&f.area!=='title';});
+  if (!fixes.length) return;
+  const title = (d.stats&&d.stats.title)||('Listing '+listingId);
+  const chatBtn = document.querySelectorAll('nav button')[3];
+  showTab('chat', chatBtn);
+  const inp = document.getElementById('msg-input');
+  inp.value = 'Fix all issues for listing "'+title+'": '+fixes.map(function(f){return f.area+': '+f.finding+' → '+f.fix;}).join('; ');
+  sendMsg();
+}
 async function loadConvTargets() {
   const el = document.getElementById('conv-doctor');
   if (!el) return;
@@ -1240,6 +1296,14 @@ function _renderDiagnosis(d) {
     '<span>📸 '+(st.photo_count||0)+'/10</span><span>🔖 '+(st.tag_count||0)+'/13</span><span>🏷️ '+(st.title_length||0)+'/70</span><span>👁 '+(st.views||0)+'</span><span>♥ '+(st.favorites||0)+'</span><span style="color:var(--red)">🛒 '+(st.sales||0)+' sold</span></div>';
   if (dx.primary_issue) inner += '<div class="card" style="background:#241313;border-color:#5a2d2d;margin-bottom:8px"><div class="label" style="color:#e07070">⚠️ PRIMARY ISSUE</div><div style="font-size:13px;line-height:1.45;margin-top:4px">'+escHtml(dx.primary_issue)+'</div></div>';
   if (dx.summary) inner += '<div style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:8px">'+escHtml(dx.summary)+'</div>';
+  var stageableCount = fixes.filter(function(f){return f.area==='tags'||f.area==='title';}).length;
+  var chatCount = fixes.filter(function(f){return f.area!=='tags'&&f.area!=='title';}).length;
+  if (stageableCount > 0 || chatCount > 0) {
+    inner += '<div class="act-btns" style="margin-bottom:14px">';
+    if (stageableCount > 0) inner += '<button class="act-btn primary" style="font-size:13px;padding:9px" onclick="fixAllStageable('+listingId+',this)">🚀 Stage All ('+stageableCount+')</button>';
+    if (chatCount > 0) inner += '<button class="act-btn" style="font-size:13px;padding:9px" onclick="fixAllInChat('+listingId+')">💬 Chat Fixes ('+chatCount+')</button>';
+    inner += '</div>';
+  }
   fixes.forEach(function(f,fIdx){
     const pc = _DXCOLOR[f.priority]||'var(--muted)';
     const icon = _AREA_ICON[f.area]||'•';
@@ -2376,6 +2440,107 @@ async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
         _cache.pop("actions", None)
 
     return {"staged": True, "action_id": action_id, "title": new_title, "listing_id": listing_id}
+
+
+@app.post("/api/autofix/draft/{listing_id}")
+async def autofix_draft(listing_id: int, _token: str = Depends(_auth)):
+    """Auto-fix a draft listing's title and tags in one shot.
+
+    Generates a corrected ≤70-char title AND a full 13-tag set, validates both
+    through the quality gate, and enqueues them as separate pending approvals.
+    Nothing touches Etsy until Scott taps Approve on each fix. After approving
+    the fixes, Scott can then approve the original publish_listing action."""
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    def _fetch():
+        return EtsyAPIClient().get_listing(listing_id)
+
+    try:
+        listing = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout")
+    except EtsyAPIError as exc:
+        raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+
+    staged: list[dict] = []
+    errors: list[str] = []
+    title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
+
+    # ── 1. Fix tags ────────────────────────────────────────────────────────────
+    listing_data = {
+        "listing_id": listing_id,
+        "title": listing.get("title", ""),
+        "price": _price_float(listing.get("price")),
+        "tags": listing.get("tags", []),
+    }
+    try:
+        tag_results = await asyncio.wait_for(
+            asyncio.to_thread(_generate_tags_for_listings, [listing_data]),
+            timeout=60.0,
+        )
+        if tag_results:
+            raw_tags = tag_results[0].get("tags", [])
+            tags = [_clean_tag(t) for t in raw_tags if str(t).strip()]
+            seen: set = set()
+            tags = [t for t in tags if t and not (t in seen or seen.add(t))]
+            candidate = {"type": "update_tags", "payload": {"listing_id": listing_id, "tags": tags}}
+            ok, msg = _validate_staged_action(candidate)
+            if ok:
+                aid = db.enqueue_action(
+                    "update_tags",
+                    f"Draft tag fix ({len(tags)}/13): {title_short}",
+                    {"listing_id": listing_id, "tags": tags},
+                )
+                staged.append({"type": "update_tags", "action_id": aid})
+            else:
+                errors.append(f"tags: {msg}")
+    except Exception as exc:
+        errors.append(f"tag gen failed: {str(exc)[:80]}")
+
+    # ── 2. Fix title ───────────────────────────────────────────────────────────
+    title = listing.get("title", "")
+    tags_str = ", ".join(listing.get("tags", []))
+    price = _price_float(listing.get("price"))
+    desc = (listing.get("description", "") or "")[:500]
+    prompt = _TITLE_FIX_PROMPT.format(title=title, price=f"{price:.2f}", tags=tags_str, desc=desc)
+
+    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    try:
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                lambda: ai_client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=100,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+            ),
+            timeout=30.0,
+        )
+        new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
+        candidate = {"type": "update_title", "payload": {"listing_id": listing_id, "title": new_title}}
+        ok, msg = _validate_staged_action(candidate)
+        if ok:
+            aid = db.enqueue_action(
+                "update_title",
+                f"Draft title fix: {new_title[:50]}",
+                {"listing_id": listing_id, "title": new_title},
+            )
+            staged.append({"type": "update_title", "action_id": aid, "title": new_title})
+        else:
+            errors.append(f"title: {msg}")
+    except Exception as exc:
+        errors.append(f"title gen failed: {str(exc)[:80]}")
+
+    with _cache_lock:
+        _cache.pop("actions", None)
+
+    return {
+        "staged": staged,
+        "staged_count": len(staged),
+        "errors": errors,
+        "listing_id": listing_id,
+    }
 
 
 @app.post("/api/snapshot")
