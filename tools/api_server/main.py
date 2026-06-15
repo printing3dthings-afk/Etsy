@@ -52,7 +52,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a9d62f4-v9"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v10"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -139,6 +139,11 @@ How you operate (prepare, Scott approves):
   quality-gate checklists). You do not publish, change prices, or edit live listings
   yourself — you prepare the work and Scott approves it. Be explicit about what you'd
   change and why, so a single yes is enough to act.
+- When you have a concrete fix ready (a corrected title, a full replacement tag set, or a
+  draft ready to publish), use the stage_action tool to queue it for Scott's one-tap
+  approval in the Action Center. ALWAYS read the listing first so the change is accurate.
+  Tell Scott you've staged it and what it will do. Never claim a change is live — it only
+  applies after he approves.
 
 Products live: DP1026 Life Planner ($14.99), DP1027 Student Planner ($9.99),
 DP1028 Budget Planner ($12.99), DP1029 Fitness Planner ($12.99).
@@ -182,6 +187,40 @@ AGENT_TOOLS = [
             },
         },
     },
+    {
+        "name": "stage_action",
+        "description": (
+            "Stage a proposed change for Scott's one-tap approval. You do NOT execute "
+            "it — it lands in the approval queue (Action Center) and only applies to "
+            "Etsy when Scott taps Approve. Use for fixes you can fully specify: "
+            "correcting a listing title, replacing its tags, or publishing a draft. "
+            "Always fetch the listing first so your change is accurate."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "action_type": {
+                    "type": "string",
+                    "enum": ["update_tags", "update_title", "publish_listing"],
+                },
+                "listing_id": {"type": "integer", "description": "The listing to change."},
+                "summary": {
+                    "type": "string",
+                    "description": "One-line human summary shown on the approval card.",
+                },
+                "title": {
+                    "type": "string",
+                    "description": "New title for update_title. Must be ≤70 characters.",
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Full replacement tag list for update_tags. Max 13, each ≤20 chars.",
+                },
+            },
+            "required": ["action_type", "listing_id", "summary"],
+        },
+    },
 ]
 
 
@@ -199,6 +238,24 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 for l in data.get("listings", [])[:60]
             ]
             return {"count": data.get("count"), "state": data.get("state"), "listings": slim}
+        if name == "stage_action":
+            ti = tool_input or {}
+            payload = {"listing_id": ti.get("listing_id")}
+            if ti.get("title") is not None:
+                payload["title"] = ti["title"]
+            if ti.get("tags") is not None:
+                payload["tags"] = ti["tags"]
+            candidate = {"type": ti.get("action_type"), "payload": payload}
+            ok, msg = _validate_staged_action(candidate)
+            if not ok:
+                return {"staged": False, "error": msg}
+            aid = db.enqueue_action(ti.get("action_type"), ti.get("summary", ""), payload)
+            return {
+                "staged": True,
+                "action_id": aid,
+                "status": "pending",
+                "note": "Queued for Scott's approval in the Action Center — not yet applied.",
+            }
         return {"error": f"unknown tool: {name}"}
     except Exception as exc:
         return {"error": str(exc)}
@@ -273,6 +330,10 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 .act-btns{display:flex;gap:8px;margin-top:9px}
 .act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
 .act-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.act-card.approval{border-left-color:var(--green);background:#13241c}
+.act-sev.approval{background:#13241c;color:#5fcf9e;border:1px solid #2d5a44}
+.act-btn.approve{background:var(--green);color:#06140d;border-color:var(--green)}
+.act-btn.reject{color:#e08585;border-color:#5a2d2d}
 .toggle-row{display:flex;gap:8px;margin-bottom:12px}
 .toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .toggle-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
@@ -392,25 +453,67 @@ function fetchWithTimeout(url, opts, ms=12000){
 
 // ── Action Center ────────────────────────────────────────────────────────────
 let _actions = [];
-function setActionBadge(summary) {
+function setActionBadge(summary, pending) {
   const b = document.getElementById('nav-badge');
   if (!b) return;
-  const n = (summary && summary.high) || 0;  // badge = urgent (high) items only
+  const n = ((summary && summary.high) || 0) + (pending || 0);  // urgent + awaiting approval
   if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
   else { b.style.display = 'none'; }
+}
+function renderApproval(a) {
+  const p = a.payload || {};
+  let preview = '';
+  if (a.type === 'update_title') preview = 'New title: ' + escHtml(p.title || '');
+  else if (a.type === 'update_tags') preview = 'New tags: ' + escHtml((p.tags || []).join(', '));
+  else if (a.type === 'publish_listing') preview = 'Publish draft listing ' + escHtml(String(p.listing_id || ''));
+  return `<div class="act-card approval">
+    <span class="act-sev approval">awaiting you</span>
+    <div class="act-title">${escHtml(a.summary || a.type)}</div>
+    <div class="act-detail">${preview}</div>
+    <div class="act-btns">
+      <button class="act-btn approve" onclick="approveAction(${a.id})">Approve &amp; Apply</button>
+      <button class="act-btn reject" onclick="rejectAction(${a.id})">Reject</button>
+    </div>
+  </div>`;
+}
+async function approveAction(id) {
+  if (!confirm('Approve and apply this change to your live Etsy listing now?')) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/approve', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 50000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    loadActions();
+  } catch(e) { alert('Could not apply: ' + (e.message||e)); }
+}
+async function rejectAction(id) {
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/reject', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    if (!r.ok) { const d = await r.json().catch(()=>({})); throw new Error(d.detail||'HTTP '+r.status); }
+    loadActions();
+  } catch(e) { alert('Could not reject: ' + (e.message||e)); }
 }
 async function loadActions() {
   const el = document.getElementById('actions-content');
   el.innerHTML = '<div class="spinner"></div>';
   try {
-    const r = await fetchWithTimeout(BASE+'/api/actions', {headers:{Authorization:'Bearer '+TOKEN}}, 25000);
-    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
-    const d = await r.json();
+    const [ar, qr] = await Promise.all([
+      fetchWithTimeout(BASE+'/api/actions', {headers:{Authorization:'Bearer '+TOKEN}}, 25000),
+      fetchWithTimeout(BASE+'/api/queue?status=pending', {headers:{Authorization:'Bearer '+TOKEN}}, 15000).catch(()=>null)
+    ]);
+    if (!ar.ok) { const e = await ar.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+ar.status); }
+    const d = await ar.json();
+    let pending = [];
+    if (qr && qr.ok) { const qd = await qr.json().catch(()=>({})); pending = qd.actions || []; }
     _actions = d.actions || [];
-    setActionBadge(d.summary || {});
-    if (!_actions.length) { el.innerHTML = '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
+    setActionBadge(d.summary || {}, pending.length);
+    let html = '';
+    if (pending.length) {
+      html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
+      html += pending.map(renderApproval).join('');
+    }
+    if (!_actions.length && !pending.length) { el.innerHTML = '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
     const s = d.summary || {high:0,medium:0,low:0};
-    let html = `<div style="display:flex;gap:8px;margin-bottom:14px">`+
+    html += `<div class="section-title">Flagged by scan</div><div style="display:flex;gap:8px;margin-bottom:14px">`+
       `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:var(--red);font-size:20px">${s.high}</div><div class="sub">high</div></div>`+
       `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:var(--gold);font-size:20px">${s.medium}</div><div class="sub">medium</div></div>`+
       `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:#7ba0c2;font-size:20px">${s.low}</div><div class="sub">low</div></div>`+
@@ -1004,6 +1107,107 @@ async def post_snapshot(_token: str = Depends(_auth)):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
     return {"recorded": d, "db": db.db_info()}
+
+
+# ── Staged actions (agent prepares → Scott approves → server executes) ────────────
+
+_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing")
+
+
+def _validate_staged_action(a: dict) -> tuple[bool, str]:
+    """Quality gate run BOTH at stage time and again at approve time. The gate is
+    code — a change that violates the 2026 standards can never be applied."""
+    t = a.get("type")
+    p = a.get("payload", {}) or {}
+    if t not in _STAGED_ACTION_TYPES:
+        return False, f"unsupported action type: {t}"
+    if not p.get("listing_id"):
+        return False, "missing listing_id"
+    if t == "update_title":
+        title = (p.get("title") or "").strip()
+        if not title:
+            return False, "title is empty"
+        if len(title) > 70:
+            return False, f"title is {len(title)} chars — max 70 (mobile ranking rule)"
+    if t == "update_tags":
+        tags = p.get("tags")
+        if not isinstance(tags, list) or not tags:
+            return False, "tags must be a non-empty list"
+        if len(tags) > 13:
+            return False, f"{len(tags)} tags — Etsy allows max 13"
+        for tg in tags:
+            if not isinstance(tg, str) or not tg.strip():
+                return False, "tags contain an empty value"
+            if len(tg) > 20:
+                return False, f"tag '{tg}' exceeds 20 characters"
+    return True, "ok"
+
+
+def _execute_staged_action(a: dict) -> dict:
+    """Apply an approved action to Etsy via update_listing, then bust caches."""
+    t = a["type"]
+    p = a.get("payload", {}) or {}
+    lid = p["listing_id"]
+    client = EtsyAPIClient()
+    if t == "update_tags":
+        res = client.update_listing(lid, {"tags": p["tags"]})
+    elif t == "update_title":
+        res = client.update_listing(lid, {"title": p["title"].strip()})
+    elif t == "publish_listing":
+        res = client.update_listing(lid, {"state": "active"})
+    else:
+        raise ValueError(f"unsupported type {t}")
+    with _cache_lock:
+        for k in ("listings_active", "listings_draft", "actions", "metrics"):
+            _cache.pop(k, None)
+    return {
+        "listing_id": lid,
+        "etsy": {
+            "listing_id": res.get("listing_id"),
+            "state": res.get("state"),
+            "title": res.get("title"),
+        },
+    }
+
+
+@app.get("/api/queue")
+async def get_queue(status: str = "pending", _token: str = Depends(_auth)):
+    """List staged actions. status=pending (default) or 'all'."""
+    st = None if status == "all" else status
+    actions = await asyncio.to_thread(db.list_actions, st)
+    return {"actions": actions, "count": len(actions)}
+
+
+@app.post("/api/queue/{action_id}/approve")
+async def approve_action(action_id: int, _token: str = Depends(_auth)):
+    """Run the quality gate, then apply the change to Etsy. Records the result."""
+    a = await asyncio.to_thread(db.get_action, action_id)
+    if not a:
+        raise HTTPException(status_code=404, detail="action not found")
+    if a["status"] != "pending":
+        raise HTTPException(status_code=409, detail=f"action already {a['status']}")
+    ok, msg = _validate_staged_action(a)
+    if not ok:
+        await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": f"gate failed: {msg}"})
+        raise HTTPException(status_code=422, detail=f"quality gate failed: {msg}")
+    try:
+        result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
+    except Exception as exc:
+        await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": str(exc)})
+        raise HTTPException(status_code=502, detail=f"Etsy execution failed: {exc}")
+    await asyncio.to_thread(db.set_action_status, action_id, "executed", result)
+    return {"status": "executed", "id": action_id, "result": result}
+
+
+@app.post("/api/queue/{action_id}/reject")
+async def reject_action(action_id: int, _token: str = Depends(_auth)):
+    a = await asyncio.to_thread(db.get_action, action_id)
+    if not a:
+        raise HTTPException(status_code=404, detail="action not found")
+    if a["status"] != "pending":
+        raise HTTPException(status_code=409, detail=f"action already {a['status']}")
+    await asyncio.to_thread(db.set_action_status, action_id, "rejected")
+    return {"status": "rejected", "id": action_id}
 
 
 # ── WebSocket chat ─────────────────────────────────────────────────────────────

@@ -188,6 +188,82 @@ def get_listing_history(listing_id: int, days: int = 30) -> list:
         conn.close()
 
 
+# ── Action queue (staged changes awaiting Scott's approval) ──────────────────────
+
+
+def enqueue_action(action_type: str, summary: str, payload: dict) -> int:
+    """Stage a proposed change. Returns the new queue id. Status starts 'pending'."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "INSERT INTO action_queue (created_at, type, summary, payload_json, status) "
+            "VALUES (?,?,?,?, 'pending')",
+            (ts, action_type, summary, json.dumps(payload or {})),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def _row_to_action(r) -> dict:
+    d = dict(r)
+    d["payload"] = json.loads(d.pop("payload_json") or "{}")
+    if d.get("result_json"):
+        try:
+            d["result"] = json.loads(d["result_json"])
+        except Exception:
+            d["result"] = {"raw": d["result_json"]}
+    d.pop("result_json", None)
+    return d
+
+
+def list_actions(status: str | None = "pending", limit: int = 100) -> list:
+    init_db()
+    conn = _connect()
+    try:
+        if status:
+            rows = conn.execute(
+                "SELECT * FROM action_queue WHERE status=? ORDER BY created_at DESC LIMIT ?",
+                (status, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM action_queue ORDER BY created_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        return [_row_to_action(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_action(action_id: int) -> dict | None:
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute("SELECT * FROM action_queue WHERE id=?", (action_id,)).fetchone()
+        return _row_to_action(r) if r else None
+    finally:
+        conn.close()
+
+
+def set_action_status(action_id: int, status: str, result: dict | None = None) -> bool:
+    """Update an action's status (+ optional result). Sets decided_at. Returns True if a row changed."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE action_queue SET status=?, result_json=?, decided_at=? WHERE id=?",
+            (status, json.dumps(result) if result is not None else None, ts, action_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
 def db_info() -> dict:
     """Lightweight stats for the diagnostics endpoint."""
     try:
