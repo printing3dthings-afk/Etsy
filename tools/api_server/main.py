@@ -53,7 +53,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v11"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v12"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -481,6 +481,15 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
     <div id="listings-content"><div class="spinner"></div></div>
   </div>
 
+  <div id="screen-analytics" class="screen">
+    <div class="toggle-row" id="analytics-period-row">
+      <button class="toggle-btn" onclick="loadAnalytics(7,this)">7 Days</button>
+      <button class="toggle-btn active" onclick="loadAnalytics(30,this)">30 Days</button>
+      <button class="toggle-btn" onclick="loadAnalytics(90,this)">90 Days</button>
+    </div>
+    <div id="analytics-content"><div class="spinner"></div></div>
+  </div>
+
   <div id="chat-wrap">
     <div id="msgs"></div>
     <div class="chips">
@@ -501,11 +510,15 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
   <nav>
     <button class="active" onclick="showTab('dash',this)">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      Dashboard
+      Dash
     </button>
     <button onclick="showTab('actions',this)">
       <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span id="nav-badge" class="nav-badge" style="display:none">0</span>
       Actions
+    </button>
+    <button onclick="showTab('analytics',this)">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
     </button>
     <button onclick="showTab('chat',this)">
       <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -523,13 +536,14 @@ const WS_BASE = BASE.replace(/^http/, 'ws');
 const TOKEN = """ + json.dumps(APP_TOKEN) + """;
 
 let ws = null, wsReady = false, pendingMsg = null;
+let _analyticsDays = 30;
 
 function showTab(tab, btn) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById('chat-wrap').classList.remove('active');
   btn.classList.add('active');
-  document.getElementById('hdr-sub').textContent = {dash:'Dashboard',actions:'Action Center',chat:'Chat',listings:'Listings'}[tab];
+  document.getElementById('hdr-sub').textContent = {dash:'Dashboard',actions:'Action Center',analytics:'Analytics',chat:'Chat',listings:'Listings'}[tab];
   if (tab === 'chat') {
     document.getElementById('chat-wrap').classList.add('active');
     if (!ws) initWS();
@@ -537,6 +551,7 @@ function showTab(tab, btn) {
     document.getElementById('screen-' + tab).classList.add('active');
     if (tab === 'listings') loadListings('active', document.querySelector('.toggle-btn'));
     if (tab === 'actions') loadActions();
+    if (tab === 'analytics') loadAnalytics(_analyticsDays);
   }
 }
 
@@ -755,6 +770,116 @@ function sendMsg() {
 }
 function sendChip(el) { document.getElementById('msg-input').value = el.textContent; sendMsg(); }
 document.getElementById('msg-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+
+// ── Analytics ──────────────────────────────────────────────────────────────
+function buildSparkline(values, color, h) {
+  h = h || 64;
+  values = (values || []).filter(function(v){ return v != null && !isNaN(v); });
+  if (values.length < 2) return '<div style="height:'+h+'px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">📈 Accumulating daily data…</div>';
+  var W=320,H=h,mn=Math.min.apply(null,values),mx=Math.max.apply(null,values),range=mx-mn||1,pad=4;
+  var pts=values.map(function(v,i){return [pad+(i/(values.length-1))*(W-pad*2), H-pad-((v-mn)/range)*(H-pad*2)];});
+  var poly=pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+  var area='M'+pts[0][0].toFixed(1)+','+H+' '+pts.map(function(p){return 'L'+p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+' L'+pts[pts.length-1][0].toFixed(1)+','+H+' Z';
+  var gid='sg'+Math.random().toString(36).slice(2,8);
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px;display:block;overflow:visible">'+
+    '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="'+color+'" stop-opacity="0.25"/>'+
+    '<stop offset="100%" stop-color="'+color+'" stop-opacity="0"/>'+
+    '</linearGradient></defs>'+
+    '<path d="'+area+'" fill="url(#'+gid+')"/>'+
+    '<polyline points="'+poly+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<circle cx="'+pts[pts.length-1][0].toFixed(1)+'" cy="'+pts[pts.length-1][1].toFixed(1)+'" r="3.5" fill="'+color+'"/>'+
+    '</svg>';
+}
+function _deltaSpan(val, isMoney) {
+  if (val == null || val === 0) return '<span style="color:var(--muted)">— stable</span>';
+  var pos=val>0, c=pos?'var(--green)':'var(--red)', a=pos?'↑':'↓';
+  var n=isMoney?('$'+Math.abs(val).toFixed(2)):String(Math.round(Math.abs(val)));
+  return '<span style="color:'+c+'">'+a+' '+n+'</span>';
+}
+function _renderAnalytics(d) {
+  var tr=d.trends||{}, lt=d.latest||{}, del=d.delta||{}, days=d.days||30;
+  var n=d.snapshot_count||0, top=d.top_listings||[];
+  var html='';
+  if (n < 3) {
+    html+='<div style="background:#1a2030;border:1px solid #2a3d5a;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#7ba0c2">📅 '+(n===0?'No snapshots yet — the hub records one daily snapshot at startup and midnight.':n+' day'+(n>1?'s':'')+' of history recorded. Trend charts fill in each day automatically.')+'</div>';
+  }
+  // Revenue
+  var rev=lt.revenue_30d;
+  html+='<div class="section-title">Revenue — Rolling 30 Days</div><div class="card">';
+  html+=buildSparkline(tr.revenue_30d,'var(--gold)');
+  if (rev!=null) {
+    html+='<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:flex-end">'+
+      '<div><div style="font-size:26px;font-weight:700;color:var(--gold)">$'+rev.toFixed(2)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">current 30-day window</div></div>'+
+      '<div style="text-align:right;font-size:12px">'+_deltaSpan(del.revenue_30d,true)+'<div style="color:var(--muted);font-size:10px;margin-top:2px">vs '+days+'d ago</div></div>'+
+      '</div>';
+  }
+  html+='</div>';
+  // Orders
+  var ord=lt.orders_30d;
+  html+='<div class="section-title">Orders — Rolling 30 Days</div><div class="card">';
+  html+=buildSparkline(tr.orders_30d,'#5ca8d4');
+  if (ord!=null) {
+    html+='<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:flex-end">'+
+      '<div><div style="font-size:26px;font-weight:700;color:#5ca8d4">'+ord+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">orders in rolling 30 days</div></div>'+
+      '<div style="text-align:right;font-size:12px">'+_deltaSpan(del.orders_30d,false)+'<div style="color:var(--muted);font-size:10px;margin-top:2px">vs '+days+'d ago</div></div>'+
+      '</div>';
+  }
+  html+='</div>';
+  // Shop growth cards
+  var acNow=lt.active_listings, salNow=lt.total_sales;
+  if (acNow!=null||salNow!=null) {
+    html+='<div class="section-title">Shop Growth</div><div class="card-row">';
+    if (acNow!=null) html+='<div class="metric"><div class="label">Listings</div><div class="value">'+acNow+'</div><div class="sub" style="margin-top:5px;font-size:11px">'+_deltaSpan(del.active_listings,false)+' in '+days+'d</div></div>';
+    if (salNow!=null) html+='<div class="metric"><div class="label">Total Sales</div><div class="value">'+salNow+'</div><div class="sub" style="margin-top:5px;font-size:11px">'+_deltaSpan(del.total_sales,false)+' in '+days+'d</div></div>';
+    html+='</div>';
+  }
+  // Listing trend mini-sparkline
+  var acTrend=(tr.active_listings||[]).filter(function(v){return v!=null;});
+  if (acTrend.length>=2) {
+    html+='<div class="card" style="padding:12px 14px 10px">'+buildSparkline(tr.active_listings,'var(--green)',40)+'<div style="font-size:11px;color:var(--muted);margin-top:5px">Active listings over time</div></div>';
+  }
+  // Top listings
+  if (top.length) {
+    html+='<div class="section-title">Top Listings by Views</div><div class="card" style="padding:12px 14px">';
+    html+=top.map(function(l,i){
+      var convColor=l.conversion_pct>=2?'var(--green)':l.conversion_pct>=0.5?'var(--gold)':'var(--red)';
+      return '<div class="listing-item" onclick="window.open(\''+escHtml(l.url)+'\',\'_blank\')">'+
+        '<div style="width:22px;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0">#'+(i+1)+'</div>'+
+        '<div class="listing-info">'+
+          '<div class="listing-title">'+escHtml(l.title)+'</div>'+
+          '<div class="listing-meta">'+l.views+' views · '+l.num_favorers+' ♥ · <span style="color:'+convColor+'">'+l.conversion_pct+'% conv</span></div>'+
+        '</div>'+
+        '<div class="listing-price">$'+(+l.price||0).toFixed(2)+'</div>'+
+        '</div>';
+    }).join('');
+    html+='</div>';
+  } else {
+    html+='<div class="section-title">Top Listings</div><div class="empty">View data will appear here once listings are active</div>';
+  }
+  // Footer
+  var ts=lt.ts?new Date(lt.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
+  html+='<div style="text-align:center;color:var(--muted);font-size:11px;padding:12px 0 4px">'+(ts?'Last snapshot: '+ts:'No snapshots yet')+' · '+n+' day'+(n!==1?'s':'')+' of history</div>';
+  return html;
+}
+async function loadAnalytics(days, btn) {
+  if (btn) { document.querySelectorAll('#analytics-period-row .toggle-btn').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); }
+  if (days) _analyticsDays = days;
+  var el = document.getElementById('analytics-content');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/analytics?days='+_analyticsDays, {headers:{Authorization:'Bearer '+TOKEN}}, 20000);
+    if (!r.ok) { var e=await r.json().catch(function(){return {};}); throw new Error(e.detail||'HTTP '+r.status); }
+    var d = await r.json();
+    el.innerHTML = _renderAnalytics(d);
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadAnalytics()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
 
 // ── Batch tag fix ──────────────────────────────────────────────────────────
 async function batchStageTags(btn) {
@@ -1215,6 +1340,69 @@ async def get_history(days: int = 30, _token: str = Depends(_auth)):
             if isinstance(a, (int, float)) and isinstance(b, (int, float)):
                 delta[k] = round(b - a, 2)
     return {"days": days, "count": len(rows), "delta": delta, "snapshots": rows}
+
+
+@app.get("/api/analytics")
+async def get_analytics(days: int = 30, _token: str = Depends(_auth)):
+    """Trend data from daily snapshots + live top-listing performance.
+
+    Returns parallel trend arrays (oldest→newest) for sparkline charting,
+    period deltas (latest minus earliest in the window), and top 10 active
+    listings ranked by all-time views with conversion rate.
+    """
+    days = max(7, min(days, 90))
+    rows = await asyncio.to_thread(db.get_metric_history, days)
+
+    trends = {
+        "revenue_30d": [r.get("revenue_30d") for r in rows],
+        "orders_30d": [r.get("orders_30d") for r in rows],
+        "active_listings": [r.get("active_listings") for r in rows],
+        "total_sales": [r.get("total_sales") for r in rows],
+    }
+    dates = [r.get("snapshot_date") for r in rows]
+
+    delta: dict = {}
+    if len(rows) >= 2:
+        first, last = rows[0], rows[-1]
+        for k in ("revenue_30d", "orders_30d", "active_listings", "total_sales", "avg_rating"):
+            a, b = first.get(k), last.get(k)
+            if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+                delta[k] = round(b - a, 4)
+
+    top_listings: list[dict] = []
+    try:
+        listing_data = await asyncio.wait_for(
+            asyncio.to_thread(_listings_sync, "active"), timeout=15.0
+        )
+        active = listing_data.get("listings", [])
+        top = sorted(active, key=lambda l: l.get("views", 0), reverse=True)[:10]
+        top_listings = [
+            {
+                "listing_id": l["listing_id"],
+                "title": (l.get("title") or "")[:60],
+                "views": l.get("views", 0),
+                "num_favorers": l.get("num_favorers", 0),
+                "price": l.get("price", 0),
+                "url": l.get("url", ""),
+                "conversion_pct": round(
+                    l.get("num_favorers", 0) / max(l.get("views", 1), 1) * 100, 1
+                ),
+            }
+            for l in top
+            if l.get("views", 0) > 0
+        ]
+    except Exception:
+        pass
+
+    return {
+        "days": days,
+        "snapshot_count": len(rows),
+        "dates": dates,
+        "trends": trends,
+        "delta": delta,
+        "latest": rows[-1] if rows else {},
+        "top_listings": top_listings,
+    }
 
 
 @app.post("/api/snapshot")
