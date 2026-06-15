@@ -25,8 +25,9 @@ from pathlib import Path
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Security, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
@@ -50,7 +51,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e1b8c50-v7"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f3c91a8-v8"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -65,6 +66,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve PWA icons (pre-generated files committed to the repo — no runtime PIL).
+_STATIC_DIR = Path(__file__).parent / "static"
+if _STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 security = HTTPBearer()
 
@@ -204,7 +210,13 @@ _WEB_UI = """<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OnBrandCraftz">
+<meta name="theme-color" content="#0D1B2A">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/static/icon-192.png">
 <title>OnBrandCraftz</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -544,6 +556,7 @@ function sendChip(el) { document.getElementById('msg-input').value = el.textCont
 document.getElementById('msg-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
 
 // ── Init ───────────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
 loadDash();
 setTimeout(loadActions, 1200);  // populate Action Center + nav badge without being asked
 </script>
@@ -556,6 +569,59 @@ def web_ui():
     return HTMLResponse(
         content=_WEB_UI,
         headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+    )
+
+
+# ── PWA: manifest + service worker (makes the hub installable to home screen) ─────
+
+_MANIFEST = {
+    "name": "OnBrandCraftz Hub",
+    "short_name": "OnBrandCraftz",
+    "description": "OnBrandCraftz Etsy operations hub — live metrics, action center, CEO agent.",
+    "start_url": "/",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#0D1B2A",
+    "theme_color": "#0D1B2A",
+    "icons": [
+        {"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+    ],
+}
+
+# Network-first SW: always fresh online; caches the app shell for offline launch.
+# Cache name keyed to BUILD_ID so each deploy gets a clean cache (no stale shell).
+_SW_JS = (
+    "const CACHE='obc-shell-" + _BUILD_ID + "';\n"
+    "self.addEventListener('install',e=>self.skipWaiting());\n"
+    "self.addEventListener('activate',e=>e.waitUntil((async()=>{\n"
+    "  const keys=await caches.keys();\n"
+    "  await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));\n"
+    "  await self.clients.claim();\n"
+    "})()));\n"
+    "self.addEventListener('fetch',e=>{\n"
+    "  const req=e.request;\n"
+    "  if(req.method!=='GET') return;\n"
+    "  e.respondWith(fetch(req).then(r=>{\n"
+    "    if(req.mode==='navigate'){const cp=r.clone();caches.open(CACHE).then(c=>c.put('/',cp));}\n"
+    "    return r;\n"
+    "  }).catch(()=>caches.match(req).then(m=>m||caches.match('/'))));\n"
+    "});\n"
+)
+
+
+@app.get("/manifest.webmanifest")
+def manifest():
+    return JSONResponse(_MANIFEST, media_type="application/manifest+json")
+
+
+@app.get("/sw.js")
+def service_worker():
+    return Response(
+        content=_SW_JS,
+        media_type="application/javascript",
+        headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/"},
     )
 
 
