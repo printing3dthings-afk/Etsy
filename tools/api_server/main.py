@@ -53,7 +53,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v15"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v16"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -398,6 +398,25 @@ Each tags array MUST contain exactly 13 strings. Each string MUST be 20 characte
 """
 
 
+_TITLE_FIX_PROMPT = (
+    "Generate a new Etsy listing title for OnBrandCraftz. Shop sells: kawaii digital planners "
+    "(GoodNotes/iPad), sticker packs, 3D-print SVG packs, printable wall art.\n\n"
+    "TITLE RULES (code-enforced — violation = rejection):\n"
+    "1. Maximum 70 characters — hard limit (mobile ranking penalty above 70)\n"
+    "2. First 20-30 characters = primary search keyword buyers type\n"
+    "3. Comma separators only (no pipes)\n"
+    "4. Include 'Instant Download' and either '2026' or 'Undated' for planners\n"
+    "5. No keyword stuffing — natural buyer language\n\n"
+    "Current listing:\n"
+    "TITLE: {title}\n"
+    "PRICE: ${price}\n"
+    "TAGS: {tags}\n"
+    "DESCRIPTION (first 500 chars): {desc}\n\n"
+    "Return ONLY the new title string — no quotes, no explanation, no JSON. "
+    "Must be 70 characters or fewer."
+)
+
+
 def _clean_tag(tag: str) -> str:
     """Normalise a tag: lowercase, strip special chars, collapse spaces, enforce 20-char limit."""
     tag = str(tag).strip().lower()
@@ -557,6 +576,8 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 .sug-card .sug-action{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
 .sug-card .sug-impact{font-size:11px;color:var(--muted);margin-top:5px}
 .ceo-btn{width:100%;background:linear-gradient(135deg,var(--card) 0%,#1a2440 100%);border:1px solid var(--gold);color:var(--gold);border-radius:12px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.collapse-btn{display:block;width:100%;text-align:center;padding:7px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;margin:6px 0 10px;transition:all .15s}
+.collapse-btn:active{border-color:var(--gold);color:var(--gold)}
 </style>
 </head>
 <body>
@@ -577,7 +598,10 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
       <div id="ceo-suggestions"></div>
     </div>
     <div id="conv-doctor-wrap" style="margin-top:10px">
-      <div class="section-title">🩺 Conversion Doctor — views but no sales</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px">
+        <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">🩺 Conversion Doctor</div>
+        <button id="conv-collapse-btn" onclick="toggleConvPanel(this)" style="display:none;font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer">▲ Collapse</button>
+      </div>
       <div id="conv-doctor"><div class="spinner"></div></div>
     </div>
   </div>
@@ -1042,12 +1066,19 @@ function _renderSuggestions(d) {
       if (s.impact) html += '<div class="sug-impact">💡 '+escHtml(s.impact)+'</div>';
       html += '<div class="act-btns">';
       if (s.listing_id) html += '<a class="act-btn" href="https://www.etsy.com/listing/'+escHtml(String(s.listing_id))+'" target="_blank">Open Listing</a>';
-      html += '<button class="act-btn primary" onclick="askSuggestionFix('+i+')">Ask CEO</button>';
+      html += '<button class="act-btn primary" onclick="askSuggestionFix('+i+')">🤖 Fix It</button>';
       html += '</div></div>';
     });
   }
   html += '<div style="text-align:center;margin:8px 0 4px"><button onclick="getCeoSuggestions(true)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 20px;font-size:12px;color:var(--muted);cursor:pointer">↻ Refresh analysis</button></div>';
-  return html;
+  return '<button class="collapse-btn" onclick="toggleCeoPanel(this)">▲ Collapse CEO Analysis</button><div id="ceo-body">'+html+'</div>';
+}
+function toggleCeoPanel(btn) {
+  const el = document.getElementById('ceo-body');
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? '▲ Collapse CEO Analysis' : '▼ Show CEO Analysis';
 }
 async function getCeoSuggestions(forceRefresh) {
   const btn = document.getElementById('ceo-analyze-btn');
@@ -1082,6 +1113,52 @@ function askSuggestionFix(i) {
 const _DXCOLOR = {critical:'var(--red)',high:'#e08030',medium:'var(--gold)',low:'#7ba0c2',trust:'var(--gold)'};
 const _AREA_ICON = {photos:'📸',price:'💲',title:'🏷️',description:'📝',tags:'🔖',trust:'🤝'};
 let _convTargets = [];
+let _convDiagnoses = {};
+function toggleConvPanel(btn) {
+  const el = document.getElementById('conv-doctor');
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? '▲ Collapse' : '▼ Show';
+}
+function toggleDxBody(id, btn) {
+  const el = document.getElementById('conv-dx-body-'+id);
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? '▲ Collapse Diagnosis' : '▼ Show Diagnosis';
+}
+async function fixStage(listingId, fixIdx, btn) {
+  const d = _convDiagnoses[listingId];
+  if (!d) return;
+  const f = (d._sortedFixes||[])[fixIdx];
+  if (!f) return;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Staging…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/autofix/'+f.area+'/'+listingId,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},90000);
+    const rd = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(rd.detail||'HTTP '+r.status);
+    btn.textContent = '✅ Staged — check Action Center';
+    btn.style.background = 'var(--green)'; btn.style.color = '#06140d';
+    setTimeout(loadActions, 1500);
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Could not stage fix: '+(e.message||e));
+  }
+}
+function fixChat(listingId, fixIdx) {
+  const d = _convDiagnoses[listingId];
+  if (!d) return;
+  const f = (d._sortedFixes||[])[fixIdx];
+  if (!f) return;
+  const title = (d.stats&&d.stats.title)||'';
+  const chatBtn = document.querySelectorAll('nav button')[3];
+  showTab('chat', chatBtn);
+  const inp = document.getElementById('msg-input');
+  inp.value = 'Fix the '+f.area+' for listing "'+title+'": '+f.finding+' — '+f.fix;
+  sendMsg();
+}
 async function loadConvTargets() {
   const el = document.getElementById('conv-doctor');
   if (!el) return;
@@ -1105,6 +1182,8 @@ async function loadConvTargets() {
         '<div id="conv-dx-'+l.listing_id+'"></div>'+
       '</div>';
     }).join('');
+    const cBtn = document.getElementById('conv-collapse-btn');
+    if (cBtn) cBtn.style.display = '';
   } catch(e) {
     el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')+'</div>'+
       '<div style="text-align:center;margin-top:8px"><button onclick="loadConvTargets()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer">Retry</button></div>';
@@ -1127,27 +1206,37 @@ async function diagnoseConv(id, btn) {
   }
 }
 function _renderDiagnosis(d) {
+  const listingId = d.listing_id;
   const dx = d.diagnosis||{}, st = d.stats||{};
   if (dx.raw && !(dx.fixes && dx.fixes.length)) return '<div class="card" style="font-size:13px;white-space:pre-wrap;color:var(--muted);margin-top:8px">'+escHtml(dx.raw)+'</div>';
-  let html = '<div style="margin-top:8px">';
-  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:10px;color:var(--muted)">'+
-    '<span>📸 '+(st.photo_count||0)+'/10</span><span>🔖 '+(st.tag_count||0)+'/13</span><span>🏷️ '+(st.title_length||0)+'/70</span><span>👁 '+(st.views||0)+'</span><span>♥ '+(st.favorites||0)+'</span><span style="color:var(--red)">🛒 '+(st.sales||0)+' sold</span></div>';
-  if (dx.primary_issue) html += '<div class="card" style="background:#241313;border-color:#5a2d2d;margin-bottom:8px"><div class="label" style="color:#e07070">⚠️ PRIMARY ISSUE</div><div style="font-size:13px;line-height:1.45;margin-top:4px">'+escHtml(dx.primary_issue)+'</div></div>';
-  if (dx.summary) html += '<div style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:8px">'+escHtml(dx.summary)+'</div>';
   const fixes = (dx.fixes||[]).slice().sort(function(a,b){ return (_PRANK[a.priority]||9)-(_PRANK[b.priority]||9); });
-  fixes.forEach(function(f){
+  _convDiagnoses[listingId] = Object.assign({},d,{_sortedFixes:fixes});
+  let inner = '';
+  inner += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:10px;color:var(--muted)">'+
+    '<span>📸 '+(st.photo_count||0)+'/10</span><span>🔖 '+(st.tag_count||0)+'/13</span><span>🏷️ '+(st.title_length||0)+'/70</span><span>👁 '+(st.views||0)+'</span><span>♥ '+(st.favorites||0)+'</span><span style="color:var(--red)">🛒 '+(st.sales||0)+' sold</span></div>';
+  if (dx.primary_issue) inner += '<div class="card" style="background:#241313;border-color:#5a2d2d;margin-bottom:8px"><div class="label" style="color:#e07070">⚠️ PRIMARY ISSUE</div><div style="font-size:13px;line-height:1.45;margin-top:4px">'+escHtml(dx.primary_issue)+'</div></div>';
+  if (dx.summary) inner += '<div style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:8px">'+escHtml(dx.summary)+'</div>';
+  fixes.forEach(function(f,fIdx){
     const pc = _DXCOLOR[f.priority]||'var(--muted)';
     const icon = _AREA_ICON[f.area]||'•';
-    html += '<div class="sug-card" style="border-left-color:'+pc+'">'+
+    const canStage = f.area==='tags'||f.area==='title';
+    inner += '<div class="sug-card" style="border-left-color:'+pc+'">'+
       '<span class="sug-p" style="color:'+pc+'">'+escHtml(f.priority||'medium')+'</span>'+
       '<span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-left:6px">'+icon+' '+escHtml(f.area||'')+'</span>'+
       '<div class="sug-title">'+escHtml(f.finding||'')+'</div>'+
       (f.fix?'<div class="sug-action"><b style="color:var(--gold2)">→ </b>'+escHtml(f.fix)+'</div>':'')+
       (f.impact?'<div class="sug-impact">💡 '+escHtml(f.impact)+'</div>':'')+
+      '<div class="act-btns" style="margin-top:8px">'+
+      (canStage
+        ? '<button class="act-btn primary" onclick="fixStage('+listingId+','+fIdx+',this)">⚡ Stage Fix</button>'
+        : '<button class="act-btn" onclick="fixChat('+listingId+','+fIdx+')">💬 Fix in Chat</button>')+
+      '</div>'+
     '</div>';
   });
-  html += '</div>';
-  return html;
+  return '<div style="margin-top:8px">'+
+    '<button class="collapse-btn" onclick="toggleDxBody('+listingId+',this)">▲ Collapse Diagnosis</button>'+
+    '<div id="conv-dx-body-'+listingId+'">'+inner+'</div>'+
+    '</div>';
 }
 
 // ── Back to top (listings) ─────────────────────────────────────────────────
@@ -1960,6 +2049,124 @@ async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
     }
     _cache_set(cache_key, result)
     return result
+
+
+@app.post("/api/autofix/tags/{listing_id}")
+async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
+    """Generate 13 correct tags for one listing and stage an update_tags action.
+
+    Calls Claude once for this specific listing, validates the tags through
+    the quality gate, then enqueues the action for Scott's one-tap approval.
+    Nothing touches Etsy until Scott taps Approve in the Action Center."""
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    def _fetch():
+        return EtsyAPIClient().get_listing(listing_id)
+
+    try:
+        listing = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout")
+    except EtsyAPIError as exc:
+        raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+
+    listing_data = {
+        "listing_id": listing_id,
+        "title": listing.get("title", ""),
+        "price": _price_float(listing.get("price")),
+        "tags": listing.get("tags", []),
+    }
+
+    try:
+        tag_results = await asyncio.wait_for(
+            asyncio.to_thread(_generate_tags_for_listings, [listing_data]),
+            timeout=60.0,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Tag generation failed: {exc}")
+
+    if not tag_results:
+        raise HTTPException(status_code=502, detail="Tag generation returned no results")
+
+    raw_tags = tag_results[0].get("tags", [])
+    tags = [_clean_tag(t) for t in raw_tags if str(t).strip()]
+    seen: set = set()
+    tags = [t for t in tags if t and not (t in seen or seen.add(t))]
+
+    candidate = {"type": "update_tags", "payload": {"listing_id": listing_id, "tags": tags}}
+    ok, msg = _validate_staged_action(candidate)
+    if not ok:
+        raise HTTPException(status_code=422, detail=f"Quality gate: {msg}")
+
+    title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
+    summary = f"Auto tag fix ({len(tags)}/13): {title_short}"
+    action_id = db.enqueue_action("update_tags", summary, {"listing_id": listing_id, "tags": tags})
+
+    with _cache_lock:
+        _cache.pop("actions", None)
+
+    return {"staged": True, "action_id": action_id, "tags": tags, "listing_id": listing_id}
+
+
+@app.post("/api/autofix/title/{listing_id}")
+async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
+    """Generate a corrected ≤70-char title and stage an update_title action.
+
+    Calls Claude once with the listing's full context, validates through the
+    quality gate (hard ≤70-char rule), then enqueues for Scott's approval.
+    Nothing touches Etsy until Scott taps Approve in the Action Center."""
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    def _fetch():
+        return EtsyAPIClient().get_listing(listing_id)
+
+    try:
+        listing = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout")
+    except EtsyAPIError as exc:
+        raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+
+    title = listing.get("title", "")
+    tags = ", ".join(listing.get("tags", []))
+    price = _price_float(listing.get("price"))
+    desc = (listing.get("description", "") or "")[:500]
+
+    prompt = _TITLE_FIX_PROMPT.format(
+        title=title, price=f"{price:.2f}", tags=tags, desc=desc
+    )
+
+    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    try:
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                lambda: ai_client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=100,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+            ),
+            timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Title generation timed out")
+
+    new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
+
+    candidate = {"type": "update_title", "payload": {"listing_id": listing_id, "title": new_title}}
+    ok, msg = _validate_staged_action(candidate)
+    if not ok:
+        raise HTTPException(status_code=422, detail=f"Quality gate: {msg}")
+
+    summary = f"Auto title fix: {new_title[:50]}"
+    action_id = db.enqueue_action("update_title", summary, {"listing_id": listing_id, "title": new_title})
+
+    with _cache_lock:
+        _cache.pop("actions", None)
+
+    return {"staged": True, "action_id": action_id, "title": new_title, "listing_id": listing_id}
 
 
 @app.post("/api/snapshot")
