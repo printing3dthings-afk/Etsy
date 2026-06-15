@@ -22,3 +22,9 @@ __pycache__/
 .github/
 .pytest_cache/
 *.md
+
+# Local DB (never ship into the image)
+**/hub_data/
+*.db
+*.db-wal
+*.db-shm

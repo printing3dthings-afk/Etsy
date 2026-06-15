@@ -42,6 +42,7 @@ if _env.exists():
             os.environ.setdefault(_k.strip(), _v.strip())
 
 import anthropic
+import db  # local persistence layer (tools/api_server/db.py)
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 
 # .strip() is critical: Railway env vars set via the dashboard often carry a
@@ -51,7 +52,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f3c91a8-v8"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "a9d62f4-v9"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -654,6 +655,7 @@ def ping():
             "ANTHROPIC_API_KEY": bool(os.getenv("ANTHROPIC_API_KEY")),
         },
         "etsy_shop_test": etsy_shop_test,
+        "db": db.db_info(),
     }
 
 
@@ -944,6 +946,64 @@ async def get_actions(_token: str = Depends(_auth)):
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
     _cache_set("actions", data)
     return data
+
+
+# ── Persistence: daily snapshots + history ───────────────────────────────────────
+
+
+async def _take_snapshot() -> str:
+    """Capture today's metrics + active listings into the database (upsert/day)."""
+    metrics = await asyncio.to_thread(_metrics_sync)
+    listings = (await asyncio.to_thread(_listings_sync, "active")).get("listings", [])
+    d = await asyncio.to_thread(db.record_metric_snapshot, metrics, listings)
+    print(f"[snapshot] recorded {d}: {len(listings)} listings, persistent={db.is_persistent()}", flush=True)
+    return d
+
+
+async def _snapshot_loop() -> None:
+    """Snapshot at startup, then once every 24h. Upsert-by-day means repeated
+    runs on the same calendar day just refresh that day's row (no duplicates)."""
+    while True:
+        try:
+            await _take_snapshot()
+        except Exception as exc:
+            print(f"[snapshot] error: {exc}", flush=True)
+        await asyncio.sleep(86_400)
+
+
+@app.on_event("startup")
+async def _startup() -> None:
+    try:
+        db.init_db()
+        print(f"[db] ready at {db.DB_PATH} (persistent={db.is_persistent()})", flush=True)
+    except Exception as exc:
+        print(f"[db] init failed: {exc}", flush=True)
+    asyncio.create_task(_snapshot_loop())
+
+
+@app.get("/api/history")
+async def get_history(days: int = 30, _token: str = Depends(_auth)):
+    """Daily shop snapshots (oldest-first) plus simple period deltas for trends."""
+    days = max(1, min(days, 365))
+    rows = await asyncio.to_thread(db.get_metric_history, days)
+    delta = {}
+    if len(rows) >= 2:
+        first, last = rows[0], rows[-1]
+        for k in ("revenue_30d", "active_listings", "total_sales", "total_reviews", "avg_rating"):
+            a, b = first.get(k), last.get(k)
+            if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+                delta[k] = round(b - a, 2)
+    return {"days": days, "count": len(rows), "delta": delta, "snapshots": rows}
+
+
+@app.post("/api/snapshot")
+async def post_snapshot(_token: str = Depends(_auth)):
+    """Force-capture a snapshot now (useful for testing / on-demand recording)."""
+    try:
+        d = await asyncio.wait_for(_take_snapshot(), timeout=25.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    return {"recorded": d, "db": db.db_info()}
 
 
 # ── WebSocket chat ─────────────────────────────────────────────────────────────

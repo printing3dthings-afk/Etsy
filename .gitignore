@@ -26,3 +26,9 @@ logs/
 # Node
 node_modules/
 mobile_app/node_modules/
+
+# Local hub database (use Railway Volume in prod)
+hub_data/
+*.db
+*.db-wal
+*.db-shm
