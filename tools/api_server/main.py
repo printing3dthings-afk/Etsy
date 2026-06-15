@@ -53,7 +53,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v14"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v15"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -174,8 +174,10 @@ AGENT_TOOLS = [
     {
         "name": "list_listings",
         "description": (
-            "List the shop's listings with title, price, views, favorites, and tags. "
-            "Use to inspect what's live or in draft, find low performers, or audit SEO."
+            "List the shop's listings with title, price, views, favorites, tags, and "
+            "(for active listings) real units sold and conversion_pct (sales÷views). "
+            "Use to inspect what's live or in draft, find listings with traffic but no "
+            "sales, find low performers, or audit SEO."
         ),
         "input_schema": {
             "type": "object",
@@ -233,10 +235,13 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
         if name == "list_listings":
             state = (tool_input or {}).get("state", "active")
             data = _listings_sync(state)
+            listings = data.get("listings", [])
+            if state == "active":  # attach real sales + conversion for the agent
+                _enrich_sales(listings)
             # Trim payload for the model: drop thumbnail URLs, cap to 60 listings.
             slim = [
                 {k: v for k, v in l.items() if k != "thumbnail_url"}
-                for l in data.get("listings", [])[:60]
+                for l in listings[:60]
             ]
             return {"count": data.get("count"), "state": data.get("state"), "listings": slim}
         if name == "stage_action":
@@ -301,6 +306,54 @@ Rules for suggestions:
 - If a draft has been sitting unpublished, call it out specifically
 - If listings have 0 views after 7+ days, identify which ones and why
 - Tag gaps (<13 tags), title length violations (>70 chars), and zero-view listings are high priority
+\
+"""
+
+
+# ── Conversion Doctor system prompt (single listing deep-dive) ────────────────────
+
+_CONVERSION_DOCTOR_SYSTEM = """\
+You are the Conversion Doctor for OnBrandCraftz, an Etsy shop. You are handed ONE
+listing that gets traffic but is NOT selling. Your job: diagnose the single most
+likely reason it isn't converting, then prescribe ranked, specific fixes.
+
+You will be given the listing's real data: title, price, photo count, tag count
+and the tags, views, favorites, real units sold, and the full description text.
+
+Diagnose against Etsy's 2026 conversion standards:
+- HERO PHOTO drives click-through; <10 photos is a red flag; lifestyle thumbnail
+  beats flat white background. Photo problems are the #1 conversion killer.
+- PRICE: psychology endings (.99/.97/.49) outperform round numbers. A price far
+  from the product's tier can suppress conversion in either direction.
+- TITLE: ≤70 chars, primary keyword in first 40 chars, comma separators not pipes.
+- TAGS: all 13 used, multi-word buyer-intent phrases, no title duplication.
+- DESCRIPTION: first 1-2 sentences must hook + carry the primary keyword (mobile
+  shows only this above the fold). Needs What's Included, compatibility, FAQ.
+- FAVORITES BUT NO SALES is a price/trust signal — people want it but won't buy.
+- The #1 shop rule: never claim anything untrue. Never suggest a fix that would
+  make the listing misrepresent the actual product.
+
+Return ONLY a valid JSON object — no markdown, no prose outside it:
+{
+  "primary_issue": "the single biggest reason it isn't converting, one sentence with specifics",
+  "summary": "one-line plain-English read on this listing's situation, citing its real numbers",
+  "fixes": [
+    {
+      "area": "photos|price|title|description|tags|trust",
+      "priority": "critical|high|medium|low",
+      "finding": "the specific observation from THIS listing's data (cite the number/text)",
+      "fix": "the exact concrete change to make",
+      "impact": "what this is expected to unlock for conversion"
+    }
+  ]
+}
+
+Rules:
+- 3 to 5 fixes, ordered critical → high → low by conversion impact.
+- Every finding must cite this listing's actual data — its photo count, its price,
+  its tag count, a phrase from its title or description. No generic advice.
+- If the title is fine, say so and move on — do not invent problems.
+- Be honest and direct; Scott reads this on his phone.
 \
 """
 
@@ -522,6 +575,10 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
         <span>🎯</span><span>Run CEO Analysis</span>
       </button>
       <div id="ceo-suggestions"></div>
+    </div>
+    <div id="conv-doctor-wrap" style="margin-top:10px">
+      <div class="section-title">🩺 Conversion Doctor — views but no sales</div>
+      <div id="conv-doctor"><div class="spinner"></div></div>
     </div>
   </div>
 
@@ -771,7 +828,7 @@ async function loadListings(state, btn) {
         ${l.thumbnail_url ? `<img class="thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy">` : `<div class="thumb-placeholder">🏷️</div>`}
         <div class="listing-info">
           <div class="listing-title">${escHtml(l.title)}</div>
-          <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥<span class="badge ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
+          <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span class="badge ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
         </div>
         <div class="listing-price">$${(+l.price||0).toFixed(2)}</div>
       </div>`).join('');
@@ -909,12 +966,14 @@ function _renderAnalytics(d) {
   if (top.length) {
     html+='<div class="section-title">Top Listings by Views</div><div class="card" style="padding:12px 14px">';
     html+=top.map(function(l,i){
-      var convColor=l.conversion_pct>=2?'var(--green)':l.conversion_pct>=0.5?'var(--gold)':'var(--red)';
+      // Real buy rate (sales÷views). Etsy avg is ~1-3%; 0% with views = a problem.
+      var cp=l.conversion_pct||0, sold=l.sales||0;
+      var convColor=cp>=2?'var(--green)':cp>=1?'var(--gold)':sold>0?'#7ba0c2':'var(--red)';
       return '<div class="listing-item" onclick="window.open(&apos;'+escHtml(l.url)+'&apos;,&apos;_blank&apos;)">'+
         '<div style="width:22px;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0">#'+(i+1)+'</div>'+
         '<div class="listing-info">'+
           '<div class="listing-title">'+escHtml(l.title)+'</div>'+
-          '<div class="listing-meta">'+l.views+' views · '+l.num_favorers+' ♥ · <span style="color:'+convColor+'">'+l.conversion_pct+'% conv</span></div>'+
+          '<div class="listing-meta">'+l.views+' views · '+l.num_favorers+' ♥ · <span style="color:'+convColor+'">'+sold+' sold ('+cp+'%)</span></div>'+
         '</div>'+
         '<div class="listing-price">$'+(+l.price||0).toFixed(2)+'</div>'+
         '</div>';
@@ -1019,6 +1078,78 @@ function askSuggestionFix(i) {
   sendMsg();
 }
 
+// ── Conversion Doctor (views but no sales → ranked fixes) ───────────────────
+const _DXCOLOR = {critical:'var(--red)',high:'#e08030',medium:'var(--gold)',low:'#7ba0c2',trust:'var(--gold)'};
+const _AREA_ICON = {photos:'📸',price:'💲',title:'🏷️',description:'📝',tags:'🔖',trust:'🤝'};
+let _convTargets = [];
+async function loadConvTargets() {
+  const el = document.getElementById('conv-doctor');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/conversion-targets', {headers:{Authorization:'Bearer '+TOKEN}}, 25000);
+    const d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    _convTargets = d.targets||[];
+    if (!_convTargets.length) { el.innerHTML = '<div class="empty" style="padding:20px 0">✅ Nothing to fix — every viewed listing is selling (or has no views yet).</div>'; return; }
+    el.innerHTML = _convTargets.map(function(l){
+      return '<div class="card" style="padding:12px 14px;margin-bottom:8px">'+
+        '<div class="listing-info">'+
+          '<div class="listing-title">'+escHtml(l.title)+'</div>'+
+          '<div class="listing-meta">'+l.views+' views · '+l.num_favorers+' ♥ · <span style="color:var(--red)">0 sold</span> · $'+(+l.price||0).toFixed(2)+'</div>'+
+        '</div>'+
+        '<div class="act-btns">'+
+          '<button class="act-btn primary" onclick="diagnoseConv('+l.listing_id+',this)">🩺 Diagnose</button>'+
+          '<a class="act-btn" href="'+escHtml(l.url)+'" target="_blank">Open on Etsy</a>'+
+        '</div>'+
+        '<div id="conv-dx-'+l.listing_id+'"></div>'+
+      '</div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadConvTargets()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+async function diagnoseConv(id, btn) {
+  const out = document.getElementById('conv-dx-'+id);
+  if (!out) return;
+  if (btn) { btn.disabled = true; btn.textContent = '🩺 Diagnosing…'; }
+  out.innerHTML = '<div class="card" style="text-align:center;padding:20px 12px;margin-top:8px"><div class="spinner" style="margin:0 auto 10px"></div><div style="color:var(--muted);font-size:12px">Reading title, price, photos, tags &amp; description…</div></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/diagnose/'+id, {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 90000);
+    const d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    out.innerHTML = _renderDiagnosis(d);
+  } catch(e) {
+    out.innerHTML = '<div class="empty" style="padding:14px 0">'+escHtml(e.name==='AbortError'?'Diagnosis timed out — try again':e.message||'Failed')+'</div>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🩺 Diagnose again'; }
+  }
+}
+function _renderDiagnosis(d) {
+  const dx = d.diagnosis||{}, st = d.stats||{};
+  if (dx.raw && !(dx.fixes && dx.fixes.length)) return '<div class="card" style="font-size:13px;white-space:pre-wrap;color:var(--muted);margin-top:8px">'+escHtml(dx.raw)+'</div>';
+  let html = '<div style="margin-top:8px">';
+  html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:10px;color:var(--muted)">'+
+    '<span>📸 '+(st.photo_count||0)+'/10</span><span>🔖 '+(st.tag_count||0)+'/13</span><span>🏷️ '+(st.title_length||0)+'/70</span><span>👁 '+(st.views||0)+'</span><span>♥ '+(st.favorites||0)+'</span><span style="color:var(--red)">🛒 '+(st.sales||0)+' sold</span></div>';
+  if (dx.primary_issue) html += '<div class="card" style="background:#241313;border-color:#5a2d2d;margin-bottom:8px"><div class="label" style="color:#e07070">⚠️ PRIMARY ISSUE</div><div style="font-size:13px;line-height:1.45;margin-top:4px">'+escHtml(dx.primary_issue)+'</div></div>';
+  if (dx.summary) html += '<div style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:8px">'+escHtml(dx.summary)+'</div>';
+  const fixes = (dx.fixes||[]).slice().sort(function(a,b){ return (_PRANK[a.priority]||9)-(_PRANK[b.priority]||9); });
+  fixes.forEach(function(f){
+    const pc = _DXCOLOR[f.priority]||'var(--muted)';
+    const icon = _AREA_ICON[f.area]||'•';
+    html += '<div class="sug-card" style="border-left-color:'+pc+'">'+
+      '<span class="sug-p" style="color:'+pc+'">'+escHtml(f.priority||'medium')+'</span>'+
+      '<span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-left:6px">'+icon+' '+escHtml(f.area||'')+'</span>'+
+      '<div class="sug-title">'+escHtml(f.finding||'')+'</div>'+
+      (f.fix?'<div class="sug-action"><b style="color:var(--gold2)">→ </b>'+escHtml(f.fix)+'</div>':'')+
+      (f.impact?'<div class="sug-impact">💡 '+escHtml(f.impact)+'</div>':'')+
+    '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
 // ── Back to top (listings) ─────────────────────────────────────────────────
 (function(){
   const fab = document.getElementById('fab-top');
@@ -1053,6 +1184,7 @@ async function batchStageTags(btn) {
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
 loadDash();
 setTimeout(loadActions, 1200);  // populate Action Center + nav badge without being asked
+setTimeout(loadConvTargets, 1800);  // Conversion Doctor worklist on the dashboard
 </script>
 </body>
 </html>"""
@@ -1281,6 +1413,50 @@ def _listings_sync(state: str = "active") -> dict:
     return result
 
 
+def _sales_by_listing_sync() -> dict:
+    """Map real per-listing sales from paid order receipts → transactions.
+
+    Etsy receipts each carry a `transactions` array where every transaction has
+    a `listing_id` and `quantity`. Summing these gives true units sold per
+    listing — the honest denominator for conversion (favorites are NOT sales).
+    Based on the 100 most recent paid receipts; cached 2 min. Returns
+    {listing_id: units_sold}."""
+    cached = _cache_get("sales_by_listing", ttl=120)
+    if cached is not None:
+        return cached
+    out: dict = {}
+    try:
+        orders_r = EtsyAPIClient().get_orders(limit=100)
+        for receipt in orders_r.get("results", []) or []:
+            for t in receipt.get("transactions", []) or []:
+                lid = t.get("listing_id")
+                if lid is None:
+                    continue
+                try:
+                    qty = int(t.get("quantity", 1) or 1)
+                except (TypeError, ValueError):
+                    qty = 1
+                out[lid] = out.get(lid, 0) + qty
+    except Exception as exc:  # never let a sales lookup break a listing fetch
+        print(f"[sales] receipt mapping failed: {exc}", flush=True)
+    _cache_set("sales_by_listing", out)
+    return out
+
+
+def _enrich_sales(listings: list[dict]) -> list[dict]:
+    """Attach real `sales` count and sales-based `conversion_pct` to each listing.
+
+    conversion_pct = units sold ÷ views × 100 (the true buy rate). Falls back to
+    0 when there are no views yet. Mutates in place and returns the list."""
+    sales = _sales_by_listing_sync()
+    for l in listings:
+        s = sales.get(l.get("listing_id"), 0)
+        v = l.get("views", 0) or 0
+        l["sales"] = s
+        l["conversion_pct"] = round(s / v * 100, 2) if v else 0.0
+    return listings
+
+
 # ── REST endpoints (thin async wrappers over the data layer) ─────────────────────
 
 
@@ -1312,8 +1488,15 @@ async def get_listings(state: str = "active", _token: str = Depends(_auth)):
     """Return listings with thumbnail URLs. Result cached 30 s."""
     if state not in ("active", "draft", "inactive"):
         raise HTTPException(status_code=400, detail="state must be active, draft, or inactive")
+
+    def _fetch():
+        data = _listings_sync(state)
+        if state == "active":  # drafts/inactive can't have sales
+            _enrich_sales(data.get("listings", []))
+        return data
+
     try:
-        return await asyncio.wait_for(asyncio.to_thread(_listings_sync, state), timeout=15.0)
+        return await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=20.0)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
 
@@ -1369,7 +1552,7 @@ def _compute_actions() -> dict:
 
     # Active listings — SEO + conversion hygiene.
     try:
-        active = _listings_sync("active").get("listings", [])
+        active = _enrich_sales(_listings_sync("active").get("listings", []))
     except Exception as exc:
         active = []
         add("medium", "data_error",
@@ -1382,6 +1565,7 @@ def _compute_actions() -> dict:
         tags = l.get("tags", []) or []
         views = l.get("views", 0) or 0
         favs = l.get("num_favorers", 0) or 0
+        sales = l.get("sales", 0) or 0
         created = l.get("created_timestamp", 0) or 0
         age_days = (now - created) / day if created else 0
 
@@ -1401,12 +1585,13 @@ def _compute_actions() -> dict:
                 "Add multi-word buyer-intent tags to fill all 13 slots.",
                 l)
 
-        if views >= 25 and favs == 0:
-            add("medium", "low_conversion",
-                f"{views} views, 0 favorites: {title[:50]}",
-                f"{views} people viewed this but none favorited it — a photo, "
-                "price, or title problem, not a traffic problem.",
-                "Review the hero photo and title; ask the CEO agent for a fix.",
+        if views >= 25 and sales == 0:
+            add("high", "low_conversion",
+                f"{views} views, 0 sales: {title[:50]}",
+                f"{views} people viewed this but nobody bought"
+                + (f" ({favs} favorited it — interest is there)" if favs else "")
+                + " — a photo, price, or description problem, not a traffic problem.",
+                "Tap Diagnose in the Conversion Doctor for a ranked fix.",
                 l)
 
         if views == 0 and age_days > 7:
@@ -1521,7 +1706,7 @@ async def get_analytics(days: int = 30, _token: str = Depends(_auth)):
         listing_data = await asyncio.wait_for(
             asyncio.to_thread(_listings_sync, "active"), timeout=15.0
         )
-        active = listing_data.get("listings", [])
+        active = _enrich_sales(listing_data.get("listings", []))
         top = sorted(active, key=lambda l: l.get("views", 0), reverse=True)[:10]
         top_listings = [
             {
@@ -1529,11 +1714,11 @@ async def get_analytics(days: int = 30, _token: str = Depends(_auth)):
                 "title": (l.get("title") or "")[:60],
                 "views": l.get("views", 0),
                 "num_favorers": l.get("num_favorers", 0),
+                "sales": l.get("sales", 0),
                 "price": l.get("price", 0),
                 "url": l.get("url", ""),
-                "conversion_pct": round(
-                    l.get("num_favorers", 0) / max(l.get("views", 1), 1) * 100, 1
-                ),
+                # True buy rate: units sold ÷ views (not favorites).
+                "conversion_pct": l.get("conversion_pct", 0.0),
             }
             for l in top
             if l.get("views", 0) > 0
@@ -1634,6 +1819,146 @@ async def get_suggestions(_token: str = Depends(_auth)):
 
     result["generated_at"] = datetime.now(timezone.utc).isoformat()
     _cache_set("suggestions", result)
+    return result
+
+
+# ── Conversion Doctor: find traffic-but-no-sales listings + diagnose one ──────────
+
+
+@app.get("/api/conversion-targets")
+async def conversion_targets(_token: str = Depends(_auth)):
+    """Active listings getting views but no sales — the Conversion Doctor's worklist.
+
+    Sorted by views descending (most wasted traffic first), top 10. Listings with
+    favorites but zero sales rank as the strongest signal (proven interest, no buy).
+    """
+    def _fetch():
+        active = _enrich_sales(_listings_sync("active").get("listings", []))
+        targets = [l for l in active if (l.get("views", 0) or 0) > 0 and (l.get("sales", 0) or 0) == 0]
+        targets.sort(key=lambda l: (l.get("num_favorers", 0) or 0, l.get("views", 0) or 0), reverse=True)
+        return targets[:10]
+
+    try:
+        targets = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=20.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    return {
+        "count": len(targets),
+        "targets": [
+            {
+                "listing_id": l["listing_id"],
+                "title": l.get("title", ""),
+                "views": l.get("views", 0),
+                "num_favorers": l.get("num_favorers", 0),
+                "sales": l.get("sales", 0),
+                "price": l.get("price", 0),
+                "url": l.get("url", ""),
+                "thumbnail_url": l.get("thumbnail_url", ""),
+            }
+            for l in targets
+        ],
+    }
+
+
+@app.post("/api/diagnose/{listing_id}")
+async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
+    """Deep conversion diagnosis of ONE listing. Pulls full listing detail (title,
+    price, description, tags) + photo count + real sales, then a single focused
+    Claude call returns a structured, listing-specific diagnosis. Cached 10 min."""
+    cache_key = f"diagnose_{listing_id}"
+    cached = _cache_get(cache_key, ttl=600)
+    if cached is not None:
+        return cached
+
+    if not ANTHROPIC_KEY:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    def _gather() -> dict:
+        client = EtsyAPIClient()
+        listing = client.get_listing(listing_id)
+        try:
+            photo_count = len(client.get_listing_images(listing_id))
+        except Exception:
+            photo_count = 0
+        sales = _sales_by_listing_sync().get(listing_id, 0)
+        return {"listing": listing, "photo_count": photo_count, "sales": sales}
+
+    try:
+        gathered = await asyncio.wait_for(asyncio.to_thread(_gather), timeout=20.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    except EtsyAPIError as exc:
+        raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+
+    listing = gathered["listing"]
+    title = listing.get("title", "") or ""
+    tags = listing.get("tags", []) or []
+    views = listing.get("views", 0) or 0
+    favs = listing.get("num_favorers", 0) or 0
+    sales = gathered["sales"]
+    price = _price_float(listing.get("price"))
+    desc = (listing.get("description", "") or "").strip()
+    photo_count = gathered["photo_count"]
+
+    stats = {
+        "title": title,
+        "title_length": len(title),
+        "price": round(price, 2),
+        "photo_count": photo_count,
+        "tag_count": len(tags),
+        "views": views,
+        "favorites": favs,
+        "sales": sales,
+        "conversion_pct": round(sales / views * 100, 2) if views else 0.0,
+    }
+
+    user_payload = (
+        "Diagnose why this listing isn't converting. Real data:\n\n"
+        f"TITLE ({len(title)} chars): {title}\n"
+        f"PRICE: ${price:.2f}\n"
+        f"PHOTOS: {photo_count} of 10 recommended\n"
+        f"TAGS ({len(tags)}/13): {', '.join(tags) if tags else '(none)'}\n"
+        f"VIEWS: {views}   FAVORITES: {favs}   UNITS SOLD: {sales}\n\n"
+        "FULL DESCRIPTION:\n"
+        f"{desc[:6000] if desc else '(empty)'}\n"
+    )
+
+    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    try:
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                lambda: ai_client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=2000,
+                    system=_CONVERSION_DOCTOR_SYSTEM,
+                    messages=[{"role": "user", "content": user_payload}],
+                )
+            ),
+            timeout=60.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Diagnosis timed out — try again")
+
+    text = "".join(getattr(b, "text", "") for b in response.content).strip()
+    for fence in ("```json", "```JSON", "```"):
+        if text.startswith(fence):
+            text = text[len(fence):]
+            break
+    text = text.rstrip("`").strip()
+
+    try:
+        diagnosis = json.loads(text)
+    except json.JSONDecodeError:
+        diagnosis = {"primary_issue": "Analysis complete", "fixes": [], "raw": text}
+
+    result = {
+        "listing_id": listing_id,
+        "url": f"https://www.etsy.com/listing/{listing_id}",
+        "stats": stats,
+        "diagnosis": diagnosis,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    _cache_set(cache_key, result)
     return result
 
 
