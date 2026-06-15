@@ -53,7 +53,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v13"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v14"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -598,6 +598,7 @@ const TOKEN = """ + json.dumps(APP_TOKEN) + """;
 
 let ws = null, wsReady = false, pendingMsg = null;
 let _analyticsDays = 30;
+let _onListings = false;
 
 function showTab(tab, btn) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -909,7 +910,7 @@ function _renderAnalytics(d) {
     html+='<div class="section-title">Top Listings by Views</div><div class="card" style="padding:12px 14px">';
     html+=top.map(function(l,i){
       var convColor=l.conversion_pct>=2?'var(--green)':l.conversion_pct>=0.5?'var(--gold)':'var(--red)';
-      return '<div class="listing-item" onclick="window.open(\''+escHtml(l.url)+'\',\'_blank\')">'+
+      return '<div class="listing-item" onclick="window.open(&apos;'+escHtml(l.url)+'&apos;,&apos;_blank&apos;)">'+
         '<div style="width:22px;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0">#'+(i+1)+'</div>'+
         '<div class="listing-info">'+
           '<div class="listing-title">'+escHtml(l.title)+'</div>'+
@@ -1019,7 +1020,6 @@ function askSuggestionFix(i) {
 }
 
 // ── Back to top (listings) ─────────────────────────────────────────────────
-let _onListings = false;
 (function(){
   const fab = document.getElementById('fab-top');
   const screen = document.getElementById('screen-listings');
@@ -1030,7 +1030,7 @@ let _onListings = false;
 
 // ── Batch tag fix ──────────────────────────────────────────────────────────
 async function batchStageTags(btn) {
-  if (!confirm('Scan all active listings and stage tag fixes for every listing with fewer than 13 tags?\n\nThis may take up to 2 minutes. You review and approve each fix in this Action Center.')) return;
+  if (!confirm('Scan all active listings and stage tag fixes for every listing with fewer than 13 tags?\\n\\nThis may take up to 2 minutes. You review and approve each fix in this Action Center.')) return;
   btn.disabled = true;
   const orig = btn.textContent;
   btn.textContent = '⏳ Generating…';
