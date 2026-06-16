@@ -17,6 +17,7 @@ import asyncio
 import json
 import os
 import re as _re
+import subprocess
 import sys
 import threading
 import time
@@ -46,6 +47,48 @@ import anthropic
 import db  # local persistence layer (tools/api_server/db.py)
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 
+# ── Executable command registry (CEO agent can invoke these) ───────────────────
+_EXEC_COMMANDS: dict[str, dict] = {
+    "shop_health_check": {
+        "script": "tools/shop_health_check.py",
+        "description": "Run a live shop health snapshot — metrics, listing quality, tag audit",
+        "timeout": 60,
+        "long_running": False,
+    },
+    "generate_coloring_pages": {
+        "script": "tools/generate_coloring_pages.py",
+        "description": "Generate all 20 kawaii coloring pages via gpt-image-1 (takes ~15 min)",
+        "timeout": 30,
+        "long_running": True,
+    },
+    "generate_coloring_pages_preview": {
+        "script": "tools/generate_coloring_pages.py",
+        "args": ["--preview"],
+        "description": "Preview coloring page listing JSON — no API calls, instant",
+        "timeout": 30,
+        "long_running": False,
+    },
+    "generate_coloring_pages_quick": {
+        "script": "tools/generate_coloring_pages.py",
+        "args": ["--themes", "3"],
+        "description": "Generate first 3 coloring page themes only (~3 min)",
+        "timeout": 30,
+        "long_running": True,
+    },
+    "rebuild_sticker_pack": {
+        "script": "tools/rebuild_sticker_pack.py",
+        "description": "Rebuild sticker pack ZIPs for all planners from cached images",
+        "timeout": 60,
+        "long_running": False,
+    },
+    "qc_sweep": {
+        "script": "tools/qc_sweep.py",
+        "description": "Run quality-control sweep across all product files",
+        "timeout": 90,
+        "long_running": False,
+    },
+}
+
 # .strip() is critical: Railway env vars set via the dashboard often carry a
 # trailing newline. APP_TOKEN is injected into an inline JS string literal
 # (const TOKEN = '...'); a newline inside it is a fatal SyntaxError that kills
@@ -53,7 +96,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v19"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v20"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -135,7 +178,7 @@ LIVE DATA — you can read the real shop, do not guess:
 - ALWAYS pull the real numbers with a tool before quoting any figure. Never invent data.
   If a tool returns an error, say so plainly rather than guessing.
 
-How you operate (prepare, Scott approves):
+How you operate:
 - You analyze, recommend, and can DRAFT changes (titles, tags, descriptions, photo plans,
   quality-gate checklists). You do not publish, change prices, or edit live listings
   yourself — you prepare the work and Scott approves it. Be explicit about what you'd
@@ -145,6 +188,11 @@ How you operate (prepare, Scott approves):
   approval in the Action Center. ALWAYS read the listing first so the change is accurate.
   Tell Scott you've staged it and what it will do. Never claim a change is live — it only
   applies after he approves.
+- You CAN execute backend commands directly using the execute_command tool. Use this when
+  Scott asks you to DO something: generate coloring pages, run a health check, rebuild
+  sticker packs, etc. Brief Scott on what you're about to run, then call it. Long-running
+  commands (image generation) launch in the background — confirm the PID and tell Scott
+  where to find the output. Quick commands return full terminal output for you to summarize.
 
 Products live: DP1026 Life Planner ($14.99), DP1027 Student Planner ($9.99),
 DP1028 Budget Planner ($12.99), DP1029 Fitness Planner ($12.99).
@@ -224,6 +272,36 @@ AGENT_TOOLS = [
             "required": ["action_type", "listing_id", "summary"],
         },
     },
+    {
+        "name": "execute_command",
+        "description": (
+            "Execute a backend automation command — run it NOW. Use this when Scott asks you to actually "
+            "DO something: generate images, run health checks, rebuild files, etc. "
+            "Quick commands return full output immediately. Long-running commands (image generation) "
+            "are launched in the background and confirmed with a PID. Always tell Scott what you're "
+            "about to run and what it will do before calling this.\n\n"
+            "Available commands:\n"
+            + "\n".join(
+                f"  {k}: {v['description']}"
+                for k, v in _EXEC_COMMANDS.items()
+            )
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "enum": list(_EXEC_COMMANDS.keys()),
+                    "description": "Which command to run.",
+                },
+                "extra_args": {
+                    "type": "string",
+                    "description": "Optional additional CLI arguments (e.g. '--regen' to force regenerate).",
+                },
+            },
+            "required": ["command"],
+        },
+    },
 ]
 
 
@@ -262,7 +340,46 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "status": "pending",
                 "note": "Queued for Scott's approval in the Action Center — not yet applied.",
             }
+        if name == "execute_command":
+            ti = tool_input or {}
+            cmd_name = ti.get("command", "")
+            extra_args = ti.get("extra_args", "").strip()
+            if cmd_name not in _EXEC_COMMANDS:
+                return {"error": f"Unknown command '{cmd_name}'. Available: {list(_EXEC_COMMANDS.keys())}"}
+            cfg = _EXEC_COMMANDS[cmd_name]
+            script = ROOT / cfg["script"]
+            cmd = [sys.executable, str(script)] + cfg.get("args", [])
+            if extra_args:
+                cmd.extend(extra_args.split())
+            timeout = cfg.get("timeout", 60)
+            if cfg.get("long_running"):
+                proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    cwd=str(ROOT),
+                )
+                return {
+                    "started": True,
+                    "pid": proc.pid,
+                    "command": cmd_name,
+                    "description": cfg["description"],
+                    "note": f"Running in background as PID {proc.pid}. Check the coloring_pages/ output folder when done.",
+                }
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                cwd=str(ROOT),
+            )
+            out = (result.stdout + "\n" + result.stderr).strip()
+            if len(out) > 2000:
+                out = out[:1900] + "\n…[output truncated]"
+            return {"returncode": result.returncode, "output": out, "success": result.returncode == 0}
         return {"error": f"unknown tool: {name}"}
+    except subprocess.TimeoutExpired:
+        return {"error": f"Command timed out (>{timeout}s)"}
     except Exception as exc:
         return {"error": str(exc)}
 
@@ -2823,9 +2940,14 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
         tool_results = []
         for block in final.content:
             if getattr(block, "type", None) == "tool_use":
-                await websocket.send_text(
-                    json.dumps({"type": "tool", "content": f"Reading {block.name}…"})
-                )
+                if block.name == "execute_command":
+                    cmd = (block.input or {}).get("command", "command")
+                    status_msg = f"⚙ Running {cmd}…"
+                elif block.name == "stage_action":
+                    status_msg = "📋 Staging action for approval…"
+                else:
+                    status_msg = f"📊 Reading {block.name}…"
+                await websocket.send_text(json.dumps({"type": "tool", "content": status_msg}))
                 result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
                 tool_results.append(
                     {

@@ -4544,6 +4544,23 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                            (sx, sy, sx + sw, sy + sh))
 
     # ── DALL-E sticker sheet image generation ────────────────────────────────
+    # Prepended to every sheet prompt for style + layout consistency
+    _STICKER_STYLE_ANCHOR = (
+        "STYLE DNA — apply to every sticker on this sheet: "
+        "Premium kawaii flat illustration clipart. "
+        "Each sticker has a THICK solid black outline 4-5px with NO gaps anywhere. "
+        "Luminous soft pastel color fills. Kawaii face (large glossy dot eyes with a white "
+        "catchlight dot, pink blush cheek ovals, tiny smile arc) on every object sticker. "
+        "BACKGROUND: Pure #FFFFFF white throughout — absolutely zero cream, off-white, gray, "
+        "or gradients in the background. "
+        "LAYOUT: Stickers scattered naturally on the page — NOT in a grid, NOT in rows. "
+        "Every sticker is completely isolated with minimum 50px of pure white space on "
+        "all four sides. NO two stickers touch or overlap each other. "
+        "CONSTRAINT: Every sticker has a complete 360° closed outline with no open edges. "
+        "No sticker is cut off at the page edge. No watermarks. No page border. "
+        "NOW DRAW THE FOLLOWING STICKERS FOR THIS SHEET:\n"
+    )
+
     _STICKER_SHEET_PROMPTS = [
         # Sheet 1 — Functional Planning (headers, checklists, labels)
         ("Kawaii functional planner sticker sheet, pure white background. "
@@ -4690,9 +4707,11 @@ def _create_digital_planner(data: dict, store: DataStore) -> str:
                                   f"{product_id}_sticker_sheet_{sheet_num}.jpg")
         if os.path.exists(cache_path) and os.path.getsize(cache_path) > 20_000:
             return cache_path
-        prompt = _STICKER_SHEET_PROMPTS[sheet_num - 1]
+        prompt = _STICKER_STYLE_ANCHOR + _STICKER_SHEET_PROMPTS[sheet_num - 1]
         try:
-            img_bytes = _fetch_image_bytes(prompt, size="1024x1024")
+            img_bytes = _fetch_image_bytes(
+                prompt, size="1536x1536", quality="high", output_format="jpeg"
+            )
             if img_bytes and len(img_bytes) > 10_000:
                 with open(cache_path, "wb") as _f:
                     _f.write(img_bytes)
