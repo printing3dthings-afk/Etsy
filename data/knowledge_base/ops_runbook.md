@@ -159,3 +159,34 @@ from hitting the Etsy API on every panel open. Bump to BUILD_ID v23.
 **Lesson:** Client-side JS variables reset on every page load. If state needs to survive a reload, write
 it to sessionStorage (or localStorage for longer persistence) AND read it back on init. The write without
 the read is a silent no-op from the user's perspective.
+
+### 2026-06-16 — REAL root cause of the permanently-stuck spinner: a JS SyntaxError froze the entire dashboard script
+**Symptom:** Scott reported the spinner "will not go past the spinning stage" even after the v23
+sessionStorage fix above — and *nothing* on the dashboard ever updated, not just the CEO report.
+**Root cause:** The Files/Backups browser feature built a download link with:
+`onclick="window.open(\''+url.replace(/'/g,"\\'")+'\',\'_blank\')"`. This was written inside `_WEB_UI`,
+a **non-raw** Python triple-quoted string (`_WEB_UI = """..."""`, not `r"""..."""`). Python processes
+backslash escapes in non-raw strings even inside triple quotes, so `\'` and `\\'` in the source got
+unescaped by Python *before* the text ever reached the browser — turning what was meant to be an escaped
+quote inside a JS string into a bare `'` that closed the string literal early. The result was a genuine
+JavaScript `SyntaxError: Unexpected string` partway through the `<script>` block. A SyntaxError anywhere
+in a `<script>` tag prevents the **entire script from executing** — not just the broken line. That meant
+`loadDash()`, `getCeoSuggestions()`, the 202+poll loop, the sessionStorage restore IIFE — literally none
+of it ever ran. Every spinner on the page was the static HTML placeholder baked into the page source,
+which nothing ever replaced. This is why none of the v21–v23 backend/JS fixes (warm cache, 202+poll,
+sessionStorage persistence) made any visible difference: the browser never got far enough to execute any
+of that code. Caught by pulling the live production HTML with curl, extracting the `<script>` body, and
+running it through `node --check` — this is now the standard verification step for any dashboard JS change.
+**Fix:** Replaced the backslash-escaped quotes with the `&apos;` HTML-entity pattern already used
+successfully elsewhere in the same file (Top Listings panel), which needs zero backslash escaping and
+sidesteps the double-unescaping problem entirely. `url` here is already `encodeURIComponent`-safe so no
+quote-escaping was ever actually necessary. Verified clean with `node --check` against both the locally
+evaluated `_WEB_UI` Python expression and the live redeployed page. Bump to BUILD_ID v24.
+**Lesson:** `_WEB_UI` embeds a large inline `<script>` inside a non-raw Python string — any backslash
+written in that JS (regex escapes, quote escapes, etc.) is silently reinterpreted by Python's own string
+parser first. Always verify dashboard JS changes with `node --check` against the *actual rendered output*
+(curl the live page or eval the `_WEB_UI` expression with `ast`), not just by reading the Python source —
+the source and the runtime JS are not the same text whenever a backslash is involved. A single SyntaxError
+anywhere in the script silently kills 100% of the dashboard's interactivity with no visible error to the
+user — just frozen static HTML. This class of bug is invisible to Python's own syntax checks
+(`py_compile` passes fine) because the bug only exists in the *string value*, not the Python syntax.
