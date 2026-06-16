@@ -417,13 +417,12 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
 _SUGGESTIONS_SYSTEM = """\
 You are the CEO Agent for OnBrandCraftz running a FULL SHOP DIAGNOSTIC.
 
-You MUST follow these steps in order — no skipping:
-STEP 1: Call get_metrics to get revenue, orders, active listings, sales, and rating.
-STEP 2: Call list_listings with state="active" to inspect all live listings.
-STEP 3: Call list_listings with state="draft" to inspect all drafts.
+You are given the shop's real data inline in the user message: metrics (revenue,
+orders, active listings, sales, rating), the full list of ACTIVE listings, and all
+DRAFT listings. Analyze ALL of it carefully before answering.
 
-Only after completing all three tool calls, write your final response as a single
-valid JSON object. No markdown, no prose outside the JSON — just the object.
+Write your response as a single valid JSON object. No markdown, no prose outside
+the JSON — just the object.
 
 JSON format (follow exactly):
 {
@@ -2240,6 +2239,21 @@ async def _snapshot_loop() -> None:
         await asyncio.sleep(86_400)
 
 
+async def _warm_suggestions() -> None:
+    """Pre-compute the CEO diagnostic shortly after boot so the first dashboard
+    load after a deploy hits a warm cache instead of waiting ~25s. The in-memory
+    cache is wiped on every redeploy, so without this the user stares at the
+    'analyzing your shop…' spinner every single time (seen 2026-06-16)."""
+    if not ANTHROPIC_KEY:
+        return
+    await asyncio.sleep(5)  # let the app finish booting first
+    try:
+        await _compute_suggestions()
+        print("[warm] suggestions cache primed", flush=True)
+    except Exception as exc:
+        print(f"[warm] suggestions priming skipped: {exc}", flush=True)
+
+
 @app.on_event("startup")
 async def _startup() -> None:
     try:
@@ -2248,6 +2262,7 @@ async def _startup() -> None:
     except Exception as exc:
         print(f"[db] init failed: {exc}", flush=True)
     asyncio.create_task(_snapshot_loop())
+    asyncio.create_task(_warm_suggestions())
 
 
 @app.get("/api/history")
@@ -2328,71 +2343,49 @@ async def get_analytics(days: int = 30, _token: str = Depends(_auth)):
     }
 
 
-@app.post("/api/suggestions")
-async def get_suggestions(_token: str = Depends(_auth)):
-    """CEO agent runs a 3-tool data-gathering pass (metrics + active + draft listings),
-    then synthesises a structured JSON suggestion report. Cached 5 minutes."""
-    cached = _cache_get("suggestions", ttl=300)
-    if cached is not None:
-        return cached
-
+async def _compute_suggestions() -> dict:
+    """Gather shop data + synthesise the CEO diagnostic JSON. Caches the result.
+    Shared by the /api/suggestions endpoint and the startup cache-warmer so the
+    dashboard never has to wait on a cold cache right after a deploy."""
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
-    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
-    messages: list[dict] = [
-        {
-            "role": "user",
-            "content": (
-                "Run your full shop diagnostic now. "
-                "Call get_metrics, then list_listings(active), then list_listings(draft). "
-                "After all three tool calls complete, return the JSON report."
-            ),
-        }
-    ]
-
-    # Overall budget, not per-call: the frontend allows 120s total
-    # (fetchWithTimeout(..., 120000) in the embedded JS). A flat 60s-per-call
-    # timeout was too tight for the final synthesis call (up to 3500 output
-    # tokens on top of 3 rounds of tool results) and tripped an unhandled
-    # TimeoutError -> bare 500 with no detail (seen 2026-06-16, see ops runbook).
-    deadline = time.monotonic() + 100.0
-    final_response = None
+    # Gather the three data pulls DIRECTLY in Python instead of making the model
+    # call them as tools. The old approach forced 3 sequential Claude round-trips
+    # (call -> result -> call -> result -> call -> result -> synthesis) which took
+    # ~80s on a cold cache — close enough to the frontend's 120s limit that the
+    # dashboard spinner looked stuck, especially right after a deploy wiped the
+    # cache (seen 2026-06-16, see ops runbook). We know exactly which 3 pulls we
+    # need, so we run them concurrently and do ONE synthesis call — ~25s total.
     try:
-        for _ in range(8):  # enough headroom for 3 forced tool round-trips
-            remaining = deadline - time.monotonic()
-            if remaining <= 5:
-                raise asyncio.TimeoutError()
-            response = await asyncio.wait_for(
-                asyncio.to_thread(
-                    lambda: ai_client.messages.create(
-                        model="claude-sonnet-4-6",
-                        max_tokens=3500,
-                        system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
-                        tools=AGENT_TOOLS,
-                        messages=messages,
-                    )
-                ),
-                timeout=remaining,
-            )
-            messages.append({"role": "assistant", "content": response.content})
-            final_response = response
+        metrics, active, drafts = await asyncio.gather(
+            asyncio.to_thread(_execute_agent_tool, "get_metrics", {}),
+            asyncio.to_thread(_execute_agent_tool, "list_listings", {"state": "active"}),
+            asyncio.to_thread(_execute_agent_tool, "list_listings", {"state": "draft"}),
+        )
+    except Exception as exc:  # noqa: BLE001 — surface a real message, not a bare 500
+        raise HTTPException(status_code=502, detail=f"Could not gather shop data: {exc}")
 
-            if response.stop_reason != "tool_use":
-                break
+    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    user_payload = (
+        "Here is the shop's real data. Analyze all of it and return the JSON report.\n\n"
+        "=== METRICS ===\n" + json.dumps(metrics, default=str) + "\n\n"
+        "=== ACTIVE LISTINGS ===\n" + json.dumps(active, default=str) + "\n\n"
+        "=== DRAFT LISTINGS ===\n" + json.dumps(drafts, default=str)
+    )
 
-            tool_results = []
-            for block in response.content:
-                if getattr(block, "type", None) == "tool_use":
-                    result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
-                    tool_results.append(
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": block.id,
-                            "content": json.dumps(result),
-                        }
-                    )
-            messages.append({"role": "user", "content": tool_results})
+    try:
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                lambda: ai_client.messages.create(
+                    model="claude-sonnet-4-6",
+                    max_tokens=3500,
+                    system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
+                    messages=[{"role": "user", "content": user_payload}],
+                )
+            ),
+            timeout=90.0,  # single call; comfortably under the frontend's 120s
+        )
     except asyncio.TimeoutError:
         raise HTTPException(
             status_code=504,
@@ -2401,13 +2394,7 @@ async def get_suggestions(_token: str = Depends(_auth)):
     except anthropic.APIError as exc:
         raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}")
 
-    # Extract the text from the final response
-    final_text = ""
-    if final_response:
-        for block in final_response.content:
-            if hasattr(block, "text"):
-                final_text += block.text
-
+    final_text = "".join(getattr(b, "text", "") for b in response.content)
     result = _extract_json_object(final_text)
     if result is None:
         result = {
@@ -2420,6 +2407,16 @@ async def get_suggestions(_token: str = Depends(_auth)):
     result["generated_at"] = datetime.now(timezone.utc).isoformat()
     _cache_set("suggestions", result)
     return result
+
+
+@app.post("/api/suggestions")
+async def get_suggestions(_token: str = Depends(_auth)):
+    """CEO agent synthesises a structured JSON suggestion report from live shop
+    data (metrics + active + draft listings). Cached 5 minutes; warmed on startup."""
+    cached = _cache_get("suggestions", ttl=300)
+    if cached is not None:
+        return cached
+    return await _compute_suggestions()
 
 
 # ── Conversion Doctor: find traffic-but-no-sales listings + diagnose one ──────────
