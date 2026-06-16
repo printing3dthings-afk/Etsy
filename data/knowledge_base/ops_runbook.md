@@ -119,3 +119,24 @@ truncated the JSON and caused a parse fail — kept at 4000.
 endpoint is correct but slow AND its cache resets on deploy, the fix is to keep the
 cache warm in the background, not to chase a nonexistent exception. Verify a fix by
 timing a real cold call, not just checking it returns 200.
+
+### 2026-06-16 — Spinner, final layer: make the cold path non-blocking (202 + poll)
+**Symptom:** Scott sent a screen recording of the dashboard still spinning. The warm
+cache had already finished priming ~85s earlier, so a fresh load *should* have been an
+instant hit — meaning the recording caught a request that was made while the cache was
+cold (the ~75s window right after a deploy) and was BLOCKING for the full synthesis. A
+minute-long blocking request behind a plain spinner is indistinguishable from "hung,"
+and I'd been triggering fresh cold windows by repeatedly redeploying (even doc-only
+commits redeploy and wipe the in-memory cache).
+**Root cause:** `/api/suggestions` blocked the HTTP request for the entire ~60-75s
+synthesis whenever the cache was cold. Warm-on-boot reduced how often that happened but
+didn't remove the blocking path itself.
+**Fix:** Cold cache no longer blocks. The endpoint returns an instant HTTP 202
+`{"status":"warming"}` (ensuring a background synthesis is running, guarded by a
+`_suggestions_warming` flag so it never stacks with the warm loop), and the frontend
+`getCeoSuggestions` polls every 4s (up to ~100s) while it sees 202, keeping the spinner
+but never hanging on one long request. Verified live: during the post-deploy window the
+endpoint returned 202 in <1s repeatedly, then flipped to the full 8-suggestion 200
+report the instant the warm finished (~55s); steady-state load is ~0.17s.
+**Lesson:** Never put a multi-second, let alone minute-long, synchronous AI call on a
+user's hot path. Return fast with a "working on it" status and let the client poll.
