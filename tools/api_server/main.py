@@ -2326,38 +2326,55 @@ async def get_suggestions(_token: str = Depends(_auth)):
         }
     ]
 
+    # Overall budget, not per-call: the frontend allows 120s total
+    # (fetchWithTimeout(..., 120000) in the embedded JS). A flat 60s-per-call
+    # timeout was too tight for the final synthesis call (up to 3500 output
+    # tokens on top of 3 rounds of tool results) and tripped an unhandled
+    # TimeoutError -> bare 500 with no detail (seen 2026-06-16, see ops runbook).
+    deadline = time.monotonic() + 100.0
     final_response = None
-    for _ in range(8):  # enough headroom for 3 forced tool round-trips
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                lambda: ai_client.messages.create(
-                    model="claude-sonnet-4-6",
-                    max_tokens=3500,
-                    system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
-                    tools=AGENT_TOOLS,
-                    messages=messages,
-                )
-            ),
-            timeout=60.0,
+    try:
+        for _ in range(8):  # enough headroom for 3 forced tool round-trips
+            remaining = deadline - time.monotonic()
+            if remaining <= 5:
+                raise asyncio.TimeoutError()
+            response = await asyncio.wait_for(
+                asyncio.to_thread(
+                    lambda: ai_client.messages.create(
+                        model="claude-sonnet-4-6",
+                        max_tokens=3500,
+                        system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
+                        tools=AGENT_TOOLS,
+                        messages=messages,
+                    )
+                ),
+                timeout=remaining,
+            )
+            messages.append({"role": "assistant", "content": response.content})
+            final_response = response
+
+            if response.stop_reason != "tool_use":
+                break
+
+            tool_results = []
+            for block in response.content:
+                if getattr(block, "type", None) == "tool_use":
+                    result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
+                    tool_results.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": block.id,
+                            "content": json.dumps(result),
+                        }
+                    )
+            messages.append({"role": "user", "content": tool_results})
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=504,
+            detail="Anthropic took too long to respond. This usually self-resolves — tap Try Again.",
         )
-        messages.append({"role": "assistant", "content": response.content})
-        final_response = response
-
-        if response.stop_reason != "tool_use":
-            break
-
-        tool_results = []
-        for block in response.content:
-            if getattr(block, "type", None) == "tool_use":
-                result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
-                tool_results.append(
-                    {
-                        "type": "tool_result",
-                        "tool_use_id": block.id,
-                        "content": json.dumps(result),
-                    }
-                )
-        messages.append({"role": "user", "content": tool_results})
+    except anthropic.APIError as exc:
+        raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}")
 
     # Extract the text from the final response
     final_text = ""

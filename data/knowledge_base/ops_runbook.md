@@ -42,9 +42,34 @@ itself was returning `InternalServerError: Error code: 500 - Internal server err
 on `messages.create` — a transient outage on Anthropic's side, not a bug in this
 codebase. Confirmed via Railway deployment logs (full traceback ends in
 `anthropic.InternalServerError`).
-**Fix:** None needed in code — `getCeoSuggestions()` and `loadConvTargets()` already
-have proper try/catch + "Try Again" buttons that surface within ~10-20s. If this
-happens again: check whether `/api/suggestions` is slow to fail (Anthropic outage,
-self-resolving, just wait) vs hangs past 120s (real bug, needs investigation). Don't
-assume it's a frontend bug — verify with a direct curl against `/api/suggestions`
-and check Railway logs for the actual exception first.
+**Fix:** None needed in code that time — `getCeoSuggestions()` already has proper
+try/catch + "Try Again" handling. If this happens again: check whether
+`/api/suggestions` is slow to fail (Anthropic outage, self-resolving, just wait) vs
+hangs past 120s (real bug). Don't assume it's a frontend bug — verify with a direct
+curl against `/api/suggestions` and check Railway logs for the actual exception first.
+
+### 2026-06-16 — Spinner stuck again a couple hours later — this time a real bug
+**Symptom:** Same "Fucking Frank is analyzing your shop…" spinner, reported stuck
+again at 18:49 UTC. `curl -X POST /api/suggestions` returned bare `HTTP 500
+"Internal Server Error"` after ~73s.
+**Root cause:** Different from the earlier entry — this time it was a real bug, not
+an Anthropic outage. `/api/suggestions` wrapped EACH individual `messages.create`
+call in `asyncio.wait_for(..., timeout=60.0)`, but the frontend's own fetch timeout
+is 120s (`fetchWithTimeout(..., 120000)`). The 3-tool-call diagnostic sequence's
+final synthesis call (up to 3500 output tokens, large context from 3 rounds of tool
+results) legitimately took >60s on a normal, non-outage Anthropic response — direct
+test confirmed Anthropic responded to a trivial call in 1.1s, so the API itself was
+healthy. The `asyncio.TimeoutError` this raised was never caught, so FastAPI
+returned a bare unhandled-exception 500 with no `detail` field — which is why the
+frontend showed a generic failure instead of a helpful message.
+**Fix:** Replaced the flat per-call 60s timeout with a single 100s overall budget
+shared across all loop iterations (`deadline = time.monotonic() + 100.0`, remaining
+budget passed to each `wait_for` call) — leaves headroom under the frontend's 120s
+limit while not starving a legitimately-slower synthesis call. Wrapped the loop in
+try/except for `asyncio.TimeoutError` (-> HTTP 504 with a clear `detail` message)
+and `anthropic.APIError` (-> HTTP 502 with the real error message), so any future
+failure surfaces a real message in the UI instead of bare "Internal Server Error".
+**Lesson:** When a transient symptom recurs, re-verify — don't assume the earlier
+diagnosis still holds. The first occurrence really was an Anthropic outage; this one
+was a latent timeout bug that outage exposed me to investigating but didn't itself
+cause.
