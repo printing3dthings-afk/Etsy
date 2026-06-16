@@ -1,228 +1,135 @@
 {
   "4509179201": {
-    "art_hashes": {
-      "DP1026": "efe68fe83ff45fc4f747da87dd9f321f3a73d883371e3e6e770d073f31a7e4c6"
-    },
-    "art_sources": {
-      "DP1026": "data/digital_products/product_files/DP1026_kawaii_cover.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:55.576518+00:00",
-    "baseline_files": [
-      "DP1026.pdf",
-      "DP1026_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 11,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1026"
     ],
-    "expected_file_count": 2,
-    "expected_files": [
-      "DP1026.pdf",
-      "DP1026_sticker_pack.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.819967+00:00",
+    "expected_file_count": 3,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328504+00:00",
     "listing_roles": {
       "DP1026": "planner_listing_id"
     },
-    "min_photo_count": 11,
+    "min_photo_count": 8,
     "type": "planner"
   },
   "4509184958": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:56.103982+00:00",
-    "baseline_files": [
-      "DP1027.pdf",
-      "DP1027_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 11,
     "dp_codes": [
       "DP1027"
     ],
-    "expected_file_count": 2,
-    "expected_files": [
-      "DP1027.pdf",
-      "DP1027_sticker_pack.zip"
-    ],
+    "expected_file_count": 3,
+    "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.819989+00:00",
+    "last_verified": "2026-06-16T13:18:41.328555+00:00",
     "listing_roles": {
       "DP1027": "planner_listing_id"
     },
-    "min_photo_count": 11,
+    "min_photo_count": 8,
     "type": "planner"
   },
   "4509184962": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:56.677667+00:00",
-    "baseline_files": [
-      "DP1028.pdf",
-      "DP1028_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 11,
     "dp_codes": [
       "DP1028"
     ],
-    "expected_file_count": 2,
-    "expected_files": [
-      "DP1028.pdf",
-      "DP1028_sticker_pack.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.819993+00:00",
+    "expected_file_count": 3,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328559+00:00",
     "listing_roles": {
       "DP1028": "planner_listing_id"
     },
-    "min_photo_count": 11,
+    "min_photo_count": 8,
     "type": "planner"
   },
   "4509184968": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:57.236811+00:00",
-    "baseline_files": [
-      "DP1029.pdf",
-      "DP1029_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 11,
     "dp_codes": [
       "DP1029"
     ],
-    "expected_file_count": 2,
-    "expected_files": [
-      "DP1029.pdf",
-      "DP1029_sticker_pack.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.819996+00:00",
+    "expected_file_count": 3,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328562+00:00",
     "listing_roles": {
       "DP1029": "planner_listing_id"
     },
-    "min_photo_count": 11,
+    "min_photo_count": 8,
     "type": "planner"
   },
   "4509193231": {
-    "art_hashes": {
-      "DP1058": "596499644218e9c099a2fb10e310f252f3cca74ab7b48b20412a00118000f6c0"
-    },
-    "art_sources": {
-      "DP1058": "data/digital_products/product_files/upscaled/DP1058.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:37.624789+00:00",
-    "baseline_files": [
-      "DP1058_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1058"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1058_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.819999+00:00",
+    "last_verified": "2026-06-16T13:18:41.328565+00:00",
     "listing_roles": {
       "DP1058": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509193237": {
-    "art_hashes": {
-      "DP1059": "0006060e0d4e0d4e0d460d460d460c460706d9f299b081ad883ba818fc07fc07"
-    },
-    "art_sources": {
-      "DP1059": "data/digital_products/product_files/upscaled/DP1059.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:40.106481+00:00",
-    "baseline_files": [
-      "DP1059_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1059"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1059_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820002+00:00",
+    "last_verified": "2026-06-16T13:18:41.328567+00:00",
     "listing_roles": {
       "DP1059": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509198434": {
-    "art_hashes": {
-      "DP1060": "0006060e0c4e0d4e0d460d460d460c460706d9f299b091ad883bac18fc07fc07"
-    },
-    "art_sources": {
-      "DP1060": "data/digital_products/product_files/upscaled/DP1060.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:40.654898+00:00",
-    "baseline_files": [
-      "DP1060_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1060"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1060_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820004+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328569+00:00",
     "listing_roles": {
       "DP1060": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509198446": {
-    "art_hashes": {
-      "DP1061": "0006060e0d4e0d4e0d460c460c4e0c460706d9f299b091ad883ba818fc07fc07"
-    },
-    "art_sources": {
-      "DP1061": "data/digital_products/product_files/upscaled/DP1061.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:41.226332+00:00",
-    "baseline_files": [
-      "DP1061_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1061"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1061_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820006+00:00",
+    "last_verified": "2026-06-16T13:18:41.328572+00:00",
     "listing_roles": {
       "DP1061": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509213345": {
-    "art_hashes": {
-      "DP1014": "4d2cb2d2a5296929f6d0d56c559456a4b6b356a2b172b35257025672289c1402"
-    },
-    "art_sources": {
-      "DP1014": "data/digital_products/product_files/DP1014.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:36.537344+00:00",
-    "baseline_files": [
-      "DP1014_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1014"
     ],
@@ -230,26 +137,17 @@
     "expected_files": [
       "DP1014_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820008+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328576+00:00",
     "listing_roles": {
       "DP1014": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509213533": {
-    "art_hashes": {
-      "DP1015": "2c12933472b123362c8b3cab242b252b1246da4d469c4aad4aad4ebb3136998c"
-    },
-    "art_sources": {
-      "DP1015": "data/digital_products/product_files/DP1015.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:35.975510+00:00",
-    "baseline_files": [
-      "DP1015_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1015"
     ],
@@ -258,52 +156,32 @@
       "DP1015_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820011+00:00",
+    "last_verified": "2026-06-16T13:18:41.328578+00:00",
     "listing_roles": {
       "DP1015": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509213667": {
-    "art_hashes": {
-      "DP1016": "f353c7a78fa0c659ce781b1c9e96c8cc8ce88ce0db20d8e0b9e0fcc03e8102b5"
-    },
-    "art_sources": {
-      "DP1016": "data/digital_products/product_files/DP1016.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:35.452953+00:00",
-    "baseline_files": [
-      "DP1016_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1016"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1016_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820013+00:00",
+    "last_verified": "2026-06-16T13:18:41.328580+00:00",
     "listing_roles": {
       "DP1016": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509214051": {
-    "art_hashes": {
-      "DP1019": "1bd65a9c5ae17267621ff21f7b1f020f118b256b195c25292637188e04edc2b0"
-    },
-    "art_sources": {
-      "DP1019": "data/digital_products/product_files/DP1019.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:34.382699+00:00",
-    "baseline_files": [
-      "DP1019_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1019"
     ],
@@ -311,26 +189,17 @@
     "expected_files": [
       "DP1019_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820016+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328584+00:00",
     "listing_roles": {
       "DP1019": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509214237": {
-    "art_hashes": {
-      "DP1020": "2a6ae2e2e1e2662cd64cd9a4a4d2c29bc984b968c61ab274bcb218c649e6e4d4"
-    },
-    "art_sources": {
-      "DP1020": "data/digital_products/product_files/DP1020.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:33.854964+00:00",
-    "baseline_files": [
-      "DP1020_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1020"
     ],
@@ -338,57 +207,35 @@
     "expected_files": [
       "DP1020_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820019+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328587+00:00",
     "listing_roles": {
       "DP1020": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509214477": {
-    "art_hashes": {
-      "DP1021": "8781a763a479a92dd8afd86db666a4468617860792879c4f99ef094ca404eda0",
-      "DP1062": "0006044e0f0e0e8e0e060e460e060e060506d9f299b091ad883ba818fc07fc07"
-    },
-    "art_sources": {
-      "DP1021": "data/digital_products/product_files/DP1021.jpg",
-      "DP1062": "data/digital_products/product_files/upscaled/DP1062.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:33.317433+00:00",
-    "baseline_files": [
-      "DP1062_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
-      "DP1021",
-      "DP1062"
+      "DP1021"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1062_print_sizes.zip"
+      "DP1021_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820021+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328590+00:00",
     "listing_roles": {
-      "DP1021": "listing_id",
-      "DP1062": "listing_id"
+      "DP1021": "listing_id"
     },
-    "min_photo_count": 10,
-    "type": "gallery_set"
+    "min_photo_count": 8,
+    "type": "wall_art"
   },
   "4509214803": {
-    "art_hashes": {
-      "DP1023": "40039073127288617071787998f318a3fa21c501b11410340064202122004100"
-    },
-    "art_sources": {
-      "DP1023": "data/digital_products/product_files/DP1023.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:32.170136+00:00",
-    "baseline_files": [
-      "DP1023_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1023"
     ],
@@ -396,53 +243,33 @@
     "expected_files": [
       "DP1023_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820023+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328594+00:00",
     "listing_roles": {
       "DP1023": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509215145": {
-    "art_hashes": {
-      "DP1025": "471b1e0770f1e1f8c0f4f334f39ced9cedb863c127c0f260f3e0ba011c3b44de"
-    },
-    "art_sources": {
-      "DP1025": "data/digital_products/product_files/DP1025.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:31.055508+00:00",
-    "baseline_files": [
-      "DP1025_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1025"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1025_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820025+00:00",
+    "last_verified": "2026-06-16T13:18:41.328596+00:00",
     "listing_roles": {
       "DP1025": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509218152": {
-    "art_hashes": {
-      "DP1007": "269b1b8c9b4c36cc4a4c593c4b6c474c108c18e41274500c201f80fe80e60497"
-    },
-    "art_sources": {
-      "DP1007": "data/digital_products/product_files/DP1007.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:37.100224+00:00",
-    "baseline_files": [
-      "DP1007_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1007"
     ],
@@ -450,26 +277,17 @@
     "expected_files": [
       "DP1007_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820027+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328599+00:00",
     "listing_roles": {
       "DP1007": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509218860": {
-    "art_hashes": {
-      "DP1018": "52430c451c773c0b34452c272c2734051c0d4c730c430c452c430c430c454247"
-    },
-    "art_sources": {
-      "DP1018": "data/digital_products/product_files/DP1018.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:34.915399+00:00",
-    "baseline_files": [
-      "DP1018_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1018"
     ],
@@ -478,25 +296,16 @@
       "DP1018_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820029+00:00",
+    "last_verified": "2026-06-16T13:18:41.328601+00:00",
     "listing_roles": {
       "DP1018": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509219594": {
-    "art_hashes": {
-      "DP1022": "0c8c10f3049d0c8e8266927e486ec0fc90fa00ff00ff00ff00fe00ff00fc00fc"
-    },
-    "art_sources": {
-      "DP1022": "data/digital_products/product_files/DP1022.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:32.762723+00:00",
-    "baseline_files": [
-      "DP1022_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1022"
     ],
@@ -504,26 +313,17 @@
     "expected_files": [
       "DP1022_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820031+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328602+00:00",
     "listing_roles": {
       "DP1022": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509219904": {
-    "art_hashes": {
-      "DP1024": "8000000000040000100d444500d707dc4e7c31dc20c8264a8000670c039c0198"
-    },
-    "art_sources": {
-      "DP1024": "data/digital_products/product_files/DP1024.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:31.601950+00:00",
-    "baseline_files": [
-      "DP1024_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1024"
     ],
@@ -531,26 +331,17 @@
     "expected_files": [
       "DP1024_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820034+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328604+00:00",
     "listing_roles": {
       "DP1024": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509258172": {
-    "art_hashes": {
-      "DP1012": "c738e330c731e63cc33cfe89e751c498db20ecd8db68ce89e558c5581aa2c550"
-    },
-    "art_sources": {
-      "DP1012": "data/digital_products/product_files/upscaled/DP1012.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:30.506073+00:00",
-    "baseline_files": [
-      "DP1012_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1012"
     ],
@@ -558,83 +349,51 @@
     "expected_files": [
       "DP1012_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820037+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328606+00:00",
     "listing_roles": {
       "DP1012": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509258700": {
-    "art_hashes": {
-      "DP1013": "3571c5b2eeacdc08cce2eb62e4a6e526a958e69894ca9644d6b4d2a6d922c934",
-      "DP1063": "0006060e0d4e0d4e0d460d460d460c460706d9f299b091ad883ba818fc07fc07"
-    },
-    "art_sources": {
-      "DP1013": "data/digital_products/product_files/DP1013.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:29.979930+00:00",
-    "baseline_files": [
-      "DP1013_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
-      "DP1013",
-      "DP1063"
+      "DP1013"
     ],
     "expected_file_count": 1,
     "expected_files": [
       "DP1013_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820039+00:00",
+    "last_verified": "2026-06-16T13:18:41.328607+00:00",
     "listing_roles": {
-      "DP1013": "listing_id",
-      "DP1063": "listing_id"
+      "DP1013": "listing_id"
     },
-    "min_photo_count": 10,
-    "type": "gallery_set"
+    "min_photo_count": 8,
+    "type": "wall_art"
   },
   "4509259354": {
-    "art_hashes": {
-      "DP1017": "f1e1d9b4b646968a9ea6dd08f942bb22b960bc82ff04b4a0ba929c96e96c7c71"
-    },
-    "art_sources": {
-      "DP1017": "data/digital_products/product_files/DP1017.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:29.419529+00:00",
-    "baseline_files": [
-      "DP1017_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1017"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1017_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820042+00:00",
+    "last_verified": "2026-06-16T13:18:41.328660+00:00",
     "listing_roles": {
       "DP1017": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509593487": {
-    "art_hashes": {
-      "DP1032": "0087126955a96de932d332e3f0edd1ed3271715170d170e174e434e434780c1c"
-    },
-    "art_sources": {
-      "DP1032": "data/digital_products/product_files/upscaled/DP1032.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:26.144625+00:00",
-    "baseline_files": [
-      "DP1032_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1032"
     ],
@@ -642,26 +401,17 @@
     "expected_files": [
       "DP1032_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820045+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328663+00:00",
     "listing_roles": {
       "DP1032": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509593623": {
-    "art_hashes": {
-      "DP1033": "00000000000008800000111005235924d94cd49a032510480000000000880000"
-    },
-    "art_sources": {
-      "DP1033": "data/digital_products/product_files/upscaled/DP1033.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:25.088983+00:00",
-    "baseline_files": [
-      "DP1033_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1033"
     ],
@@ -669,26 +419,17 @@
     "expected_files": [
       "DP1033_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820047+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328665+00:00",
     "listing_roles": {
       "DP1033": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509593697": {
-    "art_hashes": {
-      "DP1034": "b212b23283e2879eb21eb0eeba788cd29c8e8f0ea3ceb2da8daabf96a2daa63a"
-    },
-    "art_sources": {
-      "DP1034": "data/digital_products/product_files/upscaled/DP1034.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:24.039837+00:00",
-    "baseline_files": [
-      "DP1034_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1034"
     ],
@@ -696,26 +437,17 @@
     "expected_files": [
       "DP1034_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820049+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328667+00:00",
     "listing_roles": {
       "DP1034": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509596017": {
-    "art_hashes": {
-      "DP1036": "034c1eb2b2906b516cd4f3b0cbb04ec069e22df106f91eb05331363136b20888"
-    },
-    "art_sources": {
-      "DP1036": "data/digital_products/product_files/upscaled/DP1036.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:21.825669+00:00",
-    "baseline_files": [
-      "DP1036_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1036"
     ],
@@ -723,26 +455,17 @@
     "expected_files": [
       "DP1036_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820051+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-16T13:18:41.328668+00:00",
     "listing_roles": {
       "DP1036": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509597559": {
-    "art_hashes": {
-      "DP1037": "0623d9b4d9c8fde8e4c8e8e0eca2ecacc91ccca2e4caf31af374dda4d9c922c6"
-    },
-    "art_sources": {
-      "DP1037": "data/digital_products/product_files/upscaled/DP1037.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:20.752290+00:00",
-    "baseline_files": [
-      "DP1037_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1037"
     ],
@@ -750,26 +473,17 @@
     "expected_files": [
       "DP1037_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820053+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328671+00:00",
     "listing_roles": {
       "DP1037": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509598660": {
-    "art_hashes": {
-      "DP1030": "c854d48cd224d264c60ccc44c69cc698c69cda64ce94ceb4c694cc0cd224c884"
-    },
-    "art_sources": {
-      "DP1030": "data/digital_products/product_files/upscaled/DP1030.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:28.341355+00:00",
-    "baseline_files": [
-      "DP1030_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1030"
     ],
@@ -777,26 +491,17 @@
     "expected_files": [
       "DP1030_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820055+00:00",
+    "last_status": "WARN",
+    "last_verified": "2026-06-16T13:18:41.328672+00:00",
     "listing_roles": {
       "DP1030": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509598784": {
-    "art_hashes": {
-      "DP1031": "4994b98074e069b46128f86cee38e3d8e7d8e718f678f070f238f370f9c44619"
-    },
-    "art_sources": {
-      "DP1031": "data/digital_products/product_files/upscaled/DP1031.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:27.256023+00:00",
-    "baseline_files": [
-      "DP1031_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1031"
     ],
@@ -804,240 +509,163 @@
     "expected_files": [
       "DP1031_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820058+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328674+00:00",
     "listing_roles": {
       "DP1031": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4509600086": {
-    "art_hashes": {
-      "DP1035": "9ba0e7a0e398d31cb48cfb0cb524d4b2d3b4db2cfa5ad216d8ec98bcf060f242",
-      "DP1064": "0403094b0b0b0b0f2b0b894bccc3050b398cd8c45ac49a9458434a2148115812"
-    },
-    "art_sources": {
-      "DP1035": "data/digital_products/product_files/upscaled/DP1035.jpg",
-      "DP1064": "data/digital_products/product_files/upscaled/DP1064.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:22.950091+00:00",
-    "baseline_files": [
-      "DP1064_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1035",
       "DP1064"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1064_print_sizes.zip"
+      "DP1035_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820060+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328676+00:00",
     "listing_roles": {
       "DP1035": "listing_id",
       "DP1064": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_set"
   },
   "4512188970": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:57.791886+00:00",
-    "baseline_files": [
-      "All_4_Sticker_Packs.zip",
-      "DP1026.pdf",
-      "DP1027.pdf",
-      "DP1028.pdf",
-      "DP1029.pdf"
-    ],
-    "baseline_photo_count": 8,
     "dp_codes": [
       "BUNDLE_PLANNER_ALL4"
     ],
-    "expected_file_count": 5,
+    "expected_file_count": 1,
     "expected_files": [
-      "All_4_Sticker_Packs.zip",
-      "DP1026.pdf",
-      "DP1027.pdf",
-      "DP1028.pdf",
-      "DP1029.pdf"
+      "BUNDLE_PLANNER_ALL4"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820063+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328678+00:00",
     "listing_roles": {
       "BUNDLE_PLANNER_ALL4": "listing_id"
     },
-    "min_photo_count": 8,
+    "min_photo_count": 5,
     "type": "bundle"
   },
   "4512254015": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:02.228040+00:00",
-    "baseline_files": [
-      "DP1027_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "STICKER_COTTON_CANDY"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1027_sticker_pack.zip"
+      "STICKER_COTTON_CANDY"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820065+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328680+00:00",
     "listing_roles": {
       "STICKER_COTTON_CANDY": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "sticker_pack"
   },
   "4512254027": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:01.109434+00:00",
-    "baseline_files": [
-      "DP1029_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "STICKER_CORAL_PEACH"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1029_sticker_pack.zip"
+      "STICKER_CORAL_PEACH"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820067+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328682+00:00",
     "listing_roles": {
       "STICKER_CORAL_PEACH": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "sticker_pack"
   },
   "4512254035": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:00.573415+00:00",
-    "baseline_files": [
-      "DP1026_sticker_pack.zip",
-      "DP1027_sticker_pack.zip",
-      "DP1028_sticker_pack.zip",
-      "DP1029_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 9,
     "dp_codes": [
       "STICKER_BUNDLE_ALL4"
     ],
-    "expected_file_count": 4,
+    "expected_file_count": 1,
     "expected_files": [
-      "DP1026_sticker_pack.zip",
-      "DP1027_sticker_pack.zip",
-      "DP1028_sticker_pack.zip",
-      "DP1029_sticker_pack.zip"
+      "STICKER_BUNDLE_ALL4"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820069+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328683+00:00",
     "listing_roles": {
       "STICKER_BUNDLE_ALL4": "listing_id"
     },
-    "min_photo_count": 9,
+    "min_photo_count": 5,
     "type": "sticker_bundle"
   },
   "4512255508": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:00.025646+00:00",
-    "baseline_files": [
-      "DP1026_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 9,
     "dp_codes": [
       "STICKER_FREE"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1026_sticker_pack.zip"
+      "STICKER_FREE"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820071+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328685+00:00",
     "listing_roles": {
       "STICKER_FREE": "listing_id"
     },
-    "min_photo_count": 9,
+    "min_photo_count": 8,
     "type": "sticker_pack"
   },
   "4512255514": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:02.761243+00:00",
-    "baseline_files": [
-      "DP1026_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "STICKER_LAVENDER"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1026_sticker_pack.zip"
+      "STICKER_LAVENDER"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820073+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328687+00:00",
     "listing_roles": {
       "STICKER_LAVENDER": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "sticker_pack"
   },
   "4512255536": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:01.688359+00:00",
-    "baseline_files": [
-      "DP1028_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "STICKER_MIDNIGHT_BLUE"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1028_sticker_pack.zip"
+      "STICKER_MIDNIGHT_BLUE"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820075+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328689+00:00",
     "listing_roles": {
       "STICKER_MIDNIGHT_BLUE": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "sticker_pack"
   },
   "4512301880": {
-    "art_hashes": {
-      "DP1000": "254130cc30d2f992f921f9506cccf4c0f2cc7d48bd10db807f013f101f210f03",
-      "DP1001": "00170149006903a82ba31ce22d8a7302f224ce02cc42c800d841302812080882",
-      "DP1002": "009a21a40c653369b352fa527324f32472803b0439410f8043000320232000c0",
-      "DP1003": "01220321070207040f090f010f010f020f050305034903020309032903410105",
-      "DP1065": "1da0333239623c423cd23dd23d12384235523c4239423d523d123d5218c00318"
-    },
-    "art_sources": {
-      "DP1000": "data/digital_products/product_files/DP1000.jpg",
-      "DP1001": "data/digital_products/product_files/DP1001.jpg",
-      "DP1002": "data/digital_products/product_files/DP1002.jpg",
-      "DP1003": "data/digital_products/product_files/DP1003.jpg",
-      "DP1065": "data/digital_products/product_files/upscaled/DP1065.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:20.196999+00:00",
-    "baseline_files": [
-      "DP1065_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1003",
       "DP1002",
@@ -1046,11 +674,9 @@
       "DP1065"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1065_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820078+00:00",
+    "last_verified": "2026-06-16T13:18:41.328690+00:00",
     "listing_roles": {
       "DP1000": "listing_id",
       "DP1001": "listing_id",
@@ -1058,620 +684,354 @@
       "DP1003": "listing_id",
       "DP1065": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_set"
   },
   "4512747600": {
-    "art_hashes": {
-      "DP1038": "e184e3c4f1c8d0c8c4d4cd14ce30cb58c9ccc4c4ee90ef08cc70dac8f260fc70"
-    },
-    "art_sources": {
-      "DP1038": "data/digital_products/product_files/upscaled/DP1038.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:19.100429+00:00",
-    "baseline_files": [
-      "DP1038_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1038"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1038_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820079+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328692+00:00",
     "listing_roles": {
       "DP1038": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512750191": {
-    "art_hashes": {
-      "DP1039": "e592e1aea198e02cb134d920bce6ad8ada90f254e4b8e498c7b2cb60c6e0e9d0"
-    },
-    "art_sources": {
-      "DP1039": "data/digital_products/product_files/upscaled/DP1039.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:18.020273+00:00",
-    "baseline_files": [
-      "DP1039_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1039"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1039_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820081+00:00",
+    "last_verified": "2026-06-16T13:18:41.328694+00:00",
     "listing_roles": {
       "DP1039": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512753302": {
-    "art_hashes": {
-      "DP1040": "d9c8d9ccc8fc90e480de986a986c9a8ccd0cd81cb8c4f5a4f828c9b8db88cb20"
-    },
-    "art_sources": {
-      "DP1040": "data/digital_products/product_files/upscaled/DP1040.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:16.955741+00:00",
-    "baseline_files": [
-      "DP1040_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1040"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1040_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820084+00:00",
+    "last_verified": "2026-06-16T13:18:41.328696+00:00",
     "listing_roles": {
       "DP1040": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512755568": {
-    "art_hashes": {
-      "DP1041": "8802a80ca06890c696168ece806ca0fab0fea0fa865c820c908e830683868c90"
-    },
-    "art_sources": {
-      "DP1041": "data/digital_products/product_files/upscaled/DP1041.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:15.890125+00:00",
-    "baseline_files": [
-      "DP1041_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1041"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1041_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820086+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328698+00:00",
     "listing_roles": {
       "DP1041": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512756952": {
-    "art_hashes": {
-      "DP1042": "84c881aec0cec0c8e09ed8ac9076c59ab2fcc9acf072d31cd544f4f0f8e0fb40"
-    },
-    "art_sources": {
-      "DP1042": "data/digital_products/product_files/upscaled/DP1042.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:14.830606+00:00",
-    "baseline_files": [
-      "DP1042_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1042"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1042_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820093+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328701+00:00",
     "listing_roles": {
       "DP1042": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512758123": {
-    "art_hashes": {
-      "DP1044": "e00c80e88032b01ce04a806480acc00ec04eec8e8eccf04acd1880acc018d820"
-    },
-    "art_sources": {
-      "DP1044": "data/digital_products/product_files/upscaled/DP1044.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:12.705396+00:00",
-    "baseline_files": [
-      "DP1044_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1044"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1044_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820097+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328703+00:00",
     "listing_roles": {
       "DP1044": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512758458": {
-    "art_hashes": {
-      "DP1043": "dfd0bf4cbb949934d974d9f4c9f0ee74ace6a7a6e5a6cba4c994c33cde7ce7c4"
-    },
-    "art_sources": {
-      "DP1043": "data/digital_products/product_files/upscaled/DP1043.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:13.775296+00:00",
-    "baseline_files": [
-      "DP1043_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1043"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1043_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820101+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328705+00:00",
     "listing_roles": {
       "DP1043": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512760671": {
-    "art_hashes": {
-      "DP1046": "83868db48f9c89e4916492749278b33c82fcc17c9dacc7dcfa4ccf8cfaf0b5b0"
-    },
-    "art_sources": {
-      "DP1046": "data/digital_products/product_files/upscaled/DP1046.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:10.587972+00:00",
-    "baseline_files": [
-      "DP1046_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1046"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1046_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820104+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328706+00:00",
     "listing_roles": {
       "DP1046": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512760918": {
-    "art_hashes": {
-      "DP1045": "980ca164e4c6e46ce1eca18edf20da58b36ccd34f598f18cf9a0f9a0f1e0e0e0"
-    },
-    "art_sources": {
-      "DP1045": "data/digital_products/product_files/upscaled/DP1045.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:11.661164+00:00",
-    "baseline_files": [
-      "DP1045_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1045"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1045_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820107+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328708+00:00",
     "listing_roles": {
       "DP1045": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512763302": {
-    "art_hashes": {
-      "DP1047": "e4c2c14cc0c4e6e6c5e6e124d332c6c0c4f4e384fd88c694c6b4c09ce07cf0f0",
-      "DP1066": "016f123712b712a616af032f02a602a70d6e036a032b332ff16ff16b80e74007"
-    },
-    "art_sources": {
-      "DP1047": "data/digital_products/product_files/upscaled/DP1047.jpg",
-      "DP1066": "data/digital_products/product_files/upscaled/DP1066.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:09.519286+00:00",
-    "baseline_files": [
-      "DP1066_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1047",
       "DP1066"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1066_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820109+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328710+00:00",
     "listing_roles": {
       "DP1047": "listing_id",
       "DP1066": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_set"
   },
   "4512768771": {
-    "art_hashes": {
-      "DP1049": "cf18901cb1ccf3c2c740f302e3c28e689f3abc989c12c672a2cc9e8c9e2cfb20"
-    },
-    "art_sources": {
-      "DP1049": "data/digital_products/product_files/upscaled/DP1049.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:04.616334+00:00",
-    "baseline_files": [
-      "DP1049_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1049"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1049_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820111+00:00",
+    "last_verified": "2026-06-16T13:18:41.328711+00:00",
     "listing_roles": {
       "DP1049": "individual_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512768858": {
-    "art_hashes": {
-      "DP1067": "0c4809680ba80b280b280b2809680c480500c9008ac0c584c584cd808f069603"
-    },
-    "art_sources": {
-      "DP1067": "data/digital_products/product_files/upscaled/DP1067.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:41.769453+00:00",
-    "baseline_files": [
-      "DP1067_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1067"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1067_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820114+00:00",
+    "last_verified": "2026-06-16T13:18:41.328713+00:00",
     "listing_roles": {
       "DP1067": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512770031": {
-    "art_hashes": {
-      "DP1050": "c364c984c1f4d0f4d0dcf0f8e0fce0fce0fce8f4e0fcc07cc0fcc1fccfc0f880"
-    },
-    "art_sources": {
-      "DP1050": "data/digital_products/product_files/upscaled/DP1050.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:05.682458+00:00",
-    "baseline_files": [
-      "DP1050_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1050"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1050_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820116+00:00",
+    "last_verified": "2026-06-16T13:18:41.328714+00:00",
     "listing_roles": {
       "DP1050": "individual_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512772452": {
-    "art_hashes": {
-      "DP1051": "acb4acb4a8b4eb14eb94c990c4d8edf8e8b4f9a4e544e9d8e9f8ecc8e4c4e6c8"
-    },
-    "art_sources": {
-      "DP1051": "data/digital_products/product_files/upscaled/DP1051.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:06.748096+00:00",
-    "baseline_files": [
-      "DP1051_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1051"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1051_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820119+00:00",
+    "last_verified": "2026-06-16T13:18:41.328716+00:00",
     "listing_roles": {
       "DP1051": "individual_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512772539": {
-    "art_hashes": {
-      "DP1052": "80fcc1fc82fc86bcc4dee8dc9b1ad9cec9c8c2fccfecdf84bd04ce38c678e67c"
-    },
-    "art_sources": {
-      "DP1052": "data/digital_products/product_files/upscaled/DP1052.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:25:59.225405+00:00",
-    "baseline_files": [
-      "DP1052_print_sizes.zip"
-    ],
-    "baseline_photo_count": 11,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1052"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1052_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820121+00:00",
+    "last_verified": "2026-06-16T13:18:41.328718+00:00",
     "listing_roles": {
       "DP1052": "individual_listing_id"
     },
-    "min_photo_count": 11,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512774863": {
-    "art_hashes": {
-      "DP1053": "c100c80898009124f000b118f130e018c10cf58294e0ec80a00ee018ce00e3a0"
-    },
-    "art_sources": {
-      "DP1053": "data/digital_products/product_files/upscaled/DP1053.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:00.334573+00:00",
-    "baseline_files": [
-      "DP1053_print_sizes.zip"
-    ],
-    "baseline_photo_count": 11,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1053"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1053_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820123+00:00",
+    "last_verified": "2026-06-16T13:18:41.328719+00:00",
     "listing_roles": {
       "DP1053": "individual_listing_id"
     },
-    "min_photo_count": 11,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512776173": {
-    "art_hashes": {
-      "DP1054": "80f4c0fcc4dc98dcd8ec993cd1d88c9c839c8f648738bb3891c6c6d8c570f8d0"
-    },
-    "art_sources": {
-      "DP1054": "data/digital_products/product_files/upscaled/DP1054.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:01.382778+00:00",
-    "baseline_files": [
-      "DP1054_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1054"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1054_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820125+00:00",
+    "last_verified": "2026-06-16T13:18:41.328721+00:00",
     "listing_roles": {
       "DP1054": "individual_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512780614": {
-    "art_hashes": {
-      "DP1055": "de6cd98cc6e4c760cc94b94ce72cdc5cc8fcd85cb03cf21cf034f05cf024f090"
-    },
-    "art_sources": {
-      "DP1055": "data/digital_products/product_files/upscaled/DP1055.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:02.486915+00:00",
-    "baseline_files": [
-      "DP1055_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1055"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1055_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820127+00:00",
+    "last_verified": "2026-06-16T13:18:41.328723+00:00",
     "listing_roles": {
       "DP1055": "individual_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512780869": {
-    "art_hashes": {
-      "DP1056": "8a74807c88cc88ce8f1a8e0a8a6e88ee89ec844cc61ce5b4ed22eb18e138e8d0"
-    },
-    "art_sources": {
-      "DP1056": "data/digital_products/product_files/upscaled/DP1056.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:08.402169+00:00",
-    "baseline_files": [
-      "DP1056_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1056"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1056_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820129+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328724+00:00",
     "listing_roles": {
       "DP1056": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4512783077": {
-    "art_hashes": {
-      "DP1057": "cc84c26cd8d4c8d4c8d4d054d634de9cdaccde84ca94c3a4d464dc74de14de24",
-      "DP1068": "00cf096f096f096f096f08cf060700070207008f011b01c901cc019428dc40dc"
-    },
-    "art_sources": {
-      "DP1057": "data/digital_products/product_files/upscaled/DP1057.jpg",
-      "DP1068": "data/digital_products/product_files/upscaled/DP1068.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:07.296539+00:00",
-    "baseline_files": [
-      "DP1068_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1057",
       "DP1068"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1068_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820131+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328726+00:00",
     "listing_roles": {
       "DP1057": "listing_id",
       "DP1068": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_set"
   },
   "4512784817": {
-    "art_hashes": {
-      "DP1052": "80fcc1fc82fc86bcc4dee8dc9b1ad9cec9c8c2fccfecdf84bd04ce38c678e67c",
-      "DP1053": "c100c80898009124f000b118f130e018c10cf58294e0ec80a00ee018ce00e3a0",
-      "DP1054": "80f4c0fcc4dc98dcd8ec993cd1d88c9c839c8f648738bb3891c6c6d8c570f8d0",
-      "DP1055": "de6cd98cc6e4c760cc94b94ce72cdc5cc8fcd85cb03cf21cf034f05cf024f090",
-      "DP1069": "0d48b6c2b6c2bcc2bcc2bcc2b8c2b2c237c2b2e2bac2bcc2bcc2bcc2bcc2296a"
-    },
-    "art_sources": {
-      "DP1052": "data/digital_products/product_files/upscaled/DP1052.jpg",
-      "DP1053": "data/digital_products/product_files/upscaled/DP1053.jpg",
-      "DP1054": "data/digital_products/product_files/upscaled/DP1054.jpg",
-      "DP1055": "data/digital_products/product_files/upscaled/DP1055.jpg",
-      "DP1069": "data/digital_products/product_files/upscaled/DP1069.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:25:58.098329+00:00",
-    "baseline_files": [
-      "DP1069_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
-      "DP1052",
-      "DP1053",
-      "DP1054",
       "DP1055",
       "DP1069"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1069_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820133+00:00",
+    "last_verified": "2026-06-16T13:18:41.328727+00:00",
     "listing_roles": {
-      "DP1052": "listing_id",
-      "DP1053": "listing_id",
-      "DP1054": "listing_id",
       "DP1055": "listing_id",
       "DP1069": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_set"
   },
   "4512784922": {
-    "art_hashes": {
-      "DP1048": "a832a9b4d328e4b2f97cb0f0f320bb20f320eec08f2099b68e8c9c78f0cce288",
-      "DP1049": "cf18901cb1ccf3c2c740f302e3c28e689f3abc989c12c672a2cc9e8c9e2cfb20",
-      "DP1050": "c364c984c1f4d0f4d0dcf0f8e0fce0fce0fce8f4e0fcc07cc0fcc1fccfc0f880",
-      "DP1051": "acb4acb4a8b4eb14eb94c990c4d8edf8e8b4f9a4e544e9d8e9f8ecc8e4c4e6c8",
-      "DP1070": "2ec835523ce23ce23dc23dc239e239c23c52b4c236e236d2b6c2b4a03c622b42"
-    },
-    "art_sources": {
-      "DP1048": "data/digital_products/product_files/upscaled/DP1048.jpg",
-      "DP1049": "data/digital_products/product_files/upscaled/DP1049.jpg",
-      "DP1050": "data/digital_products/product_files/upscaled/DP1050.jpg",
-      "DP1051": "data/digital_products/product_files/upscaled/DP1051.jpg",
-      "DP1070": "data/digital_products/product_files/upscaled/DP1070.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:03.016075+00:00",
-    "baseline_files": [
-      "DP1070_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1048",
       "DP1049",
@@ -1680,11 +1040,9 @@
       "DP1070"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1070_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820136+00:00",
+    "last_verified": "2026-06-16T13:18:41.328729+00:00",
     "listing_roles": {
       "DP1048": "listing_id",
       "DP1049": "listing_id",
@@ -1692,1166 +1050,718 @@
       "DP1051": "listing_id",
       "DP1070": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_set"
   },
   "4513713044": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:59.423285+00:00",
-    "baseline_files": [
-      "DP1022_print_sizes.zip",
-      "DP1031_print_sizes.zip",
-      "DP1039_print_sizes.zip",
-      "DP1044_print_sizes.zip",
-      "DP1045_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "BUNDLE_GALLERY_COASTAL"
     ],
-    "expected_file_count": 5,
+    "expected_file_count": 1,
     "expected_files": [
-      "DP1022_print_sizes.zip",
-      "DP1031_print_sizes.zip",
-      "DP1039_print_sizes.zip",
-      "DP1044_print_sizes.zip",
-      "DP1045_print_sizes.zip"
+      "BUNDLE_GALLERY_COASTAL"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820138+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328730+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_COASTAL": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_bundle"
   },
   "4513713106": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:58.896773+00:00",
-    "baseline_files": [
-      "DP1001_print_sizes.zip",
-      "DP1003_print_sizes.zip",
-      "DP1032_print_sizes.zip",
-      "DP1042_print_sizes.zip",
-      "DP1045_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "BUNDLE_GALLERY_BOTANICAL"
     ],
-    "expected_file_count": 5,
+    "expected_file_count": 1,
     "expected_files": [
-      "DP1001_print_sizes.zip",
-      "DP1003_print_sizes.zip",
-      "DP1032_print_sizes.zip",
-      "DP1042_print_sizes.zip",
-      "DP1045_print_sizes.zip"
+      "BUNDLE_GALLERY_BOTANICAL"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820140+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328733+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_BOTANICAL": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_bundle"
   },
   "4513713142": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:58.339067+00:00",
-    "baseline_files": [
-      "DP1038_print_sizes.zip",
-      "DP1039_print_sizes.zip",
-      "DP1040_print_sizes.zip",
-      "DP1046_print_sizes.zip",
-      "DP1056_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "BUNDLE_GALLERY_WOODLAND"
     ],
-    "expected_file_count": 5,
+    "expected_file_count": 1,
     "expected_files": [
-      "DP1038_print_sizes.zip",
-      "DP1039_print_sizes.zip",
-      "DP1040_print_sizes.zip",
-      "DP1046_print_sizes.zip",
-      "DP1056_print_sizes.zip"
+      "BUNDLE_GALLERY_WOODLAND"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820142+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328734+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_WOODLAND": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 5,
     "type": "gallery_bundle"
   },
   "4513713514": {
-    "art_hashes": {
-      "DP1071": "52430c431c553c0b34452c270c2734071c0b4c770c430c452c490c470c434243"
-    },
-    "art_sources": {
-      "DP1071": "data/digital_products/product_files/upscaled/DP1071.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:42.815023+00:00",
-    "baseline_files": [
-      "DP1071_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1071"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1071_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820144+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328737+00:00",
     "listing_roles": {
       "DP1071": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4513713712": {
-    "art_hashes": {
-      "DP1072": "c854d40cd324d364c60ccc44c69ce698c69cda64ce94cfb0c694ce0cd224c884"
-    },
-    "art_sources": {
-      "DP1072": "data/digital_products/product_files/upscaled/DP1072.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:43.341037+00:00",
-    "baseline_files": [
-      "DP1072_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1072"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1072_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820147+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328739+00:00",
     "listing_roles": {
       "DP1072": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4513713805": {
-    "art_hashes": {
-      "DP1073": "f1e1d9b4b646968a9ea6dd08f942bb22b962bc82ff04b4a0ba8a9c96e96c7c71"
-    },
-    "art_sources": {
-      "DP1073": "data/digital_products/product_files/upscaled/DP1073.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:43.862171+00:00",
-    "baseline_files": [
-      "DP1073_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1073"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1073_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820177+00:00",
+    "last_verified": "2026-06-16T13:18:41.328741+00:00",
     "listing_roles": {
       "DP1073": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4513713922": {
-    "art_hashes": {
-      "DP1074": "1fef13b712b712b71337123712b712b71def1fdc23f8662966397a19721536db"
-    },
-    "art_sources": {
-      "DP1074": "data/digital_products/product_files/upscaled/DP1074.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:44.396327+00:00",
-    "baseline_files": [
-      "DP1074_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1074"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1074_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820187+00:00",
+    "last_verified": "2026-06-16T13:18:41.328743+00:00",
     "listing_roles": {
       "DP1074": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4513713936": {
-    "art_hashes": {
-      "DP1075": "886622b633b612bc12b492b692b613b6122f0a154a174b0c66e6466553695278"
-    },
-    "art_sources": {
-      "DP1075": "data/digital_products/product_files/upscaled/DP1075.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:44.931807+00:00",
-    "baseline_files": [
-      "DP1075_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1075"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1075_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820189+00:00",
+    "last_verified": "2026-06-16T13:18:41.328744+00:00",
     "listing_roles": {
       "DP1075": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4513713945": {
-    "art_hashes": {
-      "DP1076": "12c6126955a96de932d332e3f0edd1ed3271715170d170e174e434e434780c9e"
-    },
-    "art_sources": {
-      "DP1076": "data/digital_products/product_files/upscaled/DP1076.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:45.458041+00:00",
-    "baseline_files": [
-      "DP1076_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1076"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1076_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820192+00:00",
+    "last_verified": "2026-06-16T13:18:41.328746+00:00",
     "listing_roles": {
       "DP1076": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4513713962": {
-    "art_hashes": {
-      "DP1077": "044f08ef02af032f02af032f0b2f096f068f091f081b182112ec112310161416"
-    },
-    "art_sources": {
-      "DP1077": "data/digital_products/product_files/upscaled/DP1077.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:46.008775+00:00",
-    "baseline_files": [
-      "DP1077_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1077"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1077_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820195+00:00",
+    "last_verified": "2026-06-16T13:18:41.328748+00:00",
     "listing_roles": {
       "DP1077": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4513713984": {
-    "art_hashes": {
-      "DP1078": "3dcf3a6f3aa73e273e273ea7bea7bbaebdcebe593cd65cc6444e1b7a7fe6ff9c"
-    },
-    "art_sources": {
-      "DP1078": "data/digital_products/product_files/upscaled/DP1078.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:46.546063+00:00",
-    "baseline_files": [
-      "DP1078_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1078"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1078_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820198+00:00",
+    "last_verified": "2026-06-16T13:18:41.328750+00:00",
     "listing_roles": {
       "DP1078": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4513714013": {
-    "art_hashes": {
-      "DP1079": "00000000000000000100091005235924d94cd49a0b2510000000000000000088"
-    },
-    "art_sources": {
-      "DP1079": "data/digital_products/product_files/upscaled/DP1079.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:47.092784+00:00",
-    "baseline_files": [
-      "DP1079_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1079"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1079_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820200+00:00",
+    "last_verified": "2026-06-16T13:18:41.328751+00:00",
     "listing_roles": {
       "DP1079": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4513714191": {
-    "art_hashes": {
-      "DP1080": "00070407086712a712a1132612be133c133e4a3acd8ad34bf843c886c98ec947"
-    },
-    "art_sources": {
-      "DP1080": "data/digital_products/product_files/upscaled/DP1080.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:47.613787+00:00",
-    "baseline_files": [
-      "DP1080_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1080"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1080_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820202+00:00",
+    "last_verified": "2026-06-16T13:18:41.328752+00:00",
     "listing_roles": {
       "DP1080": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4514130045": {
-    "art_hashes": {
-      "DP1081": "0000000000000000c218716ad32db30ce34dd8c3b253402810800884000089a6"
-    },
-    "art_sources": {
-      "DP1081": "data/digital_products/product_files/upscaled/DP1081.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:48.169709+00:00",
-    "baseline_files": [
-      "FlowerBotanical_Bundle.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1081"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "FlowerBotanical_Bundle.zip"
-    ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820204+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328754+00:00",
     "listing_roles": {
       "DP1081": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4514134583": {
-    "art_hashes": {
-      "DP1082": "00000000000010906c2c63cbe34dcbcccbccbbcb37c848301000040200000d93"
-    },
-    "art_sources": {
-      "DP1082": "data/digital_products/product_files/upscaled/DP1082.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:48.684113+00:00",
-    "baseline_files": [
-      "DP1082_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1082"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1082_print_sizes.zip"
-    ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820206+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328756+00:00",
     "listing_roles": {
       "DP1082": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4514136783": {
-    "art_hashes": {
-      "DP1083": "00000000000050002b19b1c7532ccb1ccb5cb9cf1143021010000442000024d3"
-    },
-    "art_sources": {
-      "DP1083": "data/digital_products/product_files/upscaled/DP1083.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:49.206587+00:00",
-    "baseline_files": [
-      "Graduation2026_SVG_Bundle.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1083"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "Graduation2026_SVG_Bundle.zip"
-    ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820209+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328757+00:00",
     "listing_roles": {
       "DP1083": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4514392281": {
-    "art_hashes": {
-      "DP1084": "000000000000002aa6951c06ce2ece295e293d333832024800200082000089a6"
-    },
-    "art_sources": {
-      "DP1084": "data/digital_products/product_files/upscaled/DP1084.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:49.742616+00:00",
-    "baseline_files": [
-      "OnBrandCraftz_MomLife_SVG_Bundle_20_Designs.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1084"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "OnBrandCraftz_MomLife_SVG_Bundle_20_Designs.zip"
-    ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820211+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328759+00:00",
     "listing_roles": {
       "DP1084": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4514536935": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:50.264058+00:00",
-    "baseline_files": [
-      "OnBrandCraftz_GoodVibes_SVG_Bundle_20_Designs.zip"
-    ],
-    "baseline_photo_count": 16,
     "dp_codes": [
       "DP1085"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "OnBrandCraftz_GoodVibes_SVG_Bundle_20_Designs.zip"
-    ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820213+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328760+00:00",
     "listing_roles": {
       "DP1085": "listing_id"
     },
-    "min_photo_count": 16,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4514777212": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:05.978484+00:00",
-    "baseline_files": [
-      "OnBrandCraftz_MomLife_Sublimation_Bundle.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "SUBLIMATION_MOM_LIFE"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "OnBrandCraftz_MomLife_Sublimation_Bundle.zip"
+      "SUBLIMATION_MOM_LIFE"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820215+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328762+00:00",
     "listing_roles": {
       "SUBLIMATION_MOM_LIFE": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "sublimation"
   },
   "4515437432": {
-    "art_hashes": {
-      "DP1086": "000000000000002aa6951c06ce2ece295e293d333832024800200082000089a6"
-    },
-    "art_sources": {
-      "DP1086": "data/digital_products/product_files/upscaled/DP1086.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:50.785179+00:00",
-    "baseline_files": [
-      "OnBrandCraftz_MomLife_SVG_Bundle_20_Designs.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1086"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "OnBrandCraftz_MomLife_SVG_Bundle_20_Designs.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820217+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328764+00:00",
     "listing_roles": {
       "DP1086": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4515437442": {
-    "art_hashes": {
-      "DP1087": "21118acecacacacacaae8acaaeaac8aac8ca8cae88ac8cac8cac315386800e80"
-    },
-    "art_sources": {
-      "DP1087": "data/digital_products/product_files/upscaled/DP1087.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:51.309770+00:00",
-    "baseline_files": [
-      "OnBrandCraftz_western_SVG_Bundle.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1087"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "OnBrandCraftz_western_SVG_Bundle.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820220+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328765+00:00",
     "listing_roles": {
       "DP1087": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4515437452": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:05.434819+00:00",
-    "baseline_files": [
-      "DP1026_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 3,
     "dp_codes": [
       "COMMERCIAL_STICKER_LAVENDER"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1026_sticker_pack.zip"
+      "COMMERCIAL_STICKER_LAVENDER"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820223+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328768+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_LAVENDER": "listing_id"
     },
-    "min_photo_count": 3,
+    "min_photo_count": 2,
     "type": "commercial_license"
   },
   "4515437456": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:04.923765+00:00",
-    "baseline_files": [
-      "DP1027_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 3,
     "dp_codes": [
       "COMMERCIAL_STICKER_COTTON"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1027_sticker_pack.zip"
+      "COMMERCIAL_STICKER_COTTON"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820225+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328769+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_COTTON": "listing_id"
     },
-    "min_photo_count": 3,
+    "min_photo_count": 2,
     "type": "commercial_license"
   },
   "4515437464": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:04.363693+00:00",
-    "baseline_files": [
-      "DP1028_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 3,
     "dp_codes": [
       "COMMERCIAL_STICKER_MIDNIGHT"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1028_sticker_pack.zip"
+      "COMMERCIAL_STICKER_MIDNIGHT"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820227+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328771+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_MIDNIGHT": "listing_id"
     },
-    "min_photo_count": 3,
+    "min_photo_count": 2,
     "type": "commercial_license"
   },
   "4515439743": {
-    "art_hashes": {
-      "DP1088": "0000000000000000c218716ad32db30ce34dd8c3b353402810800884000089a6"
-    },
-    "art_sources": {
-      "DP1088": "data/digital_products/product_files/upscaled/DP1088.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:51.828292+00:00",
-    "baseline_files": [
-      "FlowerBotanical_Bundle.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1088"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "FlowerBotanical_Bundle.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820230+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328773+00:00",
     "listing_roles": {
       "DP1088": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4515439751": {
-    "art_hashes": {
-      "DP1089": "00000000000010906c2c63cbe34dcbcccbccbbcb37c848301000040200000dd3"
-    },
-    "art_sources": {
-      "DP1089": "data/digital_products/product_files/upscaled/DP1089.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:52.361471+00:00",
-    "baseline_files": [
-      "ChristianFaith_SVG_Bundle.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1089"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "ChristianFaith_SVG_Bundle.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820232+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328774+00:00",
     "listing_roles": {
       "DP1089": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4515439755": {
-    "art_hashes": {
-      "DP1090": "00000000000050002b19b1c7532ccb1ccb5cb9cf1143021010000442000024d3"
-    },
-    "art_sources": {
-      "DP1090": "data/digital_products/product_files/upscaled/DP1090.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:52.884995+00:00",
-    "baseline_files": [
-      "Graduation2026_SVG_Bundle.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1090"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "Graduation2026_SVG_Bundle.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820234+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328776+00:00",
     "listing_roles": {
       "DP1090": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4515439763": {
-    "art_hashes": {
-      "DP1091": "000000000000088822415a8ecbceca4c5ece3ccbcd4c00301008008200000d96"
-    },
-    "art_sources": {
-      "DP1091": "data/digital_products/product_files/upscaled/DP1091.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:53.428332+00:00",
-    "baseline_files": [
-      "OnBrandCraftz_GoodVibes_SVG_Bundle_20_Designs.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1091"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "OnBrandCraftz_GoodVibes_SVG_Bundle_20_Designs.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820236+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328777+00:00",
     "listing_roles": {
       "DP1091": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4515439799": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:03.807943+00:00",
-    "baseline_files": [
-      "DP1029_sticker_pack.zip"
-    ],
-    "baseline_photo_count": 3,
     "dp_codes": [
       "COMMERCIAL_STICKER_CORAL"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "DP1029_sticker_pack.zip"
+      "COMMERCIAL_STICKER_CORAL"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820238+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328779+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_CORAL": "listing_id"
     },
-    "min_photo_count": 3,
+    "min_photo_count": 2,
     "type": "commercial_license"
   },
   "4515439809": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:27:03.293535+00:00",
-    "baseline_files": [
-      "All_4_Sticker_Packs.zip"
-    ],
-    "baseline_photo_count": 3,
     "dp_codes": [
       "COMMERCIAL_STICKER_BUNDLE"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "All_4_Sticker_Packs.zip"
+      "COMMERCIAL_STICKER_BUNDLE"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820240+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328780+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_BUNDLE": "listing_id"
     },
-    "min_photo_count": 3,
+    "min_photo_count": 2,
     "type": "commercial_license"
   },
   "4515668698": {
-    "art_hashes": {
-      "DP1055": "de6cd98cc6e4c760cc94b94ce72cdc5cc8fcd85cb03cf21cf034f05cf024f090"
-    },
-    "art_sources": {
-      "DP1055": "data/digital_products/product_files/upscaled/DP1055.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:01.925987+00:00",
-    "baseline_files": [
-      "DP1055_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1055"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1055_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820243+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328781+00:00",
     "listing_roles": {
       "DP1055": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515669140": {
-    "art_hashes": {
-      "DP1051": "acb4acb4a8b4eb14eb94c990c4d8edf8e8b4f9a4e544e9d8e9f8ecc8e4c4e6c8"
-    },
-    "art_sources": {
-      "DP1051": "data/digital_products/product_files/upscaled/DP1051.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:06.215282+00:00",
-    "baseline_files": [
-      "DP1051_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1051"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1051_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820245+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328783+00:00",
     "listing_roles": {
       "DP1051": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515669246": {
-    "art_hashes": {
-      "DP1050": "c364c984c1f4d0f4d0dcf0f8e0fce0fce0fce8f4e0fcc07cc0fcc1fccfc0f880"
-    },
-    "art_sources": {
-      "DP1050": "data/digital_products/product_files/upscaled/DP1050.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:05.146509+00:00",
-    "baseline_files": [
-      "DP1050_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1050"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1050_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820247+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328784+00:00",
     "listing_roles": {
       "DP1050": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515669370": {
-    "art_hashes": {
-      "DP1049": "cf18901cb1ccf3c2c740f302e3c28e689f3abc989c12c672a2cc9e8c9e2cfb20"
-    },
-    "art_sources": {
-      "DP1049": "data/digital_products/product_files/upscaled/DP1049.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:04.072299+00:00",
-    "baseline_files": [
-      "DP1049_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1049"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1049_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820249+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328786+00:00",
     "listing_roles": {
       "DP1049": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515669596": {
-    "art_hashes": {
-      "DP1047": "e4c2c14cc0c4e6e6c5e6e124d332c6c0c4f4e384fd88c694c6b4c09ce07cf0f0"
-    },
-    "art_sources": {
-      "DP1047": "data/digital_products/product_files/upscaled/DP1047.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:10.047597+00:00",
-    "baseline_files": [
-      "DP1047_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1047"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1047_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820251+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328787+00:00",
     "listing_roles": {
       "DP1047": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515670946": {
-    "art_hashes": {
-      "DP1046": "83868db48f9c89e4916492749278b33c82fcc17c9dacc7dcfa4ccf8cfaf0b5b0"
-    },
-    "art_sources": {
-      "DP1046": "data/digital_products/product_files/upscaled/DP1046.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:11.134659+00:00",
-    "baseline_files": [
-      "DP1046_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1046"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1046_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820253+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328789+00:00",
     "listing_roles": {
       "DP1046": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515671216": {
-    "art_hashes": {
-      "DP1045": "980ca164e4c6e46ce1eca18edf20da58b36ccd34f598f18cf9a0f9a0f1e0e0e0"
-    },
-    "art_sources": {
-      "DP1045": "data/digital_products/product_files/upscaled/DP1045.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:12.183664+00:00",
-    "baseline_files": [
-      "DP1045_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1045"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1045_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820255+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328791+00:00",
     "listing_roles": {
       "DP1045": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515671336": {
-    "art_hashes": {
-      "DP1044": "e00c80e88032b01ce04a806480acc00ec04eec8e8eccf04acd1880acc018d820"
-    },
-    "art_sources": {
-      "DP1044": "data/digital_products/product_files/upscaled/DP1044.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:13.232298+00:00",
-    "baseline_files": [
-      "DP1044_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1044"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1044_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820257+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328792+00:00",
     "listing_roles": {
       "DP1044": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515671458": {
-    "art_hashes": {
-      "DP1043": "dfd0bf4cbb949934d974d9f4c9f0ee74ace6a7a6e5a6cba4c994c33cde7ce7c4"
-    },
-    "art_sources": {
-      "DP1043": "data/digital_products/product_files/upscaled/DP1043.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:14.319928+00:00",
-    "baseline_files": [
-      "DP1043_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1043"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1043_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820259+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328794+00:00",
     "listing_roles": {
       "DP1043": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515671558": {
-    "art_hashes": {
-      "DP1042": "84c881aec0cec0c8e09ed8ac9076c59ab2fcc9acf072d31cd544f4f0f8e0fb40"
-    },
-    "art_sources": {
-      "DP1042": "data/digital_products/product_files/upscaled/DP1042.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:15.350658+00:00",
-    "baseline_files": [
-      "DP1042_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1042"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1042_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820262+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328795+00:00",
     "listing_roles": {
       "DP1042": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515671764": {
-    "art_hashes": {
-      "DP1040": "d9c8d9ccc8fc90e480de986a986c9a8ccd0cd81cb8c4f5a4f828c9b8db88cb20"
-    },
-    "art_sources": {
-      "DP1040": "data/digital_products/product_files/upscaled/DP1040.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:17.481476+00:00",
-    "baseline_files": [
-      "DP1040_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1040"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1040_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820265+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328797+00:00",
     "listing_roles": {
       "DP1040": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515671951": {
-    "art_hashes": {
-      "DP1057": "cc84c26cd8d4c8d4c8d4d054d634de9cdaccde84ca94c3a4d464dc74de14de24"
-    },
-    "art_sources": {
-      "DP1057": "data/digital_products/product_files/upscaled/DP1057.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:07.865140+00:00",
-    "baseline_files": [
-      "DP1057_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1057"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1057_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820267+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328798+00:00",
     "listing_roles": {
       "DP1057": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515672065": {
-    "art_hashes": {
-      "DP1056": "8a74807c88cc88ce8f1a8e0a8a6e88ee89ec844cc61ce5b4ed22eb18e138e8d0"
-    },
-    "art_sources": {
-      "DP1056": "data/digital_products/product_files/upscaled/DP1056.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:08.953488+00:00",
-    "baseline_files": [
-      "DP1056_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1056"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1056_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820270+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328800+00:00",
     "listing_roles": {
       "DP1056": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515672204": {
-    "art_hashes": {
-      "DP1036": "034c1eb2b2906b516cd4f3b0cbb04ec069e22df106f91eb05331363136b20888"
-    },
-    "art_sources": {
-      "DP1036": "data/digital_products/product_files/upscaled/DP1036.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:22.379986+00:00",
-    "baseline_files": [
-      "DP1036_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1036"
     ],
@@ -2859,80 +1769,17 @@
     "expected_files": [
       "DP1036_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820272+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328801+00:00",
     "listing_roles": {
       "DP1036": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
-    "type": "wall_art"
-  },
-  "4515672331": {
-    "art_hashes": {
-      "DP1054": "80f4c0fcc4dc98dcd8ec993cd1d88c9c839c8f648738bb3891c6c6d8c570f8d0"
-    },
-    "art_sources": {
-      "DP1054": "data/digital_products/product_files/upscaled/DP1054.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:00.863157+00:00",
-    "baseline_files": [
-      "DP1054_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
-    "dp_codes": [
-      "DP1054"
-    ],
-    "expected_file_count": 1,
-    "expected_files": [
-      "DP1054_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820274+00:00",
-    "listing_roles": {
-      "DP1054": "kawaii_listing_id"
-    },
-    "min_photo_count": 10,
-    "type": "wall_art"
-  },
-  "4515672435": {
-    "art_hashes": {
-      "DP1053": "c100c80898009124f000b118f130e018c10cf58294e0ec80a00ee018ce00e3a0"
-    },
-    "art_sources": {
-      "DP1053": "data/digital_products/product_files/upscaled/DP1053.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:25:59.778104+00:00",
-    "baseline_files": [
-      "DP1053_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
-    "dp_codes": [
-      "DP1053"
-    ],
-    "expected_file_count": 1,
-    "expected_files": [
-      "DP1053_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820277+00:00",
-    "listing_roles": {
-      "DP1053": "kawaii_listing_id"
-    },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515672496": {
-    "art_hashes": {
-      "DP1033": "00000000000008800000111005235924d94cd49a032510480000000000880000"
-    },
-    "art_sources": {
-      "DP1033": "data/digital_products/product_files/upscaled/DP1033.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:25.617848+00:00",
-    "baseline_files": [
-      "DP1033_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1033"
     ],
@@ -2941,52 +1788,16 @@
       "DP1033_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820279+00:00",
+    "last_verified": "2026-06-16T13:18:41.328803+00:00",
     "listing_roles": {
       "DP1033": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
-    "type": "wall_art"
-  },
-  "4515672499": {
-    "art_hashes": {
-      "DP1052": "80fcc1fc82fc86bcc4dee8dc9b1ad9cec9c8c2fccfecdf84bd04ce38c678e67c"
-    },
-    "art_sources": {
-      "DP1052": "data/digital_products/product_files/upscaled/DP1052.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:25:58.676545+00:00",
-    "baseline_files": [
-      "DP1052_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
-    "dp_codes": [
-      "DP1052"
-    ],
-    "expected_file_count": 1,
-    "expected_files": [
-      "DP1052_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820281+00:00",
-    "listing_roles": {
-      "DP1052": "kawaii_listing_id"
-    },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515672588": {
-    "art_hashes": {
-      "DP1099": "100000003250b670b610b610b610b610b610b650b650b650b650365000001200"
-    },
-    "art_sources": {
-      "DP1099": "data/digital_products/product_files/upscaled/DP1099.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:27:09.246751+00:00",
-    "baseline_files": [
-      "DP1099_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1099"
     ],
@@ -2995,52 +1806,32 @@
       "DP1099_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820283+00:00",
+    "last_verified": "2026-06-16T13:18:41.328805+00:00",
     "listing_roles": {
       "DP1099": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515672895": {
-    "art_hashes": {
-      "DP1048": "a832a9b4d328e4b2f97cb0f0f320bb20f320eec08f2099b68e8c9c78f0cce288"
-    },
-    "art_sources": {
-      "DP1048": "data/digital_products/product_files/upscaled/DP1048.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:03.544844+00:00",
-    "baseline_files": [
-      "DP1048_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1048"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1048_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820286+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328806+00:00",
     "listing_roles": {
       "DP1048": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515672972": {
-    "art_hashes": {
-      "DP1097": "080000003cc03d403d403ac03f203ec03cc03f003cc03f003f40306000001400"
-    },
-    "art_sources": {
-      "DP1097": "data/digital_products/product_files/upscaled/DP1097.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:27:08.097984+00:00",
-    "baseline_files": [
-      "DP1097_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1097"
     ],
@@ -3049,25 +1840,16 @@
       "DP1097_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820288+00:00",
+    "last_verified": "2026-06-16T13:18:41.328808+00:00",
     "listing_roles": {
       "DP1097": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515673064": {
-    "art_hashes": {
-      "DP1096": "100000003b403f203e003ec039403a9038603f6036803a403f103d0000001000"
-    },
-    "art_sources": {
-      "DP1096": "data/digital_products/product_files/upscaled/DP1096.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:27:07.568716+00:00",
-    "baseline_files": [
-      "DP1096_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1096"
     ],
@@ -3076,52 +1858,32 @@
       "DP1096_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820290+00:00",
+    "last_verified": "2026-06-16T13:18:41.328809+00:00",
     "listing_roles": {
       "DP1096": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515673828": {
-    "art_hashes": {
-      "DP1058": "596499644218e9c099a2fb10e310f252f3cca74ab7b48b20412a00118000f6c0"
-    },
-    "art_sources": {
-      "DP1058": "data/digital_products/product_files/upscaled/DP1058.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:39.537176+00:00",
-    "baseline_files": [
-      "DP1058_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1058"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1058_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820292+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328811+00:00",
     "listing_roles": {
       "DP1058": "secondary_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515674042": {
-    "art_hashes": {
-      "DP1100": "0080000030e032c03100379036903d303f301a503e103c903490341000000000"
-    },
-    "art_sources": {
-      "DP1100": "data/digital_products/product_files/upscaled/DP1100.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:27:09.819190+00:00",
-    "baseline_files": [
-      "DP1100_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1100"
     ],
@@ -3130,25 +1892,16 @@
       "DP1100_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820294+00:00",
+    "last_verified": "2026-06-16T13:18:41.328813+00:00",
     "listing_roles": {
       "DP1100": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515674144": {
-    "art_hashes": {
-      "DP1095": "109000003c903c803cc03cc03e803e803fa03e803f003f003700370000001000"
-    },
-    "art_sources": {
-      "DP1095": "data/digital_products/product_files/upscaled/DP1095.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:27:07.025995+00:00",
-    "baseline_files": [
-      "DP1095_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1095"
     ],
@@ -3157,48 +1910,32 @@
       "DP1095_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820296+00:00",
+    "last_verified": "2026-06-16T13:18:41.328814+00:00",
     "listing_roles": {
       "DP1095": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515674250": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:53.963031+00:00",
-    "baseline_files": [
-      "DP1092_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "DP1092"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1092_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820299+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328816+00:00",
     "listing_roles": {
       "DP1092": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4515674594": {
-    "art_hashes": {
-      "DP1094": "1800000038c038c03a603b203c8039b03922b642ba62b652b692389000001000"
-    },
-    "art_sources": {
-      "DP1094": "data/digital_products/product_files/upscaled/DP1094.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:27:06.497861+00:00",
-    "baseline_files": [
-      "DP1094_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1094"
     ],
@@ -3207,106 +1944,64 @@
       "DP1094_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820301+00:00",
+    "last_verified": "2026-06-16T13:18:41.328818+00:00",
     "listing_roles": {
       "DP1094": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515675145": {
-    "art_hashes": {
-      "DP1041": "8802a80ca06890c696168ece806ca0fab0fea0fa865c820c908e830683868c90"
-    },
-    "art_sources": {
-      "DP1041": "data/digital_products/product_files/upscaled/DP1041.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:16.410436+00:00",
-    "baseline_files": [
-      "DP1041_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1041"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1041_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820303+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328831+00:00",
     "listing_roles": {
       "DP1041": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515675373": {
-    "art_hashes": {
-      "DP1039": "e592e1aea198e02cb134d920bce6ad8ada90f254e4b8e498c7b2cb60c6e0e9d0"
-    },
-    "art_sources": {
-      "DP1039": "data/digital_products/product_files/upscaled/DP1039.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:18.565463+00:00",
-    "baseline_files": [
-      "DP1039_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1039"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1039_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820305+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328834+00:00",
     "listing_roles": {
       "DP1039": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515675481": {
-    "art_hashes": {
-      "DP1038": "e184e3c4f1c8d0c8c4d4cd14ce30cb58c9ccc4c4ee90ef08cc70dac8f260fc70"
-    },
-    "art_sources": {
-      "DP1038": "data/digital_products/product_files/upscaled/DP1038.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:19.659199+00:00",
-    "baseline_files": [
-      "DP1038_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1038"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1038_print_sizes.zip"
-    ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820308+00:00",
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328835+00:00",
     "listing_roles": {
       "DP1038": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515675583": {
-    "art_hashes": {
-      "DP1037": "0623d9b4d9c8fde8e4c8e8e0eca2ecacc91ccca2e4caf31af374dda4d9c922c6"
-    },
-    "art_sources": {
-      "DP1037": "data/digital_products/product_files/upscaled/DP1037.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:21.293031+00:00",
-    "baseline_files": [
-      "DP1037_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1037"
     ],
@@ -3314,26 +2009,17 @@
     "expected_files": [
       "DP1037_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820310+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328837+00:00",
     "listing_roles": {
       "DP1037": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515675813": {
-    "art_hashes": {
-      "DP1035": "9ba0e7a0e398d31cb48cfb0cb524d4b2d3b4db2cfa5ad216d8ec98bcf060f242"
-    },
-    "art_sources": {
-      "DP1035": "data/digital_products/product_files/upscaled/DP1035.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:23.473574+00:00",
-    "baseline_files": [
-      "DP1035_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1035"
     ],
@@ -3341,26 +2027,17 @@
     "expected_files": [
       "DP1035_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820312+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328839+00:00",
     "listing_roles": {
       "DP1035": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515675887": {
-    "art_hashes": {
-      "DP1034": "b212b23283e2879eb21eb0eeba788cd29c8e8f0ea3ceb2da8daabf96a2daa63a"
-    },
-    "art_sources": {
-      "DP1034": "data/digital_products/product_files/upscaled/DP1034.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:24.569952+00:00",
-    "baseline_files": [
-      "DP1034_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1034"
     ],
@@ -3368,26 +2045,17 @@
     "expected_files": [
       "DP1034_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820315+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328841+00:00",
     "listing_roles": {
       "DP1034": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515676185": {
-    "art_hashes": {
-      "DP1098": "1800000058a0ba60b682bf22be82bd02be82bf02bb24bd825ba059a400001800"
-    },
-    "art_sources": {
-      "DP1098": "data/digital_products/product_files/upscaled/DP1098.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:27:08.682311+00:00",
-    "baseline_files": [
-      "DP1098_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1098"
     ],
@@ -3396,75 +2064,48 @@
       "DP1098_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820317+00:00",
+    "last_verified": "2026-06-16T13:18:41.328843+00:00",
     "listing_roles": {
       "DP1098": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515676301": {
-    "art_hashes": {
-      "DP1069": "0d48b6c2b6c2bcc2bcc2bcc2b8c2b2c237c2b2e2bac2bcc2bcc2bcc2bcc2296a"
-    },
-    "art_sources": {
-      "DP1069": "data/digital_products/product_files/upscaled/DP1069.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:42.299325+00:00",
-    "baseline_files": [
-      "DP1069_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1069"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1069_print_sizes.zip"
-    ],
+    "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-06T02:42:24.820320+00:00",
+    "last_verified": "2026-06-16T13:18:41.328845+00:00",
     "listing_roles": {
       "DP1069": "individual_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515676915": {
     "art_hashes": {},
     "art_sources": {},
-    "baseline_captured": "2026-06-06T00:26:54.481311+00:00",
-    "baseline_files": [
-      "DP1093_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
     "dp_codes": [
       "DP1093"
     ],
     "expected_file_count": 1,
-    "expected_files": [
-      "DP1093_print_sizes.zip"
-    ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820322+00:00",
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328847+00:00",
     "listing_roles": {
       "DP1093": "listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 3,
     "type": "svg_bundle"
   },
   "4515678198": {
-    "art_hashes": {
-      "DP1032": "0087126955a96de932d332e3f0edd1ed3271715170d170e174e434e434780c1c"
-    },
-    "art_sources": {
-      "DP1032": "data/digital_products/product_files/upscaled/DP1032.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:26.703608+00:00",
-    "baseline_files": [
-      "DP1032_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1032"
     ],
@@ -3472,26 +2113,17 @@
     "expected_files": [
       "DP1032_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820324+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328849+00:00",
     "listing_roles": {
       "DP1032": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515678344": {
-    "art_hashes": {
-      "DP1031": "4994b98074e069b46128f86cee38e3d8e7d8e718f678f070f238f370f9c44619"
-    },
-    "art_sources": {
-      "DP1031": "data/digital_products/product_files/upscaled/DP1031.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:27.801331+00:00",
-    "baseline_files": [
-      "DP1031_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1031"
     ],
@@ -3499,26 +2131,17 @@
     "expected_files": [
       "DP1031_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820326+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328851+00:00",
     "listing_roles": {
       "DP1031": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515682013": {
-    "art_hashes": {
-      "DP1030": "c854d48cd224d264c60ccc44c69cc698c69cda64ce94ceb4c694cc0cd224c884"
-    },
-    "art_sources": {
-      "DP1030": "data/digital_products/product_files/upscaled/DP1030.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:28.878057+00:00",
-    "baseline_files": [
-      "DP1030_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
       "DP1030"
     ],
@@ -3526,39 +2149,46 @@
     "expected_files": [
       "DP1030_print_sizes.zip"
     ],
-    "last_status": "FAIL",
-    "last_verified": "2026-06-06T02:42:24.820329+00:00",
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328852+00:00",
     "listing_roles": {
       "DP1030": "kawaii_listing_id"
     },
-    "min_photo_count": 10,
+    "min_photo_count": 8,
     "type": "wall_art"
   },
   "4515682147": {
-    "art_hashes": {
-      "DP1026": "efe68fe83ff45fc4f747da87dd9f321f3a73d883371e3e6e770d073f31a7e4c6"
-    },
-    "art_sources": {
-      "WA1026": "data/digital_products/product_files/WA1026.jpg"
-    },
-    "baseline_captured": "2026-06-06T00:26:55.027007+00:00",
-    "baseline_files": [
-      "WA1026_print_sizes.zip"
-    ],
-    "baseline_photo_count": 10,
+    "art_hashes": {},
+    "art_sources": {},
     "dp_codes": [
-      "DP1026"
+      "WA1026"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-16T13:18:41.328854+00:00",
+    "listing_roles": {
+      "WA1026": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "unknown"
+  },
+  "4519288171": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1063"
     ],
     "expected_file_count": 1,
     "expected_files": [
-      "WA1026_print_sizes.zip"
+      "DP1063_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-06T02:42:24.820331+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-16T13:18:41.328855+00:00",
     "listing_roles": {
-      "DP1026": "listing_id"
+      "DP1063": "listing_id"
     },
-    "min_photo_count": 10,
-    "type": "planner"
+    "min_photo_count": 8,
+    "type": "wall_art"
   }
 }
