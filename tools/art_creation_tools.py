@@ -1726,8 +1726,13 @@ def _render_framed_art_rgba(art_img: Any, frame_style: str, long_side_px: int,
     return canvas, (ax0, ay0, ax0 + aw, ay0 + ah)
 
 
-def _fetch_image_bytes(prompt: str, size: str = "1024x1024") -> bytes | None:
-    """Call OpenAI image generation and return raw JPEG bytes, or None on failure."""
+def _fetch_image_bytes(
+    prompt: str,
+    size: str = "1024x1024",
+    quality: str = "medium",
+    output_format: str = "jpeg",
+) -> bytes | None:
+    """Call OpenAI image generation and return raw image bytes, or None on failure."""
     api_key = os.getenv("OPENAI_API_KEY", "")
     if not api_key:
         return None
@@ -1737,9 +1742,9 @@ def _fetch_image_bytes(prompt: str, size: str = "1024x1024") -> bytes | None:
             "model": "gpt-image-1",
             "prompt": prompt,
             "size": size,
-            "quality": "medium",
+            "quality": quality,
             "n": 1,
-            "output_format": "jpeg",
+            "output_format": output_format,
         }).encode()
         req = urllib.request.Request(
             "https://api.openai.com/v1/images/generations",
