@@ -142,6 +142,11 @@ def _price_float(price_field) -> float:
 _cache: dict = {}
 _cache_lock = threading.Lock()
 
+# How long the CEO diagnostic stays fresh. Shop data (listings, tags, sales)
+# changes slowly, so a 30-min-old report is fine — and a background loop re-warms
+# it before it expires so the dashboard practically never hits the ~60s synthesis.
+_SUGGESTIONS_TTL = 1800
+
 
 def _cache_get(key: str, ttl: int = 60):
     with _cache_lock:
@@ -2240,18 +2245,24 @@ async def _snapshot_loop() -> None:
 
 
 async def _warm_suggestions() -> None:
-    """Pre-compute the CEO diagnostic shortly after boot so the first dashboard
-    load after a deploy hits a warm cache instead of waiting ~25s. The in-memory
-    cache is wiped on every redeploy, so without this the user stares at the
-    'analyzing your shop…' spinner every single time (seen 2026-06-16)."""
+    """Keep the CEO diagnostic cache permanently warm. The synthesis takes ~60s and
+    the in-memory cache is wiped on every redeploy, so without this the dashboard
+    user stares at the 'analyzing your shop…' spinner for a full minute every time
+    the cache is cold (seen 2026-06-16). We prime it ~5s after boot, then refresh a
+    little before the TTL expires so a visitor practically never lands on a cold
+    cache — only the one-time ~60s window right after a fresh deploy remains."""
     if not ANTHROPIC_KEY:
         return
     await asyncio.sleep(5)  # let the app finish booting first
-    try:
-        await _compute_suggestions()
-        print("[warm] suggestions cache primed", flush=True)
-    except Exception as exc:
-        print(f"[warm] suggestions priming skipped: {exc}", flush=True)
+    while True:
+        try:
+            await _compute_suggestions()
+            print("[warm] suggestions cache primed", flush=True)
+        except Exception as exc:
+            print(f"[warm] suggestions priming skipped: {exc}", flush=True)
+            await asyncio.sleep(120)  # back off, then retry
+            continue
+        await asyncio.sleep(_SUGGESTIONS_TTL - 120)  # refresh just before expiry
 
 
 @app.on_event("startup")
@@ -2379,7 +2390,7 @@ async def _compute_suggestions() -> dict:
             asyncio.to_thread(
                 lambda: ai_client.messages.create(
                     model="claude-sonnet-4-6",
-                    max_tokens=3500,
+                    max_tokens=2400,
                     system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
                     messages=[{"role": "user", "content": user_payload}],
                 )
@@ -2412,8 +2423,11 @@ async def _compute_suggestions() -> dict:
 @app.post("/api/suggestions")
 async def get_suggestions(_token: str = Depends(_auth)):
     """CEO agent synthesises a structured JSON suggestion report from live shop
-    data (metrics + active + draft listings). Cached 5 minutes; warmed on startup."""
-    cached = _cache_get("suggestions", ttl=300)
+    data (metrics + active + draft listings). Served from a cache that a
+    background loop keeps warm (see _warm_suggestions) so the dashboard is
+    instant; the synthesis itself takes ~60s so we never want it on the hot path
+    if we can avoid it."""
+    cached = _cache_get("suggestions", ttl=_SUGGESTIONS_TTL)
     if cached is not None:
         return cached
     return await _compute_suggestions()
