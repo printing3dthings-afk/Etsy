@@ -27,7 +27,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Security, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
 
@@ -96,7 +96,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v20"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v21"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -761,6 +761,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
     <div style="display:flex;gap:6px;margin-bottom:14px">
       <button class="hub-section-btn active" onclick="showHubSection(&apos;brand&apos;,this)">🎨 Brand</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;products&apos;,this)">📦 Products</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;files&apos;,this)">📁 Files</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;creds&apos;,this)">🔑 Creds</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;security&apos;,this)">🛡️ Security</button>
     </div>
@@ -1639,8 +1640,46 @@ function showHubSection(section, btn) {
   if (btn) btn.classList.add('active');
   if (section==='brand')         document.getElementById('hub-content').innerHTML = _renderBrandKit();
   else if (section==='products') loadProductIndex();
+  else if (section==='files')    loadFiles();
   else if (section==='creds')    loadCredentials();
   else if (section==='security') _renderSecurityPosture();
+}
+async function loadFiles() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/files',{headers:{Authorization:'Bearer '+TOKEN}},20000);
+    var d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    var groups = d.groups||[];
+    if (!groups.length || groups.every(function(g){return !g.files.length;})) {
+      el.innerHTML = '<div class="empty">No files yet.</div>';
+      return;
+    }
+    var html = '<div class="card" style="background:#1a2030;border-color:#2a3d5a;margin-bottom:12px">'+
+      '<div style="font-size:12px;color:#7ba0c2;line-height:1.6">These are the actual product source files and backups living on the server '+
+      '(data/digital_products/ and data/backups/) — they are not in git, so this is the only place to grab them. Tap a file to download.</div></div>';
+    groups.forEach(function(g){
+      if (!g.files.length) return;
+      html += '<div class="section-title">'+escHtml(g.label)+' ('+g.files.length+')</div><div class="card">';
+      g.files.forEach(function(f){
+        var url = BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+'&token='+encodeURIComponent(TOKEN);
+        var when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        html += '<div class="listing-item" onclick="window.open(\''+url.replace(/'/g,"\\'")+'\',\'_blank\')" style="cursor:pointer">'+
+          '<div class="thumb-placeholder">📄</div>'+
+          '<div class="listing-info"><div class="listing-title">'+escHtml(f.path)+'</div>'+
+          '<div class="listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+'</div></div>'+
+          '<div style="color:var(--gold);font-size:18px">⬇</div>'+
+        '</div>';
+      });
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load files')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
 }
 function loadHub() {
   var btns = document.querySelectorAll('.hub-section-btn');
@@ -2910,6 +2949,69 @@ async def credentials_status(_token: str = Depends(_auth)):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy ping timed out")
     return data
+
+
+# ── File hub (browse/download product files + backups straight from the dashboard) ─
+
+_FILE_ROOTS = {
+    "products": ROOT / "data" / "digital_products",
+    "backups": ROOT / "data" / "backups",
+}
+
+
+def _human_size(n: int) -> str:
+    size = float(n)
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024 or unit == "GB":
+            return f"{size:.1f} {unit}" if unit != "B" else f"{int(size)} {unit}"
+        size /= 1024
+    return f"{size:.1f} GB"
+
+
+@app.get("/api/files")
+async def list_files(_token: str = Depends(_auth)):
+    """List every file under data/digital_products/ and data/backups/ so Scott can
+    see and download product source files straight from the dashboard — these
+    directories are gitignored (machine-local) and have no other UI."""
+    groups = []
+    for root_key, root_path in _FILE_ROOTS.items():
+        if not root_path.exists():
+            continue
+        files = []
+        for p in sorted(root_path.rglob("*")):
+            if not p.is_file():
+                continue
+            stat = p.stat()
+            files.append(
+                {
+                    "path": str(p.relative_to(root_path)),
+                    "root": root_key,
+                    "size": stat.st_size,
+                    "size_human": _human_size(stat.st_size),
+                    "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                }
+            )
+        files.sort(key=lambda f: f["modified"], reverse=True)
+        groups.append({"root": root_key, "label": "Backups" if root_key == "backups" else "Product Files", "files": files})
+    return {"groups": groups}
+
+
+@app.get("/api/files/download")
+async def download_file(root: str, path: str, token: str = ""):
+    """Stream a file from one of the allowed roots. Auth via ?token= (query param,
+    not header) so this URL works as a plain browser/PWA download link."""
+    if token != APP_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    base = _FILE_ROOTS.get(root)
+    if base is None:
+        raise HTTPException(status_code=404, detail="Unknown root")
+    base = base.resolve()
+    target = (base / path).resolve()
+    if base not in target.parents and target != base:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    if not target.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(target, filename=target.name, media_type="application/octet-stream")
 
 
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
