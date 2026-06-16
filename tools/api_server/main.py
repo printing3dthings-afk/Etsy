@@ -2256,7 +2256,12 @@ async def _warm_suggestions() -> None:
     await asyncio.sleep(5)  # let the app finish booting first
     while True:
         try:
-            await _compute_suggestions()
+            res = await _compute_suggestions()
+            if res.get("error") == "parse_failed":
+                # Not cached (see _compute_suggestions) — retry soon, don't wait 30min.
+                print("[warm] suggestions parse failed — retrying in 60s", flush=True)
+                await asyncio.sleep(60)
+                continue
             print("[warm] suggestions cache primed", flush=True)
         except Exception as exc:
             print(f"[warm] suggestions priming skipped: {exc}", flush=True)
@@ -2390,7 +2395,7 @@ async def _compute_suggestions() -> dict:
             asyncio.to_thread(
                 lambda: ai_client.messages.create(
                     model="claude-sonnet-4-6",
-                    max_tokens=2400,
+                    max_tokens=4000,  # 8 detailed suggestions overrun 2400 and truncate
                     system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
                     messages=[{"role": "user", "content": user_payload}],
                 )
@@ -2406,18 +2411,23 @@ async def _compute_suggestions() -> dict:
         raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}")
 
     final_text = "".join(getattr(b, "text", "") for b in response.content)
-    result = _extract_json_object(final_text)
-    if result is None:
-        result = {
+    parsed = _extract_json_object(final_text)
+    now = datetime.now(timezone.utc).isoformat()
+    if not isinstance(parsed, dict):
+        # Don't poison the 30-min cache with a broken parse (e.g. a truncated
+        # response). Return the fallback to this caller but leave the cache cold
+        # so the warm loop / next request recomputes instead of serving garbage.
+        return {
             "headline": "Analysis complete",
             "suggestions": [],
             "raw": final_text,
             "error": "parse_failed",
+            "generated_at": now,
         }
 
-    result["generated_at"] = datetime.now(timezone.utc).isoformat()
-    _cache_set("suggestions", result)
-    return result
+    parsed["generated_at"] = now
+    _cache_set("suggestions", parsed)
+    return parsed
 
 
 @app.post("/api/suggestions")
