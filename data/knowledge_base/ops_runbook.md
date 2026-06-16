@@ -73,3 +73,25 @@ failure surfaces a real message in the UI instead of bare "Internal Server Error
 diagnosis still holds. The first occurrence really was an Anthropic outage; this one
 was a latent timeout bug that outage exposed me to investigating but didn't itself
 cause.
+
+### 2026-06-16 — Same spinner, third layer: 200 OK but suggestions silently empty
+**Symptom:** After the timeout fix above went live, `/api/suggestions` returned HTTP
+200 (no more 500/504), but the dashboard showed an empty/low-value report — headline
+"Analysis complete", zero suggestions — even though Claude had clearly generated a
+real, detailed diagnostic (it later turned out to include a genuinely valuable finding:
+~40 wall-art listings all carrying mismatched "kawaii" tags on non-kawaii designs).
+**Root cause:** The JSON-extraction code only stripped a ` ```json ` fence if the
+model's response text *started* with it (`if text.startswith(fence)`). Claude's actual
+response began with a conversational sentence ("Compiling the full diagnostic now.")
+before the fenced block, so the check failed, `json.loads()` raised, and the code fell
+into its fallback path — silently discarding the real report into an unrendered `raw`
+field instead of surfacing it.
+**Fix:** Added a shared `_extract_json_object()` helper (`main.py`) that searches for a
+fenced ```json block *anywhere* in the text (regex), then falls back to the outermost
+`{...}` span, then a bare `json.loads()` — used at all three sites that parse a model
+JSON response (`/api/suggestions`, `/api/diagnose/{id}` conversion doctor, and the
+batch tag generator). Verified live: response now has 8 real suggestions, no `error`
+field, full headline/score/top_win/top_risk populated.
+**Lesson:** A 200 status code is not proof a feature is actually working — always check
+the response *body* makes sense, not just the HTTP status. This bug shipped silently
+inside what looked like a successful fix.
