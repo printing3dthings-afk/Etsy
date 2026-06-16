@@ -159,10 +159,11 @@ def _cache_set(key: str, data) -> None:
 # ── CEO Agent system prompt ────────────────────────────────────────────────────
 
 _CEO_SYSTEM = """\
-You are the CEO Agent for OnBrandCraftz, an Etsy shop selling kawaii digital planners,
-sticker packs, and 3D-print SVG files. You are chatting with Scott, the shop owner,
-via his private mobile dashboard. You are the operating brain of the business — Scott
-relies on you so he does NOT have to dig through data or call in an engineer for answers.
+You are Fucking Frank, the CEO Agent for OnBrandCraftz, an Etsy shop selling kawaii
+digital planners, sticker packs, and 3D-print SVG files. You are chatting with Scott,
+the shop owner, via his private mobile dashboard. You are the operating brain of the
+business — Scott relies on you so he does NOT have to dig through data or call in an
+engineer for answers. If asked your name, you are Fucking Frank.
 
 Your role:
 - Answer questions about the business, products, listings, and growth strategy
@@ -718,9 +719,9 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
   <div id="screen-dash" class="screen active">
     <div style="margin-bottom:8px">
       <button id="ceo-analyze-btn" class="ceo-btn" onclick="getCeoSuggestions(false)" style="display:none">
-        <span>🎯</span><span>Run CEO Analysis</span>
+        <span>🎯</span><span>Ask Fucking Frank to Analyze</span>
       </button>
-      <div id="ceo-suggestions"><div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">CEO agent analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div></div>
+      <div id="ceo-suggestions"><div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">Fucking Frank is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div></div>
     </div>
     <div id="dash-content"><div class="spinner"></div></div>
     <div id="conv-doctor-wrap" style="margin-top:10px">
@@ -776,7 +777,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
       <span class="chip" onclick="sendChip(this)">SEO tips</span>
     </div>
     <div class="input-row">
-      <input id="msg-input" type="text" placeholder="Ask your CEO agent…" autocomplete="off">
+      <input id="msg-input" type="text" placeholder="Ask Fucking Frank…" autocomplete="off">
       <button id="send-btn" onclick="sendMsg()">
         <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
@@ -1248,7 +1249,7 @@ async function getCeoSuggestions(forceRefresh) {
   if (!el) return;
   if (_lastSuggestions && !forceRefresh) { if(btn)btn.style.display='none'; el.innerHTML=_renderSuggestions(_lastSuggestions); return; }
   if (btn) btn.style.display = 'none';
-  el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">CEO agent analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
+  el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">Fucking Frank is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
   try {
     const r = await fetchWithTimeout(BASE+'/api/suggestions', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 120000);
     const d = await r.json().catch(function(){return {};});
@@ -1582,7 +1583,7 @@ async function loadCredentials() {
       {label:'Etsy API Key',         ok:et.api_key,         note:'ETSY_API_KEY / ETSY_CLIENT_ID'},
       {label:'Etsy Access Token',    ok:et.access_token,    note:'Expires every 1 hour — auto-refreshed'},
       {label:'Etsy Refresh Token',   ok:et.refresh_token,   note:'90-day window — re-auth via etsy_oauth.py'},
-      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'CEO agent · Conversion Doctor · tag gen'},
+      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'Fucking Frank (CEO) · Conversion Doctor · tag gen'},
       {label:'OpenAI (DALL-E)',      ok:oa.api_key,         note:'gpt-image-1 listing photo generation'},
       {label:'SMTP Email',           ok:sm.user,            note:'Post-purchase digital delivery'},
       {label:'Pinterest',            ok:pi.api_key,         note:'API v5 · roadmap'}
@@ -1701,7 +1702,7 @@ def web_ui():
 _MANIFEST = {
     "name": "OnBrandCraftz Hub",
     "short_name": "OnBrandCraftz",
-    "description": "OnBrandCraftz Etsy operations hub — live metrics, action center, CEO agent.",
+    "description": "OnBrandCraftz Etsy operations hub — live metrics, action center, Fucking Frank (CEO agent).",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
