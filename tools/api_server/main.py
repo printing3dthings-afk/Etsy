@@ -96,7 +96,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v23"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v24"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -1761,7 +1761,7 @@ async function loadFiles() {
       g.files.forEach(function(f){
         var url = BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+'&token='+encodeURIComponent(TOKEN);
         var when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        html += '<div class="listing-item" onclick="window.open(\''+url.replace(/'/g,"\\'")+'\',\'_blank\')" style="cursor:pointer">'+
+        html += '<div class="listing-item" onclick="window.open(&apos;'+url+'&apos;,&apos;_blank&apos;)" style="cursor:pointer">'+
           '<div class="thumb-placeholder">📄</div>'+
           '<div class="listing-info"><div class="listing-title">'+escHtml(f.path)+'</div>'+
           '<div class="listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+'</div></div>'+
