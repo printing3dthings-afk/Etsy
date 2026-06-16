@@ -96,7 +96,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v24"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v25"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -910,6 +910,9 @@ function fetchWithTimeout(url, opts, ms=12000){
 
 // ── Action Center ────────────────────────────────────────────────────────────
 let _actions = [];
+let _pendingActions = [];
+let _actionsSummary = {high:0,medium:0,low:0};
+let _actionFilter = null; // 'high' | 'medium' | 'low' | null (= all)
 function setActionBadge(summary, pending) {
   const b = document.getElementById('nav-badge');
   if (!b) return;
@@ -982,20 +985,48 @@ async function loadActions() {
     let pending = [];
     if (qr && qr.ok) { const qd = await qr.json().catch(()=>({})); pending = qd.actions || []; }
     _actions = d.actions || [];
-    setActionBadge(d.summary || {}, pending.length);
-    let html = '';
-    if (pending.length) {
-      html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
-      html += pending.map(renderApproval).join('');
-    }
-    if (!_actions.length && !pending.length) { el.innerHTML = '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
-    const s = d.summary || {high:0,medium:0,low:0};
-    html += `<div class="section-title">Flagged by scan</div><div style="display:flex;gap:8px;margin-bottom:14px">`+
-      `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:var(--red);font-size:20px">${s.high}</div><div class="sub">high</div></div>`+
-      `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:var(--gold);font-size:20px">${s.medium}</div><div class="sub">medium</div></div>`+
-      `<div class="metric" style="flex:1;text-align:center;padding:10px 6px"><div class="value" style="color:#7ba0c2;font-size:20px">${s.low}</div><div class="sub">low</div></div>`+
-      `</div>`;
-    html += _actions.map((a,i) => `
+    _pendingActions = pending;
+    _actionsSummary = d.summary || {high:0,medium:0,low:0};
+    setActionBadge(_actionsSummary, pending.length);
+    renderActionsContent();
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function setActionFilter(sev) {
+  _actionFilter = (_actionFilter === sev) ? null : sev; // tap again to clear
+  renderActionsContent();
+}
+const _SEV_COLORS = {high:'#e05555', medium:'#C9A84C', low:'#7ba0c2'};
+function renderActionsContent() {
+  const el = document.getElementById('actions-content');
+  if (!el) return;
+  const pending = _pendingActions || [];
+  const s = _actionsSummary || {high:0,medium:0,low:0};
+  let html = '';
+  if (pending.length) {
+    html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
+    html += pending.map(renderApproval).join('');
+  }
+  if (!_actions.length && !pending.length) { el.innerHTML = html || '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
+  const sevBtn = sev => {
+    const active = _actionFilter === sev;
+    const c = _SEV_COLORS[sev];
+    const style = active
+      ? `flex:1;text-align:center;padding:10px 6px;cursor:pointer;border-color:${c};background:${c}26`
+      : 'flex:1;text-align:center;padding:10px 6px;cursor:pointer';
+    return `<div class="metric" style="${style}" onclick="setActionFilter('${sev}')"><div class="value" style="color:${c};font-size:20px">${s[sev]||0}</div><div class="sub">${sev}${active?' ✓':''}</div></div>`;
+  };
+  html += `<div class="section-title">Flagged by scan${_actionFilter?` — showing ${_actionFilter} only`:''}</div><div style="display:flex;gap:8px;margin-bottom:14px">`+
+    sevBtn('high')+sevBtn('medium')+sevBtn('low')+
+    `</div>`;
+  const filtered = _actionFilter ? _actions.filter(a => a.severity === _actionFilter) : _actions;
+  if (!filtered.length) {
+    html += `<div class="empty">No ${escHtml(_actionFilter)} severity items.</div>`;
+  } else {
+    html += filtered.map(a => {
+      const i = _actions.indexOf(a);
+      return `
       <div class="act-card ${escHtml(a.severity)}">
         <span class="act-sev ${escHtml(a.severity)}">${escHtml(a.severity)}</span>
         <div class="act-title">${escHtml(a.title)}</div>
@@ -1005,11 +1036,10 @@ async function loadActions() {
           <button class="act-btn primary" onclick="askActionFix(${i})">Ask CEO</button>
           ${a.url ? `<a class="act-btn" href="${escHtml(a.url)}" target="_blank">Open on Etsy</a>` : ''}
         </div>
-      </div>`).join('');
-    el.innerHTML = html;
-  } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+      </div>`;
+    }).join('');
   }
+  el.innerHTML = html;
 }
 function askActionFix(i) {
   const a = _actions[i];
