@@ -573,6 +573,36 @@ def _clean_tag(tag: str) -> str:
     return tag
 
 
+def _extract_json_object(text: str) -> dict | list | None:
+    """Pull a JSON object/array out of an LLM response that may have conversational
+    preamble before a fenced code block (e.g. "Compiling the report now.\n\n```json\n{...}\n```").
+    Tries, in order: a fenced ```json block anywhere in the text, a bare fenced block,
+    then the outermost {...} span. Returns None if nothing parses."""
+    text = text.strip()
+
+    fence_match = _re.search(r"```(?:json|JSON)?\s*\n?(.*?)```", text, _re.DOTALL)
+    if fence_match:
+        candidate = fence_match.group(1).strip()
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            pass
+
+    first_brace = text.find("{")
+    last_brace = text.rfind("}")
+    if first_brace != -1 and last_brace > first_brace:
+        candidate = text[first_brace : last_brace + 1]
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            pass
+
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return None
+
+
 def _generate_tags_for_listings(listings: list[dict]) -> list[dict]:
     """Call Claude once per batch-of-40 and return [{listing_id, tags:[13]}, ...].
 
@@ -603,14 +633,9 @@ def _generate_tags_for_listings(listings: list[dict]) -> list[dict]:
         )
 
         raw = msg.content[0].text.strip()
-        # Strip markdown code fences if the model wraps the JSON
-        for fence in ("```json", "```JSON", "```"):
-            if raw.startswith(fence):
-                raw = raw[len(fence) :]
-                break
-        raw = raw.rstrip("`").strip()
-
-        batch_results = json.loads(raw)
+        batch_results = _extract_json_object(raw)
+        if batch_results is None:
+            raise ValueError(f"Could not parse tag-generation response: {raw[:200]!r}")
         results.extend(batch_results)
 
     return results
@@ -2383,16 +2408,8 @@ async def get_suggestions(_token: str = Depends(_auth)):
             if hasattr(block, "text"):
                 final_text += block.text
 
-    text = final_text.strip()
-    for fence in ("```json", "```JSON", "```"):
-        if text.startswith(fence):
-            text = text[len(fence):]
-            break
-    text = text.rstrip("`").strip()
-
-    try:
-        result = json.loads(text)
-    except json.JSONDecodeError:
+    result = _extract_json_object(final_text)
+    if result is None:
         result = {
             "headline": "Analysis complete",
             "suggestions": [],
@@ -2523,15 +2540,8 @@ async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
         raise HTTPException(status_code=504, detail="Diagnosis timed out — try again")
 
     text = "".join(getattr(b, "text", "") for b in response.content).strip()
-    for fence in ("```json", "```JSON", "```"):
-        if text.startswith(fence):
-            text = text[len(fence):]
-            break
-    text = text.rstrip("`").strip()
-
-    try:
-        diagnosis = json.loads(text)
-    except json.JSONDecodeError:
+    diagnosis = _extract_json_object(text)
+    if diagnosis is None:
         diagnosis = {"primary_issue": "Analysis complete", "fixes": [], "raw": text}
 
     result = {
