@@ -282,37 +282,18 @@ COLORING_THEMES = [
 # ---------------------------------------------------------------------------
 
 def _gen_image_openai(prompt: str) -> bytes | None:
-    """Call gpt-image-1 and return raw PNG bytes, or None on failure."""
-    api_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if not api_key:
-        print("  ⚠ OPENAI_API_KEY not set", file=sys.stderr)
-        return None
+    """Call gpt-image-1 (via the shared helper) and return raw PNG bytes, or None on failure."""
     try:
-        body = json.dumps({
-            "model": "gpt-image-1",
-            "prompt": prompt,
-            "size": "1536x1536",
-            "quality": "high",
-            "n": 1,
-            "output_format": "png",
-        }).encode()
-        req = urllib.request.Request(
-            "https://api.openai.com/v1/images/generations",
-            data=body,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=120) as resp:
-            result = json.loads(resp.read())
-        item = result["data"][0]
-        if item.get("b64_json"):
-            return base64.b64decode(item["b64_json"])
-        if item.get("url"):
-            with urllib.request.urlopen(item["url"], timeout=30) as r:
-                return r.read()
-    except Exception as exc:
+        from tools.image_gen import generate_image, SQUARE, ImageGenError
+    except ImportError:
+        sys.path.insert(0, str(BASE))
+        from tools.image_gen import generate_image, SQUARE, ImageGenError
+    try:
+        tmp_path = generate_image(prompt, BASE / "_tmp_coloring_gen.png", size=SQUARE, output_format="png")
+        data = tmp_path.read_bytes()
+        tmp_path.unlink(missing_ok=True)
+        return data
+    except ImageGenError as exc:
         print(f"  ✗ OpenAI error: {exc}", file=sys.stderr)
     return None
 
