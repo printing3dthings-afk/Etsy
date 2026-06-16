@@ -96,7 +96,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v21"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v23"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -1251,6 +1251,25 @@ async function loadAnalytics(days, btn) {
 
 // ── CEO Analysis (structured suggestion report) ────────────────────────────
 let _lastSuggestions = null;
+
+// Silent background refresh — called after showing a cached report so the display
+// updates to fresh data without ever showing a spinner. 30s timeout; fails silently.
+async function _bgRefreshSuggestions() {
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/suggestions',{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},30000);
+    var d = await r.json().catch(function(){return {};});
+    // Only update if we received a real, complete report (not a 202 warming stub)
+    if (r.status===200 && d && Array.isArray(d.suggestions) && d.suggestions.length && !d.error) {
+      var newer = !_lastSuggestions || (d.generated_at && d.generated_at > (_lastSuggestions.generated_at||''));
+      if (newer) {
+        _lastSuggestions = d;
+        try { sessionStorage.setItem('obc_sug', JSON.stringify(d)); } catch(e2) {}
+        var el2 = document.getElementById('ceo-suggestions');
+        if (el2) { el2.innerHTML = _renderSuggestions(d); updateChips(d); }
+      }
+    }
+  } catch(e) {}
+}
 const _PCOLOR = {critical:'var(--red)',high:'#e08030',medium:'var(--gold)',low:'#7ba0c2'};
 const _PRANK  = {critical:0,high:1,medium:2,low:3};
 function _renderSuggestions(d) {
@@ -1306,7 +1325,17 @@ async function getCeoSuggestions(forceRefresh, _attempt) {
   const el  = document.getElementById('ceo-suggestions');
   if (!el) return;
   _attempt = _attempt || 0;
-  if (_lastSuggestions && !forceRefresh && !_attempt) { if(btn)btn.style.display='none'; el.innerHTML=_renderSuggestions(_lastSuggestions); return; }
+  // Show cached report immediately — no spinner. A silent background fetch
+  // checks whether the server has a newer report and updates the display when
+  // it arrives. This means the dashboard is instant on every page reload even
+  // right after a Railway deploy (which wipes the server-side in-memory cache).
+  if (_lastSuggestions && !forceRefresh && !_attempt) {
+    if(btn)btn.style.display='none';
+    el.innerHTML=_renderSuggestions(_lastSuggestions);
+    updateChips(_lastSuggestions);
+    setTimeout(_bgRefreshSuggestions, 1500); // silent background check for newer data
+    return;
+  }
   if (btn) btn.style.display = 'none';
   if (!_attempt) el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">Fucking Frank is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
   try {
@@ -1321,6 +1350,7 @@ async function getCeoSuggestions(forceRefresh, _attempt) {
     }
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     _lastSuggestions = d;
+    try { sessionStorage.setItem('obc_sug', JSON.stringify(d)); } catch(e2) {}
     el.innerHTML = _renderSuggestions(d);
     updateChips(d);
   } catch(e) {
@@ -1785,6 +1815,20 @@ async function batchStageTags(btn) {
 
 // ── Init ───────────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
+// Restore last CEO report from sessionStorage so the dashboard is instant on
+// every page reload — no spinner needed when we already have recent data.
+(function(){
+  try {
+    var _s = sessionStorage.getItem('obc_sug');
+    if (_s) {
+      var _p = JSON.parse(_s);
+      if (_p && _p.generated_at && Array.isArray(_p.suggestions) && _p.suggestions.length && !_p.error) {
+        var _age = Date.now() - new Date(_p.generated_at).getTime();
+        if (_age < 4 * 3600 * 1000) _lastSuggestions = _p; // accept up to 4h old
+      }
+    }
+  } catch(e) {}
+})();
 loadDash();
 setTimeout(loadActions, 1200);  // populate Action Center + nav badge without being asked
 setTimeout(loadConvTargets, 1800);  // Conversion Doctor worklist on the dashboard
@@ -2490,6 +2534,8 @@ async def get_suggestions(_token: str = Depends(_auth)):
 # ── Conversion Doctor: find traffic-but-no-sales listings + diagnose one ──────────
 
 
+_CONV_TARGETS_TTL = 120  # 2-minute cache — fast enough to stay fresh, eliminates repeat Etsy API calls
+
 @app.get("/api/conversion-targets")
 async def conversion_targets(_token: str = Depends(_auth)):
     """Active listings getting views but no sales — the Conversion Doctor's worklist.
@@ -2497,6 +2543,10 @@ async def conversion_targets(_token: str = Depends(_auth)):
     Sorted by views descending (most wasted traffic first), top 10. Listings with
     favorites but zero sales rank as the strongest signal (proven interest, no buy).
     """
+    cached = _cache_get("conv_targets", ttl=_CONV_TARGETS_TTL)
+    if cached is not None:
+        return cached
+
     def _fetch():
         active = _enrich_sales(_listings_sync("active").get("listings", []))
         targets = [l for l in active if (l.get("views", 0) or 0) > 0 and (l.get("sales", 0) or 0) == 0]
@@ -2507,7 +2557,7 @@ async def conversion_targets(_token: str = Depends(_auth)):
         targets = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=20.0)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
-    return {
+    result = {
         "count": len(targets),
         "targets": [
             {
@@ -2523,6 +2573,8 @@ async def conversion_targets(_token: str = Depends(_auth)):
             for l in targets
         ],
     }
+    _cache_set("conv_targets", result)
+    return result
 
 
 @app.post("/api/diagnose/{listing_id}")
