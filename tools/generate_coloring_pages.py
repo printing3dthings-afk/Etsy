@@ -2,17 +2,24 @@
 """
 generate_coloring_pages.py
 
-Generates kawaii-themed coloring pages using gpt-image-1 — clean black line art
+Generates themed coloring pages using gpt-image-1 — clean black line art
 on white background, zero fills, suitable for printing and coloring.
+
+Two packs are available:
+  kawaii     20 kawaii-cute scenes, intricate, decorative border, fills 85-90% of page
+  fun_basic  20 fun/adventure scenes — half "basic" (one big bold simple subject,
+             lots of white space, no border, great for young kids/quick coloring)
+             and half "fun" (playful action scenes, moderate detail, light border)
 
 The previous PIL edge-detection approach was removed (it produced too much fill and
 muddy lines). This version generates original artwork directly.
 
 Usage:
-    python tools/generate_coloring_pages.py              # generate all 20 themes
-    python tools/generate_coloring_pages.py --themes 5  # first 5 themes only
-    python tools/generate_coloring_pages.py --regen      # force regenerate cached
-    python tools/generate_coloring_pages.py --preview    # listing JSON only, no images
+    python tools/generate_coloring_pages.py                       # kawaii pack, all 20
+    python tools/generate_coloring_pages.py --pack fun_basic       # fun/basic pack, all 20
+    python tools/generate_coloring_pages.py --themes 5            # first 5 themes only
+    python tools/generate_coloring_pages.py --regen                # force regenerate cached
+    python tools/generate_coloring_pages.py --preview              # listing JSON only, no images
 """
 
 import argparse
@@ -48,6 +55,93 @@ _STYLE = (
     "Suitable for printing on A4/letter paper and coloring with colored pencils or markers. "
     "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
 )
+
+# ---------------------------------------------------------------------------
+# Style DNA for the "fun_basic" pack — bolder/simpler lines for the "basic" tier
+# ---------------------------------------------------------------------------
+_STYLE_BOLD = (
+    "STYLE: Professional coloring book illustration for young children. "
+    "ONLY clean black lines on pure white background — absolutely ZERO fills, "
+    "ZERO shading, ZERO gray tones, ZERO gradients anywhere. "
+    "Line weight 3-4px, extra bold and simple, very few small details. "
+    "Pure #000000 black outlines on pure #FFFFFF white only. "
+    "Suitable for printing on A4/letter paper and coloring with crayons, colored pencils, or markers. "
+    "CONSTRAINT: Black lines only. White background. No color. No gray. No text. No watermarks."
+)
+
+
+def _basic_theme(id_, title, subject):
+    """One big, bold, simple subject — generous white space, no border. For young kids / quick coloring."""
+    return {
+        "id": id_,
+        "title": title,
+        "prompt": (
+            f"SUBJECT: {subject} "
+            "COMPOSITION: ONE large, simple subject centered on the page, fills only 50-60% of "
+            "the page, generous white space all around it, NO decorative border, minimal or no "
+            "background elements. Bold, very easy to color. "
+            + _STYLE_BOLD
+        ),
+    }
+
+
+def _fun_theme(id_, title, subject, border):
+    """Playful action scene — moderate detail, light border. More of a coloring challenge."""
+    return {
+        "id": id_,
+        "title": title,
+        "prompt": (
+            f"SUBJECT: {subject} "
+            f"COMPOSITION: Playful action scene, fills 75% of the page, moderate detail — "
+            f"fun and energetic but not overwhelming. Light decorative {border} border. "
+            + _STYLE
+        ),
+    }
+
+
+FUN_BASIC_THEMES = [
+    _basic_theme("CB001", "Big Friendly Dino", "A huge friendly cartoon T-Rex standing tall, big round eyes, "
+                 "stubby little arms, one small fern leaf beside its feet."),
+    _fun_theme("CB002", "Race Car Rally", "A sleek race car speeding past a checkered flag, racing stripes, "
+               "motion/speed lines trailing behind, a trophy in the background.", "checkered-flag"),
+    _basic_theme("CB003", "Friendly Chunky Robot", "One big chunky friendly robot with a square head, round "
+                 "antenna, big buttons on its chest, simple little feet."),
+    _fun_theme("CB004", "Pirate Treasure Hunt", "A pirate ship sailing toward a small island, an open treasure "
+               "chest spilling coins and gems, a parrot on the mast, a palm tree on the island.", "rope-and-anchor"),
+    _basic_theme("CB005", "Big Happy Whale", "One large happy whale leaping with a small water spout, a couple "
+                 "of simple bubble shapes nearby, nothing else on the page."),
+    _fun_theme("CB006", "Superhero Squad", "Two kid superheroes flying side by side with capes flowing, fists "
+               "forward, a simple city skyline silhouette below, comic-style motion lines.", "star-burst"),
+    _basic_theme("CB007", "Tractor on the Farm", "One big friendly tractor with large wheels, a smiling sun "
+                 "overhead, a short simple fence line in the background."),
+    _fun_theme("CB008", "Knight and Dragon", "A knight on horseback with a lance facing a small friendly dragon "
+               "puffing a heart-shaped breath, a castle with turrets in the background.", "shield-and-banner"),
+    _basic_theme("CB009", "Smiling Sun and Clouds", "One giant smiling sun with simple ray lines, two small "
+                 "puffy clouds floating beside it, nothing else on the page."),
+    _fun_theme("CB010", "Jungle Safari Jeep", "An open safari jeep driving past a friendly elephant, a monkey "
+               "swinging from a tree branch, large palm leaves framing the scene.", "leaf-vine"),
+    _fun_theme("CB011", "Monster Truck Mania", "A giant monster truck mid-jump over a dirt ramp, dust clouds "
+               "and motion lines behind the wheels, a small checkered finish flag in the background.", "tire-tread"),
+    _basic_theme("CB012", "Friendly Monster Buddies", "Two simple round friendly monsters with big eyes and "
+                 "tiny horns, standing side by side, holding hands, nothing else on the page."),
+    _basic_theme("CB013", "Soccer Star", "One kid mid-kick toward a soccer ball, a simple goal net behind them, "
+                 "no crowd or background detail."),
+    _fun_theme("CB014", "Submarine Deep Dive", "A round-windowed submarine exploring near a sunken treasure "
+               "chest, a few curious fish swimming by, bubbles rising, simple coral shapes.", "bubble-and-wave"),
+    _fun_theme("CB015", "Camping Under the Stars", "A pointed tent beside a crackling campfire with a "
+               "marshmallow on a stick, a few simple pine trees, stars scattered in the sky.", "pine-tree"),
+    _basic_theme("CB016", "Big Rocket Blast Off", "One large rocket ship blasting upward with a simple flame "
+                 "trail, three or four small stars scattered around it, nothing else on the page."),
+    _fun_theme("CB017", "Construction Crew", "A bulldozer, a crane, and a dump truck working together at a "
+               "job site, a small pile of dirt and a traffic cone, simple background hills.", "caution-stripe"),
+    _basic_theme("CB018", "Sleepy Dragon Nap", "One small dragon curled up asleep with closed eyes, a single "
+                 "flower resting beside its tail, nothing else on the page."),
+    _fun_theme("CB019", "Circus Big Top Fun", "A circus tent with pennant flags, a clown juggling three balls, "
+               "an elephant balancing on a striped ball, simple bunting in the background.", "bunting-flag"),
+    _basic_theme("CB020", "Round Owl Friend", "One simple round owl made of big bold circular shapes — big "
+                 "eyes, tiny beak, two simple wing shapes — sitting alone with nothing else on the page."),
+]
+
 
 # ---------------------------------------------------------------------------
 # 20 kawaii-themed coloring page subjects
@@ -278,6 +372,15 @@ COLORING_THEMES = [
 
 
 # ---------------------------------------------------------------------------
+# Pack registry — id prefix is also used to namespace ZIPs/listing JSON per pack
+# ---------------------------------------------------------------------------
+PACKS = {
+    "kawaii": COLORING_THEMES,
+    "fun_basic": FUN_BASIC_THEMES,
+}
+
+
+# ---------------------------------------------------------------------------
 # Image generation
 # ---------------------------------------------------------------------------
 
@@ -344,14 +447,15 @@ def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False) -
 # ZIP packaging
 # ---------------------------------------------------------------------------
 
-def build_sets(coloring_files: list[Path]) -> list[Path]:
+def build_sets(coloring_files: list[Path], pack: str = "kawaii") -> list[Path]:
     """Package coloring PNGs into ZIP sets of PAGES_PER_SET."""
     SETS_DIR.mkdir(parents=True, exist_ok=True)
+    prefix = "coloring_set" if pack == "kawaii" else f"coloring_{pack}_set"
     zip_paths: list[Path] = []
     for i in range(0, len(coloring_files), PAGES_PER_SET):
         batch = coloring_files[i : i + PAGES_PER_SET]
         set_num = (i // PAGES_PER_SET) + 1
-        zip_path = SETS_DIR / f"coloring_set_{set_num:02d}.zip"
+        zip_path = SETS_DIR / f"{prefix}_{set_num:02d}.zip"
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
             for page in batch:
                 zf.write(page, page.name)
@@ -364,10 +468,8 @@ def build_sets(coloring_files: list[Path]) -> list[Path]:
 # Listing JSON
 # ---------------------------------------------------------------------------
 
-def generate_listing_json(zip_paths: list[Path]) -> Path:
-    today = date.today().strftime("%Y%m%d")
-    json_path = COLORING_DIR / f"listing_{today}.json"
-    listing = {
+_LISTING_META = {
+    "kawaii": {
         "title": "Kawaii Coloring Pages Printable, Adult Coloring Book, Instant Download",
         "price": 3.99,
         "tags": [
@@ -385,21 +487,69 @@ def generate_listing_json(zip_paths: list[Path]) -> Path:
             "digital coloring",
             "kawaii art print",
         ],
+        "hook": (
+            "🎨 Instant download kawaii coloring pages — print and color as many times as you want!\n\n"
+            "20 unique kawaii-themed coloring pages with adorable scenes — garden parties, "
+            "underwater kingdoms, space adventures, floral mandalas, and more. Each page is a crisp "
+            "black outline on white — zero fills — ready to bring to life with your favorite "
+            "markers, colored pencils, or watercolors."
+        ),
+        "whats_included": [
+            "20 unique kawaii coloring page PNG files",
+            "High resolution 2400×2400px — prints beautifully at 8×8\", 8×10\", or A4",
+            "Pure black outline on white background — zero fills, zero shading",
+            "Themes: garden, ocean, forest, cats, space, florals, dragons, bakery & more",
+            "Instant digital download — no physical item shipped",
+        ],
+    },
+    "fun_basic": {
+        "title": "Fun Adventure Coloring Pages, Kids Coloring Book, Instant Download",
+        "price": 3.99,
+        "tags": [
+            "kids coloring pages",
+            "printable coloring",
+            "easy coloring pages",
+            "coloring page download",
+            "instant download",
+            "boy coloring pages",
+            "dinosaur coloring",
+            "toddler coloring page",
+            "simple coloring book",
+            "coloring book pdf",
+            "fun coloring pages",
+            "digital coloring",
+            "preschool coloring",
+        ],
+        "hook": (
+            "🚀 Instant download fun adventure coloring pages — print and color as many times as you want!\n\n"
+            "20 unique coloring pages packed with fun — dinosaurs, race cars, pirates, robots, and more. "
+            "Half the pages are big, bold, and simple — perfect for toddlers and beginners — and half are "
+            "playful action scenes with a bit more detail for older kids. Each page is a crisp "
+            "black outline on white — zero fills — ready for crayons, markers, or colored pencils."
+        ),
+        "whats_included": [
+            "20 unique coloring page PNG files — 10 big & bold simple designs, 10 fun action scenes",
+            "High resolution 2400×2400px — prints beautifully at 8×8\", 8×10\", or A4",
+            "Pure black outline on white background — zero fills, zero shading",
+            "Themes: dinosaurs, race cars, pirates, robots, knights, space, animals & more",
+            "Instant digital download — no physical item shipped",
+        ],
+    },
+}
+
+
+def generate_listing_json(zip_paths: list[Path], pack: str = "kawaii") -> Path:
+    today = date.today().strftime("%Y%m%d")
+    meta = _LISTING_META[pack]
+    json_path = COLORING_DIR / f"listing_{pack}_{today}.json"
+    listing = {
+        "pack": pack,
+        "title": meta["title"],
+        "price": meta["price"],
+        "tags": meta["tags"],
         "description": {
-            "hook": (
-                "🎨 Instant download kawaii coloring pages — print and color as many times as you want!\n\n"
-                "20 unique kawaii-themed coloring pages with adorable scenes — garden parties, "
-                "underwater kingdoms, space adventures, floral mandalas, and more. Each page is a crisp "
-                "black outline on white — zero fills — ready to bring to life with your favorite "
-                "markers, colored pencils, or watercolors."
-            ),
-            "whats_included": [
-                "20 unique kawaii coloring page PNG files",
-                "High resolution 2400×2400px — prints beautifully at 8×8\", 8×10\", or A4",
-                "Pure black outline on white background — zero fills, zero shading",
-                "Themes: garden, ocean, forest, cats, space, florals, dragons, bakery & more",
-                "Instant digital download — no physical item shipped",
-            ],
+            "hook": meta["hook"],
+            "whats_included": meta["whats_included"],
             "disclaimer": (
                 "⚠️ DIGITAL DOWNLOAD only — NOT a physical coloring book. "
                 "PNG files delivered instantly after purchase. No shipping."
@@ -425,6 +575,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generate kawaii coloring pages via gpt-image-1"
     )
+    parser.add_argument("--pack", choices=list(PACKS), default="kawaii",
+                        help="Which theme pack to generate (default: kawaii)")
     parser.add_argument("--themes", type=int, default=None, metavar="N",
                         help="Generate first N themes only (default: all 20)")
     parser.add_argument("--regen", action="store_true",
@@ -436,14 +588,15 @@ def main() -> None:
     COLORING_DIR.mkdir(parents=True, exist_ok=True)
     SETS_DIR.mkdir(parents=True, exist_ok=True)
 
-    themes = COLORING_THEMES[: args.themes] if args.themes else COLORING_THEMES
+    pack_themes = PACKS[args.pack]
+    themes = pack_themes[: args.themes] if args.themes else pack_themes
 
     if args.preview:
         print("Preview mode — skipping image generation")
-        generate_listing_json([])
+        generate_listing_json([], pack=args.pack)
         return
 
-    print(f"Generating {len(themes)} coloring page(s) via gpt-image-1…\n")
+    print(f"Generating {len(themes)} '{args.pack}' coloring page(s) via gpt-image-1…\n")
     generated: list[Path] = []
     for theme in themes:
         p = generate_coloring_page(theme, COLORING_DIR, regen=args.regen)
@@ -455,8 +608,8 @@ def main() -> None:
         sys.exit(1)
 
     print(f"\nPackaging {len(generated)} pages into ZIP sets…")
-    zip_paths = build_sets(generated)
-    generate_listing_json(zip_paths)
+    zip_paths = build_sets(generated, pack=args.pack)
+    generate_listing_json(zip_paths, pack=args.pack)
     print(f"\n✅ Done — {len(generated)} coloring pages · {len(zip_paths)} ZIP set(s)")
 
 
