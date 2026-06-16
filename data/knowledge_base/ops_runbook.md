@@ -95,3 +95,27 @@ field, full headline/score/top_win/top_risk populated.
 **Lesson:** A 200 status code is not proof a feature is actually working — always check
 the response *body* makes sense, not just the HTTP status. This bug shipped silently
 inside what looked like a successful fix.
+
+### 2026-06-16 — Spinner STILL stuck: the real cause was raw latency (~80s), not a crash
+**Symptom:** Scott reported the "Fucking Frank is analyzing your shop…" spinner still
+looked stuck even after the 500 and parse fixes above. Backend was returning HTTP 200
+with a valid 8-suggestion report — but only after ~75–80 seconds.
+**Root cause:** `/api/suggestions` ran the data gathering as an agentic tool loop — the
+model was made to call get_metrics, then list_listings(active), then list_listings(draft)
+one at a time = 4 sequential Claude round-trips before the report. That's ~80s. The
+in-memory cache (`_cache`) is wiped on every redeploy (db is `persistent: false`), so
+right after any deploy the first dashboard load hit the full cold 80s path — dangerously
+close to the frontend's 120s fetch timeout, and long enough that it reads as "stuck."
+**Fix (3 commits):** (1) Gather the 3 known data pulls directly in Python with
+`asyncio.gather` and do ONE synthesis call instead of a tool loop. (2) This alone was
+still ~60–80s for the single big call, so the durable fix is a background warm loop
+(`_warm_suggestions`): prime the cache ~5s after boot, then re-prime ~2min before each
+expiry; suggestions cache TTL raised 300s → 1800s. The dashboard now serves an instant
+(<1s) cache hit on every load; only the one-time ~60s window right after a fresh deploy
+is cold. (3) Don't cache a parse_failed/truncated result (would freeze a broken report
+for 30min); warm loop retries in 60s on parse failure. NOTE: cutting max_tokens to 2400
+truncated the JSON and caused a parse fail — kept at 4000.
+**Lesson:** "Spinner stuck" can mean "genuinely too slow," not "crashed." When an
+endpoint is correct but slow AND its cache resets on deploy, the fix is to keep the
+cache warm in the background, not to chase a nonexistent exception. Verify a fix by
+timing a real cold call, not just checking it returns 200.
