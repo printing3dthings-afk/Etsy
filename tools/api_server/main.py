@@ -1301,16 +1301,24 @@ function toggleCeoPanel(btn) {
   el.style.display = hidden ? '' : 'none';
   btn.textContent = hidden ? '▲ Collapse CEO Analysis' : '▼ Show CEO Analysis';
 }
-async function getCeoSuggestions(forceRefresh) {
+async function getCeoSuggestions(forceRefresh, _attempt) {
   const btn = document.getElementById('ceo-analyze-btn');
   const el  = document.getElementById('ceo-suggestions');
   if (!el) return;
-  if (_lastSuggestions && !forceRefresh) { if(btn)btn.style.display='none'; el.innerHTML=_renderSuggestions(_lastSuggestions); return; }
+  _attempt = _attempt || 0;
+  if (_lastSuggestions && !forceRefresh && !_attempt) { if(btn)btn.style.display='none'; el.innerHTML=_renderSuggestions(_lastSuggestions); return; }
   if (btn) btn.style.display = 'none';
-  el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">Fucking Frank is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
+  if (!_attempt) el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">Fucking Frank is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
   try {
     const r = await fetchWithTimeout(BASE+'/api/suggestions', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 120000);
     const d = await r.json().catch(function(){return {};});
+    // 202 = the report is still being computed (cold cache, e.g. just after an
+    // update). Keep the spinner and poll — never block the request for a minute.
+    if (r.status === 202 || (d && d.status === 'warming')) {
+      if (_attempt >= 25) throw new Error('Analysis is taking longer than usual');
+      setTimeout(function(){ getCeoSuggestions(forceRefresh, _attempt + 1); }, 4000);
+      return;
+    }
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     _lastSuggestions = d;
     el.innerHTML = _renderSuggestions(d);
@@ -2359,13 +2367,38 @@ async def get_analytics(days: int = 30, _token: str = Depends(_auth)):
     }
 
 
+# True while a CEO-diagnostic synthesis is in flight, so the endpoint and the warm
+# loop never kick off two at once and the endpoint can answer "warming, poll again"
+# instead of blocking a request for the full ~60s synthesis.
+_suggestions_warming = False
+
+
+async def _run_suggestions_safely() -> None:
+    """Fire-and-forget wrapper: compute suggestions, swallow errors (they're logged
+    elsewhere). Used to kick off a warm from the request path without blocking it."""
+    try:
+        await _compute_suggestions()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[suggestions] background compute failed: {exc}", flush=True)
+
+
 async def _compute_suggestions() -> dict:
     """Gather shop data + synthesise the CEO diagnostic JSON. Caches the result.
     Shared by the /api/suggestions endpoint and the startup cache-warmer so the
     dashboard never has to wait on a cold cache right after a deploy."""
+    global _suggestions_warming
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+    _suggestions_warming = True
+    try:
+        return await _compute_suggestions_inner()
+    finally:
+        _suggestions_warming = False
 
+
+async def _compute_suggestions_inner() -> dict:
+    """The actual data-gather + synthesis. Wrapped by _compute_suggestions which
+    manages the _suggestions_warming flag."""
     # Gather the three data pulls DIRECTLY in Python instead of making the model
     # call them as tools. The old approach forced 3 sequential Claude round-trips
     # (call -> result -> call -> result -> call -> result -> synthesis) which took
@@ -2433,14 +2466,25 @@ async def _compute_suggestions() -> dict:
 @app.post("/api/suggestions")
 async def get_suggestions(_token: str = Depends(_auth)):
     """CEO agent synthesises a structured JSON suggestion report from live shop
-    data (metrics + active + draft listings). Served from a cache that a
-    background loop keeps warm (see _warm_suggestions) so the dashboard is
-    instant; the synthesis itself takes ~60s so we never want it on the hot path
-    if we can avoid it."""
+    data (metrics + active + draft listings). A background loop keeps the cache
+    warm so this is normally an instant hit. If the cache IS cold (the ~75s window
+    right after a deploy), we do NOT block the request for a full minute — that's
+    what made the dashboard spinner look stuck. Instead we make sure a synthesis is
+    running and return 202 'warming' immediately; the frontend polls until ready."""
     cached = _cache_get("suggestions", ttl=_SUGGESTIONS_TTL)
     if cached is not None:
         return cached
-    return await _compute_suggestions()
+
+    if not _suggestions_warming:
+        asyncio.create_task(_run_suggestions_safely())
+    return JSONResponse(
+        status_code=202,
+        content={
+            "status": "warming",
+            "headline": "Analyzing your shop… first run after an update takes up to a minute.",
+            "suggestions": [],
+        },
+    )
 
 
 # ── Conversion Doctor: find traffic-but-no-sales listings + diagnose one ──────────
