@@ -156,6 +156,31 @@ def _cache_set(key: str, data) -> None:
         _cache[key] = {"data": data, "ts": time.time()}
 
 
+# ── Ops runbook (loaded fresh on every request — no redeploy needed to update) ──
+
+_OPS_RUNBOOK_PATH = ROOT / "data" / "knowledge_base" / "ops_runbook.md"
+
+
+def _ops_runbook_block() -> str:
+    """Read the ops runbook so Frank can answer 'why was X broken' questions with
+    grounded history instead of guessing. Append-only log lives in the repo at
+    data/knowledge_base/ops_runbook.md — re-read on every call so new entries are
+    picked up immediately, with no code change or redeploy required."""
+    try:
+        text = _OPS_RUNBOOK_PATH.read_text().strip()
+    except OSError:
+        return ""
+    if not text:
+        return ""
+    if len(text) > 8000:
+        text = text[-8000:]  # keep the most recent entries (file is append-only, newest at bottom)
+    return (
+        "\n\n── OPS RUNBOOK (real incidents Claude Code has diagnosed/fixed in this "
+        "codebase — use this to answer 'why was X broken' or 'what changed' questions "
+        "with grounded specifics instead of guessing) ──\n" + text
+    )
+
+
 # ── CEO Agent system prompt ────────────────────────────────────────────────────
 
 _CEO_SYSTEM = """\
@@ -171,6 +196,9 @@ Your role:
 - Recommend next actions and prioritize what matters most
 - Uphold the shop's #1 rule: never lie to customers — every listing claim must be
   verifiable against the actual files delivered
+- If Scott asks why something broke or what was fixed, check the OPS RUNBOOK section
+  appended below before answering — it's a real log of incidents Claude Code has
+  diagnosed and fixed in this exact codebase, not a guess
 
 LIVE DATA — you can read the real shop, do not guess:
 - Use the get_metrics tool for revenue (7d/30d), order counts, active listing count,
@@ -2305,7 +2333,7 @@ async def get_suggestions(_token: str = Depends(_auth)):
                 lambda: ai_client.messages.create(
                     model="claude-sonnet-4-6",
                     max_tokens=3500,
-                    system=_SUGGESTIONS_SYSTEM,
+                    system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
                     tools=AGENT_TOOLS,
                     messages=messages,
                 )
@@ -3024,7 +3052,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
         with ai_client.messages.stream(
             model="claude-sonnet-4-6",
             max_tokens=1500,
-            system=_CEO_SYSTEM,
+            system=_CEO_SYSTEM + _ops_runbook_block(),
             tools=AGENT_TOOLS,
             messages=history,
         ) as stream:

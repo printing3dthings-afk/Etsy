@@ -2367,6 +2367,7 @@ Rules:
 | Social post scheduling | Buffer or Tailwind |
 | Shop health snapshots | `tools/shop_health_check.py` |
 | **Backup digital_products/ after producing a new product's files** | `tools/backup_digital_products.py` — run as soon as a new product's source art/PDF/ZIP is generated, since `data/digital_products/` is gitignored and has no other durable backup. Hand the output ZIP to Scott (via chat) to save in his own cloud storage. |
+| **Log infrastructure/dashboard incidents for the CEO Agent (Fucking Frank)** | Append a short dated entry (symptom, root cause, fix) to `data/knowledge_base/ops_runbook.md` any time Claude Code diagnoses or fixes a problem with the live site, API, deploy, or credentials — Frank loads this file fresh on every chat/diagnostic request (`_ops_runbook_block()` in `tools/api_server/main.py`), so Scott can ask Frank directly "why was X broken?" and get a grounded answer instead of a guess. Keep entries short — this is a log, not a report. |
 
 ### Keep Manual (human judgment required)
 - Review responses — tone matters; script = damage
