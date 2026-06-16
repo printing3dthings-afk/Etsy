@@ -53,7 +53,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v18"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v19"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -599,19 +599,19 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
   </header>
 
   <div id="screen-dash" class="screen active">
-    <div id="dash-content"><div class="spinner"></div></div>
-    <div style="margin-top:4px">
-      <button id="ceo-analyze-btn" class="ceo-btn" onclick="getCeoSuggestions(false)">
+    <div style="margin-bottom:8px">
+      <button id="ceo-analyze-btn" class="ceo-btn" onclick="getCeoSuggestions(false)" style="display:none">
         <span>🎯</span><span>Run CEO Analysis</span>
       </button>
-      <div id="ceo-suggestions"></div>
+      <div id="ceo-suggestions"><div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">CEO agent analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div></div>
     </div>
+    <div id="dash-content"><div class="spinner"></div></div>
     <div id="conv-doctor-wrap" style="margin-top:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px">
         <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">🩺 Conversion Doctor</div>
-        <button id="conv-collapse-btn" onclick="toggleConvPanel(this)" style="display:none;font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer">▲ Collapse</button>
+        <button id="conv-collapse-btn" onclick="toggleConvPanel(this)" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer">▼ Show</button>
       </div>
-      <div id="conv-doctor"><div class="spinner"></div></div>
+      <div id="conv-doctor" style="display:none"></div>
     </div>
   </div>
 
@@ -877,6 +877,7 @@ async function fetchDashData() {
 function loadDash() {
   document.getElementById('dash-content').innerHTML = _dashSkeleton();
   fetchDashData();
+  getCeoSuggestions(false);
 }
 
 // ── Listings ───────────────────────────────────────────────────────────────
@@ -1137,11 +1138,29 @@ async function getCeoSuggestions(forceRefresh) {
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     _lastSuggestions = d;
     el.innerHTML = _renderSuggestions(d);
+    updateChips(d);
   } catch(e) {
     const msg = e.name==='AbortError' ? 'Analysis timed out — try again' : escHtml(e.message||'Failed');
     el.innerHTML = '<div class="empty">'+msg+'</div><div style="text-align:center;margin-top:8px"><button onclick="getCeoSuggestions(true)" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Try Again</button></div>';
     if (btn) btn.style.display = '';
   }
+}
+function updateChips(data) {
+  const el = document.querySelector('.chips');
+  if (!el) return;
+  const sugs = ((data && data.suggestions) || [])
+    .slice()
+    .sort(function(a,b){ return (_PRANK[a.priority]||9) - (_PRANK[b.priority]||9); })
+    .slice(0, 2);
+  const chips = [];
+  sugs.forEach(function(s) {
+    if (s.title) chips.push('Fix: ' + (s.title.length > 30 ? s.title.slice(0,28)+'…' : s.title));
+  });
+  const fallbacks = ["What's my next listing?", 'How are sales?', 'Pricing advice', 'SEO tips', 'What should I focus on?'];
+  fallbacks.forEach(function(f) { if (chips.length < 5) chips.push(f); });
+  el.innerHTML = chips.slice(0, 5).map(function(c) {
+    return '<span class="chip" onclick="sendChip(this)">'+escHtml(c)+'</span>';
+  }).join('');
 }
 function askSuggestionFix(i) {
   if (!_lastSuggestions) return;
