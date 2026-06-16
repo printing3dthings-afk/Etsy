@@ -140,3 +140,22 @@ endpoint returned 202 in <1s repeatedly, then flipped to the full 8-suggestion 2
 report the instant the warm finished (~55s); steady-state load is ~0.17s.
 **Lesson:** Never put a multi-second, let alone minute-long, synchronous AI call on a
 user's hot path. Return fast with a "working on it" status and let the client poll.
+
+### 2026-06-16 — Spinner still perceived "stuck" after 202+poll fix — root cause was no client-side persistence
+**Symptom:** Scott reported spinner still spinning even after the 202+poll non-blocking fix was confirmed
+working. Backend was returning correct 200 with 8 suggestions after ~75s; 202+poll architecture was intact.
+**Root cause:** `_lastSuggestions` (the JS variable holding the last report) was initialized to `null`
+on every page load — there was no browser-side persistence. The sessionStorage write in `getCeoSuggestions`
+and `_bgRefreshSuggestions` was saving the report correctly, but the missing piece was an init IIFE before
+`loadDash()` that reads it back. So on every reload (and every Railway redeploy triggers a page reload to
+pick up the new service worker cache), the spinner ran again from scratch even though the browser already
+had a valid report from 5 minutes ago.
+**Fix:** Added an IIFE immediately before `loadDash()` that reads `sessionStorage.getItem('obc_sug')`,
+validates the stored report (must have `generated_at`, non-empty `suggestions`, no `error`, and be <4h old),
+and populates `_lastSuggestions`. `getCeoSuggestions` already checks `_lastSuggestions` first and shows it
+instantly with a silent background refresh for newer data — so the only missing link was the init IIFE.
+Also added a 2-minute server-side cache to `/api/conversion-targets` to prevent the Conversion Doctor
+from hitting the Etsy API on every panel open. Bump to BUILD_ID v23.
+**Lesson:** Client-side JS variables reset on every page load. If state needs to survive a reload, write
+it to sessionStorage (or localStorage for longer persistence) AND read it back on init. The write without
+the read is a silent no-op from the user's perspective.
