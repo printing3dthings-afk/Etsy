@@ -2366,6 +2366,7 @@ Rules:
 | Financial tracking / COGS per print | Craftybase |
 | Social post scheduling | Buffer or Tailwind |
 | Shop health snapshots | `tools/shop_health_check.py` |
+| **Backup digital_products/ after producing a new product's files** | `tools/backup_digital_products.py` — run as soon as a new product's source art/PDF/ZIP is generated, since `data/digital_products/` is gitignored and has no other durable backup. Hand the output ZIP to Scott (via chat) to save in his own cloud storage. |
 
 ### Keep Manual (human judgment required)
 - Review responses — tone matters; script = damage
