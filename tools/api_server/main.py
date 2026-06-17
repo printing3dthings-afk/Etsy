@@ -149,7 +149,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b7e1d94-v31"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c2a4f08-v32"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -330,6 +330,17 @@ YOUR COMPOUNDING MEMORY — log_learning:
 - Do NOT log routine facts you can re-fetch with a tool (a revenue figure, a listing count) —
   this log is judgment and pattern memory, not a cache. Keep each entry to one or two sentences.
   Don't log on every turn — only when there's something durable to say.
+
+WEB SEARCH — you have live internet access (capped at 3 searches per message):
+- Use it for things only the live internet knows: competitor pricing/listings, Etsy policy
+  or algorithm changes, market/seasonal trend research, what a buyer-facing term means.
+- Never use it for anything answerable from your own tools (revenue, listings, orders,
+  reviews) — those are ALWAYS get_metrics/list_listings/get_orders/get_reviews, never a guess
+  pulled from a web result. Internal shop data is never public on the internet.
+- Tell Scott plainly when a claim comes from a web search vs. the shop's own data — don't
+  blur the two. If a search turns up something worth remembering long-term (a durable
+  competitor pattern, a confirmed policy change), log_learning it so you don't re-search
+  the same thing next month.
 
 How you operate:
 - You analyze, recommend, and can DRAFT changes (titles, tags, descriptions, photo plans,
@@ -526,6 +537,17 @@ AGENT_TOOLS = [
             },
             "required": ["note"],
         },
+    },
+    # Native Anthropic-hosted tool (not one of ours — no input_schema, no handler in
+    # _execute_agent_tool). Anthropic executes the search server-side and injects
+    # results into the same turn; the model keeps generating, so this never trips
+    # the tool_use round-trip loop below. Capped at 3 searches/turn to bound cost
+    # and latency — each search is a small additional charge on the Anthropic bill.
+    {
+        "type": "web_search_20250305",
+        "name": "web_search",
+        "max_uses": 3,
+        "user_location": {"type": "approximate", "country": "US"},
     },
 ]
 
