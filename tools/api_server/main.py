@@ -47,6 +47,41 @@ import anthropic
 import db  # local persistence layer (tools/api_server/db.py)
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 
+
+def _reconcile_etsy_tokens() -> None:
+    """Restore a rotated Etsy token from the durable /data DB if the env var is stale.
+
+    Railway re-injects whatever ETSY_ACCESS_TOKEN/ETSY_REFRESH_TOKEN it has stored on
+    every restart. But Etsy rotates the refresh token on every use and invalidates the
+    old one — so if this server refreshed the token before a restart, the env var is
+    now a dead token and the next refresh 401s with invalid_grant (diagnosed 2026-06-17,
+    see ops_runbook.md). _token_sync_loop() below persists each rotation to the /data
+    SQLite volume, which survives restarts; this function runs once at boot and prefers
+    that row — but only when it's provably a forward rotation of the *current* env
+    token (matched via parent_refresh_token lineage), so a genuine manual
+    re-authorization (tools/etsy_oauth.py + a fresh dashboard update) always wins over
+    a stale DB row left over from before that re-auth.
+    """
+    env_refresh = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
+    try:
+        stored = db.get_etsy_tokens()
+    except Exception as exc:
+        print(f"[etsy-tokens] reconcile skipped: {exc}", flush=True)
+        return
+    if not stored:
+        return
+    if env_refresh and env_refresh not in (stored.get("refresh_token"), stored.get("parent_refresh_token")):
+        print("[etsy-tokens] env refresh token doesn't match stored lineage — "
+              "treating env as a fresh re-authorization, leaving it in place", flush=True)
+        return
+    if stored.get("access_token") and stored.get("refresh_token"):
+        os.environ["ETSY_ACCESS_TOKEN"] = stored["access_token"]
+        os.environ["ETSY_REFRESH_TOKEN"] = stored["refresh_token"]
+        print(f"[etsy-tokens] restored rotated token from {db.DB_PATH} (persistent={db.is_persistent()})", flush=True)
+
+
+_reconcile_etsy_tokens()
+
 # ── Executable command registry (CEO agent can invoke these) ───────────────────
 _EXEC_COMMANDS: dict[str, dict] = {
     "shop_health_check": {
@@ -114,7 +149,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a9f2e6d-v29"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f3c8a21-v30"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -2579,6 +2614,30 @@ async def _warm_suggestions() -> None:
         await asyncio.sleep(_SUGGESTIONS_TTL - 120)  # refresh just before expiry
 
 
+async def _token_sync_loop() -> None:
+    """Persist Etsy token rotations to the durable /data DB as they happen.
+
+    tools/etsy_api.py's refresh_access_token() updates os.environ in-memory the
+    moment it rotates, and tries to write .env — fine on Scott's machine, but
+    Railway's filesystem is ephemeral so that write doesn't survive a restart.
+    Polling os.environ here (instead of modifying etsy_api.py) keeps the fix
+    isolated to this server and changes zero behavior for any other consumer
+    (CI, Scott's local scripts) that imports etsy_api.py directly."""
+    last_access = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
+    last_refresh = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
+    while True:
+        await asyncio.sleep(60)
+        try:
+            cur_access = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
+            cur_refresh = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
+            if cur_access and cur_refresh and (cur_access != last_access or cur_refresh != last_refresh):
+                await asyncio.to_thread(db.save_etsy_tokens, cur_access, cur_refresh, last_refresh)
+                print(f"[etsy-tokens] persisted rotated token to {db.DB_PATH}", flush=True)
+                last_access, last_refresh = cur_access, cur_refresh
+        except Exception as exc:
+            print(f"[etsy-tokens] sync error: {exc}", flush=True)
+
+
 @app.on_event("startup")
 async def _startup() -> None:
     try:
@@ -2588,6 +2647,7 @@ async def _startup() -> None:
         print(f"[db] init failed: {exc}", flush=True)
     asyncio.create_task(_snapshot_loop())
     asyncio.create_task(_warm_suggestions())
+    asyncio.create_task(_token_sync_loop())
 
 
 @app.get("/api/history")

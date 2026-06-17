@@ -90,6 +90,13 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_chat_session ON chat_messages(session_id, id);
+CREATE TABLE IF NOT EXISTS etsy_tokens (
+  id                    INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
+  access_token          TEXT NOT NULL,
+  refresh_token         TEXT NOT NULL,
+  parent_refresh_token  TEXT,   -- the refresh_token this one rotated FROM (lineage check)
+  updated_at            TEXT NOT NULL
+);
 """
 
 
@@ -315,6 +322,52 @@ def load_chat_history(session_id: str, limit: int = 40) -> list:
             (session_id, limit),
         ).fetchall()
         return [{"role": r["role"], "content": r["content"]} for r in rows][::-1]
+    finally:
+        conn.close()
+
+
+# ── Etsy token durability (survives Railway restarts) ────────────────────────
+#
+# Railway's filesystem is ephemeral: every restart re-injects whatever
+# ETSY_ACCESS_TOKEN / ETSY_REFRESH_TOKEN the dashboard has stored, but Etsy
+# rotates the refresh token on every use and invalidates the old one. If the
+# live server refreshes the token and then restarts before anyone updates the
+# dashboard, the next refresh attempt 401s with invalid_grant on a token that
+# no longer exists anywhere. This table is the durable side of the fix: the
+# server persists each rotation here, and on boot prefers this row over the
+# (possibly stale) env var — but only when it's provably a forward rotation of
+# the current env token (see parent_refresh_token), so a genuine manual
+# re-authorization (tools/etsy_oauth.py + a fresh dashboard update) still wins.
+
+
+def save_etsy_tokens(access_token: str, refresh_token: str, parent_refresh_token: str | None = None) -> None:
+    """Persist the latest known-good Etsy OAuth token pair. Singleton row (id=1)."""
+    if not access_token or not refresh_token:
+        return
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO etsy_tokens (id, access_token, refresh_token, parent_refresh_token, updated_at)
+               VALUES (1, ?, ?, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET
+                 access_token=excluded.access_token, refresh_token=excluded.refresh_token,
+                 parent_refresh_token=excluded.parent_refresh_token, updated_at=excluded.updated_at""",
+            (access_token, refresh_token, parent_refresh_token, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_etsy_tokens() -> dict | None:
+    """The last persisted Etsy token pair, or None if nothing has been saved yet."""
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute("SELECT * FROM etsy_tokens WHERE id=1").fetchone()
+        return dict(r) if r else None
     finally:
         conn.close()
 

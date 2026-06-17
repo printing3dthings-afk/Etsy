@@ -271,3 +271,23 @@ whole Etsy integration goes dark until Scott re-runs `python tools/etsy_oauth.py
 solved for GitHub Actions (write rotated token back to the secret store). Recommended durable fix: persist
 rotated tokens to the `/data` SQLite volume and prefer the newer of DB-vs-env on startup. Deferred because a
 botched token-precedence change could itself cause an outage and can't be tested against live Railway here.
+
+**2026-06-17 (later same day) — landmine fixed.** Added a durable `etsy_tokens` table to `db.py`
+(`save_etsy_tokens()` / `get_etsy_tokens()`, singleton row on the `/data` volume) plus two small additions
+to `main.py`, deliberately **without touching `tools/etsy_api.py`** so every other consumer (CI's own
+already-working rotation via `ci_refresh_etsy_secrets.py`, Scott's local scripts) is completely unaffected:
+- `_reconcile_etsy_tokens()` runs once at import time, before any `EtsyAPIClient()` is constructed. It
+  compares the env `ETSY_REFRESH_TOKEN` against the DB row's `refresh_token` *and* `parent_refresh_token`
+  (lineage, not a timestamp race) — if the DB is a forward rotation of the current env token, the DB wins
+  and overwrites `os.environ`; if the env token doesn't match the DB's lineage at all (Scott manually
+  re-authorized via `etsy_oauth.py` and updated the Railway dashboard since the DB was last written), env
+  wins untouched. Empty DB (first boot ever) is a no-op.
+- `_token_sync_loop()` (background task, started in `_startup()`, polls every 60s) watches `os.environ` for
+  a token change — `refresh_access_token()` already updates it in-memory the instant it rotates — and
+  persists the new pair to the DB with the previous refresh token recorded as `parent_refresh_token`, so
+  the next boot's lineage check has something to match against.
+- Verified with 4 standalone scenario scripts (not committed — ad hoc): DB-forward-rotation-wins,
+  fresh-reauth-in-env-wins, empty-DB-is-noop, and a full rotate→persist→simulated-restart→restore cycle.
+  All passed. `python -m py_compile` clean on both files.
+- Risk note: this only takes effect on the *next* Railway deploy. Until then the current single
+  outstanding (working) token is unaffected — nothing about the existing token's validity changed today.
