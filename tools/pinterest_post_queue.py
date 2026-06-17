@@ -313,12 +313,14 @@ def main() -> None:
         cmd_status()
         return
 
-    with open(BASE / ".env") as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                k, v = line.split("=", 1)
-                os.environ.setdefault(k.strip(), v.strip())
+    _env_path = BASE / ".env"
+    if _env_path.exists():
+        with open(_env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
 
     client = EtsyAPIClient()
     if not client.refresh_access_token():

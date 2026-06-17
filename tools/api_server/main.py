@@ -149,7 +149,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d91f6e3-v33"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e7a91c2-v34"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -2877,6 +2877,44 @@ async def _quality_audit_loop() -> None:
         await asyncio.sleep(86_400)
 
 
+async def _autoresponder_loop() -> None:
+    """Run the Etsy buyer-message autoresponder once a day.
+
+    tools/etsy_autoresponder.py drafts replies for known question types (download
+    issues, GoodNotes setup, app compatibility, etc.), flags refunds/unrecognized
+    messages for manual review, and emails Scott a digest -- it never sends
+    anything to a buyer itself; that's a separate explicit --send/--send-all step
+    Scott runs by hand. So this loop is read + draft + email-Scott only, squarely
+    inside the "Tier 1 support" autonomy CLAUDE.md already grants, and it exists to
+    close the Star Seller message-response-rate gap (CLAUDE.md flags this as the
+    "main challenge" for digital products) -- a tool built for that exact purpose
+    was otherwise sitting unscheduled with nothing ever invoking it.
+
+    Note: dedup state (data/message_drafts/sent_log.json) lives on Railway's
+    ephemeral filesystem, not the durable /data volume, so a redeploy can cause a
+    conversation to be re-drafted into the next digest even if Scott already sent
+    a reply for it from an earlier digest. Harmless (Scott would just see a
+    duplicate draft, never a duplicate buyer message), so not worth the added
+    complexity of moving it to the DB unless it proves annoying in practice."""
+    await asyncio.sleep(180)  # stagger after the other startup loops
+    while True:
+        try:
+            result = await asyncio.to_thread(
+                subprocess.run,
+                [sys.executable, str(ROOT / "tools" / "etsy_autoresponder.py")],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                cwd=str(ROOT),
+            )
+            print(f"[autoresponder] {result.stdout.strip()[-500:]}", flush=True)
+            if result.returncode != 0:
+                print(f"[autoresponder] exit {result.returncode}: {result.stderr.strip()[-500:]}", flush=True)
+        except Exception as exc:
+            print(f"[autoresponder] run failed: {exc}", flush=True)
+        await asyncio.sleep(86_400)
+
+
 @app.on_event("startup")
 async def _startup() -> None:
     try:
@@ -2888,6 +2926,7 @@ async def _startup() -> None:
     asyncio.create_task(_warm_suggestions())
     asyncio.create_task(_token_sync_loop())
     asyncio.create_task(_quality_audit_loop())
+    asyncio.create_task(_autoresponder_loop())
 
 
 @app.get("/api/history")

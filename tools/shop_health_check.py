@@ -19,19 +19,28 @@ Usage:
 
 import os, sys, json, re, io, urllib.request, time, argparse, pathlib
 from datetime import datetime, timezone
-sys.path.insert(0, '/home/user/Etsy')
-with open('/home/user/Etsy/.env') as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
-            os.environ.setdefault(k.strip(), v.strip())
+
+# Repo-relative, not hardcoded -- this script runs both on Scott's machine and
+# (via main.py's _EXEC_COMMANDS registry) inside Frank's Railway container,
+# which has no /home/user/Etsy and no .env file (env vars are injected by the
+# platform directly). A hardcoded absolute path crashed every invocation on
+# Railway -- diagnosed 2026-06-17, see ops_runbook.md.
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+_env_path = ROOT / '.env'
+if _env_path.exists():
+    with open(_env_path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 from PIL import Image
 from tools.etsy_api import EtsyAPIClient
 
-UPSCALED_DIR = pathlib.Path('/home/user/Etsy/data/digital_products/product_files/upscaled')
-PRODUCT_FILES_DIR = pathlib.Path('/home/user/Etsy/data/digital_products/product_files')
+UPSCALED_DIR = ROOT / 'data/digital_products/product_files/upscaled'
+PRODUCT_FILES_DIR = ROOT / 'data/digital_products/product_files'
 
 
 def _dhash(img: Image.Image, size: int = 8) -> int:
@@ -69,7 +78,7 @@ STANDARDS = {
 }
 
 
-SNAPSHOT_FILE = pathlib.Path('/home/user/Etsy/data/performance/weekly_snapshots.json')
+SNAPSHOT_FILE = ROOT / 'data/performance/weekly_snapshots.json'
 
 # Early-warning thresholds — ordered from most critical to least
 EARLY_WARNINGS = [
@@ -211,7 +220,7 @@ def check_shop(client):
     # from the raw art even when the correct art is used. The composite_smart()
     # guard in lifestyle_composite.py prevents wrong-art generation at source.
     print("\nHERO-ART AUDIT")
-    MANIFEST_PATH = pathlib.Path('/home/user/Etsy/data/listing_image_manifest.json')
+    MANIFEST_PATH = ROOT / 'data/listing_image_manifest.json'
     hero_warns    = []
     hero_hashes: dict[str, tuple[str, int]] = {}  # lid → (title_short, hash)
 

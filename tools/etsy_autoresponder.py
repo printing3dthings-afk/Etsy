@@ -28,13 +28,19 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Parse .env manually — never use load_dotenv()
+# Guarded: Railway has no .env file at all (env vars are injected directly by
+# the platform), only Scott's local checkout does. Without this guard the
+# script crashes with FileNotFoundError before it ever reaches a live Etsy
+# call -- diagnosed 2026-06-17 when wiring this into the live server's daily
+# background loop (see ops_runbook.md).
 _env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-with open(_env_path) as _f:
-    for _line in _f:
-        _line = _line.strip()
-        if _line and not _line.startswith("#") and "=" in _line:
-            _k, _v = _line.split("=", 1)
-            os.environ.setdefault(_k.strip(), _v.strip())
+if os.path.exists(_env_path):
+    with open(_env_path) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
 
 import anthropic
 from etsy_api import EtsyAPIClient, EtsyAPIError

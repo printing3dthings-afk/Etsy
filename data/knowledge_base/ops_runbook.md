@@ -320,3 +320,36 @@ bearer auth (no new secret needed for the server side):
   set on the Railway service. Until both are added, CI rotation still works exactly as before, just without
   the collision protection.
 - Verified: `python -m py_compile` clean on `main.py` and `ci_refresh_etsy_secrets.py`.
+
+### 2026-06-17 (later still) — autoresponder built but never scheduled; two scripts broken on Railway by hardcoded `/home/user/Etsy` paths
+**Finding 1 — dead capability:** `tools/etsy_autoresponder.py` exists specifically to close the Star Seller
+message-response-rate gap (CLAUDE.md flags this as the "main challenge" for digital products — every other
+Star Seller criterion is near-automatic for instant digital delivery). Nothing was ever invoking it — no
+cron, no background loop, no `_EXEC_COMMANDS` entry. It had also never been run on Railway, so its
+unguarded `with open(_env_path) as _f:` (no existence check) would have crashed immediately with
+`FileNotFoundError` — Railway has no `.env` file at all; env vars are injected directly by the platform.
+**Fix:** guarded the `.env` open with `if os.path.exists(_env_path):` (matching the pattern `main.py`
+already uses for its own `.env` load), then wired it into `main.py`'s existing background-task pattern as
+`_autoresponder_loop()` (added to `_startup()`'s task list, staggered 180s after the other loops, runs once
+daily). It only drafts replies and emails Scott a digest — sending to a buyer is a separate explicit
+`--send`/`--send-all` CLI step Scott runs by hand — so this stays inside the "Tier 1 support drafting"
+autonomy CLAUDE.md already grants; nothing here sends a buyer-facing message automatically. Note: its dedup
+state (`data/message_drafts/sent_log.json`) lives on Railway's ephemeral filesystem, not the durable `/data`
+volume, so a redeploy can cause a re-drafted (never re-sent) duplicate in the next digest — harmless,
+not worth the complexity of moving to the DB unless it proves annoying in practice.
+
+**Finding 2 — live capability silently broken:** while auditing other "Automate" table scripts for the same
+`.env`-loading bug class, found `tools/shop_health_check.py` had it worse than the autoresponder did —
+hardcoded `sys.path.insert(0, '/home/user/Etsy')`, `open('/home/user/Etsy/.env')`, and three more
+`/home/user/Etsy/...` constants (`UPSCALED_DIR`, `PRODUCT_FILES_DIR`, `SNAPSHOT_FILE`, `MANIFEST_PATH`).
+Unlike the autoresponder, this one is **already registered in `main.py`'s `_EXEC_COMMANDS` registry**
+(`"shop_health_check"`) — meaning Frank could already invoke it via the `execute_command` tool, and it would
+have failed every time on Railway. **Fix:** replaced every hardcoded path with `ROOT = Path(__file__).resolve().parent.parent`-relative
+equivalents and guarded the `.env` open the same way. Also fixed the same unguarded-open bug in
+`tools/pinterest_post_queue.py` (lower priority — that one's a manual local-only CLI tool, not Railway- or
+Frank-invoked, but cheap to fix while in the file). Residual known limitation, same class as the
+autoresponder's: `SNAPSHOT_FILE`/`MANIFEST_PATH` still write under the repo's `data/` dir, not the durable
+`/data` volume, so trend-comparison and hero-art-drift detection reset on every Railway redeploy — the
+health check itself still runs and reports correctly each time, only the week-over-week comparison is lost.
+- Verified: `python -m py_compile` clean on `main.py`, `etsy_autoresponder.py`, `shop_health_check.py`,
+  `pinterest_post_queue.py`, `ci_refresh_etsy_secrets.py`.
