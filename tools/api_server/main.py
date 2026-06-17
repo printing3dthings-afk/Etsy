@@ -134,6 +134,25 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "timeout": 180,
         "long_running": False,
     },
+    # CLAUDE.md "Fully Autonomous" list explicitly grants "Run seasonal keyword
+    # reports and dry-run previews" -- neither of these two writes to Etsy.
+    # Pushing the swap for real (--push) stays gated: it's not in either args
+    # list below, and _FORBIDDEN_EXEC_FLAGS already refuses it if ever passed
+    # as extra_args, so the only path to actually changing a listing's tags
+    # is Scott approving a stage_action in the Action Center.
+    "seasonal_keywords_report": {
+        "script": "tools/seasonal_keywords.py",
+        "description": "Show which listings have an upcoming/overdue seasonal keyword swap (read-only)",
+        "timeout": 60,
+        "long_running": False,
+    },
+    "seasonal_keywords_preview": {
+        "script": "tools/seasonal_keywords.py",
+        "args": ["--dry-run"],
+        "description": "Preview exactly which tags would be swapped on which listings, without applying anything",
+        "timeout": 60,
+        "long_running": False,
+    },
 }
 
 # extra_args that would let a direct command run mutate live Etsy data bypass the
@@ -149,7 +168,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e7a91c2-v34"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f3c082d-v35"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 

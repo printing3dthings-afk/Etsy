@@ -353,3 +353,16 @@ autoresponder's: `SNAPSHOT_FILE`/`MANIFEST_PATH` still write under the repo's `d
 health check itself still runs and reports correctly each time, only the week-over-week comparison is lost.
 - Verified: `python -m py_compile` clean on `main.py`, `etsy_autoresponder.py`, `shop_health_check.py`,
   `pinterest_post_queue.py`, `ci_refresh_etsy_secrets.py`.
+
+### 2026-06-17 (later still) — gave Frank the seasonal keyword tool CLAUDE.md already grants him
+CLAUDE.md's autonomy boundaries explicitly list "Run seasonal keyword reports and dry-run previews" under
+Fully Autonomous, but `tools/seasonal_keywords.py` had no `_EXEC_COMMANDS` entry — Frank had no way to
+actually run it. Added two read-only entries: `seasonal_keywords_report` (default invocation, shows
+upcoming/overdue seasonal swaps) and `seasonal_keywords_preview` (`--dry-run`, shows exactly which tags
+would change on which listings). Neither writes to Etsy — `--push` is the only flag that does, it's in
+neither command's `args`, and `_FORBIDDEN_EXEC_FLAGS` already refuses it if ever smuggled in via
+`extra_args`, so the only real path to applying a seasonal swap is still Scott approving a `stage_action` in
+the Action Center. While wiring it in, found and fixed the same unguarded `.env` open bug as the other two
+scripts above (`tools/seasonal_keywords.py` line ~26) — would have crashed on Railway the first time Frank
+tried to call it. Verified `python -m py_compile` clean and ran `python tools/seasonal_keywords.py --weeks 10`
+locally to confirm the report still renders correctly after the guard fix.
