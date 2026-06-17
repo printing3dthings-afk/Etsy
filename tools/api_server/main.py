@@ -96,7 +96,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v26"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v27"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -1140,7 +1140,7 @@ function renderListings() {
   if (!_listings.length) { el.innerHTML = '<div class="empty">No '+_listingState+' listings</div>'; return; }
   const seen = {}; const cats = [];
   _listings.forEach(l => {
-    const key = l.shop_section_id || 'none';
+    const key = String(l.shop_section_id || 'none');
     if (!seen[key]) { seen[key] = true; cats.push({key: key, label: _sectionLabel(l.shop_section_id)}); }
   });
   cats.sort((a,b) => a.label.localeCompare(b.label));
@@ -1149,12 +1149,12 @@ function renderListings() {
     html += '<div class="chip-row">';
     html += `<button class="chip-btn${_sectionFilter===null?' active':''}" onclick="setSectionFilter(null)">All (${_listings.length})</button>`;
     cats.forEach(c => {
-      const n = _listings.filter(l => (l.shop_section_id||'none')===c.key).length;
+      const n = _listings.filter(l => String(l.shop_section_id||'none')===c.key).length;
       html += `<button class="chip-btn${_sectionFilter===c.key?' active':''}" onclick="setSectionFilter('${c.key}')">${escHtml(c.label)} (${n})</button>`;
     });
     html += '</div>';
   }
-  const filtered = _sectionFilter===null ? _listings : _listings.filter(l => (l.shop_section_id||'none')===_sectionFilter);
+  const filtered = _sectionFilter===null ? _listings : _listings.filter(l => String(l.shop_section_id||'none')===_sectionFilter);
   if (!filtered.length) { html += '<div class="empty">No listings in this category</div>'; el.innerHTML = html; return; }
   html += filtered.map(l => `
     <div class="listing-item" style="cursor:pointer" onclick="toggleListingDetail(${l.listing_id})">
