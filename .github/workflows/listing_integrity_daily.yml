@@ -1,0 +1,73 @@
+name: Daily Listing Integrity Check
+
+on:
+  schedule:
+    # 13:00 UTC ≈ 9am US Eastern. Adjust if Scott wants a different time.
+    - cron: '0 13 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  integrity-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Etsy rotates the refresh token on every use. Without writing the new
+      # refresh token back to the repo secret, tomorrow's run would fail with
+      # invalid_grant. This step fails loudly (rather than skipping) if the
+      # required PAT secret (GH_PAT_SECRETS) hasn't been configured yet --
+      # see tools/ci_refresh_etsy_secrets.py for the full explanation.
+      - name: Refresh Etsy OAuth token and rotate secrets
+        env:
+          ETSY_CLIENT_ID: ${{ secrets.ETSY_CLIENT_ID }}
+          ETSY_REFRESH_TOKEN: ${{ secrets.ETSY_REFRESH_TOKEN }}
+          GH_PAT_SECRETS: ${{ secrets.GH_PAT_SECRETS }}
+        run: python tools/ci_refresh_etsy_secrets.py
+
+      - name: Run listing integrity check (fast mode)
+        id: integrity
+        env:
+          ETSY_API_KEY: ${{ secrets.ETSY_API_KEY }}
+          ETSY_CLIENT_ID: ${{ secrets.ETSY_CLIENT_ID }}
+          ETSY_CLIENT_SECRET: ${{ secrets.ETSY_CLIENT_SECRET }}
+          ETSY_SHOP_ID: ${{ secrets.ETSY_SHOP_ID }}
+          # ETSY_ACCESS_TOKEN was refreshed and exported to GITHUB_ENV by the
+          # previous step, so it's already in the environment here.
+        run: |
+          set +e
+          python tools/listing_integrity_check.py --save 2>&1 | tee integrity_output.txt
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+        shell: bash
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integrity-report-${{ github.run_id }}
+          path: |
+            integrity_output.txt
+            review_batches/*.txt
+          retention-days: 30
+
+      - name: Open or update GitHub issue on FAIL
+        if: steps.integrity.outputs.exit_code == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/ci_report_issue.py integrity_output.txt
+
+      - name: Fail the job if FAIL-level issues were found
+        if: steps.integrity.outputs.exit_code == '1'
+        run: exit 1
