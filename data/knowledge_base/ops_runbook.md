@@ -402,3 +402,27 @@ Three issues surfaced by Scott from the live phone app (screenshots):
   PNG/TXT out of ZIP with correct types, 401 on bad token, 400 on traversal, 404 on missing entry, honest
   empty_reason when no files); confirmed `get_listing` tool registered and the no-id guard returns a clean
   error.
+
+### 2026-06-17 (later still) — one-command file sync to the durable volume
+Follow-up to the Files-area work above: Scott asked for a one-command way to actually get the local product
+files onto the hosted dashboard so they show up on his phone. Built it:
+- **Server:** `POST /api/files/upload?path=<rel>` (bearer auth, raw body) writes into the durable `/data/files`
+  volume. Path-traversal rejected, empty body rejected (400), 30MB cap (413, mirrors Etsy's 20MB per-file),
+  503 if no volume is attached. Added a `HUB_FILES_DIR` env override for the volume location (also makes it
+  locally testable).
+- **Client:** `tools/sync_files_to_hub.py` — walks local `data/digital_products/`, GETs `/api/files` to see
+  what's already in the volume, and uploads only new/changed files (size compare), so re-runs are cheap.
+  Reads `RAILWAY_APP_URL` + `APP_SECRET_TOKEN` from `.env`; skips 0-byte `.gitkeep` placeholders; never
+  deletes anything on the server. Usage: `python tools/sync_files_to_hub.py` (`--dry-run`, `--all` available).
+  This is a LOCAL tool (runs where the files are) — deliberately NOT added to `_EXEC_COMMANDS`, since Frank
+  on Railway has no files to sync.
+- **Verified end-to-end live:** started the server exactly as production does (`python tools/api_server/main.py`,
+  the Dockerfile CMD) against a temp volume + temp DB, ran the real urllib client against it: 102 real files
+  (~201MB) uploaded, second run skipped all 102 as already-present, the synced ZIP's inner files were openable
+  via `/api/files/zip-entry` — confirming the full phone flow (sync → browse → open-without-unzip). First run
+  surfaced 7 "failures" that were all empty `.gitkeep` files; fixed the client to skip 0-byte files so the run
+  is clean (exit 0, no server 400s).
+- **Scott action to populate the phone:** add `RAILWAY_APP_URL` (the dashboard's public URL) and
+  `APP_SECRET_TOKEN` (same value as on Railway) to the local `.env`, then run `python tools/sync_files_to_hub.py`.
+  Re-run it any time new products are generated. Requires a Railway Volume mounted at `/data` (already used by
+  the DB).

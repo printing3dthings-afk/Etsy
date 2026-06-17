@@ -28,7 +28,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Security, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, Security, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -171,7 +171,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a5d913e-v36"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b6f24c1-v37"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -3937,10 +3937,14 @@ _FILE_ROOTS = {
 # so files generated on Scott's machine never appear here. The /data Volume IS durable
 # across redeploys — if a "files" folder is placed there it survives, so we scan it too.
 # This is the realistic path to "every digital file should be openable from the phone":
-# drop them into the persistent volume once and they stay browsable. No-op locally.
-_PERSIST_VOL = Path("/data")
-if _PERSIST_VOL.is_dir():
-    _FILE_ROOTS["volume"] = _PERSIST_VOL / "files"
+# drop them into the persistent volume once (tools/sync_files_to_hub.py) and they stay
+# browsable. HUB_FILES_DIR overrides the location (handy if the Volume mounts elsewhere,
+# and lets this be tested locally). No-op locally when neither is present.
+_vol_override = os.getenv("HUB_FILES_DIR", "").strip()
+if _vol_override:
+    _FILE_ROOTS["volume"] = Path(_vol_override)
+elif Path("/data").is_dir():
+    _FILE_ROOTS["volume"] = Path("/data") / "files"
 
 
 def _human_size(n: int) -> str:
@@ -4069,6 +4073,44 @@ async def download_file(root: str, path: str, token: str = "", inline: int = 0):
             headers={"Content-Disposition": f'inline; filename="{target.name}"'},
         )
     return FileResponse(target, filename=target.name, media_type="application/octet-stream")
+
+
+# Upload cap — these are digital product deliverables (Etsy's own per-file limit is
+# 20MB), so 30MB is a generous ceiling that still rejects accidental giant files.
+_MAX_UPLOAD_BYTES = 30 * 1024 * 1024
+
+
+@app.post("/api/files/upload")
+async def upload_to_volume(request: Request, path: str, _token: str = Depends(_auth)):
+    """Accept a raw file body and store it under the durable /data/files volume at the
+    given relative path. This is how product files get onto the hosted dashboard so they
+    show up (and open without unzip) in the phone Files area — tools/sync_files_to_hub.py
+    walks the local data/digital_products/ and POSTs each file here.
+
+    Body is the raw bytes (Content-Type application/octet-stream), path is a query param.
+    Writes only inside the volume; path traversal is rejected."""
+    vol_root = _FILE_ROOTS.get("volume")
+    if vol_root is None:
+        raise HTTPException(
+            status_code=503,
+            detail="No persistent /data volume on this server — uploads can't be stored durably. "
+                   "Attach a Railway Volume mounted at /data.",
+        )
+    rel = (path or "").strip().lstrip("/")
+    if not rel:
+        raise HTTPException(status_code=400, detail="path query param is required")
+    vroot = vol_root.resolve()
+    target = (vroot / rel).resolve()
+    if vroot not in target.parents and target != vroot:
+        raise HTTPException(status_code=400, detail="Invalid path")
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty body")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(body)
+    return {"ok": True, "path": rel, "size": len(body), "size_human": _human_size(len(body))}
 
 
 @app.get("/api/files/zip-entry")
