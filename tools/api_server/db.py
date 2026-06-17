@@ -90,6 +90,14 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_chat_session ON chat_messages(session_id, id);
+CREATE TABLE IF NOT EXISTS quality_audits (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts          TEXT NOT NULL,
+  passed      INTEGER,
+  warned      INTEGER,
+  failed      INTEGER,
+  summary     TEXT     -- short text: which listings failed and why
+);
 CREATE TABLE IF NOT EXISTS etsy_tokens (
   id                    INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
   access_token          TEXT NOT NULL,
@@ -322,6 +330,39 @@ def load_chat_history(session_id: str, limit: int = 40) -> list:
             (session_id, limit),
         ).fetchall()
         return [{"role": r["role"], "content": r["content"]} for r in rows][::-1]
+    finally:
+        conn.close()
+
+
+# ── Quality audit history (automated daily listing_integrity_check runs) ─────
+
+
+def record_quality_audit(passed: int, warned: int, failed: int, summary: str = "") -> int:
+    """Log one automated quality-audit run. Append-only — gives Frank and Scott
+    a trend line instead of only the latest snapshot. Returns the new row id."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "INSERT INTO quality_audits (ts, passed, warned, failed, summary) VALUES (?,?,?,?,?)",
+            (ts, passed, warned, failed, summary),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def get_quality_audit_history(limit: int = 30) -> list:
+    """Most recent `limit` audit runs, oldest-first."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM quality_audits ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows][::-1]
     finally:
         conn.close()
 

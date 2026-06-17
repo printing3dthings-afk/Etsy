@@ -149,7 +149,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f3c8a21-v30"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b7e1d94-v31"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -239,6 +239,55 @@ def _ops_runbook_block() -> str:
     )
 
 
+def _append_ops_runbook_entry(heading: str, body: str) -> None:
+    """Append a short dated entry to the ops runbook. Used by automated background
+    jobs (e.g. the daily quality audit) so a real incident gets logged even when
+    no one is in a chat to ask Claude Code to write it down. Best-effort — a
+    logging failure must never break the caller."""
+    try:
+        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        entry = f"\n\n## {stamp} — {heading}\n{body}\n"
+        with open(_OPS_RUNBOOK_PATH, "a") as fh:
+            fh.write(entry)
+    except OSError as exc:
+        print(f"[ops-runbook] append failed: {exc}", flush=True)
+
+
+# ── CEO learnings (Frank's compounding memory — see ceo_learnings.md) ──────────
+
+_CEO_LEARNINGS_PATH = ROOT / "data" / "knowledge_base" / "ceo_learnings.md"
+
+
+def _ceo_learnings_block() -> str:
+    """Read back Frank's own logged insights so they carry forward into every new
+    chat session regardless of which device/session Scott is on. This is the
+    'evolve over time' mechanism: durable text, not a fine-tune — Frank reads his
+    own accumulated notes the same way a human exec reviews past meeting notes."""
+    try:
+        text = _CEO_LEARNINGS_PATH.read_text().strip()
+    except OSError:
+        return ""
+    if not text:
+        return ""
+    if len(text) > 6000:
+        text = text[-6000:]  # keep the most recent entries (file is append-only)
+    return (
+        "\n\n── YOUR LOGGED LEARNINGS (insights you've recorded in past conversations — "
+        "build on these, don't repeat the same discovery from scratch) ──\n" + text
+    )
+
+
+def _append_ceo_learning(note: str) -> None:
+    """Persist one durable insight to ceo_learnings.md. Called via the log_learning
+    tool. Best-effort — must never break the chat turn that triggered it."""
+    try:
+        stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        with open(_CEO_LEARNINGS_PATH, "a") as fh:
+            fh.write(f"- **{stamp}** — {note.strip()}\n")
+    except OSError as exc:
+        print(f"[ceo-learnings] append failed: {exc}", flush=True)
+
+
 # ── CEO Agent system prompt ────────────────────────────────────────────────────
 
 _CEO_SYSTEM = """\
@@ -262,8 +311,25 @@ LIVE DATA — you can read the real shop, do not guess:
 - Use the get_metrics tool for revenue (7d/30d), order counts, active listing count,
   total sales, and review rating.
 - Use the list_listings tool to inspect listings (title, price, views, favorites, tags).
+- Use get_orders to inspect recent paid orders (buyer name, total, items, date) — good for
+  "did we get any sales today" or spotting volume trends. No buyer email/address is exposed.
+- Use get_reviews to read recent review text and ratings — good for spotting a recurring
+  complaint or praised feature. You may surface patterns, but never draft or send a review
+  response yourself; that is always Scott's call.
 - ALWAYS pull the real numbers with a tool before quoting any figure. Never invent data.
   If a tool returns an error, say so plainly rather than guessing.
+
+YOUR COMPOUNDING MEMORY — log_learning:
+- You have a durable, append-only memory file (ceo_learnings.md) that is read back into
+  your own system prompt at the start of every future chat, regardless of device or session.
+  This is how you compound — you should sound a little smarter about THIS business every
+  month, not start cold every conversation.
+- Use the log_learning tool when a conversation surfaces something genuinely worth carrying
+  forward: a pattern in what converts, a recurring buyer question, a preference Scott stated
+  that should shape future recommendations, or a mistake worth not repeating.
+- Do NOT log routine facts you can re-fetch with a tool (a revenue figure, a listing count) —
+  this log is judgment and pattern memory, not a cache. Keep each entry to one or two sentences.
+  Don't log on every turn — only when there's something durable to say.
 
 How you operate:
 - You analyze, recommend, and can DRAFT changes (titles, tags, descriptions, photo plans,
@@ -403,6 +469,64 @@ AGENT_TOOLS = [
             "required": ["command"],
         },
     },
+    {
+        "name": "get_orders",
+        "description": (
+            "Recent paid Etsy orders (receipts): order id, buyer name, total, item count, "
+            "and date. Use to answer questions about recent sales activity, a specific "
+            "buyer's order, or order volume trends. Does not include buyer email or address."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "Max orders to fetch, most recent first. Defaults to 25, max 100.",
+                }
+            },
+        },
+    },
+    {
+        "name": "get_reviews",
+        "description": (
+            "Recent Etsy reviews: rating, review text, which listing, and date. Use to spot "
+            "patterns in buyer feedback (recurring complaints, praised features) or check "
+            "rating trends. Do NOT draft or send review responses yourself — that is Scott's "
+            "call (review responses are manual, see CLAUDE.md autonomy boundaries)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "description": "Max reviews to fetch, most recent first. Defaults to 25, max 100.",
+                }
+            },
+        },
+    },
+    {
+        "name": "log_learning",
+        "description": (
+            "Record one durable, non-obvious business insight to your own compounding "
+            "memory log (ceo_learnings.md), which is read back into your system prompt on "
+            "every future chat turn — this is how you get smarter about THIS business over "
+            "time instead of starting cold each conversation. Use sparingly: only for things "
+            "worth remembering across sessions — a pattern in what converts, a recurring "
+            "buyer question, a preference Scott stated, a mistake worth not repeating. "
+            "Do NOT log routine facts retrievable via get_metrics/list_listings — this is "
+            "judgment, not a numbers cache. One or two sentences max per entry."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "note": {
+                    "type": "string",
+                    "description": "The insight to remember, written as a short, self-contained note.",
+                }
+            },
+            "required": ["note"],
+        },
+    },
 ]
 
 
@@ -487,6 +611,45 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             if len(out) > 2000:
                 out = out[:1900] + "\n…[output truncated]"
             return {"returncode": result.returncode, "output": out, "success": result.returncode == 0}
+        if name == "get_orders":
+            limit = min(int((tool_input or {}).get("limit", 25) or 25), 100)
+            data = EtsyAPIClient().get_orders(limit=limit)
+            slim = []
+            for r in data.get("results", []) or []:
+                gt = r.get("grandtotal", {}) or {}
+                divisor = gt.get("divisor", 100) or 100
+                slim.append({
+                    "order_id": r.get("receipt_id"),
+                    "buyer_name": r.get("name"),
+                    "total": round(gt.get("amount", 0) / divisor, 2),
+                    "item_count": len(r.get("transactions", []) or []),
+                    "created": datetime.fromtimestamp(
+                        r.get("create_timestamp", 0), tz=timezone.utc
+                    ).strftime("%Y-%m-%d") if r.get("create_timestamp") else None,
+                })
+            return {"count": len(slim), "orders": slim}
+        if name == "get_reviews":
+            limit = min(int((tool_input or {}).get("limit", 25) or 25), 100)
+            data = EtsyAPIClient().get_reviews(limit=limit)
+            slim = [
+                {
+                    "transaction_id": r.get("transaction_id"),
+                    "listing_id": r.get("listing_id"),
+                    "rating": r.get("rating"),
+                    "review": r.get("review"),
+                    "created": datetime.fromtimestamp(
+                        r.get("create_timestamp", 0), tz=timezone.utc
+                    ).strftime("%Y-%m-%d") if r.get("create_timestamp") else None,
+                }
+                for r in data.get("results", []) or []
+            ]
+            return {"count": len(slim), "reviews": slim}
+        if name == "log_learning":
+            note = ((tool_input or {}).get("note") or "").strip()
+            if not note:
+                return {"error": "note is required"}
+            _append_ceo_learning(note)
+            return {"logged": True}
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired:
         return {"error": f"Command timed out (>{timeout}s)"}
@@ -2638,6 +2801,60 @@ async def _token_sync_loop() -> None:
             print(f"[etsy-tokens] sync error: {exc}", flush=True)
 
 
+_QUALITY_AUDIT_SUMMARY_RE = _re.compile(
+    r"PASS:\s*(\d+).*?WARN:\s*(\d+).*?FAIL:\s*(\d+)", _re.DOTALL
+)
+
+
+async def _quality_audit_loop() -> None:
+    """Run the read-only listing integrity check once a day and log the trend.
+
+    Uses fast mode (no --full, no --fix-titles) — this only reads from Etsy and
+    writes to the local data/listing_manifest.json cache; it never touches a
+    live listing, so it needs no approval gate. Results go to the quality_audits
+    DB table for trend tracking, and — only when a FAIL is found — a short entry
+    is auto-appended to ops_runbook.md so the regression surfaces to Frank/Scott
+    without anyone needing to remember to run the check manually."""
+    await asyncio.sleep(120)  # let the app finish booting first
+    while True:
+        try:
+            result = await asyncio.to_thread(
+                subprocess.run,
+                [sys.executable, str(ROOT / "tools" / "listing_integrity_check.py")],
+                capture_output=True,
+                text=True,
+                timeout=600,
+                cwd=str(ROOT),
+            )
+        except Exception as exc:
+            print(f"[quality-audit] run failed: {exc}", flush=True)
+            await asyncio.sleep(86_400)
+            continue
+        out = (result.stdout or "") + "\n" + (result.stderr or "")
+        m = _QUALITY_AUDIT_SUMMARY_RE.search(out)
+        if not m:
+            print("[quality-audit] could not parse summary line", flush=True)
+            await asyncio.sleep(86_400)
+            continue
+        passed, warned, failed = (int(g) for g in m.groups())
+        blocks = out.split("—" * 70)
+        header_idx = next((i for i, b in enumerate(blocks) if "✗ FAIL (" in b), None)
+        fail_block = blocks[header_idx + 1] if header_idx is not None and header_idx + 1 < len(blocks) else ""
+        summary = fail_block.strip()[:1500]
+        try:
+            db.record_quality_audit(passed, warned, failed, summary)
+        except Exception as exc:
+            print(f"[quality-audit] db record failed: {exc}", flush=True)
+        print(f"[quality-audit] PASS:{passed} WARN:{warned} FAIL:{failed}", flush=True)
+        if failed > 0:
+            _append_ops_runbook_entry(
+                f"Automated quality audit — {failed} listing(s) failing",
+                f"Daily listing_integrity_check found {failed} FAIL / {warned} WARN out of "
+                f"{passed + warned + failed} listings audited. Details:\n{summary or '(see logs)'}",
+            )
+        await asyncio.sleep(86_400)
+
+
 @app.on_event("startup")
 async def _startup() -> None:
     try:
@@ -2648,6 +2865,7 @@ async def _startup() -> None:
     asyncio.create_task(_snapshot_loop())
     asyncio.create_task(_warm_suggestions())
     asyncio.create_task(_token_sync_loop())
+    asyncio.create_task(_quality_audit_loop())
 
 
 @app.get("/api/history")
@@ -3518,7 +3736,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
         with ai_client.messages.stream(
             model="claude-sonnet-4-6",
             max_tokens=1500,
-            system=_CEO_SYSTEM + _ops_runbook_block(),
+            system=_CEO_SYSTEM + _ops_runbook_block() + _ceo_learnings_block(),
             tools=AGENT_TOOLS,
             messages=history,
         ) as stream:

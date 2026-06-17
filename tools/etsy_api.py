@@ -927,8 +927,11 @@ class EtsyAPIClient:
     def get_reviews(self, limit: int = 25, min_created: int | None = None) -> dict:
         """Get shop reviews/feedback. Returns dict with 'results' list and 'count'.
 
-        Each review includes: review_id, listing_id, rating (1-5), review (text),
-        create_timestamp, update_timestamp, seller_feedback (your reply).
+        Each review includes: shop_id, listing_id, transaction_id, buyer_user_id,
+        rating (1-5), review (text), create_timestamp, update_timestamp. There is
+        no review_id or seller_feedback field in the v3 response — verified
+        2026-06-17 against a live response (the API has no review-response
+        endpoint either; see create_review_response below).
         """
         self._require_oauth()
         params: dict = {"limit": min(limit, 100)}
