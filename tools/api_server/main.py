@@ -96,7 +96,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v25"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v26"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -722,6 +722,14 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 .toggle-row{display:flex;gap:8px;margin-bottom:12px}
 .toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .toggle-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.chip-btn{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.chip-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.listing-detail{padding:2px 14px 12px;margin:-2px 0 10px;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;font-size:12px}
+.listing-detail .drow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.listing-detail .drow:last-child{border-bottom:none}
+.listing-detail .drow span{color:var(--muted)}
+.listing-detail .drow b{font-weight:600;text-align:right}
 #chat-wrap{position:fixed;top:var(--hdr);left:0;right:0;bottom:var(--nav);z-index:100;display:none;flex-direction:column;background:var(--bg)}
 #chat-wrap.active{display:flex}
 #msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:0}
@@ -1088,27 +1096,112 @@ function loadDash() {
 
 // ── Listings ───────────────────────────────────────────────────────────────
 let _lastState = 'active';
+let _listings = [];
+let _listingState = 'active';
+let _sectionFilter = null; // null = all categories
+let _sectionsMap = null;   // {shop_section_id: title}, fetched once and cached client-side
+let _openDetailId = null;
+async function _ensureSectionsLoaded() {
+  if (_sectionsMap) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/shop-sections', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const d = await r.json();
+    _sectionsMap = {};
+    (d.sections||[]).forEach(s => { _sectionsMap[s.shop_section_id] = s.title; });
+  } catch(e) { _sectionsMap = {}; }
+}
+function _sectionLabel(id) {
+  if (!id) return 'Uncategorized';
+  return (_sectionsMap && _sectionsMap[id]) || ('Section '+id);
+}
 async function loadListings(state, btn) {
   if (btn) { document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
-  _lastState = state;
+  _lastState = state; _listingState = state; _sectionFilter = null; _openDetailId = null;
   const el = document.getElementById('listings-content');
   el.innerHTML = '<div class="spinner"></div>';
   try {
+    await _ensureSectionsLoaded();
     const r = await fetchWithTimeout(BASE+'/api/listings?state='+state, {headers:{Authorization:'Bearer '+TOKEN}}, 20000);
     if (!r.ok) { const err = await r.json().catch(()=>({})); throw new Error(err.detail||'HTTP '+r.status); }
     const d = await r.json();
-    if (!d.listings || d.listings.length === 0) { el.innerHTML = '<div class="empty">No '+state+' listings</div>'; return; }
-    el.innerHTML = d.listings.map(l => `
-      <div class="listing-item" onclick="window.open('${escHtml(l.url)}','_blank')">
-        ${l.thumbnail_url ? `<img class="thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy">` : `<div class="thumb-placeholder">🏷️</div>`}
-        <div class="listing-info">
-          <div class="listing-title">${escHtml(l.title)}</div>
-          <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span class="badge ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
-        </div>
-        <div class="listing-price">$${(+l.price||0).toFixed(2)}</div>
-      </div>`).join('');
+    _listings = d.listings || [];
+    renderListings();
   } catch(e) {
     el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastState)" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function setSectionFilter(key) {
+  _sectionFilter = key;
+  _openDetailId = null;
+  renderListings();
+}
+function renderListings() {
+  const el = document.getElementById('listings-content');
+  if (!_listings.length) { el.innerHTML = '<div class="empty">No '+_listingState+' listings</div>'; return; }
+  const seen = {}; const cats = [];
+  _listings.forEach(l => {
+    const key = l.shop_section_id || 'none';
+    if (!seen[key]) { seen[key] = true; cats.push({key: key, label: _sectionLabel(l.shop_section_id)}); }
+  });
+  cats.sort((a,b) => a.label.localeCompare(b.label));
+  let html = '';
+  if (cats.length > 1) {
+    html += '<div class="chip-row">';
+    html += `<button class="chip-btn${_sectionFilter===null?' active':''}" onclick="setSectionFilter(null)">All (${_listings.length})</button>`;
+    cats.forEach(c => {
+      const n = _listings.filter(l => (l.shop_section_id||'none')===c.key).length;
+      html += `<button class="chip-btn${_sectionFilter===c.key?' active':''}" onclick="setSectionFilter('${c.key}')">${escHtml(c.label)} (${n})</button>`;
+    });
+    html += '</div>';
+  }
+  const filtered = _sectionFilter===null ? _listings : _listings.filter(l => (l.shop_section_id||'none')===_sectionFilter);
+  if (!filtered.length) { html += '<div class="empty">No listings in this category</div>'; el.innerHTML = html; return; }
+  html += filtered.map(l => `
+    <div class="listing-item" style="cursor:pointer" onclick="toggleListingDetail(${l.listing_id})">
+      ${l.thumbnail_url ? `<img class="thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy">` : `<div class="thumb-placeholder">🏷️</div>`}
+      <div class="listing-info">
+        <div class="listing-title">${escHtml(l.title)}</div>
+        <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span class="badge ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
+      </div>
+      <div class="listing-price">$${(+l.price||0).toFixed(2)}</div>
+    </div>
+    <div id="detail-${l.listing_id}" class="listing-detail" style="display:none"></div>`).join('');
+  el.innerHTML = html;
+}
+async function toggleListingDetail(listingId) {
+  const panel = document.getElementById('detail-'+listingId);
+  if (!panel) return;
+  if (_openDetailId !== null && _openDetailId !== listingId) {
+    const prev = document.getElementById('detail-'+_openDetailId);
+    if (prev) prev.style.display = 'none';
+  }
+  if (_openDetailId === listingId) { panel.style.display = 'none'; _openDetailId = null; return; }
+  const l = _listings.find(x => x.listing_id === listingId);
+  if (!l) return;
+  panel.style.display = 'block';
+  _openDetailId = listingId;
+  panel.innerHTML =
+    `<div class="drow"><span>Listing ID</span><b>${listingId}</b></div>`+
+    `<div class="drow"><span>Category</span><b>${escHtml(_sectionLabel(l.shop_section_id))}</b></div>`+
+    `<div class="drow"><span>Views</span><b>${l.views}</b></div>`+
+    `<div class="drow"><span>Favorites</span><b>${l.num_favorers}</b></div>`+
+    (l.sales!=null ? `<div class="drow"><span>Sold</span><b>${l.sales}</b></div>` : '')+
+    (l.conversion_pct!=null ? `<div class="drow"><span>Conversion</span><b>${l.conversion_pct}%</b></div>` : '')+
+    `<div class="drow"><span>Price</span><b>$${(+l.price||0).toFixed(2)}</b></div>`+
+    `<div id="files-${listingId}"><div class="drow"><span>Digital files</span><b>loading…</b></div></div>`+
+    `<div style="margin-top:8px;text-align:right"><a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a></div>`;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/listings/'+listingId+'/files', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const slot = document.getElementById('files-'+listingId);
+    if (!slot) return;
+    if (!r.ok) { slot.innerHTML = '<div class="drow"><span>Digital files</span><b>unavailable</b></div>'; return; }
+    const d = await r.json();
+    const files = d.files || [];
+    if (!files.length) { slot.innerHTML = '<div class="drow"><span>Digital files</span><b>none attached</b></div>'; return; }
+    slot.innerHTML = files.map(f => `<div class="drow"><span>📄 ${escHtml(f.filename||'file')}</span><b>${escHtml(f.size_human||'')}</b></div>`).join('');
+  } catch(e) {
+    const slot = document.getElementById('files-'+listingId);
+    if (slot) slot.innerHTML = '<div class="drow"><span>Digital files</span><b>failed to load</b></div>';
   }
 }
 
@@ -2083,6 +2176,7 @@ def _listings_sync(state: str = "active") -> dict:
                 "thumbnail_url": thumb,
                 "url": f"https://www.etsy.com/listing/{l.get('listing_id')}",
                 "created_timestamp": l.get("creation_timestamp", 0),
+                "shop_section_id": l.get("shop_section_id"),
             }
         )
     result = {"listings": listings, "count": len(listings), "state": state}
@@ -2176,6 +2270,68 @@ async def get_listings(state: str = "active", _token: str = Depends(_auth)):
         return await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=20.0)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+
+
+def _shop_sections_sync() -> list[dict]:
+    """Shop section (category) id → title map. Sections change rarely; cached 1h."""
+    cached = _cache_get("shop_sections", ttl=3600)
+    if cached is not None:
+        return cached
+    try:
+        sections = EtsyAPIClient().get_shop_sections()
+    except Exception as exc:  # never let a sections lookup break the listings view
+        print(f"[sections] fetch failed: {exc}", flush=True)
+        sections = []
+    result = [
+        {"shop_section_id": s.get("shop_section_id"), "title": s.get("title", "")}
+        for s in sections
+    ]
+    _cache_set("shop_sections", result)
+    return result
+
+
+@app.get("/api/shop-sections")
+async def shop_sections(_token: str = Depends(_auth)):
+    """Shop sections (Etsy's listing categories) for the Listings filter chips."""
+    try:
+        sections = await asyncio.wait_for(asyncio.to_thread(_shop_sections_sync), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    return {"sections": sections}
+
+
+@app.get("/api/listings/{listing_id}/files")
+async def listing_files(listing_id: int, _token: str = Depends(_auth)):
+    """Digital files attached to a listing — powers the Listings tab expand-to-detail view."""
+    cache_key = f"listing_files_{listing_id}"
+    cached = _cache_get(cache_key, ttl=300)
+    if cached is not None:
+        return cached
+
+    def _fetch():
+        return EtsyAPIClient().get_listing_files(listing_id)
+
+    try:
+        raw = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+    files = []
+    for f in raw:
+        size_bytes = f.get("size_bytes")
+        files.append(
+            {
+                "file_id": f.get("listing_file_id"),
+                "filename": f.get("filename", ""),
+                "size_human": _human_size(size_bytes) if size_bytes else "",
+                "rank": f.get("rank"),
+                "create_timestamp": f.get("create_timestamp"),
+            }
+        )
+    result = {"listing_id": listing_id, "count": len(files), "files": files}
+    _cache_set(cache_key, result)
+    return result
 
 
 # ── Action Center (deterministic rules engine — surfaces priorities) ─────────────

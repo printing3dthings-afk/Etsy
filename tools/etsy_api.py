@@ -690,6 +690,12 @@ class EtsyAPIClient:
         result = self._request("GET", f"listings/{listing_id}/images")
         return result.get("results", [])
 
+    def get_listing_files(self, listing_id: int | str) -> list[dict]:
+        """Get all digital files attached to a listing. Requires OAuth access token."""
+        self._require_oauth()
+        result = self._request("GET", f"shops/{self.shop_id}/listings/{listing_id}/files")
+        return result.get("results", [])
+
     def delete_listing_image(self, listing_id: int | str, listing_image_id: int | str) -> None:
         """Delete a specific image from a listing. Requires OAuth access token."""
         self._require_oauth()
