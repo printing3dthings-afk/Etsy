@@ -67,7 +67,7 @@
   },
   {
     "product_id": "DP1031",
-    "name": "Undated Life Planner — Evergreen (Sage Garden)",
+    "name": "Undated Life Planner \u2014 Evergreen (Sage Garden)",
     "etsy_listing_id": "",
     "price": 12.99,
     "category": "digital_planner",
@@ -143,7 +143,7 @@
   },
   {
     "product_id": "SVG_MOM_LIFE",
-    "name": "Mom Life SVG Bundle — 20 Designs",
+    "name": "Mom Life SVG Bundle \u2014 20 Designs",
     "etsy_listing_id": "4514392281",
     "price": 9.99,
     "category": "svg_bundle",
@@ -165,7 +165,7 @@
   },
   {
     "product_id": "SVG_WESTERN",
-    "name": "Western SVG Bundle — 12 Designs",
+    "name": "Western SVG Bundle \u2014 12 Designs",
     "etsy_listing_id": "",
     "price": 9.99,
     "category": "svg_bundle",
@@ -185,7 +185,7 @@
   },
   {
     "product_id": "STICKER_DP1026",
-    "name": "Kawaii Sticker Pack — Lavender Dreams",
+    "name": "Kawaii Sticker Pack \u2014 Lavender Dreams",
     "etsy_listing_id": "4512254015",
     "price": 2.99,
     "category": "sticker_pack",
@@ -195,7 +195,7 @@
   },
   {
     "product_id": "STICKER_DP1027",
-    "name": "Kawaii Sticker Pack — Cotton Candy",
+    "name": "Kawaii Sticker Pack \u2014 Cotton Candy",
     "etsy_listing_id": "4512254027",
     "price": 2.99,
     "category": "sticker_pack",
@@ -205,7 +205,7 @@
   },
   {
     "product_id": "STICKER_DP1028",
-    "name": "Kawaii Sticker Pack — Midnight Blue",
+    "name": "Kawaii Sticker Pack \u2014 Midnight Blue",
     "etsy_listing_id": "4512255514",
     "price": 2.99,
     "category": "sticker_pack",
@@ -215,7 +215,7 @@
   },
   {
     "product_id": "STICKER_DP1029",
-    "name": "Kawaii Sticker Pack — Coral Peach",
+    "name": "Kawaii Sticker Pack \u2014 Coral Peach",
     "etsy_listing_id": "4512255536",
     "price": 2.99,
     "category": "sticker_pack",
@@ -225,7 +225,7 @@
   },
   {
     "product_id": "STICKER_BUNDLE",
-    "name": "Kawaii Sticker Pack Bundle — All 4 Themes",
+    "name": "Kawaii Sticker Pack Bundle \u2014 All 4 Themes",
     "etsy_listing_id": "4512254035",
     "price": 7.99,
     "category": "sticker_pack",
@@ -391,7 +391,7 @@
   },
   {
     "product_id": "BUNDLE_MED",
-    "name": "Mediterranean Series — Set of 3",
+    "name": "Mediterranean Series \u2014 Set of 3",
     "etsy_listing_id": "4519185376",
     "price": 14.97,
     "category": "wall_art_bundle",
@@ -1156,7 +1156,7 @@
     "etsy_listing_id": "4515672895",
     "price": 6.99,
     "category": "wall_art",
-    "status": "active",
+    "status": "draft",
     "files": [
       "DP1048_print_sizes.zip"
     ],
@@ -1169,7 +1169,7 @@
     "etsy_listing_id": "4515669370",
     "price": 6.99,
     "category": "wall_art",
-    "status": "active",
+    "status": "draft",
     "files": [
       "DP1049_print_sizes.zip"
     ],
@@ -1182,7 +1182,7 @@
     "etsy_listing_id": "4515669246",
     "price": 6.99,
     "category": "wall_art",
-    "status": "active",
+    "status": "draft",
     "files": [
       "DP1050_print_sizes.zip"
     ],
@@ -1195,7 +1195,7 @@
     "etsy_listing_id": "4515669140",
     "price": 6.99,
     "category": "wall_art",
-    "status": "active",
+    "status": "draft",
     "files": [
       "DP1051_print_sizes.zip"
     ],
@@ -1230,7 +1230,7 @@
   },
   {
     "product_id": "WA_PARIS_CAF_PRINTABLE_WALL_ART",
-    "name": "Paris Café Printable Wall Art, Instant Download, French",
+    "name": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
     "etsy_listing_id": "4515671951",
     "price": 19.98,
     "category": "wall_art",
@@ -1451,7 +1451,7 @@
   },
   {
     "product_id": "WA_PARIS_CAF_PRINTABLE_WALL_ART_2",
-    "name": "Paris Café Printable Wall Art, Instant Download, French",
+    "name": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
     "etsy_listing_id": "4512783077",
     "price": 5.99,
     "category": "wall_art",

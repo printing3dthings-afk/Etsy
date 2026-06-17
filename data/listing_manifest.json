@@ -891,8 +891,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-17T17:18:58.923994+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:56:55.715314+00:00",
     "listing_roles": {
       "DP1000": "listing_id",
       "DP1001": "listing_id",
@@ -1090,7 +1090,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-17T17:18:58.924016+00:00",
+    "last_verified": "2026-06-17T17:56:54.777577+00:00",
     "listing_roles": {
       "DP1067": "listing_id"
     },
@@ -1257,8 +1257,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-17T17:18:58.924031+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:48:12.471229+00:00",
     "listing_roles": {
       "DP1048": "listing_id",
       "DP1049": "listing_id",
