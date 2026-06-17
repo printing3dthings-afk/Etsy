@@ -96,7 +96,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v27"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c4e7b13-v28"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -3398,6 +3398,12 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
             return
 
         # Execute every requested tool, then feed results back for the next round.
+        # IMPORTANT: every tool_use block above is now committed to `history`. The
+        # Anthropic API requires a matching tool_result for each one in the very next
+        # message — if anything below raises (e.g. a flaky websocket send on a mobile
+        # connection) before we append `tool_results`, every later turn in this
+        # session 400s forever ("tool_use ids were found without tool_result blocks").
+        # So nothing here is allowed to propagate without first recording a result.
         tool_results = []
         for block in final.content:
             if getattr(block, "type", None) == "tool_use":
@@ -3408,8 +3414,14 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     status_msg = "📋 Staging action for approval…"
                 else:
                     status_msg = f"📊 Reading {block.name}…"
-                await websocket.send_text(json.dumps({"type": "tool", "content": status_msg}))
-                result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
+                try:
+                    await websocket.send_text(json.dumps({"type": "tool", "content": status_msg}))
+                except Exception:
+                    pass  # status update is best-effort; never let it block the tool result
+                try:
+                    result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
+                except Exception as exc:
+                    result = {"error": str(exc)}
                 tool_results.append(
                     {
                         "type": "tool_result",

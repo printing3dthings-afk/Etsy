@@ -190,3 +190,50 @@ the source and the runtime JS are not the same text whenever a backslash is invo
 anywhere in the script silently kills 100% of the dashboard's interactivity with no visible error to the
 user — just frozen static HTML. This class of bug is invisible to Python's own syntax checks
 (`py_compile` passes fine) because the bug only exists in the *string value*, not the Python syntax.
+
+### 2026-06-17 — Listings category filter chips never filtered (only "All" worked)
+**Symptom:** Scott reported only the "All" filter chip on the Listings tab did anything; clicking any
+named category (e.g. "Botanical and Floral Art") left the list unchanged.
+**Root cause:** `shop_section_id` arrives from `/api/listings` as a JSON number. The filter chip's
+`onclick="setSectionFilter('${c.key}')"` template literal always wrapped the value in quotes, so
+`_sectionFilter` became a string while `l.shop_section_id` stayed a number — `===` comparison in
+`renderListings()` never matched except by coincidence for the synthetic `'none'` (uncategorized) bucket,
+which is why that one looked like it might have worked.
+**Fix:** Normalized both sides of every comparison with `String(...)` (grouping key, filter compare, and
+the active-chip highlight check). Bump to BUILD_ID v27.
+**Separately confirmed NOT a bug:** Scott also reported listing detail panels showing "Uncategorized" —
+checked live Etsy data directly via curl and confirmed those specific listings (e.g. 4522868228) genuinely
+have `shop_section_id: null` on Etsy itself (87 of 164 active listings, mostly newer ones, were never
+assigned to a shop section). The dashboard was reporting this correctly.
+**Lesson:** Any value compared with `===` after passing through an HTML template-literal attribute
+(`onclick="fn('${x}')"`) silently becomes a string, even if the original value was a number. Normalize
+explicitly with `String()` on both sides rather than relying on type to survive the round trip through
+the DOM.
+
+### 2026-06-17 — CEO Agent chat ("Frank") permanently 400s mid-session after firing multiple tool calls
+**Symptom:** Scott asked Frank to fix mismatched kawaii tags on 30+ wall art listings. Frank staged the
+fixes and started "firing them all simultaneously." The next message in the same chat session immediately
+failed with Anthropic API error 400 `invalid_request_error`: "tool_use ids were found without tool_result
+blocks immediately after" — listing 8 `toolu_...` ids — and every subsequent message in that session kept
+failing the same way.
+**Root cause:** In `_run_agent_turn()`, the assistant's turn (including its `tool_use` blocks) is appended
+to `history` *before* the tools are executed. The Anthropic API requires every `tool_use` block to be
+followed by a matching `tool_result` in the very next message. If anything threw while iterating the tool
+calls — most likely `await websocket.send_text(...)` for a status update failing on a flaky mobile
+connection while Frank was firing many `stage_action` calls back-to-back — the loop aborted before
+`history.append({"role": "user", "content": tool_results})` ever ran. That left `history` (an in-memory,
+per-websocket-connection list with no persistence or self-repair) permanently corrupted for the rest of
+that connection: every later turn sent the same orphaned `tool_use` blocks to Claude and got the same 400.
+**Fix:** Wrapped both the status-update `send_text` and the `_execute_agent_tool` call in their own
+try/except inside the per-block loop in `_run_agent_turn()`, so a failure on one tool call can no longer
+abort the loop before a `tool_result` is recorded for every `tool_use` block. A failed status send is now
+silently ignored (best-effort only); a failed tool execution now produces an `{"error": ...}` result
+instead of an unhandled exception. `history.append(...)` for `tool_results` is now unconditional once the
+loop starts. Bump to BUILD_ID v28. Redeploying also force-closed the corrupted in-memory session, so Scott
+just needs to reopen the chat to get a clean `history`.
+**Lesson:** Any conversation-history list fed back into the Anthropic API must guarantee `tool_use` →
+`tool_result` pairing is atomic — either both happen or neither does. Appending the assistant's `tool_use`
+turn before the results are known creates a window where any unrelated failure (a flaky websocket send,
+not just a tool bug) corrupts that history for the rest of the session, since there is no persistence or
+truncation/recovery logic to drop a bad trailing turn. Catch exceptions at the smallest possible scope
+around side-effecting calls (websocket sends, tool execution) rather than relying on an outer handler.
