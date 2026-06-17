@@ -606,13 +606,37 @@ class EtsyAPIClient:
         self._require_oauth()
         return self._request("PATCH", f"shops/{self.shop_id}/listings/{listing_id}", body=updates)
 
-    def update_listing_inventory(self, listing_id: int | str, quantity: int) -> dict:
-        """Update listing quantity. Requires OAuth access token."""
+    def update_listing_inventory(
+        self, listing_id: int | str, quantity: int | None = None, price: float | None = None
+    ) -> dict:
+        """Update listing quantity and/or price. Requires OAuth access token.
+
+        Etsy quirk: the top-level `price` field on update_listing() / PATCH listings/{id}
+        is silently ignored for any listing that has an inventory record (which is most
+        listings, including ones with no real variations) — price must be set per-offering
+        via PUT listings/{id}/inventory instead. Fetches current inventory first so
+        sku/property_values/other products aren't wiped out by a partial overwrite.
+        """
         self._require_oauth()
+        current = self._request("GET", f"listings/{listing_id}/inventory")
+        products = []
+        for p in current["products"]:
+            offerings = []
+            for off in p["offerings"]:
+                offerings.append({
+                    "price": price if price is not None else off["price"],
+                    "quantity": quantity if quantity is not None else off["quantity"],
+                    "is_enabled": off["is_enabled"],
+                })
+            products.append({
+                "sku": p.get("sku", ""),
+                "property_values": p.get("property_values", []),
+                "offerings": offerings,
+            })
         return self._request(
             "PUT",
-            f"shops/{self.shop_id}/listings/{listing_id}/inventory",
-            body={"products": [{"offerings": [{"quantity": quantity, "is_enabled": True}]}]},
+            f"listings/{listing_id}/inventory",
+            body={"products": products},
         )
 
     # ── Shop sections ─────────────────────────────────────────────────────────
