@@ -34,6 +34,7 @@ Exit codes:
 
 import argparse
 import json
+import re
 import sys
 import time
 import urllib.request
@@ -340,6 +341,17 @@ PHYSICAL_PHRASES = [
     "will be shipped", "shipped to you", "ships to your",
 ]
 
+# Negated disclaimers ("No physical item will be shipped") correctly use
+# shipping vocabulary to deny physical fulfillment -- strip these clauses
+# before phrase-matching so they don't false-positive PHYSICAL_PHRASES.
+# Found 2026-06-17: 24 paper_pack/coloring_pages/svg_bundle listings all use
+# this exact disclaimer and were wrongly flagged before this fix.
+_NEGATED_SHIPPING_RE = re.compile(
+    r"(?:no physical (?:item|product|print|file)s?|nothing)\s+(?:will\s+be|is|are|gets?)\s+shipped"
+    r"(?:\s+(?:to\s+\w+|directly))?",
+    re.IGNORECASE,
+)
+
 
 def check_fulfillment_match(description: str, fulfillment: str) -> list[dict]:
     """For digital listings, FAIL if the description claims a physical/shipped item.
@@ -347,7 +359,7 @@ def check_fulfillment_match(description: str, fulfillment: str) -> list[dict]:
     door' description (guaranteed refunds + policy risk)."""
     if fulfillment != "digital":
         return []
-    desc_lower = description.lower()
+    desc_lower = _NEGATED_SHIPPING_RE.sub("", description).lower()
     hits = [p for p in PHYSICAL_PHRASES if p in desc_lower]
     if hits:
         return [{"severity": "FAIL", "check": "fulfillment_mismatch",
@@ -362,6 +374,55 @@ def check_description_keywords(description: str, required: list[str]) -> list[di
     if missing:
         return [{"severity": "WARN", "check": "description_keywords",
                  "detail": f"Description missing expected keyword(s): {missing}"}]
+    return []
+
+
+# Catches "Set of 4", "pack of 10", "4 prints", "5 designs" etc. -- the exact
+# failure mode found on the Four Seasons listing (4512784922): the title and
+# description both claimed "all 4" coordinated prints, but the listing
+# actually delivered a single design's DP1070_print_sizes.zip -- one design,
+# not four, and not even one of the four named ones.
+#
+# Scoped to the TITLE only (not the full description). The description
+# legitimately repeats internal item counts that have nothing to do with a
+# "how many designs does this listing represent" claim -- e.g. "11 print-ready
+# JPEG files at 300 DPI in one ZIP" (multiple SIZES of ONE design) or
+# "10 original Class of 2026 designs" inside a single SVG bundle ZIP (true and
+# fine, since the type's rule allows one ZIP to hold N designs). Matching the
+# full description against this regex flagged 46 listings, nearly all false
+# positives from that boilerplate. The title is where a true "Set of N" /
+# "N-piece" marketing promise is actually made.
+QUANTITY_CLAIM_RE = re.compile(
+    r"\bset of (\d+)\b|\bpack of (\d+)\b|\b(\d+)[\s-]*(?:piece|design|print|watercolor print)s?\b",
+    re.IGNORECASE,
+)
+
+
+def check_quantity_claims(title: str, live_file_count: int) -> list[dict]:
+    """FAIL if the title claims a design/piece count that doesn't match the
+    number of files actually attached to the listing right now. Deliberately
+    compares against the LIVE file count fetched from the Etsy API (not any
+    manifest field) -- the manifest's dp_codes/expected_file_count can go
+    stale (confirmed on listing 4512784817: manifest listed 2 dp_codes, but
+    the listing actually delivers 4 separate per-design ZIPs, correctly
+    matching its "Set of 4" title -- a manifest-only comparison would have
+    wrongly flagged a truthful listing). The live file count is the one
+    number that always reflects what the customer is about to receive."""
+    if not live_file_count:
+        return []
+    claims = set()
+    for m in QUANTITY_CLAIM_RE.finditer(title):
+        for g in m.groups():
+            if g:
+                n = int(g)
+                if n > 1:
+                    claims.add(n)
+    mismatched = sorted(n for n in claims if n != live_file_count)
+    if mismatched:
+        return [{"severity": "FAIL", "check": "quantity_claim_mismatch",
+                 "detail": (f"Title claims quantity {mismatched} but the listing currently "
+                            f"has {live_file_count} file(s) attached. Verify the claim matches "
+                            f"what the customer actually receives (Four Seasons failure mode).")}]
     return []
 
 
@@ -445,6 +506,12 @@ def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
         manifest_entry.get("expected_files", []),
         manifest_entry.get("expected_file_count", 0)
     ))
+
+    # Quantity-claim match — title count claims ("Set of 4") must match the
+    # LIVE file count just fetched above. Opt-in per type via
+    # "quantity_claim_check" (currently gallery_set only — see notes there).
+    if rule.get("quantity_claim_check"):
+        result["issues"].extend(check_quantity_claims(title, len(files)))
 
     # -- Fetch images --
     # NOTE: shops/{shop_id}/listings/{lid}/images returns 404; use listing-level endpoint

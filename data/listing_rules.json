@@ -85,7 +85,7 @@
       "instant download"
     ],
     "required_description_sections": [],
-    "notes": "Commercial license listings \u2014 minimal photo requirement.",
+    "notes": "Commercial license listings — minimal photo requirement.",
     "fulfillment": "digital"
   },
   "gallery_bundle": {
@@ -101,7 +101,7 @@
     "required_description_sections": [
       "AI_DISCLOSURE"
     ],
-    "notes": "Gallery bundle = set of multiple prints in one listing, multiple ZIP files.",
+    "notes": "Gallery bundle = set of multiple prints in one listing, multiple ZIP files. quantity_claim_check intentionally NOT set here: the manifest's dp_codes for this type is always 1 entry (one catalog row per listing) regardless of how many prints are actually bundled inside, so there's no reliable ground truth to compare a title's \"Set of N\" claim against. Only gallery_set tracks per-design dp_codes.",
     "fulfillment": "digital"
   },
   "gallery_set": {
@@ -116,8 +116,9 @@
     "required_description_sections": [
       "AI_DISCLOSURE"
     ],
-    "notes": "Gallery set = multiple DP codes but one shared listing/ZIP.",
-    "fulfillment": "digital"
+    "notes": "Gallery set = multiple DP codes but one shared listing/ZIP. The only type whose manifest dp_codes reliably tracks one entry per bundled design, which is why quantity_claim_check is enabled here and nowhere else (see Four Seasons listing 4512784922).",
+    "fulfillment": "digital",
+    "quantity_claim_check": true
   },
   "bundle": {
     "min_photos": 5,
@@ -171,6 +172,49 @@
     ],
     "required_description_sections": [],
     "notes": "Fallback rules for unclassified listing types.",
+    "fulfillment": "digital"
+  },
+  "3d_print_physical": {
+    "min_photos": 8,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 0,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "3d printed"
+    ],
+    "required_description_sections": [],
+    "notes": "Made-to-order physical 3D print, shipped — no digital file to verify. fulfillment=physical so check_fulfillment_match (which guards against digital listings claiming a shipped item) is a no-op here by design.",
+    "fulfillment": "physical"
+  },
+  "paper_pack": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant digital download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Digital paper pattern pack, one ZIP per listing.",
+    "fulfillment": "digital"
+  },
+  "coloring_pages": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant digital download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Printable coloring page set(s). The combined 4-set listing has 4 ZIPs — file_count=1 is a floor, not a cap (check_files only fails on fewer than expected).",
     "fulfillment": "digital"
   }
 }

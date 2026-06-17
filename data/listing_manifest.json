@@ -1,4 +1,220 @@
 {
+  "4488477854": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:13.614953+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_CRYSTAL_GLOW_LAMP"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.923874+00:00",
+    "listing_roles": {
+      "P3D_CRYSTAL_GLOW_LAMP": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4488532602": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:12.180018+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_RIBBED_VASE_FOR_DRIED_FLOWERS"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.923896+00:00",
+    "listing_roles": {
+      "P3D_RIBBED_VASE_FOR_DRIED_FLOWERS": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4488666558": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:11.793532+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_COFFEE_BAR_SIGN"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.923900+00:00",
+    "listing_roles": {
+      "P3D_COFFEE_BAR_SIGN": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4490472707": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:10.414640+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_SCULPTURAL_MESH_LAMP"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.923903+00:00",
+    "listing_roles": {
+      "P3D_SCULPTURAL_MESH_LAMP": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4492610660": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:10.038516+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_TEXTURED_TEA_LIGHT_HOLDERS"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.923905+00:00",
+    "listing_roles": {
+      "P3D_TEXTURED_TEA_LIGHT_HOLDERS": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4497392795": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:09.643783+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_GEOMETRIC_GLOW_LAMP"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.923908+00:00",
+    "listing_roles": {
+      "P3D_GEOMETRIC_GLOW_LAMP": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4497769840": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:08.264549+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_PUFFER_JACKET_CAN_KOOZIE"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-17T17:18:58.923910+00:00",
+    "listing_roles": {
+      "P3D_PUFFER_JACKET_CAN_KOOZIE": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4506555435": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:03.350254+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_SLIM_CAN_KOOZIE"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-17T17:18:58.923912+00:00",
+    "listing_roles": {
+      "P3D_SLIM_CAN_KOOZIE": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4506557906": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:06.896841+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_RIBBED_TEA_LIGHT_HOLDER"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-06-17T17:18:58.923915+00:00",
+    "listing_roles": {
+      "P3D_RIBBED_TEA_LIGHT_HOLDER": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4506559866": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:06.510046+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_RIBBED_PLANTER_POT"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-06-17T17:18:58.923917+00:00",
+    "listing_roles": {
+      "P3D_RIBBED_PLANTER_POT": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4506562262": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:05.135765+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_STANDARD_CAN_KOOZIE"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-06-17T17:18:58.923919+00:00",
+    "listing_roles": {
+      "P3D_STANDARD_CAN_KOOZIE": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4507783049": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:04.727435+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_MINIMALIST_PEN_HOLDER"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.923921+00:00",
+    "listing_roles": {
+      "P3D_MINIMALIST_PEN_HOLDER": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
   "4509179201": {
     "art_hashes": {},
     "art_sources": {},
@@ -8,7 +224,7 @@
     "expected_file_count": 3,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328504+00:00",
+    "last_verified": "2026-06-17T17:18:58.923923+00:00",
     "listing_roles": {
       "DP1026": "planner_listing_id"
     },
@@ -24,7 +240,7 @@
     "expected_file_count": 3,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328555+00:00",
+    "last_verified": "2026-06-17T17:18:58.923926+00:00",
     "listing_roles": {
       "DP1027": "planner_listing_id"
     },
@@ -40,7 +256,7 @@
     "expected_file_count": 3,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328559+00:00",
+    "last_verified": "2026-06-17T17:18:58.923929+00:00",
     "listing_roles": {
       "DP1028": "planner_listing_id"
     },
@@ -56,7 +272,7 @@
     "expected_file_count": 3,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328562+00:00",
+    "last_verified": "2026-06-17T17:18:58.923931+00:00",
     "listing_roles": {
       "DP1029": "planner_listing_id"
     },
@@ -72,7 +288,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328565+00:00",
+    "last_verified": "2026-06-17T17:18:58.923933+00:00",
     "listing_roles": {
       "DP1058": "listing_id"
     },
@@ -88,7 +304,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328567+00:00",
+    "last_verified": "2026-06-17T17:18:58.923934+00:00",
     "listing_roles": {
       "DP1059": "listing_id"
     },
@@ -104,7 +320,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328569+00:00",
+    "last_verified": "2026-06-17T17:18:58.923936+00:00",
     "listing_roles": {
       "DP1060": "listing_id"
     },
@@ -120,7 +336,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328572+00:00",
+    "last_verified": "2026-06-17T17:18:58.923938+00:00",
     "listing_roles": {
       "DP1061": "listing_id"
     },
@@ -138,7 +354,7 @@
       "DP1014_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328576+00:00",
+    "last_verified": "2026-06-17T17:18:58.923940+00:00",
     "listing_roles": {
       "DP1014": "listing_id"
     },
@@ -156,7 +372,7 @@
       "DP1015_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328578+00:00",
+    "last_verified": "2026-06-17T17:18:58.923942+00:00",
     "listing_roles": {
       "DP1015": "listing_id"
     },
@@ -172,7 +388,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328580+00:00",
+    "last_verified": "2026-06-17T17:18:58.923944+00:00",
     "listing_roles": {
       "DP1016": "listing_id"
     },
@@ -190,7 +406,7 @@
       "DP1019_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328584+00:00",
+    "last_verified": "2026-06-17T17:18:58.923946+00:00",
     "listing_roles": {
       "DP1019": "listing_id"
     },
@@ -208,7 +424,7 @@
       "DP1020_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328587+00:00",
+    "last_verified": "2026-06-17T17:18:58.923947+00:00",
     "listing_roles": {
       "DP1020": "listing_id"
     },
@@ -226,7 +442,7 @@
       "DP1021_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328590+00:00",
+    "last_verified": "2026-06-17T17:18:58.923949+00:00",
     "listing_roles": {
       "DP1021": "listing_id"
     },
@@ -244,7 +460,7 @@
       "DP1023_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328594+00:00",
+    "last_verified": "2026-06-17T17:18:58.923951+00:00",
     "listing_roles": {
       "DP1023": "listing_id"
     },
@@ -260,7 +476,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328596+00:00",
+    "last_verified": "2026-06-17T17:18:58.923953+00:00",
     "listing_roles": {
       "DP1025": "listing_id"
     },
@@ -278,7 +494,7 @@
       "DP1007_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328599+00:00",
+    "last_verified": "2026-06-17T17:18:58.923955+00:00",
     "listing_roles": {
       "DP1007": "listing_id"
     },
@@ -296,7 +512,7 @@
       "DP1018_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328601+00:00",
+    "last_verified": "2026-06-17T17:18:58.923956+00:00",
     "listing_roles": {
       "DP1018": "listing_id"
     },
@@ -314,7 +530,7 @@
       "DP1022_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328602+00:00",
+    "last_verified": "2026-06-17T17:18:58.923958+00:00",
     "listing_roles": {
       "DP1022": "listing_id"
     },
@@ -332,7 +548,7 @@
       "DP1024_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328604+00:00",
+    "last_verified": "2026-06-17T17:18:58.923960+00:00",
     "listing_roles": {
       "DP1024": "listing_id"
     },
@@ -350,7 +566,7 @@
       "DP1012_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328606+00:00",
+    "last_verified": "2026-06-17T17:18:58.923962+00:00",
     "listing_roles": {
       "DP1012": "listing_id"
     },
@@ -368,7 +584,7 @@
       "DP1013_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328607+00:00",
+    "last_verified": "2026-06-17T17:18:58.923964+00:00",
     "listing_roles": {
       "DP1013": "listing_id"
     },
@@ -384,7 +600,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328660+00:00",
+    "last_verified": "2026-06-17T17:18:58.923965+00:00",
     "listing_roles": {
       "DP1017": "listing_id"
     },
@@ -402,7 +618,7 @@
       "DP1032_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328663+00:00",
+    "last_verified": "2026-06-17T17:18:58.923968+00:00",
     "listing_roles": {
       "DP1032": "listing_id"
     },
@@ -420,7 +636,7 @@
       "DP1033_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328665+00:00",
+    "last_verified": "2026-06-17T17:18:58.923969+00:00",
     "listing_roles": {
       "DP1033": "listing_id"
     },
@@ -438,7 +654,7 @@
       "DP1034_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328667+00:00",
+    "last_verified": "2026-06-17T17:18:58.923971+00:00",
     "listing_roles": {
       "DP1034": "listing_id"
     },
@@ -456,7 +672,7 @@
       "DP1036_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328668+00:00",
+    "last_verified": "2026-06-17T17:18:58.923973+00:00",
     "listing_roles": {
       "DP1036": "listing_id"
     },
@@ -474,7 +690,7 @@
       "DP1037_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328671+00:00",
+    "last_verified": "2026-06-17T17:18:58.923974+00:00",
     "listing_roles": {
       "DP1037": "listing_id"
     },
@@ -492,7 +708,7 @@
       "DP1030_print_sizes.zip"
     ],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328672+00:00",
+    "last_verified": "2026-06-17T17:18:58.923976+00:00",
     "listing_roles": {
       "DP1030": "listing_id"
     },
@@ -510,7 +726,7 @@
       "DP1031_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328674+00:00",
+    "last_verified": "2026-06-17T17:18:58.923978+00:00",
     "listing_roles": {
       "DP1031": "listing_id"
     },
@@ -529,7 +745,7 @@
       "DP1035_print_sizes.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328676+00:00",
+    "last_verified": "2026-06-17T17:18:58.923980+00:00",
     "listing_roles": {
       "DP1035": "listing_id",
       "DP1064": "listing_id"
@@ -548,7 +764,7 @@
       "BUNDLE_PLANNER_ALL4"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328678+00:00",
+    "last_verified": "2026-06-17T17:18:58.923981+00:00",
     "listing_roles": {
       "BUNDLE_PLANNER_ALL4": "listing_id"
     },
@@ -566,7 +782,7 @@
       "STICKER_COTTON_CANDY"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328680+00:00",
+    "last_verified": "2026-06-17T17:18:58.923983+00:00",
     "listing_roles": {
       "STICKER_COTTON_CANDY": "listing_id"
     },
@@ -584,7 +800,7 @@
       "STICKER_CORAL_PEACH"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328682+00:00",
+    "last_verified": "2026-06-17T17:18:58.923985+00:00",
     "listing_roles": {
       "STICKER_CORAL_PEACH": "listing_id"
     },
@@ -602,7 +818,7 @@
       "STICKER_BUNDLE_ALL4"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328683+00:00",
+    "last_verified": "2026-06-17T17:18:58.923987+00:00",
     "listing_roles": {
       "STICKER_BUNDLE_ALL4": "listing_id"
     },
@@ -620,7 +836,7 @@
       "STICKER_FREE"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328685+00:00",
+    "last_verified": "2026-06-17T17:18:58.923988+00:00",
     "listing_roles": {
       "STICKER_FREE": "listing_id"
     },
@@ -638,7 +854,7 @@
       "STICKER_LAVENDER"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328687+00:00",
+    "last_verified": "2026-06-17T17:18:58.923990+00:00",
     "listing_roles": {
       "STICKER_LAVENDER": "listing_id"
     },
@@ -656,7 +872,7 @@
       "STICKER_MIDNIGHT_BLUE"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328689+00:00",
+    "last_verified": "2026-06-17T17:18:58.923992+00:00",
     "listing_roles": {
       "STICKER_MIDNIGHT_BLUE": "listing_id"
     },
@@ -676,7 +892,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328690+00:00",
+    "last_verified": "2026-06-17T17:18:58.923994+00:00",
     "listing_roles": {
       "DP1000": "listing_id",
       "DP1001": "listing_id",
@@ -696,7 +912,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328692+00:00",
+    "last_verified": "2026-06-17T17:18:58.923996+00:00",
     "listing_roles": {
       "DP1038": "listing_id"
     },
@@ -712,7 +928,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328694+00:00",
+    "last_verified": "2026-06-17T17:18:58.923997+00:00",
     "listing_roles": {
       "DP1039": "listing_id"
     },
@@ -728,7 +944,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328696+00:00",
+    "last_verified": "2026-06-17T17:18:58.923999+00:00",
     "listing_roles": {
       "DP1040": "listing_id"
     },
@@ -744,7 +960,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328698+00:00",
+    "last_verified": "2026-06-17T17:18:58.924001+00:00",
     "listing_roles": {
       "DP1041": "listing_id"
     },
@@ -760,7 +976,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328701+00:00",
+    "last_verified": "2026-06-17T17:18:58.924002+00:00",
     "listing_roles": {
       "DP1042": "listing_id"
     },
@@ -776,7 +992,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328703+00:00",
+    "last_verified": "2026-06-17T17:18:58.924004+00:00",
     "listing_roles": {
       "DP1044": "listing_id"
     },
@@ -792,7 +1008,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328705+00:00",
+    "last_verified": "2026-06-17T17:18:58.924006+00:00",
     "listing_roles": {
       "DP1043": "listing_id"
     },
@@ -808,7 +1024,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328706+00:00",
+    "last_verified": "2026-06-17T17:18:58.924008+00:00",
     "listing_roles": {
       "DP1046": "listing_id"
     },
@@ -824,7 +1040,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328708+00:00",
+    "last_verified": "2026-06-17T17:18:58.924009+00:00",
     "listing_roles": {
       "DP1045": "listing_id"
     },
@@ -841,7 +1057,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328710+00:00",
+    "last_verified": "2026-06-17T17:18:58.924013+00:00",
     "listing_roles": {
       "DP1047": "listing_id",
       "DP1066": "listing_id"
@@ -858,7 +1074,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328711+00:00",
+    "last_verified": "2026-06-17T17:18:58.924014+00:00",
     "listing_roles": {
       "DP1049": "individual_listing_id"
     },
@@ -874,7 +1090,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328713+00:00",
+    "last_verified": "2026-06-17T17:18:58.924016+00:00",
     "listing_roles": {
       "DP1067": "listing_id"
     },
@@ -890,7 +1106,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328714+00:00",
+    "last_verified": "2026-06-17T17:18:58.924018+00:00",
     "listing_roles": {
       "DP1050": "individual_listing_id"
     },
@@ -906,7 +1122,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328716+00:00",
+    "last_verified": "2026-06-17T17:18:58.924020+00:00",
     "listing_roles": {
       "DP1051": "individual_listing_id"
     },
@@ -922,7 +1138,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328718+00:00",
+    "last_verified": "2026-06-17T17:18:58.924021+00:00",
     "listing_roles": {
       "DP1052": "individual_listing_id"
     },
@@ -938,7 +1154,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328719+00:00",
+    "last_verified": "2026-06-17T17:18:58.924022+00:00",
     "listing_roles": {
       "DP1053": "individual_listing_id"
     },
@@ -954,7 +1170,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328721+00:00",
+    "last_verified": "2026-06-17T17:18:58.924024+00:00",
     "listing_roles": {
       "DP1054": "individual_listing_id"
     },
@@ -970,7 +1186,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328723+00:00",
+    "last_verified": "2026-06-17T17:18:58.924025+00:00",
     "listing_roles": {
       "DP1055": "individual_listing_id"
     },
@@ -986,7 +1202,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328724+00:00",
+    "last_verified": "2026-06-17T17:18:58.924027+00:00",
     "listing_roles": {
       "DP1056": "listing_id"
     },
@@ -1003,7 +1219,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328726+00:00",
+    "last_verified": "2026-06-17T17:18:58.924028+00:00",
     "listing_roles": {
       "DP1057": "listing_id",
       "DP1068": "listing_id"
@@ -1021,7 +1237,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328727+00:00",
+    "last_verified": "2026-06-17T17:18:58.924029+00:00",
     "listing_roles": {
       "DP1055": "listing_id",
       "DP1069": "listing_id"
@@ -1042,7 +1258,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328729+00:00",
+    "last_verified": "2026-06-17T17:18:58.924031+00:00",
     "listing_roles": {
       "DP1048": "listing_id",
       "DP1049": "listing_id",
@@ -1052,6 +1268,24 @@
     },
     "min_photo_count": 5,
     "type": "gallery_set"
+  },
+  "4513637740": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:14.364326+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "WA_PICK_ANY_3_PRINTS"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924033+00:00",
+    "listing_roles": {
+      "WA_PICK_ANY_3_PRINTS": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
   },
   "4513713044": {
     "art_hashes": {},
@@ -1064,7 +1298,7 @@
       "BUNDLE_GALLERY_COASTAL"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328730+00:00",
+    "last_verified": "2026-06-17T17:18:58.924035+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_COASTAL": "listing_id"
     },
@@ -1082,7 +1316,7 @@
       "BUNDLE_GALLERY_BOTANICAL"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328733+00:00",
+    "last_verified": "2026-06-17T17:18:58.924037+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_BOTANICAL": "listing_id"
     },
@@ -1100,7 +1334,7 @@
       "BUNDLE_GALLERY_WOODLAND"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328734+00:00",
+    "last_verified": "2026-06-17T17:18:58.924039+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_WOODLAND": "listing_id"
     },
@@ -1116,7 +1350,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328737+00:00",
+    "last_verified": "2026-06-17T17:18:58.924040+00:00",
     "listing_roles": {
       "DP1071": "listing_id"
     },
@@ -1132,7 +1366,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328739+00:00",
+    "last_verified": "2026-06-17T17:18:58.924042+00:00",
     "listing_roles": {
       "DP1072": "listing_id"
     },
@@ -1148,7 +1382,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328741+00:00",
+    "last_verified": "2026-06-17T17:18:58.924043+00:00",
     "listing_roles": {
       "DP1073": "listing_id"
     },
@@ -1164,7 +1398,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328743+00:00",
+    "last_verified": "2026-06-17T17:18:58.924044+00:00",
     "listing_roles": {
       "DP1074": "listing_id"
     },
@@ -1180,7 +1414,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328744+00:00",
+    "last_verified": "2026-06-17T17:18:58.924046+00:00",
     "listing_roles": {
       "DP1075": "listing_id"
     },
@@ -1196,7 +1430,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328746+00:00",
+    "last_verified": "2026-06-17T17:18:58.924048+00:00",
     "listing_roles": {
       "DP1076": "listing_id"
     },
@@ -1212,7 +1446,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328748+00:00",
+    "last_verified": "2026-06-17T17:18:58.924050+00:00",
     "listing_roles": {
       "DP1077": "listing_id"
     },
@@ -1228,7 +1462,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328750+00:00",
+    "last_verified": "2026-06-17T17:18:58.924051+00:00",
     "listing_roles": {
       "DP1078": "listing_id"
     },
@@ -1244,7 +1478,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328751+00:00",
+    "last_verified": "2026-06-17T17:18:58.924053+00:00",
     "listing_roles": {
       "DP1079": "listing_id"
     },
@@ -1260,7 +1494,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-16T13:18:41.328752+00:00",
+    "last_verified": "2026-06-17T17:18:58.924054+00:00",
     "listing_roles": {
       "DP1080": "listing_id"
     },
@@ -1276,7 +1510,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328754+00:00",
+    "last_verified": "2026-06-17T17:18:58.924056+00:00",
     "listing_roles": {
       "DP1081": "listing_id"
     },
@@ -1292,7 +1526,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328756+00:00",
+    "last_verified": "2026-06-17T17:18:58.924057+00:00",
     "listing_roles": {
       "DP1082": "listing_id"
     },
@@ -1308,7 +1542,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328757+00:00",
+    "last_verified": "2026-06-17T17:18:58.924059+00:00",
     "listing_roles": {
       "DP1083": "listing_id"
     },
@@ -1324,7 +1558,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328759+00:00",
+    "last_verified": "2026-06-17T17:18:58.924060+00:00",
     "listing_roles": {
       "DP1084": "listing_id"
     },
@@ -1340,7 +1574,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328760+00:00",
+    "last_verified": "2026-06-17T17:18:58.924062+00:00",
     "listing_roles": {
       "DP1085": "listing_id"
     },
@@ -1358,7 +1592,7 @@
       "SUBLIMATION_MOM_LIFE"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328762+00:00",
+    "last_verified": "2026-06-17T17:18:58.924064+00:00",
     "listing_roles": {
       "SUBLIMATION_MOM_LIFE": "listing_id"
     },
@@ -1374,7 +1608,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328764+00:00",
+    "last_verified": "2026-06-17T17:18:58.924065+00:00",
     "listing_roles": {
       "DP1086": "listing_id"
     },
@@ -1390,7 +1624,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328765+00:00",
+    "last_verified": "2026-06-17T17:18:58.924067+00:00",
     "listing_roles": {
       "DP1087": "listing_id"
     },
@@ -1408,7 +1642,7 @@
       "COMMERCIAL_STICKER_LAVENDER"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328768+00:00",
+    "last_verified": "2026-06-17T17:18:58.924103+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_LAVENDER": "listing_id"
     },
@@ -1426,7 +1660,7 @@
       "COMMERCIAL_STICKER_COTTON"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328769+00:00",
+    "last_verified": "2026-06-17T17:18:58.924105+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_COTTON": "listing_id"
     },
@@ -1444,7 +1678,7 @@
       "COMMERCIAL_STICKER_MIDNIGHT"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328771+00:00",
+    "last_verified": "2026-06-17T17:18:58.924107+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_MIDNIGHT": "listing_id"
     },
@@ -1460,7 +1694,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328773+00:00",
+    "last_verified": "2026-06-17T17:18:58.924108+00:00",
     "listing_roles": {
       "DP1088": "listing_id"
     },
@@ -1476,7 +1710,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328774+00:00",
+    "last_verified": "2026-06-17T17:18:58.924110+00:00",
     "listing_roles": {
       "DP1089": "listing_id"
     },
@@ -1492,7 +1726,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328776+00:00",
+    "last_verified": "2026-06-17T17:18:58.924112+00:00",
     "listing_roles": {
       "DP1090": "listing_id"
     },
@@ -1508,7 +1742,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328777+00:00",
+    "last_verified": "2026-06-17T17:18:58.924115+00:00",
     "listing_roles": {
       "DP1091": "listing_id"
     },
@@ -1526,7 +1760,7 @@
       "COMMERCIAL_STICKER_CORAL"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328779+00:00",
+    "last_verified": "2026-06-17T17:18:58.924117+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_CORAL": "listing_id"
     },
@@ -1544,7 +1778,7 @@
       "COMMERCIAL_STICKER_BUNDLE"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328780+00:00",
+    "last_verified": "2026-06-17T17:18:58.924119+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_BUNDLE": "listing_id"
     },
@@ -1560,7 +1794,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328781+00:00",
+    "last_verified": "2026-06-17T17:18:58.924121+00:00",
     "listing_roles": {
       "DP1055": "kawaii_listing_id"
     },
@@ -1576,7 +1810,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328783+00:00",
+    "last_verified": "2026-06-17T17:18:58.924122+00:00",
     "listing_roles": {
       "DP1051": "kawaii_listing_id"
     },
@@ -1592,7 +1826,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328784+00:00",
+    "last_verified": "2026-06-17T17:18:58.924124+00:00",
     "listing_roles": {
       "DP1050": "kawaii_listing_id"
     },
@@ -1608,7 +1842,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328786+00:00",
+    "last_verified": "2026-06-17T17:18:58.924126+00:00",
     "listing_roles": {
       "DP1049": "kawaii_listing_id"
     },
@@ -1624,7 +1858,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328787+00:00",
+    "last_verified": "2026-06-17T17:18:58.924127+00:00",
     "listing_roles": {
       "DP1047": "kawaii_listing_id"
     },
@@ -1640,7 +1874,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328789+00:00",
+    "last_verified": "2026-06-17T17:18:58.924128+00:00",
     "listing_roles": {
       "DP1046": "kawaii_listing_id"
     },
@@ -1656,7 +1890,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328791+00:00",
+    "last_verified": "2026-06-17T17:18:58.924130+00:00",
     "listing_roles": {
       "DP1045": "kawaii_listing_id"
     },
@@ -1672,7 +1906,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328792+00:00",
+    "last_verified": "2026-06-17T17:18:58.924132+00:00",
     "listing_roles": {
       "DP1044": "kawaii_listing_id"
     },
@@ -1688,7 +1922,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328794+00:00",
+    "last_verified": "2026-06-17T17:18:58.924133+00:00",
     "listing_roles": {
       "DP1043": "kawaii_listing_id"
     },
@@ -1704,7 +1938,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328795+00:00",
+    "last_verified": "2026-06-17T17:18:58.924135+00:00",
     "listing_roles": {
       "DP1042": "kawaii_listing_id"
     },
@@ -1720,7 +1954,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328797+00:00",
+    "last_verified": "2026-06-17T17:18:58.924137+00:00",
     "listing_roles": {
       "DP1040": "kawaii_listing_id"
     },
@@ -1736,7 +1970,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328798+00:00",
+    "last_verified": "2026-06-17T17:18:58.924138+00:00",
     "listing_roles": {
       "DP1057": "kawaii_listing_id"
     },
@@ -1752,7 +1986,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328800+00:00",
+    "last_verified": "2026-06-17T17:18:58.924155+00:00",
     "listing_roles": {
       "DP1056": "kawaii_listing_id"
     },
@@ -1770,7 +2004,7 @@
       "DP1036_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328801+00:00",
+    "last_verified": "2026-06-17T17:18:58.924159+00:00",
     "listing_roles": {
       "DP1036": "kawaii_listing_id"
     },
@@ -1788,7 +2022,7 @@
       "DP1033_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328803+00:00",
+    "last_verified": "2026-06-17T17:18:58.924161+00:00",
     "listing_roles": {
       "DP1033": "kawaii_listing_id"
     },
@@ -1806,7 +2040,7 @@
       "DP1099_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328805+00:00",
+    "last_verified": "2026-06-17T17:18:58.924163+00:00",
     "listing_roles": {
       "DP1099": "listing_id"
     },
@@ -1822,7 +2056,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328806+00:00",
+    "last_verified": "2026-06-17T17:18:58.924165+00:00",
     "listing_roles": {
       "DP1048": "kawaii_listing_id"
     },
@@ -1840,7 +2074,7 @@
       "DP1097_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328808+00:00",
+    "last_verified": "2026-06-17T17:18:58.924167+00:00",
     "listing_roles": {
       "DP1097": "listing_id"
     },
@@ -1858,7 +2092,7 @@
       "DP1096_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328809+00:00",
+    "last_verified": "2026-06-17T17:18:58.924169+00:00",
     "listing_roles": {
       "DP1096": "listing_id"
     },
@@ -1874,7 +2108,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328811+00:00",
+    "last_verified": "2026-06-17T17:18:58.924170+00:00",
     "listing_roles": {
       "DP1058": "secondary_listing_id"
     },
@@ -1892,7 +2126,7 @@
       "DP1100_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328813+00:00",
+    "last_verified": "2026-06-17T17:18:58.924172+00:00",
     "listing_roles": {
       "DP1100": "listing_id"
     },
@@ -1910,7 +2144,7 @@
       "DP1095_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328814+00:00",
+    "last_verified": "2026-06-17T17:18:58.924174+00:00",
     "listing_roles": {
       "DP1095": "listing_id"
     },
@@ -1926,7 +2160,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328816+00:00",
+    "last_verified": "2026-06-17T17:18:58.924176+00:00",
     "listing_roles": {
       "DP1092": "listing_id"
     },
@@ -1944,7 +2178,7 @@
       "DP1094_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328818+00:00",
+    "last_verified": "2026-06-17T17:18:58.924177+00:00",
     "listing_roles": {
       "DP1094": "listing_id"
     },
@@ -1960,7 +2194,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328831+00:00",
+    "last_verified": "2026-06-17T17:18:58.924179+00:00",
     "listing_roles": {
       "DP1041": "kawaii_listing_id"
     },
@@ -1976,7 +2210,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328834+00:00",
+    "last_verified": "2026-06-17T17:18:58.924180+00:00",
     "listing_roles": {
       "DP1039": "kawaii_listing_id"
     },
@@ -1992,7 +2226,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328835+00:00",
+    "last_verified": "2026-06-17T17:18:58.924182+00:00",
     "listing_roles": {
       "DP1038": "kawaii_listing_id"
     },
@@ -2010,7 +2244,7 @@
       "DP1037_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328837+00:00",
+    "last_verified": "2026-06-17T17:18:58.924184+00:00",
     "listing_roles": {
       "DP1037": "kawaii_listing_id"
     },
@@ -2028,7 +2262,7 @@
       "DP1035_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328839+00:00",
+    "last_verified": "2026-06-17T17:18:58.924186+00:00",
     "listing_roles": {
       "DP1035": "kawaii_listing_id"
     },
@@ -2046,7 +2280,7 @@
       "DP1034_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328841+00:00",
+    "last_verified": "2026-06-17T17:18:58.924188+00:00",
     "listing_roles": {
       "DP1034": "kawaii_listing_id"
     },
@@ -2064,7 +2298,7 @@
       "DP1098_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328843+00:00",
+    "last_verified": "2026-06-17T17:18:58.924190+00:00",
     "listing_roles": {
       "DP1098": "listing_id"
     },
@@ -2080,7 +2314,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328845+00:00",
+    "last_verified": "2026-06-17T17:18:58.924191+00:00",
     "listing_roles": {
       "DP1069": "individual_listing_id"
     },
@@ -2096,7 +2330,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328847+00:00",
+    "last_verified": "2026-06-17T17:18:58.924193+00:00",
     "listing_roles": {
       "DP1093": "listing_id"
     },
@@ -2114,7 +2348,7 @@
       "DP1032_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328849+00:00",
+    "last_verified": "2026-06-17T17:18:58.924195+00:00",
     "listing_roles": {
       "DP1032": "kawaii_listing_id"
     },
@@ -2132,7 +2366,7 @@
       "DP1031_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328851+00:00",
+    "last_verified": "2026-06-17T17:18:58.924196+00:00",
     "listing_roles": {
       "DP1031": "kawaii_listing_id"
     },
@@ -2150,7 +2384,7 @@
       "DP1030_print_sizes.zip"
     ],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328852+00:00",
+    "last_verified": "2026-06-17T17:18:58.924198+00:00",
     "listing_roles": {
       "DP1030": "kawaii_listing_id"
     },
@@ -2166,12 +2400,94 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-16T13:18:41.328854+00:00",
+    "last_verified": "2026-06-17T17:18:58.924200+00:00",
     "listing_roles": {
       "WA1026": "listing_id"
     },
     "min_photo_count": 3,
     "type": "unknown"
+  },
+  "4519185019": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:37.740400+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "DP1008"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1008_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924201+00:00",
+    "listing_roles": {
+      "DP1008": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4519185199": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:38.144407+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "DP1009"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1009_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924203+00:00",
+    "listing_roles": {
+      "DP1009": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4519185236": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:39.557420+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "DP1010"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1010_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924205+00:00",
+    "listing_roles": {
+      "DP1010": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4519185376": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:39.920535+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "BUNDLE_MED"
+    ],
+    "expected_file_count": 3,
+    "expected_files": [
+      "DP1008_print_sizes.zip",
+      "DP1009_print_sizes.zip",
+      "DP1010_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-06-17T17:18:58.924207+00:00",
+    "listing_roles": {
+      "BUNDLE_MED": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_bundle"
   },
   "4519288171": {
     "art_hashes": {},
@@ -2184,11 +2500,538 @@
       "DP1063_print_sizes.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-16T13:18:41.328855+00:00",
+    "last_verified": "2026-06-17T17:18:58.924208+00:00",
     "listing_roles": {
       "DP1063": "listing_id"
     },
     "min_photo_count": 8,
     "type": "wall_art"
+  },
+  "4519453196": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:02.604479+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_02"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_02.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924210+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_02": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519453332": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:01.200388+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_03"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_03.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924212+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_03": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519453732": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:59.032598+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_06"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_06.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924214+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_06": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519453983": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:02.971817+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_01"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_01.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924215+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_01": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454361": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:00.794542+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_04"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_04.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924217+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_04": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454376": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:53.739663+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_11"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_11.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924218+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_11": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454497": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:59.408420+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_05"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_05.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924220+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_05": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454743": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:57.261013+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_07"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_07.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924221+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_07": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454834": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:52.347113+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_CELESTIAL_NIGHT_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "celestial_night_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924222+00:00",
+    "listing_roles": {
+      "PAPER_CELESTIAL_NIGHT_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519454887": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:55.872038+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_08"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_08.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924224+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_08": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519455049": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:55.504768+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_09"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_09.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924226+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_09": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519455175": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:54.103891+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_10"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_10.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924228+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_10": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519455342": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:49.836919+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_LAVENDER_DREAMS_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "lavender_dreams_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924230+00:00",
+    "listing_roles": {
+      "PAPER_LAVENDER_DREAMS_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519455652": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:48.071163+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_MERMAIDCORE_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "mermaidcore_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924231+00:00",
+    "listing_roles": {
+      "PAPER_MERMAIDCORE_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519455834": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:47.670458+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_MIDNIGHT_BLUE_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "midnight_blue_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924232+00:00",
+    "listing_roles": {
+      "PAPER_MIDNIGHT_BLUE_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519455899": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:51.981434+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_CHERRY_BLOSSOM_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "cherry_blossom_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924234+00:00",
+    "listing_roles": {
+      "PAPER_CHERRY_BLOSSOM_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519455964": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:46.272128+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_MOCHA_LATTE_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "mocha_latte_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924235+00:00",
+    "listing_roles": {
+      "PAPER_MOCHA_LATTE_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519456025": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:51.593411+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_CORAL_PEACH_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coral_peach_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924237+00:00",
+    "listing_roles": {
+      "PAPER_CORAL_PEACH_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519456175": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:50.210490+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_COTTON_CANDY_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "cotton_candy_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924238+00:00",
+    "listing_roles": {
+      "PAPER_COTTON_CANDY_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519456348": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:43.126109+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_SUNFLOWER_STUDIO_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "sunflower_studio_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924239+00:00",
+    "listing_roles": {
+      "PAPER_SUNFLOWER_STUDIO_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519456441": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:48.431106+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_MATCHA_SERENITY_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "matcha_serenity_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924241+00:00",
+    "listing_roles": {
+      "PAPER_MATCHA_SERENITY_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519457007": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:44.896878+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_OCEAN_BREEZE_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "ocean_breeze_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924242+00:00",
+    "listing_roles": {
+      "PAPER_OCEAN_BREEZE_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519457131": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:44.515497+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_SAGE_GARDEN_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "sage_garden_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924244+00:00",
+    "listing_roles": {
+      "PAPER_SAGE_GARDEN_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4520524435": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:13.974513+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "SS_AMERICA_250_SVG"
+    ],
+    "expected_file_count": 2,
+    "expected_files": [
+      "SS1001_america250_3dprint_pack_vol1.zip",
+      "SS1001_america250_3dprint_pack_vol2.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-06-17T17:18:58.924245+00:00",
+    "listing_roles": {
+      "SS_AMERICA_250_SVG": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4522863662": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:42.741434+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_FUN_ADVENTURE_COLORING_PAGES"
+    ],
+    "expected_file_count": 4,
+    "expected_files": [
+      "coloring_fun_basic_set_01.zip",
+      "coloring_fun_basic_set_02.zip",
+      "coloring_fun_basic_set_03.zip",
+      "coloring_fun_basic_set_04.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-06-17T17:18:58.924247+00:00",
+    "listing_roles": {
+      "COLOR_FUN_ADVENTURE_COLORING_PAGES": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4522868228": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:41.316562+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_PRINTABLE"
+    ],
+    "expected_file_count": 4,
+    "expected_files": [
+      "coloring_set_01.zip",
+      "coloring_set_02.zip",
+      "coloring_set_03.zip",
+      "coloring_set_04.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-06-17T17:18:58.924248+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_PRINTABLE": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
   }
 }
