@@ -82,6 +82,14 @@ CREATE TABLE IF NOT EXISTS action_queue (
   result_json  TEXT,
   decided_at   TEXT
 );
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  session_id  TEXT NOT NULL,
+  role        TEXT NOT NULL,   -- 'user' | 'assistant'
+  content     TEXT NOT NULL,   -- plain text only; tool_use/tool_result blocks are NOT persisted
+  created_at  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_chat_session ON chat_messages(session_id, id);
 """
 
 
@@ -260,6 +268,53 @@ def set_action_status(action_id: int, status: str, result: dict | None = None) -
         )
         conn.commit()
         return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+# ── Chat memory (Frank's conversation survives reconnects & restarts) ─────────────
+#
+# Only plain text is persisted — never the assistant's tool_use blocks or their
+# matching tool_result messages. Persisting half of a tool_use/tool_result pair
+# would make a reloaded history 400 at the Anthropic API ("tool_use ids without
+# tool_result"). Text-only history is always valid to replay and still gives
+# Frank the full thread of what was said, so he never "forgets" after a mobile
+# socket drop. Tools are simply re-called live if he needs fresh data.
+
+
+def append_chat_message(session_id: str, role: str, content: str) -> int:
+    """Persist one chat turn (plain text). Returns the new row id."""
+    if not session_id or not content:
+        return 0
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "INSERT INTO chat_messages (session_id, role, content, created_at) VALUES (?,?,?,?)",
+            (session_id, role, content, ts),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def load_chat_history(session_id: str, limit: int = 40) -> list:
+    """Most recent `limit` messages for a session, oldest-first, as Anthropic
+    message dicts: [{"role": ..., "content": <text>}]. Empty list for unknown
+    sessions. `limit` bounds replayed context so a long-lived session can't grow
+    the prompt without bound."""
+    if not session_id:
+        return []
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT role, content FROM chat_messages WHERE session_id=? ORDER BY id DESC LIMIT ?",
+            (session_id, limit),
+        ).fetchall()
+        return [{"role": r["role"], "content": r["content"]} for r in rows][::-1]
     finally:
         conn.close()
 

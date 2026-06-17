@@ -237,3 +237,37 @@ turn before the results are known creates a window where any unrelated failure (
 not just a tool bug) corrupts that history for the rest of the session, since there is no persistence or
 truncation/recovery logic to drop a bad trailing turn. Catch exceptions at the smallest possible scope
 around side-effecting calls (websocket sends, tool execution) rather than relying on an outer handler.
+
+---
+
+## 2026-06-17 — Frank chat continuity + execution hardening (and Etsy-token-on-restart landmine)
+**What changed (CEO chat / Frank):**
+- **Chat now survives reconnects & restarts.** Previously the conversation lived only in an in-memory
+  per-WebSocket list, so any mobile socket drop (backgrounding, network switch, carrier idle-timeout)
+  silently reset Frank to amnesiac while the old bubbles stayed on screen — it *looked* like the chat
+  continued but Frank had forgotten everything. Added a `chat_messages` SQLite table + a stable
+  `CHAT_SESSION` id (localStorage) passed as `?session=`; `chat_ws` loads prior history on connect and
+  persists each completed exchange. Only plain text is persisted — never tool_use/tool_result blocks
+  (persisting half a pair would 400 on replay).
+- **Heartbeat + auto-reconnect.** Client pings every 25s (server replies pong) to keep the socket warm
+  through proxy idle-timeouts; on unexpected close the client auto-reconnects with capped backoff and
+  silently resumes the same server-side thread.
+- **Dangling-message wedge fixed.** A mid-turn stream/API failure used to leave a user message with no
+  assistant reply, so the next turn sent two user turns back-to-back → API 400 → chat wedged until reload.
+  `chat_ws` now snapshots `history` length and rolls back this turn's additions on any exception.
+- **Frank now actually executes.** Added `listing_integrity_check` to his command registry (the read-only
+  check that surfaces truthfulness/quantity-claim violations) and tightened the system prompt with an
+  "ACT, DON'T NARRATE" rule so he calls the tool / stages the fix instead of saying "I'll run that."
+- **Approval gate hardened.** `execute_command` extra_args are now screened against a denylist
+  (`--fix/--push/--publish/--apply/--activate/--delete/--write`) so neither Frank nor a prompt-injection
+  can push a live listing mutation through a CLI flag — those must still go through Scott's one-tap approval.
+  Per Scott's call (2026-06-17), Frank stays at "stage for approval" for all live-listing edits.
+
+**Open landmine (diagnosed, NOT yet fixed):** On Railway the live server refreshes the Etsy token lazily on
+a 401 and writes the rotated refresh token to `.env` — but Railway's filesystem is ephemeral and re-injects
+the *old* `ETSY_REFRESH_TOKEN` env var on every restart/redeploy. Etsy rotates the refresh token on each
+use, so after the next restart the server will present an already-consumed token → `invalid_grant` → the
+whole Etsy integration goes dark until Scott re-runs `python tools/etsy_oauth.py`. Same class of bug already
+solved for GitHub Actions (write rotated token back to the secret store). Recommended durable fix: persist
+rotated tokens to the `/data` SQLite volume and prefer the newer of DB-vs-env on startup. Deferred because a
+botched token-precedence change could itself cause an outage and can't be tested against live Railway here.

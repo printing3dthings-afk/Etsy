@@ -87,7 +87,25 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "timeout": 90,
         "long_running": False,
     },
+    "listing_integrity_check": {
+        "script": "tools/listing_integrity_check.py",
+        "description": (
+            "Audit every live listing for truthfulness/quality violations "
+            "(titles >70 chars, quantity-claim mismatches where a 'Set of N' "
+            "title doesn't match the delivered files, etc.). Fast read-only mode. "
+            "This is the check that surfaces 'something that needs fixing' — run it "
+            "first, then stage_action the corrections for Scott's approval."
+        ),
+        "timeout": 180,
+        "long_running": False,
+    },
 }
+
+# extra_args that would let a direct command run mutate live Etsy data bypass the
+# approval gate Scott requires. Frank stages listing edits for one-tap approval;
+# he must never push them straight through via a CLI flag (and neither can a
+# prompt-injected instruction). Any extra_arg containing one of these is refused.
+_FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate", "--delete", "--write")
 
 # .strip() is critical: Railway env vars set via the dashboard often carry a
 # trailing newline. APP_TOKEN is injected into an inline JS string literal
@@ -96,7 +114,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c4e7b13-v28"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "a9f2e6d-v29"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -223,10 +241,24 @@ How you operate:
   Tell Scott you've staged it and what it will do. Never claim a change is live — it only
   applies after he approves.
 - You CAN execute backend commands directly using the execute_command tool. Use this when
-  Scott asks you to DO something: generate coloring pages, run a health check, rebuild
-  sticker packs, etc. Brief Scott on what you're about to run, then call it. Long-running
-  commands (image generation) launch in the background — confirm the PID and tell Scott
-  where to find the output. Quick commands return full terminal output for you to summarize.
+  Scott asks you to DO something: run the listing integrity check, run a health check,
+  rebuild sticker packs, regenerate files, etc. Brief Scott on what you're about to run,
+  then call it. Long-running commands (image generation) launch in the background — confirm
+  the PID and tell Scott where to find the output. Quick commands return full terminal
+  output for you to summarize.
+
+ACT, DON'T NARRATE — this is the most important rule about doing work:
+- When a task can be done with a tool you have, CALL THE TOOL in the same turn. Never reply
+  "I'll run that now" or "let me check" and then stop — that does nothing. Saying you will
+  do something is not doing it. Either call the tool or say plainly you can't.
+- When you spot a fixable problem (a bad title, missing tags, a draft ready to publish),
+  immediately stage_action the concrete fix so it lands in Scott's Action Center for one-tap
+  approval — don't just describe what should change. Read the listing first so the fix is exact.
+- To find problems in the first place, run the listing_integrity_check command — it reports
+  exactly which listings violate the 2026 standards. Then stage the fixes it surfaces.
+- You do NOT apply listing edits, publishes, or price changes yourself — those always go
+  through Scott's one-tap approval. But you DO run read-only checks and safe automations
+  yourself without waiting.
 
 Products live: DP1026 Life Planner ($14.99), DP1027 Student Planner ($9.99),
 DP1028 Budget Planner ($12.99), DP1029 Fitness Planner ($12.99).
@@ -384,7 +416,16 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             script = ROOT / cfg["script"]
             cmd = [sys.executable, str(script)] + cfg.get("args", [])
             if extra_args:
-                cmd.extend(extra_args.split())
+                parts = extra_args.split()
+                bad = [p for p in parts if any(f in p.lower() for f in _FORBIDDEN_EXEC_FLAGS)]
+                if bad:
+                    return {
+                        "error": (
+                            f"Refused: extra_args {bad} would mutate live listings, which must go "
+                            "through Scott's approval. Run the read-only check, then use stage_action."
+                        )
+                    }
+                cmd.extend(parts)
             timeout = cfg.get("timeout", 60)
             if cfg.get("long_running"):
                 proc = subprocess.Popen(
@@ -885,6 +926,18 @@ const WS_BASE = BASE.replace(/^http/, 'ws');
 const TOKEN = """ + json.dumps(APP_TOKEN) + """;
 
 let ws = null, wsReady = false, pendingMsg = null;
+let _wsHeartbeat = null, _wsReconnectTimer = null, _wsRetries = 0, _wsManualClose = false;
+// Stable per-device chat session so Frank's memory survives reconnects & reloads.
+const CHAT_SESSION = (function(){
+  let s = null;
+  try { s = localStorage.getItem('chatSession'); } catch(e) {}
+  if (!s) {
+    s = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    try { localStorage.setItem('chatSession', s); } catch(e) {}
+  }
+  return s;
+})();
 let _analyticsDays = 30;
 let _onListings = false;
 
@@ -1213,11 +1266,22 @@ function _clearStreaming(fallback) {
   s.classList.remove('typing');
   if (!s.textContent.trim() && fallback) s.textContent = fallback;
 }
+function _stopHeartbeat() { if (_wsHeartbeat) { clearInterval(_wsHeartbeat); _wsHeartbeat = null; } }
 function initWS() {
-  ws = new WebSocket(WS_BASE + '/ws/chat?token=' + TOKEN);
-  ws.onopen = () => { wsReady = true; if (pendingMsg) { ws.send(JSON.stringify({message:pendingMsg})); pendingMsg=null; } };
+  if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
+  _wsManualClose = false;
+  ws = new WebSocket(WS_BASE + '/ws/chat?token=' + TOKEN + '&session=' + encodeURIComponent(CHAT_SESSION));
+  ws.onopen = () => {
+    wsReady = true; _wsRetries = 0;
+    // Heartbeat keeps the socket warm through mobile carrier/proxy idle timeouts
+    // (otherwise an idle socket dies in ~30-60s and the next message hits a dead pipe).
+    _stopHeartbeat();
+    _wsHeartbeat = setInterval(() => { if (ws && ws.readyState === 1) ws.send(JSON.stringify({type:'ping'})); }, 25000);
+    if (pendingMsg) { ws.send(JSON.stringify({message:pendingMsg, session:CHAT_SESSION})); pendingMsg=null; }
+  };
   ws.onmessage = e => {
     const d = JSON.parse(e.data);
+    if (d.type === 'pong') return;
     const bot = document.getElementById('bot-streaming');
     if (d.type === 'tool' && bot) {
       bot.classList.add('typing');
@@ -1229,11 +1293,18 @@ function initWS() {
     } else if (d.type === 'done') { _clearStreaming(); scrollMsgs(); }
     else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
   };
-  ws.onerror = () => { _clearStreaming('(error)'); addBubble('Connection error — please reload the page', 'bot'); };
+  ws.onerror = () => { _clearStreaming(); };
   ws.onclose = e => {
-    wsReady = false; ws = null;
-    _clearStreaming('(disconnected)');
-    if (e.code === 4001) addBubble('Auth failed — reload to reconnect', 'bot');
+    wsReady = false; ws = null; _stopHeartbeat();
+    _clearStreaming();
+    if (e.code === 4001) { addBubble('Auth failed — reload to reconnect', 'bot'); return; }
+    // Auto-reconnect with capped backoff. Frank's memory is server-side (keyed by
+    // CHAT_SESSION), so reconnecting silently resumes the same thread — no context lost.
+    if (!_wsManualClose) {
+      _wsRetries = Math.min(_wsRetries + 1, 5);
+      const delay = Math.min(1000 * Math.pow(2, _wsRetries - 1), 15000);
+      _wsReconnectTimer = setTimeout(() => { if (!ws) initWS(); }, delay);
+    }
   };
 }
 function addBubble(text, who) {
@@ -3375,9 +3446,14 @@ async def download_file(root: str, path: str, token: str = ""):
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
 
 
-async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) -> None:
+async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) -> str:
     """One user turn: stream text, run any tools the model requests, repeat until
-    the model is done. Tool calls let the CEO agent read live shop data."""
+    the model is done. Tool calls let the CEO agent read live shop data.
+
+    Returns the assistant's full visible text for the turn (so the caller can
+    persist it to chat memory). Raises on a stream/API failure — the caller is
+    responsible for rolling back this turn's additions to `history`."""
+    assistant_text_parts: list[str] = []
     for _ in range(6):  # safety cap on tool round-trips per turn
         with ai_client.messages.stream(
             model="claude-sonnet-4-6",
@@ -3387,6 +3463,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
             messages=history,
         ) as stream:
             for chunk in stream.text_stream:
+                assistant_text_parts.append(chunk)
                 await websocket.send_text(json.dumps({"type": "chunk", "content": chunk}))
             final = stream.get_final_message()
 
@@ -3395,7 +3472,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
 
         if final.stop_reason != "tool_use":
             await websocket.send_text(json.dumps({"type": "done"}))
-            return
+            return "".join(assistant_text_parts).strip()
 
         # Execute every requested tool, then feed results back for the next round.
         # IMPORTANT: every tool_use block above is now committed to `history`. The
@@ -3433,11 +3510,18 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
 
     # Exhausted the round-trip cap — close out gracefully.
     await websocket.send_text(json.dumps({"type": "done"}))
+    return "".join(assistant_text_parts).strip()
 
 
 @app.websocket("/ws/chat")
 async def chat_ws(websocket: WebSocket):
-    """Streaming CEO agent chat with live-data tools. Auth via ?token= query param."""
+    """Streaming CEO agent chat with live-data tools. Auth via ?token= query param.
+
+    `?session=<id>` ties the connection to a persisted conversation. On connect
+    the prior thread is loaded from SQLite, so Frank keeps full context across
+    mobile socket drops and Railway restarts instead of starting amnesiac every
+    time the WebSocket reconnects. A {"type":"ping"} from the client is answered
+    with a pong to keep the socket warm through carrier/proxy idle timeouts."""
     token = websocket.query_params.get("token", "")
     if token != APP_TOKEN:
         await websocket.close(code=4001)
@@ -3445,22 +3529,43 @@ async def chat_ws(websocket: WebSocket):
 
     await websocket.accept()
 
+    session_id = (websocket.query_params.get("session", "") or "").strip()[:64]
+
     ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
-    history: list[dict] = []
+    # Replay persisted text history so Frank resumes mid-thread after a reconnect.
+    history: list[dict] = await asyncio.to_thread(db.load_chat_history, session_id) if session_id else []
 
     try:
         while True:
             raw = await websocket.receive_text()
             msg = json.loads(raw)
+
+            if msg.get("type") == "ping":
+                await websocket.send_text(json.dumps({"type": "pong"}))
+                continue
+
             user_text = msg.get("message", "").strip()
             if not user_text:
                 continue
 
+            # Snapshot length so a mid-turn failure can be rolled back cleanly.
+            # Without this, a dangling user message (no assistant reply) leaves
+            # the next turn sending two user turns back-to-back, which the API
+            # rejects — wedging the chat until a full reload.
+            base_len = len(history)
             history.append({"role": "user", "content": user_text})
             try:
-                await _run_agent_turn(websocket, ai_client, history)
+                assistant_text = await _run_agent_turn(websocket, ai_client, history)
             except Exception as exc:
+                del history[base_len:]  # roll back this turn's additions
                 await websocket.send_text(json.dumps({"type": "error", "content": str(exc)}))
+                continue
+
+            # Persist only completed exchanges (text-only — see db.append_chat_message).
+            if session_id:
+                await asyncio.to_thread(db.append_chat_message, session_id, "user", user_text)
+                if assistant_text:
+                    await asyncio.to_thread(db.append_chat_message, session_id, "assistant", assistant_text)
 
     except WebSocketDisconnect:
         pass
