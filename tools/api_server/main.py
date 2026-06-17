@@ -171,7 +171,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b6f24c1-v37"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c7e503a-v38"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -2447,7 +2447,17 @@ def service_worker():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
+    # build + persistence are surfaced here so deploy version and durable-volume state
+    # can be confirmed at a glance without auth. persistent=False means the /data
+    # Railway Volume is NOT attached — the DB and the Files-area volume are running on
+    # ephemeral storage that resets every redeploy (diagnosed 2026-06-17, ops_runbook).
+    return {
+        "status": "ok",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "build": _BUILD_ID,
+        "persistent": db.is_persistent(),
+        "files_volume": "volume" in _FILE_ROOTS,
+    }
 
 
 @app.get("/api/ping")

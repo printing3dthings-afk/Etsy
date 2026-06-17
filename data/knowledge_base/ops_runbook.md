@@ -426,3 +426,37 @@ files onto the hosted dashboard so they show up on his phone. Built it:
   `APP_SECRET_TOKEN` (same value as on Railway) to the local `.env`, then run `python tools/sync_files_to_hub.py`.
   Re-run it any time new products are generated. Requires a Railway Volume mounted at `/data` (already used by
   the DB).
+
+### 2026-06-17 (later still) — CRITICAL: production has NO /data volume → DB + files are ephemeral
+**Symptom:** Auto-syncing product files to the phone failed for every file with
+`HTTP 503 {"detail":"No persistent /data volume on this server …"}`. The v38 upload endpoint ran correctly
+— it's the server that has no `/data`.
+**Root cause:** The live Railway service (`calm-light`) has **no Volume mounted at `/data`**. The app's
+`db._resolve_db_path()` AND the Files-area volume root both gate on `Path("/data").is_dir()`, so with no
+volume BOTH fall back to ephemeral container storage. Practical impact: the SQLite DB (etsy token lineage,
+staged actions, CEO learnings, weekly snapshots) is wiped on every redeploy — all the durable-DB token-sync
+work from earlier 2026-06-17 has had no durable store to write to. And product files can't be synced for the
+phone Files area. This had been *assumed* attached in prior entries; it never actually was.
+**What I could/couldn't do:** the `RAILWAY_TOKEN` in `.env` can't reach the Railway GraphQL API — `me` →
+"Not Authorized" (not an account token), `projectToken` → "Project Token not found" (not a valid project
+token either); likely expired/deploy-only. (Note for next time: Railway's API is behind Cloudflare which
+**blocks the default python-urllib User-Agent with HTTP 403 "error code: 1010"** — must send a browser UA.)
+So the volume cannot be attached via API with the current token; it needs the dashboard or a fresh account
+token.
+**Fix (done in code):** `/health` now returns `build`, `persistent` (db.is_persistent()), and `files_volume`
+so volume/deploy state is verifiable at a glance, no auth: `curl https://etsy-production-b2f1.up.railway.app/health`.
+**Action needed from Scott (one-time, ~30s, fixes BOTH the DB durability AND the phone files):**
+Railway dashboard → project `calm-light` → the Etsy service → **Settings → Volumes → New Volume**, mount
+path **`/data`** → redeploy. After it redeploys, `/health` should show `"persistent": true` and
+`"files_volume": true`; then run `python tools/sync_files_to_hub.py` (or it auto-runs after
+`backup_digital_products.py`) and the files appear in Hub → Files on the phone.
+- Note: `RAILWAY_APP_URL=https://etsy-production-b2f1.up.railway.app` was added to the local `.env` (URL
+  taken from `mobile_app/src/config.js`, confirmed against the address bar in Scott's screenshots);
+  `APP_SECRET_TOKEN` was already present, so the sync tool is fully configured locally now.
+
+### 2026-06-17 (later still) — sync auto-runs after backup
+`tools/backup_digital_products.py` now calls `tools/sync_files_to_hub.py` after writing the backup ZIP
+(skippable with `--no-sync`), so a freshly generated product lands on the phone in one step. Best-effort:
+if RAILWAY_APP_URL/APP_SECRET_TOKEN are unset or the server is unreachable, the backup still succeeds and it
+just prints a note — a sync hiccup never fails the backup. Also made that script's paths ROOT-relative and
+gave it a guarded `.env` loader (was `Path("data/...")` relative to CWD before).
