@@ -291,3 +291,32 @@ already-working rotation via `ci_refresh_etsy_secrets.py`, Scott's local scripts
   All passed. `python -m py_compile` clean on both files.
 - Risk note: this only takes effect on the *next* Railway deploy. Until then the current single
   outstanding (working) token is unaffected — nothing about the existing token's validity changed today.
+
+### 2026-06-17 (later still) — two independent Etsy token rotation lineages (Railway vs. GitHub Actions)
+**Symptom (latent, not yet observed in production — found by code audit, not an incident report):**
+the fix above deliberately left `ci_refresh_etsy_secrets.py`'s rotation untouched because it was "already
+working" in isolation. But "isolation" was the problem: the live Railway server refreshes the Etsy access
+token **reactively** (on a 401, `etsy_api.py` line ~382) from its own `ETSY_REFRESH_TOKEN` env var, while the
+`listing_integrity_daily.yml` GitHub Actions workflow refreshes **proactively, every single scheduled run**
+from a completely separate copy of the same credential stored as a GH repo secret. Etsy invalidates the
+previous refresh token on every use. Two independent actors rotating the same credential with no shared
+state means whichever one refreshes most recently silently invalidates the other's copy — there is no
+self-healing; the stale side just hard-fails with `invalid_grant` next time it tries to refresh, requiring
+a manual `tools/etsy_oauth.py` re-auth. Risk went up (not down) after adding `_quality_audit_loop()` earlier
+today: that loop guarantees a real Etsy API call from inside the Railway process once a day, every day,
+independent of whether Scott or Frank happen to be using the dashboard — raising the floor on how often the
+Railway side touches the lineage and collides with GH Actions' fixed daily 13:00 UTC run.
+**Fix:** added a single source of truth both sides can sync through, reusing the existing `APP_SECRET_TOKEN`
+bearer auth (no new secret needed for the server side):
+- `GET /api/etsy-tokens` / `POST /api/etsy-tokens` on the live server — read/write the durable `/data` DB's
+  `etsy_tokens` row (the same lineage-aware store `_reconcile_etsy_tokens()` already uses).
+- `tools/ci_refresh_etsy_secrets.py` now optionally takes `RAILWAY_APP_URL` + `APP_SECRET_TOKEN`: if set, it
+  fetches the live server's current refresh token before refreshing (prefers it if newer than its own GH
+  secret) and pushes the rotated pair back to the server after refreshing, in addition to updating the GH
+  secrets as before. Falls back to GH-secrets-only rotation if either var is unset — not a breaking change.
+- `listing_integrity_daily.yml` passes both through as `${{ secrets.RAILWAY_APP_URL }}` /
+  `${{ secrets.APP_SECRET_TOKEN }}`. **Action needed from Scott:** add these two as GitHub repo secrets
+  (Settings → Secrets and variables → Actions) — `APP_SECRET_TOKEN` should be the exact same value already
+  set on the Railway service. Until both are added, CI rotation still works exactly as before, just without
+  the collision protection.
+- Verified: `python -m py_compile` clean on `main.py` and `ci_refresh_etsy_secrets.py`.

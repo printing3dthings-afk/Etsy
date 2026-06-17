@@ -30,11 +30,20 @@ jobs:
       # invalid_grant. This step fails loudly (rather than skipping) if the
       # required PAT secret (GH_PAT_SECRETS) hasn't been configured yet --
       # see tools/ci_refresh_etsy_secrets.py for the full explanation.
+      #
+      # RAILWAY_APP_URL / APP_SECRET_TOKEN are optional but recommended: the
+      # live dashboard server also rotates this same refresh token reactively,
+      # so without a shared source of truth this workflow and the live server
+      # can silently invalidate each other's copy (diagnosed 2026-06-17, see
+      # ops_runbook.md). When both secrets are set, this step syncs lineage
+      # with the live server before and after refreshing.
       - name: Refresh Etsy OAuth token and rotate secrets
         env:
           ETSY_CLIENT_ID: ${{ secrets.ETSY_CLIENT_ID }}
           ETSY_REFRESH_TOKEN: ${{ secrets.ETSY_REFRESH_TOKEN }}
           GH_PAT_SECRETS: ${{ secrets.GH_PAT_SECRETS }}
+          RAILWAY_APP_URL: ${{ secrets.RAILWAY_APP_URL }}
+          APP_SECRET_TOKEN: ${{ secrets.APP_SECRET_TOKEN }}
         run: python tools/ci_refresh_etsy_secrets.py
 
       - name: Run listing integrity check (fast mode)

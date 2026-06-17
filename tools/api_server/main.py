@@ -149,7 +149,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c2a4f08-v32"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d91f6e3-v33"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -3678,6 +3678,55 @@ async def credentials_status(_token: str = Depends(_auth)):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy ping timed out")
     return data
+
+
+# ── Etsy token lineage sync (internal — lets the GitHub Actions daily workflow and
+# this server agree on a single source of truth instead of rotating independently) ──
+#
+# Diagnosed 2026-06-17 (see ops_runbook.md): this server refreshes its Etsy access
+# token reactively (on a 401) and the GitHub Actions integrity-check workflow
+# refreshes proactively once a day from its OWN copy of ETSY_REFRESH_TOKEN stored as
+# a repo secret. Etsy invalidates the previous refresh token on every use, so these
+# were two independent rotation lineages with no shared state — whichever side
+# refreshed most recently silently invalidated the other's copy, and the next time
+# the stale side tried to refresh it got a hard invalid_grant requiring a manual
+# tools/etsy_oauth.py re-auth. These two endpoints let either side fetch/post the
+# current lineage-true pair through this server's durable /data DB (db.etsy_tokens),
+# which already has lineage-aware reconciliation (_reconcile_etsy_tokens). Reuses
+# the existing APP_SECRET_TOKEN bearer auth — no new secret to provision.
+@app.get("/api/etsy-tokens")
+async def get_etsy_tokens_endpoint(_token: str = Depends(_auth)):
+    """Current lineage-true Etsy token pair, for the CI workflow to sync against."""
+    stored = await asyncio.to_thread(db.get_etsy_tokens)
+    if stored:
+        return {
+            "access_token": stored.get("access_token", ""),
+            "refresh_token": stored.get("refresh_token", ""),
+            "updated_at": stored.get("updated_at"),
+        }
+    return {
+        "access_token": os.getenv("ETSY_ACCESS_TOKEN", ""),
+        "refresh_token": os.getenv("ETSY_REFRESH_TOKEN", ""),
+        "updated_at": None,
+    }
+
+
+@app.post("/api/etsy-tokens")
+async def post_etsy_tokens_endpoint(payload: dict, _token: str = Depends(_auth)):
+    """Accept a freshly-rotated token pair (e.g. from the GitHub Actions workflow)
+    and make it the lineage-true pair: persist to the durable DB and adopt it into
+    this process's own os.environ immediately, so this server's next Etsy call
+    uses the same token CI just minted instead of a now-invalidated one."""
+    access_token = (payload or {}).get("access_token", "").strip()
+    refresh_token = (payload or {}).get("refresh_token", "").strip()
+    if not access_token or not refresh_token:
+        raise HTTPException(status_code=400, detail="access_token and refresh_token are required")
+    parent = (payload or {}).get("parent_refresh_token") or os.getenv("ETSY_REFRESH_TOKEN", "")
+    await asyncio.to_thread(db.save_etsy_tokens, access_token, refresh_token, parent)
+    os.environ["ETSY_ACCESS_TOKEN"] = access_token
+    os.environ["ETSY_REFRESH_TOKEN"] = refresh_token
+    print("[etsy-tokens] adopted rotated token pair posted by CI", flush=True)
+    return {"ok": True}
 
 
 # ── File hub (browse/download product files + backups straight from the dashboard) ─
