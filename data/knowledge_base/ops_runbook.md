@@ -366,3 +366,39 @@ the Action Center. While wiring it in, found and fixed the same unguarded `.env`
 scripts above (`tools/seasonal_keywords.py` line ~26) — would have crashed on Railway the first time Frank
 tried to call it. Verified `python -m py_compile` clean and ran `python tools/seasonal_keywords.py --weeks 10`
 locally to confirm the report still renders correctly after the guard fix.
+
+### 2026-06-17 (later still) — Frank couldn't pull a listing by ID; autofix "tags: HTTP 500"; Files area
+Three issues surfaced by Scott from the live phone app (screenshots):
+1. **Frank said a real listing "doesn't exist."** Scott gave Frank a listing ID; Frank reported it "not in
+   active or inactive inventory… not active, not draft, not inactive." The listing was actually **expired**.
+   Frank's only lookup path was `list_listings`, which fetches ONE state bucket at a time and never covered
+   expired/sold_out. **Fix:** added a dedicated `get_listing` agent tool that calls
+   `EtsyAPIClient.get_listing(id)` directly — that endpoint returns a listing in ANY state (active, draft,
+   inactive, expired, sold_out), so Frank now finds expired listings and only says "doesn't exist" on a true
+   Etsy 404. Also widened `list_listings` / `_listings_sync` allowed states to include expired + sold_out.
+2. **"Some fixes could not be staged: tags: HTTP 500."** `/api/autofix/tags/{id}` (and `/title/`) only
+   caught `asyncio.TimeoutError` + `EtsyAPIError` around the listing fetch; every other failure (incl. the
+   post-fetch local work: tag cleaning, quality-gate validation, `db.enqueue_action`) fell through as a bare
+   FastAPI 500 with no detail. **Fix:** both endpoints now catch generic fetch errors (502), special-case
+   404 (listing expired/deleted → 404 with a clear message), wrap the Anthropic call (502 on failure), and
+   wrap all post-fetch local work so a failure returns "Could not stage tag/title fix: <reason>" instead of
+   an opaque 500. The dashboard already surfaces `detail`, so Scott now sees WHY instead of "HTTP 500".
+3. **Hub → Files showed "No files yet" and ZIPs couldn't be opened on a phone.** Two parts. (a) The endpoint
+   only scanned the repo's `data/digital_products` + `data/backups`, which on Railway are ephemeral +
+   gitignored, so nothing is ever present there — now `/api/files` also scans the durable `/data/files`
+   Volume location (survives redeploys) and returns an honest `empty_reason` explaining where files must live
+   if none are found. (b) Scott can't unzip on a phone, so `/api/files` now expands each ZIP's contents and a
+   new `/api/files/zip-entry` endpoint streams a single file straight out of a ZIP with the correct media
+   type + inline disposition — tap a sticker PNG or PDF inside a pack and it opens directly, no unzip. Plain
+   files also gained an `inline=1` open mode (PDF/image preview) vs. force-download. `__MACOSX` junk filtered;
+   path-traversal still blocked; bad token still 401.
+- **Still true / Scott action:** the file BYTES live on Scott's machine (Etsy's API exposes file metadata
+  only — no content download URL, by design, since only buyers get download links). To make product files
+  appear in the phone Files area on the hosted dashboard, drop them into the `/data/files` Volume on Railway
+  (or run on a machine where `data/digital_products/` is populated). The open-without-unzip behavior works
+  wherever the files physically are.
+- Verified: `python -m py_compile` clean; exercised `/api/files`, `/api/files/download?inline=1`, and
+  `/api/files/zip-entry` end-to-end with a real temp ZIP via FastAPI TestClient (PDF→application/pdf inline,
+  PNG/TXT out of ZIP with correct types, 401 on bad token, 400 on traversal, 404 on missing entry, honest
+  empty_reason when no files); confirmed `get_listing` tool registered and the no-id guard returns a clean
+  error.

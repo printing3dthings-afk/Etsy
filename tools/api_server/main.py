@@ -14,13 +14,16 @@ Deploy to Railway / Render: set env vars + point start command to this file.
 from __future__ import annotations
 
 import asyncio
+import io
 import json
+import mimetypes
 import os
 import re as _re
 import subprocess
 import sys
 import threading
 import time
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -168,7 +171,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f3c082d-v35"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "a5d913e-v36"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -422,17 +425,41 @@ AGENT_TOOLS = [
             "List the shop's listings with title, price, views, favorites, tags, and "
             "(for active listings) real units sold and conversion_pct (sales÷views). "
             "Use to inspect what's live or in draft, find listings with traffic but no "
-            "sales, find low performers, or audit SEO."
+            "sales, find low performers, or audit SEO. If you're looking for ONE "
+            "specific listing by its ID, use get_listing instead — it works no matter "
+            "what state the listing is in (including expired/sold_out)."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "state": {
                     "type": "string",
-                    "enum": ["active", "draft", "inactive"],
+                    "enum": ["active", "draft", "inactive", "expired", "sold_out"],
                     "description": "Which listing state to fetch. Defaults to active.",
                 }
             },
+        },
+    },
+    {
+        "name": "get_listing",
+        "description": (
+            "Pull ONE listing by its numeric listing_id directly, regardless of state — "
+            "active, draft, inactive, expired, or sold_out. Use this whenever Scott gives "
+            "you a listing ID. Unlike list_listings (which only sees one state bucket at a "
+            "time), this fetches the listing straight from Etsy by ID, so it finds expired "
+            "listings that won't show up in the active/draft/inactive lists. Returns title, "
+            "price, state, tags, description, views, favorites, and quantity. If Etsy "
+            "returns 404 the listing truly does not exist on this shop."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {
+                    "type": "integer",
+                    "description": "The numeric Etsy listing ID to fetch.",
+                }
+            },
+            "required": ["listing_id"],
         },
     },
     {
@@ -588,6 +615,38 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 for l in listings[:60]
             ]
             return {"count": data.get("count"), "state": data.get("state"), "listings": slim}
+        if name == "get_listing":
+            lid = (tool_input or {}).get("listing_id")
+            if lid is None:
+                return {"error": "listing_id is required"}
+            try:
+                listing = EtsyAPIClient().get_listing(int(lid))
+            except EtsyAPIError as exc:
+                if getattr(exc, "status", None) == 404:
+                    return {
+                        "found": False,
+                        "listing_id": lid,
+                        "note": (
+                            "Etsy returned 404 — no listing with this ID exists on this shop "
+                            "in any state. Double-check the ID Scott gave you."
+                        ),
+                    }
+                return {"found": False, "listing_id": lid, "error": f"Etsy: {exc}"}
+            except Exception as exc:
+                return {"found": False, "listing_id": lid, "error": str(exc)}
+            return {
+                "found": True,
+                "listing_id": listing.get("listing_id", lid),
+                "title": listing.get("title", ""),
+                "state": listing.get("state", ""),
+                "price": _price_float(listing.get("price")),
+                "quantity": listing.get("quantity"),
+                "tags": listing.get("tags", []),
+                "views": listing.get("views", 0),
+                "num_favorers": listing.get("num_favorers", 0),
+                "description": (listing.get("description", "") or "")[:1500],
+                "url": listing.get("url") or f"https://www.etsy.com/listing/{listing.get('listing_id', lid)}",
+            }
         if name == "stage_action":
             ti = tool_input or {}
             payload = {"listing_id": ti.get("listing_id")}
@@ -2172,6 +2231,30 @@ function showHubSection(section, btn) {
   else if (section==='creds')    loadCredentials();
   else if (section==='security') _renderSecurityPosture();
 }
+function _fileUrl(f, inline){
+  return BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
+    '&token='+encodeURIComponent(TOKEN)+(inline?'&inline=1':'');
+}
+function _zipEntryUrl(f, entryName){
+  return BASE+'/api/files/zip-entry?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
+    '&entry='+encodeURIComponent(entryName)+'&token='+encodeURIComponent(TOKEN);
+}
+function _fileIcon(name){
+  var n=(name||'').toLowerCase();
+  if(n.match(/\\.(png|jpe?g|gif|webp|svg)$/)) return '🖼️';
+  if(n.endsWith('.pdf')) return '📕';
+  if(n.endsWith('.zip')) return '🗂️';
+  if(n.match(/\\.(txt|md)$/)) return '📃';
+  return '📄';
+}
+function toggleZip(id, btn){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var open=el.style.display==='none';
+  el.style.display=open?'':'none';
+  if(btn) btn.textContent=open?'▾':'▸';
+}
+function openFile(url){ window.open(url,'_blank'); }
 async function loadFiles() {
   var el = document.getElementById('hub-content');
   if (!el) return;
@@ -2182,24 +2265,52 @@ async function loadFiles() {
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     var groups = d.groups||[];
     if (!groups.length || groups.every(function(g){return !g.files.length;})) {
-      el.innerHTML = '<div class="empty">No files yet.</div>';
+      el.innerHTML = '<div class="empty" style="line-height:1.6">'+
+        escHtml(d.empty_reason||'No files yet.')+'</div>';
       return;
     }
     var html = '<div class="card" style="background:#1a2030;border-color:#2a3d5a;margin-bottom:12px">'+
-      '<div style="font-size:12px;color:#7ba0c2;line-height:1.6">These are the actual product source files and backups living on the server '+
-      '(data/digital_products/ and data/backups/) — they are not in git, so this is the only place to grab them. Tap a file to download.</div></div>';
+      '<div style="font-size:12px;color:#7ba0c2;line-height:1.6">The actual product files living on the server '+
+      '(data/digital_products/ and data/backups/). Tap a file to open it. Tap a ZIP to expand it and open any '+
+      'file inside directly — no unzipping needed.</div></div>';
+    var zipIdx=0;
     groups.forEach(function(g){
       if (!g.files.length) return;
       html += '<div class="section-title">'+escHtml(g.label)+' ('+g.files.length+')</div><div class="card">';
       g.files.forEach(function(f){
-        var url = BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+'&token='+encodeURIComponent(TOKEN);
         var when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        html += '<div class="listing-item" onclick="window.open(&apos;'+url+'&apos;,&apos;_blank&apos;)" style="cursor:pointer">'+
-          '<div class="thumb-placeholder">📄</div>'+
-          '<div class="listing-info"><div class="listing-title">'+escHtml(f.path)+'</div>'+
-          '<div class="listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+'</div></div>'+
-          '<div style="color:var(--gold);font-size:18px">⬇</div>'+
-        '</div>';
+        if (f.is_zip) {
+          var zid='zip-'+(zipIdx++);
+          var entries=f.entries||[];
+          html += '<div class="listing-item" onclick="toggleZip(&apos;'+zid+'&apos;,this.querySelector(&apos;.zip-caret&apos;))" style="cursor:pointer">'+
+            '<div class="thumb-placeholder">🗂️</div>'+
+            '<div class="listing-info"><div class="listing-title">'+escHtml(f.path)+'</div>'+
+            '<div class="listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+' · '+entries.length+' files inside</div></div>'+
+            '<div class="zip-caret" style="color:var(--gold);font-size:16px">▸</div>'+
+          '</div>';
+          html += '<div id="'+zid+'" style="display:none;margin:0 0 6px 14px;border-left:2px solid #2a3d5a;padding-left:8px">';
+          if(!entries.length){
+            html += '<div class="listing-meta" style="padding:8px 0">Could not read this ZIP\\'s contents.</div>';
+          }
+          entries.forEach(function(en){
+            var eurl=_zipEntryUrl(f,en.name);
+            html += '<div class="listing-item" onclick="openFile(&apos;'+eurl+'&apos;)" style="cursor:pointer;padding:7px 4px">'+
+              '<div class="thumb-placeholder" style="font-size:16px">'+_fileIcon(en.name)+'</div>'+
+              '<div class="listing-info"><div class="listing-title" style="font-size:13px">'+escHtml(en.name)+'</div>'+
+              '<div class="listing-meta">'+escHtml(en.size_human)+(en.inline?' · tap to open':' · tap to download')+'</div></div>'+
+              '<div style="color:var(--gold);font-size:15px">'+(en.inline?'↗':'⬇')+'</div>'+
+            '</div>';
+          });
+          html += '</div>';
+        } else {
+          var url=_fileUrl(f, f.inline?1:0);
+          html += '<div class="listing-item" onclick="openFile(&apos;'+url+'&apos;)" style="cursor:pointer">'+
+            '<div class="thumb-placeholder">'+_fileIcon(f.path)+'</div>'+
+            '<div class="listing-info"><div class="listing-title">'+escHtml(f.path)+'</div>'+
+            '<div class="listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+(f.inline?' · tap to open':' · tap to download')+'</div></div>'+
+            '<div style="color:var(--gold);font-size:18px">'+(f.inline?'↗':'⬇')+'</div>'+
+          '</div>';
+        }
       });
       html += '</div>';
     });
@@ -2456,8 +2567,8 @@ def _metrics_sync() -> dict:
 
 def _listings_sync(state: str = "active") -> dict:
     """Cached listing list (title/price/views/favorites/tags), blocking."""
-    if state not in ("active", "draft", "inactive"):
-        raise ValueError("state must be active, draft, or inactive")
+    if state not in ("active", "draft", "inactive", "expired", "sold_out"):
+        raise ValueError("state must be active, draft, inactive, expired, or sold_out")
     cache_key = f"listings_{state}"
     cached = _cache_get(cache_key, ttl=30)
     if cached is not None:
@@ -3305,7 +3416,14 @@ async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout")
     except EtsyAPIError as exc:
+        # 404 = listing gone (e.g. expired and removed) — report it as such, not a
+        # generic upstream error, so the dashboard message is actionable.
+        if getattr(exc, "status", None) == 404:
+            raise HTTPException(status_code=404, detail=f"Listing {listing_id} not found on Etsy (it may be expired/deleted)")
         raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+    except Exception as exc:
+        # Any other fetch failure (network, JSON decode, etc.) — never a bare 500.
+        raise HTTPException(status_code=502, detail=f"Could not fetch listing {listing_id}: {exc}")
 
     listing_data = {
         "listing_id": listing_id,
@@ -3325,19 +3443,28 @@ async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
     if not tag_results:
         raise HTTPException(status_code=502, detail="Tag generation returned no results")
 
-    raw_tags = tag_results[0].get("tags", [])
-    tags = [_clean_tag(t) for t in raw_tags if str(t).strip()]
-    seen: set = set()
-    tags = [t for t in tags if t and not (t in seen or seen.add(t))]
+    # Everything below is local work (string cleaning, validation, DB enqueue).
+    # It must never surface as a bare HTTP 500 — wrap it so any failure comes back
+    # as a clear message the dashboard can show (this was the "tags: HTTP 500"
+    # with no detail seen 2026-06-17, see ops_runbook.md).
+    try:
+        raw_tags = tag_results[0].get("tags", [])
+        tags = [_clean_tag(t) for t in raw_tags if str(t).strip()]
+        seen: set = set()
+        tags = [t for t in tags if t and not (t in seen or seen.add(t))]
 
-    candidate = {"type": "update_tags", "payload": {"listing_id": listing_id, "tags": tags}}
-    ok, msg = _validate_staged_action(candidate)
-    if not ok:
-        raise HTTPException(status_code=422, detail=f"Quality gate: {msg}")
+        candidate = {"type": "update_tags", "payload": {"listing_id": listing_id, "tags": tags}}
+        ok, msg = _validate_staged_action(candidate)
+        if not ok:
+            raise HTTPException(status_code=422, detail=f"Quality gate: {msg}")
 
-    title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
-    summary = f"Auto tag fix ({len(tags)}/13): {title_short}"
-    action_id = db.enqueue_action("update_tags", summary, {"listing_id": listing_id, "tags": tags})
+        title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
+        summary = f"Auto tag fix ({len(tags)}/13): {title_short}"
+        action_id = db.enqueue_action("update_tags", summary, {"listing_id": listing_id, "tags": tags})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not stage tag fix: {exc}")
 
     with _cache_lock:
         _cache.pop("actions", None)
@@ -3363,7 +3490,11 @@ async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout")
     except EtsyAPIError as exc:
+        if getattr(exc, "status", None) == 404:
+            raise HTTPException(status_code=404, detail=f"Listing {listing_id} not found on Etsy (it may be expired/deleted)")
         raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Could not fetch listing {listing_id}: {exc}")
 
     title = listing.get("title", "")
     tags = ", ".join(listing.get("tags", []))
@@ -3388,16 +3519,24 @@ async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
         )
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Title generation timed out")
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Title generation failed: {exc}")
 
-    new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
+    # Local work (parse, validate, enqueue) — wrap so nothing leaks as a bare 500.
+    try:
+        new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
 
-    candidate = {"type": "update_title", "payload": {"listing_id": listing_id, "title": new_title}}
-    ok, msg = _validate_staged_action(candidate)
-    if not ok:
-        raise HTTPException(status_code=422, detail=f"Quality gate: {msg}")
+        candidate = {"type": "update_title", "payload": {"listing_id": listing_id, "title": new_title}}
+        ok, msg = _validate_staged_action(candidate)
+        if not ok:
+            raise HTTPException(status_code=422, detail=f"Quality gate: {msg}")
 
-    summary = f"Auto title fix: {new_title[:50]}"
-    action_id = db.enqueue_action("update_title", summary, {"listing_id": listing_id, "title": new_title})
+        summary = f"Auto title fix: {new_title[:50]}"
+        action_id = db.enqueue_action("update_title", summary, {"listing_id": listing_id, "title": new_title})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not stage title fix: {exc}")
 
     with _cache_lock:
         _cache.pop("actions", None)
@@ -3794,6 +3933,15 @@ _FILE_ROOTS = {
     "backups": ROOT / "data" / "backups",
 }
 
+# On the hosted dashboard (Railway) the repo's data/ dir is ephemeral and gitignored,
+# so files generated on Scott's machine never appear here. The /data Volume IS durable
+# across redeploys — if a "files" folder is placed there it survives, so we scan it too.
+# This is the realistic path to "every digital file should be openable from the phone":
+# drop them into the persistent volume once and they stay browsable. No-op locally.
+_PERSIST_VOL = Path("/data")
+if _PERSIST_VOL.is_dir():
+    _FILE_ROOTS["volume"] = _PERSIST_VOL / "files"
+
 
 def _human_size(n: int) -> str:
     size = float(n)
@@ -3804,11 +3952,52 @@ def _human_size(n: int) -> str:
     return f"{size:.1f} GB"
 
 
+# Extensions a phone browser can open inline (preview) instead of force-downloading.
+# Everything else is served as a download. This is what lets a buyer-facing PDF or a
+# sticker PNG open straight in the phone without a download+unzip dance.
+_INLINE_EXTS = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".txt", ".md", ".json", ".csv"}
+
+
+def _media_type_for(name: str) -> str:
+    guessed, _ = mimetypes.guess_type(name)
+    return guessed or "application/octet-stream"
+
+
+def _zip_entries(zip_path: Path) -> list[dict]:
+    """List the openable (non-directory, non-empty) entries inside a ZIP."""
+    out: list[dict] = []
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            for info in zf.infolist():
+                if info.is_dir():
+                    continue
+                name = info.filename
+                if name.endswith("/") or name.startswith("__MACOSX/"):
+                    continue
+                ext = os.path.splitext(name)[1].lower()
+                out.append(
+                    {
+                        "name": name,
+                        "size": info.file_size,
+                        "size_human": _human_size(info.file_size),
+                        "inline": ext in _INLINE_EXTS,
+                    }
+                )
+    except (zipfile.BadZipFile, OSError):
+        return []
+    out.sort(key=lambda e: e["name"])
+    return out
+
+
 @app.get("/api/files")
 async def list_files(_token: str = Depends(_auth)):
     """List every file under data/digital_products/ and data/backups/ so Scott can
-    see and download product source files straight from the dashboard — these
-    directories are gitignored (machine-local) and have no other UI."""
+    see, open, and download product source files straight from the dashboard —
+    these directories are gitignored (machine-local) and have no other UI.
+
+    For each ZIP we also expand its contents so individual files (PDFs, sticker
+    PNGs, SVGs) can be opened directly on a phone WITHOUT downloading and
+    unzipping first (Scott's request, 2026-06-17)."""
     groups = []
     for root_key, root_path in _FILE_ROOTS.items():
         if not root_path.exists():
@@ -3818,26 +4007,39 @@ async def list_files(_token: str = Depends(_auth)):
             if not p.is_file():
                 continue
             stat = p.stat()
-            files.append(
-                {
-                    "path": str(p.relative_to(root_path)),
-                    "root": root_key,
-                    "size": stat.st_size,
-                    "size_human": _human_size(stat.st_size),
-                    "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
-                }
-            )
+            rel = str(p.relative_to(root_path))
+            ext = p.suffix.lower()
+            entry = {
+                "path": rel,
+                "root": root_key,
+                "size": stat.st_size,
+                "size_human": _human_size(stat.st_size),
+                "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                "inline": ext in _INLINE_EXTS,
+                "is_zip": ext == ".zip",
+            }
+            if ext == ".zip":
+                entry["entries"] = _zip_entries(p)
+            files.append(entry)
         files.sort(key=lambda f: f["modified"], reverse=True)
-        groups.append({"root": root_key, "label": "Backups" if root_key == "backups" else "Product Files", "files": files})
-    return {"groups": groups}
+        _labels = {"backups": "Backups", "volume": "Saved Files (persistent)", "products": "Product Files"}
+        groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
+    # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so
+    # nothing shows unless the files were produced/backed up on this same machine.
+    has_any = any(g["files"] for g in groups)
+    return {
+        "groups": groups,
+        "empty_reason": (
+            None if has_any else
+            "No product files are present on this server. data/digital_products/ and "
+            "data/backups/ are machine-local (gitignored) and do not survive a redeploy "
+            "on the hosted dashboard. Generate or restore them on the machine running "
+            "this server, or run tools/backup_digital_products.py there, to see them here."
+        ),
+    }
 
 
-@app.get("/api/files/download")
-async def download_file(root: str, path: str, token: str = ""):
-    """Stream a file from one of the allowed roots. Auth via ?token= (query param,
-    not header) so this URL works as a plain browser/PWA download link."""
-    if token != APP_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
+def _resolve_in_root(root: str, path: str) -> Path:
     base = _FILE_ROOTS.get(root)
     if base is None:
         raise HTTPException(status_code=404, detail="Unknown root")
@@ -3845,9 +4047,57 @@ async def download_file(root: str, path: str, token: str = ""):
     target = (base / path).resolve()
     if base not in target.parents and target != base:
         raise HTTPException(status_code=400, detail="Invalid path")
+    return target
+
+
+@app.get("/api/files/download")
+async def download_file(root: str, path: str, token: str = "", inline: int = 0):
+    """Stream a file from one of the allowed roots. Auth via ?token= (query param,
+    not header) so this URL works as a plain browser/PWA link.
+
+    inline=1 serves with the real media type and an inline disposition so the phone
+    browser previews it (PDF viewer, image) instead of downloading."""
+    if token != APP_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    target = _resolve_in_root(root, path)
     if not target.is_file():
         raise HTTPException(status_code=404, detail="File not found")
+    if inline:
+        return FileResponse(
+            target,
+            media_type=_media_type_for(target.name),
+            headers={"Content-Disposition": f'inline; filename="{target.name}"'},
+        )
     return FileResponse(target, filename=target.name, media_type="application/octet-stream")
+
+
+@app.get("/api/files/zip-entry")
+async def open_zip_entry(root: str, path: str, entry: str, token: str = "", inline: int = 1):
+    """Stream a single file OUT of a ZIP without the user unzipping anything.
+
+    This is the core of Scott's 'open without unzip on a phone' request: tap a
+    file inside a sticker pack / print-size ZIP and it opens directly. Default
+    inline=1 so PDFs/PNGs preview in the phone browser."""
+    if token != APP_TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    target = _resolve_in_root(root, path)
+    if not target.is_file() or target.suffix.lower() != ".zip":
+        raise HTTPException(status_code=404, detail="ZIP not found")
+    try:
+        with zipfile.ZipFile(target) as zf:
+            try:
+                data = zf.read(entry)
+            except KeyError:
+                raise HTTPException(status_code=404, detail="Entry not found in ZIP")
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=422, detail="File is not a valid ZIP")
+    name = os.path.basename(entry) or "file"
+    disposition = "inline" if inline else "attachment"
+    return Response(
+        content=data,
+        media_type=_media_type_for(name),
+        headers={"Content-Disposition": f'{disposition}; filename="{name}"'},
+    )
 
 
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
