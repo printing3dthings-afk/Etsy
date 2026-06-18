@@ -108,20 +108,30 @@ def generate_image(
     size: str = PORTRAIT,
     quality: str = "high",
     output_format: str = "jpeg",
+    background: str | None = None,
     retries: int = 3,
     timeout: int = 180,
 ) -> Path:
-    """Text -> image. Writes to out_path and returns it. Raises ImageGenError on failure."""
+    """Text -> image. Writes to out_path and returns it. Raises ImageGenError on failure.
+
+    Pass background="transparent" (with output_format="png" or "webp") for stickers /
+    cut-out assets that must drop onto any page without a white box behind them.
+    """
     if size not in _VALID_SIZES:
         raise ImageGenError(f"invalid size {size!r}; use one of {sorted(_VALID_SIZES)}")
-    body = json.dumps({
+    if background == "transparent" and output_format not in ("png", "webp"):
+        raise ImageGenError("transparent background requires output_format='png' or 'webp'")
+    payload = {
         "model": _MODEL,
         "prompt": prompt,
         "size": size,
         "quality": quality,
         "output_format": output_format,
         "n": 1,
-    }).encode()
+    }
+    if background:
+        payload["background"] = background
+    body = json.dumps(payload).encode()
     headers = {"Content-Type": "application/json", "Authorization": f"Bearer {_api_key()}"}
     result = _post(_GEN_URL, body, headers, retries, timeout)
     img = _extract_bytes(result)

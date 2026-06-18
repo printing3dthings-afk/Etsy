@@ -235,7 +235,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
         gn_steps = [
             "1.  Open GoodNotes 6 → tap the + button",
             "2.  Choose \"Import\" and select the PDF file",
-            "3.  Tap any text box to type  ·  Use the side tabs to navigate",
+            "3.  Tap any text box to type  ·  Tap a Dashboard button to navigate",
         ]
         for s in gn_steps:
             fill(DK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
@@ -308,7 +308,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
 
         # Instruction note
         fill(DK); font(fn("italic"), 8.5)
-        c.drawCentredString(PW / 2, y, "Use the side navigation tabs to jump to any section. Tap 🏠 HOME in the footer of any page to return here.")
+        c.drawCentredString(PW / 2, y, "Tap any button below to jump straight to that section. Tap 🏠 HOME in the footer of any page to return here.")
         y -= 18
 
         # Section grid — 3 columns × rows
@@ -341,7 +341,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
             fill(blend(T, 0.90))
             c.roundRect(ML, MB + 12, CW, 40, 6, fill=1, stroke=0)
             fill(DK); font(fn("bold"), 9)
-            c.drawCentredString(PW / 2, MB + 36, "TIP: The side navigation tabs are always visible — tap any tab to jump to that section.")
+            c.drawCentredString(PW / 2, MB + 36, "TIP: Every page has a tappable HOME · PREV · NEXT footer, and your PDF app's bookmarks menu lists every section.")
             font(fn("regular"), 8.5)
             c.drawCentredString(PW / 2, MB + 22, f"Support: {SUPPORT_EMAIL}  ·  © {SHOP_NAME}")
 
@@ -358,7 +358,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
         y = PH - MT - 52 - 18
 
         fill(DK); font(fn("italic"), 9)
-        c.drawCentredString(PW / 2, y, "Use the side navigation tabs or the 🏠 HOME button to jump to any section.")
+        c.drawCentredString(PW / 2, y, "Tap any section below — or use your PDF app's bookmarks — to jump there instantly.")
         y -= 24
 
         # Two-column section list

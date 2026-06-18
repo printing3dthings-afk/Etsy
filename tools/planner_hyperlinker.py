@@ -158,6 +158,82 @@ def build_cover_png(out_path, title, subtitle, year, shop="OnBrandCraftz"):
     return out_path
 
 
+def compose_ai_cover(ai_path, out_path, title, subtitle, year, shop="OnBrandCraftz"):
+    """Place an OpenAI cover illustration onto a letter-ratio night-sky canvas and
+    add the gold title text in the lower third. Letter ratio in = no distortion when
+    the page inserts it full-bleed."""
+    from PIL import Image, ImageDraw
+
+    S = 2
+    W, H = int(PW) * S, int(PH) * S
+    canvas = Image.new("RGB", (W, H), INDIGO)
+    draw = ImageDraw.Draw(canvas)
+    for y in range(H):
+        f = y / float(H)
+        if f < 0.5:
+            g = f / 0.5
+            col = tuple(int(INDIGO_TOP[i] + (SPACE_PURPLE[i] - INDIGO_TOP[i]) * g) for i in range(3))
+        else:
+            g = (f - 0.5) / 0.5
+            col = tuple(int(SPACE_PURPLE[i] + (INDIGO[i] - SPACE_PURPLE[i]) * g) for i in range(3))
+        draw.line([(0, y), (W, y)], fill=col)
+
+    ai = Image.open(ai_path).convert("RGB")
+    # fit to height, centered horizontally (illustration's clear lower third sits low)
+    scale = H / float(ai.height)
+    nw = int(ai.width * scale)
+    ai = ai.resize((nw, H), Image.LANCZOS)
+    canvas.paste(ai, ((W - nw) // 2, 0))
+
+    # scrim over lower area for title legibility
+    region_top = int(H * 0.66)
+    scrim = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(scrim)
+    sd.rectangle([0, region_top, W, H], fill=(20, 18, 46, 165))
+    canvas = Image.alpha_composite(canvas.convert("RGBA"), scrim).convert("RGB")
+    draw = ImageDraw.Draw(canvas)
+
+    # gold double border
+    m = int(20 * S); draw.rectangle([m, m, W - m, H - m], outline=GOLD, width=max(1, S))
+    m2 = int(27 * S); draw.rectangle([m2, m2, W - m2, H - m2], outline=(150, 126, 60), width=max(1, S))
+
+    def centered(text, cy, font, fill):
+        bb = draw.textbbox((0, 0), text, font=font); w = bb[2] - bb[0]
+        draw.text(((W - w) / 2, cy), text, font=font, fill=fill)
+
+    title_font = _font(40 * S, bold=True)
+    words = title.split(); lines, cur = [], ""
+    for w in words:
+        test = (cur + " " + w).strip()
+        if draw.textlength(test, font=title_font) > W * 0.84 and cur:
+            lines.append(cur); cur = w
+        else:
+            cur = test
+    if cur:
+        lines.append(cur)
+
+    sub_font = _font(22 * S)
+    year_font = _font(30 * S, bold=True)
+    shop_font = _font(16 * S)
+
+    # measured, packed stack centered within the lower band
+    line_h = int(46 * S)
+    block = [(ln, title_font, GOLD, line_h) for ln in lines]
+    block.append(("·   " + subtitle.upper() + "   ·", sub_font, MOONBEAM, int(38 * S)))
+    if year and str(year) not in title:
+        block.append((str(year), year_font, MOONBEAM, int(44 * S)))
+    block.append((shop.upper(), shop_font, (185, 175, 215), int(34 * S)))
+    total_h = sum(h for _, _, _, h in block)
+    band_top, band_bot = region_top + int(18 * S), H - m2 - int(14 * S)
+    y = band_top + max(0, ((band_bot - band_top) - total_h) // 2)
+    for text, font, fill, h in block:
+        centered(text, y, font, fill); y += h
+
+    canvas = canvas.resize((int(PW), int(PH)), Image.LANCZOS)
+    canvas.save(out_path)
+    return out_path
+
+
 # ---------------------------------------------------------------------------
 # 2. Section detection (scan rendered text -> first page of each section)
 # ---------------------------------------------------------------------------
@@ -310,12 +386,30 @@ _TOC_ORDER = [
 ]
 
 
+def _embed_sticker_sheets(doc, first_sticker_page, sheet_pngs):
+    """Replace each Sticker Library page's placeholder grid with the real
+    transparent sticker sheet rendered on a clean panel."""
+    body = fitz.Rect(ML, 88, PW - MR, 760)  # below header+subtitle, above footer bar
+    for offset, png in enumerate(sheet_pngs):
+        pno = first_sticker_page + offset
+        if pno >= doc.page_count or not Path(png).exists():
+            continue
+        page = doc[pno]
+        # mask the placeholder grid with the moonbeam neutral, then drop the sheet
+        page.draw_rect(body, color=None, fill=(MOONBEAM[0] / 255, MOONBEAM[1] / 255, MOONBEAM[2] / 255))
+        page.insert_image(body, filename=str(png), keep_proportion=True)
+
+
 def finalize_pdf(src_path, out_path, sections, title, subtitle, year,
-                 cover_png=None):
+                 cover_png=None, sticker_sheets=None):
     doc = fitz.open(str(src_path))
 
     found = _detect_sections(doc)
     dash_page = found.get("dashboard")
+
+    # --- embed real sticker sheets over the placeholder library pages ---
+    if sticker_sheets and "stickers" in found:
+        _embed_sticker_sheets(doc, found["stickers"], sticker_sheets)
 
     # --- swap in the celestial cover (delete the text placeholder page 0) ---
     if cover_png and Path(cover_png).exists():
@@ -381,8 +475,19 @@ def finalize(pid, make_cover=True):
     cover_png = None
     if make_cover:
         cover_png = PRODUCT_FILES_DIR / f"{pid}_cover.png"
-        build_cover_png(cover_png, title, subtitle, year)
-        print(f"  Cover -> {cover_png}")
+        ai_cover = PRODUCT_FILES_DIR / f"{pid}_cover_ai.png"
+        if ai_cover.exists():
+            compose_ai_cover(ai_cover, cover_png, title, subtitle, year)
+            print(f"  Cover (AI-composited) -> {cover_png}")
+        else:
+            build_cover_png(cover_png, title, subtitle, year)
+            print(f"  Cover (PIL) -> {cover_png}")
+
+    # real sticker sheets, if they've been generated
+    sticker_sheets = [PRODUCT_FILES_DIR / f"{pid}_sticker_sheet_{n}.png" for n in range(1, 6)]
+    sticker_sheets = [p for p in sticker_sheets if p.exists()]
+    if sticker_sheets:
+        print(f"  Embedding {len(sticker_sheets)} real sticker sheets into the library pages")
 
     results = []
     for suffix, yr in ((f"{pid}_v2.pdf", year), (f"{pid}U_v2.pdf", None)):
@@ -392,7 +497,7 @@ def finalize(pid, make_cover=True):
             continue
         out = PRODUCT_FILES_DIR / suffix.replace("_v2.pdf", "_v2_final.pdf")
         n, ntoc = finalize_pdf(src, out, pcfg_sections, title, subtitle, yr,
-                               cover_png=cover_png)
+                               cover_png=cover_png, sticker_sheets=sticker_sheets)
         print(f"  {out.name}: {n} pages, {ntoc} outline entries, links added")
         results.append(out)
     return results
