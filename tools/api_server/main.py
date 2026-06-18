@@ -171,7 +171,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d2a619f-v39"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v40"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -584,6 +584,40 @@ AGENT_TOOLS = [
             "required": ["note"],
         },
     },
+    {
+        "name": "list_todos",
+        "description": (
+            "View the shared to-do list that you and Scott both see on the dashboard. "
+            "Open items first, then completed ones. Check this before adding a new item "
+            "so you don't duplicate something already on the list."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "add_todo",
+        "description": (
+            "Add an item to the shared to-do list visible on Scott's dashboard. Use this "
+            "to hand Scott a concrete next step he needs to take himself (e.g. a one-time "
+            "manual action like attaching a Railway Volume), or to remind yourself of "
+            "follow-up work across sessions. Keep it one short, actionable line."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "text": {"type": "string", "description": "The to-do item text, one short line."}
+            },
+            "required": ["text"],
+        },
+    },
+    {
+        "name": "complete_todo",
+        "description": "Mark a to-do item done by its id (from list_todos).",
+        "input_schema": {
+            "type": "object",
+            "properties": {"todo_id": {"type": "integer"}},
+            "required": ["todo_id"],
+        },
+    },
     # Native Anthropic-hosted tool (not one of ours — no input_schema, no handler in
     # _execute_agent_tool). Anthropic executes the search server-side and injects
     # results into the same turn; the model keeps generating, so this never trips
@@ -750,6 +784,20 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 return {"error": "note is required"}
             _append_ceo_learning(note)
             return {"logged": True}
+        if name == "list_todos":
+            return {"todos": db.list_todos()}
+        if name == "add_todo":
+            text = ((tool_input or {}).get("text") or "").strip()
+            if not text:
+                return {"error": "text is required"}
+            todo_id = db.add_todo(text, added_by="frank")
+            return {"added": True, "id": todo_id}
+        if name == "complete_todo":
+            todo_id = (tool_input or {}).get("todo_id")
+            if todo_id is None:
+                return {"error": "todo_id is required"}
+            ok = db.set_todo_done(int(todo_id), True)
+            return {"done": ok}
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired:
         return {"error": f"Command timed out (>{timeout}s)"}
@@ -1125,6 +1173,18 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
   </div>
 
   <div id="screen-dash" class="screen active">
+    <div class="card" id="todo-card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">📋 To-Do — Scott + Frank</div>
+        <span id="todo-count" style="font-size:11px;color:var(--gold);font-weight:600"></span>
+      </div>
+      <div id="todo-list"><div class="spinner" style="margin:10px auto"></div></div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <input id="todo-input" type="text" placeholder="Add a to-do…" onkeydown="if(event.key==='Enter')addTodoItem()"
+          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text)">
+        <button onclick="addTodoItem()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
+      </div>
+    </div>
     <div style="margin-bottom:8px">
       <button id="ceo-analyze-btn" class="ceo-btn" onclick="getCeoSuggestions(false)" style="display:none">
         <span>🎯</span><span>Ask Fucking Frank to Analyze</span>
@@ -1269,6 +1329,63 @@ function fetchWithTimeout(url, opts, ms=12000){
   const c=new AbortController();
   const t=setTimeout(()=>c.abort(),ms);
   return fetch(url,{...opts,signal:c.signal}).finally(()=>clearTimeout(t));
+}
+
+// ── Shared To-Do (Scott + Frank) ────────────────────────────────────────────
+async function loadTodos(){
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/todos', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const d = await r.json();
+    renderTodos(d.todos || []);
+  } catch(e) {
+    document.getElementById('todo-list').innerHTML = '<div style="color:var(--muted);font-size:12px">Could not load to-dos.</div>';
+  }
+}
+function renderTodos(items){
+  const wrap = document.getElementById('todo-list');
+  const cnt = document.getElementById('todo-count');
+  const openN = items.filter(t=>!t.done).length;
+  cnt.textContent = items.length ? (openN ? openN+' open' : 'all done ✓') : '';
+  if (!items.length) { wrap.innerHTML = '<div style="color:var(--muted);font-size:12px">Nothing on the list yet — add one below.</div>'; return; }
+  wrap.innerHTML = items.map(t => {
+    const who = t.added_by === 'frank' ? '🤖 Frank' : '🧑 Scott';
+    return '<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)'+(t.done?';opacity:.5':'')+'">'+
+      '<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTodoItem('+t.id+',this.checked)" style="margin-top:3px;flex-shrink:0;width:16px;height:16px;accent-color:var(--gold)">'+
+      '<div style="flex:1;font-size:13px;color:var(--text)'+(t.done?';text-decoration:line-through':'')+'">'+escHtml(t.text)+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+who+'</div></div>'+
+      '<button onclick="deleteTodoItem('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 4px">✕</button>'+
+    '</div>';
+  }).join('');
+}
+async function addTodoItem(){
+  const inp = document.getElementById('todo-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  try {
+    await fetchWithTimeout(BASE+'/api/todos', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({text, added_by:'scott'}),
+    }, 15000);
+  } catch(e) {}
+  loadTodos();
+}
+async function toggleTodoItem(id, done){
+  try {
+    await fetchWithTimeout(BASE+'/api/todos/'+id+'/toggle', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({done}),
+    }, 15000);
+  } catch(e) {}
+  loadTodos();
+}
+async function deleteTodoItem(id){
+  try {
+    await fetchWithTimeout(BASE+'/api/todos/'+id, {method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+  } catch(e) {}
+  loadTodos();
 }
 
 // ── Action Center ────────────────────────────────────────────────────────────
@@ -2378,6 +2495,7 @@ if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').c
   } catch(e) {}
 })();
 loadDash();
+loadTodos();
 setTimeout(loadActions, 1200);  // populate Action Center + nav badge without being asked
 setTimeout(loadConvTargets, 1800);  // Conversion Doctor worklist on the dashboard
 
@@ -3946,6 +4064,44 @@ async def post_etsy_tokens_endpoint(payload: dict, _token: str = Depends(_auth))
     os.environ["ETSY_ACCESS_TOKEN"] = access_token
     os.environ["ETSY_REFRESH_TOKEN"] = refresh_token
     print("[etsy-tokens] adopted rotated token pair posted by CI", flush=True)
+    return {"ok": True}
+
+
+# ── Shared to-do list (Scott + Frank, always visible on the dashboard) ──────────────
+
+
+@app.get("/api/todos")
+async def get_todos(_token: str = Depends(_auth)):
+    items = await asyncio.to_thread(db.list_todos)
+    return {"todos": items, "open_count": sum(1 for t in items if not t["done"])}
+
+
+@app.post("/api/todos")
+async def post_todo(payload: dict, _token: str = Depends(_auth)):
+    text = (payload or {}).get("text", "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="text is required")
+    added_by = (payload or {}).get("added_by", "scott").strip().lower()
+    if added_by not in ("scott", "frank"):
+        added_by = "scott"
+    todo_id = await asyncio.to_thread(db.add_todo, text, added_by)
+    return {"ok": True, "id": todo_id}
+
+
+@app.post("/api/todos/{todo_id}/toggle")
+async def toggle_todo(todo_id: int, payload: dict, _token: str = Depends(_auth)):
+    done = bool((payload or {}).get("done", True))
+    ok = await asyncio.to_thread(db.set_todo_done, todo_id, done)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return {"ok": True}
+
+
+@app.delete("/api/todos/{todo_id}")
+async def remove_todo(todo_id: int, _token: str = Depends(_auth)):
+    ok = await asyncio.to_thread(db.delete_todo, todo_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Todo not found")
     return {"ok": True}
 
 

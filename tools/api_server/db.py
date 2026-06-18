@@ -105,6 +105,14 @@ CREATE TABLE IF NOT EXISTS etsy_tokens (
   parent_refresh_token  TEXT,   -- the refresh_token this one rotated FROM (lineage check)
   updated_at            TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS todos (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  text          TEXT NOT NULL,
+  added_by      TEXT NOT NULL DEFAULT 'scott',  -- 'scott' | 'frank' — who created it
+  done          INTEGER NOT NULL DEFAULT 0,
+  created_at    TEXT NOT NULL,
+  completed_at  TEXT
+);
 """
 
 
@@ -437,3 +445,67 @@ def db_info() -> dict:
             conn.close()
     except Exception as exc:  # never let diagnostics crash the caller
         return {"path": DB_PATH, "error": str(exc)}
+
+
+# ── Shared to-do list (Scott + Frank, always visible on the dashboard) ───────
+
+
+def add_todo(text: str, added_by: str = "scott") -> int:
+    """Add one to-do item. added_by is 'scott' or 'frank'. Returns the new id."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "INSERT INTO todos (text, added_by, done, created_at) VALUES (?,?,0,?)",
+            (text.strip(), added_by, ts),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def list_todos(include_done: bool = True, limit: int = 200) -> list:
+    """Open items first (oldest first), then done items (most recently completed first)."""
+    init_db()
+    conn = _connect()
+    try:
+        open_rows = conn.execute(
+            "SELECT * FROM todos WHERE done=0 ORDER BY created_at ASC LIMIT ?", (limit,)
+        ).fetchall()
+        items = [dict(r) for r in open_rows]
+        if include_done:
+            done_rows = conn.execute(
+                "SELECT * FROM todos WHERE done=1 ORDER BY completed_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+            items += [dict(r) for r in done_rows]
+        return items
+    finally:
+        conn.close()
+
+
+def set_todo_done(todo_id: int, done: bool) -> bool:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat() if done else None
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE todos SET done=?, completed_at=? WHERE id=?",
+            (1 if done else 0, ts, todo_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def delete_todo(todo_id: int) -> bool:
+    init_db()
+    conn = _connect()
+    try:
+        cur = conn.execute("DELETE FROM todos WHERE id=?", (todo_id,))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
