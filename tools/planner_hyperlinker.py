@@ -589,6 +589,18 @@ def _meal_plan_field_rects():
     return out
 
 
+def _notes_field_rects():
+    # geometry mirrors generate_planner.py::_gen_notes_pages
+    y = PH - 52 - 10
+    out = [
+        (_rl_rect(ML + 22.78, y - 2, 111.42, 12), 7, False, False),   # Date
+        (_rl_rect(ML + 168.26, y - 2, 193.51, 12), 7, False, False),  # Topic
+    ]
+    y -= 20
+    out.append((_rl_rect(ML + 4, MB + 20, CW - 8, y - (MB + 20)), 9, True, False))
+    return out
+
+
 _FIELD_BUILDERS = {
     "daily": _daily_field_rects,
     "weekly": _weekly_field_rects,
@@ -599,6 +611,7 @@ _FIELD_BUILDERS = {
     "month_glance": _month_glance_field_rects,
     "budget": _budget_field_rects,
     "meal_plan": _meal_plan_field_rects,
+    "notes": _notes_field_rects,
 }
 
 
@@ -612,6 +625,8 @@ def _classify_page(head):
         return "budget"
     if "MEAL PLANNER" in h[:40]:
         return "meal_plan"
+    if "NOTES" in h[:40] and "PAGE" in h[:40]:
+        return "notes"
     if _MONTH_RE.match(h) and "AT A GLANCE" not in h[:40] and "REVIEW" not in h[:40]:
         return "monthly"
     if h.upper().startswith("WEEK "):
