@@ -460,3 +460,12 @@ path **`/data`** → redeploy. After it redeploys, `/health` should show `"persi
 if RAILWAY_APP_URL/APP_SECRET_TOKEN are unset or the server is unreachable, the backup still succeeds and it
 just prints a note — a sync hiccup never fails the backup. Also made that script's paths ROOT-relative and
 gave it a guarded `.env` loader (was `Path("data/...")` relative to CWD before).
+
+### 2026-06-18 — dashboard now warns visibly when persistent storage is missing
+Scott confirmed via `/health` screenshot that production is still running `"persistent": false,
+"files_volume": false` on build c7e503a-v38 — the volume still hasn't been attached (see the entry above;
+this still needs the one-time Railway dashboard action). Until that's done, the failure mode was silent —
+nothing on the dashboard told Scott data wasn't durable. **Fix:** the dashboard now fetches `/health` on
+load and shows a red banner ("No durable storage attached — data and synced files will be lost on next
+redeploy") whenever `persistent` is false, instead of requiring a manual `/health` check to notice. Build
+bumped to d2a619f-v39.
