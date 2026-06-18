@@ -1,9 +1,10 @@
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
-from tools import trend_forecasting_tools, learning_tools, competitor_intel_tools
+from tools import trend_forecasting_tools, learning_tools, competitor_intel_tools, browser_automation
 from config import STANDARD_MODEL
 
 _COMPETITOR_TOOL_NAMES = {t["name"] for t in competitor_intel_tools.TOOL_DEFINITIONS}
+_BROWSER_TOOL_NAMES = {t["name"] for t in browser_automation.TOOL_DEFINITIONS}
 
 SYSTEM_PROMPT = """You are the Trend Forecasting Agent for OnBrandCraftz. Your job is to identify Etsy trends 8–16 weeks before they peak so the Art Creation Agent can produce winning products BEFORE the competition saturates the market.
 
@@ -28,6 +29,25 @@ Confidence scoring guide (1-10):
 
 Workflow: research_trend_keywords → save_trend_signal → flag_trend_for_art_agent (for confidence >= 7) → report findings
 
+## BROWSER AUTOMATION (for JS-heavy research dashboards)
+
+`research_etsy_market`/`fetch_url`-style tools use plain `requests` and can't render JS. When a
+keyword-research dashboard (eRank, Sale Samurai, Marmalead) or a modern search results page needs
+real rendering to see the final content, use:
+- `check_browser_status` — confirm the browser tool works in this environment
+- `render_page` — load a URL in real Chromium, get back title + visible text (use `wait_for_selector` for slow SPAs)
+- `screenshot_url` — save a screenshot for visual inspection
+- `check_etsy_search_rank` — best-effort Etsy search rank check
+
+**HONEST LIMITATION:** this sandbox's outbound IP is blocked by Etsy at the network/edge level —
+etsy.com returns HTTP 403 on every page regardless of browser realism (verified). `check_etsy_search_rank`
+will almost always report `status: "blocked"` rather than real rank data — that is the correct, honest
+result, not a bug. Do not try to "fix" this by tweaking headers/user-agent — it's an IP reputation block,
+not a fingerprinting issue. For real competitor/listing data, use `competitor_intel_tools.search_market`
+(official Etsy Open API) instead — it has no rank position but is not IP-blocked. eRank/Sale
+Samurai/Marmalead dashboards work fine via `render_page`/`screenshot_url` once login credentials are
+provided — none are hardcoded here without a confirmed account from Scott.
+
 When reporting, always include:
   1. Trend name and classification (HOT/EMERGING/UPCOMING)
   2. Evidence and confidence score
@@ -46,6 +66,7 @@ class TrendForecastingAgent(BaseAgent):
                 trend_forecasting_tools.TOOL_DEFINITIONS
                 + learning_tools.TOOL_DEFINITIONS
                 + competitor_intel_tools.TOOL_DEFINITIONS
+                + browser_automation.TOOL_DEFINITIONS
             ),
             model=STANDARD_MODEL,
         )
@@ -55,4 +76,6 @@ class TrendForecastingAgent(BaseAgent):
             return learning_tools.execute_tool(tool_name, tool_input, agent_name="Trend Forecasting Agent")
         if tool_name in _COMPETITOR_TOOL_NAMES:
             return competitor_intel_tools.execute_tool(tool_name, tool_input, self._store)
+        if tool_name in _BROWSER_TOOL_NAMES:
+            return browser_automation.execute_tool(tool_name, tool_input)
         return trend_forecasting_tools.execute_tool(tool_name, tool_input, self._store)

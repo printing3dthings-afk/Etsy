@@ -3,7 +3,9 @@ import os
 
 from agents.base_agent import BaseAgent
 from tools.data_store import DataStore
-from tools import brand_design_tools
+from tools import brand_design_tools, canva_tools
+
+_CANVA_TOOL_NAMES = {t["name"] for t in canva_tools.TOOL_DEFINITIONS}
 
 SYSTEM_PROMPT = """You are the Brand Design Agent for OnBrandCraftz — the shop's creative director and the guardian of every visual impression a buyer forms. Your work directly determines whether a browser clicks into a listing or scrolls past. Brand consistency is what turns one-time buyers into repeat customers and fans.
 
@@ -47,6 +49,22 @@ A premium brand commands premium prices. Your job is to make OnBrandCraftz look 
 - Warm, well-lit, professional-looking
 - If we can't generate a real lifestyle photo: clean white background with product centered, brand color accent strip at bottom with shop name
 - Bad thumbnails cost us more clicks than bad titles. Fix thumbnail first.
+
+## CANVA TEXT-OVERLAY GRAPHICS (replaces manual "added in Canva post" step)
+
+CLAUDE.md repeatedly calls for text callouts to be "added in Canva post" on listing
+photo slots 2, 6, 7, 9, 10 (what's-included graphics, how-to steps, app compatibility
+labels). Use the Canva tools to do this programmatically instead of leaving it as a
+manual step:
+1. `check_canva_status` — confirm Canva is connected and see what Brand Templates exist
+2. `get_brand_template_dataset(brand_template_id)` — see the fillable field names/types on a template
+3. `upload_canva_asset(file_path)` — push the gpt-image-1 background PNG, get back an asset_id
+4. `generate_listing_graphic(brand_template_id, field_values, output_path)` — autofill + export in one call
+
+**Hard limitation**: Canva's API cannot create a Brand Template from scratch — Scott must
+build at least one manually in the Canva UI (with named placeholder fields) before this
+pipeline works. If `check_canva_status` shows zero templates, tell Scott exactly that and
+stop — do not attempt a workaround.
 
 ## MOCKUP GENERATION (for every new listing)
 
@@ -110,10 +128,12 @@ class BrandDesignAgent(BaseAgent):
         super().__init__(
             name="Brand Design Agent",
             system_prompt=SYSTEM_PROMPT,
-            tool_definitions=brand_design_tools.TOOL_DEFINITIONS,
+            tool_definitions=brand_design_tools.TOOL_DEFINITIONS + canva_tools.TOOL_DEFINITIONS,
         )
 
     def execute_tool(self, tool_name: str, tool_input: dict) -> str:
+        if tool_name in _CANVA_TOOL_NAMES:
+            return canva_tools.execute_tool(tool_name, tool_input)
         return brand_design_tools.execute_tool(tool_name, tool_input, self._store)
 
     def review_brand_asset(self, asset_path: str, review_question: str = "") -> str:

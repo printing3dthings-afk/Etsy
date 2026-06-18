@@ -22,6 +22,10 @@ KNOWN_KEYS = [
     "OPENAI_API_KEY",
     "PINTEREST_ACCESS_TOKEN",
     "PINTEREST_REFRESH_TOKEN",
+    "CANVA_CLIENT_ID",
+    "CANVA_CLIENT_SECRET",
+    "CANVA_ACCESS_TOKEN",
+    "CANVA_REFRESH_TOKEN",
     "MAILCHIMP_API_KEY",
     "SENDGRID_API_KEY",
     "GOOGLE_ANALYTICS_ID",
@@ -41,6 +45,10 @@ API_PRIORITY = {
     "OPENAI_API_KEY":          "high",
     "PINTEREST_ACCESS_TOKEN":  "medium",
     "PINTEREST_REFRESH_TOKEN": "medium",
+    "CANVA_CLIENT_ID":         "medium",
+    "CANVA_CLIENT_SECRET":     "medium",
+    "CANVA_ACCESS_TOKEN":      "medium",
+    "CANVA_REFRESH_TOKEN":     "medium",
     "MAILCHIMP_API_KEY":       "medium",
     "SENDGRID_API_KEY":        "medium",
     "GOOGLE_ANALYTICS_ID":     "low",
@@ -56,6 +64,7 @@ API_BASE_URLS = {
     "etsy":             "https://openapi.etsy.com/v3/application",
     "openai":           "https://api.openai.com",
     "pinterest":        "https://api.pinterest.com",
+    "canva":            "https://api.canva.com",
     "mailchimp":        "https://login.mailchimp.com",
     "sendgrid":         "https://api.sendgrid.com",
     "google_analytics": "https://www.googleapis.com/analytics",
@@ -379,6 +388,30 @@ def _get_integration_guide(api_name: str) -> str:
             "docs": "https://developers.pinterest.com/docs/getting-started/introduction/",
             "cost_note": "Free API. Pinterest Business account required for analytics endpoints.",
         },
+        "canva": {
+            "purpose": (
+                "Programmatically generate the text-overlay listing graphics (what's-included "
+                "callouts, how-to steps, app compatibility labels) that CLAUDE.md otherwise calls "
+                "for 'added in Canva post' on photo slots 2, 6, 7, 9, 10. Used by the Brand Design Agent."
+            ),
+            "priority": "MEDIUM — set up when ready to automate listing graphic text overlays",
+            "env_var": "CANVA_CLIENT_ID + CANVA_CLIENT_SECRET + CANVA_ACCESS_TOKEN + CANVA_REFRESH_TOKEN",
+            "how_to_get": [
+                "1. Go to https://www.canva.com/developers/integrations → Create an Integration",
+                "2. Add redirect URI: http://localhost:3005/callback",
+                "3. Enable scopes: design:content:read design:content:write design:meta:read "
+                "asset:read asset:write folder:read brandtemplate:meta:read brandtemplate:content:read profile:read",
+                "4. Copy the Client ID and generate a Client Secret → set as CANVA_CLIENT_ID / CANVA_CLIENT_SECRET",
+                "5. Run tools/canva_oauth.py to complete OAuth and get access/refresh tokens",
+            ],
+            "oauth": "OAuth 2.0 PKCE. Run tools/canva_oauth.py (manual two-step paste flow, same pattern as etsy_oauth.py).",
+            "docs": "https://www.canva.dev/docs/connect/",
+            "cost_note": (
+                "Free API access on Canva Free/Pro. HARD MANUAL STEP: Canva's API cannot create a "
+                "Brand Template — Scott must build at least one in the Canva UI (with named "
+                "placeholder fields) before generate_listing_graphic can be used."
+            ),
+        },
         "mailchimp": {
             "purpose": "Email marketing: welcome sequences, abandoned cart recovery, new-listing announcements to subscribers.",
             "priority": "MEDIUM — set up by Day 7",
@@ -529,6 +562,7 @@ def _get_connection_health_report() -> str:
         "etsy":             ["ETSY_API_KEY", "ETSY_ACCESS_TOKEN"],
         "openai":           ["OPENAI_API_KEY"],
         "pinterest":        ["PINTEREST_ACCESS_TOKEN"],
+        "canva":            ["CANVA_ACCESS_TOKEN"],
         "mailchimp":        ["MAILCHIMP_API_KEY"],
         "sendgrid":         ["SENDGRID_API_KEY"],
         "google_analytics": ["GOOGLE_ANALYTICS_ID"],
