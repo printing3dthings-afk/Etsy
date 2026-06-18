@@ -469,3 +469,47 @@ nothing on the dashboard told Scott data wasn't durable. **Fix:** the dashboard 
 load and shows a red banner ("No durable storage attached — data and synced files will be lost on next
 redeploy") whenever `persistent` is false, instead of requiring a manual `/health` check to notice. Build
 bumped to d2a619f-v39.
+
+### 2026-06-18 (later) — Volumes confirmed plan-gated, not missing; to-do list seeded
+Scott scrolled through every section of the Railway service's Settings (Build, Deploy, Teardown, Cron
+Schedule, Healthcheck, Serverless, Restart Policy, Config-as-code, Feature-flags, Delete Service) and
+confirmed there is no Volumes section at all on the current Trial plan — it's gated behind a paid upgrade
+(~$5/mo Hobby plan), not a UI/navigation issue. Scott has decided to hold off on upgrading for now. Seeded
+the live to-do list with this item plus the still-open GitHub repo secrets item (`RAILWAY_APP_URL` /
+`APP_SECRET_TOKEN` need to be added under repo Settings → Secrets and variables → Actions so the daily
+GitHub Action and Railway stop racing each other on Etsy token rotation — see the two-lineage entry above).
+
+### 2026-06-18 (later still) — audited every command Frank/the dashboard can execute; found 3 bugs in 9
+Ran every entry in `_EXEC_COMMANDS` end-to-end (same subprocess invocation `execute_command` uses) to verify
+each one actually completes within its configured timeout. Confirmed working correctly as registered:
+`generate_coloring_pages_preview`, `qc_sweep`, `seasonal_keywords_report`, `seasonal_keywords_preview`.
+`generate_coloring_pages` / `generate_coloring_pages_quick` were not executed (real paid gpt-image-1 calls,
+3–15 min runtime) — confirmed by inspection only that their `timeout: 30` is irrelevant since both are
+`long_running: True` (fire-and-forget `Popen`, no wait-for-completion), so no timeout bug exists there.
+
+Found and fixed:
+- **`shop_health_check` timeout too short.** Registered at 60s; measured real runtime against the full live
+  catalog is ~118s. Always timed out via the dashboard/Frank path even though the script itself runs fine
+  and surfaces real findings (duplicate hero art across several Digital Paper Pack listings at pHash
+  dist=0/64, unanswered reviews). Bumped to `timeout: 150`.
+- **`listing_integrity_check` timeout too short.** Registered at 180s; measured real runtime is ~281.8s.
+  Same failure mode — script works and returns real findings (e.g. exact-duplicate hero art, "WRONG ART in
+  hero"), but always times out before Frank ever sees the result. Bumped to `timeout: 330`.
+- **`rebuild_sticker_pack.py` hardcoded `/home/user/Etsy` paths + unguarded `.env` open.** Same bug class
+  fixed elsewhere on 2026-06-17 (autoresponder, shop_health_check, pinterest_post_queue) but missed for this
+  file — would have crashed with `FileNotFoundError` immediately on Railway. Rewritten to the same
+  `ROOT = Path(__file__).resolve().parent.parent` + guarded-`.env`-open pattern. Verified clean via
+  `py_compile`.
+- **`rebuild_sticker_pack` removed from `_EXEC_COMMANDS` entirely (not just timeout/path-fixed).** Two
+  separate problems beyond the path bug: (1) the registry entry passes zero CLI args, but the script
+  requires `--pid`/`--sheets`/`--listing` with no safe defaults — it could never have completed via this
+  invocation regardless. (2) More importantly, the script DELETEs the live digital file, uploads a
+  replacement, and PATCHes the listing description directly against the Etsy API — there is no
+  `stage_action()` approval step anywhere in it, unlike every other mutation path in this codebase. Leaving
+  it registered (even after fixing the path crash) would have silently handed Frank a fully autonomous way
+  to change what a customer receives and rewrite a live listing description, in direct conflict with
+  CLAUDE.md's autonomy boundaries and the "NEVER LIE TO THE CUSTOMER" rule. Removed the registry entry
+  (script itself is left fixed and runnable by Scott by hand) with a comment explaining why, pending a
+  decision on refactoring it to use `stage_action()` before it's ever re-exposed to Frank.
+
+Build bumped to f4b1e2a-v41. Verified `python -m py_compile` clean on `main.py`.

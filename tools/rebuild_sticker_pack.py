@@ -7,13 +7,17 @@ Usage:
   python tools/rebuild_sticker_pack.py --pid DP1026 --sheets 11 --listing 4509179201
 """
 import os, sys, json, zipfile, urllib.request, urllib.error, time, argparse, re
-sys.path.insert(0, '/home/user/Etsy')
-with open('/home/user/Etsy/.env') as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
-            os.environ.setdefault(k.strip(), v.strip())
+from pathlib import Path
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+_env_path = ROOT / '.env'
+if _env_path.exists():
+    with open(_env_path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 
@@ -25,7 +29,7 @@ auth_headers = {
     "x-api-key": f"{client.client_id}:{client.client_secret}",
 }
 
-ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
+ART_DIR = str(ROOT / 'data' / 'digital_products' / 'product_files')
 
 SHEET_NAMES_BASE = {
     1: 'sheet_01_functional_planning',

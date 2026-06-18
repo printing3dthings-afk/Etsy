@@ -90,7 +90,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
     "shop_health_check": {
         "script": "tools/shop_health_check.py",
         "description": "Run a live shop health snapshot — metrics, listing quality, tag audit",
-        "timeout": 60,
+        "timeout": 150,  # measured ~118s against the full live catalog on 2026-06-18; 60s always timed out
         "long_running": False,
     },
     "generate_coloring_pages": {
@@ -113,12 +113,15 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "timeout": 30,
         "long_running": True,
     },
-    "rebuild_sticker_pack": {
-        "script": "tools/rebuild_sticker_pack.py",
-        "description": "Rebuild sticker pack ZIPs for all planners from cached images",
-        "timeout": 60,
-        "long_running": False,
-    },
+    # rebuild_sticker_pack.py removed from this registry on 2026-06-18 — it
+    # DELETEs the live digital file, uploads a replacement, and PATCHes the
+    # listing description directly against the Etsy API with no stage_action
+    # approval step. That's a direct bypass of Scott's one-tap approval gate
+    # and a violation of the autonomy boundaries in CLAUDE.md. It also requires
+    # three CLI args (--pid/--sheets/--listing) with no safe defaults, so it
+    # could never have completed via this zero-arg invocation anyway. Do not
+    # re-add without first refactoring it to stage_action() instead of writing
+    # directly.
     "qc_sweep": {
         "script": "tools/qc_sweep.py",
         "description": "Run quality-control sweep across all product files",
@@ -134,7 +137,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
             "This is the check that surfaces 'something that needs fixing' — run it "
             "first, then stage_action the corrections for Scott's approval."
         ),
-        "timeout": 180,
+        "timeout": 330,  # measured ~281.8s against the full live catalog on 2026-06-18; 180s always timed out
         "long_running": False,
     },
     # CLAUDE.md "Fully Autonomous" list explicitly grants "Run seasonal keyword
@@ -171,7 +174,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v40"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v41"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
