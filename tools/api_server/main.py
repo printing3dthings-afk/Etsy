@@ -3633,6 +3633,8 @@ async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
         )
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Diagnosis timed out — try again")
+    except anthropic.APIError as exc:
+        raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}")
 
     text = "".join(getattr(b, "text", "") for b in response.content).strip()
     diagnosis = _extract_json_object(text)

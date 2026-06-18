@@ -534,3 +534,30 @@ passes clean now.
 **Takeaway:** `py_compile` only proves the Python is valid — it can't catch bugs in *text the Python
 generates*. Any future edit to `_WEB_UI` must extract the `<script>...</script>` block from a live
 response and run `node --check` on it before pushing.
+
+---
+
+**2026-06-18 (later) — Chat (Frank) and Conversion Doctor both failing: Anthropic account out of credits, plus a real bug in the Diagnose endpoint.**
+Symptom: Scott reported two failures at once. (1) Frank's chat returned a raw `Error code: 400` block on
+every message: `'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing
+to upgrade or purchase credits.'` (2) The Conversion Doctor "Diagnose again" button on a listing returned
+a bare, uninformative `HTTP 500` with no message.
+Root cause of (1) is account-level, not code — the Anthropic API key backing this app has run out of
+credits. **This cannot be fixed by Claude Code.** Scott needs to go to console.anthropic.com → Plans &
+Billing and add credits; nothing in the codebase is broken here. The chat path already had correct error
+handling (`chat_ws` catches `Exception` and sends the raw message text back over the websocket), which is
+why the user saw the real Anthropic error text in the chat — that's the system working as intended,
+surfacing a billing problem instead of swallowing it.
+Root cause of (2) was a separate, real code bug: `diagnose_listing` (`/api/diagnose/{listing_id}`) only
+caught `asyncio.TimeoutError` around its `ai_client.messages.create()` call — no `except anthropic.APIError`
+handler, unlike `_compute_suggestions_inner` which already had the correct pattern. So the exact same
+billing error that showed cleanly in chat instead crashed this endpoint into an unhandled exception, and
+FastAPI's default 500 has no `detail` field, so the frontend's `d.detail||'HTTP '+r.status` fallback
+rendered the unhelpful bare "HTTP 500". Fixed by adding:
+`except anthropic.APIError as exc: raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}")`
+immediately after the existing timeout handler, mirroring `_compute_suggestions_inner`. Verified with
+`python -m py_compile` (no JS/`_WEB_UI` text was touched, so no `node --check` was needed this time).
+**Takeaway:** every endpoint that calls `ai_client.messages.create()` directly needs both a timeout
+handler and an `anthropic.APIError` handler — copy the pattern from `_compute_suggestions_inner`, don't
+let any new endpoint skip it. This fix makes future Anthropic errors show a real message instead of a
+bare 500, but does not and cannot fix the underlying billing issue — that's purely Scott's action.
