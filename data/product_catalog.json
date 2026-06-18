@@ -779,12 +779,13 @@
     "etsy_listing_id": "4515682013",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1030_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_ABSTRACT_BRUSHSTROKE_PRINTABLE_ART",
@@ -792,12 +793,13 @@
     "etsy_listing_id": "4515678344",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1031_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_VINTAGE_BOTANICAL_PRINTABLE_WALL_ART",
@@ -805,12 +807,13 @@
     "etsy_listing_id": "4515678198",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1032_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "MISC_BOTANICAL_HERBS_ART_PRINT",
@@ -870,12 +873,13 @@
     "etsy_listing_id": "4515673828",
     "price": 19.98,
     "category": "uncategorized",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1058_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "MISC_WATERCOLOR_FLORAL_ART_PRINT",
@@ -961,12 +965,13 @@
     "etsy_listing_id": "4515672496",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1033_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_GRAND_CANYON_PRINTABLE_WALL_ART",
@@ -974,12 +979,13 @@
     "etsy_listing_id": "4515675887",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1034_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_TROPICAL_LEAVES_PRINT",
@@ -1000,12 +1006,13 @@
     "etsy_listing_id": "4515672204",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1036_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_ITALIAN_KITCHEN_PRINTABLE_WALL_ART",
@@ -1013,12 +1020,13 @@
     "etsy_listing_id": "4515675583",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1037_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_AUTUMN_FOX_PRINTABLE_WALL_ART",
@@ -1026,12 +1034,13 @@
     "etsy_listing_id": "4515675481",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1038_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_HUMMINGBIRD_WATERCOLOR_PRINT",
@@ -1039,12 +1048,13 @@
     "etsy_listing_id": "4515675373",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1039_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_BABY_BEAR_NURSERY_PRINT",
@@ -1052,12 +1062,13 @@
     "etsy_listing_id": "4515671764",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1040_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_MOUNTAIN_LAKE_PRINTABLE_WALL_ART",
@@ -1065,12 +1076,13 @@
     "etsy_listing_id": "4515675145",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1041_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_WILDFLOWER_MEADOW_PRINTABLE_WALL_ART",
@@ -1078,12 +1090,13 @@
     "etsy_listing_id": "4515671558",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1042_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_CAT_READING_PRINTABLE_WALL_ART",
@@ -1091,12 +1104,13 @@
     "etsy_listing_id": "4515671458",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1043_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_OCEAN_WAVE_PRINTABLE_WALL_ART",
@@ -1104,12 +1118,13 @@
     "etsy_listing_id": "4515671336",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1044_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_LAVENDER_FIELDS_WATERCOLOR_PRINT",
@@ -1117,12 +1132,13 @@
     "etsy_listing_id": "4515671216",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1045_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_SNOWY_OWL_PRINTABLE_WALL_ART",
@@ -1130,12 +1146,13 @@
     "etsy_listing_id": "4515670946",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1046_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_FARMHOUSE_ROOSTER_ART_PRINT",
@@ -1208,12 +1225,13 @@
     "etsy_listing_id": "4515668698",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1055_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_FOX_WATERCOLOR_PRINTABLE_WALL_ART",
@@ -1221,12 +1239,13 @@
     "etsy_listing_id": "4515672065",
     "price": 19.98,
     "category": "wall_art",
-    "status": "active",
+    "status": "inactive",
     "files": [
       "DP1056_print_sizes.zip"
     ],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   },
   {
     "product_id": "WA_PARIS_CAF_PRINTABLE_WALL_ART",
@@ -2188,9 +2207,10 @@
     "etsy_listing_id": "4513637740",
     "price": 14.97,
     "category": "wall_art",
-    "status": "draft",
+    "status": "inactive",
     "files": [],
-    "last_updated": "2026-06-17",
-    "source": "etsy_sync"
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
   }
 ]

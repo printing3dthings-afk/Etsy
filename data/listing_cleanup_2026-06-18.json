@@ -1,0 +1,181 @@
+[
+  {
+    "listing_id": "4515682013",
+    "reason": "dup of DP1030 Moon Phases @7.99",
+    "keeper": "4509598660",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515678344",
+    "reason": "dup of DP1031 Abstract Brushstroke @5.99",
+    "keeper": "4509598784",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515678198",
+    "reason": "dup of DP1032 Vintage Botanical @5.99",
+    "keeper": "4509593487",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515673828",
+    "reason": "dup of DP1058 (Sage Lavender @4.99)",
+    "keeper": "4509193231",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515672496",
+    "reason": "dup of DP1033 Paris Skyline @5.99",
+    "keeper": "4509593623",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515675887",
+    "reason": "dup of DP1034 Grand Canyon @5.99",
+    "keeper": "4509593697",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515672204",
+    "reason": "dup of DP1036 Abstract Woman @5.99",
+    "keeper": "4509596017",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515675583",
+    "reason": "dup of DP1037 Italian Kitchen @5.99",
+    "keeper": "4509597559",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515675481",
+    "reason": "dup of DP1038 Autumn Fox @5.99",
+    "keeper": "4512747600",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515675373",
+    "reason": "dup of DP1039 Hummingbird @6.99",
+    "keeper": "4512750191",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515671764",
+    "reason": "dup of DP1040 Baby Bear @7.99",
+    "keeper": "4512753302",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515675145",
+    "reason": "dup of DP1041 Mountain Lake @5.99",
+    "keeper": "4512755568",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515671558",
+    "reason": "dup of DP1042 Wildflower Meadow @5.99",
+    "keeper": "4512756952",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515671458",
+    "reason": "dup of DP1043 Cat Reading @5.99",
+    "keeper": "4512758458",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515671336",
+    "reason": "dup of DP1044 Ocean Wave @5.99",
+    "keeper": "4512758123",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515671216",
+    "reason": "dup of DP1045 Lavender Fields @6.99",
+    "keeper": "4512760918",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515670946",
+    "reason": "dup of DP1046 Snowy Owl @5.99",
+    "keeper": "4512760671",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515668698",
+    "reason": "FALSE: 'Set of 4' but delivers 1 file (DP1055); dup of Pelican @6.99",
+    "keeper": "4512780614",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4515672065",
+    "reason": "dup of DP1056 Fox Watercolor @6.99",
+    "keeper": "4512780869",
+    "keeper_state": "active",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  },
+  {
+    "listing_id": "4513637740",
+    "reason": "ZERO files attached on active instant-download listing",
+    "keeper": "-",
+    "before": "active",
+    "after": "edit",
+    "result": "UNEXPECTED edit"
+  }
+]
