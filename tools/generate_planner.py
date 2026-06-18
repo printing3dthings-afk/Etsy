@@ -55,6 +55,54 @@ _DAYS_S    = ["MON","TUE","WED","THU","FRI","SAT","SUN"]
 # ── Planner configs (from CLAUDE.md theme catalog) ───────────────────────────
 
 PLANNER_CONFIGS = {
+    "DP1034": {
+        "name":        "Ultimate Celestial Life Planner 2026",
+        "subtitle":    "Celestial Night",
+        "year":        2026,
+        "specialty":   "life",
+        "page_count":  140,
+        # Celestial Night palette (from CLAUDE.md theme catalog — top-rated celestial aesthetic)
+        "theme_rgb":   (0.1176, 0.1059, 0.2941),   # #1E1B4B deep indigo
+        "accent_rgb":  (0.7882, 0.6588, 0.2980),   # #C9A84C starlight gold
+        "bg_rgb":      (0.9412, 0.9333, 0.9725),   # #F0EEF8 moonbeam white
+        "dark_rgb":    (0.0784, 0.0706, 0.1804),   # #14122E near-black indigo
+        "price":       16.99,
+        "tags": [
+            "digital planner",    "celestial planner",  "goodnotes planner",
+            "ipad planner",       "fillable planner",   "2026 life planner",
+            "moon phase planner", "instant download",   "notability planner",
+            "daily planner pdf",  "habit tracker pdf",  "hyperlinked planner",
+            "celestial sticker",
+        ],
+        "cover_prompt": (
+            "Celestial digital planner cover art, square 2400x2400px. "
+            "Deep indigo night-sky background (#1E1B4B) with a soft gradient to "
+            "twilight purple, scattered tiny starlight-gold stars and a delicate "
+            "constellation line pattern. Center: an elegant crescent moon with a "
+            "calm sleepy kawaii face, ringed by a thin gold celestial border and "
+            "tiny orbiting planets and comets. Subtle gold sparkle accents. "
+            "Typography: 'Ultimate Celestial Life Planner 2026' in an elegant "
+            "rounded serif, starlight gold (#C9A84C). Premium, mystical, polished."
+        ),
+        "sections": [
+            "Welcome & Setup", "Dashboard / Home", "Planner Index",
+            "Yearly Overview", "Monthly Calendars × 12",
+            "Monthly Reviews × 12", "Month at a Glance × 12",
+            "Weekly Spreads × 52", "Daily Pages",
+            "Brain Dump & Priority Matrix", "Habit Tracker",
+            "SMART Goals", "Budget Tracker", "Meal Planner",
+            "Notes × 4", "Sticker Library × 5",
+        ],
+        "description_hook": (
+            "Plan your whole life by the stars. The Ultimate Celestial Life "
+            "Planner 2026 is a fully hyperlinked, fillable GoodNotes & Notability "
+            "planner with everything you need in one place — yearly, monthly, "
+            "weekly and daily layouts, habit and mood tracking, budgeting, meal "
+            "planning, SMART goals and brain-dump pages — wrapped in a premium "
+            "Celestial Night palette of deep indigo and starlight gold."
+        ),
+        "listing_title": "Celestial Digital Planner 2026, GoodNotes iPad, Instant Download",
+    },
     "DP1030": {
         "name":        "ADHD Digital Planner 2026",
         "subtitle":    "Matcha Serenity",

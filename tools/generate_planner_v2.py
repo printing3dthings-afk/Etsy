@@ -724,7 +724,7 @@ _NEW_SPECIALTY_PAGES = {
 # specialty page dispatch to avoid generating it twice.
 SKIP_SPECIALTY = {"brain_dump"}
 
-_ALL_V2_PIDS = ["DP1026", "DP1027", "DP1028", "DP1029", "DP1030", "DP1031", "DP1032", "DP1033"]
+_ALL_V2_PIDS = ["DP1026", "DP1027", "DP1028", "DP1029", "DP1030", "DP1031", "DP1032", "DP1033", "DP1034"]
 
 
 def _normalize_cfg(pid):
