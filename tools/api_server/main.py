@@ -1636,7 +1636,7 @@ function renderListings() {
       ${l.thumbnail_url ? `<img class="thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy">` : `<div class="thumb-placeholder">🏷️</div>`}
       <div class="listing-info">
         <div class="listing-title">${escHtml(l.title)}</div>
-        <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span class="badge ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
+        <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="badge-${l.listing_id}" class="badge ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
       </div>
       <div class="listing-price">$${(+l.price||0).toFixed(2)}</div>
     </div>
@@ -1664,7 +1664,10 @@ async function toggleListingDetail(listingId) {
     (l.conversion_pct!=null ? `<div class="drow"><span>Conversion</span><b>${l.conversion_pct}%</b></div>` : '')+
     `<div class="drow"><span>Price</span><b>$${(+l.price||0).toFixed(2)}</b></div>`+
     `<div id="files-${listingId}"><div class="drow"><span>Digital files</span><b>loading…</b></div></div>`+
-    `<div style="margin-top:8px;text-align:right"><a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a></div>`;
+    `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
+    ((l.state==='active'||l.state==='inactive') ? `<button id="state-btn-${listingId}" class="act-btn" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
+    `<a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a>`+
+    `</div>`;
   try {
     const r = await fetchWithTimeout(BASE+'/api/listings/'+listingId+'/files', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
     const slot = document.getElementById('files-'+listingId);
@@ -1677,6 +1680,28 @@ async function toggleListingDetail(listingId) {
   } catch(e) {
     const slot = document.getElementById('files-'+listingId);
     if (slot) slot.innerHTML = '<div class="drow"><span>Digital files</span><b>failed to load</b></div>';
+  }
+}
+async function toggleListingState(listingId, btn) {
+  const l = _listings.find(x => x.listing_id === listingId);
+  if (!l) return;
+  const newState = l.state === 'active' ? 'inactive' : 'active';
+  if (!confirm((newState==='inactive'?'Deactivate':'Activate')+' this listing on Etsy now?')) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Working…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/listings/'+listingId+'/state?new_state='+newState, {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 25000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    l.state = d.state || newState;
+    btn.textContent = l.state==='active' ? '⏸️ Deactivate' : '▶️ Activate';
+    btn.disabled = false;
+    const badge = document.getElementById('badge-'+listingId);
+    if (badge) { badge.textContent = l.state; badge.className = 'badge ' + (l.state==='active'?'active':'draft'); }
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Could not change listing state: ' + (e.message||e));
   }
 }
 
@@ -2897,6 +2922,41 @@ async def listing_files(listing_id: int, _token: str = Depends(_auth)):
     result = {"listing_id": listing_id, "count": len(files), "files": files}
     _cache_set(cache_key, result)
     return result
+
+
+@app.post("/api/listings/{listing_id}/state")
+async def set_listing_state(listing_id: int, new_state: str, _token: str = Depends(_auth)):
+    """Activate or deactivate a listing — powers the Activate/Deactivate button in the
+    Listings tab detail panel. Scott clicks this directly; it is not something any
+    agent calls autonomously."""
+    if new_state not in ("active", "inactive"):
+        raise HTTPException(status_code=400, detail="new_state must be active or inactive")
+
+    def _update():
+        client = EtsyAPIClient()
+        for attempt in range(3):
+            try:
+                return client.update_listing(listing_id, {"state": new_state})
+            except EtsyAPIError as exc:
+                # PATCH listings/{id} has a documented non-deterministic 403
+                # ("listing is not editable") that's a server-side race condition,
+                # not a real permission error — retry a couple times before giving up.
+                if exc.status == 403 and attempt < 2:
+                    time.sleep(2)
+                    continue
+                raise
+
+    try:
+        result = await asyncio.wait_for(asyncio.to_thread(_update), timeout=20.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    except EtsyAPIError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    with _cache_lock:
+        _cache.pop("listings_active", None)
+        _cache.pop("listings_inactive", None)
+    return {"listing_id": listing_id, "state": result.get("state", new_state)}
 
 
 # ── Action Center (deterministic rules engine — surfaces priorities) ─────────────
