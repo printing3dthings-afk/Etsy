@@ -513,3 +513,24 @@ Found and fixed:
   decision on refactoring it to use `stage_action()` before it's ever re-exposed to Frank.
 
 Build bumped to f4b1e2a-v41. Verified `python -m py_compile` clean on `main.py`.
+
+---
+
+**2026-06-18 — Dashboard stuck spinning, root cause: broken JS from single- vs double-backslash escaping.**
+Symptom: dashboard reported "spinning again" after the Platform Connections roadmap-steps feature shipped.
+`python -m py_compile` on `main.py` passed clean (it's valid Python), which is why the earlier
+push looked safe — the bug only exists in the JS text the Python string *emits*, not in the Python
+syntax itself. Root cause: `_WEB_UI` is one giant non-raw `"""..."""` Python string containing the
+dashboard's HTML/JS. To make the embedded JS contain a literal `\'` (escaped quote inside a JS string),
+the Python source must write `\\'` (double backslash) — a single `\'` gets collapsed by Python's own
+string-escape processing into a bare `'` before it ever reaches the browser. The `toggleCredSteps`
+onclick handler added in commit `e0157e7` used `\''+key+'\'` (single backslash), which rendered as
+`''+key+''` in the actual served JS — `Unexpected string` syntax error, confirmed with
+`node --check` on the extracted `<script>` block, which aborted the entire script tag and froze every
+dashboard tab on its loading spinner. Fixed by doubling the backslashes (`\\''+key+'\\'`), matching the
+one other pre-existing correct example of this pattern at the "ZIP's contents" string. Verified by
+re-fetching `/` from a locally running instance and running `node --check` on the extracted script —
+passes clean now.
+**Takeaway:** `py_compile` only proves the Python is valid — it can't catch bugs in *text the Python
+generates*. Any future edit to `_WEB_UI` must extract the `<script>...</script>` block from a live
+response and run `node --check` on it before pushing.

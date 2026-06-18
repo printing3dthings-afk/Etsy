@@ -2327,7 +2327,7 @@ function loadProductIndex() {
       '<div style="font-size:11px;color:var(--muted)">'+escHtml(p.note)+'</div></div>'+
       (live
         ? '<div style="font-size:11px;font-weight:700;color:var(--green)">✅ Live</div>'
-        : '<div style="font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap" onclick="toggleCredSteps(\''+key+'\')">🗺️ Roadmap ›</div>')+
+        : '<div style="font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap" onclick="toggleCredSteps(\\''+key+'\\')">🗺️ Roadmap ›</div>')+
       '</div>'+
       (live ? '' :
         '<div id="cred-steps-'+key+'" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'+
