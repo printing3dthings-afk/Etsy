@@ -2280,23 +2280,71 @@ function loadProductIndex() {
   html += '<div class="section-title" style="margin-top:8px">Platform Connections</div><div class="card">';
   [
     {name:'Etsy',      icon:'🛍️',status:'live',    note:'onbrandcraftz · authorized'},
-    {name:'Pinterest', icon:'📌',        status:'roadmap',note:'API v5 — ready to integrate'},
-    {name:'Instagram', icon:'📷',        status:'roadmap',note:'Meta Graph API (app review needed)'},
-    {name:'Facebook',  icon:'📘',        status:'roadmap',note:'Same Meta app as Instagram'},
-    {name:'TikTok',    icon:'🎵',        status:'roadmap',note:'TikTok for Business API'},
-    {name:'OneDrive',  icon:'☁️',        status:'roadmap',note:'Microsoft Graph — source file storage'}
+    {name:'Pinterest', icon:'📌',        status:'roadmap',note:'API v5 — ready to integrate', steps:[
+      'Create a Pinterest Developer app at developers.pinterest.com',
+      'Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env',
+      'Run: python tools/pinterest_oauth.py — authorizes and saves tokens to .env automatically',
+      'Claim the Etsy shop under Pinterest "Claimed accounts" to enable Rich Pins',
+      'Done — the Social Media Agent can post via tools/pinterest_api.py'
+    ]},
+    {name:'Instagram', icon:'📷',        status:'roadmap',note:'Meta Graph API (app review needed)', steps:[
+      'Create a Meta Business app at developers.facebook.com',
+      'Add the "Instagram Graph API" product to the app',
+      'Connect the Instagram Professional account via a Facebook Page',
+      'Add INSTAGRAM_APP_ID / INSTAGRAM_APP_SECRET to .env',
+      'Generate a long-lived access token (scopes: instagram_basic, instagram_content_publish, instagram_manage_insights, pages_show_list, pages_read_engagement)',
+      'Add INSTAGRAM_USER_ID / INSTAGRAM_ACCESS_TOKEN to .env',
+      'Submit the app for Meta App Review before posting publicly — tools/instagram_api.py is already built and waiting on this'
+    ]},
+    {name:'Facebook',  icon:'📘',        status:'roadmap',note:'Same Meta app as Instagram', steps:[
+      'No separate app needed — reuse the Meta app created for Instagram',
+      'Add the Facebook Page and Pages API permission to that same app',
+      'Generate a Page Access Token with the pages_manage_posts scope',
+      'Add FACEBOOK_PAGE_ID / FACEBOOK_ACCESS_TOKEN to .env once issued'
+    ]},
+    {name:'TikTok',    icon:'🎵',        status:'roadmap',note:'TikTok for Business API', steps:[
+      'App credentials are already configured (TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET)',
+      'Run: python tools/tiktok_oauth.py — log in as @onbrandcraftz and approve',
+      'Tokens save to .env automatically (access token 24h, refresh token 365 days)',
+      'Re-run tools/tiktok_oauth.py whenever the access token expires',
+      'Done — post via tools/tiktok_poster.py'
+    ]},
+    {name:'OneDrive',  icon:'☁️',        status:'roadmap',note:'Microsoft Graph — source file storage', steps:[
+      'Not yet built — no OneDrive code exists in the repo today',
+      'Register an app in the Azure Portal (Microsoft Entra ID → App registrations)',
+      'Grant the Microsoft Graph "Files.ReadWrite" delegated permission',
+      'Add ONEDRIVE_CLIENT_ID / ONEDRIVE_CLIENT_SECRET to .env',
+      'Build tools/onedrive_oauth.py to get access/refresh tokens (does not exist yet)',
+      'Use the Graph API /me/drive/root:/path:/content endpoint to sync source files for backup'
+    ]}
   ].forEach(function(p){
     var live = p.status==='live';
-    html += '<div class="cred-row">'+
+    var key = p.name.toLowerCase();
+    html += '<div class="cred-row" style="flex-wrap:wrap">'+
+      '<div style="display:flex;align-items:center;gap:10px;width:100%">'+
       '<div style="font-size:20px;flex-shrink:0;width:28px">'+p.icon+'</div>'+
       '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+escHtml(p.name)+'</div>'+
       '<div style="font-size:11px;color:var(--muted)">'+escHtml(p.note)+'</div></div>'+
-      '<div style="font-size:11px;font-weight:700;color:'+(live?'var(--green)':'var(--muted)')+'">'+
-        (live?'✅ Live':'🗺️ Roadmap')+
-      '</div></div>';
+      (live
+        ? '<div style="font-size:11px;font-weight:700;color:var(--green)">✅ Live</div>'
+        : '<div style="font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap" onclick="toggleCredSteps(\''+key+'\')">🗺️ Roadmap ›</div>')+
+      '</div>'+
+      (live ? '' :
+        '<div id="cred-steps-'+key+'" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'+
+          '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Steps to complete</div>'+
+          '<ol style="margin:0;padding-left:18px;font-size:12px;line-height:1.6">'+
+            (p.steps||[]).map(function(s){return '<li style="margin-bottom:4px">'+escHtml(s)+'</li>';}).join('')+
+          '</ol>'+
+        '</div>')+
+      '</div>';
   });
   html += '</div>';
   el.innerHTML = html;
+}
+function toggleCredSteps(key) {
+  var panel = document.getElementById('cred-steps-'+key);
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
 async function loadCredentials() {
   var el = document.getElementById('hub-content');
