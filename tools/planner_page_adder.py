@@ -535,7 +535,7 @@ def _draw_specialty_pages(c, cfg, specialty, PW, PH, ML, MR, MT, MB, CW,
                   "1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM"]
         tw = 52   # time col width
         dw = (CW - tw) / len(DAYS)
-        rh = (PH - y - MB - 30) / len(TIMES)
+        rh = (y - MB - 30) / len(TIMES)
 
         # Header
         fill(T); c.rect(ML, y - 18, CW, 18, fill=1, stroke=0)

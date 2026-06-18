@@ -601,6 +601,233 @@ def _notes_field_rects():
     return out
 
 
+def _year_in_pixels_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "year_in_pixels"
+    y = PH - MT - 52 - 16
+    y -= 20
+    ky2 = y - 24
+    out = []
+    label_w = 6.930        # "= " @ Poppins 7
+    blank_full_w = 63.371  # "= ___________" @ Poppins 7
+    for i in range(5):
+        bx = ML + 80 + i * 60 + 42 + label_w
+        out.append((_rl_rect(bx, ky2 - 8 - 2, blank_full_w - label_w, 10), 6.5, False, False))
+    return out
+
+
+def _class_schedule_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "class_schedule"
+    y = PH - MT - 52 - 16
+    y -= 30
+    n_days, n_times = 5, 11
+    tw = 52.0
+    dw = (CW - tw) / n_days
+    rh = (y - MB - 30) / n_times
+    out = []
+    for ri in range(n_times):
+        ry = y - 18 - (ri + 1) * rh
+        for di in range(n_days):
+            cx = ML + tw + di * dw
+            out.append((_rl_rect(cx + 2, ry + 2, dw - 4, rh - 4), 6.5, True, False))
+    return out
+
+
+def _priority_matrix_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "priority_matrix"
+    y = PH - MT - 52 - 16
+    y -= 20
+    out = [(_rl_rect(ML + 41.463, y - 2, 168.48, 12), 8, False, False)]  # Week of
+    y -= 22
+    qw = CW / 2 - 4
+    qh = (y - MB - 30) / 2
+    positions = [
+        (ML, y - qh),
+        (ML + qw + 8, y - qh),
+        (ML, y - 2 * qh - 4),
+        (ML + qw + 8, y - 2 * qh - 4),
+    ]
+    line_h = 16
+    lines_n = int((qh - 28) / line_h)
+    for qx, qy in positions:
+        for li in range(lines_n):
+            ly = qy + qh - 28 - li * line_h - 4
+            out.append((_rl_rect(qx + 10, ly, qw - 20, line_h - 4), 7, False, False))
+    return out
+
+
+def _pomodoro_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "pomodoro"
+    y = PH - MT - 52 - 16
+    y -= 22
+    session_h = (y - MB - 30) / 8
+    out = []
+    for si in range(8):
+        sy = y - si * session_h
+        tx = ML + 66 + 20.738  # "Task: " @ Poppins-Italic 7.5
+        out.append((_rl_rect(tx, sy - session_h + 6 - 2, 170.422, 10), 7, False, False))
+        for pi in range(4):
+            px = ML + CW * 0.42 + 62 + pi * 44
+            py = sy - session_h / 2
+            r = 13.0
+            out.append((_rl_rect(px - r, py - r, 2 * r, 2 * r), 7, False, True))
+        bx = ML + CW - 40
+        out.append((_rl_rect(bx, sy - session_h + 6, 34, 16), 7, False, True))
+    return out
+
+
+def _debt_payoff_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "debt_payoff"
+    y = PH - MT - 52 - 16
+    y -= 22
+    col_widths = [90, 70, 55, 65, 55, 60, 50]
+    header_h = 18.0
+    row_h_debt = 24.0
+    rows_n = int((y - MB - 50) / row_h_debt)
+    out = []
+    for ri in range(rows_n):
+        rx = ML
+        ry = y - header_h - (ri + 1) * row_h_debt
+        for ci, cw2 in enumerate(col_widths):
+            if ci == len(col_widths) - 1:
+                cx, cy = rx + cw2 / 2.0, ry + row_h_debt / 2.0
+                r = min(cw2, row_h_debt) * 0.30
+                out.append((_rl_rect(cx - r, cy - r, 2 * r, 2 * r), 7, False, True))
+            else:
+                out.append((_rl_rect(rx + 3, ry + 3, cw2 - 6, row_h_debt - 6), 7, False, False))
+            rx += cw2
+    total_y = y - header_h - (rows_n + 1) * row_h_debt
+    dollar_x = ML + sum(col_widths[:3]) - 30 + 5.922  # "$" @ Poppins-Bold 9
+    out.append((_rl_rect(dollar_x, total_y + 8 - 2, 70.2, 12), 8, False, False))
+    vby = total_y - 38
+    out.append((_rl_rect(244.807, vby + 16 - 3, 274.56, 14), 9, False, False))  # Debt-Free Date Goal
+    return out
+
+
+_SAVINGS_GOAL_OFFSETS = [
+    (39.113, 200.573, 247.274, 331.514, 363.554, 447.794),
+    (40.868, 202.328, 249.029, 333.269, 365.309, 449.549),
+    (41.174, 202.634, 249.335, 333.575, 365.615, 449.855),
+    (41.822, 203.282, 249.983, 334.223, 366.263, 450.503),
+]
+
+
+def _savings_goal_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "savings_goal"
+    y = PH - MT - 52 - 16
+    y -= 20
+    goal_h = (y - MB - 20) / 4 - 8
+    out = []
+    for gi in range(4):
+        gy = y - gi * (goal_h + 8)
+        b1s, b1e, b2s, b2e, b3s, b3e = _SAVINGS_GOAL_OFFSETS[gi]
+        base_y = gy - 16
+        out.append((_rl_rect(ML + b1s, base_y - 2, b1e - b1s, 12), 8, False, False))
+        out.append((_rl_rect(ML + b2s, base_y - 2, b2e - b2s, 12), 8, False, False))
+        out.append((_rl_rect(ML + b3s, base_y - 2, b3e - b3s, 12), 8, False, False))
+    return out
+
+
+def _bill_checklist_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "bill_checklist"
+    y = PH - MT - 52 - 16
+    y -= 22
+    bill_col_w = 110.0
+    month_col_w = (CW - bill_col_w) / 12.0
+    header_h2 = 16.0
+    bill_rows = int((y - MB - 20) / 20)
+    out = []
+    for ri in range(bill_rows):
+        ry = y - header_h2 - (ri + 1) * 20
+        out.append((_rl_rect(ML + 3, ry + 3, bill_col_w - 6, 20 - 6), 7, False, False))
+        for mi in range(12):
+            mx = ML + bill_col_w + mi * month_col_w
+            cx, cy = mx + month_col_w / 2.0, ry + 10.0
+            r = min(month_col_w, 20) * 0.32
+            out.append((_rl_rect(cx - r, cy - r, 2 * r, 2 * r), 6, False, True))
+    return out
+
+
+def _progress_photos_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "progress_photos"
+    y = PH - MT - 52 - 14
+    y -= 22
+    block_h = (y - MB - 20) / 4 - 8
+    label_widths_l = [34.017, 28.883, 27.744, 22.236]   # Weight, Chest, Waist, Hips
+    label_widths_r = [26.172, 31.833, 59.373, 54.545]   # Arms, Thighs, Energy, Mood
+    BLANK_W = 99.688
+    date_label_w = 22.776
+    out = []
+    for bi in range(4):
+        by = y - bi * (block_h + 8)
+        out.append((_rl_rect(ML + 160 + date_label_w, by - 16 - 2, BLANK_W, 12), 7, False, False))
+        fh = (block_h - 26) / 4.0
+        fy = by - 26
+        for fi in range(4):
+            field_y = fy - fi * fh
+            base_y = field_y - fh + 5
+            lx = ML + 10 + label_widths_l[fi]
+            rx = ML + CW / 2 + 10 + label_widths_r[fi]
+            out.append((_rl_rect(lx, base_y - 2, BLANK_W, 12), 7, False, False))
+            out.append((_rl_rect(rx, base_y - 2, BLANK_W, 12), 7, False, False))
+    return out
+
+
+def _water_tracker_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "water_tracker"
+    y = PH - MT - 52 - 16
+    y -= 20
+    out = [
+        (_rl_rect(ML + 34.245, y - 2, 209.745 - 34.245, 12), 8, False, False),    # Month
+        (_rl_rect(ML + 266.85, y - 2, 315.99 - 266.85, 12), 8, False, False),     # Daily Goal oz
+        (_rl_rect(ML + 335.988, y - 2, 385.128 - 335.988, 12), 8, False, False),  # Daily Goal glasses
+    ]
+    y -= 24
+    DROP_ROWS, DROP_COLS = 30, 8
+    row_h_w = (y - MB - 30) / DROP_ROWS
+    day_label_w = 40.0
+    cell_w_w = (CW - day_label_w) / DROP_COLS
+    for di in range(DROP_ROWS):
+        dy = y - di * row_h_w
+        for gi in range(DROP_COLS):
+            gx = ML + day_label_w + gi * cell_w_w
+            out.append((_rl_rect(gx + 2, dy - row_h_w + 2, cell_w_w - 4, row_h_w - 4), 6, False, True))
+    return out
+
+
+def _sleep_log_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "sleep_log"
+    y = PH - MT - 52 - 16
+    y -= 22
+    col_ws = [30, 55, 60, 60, 70, 0]
+    col_ws[-1] = CW - sum(col_ws[:-1])
+    row_h_sl = (y - MB - 20) / 32
+    header_h_sl = 18.0
+    out = []
+    for ri in range(31):
+        rx = ML
+        ry = y - header_h_sl - (ri + 1) * row_h_sl
+        for ci, cw3 in enumerate(col_ws):
+            if ci > 0:
+                is_notes = ci == len(col_ws) - 1
+                out.append((_rl_rect(rx + 3, ry + 3, cw3 - 6, row_h_sl - 6), 8 if is_notes else 7, is_notes, False))
+            rx += cw3
+    return out
+
+
+def _nsv_journal_field_rects():
+    # geometry mirrors planner_page_adder.py::_draw_specialty_pages "nsv_journal"
+    y = PH - MT - 52 - 16
+    y -= 22
+    n_prompts = 8
+    box_h = (y - MB - 20) / n_prompts - 4
+    out = []
+    for pi in range(n_prompts):
+        py = y - pi * (box_h + 4)
+        base_y = py - box_h + 8
+        out.append((_rl_rect(ML + 8, base_y - 2, 469.12, 12), 8, False, False))
+    return out
+
+
 _FIELD_BUILDERS = {
     "daily": _daily_field_rects,
     "weekly": _weekly_field_rects,
@@ -612,6 +839,17 @@ _FIELD_BUILDERS = {
     "budget": _budget_field_rects,
     "meal_plan": _meal_plan_field_rects,
     "notes": _notes_field_rects,
+    "year_in_pixels": _year_in_pixels_field_rects,
+    "class_schedule": _class_schedule_field_rects,
+    "priority_matrix": _priority_matrix_field_rects,
+    "pomodoro": _pomodoro_field_rects,
+    "debt_payoff": _debt_payoff_field_rects,
+    "savings_goal": _savings_goal_field_rects,
+    "bill_checklist": _bill_checklist_field_rects,
+    "progress_photos": _progress_photos_field_rects,
+    "water_tracker": _water_tracker_field_rects,
+    "sleep_log": _sleep_log_field_rects,
+    "nsv_journal": _nsv_journal_field_rects,
 }
 
 
@@ -639,6 +877,28 @@ def _classify_page(head):
         return "habit"
     if "SMART GOALS" in h[:40]:
         return "goals"
+    if "YEAR IN PIXELS" in h[:40]:
+        return "year_in_pixels"
+    if "CLASS SCHEDULE" in h[:40]:
+        return "class_schedule"
+    if "PRIORITY MATRIX" in h[:40]:
+        return "priority_matrix"
+    if "POMODORO" in h[:40]:
+        return "pomodoro"
+    if "DEBT PAYOFF" in h[:40]:
+        return "debt_payoff"
+    if "SAVINGS GOAL" in h[:40]:
+        return "savings_goal"
+    if "BILL PAYMENT" in h[:40]:
+        return "bill_checklist"
+    if "PROGRESS PHOTOS" in h[:40]:
+        return "progress_photos"
+    if "WATER INTAKE" in h[:40]:
+        return "water_tracker"
+    if "SLEEP QUALITY" in h[:40]:
+        return "sleep_log"
+    if "NON-SCALE VICTORIES" in h[:40]:
+        return "nsv_journal"
     return None
 
 
