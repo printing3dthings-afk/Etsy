@@ -277,6 +277,17 @@ def _detect_sections(doc):
     first("goals", lambda h: "SMART GOALS" in h[:40])
     first("notes", lambda h: h.upper().startswith("NOTES"))
     first("stickers", lambda h: "STICKER LIBRARY" in h[:40])
+    first("year_in_pixels", lambda h: "YEAR IN PIXELS" in h[:40])
+    first("class_schedule", lambda h: "CLASS SCHEDULE" in h[:40])
+    first("priority_matrix", lambda h: "PRIORITY MATRIX" in h[:40])
+    first("pomodoro", lambda h: "POMODORO" in h[:40])
+    first("debt_payoff", lambda h: "DEBT PAYOFF" in h[:40])
+    first("savings_goal", lambda h: "SAVINGS GOAL" in h[:40])
+    first("bill_checklist", lambda h: "BILL PAYMENT" in h[:40])
+    first("progress_photos", lambda h: "PROGRESS PHOTOS" in h[:40])
+    first("water_tracker", lambda h: "WATER INTAKE" in h[:40])
+    first("sleep_log", lambda h: "SLEEP QUALITY" in h[:40])
+    first("nsv_journal", lambda h: "NON-SCALE VICTORIES" in h[:40])
     return found
 
 
@@ -286,17 +297,28 @@ def _label_to_key(label):
     if "welcome" in l: return "welcome"
     if "dashboard" in l: return "dashboard"
     if "index" in l: return "index"
+    if "year in pixels" in l: return "year_in_pixels"
     if "yearly" in l or "year at" in l or "year in" in l: return "yearly"
     if "monthly review" in l: return "monthly_review"
     if "at a glance" in l: return "glance"
     if "monthly cal" in l or l.startswith("monthly"): return "monthly"
+    if "class schedule" in l: return "class_schedule"
     if "weekly" in l: return "weekly"
     if "daily" in l: return "daily"
-    if "brain dump" in l or "priority matrix" in l: return "brain_dump"
+    if "priority matrix" in l: return "priority_matrix"
+    if "brain dump" in l: return "brain_dump"
+    if "pomodoro" in l: return "pomodoro"
+    if "debt payoff" in l: return "debt_payoff"
+    if "savings goal" in l: return "savings_goal"
+    if "bill payment" in l or "bill checklist" in l: return "bill_checklist"
     if "habit" in l: return "habit"
     if "smart goal" in l or l == "goals" or "goals" in l: return "goals"
     if "budget" in l: return "budget"
     if "meal" in l: return "meal"
+    if "progress photos" in l: return "progress_photos"
+    if "water tracker" in l or "water intake" in l: return "water_tracker"
+    if "sleep quality" in l or "sleep log" in l: return "sleep_log"
+    if "non-scale" in l or "nsv" in l: return "nsv_journal"
     if "note" in l: return "notes"
     if "sticker" in l: return "stickers"
     return None
@@ -992,16 +1014,27 @@ _TOC_ORDER = [
     ("dashboard", "Dashboard / Home"),
     ("index", "Planner Index"),
     ("yearly", "Yearly Overview"),
+    ("year_in_pixels", "Year in Pixels"),
     ("monthly", "Monthly Calendars"),
     ("monthly_review", "Monthly Reviews"),
     ("glance", "Month at a Glance"),
     ("weekly", "Weekly Spreads"),
     ("daily", "Daily Pages"),
-    ("brain_dump", "Brain Dump & Priority Matrix"),
+    ("class_schedule", "Class Schedule"),
+    ("brain_dump", "Brain Dump"),
+    ("priority_matrix", "Priority Matrix"),
+    ("pomodoro", "Pomodoro Focus Tracker"),
     ("habit", "Habit Tracker"),
     ("goals", "SMART Goals"),
     ("budget", "Budget Tracker"),
+    ("debt_payoff", "Debt Payoff Tracker"),
+    ("savings_goal", "Savings Goal Tracker"),
+    ("bill_checklist", "Bill Payment Checklist"),
     ("meal", "Meal Planner"),
+    ("progress_photos", "Progress Photos Log"),
+    ("water_tracker", "30-Day Water Tracker"),
+    ("sleep_log", "Sleep Quality Log"),
+    ("nsv_journal", "Non-Scale Victories"),
     ("notes", "Notes"),
     ("stickers", "Sticker Library"),
 ]
