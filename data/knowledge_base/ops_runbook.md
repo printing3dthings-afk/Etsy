@@ -586,3 +586,19 @@ Compactor marked "not built"), System Monitor, Live Intelligence Feed, Mission T
 bottom Talk-to-Frank bar. Every placeholder panel has an inline comment naming its real future data source
 — no invented numbers presented as fact. Bumped `_BUILD_ID` to f4b1e2a-v42. No backend wiring; Step 1 (real
 local file tools + approval gate detail view) is next once Scott signs off on the look.
+
+### 2026-06-19 — FRANK mockup v2: fixed mobile rendering + orb/layout structure (Scott feedback)
+Scott reviewed the v1 /frank mockup and sent two corrections: (1) reference screenshot showing the orb
+was missing/buried and panels felt "compressed into the middle instead of having clear layer out
+sections," and (2) an actual mobile Safari screenshot showing the page rendering squished into the top
+third of the screen with a large blank area below. Root cause of (2): `<meta viewport width=1440>` +
+`body{height:100vh}` doesn't scale reliably on mobile browsers. Fix: rebuilt the page around a fixed
+1440x900 `#stage` div with `width=device-width` viewport meta + JS `fitStage()` that computes
+`scale=min(innerWidth/1440, innerHeight/900)` and applies `transform:scale()` on load/resize — renders
+at correct proportions (letterboxed) on any screen. Root cause of (1): `.main` was a single 3-column CSS
+grid burying a small 220px orb among other panels. Fix: restructured into 3 explicit flex rows (rowA:
+AI Core Overview | large dedicated Orb Hero panel (300px canvas) with text overlay | Live Intelligence
+Feed; rowB: Active Agents | Mission Timeline | Quick Commands; rowC: System Monitor | Memory Insights |
+LLM Status), proportions matched to the reference image, plus corner-bracket (`.brk`) panel accents for
+clearer section separation. Verified via FastAPI TestClient hit on /frank (200 OK, all new markers
+present) before deploy. Bumped `_BUILD_ID` to f4b1e2a-v43.
