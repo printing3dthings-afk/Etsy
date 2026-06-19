@@ -174,7 +174,7 @@ _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate"
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v41"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v42"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
 
@@ -2592,6 +2592,20 @@ fetch(BASE + '/health').then(r => r.json()).then(h => {
 def web_ui():
     return HTMLResponse(
         content=_WEB_UI,
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+    )
+
+
+# FRANK Command Center — static clickable mockup (Build Order step 0.5). No backend
+# wiring yet; served at a separate path so the live dashboard above is never at risk
+# while Scott reviews the look. See frank_hud_mockup.py for details.
+from frank_hud_mockup import _FRANK_HUD_MOCKUP  # noqa: E402
+
+
+@app.get("/frank", response_class=HTMLResponse)
+def frank_hud_mockup():
+    return HTMLResponse(
+        content=_FRANK_HUD_MOCKUP,
         headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
     )
 

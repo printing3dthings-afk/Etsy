@@ -561,3 +561,28 @@ immediately after the existing timeout handler, mirroring `_compute_suggestions_
 handler and an `anthropic.APIError` handler — copy the pattern from `_compute_suggestions_inner`, don't
 let any new endpoint skip it. This fix makes future Anthropic errors show a real message instead of a
 bare 500, but does not and cannot fix the underlying billing issue — that's purely Scott's action.
+
+### 2026-06-19 — Railway volume still not attached (re-verified, FRANK Command Center build start)
+Symptom: kicking off the FRANK Command Center rebuild, Step 0 is "fix persistence." Re-checked
+`/health` — still `"persistent": false, "files_volume": false`. Re-tested `RAILWAY_TOKEN` against
+`backboard.railway.app/graphql/v2` (`me` query) — still "Not Authorized," same as 2026-06-17. No change;
+this token cannot attach a volume via API.
+**Action still needed from Scott (unchanged, ~30s):** Railway dashboard → project `calm-light` → Etsy
+service → Settings → Volumes → New Volume → mount path `/data` → redeploy. Confirms via
+`curl https://etsy-production-b2f1.up.railway.app/health` showing `persistent: true`.
+**What I did instead:** proceeded with the parts of the FRANK Command Center plan that don't depend on
+the volume — starting with the static HTML/CSS mockup (Build Order step 0.5) — so the dashboard rebuild
+isn't blocked waiting on a manual click only Scott can do.
+
+### 2026-06-19 — FRANK Command Center static mockup live at /frank (Build Order step 0.5)
+Added `tools/api_server/frank_hud_mockup.py` (self-contained HTML/CSS/canvas-JS, no external deps,
+matches existing no-webfont/no-framework convention) and a new `/frank` route in `main.py` serving it,
+fully separate from the live `/` dashboard so production is never at risk while this is reviewed.
+Mockup covers the full reference layout: left nav (Command Center/AI Core/Agents/Tasks/Calendar/Memory/
+Conversations/Knowledge Base/Tools & Skills/Workflows/Studio + Voice Status/Focus Mode widget), top bar,
+AI Core Overview column, animated canvas orb (idle rotation, click-to-preview "speaking" reactive distortion
+— real audio-amplitude wiring is Step 4), Active Agents tile row (5 real loops + Local Relay + Context
+Compactor marked "not built"), System Monitor, Live Intelligence Feed, Mission Timeline, Quick Commands,
+bottom Talk-to-Frank bar. Every placeholder panel has an inline comment naming its real future data source
+— no invented numbers presented as fact. Bumped `_BUILD_ID` to f4b1e2a-v42. No backend wiring; Step 1 (real
+local file tools + approval gate detail view) is next once Scott signs off on the look.
