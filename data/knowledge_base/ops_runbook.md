@@ -616,3 +616,56 @@ frank_hud_mockup.py, following the existing placeholder-screen pattern (each nam
 line number, states "restyled into the HUD shell in Step 2" since these are working screens being ported,
 not new builds). Verified via FastAPI TestClient hit on /frank (200 OK, all 6 new nav-item + screen markers
 present) before deploy. Bumped `_BUILD_ID` to f4b1e2a-v44.
+
+### 2026-06-19 — Autoresponder agent: Etsy API has no messaging endpoint (silent "ok", never actually working)
+**Symptom:** the live-status agent registry showed `autoresponder` as `status: "ok"`, but its detail field
+embedded "Etsy API 404: Resource not found" inside the supposedly-healthy status. The autoresponder loop has
+likely never fetched a single buyer message despite reporting healthy every run.
+**Root cause:** Etsy Open API v3 has **no buyer-seller messaging/conversations endpoint** for third-party
+apps. Confirmed by probing through the already-correctly-authed `EtsyAPIClient`: `shops/{id}/listings/active`
+→ 200 and `shops/{id}/receipts` → 200 (proves the token/scopes are fine), but both `shops/{id}/conversations`
+and `shops/{id}/messages` → 404. Separately confirmed a real scope denial returns 403, not 404 — so a 404 on
+an otherwise-authorized account means the route simply does not exist, not a permissions problem. In
+`tools/etsy_autoresponder.py`, the failure is caught, printed, and the script `return`s → exit code 0 →
+`_autoresponder_loop` (main.py) sets heartbeat "ok" purely from `returncode == 0` without inspecting stdout
+for an embedded failure message.
+**Fix (pending Scott):** re-authorizing with more scopes will not help — the endpoint doesn't exist on Etsy's
+side. This matches CLAUDE.md's own note that Etsy has no API-driven buyer messaging, only Shop Manager Quick
+Replies / Auto-Reply (manual or built-in auto-reply windows only). The autoresponder agent as designed can't
+do its job via the API. Options for Scott: retire the agent, or convert it to an honest no-op/disabled state;
+either way the heartbeat check should be fixed to inspect actual output instead of trusting exit code 0. No
+code changed yet — flagged for a decision.
+
+### 2026-06-19 — Quality Audit agent "could not parse summary line" error not reproducible
+**Symptom:** the live-status registry showed `quality_audit` as `status: "error"`, detail "could not parse
+summary line".
+**Investigation:** ran `tools/listing_integrity_check.py` to completion against the live shop (172 listings,
+~280s) — it finished clean and printed a summary line that matches main.py's summary-parsing regex exactly
+("✓ PASS / ⚠ WARN / ✗ FAIL" counts). Not a deterministic bug reproduced on this run; most likely a transient
+unhandled exception mid-run (e.g. one bad live Etsy API call) before the summary print on the run that
+actually failed.
+**Observability gap to fix later:** when the regex fails, `_quality_audit_loop` discards the real `stdout`/
+`stderr` and persists only the generic "could not parse summary line", making the actual root cause
+invisible from the HUD. Should persist a truncated tail of the real output on parse failure so a future
+occurrence is diagnosable instead of guessed at.
+
+### 2026-06-19 — Two "Set of 4" listings may deliver only 1 design (Cardinal Rule risk, not infra)
+**Surfaced by:** `tools/listing_integrity_check.py`'s `quantity_claim_mismatch` gate, which flags when a
+listing's title claims a design count (e.g. "Set of 4") that doesn't match the number of digital files
+actually attached. `4512301880` (Boho Botanical Set of 4) and `4512784922` (Four Seasons Set of 4) each have
+a single `DP10xx_print_sizes.zip` attached — `generate_print_sizes.py`'s naming convention produces one such
+ZIP per design (multiple print *sizes* of one design, not multiple designs). Prior `fix_queue.json` work on
+both was photos-only ("using DP1065/DP1070 art source", singular) — the underlying file-quantity question was
+never addressed by that work.
+**Cannot fully confirm ZIP internals from this cloud container** (source files are gitignored locally and
+Etsy's API exposes only file metadata, not content download, for the seller's own listings), but every
+available signal (title says 4, one ZIP attached, naming convention implies one design per ZIP) points to
+customers paying for 4 designs and receiving 1.
+**Note:** the third "Set of 4" listing checked as a possible control case, `4512784817` (Coastal Set of 4),
+is NOT a clean comparison — `data/listing_audit_report.json` already separately flags it with its own
+unrelated Cardinal Rule issue ("IMAGE CONTENT: MISMATCH: the image shows a single framed artwork of a turtle
+instead of a set of four coastal art prints") plus missing AI disclosure and only 6/10 photos uploaded. So no
+verified "this is what a correct Set-of-4 listing looks like" example was confirmed in this pass — don't cite
+it as a control case in future reasoning about this issue.
+**Action:** flagged to Scott for a fix-or-pull decision on `4512301880`/`4512784922` — Hard Stop, no
+listing/file changes made autonomously. Logged here for the record, not as a fixed item.
