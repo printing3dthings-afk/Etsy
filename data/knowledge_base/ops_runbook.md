@@ -602,3 +602,17 @@ Feed; rowB: Active Agents | Mission Timeline | Quick Commands; rowC: System Moni
 LLM Status), proportions matched to the reference image, plus corner-bracket (`.brk`) panel accents for
 clearer section separation. Verified via FastAPI TestClient hit on /frank (200 OK, all new markers
 present) before deploy. Bumped `_BUILD_ID` to f4b1e2a-v43.
+
+### 2026-06-19 — FRANK mockup: added 6 missing Hub tabs (Listings/Products/Brand Kit/Files/Connections/Security)
+Scott asked "It will have the roadmap section and everything from the hub in it?" — surfaced a real plan
+gap: the nav-mapping table only covered tabs present in the JARVIS reference image, silently dropping six
+real, currently-used Hub sections (Listings, Brand Kit, Products, Files, Credentials+Platform Connections
+Roadmap, Security Posture). Researched the live Hub code to confirm each one's real source function
+(loadListings() main.py:1592, loadProductIndex() main.py:2263, _renderBrandKit() main.py:2217, loadFiles()
+main.py:2455, loadCredentials() main.py:2349 + Roadmap array main.py:2280-2394, _renderSecurityPosture()
+main.py:2391), asked Scott how to reconcile them with the fixed reference nav, and per his answer ("Add
+new dedicated tabs") added each as its own top-level tab under a new "Shop" nav-section in
+frank_hud_mockup.py, following the existing placeholder-screen pattern (each names its real source +
+line number, states "restyled into the HUD shell in Step 2" since these are working screens being ported,
+not new builds). Verified via FastAPI TestClient hit on /frank (200 OK, all 6 new nav-item + screen markers
+present) before deploy. Bumped `_BUILD_ID` to f4b1e2a-v44.

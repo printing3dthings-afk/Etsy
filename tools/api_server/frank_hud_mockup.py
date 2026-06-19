@@ -304,6 +304,14 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-item" data-screen="workflows"><span class="ic">⇄</span>Workflows</div>
     <div class="nav-item" data-screen="studio"><span class="ic">▶</span>Studio</div>
 
+    <div class="nav-section">Shop</div>
+    <div class="nav-item" data-screen="listings"><span class="ic">🏷</span>Listings</div>
+    <div class="nav-item" data-screen="products"><span class="ic">📦</span>Products</div>
+    <div class="nav-item" data-screen="brandkit"><span class="ic">🎨</span>Brand Kit</div>
+    <div class="nav-item" data-screen="files"><span class="ic">🗂</span>Files</div>
+    <div class="nav-item" data-screen="connections"><span class="ic">🔌</span>Connections</div>
+    <div class="nav-item" data-screen="security"><span class="ic">🛡</span>Security</div>
+
     <div class="voice-widget">
       <div class="vw-title">VOICE STATUS</div>
       <div class="wave-row" id="sidebar-wave">
@@ -438,6 +446,13 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   <div class="screen" id="screen-kb"><div class="placeholder-screen"><div class="big">KNOWLEDGE BASE</div><div class="small">Browse/search reader for the 9 real markdown docs in data/knowledge_base/. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-tools"><div class="placeholder-screen"><div class="big">TOOLS &amp; SKILLS</div><div class="small">Live list of every entry in AGENT_TOOLS (currently 12), badge = len(AGENT_TOOLS). Built in Step 2.</div></div></div>
   <div class="screen" id="screen-workflows"><div class="placeholder-screen"><div class="big">WORKFLOWS</div><div class="small">Runnable workflow list — each Run stages through the existing approval gate. Built in Step 2.</div></div></div>
+
+  <div class="screen" id="screen-listings"><div class="placeholder-screen"><div class="big">LISTINGS</div><div class="small">Carried over from the live Hub's listings browser — loadListings() in main.py:1592, real Etsy listings via list_listings/get_listing. Restyled into the HUD shell in Step 2.</div></div></div>
+  <div class="screen" id="screen-products"><div class="placeholder-screen"><div class="big">PRODUCTS</div><div class="small">Carried over from the live Hub's product catalog — loadProductIndex() in main.py:2263, the DP1026–1029 etc. index. Restyled into the HUD shell in Step 2.</div></div></div>
+  <div class="screen" id="screen-brandkit"><div class="placeholder-screen"><div class="big">BRAND KIT</div><div class="small">Carried over from the live Hub — _renderBrandKit() in main.py:2217, color palettes, listing standards, pricing tiers from CLAUDE.md. Restyled into the HUD shell in Step 2.</div></div></div>
+  <div class="screen" id="screen-files"><div class="placeholder-screen"><div class="big">FILES</div><div class="small">Carried over from the live Hub's file browser — loadFiles() in main.py:2455, real files over data/digital_products/ and backups. Restyled into the HUD shell in Step 2.</div></div></div>
+  <div class="screen" id="screen-connections"><div class="placeholder-screen"><div class="big">CONNECTIONS</div><div class="small">Carried over from the live Hub — loadCredentials() in main.py:2349, live API credential/token status, plus the Platform Connections Roadmap (Pinterest/Instagram/Facebook/TikTok/OneDrive, main.py:2280-2394) honestly marked not-yet-built. Restyled into the HUD shell in Step 2.</div></div></div>
+  <div class="screen" id="screen-security"><div class="placeholder-screen"><div class="big">SECURITY</div><div class="small">Carried over from the live Hub — _renderSecurityPosture() in main.py:2391. Restyled into the HUD shell in Step 2.</div></div></div>
 
   <div class="screen" id="screen-studio">
     <div class="panel brk" style="height:100%">
