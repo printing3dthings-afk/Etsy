@@ -16,7 +16,16 @@ every nav tab/panel here is a placeholder shell with the real future data source
 in a code comment, not invented numbers presented as fact. LLM Status only lists
 providers we actually have wired (Anthropic, OpenAI, Etsy) — no fake Gemini/Groq/Ollama
 tiles, per the "no fake tiles anywhere" rule in the plan.
+
+Step 2 (in progress): wiring real data into this shell, panel by panel. The page is a
+plain string template (not f-string/`.format()`, since the JS below is full of literal
+`{}`) with a single `__APP_TOKEN__` placeholder substituted at request time by
+`render_frank_hud()` — same bearer token used by the existing dashboard at `/`, just
+injected via `str.replace()` instead of being baked in at module-import time, since this
+template lives outside main.py and has no direct access to APP_TOKEN.
 """
+
+import json
 
 _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <html lang="en">
@@ -140,6 +149,9 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .core-row .lab .dotc{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
 .core-row .v{color:var(--green);font-weight:600;font-size:10.5px}
 .core-row .v.warn{color:var(--amber)}
+.core-row .v.err{color:var(--red)}
+.core-row .lab .dotc.warn{background:var(--amber)}
+.core-row .lab .dotc.err{background:var(--red)}
 .core-row .sub{font-size:9.5px;color:var(--muted);display:block}
 
 .orb-hero{align-items:center;justify-content:center;position:relative;
@@ -291,7 +303,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-item active" data-screen="cmd"><span class="ic">⌂</span>Command Center</div>
     <div class="nav-item" data-screen="core"><span class="ic">◎</span>AI Core</div>
     <div class="nav-item" data-screen="agents"><span class="ic">⚙</span>Agents</div>
-    <div class="nav-item" data-screen="tasks"><span class="ic">☑</span>Tasks<span class="nbadge">3</span></div>
+    <div class="nav-item" data-screen="tasks"><span class="ic">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
     <div class="nav-item" data-screen="calendar"><span class="ic">▦</span>Calendar</div>
 
     <div class="nav-section">Knowledge</div>
@@ -300,7 +312,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-item" data-screen="kb"><span class="ic">📚</span>Knowledge Base</div>
 
     <div class="nav-section">Tools</div>
-    <div class="nav-item" data-screen="tools"><span class="ic">🛠</span>Tools &amp; Skills<span class="nbadge">12</span></div>
+    <div class="nav-item" data-screen="tools"><span class="ic">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
     <div class="nav-item" data-screen="workflows"><span class="ic">⇄</span>Workflows</div>
     <div class="nav-item" data-screen="studio"><span class="ic">▶</span>Studio</div>
 
@@ -335,12 +347,12 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         <div class="panel brk col-aicore">
           <div class="panel-title">AI Core Overview <span class="src">/health</span></div>
           <div class="panel-body">
-            <div class="core-row"><span class="lab"><span class="dotc"></span>AI Core</span><span class="v">Online</span></div>
-            <div class="core-row"><span class="lab"><span class="dotc"></span>Memory</span><span class="v">Synced</span></div>
-            <div class="core-row"><span class="lab" style="color:var(--amber)"><span class="dotc" style="background:var(--amber)"></span>Voice</span><span class="v warn">Relay offline</span></div>
-            <div class="core-row"><span class="lab"><span class="dotc"></span>Agents</span><span class="v">5 / 7 running</span></div>
-            <div class="core-row"><span class="lab"><span class="dotc"></span>LLMs</span><span class="v">2 connected</span></div>
-            <div class="core-row"><span class="lab"><span class="dotc"></span>System</span><span class="v">Healthy</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>AI Core</span><span class="v" id="ac-core">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>Memory</span><span class="v" id="ac-memory">—</span></div>
+            <div class="core-row" id="ac-voice-row"><span class="lab" id="ac-voice-lab"><span class="dotc" id="ac-voice-dot"></span>Voice</span><span class="v" id="ac-voice">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>Agents</span><span class="v" id="ac-agents">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>LLMs</span><span class="v" id="ac-llms">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>System</span><span class="v" id="ac-system">—</span></div>
           </div>
         </div>
 
@@ -370,15 +382,9 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
       <div class="mrow rowB">
         <div class="panel brk col-agents">
-          <div class="panel-title">Active Agents <span class="lnk">View All ›</span></div>
-          <div class="agents-grid">
-            <div class="agent-tile"><div class="top"><div class="ic">⌁</div><div class="name">Snapshot</div></div><div class="stat"><span class="d"></span>Running</div></div>
-            <div class="agent-tile"><div class="top"><div class="ic">★</div><div class="name">Suggestion Warmer</div></div><div class="stat"><span class="d"></span>Running</div></div>
-            <div class="agent-tile"><div class="top"><div class="ic">⇄</div><div class="name">Token Sync</div></div><div class="stat"><span class="d"></span>Running</div></div>
-            <div class="agent-tile"><div class="top"><div class="ic">✓</div><div class="name">Quality Audit</div></div><div class="stat"><span class="d"></span>Running</div></div>
-            <div class="agent-tile"><div class="top"><div class="ic">💬</div><div class="name">Autoresponder</div></div><div class="stat"><span class="d"></span>Running</div></div>
-            <div class="agent-tile idle"><div class="top"><div class="ic">🖥</div><div class="name">Local Relay</div></div><div class="stat"><span class="d"></span>Not built</div></div>
-            <div class="agent-tile idle"><div class="top"><div class="ic">🗂</div><div class="name">Context Compactor</div></div><div class="stat"><span class="d"></span>Not built</div></div>
+          <div class="panel-title">Active Agents <span class="lnk" onclick="showScreen('agents')" style="cursor:pointer">View All ›</span></div>
+          <div class="agents-grid" id="cmd-agents-grid">
+            <div class="agent-tile idle"><div class="top"><div class="ic">⋯</div><div class="name">Loading…</div></div><div class="stat"><span class="d"></span>—</div></div>
           </div>
         </div>
 
@@ -424,11 +430,11 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         </div>
 
         <div class="panel brk col-llm">
-          <div class="panel-title">LLM Status <span class="lnk">Manage Providers ›</span></div>
-          <div class="llm-grid">
-            <div class="llm-chip"><div class="nm">Claude</div><div class="st ok"><span class="d"></span>Connected</div></div>
-            <div class="llm-chip"><div class="nm">OpenAI</div><div class="st ok"><span class="d"></span>Connected</div></div>
-            <div class="llm-chip"><div class="nm">Etsy API</div><div class="st ok"><span class="d"></span>Token valid</div></div>
+          <div class="panel-title">LLM Status <span class="lnk" onclick="showScreen('connections')" style="cursor:pointer">Manage Providers ›</span></div>
+          <div class="llm-grid" id="llm-grid">
+            <div class="llm-chip"><div class="nm">Claude</div><div class="st"><span class="d"></span>—</div></div>
+            <div class="llm-chip"><div class="nm">OpenAI</div><div class="st"><span class="d"></span>—</div></div>
+            <div class="llm-chip"><div class="nm">Etsy API</div><div class="st"><span class="d"></span>—</div></div>
           </div>
         </div>
       </div>
@@ -436,15 +442,51 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     </div>
   </div>
 
-  <!-- ══════════ generic placeholder screens ══════════ -->
-  <div class="screen" id="screen-core"><div class="placeholder-screen"><div class="big">AI CORE</div><div class="small">Real model/provider state from /api/credentials/status + build/version from /health. Wired in Step 2.</div></div></div>
-  <div class="screen" id="screen-agents"><div class="placeholder-screen"><div class="big">AGENTS</div><div class="small">The 5 real background loops + Local Relay + Context Compactor, each reporting live status via a new registry. Wired in Step 2.</div></div></div>
-  <div class="screen" id="screen-tasks"><div class="placeholder-screen"><div class="big">TASKS</div><div class="small">/api/todos — already real today. Promoted to its own full screen in Step 2.</div></div></div>
+  <!-- ══════════ AI CORE — real data: /health + /api/credentials/status ══════════ -->
+  <div class="screen" id="screen-core">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">AI Core <span class="src">/health + /api/credentials/status</span></div>
+      <div class="panel-body" id="core-detail">
+        <div class="core-row"><span class="lab"><span class="dotc"></span>Loading…</span><span class="v">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ AGENTS — real data: /api/agents/status (live-status registry) ══════════ -->
+  <div class="screen" id="screen-agents">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Agents <span class="src">/api/agents/status — every tile below is a real loop or honestly marked not_built</span></div>
+      <div class="agents-grid" id="agents-grid-full" style="margin-top:14px">
+        <div class="agent-tile idle"><div class="top"><div class="ic">⋯</div><div class="name">Loading…</div></div><div class="stat"><span class="d"></span>—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ TASKS — real data: /api/todos ══════════ -->
+  <div class="screen" id="screen-tasks">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Tasks <span class="src">/api/todos</span></div>
+      <div id="tasks-list" style="margin-top:10px;overflow-y:auto;max-height:760px">
+        <div style="color:var(--muted);font-size:12px">Loading…</div>
+      </div>
+    </div>
+  </div>
+
   <div class="screen" id="screen-calendar"><div class="placeholder-screen"><div class="big">CALENDAR</div><div class="small">Combines todo due dates + CLAUDE.md's weekly/monthly/quarterly cadence + Seasonal Keyword Calendar. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-memory"><div class="placeholder-screen"><div class="big">MEMORY</div><div class="small">Constellation of real chat_messages + log_learning + knowledge_base docs — counts from the DB, never invented. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-conversations"><div class="placeholder-screen"><div class="big">CONVERSATIONS</div><div class="small">Searchable chat_messages history. Built in Step 2.</div></div></div>
-  <div class="screen" id="screen-kb"><div class="placeholder-screen"><div class="big">KNOWLEDGE BASE</div><div class="small">Browse/search reader for the 9 real markdown docs in data/knowledge_base/. Built in Step 2.</div></div></div>
-  <div class="screen" id="screen-tools"><div class="placeholder-screen"><div class="big">TOOLS &amp; SKILLS</div><div class="small">Live list of every entry in AGENT_TOOLS (currently 12), badge = len(AGENT_TOOLS). Built in Step 2.</div></div></div>
+  <div class="screen" id="screen-kb"><div class="placeholder-screen"><div class="big">KNOWLEDGE BASE</div><div class="small">Browse/search reader for the real markdown docs in data/knowledge_base/. Built in Step 2.</div></div></div>
+
+  <!-- ══════════ TOOLS & SKILLS — real data: /api/tools/list (live AGENT_TOOLS) ══════════ -->
+  <div class="screen" id="screen-tools">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Tools &amp; Skills <span class="src">/api/tools/list — live AGENT_TOOLS registry</span></div>
+      <div id="tools-list" style="margin-top:10px;overflow-y:auto;max-height:760px">
+        <div style="color:var(--muted);font-size:12px">Loading…</div>
+      </div>
+    </div>
+  </div>
+
   <div class="screen" id="screen-workflows"><div class="placeholder-screen"><div class="big">WORKFLOWS</div><div class="small">Runnable workflow list — each Run stages through the existing approval gate. Built in Step 2.</div></div></div>
 
   <div class="screen" id="screen-listings"><div class="placeholder-screen"><div class="big">LISTINGS</div><div class="small">Carried over from the live Hub's listings browser — loadListings() in main.py:1592, real Etsy listings via list_listings/get_listing. Restyled into the HUD shell in Step 2.</div></div></div>
@@ -504,17 +546,178 @@ function fitStage(){
 window.addEventListener('resize', fitStage);
 fitStage();
 
-// ── Nav switching ──
+// ── Real data wiring (Step 2) — same bearer token + fetch pattern as the live
+// dashboard at /, injected into this template at request time. ──
+const BASE = location.origin;
+const TOKEN = __APP_TOKEN__;
+function fetchWithTimeout(url, opts, ms=12000){
+  const c = new AbortController();
+  const t = setTimeout(()=>c.abort(), ms);
+  return fetch(url, {...opts, signal: c.signal}).finally(()=>clearTimeout(t));
+}
+function authGet(path, ms=15000){
+  return fetchWithTimeout(BASE+path, {headers:{Authorization:'Bearer '+TOKEN}}, ms);
+}
+function escHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Nav switching — also called directly by in-panel links like
+// "View All ›" / "Manage Providers ›", not just the sidebar. ──
+function showScreen(name){
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
+  if(navItem) navItem.classList.add('active');
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+}
 document.querySelectorAll('.nav-item').forEach(item=>{
-  item.addEventListener('click',()=>{
-    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
-    item.classList.add('active');
-    const target = item.dataset.screen;
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-    const el = document.getElementById('screen-'+target);
-    if(el) el.classList.add('active');
-  });
+  item.addEventListener('click',()=>showScreen(item.dataset.screen));
 });
+
+// ── Agents — real data from /api/agents/status (live-status registry).
+// Every tile is a real loop or honestly marked not_built/offline; never invented. ──
+function renderAgentTile(a){
+  const ok = a.status === 'ok';
+  const err = a.status === 'error';
+  const cls = 'agent-tile' + (ok ? '' : ' idle');
+  const dotStyle = err ? ' style="background:var(--red)"' : '';
+  const statStyle = err ? ' style="color:var(--red)"' : '';
+  const icon = a.built ? '⚙' : '⋯';
+  return '<div class="'+cls+'"><div class="top"><div class="ic">'+icon+'</div><div class="name">'+escHtml(a.label)+'</div></div>'+
+    '<div class="stat"'+statStyle+'><span class="d"'+dotStyle+'></span>'+escHtml(a.detail||a.status)+'</div></div>';
+}
+async function loadAgents(){
+  const cmdGrid = document.getElementById('cmd-agents-grid');
+  const fullGrid = document.getElementById('agents-grid-full');
+  try{
+    const r = await authGet('/api/agents/status');
+    const d = await r.json();
+    const tiles = d.agents.map(renderAgentTile).join('');
+    if(cmdGrid) cmdGrid.innerHTML = tiles;
+    if(fullGrid) fullGrid.innerHTML = tiles;
+    const acAgents = document.getElementById('ac-agents');
+    if(acAgents) acAgents.textContent = d.running_count + '/' + d.total_count + ' running';
+    const relay = d.agents.find(a=>a.name==='local_relay');
+    const voiceEl = document.getElementById('ac-voice');
+    const voiceDot = document.getElementById('ac-voice-dot');
+    if(relay && voiceEl){
+      const state = relay.status==='ok' ? '' : (relay.status==='error' ? ' err' : ' warn');
+      voiceEl.textContent = relay.status==='ok' ? 'Online' : (relay.status==='error' ? 'Killed' : 'Offline — not built yet');
+      voiceEl.className = 'v' + state;
+      if(voiceDot) voiceDot.className = 'dotc' + state;
+    }
+  }catch(e){
+    const msg = '<div style="color:var(--red);font-size:11px;padding:8px">Agents offline: '+escHtml(e.message)+'</div>';
+    if(cmdGrid) cmdGrid.innerHTML = msg;
+    if(fullGrid) fullGrid.innerHTML = msg;
+  }
+}
+
+// ── LLM Status + AI Core — real data from /api/credentials/status + /health ──
+async function loadCredentialsAndHealth(){
+  let cred = null, health = null;
+  try{ const r = await authGet('/api/credentials/status'); cred = await r.json(); }catch(e){}
+  try{ const r = await fetchWithTimeout(BASE+'/health', {}, 10000); health = await r.json(); }catch(e){}
+
+  const chips = [];
+  const coreRows = [];
+  if(cred){
+    const providers = [
+      {nm:'Claude', ok: !!(cred.anthropic && cred.anthropic.api_key)},
+      {nm:'OpenAI', ok: !!(cred.openai && cred.openai.api_key)},
+      {nm:'Etsy API', ok: !!cred.etsy_live}
+    ];
+    providers.forEach(p=>{
+      chips.push('<div class="llm-chip"><div class="nm">'+p.nm+'</div><div class="st'+(p.ok?' ok':'')+'"><span class="d"'+(p.ok?'':' style="background:var(--red)"')+'></span>'+(p.ok?'Connected':'Offline')+'</div></div>');
+    });
+    const connectedCount = providers.filter(p=>p.ok).length;
+    const acLlms = document.getElementById('ac-llms');
+    if(acLlms) acLlms.textContent = connectedCount+'/'+providers.length+' connected';
+
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+(cred.etsy_live?'':' err')+'"></span>Etsy</span><span class="v'+(cred.etsy_live?'':' err')+'">'+(cred.etsy_live?('Live — '+escHtml(cred.shop_name||'onbrandcraftz')):escHtml(cred.etsy_live_error||'offline'))+'</span></div>');
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.anthropic&&cred.anthropic.api_key)?'':' err')+'"></span>Anthropic</span><span class="v'+((cred.anthropic&&cred.anthropic.api_key)?'':' err')+'">'+((cred.anthropic&&cred.anthropic.api_key)?'Key configured':'Missing key')+'</span></div>');
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.openai&&cred.openai.api_key)?'':' err')+'"></span>OpenAI</span><span class="v'+((cred.openai&&cred.openai.api_key)?'':' err')+'">'+((cred.openai&&cred.openai.api_key)?'Key configured':'Missing key')+'</span></div>');
+  } else {
+    chips.push('<div style="color:var(--red);font-size:11px;padding:4px">Credentials offline</div>');
+  }
+  const llmGrid = document.getElementById('llm-grid');
+  if(llmGrid) llmGrid.innerHTML = chips.join('');
+
+  const acCore = document.getElementById('ac-core');
+  const acSystem = document.getElementById('ac-system');
+  if(health){
+    if(acCore){ acCore.textContent = 'Online · build '+escHtml(health.build||'?'); acCore.className='v'; }
+    if(acSystem){
+      acSystem.textContent = health.persistent ? 'Persistent storage' : 'Ephemeral (volume not attached)';
+      acSystem.className = 'v'+(health.persistent?'':' warn');
+    }
+    coreRows.unshift('<div class="core-row"><span class="lab"><span class="dotc"></span>Build</span><span class="v">'+escHtml(health.build||'?')+'</span></div>');
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+(health.persistent?'':' warn')+'"></span>Storage</span><span class="v'+(health.persistent?'':' warn')+'">'+(health.persistent?'Persistent volume attached':'Ephemeral — resets on redeploy')+'</span></div>');
+  } else if(acCore){
+    acCore.textContent = 'Offline'; acCore.className='v err';
+  }
+
+  const acMemory = document.getElementById('ac-memory');
+  if(acMemory){ acMemory.textContent = 'Not wired yet'; acMemory.className = 'v warn'; }
+
+  const coreDetail = document.getElementById('core-detail');
+  if(coreDetail){
+    coreDetail.innerHTML = coreRows.length ? coreRows.join('') :
+      '<div class="core-row"><span class="lab"><span class="dotc err"></span>Unavailable</span><span class="v err">Could not load</span></div>';
+  }
+}
+
+// ── Tasks — real data from /api/todos ──
+async function loadTasks(){
+  const list = document.getElementById('tasks-list');
+  try{
+    const r = await authGet('/api/todos');
+    const d = await r.json();
+    if(list){
+      list.innerHTML = d.todos.length ? d.todos.map(t=>{
+        const done = !!t.done;
+        return '<div class="tl-item"><div class="tl-dotcol"><span class="d"'+(done?' style="background:var(--muted)"':'')+'></span></div>'+
+          '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':'')+'>'+escHtml(t.text)+'</div>'+
+          '<div class="sub">added by '+escHtml(t.added_by||'scott')+'</div></div></div>';
+      }).join('') : '<div style="color:var(--muted);font-size:12px">No tasks yet.</div>';
+    }
+    const badge = document.getElementById('badge-tasks');
+    if(badge){ badge.textContent = d.open_count; badge.style.display = d.open_count>0 ? '' : 'none'; }
+  }catch(e){
+    if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Tasks offline: '+escHtml(e.message)+'</div>';
+  }
+}
+
+// ── Tools & Skills — real data from /api/tools/list (live AGENT_TOOLS registry) ──
+async function loadTools(){
+  const list = document.getElementById('tools-list');
+  try{
+    const r = await authGet('/api/tools/list');
+    const d = await r.json();
+    if(list){
+      list.innerHTML = d.tools.map(t=>
+        '<div style="padding:10px 0;border-bottom:1px solid var(--border)">'+
+          '<div style="font-weight:600;font-size:12px;color:var(--text)">'+escHtml(t.name)+'</div>'+
+          '<div style="font-size:10.5px;color:var(--muted);margin-top:3px">'+escHtml(t.description)+'</div></div>'
+      ).join('');
+    }
+    const badge = document.getElementById('badge-tools');
+    if(badge){ badge.textContent = d.count; badge.style.display = ''; }
+  }catch(e){
+    if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Tools offline: '+escHtml(e.message)+'</div>';
+  }
+}
+
+function loadAll(){
+  loadAgents();
+  loadCredentialsAndHealth();
+  loadTasks();
+  loadTools();
+}
+loadAll();
+setInterval(loadAll, 30000);
 
 // ── Clock ──
 function tick(){
@@ -625,3 +828,12 @@ drawMem();
 </script>
 </body>
 </html>"""
+
+
+def render_frank_hud(app_token: str) -> str:
+    """Substitute the real bearer token into the mockup's __APP_TOKEN__ placeholder
+    at request time. The template is a plain string (not f-string/.format()) because
+    its JS is full of literal {} braces, and it lives outside main.py so it has no
+    direct access to APP_TOKEN at its own module-definition time — same token, same
+    auth model as the live dashboard at /, just injected via str.replace() instead."""
+    return _FRANK_HUD_MOCKUP.replace("__APP_TOKEN__", json.dumps(app_token))

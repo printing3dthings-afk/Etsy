@@ -2989,16 +2989,16 @@ def web_ui():
     )
 
 
-# FRANK Command Center — static clickable mockup (Build Order step 0.5). No backend
-# wiring yet; served at a separate path so the live dashboard above is never at risk
-# while Scott reviews the look. See frank_hud_mockup.py for details.
-from frank_hud_mockup import _FRANK_HUD_MOCKUP  # noqa: E402
+# FRANK Command Center — Step 2 is wiring this shell to real data (Build Order
+# step 2). Served at a separate path so the live dashboard above is never at risk
+# while this is built out panel by panel. See frank_hud_mockup.py for details.
+from frank_hud_mockup import render_frank_hud  # noqa: E402
 
 
 @app.get("/frank", response_class=HTMLResponse)
 def frank_hud_mockup():
     return HTMLResponse(
-        content=_FRANK_HUD_MOCKUP,
+        content=render_frank_hud(APP_TOKEN),
         headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
     )
 
@@ -3557,8 +3557,10 @@ async def _snapshot_loop() -> None:
     while True:
         try:
             await _take_snapshot()
+            db.set_agent_heartbeat("snapshot", "Snapshot", "ok", "Daily metric snapshot recorded")
         except Exception as exc:
             print(f"[snapshot] error: {exc}", flush=True)
+            db.set_agent_heartbeat("snapshot", "Snapshot", "error", str(exc)[:300])
         await asyncio.sleep(86_400)
 
 
@@ -3570,6 +3572,7 @@ async def _warm_suggestions() -> None:
     little before the TTL expires so a visitor practically never lands on a cold
     cache — only the one-time ~60s window right after a fresh deploy remains."""
     if not ANTHROPIC_KEY:
+        db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "error", "ANTHROPIC_API_KEY not set")
         return
     await asyncio.sleep(5)  # let the app finish booting first
     while True:
@@ -3578,11 +3581,14 @@ async def _warm_suggestions() -> None:
             if res.get("error") == "parse_failed":
                 # Not cached (see _compute_suggestions) — retry soon, don't wait 30min.
                 print("[warm] suggestions parse failed — retrying in 60s", flush=True)
+                db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "error", "parse_failed — retrying")
                 await asyncio.sleep(60)
                 continue
             print("[warm] suggestions cache primed", flush=True)
+            db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "ok", "CEO diagnostic cache primed")
         except Exception as exc:
             print(f"[warm] suggestions priming skipped: {exc}", flush=True)
+            db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "error", str(exc)[:300])
             await asyncio.sleep(120)  # back off, then retry
             continue
         await asyncio.sleep(_SUGGESTIONS_TTL - 120)  # refresh just before expiry
@@ -3608,8 +3614,12 @@ async def _token_sync_loop() -> None:
                 await asyncio.to_thread(db.save_etsy_tokens, cur_access, cur_refresh, last_refresh)
                 print(f"[etsy-tokens] persisted rotated token to {db.DB_PATH}", flush=True)
                 last_access, last_refresh = cur_access, cur_refresh
+                db.set_agent_heartbeat("token_sync", "Token Sync", "ok", "Etsy token rotation persisted")
+            else:
+                db.set_agent_heartbeat("token_sync", "Token Sync", "ok", "watching for token rotation")
         except Exception as exc:
             print(f"[etsy-tokens] sync error: {exc}", flush=True)
+            db.set_agent_heartbeat("token_sync", "Token Sync", "error", str(exc)[:300])
 
 
 _QUALITY_AUDIT_SUMMARY_RE = _re.compile(
@@ -3639,12 +3649,14 @@ async def _quality_audit_loop() -> None:
             )
         except Exception as exc:
             print(f"[quality-audit] run failed: {exc}", flush=True)
+            db.set_agent_heartbeat("quality_audit", "Quality Audit", "error", str(exc)[:300])
             await asyncio.sleep(86_400)
             continue
         out = (result.stdout or "") + "\n" + (result.stderr or "")
         m = _QUALITY_AUDIT_SUMMARY_RE.search(out)
         if not m:
             print("[quality-audit] could not parse summary line", flush=True)
+            db.set_agent_heartbeat("quality_audit", "Quality Audit", "error", "could not parse summary line")
             await asyncio.sleep(86_400)
             continue
         passed, warned, failed = (int(g) for g in m.groups())
@@ -3657,6 +3669,11 @@ async def _quality_audit_loop() -> None:
         except Exception as exc:
             print(f"[quality-audit] db record failed: {exc}", flush=True)
         print(f"[quality-audit] PASS:{passed} WARN:{warned} FAIL:{failed}", flush=True)
+        db.set_agent_heartbeat(
+            "quality_audit", "Quality Audit",
+            "error" if failed > 0 else "ok",
+            f"PASS:{passed} WARN:{warned} FAIL:{failed}",
+        )
         if failed > 0:
             _append_ops_runbook_entry(
                 f"Automated quality audit — {failed} listing(s) failing",
@@ -3699,9 +3716,28 @@ async def _autoresponder_loop() -> None:
             print(f"[autoresponder] {result.stdout.strip()[-500:]}", flush=True)
             if result.returncode != 0:
                 print(f"[autoresponder] exit {result.returncode}: {result.stderr.strip()[-500:]}", flush=True)
+                db.set_agent_heartbeat(
+                    "autoresponder", "Autoresponder", "error",
+                    f"exit {result.returncode}: {result.stderr.strip()[-300:]}",
+                )
+            else:
+                db.set_agent_heartbeat(
+                    "autoresponder", "Autoresponder", "ok",
+                    result.stdout.strip()[-300:] or "run completed",
+                )
         except Exception as exc:
             print(f"[autoresponder] run failed: {exc}", flush=True)
+            db.set_agent_heartbeat("autoresponder", "Autoresponder", "error", str(exc)[:300])
         await asyncio.sleep(86_400)
+
+
+_AGENT_LOOP_LABELS = {
+    "snapshot": "Snapshot",
+    "suggestion_warmer": "Suggestion Warmer",
+    "token_sync": "Token Sync",
+    "quality_audit": "Quality Audit",
+    "autoresponder": "Autoresponder",
+}
 
 
 @app.on_event("startup")
@@ -3711,6 +3747,14 @@ async def _startup() -> None:
         print(f"[db] ready at {db.DB_PATH} (persistent={db.is_persistent()})", flush=True)
     except Exception as exc:
         print(f"[db] init failed: {exc}", flush=True)
+    # Seed every loop's row immediately so the Agents registry always reports
+    # all 5 from boot, rather than waiting on each loop's own startup delay
+    # (some sleep minutes before their first real run).
+    for _name, _label in _AGENT_LOOP_LABELS.items():
+        try:
+            db.set_agent_heartbeat(_name, _label, "started", "waiting for first run")
+        except Exception as exc:
+            print(f"[agent-heartbeat] seed failed for {_name}: {exc}", flush=True)
     asyncio.create_task(_snapshot_loop())
     asyncio.create_task(_warm_suggestions())
     asyncio.create_task(_token_sync_loop())
@@ -4664,6 +4708,76 @@ async def get_relay_status(_token: str = Depends(_auth)):
         "killed_by": state.get("killed_by"),
         "last_heartbeat": state.get("last_heartbeat"),
     }
+
+
+async def _agents_status_snapshot() -> dict:
+    """The live-status registry for the FRANK HUD's Agents screen + Command
+    Center tiles. Every entry maps to a real loop/process — per the plan's
+    no-fake-tiles rule, an agent that hasn't been built yet is reported as
+    'not_built', never given a fake 'running' status."""
+    heartbeats = {h["name"]: h for h in await asyncio.to_thread(db.list_agent_heartbeats)}
+    agents = []
+    for name, label in _AGENT_LOOP_LABELS.items():
+        hb = heartbeats.get(name)
+        agents.append({
+            "name": name,
+            "label": label,
+            "built": True,
+            "status": hb["status"] if hb else "started",
+            "detail": hb["detail"] if hb else "waiting for first run",
+            "updated_at": hb["updated_at"] if hb else None,
+        })
+
+    relay_state = await asyncio.to_thread(db.get_relay_state)
+    with _relay_lock:
+        relay_connected = _relay_ws is not None
+    if relay_state.get("killed"):
+        relay_status, relay_detail = "error", "kill switch engaged"
+    elif relay_connected:
+        relay_status, relay_detail = "ok", "connected"
+    else:
+        relay_status, relay_detail = "offline", "no relay connected"
+    agents.append({
+        "name": "local_relay",
+        "label": "Local Relay",
+        "built": True,
+        "status": relay_status,
+        "detail": relay_detail,
+        "updated_at": relay_state.get("last_heartbeat"),
+    })
+
+    agents.append({
+        "name": "context_compactor",
+        "label": "Context Compactor",
+        "built": False,
+        "status": "not_built",
+        "detail": "Planned — compresses chat history/runbook entries that fall out of the replay window",
+        "updated_at": None,
+    })
+
+    running = sum(1 for a in agents if a["built"] and a["status"] != "error")
+    return {"agents": agents, "running_count": running, "total_count": len(agents)}
+
+
+@app.get("/api/agents/status")
+async def get_agents_status(_token: str = Depends(_auth)):
+    return await _agents_status_snapshot()
+
+
+@app.get("/api/tools/list")
+async def get_tools_list(_token: str = Depends(_auth)):
+    """Live registered AGENT_TOOLS — the Tools & Skills screen's source of
+    truth. Badge count is always len(AGENT_TOOLS), so it grows automatically
+    as local_* relay tools or new tools are added; never hardcoded."""
+    tools = [
+        {
+            "name": t["name"],
+            "description": t.get("description")
+            or "Native Anthropic-hosted tool — executed server-side by Anthropic, not by our code.",
+        }
+        for t in AGENT_TOOLS
+    ]
+    return {"tools": tools, "count": len(tools)}
 
 
 @app.post("/api/relay/kill")

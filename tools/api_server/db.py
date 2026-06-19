@@ -136,6 +136,13 @@ CREATE TABLE IF NOT EXISTS relay_state (
   killed_at      TEXT,
   killed_by      TEXT
 );
+CREATE TABLE IF NOT EXISTS agent_heartbeats (
+  name       TEXT PRIMARY KEY,   -- loop identifier, e.g. 'snapshot', 'autoresponder'
+  label      TEXT NOT NULL,      -- human-readable display name for the HUD
+  status     TEXT NOT NULL,      -- 'started' | 'ok' | 'error'
+  detail     TEXT,               -- short free-text result of the last run
+  updated_at TEXT NOT NULL
+);
 """
 
 
@@ -692,5 +699,39 @@ def set_kill_switch(active: bool, by: str = "scott") -> None:
             (1 if active else 0, ts if active else None, by if active else None),
         )
         conn.commit()
+    finally:
+        conn.close()
+
+
+# ── Agent heartbeats (live-status registry) — each of the 5 real background
+# loops (and the relay/compactor once built) upserts its own row here on every
+# run so the HUD's Agents screen and Command Center tiles show real state
+# instead of a hardcoded "Running" label. ───────────────────────────────────
+
+
+def set_agent_heartbeat(name: str, label: str, status: str, detail: str = "") -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO agent_heartbeats (name, label, status, detail, updated_at)
+               VALUES (?,?,?,?,?)
+               ON CONFLICT(name) DO UPDATE SET
+                 label=excluded.label, status=excluded.status,
+                 detail=excluded.detail, updated_at=excluded.updated_at""",
+            (name, label, status, detail, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def list_agent_heartbeats() -> list:
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute("SELECT * FROM agent_heartbeats ORDER BY name").fetchall()
+        return [dict(r) for r in rows]
     finally:
         conn.close()
