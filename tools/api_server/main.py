@@ -23,6 +23,7 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -84,6 +85,7 @@ def _reconcile_etsy_tokens() -> None:
 
 
 _reconcile_etsy_tokens()
+db.ensure_default_sandbox_folder()
 
 # ── Executable command registry (CEO agent can invoke these) ───────────────────
 _EXEC_COMMANDS: dict[str, dict] = {
@@ -167,6 +169,20 @@ _EXEC_COMMANDS: dict[str, dict] = {
 # prompt-injected instruction). Any extra_arg containing one of these is refused.
 _FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate", "--delete", "--write")
 
+# Local relay command registry for the local_exec tool — runs on Scott's own
+# machine via the relay, not in this Railway container, so it is a separate
+# registry from _EXEC_COMMANDS above (different filesystem entirely). Step 1
+# scope is read-only diagnostics only (Scott's locked-in decision) — real
+# mutating commands are not added until the approval gate has been proven
+# safe over time. The relay re-validates against its own copy of this same
+# whitelist before calling subprocess — this list is advisory until the relay
+# agrees (see frank_relay.py).
+_LOCAL_EXEC_COMMANDS: dict[str, str] = {
+    "dir_listing": "List the contents of a directory on Scott's machine (read-only)",
+    "disk_usage": "Report free/used disk space on Scott's machine (read-only)",
+}
+_LOCAL_FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate", "--delete", "--write", "&&", "|", ";", ">", "<")
+
 # .strip() is critical: Railway env vars set via the dashboard often carry a
 # trailing newline. APP_TOKEN is injected into an inline JS string literal
 # (const TOKEN = '...'); a newline inside it is a fatal SyntaxError that kills
@@ -237,6 +253,110 @@ def _cache_get(key: str, ttl: int = 60):
 def _cache_set(key: str, data) -> None:
     with _cache_lock:
         _cache[key] = {"data": data, "ts": time.time()}
+
+
+# ── Local Relay connection registry (Frank's hands/ears on Scott's machine) ─────
+#
+# The relay is a separate small process on Scott's own computer that holds open
+# a /ws/relay WebSocket and executes local_* tool calls Frank requests during a
+# /ws/chat conversation. One relay connects at a time — a second connect just
+# replaces the registered reference below, no multi-relay routing needed.
+# Requests are correlated to responses by reusing Anthropic's own tool_use_id
+# (or a fresh uuid for non-tool calls) as the request id, via the pending dict.
+
+_relay_ws: "WebSocket | None" = None
+_relay_lock = threading.Lock()
+_relay_pending: dict[str, "asyncio.Future"] = {}
+
+# Instant, ungated AGENT_TOOLS that execute on Scott's machine via the relay instead
+# of on the Railway server. Staged local tools (local_write_file/local_delete/
+# local_exec, added in sub-step 1g) are NOT in this set — those go through
+# db.enqueue_action like stage_action does, and only reach the relay at approve-time.
+_RELAY_TOOLS = {"local_read_file", "local_list_dir"}
+
+# Staged local AGENT_TOOLS — same approval-gate principle as stage_action, but
+# for actions that touch Scott's actual machine. The turn loop routes these to
+# _stage_local_action (db.enqueue_action) instead of _dispatch_to_relay, so
+# nothing here ever mutates anything until Scott approves in the Action Center.
+_LOCAL_STAGED_TOOLS = {"local_write_file", "local_delete", "local_exec"}
+
+
+async def _dispatch_to_relay(name: str, tool_input: dict, timeout: float = 15.0) -> dict:
+    """Round-trip one tool call to the local relay over /ws/relay.
+
+    Returns {"error": ...} immediately (no hang) if the kill switch is engaged
+    or no relay is connected. Otherwise sends a tool_request and awaits the
+    matching tool_result, bounded by `timeout` so a relay that goes silent
+    can't wedge a chat turn forever."""
+    state = await asyncio.to_thread(db.get_relay_state)
+    if state.get("killed"):
+        return {"error": "kill switch is engaged — local actions are suspended"}
+    with _relay_lock:
+        ws = _relay_ws
+    if ws is None:
+        return {"error": "relay offline — Frank's local relay is not connected"}
+    req_id = str(uuid.uuid4())
+    fut: asyncio.Future = asyncio.get_event_loop().create_future()
+    _relay_pending[req_id] = fut
+    try:
+        await ws.send_text(json.dumps({"type": "tool_request", "id": req_id, "tool": name, "input": tool_input or {}}))
+    except Exception as exc:
+        _relay_pending.pop(req_id, None)
+        return {"error": f"relay send failed: {exc}"}
+    try:
+        return await asyncio.wait_for(fut, timeout=timeout)
+    except asyncio.TimeoutError:
+        return {"error": f"relay timed out after {timeout}s"}
+    finally:
+        _relay_pending.pop(req_id, None)
+
+
+async def _stage_local_action(name: str, tool_input: dict) -> dict:
+    """Queue a local_write_file/local_delete/local_exec call for Scott's approval —
+    mirrors the stage_action handler's return shape exactly, but for actions that
+    touch Scott's machine instead of Etsy. Nothing here executes anything; the
+    relay round-trip only happens later, at approve-time, in
+    _execute_local_staged_action. The one exception is local_write_file's "before"
+    snapshot below — that's a read, not a write, captured now so the diff Scott
+    sees at approval time reflects the file's state at staging time, not whatever
+    it happens to be when he taps Approve."""
+    ti = tool_input or {}
+    summary = (ti.get("summary") or "").strip()
+    if not summary:
+        return {"staged": False, "error": "summary is required"}
+    payload: dict = {}
+    if name == "local_write_file":
+        path = (ti.get("path") or "").strip()
+        content = ti.get("content")
+        if not path or content is None:
+            return {"staged": False, "error": "path and content are required"}
+        payload = {"path": path, "after": content}
+        before = await _dispatch_to_relay("local_read_file", {"path": path})
+        payload["before"] = before.get("content") if "error" not in before else None
+        payload["before_existed"] = "error" not in before
+    elif name == "local_delete":
+        path = (ti.get("path") or "").strip()
+        if not path:
+            return {"staged": False, "error": "path is required"}
+        payload = {"path": path}
+    elif name == "local_exec":
+        command = (ti.get("command") or "").strip()
+        if not command:
+            return {"staged": False, "error": "command is required"}
+        payload = {"command": command, "extra_args": (ti.get("extra_args") or "").strip()}
+    else:
+        return {"staged": False, "error": f"unknown local staged tool: {name}"}
+    candidate = {"type": name, "payload": payload}
+    ok, msg = _validate_staged_action(candidate)
+    if not ok:
+        return {"staged": False, "error": msg}
+    aid = await asyncio.to_thread(db.enqueue_action, name, summary, payload)
+    return {
+        "staged": True,
+        "action_id": aid,
+        "status": "pending",
+        "note": "Queued for Scott's approval in the Action Center — not yet applied.",
+    }
 
 
 # ── Ops runbook (loaded fresh on every request — no redeploy needed to update) ──
@@ -621,6 +741,108 @@ AGENT_TOOLS = [
             "required": ["todo_id"],
         },
     },
+    {
+        "name": "local_read_file",
+        "description": (
+            "Read a text file on Scott's own computer via the local relay — NOT the "
+            "Railway server's filesystem. Only works while the relay is connected and "
+            "only for paths inside one of Scott's configured Allowed Folders; anything "
+            "else is refused. Instant, read-only, no approval needed. Binary files and "
+            "files over ~200KB are not supported. If the relay is offline you'll get a "
+            "clear error instead of a hang — tell Scott to start tools/relay/frank_relay.py."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Absolute path on Scott's machine."}
+            },
+            "required": ["path"],
+        },
+    },
+    {
+        "name": "local_list_dir",
+        "description": (
+            "List a directory on Scott's own computer via the local relay — NOT the "
+            "Railway server's filesystem. Same Allowed Folders restriction as "
+            "local_read_file. Instant, read-only, no approval needed."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Absolute path on Scott's machine."}
+            },
+            "required": ["path"],
+        },
+    },
+    {
+        "name": "local_write_file",
+        "description": (
+            "Write/overwrite a text file on Scott's own computer via the local relay. "
+            "This does NOT execute immediately — it is staged for Scott's one-tap "
+            "approval in the Action Center, same as stage_action for Etsy changes. "
+            "The current file content (if any) is captured now so Scott sees a real "
+            "diff before approving. Path must be inside an Allowed Folder."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Absolute path on Scott's machine."},
+                "content": {"type": "string", "description": "Full new file content."},
+                "summary": {"type": "string", "description": "One-line human summary for the approval card."},
+            },
+            "required": ["path", "content", "summary"],
+        },
+    },
+    {
+        "name": "local_delete",
+        "description": (
+            "Delete a file on Scott's own computer via the local relay. Staged for "
+            "Scott's one-tap approval — does NOT execute immediately. Path must be "
+            "inside an Allowed Folder."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "path": {"type": "string", "description": "Absolute path on Scott's machine."},
+                "summary": {"type": "string", "description": "One-line human summary for the approval card."},
+            },
+            "required": ["path", "summary"],
+        },
+    },
+    {
+        "name": "local_exec",
+        "description": (
+            "Run a whitelisted read-only diagnostic command on Scott's own computer via "
+            "the local relay. Staged for Scott's one-tap approval — does NOT execute "
+            "immediately. Step 1 whitelist is intentionally minimal (read-only diagnostics "
+            "only); extra_args may not contain anything that mutates files or chains "
+            "commands."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "command": {"type": "string", "enum": list(_LOCAL_EXEC_COMMANDS.keys())},
+                "extra_args": {"type": "string", "description": "Optional extra arguments, space-separated."},
+                "summary": {"type": "string", "description": "One-line human summary for the approval card."},
+            },
+            "required": ["command", "summary"],
+        },
+    },
+    {
+        "name": "local_speak",
+        "description": (
+            "Speak a short reply out loud through Scott's computer. Step 1 stub: no "
+            "audio yet — this just logs the text that would be spoken (real TTS ships "
+            "later). Output-only, instant, no approval needed."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "text": {"type": "string", "description": "What Frank would say out loud."}
+            },
+            "required": ["text"],
+        },
+    },
     # Native Anthropic-hosted tool (not one of ours — no input_schema, no handler in
     # _execute_agent_tool). Anthropic executes the search server-side and injects
     # results into the same turn; the model keeps generating, so this never trips
@@ -691,6 +913,27 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 payload["title"] = ti["title"]
             if ti.get("tags") is not None:
                 payload["tags"] = ti["tags"]
+            if ti.get("action_type") == "publish_listing" and ti.get("listing_id"):
+                # Capture-now-render-later snapshot for the Detailed Action Review
+                # mock listing preview — taken at staging time so the card Scott
+                # sees doesn't depend on the listing still existing/unchanged later.
+                try:
+                    client = EtsyAPIClient()
+                    listing = client.get_listing(int(ti["listing_id"]))
+                    images = client.get_listing_images(int(ti["listing_id"]))
+                    thumb = ""
+                    if images:
+                        img = images[0]
+                        thumb = img.get("url_570xN") or img.get("url_fullxfull") or img.get("url_75x75", "")
+                    payload["preview"] = {
+                        "title": payload.get("title") or listing.get("title", ""),
+                        "price": _price_float(listing.get("price")),
+                        "tags": payload.get("tags") or listing.get("tags", [])[:13],
+                        "thumbnail_url": thumb,
+                        "photo_count": len(images),
+                    }
+                except Exception as exc:
+                    payload["preview"] = {"error": str(exc)}
             candidate = {"type": ti.get("action_type"), "payload": payload}
             ok, msg = _validate_staged_action(candidate)
             if not ok:
@@ -748,6 +991,10 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             if len(out) > 2000:
                 out = out[:1900] + "\n…[output truncated]"
             return {"returncode": result.returncode, "output": out, "success": result.returncode == 0}
+        if name == "local_speak":
+            text = (tool_input or {}).get("text", "")
+            db.log_activity("frank", "local_speak", text[:500], {"text": text}, outcome="ok")
+            return {"spoken": False, "text": text, "note": "Step 1 stub — logged only, no audio yet (real TTS ships in Step 4)."}
         if name == "get_orders":
             limit = min(int((tool_input or {}).get("limit", 25) or 25), 100)
             data = EtsyAPIClient().get_orders(limit=limit)
@@ -1235,6 +1482,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
       <button class="hub-section-btn" onclick="showHubSection(&apos;files&apos;,this)">📁 Files</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;creds&apos;,this)">🔑 Creds</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;security&apos;,this)">🛡️ Security</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;relay&apos;,this)">🔌 Relay</button>
     </div>
     <div id="hub-content"><div class="spinner"></div></div>
   </div>
@@ -1403,12 +1651,51 @@ function setActionBadge(summary, pending) {
   if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
   else { b.style.display = 'none'; }
 }
+function simpleLineDiff(before, after) {
+  const b = String(before == null ? '' : before).split('\\n');
+  const a = String(after == null ? '' : after).split('\\n');
+  const max = Math.max(b.length, a.length);
+  let html = '';
+  for (let i = 0; i < max; i++) {
+    const bl = b[i], al = a[i];
+    if (bl === al) {
+      if (bl !== undefined) html += `<div style="color:#7a8a9a">&nbsp;&nbsp;${escHtml(bl)}</div>`;
+    } else {
+      if (bl !== undefined) html += `<div style="color:#e05555">-&nbsp;${escHtml(bl)}</div>`;
+      if (al !== undefined) html += `<div style="color:#4ade80">+&nbsp;${escHtml(al)}</div>`;
+    }
+  }
+  return html;
+}
 function renderApproval(a) {
   const p = a.payload || {};
   let preview = '';
   if (a.type === 'update_title') preview = 'New title: ' + escHtml(p.title || '');
   else if (a.type === 'update_tags') preview = 'New tags: ' + escHtml((p.tags || []).join(', '));
-  else if (a.type === 'publish_listing') preview = 'Publish draft listing ' + escHtml(String(p.listing_id || ''));
+  else if (a.type === 'publish_listing') {
+    const pv = p.preview || {};
+    preview = `<div style="display:flex;gap:10px;align-items:flex-start">` +
+      (pv.thumbnail_url
+        ? `<img class="thumb" src="${escHtml(pv.thumbnail_url)}" loading="lazy" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+        : `<div class="thumb-placeholder" style="width:70px;height:70px;flex-shrink:0">🏷️</div>`) +
+      `<div><div>Publish draft listing ${escHtml(String(p.listing_id || ''))}</div>` +
+      (pv.title ? `<div style="font-weight:600;margin-top:4px">${escHtml(pv.title)}</div>` : '') +
+      (pv.price != null ? `<div>$${escHtml(String(pv.price))} · ${(pv.tags || []).length} tags · ${pv.photo_count || 0} photos</div>` : '') +
+      (pv.error ? `<div style="color:#C9A84C">⚠️ Preview unavailable: ${escHtml(pv.error)}</div>` : '') +
+      `</div></div>`;
+  }
+  else if (a.type === 'local_write_file') {
+    const diffHtml = simpleLineDiff(p.before, p.after);
+    preview = `<div style="margin-bottom:6px"><strong>File:</strong> ${escHtml(p.path || '')}</div>` +
+      (p.before_existed === false ? `<div style="color:#C9A84C;margin-bottom:6px">⚠️ File does not currently exist — this will create it.</div>` : '') +
+      `<div style="max-height:260px;overflow:auto;background:#0a1420;border-radius:8px;padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:#7a8a9a">No changes</span>'}</div>`;
+  }
+  else if (a.type === 'local_delete') {
+    preview = `<div style="color:#e05555">⚠️ This will permanently delete:</div><div style="font-family:monospace;margin-top:4px">${escHtml(p.path || '')}</div>`;
+  }
+  else if (a.type === 'local_exec') {
+    preview = `<div><strong>Run:</strong> <span style="font-family:monospace">${escHtml(p.command || '')}${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>`;
+  }
   return `<div class="act-card approval">
     <span class="act-sev approval">awaiting you</span>
     <div class="act-title">${escHtml(a.summary || a.type)}</div>
@@ -1420,8 +1707,15 @@ function renderApproval(a) {
     </div>
   </div>`;
 }
+const _APPROVE_CONFIRM_MSGS = {
+  local_write_file: 'Approve and write this file on your computer now?',
+  local_delete: 'Approve and PERMANENTLY DELETE this file on your computer now?',
+  local_exec: 'Approve and run this command on your computer now?'
+};
 async function approveAction(id) {
-  if (!confirm('Approve and apply this change to your live Etsy listing now?')) return;
+  const act = (_pendingActions || []).find(x => x.id === id);
+  const msg = (act && _APPROVE_CONFIRM_MSGS[act.type]) || 'Approve and apply this change to your live Etsy listing now?';
+  if (!confirm(msg)) return;
   try {
     const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/approve', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 50000);
     const d = await r.json().catch(()=>({}));
@@ -2427,6 +2721,105 @@ function showHubSection(section, btn) {
   else if (section==='files')    loadFiles();
   else if (section==='creds')    loadCredentials();
   else if (section==='security') _renderSecurityPosture();
+  else if (section==='relay')    _renderRelayPanel();
+}
+async function _renderRelayPanel() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    var rs = await fetchWithTimeout(BASE+'/api/relay/status',{headers:{Authorization:'Bearer '+TOKEN}},15000);
+    var status = await rs.json().catch(function(){return {};});
+    if (!rs.ok) throw new Error(status.detail||'HTTP '+rs.status);
+    var rf = await fetchWithTimeout(BASE+'/api/relay/allowed-folders',{headers:{Authorization:'Bearer '+TOKEN}},15000);
+    var fd = await rf.json().catch(function(){return {};});
+    if (!rf.ok) throw new Error(fd.detail||'HTTP '+rf.status);
+    var folders = fd.folders || [];
+
+    var badge, badgeCol;
+    if (status.killed)            { badge = '⛔ Killed';   badgeCol = 'var(--red)'; }
+    else if (status.connected)    { badge = '✅ Online';   badgeCol = 'var(--green)'; }
+    else                          { badge = '⚪ Offline';  badgeCol = 'var(--muted)'; }
+
+    var html = '<div class="card" style="margin-bottom:12px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'+
+      '<div><div style="font-size:15px;font-weight:700;color:'+badgeCol+'">'+badge+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:4px">'+
+        (status.last_heartbeat ? 'Last heartbeat: '+escHtml(status.last_heartbeat) : 'No heartbeat received yet')+
+      '</div></div>'+
+      (status.killed
+        ? '<button onclick="relayResume()" style="background:var(--green);color:#0D1B2A;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Resume</button>'
+        : '<button onclick="relayKill()" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Kill Switch</button>')+
+      '</div>';
+    if (status.killed && status.killed_at) {
+      html += '<div style="font-size:11px;color:var(--muted);margin-top:8px">Killed at '+escHtml(status.killed_at)+
+        (status.killed_by ? ' by '+escHtml(status.killed_by) : '')+'</div>';
+    }
+    html += '<div style="font-size:11px;color:var(--muted);margin-top:8px">'+
+      'Kill switch blocks every local tool — including read-only file access — until resumed.'+
+      '</div>';
+    html += '</div>';
+
+    html += '<div class="section-title">Allowed Folders</div><div class="card">';
+    if (!folders.length) {
+      html += '<div class="empty">No folders configured yet — the relay can\\'t read or write anything on Scott\\'s machine until at least one is added.</div>';
+    } else {
+      folders.forEach(function(f){
+        html += '<div class="cred-row">'+
+          '<div style="flex:1"><div style="font-size:13px;font-weight:600;word-break:break-all">'+escHtml(f.path)+'</div>'+
+          '<div style="font-size:11px;color:var(--muted)">added by '+escHtml(f.added_by||'system')+' · '+escHtml(f.added_at||'')+'</div></div>'+
+          '<button onclick="removeAllowedFolder('+f.id+')" style="background:none;color:var(--red);border:1px solid var(--red);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">Remove</button>'+
+        '</div>';
+      });
+    }
+    html += '<div style="display:flex;gap:8px;margin-top:12px">'+
+      '<input id="relay-folder-input" type="text" placeholder="C:\\\\Users\\\\Scott\\\\frank_sandbox" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+      '<button onclick="addAllowedFolder()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Add</button>'+
+      '</div>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px 0">'+
+      'The relay re-resolves every path with realpath before allowing access — this list is enforced on Scott\\'s machine, not just the server.'+
+      '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="_renderRelayPanel()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+async function relayKill() {
+  if (!confirm('Engage the kill switch? This blocks ALL local relay actions, including reads, until resumed.')) return;
+  try {
+    await fetchWithTimeout(BASE+'/api/relay/kill', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+  } catch(e) { alert('Could not engage kill switch: ' + (e.message||e)); }
+  _renderRelayPanel();
+}
+async function relayResume() {
+  try {
+    await fetchWithTimeout(BASE+'/api/relay/resume', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+  } catch(e) { alert('Could not resume: ' + (e.message||e)); }
+  _renderRelayPanel();
+}
+async function addAllowedFolder() {
+  var inp = document.getElementById('relay-folder-input');
+  var path = (inp && inp.value || '').trim();
+  if (!path) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/relay/allowed-folders', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({path}),
+    }, 15000);
+    const d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+  } catch(e) { alert('Could not add folder: ' + (e.message||e)); }
+  _renderRelayPanel();
+}
+async function removeAllowedFolder(id) {
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/relay/allowed-folders/'+id, {method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    if (!r.ok) { const d = await r.json().catch(function(){return {};}); throw new Error(d.detail||'HTTP '+r.status); }
+  } catch(e) { alert('Could not remove folder: ' + (e.message||e)); }
+  _renderRelayPanel();
 }
 function _fileUrl(f, inline){
   return BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
@@ -3925,7 +4318,9 @@ async def post_snapshot(_token: str = Depends(_auth)):
 
 # ── Staged actions (agent prepares → Scott approves → server executes) ────────────
 
-_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing")
+_ETSY_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing")
+_LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
+_STAGED_ACTION_TYPES = _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
 
 
 def _validate_staged_action(a: dict) -> tuple[bool, str]:
@@ -3935,25 +4330,50 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
     p = a.get("payload", {}) or {}
     if t not in _STAGED_ACTION_TYPES:
         return False, f"unsupported action type: {t}"
-    if not p.get("listing_id"):
-        return False, "missing listing_id"
-    if t == "update_title":
-        title = (p.get("title") or "").strip()
-        if not title:
-            return False, "title is empty"
-        if len(title) > 70:
-            return False, f"title is {len(title)} chars — max 70 (mobile ranking rule)"
-    if t == "update_tags":
-        tags = p.get("tags")
-        if not isinstance(tags, list) or not tags:
-            return False, "tags must be a non-empty list"
-        if len(tags) > 13:
-            return False, f"{len(tags)} tags — Etsy allows max 13"
-        for tg in tags:
-            if not isinstance(tg, str) or not tg.strip():
-                return False, "tags contain an empty value"
-            if len(tg) > 20:
-                return False, f"tag '{tg}' exceeds 20 characters"
+    if t in _ETSY_STAGED_ACTION_TYPES:
+        if not p.get("listing_id"):
+            return False, "missing listing_id"
+        if t == "update_title":
+            title = (p.get("title") or "").strip()
+            if not title:
+                return False, "title is empty"
+            if len(title) > 70:
+                return False, f"title is {len(title)} chars — max 70 (mobile ranking rule)"
+        if t == "update_tags":
+            tags = p.get("tags")
+            if not isinstance(tags, list) or not tags:
+                return False, "tags must be a non-empty list"
+            if len(tags) > 13:
+                return False, f"{len(tags)} tags — Etsy allows max 13"
+            for tg in tags:
+                if not isinstance(tg, str) or not tg.strip():
+                    return False, "tags contain an empty value"
+                if len(tg) > 20:
+                    return False, f"tag '{tg}' exceeds 20 characters"
+        return True, "ok"
+    # Local types — the real security boundary is the relay's own realpath check
+    # at execution time (it's the only thing with Scott's actual filesystem to
+    # resolve against); this is fast UX feedback at staging time only.
+    if t in ("local_write_file", "local_delete"):
+        path = (p.get("path") or "").strip()
+        if not path:
+            return False, "missing path"
+        if not db.is_path_allowed(path):
+            return False, f"path not in an Allowed Folder: {path}"
+        if t == "local_write_file" and p.get("after") is None:
+            return False, "missing file content"
+    elif t == "local_exec":
+        command = p.get("command")
+        if command not in _LOCAL_EXEC_COMMANDS:
+            return False, f"unknown local command: {command}"
+        extra_args = (p.get("extra_args") or "").strip()
+        if extra_args:
+            bad = [
+                part for part in extra_args.split()
+                if any(f in part.lower() for f in _LOCAL_FORBIDDEN_EXEC_FLAGS)
+            ]
+            if bad:
+                return False, f"extra_args {bad} are not allowed on a local command"
     return True, "ok"
 
 
@@ -3984,6 +4404,30 @@ def _execute_staged_action(a: dict) -> dict:
     }
 
 
+async def _execute_local_staged_action(a: dict) -> dict:
+    """Apply an approved local_write_file/local_delete/local_exec action — the
+    actual mutation only ever happens here, after Scott's approval, via the same
+    _dispatch_to_relay round-trip the instant tools use. Logged to activity_log
+    (durable, separate from action_queue) regardless of outcome."""
+    t = a["type"]
+    p = a.get("payload", {}) or {}
+    if t == "local_write_file":
+        result = await _dispatch_to_relay("local_write_file", {"path": p["path"], "content": p["after"]})
+    elif t == "local_delete":
+        result = await _dispatch_to_relay("local_delete", {"path": p["path"]})
+    elif t == "local_exec":
+        result = await _dispatch_to_relay("local_exec", {"command": p["command"], "extra_args": p.get("extra_args", "")})
+    else:
+        raise ValueError(f"unsupported local type {t}")
+    if "error" in result:
+        await asyncio.to_thread(
+            db.log_activity, "frank", t, a.get("summary", ""), p, outcome="error"
+        )
+        raise RuntimeError(result["error"])
+    await asyncio.to_thread(db.log_activity, "frank", t, a.get("summary", ""), p, outcome="ok")
+    return result
+
+
 @app.get("/api/queue")
 async def get_queue(status: str = "pending", _token: str = Depends(_auth)):
     """List staged actions. status=pending (default) or 'all'."""
@@ -4004,11 +4448,19 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
     if not ok:
         await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": f"gate failed: {msg}"})
         raise HTTPException(status_code=422, detail=f"quality gate failed: {msg}")
+    is_local = a["type"] in _LOCAL_STAGED_ACTION_TYPES
+    if is_local:
+        state = await asyncio.to_thread(db.get_relay_state)
+        if state.get("killed"):
+            raise HTTPException(status_code=409, detail="kill switch is engaged — local actions are suspended")
     try:
-        result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
+        if is_local:
+            result = await asyncio.wait_for(_execute_local_staged_action(a), timeout=45.0)
+        else:
+            result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
     except Exception as exc:
         await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": str(exc)})
-        raise HTTPException(status_code=502, detail=f"Etsy execution failed: {exc}")
+        raise HTTPException(status_code=502, detail=f"execution failed: {exc}")
     await asyncio.to_thread(db.set_action_status, action_id, "executed", result)
     return {"status": "executed", "id": action_id, "result": result}
 
@@ -4191,6 +4643,84 @@ async def post_etsy_tokens_endpoint(payload: dict, _token: str = Depends(_auth))
     os.environ["ETSY_ACCESS_TOKEN"] = access_token
     os.environ["ETSY_REFRESH_TOKEN"] = refresh_token
     print("[etsy-tokens] adopted rotated token pair posted by CI", flush=True)
+    return {"ok": True}
+
+
+# ── Local Relay — status, kill switch, Allowed Folders ──────────────────────────
+
+
+@app.get("/api/relay/status")
+async def get_relay_status(_token: str = Depends(_auth)):
+    """3-state status for the HUD badge: connected, killed, or offline. Connected
+    and killed are independent — a killed relay can still be connected (it just
+    refuses every tool_request), and an unkilled relay can be offline."""
+    state = await asyncio.to_thread(db.get_relay_state)
+    with _relay_lock:
+        connected = _relay_ws is not None
+    return {
+        "connected": connected,
+        "killed": bool(state.get("killed")),
+        "killed_at": state.get("killed_at"),
+        "killed_by": state.get("killed_by"),
+        "last_heartbeat": state.get("last_heartbeat"),
+    }
+
+
+@app.post("/api/relay/kill")
+async def post_relay_kill(_token: str = Depends(_auth)):
+    """Engage the kill switch. Blocks everything — including read-only
+    local_read_file/local_list_dir — until /api/relay/resume is called.
+    relay_state.killed is the source of truth (survives a server restart)."""
+    await asyncio.to_thread(db.set_kill_switch, True, "scott")
+    await asyncio.to_thread(db.log_activity, "scott", "kill_switch", "kill switch engaged", None, "ok")
+    with _relay_lock:
+        ws = _relay_ws
+    if ws is not None:
+        try:
+            await ws.send_text(json.dumps({"type": "kill_switch", "active": True}))
+        except Exception:
+            pass
+    return {"killed": True}
+
+
+@app.post("/api/relay/resume")
+async def post_relay_resume(_token: str = Depends(_auth)):
+    await asyncio.to_thread(db.set_kill_switch, False, "scott")
+    await asyncio.to_thread(db.log_activity, "scott", "kill_switch", "kill switch released", None, "ok")
+    with _relay_lock:
+        ws = _relay_ws
+    if ws is not None:
+        try:
+            await ws.send_text(json.dumps({"type": "kill_switch", "active": False}))
+        except Exception:
+            pass
+    return {"killed": False}
+
+
+@app.get("/api/relay/allowed-folders")
+async def get_allowed_folders(_token: str = Depends(_auth)):
+    """The relay polls this (or refreshes periodically) so folder changes take
+    effect without restarting the relay process."""
+    folders = await asyncio.to_thread(db.list_allowed_folders)
+    return {"folders": folders}
+
+
+@app.post("/api/relay/allowed-folders")
+async def post_allowed_folder(payload: dict, _token: str = Depends(_auth)):
+    path = (payload or {}).get("path", "").strip()
+    if not path:
+        raise HTTPException(status_code=400, detail="path is required")
+    folder_id = await asyncio.to_thread(db.add_allowed_folder, path, "scott")
+    await asyncio.to_thread(db.log_activity, "scott", "allowed_folder_add", path, None, "ok")
+    return {"ok": True, "id": folder_id}
+
+
+@app.delete("/api/relay/allowed-folders/{folder_id}")
+async def delete_allowed_folder(folder_id: int, _token: str = Depends(_auth)):
+    ok = await asyncio.to_thread(db.remove_allowed_folder, folder_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Folder not found")
+    await asyncio.to_thread(db.log_activity, "scott", "allowed_folder_remove", str(folder_id), None, "ok")
     return {"ok": True}
 
 
@@ -4448,6 +4978,56 @@ async def open_zip_entry(root: str, path: str, entry: str, token: str = "", inli
     )
 
 
+# ── WebSocket relay (Frank's local hands/ears process connects here) ───────────
+
+
+@app.websocket("/ws/relay")
+async def relay_ws(websocket: WebSocket):
+    """The local relay process (tools/relay/frank_relay.py, running on Scott's own
+    machine) connects here. This is a pure RPC executor for local_* tool calls —
+    it owns no conversation, unlike /ws/chat. Auth via the same ?token=<APP_TOKEN>
+    as /ws/chat (v1 limitation; a dedicated relay-only token is a planned
+    follow-up so the credential reaching Scott's computer isn't the same one
+    already in the mobile app's source)."""
+    global _relay_ws
+    token = websocket.query_params.get("token", "")
+    if token != APP_TOKEN:
+        await websocket.close(code=4001)
+        return
+
+    await websocket.accept()
+    with _relay_lock:
+        _relay_ws = websocket
+    await asyncio.to_thread(db.log_activity, "relay", "connect", "relay connected", None, "ok")
+
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            msg = json.loads(raw)
+            mtype = msg.get("type")
+
+            if mtype == "tool_result":
+                req_id = msg.get("id")
+                fut = _relay_pending.get(req_id)
+                if fut and not fut.done():
+                    if msg.get("ok"):
+                        fut.set_result(msg.get("result") or {})
+                    else:
+                        fut.set_result({"error": msg.get("error") or "relay reported failure"})
+
+            elif mtype == "heartbeat":
+                await asyncio.to_thread(db.set_relay_heartbeat, msg.get("cpu"), msg.get("ram_pct"))
+
+            # "kill_switch" is server → relay only; nothing to receive for it here.
+    except WebSocketDisconnect:
+        pass
+    finally:
+        with _relay_lock:
+            if _relay_ws is websocket:
+                _relay_ws = None
+        await asyncio.to_thread(db.log_activity, "relay", "disconnect", "relay disconnected", None, "ok")
+
+
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
 
 
@@ -4494,6 +5074,10 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     status_msg = f"⚙ Running {cmd}…"
                 elif block.name == "stage_action":
                     status_msg = "📋 Staging action for approval…"
+                elif block.name in _RELAY_TOOLS:
+                    status_msg = f"💻 Asking the relay to run {block.name}…"
+                elif block.name in _LOCAL_STAGED_TOOLS:
+                    status_msg = f"📋 Staging {block.name} for approval…"
                 else:
                     status_msg = f"📊 Reading {block.name}…"
                 try:
@@ -4501,7 +5085,12 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                 except Exception:
                     pass  # status update is best-effort; never let it block the tool result
                 try:
-                    result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
+                    if block.name in _RELAY_TOOLS:
+                        result = await _dispatch_to_relay(block.name, block.input)
+                    elif block.name in _LOCAL_STAGED_TOOLS:
+                        result = await _stage_local_action(block.name, block.input)
+                    else:
+                        result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
                 except Exception as exc:
                     result = {"error": str(exc)}
                 tool_results.append(

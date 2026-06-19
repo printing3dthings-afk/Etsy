@@ -113,6 +113,29 @@ CREATE TABLE IF NOT EXISTS todos (
   created_at    TEXT NOT NULL,
   completed_at  TEXT
 );
+CREATE TABLE IF NOT EXISTS allowed_folders (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  path       TEXT NOT NULL UNIQUE,
+  added_at   TEXT NOT NULL,
+  added_by   TEXT NOT NULL DEFAULT 'system'
+);
+CREATE TABLE IF NOT EXISTS activity_log (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts           TEXT NOT NULL,
+  actor        TEXT NOT NULL,
+  action_type  TEXT NOT NULL,
+  detail       TEXT,
+  payload_json TEXT,
+  outcome      TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_activity_ts ON activity_log(ts);
+CREATE TABLE IF NOT EXISTS relay_state (
+  id             INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
+  last_heartbeat TEXT,
+  killed         INTEGER NOT NULL DEFAULT 0,
+  killed_at      TEXT,
+  killed_by      TEXT
+);
 """
 
 
@@ -507,5 +530,167 @@ def delete_todo(todo_id: int) -> bool:
         cur = conn.execute("DELETE FROM todos WHERE id=?", (todo_id,))
         conn.commit()
         return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+# ── Allowed Folders (server-side staging-time check; relay re-checks at execution
+# time with os.path.realpath against Scott's actual filesystem — that relay-side
+# check is the real security boundary, this one is fast UX feedback only) ───────
+
+
+def add_allowed_folder(path: str, added_by: str = "system") -> int:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO allowed_folders (path, added_at, added_by) VALUES (?,?,?)",
+            (path, ts, added_by),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def list_allowed_folders() -> list:
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute("SELECT * FROM allowed_folders ORDER BY added_at ASC").fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def remove_allowed_folder(folder_id: int) -> bool:
+    init_db()
+    conn = _connect()
+    try:
+        cur = conn.execute("DELETE FROM allowed_folders WHERE id=?", (folder_id,))
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def is_path_allowed(path: str) -> bool:
+    """Best-effort string-prefix check against the allow-list. NOT the security
+    boundary — this gives fast UX feedback at staging time only. The relay
+    performs the real check at execution time using os.path.realpath against
+    Scott's actual filesystem (this server never sees that filesystem)."""
+    if not path:
+        return False
+    norm = path.replace("\\", "/").rstrip("/").lower()
+    for f in list_allowed_folders():
+        root = f["path"].replace("\\", "/").rstrip("/").lower()
+        if norm == root or norm.startswith(root + "/"):
+            return True
+    return False
+
+
+def ensure_default_sandbox_folder() -> None:
+    """Seed the default sandbox folder on first run if the allow-list is empty."""
+    init_db()
+    if not list_allowed_folders():
+        add_allowed_folder(r"C:\Users\<you>\frank_sandbox", added_by="system")
+
+
+# ── Activity log (permanent, append-only — separate from action_queue, which
+# clears once a pending item is decided). Gives a durable "everything Frank
+# has done" history for review, queryable by type/date/actor for an audit UI. ──
+
+
+def log_activity(actor: str, action_type: str, detail: str = "", payload: dict | None = None, outcome: str = "ok") -> int:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "INSERT INTO activity_log (ts, actor, action_type, detail, payload_json, outcome) "
+            "VALUES (?,?,?,?,?,?)",
+            (ts, actor, action_type, detail, json.dumps(payload) if payload is not None else None, outcome),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def list_activity(limit: int = 200, action_type: str | None = None) -> list:
+    init_db()
+    conn = _connect()
+    try:
+        if action_type:
+            rows = conn.execute(
+                "SELECT * FROM activity_log WHERE action_type=? ORDER BY id DESC LIMIT ?",
+                (action_type, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM activity_log ORDER BY id DESC LIMIT ?", (limit,)
+            ).fetchall()
+        out = []
+        for r in rows:
+            d = dict(r)
+            if d.get("payload_json"):
+                try:
+                    d["payload"] = json.loads(d.pop("payload_json"))
+                except Exception:
+                    d["payload"] = None
+            else:
+                d.pop("payload_json", None)
+            out.append(d)
+        return out
+    finally:
+        conn.close()
+
+
+# ── Relay state (singleton row, same pattern as etsy_tokens — the kill switch
+# must survive a server restart without silently un-killing) ─────────────────
+
+
+def get_relay_state() -> dict:
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute("SELECT * FROM relay_state WHERE id=1").fetchone()
+        if r:
+            return dict(r)
+        return {"id": 1, "last_heartbeat": None, "killed": 0, "killed_at": None, "killed_by": None}
+    finally:
+        conn.close()
+
+
+def set_relay_heartbeat(cpu: float | None = None, ram_pct: float | None = None) -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO relay_state (id, last_heartbeat, killed)
+               VALUES (1, ?, 0)
+               ON CONFLICT(id) DO UPDATE SET last_heartbeat=excluded.last_heartbeat""",
+            (ts,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def set_kill_switch(active: bool, by: str = "scott") -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO relay_state (id, killed, killed_at, killed_by)
+               VALUES (1, ?, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET
+                 killed=excluded.killed, killed_at=excluded.killed_at, killed_by=excluded.killed_by""",
+            (1 if active else 0, ts if active else None, by if active else None),
+        )
+        conn.commit()
     finally:
         conn.close()
