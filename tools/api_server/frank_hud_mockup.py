@@ -518,7 +518,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="bb-left">
       <div class="it">📍 Local</div>
       <div class="it">⛅ —</div>
-      <div class="it">🌐 Relay: not built</div>
+      <div class="it" id="bb-relay">🌐 Relay: —</div>
     </div>
     <div class="bb-center">
       <span class="dots-line"></span>
@@ -614,6 +614,29 @@ async function loadAgents(){
     const msg = '<div style="color:var(--red);font-size:11px;padding:8px">Agents offline: '+escHtml(e.message)+'</div>';
     if(cmdGrid) cmdGrid.innerHTML = msg;
     if(fullGrid) fullGrid.innerHTML = msg;
+  }
+}
+
+// ── Bottom-bar Relay indicator — real data from /api/relay/status ──
+async function loadRelayStatus(){
+  const el = document.getElementById('bb-relay');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/relay/status');
+    const d = await r.json();
+    if(d.killed){
+      el.textContent = '🌐 Relay: Killed';
+      el.style.color = 'var(--red)';
+    } else if(d.connected){
+      el.textContent = '🌐 Relay: Connected';
+      el.style.color = 'var(--green)';
+    } else {
+      el.textContent = '🌐 Relay: Offline';
+      el.style.color = 'var(--muted)';
+    }
+  }catch(e){
+    el.textContent = '🌐 Relay: —';
+    el.style.color = 'var(--muted)';
   }
 }
 
@@ -823,6 +846,7 @@ function loadAll(){
   loadMissionTimeline();
   loadTasks();
   loadTools();
+  loadRelayStatus();
 }
 loadAll();
 setInterval(loadAll, 30000);
