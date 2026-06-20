@@ -215,7 +215,7 @@ canvas#orb{cursor:pointer}
 /* Row C: System Monitor | Memory Insights | LLM Status */
 .col-sysmon{flex:1}
 .col-meminsights{flex:1}
-.col-llm{flex:1.3}
+.col-shop{flex:1.3}
 
 .gauge-row{display:flex;gap:10px;flex:1;align-items:center;justify-content:space-around}
 .gauge{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -232,13 +232,19 @@ canvas#orb{cursor:pointer}
 .mem-stat .n{font-size:14px;font-weight:700;color:var(--cyan2)}
 .mem-stat .l{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
 
-.llm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;flex:1}
-.llm-chip{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:9px 8px;
-  display:flex;flex-direction:column;gap:4px;justify-content:center}
-.llm-chip .nm{font-size:11px;font-weight:600}
-.llm-chip .st{font-size:9.5px;display:flex;align-items:center;gap:4px}
-.llm-chip .st.ok{color:var(--green)}
-.llm-chip .st .d{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.shop-spark-row{display:flex;gap:8px;flex:1;min-height:0}
+.shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+  padding:7px 9px;display:flex;flex-direction:column;gap:2px;min-height:0;overflow:hidden}
+.shop-spark-card .ssc-lab{font-size:9px;color:var(--muted);letter-spacing:.4px}
+.shop-spark-card .ssc-val{font-size:14px;font-weight:700;color:var(--cyan2)}
+.shop-spark-card .ssc-delta{font-size:9px;margin-top:1px}
+.shop-spark-card .ssc-spark{flex:1;min-height:0}
+
+.shop-chip-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.shop-chip{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;
+  display:flex;flex-direction:column;gap:3px;justify-content:center}
+.shop-chip .nm{font-size:9px;color:var(--muted);letter-spacing:.3px}
+.shop-chip .v{font-size:12.5px;font-weight:700;color:var(--text)}
 
 /* Studio tab placeholder */
 .studio-grid{display:flex;gap:14px;height:100%}
@@ -429,12 +435,16 @@ video{width:100%;border-radius:10px;background:#000;display:block}
           </div>
         </div>
 
-        <div class="panel brk col-llm">
-          <div class="panel-title">LLM Status <span class="lnk" onclick="showScreen('connections')" style="cursor:pointer">Manage Providers ›</span></div>
-          <div class="llm-grid" id="llm-grid">
-            <div class="llm-chip"><div class="nm">Claude</div><div class="st"><span class="d"></span>—</div></div>
-            <div class="llm-chip"><div class="nm">OpenAI</div><div class="st"><span class="d"></span>—</div></div>
-            <div class="llm-chip"><div class="nm">Etsy API</div><div class="st"><span class="d"></span>—</div></div>
+        <div class="panel brk col-shop">
+          <div class="panel-title">Shop Performance <span class="src">/api/analytics + /api/metrics</span></div>
+          <div class="shop-spark-row" id="shop-spark-row">
+            <div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div><div class="ssc-val">—</div></div>
+            <div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div><div class="ssc-val">—</div></div>
+          </div>
+          <div class="shop-chip-row" id="shop-chip-row">
+            <div class="shop-chip"><div class="nm">Listings</div><div class="v">—</div></div>
+            <div class="shop-chip"><div class="nm">Total Sales</div><div class="v">—</div></div>
+            <div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">—</div></div>
           </div>
         </div>
       </div>
@@ -621,7 +631,6 @@ async function loadCredentialsAndHealth(){
   try{ const r = await authGet('/api/credentials/status'); cred = await r.json(); }catch(e){}
   try{ const r = await fetchWithTimeout(BASE+'/health', {}, 10000); health = await r.json(); }catch(e){}
 
-  const chips = [];
   const coreRows = [];
   if(cred){
     const providers = [
@@ -629,9 +638,6 @@ async function loadCredentialsAndHealth(){
       {nm:'OpenAI', ok: !!(cred.openai && cred.openai.api_key)},
       {nm:'Etsy API', ok: !!cred.etsy_live}
     ];
-    providers.forEach(p=>{
-      chips.push('<div class="llm-chip"><div class="nm">'+p.nm+'</div><div class="st'+(p.ok?' ok':'')+'"><span class="d"'+(p.ok?'':' style="background:var(--red)"')+'></span>'+(p.ok?'Connected':'Offline')+'</div></div>');
-    });
     const connectedCount = providers.filter(p=>p.ok).length;
     const acLlms = document.getElementById('ac-llms');
     if(acLlms) acLlms.textContent = connectedCount+'/'+providers.length+' connected';
@@ -639,12 +645,7 @@ async function loadCredentialsAndHealth(){
     coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+(cred.etsy_live?'':' err')+'"></span>Etsy</span><span class="v'+(cred.etsy_live?'':' err')+'">'+(cred.etsy_live?('Live — '+escHtml(cred.shop_name||'onbrandcraftz')):escHtml(cred.etsy_live_error||'offline'))+'</span></div>');
     coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.anthropic&&cred.anthropic.api_key)?'':' err')+'"></span>Anthropic</span><span class="v'+((cred.anthropic&&cred.anthropic.api_key)?'':' err')+'">'+((cred.anthropic&&cred.anthropic.api_key)?'Key configured':'Missing key')+'</span></div>');
     coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.openai&&cred.openai.api_key)?'':' err')+'"></span>OpenAI</span><span class="v'+((cred.openai&&cred.openai.api_key)?'':' err')+'">'+((cred.openai&&cred.openai.api_key)?'Key configured':'Missing key')+'</span></div>');
-  } else {
-    chips.push('<div style="color:var(--red);font-size:11px;padding:4px">Credentials offline</div>');
   }
-  const llmGrid = document.getElementById('llm-grid');
-  if(llmGrid) llmGrid.innerHTML = chips.join('');
-
   const acCore = document.getElementById('ac-core');
   const acSystem = document.getElementById('ac-system');
   if(health){
@@ -666,6 +667,66 @@ async function loadCredentialsAndHealth(){
   if(coreDetail){
     coreDetail.innerHTML = coreRows.length ? coreRows.join('') :
       '<div class="core-row"><span class="lab"><span class="dotc err"></span>Unavailable</span><span class="v err">Could not load</span></div>';
+  }
+}
+
+// ── Shop Performance — real data from /api/analytics + /api/metrics ──
+function _miniSpark(values, color){
+  var h = 26;
+  values = (values||[]).filter(function(v){ return v!=null && !isNaN(v); });
+  if(values.length < 2) return '<div style="height:'+h+'px;display:flex;align-items:center;font-size:8.5px;color:var(--muted)">📈 Accumulating daily data…</div>';
+  var W=140,H=h,mn=Math.min.apply(null,values),mx=Math.max.apply(null,values),range=mx-mn||1,pad=2;
+  var pts=values.map(function(v,i){return [pad+(i/(values.length-1))*(W-pad*2), H-pad-((v-mn)/range)*(H-pad*2)];});
+  var poly=pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+  var area='M'+pts[0][0].toFixed(1)+','+H+' '+pts.map(function(p){return 'L'+p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+' L'+pts[pts.length-1][0].toFixed(1)+','+H+' Z';
+  var gid='fsg'+Math.random().toString(36).slice(2,8);
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px;display:block;overflow:visible">'+
+    '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="'+color+'" stop-opacity="0.3"/>'+
+    '<stop offset="100%" stop-color="'+color+'" stop-opacity="0"/>'+
+    '</linearGradient></defs>'+
+    '<path d="'+area+'" fill="url(#'+gid+')"/>'+
+    '<polyline points="'+poly+'" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<circle cx="'+pts[pts.length-1][0].toFixed(1)+'" cy="'+pts[pts.length-1][1].toFixed(1)+'" r="2.5" fill="'+color+'"/>'+
+    '</svg>';
+}
+function _miniDelta(val, isMoney){
+  if(val==null || val===0) return '<span style="color:var(--muted)">— stable</span>';
+  var pos=val>0, c=pos?'var(--green)':'var(--red)', a=pos?'↑':'↓';
+  var n=isMoney?('$'+Math.abs(val).toFixed(2)):String(Math.round(Math.abs(val)));
+  return '<span style="color:'+c+'">'+a+' '+n+'</span>';
+}
+async function loadShopPerf(){
+  const sparkEl = document.getElementById('shop-spark-row');
+  const chipEl = document.getElementById('shop-chip-row');
+  try{
+    const [ar, mr] = await Promise.all([
+      authGet('/api/analytics?days=30'),
+      authGet('/api/metrics'),
+    ]);
+    const a = await ar.json();
+    const m = await mr.json();
+    const tr = a.trends||{}, lt = a.latest||{}, del = a.delta||{};
+    if(sparkEl){
+      sparkEl.innerHTML =
+        '<div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div>'+
+          '<div class="ssc-val">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
+          '<div class="ssc-spark">'+_miniSpark(tr.revenue_30d,'var(--gold)')+'</div>'+
+          '<div class="ssc-delta">'+_miniDelta(del.revenue_30d,true)+'</div></div>'+
+        '<div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div>'+
+          '<div class="ssc-val">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
+          '<div class="ssc-spark">'+_miniSpark(tr.orders_30d,'var(--cyan2)')+'</div>'+
+          '<div class="ssc-delta">'+_miniDelta(del.orders_30d,false)+'</div></div>';
+    }
+    const allTimeRev = (m.orders && m.orders.all_time_revenue!=null) ? m.orders.all_time_revenue : null;
+    if(chipEl){
+      chipEl.innerHTML =
+        '<div class="shop-chip"><div class="nm">Listings</div><div class="v">'+(lt.active_listings!=null?lt.active_listings:'—')+'</div></div>'+
+        '<div class="shop-chip"><div class="nm">Total Sales</div><div class="v">'+(lt.total_sales!=null?lt.total_sales:'—')+'</div></div>'+
+        '<div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">'+(allTimeRev!=null?'$'+allTimeRev.toFixed(2):'—')+'</div></div>';
+    }
+  }catch(e){
+    if(sparkEl) sparkEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:4px">Shop data offline</div>';
   }
 }
 
@@ -713,6 +774,7 @@ async function loadTools(){
 function loadAll(){
   loadAgents();
   loadCredentialsAndHealth();
+  loadShopPerf();
   loadTasks();
   loadTools();
 }

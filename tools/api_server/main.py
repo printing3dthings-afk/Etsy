@@ -3136,6 +3136,8 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
             "last_30_days": len(o30),
             "revenue_7d": _revenue(o7),
             "revenue_30d": _revenue(o30),
+            "all_time_count": len(orders),
+            "all_time_revenue": _revenue(orders),
         }
 
     if isinstance(reviews_r, Exception):
