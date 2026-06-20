@@ -681,3 +681,18 @@ doesn't show a frozen tile for a loop that no longer runs.
 direct human-only endpoint. Staged both `4512301880` and `4512784922` via `db.enqueue_action` referencing this
 finding; both sit as `pending` in the Action Center queue. Nothing on Etsy has changed — Scott must still tap
 Approve for either listing to actually go inactive.
+
+### 2026-06-19 — Closed: both quantity-mismatch listings approved and taken off the storefront
+Scott explicitly approved ("I want you to deactivate those"). Ran `approve_action`'s code path (validate →
+`_execute_staged_action` → `client.update_listing(lid, {"state": "inactive"})`) for queue IDs `1` and `2`.
+Both now show `status: "executed"` in `action_queue`.
+**API quirk found:** Etsy's PATCH response reports `state: "edit"` for both listings, not `"inactive"` as
+requested. This is a real, distinct Etsy listing state (not an error) — likely returned because the PATCH
+payload only sets `state` without re-sending other listing fields Etsy wants on a full update. Confirmed by
+paginating the full `shops/{shop_id}/listings/active` feed (140 results) end to end: neither `4512301880` nor
+`4512784922` appears, so the practical effect (off the public storefront, not purchasable) is achieved even
+though the literal state string differs from what was requested. If a future check needs to confirm "is this
+listing live," do not rely on `state == "inactive"` alone — also check absence from the `listings/active` feed,
+since Etsy may return `edit` for what is functionally the same outcome.
+**Result:** `4512301880` (Boho Botanical Set of 4) and `4512784922` (Four Seasons Set of 4) are confirmed off
+the storefront. Finding fully closed — not just staged.
