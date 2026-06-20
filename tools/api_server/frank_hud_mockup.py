@@ -125,9 +125,11 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 /* ── Main content ── */
 .main{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:12px;padding:12px;overflow:hidden}
 .mrow{display:flex;gap:12px;min-height:0}
-.mrow.rowA{flex:1.25}
-.mrow.rowB{flex:1}
-.mrow.rowC{flex:1}
+.mrow.rowA{flex:1.1}
+.mrow.rowB{flex:0.85}
+.mrow.rowC{flex:0.85}
+.mrow.rowD{flex:1.1}
+.col-chat{flex:1 1 auto}
 
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;
   display:flex;flex-direction:column;overflow:hidden;min-height:0}
@@ -325,7 +327,6 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   <div class="sidebar">
     <div class="nav-section">Frank</div>
     <div class="nav-item active" data-screen="cmd"><span class="ic">⌂</span>Command Center</div>
-    <div class="nav-item" data-screen="livechat"><span class="ic">🗨</span>Chat</div>
     <div class="nav-item" data-screen="core"><span class="ic">◎</span>AI Core</div>
     <div class="nav-item" data-screen="agents"><span class="ic">⚙</span>Agents</div>
     <div class="nav-item" data-screen="tasks"><span class="ic">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
@@ -459,6 +460,26 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         </div>
       </div>
 
+      <div class="mrow rowD">
+        <div class="panel brk col-chat">
+          <div class="panel-title">Ask Frank <span class="src">/ws/chat — live, always-on chat</span></div>
+          <div id="chat-msgs"></div>
+          <div class="lc-chips">
+            <span class="lc-chip" onclick="sendChip(this)">What should I focus on?</span>
+            <span class="lc-chip" onclick="sendChip(this)">How are sales?</span>
+            <span class="lc-chip" onclick="sendChip(this)">What's my next listing?</span>
+            <span class="lc-chip" onclick="sendChip(this)">Pricing advice</span>
+            <span class="lc-chip" onclick="sendChip(this)">SEO tips</span>
+          </div>
+          <div class="lc-input-row">
+            <input id="chat-input" type="text" placeholder="Ask Fucking Frank…" autocomplete="off">
+            <button id="chat-send" onclick="sendMsg()">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -488,27 +509,6 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <div class="panel-title">Tasks <span class="src">/api/todos</span></div>
       <div id="tasks-list" style="margin-top:10px;overflow-y:auto;max-height:760px">
         <div style="color:var(--muted);font-size:12px">Loading…</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ LIVE CHAT — real data: /ws/chat (same backend &amp; session scheme as the live Hub at /) ══════════ -->
-  <div class="screen" id="screen-livechat">
-    <div class="panel brk" style="height:100%">
-      <div class="panel-title">Ask Frank <span class="src">/ws/chat — same backend &amp; session as the Hub at /</span></div>
-      <div id="chat-msgs"></div>
-      <div class="lc-chips">
-        <span class="lc-chip" onclick="sendChip(this)">What should I focus on?</span>
-        <span class="lc-chip" onclick="sendChip(this)">How are sales?</span>
-        <span class="lc-chip" onclick="sendChip(this)">What's my next listing?</span>
-        <span class="lc-chip" onclick="sendChip(this)">Pricing advice</span>
-        <span class="lc-chip" onclick="sendChip(this)">SEO tips</span>
-      </div>
-      <div class="lc-input-row">
-        <input id="chat-input" type="text" placeholder="Ask Fucking Frank…" autocomplete="off">
-        <button id="chat-send" onclick="sendMsg()">
-          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
       </div>
     </div>
   </div>
@@ -613,7 +613,6 @@ function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el = document.getElementById('screen-'+name);
   if(el) el.classList.add('active');
-  if(name === 'livechat' && !ws) initWS();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -701,6 +700,7 @@ function sendMsg() {
 }
 function sendChip(el) { document.getElementById('chat-input').value = el.textContent; sendMsg(); }
 document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+initWS();
 
 // ── Agents — real data from /api/agents/status (live-status registry).
 // Every tile is a real loop or honestly marked not_built/offline; never invented. ──
