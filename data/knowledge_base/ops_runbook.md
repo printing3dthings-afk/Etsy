@@ -731,3 +731,24 @@ flagging these as WARN, and synced CLAUDE.md's "Product Catalog" and "Pre-Writte
 match. **Still open:** Scott should be told the underlying PDFs grew without anyone updating the listing
 copy — worth a quick process check on whatever workflow regenerates these PDFs, so the description doesn't
 drift again next time content is added.
+
+### 2026-06-20 — Western SVG commercial license listing told buyers to purchase a second listing that doesn't exist (truthfulness fix)
+**Symptom:** While deciding what to do about `SVG_WESTERN`'s `"incomplete"` catalog status, found it isn't
+just a dormant unbuilt product — it's tied to a live, active $24.99 listing (4515437442, "Commercial
+License, Western SVG Bundle 12 Designs"). Its description said "Purchase the personal use listing (linked
+in the description above) to receive the files" and "You receive the same files as the personal use listing
+PLUS this commercial license certificate," and its FAQ said "Yes — this listing is the license only.
+Purchase the regular listing for the design files."
+**Root cause:** No such "personal use listing" exists or ever existed — confirmed via `c.get_listing_files()`
+that the design ZIP (`OnBrandCraftz_western_SVG_Bundle.zip`, 15.98MB, 12 designs) is already directly attached
+to and deliverable by this very license listing, and via a shop-wide search of all 140 active listings that
+zero other listings contain "western" in the title. The description text was carried over from a planned
+two-listing (personal-use + commercial-license) model that was apparently never actually built, leaving buyers
+told to go find and purchase a listing that doesn't exist in order to receive files they already paid for.
+**Fix:** Edited the live description via `client.update_listing(4515437442, {"description": ...})` — removed
+the "purchase the personal use listing" line, the matching "same files as the personal use listing" line, and
+the FAQ Q&A, replacing all three with accurate statements that this purchase includes both the commercial
+license and the full design file set, delivered instantly. Verified live: false text gone, ZIP attachment
+(filename/size/file_id) unchanged. Did not touch price, photos, tags, or `product_catalog.json`'s
+`SVG_WESTERN` `"incomplete"` status — that entry tracks a separate personal-use product that was never built
+(build-vs-abandon decision, out of scope for this fix).
