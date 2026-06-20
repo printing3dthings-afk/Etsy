@@ -591,7 +591,7 @@ def publish_coloring_sets(c: EtsyAPIClient, dry_run: bool) -> list[dict]:
 
         # Upload ZIP digital file
         try:
-            c.upload_listing_file(lid, str(zip_path), rank=1, skip_validation=True)
+            c.upload_listing_file(lid, str(zip_path), rank=1)
             time.sleep(1.0)
             print(f"  ZIP uploaded: {zip_path.name}")
         except Exception as exc:
@@ -721,7 +721,7 @@ def publish_paper_packs(c: EtsyAPIClient, dry_run: bool) -> list[dict]:
 
         # Upload ZIP digital file
         try:
-            c.upload_listing_file(lid, str(zip_path), rank=1, skip_validation=True)
+            c.upload_listing_file(lid, str(zip_path), rank=1)
             time.sleep(1.0)
             print(f"  ZIP uploaded: {zip_path.name}")
         except Exception as exc:

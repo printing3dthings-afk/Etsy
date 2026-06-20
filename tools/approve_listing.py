@@ -20,6 +20,7 @@ Usage:
   python tools/approve_listing.py --list-drafts            # show draft listings
   python tools/approve_listing.py --listing-id <ID>        # review + prompt to publish
   python tools/approve_listing.py --listing-id <ID> --yes  # publish + lock in
+  python tools/approve_listing.py --listing-id <ID> --force # override a failed file gate
   python tools/approve_listing.py --lock <ID> [--notes ""] # lock an active listing
   python tools/approve_listing.py --list-approvals         # show locked approvals
   python tools/approve_listing.py --revoke <ID>            # remove an approval
@@ -58,9 +59,17 @@ if _env_path.exists():
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from etsy_api import EtsyAPIClient, EtsyAPIError
 
+sys.path.insert(0, str(BASE_DIR))
+from tools import qc_sweep as _qc_sweep
+from tools.qc_sweep import check_planner_pdf, check_sticker_zip, check_other_zip, PLANNER_PAGES
+
+if PIL_OK:
+    _qc_sweep.Image = Image  # qc_sweep lazy-imports PIL inside main(); we call its checks directly
+
 APPROVALS_PATH = BASE_DIR / "data" / "listing_approvals.json"
 REGISTRY_PATH = BASE_DIR / "data" / "product_art_registry.json"
 MAP_PATH = BASE_DIR / "data" / "dp_listing_map.json"
+CATALOG_PATH = BASE_DIR / "data" / "product_catalog.json"
 
 ART_MATCH_THRESHOLD = 80   # Hamming distance; ≤ this means the art is present in a photo
 
@@ -160,6 +169,43 @@ def verify_art(photo_hashes: dict[str, str], dp_codes: list[str],
     return best_distance <= ART_MATCH_THRESHOLD, best_distance, best_dp
 
 
+def check_product_files(dp_codes: list[str]) -> list[dict]:
+    """Run qc_sweep's count/structure checks against just this listing's deliverables.
+
+    Looks up each dp_code's `files` list in product_catalog.json and dispatches each
+    file to the matching qc_sweep check by filename pattern — the same dispatch
+    qc_sweep.main() uses for the full bulk sweep, scoped here to one product so it can
+    run as part of a single listing's pre-publish gate."""
+    catalog = json.loads(CATALOG_PATH.read_text()) if CATALOG_PATH.exists() else []
+    by_id = {p.get("product_id"): p for p in catalog}
+    planner_codes = tuple(PLANNER_PAGES)
+
+    rows: list[dict] = []
+
+    def add(sev, f, check, detail=""):
+        rows.append({"severity": sev, "file": f, "check": check, "detail": detail})
+
+    for dp_code in dp_codes:
+        product = by_id.get(dp_code)
+        if not product:
+            add("WARN", dp_code, "catalog_lookup", "no entry in data/product_catalog.json")
+            continue
+        for rel_path in (product.get("files") or []):
+            path = Path(rel_path)
+            if not path.is_absolute():
+                path = BASE_DIR / rel_path
+            if path.name.endswith("_sticker_pack.zip"):
+                check_sticker_zip(path, add)
+            elif path.suffix.lower() == ".pdf" and path.stem.rstrip("U") in planner_codes:
+                check_planner_pdf(path, add)
+            elif path.suffix.lower() == ".zip":
+                check_other_zip(path, add)
+            else:
+                add("WARN", path.name, "unrecognized_type",
+                    f"no qc_sweep check for extension '{path.suffix or '(none)'}'")
+    return rows
+
+
 # ---------------------------------------------------------------------------
 # Draft review / publish (original behavior)
 # ---------------------------------------------------------------------------
@@ -184,7 +230,7 @@ def list_drafts(client: EtsyAPIClient) -> None:
         print(f"{lid:<14} {title:<65} {tags:>4}  {images:>5}")
 
 
-def show_listing(listing: dict) -> None:
+def show_listing(listing: dict) -> list[dict]:
     title = listing.get("title", "")
     desc = listing.get("description", "")
     tags = listing.get("tags") or []
@@ -213,7 +259,24 @@ def show_listing(listing: dict) -> None:
             print(f"   ✗ {f}")
     else:
         print("\n✓ Quality gate: PASSED")
+
+    dp_codes = get_dp_codes_for_listing(str(listing.get("listing_id", "")))
+    file_rows: list[dict] = []
+    if dp_codes:
+        file_rows = check_product_files(dp_codes)
+        print(f"\nFILE QUALITY GATE ({', '.join(dp_codes)} — qc_sweep checks):")
+        for r in file_rows:
+            mark = {"PASS": "✓", "WARN": "!", "FAIL": "✗"}[r["severity"]]
+            print(f"   {mark} {r['file']} — {r['check']}: {r['detail']}")
+        n_fail = sum(1 for r in file_rows if r["severity"] == "FAIL")
+        if n_fail:
+            print(f"\n✗ File gate FAILED — {n_fail} failing check(s)")
+        else:
+            print("\n✓ File gate: PASSED")
+    else:
+        print("\nFILE QUALITY GATE: skipped — no DP code mapped to this listing in dp_listing_map.json")
     print("=" * 70)
+    return file_rows
 
 
 def activate_listing(client: EtsyAPIClient, listing_id: str) -> None:
@@ -268,6 +331,11 @@ def lock_in(client: EtsyAPIClient, listing_id: str, notes: str = "") -> dict:
     registry = load_json(REGISTRY_PATH)
     art_verified, art_min, art_dp = verify_art(photo_hashes, dp_codes, registry)
 
+    file_rows = check_product_files(dp_codes) if dp_codes else []
+    file_gate_failures = [f"{r['file']}: {r['check']} — {r['detail']}"
+                           for r in file_rows if r["severity"] == "FAIL"]
+    file_gate_passed = not file_gate_failures
+
     record = {
         "dp_codes": dp_codes,
         "approved_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -282,6 +350,8 @@ def lock_in(client: EtsyAPIClient, listing_id: str, notes: str = "") -> dict:
         "art_verified": art_verified,
         "art_min_distance": art_min,
         "art_matching_dp": art_dp,
+        "file_gate_passed": file_gate_passed,
+        "file_gate_failures": file_gate_failures,
     }
 
     approvals = load_json(APPROVALS_PATH)
@@ -303,6 +373,7 @@ def lock_in(client: EtsyAPIClient, listing_id: str, notes: str = "") -> dict:
     print(f"  Files : {file_names}")
     print(f"  Photos: {len(images)} (hashes captured)")
     print(f"  Art verified: {art_str}")
+    print(f"  File gate: {'PASSED' if file_gate_passed else f'FAILED — {len(file_gate_failures)} issue(s)'}")
     if notes:
         print(f"  Notes : {notes}")
     if dp_codes and registry and not art_verified:
@@ -352,6 +423,8 @@ def main() -> None:
     parser.add_argument("--notes", default="", help="Optional approval notes")
     parser.add_argument("--list-approvals", action="store_true", help="Show locked approvals")
     parser.add_argument("--revoke", metavar="LISTING_ID", help="Remove an approval record")
+    parser.add_argument("--force", action="store_true",
+                        help="Activate/lock in even if the file quality gate (qc_sweep checks) fails")
     args = parser.parse_args()
 
     # Pure-local actions (no API client needed)
@@ -385,14 +458,23 @@ def main() -> None:
         sys.exit(0)
 
     listing = client.get_listing(args.listing_id)
-    show_listing(listing)
+    file_rows = show_listing(listing)
+    file_gate_failed = any(r["severity"] == "FAIL" for r in file_rows)
 
     if listing.get("state") == "active":
         print("This listing is already active.")
+        if file_gate_failed and not args.force:
+            print("\n✗ File quality gate FAILED — refusing to lock in without --force.")
+            sys.exit(1)
         # Offer to lock it in anyway
         if args.yes or input("\nLock in this active listing as approved? [y/N]: ").strip().lower() == "y":
             lock_in(client, args.listing_id, args.notes)
         return
+
+    if file_gate_failed and not args.force:
+        print("\n✗ File quality gate FAILED — refusing to activate without --force. "
+              "Fix the failing file(s) or re-run with --force to override.")
+        sys.exit(1)
 
     if not args.yes:
         answer = input("\nActivate AND lock in this listing? [y/N]: ").strip().lower()
