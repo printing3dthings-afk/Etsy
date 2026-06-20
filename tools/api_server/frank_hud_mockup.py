@@ -377,13 +377,8 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         </div>
 
         <div class="panel brk col-feed">
-          <div class="panel-title">Live Intelligence Feed <span class="src">queue+audits+todos</span></div>
-          <div class="panel-body">
-            <div class="feed-item"><div class="ftxt">Quality audit flagged 1 listing for review<div class="t">2m ago</div></div><span class="feed-tag warn">WARN</span></div>
-            <div class="feed-item"><div class="ftxt">3 actions pending approval in queue<div class="t">14m ago</div></div><span class="feed-tag tip">TIP</span></div>
-            <div class="feed-item"><div class="ftxt">Token sync refreshed Etsy access token<div class="t">41m ago</div></div><span class="feed-tag info">INFO</span></div>
-            <div class="feed-item"><div class="ftxt">Autoresponder cleared support queue<div class="t">1h ago</div></div><span class="feed-tag info">INFO</span></div>
-          </div>
+          <div class="panel-title">Live Intelligence Feed <span class="src">/api/queue</span></div>
+          <div class="panel-body" id="feed-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
         </div>
       </div>
 
@@ -397,12 +392,8 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
         <div class="panel brk col-timeline">
           <div class="panel-title">Mission Timeline <span class="src">/api/todos</span></div>
-          <div class="panel-body">
-            <div class="tl-item"><div class="tl-time">FRI</div><div class="tl-dotcol"><span class="d"></span></div><div class="tl-txt"><div class="ttl">Shop health review</div><div class="sub">weekly cadence</div></div></div>
-            <div class="tl-item"><div class="tl-time">—</div><div class="tl-dotcol"><span class="d"></span></div><div class="tl-txt"><div class="ttl">Restock 3D print queue</div><div class="sub">open todo</div></div></div>
-            <div class="tl-item"><div class="tl-time">JUL</div><div class="tl-dotcol"><span class="d"></span></div><div class="tl-txt"><div class="ttl">Update seasonal keywords</div><div class="sub">back to school</div></div></div>
-          </div>
-          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto">View Full Schedule ›</span></div>
+          <div class="panel-body" id="timeline-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('tasks')">View Full Schedule ›</span></div>
         </div>
 
         <div class="panel brk col-quick">
@@ -731,6 +722,58 @@ async function loadShopPerf(){
   }
 }
 
+function _timeAgo(iso){
+  if(!iso) return '';
+  const ms = Date.now() - new Date(iso).getTime();
+  if(!(ms >= 0)) return '';
+  const m = Math.floor(ms/60000);
+  if(m < 1) return 'just now';
+  if(m < 60) return m+'m ago';
+  const h = Math.floor(m/60);
+  if(h < 24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+// ── Live Intelligence Feed — real data from /api/queue (pending staged actions) ──
+async function loadQueue(){
+  const list = document.getElementById('feed-list');
+  try{
+    const r = await authGet('/api/queue?status=pending');
+    const d = await r.json();
+    if(list){
+      const items = d.actions.slice(0, 6);
+      list.innerHTML = items.length ? items.map(a=>
+        '<div class="feed-item"><div class="ftxt">'+escHtml(a.summary)+'<div class="t">'+_timeAgo(a.created_at)+'</div></div>'+
+        '<span class="feed-tag tip">PENDING</span></div>'
+      ).join('') : '<div style="color:var(--muted);font-size:12px">No pending actions — queue is clear.</div>';
+    }
+  }catch(e){
+    if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Feed offline: '+escHtml(e.message)+'</div>';
+  }
+}
+
+// ── Mission Timeline — real data from /api/todos (open tasks only, compact view) ──
+async function loadMissionTimeline(){
+  const list = document.getElementById('timeline-list');
+  try{
+    const r = await authGet('/api/todos');
+    const d = await r.json();
+    if(list){
+      const open = d.todos.filter(t=>!t.done)
+        .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))
+        .slice(0, 6);
+      list.innerHTML = open.length ? open.map(t=>{
+        const day = t.created_at ? new Date(t.created_at).toLocaleDateString(undefined,{weekday:'short'}).toUpperCase() : '—';
+        return '<div class="tl-item"><div class="tl-time">'+day+'</div><div class="tl-dotcol"><span class="d"></span></div>'+
+          '<div class="tl-txt"><div class="ttl">'+escHtml(t.text)+'</div>'+
+          '<div class="sub">added by '+escHtml(t.added_by||'scott')+'</div></div></div>';
+      }).join('') : '<div style="color:var(--muted);font-size:12px">All caught up — no open tasks.</div>';
+    }
+  }catch(e){
+    if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Timeline offline: '+escHtml(e.message)+'</div>';
+  }
+}
+
 // ── Tasks — real data from /api/todos ──
 async function loadTasks(){
   const list = document.getElementById('tasks-list');
@@ -776,6 +819,8 @@ function loadAll(){
   loadAgents();
   loadCredentialsAndHealth();
   loadShopPerf();
+  loadQueue();
+  loadMissionTimeline();
   loadTasks();
   loadTools();
 }
