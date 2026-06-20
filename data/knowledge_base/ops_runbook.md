@@ -696,3 +696,18 @@ listing live," do not rely on `state == "inactive"` alone — also check absence
 since Etsy may return `edit` for what is functionally the same outcome.
 **Result:** `4512301880` (Boho Botanical Set of 4) and `4512784922` (Four Seasons Set of 4) are confirmed off
 the storefront. Finding fully closed — not just staged.
+
+### 2026-06-20 — DP1026–DP1029 sticker pack ZIPs missing locally; live listings unaffected
+New pre-publish file gate (`approve_listing.py`'s `check_product_files()`, added this session) flagged
+`DP1026_sticker_pack.zip` / `DP1027` / `DP1028` / `DP1029` as missing from
+`data/digital_products/product_files/`. Checked `client.get_listing_files()` against all four live listing
+IDs (4509179201, 4509184958, 4509184962, 4509184968) — each still has its sticker pack ZIP, PDF, and undated
+PDF attached and correctly sized on Etsy's side. **No customer-facing problem; did not deactivate anything.**
+Tried to restore the local copies and could not: (1) Etsy API v3 exposes no download URL on
+`GET .../listings/{id}/files` — sellers cannot pull back an already-uploaded digital file via API by design;
+(2) neither `data/backups/digital_products_backup_20260616_163922.zip` nor the 06-17 backup contains these
+sticker ZIPs (they predate this gap or never captured them); (3) `tools/rebuild_sticker_pack.py` needs source
+sheet PNGs (`sheet_01_functional_planning.png` etc.) to rebuild a pack, and those aren't present locally either
+— only `DP102[6-9]_cover.png` survived. Only manual path: Scott downloads the file from Etsy Shop Manager's
+listing-edit UI (it has a download icon per file even though the API doesn't), or pulls it from wherever he
+saved the original backup ZIP from `backup_digital_products.py`. Left open — informational, not urgent.
