@@ -173,9 +173,10 @@
     "etsy_listing_id": "",
     "price": 9.99,
     "category": "svg_bundle",
-    "status": "incomplete",
+    "status": "retired",
     "files": [],
-    "last_updated": "2026-06-02"
+    "last_updated": "2026-06-20",
+    "note": "Personal-use listing was never built (no local SVG/ZIP/photo assets exist). Retired rather than built: the live commercial license listing (LICENSE_SVG_WESTERN, 4515437442) already delivers the full design file set directly, and its description was corrected 2026-06-20 to say so \u2014 no separate personal-use listing is needed."
   },
   {
     "product_id": "SUBLIM_MOM_LIFE",
