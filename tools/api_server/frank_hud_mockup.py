@@ -232,16 +232,17 @@ canvas#orb{cursor:pointer}
 .mem-stat .n{font-size:14px;font-weight:700;color:var(--cyan2)}
 .mem-stat .l{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
 
-.shop-spark-row{display:flex;gap:8px;flex:1;min-height:0}
+.shop-spark-row{display:flex;gap:8px;flex:1;min-height:0;overflow:hidden}
 .shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
-  padding:7px 9px;display:flex;flex-direction:column;gap:2px;min-height:0;overflow:hidden}
+  padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-height:0;overflow:hidden}
 .shop-spark-card .ssc-lab{font-size:9px;color:var(--muted);letter-spacing:.4px}
-.shop-spark-card .ssc-val{font-size:14px;font-weight:700;color:var(--cyan2)}
-.shop-spark-card .ssc-delta{font-size:9px;margin-top:1px}
+.shop-spark-card .ssc-valrow{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.shop-spark-card .ssc-val{font-size:13px;font-weight:700;color:var(--cyan2)}
+.shop-spark-card .ssc-delta{font-size:8.5px;flex-shrink:0}
 .shop-spark-card .ssc-spark{flex:1;min-height:0}
 
-.shop-chip-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
-.shop-chip{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:6px 7px;
+.shop-chip-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;flex-shrink:0}
+.shop-chip{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 7px;
   display:flex;flex-direction:column;gap:3px;justify-content:center}
 .shop-chip .nm{font-size:9px;color:var(--muted);letter-spacing:.3px}
 .shop-chip .v{font-size:12.5px;font-weight:700;color:var(--text)}
@@ -672,7 +673,7 @@ async function loadCredentialsAndHealth(){
 
 // ── Shop Performance — real data from /api/analytics + /api/metrics ──
 function _miniSpark(values, color){
-  var h = 26;
+  var h = 16;
   values = (values||[]).filter(function(v){ return v!=null && !isNaN(v); });
   if(values.length < 2) return '<div style="height:'+h+'px;display:flex;align-items:center;font-size:8.5px;color:var(--muted)">📈 Accumulating daily data…</div>';
   var W=140,H=h,mn=Math.min.apply(null,values),mx=Math.max.apply(null,values),range=mx-mn||1,pad=2;
@@ -710,13 +711,13 @@ async function loadShopPerf(){
     if(sparkEl){
       sparkEl.innerHTML =
         '<div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div>'+
-          '<div class="ssc-val">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
-          '<div class="ssc-spark">'+_miniSpark(tr.revenue_30d,'var(--gold)')+'</div>'+
+          '<div class="ssc-valrow"><div class="ssc-val">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
           '<div class="ssc-delta">'+_miniDelta(del.revenue_30d,true)+'</div></div>'+
+          '<div class="ssc-spark">'+_miniSpark(tr.revenue_30d,'var(--gold)')+'</div></div>'+
         '<div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div>'+
-          '<div class="ssc-val">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
-          '<div class="ssc-spark">'+_miniSpark(tr.orders_30d,'var(--cyan2)')+'</div>'+
-          '<div class="ssc-delta">'+_miniDelta(del.orders_30d,false)+'</div></div>';
+          '<div class="ssc-valrow"><div class="ssc-val">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
+          '<div class="ssc-delta">'+_miniDelta(del.orders_30d,false)+'</div></div>'+
+          '<div class="ssc-spark">'+_miniSpark(tr.orders_30d,'var(--cyan2)')+'</div></div>';
     }
     const allTimeRev = (m.orders && m.orders.all_time_revenue!=null) ? m.orders.all_time_revenue : null;
     if(chipEl){
