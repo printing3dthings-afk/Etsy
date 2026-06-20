@@ -45,7 +45,7 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 
 #stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
 #stage{
-  position:relative;width:1440px;height:1040px;flex-shrink:0;transform-origin:center center;
+  position:relative;width:1440px;height:900px;flex-shrink:0;transform-origin:center center;
   background:radial-gradient(ellipse at 50% -10%, #0e2a44 0%, var(--bg) 55%);
   display:grid;grid-template-columns:226px 1fr;grid-template-rows:68px 1fr 54px;
 }
@@ -125,11 +125,10 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 /* ── Main content ── */
 .main{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:12px;padding:12px;overflow:hidden}
 .mrow{display:flex;gap:12px;min-height:0}
-.mrow.rowA{flex:1.1}
-.mrow.rowB{flex:0.85}
-.mrow.rowC{flex:0.85}
-.mrow.rowD{flex:1.1}
-.col-chat{flex:1 1 auto}
+.mrow.rowA{flex:1}
+.mrow.rowB{flex:1.25}
+.mrow.rowC{flex:0.95}
+.col-chat{flex:1.6 1 0;min-width:0}
 
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;
   display:flex;flex-direction:column;overflow:hidden;min-height:0}
@@ -182,7 +181,7 @@ canvas#orb{cursor:pointer}
 .feed-tag.tip{background:rgba(76,175,130,.15);color:var(--green)}
 
 /* Row B: Active Agents | Mission Timeline | Quick Commands */
-.col-agents{flex:1.5}
+.col-agents{flex:1.1}
 .col-timeline{flex:1}
 .col-quick{flex:0.85}
 
@@ -350,18 +349,12 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-item" data-screen="connections"><span class="ic">🔌</span>Connections</div>
     <div class="nav-item" data-screen="security"><span class="ic">🛡</span>Security</div>
 
-    <div class="voice-widget">
-      <div class="vw-title">VOICE STATUS</div>
-      <div class="wave-row" id="sidebar-wave">
-        <span style="animation-delay:0s"></span><span style="animation-delay:.1s"></span>
-        <span style="animation-delay:.2s"></span><span style="animation-delay:.3s"></span>
-        <span style="animation-delay:.4s"></span><span style="animation-delay:.3s"></span>
-        <span style="animation-delay:.2s"></span><span style="animation-delay:.1s"></span>
-      </div>
-      <div class="mic-circle" id="tap-speak">🎙</div>
-      <div class="vw-sub" id="vw-sub-text">Tap to speak</div>
-      <div class="vw-tap">FRANK</div>
-      <button class="focus-btn" id="focus-toggle">FOCUS MODE: OFF</button>
+    <div class="voice-widget" style="text-align:left">
+      <div class="vw-title">QUICK COMMANDS</div>
+      <button class="qc-btn"><span class="qic">+</span>Start New Task</button>
+      <button class="qc-btn"><span class="qic">▦</span>Open Calendar</button>
+      <button class="qc-btn"><span class="qic">✓</span>Run Health Check</button>
+      <button class="qc-btn"><span class="qic">⇄</span>Run Workflow</button>
     </div>
   </div>
 
@@ -409,18 +402,28 @@ video{width:100%;border-radius:10px;background:#000;display:block}
           </div>
         </div>
 
+        <div class="panel brk col-chat">
+          <div class="panel-title">Ask Frank <span class="src">/ws/chat — live, always-on chat</span></div>
+          <div id="chat-msgs"></div>
+          <div class="lc-chips">
+            <span class="lc-chip" onclick="sendChip(this)">What should I focus on?</span>
+            <span class="lc-chip" onclick="sendChip(this)">How are sales?</span>
+            <span class="lc-chip" onclick="sendChip(this)">What's my next listing?</span>
+            <span class="lc-chip" onclick="sendChip(this)">Pricing advice</span>
+            <span class="lc-chip" onclick="sendChip(this)">SEO tips</span>
+          </div>
+          <div class="lc-input-row">
+            <input id="chat-input" type="text" placeholder="Ask Fucking Frank…" autocomplete="off">
+            <button id="chat-send" onclick="sendMsg()">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+
         <div class="panel brk col-timeline">
           <div class="panel-title">Mission Timeline <span class="src">/api/todos</span></div>
           <div class="panel-body" id="timeline-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
           <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('tasks')">View Full Schedule ›</span></div>
-        </div>
-
-        <div class="panel brk col-quick">
-          <div class="panel-title">Quick Commands</div>
-          <button class="qc-btn"><span class="qic">+</span>Start New Task</button>
-          <button class="qc-btn"><span class="qic">▦</span>Open Calendar</button>
-          <button class="qc-btn"><span class="qic">✓</span>Run Health Check</button>
-          <button class="qc-btn"><span class="qic">⇄</span>Run Workflow</button>
         </div>
       </div>
 
@@ -456,26 +459,6 @@ video{width:100%;border-radius:10px;background:#000;display:block}
             <div class="shop-chip"><div class="nm">Listings</div><div class="v">—</div></div>
             <div class="shop-chip"><div class="nm">Total Sales</div><div class="v">—</div></div>
             <div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">—</div></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mrow rowD">
-        <div class="panel brk col-chat">
-          <div class="panel-title">Ask Frank <span class="src">/ws/chat — live, always-on chat</span></div>
-          <div id="chat-msgs"></div>
-          <div class="lc-chips">
-            <span class="lc-chip" onclick="sendChip(this)">What should I focus on?</span>
-            <span class="lc-chip" onclick="sendChip(this)">How are sales?</span>
-            <span class="lc-chip" onclick="sendChip(this)">What's my next listing?</span>
-            <span class="lc-chip" onclick="sendChip(this)">Pricing advice</span>
-            <span class="lc-chip" onclick="sendChip(this)">SEO tips</span>
-          </div>
-          <div class="lc-input-row">
-            <input id="chat-input" type="text" placeholder="Ask Fucking Frank…" autocomplete="off">
-            <button id="chat-send" onclick="sendMsg()">
-              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            </button>
           </div>
         </div>
       </div>
@@ -578,7 +561,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
 <script>
 // ── Auto-scale the fixed 1440x900 stage to fit any viewport (phone or desktop) ──
-const STAGE_W = 1440, STAGE_H = 1040;
+const STAGE_W = 1440, STAGE_H = 900;
 const stage = document.getElementById('stage');
 function fitStage(){
   const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
@@ -983,8 +966,9 @@ function tick(){
 }
 tick(); setInterval(tick, 1000);
 
-// ── Focus mode toggle (visual only) ──
-document.getElementById('focus-toggle').addEventListener('click', function(){
+// ── Focus mode toggle (visual only; element only present when the voice widget is shown) ──
+const focusToggle = document.getElementById('focus-toggle');
+if(focusToggle) focusToggle.addEventListener('click', function(){
   this.classList.toggle('on');
   this.textContent = this.classList.contains('on') ? 'FOCUS MODE: ON' : 'FOCUS MODE: OFF';
 });
@@ -1058,14 +1042,15 @@ requestAnimationFrame(frame);
 
 function setSpeaking(on){
   speaking = on;
-  orbState.textContent = on ? 'SPEAKING — reacting to live TTS amplitude (demo)' : 'IDLE — slow ambient rotation';
-  vwSub.textContent = on ? 'Speaking…' : 'Tap to speak';
-  talkSub.textContent = on ? 'Frank is speaking…' : 'tap to speak';
-  micCircle.classList.toggle('live', on);
+  if(orbState) orbState.textContent = on ? 'SPEAKING — reacting to live TTS amplitude (demo)' : 'IDLE — slow ambient rotation';
+  if(vwSub) vwSub.textContent = on ? 'Speaking…' : 'Tap to speak';
+  if(talkSub) talkSub.textContent = on ? 'Frank is speaking…' : 'tap to speak';
+  if(micCircle) micCircle.classList.toggle('live', on);
 }
 canvas.addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
-document.getElementById('tap-speak').addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
-document.getElementById('talk-pill').addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
+if(micCircle) micCircle.addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
+const talkPillEl = document.getElementById('talk-pill');
+if(talkPillEl) talkPillEl.addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
 
 // ── Memory Insights constellation (placeholder line graph, real data wired in Step 2) ──
 const mc = document.getElementById('mem-canvas');
