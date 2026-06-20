@@ -5196,6 +5196,8 @@ async def chat_ws(websocket: WebSocket):
     ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     # Replay persisted text history so Frank resumes mid-thread after a reconnect.
     history: list[dict] = await asyncio.to_thread(db.load_chat_history, session_id) if session_id else []
+    if history:
+        await websocket.send_text(json.dumps({"type": "history", "messages": history}))
 
     try:
         while True:

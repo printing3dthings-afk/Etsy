@@ -606,6 +606,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
 // so a conversation continues seamlessly whether Scott is on / or /frank. ──
 let ws = null, wsReady = false, pendingMsg = null;
 let _wsHeartbeat = null, _wsReconnectTimer = null, _wsRetries = 0, _wsManualClose = false;
+let _historyApplied = false;
 const CHAT_SESSION = (function(){
   let s = null;
   try { s = localStorage.getItem('chatSession'); } catch(e) {}
@@ -637,6 +638,14 @@ function initWS() {
   ws.onmessage = e => {
     const d = JSON.parse(e.data);
     if (d.type === 'pong') return;
+    if (d.type === 'history') {
+      if (!_historyApplied && Array.isArray(d.messages)) {
+        const c = document.getElementById('chat-msgs'); c.innerHTML = '';
+        d.messages.forEach(m => addBubble(m.content, m.role === 'user' ? 'user' : 'bot'));
+        _historyApplied = true; scrollMsgs();
+      }
+      return;
+    }
     const bot = document.getElementById('bot-streaming');
     if (d.type === 'tool' && bot) {
       bot.classList.add('typing');
