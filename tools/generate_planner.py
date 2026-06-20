@@ -127,8 +127,8 @@ PLANNER_CONFIGS = {
             "Center: large kawaii matcha cup with cream swirl and tiny steam curls, "
             "surrounded by zen garden elements — smooth stones, bamboo sprigs, tiny lotus flower. "
             "Small kawaii brain character with stars around it, calm sleepy expression. "
-            "Typography: 'ADHD Digital Planner 2026' in rounded sans-serif font. "
-            "Soft kawaii illustration style, pastel palette."
+            "Soft kawaii illustration style, pastel palette. "
+            "No text, no words, no typography, no letters anywhere in the image."
         ),
         "sections": [
             "Welcome & Setup", "Dashboard / Home", "Planner Index",
@@ -171,7 +171,7 @@ PLANNER_CONFIGS = {
             "Center: kawaii garden scene — tiny mushrooms, watering can, herb sprigs, "
             "garden snail with bow, potted succulents, small bee. "
             "Cottagecore aesthetic, soft botanical illustration. "
-            "Typography: 'Undated Life Planner' in flowing rounded font."
+            "No text, no words, no typography, no letters anywhere in the image."
         ),
         "sections": [
             "Welcome & Setup", "Dashboard / Home", "Planner Index",
@@ -210,7 +210,7 @@ PLANNER_CONFIGS = {
             "Center: kawaii space cat with neon violet glow, holographic elements, "
             "pixel art stars, glowing crescent moon, neon-outlined kawaii ghost. "
             "Electric violet and neon aqua accent glows. "
-            "Typography: 'Dark Mode Planner 2026' in neon glow font effect."
+            "No text, no words, no typography, no letters anywhere in the image."
         ),
         "sections": [
             "Welcome & Setup", "Dashboard / Home", "Planner Index",
@@ -248,10 +248,10 @@ PLANNER_CONFIGS = {
             "Kawaii digital planner cover art, square 2400x2400px. "
             "Warm cream background with subtle grid texture. "
             "Center: kawaii teacher scene — sunflowers in a mason jar, tiny apple, "
-            "mini chalkboard with 'Hello Students', pencils in a cup, books stacked, "
+            "blank mini chalkboard, pencils in a cup, books stacked, "
             "kawaii bee with graduation cap, butterflies, small ruler. "
             "Sunflower yellow and stem green color palette. "
-            "Typography: 'Teacher Planner 2026-2027' in cheerful rounded font."
+            "No text, no words, no typography, no letters anywhere in the image."
         ),
         "sections": [
             "Welcome & Setup", "Dashboard / Home", "Planner Index",

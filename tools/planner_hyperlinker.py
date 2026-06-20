@@ -57,21 +57,49 @@ def _to255(rgb01):
     return tuple(int(round(c * 255)) for c in rgb01)
 
 
+def _luminance(rgb255):
+    """WCAG relative luminance for a 0-255 RGB tuple."""
+    rs = []
+    for c in rgb255:
+        c = c / 255.0
+        rs.append(c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4)
+    return 0.2126 * rs[0] + 0.7152 * rs[1] + 0.0722 * rs[2]
+
+
+def _contrast(c1, c2):
+    """WCAG contrast ratio between two 0-255 RGB tuples."""
+    l1, l2 = _luminance(c1), _luminance(c2)
+    l1, l2 = max(l1, l2), min(l1, l2)
+    return (l1 + 0.05) / (l2 + 0.05)
+
+
 def _cover_palette(theme_rgb=None, accent_rgb=None, bg_rgb=None, dark_rgb=None):
     """Build the 5-color palette used by the cover builders below.
 
     Falls back to the Celestial Night defaults (DP1034's original look) when no
     product-specific colors are supplied, so existing behavior is unchanged for
     callers that don't pass colors.
+
+    Most products' PLANNER_CONFIGS follow the convention bg_rgb=light page
+    background, dark_rgb=near-black text color -- dark_rgb is genuinely dark, so
+    it works directly as the scrim/gradient base. Dark-mode products (e.g.
+    DP1032) invert this (bg_rgb=dark page background, dark_rgb=light text color),
+    which would otherwise hand the scrim a LIGHT color and produce a washed-out,
+    low-contrast cover. Detect the inversion by relative luminance and swap so
+    the scrim always gets the genuinely dark color of the pair.
     """
     if dark_rgb is None:
         indigo_top, space_purple, indigo = INDIGO_TOP, SPACE_PURPLE, INDIGO
+        moonbeam = _to255(bg_rgb) if bg_rgb else MOONBEAM
     else:
         dark = _to255(dark_rgb)
+        light = _to255(bg_rgb) if bg_rgb else MOONBEAM
+        if _luminance(dark) > _luminance(light):
+            dark, light = light, dark
         mid = _to255(theme_rgb) if theme_rgb else SPACE_PURPLE
         indigo_top, space_purple, indigo = dark, mid, dark
+        moonbeam = light
     gold = _to255(accent_rgb) if accent_rgb else GOLD
-    moonbeam = _to255(bg_rgb) if bg_rgb else MOONBEAM
     return indigo_top, space_purple, indigo, gold, moonbeam
 
 
@@ -238,9 +266,17 @@ def compose_ai_cover(ai_path, out_path, title, subtitle, year, shop="OnBrandCraf
     region_top = int(H * 0.66)
     scrim = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     sd = ImageDraw.Draw(scrim)
-    sd.rectangle([0, region_top, W, H], fill=(scrim_rgb[0], scrim_rgb[1], scrim_rgb[2], 165))
+    sd.rectangle([0, region_top, W, H], fill=(scrim_rgb[0], scrim_rgb[1], scrim_rgb[2], 200))
     canvas = Image.alpha_composite(canvas.convert("RGBA"), scrim).convert("RGB")
     draw = ImageDraw.Draw(canvas)
+
+    # Some themes' accent color (used for the title) is a mid-tone rather than a
+    # bright/pale tint (e.g. DP1033's stem green) and reads low-contrast against
+    # the scrim. Use whichever of accent/moonbeam contrasts better against the
+    # scrim for the title; the other goes to the subtitle/year.
+    title_color, sub_color = gold, moonbeam
+    if _contrast(moonbeam, scrim_rgb) > _contrast(gold, scrim_rgb):
+        title_color, sub_color = moonbeam, gold
 
     # double border
     m = int(20 * S); draw.rectangle([m, m, W - m, H - m], outline=gold, width=max(1, S))
@@ -267,10 +303,10 @@ def compose_ai_cover(ai_path, out_path, title, subtitle, year, shop="OnBrandCraf
 
     # measured, packed stack centered within the lower band
     line_h = int(46 * S)
-    block = [(ln, title_font, gold, line_h) for ln in lines]
-    block.append(("·   " + subtitle.upper() + "   ·", sub_font, moonbeam, int(38 * S)))
+    block = [(ln, title_font, title_color, line_h) for ln in lines]
+    block.append(("·   " + subtitle.upper() + "   ·", sub_font, sub_color, int(38 * S)))
     if year and str(year) not in title:
-        block.append((str(year), year_font, moonbeam, int(44 * S)))
+        block.append((str(year), year_font, sub_color, int(44 * S)))
     block.append((shop.upper(), shop_font, (185, 175, 215), int(34 * S)))
     total_h = sum(h for _, _, _, h in block)
     band_top, band_bot = region_top + int(18 * S), H - m2 - int(14 * S)

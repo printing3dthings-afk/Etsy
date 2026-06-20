@@ -22,11 +22,91 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 
 ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
-APP_COMPAT_SRC = os.path.join(ART_DIR, 'DP1028_listing_images', '07_app_compatibility.jpg')
+APP_COMPAT_SRC = os.path.join(ART_DIR, '07_app_compatibility.jpg')
 CANVAS = 2400
 
 # Pages (1-indexed) for each photo type per planner
 PLANNER_PAGES = {
+    'DP1030': {
+        'cover':    1,
+        'monthly':  6,
+        'weekly':   30,
+        'tracker':  119,  # habit tracker
+        'specialty': 113, # pomodoro focus tracker
+        'name': 'ADHD Digital Planner 2026',
+        'short': 'ADHD Planner',
+        'pages': 130,
+        'theme': 'Matcha Serenity',
+        'color': (126, 200, 164),
+        'accent': (184, 204, 142),
+        'bg': (247, 249, 243),
+        'tracker_label': 'Habit Tracker',
+        'specialty_label': 'Pomodoro Focus Tracker',
+        'emoji': '🌿',
+        'sticker_sheets': [1, 3, 6, 9],
+        'sheet_count': 9,
+        'sticker_count': 241,
+    },
+    'DP1031': {
+        'cover':    1,
+        'monthly':  5,
+        'weekly':   41,
+        'tracker':  130,  # habit tracker
+        'specialty': 128, # budget tracker
+        'name': 'Undated Life Planner',
+        'short': 'Life Planner',
+        'pages': 141,
+        'theme': 'Sage Garden',
+        'color': (139, 168, 136),
+        'accent': (200, 221, 181),
+        'bg': (246, 248, 242),
+        'tracker_label': 'Habit Tracker',
+        'specialty_label': 'Budget Tracker',
+        'emoji': '🌿',
+        'sticker_sheets': [1, 3, 6, 9],
+        'sheet_count': 9,
+        'sticker_count': 183,
+    },
+    'DP1032': {
+        'cover':    1,
+        'monthly':  6,
+        'weekly':   42,
+        'tracker':  129,  # habit tracker
+        'specialty': 125, # brain dump
+        'name': 'Dark Mode Planner Bundle 2026',
+        'short': 'Dark Mode Planner',
+        'pages': 140,
+        'theme': 'Midnight Kawaii',
+        'color': (128, 64, 156),
+        'accent': (0, 229, 255),
+        'bg': (26, 26, 46),
+        'tracker_label': 'Habit Tracker',
+        'specialty_label': 'Brain Dump',
+        'emoji': '🌙',
+        'sticker_sheets': [1, 3, 6, 9],
+        'sheet_count': 9,
+        'sticker_count': 183,
+    },
+    'DP1033': {
+        'cover':    1,
+        'monthly':  6,
+        'weekly':   42,   # Lesson Plan Week 1
+        'tracker':  96,   # habit tracker
+        'specialty': 86,  # class roster
+        'name': 'Teacher Planner 2026-2027',
+        'short': 'Teacher Planner',
+        'pages': 107,
+        'theme': 'Sunflower Studio',
+        'color': (244, 196, 48),
+        'accent': (74, 124, 89),
+        'bg': (255, 253, 240),
+        'tracker_label': 'Habit Tracker',
+        'specialty_label': 'Class Roster',
+        'emoji': '🌼',
+        'sticker_sheets': [1, 3, 6, 9],
+        'sheet_count': 9,
+        'sticker_count': 177,
+    },
     'DP1026': {
         'cover':    4,
         'monthly':  11,
@@ -258,7 +338,9 @@ def make_hero(pid, cfg, out):
     d = ImageDraw.Draw(bg)
     d.text((CANVAS//2, 80), cfg['name'], font=fb(72), fill=(255,255,255), anchor='mm')
     d.text((CANVAS//2, 166), f"GoodNotes · Notability · Instant Download", font=fr(46), fill=(240,235,250), anchor='mm')
-    d.text((CANVAS//2, CANVAS-55), f"✓ 2026 Dated + Undated Version   ✓ {cfg['pages']} Pages   ✓ 200+ Kawaii Stickers",
+    _sc = cfg.get('sticker_count', 200)
+    _sc_label = f"{_sc}+ Kawaii Stickers" if _sc >= 200 else f"{_sc} Kawaii Stickers"
+    d.text((CANVAS//2, CANVAS-55), f"✓ 2026 Dated + Undated Version   ✓ {cfg['pages']} Pages   ✓ {_sc_label}",
            font=fr(42), fill=cfg['color'], anchor='mm')
 
     bg.save(out, 'JPEG', quality=93)
@@ -299,6 +381,38 @@ CONTENTS = {
         ("Fully fillable text fields",                     "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                          "Jump to any section in one tap"),
         ("Meal planner + fitness log",                     "Weekly workout + meal planning spreads"),
+    ],
+    'DP1030': [
+        ("Interactive PDF Planner — 2026 Dated Version",  "130 pages · Matcha Serenity · US Letter"),
+        ("Bonus Undated Version — works any year forever", "Same layout, no year dates"),
+        ("Kawaii Sticker Pack ZIP",                        "9 illustrated sheets · 241 stickers · transparent PNG"),
+        ("Fully fillable text fields",                     "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
+        ("Hyperlinked side tabs",                           "Jump to any section in one tap"),
+        ("Pomodoro focus + habit trackers",                 "ADHD-friendly time-blocking and streak tracking"),
+    ],
+    'DP1031': [
+        ("Interactive PDF Planner — Undated Evergreen",    "141 pages · Sage Garden · US Letter"),
+        ("Works any year, forever",                         "No dates to expire — start any month"),
+        ("Kawaii Sticker Pack ZIP",                          "9 illustrated sheets · 183 stickers · transparent PNG"),
+        ("Fully fillable text fields",                       "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
+        ("Hyperlinked side tabs",                             "Jump to any section in one tap"),
+        ("Budget tracker + habit tracker",                    "Built-in financial and habit-building tools"),
+    ],
+    'DP1032': [
+        ("Interactive PDF Planner — 2026 Dated Version",    "140 pages · Midnight Kawaii · US Letter"),
+        ("Bonus Undated Version — works any year forever",   "Same layout, no year dates"),
+        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 183 stickers · transparent PNG"),
+        ("Fully fillable text fields",                        "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
+        ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
+        ("Dark mode design + brain dump page",                 "Neon-on-dark theme, easy on the eyes at night"),
+    ],
+    'DP1033': [
+        ("Interactive PDF Planner — 2026-2027 School Year", "107 pages · Sunflower Studio · US Letter"),
+        ("Bonus Undated Version — works any school year",    "Same layout, no year dates"),
+        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 177 stickers · transparent PNG"),
+        ("Fully fillable text fields",                        "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
+        ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
+        ("Lesson plans + class roster pages",                  "Weekly lesson planning and student roster tracking"),
     ],
 }
 
@@ -361,7 +475,10 @@ def make_sticker_showcase(pid, cfg, out):
     bg = Image.new('RGB', (CANVAS, CANVAS), cfg['bg'])
     d = ImageDraw.Draw(bg)
     d.rectangle([0, 0, CANVAS, 200], fill=cfg['color'])
-    d.text((CANVAS//2, 100), "200+ KAWAII STICKERS INCLUDED", font=fb(78), fill=(255,255,255), anchor='mm')
+    sticker_count = cfg.get('sticker_count', 200)
+    d.text((CANVAS//2, 100), f"{sticker_count}+ KAWAII STICKERS INCLUDED" if sticker_count >= 200
+           else f"{sticker_count} KAWAII STICKERS INCLUDED",
+           font=fb(78), fill=(255,255,255), anchor='mm')
 
     sheets = cfg['sticker_sheets']
     sheet_size = 960
@@ -387,7 +504,8 @@ def make_sticker_showcase(pid, cfg, out):
         d = ImageDraw.Draw(bg)
 
     d = ImageDraw.Draw(bg)
-    d.text((CANVAS//2, CANVAS-55), f"11 illustrated sheets · {cfg['theme']} theme · transparent PNG",
+    sheet_count = cfg.get('sheet_count', 11)
+    d.text((CANVAS//2, CANVAS-55), f"{sheet_count} illustrated sheets · {cfg['theme']} theme · transparent PNG",
            font=fr(44), fill=cfg['color'], anchor='mm')
     bg.save(out, 'JPEG', quality=93)
     print(f"    05_sticker_showcase.jpg")
@@ -406,7 +524,7 @@ def make_howto(pid, cfg, out):
         ("Step 1", "Download & Unzip",
          "After purchase, download your files from Etsy.\nUnzip the sticker pack ZIP file."),
         ("Step 2", "Import into GoodNotes 6",
-         "Open GoodNotes 6 → tap Elements (◆)\n→ Stickers tab → tap + → select all 11 PNG files"),
+         f"Open GoodNotes 6 → tap Elements (◆)\n→ Stickers tab → tap + → select all {cfg.get('sheet_count', 11)} PNG files"),
         ("Step 3", "Drag Stickers onto Any Page",
          "All stickers appear in your library.\nTap any sticker and drag it onto any planner page!"),
     ]
@@ -571,4 +689,7 @@ if __name__ == '__main__':
     for pid in pids:
         generate_for_planner(pid, client, upload=not args.no_upload)
 
-    print("\n✓ All planner photos generated and uploaded")
+    if args.no_upload:
+        print("\n✓ All planner photos generated (local only, not uploaded)")
+    else:
+        print("\n✓ All planner photos generated and uploaded")

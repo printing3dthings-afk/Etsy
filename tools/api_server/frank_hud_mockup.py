@@ -283,6 +283,23 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
 .screen{display:none;grid-column:2;grid-row:2;overflow:hidden;padding:12px}
 .screen.active{display:block}
+
+/* ── Live Chat screen — ported from the live Hub's #chat-wrap at / (main.py), same
+   /ws/chat backend, same CHAT_SESSION scheme, restyled to the HUD's cyan/gold theme. ── */
+#chat-msgs{flex:1;overflow-y:auto;min-height:0;padding:2px 2px 10px;display:flex;flex-direction:column;gap:10px}
+.lc-bubble{max-width:78%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;word-break:break-word}
+.lc-bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
+.lc-bubble.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--border);border-bottom-left-radius:4px;white-space:pre-wrap;color:var(--text)}
+.lc-bubble.typing{color:var(--muted);font-style:italic}
+.lc-chips{display:flex;gap:8px;overflow-x:auto;padding:8px 2px;flex-shrink:0;border-top:1px solid var(--border);scrollbar-width:none}
+.lc-chips::-webkit-scrollbar{display:none}
+.lc-chip{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
+.lc-chip:active{border-color:var(--gold);color:var(--gold)}
+.lc-input-row{display:flex;gap:8px;padding:10px 2px 0;border-top:1px solid var(--border);flex-shrink:0}
+#chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:22px;padding:10px 16px;color:var(--text);font-size:14px;outline:none}
+#chat-input:focus{border-color:var(--gold)}
+#chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
@@ -308,6 +325,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   <div class="sidebar">
     <div class="nav-section">Frank</div>
     <div class="nav-item active" data-screen="cmd"><span class="ic">⌂</span>Command Center</div>
+    <div class="nav-item" data-screen="livechat"><span class="ic">🗨</span>Chat</div>
     <div class="nav-item" data-screen="core"><span class="ic">◎</span>AI Core</div>
     <div class="nav-item" data-screen="agents"><span class="ic">⚙</span>Agents</div>
     <div class="nav-item" data-screen="tasks"><span class="ic">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
@@ -474,6 +492,27 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     </div>
   </div>
 
+  <!-- ══════════ LIVE CHAT — real data: /ws/chat (same backend &amp; session scheme as the live Hub at /) ══════════ -->
+  <div class="screen" id="screen-livechat">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Ask Frank <span class="src">/ws/chat — same backend &amp; session as the Hub at /</span></div>
+      <div id="chat-msgs"></div>
+      <div class="lc-chips">
+        <span class="lc-chip" onclick="sendChip(this)">What should I focus on?</span>
+        <span class="lc-chip" onclick="sendChip(this)">How are sales?</span>
+        <span class="lc-chip" onclick="sendChip(this)">What's my next listing?</span>
+        <span class="lc-chip" onclick="sendChip(this)">Pricing advice</span>
+        <span class="lc-chip" onclick="sendChip(this)">SEO tips</span>
+      </div>
+      <div class="lc-input-row">
+        <input id="chat-input" type="text" placeholder="Ask Fucking Frank…" autocomplete="off">
+        <button id="chat-send" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="screen" id="screen-calendar"><div class="placeholder-screen"><div class="big">CALENDAR</div><div class="small">Combines todo due dates + CLAUDE.md's weekly/monthly/quarterly cadence + Seasonal Keyword Calendar. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-memory"><div class="placeholder-screen"><div class="big">MEMORY</div><div class="small">Constellation of real chat_messages + log_learning + knowledge_base docs — counts from the DB, never invented. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-conversations"><div class="placeholder-screen"><div class="big">CONVERSATIONS</div><div class="small">Searchable chat_messages history. Built in Step 2.</div></div></div>
@@ -551,6 +590,7 @@ fitStage();
 // ── Real data wiring (Step 2) — same bearer token + fetch pattern as the live
 // dashboard at /, injected into this template at request time. ──
 const BASE = location.origin;
+const WS_BASE = BASE.replace(/^http/, 'ws');
 const TOKEN = __APP_TOKEN__;
 function fetchWithTimeout(url, opts, ms=12000){
   const c = new AbortController();
@@ -573,10 +613,94 @@ function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el = document.getElementById('screen-'+name);
   if(el) el.classList.add('active');
+  if(name === 'livechat' && !ws) initWS();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
 });
+
+// ── Live Chat — ported verbatim (same protocol/session scheme) from the live Hub's
+// chat-wrap at / (main.py). Same /ws/chat endpoint, same CHAT_SESSION localStorage key,
+// so a conversation continues seamlessly whether Scott is on / or /frank. ──
+let ws = null, wsReady = false, pendingMsg = null;
+let _wsHeartbeat = null, _wsReconnectTimer = null, _wsRetries = 0, _wsManualClose = false;
+const CHAT_SESSION = (function(){
+  let s = null;
+  try { s = localStorage.getItem('chatSession'); } catch(e) {}
+  if (!s) {
+    s = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    try { localStorage.setItem('chatSession', s); } catch(e) {}
+  }
+  return s;
+})();
+function _clearStreaming(fallback) {
+  const s = document.getElementById('bot-streaming');
+  if (!s) return;
+  s.id = '';
+  s.classList.remove('typing');
+  if (!s.textContent.trim() && fallback) s.textContent = fallback;
+}
+function _stopHeartbeat() { if (_wsHeartbeat) { clearInterval(_wsHeartbeat); _wsHeartbeat = null; } }
+function initWS() {
+  if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
+  _wsManualClose = false;
+  ws = new WebSocket(WS_BASE + '/ws/chat?token=' + TOKEN + '&session=' + encodeURIComponent(CHAT_SESSION));
+  ws.onopen = () => {
+    wsReady = true; _wsRetries = 0;
+    _stopHeartbeat();
+    _wsHeartbeat = setInterval(() => { if (ws && ws.readyState === 1) ws.send(JSON.stringify({type:'ping'})); }, 25000);
+    if (pendingMsg) { ws.send(JSON.stringify({message:pendingMsg, session:CHAT_SESSION})); pendingMsg=null; }
+  };
+  ws.onmessage = e => {
+    const d = JSON.parse(e.data);
+    if (d.type === 'pong') return;
+    const bot = document.getElementById('bot-streaming');
+    if (d.type === 'tool' && bot) {
+      bot.classList.add('typing');
+      if (!bot.dataset.real) bot.textContent = '⚙ ' + d.content;
+      scrollMsgs();
+    } else if (d.type === 'chunk' && bot) {
+      if (!bot.dataset.real) { bot.textContent = ''; bot.dataset.real = '1'; bot.classList.remove('typing'); }
+      bot.textContent += d.content; scrollMsgs();
+    } else if (d.type === 'done') { _clearStreaming(); scrollMsgs(); }
+    else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
+  };
+  ws.onerror = () => { _clearStreaming(); };
+  ws.onclose = e => {
+    wsReady = false; ws = null; _stopHeartbeat();
+    _clearStreaming();
+    if (e.code === 4001) { addBubble('Auth failed — reload to reconnect', 'bot'); return; }
+    if (!_wsManualClose) {
+      _wsRetries = Math.min(_wsRetries + 1, 5);
+      const delay = Math.min(1000 * Math.pow(2, _wsRetries - 1), 15000);
+      _wsReconnectTimer = setTimeout(() => { if (!ws) initWS(); }, delay);
+    }
+  };
+}
+function addBubble(text, who) {
+  const el = document.createElement('div');
+  el.className = 'lc-bubble ' + who;
+  el.textContent = text;
+  document.getElementById('chat-msgs').appendChild(el);
+  scrollMsgs();
+  return el;
+}
+function scrollMsgs() { const m=document.getElementById('chat-msgs'); m.scrollTop=m.scrollHeight; }
+function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  addBubble(text, 'user');
+  const bot = addBubble('', 'bot typing');
+  bot.id = 'bot-streaming';
+  bot.textContent = '';
+  if (wsReady) { ws.send(JSON.stringify({message:text, session:CHAT_SESSION})); }
+  else { pendingMsg = text; if(!ws) initWS(); }
+}
+function sendChip(el) { document.getElementById('chat-input').value = el.textContent; sendMsg(); }
+document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
 
 // ── Agents — real data from /api/agents/status (live-status registry).
 // Every tile is a real loop or honestly marked not_built/offline; never invented. ──

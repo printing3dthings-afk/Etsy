@@ -65,9 +65,25 @@
     "etsy_listing_id": "",
     "price": 12.99,
     "category": "digital_planner",
-    "status": "pending_generation",
-    "files": [],
-    "last_updated": "2026-06-02"
+    "status": "ready_for_review",
+    "files": [
+      "data/digital_products/product_files/DP1030.pdf",
+      "data/digital_products/product_files/DP1030U.pdf",
+      "data/digital_products/product_files/DP1030_sticker_pack.zip",
+      "data/digital_products/product_files/DP1030_cover_ai.png",
+      "data/digital_products/product_files/DP1030_listing_images/01_hero.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/02_whats_included.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/03_monthly_spread.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/04_weekly_spread.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/05_sticker_showcase.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/06_goodnotes_howto.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/07_app_compatibility.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/08_cover_closeup.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/09_tracker.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/10_specialty.jpg"
+    ],
+    "last_updated": "2026-06-20",
+    "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
   },
   {
     "product_id": "DP1031",
@@ -75,9 +91,25 @@
     "etsy_listing_id": "",
     "price": 12.99,
     "category": "digital_planner",
-    "status": "pending_generation",
-    "files": [],
-    "last_updated": "2026-06-02"
+    "status": "ready_for_review",
+    "files": [
+      "data/digital_products/product_files/DP1031.pdf",
+      "data/digital_products/product_files/DP1031U.pdf",
+      "data/digital_products/product_files/DP1031_sticker_pack.zip",
+      "data/digital_products/product_files/DP1031_cover_ai.png",
+      "data/digital_products/product_files/DP1031_listing_images/01_hero.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/02_whats_included.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/03_monthly_spread.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/04_weekly_spread.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/05_sticker_showcase.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/06_goodnotes_howto.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/07_app_compatibility.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/08_cover_closeup.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/09_tracker.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/10_specialty.jpg"
+    ],
+    "last_updated": "2026-06-20",
+    "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
   },
   {
     "product_id": "DP1032",
@@ -85,9 +117,25 @@
     "etsy_listing_id": "",
     "price": 14.99,
     "category": "digital_planner",
-    "status": "pending_generation",
-    "files": [],
-    "last_updated": "2026-06-02"
+    "status": "ready_for_review",
+    "files": [
+      "data/digital_products/product_files/DP1032.pdf",
+      "data/digital_products/product_files/DP1032U.pdf",
+      "data/digital_products/product_files/DP1032_sticker_pack.zip",
+      "data/digital_products/product_files/DP1032_cover_ai.png",
+      "data/digital_products/product_files/DP1032_listing_images/01_hero.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/02_whats_included.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/03_monthly_spread.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/04_weekly_spread.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/05_sticker_showcase.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/06_goodnotes_howto.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/07_app_compatibility.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/08_cover_closeup.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/09_tracker.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/10_specialty.jpg"
+    ],
+    "last_updated": "2026-06-20",
+    "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
   },
   {
     "product_id": "DP1033",
@@ -95,9 +143,25 @@
     "etsy_listing_id": "",
     "price": 14.99,
     "category": "digital_planner",
-    "status": "pending_generation",
-    "files": [],
-    "last_updated": "2026-06-02"
+    "status": "ready_for_review",
+    "files": [
+      "data/digital_products/product_files/DP1033.pdf",
+      "data/digital_products/product_files/DP1033U.pdf",
+      "data/digital_products/product_files/DP1033_sticker_pack.zip",
+      "data/digital_products/product_files/DP1033_cover_ai.png",
+      "data/digital_products/product_files/DP1033_listing_images/01_hero.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/02_whats_included.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/03_monthly_spread.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/04_weekly_spread.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/05_sticker_showcase.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/06_goodnotes_howto.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/07_app_compatibility.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/08_cover_closeup.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/09_tracker.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/10_specialty.jpg"
+    ],
+    "last_updated": "2026-06-20",
+    "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
   },
   {
     "product_id": "BUNDLE_PLANNERS",
