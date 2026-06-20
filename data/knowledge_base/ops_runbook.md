@@ -770,3 +770,27 @@ rezipping. Final pack: 9 sheets, 233 individual stickers, 2.7MB total (was 28MB)
 visually post-quantization — flat kawaii cel-shaded art shows no visible quality loss at 256 colors.
 **Note for future sticker packs:** quantize every PNG (sheets + individuals) to 256 colors before zipping by
 default — don't wait to discover the 20MB limit after the fact.
+
+### 2026-06-20 — Cover-art destructive-overwrite bug shipped the wrong cover on 4 LIVE listings (DP1026-1029)
+**Symptom:** DP1030's freshly AI-generated matcha-themed cover was found replaced by a generic indigo/gold
+"Celestial Night" design. Investigating the code path revealed the bug was systemic, not a one-off — DP1026,
+DP1027, DP1028, and DP1029 (all live, currently-selling listings) had been shipping the same indigo/gold
+placeholder cover instead of their documented Lavender Dreams / Cotton Candy / Midnight Blue / Coral Peach
+covers. This violated the "NEVER LIE TO THE CUSTOMER" rule — customers were receiving planners whose cover
+didn't match the listing's theme.
+**Root cause:** `generate_planner_v2.py` wrote newly-generated AI cover art to `{pid}_cover.png`, but
+`planner_hyperlinker.py`'s `finalize()` checked for a *different* filename (`{pid}_cover_ai.png`) to decide
+whether real AI art existed. Since that file never existed for these products, `finalize()` always fell
+through to `build_cover_png()`, which wrote directly into `{pid}_cover.png` — silently destroying the real
+AI art that had just been generated there. Both cover builders also used hardcoded module-level "Celestial
+Night" color constants regardless of which product was being built, so the placeholder was always indigo/gold.
+**Fix:** Renamed the AI-cover output path in `generate_planner_v2.py` to `{pid}_cover_ai.png` so it matches
+what `finalize()` looks for. Parameterized `build_cover_png()`/`compose_ai_cover()` in `planner_hyperlinker.py`
+to accept the product's real theme/accent/bg/dark colors instead of always using the hardcoded constants
+(DP1034 pinned to the legacy defaults — its exact 3-tone gradient can't be reconstructed from the 4 generic
+theme colors; verified byte-for-byte identical output post-fix). Regenerated theme-correct AI covers for
+DP1026-1030 via `tools.image_gen.generate_image()`, rebuilt all dated+undated PDFs through the fixed pipeline,
+visually confirmed each cover matches its documented theme, and re-uploaded the corrected `{pid}.pdf`/
+`{pid}U.pdf` files to the 4 live listings (4509179201/4509184958/4509184962/4509184968) via
+`delete_listing_file()` + `upload_listing_file()` — all 8 files passed `validate_digital_file()` with zero
+errors. DP1030 remains an unpublished pilot; its files were fixed but no new listing was published.
