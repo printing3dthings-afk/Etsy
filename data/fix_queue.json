@@ -72,7 +72,7 @@
     },
     {
       "listing_id": 4512783077,
-      "title": "Paris Café Printable Wall Art, Instant Download, French",
+      "title": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
       "flagged_in_batch": 8,
       "fix_notes": "Deleted bad composite #1 (hero); uploaded clean living_room composite as new hero using DP1068 art source",
       "status": "done"
@@ -165,7 +165,7 @@
       "listing_id": 4514130045,
       "title": "Floral SVG Bundle Cricut, Botanical Cut Files, Instant Download",
       "flagged_in_batch": 9,
-      "fix_notes": "Deleted photos 7-17 (old SVG). Generated 4 room composites. Photos 2,4 off-center clothing — pending user decision. DP1081. Download file: FlowerBotanical_Bundle.zip",
+      "fix_notes": "Deleted photos 7-17 (old SVG). Generated 4 room composites. Photos 2,4 off-center clothing \u2014 pending user decision. DP1081. Download file: FlowerBotanical_Bundle.zip",
       "status": "done"
     },
     {
@@ -242,14 +242,14 @@
       "listing_id": 4515673288,
       "title": "Boho Mandala Art Print | Spiritual Wall Decor | Multiple Sizes",
       "flagged_in_batch": 13,
-      "fix_notes": "Listing deleted — art not recognized as ours, no digital files attached.",
+      "fix_notes": "Listing deleted \u2014 art not recognized as ours, no digital files attached.",
       "status": "done"
     },
     {
       "listing_id": 4515673500,
       "title": "Modern Geometric Art Print | Minimal Wall Decor | Multiple Sizes",
       "flagged_in_batch": 13,
-      "fix_notes": "Listing deleted — art not ours. Lifestyle room shots saved as reference templates in data/digital_products/product_files/room_references/.",
+      "fix_notes": "Listing deleted \u2014 art not ours. Lifestyle room shots saved as reference templates in data/digital_products/product_files/room_references/.",
       "status": "done"
     },
     {
@@ -270,15 +270,15 @@
       "listing_id": 4515677081,
       "title": "Pastel Abstract Art Print | Kawaii Wall Decor | Multiple Sizes",
       "flagged_in_batch": 15,
-      "fix_notes": "Listing deleted — art not ours.",
+      "fix_notes": "Listing deleted \u2014 art not ours.",
       "status": "done"
     },
     {
       "listing_id": 4515677207,
       "title": "Kawaii Celestial Art Print | Moon Stars Wall Decor | Multiple Sizes",
       "flagged_in_batch": 15,
-      "fix_notes": "",
-      "status": "pending"
+      "fix_notes": "Listing permanently deleted 2026-06-05 (see review_batches/mystery_deletions_log.json) \u2014 fake AI lifestyle photos, no real product composited. No further fix possible or needed; listing no longer exists (confirmed via Etsy API 404).",
+      "status": "done"
     }
   ],
   "reviewed_batches": [
@@ -301,22 +301,22 @@
   ],
   "design_notes": [
     {
-      "note": "Listing #25 photo 6 — user loved the font/saying style. Explore making new SVG cut files with that aesthetic (script font, inspirational/faith sayings). Reference listing 4514134583 photo 6.",
+      "note": "Listing #25 photo 6 \u2014 user loved the font/saying style. Explore making new SVG cut files with that aesthetic (script font, inspirational/faith sayings). Reference listing 4514134583 photo 6.",
       "date": "2026-06-05",
       "status": "idea"
     },
     {
-      "note": "Listing #26 photo 6 — user loves this SVG style (same as #25). Confirmed request: create new SVG cut files with this font/saying aesthetic. Reference listing 4514136783 photo 6.",
+      "note": "Listing #26 photo 6 \u2014 user loves this SVG style (same as #25). Confirmed request: create new SVG cut files with this font/saying aesthetic. Reference listing 4514136783 photo 6.",
       "date": "2026-06-05",
       "status": "idea"
     },
     {
-      "note": "Listing #27 photo 6 — 3rd confirmation user wants SVG cut files in this style. Priority design task after fix queue complete. Reference listings 4514130045, 4514134583, 4514136783, 4514392281 photo 6.",
+      "note": "Listing #27 photo 6 \u2014 3rd confirmation user wants SVG cut files in this style. Priority design task after fix queue complete. Reference listings 4514130045, 4514134583, 4514136783, 4514392281 photo 6.",
       "date": "2026-06-05",
       "status": "priority"
     },
     {
-      "note": "Listing #28 photo 6 — 4th confirmation. User explicitly said \"I want ones like those.\" Priority SVG design task: create new cut file bundles in the style shown in photo 6 across listings #24-#28.",
+      "note": "Listing #28 photo 6 \u2014 4th confirmation. User explicitly said \"I want ones like those.\" Priority SVG design task: create new cut file bundles in the style shown in photo 6 across listings #24-#28.",
       "date": "2026-06-05",
       "status": "priority"
     },
@@ -336,7 +336,7 @@
       "status": "flagged_needs_art"
     },
     {
-      "note": "DP1008/DP1009/DP1010 orphan room-scenes RESOLVED: generated a cohesive \"Mediterranean impressionist\" 3-piece series — DP1008 lemon window (matches the painting shown in the old room scenes), DP1009 Amalfi cliffside village, DP1010 terrace with lemons. All upscaled to 4096x6144, sRGB print ZIPs built (18.7/19.7/19.4 MB). Old room-scene base files archived to product_files/_archive_room_scenes/. Also staged: detail close-up crops (DP1092/1093/1008/1069-seaturtle), gallery-wall composites (DP1069 4-print coastal, DP1092+DP1093 boho duo, DP1008/09/10 Mediterranean trio) in staged_lifestyle/. QC sweep now 0 FAIL / 6 WARN (all 6 are the DP1027/28/29 page counts awaiting Scott approval of pending_listing_updates.json). sRGB coverage: 91/91 print ZIPs.",
+      "note": "DP1008/DP1009/DP1010 orphan room-scenes RESOLVED: generated a cohesive \"Mediterranean impressionist\" 3-piece series \u2014 DP1008 lemon window (matches the painting shown in the old room scenes), DP1009 Amalfi cliffside village, DP1010 terrace with lemons. All upscaled to 4096x6144, sRGB print ZIPs built (18.7/19.7/19.4 MB). Old room-scene base files archived to product_files/_archive_room_scenes/. Also staged: detail close-up crops (DP1092/1093/1008/1069-seaturtle), gallery-wall composites (DP1069 4-print coastal, DP1092+DP1093 boho duo, DP1008/09/10 Mediterranean trio) in staged_lifestyle/. QC sweep now 0 FAIL / 6 WARN (all 6 are the DP1027/28/29 page counts awaiting Scott approval of pending_listing_updates.json). sRGB coverage: 91/91 print ZIPs.",
       "date": "2026-06-09",
       "status": "done_pending_scott_review"
     }
