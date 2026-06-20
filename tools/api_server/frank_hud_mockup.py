@@ -301,6 +301,56 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 #chat-input:focus{border-color:var(--gold)}
 #chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Hub screens (Listings/Products/Brand Kit/Files/Connections/Security) — ported
+   verbatim-in-behavior from the live Hub at / (main.py), restyled to the HUD's
+   cyan/gold theme. Classes are namespaced "hub-" since the HUD already has its own
+   unrelated .badge (notification dot) that would collide with the live Hub's .badge
+   (listing state pill). ── */
+.hub-scroll{margin-top:10px;overflow-y:auto;max-height:760px}
+.hub-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px}
+.hub-section-title:first-child{margin-top:0}
+.hub-card{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.hub-empty{text-align:center;color:var(--muted);padding:40px 0;font-size:13px}
+.hub-spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:hubspin .7s linear infinite;margin:40px auto}
+@keyframes hubspin{to{transform:rotate(360deg)}}
+
+.hub-toggle-row{display:flex;gap:8px;margin-bottom:12px}
+.hub-toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.hub-toggle-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
+.hub-chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.hub-chip-btn{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.hub-chip-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
+
+.hub-listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.hub-listing-item:last-child{border-bottom:none}
+.hub-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:var(--border);flex-shrink:0}
+.hub-thumb-ph{width:52px;height:52px;border-radius:8px;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.hub-listing-info{flex:1;min-width:0}
+.hub-listing-title{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-listing-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.hub-listing-price{font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
+.hub-lstate{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:6px}
+.hub-lstate.draft{background:#0f1f30;color:var(--muted);border:1px solid var(--border)}
+.hub-lstate.active{background:#143323;color:var(--green);border:1px solid #1f4d36}
+
+.hub-listing-detail{padding:2px 14px 12px;margin:-2px 0 10px;background:var(--panel);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;font-size:12px}
+.hub-listing-detail .hub-drow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.hub-listing-detail .hub-drow:last-child{border-bottom:none}
+.hub-listing-detail .hub-drow span{color:var(--muted)}
+.hub-listing-detail .hub-drow b{font-weight:600;text-align:right}
+
+.hub-act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+
+.hub-swatch{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-right:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
+.hub-prod-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+
+.hub-cred-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.hub-cred-row:last-child{border-bottom:none}
+.hub-cred-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+.hub-posture-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.hub-posture-row:last-child{border-bottom:none}
 </style>
 </head>
 <body>
@@ -513,12 +563,57 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
   <div class="screen" id="screen-workflows"><div class="placeholder-screen"><div class="big">WORKFLOWS</div><div class="small">Runnable workflow list — each Run stages through the existing approval gate. Built in Step 2.</div></div></div>
 
-  <div class="screen" id="screen-listings"><div class="placeholder-screen"><div class="big">LISTINGS</div><div class="small">Carried over from the live Hub's listings browser — loadListings() in main.py:1592, real Etsy listings via list_listings/get_listing. Restyled into the HUD shell in Step 2.</div></div></div>
-  <div class="screen" id="screen-products"><div class="placeholder-screen"><div class="big">PRODUCTS</div><div class="small">Carried over from the live Hub's product catalog — loadProductIndex() in main.py:2263, the DP1026–1029 etc. index. Restyled into the HUD shell in Step 2.</div></div></div>
-  <div class="screen" id="screen-brandkit"><div class="placeholder-screen"><div class="big">BRAND KIT</div><div class="small">Carried over from the live Hub — _renderBrandKit() in main.py:2217, color palettes, listing standards, pricing tiers from CLAUDE.md. Restyled into the HUD shell in Step 2.</div></div></div>
-  <div class="screen" id="screen-files"><div class="placeholder-screen"><div class="big">FILES</div><div class="small">Carried over from the live Hub's file browser — loadFiles() in main.py:2455, real files over data/digital_products/ and backups. Restyled into the HUD shell in Step 2.</div></div></div>
-  <div class="screen" id="screen-connections"><div class="placeholder-screen"><div class="big">CONNECTIONS</div><div class="small">Carried over from the live Hub — loadCredentials() in main.py:2349, live API credential/token status, plus the Platform Connections Roadmap (Pinterest/Instagram/Facebook/TikTok/OneDrive, main.py:2280-2394) honestly marked not-yet-built. Restyled into the HUD shell in Step 2.</div></div></div>
-  <div class="screen" id="screen-security"><div class="placeholder-screen"><div class="big">SECURITY</div><div class="small">Carried over from the live Hub — _renderSecurityPosture() in main.py:2391. Restyled into the HUD shell in Step 2.</div></div></div>
+  <!-- ══════════ LISTINGS — real data: /api/listings, /api/shop-sections, /api/listings/{id}/files ══════════ -->
+  <div class="screen" id="screen-listings">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Listings <span class="src">/api/listings — live Etsy listings via list_listings/get_listing</span></div>
+      <div class="hub-toggle-row" style="margin-top:10px">
+        <button class="hub-toggle-btn active" onclick="loadListings('active',this)">Active</button>
+        <button class="hub-toggle-btn" onclick="loadListings('draft',this)">Drafts</button>
+      </div>
+      <div id="listings-content" class="hub-scroll"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ PRODUCTS — fully static: DP1026-1029 + theme catalog, from CLAUDE.md ══════════ -->
+  <div class="screen" id="screen-products">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Products <span class="src">Static — DP1026–1029 product catalog from CLAUDE.md</span></div>
+      <div id="products-content" class="hub-scroll"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ BRAND KIT — fully static: color palettes, listing standards, pricing tiers ══════════ -->
+  <div class="screen" id="screen-brandkit">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Brand Kit <span class="src">Static — palettes, listing standards, pricing tiers from CLAUDE.md</span></div>
+      <div id="brandkit-content" class="hub-scroll"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ FILES — real data: /api/files (data/digital_products/ + backups) ══════════ -->
+  <div class="screen" id="screen-files">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Files <span class="src">/api/files — live volume listing, data/digital_products/ + backups</span></div>
+      <div id="files-content" class="hub-scroll"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ CONNECTIONS — real data: /api/credentials/status + static Platform Roadmap ══════════ -->
+  <div class="screen" id="screen-connections">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Connections <span class="src">/api/credentials/status — live token status + Platform Connections Roadmap</span></div>
+      <div id="connections-content" class="hub-scroll"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SECURITY — fully static: security posture checklist ══════════ -->
+  <div class="screen" id="screen-security">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Security <span class="src">Static — security posture checklist + re-auth instructions</span></div>
+      <div id="security-content" class="hub-scroll"></div>
+    </div>
+  </div>
 
   <div class="screen" id="screen-studio">
     <div class="panel brk" style="height:100%">
@@ -954,6 +1049,464 @@ async function loadTools(){
   }
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// Hub screens — ported from the live Hub at / (main.py): Listings, Products,
+// Brand Kit, Files, Connections, Security. Same API calls, same write
+// semantics (toggleListingState still confirm-gated), restyled to hub- CSS.
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── Listings — real data: /api/listings, /api/shop-sections, /api/listings/{id}/files ──
+let _lastListingState = 'active';
+let _listings = [];
+let _listingState = 'active';
+let _sectionFilter = null; // null = all categories
+let _sectionsMap = null;   // {shop_section_id: title}, fetched once and cached client-side
+let _openDetailId = null;
+async function _ensureSectionsLoaded() {
+  if (_sectionsMap) return;
+  try {
+    const d = await (await authGet('/api/shop-sections', 15000)).json();
+    _sectionsMap = {};
+    (d.sections||[]).forEach(s => { _sectionsMap[s.shop_section_id] = s.title; });
+  } catch(e) { _sectionsMap = {}; }
+}
+function _sectionLabel(id) {
+  if (!id) return 'Uncategorized';
+  return (_sectionsMap && _sectionsMap[id]) || ('Section '+id);
+}
+async function loadListings(state, btn) {
+  if (btn) { document.querySelectorAll('#screen-listings .hub-toggle-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  _lastListingState = state; _listingState = state; _sectionFilter = null; _openDetailId = null;
+  const el = document.getElementById('listings-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    await _ensureSectionsLoaded();
+    const r = await authGet('/api/listings?state='+state, 20000);
+    if (!r.ok) { const err = await r.json().catch(()=>({})); throw new Error(err.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    _listings = d.listings || [];
+    renderListings();
+  } catch(e) {
+    el.innerHTML = `<div class="hub-empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastListingState)" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function setSectionFilter(key) {
+  _sectionFilter = key;
+  _openDetailId = null;
+  renderListings();
+}
+function renderListings() {
+  const el = document.getElementById('listings-content');
+  if (!_listings.length) { el.innerHTML = '<div class="hub-empty">No '+_listingState+' listings</div>'; return; }
+  const seen = {}; const cats = [];
+  _listings.forEach(l => {
+    const key = String(l.shop_section_id || 'none');
+    if (!seen[key]) { seen[key] = true; cats.push({key: key, label: _sectionLabel(l.shop_section_id)}); }
+  });
+  cats.sort((a,b) => a.label.localeCompare(b.label));
+  let html = '';
+  if (cats.length > 1) {
+    html += '<div class="hub-chip-row">';
+    html += `<button class="hub-chip-btn${_sectionFilter===null?' active':''}" onclick="setSectionFilter(null)">All (${_listings.length})</button>`;
+    cats.forEach(c => {
+      const n = _listings.filter(l => String(l.shop_section_id||'none')===c.key).length;
+      html += `<button class="hub-chip-btn${_sectionFilter===c.key?' active':''}" onclick="setSectionFilter('${c.key}')">${escHtml(c.label)} (${n})</button>`;
+    });
+    html += '</div>';
+  }
+  const filtered = _sectionFilter===null ? _listings : _listings.filter(l => String(l.shop_section_id||'none')===_sectionFilter);
+  if (!filtered.length) { html += '<div class="hub-empty">No listings in this category</div>'; el.innerHTML = html; return; }
+  html += filtered.map(l => `
+    <div class="hub-listing-item" style="cursor:pointer" onclick="toggleListingDetail(${l.listing_id})">
+      ${l.thumbnail_url ? `<img class="hub-thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy">` : `<div class="hub-thumb-ph">🏷️</div>`}
+      <div class="hub-listing-info">
+        <div class="hub-listing-title">${escHtml(l.title)}</div>
+        <div class="hub-listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="hub-state-${l.listing_id}" class="hub-lstate ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
+      </div>
+      <div class="hub-listing-price">$${(+l.price||0).toFixed(2)}</div>
+    </div>
+    <div id="hub-detail-${l.listing_id}" class="hub-listing-detail" style="display:none"></div>`).join('');
+  el.innerHTML = html;
+}
+async function toggleListingDetail(listingId) {
+  const panel = document.getElementById('hub-detail-'+listingId);
+  if (!panel) return;
+  if (_openDetailId !== null && _openDetailId !== listingId) {
+    const prev = document.getElementById('hub-detail-'+_openDetailId);
+    if (prev) prev.style.display = 'none';
+  }
+  if (_openDetailId === listingId) { panel.style.display = 'none'; _openDetailId = null; return; }
+  const l = _listings.find(x => x.listing_id === listingId);
+  if (!l) return;
+  panel.style.display = 'block';
+  _openDetailId = listingId;
+  panel.innerHTML =
+    `<div class="hub-drow"><span>Listing ID</span><b>${listingId}</b></div>`+
+    `<div class="hub-drow"><span>Category</span><b>${escHtml(_sectionLabel(l.shop_section_id))}</b></div>`+
+    `<div class="hub-drow"><span>Views</span><b>${l.views}</b></div>`+
+    `<div class="hub-drow"><span>Favorites</span><b>${l.num_favorers}</b></div>`+
+    (l.sales!=null ? `<div class="hub-drow"><span>Sold</span><b>${l.sales}</b></div>` : '')+
+    (l.conversion_pct!=null ? `<div class="hub-drow"><span>Conversion</span><b>${l.conversion_pct}%</b></div>` : '')+
+    `<div class="hub-drow"><span>Price</span><b>$${(+l.price||0).toFixed(2)}</b></div>`+
+    `<div id="hub-files-${listingId}"><div class="hub-drow"><span>Digital files</span><b>loading…</b></div></div>`+
+    `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
+    ((l.state==='active'||l.state==='inactive') ? `<button id="hub-state-btn-${listingId}" class="hub-act-btn" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
+    `<a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a>`+
+    `</div>`;
+  try {
+    const r = await authGet('/api/listings/'+listingId+'/files', 15000);
+    const slot = document.getElementById('hub-files-'+listingId);
+    if (!slot) return;
+    if (!r.ok) { slot.innerHTML = '<div class="hub-drow"><span>Digital files</span><b>unavailable</b></div>'; return; }
+    const d = await r.json();
+    const files = d.files || [];
+    if (!files.length) { slot.innerHTML = '<div class="hub-drow"><span>Digital files</span><b>none attached</b></div>'; return; }
+    slot.innerHTML = files.map(f => `<div class="hub-drow"><span>📄 ${escHtml(f.filename||'file')}</span><b>${escHtml(f.size_human||'')}</b></div>`).join('');
+  } catch(e) {
+    const slot = document.getElementById('hub-files-'+listingId);
+    if (slot) slot.innerHTML = '<div class="hub-drow"><span>Digital files</span><b>failed to load</b></div>';
+  }
+}
+async function toggleListingState(listingId, btn) {
+  const l = _listings.find(x => x.listing_id === listingId);
+  if (!l) return;
+  const newState = l.state === 'active' ? 'inactive' : 'active';
+  if (!confirm((newState==='inactive'?'Deactivate':'Activate')+' this listing on Etsy now?')) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Working…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/listings/'+listingId+'/state?new_state='+newState, {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 25000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    l.state = d.state || newState;
+    btn.textContent = l.state==='active' ? '⏸️ Deactivate' : '▶️ Activate';
+    btn.disabled = false;
+    const badge = document.getElementById('hub-state-'+listingId);
+    if (badge) { badge.textContent = l.state; badge.className = 'hub-lstate ' + (l.state==='active'?'active':'draft'); }
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Could not change listing state: ' + (e.message||e));
+  }
+}
+
+// ── Products / Brand Kit — fully static, from CLAUDE.md product catalog ──
+const _THEMES = [
+  {id:'DP1026',name:'Lavender Dreams',primary:'#8666AA',accent:'#C4A8D4',neutral:'#FAF7FF',text:'#2C1A3A'},
+  {id:'DP1027',name:'Cotton Candy',   primary:'#DE97C6',accent:'#97C6DE',neutral:'#FFF6FC',text:'#2C1A2A'},
+  {id:'DP1028',name:'Midnight Blue',  primary:'#1B2568',accent:'#7BA7C2',neutral:'#F0F5FF',text:'#0D1525'},
+  {id:'DP1029',name:'Coral Peach',    primary:'#FD6C49',accent:'#F5B878',neutral:'#FFF8F4',text:'#3A1A0D'}
+];
+const _PRODUCTS_STATIC = [
+  {id:'DP1026',name:'Ultimate Life Planner',      price:'$14.99',pages:104},
+  {id:'DP1027',name:'Student & School Planner',   price:'$9.99', pages:90},
+  {id:'DP1028',name:'Budget & Finance Planner',   price:'$12.99',pages:102},
+  {id:'DP1029',name:'Fitness & Wellness Planner', price:'$12.99',pages:91}
+];
+function renderProducts() {
+  const el = document.getElementById('products-content');
+  if (!el) return;
+  let html = '<div class="hub-section-title">Core Products</div>';
+  _PRODUCTS_STATIC.forEach((p,i) => {
+    const t = _THEMES[i]||{};
+    html += '<div class="hub-prod-card" style="border-left-color:'+(t.primary||'var(--gold)')+'">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+        '<div><div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px">'+escHtml(p.id)+'</div>'+
+        '<div style="font-size:14px;font-weight:600;margin-top:3px">'+escHtml(p.name)+'</div></div>'+
+        '<div style="font-size:16px;font-weight:700;color:var(--gold)">'+escHtml(p.price)+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--muted)">'+
+        '<span>📄 '+p.pages+' pages</span><span>🔖 13 tags</span><span>Digital Download</span>'+
+      '</div>'+
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+function renderBrandKit() {
+  const el = document.getElementById('brandkit-content');
+  if (!el) return;
+  let html = '<div class="hub-section-title">Product Color Palettes</div>';
+  _THEMES.forEach(t => {
+    html += '<div class="hub-card" style="margin-bottom:10px">';
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">'+escHtml(t.id)+' — '+escHtml(t.name)+'</div>';
+    html += '<div style="display:flex;gap:12px;flex-wrap:wrap">';
+    [{label:'Primary',hex:t.primary},{label:'Accent',hex:t.accent},{label:'Neutral',hex:t.neutral},{label:'Text',hex:t.text}].forEach(c => {
+      html += '<div style="display:flex;align-items:center;gap:5px">'+
+        '<span class="hub-swatch" style="background:'+escHtml(c.hex)+'"></span>'+
+        '<div style="font-size:11px"><div style="color:var(--muted)">'+escHtml(c.label)+'</div>'+
+        '<div style="font-family:monospace;font-size:10px;color:var(--text)">'+escHtml(c.hex)+'</div></div>'+
+        '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div class="hub-section-title">Listing Standards</div><div class="hub-card">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  [['Title','≤70 chars · keyword first 40 · commas not pipes'],
+   ['Tags','13 tags · each ≤20 chars · multi-word buyer phrases'],
+   ['Photos','10 slots · 2400×2400px · lifestyle hero first'],
+   ['Price','.99 / .97 / .49 endings — never round numbers'],
+   ['AI disclosure','Required in description · who_made: i_did'],
+   ['File limit','20 MB per file (PDF + ZIP · Etsy hard limit)']
+  ].forEach(r => {
+    html += '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:7px 0;padding-right:10px;color:var(--gold);font-weight:700;white-space:nowrap">'+escHtml(r[0])+'</td>'+
+      '<td style="padding:7px 0;color:var(--muted);line-height:1.4">'+escHtml(r[1])+'</td></tr>';
+  });
+  html += '</table></div>';
+  html += '<div class="hub-section-title">Pricing Tiers</div><div class="hub-card">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  [['DP1026 Life Planner','$14.99','104 pages + sticker pack'],
+   ['DP1027 Student','$9.99','90 pages · student budget'],
+   ['DP1028 Budget','$12.99','102 pages · finance niche'],
+   ['DP1029 Fitness','$12.99','91 pages · wellness niche'],
+   ['SVG 5-pack','$9.99','5 designs · instant DL'],
+   ['SVG 10+ pack','$14.99','10+ designs · instant DL']
+  ].forEach(r => {
+    html += '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:7px 0;padding-right:8px;font-weight:600">'+escHtml(r[0])+'</td>'+
+      '<td style="padding:7px 0;padding-right:8px;color:var(--gold);font-weight:700;white-space:nowrap">'+escHtml(r[1])+'</td>'+
+      '<td style="padding:7px 0;color:var(--muted)">'+escHtml(r[2])+'</td></tr>';
+  });
+  html += '</table></div>';
+  el.innerHTML = html;
+}
+
+// ── Files — real data: /api/files (data/digital_products/ + backups) ──
+function _hubFileUrl(f, inline){
+  return BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
+    '&token='+encodeURIComponent(TOKEN)+(inline?'&inline=1':'');
+}
+function _hubZipEntryUrl(f, entryName){
+  return BASE+'/api/files/zip-entry?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
+    '&entry='+encodeURIComponent(entryName)+'&token='+encodeURIComponent(TOKEN);
+}
+function _hubFileIcon(name){
+  const n=(name||'').toLowerCase();
+  if(n.match(/\.(png|jpe?g|gif|webp|svg)$/)) return '🖼️';
+  if(n.endsWith('.pdf')) return '📕';
+  if(n.endsWith('.zip')) return '🗂️';
+  if(n.match(/\.(txt|md)$/)) return '📃';
+  return '📄';
+}
+function toggleZip(id, btn){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const open=el.style.display==='none';
+  el.style.display=open?'':'none';
+  if(btn) btn.textContent=open?'▾':'▸';
+}
+function openFile(url){ window.open(url,'_blank'); }
+async function loadFiles() {
+  const el = document.getElementById('files-content');
+  if (!el) return;
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/files', 20000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const groups = d.groups||[];
+    if (!groups.length || groups.every(g=>!g.files.length)) {
+      el.innerHTML = '<div class="hub-empty" style="line-height:1.6">'+
+        escHtml(d.empty_reason||'No files yet.')+'</div>';
+      return;
+    }
+    let html = '<div class="hub-card" style="margin-bottom:12px">'+
+      '<div style="font-size:12px;color:var(--muted);line-height:1.6">The actual product files living on the server '+
+      '(data/digital_products/ and data/backups/). Tap a file to open it. Tap a ZIP to expand it and open any '+
+      'file inside directly — no unzipping needed.</div></div>';
+    let zipIdx=0;
+    groups.forEach(g => {
+      if (!g.files.length) return;
+      html += '<div class="hub-section-title">'+escHtml(g.label)+' ('+g.files.length+')</div><div class="hub-card">';
+      g.files.forEach(f => {
+        const when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        if (f.is_zip) {
+          const zid='hub-zip-'+(zipIdx++);
+          const entries=f.entries||[];
+          html += '<div class="hub-listing-item" onclick="toggleZip(\\''+zid+'\\',this.querySelector(\\'.hub-zip-caret\\'))" style="cursor:pointer">'+
+            '<div class="hub-thumb-ph">🗂️</div>'+
+            '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
+            '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+' · '+entries.length+' files inside</div></div>'+
+            '<div class="hub-zip-caret" style="color:var(--gold);font-size:16px">▸</div>'+
+          '</div>';
+          html += '<div id="'+zid+'" style="display:none;margin:0 0 6px 14px;border-left:2px solid var(--border);padding-left:8px">';
+          if(!entries.length){
+            html += '<div class="hub-listing-meta" style="padding:8px 0">Could not read this ZIP\\'s contents.</div>';
+          }
+          entries.forEach(en => {
+            const eurl=_hubZipEntryUrl(f,en.name);
+            html += '<div class="hub-listing-item" onclick="openFile(\\''+eurl+'\\')" style="cursor:pointer;padding:7px 4px">'+
+              '<div class="hub-thumb-ph" style="font-size:16px">'+_hubFileIcon(en.name)+'</div>'+
+              '<div class="hub-listing-info"><div class="hub-listing-title" style="font-size:13px">'+escHtml(en.name)+'</div>'+
+              '<div class="hub-listing-meta">'+escHtml(en.size_human)+(en.inline?' · tap to open':' · tap to download')+'</div></div>'+
+              '<div style="color:var(--gold);font-size:15px">'+(en.inline?'↗':'⬇')+'</div>'+
+            '</div>';
+          });
+          html += '</div>';
+        } else {
+          const url=_hubFileUrl(f, f.inline?1:0);
+          html += '<div class="hub-listing-item" onclick="openFile(\\''+url+'\\')" style="cursor:pointer">'+
+            '<div class="hub-thumb-ph">'+_hubFileIcon(f.path)+'</div>'+
+            '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
+            '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+(f.inline?' · tap to open':' · tap to download')+'</div></div>'+
+            '<div style="color:var(--gold);font-size:18px">'+(f.inline?'↗':'⬇')+'</div>'+
+          '</div>';
+        }
+      });
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load files')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+
+// ── Connections — real data: /api/credentials/status + static Platform Roadmap ──
+const _PLATFORM_ROADMAP = [
+  {name:'Etsy',      icon:'🛍️', status:'live',    note:'onbrandcraftz · authorized'},
+  {name:'Pinterest', icon:'📌', status:'roadmap',note:'API v5 — ready to integrate', steps:[
+    'Create a Pinterest Developer app at developers.pinterest.com',
+    'Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env',
+    'Run: python tools/pinterest_oauth.py — authorizes and saves tokens to .env automatically',
+    'Claim the Etsy shop under Pinterest "Claimed accounts" to enable Rich Pins',
+    'Done — the Social Media Agent can post via tools/pinterest_api.py'
+  ]},
+  {name:'Instagram', icon:'📷', status:'roadmap',note:'Meta Graph API (app review needed)', steps:[
+    'Create a Meta Business app at developers.facebook.com',
+    'Add the "Instagram Graph API" product to the app',
+    'Connect the Instagram Professional account via a Facebook Page',
+    'Add INSTAGRAM_APP_ID / INSTAGRAM_APP_SECRET to .env',
+    'Generate a long-lived access token (scopes: instagram_basic, instagram_content_publish, instagram_manage_insights, pages_show_list, pages_read_engagement)',
+    'Add INSTAGRAM_USER_ID / INSTAGRAM_ACCESS_TOKEN to .env',
+    'Submit the app for Meta App Review before posting publicly — tools/instagram_api.py is already built and waiting on this'
+  ]},
+  {name:'Facebook',  icon:'📘', status:'roadmap',note:'Same Meta app as Instagram', steps:[
+    'No separate app needed — reuse the Meta app created for Instagram',
+    'Add the Facebook Page and Pages API permission to that same app',
+    'Generate a Page Access Token with the pages_manage_posts scope',
+    'Add FACEBOOK_PAGE_ID / FACEBOOK_ACCESS_TOKEN to .env once issued'
+  ]},
+  {name:'TikTok',    icon:'🎵', status:'roadmap',note:'TikTok for Business API', steps:[
+    'App credentials are already configured (TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET)',
+    'Run: python tools/tiktok_oauth.py — log in as @onbrandcraftz and approve',
+    'Tokens save to .env automatically (access token 24h, refresh token 365 days)',
+    'Re-run tools/tiktok_oauth.py whenever the access token expires',
+    'Done — post via tools/tiktok_poster.py'
+  ]},
+  {name:'OneDrive',  icon:'☁️', status:'roadmap',note:'Microsoft Graph — source file storage', steps:[
+    'Not yet built — no OneDrive code exists in the repo today',
+    'Register an app in the Azure Portal (Microsoft Entra ID → App registrations)',
+    'Grant the Microsoft Graph "Files.ReadWrite" delegated permission',
+    'Add ONEDRIVE_CLIENT_ID / ONEDRIVE_CLIENT_SECRET to .env',
+    'Build tools/onedrive_oauth.py to get access/refresh tokens (does not exist yet)',
+    'Use the Graph API /me/drive/root:/path:/content endpoint to sync source files for backup'
+  ]}
+];
+function toggleCredSteps(key) {
+  const panel = document.getElementById('hub-cred-steps-'+key);
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+async function loadConnections() {
+  const el = document.getElementById('connections-content');
+  if (!el) return;
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/credentials/status', 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    let html = '<div class="hub-card" style="margin-bottom:12px">';
+    if (d.etsy_live) {
+      html += '<div style="color:var(--green);font-size:15px;font-weight:700">✅ Etsy Live</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+escHtml(d.shop_name||'onbrandcraftz')+' · token valid</div>';
+    } else {
+      html += '<div style="color:var(--red);font-size:15px;font-weight:700">⚠️ Etsy Ping Failed</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+escHtml(d.etsy_live_error||'Unknown error')+' — run python tools/etsy_oauth.py</div>';
+    }
+    html += '</div><div class="hub-section-title">API Credentials</div><div class="hub-card">';
+    const et=d.etsy||{}, an=d.anthropic||{}, oa=d.openai||{}, sm=d.smtp||{}, pi=d.pinterest||{};
+    [
+      {label:'Etsy API Key',         ok:et.api_key,         note:'ETSY_API_KEY / ETSY_CLIENT_ID'},
+      {label:'Etsy Access Token',    ok:et.access_token,    note:'Expires every 1 hour — auto-refreshed'},
+      {label:'Etsy Refresh Token',   ok:et.refresh_token,   note:'90-day window — re-auth via etsy_oauth.py'},
+      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'Fucking Frank (CEO) · Conversion Doctor · tag gen'},
+      {label:'OpenAI (DALL-E)',      ok:oa.api_key,         note:'gpt-image-1 listing photo generation'},
+      {label:'SMTP Email',           ok:sm.user,            note:'Post-purchase digital delivery'},
+      {label:'Pinterest',            ok:pi.api_key,         note:'API v5 · roadmap'}
+    ].forEach(c => {
+      const col = c.ok ? 'var(--green)' : 'var(--red)';
+      html += '<div class="hub-cred-row">'+
+        '<div class="hub-cred-dot" style="background:'+col+'"></div>'+
+        '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+escHtml(c.label)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+escHtml(c.note)+'</div></div>'+
+        '<div style="font-size:12px;font-weight:700;color:'+col+'">'+escHtml(c.ok?'Set ✓':'Not set')+'</div>'+
+      '</div>';
+    });
+    html += '</div><div style="font-size:11px;color:var(--muted);text-align:center;padding:10px 0">All tokens stored in .env — never committed to git</div>';
+    html += '<div class="hub-section-title">Platform Connections</div><div class="hub-card">';
+    _PLATFORM_ROADMAP.forEach(p => {
+      const live = p.status==='live';
+      const key = p.name.toLowerCase();
+      html += '<div class="hub-cred-row">'+
+        '<div style="display:flex;align-items:center;gap:10px;width:100%">'+
+        '<div style="font-size:20px;flex-shrink:0;width:28px">'+p.icon+'</div>'+
+        '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+escHtml(p.name)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+escHtml(p.note)+'</div></div>'+
+        (live
+          ? '<div style="font-size:11px;font-weight:700;color:var(--green)">✅ Live</div>'
+          : '<div style="font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap" onclick="toggleCredSteps(\\''+key+'\\')">🗺️ Roadmap ›</div>')+
+        '</div>'+
+        (live ? '' :
+          '<div id="hub-cred-steps-'+key+'" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'+
+            '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Steps to complete</div>'+
+            '<ol style="margin:0;padding-left:18px;font-size:12px;line-height:1.6">'+
+              (p.steps||[]).map(s=>'<li style="margin-bottom:4px">'+escHtml(s)+'</li>').join('')+
+            '</ol>'+
+          '</div>')+
+        '</div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadConnections()" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+
+// ── Security — fully static: security posture checklist ──
+function renderSecurityPosture() {
+  const el = document.getElementById('security-content');
+  if (!el) return;
+  let html = '<div class="hub-section-title">Security Posture</div><div class="hub-card">';
+  [
+    {ok:true, label:'.env not committed to git',           note:'Credentials stay local, never in version control'},
+    {ok:true, label:'APP_SECRET_TOKEN set',                note:'Every dashboard request requires Bearer auth'},
+    {ok:true, label:'Quality gate is code',                note:'Title ≤70 · tags ≤13 · validated at stage AND approve'},
+    {ok:true, label:'Staged action queue',                 note:'Every Etsy change requires Scott one-tap approval'},
+    {ok:null, label:'Etsy MFA enabled?',                   note:'Verify in Etsy → Account Settings → Security'},
+    {ok:null, label:'Outlook 2FA active?',                 note:'Verify at account.microsoft.com → Security'},
+    {ok:null, label:'Pinterest not integrated yet',        note:'No API exposure until keys are added'},
+    {ok:false,label:'No per-IP rate limiting',             note:'Add nginx or Cloudflare for production hardening'},
+    {ok:false,label:'Token rotation reminder needed',      note:'Etsy refresh tokens expire 90 days — set a calendar alert'}
+  ].forEach(c => {
+    const icon = c.ok===true?'✅':c.ok===false?'⚠️':'❓';
+    const col  = c.ok===true?'var(--green)':c.ok===false?'var(--red)':'var(--muted)';
+    html += '<div class="hub-posture-row">'+
+      '<div style="font-size:16px;flex-shrink:0;width:24px">'+icon+'</div>'+
+      '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+col+'">'+escHtml(c.label)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+escHtml(c.note)+'</div></div>'+
+    '</div>';
+  });
+  html += '</div>';
+  html += '<div class="hub-card" style="background:var(--panel);margin-top:4px">'+
+    '<div style="font-size:12px;color:var(--muted);line-height:1.7">'+
+    '<b style="color:var(--gold)">Re-authorize Etsy:</b> If any API call returns 401, run<br>'+
+    '<code style="font-size:11px;background:var(--bg);padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px">python tools/etsy_oauth.py</code>'+
+    '</div></div>';
+  el.innerHTML = html;
+}
+
 function loadAll(){
   loadAgents();
   loadCredentialsAndHealth();
@@ -962,6 +1515,12 @@ function loadAll(){
   loadMissionTimeline();
   loadTasks();
   loadTools();
+  loadListings(_lastListingState);
+  renderProducts();
+  renderBrandKit();
+  loadFiles();
+  loadConnections();
+  renderSecurityPosture();
   loadRelayStatus();
 }
 loadAll();
