@@ -852,7 +852,7 @@ def generate_planner_v2(pid, no_cover=False):
         "dark_rgb": pcfg["dark"],
     }
 
-    cover_img_path = out_dir / f"{pid}_cover.png"
+    cover_img_path = out_dir / f"{pid}_cover_ai.png"
     if not no_cover:
         if not cover_img_path.exists() and raw.get("cover_prompt"):
             print(f"  Generating cover image for {pid}...")

@@ -43,12 +43,36 @@ PRODUCT_FILES_DIR = _BASE_DIR / "data" / "digital_products" / "product_files"
 
 PW, PH = 612.0, 792.0  # US Letter, matches _new_canvas() in generate_planner.py
 
-# Celestial Night palette (hex -> 0-255 tuples)
+# Celestial Night palette (hex -> 0-255 tuples) — DEFAULT cover palette, used
+# whenever a product doesn't pass its own theme/accent/bg/dark colors through.
 INDIGO_TOP = (20, 18, 46)      # #14122E
 SPACE_PURPLE = (45, 43, 85)    # #2D2B55
 INDIGO = (30, 27, 75)          # #1E1B4B
 GOLD = (201, 168, 76)          # #C9A84C
 MOONBEAM = (240, 238, 248)     # #F0EEF8
+
+
+def _to255(rgb01):
+    """Convert a 0-1 float RGB tuple (as used in PLANNERS/PLANNER_CONFIGS) to 0-255 ints."""
+    return tuple(int(round(c * 255)) for c in rgb01)
+
+
+def _cover_palette(theme_rgb=None, accent_rgb=None, bg_rgb=None, dark_rgb=None):
+    """Build the 5-color palette used by the cover builders below.
+
+    Falls back to the Celestial Night defaults (DP1034's original look) when no
+    product-specific colors are supplied, so existing behavior is unchanged for
+    callers that don't pass colors.
+    """
+    if dark_rgb is None:
+        indigo_top, space_purple, indigo = INDIGO_TOP, SPACE_PURPLE, INDIGO
+    else:
+        dark = _to255(dark_rgb)
+        mid = _to255(theme_rgb) if theme_rgb else SPACE_PURPLE
+        indigo_top, space_purple, indigo = dark, mid, dark
+    gold = _to255(accent_rgb) if accent_rgb else GOLD
+    moonbeam = _to255(bg_rgb) if bg_rgb else MOONBEAM
+    return indigo_top, space_purple, indigo, gold, moonbeam
 
 
 # ---------------------------------------------------------------------------
@@ -73,34 +97,43 @@ def _font(size, bold=False):
     return ImageFont.load_default()
 
 
-def build_cover_png(out_path, title, subtitle, year, shop="OnBrandCraftz"):
-    """Deep night-sky cover: gradient, stars, constellation, crescent moon, gold title."""
+def build_cover_png(out_path, title, subtitle, year, shop="OnBrandCraftz",
+                     theme_rgb=None, accent_rgb=None, bg_rgb=None, dark_rgb=None):
+    """Deep night-sky-style cover: gradient, stars, constellation, crescent moon, title.
+
+    Colors default to the Celestial Night palette (DP1034's original look). Pass
+    theme_rgb/accent_rgb/bg_rgb/dark_rgb (0-1 float tuples, as used in PLANNERS /
+    PLANNER_CONFIGS) to render the same composition in a different product's theme.
+    """
     from PIL import Image, ImageDraw, ImageFilter
+
+    indigo_top, space_purple, indigo, gold, moonbeam = _cover_palette(
+        theme_rgb, accent_rgb, bg_rgb, dark_rgb)
 
     S = 2  # supersample factor for crisp edges
     W, H = int(PW) * S, int(PH) * S
-    img = Image.new("RGB", (W, H), INDIGO)
+    img = Image.new("RGB", (W, H), indigo)
     draw = ImageDraw.Draw(img)
 
-    # Vertical gradient: indigo-top -> space purple (middle) -> indigo
+    # Vertical gradient: dark-top -> mid-tone (middle) -> dark
     for y in range(H):
         f = y / float(H)
         if f < 0.5:
             g = f / 0.5
-            col = tuple(int(INDIGO_TOP[i] + (SPACE_PURPLE[i] - INDIGO_TOP[i]) * g) for i in range(3))
+            col = tuple(int(indigo_top[i] + (space_purple[i] - indigo_top[i]) * g) for i in range(3))
         else:
             g = (f - 0.5) / 0.5
-            col = tuple(int(SPACE_PURPLE[i] + (INDIGO[i] - SPACE_PURPLE[i]) * g) for i in range(3))
+            col = tuple(int(space_purple[i] + (indigo[i] - space_purple[i]) * g) for i in range(3))
         draw.line([(0, y), (W, y)], fill=col)
 
     rng = random.Random(2026)
-    # Scattered stars (gold + white), varied size, soft glow on the big ones
+    # Scattered stars (accent + white), varied size, soft glow on the big ones
     stars = []
     for _ in range(260):
         x, y = rng.randint(0, W), rng.randint(0, int(H * 0.92))
         r = rng.choice([1, 1, 1, 2, 2, 3]) * S
         bright = rng.random()
-        col = GOLD if bright > 0.55 else (235, 233, 245)
+        col = gold if bright > 0.55 else (235, 233, 245)
         stars.append((x, y, r))
         draw.ellipse([x - r, y - r, x + r, y + r], fill=col)
         if r >= 3 * S:  # 4-point sparkle on the largest stars
@@ -122,12 +155,12 @@ def build_cover_png(out_path, title, subtitle, year, shop="OnBrandCraftz"):
     off = int(mr * 0.55)
     md.ellipse([mx - mr + off, my - mr - off * 0.2, mx + mr + off, my + mr - off * 0.2], fill=0)
     moon = moon.filter(ImageFilter.GaussianBlur(S))
-    gold_layer = Image.new("RGB", (W, H), GOLD)
+    gold_layer = Image.new("RGB", (W, H), gold)
     img.paste(gold_layer, (0, 0), moon)
 
-    # Thin gold double border frame
+    # Thin double border frame
     m = int(20 * S)
-    draw.rectangle([m, m, W - m, H - m], outline=GOLD, width=max(1, S))
+    draw.rectangle([m, m, W - m, H - m], outline=gold, width=max(1, S))
     m2 = int(27 * S)
     draw.rectangle([m2, m2, W - m2, H - m2], outline=(150, 126, 60), width=max(1, S))
 
@@ -150,12 +183,12 @@ def build_cover_png(out_path, title, subtitle, year, shop="OnBrandCraftz"):
         lines.append(cur)
     ty = int(H * 0.55)
     for ln in lines:
-        centered(ln, ty, title_font, GOLD)
+        centered(ln, ty, title_font, gold)
         ty += int(66 * S)
 
-    centered("✦  " + subtitle.upper() + "  ✦", ty + int(10 * S), _font(26 * S), MOONBEAM)
+    centered("✦  " + subtitle.upper() + "  ✦", ty + int(10 * S), _font(26 * S), moonbeam)
     if year:
-        centered(str(year), ty + int(54 * S), _font(40 * S, bold=True), MOONBEAM)
+        centered(str(year), ty + int(54 * S), _font(40 * S, bold=True), moonbeam)
     centered(shop.upper(), H - int(70 * S), _font(20 * S), (170, 160, 200))
 
     img = img.resize((int(PW), int(PH)), Image.LANCZOS)
@@ -163,24 +196,35 @@ def build_cover_png(out_path, title, subtitle, year, shop="OnBrandCraftz"):
     return out_path
 
 
-def compose_ai_cover(ai_path, out_path, title, subtitle, year, shop="OnBrandCraftz"):
-    """Place an OpenAI cover illustration onto a letter-ratio night-sky canvas and
-    add the gold title text in the lower third. Letter ratio in = no distortion when
-    the page inserts it full-bleed."""
+def compose_ai_cover(ai_path, out_path, title, subtitle, year, shop="OnBrandCraftz",
+                      theme_rgb=None, accent_rgb=None, bg_rgb=None, dark_rgb=None):
+    """Place an OpenAI cover illustration onto a letter-ratio canvas and add the
+    title text in the lower third. Letter ratio in = no distortion when the page
+    inserts it full-bleed.
+
+    Colors default to the Celestial Night palette (DP1034's original look). Pass
+    theme_rgb/accent_rgb/bg_rgb/dark_rgb (0-1 float tuples, as used in PLANNERS /
+    PLANNER_CONFIGS) to match the composited frame/text colors to the product's
+    real theme instead.
+    """
     from PIL import Image, ImageDraw
+
+    indigo_top, space_purple, indigo, gold, moonbeam = _cover_palette(
+        theme_rgb, accent_rgb, bg_rgb, dark_rgb)
+    scrim_rgb = indigo_top
 
     S = 2
     W, H = int(PW) * S, int(PH) * S
-    canvas = Image.new("RGB", (W, H), INDIGO)
+    canvas = Image.new("RGB", (W, H), indigo)
     draw = ImageDraw.Draw(canvas)
     for y in range(H):
         f = y / float(H)
         if f < 0.5:
             g = f / 0.5
-            col = tuple(int(INDIGO_TOP[i] + (SPACE_PURPLE[i] - INDIGO_TOP[i]) * g) for i in range(3))
+            col = tuple(int(indigo_top[i] + (space_purple[i] - indigo_top[i]) * g) for i in range(3))
         else:
             g = (f - 0.5) / 0.5
-            col = tuple(int(SPACE_PURPLE[i] + (INDIGO[i] - SPACE_PURPLE[i]) * g) for i in range(3))
+            col = tuple(int(space_purple[i] + (indigo[i] - space_purple[i]) * g) for i in range(3))
         draw.line([(0, y), (W, y)], fill=col)
 
     ai = Image.open(ai_path).convert("RGB")
@@ -194,12 +238,12 @@ def compose_ai_cover(ai_path, out_path, title, subtitle, year, shop="OnBrandCraf
     region_top = int(H * 0.66)
     scrim = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     sd = ImageDraw.Draw(scrim)
-    sd.rectangle([0, region_top, W, H], fill=(20, 18, 46, 165))
+    sd.rectangle([0, region_top, W, H], fill=(scrim_rgb[0], scrim_rgb[1], scrim_rgb[2], 165))
     canvas = Image.alpha_composite(canvas.convert("RGBA"), scrim).convert("RGB")
     draw = ImageDraw.Draw(canvas)
 
-    # gold double border
-    m = int(20 * S); draw.rectangle([m, m, W - m, H - m], outline=GOLD, width=max(1, S))
+    # double border
+    m = int(20 * S); draw.rectangle([m, m, W - m, H - m], outline=gold, width=max(1, S))
     m2 = int(27 * S); draw.rectangle([m2, m2, W - m2, H - m2], outline=(150, 126, 60), width=max(1, S))
 
     def centered(text, cy, font, fill):
@@ -223,10 +267,10 @@ def compose_ai_cover(ai_path, out_path, title, subtitle, year, shop="OnBrandCraf
 
     # measured, packed stack centered within the lower band
     line_h = int(46 * S)
-    block = [(ln, title_font, GOLD, line_h) for ln in lines]
-    block.append(("·   " + subtitle.upper() + "   ·", sub_font, MOONBEAM, int(38 * S)))
+    block = [(ln, title_font, gold, line_h) for ln in lines]
+    block.append(("·   " + subtitle.upper() + "   ·", sub_font, moonbeam, int(38 * S)))
     if year and str(year) not in title:
-        block.append((str(year), year_font, MOONBEAM, int(44 * S)))
+        block.append((str(year), year_font, moonbeam, int(44 * S)))
     block.append((shop.upper(), shop_font, (185, 175, 215), int(34 * S)))
     total_h = sum(h for _, _, _, h in block)
     band_top, band_bot = region_top + int(18 * S), H - m2 - int(14 * S)
@@ -1127,17 +1171,27 @@ def finalize_pdf(src_path, out_path, sections, title, subtitle, year,
 
 
 def finalize(pid, make_cover=True):
-    pcfg_sections, title, subtitle, year = _load_cfg(pid)
+    pcfg_sections, title, subtitle, year, theme_rgb, accent_rgb, bg_rgb, dark_rgb = _load_cfg(pid)
+
+    # DP1034 already owns the exact Celestial Night look this gradient was designed
+    # for, using a 3-tone gradient that can't be losslessly reconstructed from just
+    # the 4 generic theme colors -- so leave it on the hardcoded defaults untouched.
+    if pid == "DP1034":
+        theme_rgb = accent_rgb = bg_rgb = dark_rgb = None
 
     cover_png = None
     if make_cover:
         cover_png = PRODUCT_FILES_DIR / f"{pid}_cover.png"
         ai_cover = PRODUCT_FILES_DIR / f"{pid}_cover_ai.png"
         if ai_cover.exists():
-            compose_ai_cover(ai_cover, cover_png, title, subtitle, year)
+            compose_ai_cover(ai_cover, cover_png, title, subtitle, year,
+                              theme_rgb=theme_rgb, accent_rgb=accent_rgb,
+                              bg_rgb=bg_rgb, dark_rgb=dark_rgb)
             print(f"  Cover (AI-composited) -> {cover_png}")
         else:
-            build_cover_png(cover_png, title, subtitle, year)
+            build_cover_png(cover_png, title, subtitle, year,
+                             theme_rgb=theme_rgb, accent_rgb=accent_rgb,
+                             bg_rgb=bg_rgb, dark_rgb=dark_rgb)
             print(f"  Cover (PIL) -> {cover_png}")
 
     # real sticker sheets, if they've been generated
@@ -1166,7 +1220,8 @@ def _load_cfg(pid):
         sys.path.insert(0, str(_BASE_DIR))
     from tools.generate_planner_v2 import _normalize_cfg
     pcfg, _meta = _normalize_cfg(pid)
-    return pcfg["sections"], pcfg["title"], pcfg["subtitle"], pcfg.get("year")
+    return (pcfg["sections"], pcfg["title"], pcfg["subtitle"], pcfg.get("year"),
+            pcfg["theme"], pcfg["accent"], pcfg["bg"], pcfg["dark"])
 
 
 def main():
