@@ -752,3 +752,21 @@ license and the full design file set, delivered instantly. Verified live: false 
 (filename/size/file_id) unchanged. Did not touch price, photos, tags, or `product_catalog.json`'s
 `SVG_WESTERN` `"incomplete"` status — that entry tracks a separate personal-use product that was never built
 (build-vs-abandon decision, out of scope for this fix).
+
+### 2026-06-20 — DP1034 (Ultimate Celestial Life Planner) sticker pack was short of the 200+ standard, and rebuilding it blew the 20MB Etsy file limit
+**Symptom:** `DP1034_sticker_pack.zip` (Celestial Night theme, built by `tools/generate_celestial_assets.py`)
+shipped with only 115 individual stickers across 5 sheets — short of CLAUDE.md's 5-sheet/200+ minimum. After
+generating 4 more sheets (6-9: Zodiac & Affirmations, Bonus Celestial Extras, Date Dots & Labels, Mini Icons
+& Motivational Tags) to bring the count to 233, the rebuilt ZIP came out at 28MB — over the 20MB Etsy hard
+limit (`ZIP size: under 20 MB` per the sticker pack QC checklist).
+**Root cause:** gpt-image-1 PNG output for these transparent sticker sheets is full 32-bit RGBA with no
+palette reduction — 9 sheets + 233 cropped individuals at that bit depth totalled ~29MB uncompressed, and PNG
+deflate gets almost no win on already-noisy AI-generated raster art.
+**Fix:** Added `--append-sheets` to `generate_celestial_assets.py` so new sheets can be generated and merged
+into the existing pack without regenerating sheets already on disk. Quantized every sheet and individual
+sticker PNG to a 256-color adaptive palette via `Image.quantize(colors=256, method=Image.Quantize.FASTOCTREE)`
+(alpha channel preserved correctly — verified anti-aliased edges still gradient, not hard-cut) before
+rezipping. Final pack: 9 sheets, 233 individual stickers, 2.7MB total (was 28MB). Spot-checked sheets 6 and 8
+visually post-quantization — flat kawaii cel-shaded art shows no visible quality loss at 256 colors.
+**Note for future sticker packs:** quantize every PNG (sheets + individuals) to 256 colors before zipping by
+default — don't wait to discover the 20MB limit after the fact.

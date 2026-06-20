@@ -71,6 +71,39 @@ SHEETS = {
         "with faces, full moon, stars and shooting stars/comets, tiny planets with "
         "rings, constellations, a sun-and-moon, a crystal ball, a tarot-style 'star' "
         "card, a telescope, clouds with stars, a rainbow of stars. Indigo + gold."),
+    6: ("Zodiac & Affirmations",
+        "About 45 small stickers on a transparent grid: 12 minimalist zodiac "
+        "constellation glyph badges (one per sign, each in a small round starlight-"
+        "gold badge), and celestial affirmation ribbon banners reading 'Trust The "
+        "Timing', 'Aligned & Calm', 'Made Of Stardust', 'Dream Big', 'Stay Grounded', "
+        "'New Moon New Me', 'Written In The Stars' in a soft kawaii script, plus tiny "
+        "sparkle and star accents scattered between each badge/banner. Celestial "
+        "Night palette only: deep indigo, twilight purple, starlight gold, moonbeam "
+        "off-white."),
+    7: ("Bonus Celestial Extras",
+        "About 45 small stickers on a transparent grid, densely packed in neat rows: "
+        "tiny constellation line-art badges (Big Dipper, Orion, Cassiopeia, Southern "
+        "Cross), small planet ring icons, a sleepy sun-and-moon pair, a dreamcatcher, "
+        "a crystal cluster, a tarot star card, a telescope, a witchy spellbook, a "
+        "cauldron with sparkles, tiny shooting stars, a zodiac wheel, a moon-phase "
+        "strip (8 phases in a row), and a few celestial wax-seal style stamps. "
+        "Celestial Night palette only: deep indigo, twilight purple, starlight gold, "
+        "moonbeam off-white."),
+    8: ("Date Dots & Labels",
+        "About 50 tiny stickers on a transparent grid, very densely packed in small "
+        "uniform rows with thin gaps: filled circle date-dot numbers 1 through 31 "
+        "(small round gold badges with indigo numerals), plus 8 small color-coded "
+        "category label dots, plus a row of small month-abbreviation tab labels "
+        "(JAN through DEC, tiny rounded rectangle tags). Celestial Night palette "
+        "only: deep indigo, twilight purple, starlight gold, moonbeam off-white."),
+    9: ("Mini Icons & Motivational Tags",
+        "About 45 tiny stickers on a transparent grid, densely packed in small "
+        "uniform rows: small celestial weather icons (starry night, cloudy moon, "
+        "clear sky), small mini moon-face expressions (happy, sleepy, excited, "
+        "calm), small star-rating rows, small priority flags in three sizes, small "
+        "motivational tag stickers reading 'Rest Is Productive', 'One Step At A "
+        "Time', 'Cosmic Reset', 'Shine On'. Celestial Night palette only: deep "
+        "indigo, twilight purple, starlight gold, moonbeam off-white."),
 }
 
 
@@ -188,7 +221,23 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cover-only", action="store_true")
     ap.add_argument("--stickers-only", action="store_true")
+    ap.add_argument("--append-sheets", type=str, default=None,
+                     help="Comma-separated new sheet numbers to generate and merge into "
+                          "the existing pack/zip without touching sheets already on disk "
+                          "(e.g. '6,7').")
     args = ap.parse_args()
+
+    if args.append_sheets:
+        nums = [int(n) for n in args.append_sheets.split(",")]
+        new_sheets = generate_sheets(nums=nums)
+        ind_dir = ART / f"{PID}_individual_stickers"
+        print(f"  Auto-cropping new sheets {nums}...")
+        autocrop_individuals(new_sheets, ind_dir)
+        all_sheets = [ART / f"{PID}_sticker_sheet_{n}.png" for n in sorted(SHEETS)]
+        n_total = len(list(ind_dir.glob("*.png")))
+        build_zip(all_sheets, ind_dir, n_total)
+        print(f"Done. Total individual stickers now: {n_total}")
+        return
 
     if not args.stickers_only:
         generate_cover()
