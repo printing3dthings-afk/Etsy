@@ -79,6 +79,40 @@ SHEETS = {
         "a snowflake and pine sprig (winter), a small gift box, a heart for "
         "valentines, a firework for new year, a candle for any holiday. All "
         "rendered in matcha green and chartreuse with cream accents."),
+    6: ("ADHD Affirmations & Motivation",
+        "About 45 small stickers on a transparent grid: kawaii ribbon affirmation "
+        "banners reading 'Progress Not Perfection', 'Done Is Better Than Perfect', "
+        "'One Task At A Time', 'Small Steps Count', 'Rest Is Productive', 'You're "
+        "Doing Better Than You Think', 'Brains Work Differently', plus tiny leaf "
+        "and sparkle accents scattered between each banner. Matcha Serenity "
+        "palette only: matcha green, pale chartreuse, green tea cream, rice paper, "
+        "deep forest."),
+    7: ("Bonus ADHD Functional Extras",
+        "About 45 small stickers on a transparent grid, densely packed in neat "
+        "rows: a 'body doubling' two-chair icon, a 'low spoon day' spoon badge, a "
+        "dopamine-menu small list icon, a fidget cube, a fidget spinner, "
+        "noise-cancelling headphones, a hyperfocus warning badge with a magnifying "
+        "glass, a 'transition reminder' arrow-clock, a brain-fog cloud icon, a "
+        "weighted blanket fold icon, a timer with a checkmark, a small 'task "
+        "chunking' staircase icon, a reward-jar icon, a calm-down breathing circle, "
+        "and a 'good enough' stamp badge. Matcha Serenity palette only: matcha "
+        "green, pale chartreuse, green tea cream, rice paper, deep forest."),
+    8: ("Date Dots & Labels",
+        "About 50 tiny stickers on a transparent grid, very densely packed in "
+        "small uniform rows with thin gaps: filled circle date-dot numbers 1 "
+        "through 31 (small round chartreuse badges with deep-forest numerals), "
+        "plus 8 small color-coded category label dots, plus a row of small "
+        "month-abbreviation tab labels (JAN through DEC, tiny rounded rectangle "
+        "tags). Matcha Serenity palette only: matcha green, pale chartreuse, green "
+        "tea cream, rice paper, deep forest."),
+    9: ("Mini Icons & Motivational Tags",
+        "About 45 tiny stickers on a transparent grid, densely packed in small "
+        "uniform rows: small mood-face expressions (focused, overwhelmed, calm, "
+        "excited, tired), small energy-level battery icons (low/mid/high), small "
+        "star-rating rows, small priority flags in three sizes, small "
+        "motivational tag stickers reading 'Focus Mode ON', 'Hyperfocus Activated', "
+        "'Took My Meds', 'Did The Thing'. Matcha Serenity palette only: matcha "
+        "green, pale chartreuse, green tea cream, rice paper, deep forest."),
 }
 
 
