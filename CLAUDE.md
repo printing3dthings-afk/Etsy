@@ -216,12 +216,12 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 ## Product Catalog
 
 ### DP1026 — Ultimate Digital Life Planner (Lavender Dreams)
-- **File**: `data/digital_products/product_files/DP1026.pdf` (~15MB, 104 pages)
-- **Undated**: `DP1026U.pdf` (~8MB, 104 pages) — perpetual, sells year-round
+- **File**: `data/digital_products/product_files/DP1026.pdf` (~15MB, 143 pages)
+- **Undated**: `DP1026U.pdf` (~8MB, 143 pages) — perpetual, sells year-round
 - **Color scheme**: Lavender Dreams (muted purple #8666AA, soft lavender accent)
 - **Cover**: Full-page kawaii illustrated cover (DALL-E, portrait 1024×1536)
 - **Structure**: Cover → Welcome/Setup (p2) → Dashboard/Home (p3) → Index (p4) → How-to → Content
-- **Sections**: Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Habit Tracker, Goals, Budget, Meal Plan, Notes × 4
+- **Sections**: Yearly Overview, Year in Pixels, Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Budget, Meal Plan, Notes × 4
 - **Sticker Library**: 5 pages — Functional Planning, Widget Trackers, Planner & Stationery, Cozy Lifestyle, Seasonal & Holiday
 - **Sticker Pack ZIP**: `DP1026_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
 - **Interactive**: Yes — fillable fields, hyperlinked tabs, Dashboard home page, JS popup sticker menu (Acrobat/Xodo)
@@ -231,11 +231,11 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Target audience**: Women 18–35, planner lovers, stationery enthusiasts, productivity
 
 ### DP1027 — Student & School Planner 2026 (Cotton Candy)
-- **File**: `data/digital_products/product_files/DP1027.pdf` (~14MB, 90 pages)
-- **Undated**: `DP1027U.pdf` (~7MB, 90 pages)
+- **File**: `data/digital_products/product_files/DP1027.pdf` (~14MB, 131 pages)
+- **Undated**: `DP1027U.pdf` (~7MB, 131 pages)
 - **Color scheme**: Cotton Candy (pink #DE97C6, sky blue accent)
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
-- **Sections**: Monthly × 12, Monthly Review × 12, Weekly × 52, Habit Tracker, Goals, Notes × 4
+- **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Weekly × 52, Daily × 365, Class Schedule, Brain Dump, Priority Matrix, Pomodoro Focus Tracker, Habit Tracker, SMART Goals, Notes × 4
 - **Sticker Library**: 5 pages (same 5-sheet system)
 - **Sticker Pack ZIP**: `DP1027_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
 - **Interactive**: Yes
@@ -243,11 +243,11 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Target audience**: High school/college students, back to school, study planners
 
 ### DP1028 — Budget & Finance Planner 2026 (Midnight Blue)
-- **File**: `data/digital_products/product_files/DP1028.pdf` (~15MB, 102 pages)
-- **Undated**: `DP1028U.pdf` (~8MB, 102 pages)
+- **File**: `data/digital_products/product_files/DP1028.pdf` (~15MB, 144 pages)
+- **Undated**: `DP1028U.pdf` (~8MB, 144 pages)
 - **Color scheme**: Midnight Blue (deep royal blue #1B2568, ice-blue accent)
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
-- **Sections**: Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Budget, Goals, Notes × 4
+- **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Budget Tracker × 12, Debt Payoff Tracker, Savings Goal Tracker, Bill Payment Checklist, Notes × 4
 - **Sticker Library**: 5 pages
 - **Sticker Pack ZIP**: `DP1028_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
 - **Interactive**: Yes
@@ -255,11 +255,11 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Target audience**: Adults tracking finances, budgeters, Dave Ramsey followers, debt payoff community
 
 ### DP1029 — Fitness & Wellness Planner 2026 (Coral Peach)
-- **File**: `data/digital_products/product_files/DP1029.pdf` (~14MB, 91 pages)
-- **Undated**: `DP1029U.pdf` (~7MB, 91 pages)
+- **File**: `data/digital_products/product_files/DP1029.pdf` (~14MB, 133 pages)
+- **Undated**: `DP1029U.pdf` (~7MB, 133 pages)
 - **Color scheme**: Coral Peach (warm coral #FD6C49, peach-gold accent)
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
-- **Sections**: Monthly × 12, Monthly Review × 12, Weekly × 52, Habit Tracker, Meal Plan, Goals, Notes × 4
+- **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Meal Plan, Progress Photos Log, 30-Day Water Tracker, Sleep Quality Log, Non-Scale Victories, Notes × 4
 - **Sticker Library**: 5 pages
 - **Sticker Pack ZIP**: `DP1029_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
 - **Interactive**: Yes
@@ -782,12 +782,12 @@ When asked to list a planner on Etsy:
 ```
 ✨ Stay organized, stay cute — your ultimate kawaii digital life planner for GoodNotes and Notability is here!
 
-Meet the Ultimate Digital Life Planner 2026, the most complete fillable PDF planner for GoodNotes, Notability, and iPad — packed with 104 beautifully designed pages, an illustrated kawaii cover, a full kawaii sticker pack (200+ stickers, 5 sheets!), and a bonus undated evergreen version so you can use it any year.
+Meet the Ultimate Digital Life Planner 2026, the most complete fillable PDF planner for GoodNotes, Notability, and iPad — packed with 143 beautifully designed pages, an illustrated kawaii cover, a full kawaii sticker pack (200+ stickers, 5 sheets!), and a bonus undated evergreen version so you can use it any year.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT'S INCLUDED
 ━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Interactive PDF Planner — 104 pages, US Letter, Lavender Dreams color theme
+✅ Interactive PDF Planner — 143 pages, US Letter, Lavender Dreams color theme
 ✅ Bonus Undated Version — same planner, no year dates, works any year forever
 ✅ Kawaii Sticker Pack ZIP — 5 PNG sticker sheets (200+ stickers, transparent background)
    • Sheet 1: Functional Planning — headers, checklists, flags, date dots, priority labels
@@ -827,18 +827,21 @@ Meet the Ultimate Digital Life Planner 2026, the most complete fillable PDF plan
 5. Import sticker PNGs for unlimited kawaii decoration
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-📅 SECTIONS INCLUDED (104 pages)
+📅 SECTIONS INCLUDED (143 pages)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Welcome & Setup Guide — app links, how-to steps, support contact
 • Dashboard / Home — tappable hub linking to every section in one tap
 • Planner Index — complete table of contents with page numbers
 • Yearly Overview — see all 12 months at a glance
+• Year in Pixels — 12-month mood tracker grid, one colored box per day
 • Monthly Calendars × 12 — full month grid with daily notes
 • Monthly Reviews × 12 — reflect, celebrate wins, plan improvements
 • Month at a Glance × 12 — top priorities, focus areas, intentions
 • Weekly Spreads × 52 — time-blocked horizontal layout for every week of 2026
+• Daily Pages × 365 — top 3 priorities, hour-by-hour schedule, notes, gratitude
+• Brain Dump — free-write page to clear your head before planning
 • Habit Tracker — 31-day grid, fully customizable
-• Goals Page — quarterly goals, action steps, milestones
+• SMART Goals — quarterly goals, action steps, milestones
 • Budget Tracker — income, expenses, savings, bills
 • Meal Planner — weekly meal plan with grocery list
 • Notes Pages × 4 — lined + dot-grid mix
@@ -849,7 +852,7 @@ Meet the Ultimate Digital Life Planner 2026, the most complete fillable PDF plan
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Format: Interactive fillable PDF (2026 dated + undated versions included)
 • Page size: US Letter (8.5 × 11 inches)
-• Pages: 104 (each version)
+• Pages: 143 (each version)
 • Color theme: Lavender Dreams
 • File size: ~15MB PDF + sticker ZIP
 • Delivery: Instant digital download — no physical item shipped
@@ -894,12 +897,12 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 ```
 🎓 Study smarter, plan cuter — the kawaii student planner for GoodNotes and Notability that makes school actually fun!
 
-Meet the Kawaii Student Planner 2026, the most adorable fillable PDF planner for GoodNotes, Notability, and iPad — packed with 90 beautifully designed pages in a dreamy Cotton Candy color theme, plus a full kawaii sticker pack (200+ stickers, 5 sheets!) and a bonus undated version to personalize every week of your school year.
+Meet the Kawaii Student Planner 2026, the most adorable fillable PDF planner for GoodNotes, Notability, and iPad — packed with 131 beautifully designed pages in a dreamy Cotton Candy color theme, plus a full kawaii sticker pack (200+ stickers, 5 sheets!) and a bonus undated version to personalize every week of your school year.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT'S INCLUDED
 ━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Interactive PDF Planner — 90 pages, US Letter, Cotton Candy color theme (pink + sky blue)
+✅ Interactive PDF Planner — 131 pages, US Letter, Cotton Candy color theme (pink + sky blue)
 ✅ Bonus Undated Version — same planner, no year dates, works any school year forever
 ✅ Kawaii Sticker Pack ZIP — 5 PNG sticker sheets (200+ stickers, transparent background)
    • Sheet 1: Functional Planning — headers, checklists, flags, date dots, priority labels
@@ -939,7 +942,7 @@ Meet the Kawaii Student Planner 2026, the most adorable fillable PDF planner for
 5. Import sticker PNGs for unlimited kawaii decoration
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-📅 SECTIONS INCLUDED (90 pages)
+📅 SECTIONS INCLUDED (131 pages)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Welcome & Setup Guide — app links, how-to steps, support contact
 • Dashboard / Home — tappable hub linking to every section in one tap
@@ -948,8 +951,13 @@ Meet the Kawaii Student Planner 2026, the most adorable fillable PDF planner for
 • Monthly Calendars × 12 — full month grid with daily note cells
 • Monthly Reviews × 12 — reflect on wins, set next month's focus
 • Weekly Spreads × 52 — class schedule layout with assignment tracker per subject
+• Daily Pages × 365 — top 3 priorities, hour-by-hour schedule, notes, gratitude
+• Class Schedule — weekly class times and room tracker
+• Brain Dump — free-write page before each week to clear your head
+• Priority Matrix — Urgent/Important 2×2 grid for ADHD-friendly planning
+• Pomodoro Focus Tracker — 25-min work / 5-min break timer boxes
 • Habit Tracker — 31-day grid for study streaks, self-care, and daily goals
-• Goals Page — semester goals, action steps, milestones
+• SMART Goals — semester goals, action steps, milestones
 • Notes Pages × 4 — lined + dot-grid for lecture notes or brainstorming
 • Kawaii Sticker Library × 5 — 200+ illustrated sticker reference sheets
 
@@ -958,7 +966,7 @@ Meet the Kawaii Student Planner 2026, the most adorable fillable PDF planner for
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Format: Interactive fillable PDF (2026 dated + undated versions included)
 • Page size: US Letter (8.5 × 11 inches)
-• Pages: 90 (each version)
+• Pages: 131 (each version)
 • Color theme: Cotton Candy (pink #DE97C6 + sky blue)
 • File size: ~13MB PDF + sticker ZIP
 • Delivery: Instant digital download — no physical item shipped
@@ -1003,12 +1011,12 @@ A: This license is for personal use only. Please don't share, resell, or redistr
 ```
 💰 Take control of your money in the most adorable way possible — your kawaii budget planner for GoodNotes and Notability is here!
 
-Meet the Digital Budget & Finance Planner 2026, the most complete fillable PDF money planner for GoodNotes, Notability, and iPad — packed with 102 beautifully designed pages in a sleek Midnight Blue color theme, with built-in trackers for every dollar, debt, and financial goal you have — plus a bonus undated version and 200+ kawaii stickers.
+Meet the Digital Budget & Finance Planner 2026, the most complete fillable PDF money planner for GoodNotes, Notability, and iPad — packed with 144 beautifully designed pages in a sleek Midnight Blue color theme, with built-in trackers for every dollar, debt, and financial goal you have — plus a bonus undated version and 200+ kawaii stickers.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT'S INCLUDED
 ━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Interactive PDF Planner — 102 pages, US Letter, Midnight Blue color theme
+✅ Interactive PDF Planner — 144 pages, US Letter, Midnight Blue color theme
 ✅ Bonus Undated Version — same planner, no year dates, works any year forever
 ✅ Kawaii Sticker Pack ZIP — 5 PNG sticker sheets (200+ stickers, transparent background)
    • Sheet 1: Functional Planning — headers, checklists, flags, date dots, priority labels
@@ -1048,7 +1056,7 @@ Meet the Digital Budget & Finance Planner 2026, the most complete fillable PDF m
 5. Import sticker PNGs for unlimited kawaii decoration
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-💸 SECTIONS INCLUDED (102 pages)
+💸 SECTIONS INCLUDED (144 pages)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Welcome & Setup Guide — app links, how-to steps, support contact
 • Dashboard / Home — tappable hub linking to every section in one tap
@@ -1058,8 +1066,14 @@ Meet the Digital Budget & Finance Planner 2026, the most complete fillable PDF m
 • Monthly Reviews × 12 — reflect on spending wins, set savings intentions
 • Month at a Glance × 12 — monthly income, fixed expenses, savings target, debt minimum
 • Weekly Spreads × 52 — week-by-week spending log and task list
+• Daily Pages × 365 — top 3 priorities, hour-by-hour schedule, notes, gratitude
+• Brain Dump — free-write page to clear your head before budgeting
+• Habit Tracker — 31-day grid for no-spend days and money habits
+• SMART Goals — financial goals, debt payoff milestones, savings targets
 • Budget Tracker × 12 — monthly income vs. expenses breakdown, net savings
-• Goals Page — financial goals, debt payoff milestones, savings targets
+• Debt Payoff Tracker — snowball/avalanche method visual progress bar
+• Savings Goal Tracker — visual thermometer fill-in
+• Bill Payment Checklist — monthly recurring bills check-off
 • Notes Pages × 4 — lined for ideas, financial planning, or research
 • Kawaii Sticker Library × 5 — 200+ illustrated sticker reference sheets
 
@@ -1068,7 +1082,7 @@ Meet the Digital Budget & Finance Planner 2026, the most complete fillable PDF m
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Format: Interactive fillable PDF (2026 dated + undated versions included)
 • Page size: US Letter (8.5 × 11 inches)
-• Pages: 102 (each version)
+• Pages: 144 (each version)
 • Color theme: Midnight Blue (deep royal blue #1B2568 + ice-blue accent)
 • File size: ~14MB PDF + sticker ZIP
 • Delivery: Instant digital download — no physical item shipped
@@ -1113,12 +1127,12 @@ A: This license is for personal use only. If your partner wants a copy, they'll 
 ```
 🌸 Your glow-up starts now — the kawaii fitness planner for GoodNotes and Notability that makes healthy habits actually stick!
 
-Meet the Fitness & Wellness Planner 2026, your all-in-one fillable PDF wellness companion for GoodNotes, Notability, and iPad — packed with 91 beautifully designed pages in a warm Coral Peach color theme, with habit trackers, meal planning, and fitness logs — plus a bonus undated version and 200+ kawaii stickers to support your healthiest year yet.
+Meet the Fitness & Wellness Planner 2026, your all-in-one fillable PDF wellness companion for GoodNotes, Notability, and iPad — packed with 133 beautifully designed pages in a warm Coral Peach color theme, with habit trackers, meal planning, and fitness logs — plus a bonus undated version and 200+ kawaii stickers to support your healthiest year yet.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 📦 WHAT'S INCLUDED
 ━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Interactive PDF Planner — 91 pages, US Letter, Coral Peach color theme
+✅ Interactive PDF Planner — 133 pages, US Letter, Coral Peach color theme
 ✅ Bonus Undated Version — same planner, no year dates, works any year forever
 ✅ Kawaii Sticker Pack ZIP — 5 PNG sticker sheets (200+ stickers, transparent background)
    • Sheet 1: Functional Planning — headers, checklists, flags, date dots, priority labels
@@ -1158,7 +1172,7 @@ Meet the Fitness & Wellness Planner 2026, your all-in-one fillable PDF wellness 
 5. Import sticker PNGs for unlimited kawaii decoration
 
 ━━━━━━━━━━━━━━━━━━━━━━━━
-🏃 SECTIONS INCLUDED (91 pages)
+🏃 SECTIONS INCLUDED (133 pages)
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Welcome & Setup Guide — app links, how-to steps, support contact
 • Dashboard / Home — tappable hub linking to every section in one tap
@@ -1167,9 +1181,15 @@ Meet the Fitness & Wellness Planner 2026, your all-in-one fillable PDF wellness 
 • Monthly Calendars × 12 — full month grid with workout and self-care markers
 • Monthly Reviews × 12 — celebrate wins, reflect on habits, reset intentions
 • Weekly Spreads × 52 — weekly workout planner + daily water intake + mood tracker
+• Daily Pages × 365 — top 3 priorities, hour-by-hour schedule, notes, gratitude
+• Brain Dump — free-write page to clear your head before planning
 • Habit Tracker — 31-day grid for workouts, water, sleep, nutrition, and self-care
+• SMART Goals — fitness goals, milestone celebrations, progress measurements
 • Meal Planner — weekly meal plan with grocery list + macro/calorie note row
-• Goals Page — fitness goals, milestone celebrations, progress measurements
+• Progress Photos Log — before/after date headers with measurement fields
+• 30-Day Water Tracker — monthly glass-fill illustration
+• Sleep Quality Log — track hours and quality every night
+• Non-Scale Victories — celebration journal for wins beyond the scale
 • Notes Pages × 4 — lined for journaling, research, or recipe notes
 • Kawaii Sticker Library × 5 — 200+ illustrated sticker reference sheets
 
@@ -1178,7 +1198,7 @@ Meet the Fitness & Wellness Planner 2026, your all-in-one fillable PDF wellness 
 ━━━━━━━━━━━━━━━━━━━━━━━━
 • Format: Interactive fillable PDF (2026 dated + undated versions included)
 • Page size: US Letter (8.5 × 11 inches)
-• Pages: 91 (each version)
+• Pages: 133 (each version)
 • Color theme: Coral Peach (warm coral #FD6C49 + peach-gold accent)
 • File size: ~14MB PDF + sticker ZIP
 • Delivery: Instant digital download — no physical item shipped

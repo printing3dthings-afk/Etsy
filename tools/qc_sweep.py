@@ -39,7 +39,7 @@ DP_BASE = BASE_DIR / "data" / "digital_products"
 
 # Expected planner page counts (from CLAUDE.md catalog). Tolerance applied below.
 PLANNER_PAGES = {
-    "DP1026": 104, "DP1027": 90, "DP1028": 102, "DP1029": 91,
+    "DP1026": 143, "DP1027": 131, "DP1028": 144, "DP1029": 133,
     "DP1030": 98, "DP1031": 105, "DP1032": 108, "DP1033": 102,
 }
 PAGE_TOLERANCE = 8  # generated count may differ slightly from the catalog figure

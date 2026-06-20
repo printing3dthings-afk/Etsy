@@ -711,3 +711,23 @@ sheet PNGs (`sheet_01_functional_planning.png` etc.) to rebuild a pack, and thos
 — only `DP102[6-9]_cover.png` survived. Only manual path: Scott downloads the file from Etsy Shop Manager's
 listing-edit UI (it has a download icon per file even though the API doesn't), or pulls it from wherever he
 saved the original backup ZIP from `backup_digital_products.py`. Left open — informational, not urgent.
+
+### 2026-06-20 — DP1026–DP1029 listing descriptions understated real page counts (truthfulness fix)
+The same file-gate work above led to comparing each PDF's actual content against the published description.
+Used `pypdf.PdfReader(...).outline` on the live `data/digital_products/product_files/DP102[6-9].pdf` files and
+found real page counts of 143/131/144/133 — all higher than what the live Etsy descriptions and
+`qc_sweep.py`'s `PLANNER_PAGES` dict claimed (104/90/102/91). Confirmed via the outline that the extra pages
+are real, intentional sections already on CLAUDE.md's roadmap (Daily Pages × 365, Brain Dump, SMART Goals,
+Year in Pixels, Class Schedule, Priority Matrix, Pomodoro Focus Tracker, Debt Payoff Tracker, Savings Goal
+Tracker, Bill Payment Checklist, Progress Photos Log, 30-Day Water Tracker, Sleep Quality Log, Non-Scale
+Victories) — not a generation bug or duplicate pages. This was a real violation of CLAUDE.md's "never lie to
+the customer" rule (wrong page count + missing sections in description). **Fix:** rewrote each live
+description via regex-anchored substitution (`/tmp/desc_work/fix_descriptions.py` — anchors on the
+surrounding text rather than an exact hand-typed match, to avoid the byte-mismatch bug from an earlier
+attempt) and pushed via `client.update_listing()` to all four listings (4509179201, 4509184958, 4509184962,
+4509184968) — confirmed live with correct page counts and the new section bullets. Also updated
+`tools/qc_sweep.py`'s `PLANNER_PAGES` dict (104→143, 90→131, 102→144, 91→133) so the count-accuracy gate stops
+flagging these as WARN, and synced CLAUDE.md's "Product Catalog" and "Pre-Written Listing Content" sections to
+match. **Still open:** Scott should be told the underlying PDFs grew without anyone updating the listing
+copy — worth a quick process check on whatever workflow regenerates these PDFs, so the description doesn't
+drift again next time content is added.
