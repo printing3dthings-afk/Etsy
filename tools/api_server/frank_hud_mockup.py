@@ -45,7 +45,7 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 
 #stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
 #stage{
-  position:relative;width:1440px;height:900px;flex-shrink:0;transform-origin:center center;
+  position:relative;width:1440px;height:1040px;flex-shrink:0;transform-origin:center center;
   background:radial-gradient(ellipse at 50% -10%, #0e2a44 0%, var(--bg) 55%);
   display:grid;grid-template-columns:226px 1fr;grid-template-rows:68px 1fr 54px;
 }
@@ -578,7 +578,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
 <script>
 // ── Auto-scale the fixed 1440x900 stage to fit any viewport (phone or desktop) ──
-const STAGE_W = 1440, STAGE_H = 900;
+const STAGE_W = 1440, STAGE_H = 1040;
 const stage = document.getElementById('stage');
 function fitStage(){
   const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
