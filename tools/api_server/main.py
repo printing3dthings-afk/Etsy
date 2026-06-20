@@ -599,7 +599,7 @@ AGENT_TOOLS = [
             "properties": {
                 "action_type": {
                     "type": "string",
-                    "enum": ["update_tags", "update_title", "publish_listing"],
+                    "enum": ["update_tags", "update_title", "publish_listing", "deactivate_listing"],
                 },
                 "listing_id": {"type": "integer", "description": "The listing to change."},
                 "summary": {
@@ -3683,60 +3683,11 @@ async def _quality_audit_loop() -> None:
         await asyncio.sleep(86_400)
 
 
-async def _autoresponder_loop() -> None:
-    """Run the Etsy buyer-message autoresponder once a day.
-
-    tools/etsy_autoresponder.py drafts replies for known question types (download
-    issues, GoodNotes setup, app compatibility, etc.), flags refunds/unrecognized
-    messages for manual review, and emails Scott a digest -- it never sends
-    anything to a buyer itself; that's a separate explicit --send/--send-all step
-    Scott runs by hand. So this loop is read + draft + email-Scott only, squarely
-    inside the "Tier 1 support" autonomy CLAUDE.md already grants, and it exists to
-    close the Star Seller message-response-rate gap (CLAUDE.md flags this as the
-    "main challenge" for digital products) -- a tool built for that exact purpose
-    was otherwise sitting unscheduled with nothing ever invoking it.
-
-    Note: dedup state (data/message_drafts/sent_log.json) lives on Railway's
-    ephemeral filesystem, not the durable /data volume, so a redeploy can cause a
-    conversation to be re-drafted into the next digest even if Scott already sent
-    a reply for it from an earlier digest. Harmless (Scott would just see a
-    duplicate draft, never a duplicate buyer message), so not worth the added
-    complexity of moving it to the DB unless it proves annoying in practice."""
-    await asyncio.sleep(180)  # stagger after the other startup loops
-    while True:
-        try:
-            result = await asyncio.to_thread(
-                subprocess.run,
-                [sys.executable, str(ROOT / "tools" / "etsy_autoresponder.py")],
-                capture_output=True,
-                text=True,
-                timeout=300,
-                cwd=str(ROOT),
-            )
-            print(f"[autoresponder] {result.stdout.strip()[-500:]}", flush=True)
-            if result.returncode != 0:
-                print(f"[autoresponder] exit {result.returncode}: {result.stderr.strip()[-500:]}", flush=True)
-                db.set_agent_heartbeat(
-                    "autoresponder", "Autoresponder", "error",
-                    f"exit {result.returncode}: {result.stderr.strip()[-300:]}",
-                )
-            else:
-                db.set_agent_heartbeat(
-                    "autoresponder", "Autoresponder", "ok",
-                    result.stdout.strip()[-300:] or "run completed",
-                )
-        except Exception as exc:
-            print(f"[autoresponder] run failed: {exc}", flush=True)
-            db.set_agent_heartbeat("autoresponder", "Autoresponder", "error", str(exc)[:300])
-        await asyncio.sleep(86_400)
-
-
 _AGENT_LOOP_LABELS = {
     "snapshot": "Snapshot",
     "suggestion_warmer": "Suggestion Warmer",
     "token_sync": "Token Sync",
     "quality_audit": "Quality Audit",
-    "autoresponder": "Autoresponder",
 }
 
 
@@ -3759,7 +3710,6 @@ async def _startup() -> None:
     asyncio.create_task(_warm_suggestions())
     asyncio.create_task(_token_sync_loop())
     asyncio.create_task(_quality_audit_loop())
-    asyncio.create_task(_autoresponder_loop())
 
 
 @app.get("/api/history")
@@ -4362,7 +4312,7 @@ async def post_snapshot(_token: str = Depends(_auth)):
 
 # ── Staged actions (agent prepares → Scott approves → server executes) ────────────
 
-_ETSY_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing")
+_ETSY_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing", "deactivate_listing")
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
 _STAGED_ACTION_TYPES = _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
 
@@ -4433,6 +4383,8 @@ def _execute_staged_action(a: dict) -> dict:
         res = client.update_listing(lid, {"title": p["title"].strip()})
     elif t == "publish_listing":
         res = client.update_listing(lid, {"state": "active"})
+    elif t == "deactivate_listing":
+        res = client.update_listing(lid, {"state": "inactive"})
     else:
         raise ValueError(f"unsupported type {t}")
     with _cache_lock:

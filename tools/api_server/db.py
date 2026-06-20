@@ -735,3 +735,15 @@ def list_agent_heartbeats() -> list:
         return [dict(r) for r in rows]
     finally:
         conn.close()
+
+
+def delete_agent_heartbeat(name: str) -> None:
+    """Remove a loop's row entirely -- for a retired loop that will never run again,
+    so it doesn't sit on the Agents HUD forever frozen at its last status."""
+    init_db()
+    conn = _connect()
+    try:
+        conn.execute("DELETE FROM agent_heartbeats WHERE name = ?", (name,))
+        conn.commit()
+    finally:
+        conn.close()

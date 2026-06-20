@@ -669,3 +669,15 @@ verified "this is what a correct Set-of-4 listing looks like" example was confir
 it as a control case in future reasoning about this issue.
 **Action:** flagged to Scott for a fix-or-pull decision on `4512301880`/`4512784922` — Hard Stop, no
 listing/file changes made autonomously. Logged here for the record, not as a fixed item.
+
+### 2026-06-19 — Resolved: autoresponder retired, two mismatched listings staged for deactivation
+Scott decided both items above. **Autoresponder:** `_autoresponder_loop`, its `_AGENT_LOOP_LABELS` entry, and
+its `asyncio.create_task(...)` registration were removed from `main.py` (the standalone
+`tools/etsy_autoresponder.py` script itself was left in place, just unscheduled). The stale `autoresponder`
+row in `agent_heartbeats` was cleared via a new `db.delete_agent_heartbeat()` function so the Agents HUD
+doesn't show a frozen tile for a loop that no longer runs.
+**Quantity-mismatch listings:** added a `deactivate_listing` staged-action type (same pattern as
+`publish_listing`, sets `state: "inactive"`) since no staged path for deactivation existed before — only a
+direct human-only endpoint. Staged both `4512301880` and `4512784922` via `db.enqueue_action` referencing this
+finding; both sit as `pending` in the Action Center queue. Nothing on Etsy has changed — Scott must still tap
+Approve for either listing to actually go inactive.

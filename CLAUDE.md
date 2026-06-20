@@ -2469,7 +2469,7 @@ Etsy's search operates in two distinct phases:
 ### Star Seller Requirements (Digital Products)
 | Requirement | Threshold | Digital Product Notes |
 |---|---|---|
-| Message response rate | 95%+ within 24 hours | **Main challenge** — autoresponder helps (see `tools/etsy_autoresponder.py`) |
+| Message response rate | 95%+ within 24 hours | **Main challenge** — Etsy's API has no buyer-messaging endpoint for third-party apps (confirmed 2026-06-19, see ops_runbook.md), so this can't be automated. The only mechanisms that earn Star Seller credit are manual Quick Replies and Etsy's built-in Temporary/Weekly Auto-Reply windows — see "Customer Service — Autonomous Response System" above |
 | On-time shipping | 95%+ | **Auto-pass** — instant digital delivery = 100% on time, always |
 | Average rating | 4.8+ stars | Need 5+ orders in the review window |
 | Minimum orders | 5 orders, $300+ total | Over the past 3 months |
