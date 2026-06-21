@@ -376,6 +376,119 @@ def load_chat_history(session_id: str, limit: int = 40) -> list:
         conn.close()
 
 
+def list_chat_sessions() -> list:
+    """One row per distinct session_id, most-recently-active first. Each row:
+    {"session_id", "message_count", "started_at", "last_at", "last_role", "last_snippet"}.
+    "Sessions" here are long-lived per-device threads (one per browser/device Scott
+    uses), not short discrete conversations — there will typically be very few of
+    them, each potentially holding many messages. The "last message" is found via
+    a derived-table join on a GROUP BY subquery rather than a window function,
+    matching the plain-SQL style used everywhere else in this file."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            """
+            SELECT
+              s.session_id,
+              s.message_count,
+              s.started_at,
+              s.last_at,
+              m.role AS last_role,
+              m.content AS last_content
+            FROM (
+              SELECT session_id,
+                     COUNT(*) AS message_count,
+                     MIN(created_at) AS started_at,
+                     MAX(created_at) AS last_at,
+                     MAX(id) AS last_id
+              FROM chat_messages
+              GROUP BY session_id
+            ) s
+            JOIN chat_messages m ON m.id = s.last_id
+            ORDER BY s.last_at DESC
+            """
+        ).fetchall()
+        out = []
+        for r in rows:
+            snippet = (r["last_content"] or "").strip().replace("\n", " ")
+            if len(snippet) > 140:
+                snippet = snippet[:140].rstrip() + "…"
+            out.append({
+                "session_id": r["session_id"],
+                "message_count": r["message_count"],
+                "started_at": r["started_at"],
+                "last_at": r["last_at"],
+                "last_role": r["last_role"],
+                "last_snippet": snippet,
+            })
+        return out
+    finally:
+        conn.close()
+
+
+def get_chat_session(session_id: str, limit: int = 500) -> dict:
+    """Full message history for one session, ascending (oldest-first) — distinct
+    from load_chat_history(), which is newest-N-then-reversed and built only to
+    seed live agent context. Returns {"messages": [...], "truncated": bool}.
+    `limit` is a safety cap, not a UX page size."""
+    if not session_id:
+        return {"messages": [], "truncated": False}
+    init_db()
+    conn = _connect()
+    try:
+        total = conn.execute(
+            "SELECT COUNT(*) AS n FROM chat_messages WHERE session_id=?",
+            (session_id,),
+        ).fetchone()["n"]
+        rows = conn.execute(
+            "SELECT id, role, content, created_at FROM chat_messages "
+            "WHERE session_id=? ORDER BY id ASC LIMIT ?",
+            (session_id, limit),
+        ).fetchall()
+        return {
+            "messages": [
+                {"id": r["id"], "role": r["role"], "content": r["content"], "created_at": r["created_at"]}
+                for r in rows
+            ],
+            "truncated": total > limit,
+        }
+    finally:
+        conn.close()
+
+
+def search_chat_messages(query: str, limit: int = 50) -> list:
+    """Substring search across all sessions' message content, newest-first, capped
+    at `limit`. SQLite's LIKE is case-insensitive for ASCII by default, so no
+    LOWER() wrapping is needed. LIKE wildcard characters (% and _) in the user's
+    query are escaped so a literal search like "50% off" behaves correctly
+    instead of being interpreted as a wildcard."""
+    query = (query or "").strip()
+    if not query:
+        return []
+    init_db()
+    escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT id, session_id, role, content, created_at FROM chat_messages "
+            "WHERE content LIKE ? ESCAPE '\\' ORDER BY id DESC LIMIT ?",
+            (f"%{escaped}%", limit),
+        ).fetchall()
+        return [
+            {
+                "id": r["id"],
+                "session_id": r["session_id"],
+                "role": r["role"],
+                "content": r["content"],
+                "created_at": r["created_at"],
+            }
+            for r in rows
+        ]
+    finally:
+        conn.close()
+
+
 # ── Quality audit history (automated daily listing_integrity_check runs) ─────
 
 

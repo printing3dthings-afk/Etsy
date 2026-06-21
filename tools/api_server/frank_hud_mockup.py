@@ -412,7 +412,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
     <div class="nav-section">Knowledge</div>
     <div class="nav-item" data-screen="memory"><span class="ic">✦</span>Memory</div>
-    <div class="nav-item" data-screen="conversations"><span class="ic">💬</span>Conversations<span class="nbadge">12</span></div>
+    <div class="nav-item" data-screen="conversations"><span class="ic">💬</span>Conversations<span class="nbadge" id="badge-conversations" style="display:none">—</span></div>
     <div class="nav-item" data-screen="kb"><span class="ic">📚</span>Knowledge Base</div>
 
     <div class="nav-section">Tools</div>
@@ -600,7 +600,16 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     </div>
   </div>
   <div class="screen" id="screen-memory"><div class="placeholder-screen"><div class="big">MEMORY</div><div class="small">Constellation of real chat_messages + log_learning + knowledge_base docs — counts from the DB, never invented. Built in Step 2.</div></div></div>
-  <div class="screen" id="screen-conversations"><div class="placeholder-screen"><div class="big">CONVERSATIONS</div><div class="small">Searchable chat_messages history. Built in Step 2.</div></div></div>
+  <div class="screen" id="screen-conversations">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Conversations <span class="src">/api/conversations — persisted chat_messages history</span></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <input id="conv-search-input" type="text" placeholder="Search all conversations…" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
+        <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
+      </div>
+      <div id="conversations-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
   <div class="screen" id="screen-kb"><div class="placeholder-screen"><div class="big">KNOWLEDGE BASE</div><div class="small">Browse/search reader for the real markdown docs in data/knowledge_base/. Built in Step 2.</div></div></div>
 
   <!-- ══════════ TOOLS & SKILLS — real data: /api/tools/list (live AGENT_TOOLS) ══════════ -->
@@ -745,6 +754,7 @@ function showScreen(name){
   if(el) el.classList.add('active');
   if (name === 'actions') loadActions();
   if (name === 'calendar') loadCalendar();
+  if (name === 'conversations') loadConversations();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -1433,6 +1443,137 @@ function renderCalendarContent(d) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
+// Conversations — real data: /api/conversations — read-only browser + search
+// for the persisted chat_messages history. Session = a long-lived per-device
+// thread (one per browser localStorage), not a short discrete conversation —
+// expect very few sessions, each potentially holding many messages. Two views
+// inside one panel: session list (default) and a session detail/reader (drill-in).
+// No writes, no approval gate — this screen is purely a reporting surface.
+// ══════════════════════════════════════════════════════════════════════════
+let _convSessions = [];
+
+function _convTimeAgo(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.round(hrs / 24);
+  if (days < 30) return days + 'd ago';
+  return d.toLocaleDateString();
+}
+
+function _convShortId(sessionId) {
+  const s = sessionId || '';
+  return s.length > 12 ? s.slice(0, 8) + '…' + s.slice(-4) : s;
+}
+
+async function loadConversations() {
+  const el = document.getElementById('conversations-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/conversations', 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    _convSessions = d.sessions || [];
+    renderConversationList();
+    const badge = document.getElementById('badge-conversations');
+    if (badge) {
+      const total = _convSessions.reduce((sum, s) => sum + (s.message_count || 0), 0);
+      badge.textContent = total > 999 ? '999+' : total;
+      badge.style.display = total > 0 ? '' : 'none';
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderConversationList() {
+  const el = document.getElementById('conversations-content');
+  if (!el) return;
+  if (!_convSessions.length) {
+    el.innerHTML = '<div class="empty">No conversations yet — chat history will appear here once Frank has been used.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="section-title">💬 Sessions (${_convSessions.length})</div>` +
+    _convSessions.map(s => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(s.session_id)}')">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt">
+        <div class="ttl">${escHtml(_convShortId(s.session_id))} <span style="color:var(--muted);font-weight:400">— ${s.message_count} msg${s.message_count===1?'':'s'}</span></div>
+        <div class="sub">${escHtml(s.last_role === 'user' ? 'Scott' : 'Frank')}: ${escHtml(s.last_snippet || '')} · ${_convTimeAgo(s.last_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function openConversation(sessionId) {
+  const el = document.getElementById('conversations-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/conversations/' + encodeURIComponent(sessionId), 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderConversationDetail(sessionId, d);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openConversation('${escHtml(sessionId)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
+  }
+}
+
+function renderConversationDetail(sessionId, d) {
+  const el = document.getElementById('conversations-content');
+  if (!el) return;
+  const msgs = d.messages || [];
+  let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
+    <span style="font-size:12px;color:var(--muted)">${escHtml(_convShortId(sessionId))} · ${msgs.length} message${msgs.length===1?'':'s'}${d.truncated ? ' (showing first 500)' : ''}</span>
+  </div>`;
+  html += '<div style="display:flex;flex-direction:column;gap:10px">' +
+    msgs.map(m => `<div class="lc-bubble ${m.role === 'user' ? 'user' : 'bot'}">${escHtml(m.content)}</div>`).join('') +
+    '</div>';
+  el.innerHTML = html;
+}
+
+function backToConversationList() {
+  renderConversationList();
+}
+
+async function searchConversations() {
+  const q = (document.getElementById('conv-search-input').value || '').trim();
+  if (!q) { loadConversations(); return; }
+  const el = document.getElementById('conversations-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/conversations?q=' + encodeURIComponent(q), 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderConversationSearch(q, d.results || []);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderConversationSearch(q, results) {
+  const el = document.getElementById('conversations-content');
+  if (!el) return;
+  let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
+    <span style="font-size:12px;color:var(--muted)">${results.length} match${results.length===1?'':'es'} for "${escHtml(q)}"</span>
+  </div>`;
+  html += results.length ? results.map(r => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(r.session_id)}')">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt">
+        <div class="ttl">${escHtml(r.role === 'user' ? 'Scott' : 'Frank')} <span style="color:var(--muted);font-weight:400">in ${escHtml(_convShortId(r.session_id))}</span></div>
+        <div class="sub">${escHtml(r.content.length > 160 ? r.content.slice(0,160)+'…' : r.content)} · ${_convTimeAgo(r.created_at)}</div>
+      </div>
+    </div>`).join('') : '<div class="empty">No messages match that search.</div>';
+  el.innerHTML = html;
+}
+
+document.getElementById('conv-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchConversations(); });
+
+// ══════════════════════════════════════════════════════════════════════════
 // Hub screens — ported from the live Hub at / (main.py): Listings, Products,
 // Brand Kit, Files, Connections, Security. Same API calls, same write
 // semantics (toggleListingState still confirm-gated), restyled to hub- CSS.
@@ -1909,6 +2050,7 @@ function loadAll(){
 loadAll();
 loadActions();
 loadCalendar();
+loadConversations();
 setInterval(loadAll, 30000);
 
 // ── Clock ──

@@ -5063,6 +5063,29 @@ async def get_cadence(_token: str = Depends(_auth)):
     }
 
 
+# ── Conversations — read-only browser/search for persisted chat_messages history ──
+
+
+@app.get("/api/conversations")
+async def get_conversations(q: str = "", _token: str = Depends(_auth)):
+    """Session list (most-recently-active first), or — when `q` is supplied —
+    a cross-session substring search instead."""
+    if q.strip():
+        results = await asyncio.to_thread(db.search_chat_messages, q.strip())
+        return {"query": q.strip(), "results": results}
+    sessions = await asyncio.to_thread(db.list_chat_sessions)
+    return {"sessions": sessions}
+
+
+@app.get("/api/conversations/{session_id}")
+async def get_conversation_detail(session_id: str, _token: str = Depends(_auth)):
+    """Full message history for one session."""
+    data = await asyncio.to_thread(db.get_chat_session, session_id)
+    if not data["messages"]:
+        raise HTTPException(status_code=404, detail="No messages for this session")
+    return data
+
+
 # ── File hub (browse/download product files + backups straight from the dashboard) ─
 
 _FILE_ROOTS = {
