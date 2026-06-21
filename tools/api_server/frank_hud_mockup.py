@@ -408,7 +408,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-item" data-screen="agents"><span class="ic">⚙</span>Agents</div>
     <div class="nav-item" data-screen="tasks"><span class="ic">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
     <div class="nav-item" data-screen="actions"><span class="ic">✓</span>Action Center<span class="nbadge" id="badge-actions" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="calendar"><span class="ic">▦</span>Calendar</div>
+    <div class="nav-item" data-screen="calendar"><span class="ic">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
 
     <div class="nav-section">Knowledge</div>
     <div class="nav-item" data-screen="memory"><span class="ic">✦</span>Memory</div>
@@ -431,7 +431,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="voice-widget" style="text-align:left">
       <div class="vw-title">QUICK COMMANDS</div>
       <button class="qc-btn"><span class="qic">+</span>Start New Task</button>
-      <button class="qc-btn"><span class="qic">▦</span>Open Calendar</button>
+      <button class="qc-btn" onclick="showScreen('calendar')"><span class="qic">▦</span>Open Calendar</button>
       <button class="qc-btn"><span class="qic">✓</span>Run Health Check</button>
       <button class="qc-btn"><span class="qic">⇄</span>Run Workflow</button>
     </div>
@@ -569,7 +569,13 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   <div class="screen" id="screen-tasks">
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Tasks <span class="src">/api/todos</span></div>
-      <div id="tasks-list" style="margin-top:10px;overflow-y:auto;max-height:760px">
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <input id="hud-todo-input" type="text" placeholder="Add a to-do…" onkeydown="if(event.key==='Enter')addHudTodo()"
+          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text)">
+        <input id="hud-todo-due" type="date" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text)">
+        <button onclick="addHudTodo()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
+      </div>
+      <div id="tasks-list" style="margin-top:10px;overflow-y:auto;max-height:700px">
         <div style="color:var(--muted);font-size:12px">Loading…</div>
       </div>
     </div>
@@ -586,7 +592,13 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     </div>
   </div>
 
-  <div class="screen" id="screen-calendar"><div class="placeholder-screen"><div class="big">CALENDAR</div><div class="small">Combines todo due dates + CLAUDE.md's weekly/monthly/quarterly cadence + Seasonal Keyword Calendar. Built in Step 2.</div></div></div>
+  <!-- ══════════ CALENDAR — real data: /api/cadence + /api/todos — due dates, ops cadence, seasonal/tax calendar ══════════ -->
+  <div class="screen" id="screen-calendar">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Calendar <span class="src">/api/cadence + /api/todos — due dates, ops cadence, seasonal keywords</span></div>
+      <div id="calendar-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
   <div class="screen" id="screen-memory"><div class="placeholder-screen"><div class="big">MEMORY</div><div class="small">Constellation of real chat_messages + log_learning + knowledge_base docs — counts from the DB, never invented. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-conversations"><div class="placeholder-screen"><div class="big">CONVERSATIONS</div><div class="small">Searchable chat_messages history. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-kb"><div class="placeholder-screen"><div class="big">KNOWLEDGE BASE</div><div class="small">Browse/search reader for the real markdown docs in data/knowledge_base/. Built in Step 2.</div></div></div>
@@ -732,6 +744,7 @@ function showScreen(name){
   const el = document.getElementById('screen-'+name);
   if(el) el.classList.add('active');
   if (name === 'actions') loadActions();
+  if (name === 'calendar') loadCalendar();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -1061,9 +1074,13 @@ async function loadTasks(){
     if(list){
       list.innerHTML = d.todos.length ? d.todos.map(t=>{
         const done = !!t.done;
-        return '<div class="tl-item"><div class="tl-dotcol"><span class="d"'+(done?' style="background:var(--muted)"':'')+'></span></div>'+
-          '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':'')+'>'+escHtml(t.text)+'</div>'+
-          '<div class="sub">added by '+escHtml(t.added_by||'scott')+'</div></div></div>';
+        const overdue = !done && t.due_date && t.due_date < new Date().toISOString().slice(0,10);
+        const dueTxt = t.due_date ? ' · due '+escHtml(t.due_date)+(overdue?' ⚠':'') : '';
+        return '<div class="tl-item">'+
+          '<div class="tl-dotcol"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleHudTodo('+t.id+',this.checked)" style="width:13px;height:13px;margin-top:2px;accent-color:var(--gold)"></div>'+
+          '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':(overdue?' style="color:var(--red)"':''))+'>'+escHtml(t.text)+'</div>'+
+          '<div class="sub">added by '+escHtml(t.added_by||'scott')+dueTxt+'</div></div>'+
+          '<button onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>';
       }).join('') : '<div style="color:var(--muted);font-size:12px">No tasks yet.</div>';
     }
     const badge = document.getElementById('badge-tasks');
@@ -1071,6 +1088,39 @@ async function loadTasks(){
   }catch(e){
     if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Tasks offline: '+escHtml(e.message)+'</div>';
   }
+}
+async function addHudTodo(){
+  const inp = document.getElementById('hud-todo-input');
+  const dueInp = document.getElementById('hud-todo-due');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  const due = dueInp.value;
+  dueInp.value = '';
+  try {
+    await fetchWithTimeout(BASE+'/api/todos', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({text, added_by:'scott', due_date: due || null}),
+    }, 15000);
+  } catch(e) {}
+  loadTasks();
+}
+async function toggleHudTodo(id, done){
+  try {
+    await fetchWithTimeout(BASE+'/api/todos/'+id+'/toggle', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({done}),
+    }, 15000);
+  } catch(e) {}
+  loadTasks();
+}
+async function deleteHudTodo(id){
+  try {
+    await fetchWithTimeout(BASE+'/api/todos/'+id, {method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+  } catch(e) {}
+  loadTasks();
 }
 
 // ── Tools & Skills — real data from /api/tools/list (live AGENT_TOOLS registry) ──
@@ -1305,6 +1355,81 @@ async function batchStageTags(btn) {
     btn.disabled = false;
     btn.textContent = orig;
   }
+}
+
+// ── Calendar — real data from /api/cadence + /api/todos: due-dated tasks,
+// recurring weekly/monthly/quarterly ops cadence, and the seasonal keyword +
+// tax deadline calendar. List-based (not a grid) — same .act-card pattern as
+// the Action Center, since data volume (~15-20 dated items/year) doesn't
+// justify a calendar-grid widget. ──
+const _CAL_URGENCY_SEV = {OVERDUE:'high', 'THIS WEEK':'high', SOON:'medium', UPCOMING:'low'};
+async function loadCalendar() {
+  const el = document.getElementById('calendar-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const [cr, tr] = await Promise.all([
+      authGet('/api/cadence', 20000),
+      authGet('/api/todos', 15000).catch(()=>null)
+    ]);
+    if (!cr.ok) { const e = await cr.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+cr.status); }
+    const d = await cr.json();
+    renderCalendarContent(d);
+    const badge = document.getElementById('badge-calendar');
+    if (badge) {
+      const urgent = (d.seasonal||[]).concat(d.tax_deadlines||[]).filter(e=>e.urgency==='OVERDUE'||e.urgency==='THIS WEEK').length
+        + (d.due_todos||[]).length;
+      badge.textContent = urgent;
+      badge.style.display = urgent>0 ? '' : 'none';
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadCalendar()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function _calCard(sev, title, detail) {
+  return `<div class="act-card ${sev}"><span class="act-sev ${sev}">${escHtml(sev)}</span><div class="act-title">${escHtml(title)}</div><div class="act-detail">${escHtml(detail)}</div></div>`;
+}
+function renderCalendarContent(d) {
+  const el = document.getElementById('calendar-content');
+  if (!el) return;
+  let html = '';
+
+  const due = d.due_todos || [];
+  html += `<div class="section-title">📌 Upcoming Due Dates (${due.length})</div>`;
+  html += due.length ? due.map(t => {
+    const overdue = t.due_date < new Date().toISOString().slice(0,10);
+    return _calCard(overdue?'high':'low', t.text, 'Due ' + t.due_date);
+  }).join('') : '<div class="empty">No to-dos with a due date.</div>';
+
+  html += `<div class="section-title">🔁 This Week's Cadence</div>`;
+  const cl = d.checklists || {weekly:[],monthly:[],quarterly:[]};
+  html += `<div class="act-card low" style="cursor:default">
+    <div class="act-title">Weekly (Friday)</div>
+    <ul style="margin:6px 0 10px 18px;padding:0;font-size:11.5px;color:var(--muted)">${cl.weekly.map(i=>`<li>${escHtml(i)}</li>`).join('')}</ul>
+    <div class="act-title">Monthly (1st)</div>
+    <ul style="margin:6px 0 10px 18px;padding:0;font-size:11.5px;color:var(--muted)">${cl.monthly.map(i=>`<li>${escHtml(i)}</li>`).join('')}</ul>
+    <div class="act-title">Quarterly</div>
+    <ul style="margin:6px 0 0 18px;padding:0;font-size:11.5px;color:var(--muted)">${cl.quarterly.map(i=>`<li>${escHtml(i)}</li>`).join('')}</ul>
+  </div>`;
+
+  const seasonal = d.seasonal || [];
+  const tax = d.tax_deadlines || [];
+  html += `<div class="section-title">🗓 Seasonal &amp; Tax Calendar</div>`;
+  if (!seasonal.length && !tax.length) {
+    html += '<div class="empty">Nothing upcoming.</div>';
+  } else {
+    html += seasonal.map(e => _calCard(
+      _CAL_URGENCY_SEV[e.urgency]||'low',
+      `${e.season} — update by ${e.update_by}`,
+      `Peak ${e.peak} · ${e.urgency} · listings: ${e.listings_to_update.join(', ')}`
+    )).join('');
+    html += tax.map(t => _calCard(
+      _CAL_URGENCY_SEV[t.urgency]||'low',
+      t.event,
+      `${t.date} · ${t.urgency}`
+    )).join('');
+  }
+
+  el.innerHTML = html;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -1783,6 +1908,7 @@ function loadAll(){
 }
 loadAll();
 loadActions();
+loadCalendar();
 setInterval(loadAll, 30000);
 
 // ── Clock ──

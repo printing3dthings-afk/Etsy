@@ -162,6 +162,10 @@ def init_db() -> None:
         conn = _connect()
         try:
             conn.executescript(_SCHEMA)
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN due_date TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
             conn.commit()
         finally:
             conn.close()
@@ -480,15 +484,15 @@ def db_info() -> dict:
 # ── Shared to-do list (Scott + Frank, always visible on the dashboard) ───────
 
 
-def add_todo(text: str, added_by: str = "scott") -> int:
+def add_todo(text: str, added_by: str = "scott", due_date: str | None = None) -> int:
     """Add one to-do item. added_by is 'scott' or 'frank'. Returns the new id."""
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
         cur = conn.execute(
-            "INSERT INTO todos (text, added_by, done, created_at) VALUES (?,?,0,?)",
-            (text.strip(), added_by, ts),
+            "INSERT INTO todos (text, added_by, done, created_at, due_date) VALUES (?,?,0,?,?)",
+            (text.strip(), added_by, ts, due_date),
         )
         conn.commit()
         return cur.lastrowid

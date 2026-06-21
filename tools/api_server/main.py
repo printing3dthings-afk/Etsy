@@ -26,7 +26,7 @@ import threading
 import time
 import uuid
 import zipfile
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import uvicorn
@@ -50,6 +50,8 @@ if _env.exists():
 
 import anthropic
 import db  # local persistence layer (tools/api_server/db.py)
+import seasonal_keywords  # noqa: E402
+import tax_compliance_tools  # noqa: E402
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
 
 
@@ -4971,7 +4973,8 @@ async def post_todo(payload: dict, _token: str = Depends(_auth)):
     added_by = (payload or {}).get("added_by", "scott").strip().lower()
     if added_by not in ("scott", "frank"):
         added_by = "scott"
-    todo_id = await asyncio.to_thread(db.add_todo, text, added_by)
+    due_date = (payload or {}).get("due_date") or None
+    todo_id = await asyncio.to_thread(db.add_todo, text, added_by, due_date)
     return {"ok": True, "id": todo_id}
 
 
@@ -4990,6 +4993,74 @@ async def remove_todo(todo_id: int, _token: str = Depends(_auth)):
     if not ok:
         raise HTTPException(status_code=404, detail="Todo not found")
     return {"ok": True}
+
+
+# ── Calendar — due-dated todos + recurring ops cadence + seasonal/tax calendar ──────
+
+_CADENCE_CHECKLISTS = {
+    "weekly": [
+        "Check Etsy Search Visibility Dashboard — fix any flagged listings immediately",
+        "Review 7-day conversion rate per listing (Etsy Analytics → Listings)",
+        "Respond to any outstanding messages or reviews",
+        "Check 3D print queue — what sold, what needs restocking",
+    ],
+    "monthly": [
+        "Run `python tools/shop_health_check.py` — full snapshot",
+        "Compare conversion rates, views, revenue vs. prior month",
+        "Identify listings with high views but low conversion (photo or price problem)",
+        "Update seasonal keywords in top 10 listings (update 6 weeks before peak season)",
+        "Export orders for COGS/Craftybase reconciliation",
+    ],
+    "quarterly": [
+        "Estimated tax payment (see tax_deadlines below for exact dates)",
+        "New product launch or existing product upgrade decision",
+        "Review competitor pricing in top 3 niches",
+        "S-Corp salary draw if applicable",
+    ],
+}
+
+
+@app.get("/api/cadence")
+async def get_cadence(_token: str = Depends(_auth)):
+    today = date.today()
+
+    calendar = seasonal_keywords._build_calendar(today.year)
+    for e in calendar:
+        if e["update_by"] is None:
+            e["update_by"] = seasonal_keywords._update_by(e["peak"])
+    seasonal = [
+        {
+            "season": e["season"],
+            "priority": e["priority"],
+            "peak": e["peak"].isoformat(),
+            "update_by": e["update_by"].isoformat(),
+            "urgency": seasonal_keywords._urgency(e["update_by"], today),
+            "listings_to_update": e["listings_to_update"],
+        }
+        for e in calendar
+        if e["peak"] >= today or (e["update_by"] < today < e["peak"])
+    ]
+    seasonal.sort(key=lambda e: e["update_by"])
+
+    tax = json.loads(tax_compliance_tools._get_tax_calendar())["tax_deadlines"]
+    for t in tax:
+        d = datetime.strptime(t["date"], "%b %d, %Y").date()
+        t["date_iso"] = d.isoformat()
+        t["urgency"] = seasonal_keywords._urgency(d, today)
+    tax.sort(key=lambda t: t["date_iso"])
+
+    todos = await asyncio.to_thread(db.list_todos)
+    due_todos = sorted(
+        (t for t in todos if t.get("due_date") and not t["done"]),
+        key=lambda t: t["due_date"],
+    )
+
+    return {
+        "seasonal": seasonal,
+        "tax_deadlines": tax,
+        "due_todos": due_todos,
+        "checklists": _CADENCE_CHECKLISTS,
+    }
 
 
 # ── File hub (browse/download product files + backups straight from the dashboard) ─
