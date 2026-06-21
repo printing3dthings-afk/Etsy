@@ -814,3 +814,36 @@ are unchanged. Verified end-to-end: unauthenticated `GET /`/`/frank` → 307; 6t
 429; correct passphrase → cookie set + redirect; cookie then grants `/` and `/frank` normally; `/api/listings`
 still 403 without Bearer token, 200 with it. Deferred (not done this round): moving the WS token off the URL,
 tightening CORS, adding CSP/security headers.
+
+
+## 2026-06-21 — Automated quality audit — 44 listing(s) failing
+Daily listing_integrity_check found 44 FAIL / 24 WARN out of 172 listings audited. Details:
+[4488477854] P3D_CRYSTAL_GLOW_LAMP — Crystal Glow Lamp, 3D Printed Faceted RGB Table Lamp, U…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488532602] P3D_RIBBED_VASE_FOR_DRIED_FLOWERS — Ribbed Vase for Dried Flowers, 3D Printed Boho Decor, M…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488666558] P3D_COFFEE_BAR_SIGN — Coffee Bar Sign, 3D Printed Cat Kitchen Decor, Housewar…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4490472707] P3D_SCULPTURAL_MESH_LAMP — Sculptural Mesh Lamp, 3D Printed Geometric Table Lamp, …
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4492610660] P3D_TEXTURED_TEA_LIGHT_HOLDERS — Textured Tea Light Holders, 3D Printed Candle Holder Se…
+  Type: 3d_print_physical | Photos: 4 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 4 photos (want ≥8)
+
+  [4497392795] P3D_GEOMETRIC_GLOW_LAMP — Geometric Glow Lamp, 3D Printed Table Lamp, Modern Home…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4507783049] P3D_MINIMALIST_PEN_HOLDER — Minimalist Pen Holder, 3D Printed Desk Organizer, Moder…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4509600086] DP1035, DP1064 — Tropical Leaves Print, Bold Monster
