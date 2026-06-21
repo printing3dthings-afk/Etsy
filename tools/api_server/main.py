@@ -19,6 +19,7 @@ import json
 import mimetypes
 import os
 import re as _re
+import secrets
 import subprocess
 import sys
 import threading
@@ -29,9 +30,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Request, Security, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, Form, HTTPException, Request, Security, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
 
@@ -187,7 +188,9 @@ _LOCAL_FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--act
 # trailing newline. APP_TOKEN is injected into an inline JS string literal
 # (const TOKEN = '...'); a newline inside it is a fatal SyntaxError that kills
 # the ENTIRE dashboard script — the page renders but no JS runs (frozen spinner).
-APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "changeme").strip()
+APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "").strip()
+if not APP_TOKEN:
+    raise RuntimeError("APP_SECRET_TOKEN is not set — refusing to start with no auth token.")
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
 _BUILD_ID = "f4b1e2a-v44"  # bump on each deploy to confirm Railway is using latest code
@@ -218,6 +221,161 @@ def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str
     if credentials.credentials != APP_TOKEN:
         raise HTTPException(status_code=401, detail="Invalid token")
     return credentials.credentials
+
+
+# ── Page login gate ─────────────────────────────────────────────────────────────
+#
+# /api/* and /ws/* stay protected by the bearer/query APP_TOKEN exactly as before.
+# But GET / and GET /frank used to serve their full page (which embeds that same
+# APP_TOKEN in the JS) to anyone, no auth at all — so the "API auth" above was
+# theater for anyone who could just load the page. This adds a passphrase login
+# (checked against the same APP_TOKEN — nothing new for Scott to manage) gating
+# those two page routes, backed by an in-memory session + login-attempt store.
+# Deliberately in-memory only (same tradeoff as _relay_pending below) — a redeploy
+# clears sessions and Scott logs in again; no DB table needed for one operator.
+
+_sessions: dict[str, float] = {}        # session_id -> expiry (epoch seconds)
+_sessions_lock = threading.Lock()
+SESSION_TTL = 60 * 60 * 24 * 30          # 30 days
+
+_login_fails: dict[str, list[float]] = {}  # ip -> recent failure timestamps
+_login_fails_lock = threading.Lock()
+LOGIN_MAX_FAILS = 5
+LOGIN_WINDOW = 15 * 60                    # 15 minutes
+
+SESSION_COOKIE = "frank_session"
+
+
+def _new_session() -> str:
+    sid = secrets.token_urlsafe(32)
+    with _sessions_lock:
+        _sessions[sid] = time.time() + SESSION_TTL
+    return sid
+
+
+def _check_session(request: Request) -> bool:
+    sid = request.cookies.get(SESSION_COOKIE, "")
+    if not sid:
+        return False
+    with _sessions_lock:
+        expiry = _sessions.get(sid)
+        if expiry is None:
+            return False
+        if time.time() > expiry:
+            del _sessions[sid]
+            return False
+    return True
+
+
+def _clear_session(request: Request) -> None:
+    sid = request.cookies.get(SESSION_COOKIE, "")
+    if sid:
+        with _sessions_lock:
+            _sessions.pop(sid, None)
+
+
+def _client_ip(request: Request) -> str:
+    fwd = request.headers.get("x-forwarded-for", "")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _login_rate_limited(ip: str) -> bool:
+    with _login_fails_lock:
+        fails = [t for t in _login_fails.get(ip, []) if time.time() - t < LOGIN_WINDOW]
+        _login_fails[ip] = fails
+        return len(fails) >= LOGIN_MAX_FAILS
+
+
+def _record_login_fail(ip: str) -> None:
+    with _login_fails_lock:
+        _login_fails.setdefault(ip, []).append(time.time())
+
+
+def _reset_login_fails(ip: str) -> None:
+    with _login_fails_lock:
+        _login_fails.pop(ip, None)
+
+
+_LOGIN_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnBrandCraftz Hub — Sign in</title>
+<style>
+  body {{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:#0b0f14; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }}
+  .box {{ width:320px; padding:32px; background:#121821; border:1px solid #1f2a36; border-radius:12px; }}
+  .box h1 {{ margin:0 0 6px; font-size:18px; color:#e8eef3; }}
+  .box p.sub {{ margin:0 0 20px; font-size:13px; color:#7c8896; }}
+  input[type=password] {{ width:100%; box-sizing:border-box; padding:10px 12px; margin-bottom:14px;
+    background:#0b0f14; border:1px solid #2a3744; border-radius:8px; color:#e8eef3; font-size:14px; }}
+  button {{ width:100%; padding:10px; background:#2ec4c4; border:none; border-radius:8px;
+    color:#06222a; font-weight:600; font-size:14px; cursor:pointer; }}
+  .err {{ color:#ff6b6b; font-size:13px; margin:0 0 14px; }}
+</style>
+</head>
+<body>
+  <div class="box">
+    <h1>OnBrandCraftz Hub</h1>
+    <p class="sub">Enter the passphrase to continue.</p>
+    {error_html}
+    <form method="post" action="/login">
+      <input type="hidden" name="next" value="{next_path}">
+      <input type="password" name="passphrase" placeholder="Passphrase" autofocus>
+      <button type="submit">Sign in</button>
+    </form>
+  </div>
+</body>
+</html>"""
+
+
+def _safe_next(next_path: str) -> str:
+    # Only allow same-site relative paths — never redirect off-site via the next param.
+    if next_path and next_path.startswith("/") and not next_path.startswith("//"):
+        return next_path
+    return "/"
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page(next: str = "/", error: str = ""):
+    error_html = '<p class="err">Incorrect passphrase. Try again.</p>' if error else ""
+    return HTMLResponse(
+        _LOGIN_PAGE.format(error_html=error_html, next_path=_safe_next(next)),
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+    )
+
+
+@app.post("/login")
+def login_submit(request: Request, passphrase: str = Form(""), next: str = Form("/")):
+    ip = _client_ip(request)
+    safe_next = _safe_next(next)
+    if _login_rate_limited(ip):
+        return Response(
+            content="Too many failed attempts. Try again in a few minutes.",
+            status_code=429,
+        )
+    if secrets.compare_digest(passphrase, APP_TOKEN):
+        _reset_login_fails(ip)
+        sid = _new_session()
+        resp = RedirectResponse(safe_next, status_code=303)
+        resp.set_cookie(
+            SESSION_COOKIE, sid,
+            max_age=SESSION_TTL, httponly=True, secure=True, samesite="lax",
+        )
+        return resp
+    _record_login_fail(ip)
+    return RedirectResponse(f"/login?error=1&next={safe_next}", status_code=303)
+
+
+@app.get("/logout")
+def logout(request: Request):
+    _clear_session(request)
+    resp = RedirectResponse("/login", status_code=303)
+    resp.delete_cookie(SESSION_COOKIE)
+    return resp
 
 
 def _price_float(price_field) -> float:
@@ -2982,7 +3140,9 @@ fetch(BASE + '/health').then(r => r.json()).then(h => {
 
 
 @app.get("/", response_class=HTMLResponse)
-def web_ui():
+def web_ui(request: Request):
+    if not _check_session(request):
+        return RedirectResponse(f"/login?next={request.url.path}", status_code=307)
     return HTMLResponse(
         content=_WEB_UI,
         headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
@@ -2996,7 +3156,9 @@ from frank_hud_mockup import render_frank_hud  # noqa: E402
 
 
 @app.get("/frank", response_class=HTMLResponse)
-def frank_hud_mockup():
+def frank_hud_mockup(request: Request):
+    if not _check_session(request):
+        return RedirectResponse(f"/login?next={request.url.path}", status_code=307)
     return HTMLResponse(
         content=render_frank_hud(APP_TOKEN),
         headers={"Cache-Control": "no-store, no-cache, must-revalidate"},

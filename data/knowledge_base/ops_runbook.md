@@ -794,3 +794,23 @@ visually confirmed each cover matches its documented theme, and re-uploaded the 
 `{pid}U.pdf` files to the 4 live listings (4509179201/4509184958/4509184962/4509184968) via
 `delete_listing_file()` + `upload_listing_file()` — all 8 files passed `validate_digital_file()` with zero
 errors. DP1030 remains an unpublished pilot; its files were fixed but no new listing was published.
+
+### 2026-06-21 — `/` and `/frank` had zero auth; the API bearer token was readable in their page source
+**Symptom:** Investigating "is Frank protected," found `GET /` and `GET /frank` had no auth check at all —
+anyone with the URL got the full page, no token needed. That's worse than it sounds, because the same page
+embeds the literal `APP_TOKEN` value used for every `/api/*` Bearer check and both `/ws/*` query-param checks
+(`const TOKEN = ...` in `_WEB_UI`, `render_frank_hud(APP_TOKEN)`). So the API's "auth" was theater — loading
+the unauthenticated page handed over the key to everything else. Also found `APP_TOKEN` defaulted to the
+literal string `"changeme"` if `APP_SECRET_TOKEN` was ever unset (fails open, not closed).
+**Fix:** Added a passphrase login gate in `tools/api_server/main.py` (only file touched) in front of both
+`/` and `/frank`: `GET /login` / `POST /login` check the submitted passphrase against the existing
+`APP_SECRET_TOKEN` (no new credential), set an HttpOnly/Secure/SameSite=Lax session cookie on success
+(in-memory session store, 30-day TTL), and `GET /logout` clears it. `web_ui()`/`frank_hud_mockup()` now
+redirect (307) to `/login?next=...` if the session cookie is missing/expired. Added a per-IP login rate
+limiter (5 failed attempts / 15 min → 429) since there was no rate limiting anywhere in the app before.
+Removed the `"changeme"` default — the server now raises `RuntimeError` at startup if `APP_SECRET_TOKEN`
+is unset, instead of silently accepting a guessable token. `/api/*` Bearer auth and `/ws/*` query-token auth
+are unchanged. Verified end-to-end: unauthenticated `GET /`/`/frank` → 307; 6th bad passphrase from one IP →
+429; correct passphrase → cookie set + redirect; cookie then grants `/` and `/frank` normally; `/api/listings`
+still 403 without Bearer token, 200 with it. Deferred (not done this round): moving the WS token off the URL,
+tightening CORS, adding CSP/security headers.
