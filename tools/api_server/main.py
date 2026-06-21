@@ -593,6 +593,90 @@ def _append_ceo_learning(note: str) -> None:
         print(f"[ceo-learnings] append failed: {exc}", flush=True)
 
 
+# ── Knowledge Base — read-only browser/search for the real markdown docs in
+# data/knowledge_base/ (separate read path from _ops_runbook_block/_ceo_learnings_block,
+# which seed chat context — this is for the human-facing reader UI in /frank) ──────
+
+_KB_DIR = ROOT / "data" / "knowledge_base"
+
+
+def _kb_title(path: Path, text: str) -> str:
+    m = _re.search(r"^#\s+(.+)", text, _re.MULTILINE)
+    if m:
+        return m.group(1).strip()
+    return path.stem.replace("_", " ").replace("-", " ").title()
+
+
+def _kb_docs() -> list[dict]:
+    """Metadata for every *.md file in _KB_DIR, newest-modified first. .json data
+    files living in the same directory are intentionally excluded — they aren't docs."""
+    out = []
+    for p in sorted(_KB_DIR.glob("*.md")):
+        text = p.read_text()
+        stat = p.stat()
+        out.append({
+            "filename": p.name,
+            "title": _kb_title(p, text),
+            "size": stat.st_size,
+            "size_human": _human_size(stat.st_size),
+            "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+            "word_count": len(text.split()),
+        })
+    out.sort(key=lambda d: d["modified"], reverse=True)
+    return out
+
+
+def _resolve_kb_doc(filename: str) -> Path:
+    base = _KB_DIR.resolve()
+    target = (base / filename).resolve()
+    if target.parent != base or not filename.endswith(".md"):
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    if not target.is_file():
+        raise HTTPException(status_code=404, detail="Doc not found")
+    return target
+
+
+def _kb_search(query: str, limit_per_doc: int = 5) -> list[dict]:
+    """Case-insensitive per-line substring search across every doc in _KB_DIR.
+    Up to `limit_per_doc` matches per doc, each with 1 line of context above/below."""
+    q = query.lower()
+    results = []
+    for p in sorted(_KB_DIR.glob("*.md")):
+        lines = p.read_text().splitlines()
+        matches = []
+        for i, line in enumerate(lines):
+            if q in line.lower():
+                lo, hi = max(0, i - 1), min(len(lines), i + 2)
+                matches.append({"line_no": i + 1, "context": "\n".join(lines[lo:hi])})
+                if len(matches) >= limit_per_doc:
+                    break
+        if matches:
+            results.append({
+                "filename": p.name,
+                "title": _kb_title(p, "\n".join(lines)),
+                "matches": matches,
+                "match_count": len(matches),
+            })
+    results.sort(key=lambda r: r["match_count"], reverse=True)
+    return results
+
+
+@app.get("/api/kb")
+async def get_kb(q: str = "", _token: str = Depends(_auth)):
+    if q.strip():
+        results = await asyncio.to_thread(_kb_search, q.strip())
+        return {"query": q.strip(), "results": results}
+    docs = await asyncio.to_thread(_kb_docs)
+    return {"docs": docs}
+
+
+@app.get("/api/kb/{filename}")
+async def get_kb_doc(filename: str, _token: str = Depends(_auth)):
+    target = await asyncio.to_thread(_resolve_kb_doc, filename)
+    text = await asyncio.to_thread(target.read_text)
+    return {"filename": filename, "title": _kb_title(target, text), "content": text}
+
+
 # ── CEO Agent system prompt ────────────────────────────────────────────────────
 
 _CEO_SYSTEM = """\

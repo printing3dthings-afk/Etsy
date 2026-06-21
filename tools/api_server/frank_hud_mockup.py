@@ -413,7 +413,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-section">Knowledge</div>
     <div class="nav-item" data-screen="memory"><span class="ic">✦</span>Memory</div>
     <div class="nav-item" data-screen="conversations"><span class="ic">💬</span>Conversations<span class="nbadge" id="badge-conversations" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="kb"><span class="ic">📚</span>Knowledge Base</div>
+    <div class="nav-item" data-screen="kb"><span class="ic">📚</span>Knowledge Base<span class="nbadge" id="badge-kb" style="display:none">—</span></div>
 
     <div class="nav-section">Tools</div>
     <div class="nav-item" data-screen="tools"><span class="ic">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
@@ -610,7 +610,16 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <div id="conversations-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
     </div>
   </div>
-  <div class="screen" id="screen-kb"><div class="placeholder-screen"><div class="big">KNOWLEDGE BASE</div><div class="small">Browse/search reader for the real markdown docs in data/knowledge_base/. Built in Step 2.</div></div></div>
+  <div class="screen" id="screen-kb">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Knowledge Base <span class="src">/api/kb — real markdown docs in data/knowledge_base/</span></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <input id="kb-search-input" type="text" placeholder="Search all docs…" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
+        <button onclick="searchKb()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
+      </div>
+      <div id="kb-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
 
   <!-- ══════════ TOOLS & SKILLS — real data: /api/tools/list (live AGENT_TOOLS) ══════════ -->
   <div class="screen" id="screen-tools">
@@ -755,6 +764,7 @@ function showScreen(name){
   if (name === 'actions') loadActions();
   if (name === 'calendar') loadCalendar();
   if (name === 'conversations') loadConversations();
+  if (name === 'kb') loadKb();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -1574,6 +1584,117 @@ function renderConversationSearch(q, results) {
 document.getElementById('conv-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchConversations(); });
 
 // ══════════════════════════════════════════════════════════════════════════
+// Knowledge Base — real data: /api/kb — read-only browser + search for the
+// real markdown docs in data/knowledge_base/. Docs render as raw escaped text
+// in a monospace pre-wrap block (no markdown-to-HTML conversion) because these
+// docs are dense with markdown tables that a partial header-only renderer would
+// leave looking broken — pre-wrap monospace preserves table alignment exactly
+// as authored. Three view-states inside one panel: doc list (default), doc
+// reader (drill-in), search results. No writes, no approval gate.
+// ══════════════════════════════════════════════════════════════════════════
+let _kbDocs = [];
+
+function _kbPre(text) {
+  return `<div style="white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.5;color:var(--text)">${escHtml(text)}</div>`;
+}
+
+async function loadKb() {
+  const el = document.getElementById('kb-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/kb', 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    _kbDocs = d.docs || [];
+    renderKbList();
+    const badge = document.getElementById('badge-kb');
+    if (badge) {
+      badge.textContent = _kbDocs.length > 999 ? '999+' : _kbDocs.length;
+      badge.style.display = _kbDocs.length > 0 ? '' : 'none';
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderKbList() {
+  const el = document.getElementById('kb-content');
+  if (!el) return;
+  if (!_kbDocs.length) {
+    el.innerHTML = '<div class="empty">No knowledge base docs found in data/knowledge_base/.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="section-title">📚 Docs (${_kbDocs.length})</div>` +
+    _kbDocs.map(d => `<div class="tl-item" style="cursor:pointer" onclick="openKbDoc('${escHtml(d.filename)}')">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt">
+        <div class="ttl">${escHtml(d.title)}</div>
+        <div class="sub">${escHtml(d.filename)} · ${escHtml(d.size_human)} · ${d.word_count.toLocaleString()} words</div>
+      </div>
+    </div>`).join('');
+}
+
+async function openKbDoc(filename) {
+  const el = document.getElementById('kb-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/kb/' + encodeURIComponent(filename), 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderKbDoc(filename, d);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openKbDoc('${escHtml(filename)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
+  }
+}
+
+function renderKbDoc(filename, d) {
+  const el = document.getElementById('kb-content');
+  if (!el) return;
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
+    <span style="font-size:12px;color:var(--muted)">${escHtml(d.title)} · ${escHtml(filename)}</span>
+  </div>` + _kbPre(d.content);
+}
+
+function backToKbList() {
+  renderKbList();
+}
+
+async function searchKb() {
+  const q = (document.getElementById('kb-search-input').value || '').trim();
+  if (!q) { loadKb(); return; }
+  const el = document.getElementById('kb-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/kb?q=' + encodeURIComponent(q), 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderKbSearch(q, d.results || []);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderKbSearch(q, results) {
+  const el = document.getElementById('kb-content');
+  if (!el) return;
+  let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
+    <span style="font-size:12px;color:var(--muted)">${results.length} doc${results.length===1?'':'s'} match "${escHtml(q)}"</span>
+  </div>`;
+  html += results.length ? results.map(r => `<div class="tl-item" style="cursor:default">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt" style="width:100%">
+        <div class="ttl" style="cursor:pointer" onclick="openKbDoc('${escHtml(r.filename)}')">${escHtml(r.title)} <span style="color:var(--muted);font-weight:400">— ${r.match_count} match${r.match_count===1?'':'es'}</span></div>
+        ${r.matches.map(m => `<div class="sub" style="margin-top:6px">line ${m.line_no}</div>` + _kbPre(m.context)).join('')}
+      </div>
+    </div>`).join('') : '<div class="empty">No docs match that search.</div>';
+  el.innerHTML = html;
+}
+
+document.getElementById('kb-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchKb(); });
+
+// ══════════════════════════════════════════════════════════════════════════
 // Hub screens — ported from the live Hub at / (main.py): Listings, Products,
 // Brand Kit, Files, Connections, Security. Same API calls, same write
 // semantics (toggleListingState still confirm-gated), restyled to hub- CSS.
@@ -2051,6 +2172,7 @@ loadAll();
 loadActions();
 loadCalendar();
 loadConversations();
+loadKb();
 setInterval(loadAll, 30000);
 
 // ── Clock ──
