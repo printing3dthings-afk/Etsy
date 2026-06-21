@@ -4631,7 +4631,8 @@ async def post_snapshot(_token: str = Depends(_auth)):
 
 _ETSY_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing", "deactivate_listing")
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
-_STAGED_ACTION_TYPES = _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
+_SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
+_STAGED_ACTION_TYPES = _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES + _SCRIPT_STAGED_ACTION_TYPES
 
 
 def _validate_staged_action(a: dict) -> tuple[bool, str]:
@@ -4685,6 +4686,17 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
             ]
             if bad:
                 return False, f"extra_args {bad} are not allowed on a local command"
+    elif t == "run_script":
+        command = p.get("command")
+        if command not in _EXEC_COMMANDS:
+            return False, f"unknown command: {command}"
+        if not _EXEC_COMMANDS[command].get("requires_approval"):
+            return False, f"{command} does not require approval — run it directly from Workflows"
+        extra_args = (p.get("extra_args") or "").strip()
+        if extra_args:
+            bad = [pt for pt in extra_args.split() if any(f in pt.lower() for f in _FORBIDDEN_EXEC_FLAGS)]
+            if bad:
+                return False, f"extra_args {bad} are not allowed"
     return True, "ok"
 
 
@@ -4741,6 +4753,21 @@ async def _execute_local_staged_action(a: dict) -> dict:
     return result
 
 
+def _execute_script_staged_action(a: dict) -> dict:
+    """Run an approved run_script action via the SAME in-process subprocess
+    mechanism _EXEC_COMMANDS/execute_command already use — NOT the relay path
+    local_exec uses. These scripts live on this server's filesystem, not
+    Scott's machine. Logged to activity_log regardless of outcome."""
+    p = a.get("payload", {}) or {}
+    cmd_name = p["command"]
+    result = _run_exec_command(cmd_name, (p.get("extra_args") or "").strip())
+    db.log_activity(
+        "frank", "run_script", a.get("summary", ""), p,
+        outcome="ok" if result.get("success", True) else "error",
+    )
+    return result
+
+
 @app.get("/api/queue")
 async def get_queue(status: str = "pending", _token: str = Depends(_auth)):
     """List staged actions. status=pending (default) or 'all'."""
@@ -4762,6 +4789,7 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
         await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": f"gate failed: {msg}"})
         raise HTTPException(status_code=422, detail=f"quality gate failed: {msg}")
     is_local = a["type"] in _LOCAL_STAGED_ACTION_TYPES
+    is_script = a["type"] in _SCRIPT_STAGED_ACTION_TYPES
     if is_local:
         state = await asyncio.to_thread(db.get_relay_state)
         if state.get("killed"):
@@ -4769,6 +4797,11 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
     try:
         if is_local:
             result = await asyncio.wait_for(_execute_local_staged_action(a), timeout=45.0)
+        elif is_script:
+            cfg_timeout = _EXEC_COMMANDS.get(a.get("payload", {}).get("command"), {}).get("timeout", 60)
+            result = await asyncio.wait_for(
+                asyncio.to_thread(_execute_script_staged_action, a), timeout=cfg_timeout + 5.0
+            )
         else:
             result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
     except Exception as exc:
@@ -5047,6 +5080,46 @@ async def get_tools_list(_token: str = Depends(_auth)):
         for t in AGENT_TOOLS
     ]
     return {"tools": tools, "count": len(tools)}
+
+
+@app.get("/api/workflows")
+async def get_workflows(_token: str = Depends(_auth)):
+    """Runnable backend scripts for the Workflows screen — distinct from
+    /api/tools/list (Frank's chat capabilities). Same _EXEC_COMMANDS registry
+    execute_command already runs against."""
+    workflows = [
+        {
+            "id": k,
+            "name": k.replace("_", " ").title(),
+            "description": v["description"],
+            "requires_approval": v.get("requires_approval", False),
+            "long_running": v.get("long_running", False),
+        }
+        for k, v in _EXEC_COMMANDS.items()
+    ]
+    return {"workflows": workflows, "count": len(workflows)}
+
+
+@app.post("/api/workflows/{workflow_id}/run")
+async def post_workflow_run(workflow_id: str, body: dict | None = None, _token: str = Depends(_auth)):
+    """Run a workflow. Commands without requires_approval run immediately;
+    backup_digital_products (the one command with requires_approval) stages
+    through the same action_queue Action Center uses."""
+    if workflow_id not in _EXEC_COMMANDS:
+        raise HTTPException(status_code=404, detail=f"unknown workflow: {workflow_id}")
+    cfg = _EXEC_COMMANDS[workflow_id]
+    extra_args = ((body or {}).get("extra_args") or "").strip()
+    if extra_args:
+        bad = [p for p in extra_args.split() if any(f in p.lower() for f in _FORBIDDEN_EXEC_FLAGS)]
+        if bad:
+            raise HTTPException(status_code=400, detail=f"extra_args {bad} not allowed")
+    if cfg.get("requires_approval"):
+        payload = {"command": workflow_id, "extra_args": extra_args}
+        summary = f"Run {workflow_id.replace('_', ' ')}" + (f" {extra_args}" if extra_args else "")
+        aid = await asyncio.to_thread(db.enqueue_action, "run_script", summary, payload)
+        return {"staged": True, "action_id": aid, "status": "pending"}
+    result = await asyncio.to_thread(_run_exec_command, workflow_id, extra_args)
+    return {"staged": False, **result}
 
 
 @app.post("/api/relay/kill")

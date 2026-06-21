@@ -636,7 +636,13 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     </div>
   </div>
 
-  <div class="screen" id="screen-workflows"><div class="placeholder-screen"><div class="big">WORKFLOWS</div><div class="small">Runnable workflow list — each Run stages through the existing approval gate. Built in Step 2.</div></div></div>
+  <!-- ══════════ WORKFLOWS — real data: /api/workflows (live _EXEC_COMMANDS registry) ══════════ -->
+  <div class="screen" id="screen-workflows">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Workflows <span class="src">/api/workflows — runnable backend scripts, gated by the same approval queue as Action Center</span></div>
+      <div id="workflows-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
 
   <!-- ══════════ LISTINGS — real data: /api/listings, /api/shop-sections, /api/listings/{id}/files ══════════ -->
   <div class="screen" id="screen-listings">
@@ -771,6 +777,7 @@ function showScreen(name){
   if (name === 'memory') loadMemory();
   if (name === 'conversations') loadConversations();
   if (name === 'kb') loadKb();
+  if (name === 'workflows') loadWorkflows();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -1232,6 +1239,10 @@ function renderApproval(a) {
   else if (a.type === 'local_exec') {
     preview = `<div><strong>Run:</strong> <span style="font-family:monospace">${escHtml(p.command || '')}${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>`;
   }
+  else if (a.type === 'run_script') {
+    preview = `<div><strong>Run:</strong> <span style="font-family:monospace">python tools/${escHtml(p.command || '')}.py${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>` +
+      `<div class="sub" style="margin-top:4px">Script output isn't previewable before approval — it will run for real on approve.</div>`;
+  }
   return `<div class="act-card approval">
     <span class="act-sev approval">awaiting you</span>
     <div class="act-title">${escHtml(a.summary || a.type)}</div>
@@ -1246,7 +1257,8 @@ function renderApproval(a) {
 const _APPROVE_CONFIRM_MSGS = {
   local_write_file: 'Approve and write this file on your computer now?',
   local_delete: 'Approve and PERMANENTLY DELETE this file on your computer now?',
-  local_exec: 'Approve and run this command on your computer now?'
+  local_exec: 'Approve and run this command on your computer now?',
+  run_script: 'Approve and run this workflow script now?'
 };
 async function approveAction(id) {
   const act = (_pendingActions || []).find(x => x.id === id);
@@ -1521,6 +1533,79 @@ function updateMemoryWidget(d) {
   if (memEl) memEl.textContent = d.learnings_count;
   if (turnsEl) turnsEl.textContent = d.total_messages;
   drawMem(d.recent_session_sizes || []);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Workflows — real data: /api/workflows, live off the same _EXEC_COMMANDS
+// registry the execute_command chat tool already runs against. Most run
+// directly and show output inline; the one mutating command
+// (backup_digital_products) stages through the same action_queue Action
+// Center uses, via the run_script staged-action type. Static inventory —
+// loaded once at init, not on the 30s loadAll() poll.
+// ══════════════════════════════════════════════════════════════════════════
+async function loadWorkflows() {
+  const el = document.getElementById('workflows-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/workflows', 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderWorkflows(d.workflows || []);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadWorkflows()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderWorkflows(workflows) {
+  const el = document.getElementById('workflows-content');
+  if (!el) return;
+  if (!workflows.length) {
+    el.innerHTML = '<div class="empty">No workflows registered.</div>';
+    return;
+  }
+  el.innerHTML = workflows.map(w => {
+    const badge = w.requires_approval
+      ? '<span class="act-sev medium">needs approval</span>'
+      : (w.long_running ? '<span class="act-sev low">background</span>' : '<span class="act-sev approval">instant</span>');
+    return `<div class="act-card low">
+      ${badge}
+      <div class="act-title">${escHtml(w.name)}</div>
+      <div class="act-detail">${escHtml(w.description)}</div>
+      <div class="act-btns">
+        <button class="act-btn primary" onclick="runWorkflow('${escHtml(w.id)}', this)">▶ Run</button>
+      </div>
+      <div id="wf-result-${escHtml(w.id)}" style="margin-top:9px"></div>
+    </div>`;
+  }).join('');
+}
+
+async function runWorkflow(id, btn) {
+  if (!confirm('Run this workflow now?')) return;
+  const resultEl = document.getElementById('wf-result-' + id);
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+  if (resultEl) resultEl.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/workflows/'+id+'/run', {method:'POST',headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},body:'{}'}, 150000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (d.staged) {
+      if (resultEl) resultEl.innerHTML = `<div class="sub">Queued — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Action Center ›</a></div>`;
+      loadActions();
+    } else if (d.started) {
+      if (resultEl) resultEl.innerHTML = `<div class="sub">Started (PID ${escHtml(String(d.pid||''))}), running in background.</div>`;
+    } else {
+      const ok = d.success !== false;
+      if (resultEl) resultEl.innerHTML = `<div class="sub" style="color:${ok?'var(--green)':'var(--red)'}">${ok?'✅ Completed':'❌ Failed'} (exit ${escHtml(String(d.returncode))})</div>` +
+        (d.output ? `<pre style="margin-top:6px;max-height:220px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap">${escHtml(d.output)}</pre>` : '');
+    }
+  } catch(e) {
+    if (resultEl) resultEl.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to run')}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -2245,6 +2330,7 @@ loadCalendar();
 loadMemory();
 loadConversations();
 loadKb();
+loadWorkflows();
 setInterval(loadAll, 30000);
 
 // ── Clock ──
