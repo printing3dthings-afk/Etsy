@@ -32,6 +32,14 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FRANK">
+<meta name="theme-color" content="#070d16">
+<link rel="manifest" href="/frank-manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/static/icon-192.png">
 <title>FRANK — Command Center (mockup)</title>
 <style>
 :root{
@@ -745,6 +753,7 @@ function fitStage(){
 }
 window.addEventListener('resize', fitStage);
 fitStage();
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/frank-sw.js', { scope: '/frank' }).catch(()=>{}); }
 
 // ── Real data wiring (Step 2) — same bearer token + fetch pattern as the live
 // dashboard at /, injected into this template at request time. ──
@@ -761,6 +770,91 @@ function authGet(path, ms=15000){
 }
 function escHtml(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Voice: OpenAI TTS (speech-out) + Whisper (speech-in) — wired to the orb's
+// setSpeaking() and the mic/talk-pill click targets further down this file. ──
+let _ttsAudio = null;
+function speakText(text){
+  if(!text) return;
+  fetchWithTimeout(BASE+'/api/voice/speak', {
+    method:'POST',
+    headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+    body: JSON.stringify({text})
+  }, 20000).then(r=>{
+    if(!r.ok) throw new Error('speak failed: '+r.status);
+    return r.blob();
+  }).then(blob=>{
+    if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio = null; }
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    _ttsAudio = audio;
+    audio.onplay = () => setSpeaking(true);
+    audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+    audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+    audio.play().catch(()=>{ setSpeaking(false); });
+  }).catch(()=>{ setSpeaking(false); });
+}
+
+let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false;
+async function toggleVoiceCapture(){
+  if(_voiceRecording){
+    if(_voiceRecorder && _voiceRecorder.state !== 'inactive') _voiceRecorder.stop();
+    return;
+  }
+  if(_ttsAudio){ _ttsAudio.pause(); setSpeaking(false); }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  } catch(err){
+    addBubble('⚠️ Microphone access denied or unavailable', 'bot');
+    return;
+  }
+  _voiceChunks = [];
+  _voiceRecorder = new MediaRecorder(stream);
+  _voiceRecorder.ondataavailable = e => { if(e.data.size > 0) _voiceChunks.push(e.data); };
+  _voiceRecorder.onstop = () => {
+    stream.getTracks().forEach(t => t.stop());
+    _voiceRecording = false;
+    _setVoiceCaptureUI(false);
+    transcribeAndSend(new Blob(_voiceChunks, {type:'audio/webm'}));
+  };
+  _voiceRecorder.start();
+  _voiceRecording = true;
+  _setVoiceCaptureUI(true);
+}
+function _setVoiceCaptureUI(on){
+  const mic = document.getElementById('tap-speak');
+  const pill = document.getElementById('talk-pill');
+  if(mic) mic.classList.toggle('live', on);
+  if(pill) pill.classList.toggle('live', on);
+  const vwSubEl = document.getElementById('vw-sub-text');
+  const talkSubEl = document.getElementById('talk-sub');
+  if(vwSubEl) vwSubEl.textContent = on ? 'Listening…' : 'Tap to speak';
+  if(talkSubEl) talkSubEl.textContent = on ? 'Listening…' : 'tap to speak';
+}
+function transcribeAndSend(blob){
+  const vwSubEl = document.getElementById('vw-sub-text');
+  const talkSubEl = document.getElementById('talk-sub');
+  if(vwSubEl) vwSubEl.textContent = 'Transcribing…';
+  if(talkSubEl) talkSubEl.textContent = 'Transcribing…';
+  fetchWithTimeout(BASE+'/api/voice/transcribe', {
+    method:'POST',
+    headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'audio/webm'},
+    body: blob
+  }, 30000).then(r=>{
+    if(!r.ok) throw new Error('transcribe failed: '+r.status);
+    return r.json();
+  }).then(d=>{
+    if(vwSubEl) vwSubEl.textContent = 'Tap to speak';
+    if(talkSubEl) talkSubEl.textContent = 'tap to speak';
+    const text = (d.text||'').trim();
+    if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
+  }).catch(()=>{
+    if(vwSubEl) vwSubEl.textContent = 'Tap to speak';
+    if(talkSubEl) talkSubEl.textContent = 'tap to speak';
+    addBubble('⚠️ Could not transcribe audio', 'bot');
+  });
 }
 
 // ── Nav switching — also called directly by in-panel links like
@@ -836,7 +930,11 @@ function initWS() {
     } else if (d.type === 'chunk' && bot) {
       if (!bot.dataset.real) { bot.textContent = ''; bot.dataset.real = '1'; bot.classList.remove('typing'); }
       bot.textContent += d.content; scrollMsgs();
-    } else if (d.type === 'done') { _clearStreaming(); scrollMsgs(); }
+    } else if (d.type === 'done') {
+      const finalText = bot ? bot.textContent.trim() : '';
+      _clearStreaming(); scrollMsgs();
+      if (finalText) speakText(finalText);
+    }
     else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
   };
   ws.onerror = () => { _clearStreaming(); };
@@ -2422,10 +2520,10 @@ function setSpeaking(on){
   if(talkSub) talkSub.textContent = on ? 'Frank is speaking…' : 'tap to speak';
   if(micCircle) micCircle.classList.toggle('live', on);
 }
-canvas.addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
-if(micCircle) micCircle.addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
+canvas.addEventListener('click', toggleVoiceCapture);
+if(micCircle) micCircle.addEventListener('click', toggleVoiceCapture);
 const talkPillEl = document.getElementById('talk-pill');
-if(talkPillEl) talkPillEl.addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
+if(talkPillEl) talkPillEl.addEventListener('click', toggleVoiceCapture);
 
 // ── Memory Insights constellation — real per-session message-count sparkline,
 // fed by loadMemory() via updateMemoryWidget(). Canvas stays blank until real

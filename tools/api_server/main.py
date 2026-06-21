@@ -49,6 +49,7 @@ if _env.exists():
             os.environ.setdefault(_k.strip(), _v.strip())
 
 import anthropic
+import openai
 import db  # local persistence layer (tools/api_server/db.py)
 import seasonal_keywords  # noqa: E402
 import tax_compliance_tools  # noqa: E402
@@ -207,10 +208,11 @@ APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "").strip()
 if not APP_TOKEN:
     raise RuntimeError("APP_SECRET_TOKEN is not set — refusing to start with no auth token.")
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
+OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v44"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v45"  # bump on each deploy to confirm Railway is using latest code
 
-print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)}", flush=True)
+print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
 # ── App setup ──────────────────────────────────────────────────────────────────
 
@@ -3371,6 +3373,60 @@ def service_worker():
     )
 
 
+# FRANK gets its own manifest + service worker, scoped to /frank, so it installs as
+# its own standalone app distinct from the root Hub above. A second SW can't share
+# /sw.js (that's already registered at scope "/"), so it's served from a separate
+# path; Service-Worker-Allowed widens the registerable scope to /frank since the
+# script's own path (/frank-sw.js) isn't literally under /frank/.
+_FRANK_MANIFEST = {
+    "name": "FRANK Command Center",
+    "short_name": "FRANK",
+    "description": "FRANK — OnBrandCraftz CEO agent command center.",
+    "start_url": "/frank",
+    "scope": "/frank",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#070d16",
+    "theme_color": "#070d16",
+    "icons": [
+        {"src": "/static/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": "/static/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"},
+    ],
+}
+
+_FRANK_SW_JS = (
+    "const CACHE='obc-frank-shell-" + _BUILD_ID + "';\n"
+    "self.addEventListener('install',e=>self.skipWaiting());\n"
+    "self.addEventListener('activate',e=>e.waitUntil((async()=>{\n"
+    "  const keys=await caches.keys();\n"
+    "  await Promise.all(keys.filter(k=>k!==CACHE && k.startsWith('obc-frank-')).map(k=>caches.delete(k)));\n"
+    "  await self.clients.claim();\n"
+    "})()));\n"
+    "self.addEventListener('fetch',e=>{\n"
+    "  const req=e.request;\n"
+    "  if(req.method!=='GET') return;\n"
+    "  e.respondWith(fetch(req).then(r=>{\n"
+    "    if(req.mode==='navigate'){const cp=r.clone();caches.open(CACHE).then(c=>c.put('/frank',cp));}\n"
+    "    return r;\n"
+    "  }).catch(()=>caches.match(req).then(m=>m||caches.match('/frank'))));\n"
+    "});\n"
+)
+
+
+@app.get("/frank-manifest.webmanifest")
+def frank_manifest():
+    return JSONResponse(_FRANK_MANIFEST, media_type="application/manifest+json")
+
+
+@app.get("/frank-sw.js")
+def frank_service_worker():
+    return Response(
+        content=_FRANK_SW_JS,
+        media_type="application/javascript",
+        headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/frank"},
+    )
+
+
 # ── Health / Diagnostics ───────────────────────────────────────────────────────
 
 
@@ -5653,6 +5709,77 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
     # Exhausted the round-trip cap — close out gracefully.
     await websocket.send_text(json.dumps({"type": "done"}))
     return "".join(assistant_text_parts).strip()
+
+
+# ── Voice: OpenAI Whisper (speech-in) + OpenAI TTS (speech-out) ────────────────
+# REST, not an extension of /ws/chat's JSON-text protocol — audio is binary and
+# both operations are one-shot request/response, so the existing Bearer-auth REST
+# pattern (same _auth dependency every other /api/* route uses) is simpler and
+# lower-risk than adding binary framing to the chat socket.
+
+_VOICE_CONTENT_TYPE_EXT = {
+    "audio/webm": "webm",
+    "audio/mp4": "m4a",
+    "audio/x-m4a": "m4a",
+    "audio/wav": "wav",
+    "audio/x-wav": "wav",
+    "audio/mpeg": "mp3",
+    "audio/mp3": "mp3",
+}
+
+
+@app.post("/api/voice/transcribe")
+async def transcribe_voice(request: Request, _token: str = Depends(_auth)):
+    """Accepts a raw audio blob (Content-Type set by the client, e.g. audio/webm from
+    the browser's MediaRecorder, or audio/m4a from the native app) and returns its
+    transcript via OpenAI Whisper. Mirrors the raw-bytes body pattern already used by
+    /api/files/upload — no multipart parsing needed for a single blob."""
+    if not OPENAI_KEY:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY not configured")
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty audio body")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"audio exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+    content_type = request.headers.get("content-type", "audio/webm").split(";")[0].strip()
+    ext = _VOICE_CONTENT_TYPE_EXT.get(content_type, "webm")
+
+    def _do_transcribe() -> str:
+        client = openai.OpenAI(api_key=OPENAI_KEY)
+        buf = io.BytesIO(body)
+        buf.name = f"audio.{ext}"
+        result = client.audio.transcriptions.create(model="whisper-1", file=buf)
+        return result.text
+
+    try:
+        text = await asyncio.to_thread(_do_transcribe)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"transcription failed: {str(exc)[:200]}")
+    return {"text": text}
+
+
+@app.post("/api/voice/speak")
+async def speak_text(payload: dict, _token: str = Depends(_auth)):
+    """Accepts {"text": "..."} and returns MP3 audio bytes from OpenAI TTS — returned
+    as a direct audio/mpeg response body (not base64/JSON) so the client can feed it
+    straight into an <audio> element (web) or a Sound object (native)."""
+    if not OPENAI_KEY:
+        raise HTTPException(status_code=503, detail="OPENAI_API_KEY not configured")
+    text = (payload.get("text") or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="text is required")
+    text = text[:4000]  # OpenAI TTS input cap safeguard
+
+    def _do_speak() -> bytes:
+        client = openai.OpenAI(api_key=OPENAI_KEY)
+        resp = client.audio.speech.create(model="tts-1", voice="onyx", input=text)
+        return resp.read()
+
+    try:
+        audio_bytes = await asyncio.to_thread(_do_speak)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"speech synthesis failed: {str(exc)[:200]}")
+    return Response(content=audio_bytes, media_type="audio/mpeg")
 
 
 @app.websocket("/ws/chat")
