@@ -164,6 +164,19 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "timeout": 60,
         "long_running": False,
     },
+    # requires_approval=True: this is the one Workflows-screen command that writes
+    # a new file (a backup ZIP) rather than just reporting. It can't mutate Etsy or
+    # destroy anything live, but it still routes through the run_script staged-action
+    # type so that path gets exercised for real before any higher-risk script is
+    # ever added to it (see _SCRIPT_STAGED_ACTION_TYPES below).
+    "backup_digital_products": {
+        "script": "tools/backup_digital_products.py",
+        "args": ["--no-sync"],
+        "description": "Create a timestamped ZIP backup of digital_products/ (local only, no Etsy mutation)",
+        "timeout": 120,
+        "long_running": False,
+        "requires_approval": True,
+    },
 }
 
 # extra_args that would let a direct command run mutate live Etsy data bypass the
@@ -1147,6 +1160,44 @@ AGENT_TOOLS = [
 ]
 
 
+def _run_exec_command(cmd_name: str, extra_args: str = "") -> dict:
+    """Run a whitelisted _EXEC_COMMANDS entry. Shared by the execute_command chat
+    tool (direct, pre-approval) and _execute_script_staged_action (post-approval) —
+    one place to fix if the truncation length or long_running branch ever changes.
+    Caller is responsible for validating cmd_name/extra_args against
+    _EXEC_COMMANDS/_FORBIDDEN_EXEC_FLAGS before calling this."""
+    cfg = _EXEC_COMMANDS[cmd_name]
+    script = ROOT / cfg["script"]
+    cmd = [sys.executable, str(script)] + cfg.get("args", [])
+    if extra_args:
+        cmd.extend(extra_args.split())
+    if cfg.get("long_running"):
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            cwd=str(ROOT),
+        )
+        return {
+            "started": True,
+            "pid": proc.pid,
+            "command": cmd_name,
+            "description": cfg["description"],
+            "note": f"Running in background as PID {proc.pid}. Check the coloring_pages/ output folder when done.",
+        }
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=cfg.get("timeout", 60),
+        cwd=str(ROOT),
+    )
+    out = (result.stdout + "\n" + result.stderr).strip()
+    if len(out) > 2000:
+        out = out[:1900] + "\n…[output truncated]"
+    return {"returncode": result.returncode, "output": out, "success": result.returncode == 0}
+
+
 def _execute_agent_tool(name: str, tool_input: dict) -> dict:
     """Run a CEO-agent tool and return a JSON-serializable result. Read-only."""
     try:
@@ -1241,12 +1292,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             extra_args = ti.get("extra_args", "").strip()
             if cmd_name not in _EXEC_COMMANDS:
                 return {"error": f"Unknown command '{cmd_name}'. Available: {list(_EXEC_COMMANDS.keys())}"}
-            cfg = _EXEC_COMMANDS[cmd_name]
-            script = ROOT / cfg["script"]
-            cmd = [sys.executable, str(script)] + cfg.get("args", [])
             if extra_args:
-                parts = extra_args.split()
-                bad = [p for p in parts if any(f in p.lower() for f in _FORBIDDEN_EXEC_FLAGS)]
+                bad = [p for p in extra_args.split() if any(f in p.lower() for f in _FORBIDDEN_EXEC_FLAGS)]
                 if bad:
                     return {
                         "error": (
@@ -1254,33 +1301,7 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                             "through Scott's approval. Run the read-only check, then use stage_action."
                         )
                     }
-                cmd.extend(parts)
-            timeout = cfg.get("timeout", 60)
-            if cfg.get("long_running"):
-                proc = subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    cwd=str(ROOT),
-                )
-                return {
-                    "started": True,
-                    "pid": proc.pid,
-                    "command": cmd_name,
-                    "description": cfg["description"],
-                    "note": f"Running in background as PID {proc.pid}. Check the coloring_pages/ output folder when done.",
-                }
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                cwd=str(ROOT),
-            )
-            out = (result.stdout + "\n" + result.stderr).strip()
-            if len(out) > 2000:
-                out = out[:1900] + "\n…[output truncated]"
-            return {"returncode": result.returncode, "output": out, "success": result.returncode == 0}
+            return _run_exec_command(cmd_name, extra_args)
         if name == "local_speak":
             text = (tool_input or {}).get("text", "")
             db.log_activity("frank", "local_speak", text[:500], {"text": text}, outcome="ok")
