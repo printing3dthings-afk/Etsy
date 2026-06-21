@@ -677,6 +677,52 @@ async def get_kb_doc(filename: str, _token: str = Depends(_auth)):
     return {"filename": filename, "title": _kb_title(target, text), "content": text}
 
 
+# ── Memory — aggregate, read-only rollup across chat_messages, ceo_learnings.md, and
+# the knowledge base doc count. Not a fourth document/session browser — Conversations
+# and Knowledge Base already own that job; this is the summary neither of them shows. ──
+
+_CEO_LEARNING_RE = _re.compile(r"^- \*\*(\d{4}-\d{2}-\d{2})\*\* — (.+)$", _re.MULTILINE)
+
+
+def _ceo_learnings_entries() -> list[dict]:
+    """Parse every entry out of ceo_learnings.md, newest first. Mirrors the exact
+    format _append_ceo_learning() writes. Best-effort: a missing/malformed file
+    yields an empty list, never an error — this is a reporting surface, not a
+    source of truth."""
+    try:
+        text = _CEO_LEARNINGS_PATH.read_text()
+    except OSError:
+        return []
+    entries = [{"date": m.group(1), "note": m.group(2).strip()} for m in _CEO_LEARNING_RE.finditer(text)]
+    entries.reverse()  # file is append-only oldest-first; reverse for newest-first
+    return entries
+
+
+@app.get("/api/memory")
+async def get_memory(_token: str = Depends(_auth)):
+    sessions, kb_docs, learnings = await asyncio.gather(
+        asyncio.to_thread(db.list_chat_sessions),
+        asyncio.to_thread(_kb_docs),
+        asyncio.to_thread(_ceo_learnings_entries),
+    )
+    total_messages = sum(s["message_count"] for s in sessions)
+    started = [s["started_at"] for s in sessions if s.get("started_at")]
+    lasts = [s["last_at"] for s in sessions if s.get("last_at")]
+    # list_chat_sessions() already sorts most-recently-active first; take the most
+    # recent 14, then reverse to oldest→newest for a left-to-right sparkline.
+    recent_sizes = [s["message_count"] for s in sessions[:14]][::-1]
+    return {
+        "total_sessions": len(sessions),
+        "total_messages": total_messages,
+        "oldest_at": min(started) if started else None,
+        "newest_at": max(lasts) if lasts else None,
+        "kb_doc_count": len(kb_docs),
+        "learnings_count": len(learnings),
+        "learnings": learnings[:20],
+        "recent_session_sizes": recent_sizes,
+    }
+
+
 # ── CEO Agent system prompt ────────────────────────────────────────────────────
 
 _CEO_SYSTEM = """\

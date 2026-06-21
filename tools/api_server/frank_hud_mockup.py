@@ -411,7 +411,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-item" data-screen="calendar"><span class="ic">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
 
     <div class="nav-section">Knowledge</div>
-    <div class="nav-item" data-screen="memory"><span class="ic">✦</span>Memory</div>
+    <div class="nav-item" data-screen="memory"><span class="ic">✦</span>Memory<span class="nbadge" id="badge-memory" style="display:none">—</span></div>
     <div class="nav-item" data-screen="conversations"><span class="ic">💬</span>Conversations<span class="nbadge" id="badge-conversations" style="display:none">—</span></div>
     <div class="nav-item" data-screen="kb"><span class="ic">📚</span>Knowledge Base<span class="nbadge" id="badge-kb" style="display:none">—</span></div>
 
@@ -517,12 +517,12 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         </div>
 
         <div class="panel brk col-meminsights">
-          <div class="panel-title">Memory Insights <span class="lnk">View Memory Map ›</span></div>
+          <div class="panel-title">Memory Insights <span class="lnk" style="cursor:pointer" onclick="showScreen('memory')">View Memory Map ›</span></div>
           <div class="mem-row">
             <div class="mem-canvas-wrap"><canvas id="mem-canvas" width="220" height="90" style="width:100%;height:100%"></canvas></div>
             <div class="mem-stats">
-              <div class="mem-stat"><div class="n">—</div><div class="l">MEMORIES</div></div>
-              <div class="mem-stat"><div class="n">—</div><div class="l">SESSION TURNS</div></div>
+              <div class="mem-stat"><div class="n" id="mem-stat-memories">—</div><div class="l">MEMORIES</div></div>
+              <div class="mem-stat"><div class="n" id="mem-stat-turns">—</div><div class="l">SESSION TURNS</div></div>
               <div class="mem-stat"><div class="n">—</div><div class="l">TOOL CALLS</div></div>
             </div>
           </div>
@@ -599,7 +599,12 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <div id="calendar-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
     </div>
   </div>
-  <div class="screen" id="screen-memory"><div class="placeholder-screen"><div class="big">MEMORY</div><div class="small">Constellation of real chat_messages + log_learning + knowledge_base docs — counts from the DB, never invented. Built in Step 2.</div></div></div>
+  <div class="screen" id="screen-memory">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Memory <span class="src">/api/memory — chat history + logged learnings + knowledge base, rolled up</span></div>
+      <div id="memory-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
   <div class="screen" id="screen-conversations">
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Conversations <span class="src">/api/conversations — persisted chat_messages history</span></div>
@@ -763,6 +768,7 @@ function showScreen(name){
   if(el) el.classList.add('active');
   if (name === 'actions') loadActions();
   if (name === 'calendar') loadCalendar();
+  if (name === 'memory') loadMemory();
   if (name === 'conversations') loadConversations();
   if (name === 'kb') loadKb();
 }
@@ -1450,6 +1456,71 @@ function renderCalendarContent(d) {
   }
 
   el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Memory — real data: /api/memory — a single read-only rollup, not a third
+// document/session browser (Conversations owns session drill-down, Knowledge
+// Base owns the doc browser/search). Shows aggregate counts plus the one
+// thing with no UI anywhere else in the app: the CEO learnings log itself.
+// Also feeds the Command Center's "Memory Insights" preview widget from the
+// same payload — no second request needed.
+// ══════════════════════════════════════════════════════════════════════════
+async function loadMemory() {
+  const el = document.getElementById('memory-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/memory', 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderMemory(d);
+    const badge = document.getElementById('badge-memory');
+    if (badge) {
+      badge.textContent = d.learnings_count > 999 ? '999+' : d.learnings_count;
+      badge.style.display = d.learnings_count > 0 ? '' : 'none';
+    }
+    updateMemoryWidget(d);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadMemory()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderMemory(d) {
+  const el = document.getElementById('memory-content');
+  if (!el) return;
+  let html = '<div style="display:flex;gap:8px;margin-bottom:14px">' +
+    `<div class="metric" style="flex:1;text-align:center"><div class="value">${d.total_sessions}</div><div class="sub">Sessions</div></div>` +
+    `<div class="metric" style="flex:1;text-align:center"><div class="value">${d.total_messages}</div><div class="sub">Messages</div></div>` +
+    `<div class="metric" style="flex:1;text-align:center"><div class="value">${d.kb_doc_count}</div><div class="sub">KB Docs</div></div>` +
+    `<div class="metric" style="flex:1;text-align:center"><div class="value">${d.learnings_count}</div><div class="sub">Learnings logged</div></div>` +
+    '</div>';
+  const oldest = _timeAgo(d.oldest_at), newest = _timeAgo(d.newest_at);
+  html += `<div class="sub" style="margin-bottom:14px">` +
+    (d.total_sessions ? `History spans ${escHtml(oldest||'—')} to ${escHtml(newest||'just now')} — ` : '') +
+    `<a href="#" onclick="showScreen('conversations');return false" style="color:var(--cyan2)">view full history ›</a></div>`;
+  html += '<div class="section-title">🧠 What Frank has logged</div>';
+  if (!d.learnings.length) {
+    html += '<div class="empty">No durable insights logged yet — Frank appends a line here whenever a conversation surfaces a pattern worth remembering.</div>';
+  } else {
+    html += d.learnings.map(l => `<div class="tl-item">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt">
+        <div class="ttl">${escHtml(l.note)}</div>
+        <div class="sub">${escHtml(l.date)}</div>
+      </div>
+    </div>`).join('');
+  }
+  html += '<div class="section-title">📚 Knowledge Base</div>';
+  html += `<div class="empty" style="padding:14px 0"><a href="#" onclick="showScreen('kb');return false" style="color:var(--cyan2)">${d.kb_doc_count} doc${d.kb_doc_count===1?'':'s'} in the knowledge base ›</a></div>`;
+  el.innerHTML = html;
+}
+
+function updateMemoryWidget(d) {
+  const memEl = document.getElementById('mem-stat-memories');
+  const turnsEl = document.getElementById('mem-stat-turns');
+  if (memEl) memEl.textContent = d.learnings_count;
+  if (turnsEl) turnsEl.textContent = d.total_messages;
+  drawMem(d.recent_session_sizes || []);
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -2171,6 +2242,7 @@ function loadAll(){
 loadAll();
 loadActions();
 loadCalendar();
+loadMemory();
 loadConversations();
 loadKb();
 setInterval(loadAll, 30000);
@@ -2269,20 +2341,25 @@ if(micCircle) micCircle.addEventListener('click', ()=>{ setSpeaking(true); setTi
 const talkPillEl = document.getElementById('talk-pill');
 if(talkPillEl) talkPillEl.addEventListener('click', ()=>{ setSpeaking(true); setTimeout(()=>setSpeaking(false), 3000); });
 
-// ── Memory Insights constellation (placeholder line graph, real data wired in Step 2) ──
+// ── Memory Insights constellation — real per-session message-count sparkline,
+// fed by loadMemory() via updateMemoryWidget(). Canvas stays blank until real
+// data arrives — no fake/random chart is ever drawn. ──
 const mc = document.getElementById('mem-canvas');
 const mctx = mc.getContext('2d');
-const pts2 = [];
-for(let i=0;i<14;i++){ pts2.push({x: i*(220/13), y: 20+Math.sin(i*0.9)*18+Math.random()*8}); }
-function drawMem(){
+function drawMem(points){
   mctx.clearRect(0,0,220,90);
+  if (!points || !points.length) return;
+  const max = Math.max(...points, 1);
+  const pts = points.map((v,i) => ({
+    x: points.length > 1 ? i*(220/(points.length-1)) : 110,
+    y: 80 - (v/max)*70,
+  }));
   mctx.strokeStyle = 'rgba(58,214,255,0.35)'; mctx.lineWidth = 1;
   mctx.beginPath();
-  pts2.forEach((p,i)=>{ if(i===0) mctx.moveTo(p.x,p.y); else mctx.lineTo(p.x,p.y); });
+  pts.forEach((p,i)=>{ if(i===0) mctx.moveTo(p.x,p.y); else mctx.lineTo(p.x,p.y); });
   mctx.stroke();
-  pts2.forEach(p=>{ mctx.fillStyle='rgba(122,232,255,0.8)'; mctx.beginPath(); mctx.arc(p.x,p.y,2,0,Math.PI*2); mctx.fill(); });
+  pts.forEach(p=>{ mctx.fillStyle='rgba(122,232,255,0.8)'; mctx.beginPath(); mctx.arc(p.x,p.y,2,0,Math.PI*2); mctx.fill(); });
 }
-drawMem();
 </script>
 </body>
 </html>"""
