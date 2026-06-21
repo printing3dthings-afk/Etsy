@@ -36,7 +36,7 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <style>
 :root{
   --bg:#070d16;--panel:#0f1f30;--panel2:#13283d;--border:#1c3349;
-  --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--text:#e8edf2;--muted:#5d7891;
+  --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#5d7891;
   --green:#4caf82;--red:#e05555;--amber:#e0a83a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -351,6 +351,34 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
 .hub-posture-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
 .hub-posture-row:last-child{border-bottom:none}
+
+/* ── Action Center — ported from the live Hub's Action Center at / (main.py); the
+   approve/reject queue is the human-in-the-loop safety gate for Etsy writes and local
+   file/exec actions. Namespaced "act-" — new concept, no existing HUD equivalent. ── */
+.section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.act-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.act-card.high{border-left-color:var(--red)}
+.act-card.medium{border-left-color:var(--gold)}
+.act-card.low{border-left-color:#4a6b8a}
+.act-card.approval{border-left-color:var(--green);background:#13241c}
+.act-sev{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px}
+.act-sev.high{background:#2d1a1a;color:#e07070}
+.act-sev.medium{background:#2d2a1a;color:var(--gold2)}
+.act-sev.low{background:#1a2330;color:#7ba0c2}
+.act-sev.approval{background:#13241c;color:#5fcf9e;border:1px solid #2d5a44}
+.act-title{font-size:14px;font-weight:600;margin:7px 0 4px;line-height:1.35;color:var(--text)}
+.act-detail{font-size:12px;color:var(--muted);line-height:1.45}
+.act-sug{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.act-sug b{color:var(--gold2);font-weight:600}
+.act-btns{display:flex;gap:8px;margin-top:9px}
+.act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+.act-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.act-btn.approve{background:var(--green);color:#06140d;border-color:var(--green)}
+.act-btn.reject{color:#e08585;border-color:#5a2d2d}
+.metric{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.metric .value{font-size:24px;font-weight:700;color:var(--text)}
+.metric .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
 </style>
 </head>
 <body>
@@ -379,6 +407,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-item" data-screen="core"><span class="ic">◎</span>AI Core</div>
     <div class="nav-item" data-screen="agents"><span class="ic">⚙</span>Agents</div>
     <div class="nav-item" data-screen="tasks"><span class="ic">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="actions"><span class="ic">✓</span>Action Center<span class="nbadge" id="badge-actions" style="display:none">—</span></div>
     <div class="nav-item" data-screen="calendar"><span class="ic">▦</span>Calendar</div>
 
     <div class="nav-section">Knowledge</div>
@@ -546,6 +575,17 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     </div>
   </div>
 
+  <!-- ══════════ ACTION CENTER — real data: /api/queue + /api/actions — approve/reject gate ══════════ -->
+  <div class="screen" id="screen-actions">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Action Center <span class="src">/api/queue + /api/actions — approve/reject staged changes</span></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <button id="batch-tag-btn" onclick="batchStageTags(this)" style="flex:1;background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:center">⚡ Stage All Tag Fixes</button>
+      </div>
+      <div id="actions-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
   <div class="screen" id="screen-calendar"><div class="placeholder-screen"><div class="big">CALENDAR</div><div class="small">Combines todo due dates + CLAUDE.md's weekly/monthly/quarterly cadence + Seasonal Keyword Calendar. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-memory"><div class="placeholder-screen"><div class="big">MEMORY</div><div class="small">Constellation of real chat_messages + log_learning + knowledge_base docs — counts from the DB, never invented. Built in Step 2.</div></div></div>
   <div class="screen" id="screen-conversations"><div class="placeholder-screen"><div class="big">CONVERSATIONS</div><div class="small">Searchable chat_messages history. Built in Step 2.</div></div></div>
@@ -691,6 +731,7 @@ function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el = document.getElementById('screen-'+name);
   if(el) el.classList.add('active');
+  if (name === 'actions') loadActions();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -981,6 +1022,9 @@ async function loadQueue(){
         '<span class="feed-tag tip">PENDING</span></div>'
       ).join('') : '<div style="color:var(--muted);font-size:12px">No pending actions — queue is clear.</div>';
     }
+    // Keep the Action Center nav badge fresh on the 30s loop without re-rendering
+    // the Action Center screen itself (loadActions() is intentionally NOT in loadAll()).
+    setActionBadge(_actionsSummary, (d.actions||[]).length);
   }catch(e){
     if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Feed offline: '+escHtml(e.message)+'</div>';
   }
@@ -1046,6 +1090,220 @@ async function loadTools(){
     if(badge){ badge.textContent = d.count; badge.style.display = ''; }
   }catch(e){
     if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Tools offline: '+escHtml(e.message)+'</div>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Action Center — ported from the live Hub's Action Center at / (main.py).
+// The approve/reject queue is the human-in-the-loop safety gate for every Etsy
+// write and local file/exec action — every confirm()/alert() below IS that
+// gate and must never be removed. Same /api/queue + /api/actions endpoints,
+// zero backend changes.
+// ══════════════════════════════════════════════════════════════════════════
+let _actions = [];
+let _pendingActions = [];
+let _actionsSummary = {high:0,medium:0,low:0};
+let _actionFilter = null; // 'high' | 'medium' | 'low' | null (= all)
+function setActionBadge(summary, pending) {
+  const b = document.getElementById('badge-actions');
+  if (!b) return;
+  const n = ((summary && summary.high) || 0) + (pending || 0);  // urgent + awaiting approval
+  if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
+  else { b.style.display = 'none'; }
+}
+function simpleLineDiff(before, after) {
+  const b = String(before == null ? '' : before).split('\\n');
+  const a = String(after == null ? '' : after).split('\\n');
+  const max = Math.max(b.length, a.length);
+  let html = '';
+  for (let i = 0; i < max; i++) {
+    const bl = b[i], al = a[i];
+    if (bl === al) {
+      if (bl !== undefined) html += `<div style="color:var(--muted)">&nbsp;&nbsp;${escHtml(bl)}</div>`;
+    } else {
+      if (bl !== undefined) html += `<div style="color:var(--red)">-&nbsp;${escHtml(bl)}</div>`;
+      if (al !== undefined) html += `<div style="color:var(--green)">+&nbsp;${escHtml(al)}</div>`;
+    }
+  }
+  return html;
+}
+function renderApproval(a) {
+  const p = a.payload || {};
+  let preview = '';
+  if (a.type === 'update_title') preview = 'New title: ' + escHtml(p.title || '');
+  else if (a.type === 'update_tags') preview = 'New tags: ' + escHtml((p.tags || []).join(', '));
+  else if (a.type === 'publish_listing') {
+    const pv = p.preview || {};
+    preview = `<div style="display:flex;gap:10px;align-items:flex-start">` +
+      (pv.thumbnail_url
+        ? `<img class="hub-thumb" src="${escHtml(pv.thumbnail_url)}" loading="lazy" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+        : `<div class="hub-thumb-ph" style="width:70px;height:70px;flex-shrink:0">🏷️</div>`) +
+      `<div><div>Publish draft listing ${escHtml(String(p.listing_id || ''))}</div>` +
+      (pv.title ? `<div style="font-weight:600;margin-top:4px">${escHtml(pv.title)}</div>` : '') +
+      (pv.price != null ? `<div>$${escHtml(String(pv.price))} · ${(pv.tags || []).length} tags · ${pv.photo_count || 0} photos</div>` : '') +
+      (pv.error ? `<div style="color:var(--gold)">⚠️ Preview unavailable: ${escHtml(pv.error)}</div>` : '') +
+      `</div></div>`;
+  }
+  else if (a.type === 'local_write_file') {
+    const diffHtml = simpleLineDiff(p.before, p.after);
+    preview = `<div style="margin-bottom:6px"><strong>File:</strong> ${escHtml(p.path || '')}</div>` +
+      (p.before_existed === false ? `<div style="color:var(--gold);margin-bottom:6px">⚠️ File does not currently exist — this will create it.</div>` : '') +
+      `<div style="max-height:260px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:var(--muted)">No changes</span>'}</div>`;
+  }
+  else if (a.type === 'local_delete') {
+    preview = `<div style="color:var(--red)">⚠️ This will permanently delete:</div><div style="font-family:monospace;margin-top:4px">${escHtml(p.path || '')}</div>`;
+  }
+  else if (a.type === 'local_exec') {
+    preview = `<div><strong>Run:</strong> <span style="font-family:monospace">${escHtml(p.command || '')}${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>`;
+  }
+  return `<div class="act-card approval">
+    <span class="act-sev approval">awaiting you</span>
+    <div class="act-title">${escHtml(a.summary || a.type)}</div>
+    <div class="act-detail">${preview}</div>
+    <div class="act-btns">
+      <button class="act-btn approve" onclick="approveAction(${a.id})">Approve &amp; Apply</button>
+      ${a.type === 'publish_listing' ? `<button class="act-btn" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix Draft</button>` : ''}
+      <button class="act-btn reject" onclick="rejectAction(${a.id})">Reject</button>
+    </div>
+  </div>`;
+}
+const _APPROVE_CONFIRM_MSGS = {
+  local_write_file: 'Approve and write this file on your computer now?',
+  local_delete: 'Approve and PERMANENTLY DELETE this file on your computer now?',
+  local_exec: 'Approve and run this command on your computer now?'
+};
+async function approveAction(id) {
+  const act = (_pendingActions || []).find(x => x.id === id);
+  const msg = (act && _APPROVE_CONFIRM_MSGS[act.type]) || 'Approve and apply this change to your live Etsy listing now?';
+  if (!confirm(msg)) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/approve', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 50000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    loadActions();
+  } catch(e) { alert('Could not apply: ' + (e.message||e)); }
+}
+async function rejectAction(id) {
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/reject', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    if (!r.ok) { const d = await r.json().catch(()=>({})); throw new Error(d.detail||'HTTP '+r.status); }
+    loadActions();
+  } catch(e) { alert('Could not reject: ' + (e.message||e)); }
+}
+async function fixDraftStage(listingId, actionId, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Fixing…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/autofix/draft/'+listingId,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},120000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const n = d.staged_count||0;
+    btn.textContent = n > 0 ? n+' fix'+(n>1?'es':'')+' staged ✅' : '⚠️ No auto-fixes';
+    if (n > 0) { btn.style.background='var(--green)'; btn.style.color='#06140d'; }
+    const errNote = (d.errors&&d.errors.length) ? '\\n\\nErrors: '+d.errors.join(', ') : '';
+    alert('Staged '+n+' fix'+(n!==1?'es':'')+'.\\nApprove the new fixes in Action Center, then come back to approve Publish.'+errNote);
+    loadActions();
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Could not fix draft: '+(e.message||e));
+  }
+}
+async function loadActions() {
+  const el = document.getElementById('actions-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const [ar, qr] = await Promise.all([
+      authGet('/api/actions', 25000),
+      authGet('/api/queue?status=pending', 15000).catch(()=>null)
+    ]);
+    if (!ar.ok) { const e = await ar.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+ar.status); }
+    const d = await ar.json();
+    let pending = [];
+    if (qr && qr.ok) { const qd = await qr.json().catch(()=>({})); pending = qd.actions || []; }
+    _actions = d.actions || [];
+    _pendingActions = pending;
+    _actionsSummary = d.summary || {high:0,medium:0,low:0};
+    setActionBadge(_actionsSummary, pending.length);
+    renderActionsContent();
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function setActionFilter(sev) {
+  _actionFilter = (_actionFilter === sev) ? null : sev; // tap again to clear
+  renderActionsContent();
+}
+const _SEV_COLORS = {high:'var(--red)', medium:'var(--gold)', low:'#7ba0c2'};
+function renderActionsContent() {
+  const el = document.getElementById('actions-content');
+  if (!el) return;
+  const pending = _pendingActions || [];
+  const s = _actionsSummary || {high:0,medium:0,low:0};
+  let html = '';
+  if (pending.length) {
+    html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
+    html += pending.map(renderApproval).join('');
+  }
+  if (!_actions.length && !pending.length) { el.innerHTML = html || '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
+  const sevBtn = sev => {
+    const active = _actionFilter === sev;
+    const c = _SEV_COLORS[sev];
+    const style = active
+      ? `flex:1;text-align:center;padding:10px 6px;cursor:pointer;border-color:${c};background:${c}26`
+      : 'flex:1;text-align:center;padding:10px 6px;cursor:pointer';
+    return `<div class="metric" style="${style}" onclick="setActionFilter('${sev}')"><div class="value" style="color:${c};font-size:20px">${s[sev]||0}</div><div class="sub">${sev}${active?' ✓':''}</div></div>`;
+  };
+  html += `<div class="section-title">Flagged by scan${_actionFilter?` — showing ${_actionFilter} only`:''}</div><div style="display:flex;gap:8px;margin-bottom:14px">`+
+    sevBtn('high')+sevBtn('medium')+sevBtn('low')+
+    `</div>`;
+  const filtered = _actionFilter ? _actions.filter(a => a.severity === _actionFilter) : _actions;
+  if (!filtered.length) {
+    html += `<div class="empty">No ${escHtml(_actionFilter)} severity items.</div>`;
+  } else {
+    html += filtered.map(a => {
+      const i = _actions.indexOf(a);
+      return `
+      <div class="act-card ${escHtml(a.severity)}">
+        <span class="act-sev ${escHtml(a.severity)}">${escHtml(a.severity)}</span>
+        <div class="act-title">${escHtml(a.title)}</div>
+        <div class="act-detail">${escHtml(a.detail)}</div>
+        <div class="act-sug"><b>💡 Fix:</b> ${escHtml(a.suggestion)}</div>
+        <div class="act-btns">
+          <button class="act-btn primary" onclick="askActionFix(${i})">Ask CEO</button>
+          ${a.url ? `<a class="act-btn" href="${escHtml(a.url)}" target="_blank">Open on Etsy</a>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  el.innerHTML = html;
+}
+function askActionFix(i) {
+  const a = _actions[i];
+  if (!a) return;
+  showScreen('cmd');
+  const q = 'How should I fix this? ' + a.title + ' — ' + a.detail;
+  const inp = document.getElementById('chat-input');
+  inp.value = q;
+  sendMsg();
+}
+async function batchStageTags(btn) {
+  if (!confirm('Scan all active listings and stage tag fixes for every listing with fewer than 13 tags?\\n\\nThis may take up to 2 minutes. You review and approve each fix in this Action Center.')) return;
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Generating…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/batch/stage-tags', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 180000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const errNote = d.errors && d.errors.length ? `\n${d.errors.length} listing(s) had tag-length issues and were skipped.` : '';
+    alert('✅ ' + d.message + errNote);
+    loadActions();
+  } catch(e) {
+    alert('Error: ' + (e.name==='AbortError'?'Request timed out — the batch is still running server-side; check the Action Center in a moment':(e.message||e)));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
   }
 }
 
@@ -1524,6 +1782,7 @@ function loadAll(){
   loadRelayStatus();
 }
 loadAll();
+loadActions();
 setInterval(loadAll, 30000);
 
 // ── Clock ──
