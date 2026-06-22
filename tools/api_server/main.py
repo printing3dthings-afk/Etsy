@@ -1222,6 +1222,12 @@ AGENT_TOOLS = [
 ]
 
 
+# Tracks processes started via the long_running branch below
+# ({pid: (Popen, cmd_name, started_at)}) so the health-check loop can reap finished
+# ones instead of them silently becoming untracked orphans.
+_LONG_RUNNING_PROCS: dict[int, tuple[subprocess.Popen, str, datetime]] = {}
+
+
 def _run_exec_command(cmd_name: str, extra_args: str = "") -> dict:
     """Run a whitelisted _EXEC_COMMANDS entry. Shared by the execute_command chat
     tool (direct, pre-approval) and _execute_script_staged_action (post-approval) —
@@ -1240,6 +1246,7 @@ def _run_exec_command(cmd_name: str, extra_args: str = "") -> dict:
             stderr=subprocess.DEVNULL,
             cwd=str(ROOT),
         )
+        _LONG_RUNNING_PROCS[proc.pid] = (proc, cmd_name, datetime.now(timezone.utc))
         return {
             "started": True,
             "pid": proc.pid,
@@ -4132,11 +4139,59 @@ async def _quality_audit_loop() -> None:
         await asyncio.sleep(86_400)
 
 
+async def _health_check_loop() -> None:
+    """Every 5 minutes: confirm Etsy + Anthropic credentials are actually live (the
+    same checks /api/ping exposes manually, run here on a timer so a regression
+    surfaces in ops_runbook.md without anyone needing to remember to hit that URL),
+    and reap any long_running background processes (coloring page generation, etc.)
+    started via _run_exec_command so a finished/crashed child never sits untracked
+    forever in _LONG_RUNNING_PROCS."""
+    await asyncio.sleep(60)  # let the app finish booting first
+    while True:
+        try:
+            for pid, (proc, cmd_name, started_at) in list(_LONG_RUNNING_PROCS.items()):
+                if proc.poll() is not None:  # finished (crashed or completed)
+                    age_s = (datetime.now(timezone.utc) - started_at).total_seconds()
+                    print(
+                        f"[health-check] reaped {cmd_name} (pid {pid}, ran {age_s:.0f}s, "
+                        f"exit={proc.returncode})",
+                        flush=True,
+                    )
+                    del _LONG_RUNNING_PROCS[pid]
+
+            etsy_ok = True
+            etsy_detail = "ok"
+            try:
+                shop = await asyncio.to_thread(EtsyAPIClient().get_shop)
+                etsy_detail = f"ok — {shop.get('shop_name', '?')}"
+            except Exception as exc:
+                etsy_ok = False
+                etsy_detail = f"error: {str(exc)[:200]}"
+
+            anthropic_ok = bool(os.getenv("ANTHROPIC_API_KEY"))
+            all_ok = etsy_ok and anthropic_ok
+            detail = f"Etsy: {etsy_detail} | Anthropic key set: {anthropic_ok}"
+            db.set_agent_heartbeat("health_check", "Health Check", "ok" if all_ok else "error", detail[:300])
+            if not all_ok:
+                _append_ops_runbook_entry(
+                    "Automated health check failure",
+                    f"5-minute health loop detected a problem: {detail}",
+                )
+        except Exception as exc:
+            print(f"[health-check] loop iteration failed: {exc}", flush=True)
+            try:
+                db.set_agent_heartbeat("health_check", "Health Check", "error", str(exc)[:300])
+            except Exception:
+                pass
+        await asyncio.sleep(300)
+
+
 _AGENT_LOOP_LABELS = {
     "snapshot": "Snapshot",
     "suggestion_warmer": "Suggestion Warmer",
     "token_sync": "Token Sync",
     "quality_audit": "Quality Audit",
+    "health_check": "Health Check",
 }
 
 
@@ -4159,6 +4214,7 @@ async def _startup() -> None:
     asyncio.create_task(_warm_suggestions())
     asyncio.create_task(_token_sync_loop())
     asyncio.create_task(_quality_audit_loop())
+    asyncio.create_task(_health_check_loop())
 
 
 @app.get("/api/history")
@@ -5876,22 +5932,56 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
     """One user turn: stream text, run any tools the model requests, repeat until
     the model is done. Tool calls let the CEO agent read live shop data.
 
+    The Anthropic SDK's stream is a *blocking* iterator — reading it directly inside
+    this coroutine would tie up the whole shared asyncio event loop (every other
+    concurrent /ws/chat session, every background loop) for as long as a chunk takes
+    to arrive over the network. So the blocking read runs in a worker thread; chunks
+    cross back into the event loop via call_soon_threadsafe onto an asyncio.Queue,
+    bounded by a 90s per-chunk stall timeout so a frozen connection can't hang the
+    shared loop forever.
+
     Returns the assistant's full visible text for the turn (so the caller can
-    persist it to chat memory). Raises on a stream/API failure — the caller is
-    responsible for rolling back this turn's additions to `history`."""
+    persist it to chat memory). Raises on a stream/API failure or stall — the caller
+    is responsible for rolling back this turn's additions to `history`."""
     assistant_text_parts: list[str] = []
+    loop = asyncio.get_running_loop()
     for _ in range(6):  # safety cap on tool round-trips per turn
-        with ai_client.messages.stream(
-            model="claude-sonnet-4-6",
-            max_tokens=1500,
-            system=_CEO_SYSTEM + _ops_runbook_block() + _ceo_learnings_block(),
-            tools=AGENT_TOOLS,
-            messages=history,
-        ) as stream:
-            for chunk in stream.text_stream:
-                assistant_text_parts.append(chunk)
-                await websocket.send_text(json.dumps({"type": "chunk", "content": chunk}))
-            final = stream.get_final_message()
+        queue: asyncio.Queue = asyncio.Queue()
+
+        def _produce() -> None:
+            try:
+                with ai_client.messages.stream(
+                    model="claude-sonnet-4-6",
+                    max_tokens=1500,
+                    system=_CEO_SYSTEM + _ops_runbook_block() + _ceo_learnings_block(),
+                    tools=AGENT_TOOLS,
+                    messages=history,
+                ) as stream:
+                    for chunk in stream.text_stream:
+                        loop.call_soon_threadsafe(queue.put_nowait, ("chunk", chunk))
+                    final_msg = stream.get_final_message()
+                loop.call_soon_threadsafe(queue.put_nowait, ("done", final_msg))
+            except Exception as exc:  # surfaced to the consumer below, never swallowed
+                loop.call_soon_threadsafe(queue.put_nowait, ("error", exc))
+
+        producer = asyncio.create_task(asyncio.to_thread(_produce))
+        final = None
+        try:
+            while final is None:
+                kind, payload = await asyncio.wait_for(queue.get(), timeout=90)
+                if kind == "chunk":
+                    assistant_text_parts.append(payload)
+                    try:
+                        await websocket.send_text(json.dumps({"type": "chunk", "content": payload}))
+                    except Exception:
+                        pass  # best-effort; a flaky send shouldn't abort an otherwise-good stream
+                elif kind == "done":
+                    final = payload
+                elif kind == "error":
+                    raise payload
+        except asyncio.TimeoutError:
+            producer.cancel()  # can't kill the underlying thread, but stop awaiting it
+            raise TimeoutError("Frank's reply stalled (no response for 90s)") from None
 
         # Record the assistant turn (text + any tool_use blocks) verbatim.
         history.append({"role": "assistant", "content": final.content})

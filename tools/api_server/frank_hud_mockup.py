@@ -940,6 +940,24 @@ const CHAT_SESSION = (function(){
   }
   return s;
 })();
+// ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
+// Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
+// No write-queueing here by design — todos/approvals need a live connection. ──
+function cacheSet(key, data) {
+  try { localStorage.setItem('hudCache:'+key, JSON.stringify({data, ts: Date.now()})); } catch(e) {}
+}
+function cacheGet(key) {
+  try {
+    const raw = localStorage.getItem('hudCache:'+key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !('data' in parsed) || !parsed.ts) return null;
+    return parsed;
+  } catch(e) { return null; }
+}
+function _offlineNote(ts) {
+  return '<div style="color:var(--gold);font-size:10.5px;padding:4px 0">⚠ offline — showing data from '+_timeAgo(new Date(ts).toISOString())+'</div>';
+}
 function _clearStreaming(fallback) {
   const s = document.getElementById('bot-streaming');
   if (!s) return;
@@ -1048,6 +1066,7 @@ async function loadAgents(){
   try{
     const r = await authGet('/api/agents/status');
     const d = await r.json();
+    cacheSet('agents', d);
     const tiles = d.agents.map(renderAgentTile).join('');
     if(cmdGrid) cmdGrid.innerHTML = tiles;
     if(fullGrid) fullGrid.innerHTML = tiles;
@@ -1063,9 +1082,16 @@ async function loadAgents(){
       if(voiceDot) voiceDot.className = 'dotc' + state;
     }
   }catch(e){
-    const msg = '<div style="color:var(--red);font-size:11px;padding:8px">Agents offline: '+escHtml(e.message)+'</div>';
-    if(cmdGrid) cmdGrid.innerHTML = msg;
-    if(fullGrid) fullGrid.innerHTML = msg;
+    const cached = cacheGet('agents');
+    if(cached){
+      const tiles = _offlineNote(cached.ts) + cached.data.agents.map(renderAgentTile).join('');
+      if(cmdGrid) cmdGrid.innerHTML = tiles;
+      if(fullGrid) fullGrid.innerHTML = tiles;
+    } else {
+      const msg = '<div style="color:var(--red);font-size:11px;padding:8px">Agents offline: '+escHtml(e.message)+'</div>';
+      if(cmdGrid) cmdGrid.innerHTML = msg;
+      if(fullGrid) fullGrid.innerHTML = msg;
+    }
   }
 }
 
@@ -1163,6 +1189,27 @@ function _miniDelta(val, isMoney){
   var n=isMoney?('$'+Math.abs(val).toFixed(2)):String(Math.round(Math.abs(val)));
   return '<span style="color:'+c+'">'+a+' '+n+'</span>';
 }
+function _renderShopPerf(a, m, sparkEl, chipEl, offlineNote){
+  const tr = a.trends||{}, lt = a.latest||{}, del = a.delta||{};
+  if(sparkEl){
+    sparkEl.innerHTML = (offlineNote||'') +
+      '<div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div>'+
+        '<div class="ssc-valrow"><div class="ssc-val">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
+        '<div class="ssc-delta">'+_miniDelta(del.revenue_30d,true)+'</div></div>'+
+        '<div class="ssc-spark">'+_miniSpark(tr.revenue_30d,'var(--gold)')+'</div></div>'+
+      '<div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div>'+
+        '<div class="ssc-valrow"><div class="ssc-val">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
+        '<div class="ssc-delta">'+_miniDelta(del.orders_30d,false)+'</div></div>'+
+        '<div class="ssc-spark">'+_miniSpark(tr.orders_30d,'var(--cyan2)')+'</div></div>';
+  }
+  const allTimeRev = (m.orders && m.orders.all_time_revenue!=null) ? m.orders.all_time_revenue : null;
+  if(chipEl){
+    chipEl.innerHTML =
+      '<div class="shop-chip"><div class="nm">Listings</div><div class="v">'+(lt.active_listings!=null?lt.active_listings:'—')+'</div></div>'+
+      '<div class="shop-chip"><div class="nm">Total Sales</div><div class="v">'+(lt.total_sales!=null?lt.total_sales:'—')+'</div></div>'+
+      '<div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">'+(allTimeRev!=null?'$'+allTimeRev.toFixed(2):'—')+'</div></div>';
+  }
+}
 async function loadShopPerf(){
   const sparkEl = document.getElementById('shop-spark-row');
   const chipEl = document.getElementById('shop-chip-row');
@@ -1173,27 +1220,15 @@ async function loadShopPerf(){
     ]);
     const a = await ar.json();
     const m = await mr.json();
-    const tr = a.trends||{}, lt = a.latest||{}, del = a.delta||{};
-    if(sparkEl){
-      sparkEl.innerHTML =
-        '<div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div>'+
-          '<div class="ssc-valrow"><div class="ssc-val">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
-          '<div class="ssc-delta">'+_miniDelta(del.revenue_30d,true)+'</div></div>'+
-          '<div class="ssc-spark">'+_miniSpark(tr.revenue_30d,'var(--gold)')+'</div></div>'+
-        '<div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div>'+
-          '<div class="ssc-valrow"><div class="ssc-val">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
-          '<div class="ssc-delta">'+_miniDelta(del.orders_30d,false)+'</div></div>'+
-          '<div class="ssc-spark">'+_miniSpark(tr.orders_30d,'var(--cyan2)')+'</div></div>';
-    }
-    const allTimeRev = (m.orders && m.orders.all_time_revenue!=null) ? m.orders.all_time_revenue : null;
-    if(chipEl){
-      chipEl.innerHTML =
-        '<div class="shop-chip"><div class="nm">Listings</div><div class="v">'+(lt.active_listings!=null?lt.active_listings:'—')+'</div></div>'+
-        '<div class="shop-chip"><div class="nm">Total Sales</div><div class="v">'+(lt.total_sales!=null?lt.total_sales:'—')+'</div></div>'+
-        '<div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">'+(allTimeRev!=null?'$'+allTimeRev.toFixed(2):'—')+'</div></div>';
-    }
+    cacheSet('shopPerf', {a, m});
+    _renderShopPerf(a, m, sparkEl, chipEl, null);
   }catch(e){
-    if(sparkEl) sparkEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:4px">Shop data offline</div>';
+    const cached = cacheGet('shopPerf');
+    if(cached){
+      _renderShopPerf(cached.data.a, cached.data.m, sparkEl, chipEl, _offlineNote(cached.ts));
+    } else if(sparkEl){
+      sparkEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:4px">Shop data offline</div>';
+    }
   }
 }
 
@@ -1210,70 +1245,100 @@ function _timeAgo(iso){
 }
 
 // ── Live Intelligence Feed — real data from /api/queue (pending staged actions) ──
+function _renderQueue(d, list, offlineNote){
+  if(list){
+    const items = d.actions.slice(0, 6);
+    list.innerHTML = (offlineNote||'') + (items.length ? items.map(a=>
+      '<div class="feed-item"><div class="ftxt">'+escHtml(a.summary)+'<div class="t">'+_timeAgo(a.created_at)+'</div></div>'+
+      '<span class="feed-tag tip">PENDING</span></div>'
+    ).join('') : '<div style="color:var(--muted);font-size:12px">No pending actions — queue is clear.</div>');
+  }
+}
 async function loadQueue(){
   const list = document.getElementById('feed-list');
   try{
     const r = await authGet('/api/queue?status=pending');
     const d = await r.json();
-    if(list){
-      const items = d.actions.slice(0, 6);
-      list.innerHTML = items.length ? items.map(a=>
-        '<div class="feed-item"><div class="ftxt">'+escHtml(a.summary)+'<div class="t">'+_timeAgo(a.created_at)+'</div></div>'+
-        '<span class="feed-tag tip">PENDING</span></div>'
-      ).join('') : '<div style="color:var(--muted);font-size:12px">No pending actions — queue is clear.</div>';
-    }
+    cacheSet('queue', d);
+    _renderQueue(d, list, null);
     // Keep the Action Center nav badge fresh on the 30s loop without re-rendering
     // the Action Center screen itself (loadActions() is intentionally NOT in loadAll()).
     setActionBadge(_actionsSummary, (d.actions||[]).length);
   }catch(e){
-    if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Feed offline: '+escHtml(e.message)+'</div>';
+    const cached = cacheGet('queue');
+    if(cached){
+      _renderQueue(cached.data, list, _offlineNote(cached.ts));
+      setActionBadge(_actionsSummary, (cached.data.actions||[]).length);
+    } else if(list){
+      list.innerHTML = '<div style="color:var(--red);font-size:12px">Feed offline: '+escHtml(e.message)+'</div>';
+    }
   }
 }
 
 // ── Mission Timeline — real data from /api/todos (open tasks only, compact view) ──
+function _renderMissionTimeline(d, list, offlineNote){
+  if(list){
+    const open = d.todos.filter(t=>!t.done)
+      .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))
+      .slice(0, 6);
+    list.innerHTML = (offlineNote||'') + (open.length ? open.map(t=>{
+      const day = t.created_at ? new Date(t.created_at).toLocaleDateString(undefined,{weekday:'short'}).toUpperCase() : '—';
+      return '<div class="tl-item"><div class="tl-time">'+day+'</div><div class="tl-dotcol"><span class="d"></span></div>'+
+        '<div class="tl-txt"><div class="ttl">'+escHtml(t.text)+'</div>'+
+        '<div class="sub">added by '+escHtml(t.added_by||'scott')+'</div></div></div>';
+    }).join('') : '<div style="color:var(--muted);font-size:12px">All caught up — no open tasks.</div>');
+  }
+}
 async function loadMissionTimeline(){
   const list = document.getElementById('timeline-list');
   try{
     const r = await authGet('/api/todos');
     const d = await r.json();
-    if(list){
-      const open = d.todos.filter(t=>!t.done)
-        .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))
-        .slice(0, 6);
-      list.innerHTML = open.length ? open.map(t=>{
-        const day = t.created_at ? new Date(t.created_at).toLocaleDateString(undefined,{weekday:'short'}).toUpperCase() : '—';
-        return '<div class="tl-item"><div class="tl-time">'+day+'</div><div class="tl-dotcol"><span class="d"></span></div>'+
-          '<div class="tl-txt"><div class="ttl">'+escHtml(t.text)+'</div>'+
-          '<div class="sub">added by '+escHtml(t.added_by||'scott')+'</div></div></div>';
-      }).join('') : '<div style="color:var(--muted);font-size:12px">All caught up — no open tasks.</div>';
-    }
+    cacheSet('missionTimeline', d);
+    _renderMissionTimeline(d, list, null);
   }catch(e){
-    if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Timeline offline: '+escHtml(e.message)+'</div>';
+    const cached = cacheGet('missionTimeline');
+    if(cached){
+      _renderMissionTimeline(cached.data, list, _offlineNote(cached.ts));
+    } else if(list){
+      list.innerHTML = '<div style="color:var(--red);font-size:12px">Timeline offline: '+escHtml(e.message)+'</div>';
+    }
   }
 }
 
 // ── Tasks — real data from /api/todos ──
+function _renderTasks(d, list, offlineNote){
+  if(list){
+    list.innerHTML = (offlineNote||'') + (d.todos.length ? d.todos.map(t=>{
+      const done = !!t.done;
+      const overdue = !done && t.due_date && t.due_date < new Date().toISOString().slice(0,10);
+      const dueTxt = t.due_date ? ' · due '+escHtml(t.due_date)+(overdue?' ⚠':'') : '';
+      return '<div class="tl-item">'+
+        '<div class="tl-dotcol"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleHudTodo('+t.id+',this.checked)" style="width:13px;height:13px;margin-top:2px;accent-color:var(--gold)"></div>'+
+        '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':(overdue?' style="color:var(--red)"':''))+'>'+escHtml(t.text)+'</div>'+
+        '<div class="sub">added by '+escHtml(t.added_by||'scott')+dueTxt+'</div></div>'+
+        '<button onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>';
+    }).join('') : '<div style="color:var(--muted);font-size:12px">No tasks yet.</div>');
+  }
+}
 async function loadTasks(){
   const list = document.getElementById('tasks-list');
   try{
     const r = await authGet('/api/todos');
     const d = await r.json();
-    if(list){
-      list.innerHTML = d.todos.length ? d.todos.map(t=>{
-        const done = !!t.done;
-        const overdue = !done && t.due_date && t.due_date < new Date().toISOString().slice(0,10);
-        const dueTxt = t.due_date ? ' · due '+escHtml(t.due_date)+(overdue?' ⚠':'') : '';
-        return '<div class="tl-item">'+
-          '<div class="tl-dotcol"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleHudTodo('+t.id+',this.checked)" style="width:13px;height:13px;margin-top:2px;accent-color:var(--gold)"></div>'+
-          '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':(overdue?' style="color:var(--red)"':''))+'>'+escHtml(t.text)+'</div>'+
-          '<div class="sub">added by '+escHtml(t.added_by||'scott')+dueTxt+'</div></div>'+
-          '<button onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>';
-      }).join('') : '<div style="color:var(--muted);font-size:12px">No tasks yet.</div>';
-    }
+    cacheSet('tasks', d);
+    _renderTasks(d, list, null);
     const badge = document.getElementById('badge-tasks');
     if(badge){ badge.textContent = d.open_count; badge.style.display = d.open_count>0 ? '' : 'none'; }
   }catch(e){
-    if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Tasks offline: '+escHtml(e.message)+'</div>';
+    const cached = cacheGet('tasks');
+    if(cached){
+      _renderTasks(cached.data, list, _offlineNote(cached.ts));
+      const badge = document.getElementById('badge-tasks');
+      if(badge){ badge.textContent = cached.data.open_count; badge.style.display = cached.data.open_count>0 ? '' : 'none'; }
+    } else if(list){
+      list.innerHTML = '<div style="color:var(--red);font-size:12px">Tasks offline: '+escHtml(e.message)+'</div>';
+    }
   }
 }
 async function addHudTodo(){
@@ -1311,22 +1376,33 @@ async function deleteHudTodo(id){
 }
 
 // ── Tools & Skills — real data from /api/tools/list (live AGENT_TOOLS registry) ──
+function _renderTools(d, list, offlineNote){
+  if(list){
+    list.innerHTML = (offlineNote||'') + d.tools.map(t=>
+      '<div style="padding:10px 0;border-bottom:1px solid var(--border)">'+
+        '<div style="font-weight:600;font-size:12px;color:var(--text)">'+escHtml(t.name)+'</div>'+
+        '<div style="font-size:10.5px;color:var(--muted);margin-top:3px">'+escHtml(t.description)+'</div></div>'
+    ).join('');
+  }
+}
 async function loadTools(){
   const list = document.getElementById('tools-list');
   try{
     const r = await authGet('/api/tools/list');
     const d = await r.json();
-    if(list){
-      list.innerHTML = d.tools.map(t=>
-        '<div style="padding:10px 0;border-bottom:1px solid var(--border)">'+
-          '<div style="font-weight:600;font-size:12px;color:var(--text)">'+escHtml(t.name)+'</div>'+
-          '<div style="font-size:10.5px;color:var(--muted);margin-top:3px">'+escHtml(t.description)+'</div></div>'
-      ).join('');
-    }
+    cacheSet('tools', d);
+    _renderTools(d, list, null);
     const badge = document.getElementById('badge-tools');
     if(badge){ badge.textContent = d.count; badge.style.display = ''; }
   }catch(e){
-    if(list) list.innerHTML = '<div style="color:var(--red);font-size:12px">Tools offline: '+escHtml(e.message)+'</div>';
+    const cached = cacheGet('tools');
+    if(cached){
+      _renderTools(cached.data, list, _offlineNote(cached.ts));
+      const badge = document.getElementById('badge-tools');
+      if(badge){ badge.textContent = cached.data.count; badge.style.display = ''; }
+    } else if(list){
+      list.innerHTML = '<div style="color:var(--red);font-size:12px">Tools offline: '+escHtml(e.message)+'</div>';
+    }
   }
 }
 
