@@ -909,3 +909,26 @@ could cause a second crash-loop cycle.
 `/health` returns 200, all new security headers present (CSP, X-Frame-Options, HSTS, etc.), `/api/ws-ticket`
 now exists (403 without auth, not 404) — confirming the security-hardening work from earlier the same day is
 finally actually live, not just committed.
+
+---
+
+## 2026-06-22 — Voice in/out broken on live Frank: OpenAI account out of quota
+
+**Symptom:** Scott reported "voice communication is not working" in the Frank PWA on his phone.
+
+**Diagnosis:** Hit the live TTS endpoint directly —
+`POST /api/voice/speak {"text":"..."}` on the production URL returned HTTP 502 with body
+`speech synthesis failed: Error code: 429 - insufficient_quota` ("You exceeded your current quota,
+please check your plan and billing details"). Both voice endpoints depend on OpenAI
+(`/api/voice/speak` → OpenAI TTS `tts-1`; `/api/voice/transcribe` → Whisper `whisper-1`), so an
+account-level quota exhaustion takes out voice in AND out simultaneously. Same `429 insufficient_quota`
+was also observed when testing the new reject-with-reason photo auto-regeneration (gpt-image-1), confirming
+this is account-wide, not endpoint-specific.
+
+**Root cause:** The OpenAI account behind `OPENAI_API_KEY` has exceeded its quota / has a billing issue —
+NOT a code or deploy bug. `OPENAI=True` at startup (key is present and loaded); the key is simply rejected
+at spend time.
+
+**Fix:** Billing-side only — add credits / fix payment method at platform.openai.com → Settings → Billing.
+No redeploy needed; all OpenAI-backed features (voice TTS+Whisper, gpt-image-1 photo generation, the
+reject-fix photo loop) resume the moment the account has quota again.
