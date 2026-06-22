@@ -11,13 +11,17 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.onbrandcraftz.dashboard"
+      "bundleIdentifier": "com.onbrandcraftz.dashboard",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Frank uses the microphone so you can talk to it instead of typing."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#0D1B2A"
       },
-      "package": "com.onbrandcraftz.dashboard"
+      "package": "com.onbrandcraftz.dashboard",
+      "permissions": ["RECORD_AUDIO"]
     },
     "platforms": ["ios", "android"]
   }

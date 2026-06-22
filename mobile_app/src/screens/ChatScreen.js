@@ -12,8 +12,46 @@ import {
   Keyboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 import { WS_URL, APP_TOKEN } from '../config';
+import { api } from '../api';
 import { colors, spacing, radius, typography } from '../theme';
+
+// Mirrors frank_hud_mockup.py's speakText()/transcribeAndSend(): same two
+// REST endpoints, same Bearer auth, same "drop transcript into input + auto
+// send" behavior — just swapping MediaRecorder/Audio() for expo-av.
+async function speak(text) {
+  if (!text) return;
+  const res = await fetch(api.speakUrl, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${APP_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(`speak failed: ${res.status}`);
+  const blob = await res.blob();
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(String(reader.result).split(',')[1] ?? '');
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+  const path = `${FileSystem.cacheDirectory}frank-reply-${Date.now()}.mp3`;
+  await FileSystem.writeAsStringAsync(path, base64, { encoding: FileSystem.EncodingType.Base64 });
+  const { sound } = await Audio.Sound.createAsync({ uri: path }, { shouldPlay: true });
+  return sound;
+}
+
+async function transcribe(fileUri) {
+  const res = await FileSystem.uploadAsync(api.transcribeUrl, fileUri, {
+    httpMethod: 'POST',
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: { Authorization: `Bearer ${APP_TOKEN}`, 'Content-Type': 'audio/mp4' },
+  });
+  if (res.status < 200 || res.status >= 300) throw new Error(`transcribe failed: ${res.status}`);
+  const data = JSON.parse(res.body);
+  return (data.text || '').trim();
+}
 
 const SUGGESTIONS = [
   "What should I focus on today?",
@@ -52,10 +90,16 @@ export default function ChatScreen() {
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [wsError, setWsError] = useState('');
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   const wsRef = useRef(null);
   const listRef = useRef(null);
   const streamingIdxRef = useRef(-1);
+  const streamingTextRef = useRef('');
+  const soundRef = useRef(null);
+  const recordingRef = useRef(null);
 
   const scrollToBottom = () => {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
@@ -73,6 +117,7 @@ export default function ChatScreen() {
       const data = JSON.parse(event.data);
 
       if (data.type === 'chunk') {
+        streamingTextRef.current += data.content;
         setMessages((prev) => {
           const next = [...prev];
           const idx = streamingIdxRef.current;
@@ -86,6 +131,24 @@ export default function ChatScreen() {
         setIsStreaming(false);
         streamingIdxRef.current = -1;
         scrollToBottom();
+        const fullText = streamingTextRef.current;
+        streamingTextRef.current = '';
+        if (fullText) {
+          soundRef.current?.unloadAsync().catch(() => {});
+          setIsSpeaking(true);
+          speak(fullText)
+            .then((sound) => {
+              soundRef.current = sound;
+              if (sound) {
+                sound.setOnPlaybackStatusUpdate((status) => {
+                  if (status.didJustFinish) setIsSpeaking(false);
+                });
+              } else {
+                setIsSpeaking(false);
+              }
+            })
+            .catch(() => setIsSpeaking(false));
+        }
       } else if (data.type === 'error') {
         setIsStreaming(false);
         streamingIdxRef.current = -1;
@@ -102,21 +165,31 @@ export default function ChatScreen() {
 
   useEffect(() => {
     connectWS();
-    return () => wsRef.current?.close();
+    Audio.setAudioModeAsync({
+      allowsRecordingIOS: true,
+      playsInSilentModeIOS: true,
+    }).catch(() => {});
+    return () => {
+      wsRef.current?.close();
+      soundRef.current?.unloadAsync().catch(() => {});
+    };
   }, [connectWS]);
 
-  const send = useCallback(() => {
-    const text = input.trim();
+  const send = useCallback((overrideText) => {
+    const text = (overrideText ?? input).trim();
     if (!text || isStreaming) return;
 
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       connectWS();
-      setTimeout(() => send(), 500);
+      setTimeout(() => send(text), 500);
       return;
     }
 
     Keyboard.dismiss();
     setInput('');
+    streamingTextRef.current = '';
+    soundRef.current?.unloadAsync().catch(() => {});
+    setIsSpeaking(false);
 
     const userMsg = { role: 'user', content: text };
     const agentMsg = { role: 'assistant', content: '' };
@@ -135,6 +208,39 @@ export default function ChatScreen() {
   const useSuggestion = (text) => {
     setInput(text);
   };
+
+  const toggleVoiceCapture = useCallback(async () => {
+    if (isRecording) {
+      setIsRecording(false);
+      setIsTranscribing(true);
+      try {
+        await recordingRef.current?.stopAndUnloadAsync();
+        const uri = recordingRef.current?.getURI();
+        recordingRef.current = null;
+        if (uri) {
+          const text = await transcribe(uri);
+          if (text) send(text);
+        }
+      } catch {
+        // swallow — mirrors web's silent-fail-with-toast behavior
+      } finally {
+        setIsTranscribing(false);
+      }
+      return;
+    }
+
+    soundRef.current?.pauseAsync().catch(() => {});
+    setIsSpeaking(false);
+
+    const { status } = await Audio.requestPermissionsAsync();
+    if (status !== 'granted') return;
+
+    const { recording } = await Audio.Recording.createAsync(
+      Audio.RecordingOptionsPresets.HIGH_QUALITY
+    );
+    recordingRef.current = recording;
+    setIsRecording(true);
+  }, [isRecording, send]);
 
   const renderItem = ({ item, index }) => (
     <Bubble
@@ -159,7 +265,15 @@ export default function ChatScreen() {
           <View>
             <Text style={styles.headerTitle}>CEO Agent</Text>
             <Text style={styles.headerSub}>
-              {isStreaming ? 'Thinking…' : wsError || 'OnBrandCraftz HQ'}
+              {isTranscribing
+                ? 'Transcribing…'
+                : isRecording
+                ? 'Listening…'
+                : isSpeaking
+                ? 'Speaking…'
+                : isStreaming
+                ? 'Thinking…'
+                : wsError || 'OnBrandCraftz HQ'}
             </Text>
           </View>
           {isStreaming && (
@@ -205,6 +319,21 @@ export default function ChatScreen() {
           onSubmitEditing={send}
           editable={!isStreaming}
         />
+        <TouchableOpacity
+          style={[
+            styles.micBtn,
+            isRecording && styles.micBtnActive,
+            isTranscribing && styles.sendBtnDisabled,
+          ]}
+          onPress={toggleVoiceCapture}
+          disabled={isTranscribing}
+        >
+          {isTranscribing ? (
+            <ActivityIndicator color={colors.textPrimary} size="small" />
+          ) : (
+            <Text style={styles.micIcon}>{isRecording ? '■' : '🎤'}</Text>
+          )}
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.sendBtn, (!input.trim() || isStreaming) && styles.sendBtnDisabled]}
           onPress={send}
@@ -323,4 +452,14 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: { backgroundColor: colors.cardBorder },
   sendIcon: { color: '#0D1B2A', fontSize: 20, fontWeight: '700' },
+
+  micBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: colors.inputBg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  micBtnActive: { backgroundColor: '#B0413E', borderColor: '#B0413E' },
+  micIcon: { fontSize: 18, color: colors.textPrimary },
 });
