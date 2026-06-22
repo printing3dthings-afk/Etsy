@@ -1617,11 +1617,13 @@ def _extract_json_object(text: str) -> dict | list | None:
         return None
 
 
-def _generate_tags_for_listings(listings: list[dict]) -> list[dict]:
+def _generate_tags_for_listings(listings: list[dict], reason: str = "") -> list[dict]:
     """Call Claude once per batch-of-40 and return [{listing_id, tags:[13]}, ...].
 
     Uses a single structured prompt that outputs clean JSON — no streaming needed.
-    Falls back to an empty list if no API key is set."""
+    Falls back to an empty list if no API key is set. `reason` is optional human
+    feedback (e.g. a Scott reject reason) folded in as explicit corrective guidance —
+    only meaningful when called with a single listing (the reject-fix path)."""
     if not ANTHROPIC_KEY or not listings:
         return []
 
@@ -1639,6 +1641,11 @@ def _generate_tags_for_listings(listings: list[dict]) -> list[dict]:
                 f'PRICE:${round(l.get("price", 0), 2)} TAGS:[{ct}]'
             )
         prompt = _BATCH_TAG_PROMPT + "\n\nListings:\n" + "\n".join(rows)
+        if reason:
+            prompt += (
+                "\n\nREVIEWER REJECTED THE PREVIOUS TAG SET WITH THIS FEEDBACK — "
+                f"fix this specifically:\n{reason}"
+            )
 
         msg = client.messages.create(
             model="claude-sonnet-4-6",
@@ -4495,32 +4502,35 @@ async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
     return result
 
 
-@app.post("/api/autofix/tags/{listing_id}")
-async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
-    """Generate 13 correct tags for one listing and stage an update_tags action.
-
-    Calls Claude once for this specific listing, validates the tags through
-    the quality gate, then enqueues the action for Scott's one-tap approval.
-    Nothing touches Etsy until Scott taps Approve in the Action Center."""
-    if not ANTHROPIC_KEY:
-        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
-
+async def _fetch_listing_for_autofix(listing_id: int) -> dict:
+    """Shared Etsy fetch for the autofix helpers below — raises HTTPException
+    with an actionable message on any failure, never a bare 500."""
     def _fetch():
         return EtsyAPIClient().get_listing(listing_id)
 
     try:
-        listing = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
+        return await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout")
     except EtsyAPIError as exc:
-        # 404 = listing gone (e.g. expired and removed) — report it as such, not a
-        # generic upstream error, so the dashboard message is actionable.
         if getattr(exc, "status", None) == 404:
             raise HTTPException(status_code=404, detail=f"Listing {listing_id} not found on Etsy (it may be expired/deleted)")
         raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
     except Exception as exc:
-        # Any other fetch failure (network, JSON decode, etc.) — never a bare 500.
         raise HTTPException(status_code=502, detail=f"Could not fetch listing {listing_id}: {exc}")
+
+
+async def _autofix_tags_core(listing_id: int, listing: dict | None = None, reason: str = "") -> dict:
+    """Generate a fresh 13-tag set for one listing and stage an update_tags action.
+
+    `reason` is optional human feedback (a Scott reject reason) folded into the
+    prompt as explicit corrective guidance. Never raises — returns {"error": str}
+    on any failure so callers (an HTTP route or the reject-fix dispatcher) can
+    decide how to surface it."""
+    if not ANTHROPIC_KEY:
+        return {"error": "ANTHROPIC_API_KEY not configured", "listing_id": listing_id}
+    if listing is None:
+        listing = await _fetch_listing_for_autofix(listing_id)
 
     listing_data = {
         "listing_id": listing_id,
@@ -4528,17 +4538,15 @@ async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
         "price": _price_float(listing.get("price")),
         "tags": listing.get("tags", []),
     }
-
     try:
         tag_results = await asyncio.wait_for(
-            asyncio.to_thread(_generate_tags_for_listings, [listing_data]),
+            asyncio.to_thread(_generate_tags_for_listings, [listing_data], reason),
             timeout=60.0,
         )
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Tag generation failed: {exc}")
-
+        return {"error": f"Tag generation failed: {exc}", "listing_id": listing_id}
     if not tag_results:
-        raise HTTPException(status_code=502, detail="Tag generation returned no results")
+        return {"error": "Tag generation returned no results", "listing_id": listing_id}
 
     # Everything below is local work (string cleaning, validation, DB enqueue).
     # It must never surface as a bare HTTP 500 — wrap it so any failure comes back
@@ -4553,54 +4561,41 @@ async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
         candidate = {"type": "update_tags", "payload": {"listing_id": listing_id, "tags": tags}}
         ok, msg = _validate_staged_action(candidate)
         if not ok:
-            raise HTTPException(status_code=422, detail=f"Quality gate: {msg}")
+            return {"error": f"Quality gate: {msg}", "listing_id": listing_id}
 
         title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
-        summary = f"Auto tag fix ({len(tags)}/13): {title_short}"
+        prefix = "Reject-fix tag" if reason else "Auto tag fix"
+        summary = f"{prefix} ({len(tags)}/13): {title_short}"
         action_id = db.enqueue_action("update_tags", summary, {"listing_id": listing_id, "tags": tags})
-    except HTTPException:
-        raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Could not stage tag fix: {exc}")
+        return {"error": f"Could not stage tag fix: {exc}", "listing_id": listing_id}
 
     with _cache_lock:
         _cache.pop("actions", None)
 
-    return {"staged": True, "action_id": action_id, "tags": tags, "listing_id": listing_id}
+    return {"action_id": action_id, "tags": tags, "listing_id": listing_id}
 
 
-@app.post("/api/autofix/title/{listing_id}")
-async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
-    """Generate a corrected ≤70-char title and stage an update_title action.
-
-    Calls Claude once with the listing's full context, validates through the
-    quality gate (hard ≤70-char rule), then enqueues for Scott's approval.
-    Nothing touches Etsy until Scott taps Approve in the Action Center."""
+async def _autofix_title_core(listing_id: int, listing: dict | None = None, reason: str = "") -> dict:
+    """Generate a corrected ≤70-char title for one listing and stage an
+    update_title action. `reason` is optional human feedback (a Scott reject
+    reason) appended to the prompt as explicit corrective guidance. Never
+    raises — returns {"error": str} on any failure."""
     if not ANTHROPIC_KEY:
-        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
-
-    def _fetch():
-        return EtsyAPIClient().get_listing(listing_id)
-
-    try:
-        listing = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy API timeout")
-    except EtsyAPIError as exc:
-        if getattr(exc, "status", None) == 404:
-            raise HTTPException(status_code=404, detail=f"Listing {listing_id} not found on Etsy (it may be expired/deleted)")
-        raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Could not fetch listing {listing_id}: {exc}")
+        return {"error": "ANTHROPIC_API_KEY not configured", "listing_id": listing_id}
+    if listing is None:
+        listing = await _fetch_listing_for_autofix(listing_id)
 
     title = listing.get("title", "")
     tags = ", ".join(listing.get("tags", []))
     price = _price_float(listing.get("price"))
     desc = (listing.get("description", "") or "")[:500]
-
-    prompt = _TITLE_FIX_PROMPT.format(
-        title=title, price=f"{price:.2f}", tags=tags, desc=desc
-    )
+    prompt = _TITLE_FIX_PROMPT.format(title=title, price=f"{price:.2f}", tags=tags, desc=desc)
+    if reason:
+        prompt += (
+            "\n\nREVIEWER REJECTED THE PREVIOUS TITLE WITH THIS FEEDBACK — "
+            f"fix this specifically:\n{reason}"
+        )
 
     ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     try:
@@ -4615,30 +4610,54 @@ async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
             timeout=30.0,
         )
     except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Title generation timed out")
+        return {"error": "Title generation timed out", "listing_id": listing_id}
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Title generation failed: {exc}")
+        return {"error": f"Title generation failed: {exc}", "listing_id": listing_id}
 
-    # Local work (parse, validate, enqueue) — wrap so nothing leaks as a bare 500.
     try:
         new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
 
         candidate = {"type": "update_title", "payload": {"listing_id": listing_id, "title": new_title}}
         ok, msg = _validate_staged_action(candidate)
         if not ok:
-            raise HTTPException(status_code=422, detail=f"Quality gate: {msg}")
+            return {"error": f"Quality gate: {msg}", "listing_id": listing_id}
 
-        summary = f"Auto title fix: {new_title[:50]}"
+        prefix = "Reject-fix title" if reason else "Auto title fix"
+        summary = f"{prefix}: {new_title[:50]}"
         action_id = db.enqueue_action("update_title", summary, {"listing_id": listing_id, "title": new_title})
-    except HTTPException:
-        raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Could not stage title fix: {exc}")
+        return {"error": f"Could not stage title fix: {exc}", "listing_id": listing_id}
 
     with _cache_lock:
         _cache.pop("actions", None)
 
-    return {"staged": True, "action_id": action_id, "title": new_title, "listing_id": listing_id}
+    return {"action_id": action_id, "title": new_title, "listing_id": listing_id}
+
+
+@app.post("/api/autofix/tags/{listing_id}")
+async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
+    """Generate 13 correct tags for one listing and stage an update_tags action.
+
+    Calls Claude once for this specific listing, validates the tags through
+    the quality gate, then enqueues the action for Scott's one-tap approval.
+    Nothing touches Etsy until Scott taps Approve in the Action Center."""
+    result = await _autofix_tags_core(listing_id)
+    if "error" in result:
+        raise HTTPException(status_code=502, detail=result["error"])
+    return {"staged": True, **result}
+
+
+@app.post("/api/autofix/title/{listing_id}")
+async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
+    """Generate a corrected ≤70-char title and stage an update_title action.
+
+    Calls Claude once with the listing's full context, validates through the
+    quality gate (hard ≤70-char rule), then enqueues for Scott's approval.
+    Nothing touches Etsy until Scott taps Approve in the Action Center."""
+    result = await _autofix_title_core(listing_id)
+    if "error" in result:
+        raise HTTPException(status_code=502, detail=result["error"])
+    return {"staged": True, **result}
 
 
 @app.post("/api/autofix/draft/{listing_id}")
@@ -4649,90 +4668,26 @@ async def autofix_draft(listing_id: int, _token: str = Depends(_auth)):
     through the quality gate, and enqueues them as separate pending approvals.
     Nothing touches Etsy until Scott taps Approve on each fix. After approving
     the fixes, Scott can then approve the original publish_listing action."""
-    if not ANTHROPIC_KEY:
-        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
-
-    def _fetch():
-        return EtsyAPIClient().get_listing(listing_id)
-
-    try:
-        listing = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy API timeout")
-    except EtsyAPIError as exc:
-        raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+    listing = await _fetch_listing_for_autofix(listing_id)
 
     staged: list[dict] = []
     errors: list[str] = []
-    title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
 
-    # ── 1. Fix tags ────────────────────────────────────────────────────────────
-    listing_data = {
-        "listing_id": listing_id,
-        "title": listing.get("title", ""),
-        "price": _price_float(listing.get("price")),
-        "tags": listing.get("tags", []),
-    }
-    try:
-        tag_results = await asyncio.wait_for(
-            asyncio.to_thread(_generate_tags_for_listings, [listing_data]),
-            timeout=60.0,
-        )
-        if tag_results:
-            raw_tags = tag_results[0].get("tags", [])
-            tags = [_clean_tag(t) for t in raw_tags if str(t).strip()]
-            seen: set = set()
-            tags = [t for t in tags if t and not (t in seen or seen.add(t))]
-            candidate = {"type": "update_tags", "payload": {"listing_id": listing_id, "tags": tags}}
-            ok, msg = _validate_staged_action(candidate)
-            if ok:
-                aid = db.enqueue_action(
-                    "update_tags",
-                    f"Draft tag fix ({len(tags)}/13): {title_short}",
-                    {"listing_id": listing_id, "tags": tags},
-                )
-                staged.append({"type": "update_tags", "action_id": aid})
-            else:
-                errors.append(f"tags: {msg}")
-    except Exception as exc:
-        errors.append(f"tag gen failed: {str(exc)[:80]}")
+    tag_result = await _autofix_tags_core(listing_id, listing=listing)
+    if "error" in tag_result:
+        errors.append(f"tags: {tag_result['error']}")
+    else:
+        staged.append({"type": "update_tags", "action_id": tag_result["action_id"]})
 
-    # ── 2. Fix title ───────────────────────────────────────────────────────────
-    title = listing.get("title", "")
-    tags_str = ", ".join(listing.get("tags", []))
-    price = _price_float(listing.get("price"))
-    desc = (listing.get("description", "") or "")[:500]
-    prompt = _TITLE_FIX_PROMPT.format(title=title, price=f"{price:.2f}", tags=tags_str, desc=desc)
-
-    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
-    try:
-        response = await asyncio.wait_for(
-            asyncio.to_thread(
-                lambda: ai_client.messages.create(
-                    model="claude-sonnet-4-6",
-                    max_tokens=100,
-                    messages=[{"role": "user", "content": prompt}],
-                )
-            ),
-            timeout=30.0,
-        )
-        new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
-        candidate = {"type": "update_title", "payload": {"listing_id": listing_id, "title": new_title}}
-        ok, msg = _validate_staged_action(candidate)
-        if ok:
-            aid = db.enqueue_action(
-                "update_title",
-                f"Draft title fix: {new_title[:50]}",
-                {"listing_id": listing_id, "title": new_title},
-            )
-            staged.append({"type": "update_title", "action_id": aid, "title": new_title})
-        else:
-            errors.append(f"title: {msg}")
-    except Exception as exc:
-        errors.append(f"title gen failed: {str(exc)[:80]}")
-
-    with _cache_lock:
-        _cache.pop("actions", None)
+    title_result = await _autofix_title_core(listing_id, listing=listing)
+    if "error" in title_result:
+        errors.append(f"title: {title_result['error']}")
+    else:
+        staged.append({
+            "type": "update_title",
+            "action_id": title_result["action_id"],
+            "title": title_result["title"],
+        })
 
     return {
         "staged": staged,
@@ -4757,7 +4712,11 @@ async def post_snapshot(_token: str = Depends(_auth)):
 _ETSY_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing", "deactivate_listing")
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
 _SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
-_STAGED_ACTION_TYPES = _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES + _SCRIPT_STAGED_ACTION_TYPES
+_PHOTO_STAGED_ACTION_TYPES = ("listing_photo",)
+_STAGED_ACTION_TYPES = (
+    _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
+    + _SCRIPT_STAGED_ACTION_TYPES + _PHOTO_STAGED_ACTION_TYPES
+)
 
 
 def _validate_staged_action(a: dict) -> tuple[bool, str]:
@@ -4787,6 +4746,22 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
                     return False, "tags contain an empty value"
                 if len(tg) > 20:
                     return False, f"tag '{tg}' exceeds 20 characters"
+        return True, "ok"
+    if t in _PHOTO_STAGED_ACTION_TYPES:
+        if not p.get("listing_id"):
+            return False, "missing listing_id"
+        rank = p.get("rank")
+        if not isinstance(rank, int) or isinstance(rank, bool) or not (1 <= rank <= 10):
+            return False, "rank must be an integer 1-10"
+        path = (p.get("path") or "").strip()
+        if not path:
+            return False, "missing path"
+        try:
+            target = _resolve_in_root("staged_photos", path)
+        except HTTPException:
+            return False, f"path escapes the staged_photos root: {path}"
+        if not target.is_file():
+            return False, f"staged photo file not found: {path}"
         return True, "ok"
     # Local types — the real security boundary is the relay's own realpath check
     # at execution time (it's the only thing with Scott's actual filesystem to
@@ -4839,6 +4814,22 @@ def _execute_staged_action(a: dict) -> dict:
         res = client.update_listing(lid, {"state": "active"})
     elif t == "deactivate_listing":
         res = client.update_listing(lid, {"state": "inactive"})
+    elif t == "listing_photo":
+        abs_path = _resolve_in_root("staged_photos", p["path"])
+        if not abs_path.is_file():
+            raise FileNotFoundError(f"staged photo not found: {p['path']}")
+        img = client.upload_listing_image(lid, str(abs_path), rank=p.get("rank", 1))
+        with _cache_lock:
+            for k in ("listings_active", "listings_draft", "actions", "metrics"):
+                _cache.pop(k, None)
+        return {
+            "listing_id": lid,
+            "etsy": {
+                "listing_image_id": img.get("listing_image_id"),
+                "rank": img.get("rank"),
+                "url": img.get("url_570xN") or img.get("url_fullxfull"),
+            },
+        }
     else:
         raise ValueError(f"unsupported type {t}")
     with _cache_lock:
@@ -4937,14 +4928,171 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
 
 
 @app.post("/api/queue/{action_id}/reject")
-async def reject_action(action_id: int, _token: str = Depends(_auth)):
+async def reject_action(action_id: int, body: dict | None = None, _token: str = Depends(_auth)):
+    """Reject a pending action. If `body` carries a non-empty `reason`, kick off the
+    matching auto-fix in the background (fire-and-forget — the HTTP response doesn't
+    wait on it) so the corrected replacement shows up as a new pending row shortly after."""
     a = await asyncio.to_thread(db.get_action, action_id)
     if not a:
         raise HTTPException(status_code=404, detail="action not found")
     if a["status"] != "pending":
         raise HTTPException(status_code=409, detail=f"action already {a['status']}")
-    await asyncio.to_thread(db.set_action_status, action_id, "rejected")
-    return {"status": "rejected", "id": action_id}
+    reason = ((body or {}).get("reason") or "").strip()
+    await asyncio.to_thread(db.set_action_status, action_id, "rejected", {"reason": reason} if reason else None)
+    if reason:
+        asyncio.create_task(_dispatch_reject_fix(a, reason))
+    return {"status": "rejected", "id": action_id, "fix_started": bool(reason)}
+
+
+async def _dispatch_reject_fix(action: dict, reason: str) -> None:
+    """Best-effort auto-fix dispatcher run after a reject-with-reason. Never raises —
+    any failure is logged to activity_log so it's visible in the ops runbook / activity
+    feed instead of vanishing into a fire-and-forget task."""
+    t = action.get("type")
+    listing_id = (action.get("payload") or {}).get("listing_id")
+    try:
+        if t == "listing_photo":
+            await _refix_listing_photo(action, reason)
+        elif t == "update_title":
+            result = await _autofix_title_core(listing_id, reason=reason)
+            if "error" in result:
+                raise RuntimeError(result["error"])
+        elif t == "update_tags":
+            result = await _autofix_tags_core(listing_id, reason=reason)
+            if "error" in result:
+                raise RuntimeError(result["error"])
+        elif t == "publish_listing":
+            title_result = await _autofix_title_core(listing_id, reason=reason)
+            tags_result = await _autofix_tags_core(listing_id, reason=reason)
+            errors = [r["error"] for r in (title_result, tags_result) if "error" in r]
+            if errors:
+                raise RuntimeError("; ".join(errors))
+        else:
+            # local_write_file, local_delete, local_exec, run_script, deactivate_listing —
+            # no well-posed auto-retry from free-text feedback; the reason is already
+            # recorded on the rejected action above.
+            return
+        db.log_activity("frank", "reject_fix", f"{t} #{action.get('id')}: {reason}", action, outcome="ok")
+    except Exception as exc:
+        db.log_activity("frank", "reject_fix", f"{t} #{action.get('id')}: {reason}", action,
+                         outcome=f"error: {exc}")
+
+
+async def _refix_listing_photo(action: dict, reason: str) -> dict:
+    """Re-run generate_verified_photo() with the reject reason folded in as corrective
+    feedback, then re-stage the result as a fresh listing_photo action chained to the
+    original via fixes_action_id."""
+    from tools.listing_photo_pipeline import generate_verified_photo
+
+    p = action.get("payload") or {}
+    sku = p.get("sku") or "unknown"
+    physics = p.get("physics") or "sign_flat"
+    design_paths = p.get("design_paths") or []
+    scene_prompt = (p.get("scene_prompt") or "") + (
+        f"\n\nADDITIONAL FEEDBACK FROM REVIEWER:\n{reason}"
+    )
+
+    safe_sku = _re.sub(r"[^A-Za-z0-9_.-]", "_", sku)
+    out_dir = _FILE_ROOTS["staged_photos"] / safe_sku
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"photo_{uuid.uuid4().hex[:8]}.jpg"
+
+    result = await asyncio.to_thread(
+        generate_verified_photo, design_paths, scene_prompt, str(out_path), physics,
+    )
+    if not result.passed:
+        raise RuntimeError(f"regeneration failed verification: {result.issues}")
+
+    action_id = await _stage_photo_action(
+        listing_id=p.get("listing_id"),
+        rank=p.get("rank", 1),
+        sku=sku,
+        rel_path=f"{safe_sku}/{out_path.name}",
+        summary=f"Reject-fix photo: {action.get('summary', '')}",
+        physics=physics,
+        scene_prompt=p.get("scene_prompt") or "",
+        design_paths=design_paths,
+        fixes_action_id=action.get("id"),
+    )
+    return {"action_id": action_id}
+
+
+async def _stage_photo_action(
+    listing_id, rank: int, sku: str, rel_path: str, summary: str,
+    physics: str, scene_prompt: str, design_paths: list, fixes_action_id: int | None = None,
+) -> int:
+    """Validate and enqueue a listing_photo staged action. rel_path is relative to the
+    staged_photos root (e.g. 'P3D_SCULPTURAL_MESH_LAMP/photo_ab12cd34.jpg')."""
+    payload = {
+        "listing_id": listing_id,
+        "rank": rank,
+        "path": rel_path,
+        "sku": sku,
+        "physics": physics,
+        "scene_prompt": scene_prompt,
+        "design_paths": design_paths,
+    }
+    if fixes_action_id is not None:
+        payload["fixes_action_id"] = fixes_action_id
+    fake_action = {"type": "listing_photo", "payload": payload}
+    ok, msg = _validate_staged_action(fake_action)
+    if not ok:
+        raise ValueError(f"quality gate failed: {msg}")
+    return await asyncio.to_thread(db.enqueue_action, "listing_photo", summary, payload)
+
+
+@app.post("/api/queue/stage-photo")
+async def stage_photo(
+    request: Request,
+    listing_id: int,
+    rank: int,
+    sku: str,
+    summary: str = "",
+    physics: str = "sign_flat",
+    scene_prompt: str = "",
+    design_paths: str = "[]",
+    _token: str = Depends(_auth),
+):
+    """Stage a generated listing photo for Scott's approve/reject review. Body is the
+    raw image bytes; everything else is a query param (same convention as
+    /api/files/upload — this module has no multipart/UploadFile support).
+
+    design_paths is a JSON-encoded list of source file paths used to generate the photo
+    (kept on the action so a reject+reason can re-run generate_verified_photo() later
+    without re-deriving anything)."""
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty body")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+    try:
+        design_paths_list = json.loads(design_paths)
+        if not isinstance(design_paths_list, list):
+            raise ValueError
+    except (json.JSONDecodeError, ValueError):
+        raise HTTPException(status_code=400, detail="design_paths must be a JSON-encoded list")
+
+    safe_sku = _re.sub(r"[^A-Za-z0-9_.-]", "_", sku) or "unknown"
+    out_dir = _FILE_ROOTS["staged_photos"] / safe_sku
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"photo_{uuid.uuid4().hex[:8]}.jpg"
+    out_path.write_bytes(body)
+
+    try:
+        action_id = await _stage_photo_action(
+            listing_id=listing_id,
+            rank=rank,
+            sku=sku,
+            rel_path=f"{safe_sku}/{out_path.name}",
+            summary=summary or f"Staged photo for listing {listing_id} (rank {rank})",
+            physics=physics,
+            scene_prompt=scene_prompt,
+            design_paths=design_paths_list,
+        )
+    except ValueError as exc:
+        out_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=422, detail=str(exc))
+    return {"action_id": action_id, "path": f"{safe_sku}/{out_path.name}"}
 
 
 # ── Batch tag fix (one Claude call → staged approvals for every under-tagged listing) ─
@@ -5455,6 +5603,14 @@ if _vol_override:
 elif Path("/data").is_dir():
     _FILE_ROOTS["volume"] = Path("/data") / "files"
 
+# Staged listing photos awaiting Scott's approve/reject in the Action Center —
+# durable under the Railway volume when mounted (survives redeploys, same reason
+# "volume" exists above), else a local data/ dir for dev.
+_FILE_ROOTS["staged_photos"] = (
+    (_FILE_ROOTS["volume"] / "staged_photos") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "staged_photos")
+)
+
 
 def _human_size(n: int) -> str:
     size = float(n)
@@ -5535,7 +5691,10 @@ async def list_files(_token: str = Depends(_auth)):
                 entry["entries"] = _zip_entries(p)
             files.append(entry)
         files.sort(key=lambda f: f["modified"], reverse=True)
-        _labels = {"backups": "Backups", "volume": "Saved Files (persistent)", "products": "Product Files"}
+        _labels = {
+            "backups": "Backups", "volume": "Saved Files (persistent)", "products": "Product Files",
+            "staged_photos": "Staged Photos (pending approval)",
+        }
         groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
     # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so
     # nothing shows unless the files were produced/backed up on this same machine.

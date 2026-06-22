@@ -1309,49 +1309,102 @@ function simpleLineDiff(before, after) {
   }
   return html;
 }
-function renderApproval(a) {
+const _ACT_TYPE_GLYPH = {
+  update_title: '📝', update_tags: '🏷️', publish_listing: '🏷️', deactivate_listing: '⛔',
+  listing_photo: '🖼️', local_write_file: '📁', local_delete: '🗑️', local_exec: '⚙️', run_script: '⚙️'
+};
+function _actAgeStr(a) {
+  const t = a.staged_at || a.created_at || a.decided_at;
+  if (!t) return '';
+  const ms = Date.now() - new Date(t).getTime();
+  if (!isFinite(ms) || ms < 0) return '';
+  const mins = Math.round(ms / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.round(hrs / 24) + 'd ago';
+}
+function _actionPreviewHtml(a) {
   const p = a.payload || {};
-  let preview = '';
-  if (a.type === 'update_title') preview = 'New title: ' + escHtml(p.title || '');
-  else if (a.type === 'update_tags') preview = 'New tags: ' + escHtml((p.tags || []).join(', '));
-  else if (a.type === 'publish_listing') {
+  if (a.type === 'update_title') return 'New title: ' + escHtml(p.title || '');
+  if (a.type === 'update_tags') return 'New tags: ' + escHtml((p.tags || []).join(', '));
+  if (a.type === 'listing_photo') {
+    const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&token='+encodeURIComponent(TOKEN)+'&inline=1';
+    return `<img src="${url}" loading="lazy" style="max-width:260px;max-height:260px;border-radius:8px;display:block">` +
+      `<div style="margin-top:6px">Listing ${escHtml(String(p.listing_id||''))} · rank ${p.rank||''} · ${escHtml(p.sku||'')}</div>`;
+  }
+  if (a.type === 'publish_listing') {
     const pv = p.preview || {};
-    preview = `<div style="display:flex;gap:10px;align-items:flex-start">` +
+    return `<div style="display:flex;gap:10px;align-items:flex-start">` +
       (pv.thumbnail_url
-        ? `<img class="hub-thumb" src="${escHtml(pv.thumbnail_url)}" loading="lazy" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
-        : `<div class="hub-thumb-ph" style="width:70px;height:70px;flex-shrink:0">🏷️</div>`) +
+        ? `<img src="${escHtml(pv.thumbnail_url)}" loading="lazy" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+        : '') +
       `<div><div>Publish draft listing ${escHtml(String(p.listing_id || ''))}</div>` +
       (pv.title ? `<div style="font-weight:600;margin-top:4px">${escHtml(pv.title)}</div>` : '') +
       (pv.price != null ? `<div>$${escHtml(String(pv.price))} · ${(pv.tags || []).length} tags · ${pv.photo_count || 0} photos</div>` : '') +
       (pv.error ? `<div style="color:var(--gold)">⚠️ Preview unavailable: ${escHtml(pv.error)}</div>` : '') +
       `</div></div>`;
   }
-  else if (a.type === 'local_write_file') {
+  if (a.type === 'local_write_file') {
     const diffHtml = simpleLineDiff(p.before, p.after);
-    preview = `<div style="margin-bottom:6px"><strong>File:</strong> ${escHtml(p.path || '')}</div>` +
+    return `<div style="margin-bottom:6px"><strong>File:</strong> ${escHtml(p.path || '')}</div>` +
       (p.before_existed === false ? `<div style="color:var(--gold);margin-bottom:6px">⚠️ File does not currently exist — this will create it.</div>` : '') +
       `<div style="max-height:260px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:var(--muted)">No changes</span>'}</div>`;
   }
-  else if (a.type === 'local_delete') {
-    preview = `<div style="color:var(--red)">⚠️ This will permanently delete:</div><div style="font-family:monospace;margin-top:4px">${escHtml(p.path || '')}</div>`;
+  if (a.type === 'local_delete') {
+    return `<div style="color:var(--red)">⚠️ This will permanently delete:</div><div style="font-family:monospace;margin-top:4px">${escHtml(p.path || '')}</div>`;
   }
-  else if (a.type === 'local_exec') {
-    preview = `<div><strong>Run:</strong> <span style="font-family:monospace">${escHtml(p.command || '')}${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>`;
+  if (a.type === 'local_exec') {
+    return `<div><strong>Run:</strong> <span style="font-family:monospace">${escHtml(p.command || '')}${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>`;
   }
-  else if (a.type === 'run_script') {
-    preview = `<div><strong>Run:</strong> <span style="font-family:monospace">python tools/${escHtml(p.command || '')}.py${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>` +
+  if (a.type === 'run_script') {
+    return `<div><strong>Run:</strong> <span style="font-family:monospace">python tools/${escHtml(p.command || '')}.py${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>` +
       `<div class="sub" style="margin-top:4px">Script output isn't previewable before approval — it will run for real on approve.</div>`;
   }
-  return `<div class="act-card approval">
-    <span class="act-sev approval">awaiting you</span>
-    <div class="act-title">${escHtml(a.summary || a.type)}</div>
-    <div class="act-detail">${preview}</div>
-    <div class="act-btns">
-      <button class="act-btn approve" onclick="approveAction(${a.id})">Approve &amp; Apply</button>
-      ${a.type === 'publish_listing' ? `<button class="act-btn" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix Draft</button>` : ''}
-      <button class="act-btn reject" onclick="rejectAction(${a.id})">Reject</button>
+  return '';
+}
+function renderApproval(a) {
+  const p = a.payload || {};
+  let thumb;
+  if (a.type === 'listing_photo') {
+    const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&token='+encodeURIComponent(TOKEN)+'&inline=1';
+    thumb = `<img class="hub-thumb" src="${url}" loading="lazy">`;
+  } else if (a.type === 'publish_listing' && (p.preview || {}).thumbnail_url) {
+    thumb = `<img class="hub-thumb" src="${escHtml(p.preview.thumbnail_url)}" loading="lazy">`;
+  } else {
+    thumb = `<div class="hub-thumb-ph">${_ACT_TYPE_GLYPH[a.type] || '❓'}</div>`;
+  }
+  let meta = a.type.replace(/_/g, ' ');
+  const age = _actAgeStr(a);
+  if (age) meta += ' · ' + age;
+  if (a.type === 'listing_photo') meta += ` · ${escHtml(p.sku || '')} · rank ${p.rank || ''}`;
+  else if (a.type === 'publish_listing' && (p.preview || {}).price != null) {
+    meta += ` · $${escHtml(String(p.preview.price))} · ${(p.preview.tags || []).length} tags · ${p.preview.photo_count || 0} photos`;
+  } else if (a.type === 'update_title') meta += ` · "${escHtml(p.title || '')}"`;
+  else if (a.type === 'update_tags') meta += ` · ${escHtml((p.tags || []).join(', '))}`;
+  return `<div class="hub-listing-item" style="cursor:pointer" onclick="toggleActionDetail(${a.id})">
+    ${thumb}
+    <div class="hub-listing-info">
+      <div class="hub-listing-title">${escHtml(a.summary || a.type)}</div>
+      <div class="hub-listing-meta">${escHtml(meta)}</div>
     </div>
-  </div>`;
+    <div class="act-btns" style="flex-shrink:0" onclick="event.stopPropagation()">
+      <button class="act-btn approve" onclick="approveAction(${a.id})">Approve</button>
+      ${a.type === 'publish_listing' ? `<button class="act-btn" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix</button>` : ''}
+      <button class="act-btn reject" onclick="openRejectModal(${a.id})">Reject</button>
+    </div>
+  </div>
+  <div id="act-detail-${a.id}" class="hub-listing-detail" style="display:none"></div>
+  <div id="reject-modal-${a.id}" style="display:none"></div>`;
+}
+function toggleActionDetail(id) {
+  const panel = document.getElementById('act-detail-'+id);
+  if (!panel) return;
+  if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+  const a = (_pendingActions || []).find(x => x.id === id);
+  if (a) panel.innerHTML = _actionPreviewHtml(a);
+  panel.style.display = 'block';
 }
 const _APPROVE_CONFIRM_MSGS = {
   local_write_file: 'Approve and write this file on your computer now?',
@@ -1370,10 +1423,38 @@ async function approveAction(id) {
     loadActions();
   } catch(e) { alert('Could not apply: ' + (e.message||e)); }
 }
-async function rejectAction(id) {
+function openRejectModal(id) {
+  const panel = document.getElementById('reject-modal-'+id);
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  document.querySelectorAll('[id^="reject-modal-"]').forEach(el => el.style.display = 'none');
+  if (isOpen) return;
+  panel.innerHTML = `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+    <div class="hub-listing-meta" style="margin-bottom:6px">Why is this being rejected? A reason lets the right agent fix and re-stage it automatically.</div>
+    <textarea id="reject-reason-${id}" rows="2" placeholder="e.g. shade is too dark, brighten it"
+      style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-size:13px;font-family:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="act-btn reject" onclick="submitRejectReason(${id})">Submit &amp; Fix</button>
+      <button class="act-btn" onclick="document.getElementById('reject-modal-${id}').style.display='none'">Cancel</button>
+    </div>
+  </div>`;
+  panel.style.display = 'block';
+}
+async function submitRejectReason(id) {
+  const ta = document.getElementById('reject-reason-'+id);
+  const reason = (ta && ta.value || '').trim();
   try {
-    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/reject', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
-    if (!r.ok) { const d = await r.json().catch(()=>({})); throw new Error(d.detail||'HTTP '+r.status); }
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/reject', {
+      method: 'POST',
+      headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({reason})
+    }, 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (d.fix_started) {
+      const panel = document.getElementById('reject-modal-'+id);
+      if (panel) panel.innerHTML = '<div class="hub-listing-meta" style="padding:8px 0">🤖 Fixing — check back in a minute, the corrected version will appear as a new pending item.</div>';
+    }
     loadActions();
   } catch(e) { alert('Could not reject: ' + (e.message||e)); }
 }

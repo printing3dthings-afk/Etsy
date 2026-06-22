@@ -735,6 +735,7 @@ def generate_verified_photo(
     )
 
     corrections = ""
+    issues: list = []
     for attempt in range(1, max_attempts + 1):
         prompt = base_prompt + corrections
         print(f"  Attempt {attempt}/{max_attempts}: generating...")
@@ -751,6 +752,7 @@ def generate_verified_photo(
                 output_format="png",
             )
         except Exception as e:
+            issues = [f"generation error: {e}"]
             print(f"    generation error: {e}")
             continue
 

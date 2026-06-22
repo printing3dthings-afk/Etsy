@@ -32,3 +32,6 @@ hub_data/
 *.db
 *.db-wal
 *.db-shm
+
+# Staged photos pending Action Center approval (use Railway Volume in prod)
+data/staged_photos/
