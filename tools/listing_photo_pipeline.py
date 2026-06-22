@@ -98,9 +98,10 @@ PHYSICS = {
     "3d_print_lamp": (
         "an FDM 3D-printed lamp made from translucent PLA filament, lit from inside "
         "with a warm soft white LED glow that shines evenly through the shade walls. "
-        "The shade's exact surface pattern (faceted diamond-cut panels, organic mesh "
-        "cells, or coral-like texture — whichever pattern appears in the source photo) "
-        "must be preserved exactly, with no added or invented texture. The shade has a "
+        "Copy the shade's surface pattern pixel-for-pixel from the attached source "
+        "photo — do not substitute, simplify, smooth over, or swap in any other "
+        "surface pattern; render only the exact perforations/cells/facets visible in "
+        "that source image, with no added or invented texture. The shade has a "
         "matte, slightly frosted translucent finish — not glossy, not glass, not "
         "perfectly clear. Faint horizontal FDM layer lines are visible only when viewed "
         "close to the surface at a grazing angle. The lamp sits on its solid opaque "
