@@ -66,4 +66,8 @@ export const api = {
   // Voice
   speakUrl:       `${API_URL}/api/voice/speak`,
   transcribeUrl:  `${API_URL}/api/voice/transcribe`,
+
+  // Chat WS handshake — short-lived single-use ticket, since React Native's
+  // WebSocket implementation can't set a custom header on the handshake.
+  wsTicket: () => _post('/api/ws-ticket'),
 };

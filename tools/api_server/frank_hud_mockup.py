@@ -472,7 +472,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
             </div>
           </div>
           <div class="orb-state" id="orb-state">IDLE — slow ambient rotation</div>
-          <div class="orb-hint">click the orb (or Tap to Speak) to preview the audio-reactive "speaking" state</div>
+          <div class="orb-hint">click the orb (or the talk pill) to start talking to Frank</div>
         </div>
 
         <div class="panel brk col-feed">
@@ -824,19 +824,13 @@ async function toggleVoiceCapture(){
   _setVoiceCaptureUI(true);
 }
 function _setVoiceCaptureUI(on){
-  const mic = document.getElementById('tap-speak');
   const pill = document.getElementById('talk-pill');
-  if(mic) mic.classList.toggle('live', on);
   if(pill) pill.classList.toggle('live', on);
-  const vwSubEl = document.getElementById('vw-sub-text');
   const talkSubEl = document.getElementById('talk-sub');
-  if(vwSubEl) vwSubEl.textContent = on ? 'Listening…' : 'Tap to speak';
   if(talkSubEl) talkSubEl.textContent = on ? 'Listening…' : 'tap to speak';
 }
 function transcribeAndSend(blob){
-  const vwSubEl = document.getElementById('vw-sub-text');
   const talkSubEl = document.getElementById('talk-sub');
-  if(vwSubEl) vwSubEl.textContent = 'Transcribing…';
   if(talkSubEl) talkSubEl.textContent = 'Transcribing…';
   fetchWithTimeout(BASE+'/api/voice/transcribe', {
     method:'POST',
@@ -846,12 +840,10 @@ function transcribeAndSend(blob){
     if(!r.ok) throw new Error('transcribe failed: '+r.status);
     return r.json();
   }).then(d=>{
-    if(vwSubEl) vwSubEl.textContent = 'Tap to speak';
     if(talkSubEl) talkSubEl.textContent = 'tap to speak';
     const text = (d.text||'').trim();
     if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
   }).catch(()=>{
-    if(vwSubEl) vwSubEl.textContent = 'Tap to speak';
     if(talkSubEl) talkSubEl.textContent = 'tap to speak';
     addBubble('⚠️ Could not transcribe audio', 'bot');
   });
@@ -901,10 +893,19 @@ function _clearStreaming(fallback) {
   if (!s.textContent.trim() && fallback) s.textContent = fallback;
 }
 function _stopHeartbeat() { if (_wsHeartbeat) { clearInterval(_wsHeartbeat); _wsHeartbeat = null; } }
-function initWS() {
+async function initWS() {
   if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
   _wsManualClose = false;
-  ws = new WebSocket(WS_BASE + '/ws/chat?token=' + TOKEN + '&session=' + encodeURIComponent(CHAT_SESSION));
+  let ticket;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/ws-ticket', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 10000);
+    if (!r.ok) throw new Error('ticket request failed: '+r.status);
+    ticket = (await r.json()).ticket;
+  } catch(e) {
+    addBubble('⚠️ Could not start chat session — reload to retry', 'bot');
+    return;
+  }
+  ws = new WebSocket(WS_BASE + '/ws/chat?ticket=' + encodeURIComponent(ticket) + '&session=' + encodeURIComponent(CHAT_SESSION));
   ws.onopen = () => {
     wsReady = true; _wsRetries = 0;
     _stopHeartbeat();
@@ -2461,9 +2462,7 @@ for(let i=0;i<=N_LAT;i++){
 }
 let rot = 0, speaking = false, speakT = 0;
 const orbState = document.getElementById('orb-state');
-const vwSub = document.getElementById('vw-sub-text');
 const talkSub = document.getElementById('talk-sub');
-const micCircle = document.getElementById('tap-speak');
 
 function frame(){
   ctx.clearRect(0,0,W,H);
@@ -2515,13 +2514,10 @@ requestAnimationFrame(frame);
 
 function setSpeaking(on){
   speaking = on;
-  if(orbState) orbState.textContent = on ? 'SPEAKING — reacting to live TTS amplitude (demo)' : 'IDLE — slow ambient rotation';
-  if(vwSub) vwSub.textContent = on ? 'Speaking…' : 'Tap to speak';
+  if(orbState) orbState.textContent = on ? 'SPEAKING — reacting to live TTS amplitude' : 'IDLE — slow ambient rotation';
   if(talkSub) talkSub.textContent = on ? 'Frank is speaking…' : 'tap to speak';
-  if(micCircle) micCircle.classList.toggle('live', on);
 }
 canvas.addEventListener('click', toggleVoiceCapture);
-if(micCircle) micCircle.addEventListener('click', toggleVoiceCapture);
 const talkPillEl = document.getElementById('talk-pill');
 if(talkPillEl) talkPillEl.addEventListener('click', toggleVoiceCapture);
 

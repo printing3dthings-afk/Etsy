@@ -105,10 +105,18 @@ export default function ChatScreen() {
     setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50);
   };
 
-  const connectWS = useCallback(() => {
+  const connectWS = useCallback(async () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    const ws = new WebSocket(`${WS_URL}/ws/chat?token=${APP_TOKEN}`);
+    let ticket;
+    try {
+      ({ ticket } = await api.wsTicket());
+    } catch (e) {
+      setWsError('Connection error — check server URL in config.js');
+      return;
+    }
+
+    const ws = new WebSocket(`${WS_URL}/ws/chat?ticket=${encodeURIComponent(ticket)}`);
     wsRef.current = ws;
 
     ws.onopen = () => setWsError('');

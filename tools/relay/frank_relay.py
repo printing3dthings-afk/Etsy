@@ -330,8 +330,11 @@ def _read_system_stats() -> tuple[float | None, float | None]:
 
 async def _run_once() -> None:
     _refresh_allowed_roots(force=True)
-    url = f"{RELAY_URL}?token={APP_TOKEN}"
-    async with websockets.connect(url, ping_interval=20, ping_timeout=20) as ws:
+    # Unlike a browser/RN client, this is a plain Python websockets client, so it
+    # can set a real Authorization header on the handshake instead of putting the
+    # long-lived APP_TOKEN in the URL (where it'd land in server access logs).
+    headers = {"Authorization": f"Bearer {APP_TOKEN}"}
+    async with websockets.connect(RELAY_URL, additional_headers=headers, ping_interval=20, ping_timeout=20) as ws:
         print(f"[relay] connected to {RELAY_URL}", flush=True)
         await asyncio.gather(_receive_loop(ws), _heartbeat_loop(ws))
 

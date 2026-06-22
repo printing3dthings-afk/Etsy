@@ -94,6 +94,51 @@ PHYSICS = {
         "sticker designs are clearly legible, transparent areas between stickers reveal "
         "the cream surface beneath. A subtle drop shadow at each sheet edge."
     ),
+    # FDM 3D-printed translucent lamp shade (Crystal Glow / Sculptural Mesh / Geometric Glow)
+    "3d_print_lamp": (
+        "an FDM 3D-printed lamp made from translucent PLA filament, lit from inside "
+        "with a warm soft white LED glow that shines evenly through the shade walls. "
+        "The shade's exact surface pattern (faceted diamond-cut panels, organic mesh "
+        "cells, or coral-like texture — whichever pattern appears in the source photo) "
+        "must be preserved exactly, with no added or invented texture. The shade has a "
+        "matte, slightly frosted translucent finish — not glossy, not glass, not "
+        "perfectly clear. Faint horizontal FDM layer lines are visible only when viewed "
+        "close to the surface at a grazing angle. The lamp sits on its solid opaque "
+        "matte plastic base (the same base color and shape as the source photo), which "
+        "does not glow. No cracks, no warping, no support-material marks."
+    ),
+    # FDM 3D-printed vase (Ribbed Vase for Dried Flowers)
+    "3d_print_vase": (
+        "an FDM 3D-printed vase made from matte black PLA filament with continuous "
+        "vertical ribbing/fluting running the full height of the body, exactly as "
+        "shown in the source photo — never smooth, never glossy. The surface has a "
+        "uniform matte, slightly satin sheen typical of PLA, with faint horizontal FDM "
+        "layer lines visible only at a close grazing angle, not as a dominant texture. "
+        "The vase is opaque and fully solid-colored black with no gradients, prints, or "
+        "decals. Wall thickness and silhouette (bulbous body, narrower neck) match the "
+        "source exactly."
+    ),
+    # FDM 3D-printed small desk holder (Minimalist Pen Holder / tea light holders)
+    "3d_print_holder": (
+        "a small FDM 3D-printed holder made from matte PLA filament. The exterior "
+        "surface texture (organic pebbled cells, vertical fluting, or a corded/ribbed "
+        "ring pattern — whichever exact pattern appears in the source photo) must be "
+        "reproduced precisely, with no added or invented detail beyond what the source "
+        "shows. The plastic is fully opaque with a uniform matte finish — never glossy, "
+        "never transparent. Faint horizontal FDM layer lines are visible only at a "
+        "close grazing angle on edges. Color is flat and solid exactly matching the "
+        "source (no gradients, no printed graphics on the holder itself)."
+    ),
+    # FDM 3D-printed planter (Ribbed Planter Pot)
+    "3d_print_planter": (
+        "an FDM 3D-printed two-tone planter pot made from matte PLA filament: a cream/"
+        "white upper section (including its printed smiley-face detail exactly as shown "
+        "in the source photo) and a coral/red lower section standing on three short "
+        "stubby legs. Both color sections are flat, solid, matte PLA — never glossy, "
+        "never gradient-blended at the color seam. Faint horizontal FDM layer lines are "
+        "visible only at a close grazing angle. No soil or plant is inside the pot "
+        "unless the scene prompt explicitly adds one as a separate real-world prop."
+    ),
 }
 
 

@@ -218,13 +218,48 @@ print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool
 
 app = FastAPI(title="OnBrandCraftz Mobile API", version="1.0.0", docs_url=None, redoc_url=None)
 
+# allow_origins=["*"] + allow_credentials=True is actually a no-op/invalid combo per the
+# CORS spec for credentialed requests (browsers refuse to honor "*" once credentials are
+# involved) — so this also fixes correctness, not just exposure. Native app traffic sends
+# no browser Origin header at all, so tightening this list cannot break the mobile app.
+# The only legitimate cross-origin caller is the web UI itself (same-origin, BASE = location.origin).
+_RAILWAY_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip()
+_CORS_ALLOWED_ORIGINS = [
+    o for o in (
+        f"https://{_RAILWAY_DOMAIN}" if _RAILWAY_DOMAIN else None,
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://localhost:19006",
+    )
+    if o
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_CORS_ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE", "PUT"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+
+@app.middleware("http")
+async def _security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    # 'unsafe-inline' is required because _WEB_UI / frank_hud_mockup.py are single embedded
+    # HTML strings full of inline <script>/style= — a nonce-based strict CSP would require
+    # extracting all inline JS/CSS to separate files first, which is a larger follow-up,
+    # out of scope here. Even with 'unsafe-inline' this still blocks third-party
+    # script/iframe injection, clickjacking, and MIME-sniffing — real wins over zero headers.
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; "
+        "connect-src 'self' wss: https:; frame-ancestors 'none'; object-src 'none'"
+    )
+    return response
 
 # Serve PWA icons (pre-generated files committed to the repo — no runtime PIL).
 _STATIC_DIR = Path(__file__).parent / "static"
@@ -261,6 +296,31 @@ LOGIN_MAX_FAILS = 5
 LOGIN_WINDOW = 15 * 60                    # 15 minutes
 
 SESSION_COOKIE = "frank_session"
+
+# ── WS handshake tickets ────────────────────────────────────────────────────────
+#
+# Browser/React-Native WebSocket clients can't set a custom Authorization header on
+# the handshake — the query string is the only channel available — so embedding the
+# long-lived APP_TOKEN there leaks it into page source, browser history, and server
+# access logs. Instead, an authenticated REST call mints a short-lived, single-use
+# ticket that's spent immediately on the WS connect and then deleted.
+_ws_tickets: dict[str, float] = {}      # ticket -> expiry (epoch seconds)
+_ws_tickets_lock = threading.Lock()
+_WS_TICKET_TTL = 60                      # seconds
+
+
+def _new_ws_ticket() -> str:
+    ticket = secrets.token_urlsafe(32)
+    with _ws_tickets_lock:
+        _ws_tickets[ticket] = time.time() + _WS_TICKET_TTL
+    return ticket
+
+
+def _consume_ws_ticket(ticket: str) -> bool:
+    """Single-use: returns True and deletes the ticket iff it exists and hasn't expired."""
+    with _ws_tickets_lock:
+        expiry = _ws_tickets.pop(ticket, None)
+    return expiry is not None and time.time() <= expiry
 
 
 def _new_session() -> str:
@@ -2321,10 +2381,19 @@ function _clearStreaming(fallback) {
   if (!s.textContent.trim() && fallback) s.textContent = fallback;
 }
 function _stopHeartbeat() { if (_wsHeartbeat) { clearInterval(_wsHeartbeat); _wsHeartbeat = null; } }
-function initWS() {
+async function initWS() {
   if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
   _wsManualClose = false;
-  ws = new WebSocket(WS_BASE + '/ws/chat?token=' + TOKEN + '&session=' + encodeURIComponent(CHAT_SESSION));
+  let ticket;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/ws-ticket', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 10000);
+    if (!r.ok) throw new Error('ticket request failed: '+r.status);
+    ticket = (await r.json()).ticket;
+  } catch(e) {
+    addBubble('⚠️ Could not start chat session — reload to retry', 'bot');
+    return;
+  }
+  ws = new WebSocket(WS_BASE + '/ws/chat?ticket=' + encodeURIComponent(ticket) + '&session=' + encodeURIComponent(CHAT_SESSION));
   ws.onopen = () => {
     wsReady = true; _wsRetries = 0;
     // Heartbeat keeps the socket warm through mobile carrier/proxy idle timeouts
@@ -5582,6 +5651,15 @@ async def open_zip_entry(root: str, path: str, entry: str, token: str = "", inli
     )
 
 
+@app.post("/api/ws-ticket")
+async def post_ws_ticket(_token: str = Depends(_auth)):
+    """Mint a short-lived, single-use ticket for the /ws/chat handshake. Browser/RN
+    WebSocket clients can't send a Bearer header on connect, so this lets them prove
+    they hold the real APP_TOKEN (via this normal authenticated REST call) without
+    putting that long-lived secret in the WS URL itself."""
+    return {"ticket": _new_ws_ticket(), "ttl": _WS_TICKET_TTL}
+
+
 # ── WebSocket relay (Frank's local hands/ears process connects here) ───────────
 
 
@@ -5589,12 +5667,12 @@ async def open_zip_entry(root: str, path: str, entry: str, token: str = "", inli
 async def relay_ws(websocket: WebSocket):
     """The local relay process (tools/relay/frank_relay.py, running on Scott's own
     machine) connects here. This is a pure RPC executor for local_* tool calls —
-    it owns no conversation, unlike /ws/chat. Auth via the same ?token=<APP_TOKEN>
-    as /ws/chat (v1 limitation; a dedicated relay-only token is a planned
-    follow-up so the credential reaching Scott's computer isn't the same one
-    already in the mobile app's source)."""
+    it owns no conversation, unlike /ws/chat. Auth via the Authorization header
+    (the relay is a plain Python `websockets` client, so unlike a browser it can
+    actually set one — no need for the URL-query workaround /ws/chat requires)."""
     global _relay_ws
-    token = websocket.query_params.get("token", "")
+    auth_header = websocket.headers.get("authorization", "")
+    token = auth_header[7:] if auth_header.lower().startswith("bearer ") else ""
     if token != APP_TOKEN:
         await websocket.close(code=4001)
         return
@@ -5784,15 +5862,17 @@ async def speak_text(payload: dict, _token: str = Depends(_auth)):
 
 @app.websocket("/ws/chat")
 async def chat_ws(websocket: WebSocket):
-    """Streaming CEO agent chat with live-data tools. Auth via ?token= query param.
+    """Streaming CEO agent chat with live-data tools. Auth via a short-lived, single-use
+    ?ticket= minted by POST /api/ws-ticket (browser/RN WebSocket clients can't set a
+    Bearer header on the handshake, so the long-lived APP_TOKEN never goes in the URL).
 
     `?session=<id>` ties the connection to a persisted conversation. On connect
     the prior thread is loaded from SQLite, so Frank keeps full context across
     mobile socket drops and Railway restarts instead of starting amnesiac every
     time the WebSocket reconnects. A {"type":"ping"} from the client is answered
     with a pong to keep the socket warm through carrier/proxy idle timeouts."""
-    token = websocket.query_params.get("token", "")
-    if token != APP_TOKEN:
+    ticket = websocket.query_params.get("ticket", "")
+    if not ticket or not _consume_ws_ticket(ticket):
         await websocket.close(code=4001)
         return
 
