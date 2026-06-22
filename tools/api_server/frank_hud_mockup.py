@@ -775,6 +775,20 @@ function escHtml(s){
 // ── Voice: OpenAI TTS (speech-out) + Whisper (speech-in) — wired to the orb's
 // setSpeaking() and the mic/talk-pill click targets further down this file. ──
 let _ttsAudio = null;
+// Free fallback for when OpenAI TTS is unavailable (e.g. quota exhausted) — uses the
+// browser's own speechSynthesis, no API key, no cost. Works on iOS Safari/PWA (unlike
+// SpeechRecognition/listening, which is why only speaking gets a fallback, not the mic).
+function _speakWithBrowserFallback(text){
+  if(!('speechSynthesis' in window)){ setSpeaking(false); return; }
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.onstart = () => setSpeaking(true, true);
+    u.onend = () => setSpeaking(false, true);
+    u.onerror = () => setSpeaking(false, true);
+    window.speechSynthesis.speak(u);
+  } catch(err){ setSpeaking(false); }
+}
 function speakText(text){
   if(!text) return;
   fetchWithTimeout(BASE+'/api/voice/speak', {
@@ -792,8 +806,8 @@ function speakText(text){
     audio.onplay = () => setSpeaking(true);
     audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
     audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-    audio.play().catch(()=>{ setSpeaking(false); });
-  }).catch(()=>{ setSpeaking(false); });
+    audio.play().catch(()=>{ _speakWithBrowserFallback(text); });
+  }).catch(()=>{ _speakWithBrowserFallback(text); });
 }
 
 let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false;
@@ -2593,10 +2607,14 @@ function frame(){
 }
 requestAnimationFrame(frame);
 
-function setSpeaking(on){
+function setSpeaking(on, viaFallback){
   speaking = on;
-  if(orbState) orbState.textContent = on ? 'SPEAKING — reacting to live TTS amplitude' : 'IDLE — slow ambient rotation';
-  if(talkSub) talkSub.textContent = on ? 'Frank is speaking…' : 'tap to speak';
+  if(orbState) orbState.textContent = on
+    ? (viaFallback ? 'SPEAKING — free voice (OpenAI quota down)' : 'SPEAKING — reacting to live TTS amplitude')
+    : 'IDLE — slow ambient rotation';
+  if(talkSub) talkSub.textContent = on
+    ? (viaFallback ? 'Frank is speaking… (free voice)' : 'Frank is speaking…')
+    : 'tap to speak';
 }
 canvas.addEventListener('click', toggleVoiceCapture);
 const talkPillEl = document.getElementById('talk-pill');
