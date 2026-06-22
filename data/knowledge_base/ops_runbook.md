@@ -880,3 +880,32 @@ Daily listing_integrity_check found 44 FAIL / 24 WARN out of 172 listings audite
     ✗ [photo_count] Only 5 photos (want ≥8)
 
   [4509600086] DP1035, DP1064 — Tropical Leaves Print, Bold Monster
+
+## 2026-06-22 — Production crash-loop fixed (server had been stuck on stale code) + Railway token fix
+**Symptom:** Three consecutive deploys after the Part A/B security-hardening commits never went live —
+production kept serving an old build. Railway CLI auth also appeared broken (`railway whoami`/`railway
+status` failed with "Invalid RAILWAY_TOKEN" using Scott's new personal token).
+
+**Root cause 1 (Railway CLI auth):** Scott's token is an account-level personal token, not a project-scoped
+token. Railway CLI only accepts personal tokens via the `RAILWAY_API_TOKEN` env var — `RAILWAY_TOKEN` is for
+project-scoped tokens only, and silently produces a misleading "Invalid RAILWAY_TOKEN" instead of a
+wrong-token-type error. Confirmed valid by querying the GraphQL API directly (`query { me { email } }`)
+before touching the CLI var name. Fixed by renaming the `.env` key from `RAILWAY_TOKEN` to
+`RAILWAY_API_TOKEN`.
+
+**Root cause 2 (the actual production outage):** `tools/api_server/main.py` has imported `openai` since the
+voice-feature commit (`ec034aa`), but `Dockerfile`'s hand-picked `pip install` list was never updated to
+match — `requirements.txt` lists `openai` but is NOT what governs the Docker build (`railway.toml` uses
+`builder = "dockerfile"`, which ignores `requirements.txt` entirely). Every deploy since `ec034aa` crashed
+on `ModuleNotFoundError: No module named 'openai'` at startup, looped through all 10 restart attempts, failed
+health checks, and Railway kept serving the last build that had actually gone live — silently, with no
+error surfaced anywhere obvious. `PyPDF2` (used by `etsy_api.py`'s digital-file PDF validation) was also
+missing from the same list — found via an AST-based audit of all of `main.py`'s real dependencies before it
+could cause a second crash-loop cycle.
+
+**Fix:** added `"openai>=1.0.0"` and `"PyPDF2>=3.0.0"` to `Dockerfile`'s pip install (quoted to avoid the
+`PyPDF2>=3.0.0` → shell `2>` redirect parsing trap). Commit `4c3737d`, pushed to
+`claude/etsy-automation-agents-WFAPU`. Deploy `eb0abf50` succeeded and is now `RUNNING`; verified live:
+`/health` returns 200, all new security headers present (CSP, X-Frame-Options, HSTS, etc.), `/api/ws-ticket`
+now exists (403 without auth, not 404) — confirming the security-hardening work from earlier the same day is
+finally actually live, not just committed.
