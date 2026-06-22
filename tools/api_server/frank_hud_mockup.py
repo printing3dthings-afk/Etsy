@@ -811,6 +811,38 @@ function speakText(text){
 }
 
 let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false;
+// Free fallback for when OpenAI transcription is unavailable (e.g. quota exhausted).
+// SpeechRecognition needs LIVE mic audio — it can't transcribe a finished recording —
+// so it runs in parallel with the MediaRecorder for the same capture session, and its
+// transcript is only used if the Whisper call afterward fails or returns nothing.
+// Not available on iOS Safari/PWA (no webkitSpeechRecognition there) — degrades to the
+// existing "could not transcribe" message on those devices, same as before this change.
+let _speechRecognizer = null, _speechRecognitionText = '';
+function _startSpeechRecognitionFallback(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _speechRecognitionText = '';
+  if(!SR){ _speechRecognizer = null; return; }
+  try {
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.lang = 'en-US';
+    rec.onresult = (e) => {
+      for(let i = e.resultIndex; i < e.results.length; i++){
+        if(e.results[i].isFinal) _speechRecognitionText += e.results[i][0].transcript + ' ';
+      }
+    };
+    rec.onerror = () => {};
+    rec.start();
+    _speechRecognizer = rec;
+  } catch(err){ _speechRecognizer = null; }
+}
+function _stopSpeechRecognitionFallback(){
+  if(_speechRecognizer){
+    try { _speechRecognizer.stop(); } catch(err){}
+    _speechRecognizer = null;
+  }
+}
 async function toggleVoiceCapture(){
   if(_voiceRecording){
     if(_voiceRecorder && _voiceRecorder.state !== 'inactive') _voiceRecorder.stop();
@@ -831,9 +863,11 @@ async function toggleVoiceCapture(){
     stream.getTracks().forEach(t => t.stop());
     _voiceRecording = false;
     _setVoiceCaptureUI(false);
+    _stopSpeechRecognitionFallback();
     transcribeAndSend(new Blob(_voiceChunks, {type:'audio/webm'}));
   };
   _voiceRecorder.start();
+  _startSpeechRecognitionFallback();
   _voiceRecording = true;
   _setVoiceCaptureUI(true);
 }
@@ -842,6 +876,13 @@ function _setVoiceCaptureUI(on){
   if(pill) pill.classList.toggle('live', on);
   const talkSubEl = document.getElementById('talk-sub');
   if(talkSubEl) talkSubEl.textContent = on ? 'Listening…' : 'tap to speak';
+}
+function _useSpeechRecognitionFallbackText(){
+  const talkSubEl = document.getElementById('talk-sub');
+  if(talkSubEl) talkSubEl.textContent = 'tap to speak';
+  const text = _speechRecognitionText.trim();
+  if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
+  else { addBubble('⚠️ Could not transcribe audio', 'bot'); }
 }
 function transcribeAndSend(blob){
   const talkSubEl = document.getElementById('talk-sub');
@@ -857,9 +898,9 @@ function transcribeAndSend(blob){
     if(talkSubEl) talkSubEl.textContent = 'tap to speak';
     const text = (d.text||'').trim();
     if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
+    else { _useSpeechRecognitionFallbackText(); }
   }).catch(()=>{
-    if(talkSubEl) talkSubEl.textContent = 'tap to speak';
-    addBubble('⚠️ Could not transcribe audio', 'bot');
+    _useSpeechRecognitionFallbackText();
   });
 }
 
