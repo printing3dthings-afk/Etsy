@@ -1594,6 +1594,24 @@ def _clean_tag(tag: str) -> str:
     return tag
 
 
+def _friendly_error_message(exc: Exception) -> str:
+    """Turn a raw Anthropic/network exception into a short, human-readable message.
+    Never surface str(exc) directly to the dashboard or chat UI — a 2026-06-23
+    incident showed a raw 'credit balance is too low' API dump leaking into Frank's
+    chat bubble and the Suggestion Warmer widget. Callers should still log str(exc)
+    server-side for debugging."""
+    text = str(exc).lower()
+    if "credit balance" in text or "credit_balance" in text:
+        return "Frank's AI provider account is out of credits — let Scott know to top up Anthropic billing."
+    if "rate_limit" in text or "rate limit" in text or "429" in text:
+        return "Frank's AI is rate-limited right now — try again in a moment."
+    if "authentication" in text or "invalid x-api-key" in text or "401" in text:
+        return "Frank's AI provider rejected the API key — let Scott know to check the Anthropic credentials."
+    if "overloaded" in text or "529" in text:
+        return "Frank's AI provider is overloaded right now — try again shortly."
+    return "Something went wrong talking to the AI provider — try again shortly."
+
+
 def _extract_json_object(text: str) -> dict | list | None:
     """Pull a JSON object/array out of an LLM response that may have conversational
     preamble before a fenced code block (e.g. "Compiling the report now.\n\n```json\n{...}\n```").
@@ -4044,7 +4062,7 @@ async def _warm_suggestions() -> None:
             db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "ok", "CEO diagnostic cache primed")
         except Exception as exc:
             print(f"[warm] suggestions priming skipped: {exc}", flush=True)
-            db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "error", str(exc)[:300])
+            db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "error", _friendly_error_message(exc))
             await asyncio.sleep(120)  # back off, then retry
             continue
         await asyncio.sleep(_SUGGESTIONS_TTL - 120)  # refresh just before expiry
@@ -4369,7 +4387,8 @@ async def _compute_suggestions_inner() -> dict:
             detail="Anthropic took too long to respond. This usually self-resolves — tap Try Again.",
         )
     except anthropic.APIError as exc:
-        raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}")
+        print(f"[suggestions] Anthropic API error: {exc}", flush=True)
+        raise HTTPException(status_code=502, detail=_friendly_error_message(exc))
 
     final_text = "".join(getattr(b, "text", "") for b in response.content)
     parsed = _extract_json_object(final_text)
@@ -4540,7 +4559,8 @@ async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Diagnosis timed out — try again")
     except anthropic.APIError as exc:
-        raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}")
+        print(f"[conversion_doctor] Anthropic API error: {exc}", flush=True)
+        raise HTTPException(status_code=502, detail=_friendly_error_message(exc))
 
     text = "".join(getattr(b, "text", "") for b in response.content).strip()
     diagnosis = _extract_json_object(text)
@@ -6411,8 +6431,9 @@ async def chat_ws(websocket: WebSocket):
             try:
                 assistant_text = await _run_agent_turn(websocket, ai_client, history)
             except Exception as exc:
+                print(f"[chat] turn failed: {exc}", flush=True)
                 del history[base_len:]  # roll back this turn's additions
-                await websocket.send_text(json.dumps({"type": "error", "content": str(exc)}))
+                await websocket.send_text(json.dumps({"type": "error", "content": _friendly_error_message(exc)}))
                 continue
 
             # Persist only completed exchanges (text-only — see db.append_chat_message).

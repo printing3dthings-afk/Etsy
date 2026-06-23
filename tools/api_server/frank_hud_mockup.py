@@ -1142,15 +1142,6 @@ async function loadAgents(){
     if(fullGrid) fullGrid.innerHTML = tiles;
     const acAgents = document.getElementById('ac-agents');
     if(acAgents) acAgents.textContent = d.running_count + '/' + d.total_count + ' running';
-    const relay = d.agents.find(a=>a.name==='local_relay');
-    const voiceEl = document.getElementById('ac-voice');
-    const voiceDot = document.getElementById('ac-voice-dot');
-    if(relay && voiceEl){
-      const state = relay.status==='ok' ? '' : (relay.status==='error' ? ' err' : ' warn');
-      voiceEl.textContent = relay.status==='ok' ? 'Online' : (relay.status==='error' ? 'Killed' : 'Offline — not built yet');
-      voiceEl.className = 'v' + state;
-      if(voiceDot) voiceDot.className = 'dotc' + state;
-    }
   }catch(e){
     const cached = cacheGet('agents');
     if(cached){
@@ -1190,9 +1181,10 @@ async function loadRelayStatus(){
 
 // ── LLM Status + AI Core — real data from /api/credentials/status + /health ──
 async function loadCredentialsAndHealth(){
-  let cred = null, health = null;
+  let cred = null, health = null, mem = null;
   try{ const r = await authGet('/api/credentials/status'); cred = await r.json(); }catch(e){}
   try{ const r = await fetchWithTimeout(BASE+'/health', {}, 10000); health = await r.json(); }catch(e){}
+  try{ const r = await authGet('/api/memory'); mem = await r.json(); }catch(e){}
 
   const coreRows = [];
   if(cred){
@@ -1211,20 +1203,44 @@ async function loadCredentialsAndHealth(){
   }
   const acCore = document.getElementById('ac-core');
   const acSystem = document.getElementById('ac-system');
+  const voiceEl = document.getElementById('ac-voice');
+  const voiceDot = document.getElementById('ac-voice-dot');
   if(health){
     if(acCore){ acCore.textContent = 'Online · build '+escHtml(health.build||'?'); acCore.className='v'; }
     if(acSystem){
       acSystem.textContent = health.persistent ? 'Persistent storage' : 'Ephemeral (volume not attached)';
       acSystem.className = 'v'+(health.persistent?'':' warn');
     }
+    // Voice (mic capture + /api/voice/transcribe + /api/voice/speak) is a stateless
+    // feature of this same server — it has no dependency on the local relay, so it's
+    // "Online" whenever the server itself answers /health (mislabeled as relay-bound
+    // "not built yet" before 2026-06-23, see ops_runbook.md).
+    if(voiceEl){
+      voiceEl.textContent = 'Online';
+      voiceEl.className = 'v';
+      if(voiceDot) voiceDot.className = 'dotc';
+    }
     coreRows.unshift('<div class="core-row"><span class="lab"><span class="dotc"></span>Build</span><span class="v">'+escHtml(health.build||'?')+'</span></div>');
     coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+(health.persistent?'':' warn')+'"></span>Storage</span><span class="v'+(health.persistent?'':' warn')+'">'+(health.persistent?'Persistent volume attached':'Ephemeral — resets on redeploy')+'</span></div>');
-  } else if(acCore){
-    acCore.textContent = 'Offline'; acCore.className='v err';
+  } else {
+    if(acCore){ acCore.textContent = 'Offline'; acCore.className='v err'; }
+    if(voiceEl){
+      voiceEl.textContent = 'Offline';
+      voiceEl.className = 'v err';
+      if(voiceDot) voiceDot.className = 'dotc err';
+    }
   }
 
   const acMemory = document.getElementById('ac-memory');
-  if(acMemory){ acMemory.textContent = 'Not wired yet'; acMemory.className = 'v warn'; }
+  if(acMemory){
+    if(mem){
+      acMemory.textContent = mem.total_sessions + ' sessions · ' + mem.learnings_count + ' learnings';
+      acMemory.className = 'v';
+    } else {
+      acMemory.textContent = 'Unavailable';
+      acMemory.className = 'v warn';
+    }
+  }
 
   const coreDetail = document.getElementById('core-detail');
   if(coreDetail){

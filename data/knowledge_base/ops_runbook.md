@@ -932,3 +932,41 @@ at spend time.
 **Fix:** Billing-side only — add credits / fix payment method at platform.openai.com → Settings → Billing.
 No redeploy needed; all OpenAI-backed features (voice TTS+Whisper, gpt-image-1 photo generation, the
 reject-fix photo loop) resume the moment the account has quota again.
+
+---
+
+## 2026-06-23 — Raw Anthropic error text leaking to users + 2 mislabeled "AI Core Overview" status dots
+
+**Symptom:** Scott sent a screenshot of the live Frank dashboard: "There are still a lot of errors in
+frank." The chat bubble showed a raw `Error code: 400 - {'type': 'error', ...'Your credit balance is too
+low...'}` dump when he asked Frank to talk back, the Suggestion Warmer widget showed the same raw
+`Anthropic API error: <exc>` string as its heartbeat detail, and "AI Core Overview" showed "Voice: Offline
+— not built yet" and "Memory: Not wired yet" even though both features are fully built and working.
+
+**Diagnosis:**
+1. The trigger was a real Anthropic billing issue (credit balance too low) — but the chat WS handler
+   (`main.py` `chat_ws`) and two suggestion-generation endpoints (`_compute_suggestions_inner`,
+   `diagnose_listing`) all forwarded `str(exc)` / `f"Anthropic API error: {exc}"` straight to the client,
+   so any Anthropic exception (billing, rate limit, auth, overload) dumped raw Python exception text into
+   the UI instead of a readable message.
+2. `frank_hud_mockup.py`'s "Voice" AI-Core-Overview indicator was bound to the `local_relay` agent's
+   status (a leftover copy-paste from when Voice and Relay were being built around the same time) —
+   Voice has zero dependency on the relay, it's a stateless feature of this same server
+   (`/api/voice/transcribe`, `/api/voice/speak`), so it always showed the relay's "not built yet"
+   placeholder regardless of whether voice itself worked.
+3. "Memory" was a permanent hardcoded stub (`'Not wired yet'`) that was never wired to the already-working
+   `/api/memory` endpoint (used elsewhere on the dashboard's Memory tab).
+
+**Confirmed NOT bugs (left untouched, called out to Scott separately):** "System: Ephemeral (volume not
+attached)" is accurate — no Railway persistent volume is attached (see 2026-06-17 entry above) — and
+"Local Relay: Offline" is accurate — `tools/relay/frank_relay.py` is fully built but has never been
+started on Scott's machine. Both require action outside this repo, not a code fix.
+
+**Fix:** Added `_friendly_error_message(exc)` in `main.py` that maps known Anthropic failure signatures
+(credit balance, rate limit, auth, overload) to short human-readable strings, with a generic fallback;
+wired it into the chat WS error path, both suggestion-endpoint `HTTPException` details, and the Suggestion
+Warmer's stored heartbeat — raw exception text is still printed server-side for debugging, just never sent
+to the client. In `frank_hud_mockup.py`, removed the relay-bound Voice block from `loadAgents()` and
+instead set Voice to Online/Offline based on whether `/health` answers (inside
+`loadCredentialsAndHealth()`); replaced the Memory stub with a live fetch of `/api/memory`, rendering
+real session/learnings counts.
