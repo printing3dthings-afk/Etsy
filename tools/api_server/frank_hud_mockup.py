@@ -705,17 +705,62 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   </div>
 
   <div class="screen" id="screen-studio">
-    <div class="panel brk" style="height:100%">
-      <div class="panel-title">Studio — Video Preview &amp; Generation <span class="src">/api/files (new generate_listing_video tool)</span></div>
-      <div class="studio-grid">
-        <div style="flex:1">
-          <video controls poster="" style="aspect-ratio:16/9"></video>
-          <div style="margin-top:10px;color:var(--muted);font-size:11px">No videos generated yet. Player wired to /api/files in Step 3.</div>
+    <div class="panel brk" style="height:100%;overflow-y:auto">
+      <div class="panel-title">Studio — Image-to-Video Generation <span class="src">/api/studio/* — generate, attach to Etsy, post to Instagram/Facebook</span></div>
+      <div class="studio-grid" style="flex-wrap:wrap">
+        <div style="flex:1;min-width:320px">
+          <video id="studio-player" controls style="aspect-ratio:16/9"></video>
+          <div id="studio-player-caption" style="margin-top:10px;color:var(--muted);font-size:11px">Select a generated video from the list to preview it here.</div>
         </div>
-        <div style="flex:0 0 220px">
+        <div style="flex:0 0 300px">
           <div class="panel-title" style="margin-top:0">Generated Videos</div>
-          <div class="studio-list-item">— none yet —</div>
+          <div id="studio-videos-list" class="hub-scroll" style="max-height:420px"><div class="hub-empty">Loading…</div></div>
         </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Generate a New Video</div>
+      <div class="hub-card">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Upload images below, or leave images empty and enter an existing Etsy listing ID to pull its photos automatically.</div>
+        <input type="file" id="studio-file-input" accept="image/*" multiple style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
+        <div id="studio-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <select id="studio-style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            <option value="showcase">Showcase</option>
+            <option value="new-drop">New Drop</option>
+            <option value="feature">Feature</option>
+            <option value="minimal">Minimal</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+          <input id="studio-title" type="text" placeholder="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-price" type="text" placeholder="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
+        </div>
+        <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
+        <div id="studio-generate-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+      </div>
+
+      <div class="hub-section-title" id="studio-actions-title" style="display:none">Actions — <span id="studio-actions-filename"></span></div>
+      <div class="hub-card" id="studio-actions-card" style="display:none">
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for Scott's approval — it is only attached to the listing after approving in the Action Center.</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+        </div>
+        <button class="act-btn" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
+        <div id="studio-stage-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Instagram</div>
+        <textarea id="studio-ig-caption" placeholder="Caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+        <button class="act-btn" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
+        <div id="studio-ig-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Facebook</div>
+        <textarea id="studio-fb-caption" placeholder="Description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+        <button class="act-btn" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
+        <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
     </div>
   </div>
@@ -2474,6 +2519,221 @@ async function loadFiles() {
   }
 }
 
+// ── Studio — real data: /api/studio/* (image-to-video generation, attach-to-Etsy
+// staging, Instagram/Facebook posting). Posting always fires only on a direct button
+// click — there is no automatic or scheduled trigger anywhere in this code. ──
+let _studioSelectedVideo = '';
+let _studioUploadedPaths = [];
+
+function _studioVideoUrl(name, inline){
+  return BASE+'/api/files/download?root=videos&path='+encodeURIComponent(name)+
+    '&token='+encodeURIComponent(TOKEN)+(inline?'&inline=1':'');
+}
+
+function studioPreviewVideo(name){
+  _studioSelectedVideo = name;
+  const player = document.getElementById('studio-player');
+  if (player) { player.src = _studioVideoUrl(name, 1); player.load(); }
+  const cap = document.getElementById('studio-player-caption');
+  if (cap) cap.textContent = name;
+  const title = document.getElementById('studio-actions-title');
+  const card = document.getElementById('studio-actions-card');
+  const fn = document.getElementById('studio-actions-filename');
+  if (title) title.style.display = '';
+  if (card) card.style.display = '';
+  if (fn) fn.textContent = name;
+  ['studio-stage-status','studio-ig-status','studio-fb-status'].forEach(function(id){
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  document.querySelectorAll('#studio-videos-list .studio-list-item').forEach(function(row){
+    row.style.borderColor = (row.getAttribute('data-path')===name) ? 'var(--gold)' : '';
+  });
+}
+
+document.addEventListener('click', function(e){
+  const row = e.target.closest && e.target.closest('#studio-videos-list .studio-list-item');
+  if (row) studioPreviewVideo(row.getAttribute('data-path'));
+});
+
+async function loadStudioVideos() {
+  const el = document.getElementById('studio-videos-list');
+  if (!el) return;
+  try {
+    const r = await authGet('/api/studio/videos', 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const videos = d.videos||[];
+    if (!videos.length) {
+      el.innerHTML = '<div class="hub-empty">No videos generated yet.</div>';
+      return;
+    }
+    el.innerHTML = videos.map(v => {
+      const when = new Date(v.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const selected = v.path === _studioSelectedVideo;
+      return '<div class="studio-list-item" data-path="'+escHtml(v.path)+'" '+
+        'style="cursor:pointer'+(selected?';border-color:var(--gold)':'')+'">'+
+        '<div style="font-weight:600">'+escHtml(v.path)+'</div>'+
+        '<div style="color:var(--muted);margin-top:3px">'+escHtml(v.size_human)+' · '+escHtml(when)+'</div></div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load videos')+'</div>';
+  }
+}
+
+document.addEventListener('change', function(e){
+  if (e.target && e.target.id === 'studio-file-input') studioUploadImages(e.target.files);
+});
+
+async function studioUploadImages(fileList) {
+  const status = document.getElementById('studio-upload-status');
+  const files = Array.from(fileList||[]);
+  if (!files.length) return;
+  _studioUploadedPaths = [];
+  for (let i=0; i<files.length; i++) {
+    const f = files[i];
+    if (status) status.textContent = 'Uploading '+(i+1)+'/'+files.length+'…';
+    try {
+      const r = await fetchWithTimeout(
+        BASE+'/api/studio/upload-image?filename='+encodeURIComponent(f.name),
+        {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:f},
+        30000
+      );
+      const d = await r.json().catch(()=>({}));
+      if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+      _studioUploadedPaths.push(d.path);
+    } catch(e) {
+      if (status) status.textContent = 'Upload failed on "'+f.name+'": '+(e.message||e);
+      return;
+    }
+  }
+  if (status) status.textContent = _studioUploadedPaths.length+' image(s) ready to generate.';
+}
+
+async function studioGenerate() {
+  const btn = document.getElementById('studio-generate-btn');
+  const status = document.getElementById('studio-generate-status');
+  const listingId = (document.getElementById('studio-listing-id').value||'').trim();
+  const style = document.getElementById('studio-style').value;
+  const title = document.getElementById('studio-title').value||'';
+  const price = document.getElementById('studio-price').value||'';
+  const digital = document.getElementById('studio-digital').checked;
+
+  if (!listingId && !_studioUploadedPaths.length) {
+    if (status) status.textContent = 'Upload images or enter a listing ID first.';
+    return;
+  }
+  const body = {style:style, title:title, price:price, digital:digital};
+  if (listingId) body.listing_id = parseInt(listingId, 10);
+  else body.image_paths = _studioUploadedPaths;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+  if (status) status.innerHTML = '<div class="hub-spinner" style="margin:10px auto"></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/studio/generate', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'}, body:JSON.stringify(body)
+    }, 185000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (status) status.textContent = 'Generated '+d.path+' ('+d.size_human+').';
+    _studioUploadedPaths = [];
+    const fi = document.getElementById('studio-file-input');
+    if (fi) fi.value = '';
+    const us = document.getElementById('studio-upload-status');
+    if (us) us.textContent = '';
+    await loadStudioVideos();
+    studioPreviewVideo(d.path);
+  } catch(e) {
+    if (status) status.textContent = e.name==='AbortError' ? 'Generation timed out.' : (e.message||'Generation failed');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Video';
+  }
+}
+
+async function studioStageToEtsy() {
+  if (!_studioSelectedVideo) return;
+  const btn = document.getElementById('studio-stage-btn');
+  const status = document.getElementById('studio-stage-status');
+  const listingId = (document.getElementById('studio-attach-listing-id').value||'').trim();
+  const rank = (document.getElementById('studio-attach-rank').value||'').trim();
+  if (!listingId) { if (status) status.textContent = 'Enter a listing ID first.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Staging…';
+  if (status) status.textContent = '';
+  try {
+    const videoResp = await fetchWithTimeout(_studioVideoUrl(_studioSelectedVideo, 0), {}, 30000);
+    if (!videoResp.ok) throw new Error('Could not read video file (HTTP '+videoResp.status+')');
+    const blob = await videoResp.blob();
+    let url = BASE+'/api/queue/stage-video?listing_id='+encodeURIComponent(listingId)+
+      '&summary='+encodeURIComponent('Studio video for listing '+listingId);
+    if (rank) url += '&rank='+encodeURIComponent(rank);
+    const r = await fetchWithTimeout(url, {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:blob}, 60000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (status) status.innerHTML = `Staged — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Action Center ›</a>`;
+  } catch(e) {
+    if (status) status.textContent = e.message||'Staging failed';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Stage for Approval';
+  }
+}
+
+async function studioPostInstagram() {
+  if (!_studioSelectedVideo) return;
+  const btn = document.getElementById('studio-ig-btn');
+  const status = document.getElementById('studio-ig-status');
+  const caption = document.getElementById('studio-ig-caption').value||'';
+  if (!confirm('Post this video to Instagram now? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Posting…';
+  if (status) status.textContent = '';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/studio/post-instagram', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify({video:_studioSelectedVideo, caption:caption, is_reel:true})
+    }, 120000);
+    const d = await r.json().catch(()=>({}));
+    if (d.error) { if (status) status.textContent = d.error+': '+(d.detail||''); return; }
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (status) status.textContent = 'Posted to Instagram.';
+  } catch(e) {
+    if (status) status.textContent = e.message||'Instagram post failed';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Post to Instagram (Reel)';
+  }
+}
+
+async function studioPostFacebook() {
+  if (!_studioSelectedVideo) return;
+  const btn = document.getElementById('studio-fb-btn');
+  const status = document.getElementById('studio-fb-status');
+  const caption = document.getElementById('studio-fb-caption').value||'';
+  if (!confirm('Post this video to Facebook now? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Posting…';
+  if (status) status.textContent = '';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/studio/post-facebook', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify({video:_studioSelectedVideo, caption:caption})
+    }, 120000);
+    const d = await r.json().catch(()=>({}));
+    if (d.error) { if (status) status.textContent = d.error+': '+(d.detail||''); return; }
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (status) status.textContent = 'Posted to Facebook.';
+  } catch(e) {
+    if (status) status.textContent = e.message||'Facebook post failed';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Post to Facebook';
+  }
+}
+
 // ── Connections — real data: /api/credentials/status + static Platform Roadmap ──
 const _PLATFORM_ROADMAP = [
   {name:'Etsy',      icon:'🛍️', status:'live',    note:'onbrandcraftz · authorized'},
@@ -2634,6 +2894,7 @@ function loadAll(){
   loadConnections();
   renderSecurityPosture();
   loadRelayStatus();
+  loadStudioVideos();
 }
 loadAll();
 loadActions();

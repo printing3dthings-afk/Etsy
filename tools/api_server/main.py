@@ -4769,9 +4769,11 @@ _ETSY_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing", "
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
 _SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
 _PHOTO_STAGED_ACTION_TYPES = ("listing_photo",)
+_VIDEO_STAGED_ACTION_TYPES = ("listing_video",)
 _STAGED_ACTION_TYPES = (
     _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
     + _SCRIPT_STAGED_ACTION_TYPES + _PHOTO_STAGED_ACTION_TYPES
+    + _VIDEO_STAGED_ACTION_TYPES
 )
 
 
@@ -4818,6 +4820,22 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
             return False, f"path escapes the staged_photos root: {path}"
         if not target.is_file():
             return False, f"staged photo file not found: {path}"
+        return True, "ok"
+    if t in _VIDEO_STAGED_ACTION_TYPES:
+        if not p.get("listing_id"):
+            return False, "missing listing_id"
+        rank = p.get("rank")
+        if rank is not None and (not isinstance(rank, int) or isinstance(rank, bool) or not (1 <= rank <= 10)):
+            return False, "rank must be an integer 1-10 (or omitted)"
+        path = (p.get("path") or "").strip()
+        if not path:
+            return False, "missing path"
+        try:
+            target = _resolve_in_root("staged_videos", path)
+        except HTTPException:
+            return False, f"path escapes the staged_videos root: {path}"
+        if not target.is_file():
+            return False, f"staged video file not found: {path}"
         return True, "ok"
     # Local types — the real security boundary is the relay's own realpath check
     # at execution time (it's the only thing with Scott's actual filesystem to
@@ -4884,6 +4902,21 @@ def _execute_staged_action(a: dict) -> dict:
                 "listing_image_id": img.get("listing_image_id"),
                 "rank": img.get("rank"),
                 "url": img.get("url_570xN") or img.get("url_fullxfull"),
+            },
+        }
+    elif t == "listing_video":
+        abs_path = _resolve_in_root("staged_videos", p["path"])
+        if not abs_path.is_file():
+            raise FileNotFoundError(f"staged video not found: {p['path']}")
+        vid = client.upload_listing_video(lid, str(abs_path), rank=p.get("rank"))
+        with _cache_lock:
+            for k in ("listings_active", "listings_draft", "actions", "metrics"):
+                _cache.pop(k, None)
+        return {
+            "listing_id": lid,
+            "etsy": {
+                "listing_video_id": vid.get("listing_video_id") or vid.get("video_id"),
+                "rank": vid.get("rank"),
             },
         }
     else:
@@ -5097,6 +5130,19 @@ async def _stage_photo_action(
     return await asyncio.to_thread(db.enqueue_action, "listing_photo", summary, payload)
 
 
+async def _stage_video_action(listing_id, rel_path: str, summary: str, rank: int | None = None) -> int:
+    """Validate and enqueue a listing_video staged action. rel_path is relative to the
+    staged_videos root. Mirrors _stage_photo_action()'s pattern."""
+    payload: dict = {"listing_id": listing_id, "path": rel_path}
+    if rank is not None:
+        payload["rank"] = rank
+    fake_action = {"type": "listing_video", "payload": payload}
+    ok, msg = _validate_staged_action(fake_action)
+    if not ok:
+        raise ValueError(f"quality gate failed: {msg}")
+    return await asyncio.to_thread(db.enqueue_action, "listing_video", summary, payload)
+
+
 @app.post("/api/queue/stage-photo")
 async def stage_photo(
     request: Request,
@@ -5149,6 +5195,204 @@ async def stage_photo(
         out_path.unlink(missing_ok=True)
         raise HTTPException(status_code=422, detail=str(exc))
     return {"action_id": action_id, "path": f"{safe_sku}/{out_path.name}"}
+
+
+@app.post("/api/queue/stage-video")
+async def stage_video(
+    request: Request,
+    listing_id: int,
+    rank: int | None = None,
+    summary: str = "",
+    _token: str = Depends(_auth),
+):
+    """Stage a generated marketing video for Scott's approve/reject review before it's
+    attached to an Etsy listing. Body is the raw video bytes (same convention as
+    /api/queue/stage-photo — this module has no multipart/UploadFile support)."""
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty body")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+
+    out_dir = _FILE_ROOTS["staged_videos"] / str(listing_id)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f"video_{uuid.uuid4().hex[:8]}.mp4"
+    out_path.write_bytes(body)
+
+    try:
+        action_id = await _stage_video_action(
+            listing_id=listing_id,
+            rel_path=f"{listing_id}/{out_path.name}",
+            summary=summary or f"Staged video for listing {listing_id}",
+            rank=rank,
+        )
+    except ValueError as exc:
+        out_path.unlink(missing_ok=True)
+        raise HTTPException(status_code=422, detail=str(exc))
+    return {"action_id": action_id, "path": f"{listing_id}/{out_path.name}"}
+
+
+# ── Studio tab (image-to-video generation + Instagram/Facebook posting) ───────────
+
+
+@app.post("/api/studio/upload-image")
+async def studio_upload_image(request: Request, filename: str, _token: str = Depends(_auth)):
+    """Accept a raw image body and store it under studio_uploads/ so it can be picked
+    for video generation. Same convention as /api/files/upload."""
+    safe_name = os.path.basename((filename or "").strip())
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="filename query param is required")
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty body")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+    root = _FILE_ROOTS["studio_uploads"]
+    root.mkdir(parents=True, exist_ok=True)
+    out_path = root / f"{uuid.uuid4().hex[:8]}_{safe_name}"
+    out_path.write_bytes(body)
+    return {"ok": True, "path": out_path.name, "size": len(body), "size_human": _human_size(len(body))}
+
+
+@app.post("/api/studio/generate")
+async def studio_generate_video(body: dict, _token: str = Depends(_auth)):
+    """Generate a Ken Burns slideshow video either from an existing Etsy listing's
+    photos (listing_id) or from previously-uploaded studio images (image_paths,
+    filenames relative to studio_uploads/). Runs video_generator.generate_video()
+    in-process — this is asset generation only (no Etsy mutation), so it needs no
+    approval per CLAUDE.md's autonomy boundaries."""
+    import video_generator
+    from PIL import Image as _PILImage
+
+    listing_id = body.get("listing_id")
+    image_paths = body.get("image_paths") or []
+    style = body.get("style", "showcase")
+    title = (body.get("title") or "").strip()
+    price = str(body.get("price") or "")
+    digital = bool(body.get("digital", True))
+
+    if style not in video_generator.STYLES:
+        raise HTTPException(status_code=400, detail=f"style must be one of {list(video_generator.STYLES)}")
+    if not listing_id and not image_paths:
+        raise HTTPException(status_code=400, detail="provide either listing_id or image_paths")
+
+    def _generate() -> Path:
+        if listing_id:
+            client = EtsyAPIClient()
+            imgs, listing = video_generator.fetch_listing_images(int(listing_id), client)
+            t = title or listing.get("title", "")
+            p = price or video_generator.get_price_str(listing)
+            d = digital if "digital" in body else video_generator.is_digital(listing)
+            lid: int | str = listing_id
+        else:
+            root = _FILE_ROOTS["studio_uploads"]
+            imgs = []
+            for name in image_paths:
+                target = _resolve_in_root("studio_uploads", name)
+                if not target.is_file():
+                    raise HTTPException(status_code=404, detail=f"studio upload not found: {name}")
+                imgs.append(_PILImage.open(target).convert("RGB"))
+            t = title or "Product"
+            p = price
+            d = digital
+            lid = "studio_" + uuid.uuid4().hex[:8]
+        return video_generator.generate_video(imgs, t, style, lid, price=p, digital=d)
+
+    try:
+        out_path = await asyncio.wait_for(asyncio.to_thread(_generate), timeout=180.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Video generation timed out")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    return {
+        "ok": True,
+        "path": out_path.name,
+        "size": out_path.stat().st_size,
+        "size_human": _human_size(out_path.stat().st_size),
+    }
+
+
+@app.get("/api/studio/videos")
+async def studio_list_videos(_token: str = Depends(_auth)):
+    """List generated videos under data/social/videos/ for the Studio sidebar."""
+    root = _FILE_ROOTS["videos"]
+    files = []
+    if root.exists():
+        for p in sorted(root.glob("*.mp4")):
+            stat = p.stat()
+            files.append({
+                "path": p.name,
+                "root": "videos",
+                "size": stat.st_size,
+                "size_human": _human_size(stat.st_size),
+                "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+            })
+    files.sort(key=lambda f: f["modified"], reverse=True)
+    return {"videos": files}
+
+
+@app.post("/api/studio/post-instagram")
+async def studio_post_instagram(body: dict, _token: str = Depends(_auth)):
+    """Post a generated video to Instagram as a Reel. Fires immediately on this call —
+    there is no staging queue for social posts because, per CLAUDE.md, posting to
+    social media is a Hard Stop that must always be an explicit, direct user action;
+    the button click that triggers this request IS that explicit action."""
+    import instagram_api
+
+    if not instagram_api.is_configured():
+        return {"error": "not configured", "detail": "INSTAGRAM_ACCESS_TOKEN is not set in .env"}
+
+    video_name = (body.get("video") or "").strip()
+    caption = body.get("caption", "")
+    is_reel = bool(body.get("is_reel", True))
+    target = _resolve_in_root("videos", video_name)
+    if not target.is_file():
+        raise HTTPException(status_code=404, detail="video not found")
+
+    railway_url = os.getenv("RAILWAY_APP_URL", "").rstrip("/")
+    if not railway_url:
+        return {"error": "not configured", "detail": "RAILWAY_APP_URL is not set — needed to serve the video to Instagram"}
+    video_url = f"{railway_url}/api/files/download?root=videos&path={video_name}&token={APP_TOKEN}&inline=1"
+
+    client = instagram_api.get_client()
+    try:
+        result = await asyncio.to_thread(client.post_video, video_url, caption, is_reel)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Instagram post failed: {exc}")
+    db.log_activity("frank", "post_instagram", f"Posted {video_name} to Instagram", body, outcome="ok")
+    return {"ok": True, "result": result}
+
+
+@app.post("/api/studio/post-facebook")
+async def studio_post_facebook(body: dict, _token: str = Depends(_auth)):
+    """Post a generated video to the Facebook Page. Fires immediately on this call —
+    same Hard Stop reasoning as studio_post_instagram() above: no staging queue,
+    the button click itself is the required explicit action."""
+    import facebook_api
+
+    if not facebook_api.is_configured():
+        return {"error": "not configured", "detail": "FACEBOOK_PAGE_ACCESS_TOKEN is not set in .env"}
+
+    video_name = (body.get("video") or "").strip()
+    description = body.get("caption", "")
+    title = body.get("title", "")
+    target = _resolve_in_root("videos", video_name)
+    if not target.is_file():
+        raise HTTPException(status_code=404, detail="video not found")
+
+    railway_url = os.getenv("RAILWAY_APP_URL", "").rstrip("/")
+    if not railway_url:
+        return {"error": "not configured", "detail": "RAILWAY_APP_URL is not set — needed to serve the video to Facebook"}
+    video_url = f"{railway_url}/api/files/download?root=videos&path={video_name}&token={APP_TOKEN}&inline=1"
+
+    client = facebook_api.get_client()
+    try:
+        result = await asyncio.to_thread(client.post_video, video_url, description, title)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Facebook post failed: {exc}")
+    db.log_activity("frank", "post_facebook", f"Posted {video_name} to Facebook", body, outcome="ok")
+    return {"ok": True, "result": result}
 
 
 # ── Batch tag fix (one Claude call → staged approvals for every under-tagged listing) ─
@@ -5667,6 +5911,14 @@ _FILE_ROOTS["staged_photos"] = (
     else (ROOT / "data" / "staged_photos")
 )
 
+# Studio tab — generated videos (video_generator.py's own OUTPUT_DIR), source images
+# a user uploads before generation, and videos staged for Etsy/Instagram/Facebook
+# review. Not placed under the durable volume: these are regeneratable working
+# files, not source-of-truth product assets.
+_FILE_ROOTS["videos"] = ROOT / "data" / "social" / "videos"
+_FILE_ROOTS["studio_uploads"] = ROOT / "data" / "social" / "studio_uploads"
+_FILE_ROOTS["staged_videos"] = ROOT / "data" / "social" / "staged_videos"
+
 
 def _human_size(n: int) -> str:
     size = float(n)
@@ -5680,7 +5932,7 @@ def _human_size(n: int) -> str:
 # Extensions a phone browser can open inline (preview) instead of force-downloading.
 # Everything else is served as a download. This is what lets a buyer-facing PDF or a
 # sticker PNG open straight in the phone without a download+unzip dance.
-_INLINE_EXTS = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".txt", ".md", ".json", ".csv"}
+_INLINE_EXTS = {".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".txt", ".md", ".json", ".csv", ".mp4"}
 
 
 def _media_type_for(name: str) -> str:
@@ -5750,6 +6002,8 @@ async def list_files(_token: str = Depends(_auth)):
         _labels = {
             "backups": "Backups", "volume": "Saved Files (persistent)", "products": "Product Files",
             "staged_photos": "Staged Photos (pending approval)",
+            "videos": "Generated Videos", "studio_uploads": "Studio Uploads",
+            "staged_videos": "Staged Videos (pending approval)",
         }
         groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
     # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so

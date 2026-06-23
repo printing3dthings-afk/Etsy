@@ -23,6 +23,7 @@
 | ~~6~~ | ~~Create Printify account~~ | ~~Done~~ | ✅ **COMPLETE** — 52 products live, 156 variants, orders auto-route |
 | 7 | ~~**Create Mailchimp account**~~ | Deferred | Not free — revisit when monthly revenue justifies the cost |
 | 8 | **Create Instagram app** — developers.facebook.com → New App → Business type → add Instagram Graph API → add to `.env`: `INSTAGRAM_APP_ID=`, `INSTAGRAM_APP_SECRET=`, `INSTAGRAM_USER_ID=`, `INSTAGRAM_ACCESS_TOKEN=` | 20 min | Visual platform — kawaii planners/stickers perform very well on Instagram Reels |
+| 20 | **Create Facebook Page + app credentials** — `tools/facebook_api.py` is built and wired into the new Studio tab's "Post to Facebook" button, but has zero credentials yet (no Facebook Page exists for OnBrandCraftz at all). Can reuse the same Meta App created for Instagram above (#8) — just add the "Facebook Pages" product, connect/create the OnBrandCraftz Page, and add to `.env`: `FACEBOOK_APP_ID=`, `FACEBOOK_APP_SECRET=`, `FACEBOOK_PAGE_ID=`, `FACEBOOK_PAGE_ACCESS_TOKEN=`. See `tools/facebook_api.py` header for full step-by-step setup. | 20 min | Unlocks video posting to Facebook directly from the Studio tab |
 
 ### Review and publish new draft listings (I created these today)
 

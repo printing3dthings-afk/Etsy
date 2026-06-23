@@ -709,6 +709,48 @@ class EtsyAPIClient:
                 msg = body_text
             raise EtsyAPIError(e.code, msg)
 
+    def upload_listing_video(self, listing_id: int | str, video_path: str, rank: int | None = None) -> dict:
+        """Upload a marketing video to a listing (Etsy API v3 uploadListingVideo)."""
+        self._require_oauth()
+        import mimetypes
+
+        with open(video_path, "rb") as f:
+            video_data = f.read()
+
+        mime_type = mimetypes.guess_type(video_path)[0] or "video/mp4"
+        filename = os.path.basename(video_path)
+
+        boundary = "----FormBoundary" + os.urandom(8).hex()
+        body_parts = []
+        if rank is not None:
+            body_parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="rank"\r\n\r\n{rank}'.encode())
+        body_parts.append(
+            f'--{boundary}\r\nContent-Disposition: form-data; name="video"; filename="{filename}"\r\nContent-Type: {mime_type}\r\n\r\n'.encode()
+            + video_data
+        )
+        body_parts.append(f'--{boundary}--'.encode())
+        body = b'\r\n'.join(body_parts)
+
+        url = f"{BASE_URL}/shops/{self.shop_id}/listings/{listing_id}/videos"
+        api_key_header = f"{self.client_id}:{self.client_secret}" if self.client_secret else self.api_key
+        headers = {
+            "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "Authorization": f"Bearer {self.access_token}",
+            "x-api-key": api_key_header,
+        }
+        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=120) as resp:
+                return json.loads(resp.read().decode())
+        except urllib.error.HTTPError as e:
+            body_text = e.read().decode()
+            try:
+                err = json.loads(body_text)
+                msg = err.get("error", body_text)
+            except Exception:
+                msg = body_text
+            raise EtsyAPIError(e.code, msg)
+
     def get_listing_images(self, listing_id: int | str) -> list[dict]:
         """Get all images for a listing. Returns list of image records with listing_image_id."""
         result = self._request("GET", f"listings/{listing_id}/images")

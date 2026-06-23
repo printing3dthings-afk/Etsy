@@ -51,6 +51,10 @@ BASE_URL = "https://graph.facebook.com/v21.0"
 _CONTAINER_POLL_INTERVAL = 3
 _CONTAINER_POLL_MAX_ATTEMPTS = 20
 
+# Video/Reels processing is much slower than image processing — give it up to
+# 60 attempts * 3s = 3 minutes before giving up (vs. ~60s for images).
+_VIDEO_CONTAINER_POLL_MAX_ATTEMPTS = 60
+
 
 class InstagramAPIError(Exception):
     def __init__(self, status: int, message: str):
@@ -179,24 +183,36 @@ class InstagramAPIClient:
 
     def _create_media_container(
         self,
-        image_url: str,
+        image_url: str = "",
         caption: str = "",
         is_carousel_item: bool = False,
+        video_url: str = "",
+        media_type: str = "",
     ) -> str:
         """
-        Step 1 of 2 for photo posting — create a media container.
+        Step 1 of 2 for photo/video posting — create a media container.
 
         Args:
             image_url: A publicly accessible HTTPS URL. Local paths will be
-                rejected by Instagram's servers.
+                rejected by Instagram's servers. Mutually exclusive with video_url.
             caption: Post caption (only used for non-carousel-item containers).
             is_carousel_item: When True, omits the caption and marks the
                 container as a carousel child.
+            video_url: A publicly accessible HTTPS URL to an MP4. Used for
+                video/Reels posting instead of image_url.
+            media_type: e.g. "REELS" or "VIDEO" — required when video_url is set.
 
         Returns:
             The container ID string.
         """
-        body: dict[str, Any] = {"image_url": image_url}
+        body: dict[str, Any] = {}
+        if video_url:
+            body["video_url"] = video_url
+            if media_type:
+                body["media_type"] = media_type
+        else:
+            body["image_url"] = image_url
+
         if is_carousel_item:
             body["is_carousel_item"] = True
         else:
@@ -209,17 +225,19 @@ class InstagramAPIClient:
             raise InstagramAPIError(0, f"Media container creation returned no ID. Response: {result}")
         return container_id
 
-    def _wait_for_container(self, container_id: str) -> None:
+    def _wait_for_container(self, container_id: str, max_attempts: int = _CONTAINER_POLL_MAX_ATTEMPTS) -> None:
         """
         Poll the container status field until it reaches FINISHED.
 
         Instagram processes uploaded images asynchronously before allowing
-        publish. Polling typically resolves within 3–10 seconds for images.
+        publish. Polling typically resolves within 3–10 seconds for images,
+        but can take much longer for video — pass a higher max_attempts for
+        video/Reels containers.
 
         Raises InstagramAPIError if the container errors out or the poll
         timeout is exceeded.
         """
-        for _ in range(_CONTAINER_POLL_MAX_ATTEMPTS):
+        for _ in range(max_attempts):
             result = self._request(
                 "GET",
                 container_id,
@@ -237,7 +255,7 @@ class InstagramAPIClient:
         raise InstagramAPIError(
             0,
             f"Media container {container_id} did not finish processing within "
-            f"{_CONTAINER_POLL_MAX_ATTEMPTS * _CONTAINER_POLL_INTERVAL}s.",
+            f"{max_attempts * _CONTAINER_POLL_INTERVAL}s.",
         )
 
     def _publish_container(self, container_id: str) -> dict:
@@ -282,6 +300,37 @@ class InstagramAPIClient:
         """
         container_id = self._create_media_container(image_url, caption=caption)
         self._wait_for_container(container_id)
+        return self._publish_container(container_id)
+
+    def post_video(self, video_url: str, caption: str = "", is_reel: bool = True) -> dict:
+        """
+        Publish a video to Instagram as a Reel (default) or feed video.
+
+        Same 2-step process as post_photo(), but video containers take much
+        longer to process — polling uses a higher attempt ceiling
+        (_VIDEO_CONTAINER_POLL_MAX_ATTEMPTS) than the image path.
+
+        Args:
+            video_url: Must be a publicly accessible HTTPS URL pointing to an
+                MP4 file. Instagram's servers fetch this directly — a local
+                file path will fail. Serve the generated video from this
+                app's own public URL (e.g. RAILWAY_APP_URL + /api/files/...).
+            caption: Post caption. Supports hashtags and emoji. Max 2,200 chars.
+            is_reel: When True (default), publishes as a Reel (media_type=REELS).
+                When False, publishes as a regular feed video (media_type=VIDEO).
+
+        Returns:
+            Dict with 'id' key containing the published media ID.
+
+        Raises:
+            InstagramAPIError: On API error, container processing failure, or
+                if credentials are not configured.
+        """
+        media_type = "REELS" if is_reel else "VIDEO"
+        container_id = self._create_media_container(
+            video_url=video_url, caption=caption, media_type=media_type
+        )
+        self._wait_for_container(container_id, max_attempts=_VIDEO_CONTAINER_POLL_MAX_ATTEMPTS)
         return self._publish_container(container_id)
 
     def post_carousel(self, image_urls: list[str], caption: str = "") -> dict:

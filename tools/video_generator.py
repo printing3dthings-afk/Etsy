@@ -565,7 +565,7 @@ def main() -> None:
             except Exception as e:
                 print(f"  ERROR generating {style} video: {e}")
 
-        if batch_mode and i < len(listing_ids) - 1:
+        if batch_mode and i < len(listings) - 1:
             time.sleep(1)
 
     print("\nDone. Upload videos to TikTok/Instagram Reels/Pinterest.")
