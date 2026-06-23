@@ -970,3 +970,50 @@ to the client. In `frank_hud_mockup.py`, removed the relay-bound Voice block fro
 instead set Voice to Online/Offline based on whether `/health` answers (inside
 `loadCredentialsAndHealth()`); replaced the Memory stub with a live fetch of `/api/memory`, rendering
 real session/learnings counts.
+
+---
+
+## 2026-06-23 — Frank's installed PWA was unusable on Scott's phone (content cut off, no mobile nav)
+
+**Symptom:** Scott: "I need the app on my home screen to be able to show everything on Frank's main page
+and not be cut off... I want to make sure I can work from my phone without losing function." The installed
+home-screen PWA showed the desktop layout shrunk to ~27% size with most screens' content clipped.
+
+**Diagnosis (confirmed via grep against the 3,000+ line inline template in `frank_hud_mockup.py`, no
+guessing):**
+1. The entire dashboard is a fixed 1440×900px `#stage` that JS (`fitStage()`) uniformly scaled down to fit
+   any viewport via `transform:scale()` — on an iPhone (390×844) that's `scale≈0.271`. Zero `@media`
+   queries existed anywhere in the CSS; the scale hack was the only "mobile" handling, and it reflowed
+   nothing.
+2. 8 screens (Tasks, Action Center, Calendar, Memory, Conversations, Knowledge Base, Tools & Skills,
+   Workflows) plus `.hub-scroll` (Listings/Products/Brand Kit/Files/Connections/Security) and Studio's
+   video list hardcoded inline `max-height:700px`/`760px`/`420px`, sized for the 900px-tall desktop stage —
+   these clipped content on a phone regardless of the stage-scaling fix.
+3. The 226px-fixed sidebar nav (16 screens, 4 groups) had no mobile pattern — at 390px wide it would have
+   eaten 58% of the screen.
+
+**Fix (all in `frank_hud_mockup.py` unless noted):**
+- Viewport meta tag: added `viewport-fit=cover` so `env(safe-area-inset-*)` resolves on iOS standalone mode.
+- `fitStage()`: now checks `window.matchMedia('(max-width:880px)')` and skips the scale transform on
+  mobile (`stage.style.transform='none'`); a `syncMobileClass()` function toggles `body.is-mobile` on
+  resize/orientation-change so CSS and JS agree on mode.
+- New `@media (max-width:880px)` block (plus a nested `@media (max-width:380px)` for small phones):
+  `#stage` goes fluid and the whole page becomes a normal scrolling document (`html,body{overflow-y:auto}`,
+  `#stage{height:auto}`); the sidebar becomes a fixed off-canvas drawer
+  (`translateX(-100%)` ↔ `translateX(0)` via `body.drawer-open`) with its own backdrop and a duplicate
+  search input (the header search/clock are hidden on mobile to make room for the hamburger button);
+  `.mrow` panel rows stack vertically full-width instead of sitting in fixed-width columns; the agents grid
+  collapses 4→2→1 columns; every one of the 8 hardcoded `max-height` clamps plus `.hub-scroll` and
+  `#studio-videos-list` get `max-height:none !important;overflow:visible !important`; touch targets
+  (`.nav-item`, `.icon-btn`, `.qc-btn`, `#chat-send`, `.talk-pill`) were bumped to ~40-44px; safe-area-inset
+  padding was added to the header/footer/drawer for the iPhone notch/home-indicator.
+- Hamburger button (`#hamburger-btn`, CSS-hidden on desktop) wired to `openDrawer()`/`closeDrawer()`/
+  `toggleDrawer()`; drawer auto-closes on navigation via one added line in the existing `showScreen()`
+  chokepoint (`if (isMobileMode()) closeDrawer();`), which covers every nav path (sidebar clicks, "View
+  All ›" links, Quick Commands) without touching each call-site individually.
+- Bumped `_BUILD_ID` in `main.py` (`f4b1e2a-v45` → `v46`) so Scott's already-installed PWA's service
+  worker cache-busts and fetches this new shell instead of serving the old cached one indefinitely.
+- Desktop (≥881px) is untouched — every change is gated behind the `880px` media query / `body.is-mobile`,
+  confirmed by re-grepping `STAGE_W`/`STAGE_H`/`innerWidth`/`innerHeight` to verify they're still only
+  referenced inside the now-mobile-gated `fitStage()`, and by a CSS brace-balance + `node --check` pass on
+  the extracted inline `<script>` block (118KB, no syntax errors).

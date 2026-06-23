@@ -31,7 +31,7 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -86,6 +86,9 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .hdr-bar .right{display:flex;align-items:center;gap:10px}
 .search{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:8px;
   padding:6px 10px;color:var(--text);font-size:11px}
+.drawer-toggle{display:none}
+.drawer-search{display:none}
+#drawer-backdrop{display:none}
 .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
   background:var(--panel);display:flex;align-items:center;justify-content:center;
   cursor:pointer;position:relative;color:var(--muted);font-size:13px;flex-shrink:0}
@@ -387,12 +390,87 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 .metric .value{font-size:24px;font-weight:700;color:var(--text)}
 .metric .sub{font-size:11px;color:var(--muted);margin-top:2px}
 .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+
+/* ══════════ MOBILE LAYOUT — fluid stage, off-canvas drawer nav, stacked rows ══════════
+   Single breakpoint, kept in sync with MOBILE_BREAKPOINT in JS. Desktop (>880px) is
+   completely untouched — everything below is additive and gated behind this query. ── */
+@media (max-width:880px){
+  html,body{overflow-y:auto}
+  #stage-wrap{position:static;display:block;height:auto;min-height:100dvh}
+  #stage{
+    position:static;width:100vw;min-height:100dvh;height:auto;transform:none !important;
+    grid-template-columns:92px 1fr;grid-template-rows:auto auto auto;
+  }
+
+  .hdr-logo{padding:0 8px;gap:6px}
+  .hdr-logo .lbl{display:none}
+  .drawer-toggle{display:flex}
+
+  .hdr-bar{padding:0 10px;gap:8px}
+  .hdr-bar .search,.hdr-bar .clockwrap{display:none}
+
+  .sidebar{
+    position:fixed;top:0;left:0;bottom:0;width:78vw;max-width:320px;z-index:200;
+    grid-column:unset;grid-row:unset;
+    transform:translateX(-100%);transition:transform .25s ease;
+    box-shadow:8px 0 24px rgba(0,0,0,.45);
+    padding-top:calc(14px + env(safe-area-inset-top));
+    padding-bottom:calc(14px + env(safe-area-inset-bottom));
+    padding-left:calc(10px + env(safe-area-inset-left));
+  }
+  body.drawer-open .sidebar{transform:translateX(0)}
+  .drawer-search{display:block;margin-bottom:12px;width:100%}
+
+  #drawer-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;
+  }
+  body.drawer-open #drawer-backdrop{display:block}
+
+  .main{grid-column:1/-1;overflow:visible !important;height:auto !important;padding:10px}
+  .screen{grid-column:1/-1;height:auto;overflow:visible;padding:10px}
+  .panel{overflow:visible !important}
+  .panel-body{overflow:visible !important;max-height:none !important;flex:none !important}
+
+  .mrow{flex-direction:column}
+  .mrow.rowA,.mrow.rowB,.mrow.rowC{flex:none}
+  .col-aicore,.col-orb,.col-feed,.col-agents,.col-chat,.col-timeline,
+  .col-sysmon,.col-meminsights,.col-shop{flex:none !important;width:100% !important}
+
+  #chat-msgs{min-height:280px;max-height:55vh;flex:none}
+  .orb-hero{min-height:260px}
+  .orb-hero-stage{min-height:220px}
+  .mem-canvas-wrap{min-height:160px}
+
+  .agents-grid{grid-template-columns:repeat(2,1fr)}
+
+  #tasks-list,#actions-content,#calendar-content,#memory-content,#conversations-content,
+  #kb-content,#tools-list,#workflows-content,.hub-scroll,#studio-videos-list{
+    max-height:none !important;overflow:visible !important;
+  }
+
+  .nav-item{padding:12px 14px;font-size:14px}
+  .icon-btn{width:40px;height:40px}
+  .qc-btn{padding:12px 10px}
+  #chat-send{width:44px;height:44px}
+  .talk-pill{padding:10px 24px}
+
+  .hdr-logo,.hdr-bar{padding-top:env(safe-area-inset-top)}
+  .bottombar{
+    flex-wrap:wrap;height:auto;padding:10px;gap:8px;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width:380px){
+  .agents-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 <div id="stage-wrap"><div id="stage">
 
   <div class="hdr-logo brk">
+    <button id="hamburger-btn" class="icon-btn drawer-toggle" aria-label="Open navigation">☰</button>
     <div class="hex">⬡</div>
     <div class="lbl"><div class="l1">FRANK</div><div class="l2">COMMAND CENTER</div></div>
   </div>
@@ -410,6 +488,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   </div>
 
   <div class="sidebar">
+    <input class="search drawer-search" placeholder="Search listings, orders, tools, knowledge base…">
     <div class="nav-section">Frank</div>
     <div class="nav-item active" data-screen="cmd"><span class="ic">⌂</span>Command Center</div>
     <div class="nav-item" data-screen="core"><span class="ic">◎</span>AI Core</div>
@@ -444,6 +523,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <button class="qc-btn"><span class="qic">⇄</span>Run Workflow</button>
     </div>
   </div>
+  <div id="drawer-backdrop"></div>
 
   <!-- ══════════ COMMAND CENTER (home) ══════════ -->
   <div class="screen active" id="screen-cmd">
@@ -789,15 +869,31 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 </div></div>
 
 <script>
-// ── Auto-scale the fixed 1440x900 stage to fit any viewport (phone or desktop) ──
+// ── Auto-scale the fixed 1440x900 stage to fit any viewport, desktop only — below
+// MOBILE_BREAKPOINT the stage goes fluid via CSS instead (see isMobileMode()). ──
 const STAGE_W = 1440, STAGE_H = 900;
+const MOBILE_BREAKPOINT = 880;
 const stage = document.getElementById('stage');
+const mobileMQ = window.matchMedia('(max-width:' + MOBILE_BREAKPOINT + 'px)');
+function isMobileMode(){ return mobileMQ.matches; }
 function fitStage(){
+  if (isMobileMode()){ stage.style.transform = 'none'; return; }
   const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
   stage.style.transform = 'scale(' + scale + ')';
 }
-window.addEventListener('resize', fitStage);
-fitStage();
+function openDrawer(){ document.body.classList.add('drawer-open'); }
+function closeDrawer(){ document.body.classList.remove('drawer-open'); }
+function toggleDrawer(){ document.body.classList.toggle('drawer-open'); }
+function syncMobileClass(){
+  document.body.classList.toggle('is-mobile', isMobileMode());
+  if (!isMobileMode()) closeDrawer();
+  fitStage();
+}
+window.addEventListener('resize', syncMobileClass);
+mobileMQ.addEventListener('change', syncMobileClass);
+syncMobileClass();
+document.getElementById('hamburger-btn').addEventListener('click', toggleDrawer);
+document.getElementById('drawer-backdrop').addEventListener('click', closeDrawer);
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/frank-sw.js', { scope: '/frank' }).catch(()=>{}); }
 
 // ── Real data wiring (Step 2) — same bearer token + fetch pattern as the live
@@ -989,6 +1085,7 @@ function showScreen(name){
   if (name === 'conversations') loadConversations();
   if (name === 'kb') loadKb();
   if (name === 'workflows') loadWorkflows();
+  if (isMobileMode()) closeDrawer();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
