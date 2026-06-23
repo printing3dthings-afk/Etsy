@@ -855,7 +855,7 @@ function speakText(text){
   }).catch(()=>{ _speakWithBrowserFallback(text); });
 }
 
-let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false;
+let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false, _voiceStream = null;
 // Free fallback for when OpenAI transcription is unavailable (e.g. quota exhausted).
 // SpeechRecognition needs LIVE mic audio — it can't transcribe a finished recording —
 // so it runs in parallel with the MediaRecorder for the same capture session, and its
@@ -888,6 +888,19 @@ function _stopSpeechRecognitionFallback(){
     _speechRecognizer = null;
   }
 }
+// iOS Safari (and other WebKit) PWAs in standalone mode have a known bug: once a
+// getUserMedia() stream's tracks are all stopped, a SECOND getUserMedia() call in the
+// same page session can hang forever (the promise never resolves or rejects). Re-acquiring
+// the mic fresh on every recording — and fully releasing it in onstop — was tripping that
+// bug, which is why the talk button worked once then went dead until a full app relaunch.
+// Fix: acquire the mic stream once and keep it alive for the whole page session; only a
+// new MediaRecorder (cheap, single-use by design) is created per recording cycle.
+async function _getVoiceStream(){
+  if(_voiceStream && _voiceStream.getTracks().every(t => t.readyState === 'live')) return _voiceStream;
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('mic timeout')), 8000));
+  _voiceStream = await Promise.race([navigator.mediaDevices.getUserMedia({audio:true}), timeout]);
+  return _voiceStream;
+}
 async function toggleVoiceCapture(){
   if(_voiceRecording){
     if(_voiceRecorder && _voiceRecorder.state !== 'inactive') _voiceRecorder.stop();
@@ -896,22 +909,34 @@ async function toggleVoiceCapture(){
   if(_ttsAudio){ _ttsAudio.pause(); setSpeaking(false); }
   let stream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    stream = await _getVoiceStream();
   } catch(err){
     addBubble('⚠️ Microphone access denied or unavailable', 'bot');
     return;
   }
   _voiceChunks = [];
-  _voiceRecorder = new MediaRecorder(stream);
+  try {
+    _voiceRecorder = new MediaRecorder(stream);
+  } catch(err){
+    addBubble('⚠️ Microphone unavailable — try again', 'bot');
+    return;
+  }
   _voiceRecorder.ondataavailable = e => { if(e.data.size > 0) _voiceChunks.push(e.data); };
   _voiceRecorder.onstop = () => {
-    stream.getTracks().forEach(t => t.stop());
+    // Do NOT stop the stream's tracks here — keep the mic stream alive across
+    // recordings (see _getVoiceStream above) so the next tap doesn't have to
+    // re-acquire it.
     _voiceRecording = false;
     _setVoiceCaptureUI(false);
     _stopSpeechRecognitionFallback();
     transcribeAndSend(new Blob(_voiceChunks, {type:'audio/webm'}));
   };
-  _voiceRecorder.start();
+  try {
+    _voiceRecorder.start();
+  } catch(err){
+    addBubble('⚠️ Could not start recording — try again', 'bot');
+    return;
+  }
   _startSpeechRecognitionFallback();
   _voiceRecording = true;
   _setVoiceCaptureUI(true);
