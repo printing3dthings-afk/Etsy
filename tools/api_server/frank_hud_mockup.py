@@ -502,10 +502,10 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
     <div class="voice-widget" style="text-align:left">
       <div class="vw-title">QUICK COMMANDS</div>
-      <button class="qc-btn"><span class="qic">+</span>Start New Task</button>
+      <button class="qc-btn" onclick="showScreen('tasks');document.getElementById('hud-todo-input').focus()"><span class="qic">+</span>Start New Task</button>
       <button class="qc-btn" onclick="showScreen('calendar')"><span class="qic">▦</span>Open Calendar</button>
-      <button class="qc-btn"><span class="qic">✓</span>Run Health Check</button>
-      <button class="qc-btn"><span class="qic">⇄</span>Run Workflow</button>
+      <button class="qc-btn" onclick="runWorkflow('shop_health_check', this)"><span class="qic">✓</span>Run Health Check</button>
+      <button class="qc-btn" onclick="showScreen('workflows')"><span class="qic">⇄</span>Run Workflow</button>
     </div>
   </div>
   <div id="drawer-backdrop"></div>

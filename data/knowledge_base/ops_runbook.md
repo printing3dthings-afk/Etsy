@@ -1064,3 +1064,21 @@ scripts all plausibly have external/agent/manual callers a frontend grep can't s
 Scott to confirm before any removal. Also noted: 3 of 4 "QUICK COMMANDS" sidebar buttons ("Start New Task",
 "Run Health Check", "Run Workflow") have no `onclick` and currently do nothing — wiring them is a separate
 small feature, not done here.
+
+### 2026-06-23 — Full-wiring audit of Frank (frontend + backend) per Scott's request
+**Ask:** Confirm every function/button/endpoint in Frank is actually wired up and running, not just
+"not dead code." Two independent Explore agents audited the frontend (`frank_hud_mockup.py`, every
+onclick/addEventListener/fetch/nav screen/voice+chat wiring) and the backend (`main.py`, all 67
+REST/WebSocket endpoints, all 5 background loops, all local module imports).
+**Result:** Backend is fully wired — no missing imports, no broken routes, no stub endpoints standing
+in for real ones, all background loops have proper error handling. Frontend had exactly one gap: the
+3 dead "QUICK COMMANDS" sidebar buttons flagged (but left unfixed) in the prior cleanup session above
+still had no `onclick`.
+**Fix:** Wired all 3 to existing, already-proven functions instead of writing new code — "Run Health
+Check" → `runWorkflow('shop_health_check', this)` (same call the Workflows screen's buttons already use;
+`shop_health_check` is a registered `_EXEC_COMMANDS` key); "Run Workflow" → `showScreen('workflows')`
+(navigates to the screen that lists every workflow with its own working Run button); "Start New Task" →
+`showScreen('tasks')` + `.focus()` on the existing always-in-DOM `#hud-todo-input` (already wired to
+`addHudTodo()`). Bumped `_BUILD_ID` `v47`→`v48`. Verified: `py_compile` clean, re-extracted `<script>`
+block passes `node --check`, grep confirms all 3 onclicks present and reference real functions.
+**Outcome:** Frank now has zero known broken UI wiring.
