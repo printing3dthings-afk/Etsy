@@ -120,18 +120,6 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .voice-widget{margin-top:auto;border:1px solid var(--border);border-radius:12px;padding:14px 10px;
   background:var(--panel);text-align:center}
 .voice-widget .vw-title{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
-.wave-row{display:flex;align-items:center;justify-content:center;gap:3px;height:22px;margin-bottom:10px}
-.wave-row span{width:3px;background:var(--cyan);border-radius:2px;animation:wave 1.1s ease-in-out infinite}
-.mic-circle{width:78px;height:78px;border-radius:50%;margin:0 auto 8px;display:flex;align-items:center;
-  justify-content:center;cursor:pointer;background:radial-gradient(circle,rgba(58,214,255,.18),transparent 70%);
-  border:2px solid rgba(58,214,255,.5);font-size:26px;color:var(--cyan2);
-  box-shadow:0 0 22px rgba(58,214,255,.35), inset 0 0 18px rgba(58,214,255,.15)}
-.mic-circle.live{animation:micpulse 1.2s ease-in-out infinite}
-.voice-widget .vw-sub{font-size:10px;color:var(--muted);margin-bottom:2px}
-.voice-widget .vw-tap{font-size:11px;color:var(--cyan2);letter-spacing:1px;font-weight:700}
-.focus-btn{margin-top:12px;width:100%;background:transparent;border:1px solid var(--border);
-  color:var(--muted);border-radius:20px;padding:8px;font-size:10.5px;letter-spacing:.5px;cursor:pointer}
-.focus-btn.on{color:var(--amber);border-color:rgba(224,168,58,.5);background:rgba(224,168,58,.08)}
 
 /* ── Main content ── */
 .main{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:12px;padding:12px;overflow:hidden}
@@ -194,7 +182,6 @@ canvas#orb{cursor:pointer}
 /* Row B: Active Agents | Mission Timeline | Quick Commands */
 .col-agents{flex:1.1}
 .col-timeline{flex:1}
-.col-quick{flex:0.85}
 
 .agents-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1}
 .agent-tile{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
@@ -290,8 +277,6 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes wave{0%,100%{height:4px}50%{height:16px}}
-@keyframes micpulse{0%,100%{box-shadow:0 0 22px rgba(58,214,255,.35), inset 0 0 18px rgba(58,214,255,.15)}
-  50%{box-shadow:0 0 34px rgba(122,232,255,.6), inset 0 0 22px rgba(122,232,255,.3)}}
 
 .screen{display:none;grid-column:2;grid-row:2;overflow:hidden;padding:12px}
 .screen.active{display:block}
@@ -881,7 +866,6 @@ function fitStage(){
   const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
   stage.style.transform = 'scale(' + scale + ')';
 }
-function openDrawer(){ document.body.classList.add('drawer-open'); }
 function closeDrawer(){ document.body.classList.remove('drawer-open'); }
 function toggleDrawer(){ document.body.classList.toggle('drawer-open'); }
 function syncMobileClass(){
@@ -952,6 +936,15 @@ function speakText(text){
 }
 
 let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false, _voiceStream = null;
+// ── Auto-stop-on-silence state. We watch the mic's volume envelope with a Web Audio
+// AnalyserNode and stop the RECORDER (never the stream — see beb230b) once the user has
+// spoken and then gone quiet for SILENCE_MS, so they don't have to tap a second time. ──
+let _audioCtx = null, _analyser = null, _analyserSource = null, _analyserStream = null;
+let _silenceRAF = null, _speechSeen = false, _silenceStart = 0, _recStart = 0;
+const _SPEAK_RMS = 0.025;     // above this = talking
+const _SILENCE_RMS = 0.015;   // below this (after speech) = quiet
+const _SILENCE_MS = 1500;     // quiet this long after speech -> auto-stop
+const _MAX_REC_MS = 30000;    // hard cap so a noisy room can't record forever
 // Free fallback for when OpenAI transcription is unavailable (e.g. quota exhausted).
 // SpeechRecognition needs LIVE mic audio — it can't transcribe a finished recording —
 // so it runs in parallel with the MediaRecorder for the same capture session, and its
@@ -991,6 +984,52 @@ function _stopSpeechRecognitionFallback(){
 // bug, which is why the talk button worked once then went dead until a full app relaunch.
 // Fix: acquire the mic stream once and keep it alive for the whole page session; only a
 // new MediaRecorder (cheap, single-use by design) is created per recording cycle.
+// ── Silence monitor: stops the recorder hands-free once the user finishes talking. ──
+async function _startSilenceMonitor(){
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC || !_voiceStream) return;            // no Web Audio -> manual tap-to-stop only
+    if(!_audioCtx) _audioCtx = new AC();
+    if(_audioCtx.state === 'suspended') await _audioCtx.resume();
+    // (Re)bind the analyser source if the stream was (re)acquired since last time.
+    if(!_analyser || _analyserStream !== _voiceStream){
+      _analyserSource = _audioCtx.createMediaStreamSource(_voiceStream);
+      _analyser = _audioCtx.createAnalyser();
+      _analyser.fftSize = 512;
+      _analyserSource.connect(_analyser);
+      _analyserStream = _voiceStream;
+    }
+    const buf = new Uint8Array(_analyser.fftSize);
+    _speechSeen = false; _silenceStart = 0; _recStart = Date.now();
+    const tick = () => {
+      if(!_voiceRecording){ _silenceRAF = null; return; }
+      _analyser.getByteTimeDomainData(buf);
+      let sum = 0;
+      for(let i=0;i<buf.length;i++){ const v = (buf[i]-128)/128; sum += v*v; }
+      const rms = Math.sqrt(sum / buf.length);
+      const now = Date.now();
+      if(rms > _SPEAK_RMS){ _speechSeen = true; _silenceStart = 0; }
+      else if(_speechSeen && rms < _SILENCE_RMS){
+        if(!_silenceStart) _silenceStart = now;
+        else if(now - _silenceStart >= _SILENCE_MS){ _stopRecorderAuto(); return; }
+      }
+      if(now - _recStart >= _MAX_REC_MS){ _stopRecorderAuto(); return; }  // hard cap
+      _silenceRAF = requestAnimationFrame(tick);
+    };
+    _silenceRAF = requestAnimationFrame(tick);
+  } catch(err){ /* analyser unavailable -> manual tap-to-stop still works */ }
+}
+function _stopSilenceMonitor(){
+  if(_silenceRAF){ cancelAnimationFrame(_silenceRAF); _silenceRAF = null; }
+  _speechSeen = false; _silenceStart = 0; _recStart = 0;
+  // NOTE: deliberately do NOT close _audioCtx or stop _voiceStream tracks here —
+  // the context/analyser are reused across recordings and the mic stream must stay
+  // alive for the page session (see _getVoiceStream / commit beb230b).
+}
+function _stopRecorderAuto(){
+  if(_silenceRAF){ cancelAnimationFrame(_silenceRAF); _silenceRAF = null; }
+  if(_voiceRecorder && _voiceRecorder.state !== 'inactive') _voiceRecorder.stop();
+}
 async function _getVoiceStream(){
   if(_voiceStream && _voiceStream.getTracks().every(t => t.readyState === 'live')) return _voiceStream;
   const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('mic timeout')), 8000));
@@ -1023,6 +1062,7 @@ async function toggleVoiceCapture(){
     // recordings (see _getVoiceStream above) so the next tap doesn't have to
     // re-acquire it.
     _voiceRecording = false;
+    _stopSilenceMonitor();
     _setVoiceCaptureUI(false);
     _stopSpeechRecognitionFallback();
     transcribeAndSend(new Blob(_voiceChunks, {type:'audio/webm'}));
@@ -1036,6 +1076,7 @@ async function toggleVoiceCapture(){
   _startSpeechRecognitionFallback();
   _voiceRecording = true;
   _setVoiceCaptureUI(true);
+  _startSilenceMonitor();
 }
 function _setVoiceCaptureUI(on){
   const pill = document.getElementById('talk-pill');
@@ -3051,12 +3092,6 @@ function tick(){
 }
 tick(); setInterval(tick, 1000);
 
-// ── Focus mode toggle (visual only; element only present when the voice widget is shown) ──
-const focusToggle = document.getElementById('focus-toggle');
-if(focusToggle) focusToggle.addEventListener('click', function(){
-  this.classList.toggle('on');
-  this.textContent = this.classList.contains('on') ? 'FOCUS MODE: ON' : 'FOCUS MODE: OFF';
-});
 
 // ── Orb: idle rotating wireframe particle sphere, audio-reactive on click (demo only) ──
 const canvas = document.getElementById('orb');

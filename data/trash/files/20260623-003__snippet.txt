@@ -1,0 +1,1 @@
+.col-quick{flex:0.85}

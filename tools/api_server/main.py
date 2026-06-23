@@ -210,7 +210,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v46"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v47"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -4035,6 +4035,16 @@ async def _snapshot_loop() -> None:
         except Exception as exc:
             print(f"[snapshot] error: {exc}", flush=True)
             db.set_agent_heartbeat("snapshot", "Snapshot", "error", str(exc)[:300])
+        # Daily recycle-bin prune (tools/trash.py): drop deletions older than 30 days.
+        # Piggybacks on this already-daily loop so expiry is time-based and durable on
+        # the live server — no separate cron needed (and no harness-cron 7-day expiry).
+        try:
+            from tools.trash import prune as _trash_prune
+            n = await asyncio.to_thread(_trash_prune)
+            if n:
+                print(f"[trash] pruned {n} expired entr{'y' if n == 1 else 'ies'}", flush=True)
+        except Exception as exc:
+            print(f"[trash] prune error: {exc}", flush=True)
         await asyncio.sleep(86_400)
 
 

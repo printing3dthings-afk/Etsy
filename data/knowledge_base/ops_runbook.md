@@ -1017,3 +1017,50 @@ guessing):**
   confirmed by re-grepping `STAGE_W`/`STAGE_H`/`innerWidth`/`innerHeight` to verify they're still only
   referenced inside the now-mobile-gated `fitStage()`, and by a CSS brace-balance + `node --check` pass on
   the extracted inline `<script>` block (118KB, no syntax errors).
+
+---
+
+## 2026-06-23 — Recycle-bin safety net + mic auto-stop-on-silence + dashboard dead-code cleanup
+
+Three changes shipped together at Scott's request.
+
+**1. Recycle bin (`tools/trash.py` + `data/trash/`).** Scott: "I want a file that keeps anything you
+delete for 30 days so in case it was accidentally removed or caused an issue we can pull whatever we need
+back." Built a deletion safety net: `archive_snippet(source, content, reason)` / `archive_file(path, reason)`
+write to a committed, human-readable ledger `data/trash/DELETED.md` (machine-parseable per-entry header
+comment + verbatim content in an adaptive backtick fence) plus a byte-exact payload copy under
+`data/trash/files/` so restores never depend on re-parsing markdown. `restore(id[, dest])` recovers a
+snippet (stdout/file) or a whole file (back to its original path). `prune(days=30)` drops expired entries +
+their payloads and runs automatically after every archive. **The vault is committed to git on purpose** —
+this remote environment's container is ephemeral, so an uncommitted vault would vanish with the session.
+Time-based expiry is driven by a one-liner added to the existing daily `_snapshot_loop()` in `main.py`
+(calls `trash.prune()` every 24h) — chosen over a separate cron because that loop already runs continuously
+on the live Railway server, so there's nothing extra to keep alive. A hard rule was added to CLAUDE.md
+("Archive anything before deleting it") so future sessions use it. Tested: snippet round-trip is byte-exact,
+a synthetic 40-day-old entry is pruned with its payload, and the adaptive fence survives content containing
+triple backticks.
+
+**2. Microphone auto-stop on silence (`frank_hud_mockup.py`).** Previously the talk-pill/orb recorded until
+a *second* tap — there was zero silence detection. Added `_startSilenceMonitor()`/`_stopSilenceMonitor()`:
+a Web Audio `AnalyserNode` (fftSize 512) on the persistent mic stream computes RMS in a
+`requestAnimationFrame` loop; once the user has spoken (RMS > 0.025) and then stayed quiet (RMS < 0.015) for
+1500ms, it stops the **recorder** — which fires the existing `onstop` → transcribe path. A 30s hard cap
+prevents a noisy room recording forever. Wired in after `_voiceRecorder.start()` and torn down in `onstop`
+(so manual re-tap still stops immediately). **Critically preserves the beb230b fix**: it stops only the
+`MediaRecorder`, never the `_voiceStream` tracks, and reuses one `AudioContext`/analyser across recordings.
+If Web Audio is unavailable it silently degrades to the old manual tap-to-stop (no regression). Bumped
+`_BUILD_ID` `v46`→`v47` so the installed PWA picks up the new shell.
+
+**3. Dead-code cleanup (`frank_hud_mockup.py`).** Removed ~1.7KB of confirmed-dead remnants of the original
+voice-widget UI (replaced long ago by the QUICK COMMANDS buttons + bottom talk-pill): CSS `.wave-row`,
+`.mic-circle`(+`.live`), `.vw-sub`, `.vw-tap`, `.focus-btn`(+`.on`), `@keyframes micpulse`, `.col-quick`;
+and dead JS `openDrawer()` (never called) + the `#focus-toggle` handler (no such element exists). Each block
+was archived to the new recycle bin *before* removal (ids 20260623-001..005), so it's all recoverable.
+Verified: greps for the 9 removed symbols return zero; kept symbols (`@keyframes wave`, `.vw-title`,
+`.mini-wave`, `closeDrawer`, `toggleDrawer`) still present; CSS braces balanced (267/267); `node --check`
+clean. **Backend "wasted code" was investigated but NOT touched** — candidate unused endpoints
+(`/api/history`, `/api/snapshot`, `/api/conversion-targets`, `/api/autofix/{tags,title}`, etc.) and tool
+scripts all plausibly have external/agent/manual callers a frontend grep can't see, so they're left for
+Scott to confirm before any removal. Also noted: 3 of 4 "QUICK COMMANDS" sidebar buttons ("Start New Task",
+"Run Health Check", "Run Workflow") have no `onclick` and currently do nothing — wiring them is a separate
+small feature, not done here.
