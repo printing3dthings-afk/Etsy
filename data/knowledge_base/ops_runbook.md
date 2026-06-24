@@ -1114,3 +1114,51 @@ gives false-positive `node --check` failures) and passes `node --check`; grep co
 consistent at both call sites. Bumped `_BUILD_ID` `v48`→`v49`.
 **Not verified:** no browser is available in this environment — the mobile CSS changes are unverified
 visually; flagging rather than claiming a check that didn't happen.
+
+### 2026-06-24 — Phase 2 agentic capability expansion (chat ↔ REST bridge, 7 new tools)
+**Ask:** Scott's roadmap's second phase — close the gap between "Frank has a tool-use loop" and "Frank
+can do everything the dashboard's buttons can do." Every new mutating tool stages through the existing
+`db.enqueue_action()` → Action Center → approve → executor pipeline; the approval gate itself was never
+touched. All changes in `tools/api_server/main.py`.
+**M1 — autofix/batch-tag/listing-state bridged into chat.** `autofix_listing_tags`/`autofix_listing_title`
+wrap the existing `_autofix_tags_core()`/`_autofix_title_core()` verbatim — pure exposure, no new staging
+logic. `stage_batch_tag_update` is new orchestration: hard-capped at 10 listing_ids (rejects above, never
+silently truncates, per CLAUDE.md's existing bulk-edit rule), stages each listing's tag update as its own
+separate Action Center row so Scott approves/rejects per-listing, never all-or-nothing. `toggle_listing_state`
+got a **second, chat-only path** — the dashboard's `POST /api/listings/{id}/state` stays exactly as-is
+(still gated only by its own `confirm()`), but chat has no UI confirm dialog, so its tool always stages via
+a new `toggle_listing_state` action type with its own `_validate_staged_action` branch and a new
+`_execute_staged_action` dispatch branch.
+**M2 — read-only conversion diagnostics exposed to chat.** Extracted `GET /api/conversion-targets` and
+`POST /api/diagnose/{listing_id}`'s bodies into standalone `_get_conversion_targets_core()` /
+`_diagnose_listing_core(listing_id)`; the REST routes became thin cache-wrapped callers, and two new
+read-only `AGENT_TOOLS` (`get_conversion_targets`, `diagnose_listing_conversion`) call the same core
+functions directly (bypassing the HTTP-layer cache, as expected). No staging — pure reads. Fixed a latent
+bug surfaced during extraction: the diagnose core function referenced an undefined `cache_key` left over
+from before the extraction; removed it from the core function and gave the route its own local `cache_key`.
+**M3 — `register_command` self-extension tool.** Lets Claude wire up an *existing* script under `tools/`
+as a new named command — a new capability, not a one-time mutation, so it gets the same staging mechanism
+plus extra guardrails: the tool's input schema has no `requires_approval` field at all, and the executor
+(`_execute_register_command_staged_action`) hardcodes `requires_approval: True` on every registration
+regardless of what's proposed — Claude can never register a command that skips approval. Validation (in
+`_validate_staged_action`) rejects: `script_path` outside `tools/` or containing `..`, a `script_path` that
+doesn't exist on disk yet (Claude can wire up an existing script, not write-and-register in one call), a
+`command_name` that collides with an existing `_EXEC_COMMANDS` entry, and a non-positive `timeout`. New
+sidecar `data/registered_commands.json` (starts as `{}`, git-tracked) persists approved registrations
+across restarts — `_load_registered_commands()` merges it into the in-memory `_EXEC_COMMANDS` dict at
+import time, forcibly re-stamping `requires_approval: True` on every loaded entry as a second hardcoding
+layer. `approve_action`'s three-way dispatch (`is_local`/`is_script`/else) became four-way with a new
+`is_register_command` branch.
+**Verified:** `py_compile` clean. Live-import simulation (`import main as m` from `tools/api_server/`,
+calling `_execute_agent_tool` via `asyncio.to_thread`) exercised every new tool: `get_conversion_targets`
+completed a real successful Etsy API call; `diagnose_listing_conversion` correctly returned a clean
+`{"error": ...}` (not a crash) when `ANTHROPIC_API_KEY` is unset; `register_command` correctly rejected a
+`script_path` outside `tools/`, a `script_path` containing `..`, a nonexistent `script_path`, and a
+duplicate `command_name` against a real existing `_EXEC_COMMANDS` key (`shop_health_check`); a valid
+registration staged successfully, and running the approved action through
+`_execute_register_command_staged_action` correctly wrote `requires_approval: True` into both the live
+`_EXEC_COMMANDS` dict and `data/registered_commands.json` on disk, and a fresh `_load_registered_commands()`
+call reloaded it correctly. Test action and sidecar entry were cleaned up (action rejected, sidecar reset
+to `{}`) after verification — no test artifacts left in the live system. Bumped `_BUILD_ID` `v49`→`v50`.
+**M4 (revisiting the approval gate itself) stays explicitly deferred** — not part of this pass, per Scott's
+standing instruction that approval remains mandatory for every mutating action.

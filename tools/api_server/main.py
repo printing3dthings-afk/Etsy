@@ -180,6 +180,30 @@ _EXEC_COMMANDS: dict[str, dict] = {
     },
 }
 
+# Sidecar persistence for commands registered at runtime via the register_command
+# chat tool (Phase 2 M3) — _EXEC_COMMANDS above is a static in-memory dict that
+# would forget any approved registration on restart, so approved entries are also
+# written here and reloaded on every startup. Git-tracked plain JSON, same
+# "nothing we delete should be unrecoverable" spirit as data/trash/.
+_REGISTERED_COMMANDS_FILE = ROOT / "data" / "registered_commands.json"
+
+
+def _load_registered_commands() -> None:
+    if not _REGISTERED_COMMANDS_FILE.is_file():
+        return
+    try:
+        entries = json.loads(_REGISTERED_COMMANDS_FILE.read_text())
+    except Exception as exc:
+        print(f"[register_command] failed to load {_REGISTERED_COMMANDS_FILE}: {exc}", flush=True)
+        return
+    for name, cfg in entries.items():
+        cfg = dict(cfg)
+        cfg["requires_approval"] = True  # hardcoded regardless of what the sidecar says
+        _EXEC_COMMANDS[name] = cfg
+
+
+_load_registered_commands()
+
 # extra_args that would let a direct command run mutate live Etsy data bypass the
 # approval gate Scott requires. Frank stages listing edits for one-tap approval;
 # he must never push them straight through via a CLI flag (and neither can a
@@ -210,7 +234,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v49"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v50"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -964,7 +988,10 @@ AGENT_TOOLS = [
             "properties": {
                 "action_type": {
                     "type": "string",
-                    "enum": ["update_tags", "update_title", "publish_listing", "deactivate_listing"],
+                    "enum": [
+                        "update_tags", "update_title", "publish_listing",
+                        "deactivate_listing", "toggle_listing_state",
+                    ],
                 },
                 "listing_id": {"type": "integer", "description": "The listing to change."},
                 "summary": {
@@ -980,8 +1007,152 @@ AGENT_TOOLS = [
                     "items": {"type": "string"},
                     "description": "Full replacement tag list for update_tags. Max 13, each ≤20 chars.",
                 },
+                "new_state": {
+                    "type": "string",
+                    "enum": ["active", "inactive"],
+                    "description": "Target state for toggle_listing_state.",
+                },
             },
             "required": ["action_type", "listing_id", "summary"],
+        },
+    },
+    {
+        "name": "autofix_listing_tags",
+        "description": (
+            "Generate and stage a corrected, full 13-tag replacement for a listing using "
+            "the same autofix logic as the dashboard's Autofix button. Stages into the "
+            "Action Center for Scott's approval — does not apply anything directly."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {"type": "integer", "description": "The listing to fix tags for."},
+                "reason": {
+                    "type": "string",
+                    "description": "Optional context for why this listing's tags need fixing.",
+                },
+            },
+            "required": ["listing_id"],
+        },
+    },
+    {
+        "name": "autofix_listing_title",
+        "description": (
+            "Generate and stage a corrected title for a listing using the same autofix "
+            "logic as the dashboard's Autofix button. Stages into the Action Center for "
+            "Scott's approval — does not apply anything directly."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {"type": "integer", "description": "The listing to fix the title for."},
+                "reason": {
+                    "type": "string",
+                    "description": "Optional context for why this listing's title needs fixing.",
+                },
+            },
+            "required": ["listing_id"],
+        },
+    },
+    {
+        "name": "stage_batch_tag_update",
+        "description": (
+            "Generate and stage corrected tags for up to 10 listings at once. Each listing "
+            "is staged as its own independent Action Center entry — Scott approves or "
+            "rejects each one individually, never all-or-nothing. Requests for more than "
+            "10 listing_ids are rejected; split the batch and ask Scott which subset to "
+            "run first instead of guessing scope."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_ids": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "Listing IDs to fix tags for. Max 10 per call.",
+                },
+                "reason": {
+                    "type": "string",
+                    "description": "Optional shared context for why these listings' tags need fixing.",
+                },
+            },
+            "required": ["listing_ids"],
+        },
+    },
+    {
+        "name": "toggle_listing_state",
+        "description": (
+            "Stage an activate/deactivate change for a listing. This is the chat-only path "
+            "to the same effect as the dashboard's Activate/Deactivate button, but since "
+            "chat has no confirm() dialog, it always stages into the Action Center for "
+            "Scott's one-tap approval rather than applying immediately."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {"type": "integer", "description": "The listing to activate or deactivate."},
+                "new_state": {"type": "string", "enum": ["active", "inactive"]},
+                "summary": {
+                    "type": "string",
+                    "description": "One-line human summary shown on the approval card.",
+                },
+            },
+            "required": ["listing_id", "new_state", "summary"],
+        },
+    },
+    {
+        "name": "get_conversion_targets",
+        "description": (
+            "List active listings that are getting views but no sales — the Conversion "
+            "Doctor's worklist. Read-only, no staging. Sorted by favorites then views, "
+            "top 10."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "diagnose_listing_conversion",
+        "description": (
+            "Run a deep conversion diagnosis on one listing — pulls title, price, photo "
+            "count, tags, views, favorites, and sales, then returns a structured "
+            "diagnosis with a primary issue and suggested fixes. Read-only, no staging."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {"type": "integer", "description": "The listing to diagnose."},
+            },
+            "required": ["listing_id"],
+        },
+    },
+    {
+        "name": "register_command",
+        "description": (
+            "Wire up an EXISTING script under tools/ as a new named command Frank can run. "
+            "This adds a new capability, not a one-time mutation, so it stages into the "
+            "Action Center for Scott's approval like everything else — and the resulting "
+            "command always requires approval to run, no matter what is proposed here. "
+            "Use this to register a script Scott or Claude already wrote on disk; this tool "
+            "cannot write a new script and register it in the same call — script_path must "
+            "already exist."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "command_name": {"type": "string", "description": "Unique snake_case name for the new command."},
+                "script_path": {
+                    "type": "string",
+                    "description": "Path to the script, relative to the repo root, must be under tools/ (e.g. tools/my_script.py).",
+                },
+                "description": {"type": "string", "description": "One-line description shown in the Workflows screen."},
+                "timeout": {"type": "integer", "description": "Max seconds the script may run."},
+                "long_running": {"type": "boolean", "description": "Whether this command typically takes minutes to finish."},
+                "args": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional fixed CLI args always passed to the script.",
+                },
+            },
+            "required": ["command_name", "script_path", "description", "timeout", "long_running"],
         },
     },
     {
@@ -1323,6 +1494,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 payload["title"] = ti["title"]
             if ti.get("tags") is not None:
                 payload["tags"] = ti["tags"]
+            if ti.get("new_state") is not None:
+                payload["new_state"] = ti["new_state"]
             if ti.get("action_type") == "publish_listing" and ti.get("listing_id"):
                 # Capture-now-render-later snapshot for the Detailed Action Review
                 # mock listing preview — taken at staging time so the card Scott
@@ -1428,6 +1601,125 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 return {"error": "todo_id is required"}
             ok = db.set_todo_done(int(todo_id), True)
             return {"done": ok}
+        if name == "autofix_listing_tags":
+            ti = tool_input or {}
+            lid = ti.get("listing_id")
+            if lid is None:
+                return {"error": "listing_id is required"}
+            return asyncio.run(_autofix_tags_core(int(lid), reason=ti.get("reason", "")))
+        if name == "autofix_listing_title":
+            ti = tool_input or {}
+            lid = ti.get("listing_id")
+            if lid is None:
+                return {"error": "listing_id is required"}
+            return asyncio.run(_autofix_title_core(int(lid), reason=ti.get("reason", "")))
+        if name == "stage_batch_tag_update":
+            ti = tool_input or {}
+            listing_ids = ti.get("listing_ids") or []
+            if not listing_ids:
+                return {"error": "listing_ids is required"}
+            if len(listing_ids) > 10:
+                return {
+                    "error": (
+                        f"Refused: {len(listing_ids)} listing_ids exceeds the 10-listing cap "
+                        "for a single batch. Split this into smaller batches and ask Scott "
+                        "which subset to run first."
+                    )
+                }
+            client = EtsyAPIClient()
+            listings = []
+            fetch_errors = []
+            for lid in listing_ids:
+                try:
+                    listings.append(client.get_listing(int(lid)))
+                except Exception as exc:
+                    fetch_errors.append({"listing_id": lid, "error": str(exc)})
+            if not listings:
+                return {"staged": [], "count": 0, "errors": fetch_errors}
+            try:
+                tag_results = _generate_tags_for_listings(listings, ti.get("reason", ""))
+            except Exception as exc:
+                return {"error": f"Tag generation failed: {exc}", "errors": fetch_errors}
+            listing_map = {l["listing_id"]: l for l in listings}
+            staged = []
+            errors = list(fetch_errors)
+            for res in tag_results:
+                lid = res.get("listing_id")
+                raw_tags = res.get("tags", [])
+                listing = listing_map.get(lid, {})
+                title_short = (listing.get("title") or f"Listing {lid}")[:50]
+                tags = [_clean_tag(t) for t in raw_tags if str(t).strip()]
+                seen: set[str] = set()
+                tags = [t for t in tags if t and not (t in seen or seen.add(t))]
+                candidate = {"type": "update_tags", "payload": {"listing_id": lid, "tags": tags}}
+                ok, msg = _validate_staged_action(candidate)
+                if not ok:
+                    errors.append({"listing_id": lid, "title": title_short, "error": msg})
+                    continue
+                summary = f"Tag fix ({len(tags)}/13): {title_short}"
+                aid = db.enqueue_action("update_tags", summary, {"listing_id": lid, "tags": tags})
+                staged.append({"listing_id": lid, "action_id": aid, "tags": tags})
+            with _cache_lock:
+                _cache.pop("actions", None)
+            return {"staged": staged, "count": len(staged), "errors": errors}
+        if name == "toggle_listing_state":
+            ti = tool_input or {}
+            lid = ti.get("listing_id")
+            new_state = ti.get("new_state")
+            if lid is None:
+                return {"error": "listing_id is required"}
+            candidate = {
+                "type": "toggle_listing_state",
+                "payload": {"listing_id": lid, "new_state": new_state},
+            }
+            ok, msg = _validate_staged_action(candidate)
+            if not ok:
+                return {"staged": False, "error": msg}
+            aid = db.enqueue_action(
+                "toggle_listing_state",
+                ti.get("summary", ""),
+                {"listing_id": lid, "new_state": new_state},
+            )
+            return {
+                "staged": True,
+                "action_id": aid,
+                "status": "pending",
+                "note": "Queued for Scott's approval in the Action Center — not yet applied.",
+            }
+        if name == "get_conversion_targets":
+            return asyncio.run(_get_conversion_targets_core())
+        if name == "diagnose_listing_conversion":
+            ti = tool_input or {}
+            lid = ti.get("listing_id")
+            if lid is None:
+                return {"error": "listing_id is required"}
+            return asyncio.run(_diagnose_listing_core(int(lid)))
+        if name == "register_command":
+            ti = tool_input or {}
+            payload = {
+                "command_name": ti.get("command_name"),
+                "script_path": ti.get("script_path"),
+                "description": ti.get("description", ""),
+                "timeout": ti.get("timeout"),
+                "long_running": bool(ti.get("long_running", False)),
+            }
+            if ti.get("args"):
+                payload["args"] = ti["args"]
+            candidate = {"type": "register_command", "payload": payload}
+            ok, msg = _validate_staged_action(candidate)
+            if not ok:
+                return {"staged": False, "error": msg}
+            aid = db.enqueue_action(
+                "register_command",
+                f"Register new command: {payload['command_name']} ({payload['script_path']})",
+                payload,
+            )
+            return {
+                "staged": True,
+                "action_id": aid,
+                "status": "pending",
+                "note": "Queued for Scott's approval in the Action Center — not yet registered.",
+            }
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired:
         return {"error": f"Command timed out (>{timeout}s)"}
@@ -4449,17 +4741,13 @@ async def get_suggestions(_token: str = Depends(_auth)):
 
 _CONV_TARGETS_TTL = 120  # 2-minute cache — fast enough to stay fresh, eliminates repeat Etsy API calls
 
-@app.get("/api/conversion-targets")
-async def conversion_targets(_token: str = Depends(_auth)):
+async def _get_conversion_targets_core() -> dict:
     """Active listings getting views but no sales — the Conversion Doctor's worklist.
 
     Sorted by views descending (most wasted traffic first), top 10. Listings with
     favorites but zero sales rank as the strongest signal (proven interest, no buy).
+    Shared by the REST route and the get_conversion_targets chat tool.
     """
-    cached = _cache_get("conv_targets", ttl=_CONV_TARGETS_TTL)
-    if cached is not None:
-        return cached
-
     def _fetch():
         active = _enrich_sales(_listings_sync("active").get("listings", []))
         targets = [l for l in active if (l.get("views", 0) or 0) > 0 and (l.get("sales", 0) or 0) == 0]
@@ -4470,7 +4758,7 @@ async def conversion_targets(_token: str = Depends(_auth)):
         targets = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=20.0)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
-    result = {
+    return {
         "count": len(targets),
         "targets": [
             {
@@ -4486,20 +4774,24 @@ async def conversion_targets(_token: str = Depends(_auth)):
             for l in targets
         ],
     }
+
+
+@app.get("/api/conversion-targets")
+async def conversion_targets(_token: str = Depends(_auth)):
+    cached = _cache_get("conv_targets", ttl=_CONV_TARGETS_TTL)
+    if cached is not None:
+        return cached
+    result = await _get_conversion_targets_core()
     _cache_set("conv_targets", result)
     return result
 
 
-@app.post("/api/diagnose/{listing_id}")
-async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
+async def _diagnose_listing_core(listing_id: int) -> dict:
     """Deep conversion diagnosis of ONE listing. Pulls full listing detail (title,
     price, description, tags) + photo count + real sales, then a single focused
-    Claude call returns a structured, listing-specific diagnosis. Cached 10 min."""
-    cache_key = f"diagnose_{listing_id}"
-    cached = _cache_get(cache_key, ttl=600)
-    if cached is not None:
-        return cached
-
+    Claude call returns a structured, listing-specific diagnosis. Shared by the REST
+    route and the diagnose_listing_conversion chat tool — note this makes its own
+    nested Claude call, same as _autofix_title_core."""
     if not ANTHROPIC_KEY:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
 
@@ -4584,6 +4876,16 @@ async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
         "diagnosis": diagnosis,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
+    return result
+
+
+@app.post("/api/diagnose/{listing_id}")
+async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
+    cache_key = f"diagnose_{listing_id}"
+    cached = _cache_get(cache_key, ttl=600)
+    if cached is not None:
+        return cached
+    result = await _diagnose_listing_core(listing_id)
     _cache_set(cache_key, result)
     return result
 
@@ -4795,15 +5097,18 @@ async def post_snapshot(_token: str = Depends(_auth)):
 
 # ── Staged actions (agent prepares → Scott approves → server executes) ────────────
 
-_ETSY_STAGED_ACTION_TYPES = ("update_tags", "update_title", "publish_listing", "deactivate_listing")
+_ETSY_STAGED_ACTION_TYPES = (
+    "update_tags", "update_title", "publish_listing", "deactivate_listing", "toggle_listing_state",
+)
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
 _SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
 _PHOTO_STAGED_ACTION_TYPES = ("listing_photo",)
 _VIDEO_STAGED_ACTION_TYPES = ("listing_video",)
+_REGISTER_COMMAND_STAGED_ACTION_TYPES = ("register_command",)
 _STAGED_ACTION_TYPES = (
     _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
     + _SCRIPT_STAGED_ACTION_TYPES + _PHOTO_STAGED_ACTION_TYPES
-    + _VIDEO_STAGED_ACTION_TYPES
+    + _VIDEO_STAGED_ACTION_TYPES + _REGISTER_COMMAND_STAGED_ACTION_TYPES
 )
 
 
@@ -4834,6 +5139,10 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
                     return False, "tags contain an empty value"
                 if len(tg) > 20:
                     return False, f"tag '{tg}' exceeds 20 characters"
+        if t == "toggle_listing_state":
+            new_state = p.get("new_state")
+            if new_state not in ("active", "inactive"):
+                return False, "new_state must be 'active' or 'inactive'"
         return True, "ok"
     if t in _PHOTO_STAGED_ACTION_TYPES:
         if not p.get("listing_id"):
@@ -4901,6 +5210,29 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
             bad = [pt for pt in extra_args.split() if any(f in pt.lower() for f in _FORBIDDEN_EXEC_FLAGS)]
             if bad:
                 return False, f"extra_args {bad} are not allowed"
+    elif t == "register_command":
+        command_name = (p.get("command_name") or "").strip()
+        script_path = (p.get("script_path") or "").strip()
+        if not command_name:
+            return False, "missing command_name"
+        if command_name in _EXEC_COMMANDS:
+            return False, f"command_name '{command_name}' is already registered — pick a different name"
+        if not script_path:
+            return False, "missing script_path"
+        if ".." in script_path.replace("\\", "/").split("/"):
+            return False, "script_path must not contain '..'"
+        try:
+            target = (ROOT / script_path).resolve()
+        except Exception:
+            return False, f"invalid script_path: {script_path}"
+        tools_root = (ROOT / "tools").resolve()
+        if tools_root != target and tools_root not in target.parents:
+            return False, "script_path must resolve under tools/"
+        if not target.is_file():
+            return False, f"script_path does not exist on disk: {script_path}"
+        timeout = p.get("timeout")
+        if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0:
+            return False, "timeout must be a positive integer"
     return True, "ok"
 
 
@@ -4918,13 +5250,15 @@ def _execute_staged_action(a: dict) -> dict:
         res = client.update_listing(lid, {"state": "active"})
     elif t == "deactivate_listing":
         res = client.update_listing(lid, {"state": "inactive"})
+    elif t == "toggle_listing_state":
+        res = client.update_listing(lid, {"state": p["new_state"]})
     elif t == "listing_photo":
         abs_path = _resolve_in_root("staged_photos", p["path"])
         if not abs_path.is_file():
             raise FileNotFoundError(f"staged photo not found: {p['path']}")
         img = client.upload_listing_image(lid, str(abs_path), rank=p.get("rank", 1))
         with _cache_lock:
-            for k in ("listings_active", "listings_draft", "actions", "metrics"):
+            for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
                 _cache.pop(k, None)
         return {
             "listing_id": lid,
@@ -4940,7 +5274,7 @@ def _execute_staged_action(a: dict) -> dict:
             raise FileNotFoundError(f"staged video not found: {p['path']}")
         vid = client.upload_listing_video(lid, str(abs_path), rank=p.get("rank"))
         with _cache_lock:
-            for k in ("listings_active", "listings_draft", "actions", "metrics"):
+            for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
                 _cache.pop(k, None)
         return {
             "listing_id": lid,
@@ -4952,7 +5286,7 @@ def _execute_staged_action(a: dict) -> dict:
     else:
         raise ValueError(f"unsupported type {t}")
     with _cache_lock:
-        for k in ("listings_active", "listings_draft", "actions", "metrics"):
+        for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
             _cache.pop(k, None)
     return {
         "listing_id": lid,
@@ -4962,6 +5296,35 @@ def _execute_staged_action(a: dict) -> dict:
             "title": res.get("title"),
         },
     }
+
+
+def _execute_register_command_staged_action(a: dict) -> dict:
+    """Apply an approved register_command action — writes the new command into
+    the live _EXEC_COMMANDS dict and persists it to the registered_commands.json
+    sidecar so it survives a restart. requires_approval is hardcoded True here
+    too, not just at sidecar-load time, since this is the actual write path."""
+    p = a.get("payload", {}) or {}
+    command_name = p["command_name"]
+    cfg = {
+        "script": p["script_path"],
+        "description": p.get("description", ""),
+        "timeout": p["timeout"],
+        "long_running": bool(p.get("long_running", False)),
+        "requires_approval": True,
+    }
+    if p.get("args"):
+        cfg["args"] = p["args"]
+
+    try:
+        existing = json.loads(_REGISTERED_COMMANDS_FILE.read_text()) if _REGISTERED_COMMANDS_FILE.is_file() else {}
+    except Exception:
+        existing = {}
+    existing[command_name] = cfg
+    _REGISTERED_COMMANDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    _REGISTERED_COMMANDS_FILE.write_text(json.dumps(existing, indent=2))
+
+    _EXEC_COMMANDS[command_name] = cfg
+    return {"command_name": command_name, "script": cfg["script"], "registered": True}
 
 
 async def _execute_local_staged_action(a: dict) -> dict:
@@ -5025,6 +5388,7 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
         raise HTTPException(status_code=422, detail=f"quality gate failed: {msg}")
     is_local = a["type"] in _LOCAL_STAGED_ACTION_TYPES
     is_script = a["type"] in _SCRIPT_STAGED_ACTION_TYPES
+    is_register_command = a["type"] in _REGISTER_COMMAND_STAGED_ACTION_TYPES
     if is_local:
         state = await asyncio.to_thread(db.get_relay_state)
         if state.get("killed"):
@@ -5036,6 +5400,10 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
             cfg_timeout = _EXEC_COMMANDS.get(a.get("payload", {}).get("command"), {}).get("timeout", 60)
             result = await asyncio.wait_for(
                 asyncio.to_thread(_execute_script_staged_action, a), timeout=cfg_timeout + 5.0
+            )
+        elif is_register_command:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(_execute_register_command_staged_action, a), timeout=15.0
             )
         else:
             result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
