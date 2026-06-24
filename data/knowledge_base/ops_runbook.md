@@ -1162,3 +1162,83 @@ call reloaded it correctly. Test action and sidecar entry were cleaned up (actio
 to `{}`) after verification — no test artifacts left in the live system. Bumped `_BUILD_ID` `v49`→`v50`.
 **M4 (revisiting the approval gate itself) stays explicitly deferred** — not part of this pass, per Scott's
 standing instruction that approval remains mandatory for every mutating action.
+
+### 2026-06-24 — Frank Reliability & CEO-Knowledge Upgrade (Phases 0–3, full initiative)
+**Ask:** Scott's goal — Frank should hit "98% functionality without having to keep using Claude Code,"
+meaning 98% of Frank's day-to-day operation shouldn't require Scott invoking Claude Code to fix something
+broken. Four sub-goals: never assume (every claim traces to a real answer), agent loops converge correctly
+the first time, Frank diagnoses/fixes his own problems where safe, and Frank reasons with CEO-grade
+judgment. **Standing constraint preserved everywhere in this pass:** every mutating action still requires
+Action Center approval — "self-healing" means better diagnosis/retry/escalation, never auto-bypassing
+approval. Tier-1 auto-heal stays Etsy-free. `ceo_agent.py`'s `tool_approve_and_publish`/`tool_build_agent`
+were studied for patterns only, never ported (they bypass the approval gate by design).
+
+**Phase 0 — Foundations.** New `tools/api_server/resilience.py`: `retry_with_backoff()` (exponential
+backoff + full jitter, category-aware `retryable` predicate) and `CircuitBreaker` (per-dependency
+open/half-open/closed state, persisted via new `circuit_breaker_state` table in `db.py`). New structured
+tool-error taxonomy (`ToolError`/`TransientToolError`/`ValidationToolError`/`NotFoundToolError`/
+`TerminalToolError`) replaced the blanket `except Exception` closing `_execute_agent_tool` — tool errors
+now return `{"error", "category", "retryable"}` so the model knows whether a retry is worth attempting.
+
+**Phase 1 — Close the knowledge-loading gap.** `_summarize_and_rotate_kb_file()` rotates `ops_runbook.md`/
+`ceo_learnings.md` once they exceed ~20KB (Haiku-tier summarization of everything older than a recent tail)
+so the existing hard truncation in `_ops_runbook_block`/`_ceo_learnings_block` becomes a safety net instead
+of silent data loss. New `read_knowledge_base_doc` agent tool (thin wrapper on the existing
+`_resolve_kb_doc`/`_kb_docs`/`_kb_search`) gives Frank on-demand retrieval across all of
+`data/knowledge_base/`, including `CLAUDE.md` itself (special-cased in `_resolve_kb_doc`). Deleted the
+hardcoded product/price list from `_CEO_SYSTEM` — Frank now always calls `list_listings(state='active')`
+for current catalog/pricing instead of reciting a string that drifts from reality. New
+`ceo_operating_playbook.md` (Bezos one-way/two-way-door framework, pre-mortems, kill criteria, SKU-renewal
+ROI rule, financial cadence, etc.) — on-demand retrieval only, never baked into every prompt. New "WHEN YOU
+DON'T KNOW SOMETHING" protocol in `_CEO_SYSTEM`: tools → ops_runbook → ceo_learnings → knowledge base → web
+search → ask Scott (pricing/legal/tax/live-listing topics) or give a clearly-caveated estimate (everything
+else) — never invent a plausible-sounding answer silently.
+
+**Phase 2 — Consistent retry/backoff everywhere.** All 5 background loops (`_snapshot_loop`,
+`_warm_suggestions`, `_token_sync_loop`, `_quality_audit_loop`, `_health_check_loop`) migrated onto a
+shared `_run_loop_iteration()` built on Phase 0's primitives — jittered exponential backoff replaces fixed
+sleeps, each loop trips its own circuit breaker on repeated failure. The one-off Etsy 403 retry became a
+`retry_with_backoff()` call. `_execute_staged_action`'s Etsy calls (`update_listing`/`upload_listing_image`/
+`upload_listing_video`) now retry on 429/500/502/503 — only on an *already-approved* mutation, never a new
+one. New `"executing"` action status (alongside `pending`/`executed`/`failed`/`rejected`) set before
+`_execute_staged_action` runs, so a crash mid-execution can't leave an action silently re-approvable for a
+duplicate publish/upload.
+
+**Phase 3 — Self-diagnosis, safe remediation, CEO-grade reasoning.** Three-tier escalation for the health/
+quality loops: Tier 1 auto-heals cache invalidation, reaping crashed processes, transient Anthropic-API
+retries — never touches Etsy. Tier 2 alerts with a looked-up remediation from `_KNOWN_FAILURE_REMEDIATIONS`.
+Tier 3 writes a blameless-postmortem-style report (`_write_escalation_report`) into `ops_runbook.md` for
+novel failures — symptoms, what was tried, root-cause hypothesis labeled as a hypothesis. The KB-rotation
+pass now also promotes a failure category appearing 3+ times into a `## Known Recurring Issues` section at
+the top of `ops_runbook.md`. New "TOOL-RECEIPT DISCIPLINE" rule in `_CEO_SYSTEM`: every factual claim about
+live shop state must trace to an actual tool-call result from the current conversation, never a restated
+number from several turns back. `_validate_staged_action` now re-fetches a listing's live state at
+*approval* time (not staging time) for Etsy-facing staged actions and refuses if it changed since staging.
+Ported `QualityGate.check_image_dimensions`/`check_no_pale_background` from `business_pipeline.py` into
+`_validate_staged_action`'s `listing_photo` branch using PIL directly — pale/washed-out background is a
+hard block, wrong dimensions is a warning (legitimate source sizes vary before pipeline resize).
+New read-only `find_business_gaps` agent tool — advisory diagnostics (active-listing count vs. goal,
+quality-audit trend, under-used KB docs); never auto-builds agents or auto-publishes; `_CEO_SYSTEM` points
+to it for broad "how are we doing" questions instead of Frank re-deriving the same picture from five
+separate tool calls. New `context_compactor` agent (flips the `/api/agents/status` placeholder from
+`not_built` to real, data-driven status): new `chat_summaries` table (`db.py`) holds one running summary
+per session; `_maybe_compact_chat_history()` folds everything older than the live replay tail into a Haiku
+summary once a session's tail exceeds 60 messages (keeping the most recent 30 untouched), walking the cut
+point backward to land immediately after a complete assistant turn so role-alternation is never violated
+on replay. `/ws/chat`'s history load now splices a session's summary in ahead of its live tail instead of
+relying on `load_chat_history`'s hard cutoff, which silently dropped anything past its `limit`.
+**check_zip_size from `business_pipeline.py` was explicitly NOT ported** — no staged-action type exists for
+digital-file/ZIP uploads (those go through standalone scripts directly via `EtsyAPIClient.upload_listing_file()`,
+never through Action Center), so the gate would be dead code; noted here so it isn't mistaken for an
+oversight later.
+**Verified:** `py_compile` clean across `main.py`/`db.py`/`resilience.py`/`ceo_agent.py`. Phase 0 exercised
+directly in a REPL: `retry_with_backoff` showed jittered delays and succeeded after forced transient
+failures; `CircuitBreaker` tripped after the configured failure count and half-opened after cooldown.
+`context_compactor` exercised end-to-end against a throwaway SQLite DB with the real Anthropic client
+mocked: seeded 80 messages (40 pairs) into a session, confirmed compaction folded 50 into a summary and
+left 30 in the tail, and confirmed the kept tail starts on a `user` role (required for valid replay).
+Earlier segments verified Phase 1 (KB-doc retrieval and `list_listings` fire correctly instead of guessing)
+and Phase 2 (forced Etsy 5xx retries with the `executing` status guard holding) directly. Bumped `_BUILD_ID`
+`v50`→`v51`.
+**Not touched, by design:** the Action Center approval gate itself, and the prior "Frank Roadmap" plan's
+Phase 3 (distribution/white-label readiness) — both remain exactly as they were before this initiative.

@@ -236,7 +236,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v50"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v51"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -1147,6 +1147,9 @@ topic: anything touching pricing, legal, tax, or live listing state → ask Scot
 than estimate. Anything else (a rough trend read, a design opinion, a "my best guess is...")
 → give a clearly-caveated best-effort estimate and say explicitly that it's an estimate, not a
 looked-up fact. Never blur the two — Scott needs to know which kind of answer he's getting.
+For a broad "what needs attention" / "how are we doing" question, call find_business_gaps
+first — one read-only sweep across listing volume, quality-audit trend, loop health, and
+circuit breakers, instead of re-deriving the same picture from five separate tool calls.
 
 TOOL-RECEIPT DISCIPLINE — every factual claim about live shop state must trace to a real
 tool call, never a guess:
@@ -1701,6 +1704,22 @@ AGENT_TOOLS = [
             "required": ["text"],
         },
     },
+    {
+        "name": "find_business_gaps",
+        "description": (
+            "Read-only diagnostic sweep across the real shop and infra state — never stages, "
+            "builds, or publishes anything, purely advisory for a conversation with Scott. "
+            "Checks: active listing count against the catalog-growth goal in "
+            "action_plan_2026.md, quality-audit trend regressions from recent audit runs, "
+            "background-loop health (heartbeats), circuit-breaker trips on etsy_api/"
+            "anthropic_api/relay, the Action Center approval backlog, and whether "
+            "knowledge_base doc usage is even being tracked (it isn't yet — that gap is "
+            "reported too, not hidden). Use this when Scott asks something like 'what needs "
+            "attention' or 'how are we doing' and you want a grounded answer instead of a "
+            "vibe-based one."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
     # Native Anthropic-hosted tool (not one of ours — no input_schema, no handler in
     # _execute_agent_tool). Anthropic executes the search server-side and injects
     # results into the same turn; the model keeps generating, so this never trips
@@ -2072,12 +2091,142 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "note": "Full operating rules: product specs, quality gates, autonomy boundaries, pricing tables.",
             })
             return {"docs": docs}
+        if name == "find_business_gaps":
+            return _find_business_gaps_impl()
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired:
         return {"error": f"Command timed out (>{timeout}s)", "category": "transient", "retryable": True}
     except Exception as exc:
         category, retryable = classify_tool_exception(exc)
         return {"error": str(exc), "category": category, "retryable": retryable}
+
+
+_ACTIVE_LISTING_GOAL = 60  # data/knowledge_base/action_plan_2026.md: "At 60-100 listings | $1,000-$3,000"
+
+
+def _find_business_gaps_impl() -> dict:
+    """Read-only diagnostic sweep, trimmed from ceo_agent.py's tool_find_gaps/tool_audit_catalog
+    and adapted to this repo's real data. Never builds agents, never stages or executes anything --
+    every finding here is for Scott to read and decide on, not for Frank to act on unilaterally."""
+    gaps: list[dict] = []
+
+    try:
+        active = _listings_sync("active")
+        count = active.get("count", 0)
+        if count < _ACTIVE_LISTING_GOAL:
+            gaps.append({
+                "gap_type": "listing_volume",
+                "urgency": "high" if count < _ACTIVE_LISTING_GOAL * 0.5 else "medium",
+                "gap": f"{count} active listings vs the {_ACTIVE_LISTING_GOAL}+ goal in action_plan_2026.md",
+                "detail": "action_plan_2026.md projects $1,000-$3,000/mo at 60-100 active listings.",
+                "action": "Review the product roadmap and launch cadence with Scott.",
+            })
+    except Exception as exc:
+        gaps.append({
+            "gap_type": "diagnostic_error",
+            "urgency": "low",
+            "gap": f"Could not fetch active listing count: {exc}",
+            "action": "Retry once the Etsy API is reachable.",
+        })
+
+    try:
+        history = db.get_quality_audit_history(limit=7)
+        if not history:
+            gaps.append({
+                "gap_type": "missing_data",
+                "urgency": "low",
+                "gap": "No quality-audit history yet -- the audit loop hasn't completed a run.",
+                "action": "Check agent_heartbeats for the quality_audit loop's status.",
+            })
+        elif len(history) >= 2:
+            latest = history[-1]
+            prior = history[:-1]
+            avg_prior_failed = sum(h.get("failed", 0) for h in prior) / len(prior)
+            if latest.get("failed", 0) > avg_prior_failed:
+                gaps.append({
+                    "gap_type": "quality_regression",
+                    "urgency": "high" if latest.get("failed", 0) >= 1 else "medium",
+                    "gap": f"Latest quality audit: {latest.get('failed')} failed "
+                           f"(avg of prior {len(prior)} runs: {avg_prior_failed:.1f})",
+                    "detail": latest.get("summary", ""),
+                    "action": "Review ops_runbook.md and the failing listings before the next publish.",
+                })
+    except Exception as exc:
+        gaps.append({
+            "gap_type": "diagnostic_error",
+            "urgency": "low",
+            "gap": f"Could not read quality-audit history: {exc}",
+            "action": "Check that the database is reachable.",
+        })
+
+    try:
+        heartbeats = db.list_agent_heartbeats()
+        for h in heartbeats:
+            if h.get("status") == "error":
+                gaps.append({
+                    "gap_type": "loop_health",
+                    "urgency": "high",
+                    "gap": f"Background loop '{h.get('label') or h.get('name')}' is in an error state",
+                    "detail": h.get("detail", ""),
+                    "action": "Check ops_runbook.md for the matching escalation entry.",
+                })
+    except Exception as exc:
+        gaps.append({
+            "gap_type": "diagnostic_error",
+            "urgency": "low",
+            "gap": f"Could not read agent heartbeats: {exc}",
+            "action": "Check that the database is reachable.",
+        })
+
+    for dep in ("etsy_api", "anthropic_api", "relay"):
+        try:
+            cb = db.get_circuit_breaker_state(dep)
+            if cb and cb.get("state") == "open":
+                gaps.append({
+                    "gap_type": "dependency_down",
+                    "urgency": "critical",
+                    "gap": f"Circuit breaker for '{dep}' is open ({cb.get('consecutive_failures')} consecutive failures)",
+                    "detail": f"Opened at {cb.get('opened_at')}",
+                    "action": f"Diagnose {dep} connectivity before relying on anything that depends on it.",
+                })
+        except Exception:
+            pass
+
+    try:
+        pending = db.list_actions(status="pending", limit=200)
+        if len(pending) >= 10:
+            gaps.append({
+                "gap_type": "approval_backlog",
+                "urgency": "medium",
+                "gap": f"{len(pending)} staged actions awaiting Scott's approval in the Action Center",
+                "action": "Review the Action Center -- a growing backlog delays publishing.",
+            })
+    except Exception:
+        pass
+
+    # Honest gap, not a guess: no usage tracking exists yet for read_knowledge_base_doc calls,
+    # so "under-used KB docs" can only be reported as an inventory, not real usage data.
+    try:
+        docs = _kb_docs()
+        gaps.append({
+            "gap_type": "missing_tracking",
+            "urgency": "low",
+            "gap": "No usage tracking exists for knowledge_base doc reads via read_knowledge_base_doc.",
+            "detail": f"{len(docs)} docs available; cannot tell which are actually consulted vs ignored.",
+            "action": "Log each read_knowledge_base_doc call (filename, timestamp) if this becomes worth tracking.",
+        })
+    except Exception:
+        pass
+
+    urgency_rank = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+    gaps.sort(key=lambda g: -urgency_rank.get(g.get("urgency"), 0))
+    return {
+        "total_gaps": len(gaps),
+        "gaps": gaps,
+        "priority_gap": gaps[0] if gaps else None,
+        "note": "Read-only diagnostic sweep -- does not stage, build, or publish anything. For discussion with Scott.",
+    }
+
 
 # ── CEO Suggestions system prompt ─────────────────────────────────────────────────
 
@@ -6575,13 +6724,18 @@ async def _agents_status_snapshot() -> dict:
         "updated_at": relay_state.get("last_heartbeat"),
     })
 
+    summaries = await asyncio.to_thread(db.list_chat_summaries)
     agents.append({
         "name": "context_compactor",
         "label": "Context Compactor",
-        "built": False,
-        "status": "not_built",
-        "detail": "Planned — compresses chat history/runbook entries that fall out of the replay window",
-        "updated_at": None,
+        "built": True,
+        "status": "ok",
+        "detail": (
+            f"{len(summaries)} session(s) compacted; most recent at {summaries[0]['updated_at']}"
+            if summaries
+            else "Built — no session has crossed the compaction threshold yet"
+        ),
+        "updated_at": summaries[0]["updated_at"] if summaries else None,
     })
 
     running = sum(1 for a in agents if a["built"] and a["status"] != "error")
@@ -7317,6 +7471,72 @@ async def speak_text(payload: dict, _token: str = Depends(_auth)):
     return Response(content=audio_bytes, media_type="audio/mpeg")
 
 
+_CONTEXT_COMPACT_TAIL_THRESHOLD = 60  # messages since last compaction before another pass runs
+_CONTEXT_COMPACT_KEEP_RECENT = 30  # messages left untouched as the live replay tail
+
+
+def _maybe_compact_chat_history(session_id: str) -> None:
+    """The context_compactor agent: once a session's not-yet-summarized tail grows
+    past _CONTEXT_COMPACT_TAIL_THRESHOLD messages, fold everything except the most
+    recent _CONTEXT_COMPACT_KEEP_RECENT into one condensed summary via a cheap Haiku
+    call (same pattern as _summarize_and_rotate_kb_file), so a long-running session
+    keeps a real memory of earlier turns instead of load_chat_history's hard `limit`
+    cutoff silently dropping them on reconnect. Best-effort: never raises, since a
+    failed compaction just means the next pass tries again with a longer tail."""
+    if not session_id or not ANTHROPIC_KEY:
+        return
+    try:
+        existing = db.get_chat_summary(session_id)
+        through_id = existing["through_id"] if existing else 0
+        tail = db.load_chat_messages_since(session_id, after_id=through_id, limit=2000)
+        if len(tail) <= _CONTEXT_COMPACT_TAIL_THRESHOLD:
+            return
+        # Walk the naive cut point back to the nearest boundary right after an
+        # 'assistant' message, so the kept tail always resumes on a 'user' turn —
+        # required for valid role alternation when the synthetic summary pair
+        # (user, assistant) is spliced in ahead of it on the next reconnect.
+        idx = len(tail) - _CONTEXT_COMPACT_KEEP_RECENT
+        while idx > 0 and tail[idx - 1]["role"] != "assistant":
+            idx -= 1
+        if idx <= 0:
+            return  # no safe pair boundary yet; try again once the tail grows more
+        to_summarize = tail[:idx]
+        new_through_id = to_summarize[-1]["id"]
+
+        transcript = "\n\n".join(f"{m['role'].upper()}: {m['content']}" for m in to_summarize)
+        prior_summary = existing["summary"] if existing else ""
+        prompt = (
+            "Condense this chat transcript between Scott (an Etsy shop owner) and Frank (his "
+            "CEO agent) into a single summary (~1500 characters) that preserves every concrete "
+            "decision, number, and open question — not a vibe-based recap. Plain prose or short "
+            "bullets, oldest-to-newest. No preamble, no meta-commentary."
+        )
+        if prior_summary:
+            prompt += (
+                "\n\nFold in this existing summary of everything before this transcript, "
+                f"keeping the combined result around the same length:\n\n{prior_summary}"
+            )
+        prompt += f"\n\nTranscript:\n\n{transcript}"
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=2000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        new_summary = msg.content[0].text.strip()
+        if not new_summary:
+            return
+        db.set_chat_summary(session_id, new_summary, new_through_id)
+        print(
+            f"[context-compactor] session {session_id}: folded {len(to_summarize)} messages "
+            f"into a {len(new_summary)}-char summary through id {new_through_id}",
+            flush=True,
+        )
+    except Exception as exc:
+        print(f"[context-compactor] compaction failed for session {session_id}: {exc}", flush=True)
+
+
 @app.websocket("/ws/chat")
 async def chat_ws(websocket: WebSocket):
     """Streaming CEO agent chat with live-data tools. Auth via a short-lived, single-use
@@ -7339,7 +7559,24 @@ async def chat_ws(websocket: WebSocket):
 
     ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     # Replay persisted text history so Frank resumes mid-thread after a reconnect.
-    history: list[dict] = await asyncio.to_thread(db.load_chat_history, session_id) if session_id else []
+    # If the context_compactor has already condensed everything before some point,
+    # splice that summary in ahead of the still-live tail instead of using the raw
+    # load_chat_history() window, which would just hard-cut anything older.
+    history: list[dict] = []
+    if session_id:
+        summary = await asyncio.to_thread(db.get_chat_summary, session_id)
+        if summary:
+            tail = await asyncio.to_thread(db.load_chat_messages_since, session_id, summary["through_id"])
+            history = [
+                {
+                    "role": "user",
+                    "content": "[Context compactor — condensed summary of this conversation before this point:]\n"
+                    + summary["summary"],
+                },
+                {"role": "assistant", "content": "Got it, I have the context from earlier in this conversation."},
+            ] + [{"role": m["role"], "content": m["content"]} for m in tail]
+        else:
+            history = await asyncio.to_thread(db.load_chat_history, session_id)
     if history:
         await websocket.send_text(json.dumps({"type": "history", "messages": history}))
 
@@ -7375,6 +7612,7 @@ async def chat_ws(websocket: WebSocket):
                 await asyncio.to_thread(db.append_chat_message, session_id, "user", user_text)
                 if assistant_text:
                     await asyncio.to_thread(db.append_chat_message, session_id, "assistant", assistant_text)
+                await asyncio.to_thread(_maybe_compact_chat_history, session_id)
 
     except WebSocketDisconnect:
         pass

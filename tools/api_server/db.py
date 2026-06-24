@@ -90,6 +90,12 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_chat_session ON chat_messages(session_id, id);
+CREATE TABLE IF NOT EXISTS chat_summaries (
+  session_id  TEXT PRIMARY KEY,
+  summary     TEXT NOT NULL,
+  through_id  INTEGER NOT NULL,  -- highest chat_messages.id folded into `summary`
+  updated_at  TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS quality_audits (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   ts          TEXT NOT NULL,
@@ -379,6 +385,87 @@ def load_chat_history(session_id: str, limit: int = 40) -> list:
             (session_id, limit),
         ).fetchall()
         return [{"role": r["role"], "content": r["content"]} for r in rows][::-1]
+    finally:
+        conn.close()
+
+
+# ── Context compactor ────────────────────────────────────────────────────────
+#
+# load_chat_history()'s `limit` is a hard cutoff — anything older just vanishes
+# from replay, same blind spot the KB-rotation work (_summarize_and_rotate_kb_file)
+# closed for ops_runbook.md/ceo_learnings.md. chat_summaries gives a long-running
+# session a real (if lossy) memory of everything before the replayed tail instead
+# of silently forgetting it. One row per session — each compaction pass advances
+# `through_id` and replaces the prior summary with a new one that folds it in.
+
+
+def get_chat_summary(session_id: str) -> dict | None:
+    """The session's running condensed summary, or None if it's never been
+    compacted yet."""
+    if not session_id:
+        return None
+    init_db()
+    conn = _connect()
+    try:
+        row = conn.execute(
+            "SELECT summary, through_id, updated_at FROM chat_summaries WHERE session_id=?",
+            (session_id,),
+        ).fetchone()
+        if not row:
+            return None
+        return {"summary": row["summary"], "through_id": row["through_id"], "updated_at": row["updated_at"]}
+    finally:
+        conn.close()
+
+
+def set_chat_summary(session_id: str, summary: str, through_id: int) -> None:
+    """Upsert the session's running summary. `through_id` is the highest
+    chat_messages.id folded into `summary` so far."""
+    if not session_id:
+        return
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT INTO chat_summaries (session_id, summary, through_id, updated_at) VALUES (?,?,?,?) "
+            "ON CONFLICT(session_id) DO UPDATE SET summary=excluded.summary, "
+            "through_id=excluded.through_id, updated_at=excluded.updated_at",
+            (session_id, summary, through_id, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def list_chat_summaries() -> list:
+    """All sessions that have ever been compacted, newest-first. Backs the
+    context_compactor tile on /api/agents/status."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT session_id, through_id, updated_at FROM chat_summaries ORDER BY updated_at DESC"
+        ).fetchall()
+        return [{"session_id": r["session_id"], "through_id": r["through_id"], "updated_at": r["updated_at"]} for r in rows]
+    finally:
+        conn.close()
+
+
+def load_chat_messages_since(session_id: str, after_id: int = 0, limit: int = 1000) -> list:
+    """Messages for a session with id > after_id, ascending (oldest-first), as
+    [{"id":, "role":, "content":}]. Used by the context compactor to pull the
+    not-yet-summarized tail; `after_id=0` (the default) returns the whole session."""
+    if not session_id:
+        return []
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT id, role, content FROM chat_messages WHERE session_id=? AND id>? ORDER BY id ASC LIMIT ?",
+            (session_id, after_id, limit),
+        ).fetchall()
+        return [{"id": r["id"], "role": r["role"], "content": r["content"]} for r in rows]
     finally:
         conn.close()
 
