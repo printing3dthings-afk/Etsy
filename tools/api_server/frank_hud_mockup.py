@@ -544,8 +544,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="status-pill"><span class="dot"></span>SYSTEM STATUS &nbsp;● OPTIMAL</div>
     <div class="clockwrap"><div class="d" id="dt">--</div><div class="t" id="clk">--:--</div></div>
     <div class="right">
-      <input class="search" placeholder="Search listings, orders, tools, knowledge base…">
-      <div class="icon-btn">▦</div>
+      <input class="search" id="global-search" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
       <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()">🔔<span class="badge" id="bell-badge" style="display:none">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
           <div class="alert-dropdown-title">Alerts</div>
@@ -969,7 +968,13 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="premium-voice-toggle" class="premium-voice-cb"> Premium voice</label>
       <span class="dots-line"></span>
     </div>
-    <button class="brief-btn">Executive Briefing</button>
+    <div class="brief-wrap" style="position:relative">
+      <button class="brief-btn" onclick="event.stopPropagation();toggleBriefingPanel()">Executive Briefing</button>
+      <div id="brief-panel" class="alert-dropdown" style="display:none;bottom:42px;top:auto" onclick="event.stopPropagation()">
+        <div class="alert-dropdown-title">Executive Briefing</div>
+        <div id="brief-panel-body"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
+      </div>
+    </div>
   </div>
 
 </div></div>
@@ -1422,6 +1427,40 @@ function cacheGet(key) {
 function _offlineNote(ts) {
   return '<div style="color:var(--gold);font-size:10.5px;padding:4px 0">⚠ offline — showing data from '+_timeAgo(new Date(ts).toISOString())+'</div>';
 }
+// ── Global topbar search — client-side lookup over data already loaded into the
+// page (no new endpoint). First match wins, in listings → tasks → tools → KB
+// order, and jumps straight to it. ──
+function runGlobalSearch(raw) {
+  const q = (raw || '').trim().toLowerCase();
+  if (!q) return;
+  const listing = (_listings || []).find(l => (l.title || '').toLowerCase().includes(q));
+  if (listing) {
+    showScreen('listings');
+    toggleListingDetail(listing.listing_id);
+    return;
+  }
+  const tasksCache = cacheGet('tasks');
+  const task = ((tasksCache && tasksCache.data && tasksCache.data.todos) || [])
+    .find(t => (t.text || '').toLowerCase().includes(q));
+  if (task) {
+    showScreen('tasks');
+    return;
+  }
+  const toolsCache = cacheGet('tools');
+  const tool = ((toolsCache && toolsCache.data && toolsCache.data.tools) || [])
+    .find(t => (t.name || '').toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q));
+  if (tool) {
+    showScreen('tools');
+    return;
+  }
+  const doc = (_kbDocs || []).find(d => (d.filename || '').toLowerCase().includes(q));
+  if (doc) {
+    showScreen('kb');
+    openKbDoc(doc.filename);
+    return;
+  }
+  showToast('No matches for "' + raw + '"', 'info');
+}
 function _clearStreaming(fallback) {
   const s = document.getElementById('bot-streaming');
   if (!s) return;
@@ -1806,6 +1845,65 @@ document.addEventListener('click', function(e){
   if(!dd || dd.style.display === 'none' || !dd.style.display) return;
   if(bellBtn && !bellBtn.contains(e.target)){
     dd.style.display = 'none';
+  }
+});
+
+// ── Executive Briefing — bottom-bar button, pure read of data already loaded by
+// loadAll()'s 30s cycle (shop performance, open actions, alerts). No new fetch,
+// no new endpoint — just rolls up what's already cached client-side. ──
+function toggleBriefingPanel(){
+  const panel = document.getElementById('brief-panel');
+  if(!panel) return;
+  const opening = (panel.style.display === 'none' || !panel.style.display);
+  panel.style.display = opening ? 'block' : 'none';
+  if(opening) renderExecutiveBriefing();
+}
+function renderExecutiveBriefing(){
+  const body = document.getElementById('brief-panel-body');
+  if(!body) return;
+  const rows = [];
+
+  const sp = cacheGet('shopPerf');
+  if(sp && sp.data && sp.data.a){
+    const lt = sp.data.a.latest || {}, del = sp.data.a.delta || {};
+    if(lt.revenue_30d != null){
+      const sign = (del.revenue_30d != null && del.revenue_30d < 0) ? '' : '+';
+      rows.push('<div>Revenue (30d): $'+lt.revenue_30d.toFixed(2)+
+        (del.revenue_30d != null ? ' ('+sign+del.revenue_30d.toFixed(1)+'%)' : '')+'</div>');
+    } else {
+      rows.push('<div style="color:var(--muted)">Shop performance: no data yet</div>');
+    }
+  } else {
+    rows.push('<div style="color:var(--muted)">Shop performance: not yet loaded — try again in a few seconds</div>');
+  }
+
+  const pending = _pendingActions || [];
+  const s = _actionsSummary || {high:0,medium:0,low:0};
+  rows.push('<div>'+pending.length+' pending action'+(pending.length===1?'':'s')+
+    ' ('+s.high+' high / '+s.medium+' medium / '+s.low+' low)</div>');
+
+  const al = cacheGet('alerts');
+  if(al && al.data){
+    const alerts = al.data.alerts || [];
+    if(alerts.length === 0){
+      rows.push('<div style="color:var(--muted)">No active alerts</div>');
+    } else {
+      rows.push(alerts.map(a=>
+        '<div class="alert-row '+escHtml(a.severity||'')+'">'+escHtml(a.title||'')+'</div>'
+      ).join(''));
+    }
+  } else {
+    rows.push('<div style="color:var(--muted)">Alerts: not yet loaded — try again in a few seconds</div>');
+  }
+
+  body.innerHTML = rows.join('');
+}
+document.addEventListener('click', function(e){
+  const panel = document.getElementById('brief-panel');
+  const briefWrap = document.querySelector('.brief-wrap');
+  if(!panel || panel.style.display === 'none' || !panel.style.display) return;
+  if(briefWrap && !briefWrap.contains(e.target)){
+    panel.style.display = 'none';
   }
 });
 

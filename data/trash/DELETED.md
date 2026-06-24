@@ -185,3 +185,14 @@ if(focusToggle) focusToggle.addEventListener('click', function(){
 
 <!-- /TRASH 20260624-008 -->
 
+<!-- TRASH id=20260624-009 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Dead topbar icon — no handler, no discoverable intent anywhere in the codebase; removed per Scott's 2026-06-24 audit decision" -->
+## 20260624-009 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Dead topbar icon — no handler, no discoverable intent anywhere in the codebase; removed per Scott's 2026-06-24 audit decision  
+**Payload:** `data/trash/files/20260624-009__snippet.txt`
+
+```python
+<div class="icon-btn">▦</div>
+```
+
+<!-- /TRASH 20260624-009 -->
+

@@ -1339,3 +1339,29 @@ Scott's standing recycle-bin rule.
 surfacing in the alert dropdown, the bell's open/close-on-outside-click behavior, and the Settings↔bottombar
 voice toggle sync. Scott should run the plan's verification checklist
 (`/root/.claude/plans/atomic-dancing-shamir.md`) once deployed.
+
+### 2026-06-24 — Frank follow-up audit: 3 more dead elements (search, briefing button, grid icon)
+**Symptom:** Scott asked again whether anything on Frank is still not wired up after the
+Dependency Health/Alert Bell/Settings fix above. A fresh 3-agent audit of
+`frank_hud_mockup.py` found 3 elements with zero JS handler of any kind: the topbar global
+search input, the bottom-bar "Executive Briefing" button, and a topbar grid icon (▦) with no
+discoverable original intent anywhere in code or git history.
+**Root cause:** All three were left unwired when originally added — no listener, no backend
+route, nothing.
+**Fix:** Search input now has `id="global-search"` + an Enter-key handler calling
+`runGlobalSearch()`, which does a client-side substring match (listings → tasks → tools → KB
+docs, first match wins) over data already loaded by existing loaders (`_listings`,
+`cacheGet('tasks')`, `cacheGet('tools')`, `_kbDocs`) and navigates to the matching
+screen/item, or toasts "No matches" if nothing hits. The Executive Briefing button now opens
+a `#brief-panel` dropdown (same `.alert-dropdown` pattern as the bell, anchored upward via
+`bottom:42px`) whose `renderExecutiveBriefing()` reads already-cached `shopPerf`,
+`_actionsSummary`/`_pendingActions`, and `alerts` data — zero new fetches, zero new backend
+endpoints. The grid icon was archived via `tools/trash.py` (id `20260624-009`) then deleted —
+no replacement, since no intent for it was ever found. Bumped `_BUILD_ID` `v54`→`v55`.
+**Verified in this environment:** `py_compile` clean on both files; `<div>` balance checked
+manually around both new markup regions. **Not verified — cannot be, in this sandboxed,
+display-less environment:** live search navigation per entity type, the briefing panel
+actually opening/closing and showing correct data, the bell and briefing dropdowns not
+fighting each other, the grid icon's visual absence, and zero console errors. Scott should
+run the plan's verification checklist (`/root/.claude/plans/atomic-dancing-shamir.md`) once
+deployed.
