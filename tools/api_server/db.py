@@ -143,6 +143,13 @@ CREATE TABLE IF NOT EXISTS agent_heartbeats (
   detail     TEXT,               -- short free-text result of the last run
   updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS circuit_breaker_state (
+  dep_name        TEXT PRIMARY KEY,  -- 'etsy_api' | 'anthropic_api' | 'relay' | ...
+  state           TEXT NOT NULL DEFAULT 'closed',  -- 'closed' | 'open' | 'half_open'
+  consecutive_failures INTEGER NOT NULL DEFAULT 0,
+  opened_at       TEXT,
+  updated_at      TEXT NOT NULL
+);
 """
 
 
@@ -861,6 +868,45 @@ def delete_agent_heartbeat(name: str) -> None:
     conn = _connect()
     try:
         conn.execute("DELETE FROM agent_heartbeats WHERE name = ?", (name,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ── Circuit breaker state (per named dependency: 'etsy_api', 'anthropic_api',
+# 'relay'...) — persisted so a trip survives a process restart instead of
+# silently resetting to closed and immediately re-hammering a dependency that
+# was failing right before the restart. ────────────────────────────────────
+
+
+def get_circuit_breaker_state(dep_name: str) -> dict | None:
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT * FROM circuit_breaker_state WHERE dep_name = ?", (dep_name,)
+        ).fetchone()
+        return dict(r) if r else None
+    finally:
+        conn.close()
+
+
+def set_circuit_breaker_state(
+    dep_name: str, state: str, consecutive_failures: int, opened_at: str | None
+) -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO circuit_breaker_state
+                 (dep_name, state, consecutive_failures, opened_at, updated_at)
+               VALUES (?,?,?,?,?)
+               ON CONFLICT(dep_name) DO UPDATE SET
+                 state=excluded.state, consecutive_failures=excluded.consecutive_failures,
+                 opened_at=excluded.opened_at, updated_at=excluded.updated_at""",
+            (dep_name, state, consecutive_failures, opened_at, ts),
+        )
         conn.commit()
     finally:
         conn.close()

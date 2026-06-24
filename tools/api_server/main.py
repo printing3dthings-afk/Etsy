@@ -18,6 +18,7 @@ import io
 import json
 import mimetypes
 import os
+import random
 import re as _re
 import secrets
 import subprocess
@@ -54,6 +55,7 @@ import db  # local persistence layer (tools/api_server/db.py)
 import seasonal_keywords  # noqa: E402
 import tax_compliance_tools  # noqa: E402
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
+from resilience import classify_tool_exception, retry_with_backoff, TransientToolError  # noqa: E402
 
 
 def _reconcile_etsy_tokens() -> None:
@@ -657,6 +659,160 @@ def _append_ops_runbook_entry(heading: str, body: str) -> None:
         print(f"[ops-runbook] append failed: {exc}", flush=True)
 
 
+# ── Three-tier failure escalation ───────────────────────────────────────────────
+#
+# Tier 1 (silent auto-heal, Etsy-free) -- already covered by existing code, not
+#   new machinery: cache invalidation (every staged-action executor busts the
+#   relevant cache keys), reaping crashed processes (_health_check_iteration),
+#   retrying a transient Anthropic/Etsy call (resilience.retry_with_backoff,
+#   plus _run_loop_iteration's own backoff for the loops themselves). Tier 1
+#   never touches Etsy beyond what an already-running loop already does --
+#   it never fires a *new* Etsy call just to "heal" something.
+# Tier 2 (alert with diagnosis) -- a failure that matches a known category gets
+#   a concrete, pre-written remediation step instead of a bare error string.
+# Tier 3 (full write-up) -- a failure that matches nothing known gets a
+#   structured, blameless postmortem appended to ops_runbook.md so the next
+#   reader (Scott, or Frank reading his own log back) gets symptoms + what was
+#   tried + a clearly-labeled hypothesis instead of "something went wrong".
+
+_KNOWN_FAILURE_REMEDIATIONS: dict[str, str] = {
+    "anthropic_credit": "Frank's AI provider account is out of credits -- top up at console.anthropic.com/settings/billing.",
+    "anthropic_rate_limit": "Transient rate limit -- the shared backoff (resilience.py) retries automatically. If it persists past 15 minutes, check console.anthropic.com for an account-wide limit change.",
+    "anthropic_auth": "ANTHROPIC_API_KEY is invalid or revoked -- check the key in the deploy environment's env vars against console.anthropic.com/settings/keys and redeploy.",
+    "anthropic_overloaded": "Anthropic's API is overloaded shop-wide (not specific to this account) -- the shared backoff retries automatically; no action needed unless it persists past an hour.",
+    "anthropic_key_missing": "ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.",
+    "etsy_auth": "Etsy access + refresh tokens are both rejected -- the 90-day refresh token has likely expired. Scott must run `python tools/etsy_oauth.py` to re-authorize.",
+    "etsy_rate_limit": "Etsy API rate limit hit -- transient, the shared backoff retries automatically honoring the retry-after header.",
+    "etsy_server_error": "Etsy's API returned a 5xx -- their side, not ours. Transient, the shared backoff retries automatically.",
+    "etsy_unreachable": "Etsy's API is unreachable (network/DNS/timeout) -- check outbound network status; if Etsy's own status page also shows an incident, this resolves on its own.",
+}
+
+
+def _classify_known_failure(exc: Exception) -> str | None:
+    """Map an exception to a `_KNOWN_FAILURE_REMEDIATIONS` key, or None if it
+    doesn't match a known pattern -- callers should fall through to a Tier 3
+    write-up rather than guessing a remediation for an unrecognized failure."""
+    text = str(exc).lower()
+    status = getattr(exc, "status", None) or getattr(exc, "status_code", None)
+    if "credit balance" in text or "credit_balance" in text:
+        return "anthropic_credit"
+    if "rate_limit" in text or "rate limit" in text:
+        return "anthropic_rate_limit"
+    if "authentication" in text or "invalid x-api-key" in text:
+        return "anthropic_auth"
+    if "overloaded" in text:
+        return "anthropic_overloaded"
+    if isinstance(exc, EtsyAPIError):
+        if status == 401:
+            return "etsy_auth"
+        if status == 429:
+            return "etsy_rate_limit"
+        if status in (500, 502, 503):
+            return "etsy_server_error"
+    if isinstance(exc, (TimeoutError, ConnectionError)):
+        return "etsy_unreachable"
+    return None
+
+
+def _write_escalation_report(context: str, attempted_fixes: list[str], hypothesis: str) -> None:
+    """Tier 3: append a structured, blameless postmortem to ops_runbook.md for a
+    failure that doesn't match a known remediation. Follows
+    ceo_operating_playbook.md's blameless-postmortem rule -- state the concrete
+    mechanism, never blame "the AI" or "the model". `hypothesis` should read as
+    a hypothesis, not a stated fact -- Tier 3 fires precisely because the root
+    cause isn't confirmed yet."""
+    fixes_block = "\n".join(f"- {f}" for f in attempted_fixes) if attempted_fixes else "- (none -- read-only diagnostic, no remediation attempted)"
+    body = (
+        f"**Symptom:** {context}\n\n"
+        f"**What was tried:**\n{fixes_block}\n\n"
+        f"**Root-cause hypothesis (unconfirmed):** {hypothesis}\n\n"
+        "**Suggested next action:** if this recurs, escalate to Scott with this report rather "
+        "than re-attempting the same fix a third time."
+    )
+    _append_ops_runbook_entry(f"Escalation — {context[:80]}", body)
+
+
+def _escalate_failure(context: str, exc: Exception | None, *, attempted_fixes: list[str] | None = None) -> None:
+    """Tier 2/3 dispatcher used by background loops once a failure is visible
+    enough to need a human-readable trace: Tier 2 (one-line diagnosis) if `exc`
+    matches a known category, else Tier 3 (full write-up). Never called for
+    Tier 1 auto-heal -- that path resolves silently and never reaches here."""
+    category = _classify_known_failure(exc) if exc else None
+    if category:
+        _append_ops_runbook_entry(
+            f"{context[:80]} (known cause)",
+            f"{context}\n\n**Diagnosis:** {_KNOWN_FAILURE_REMEDIATIONS[category]}",
+        )
+    else:
+        _write_escalation_report(
+            context=context,
+            attempted_fixes=attempted_fixes or ["read-only diagnostic -- no auto-remediation attempted"],
+            hypothesis=f"Unrecognized failure signature: {str(exc)[:300] if exc else '(no exception captured)'}",
+        )
+
+
+_OPS_RUNBOOK_HEADING_RE = _re.compile(r"^## \d{4}-\d{2}-\d{2} — (.+)$", _re.MULTILINE)
+_KNOWN_RECURRING_HEADING = "## Known Recurring Issues"
+
+
+def _promote_recurring_failures(path: Path, *, min_occurrences: int = 3) -> bool:
+    """Scan ops_runbook.md's dated headings for the same failure description
+    recurring `min_occurrences`+ times and surface it in a 'Known Recurring
+    Issues' section pinned at the top of the file, instead of leaving the
+    pattern buried chronologically where it's only visible by reading the
+    whole log. Deterministic (string matching, no LLM call) -- cheap enough to
+    run on every quality-audit pass. Returns True if the section was
+    added/changed, False otherwise (also on any failure -- best-effort, never
+    raises)."""
+    try:
+        text = path.read_text()
+    except OSError:
+        return False
+
+    headings = _OPS_RUNBOOK_HEADING_RE.findall(text)
+    if not headings:
+        return False
+
+    counts: dict[str, int] = {}
+    for h in headings:
+        key = h.strip().lower()
+        counts[key] = counts.get(key, 0) + 1
+    recurring = {h: n for h, n in counts.items() if n >= min_occurrences}
+
+    section_body = (
+        f"{_KNOWN_RECURRING_HEADING}\n"
+        "*Auto-generated by the quality-audit loop -- a failure heading that's appeared "
+        f"{min_occurrences}+ times below. Investigate the root cause rather than re-fixing the "
+        "symptom each time.*\n\n"
+        + "\n".join(f"- **{h}** — seen {n} times" for h, n in sorted(recurring.items(), key=lambda kv: -kv[1]))
+        + "\n"
+    ) if recurring else ""
+
+    existing_match = _re.search(
+        rf"{_re.escape(_KNOWN_RECURRING_HEADING)}\n.*?(?=\n## |\Z)", text, _re.DOTALL
+    )
+    if not recurring:
+        if not existing_match:
+            return False  # nothing recurring, nothing to remove
+        new_text = text[: existing_match.start()] + text[existing_match.end():]
+    elif existing_match:
+        if text[existing_match.start() : existing_match.end()].strip() == section_body.strip():
+            return False  # unchanged
+        new_text = text[: existing_match.start()] + section_body + text[existing_match.end() :]
+    else:
+        # Insert right before the first dated entry (after the file's title/intro).
+        first_heading_match = _OPS_RUNBOOK_HEADING_RE.search(text)
+        insert_at = first_heading_match.start() if first_heading_match else len(text)
+        new_text = text[:insert_at] + section_body + "\n" + text[insert_at:]
+
+    try:
+        path.write_text(new_text)
+    except OSError as exc:
+        print(f"[ops-runbook] recurring-issues promotion write failed: {exc}", flush=True)
+        return False
+    return True
+
+
 # ── CEO learnings (Frank's compounding memory — see ceo_learnings.md) ──────────
 
 _CEO_LEARNINGS_PATH = ROOT / "data" / "knowledge_base" / "ceo_learnings.md"
@@ -690,6 +846,88 @@ def _append_ceo_learning(note: str) -> None:
             fh.write(f"- **{stamp}** — {note.strip()}\n")
     except OSError as exc:
         print(f"[ceo-learnings] append failed: {exc}", flush=True)
+
+
+# Matches either a markdown heading entry ("## ..." / "### ...") or a dated
+# ceo_learnings.md bullet ("- **YYYY-MM-DD** — ...") — the two entry styles
+# used by ops_runbook.md and ceo_learnings.md respectively.
+_KB_ROTATE_ENTRY_RE = _re.compile(r"\n(#{2,3}\s.+|-\s\*\*\d{4}-\d{2}-\d{2}\*\*.*)")
+
+
+def _summarize_and_rotate_kb_file(
+    path: Path, *, keep_recent_chars: int = 8000, summary_target_chars: int = 1500
+) -> bool:
+    """Once `path` grows past `keep_recent_chars` (+ a buffer), compress everything
+    older than the recent tail into a single dated '## Summarized history (through
+    YYYY-MM-DD)' section via one cheap Haiku call, leaving the recent tail untouched.
+
+    This turns the hard truncation in _ops_runbook_block()/_ceo_learnings_block()
+    (which simply cuts at 8000/6000 chars on every read) from silent data loss into
+    a safety net — older entries get condensed into a summary that's still inside
+    the truncation window, instead of falling off the end and vanishing. Returns
+    True if a rotation happened, False if the file wasn't due for one (also true on
+    any failure — best-effort, never raises)."""
+    try:
+        text = path.read_text()
+    except OSError:
+        return False
+    if not ANTHROPIC_KEY or len(text) <= keep_recent_chars + 4000:
+        return False
+
+    matches = list(_KB_ROTATE_ENTRY_RE.finditer(text))
+    if len(matches) < 4:
+        return False  # not enough discrete entries to safely split without guessing
+
+    preamble_end = matches[0].start() + 1  # keep the file's title/intro untouched
+    preamble, body = text[:preamble_end], text[preamble_end:]
+
+    split_target = len(text) - keep_recent_chars
+    candidates = [
+        m.start() + 1 - preamble_end
+        for m in matches
+        if 0 < m.start() + 1 <= split_target
+    ]
+    if not candidates:
+        return False
+    boundary = candidates[-1]
+    old_body, recent_body = body[:boundary], body[boundary:]
+    if len(old_body) < 3000:
+        return False  # not enough old content yet to be worth a summarization call
+
+    try:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=2000,
+            messages=[{
+                "role": "user",
+                "content": (
+                    f"Condense this dated log into a single summary (~{summary_target_chars} "
+                    "characters) that preserves every distinct incident/insight and recurring "
+                    "pattern, grouped by theme rather than chronology, and notes the date range "
+                    "covered. Plain prose or short bullets. No preamble, no meta-commentary:"
+                    f"\n\n{old_body}"
+                ),
+            }],
+        )
+        summary = msg.content[0].text.strip()
+    except Exception as exc:
+        print(f"[kb-rotate] summarization failed for {path.name}: {exc}", flush=True)
+        return False
+
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    new_text = f"{preamble}## Summarized history (through {stamp})\n{summary}\n{recent_body}"
+    try:
+        path.write_text(new_text)
+    except OSError as exc:
+        print(f"[kb-rotate] write failed for {path.name}: {exc}", flush=True)
+        return False
+    print(
+        f"[kb-rotate] rotated {path.name}: {len(text)} -> {len(new_text)} chars "
+        f"({len(old_body)} chars of history condensed to {len(summary)})",
+        flush=True,
+    )
+    return True
 
 
 # ── Knowledge Base — read-only browser/search for the real markdown docs in
@@ -726,6 +964,11 @@ def _kb_docs() -> list[dict]:
 
 
 def _resolve_kb_doc(filename: str) -> Path:
+    if filename == "CLAUDE.md":  # ground truth beyond what's summarized into the KB
+        target = ROOT / "CLAUDE.md"
+        if not target.is_file():
+            raise HTTPException(status_code=404, detail="Doc not found")
+        return target
     base = _KB_DIR.resolve()
     target = (base / filename).resolve()
     if target.parent != base or not filename.endswith(".md"):
@@ -876,6 +1119,47 @@ WEB SEARCH — you have live internet access (capped at 3 searches per message):
   competitor pattern, a confirmed policy change), log_learning it so you don't re-search
   the same thing next month.
 
+KNOWLEDGE BASE — use read_knowledge_base_doc on demand, never guess from memory:
+- data/knowledge_base/ holds the full research and standards behind everything summarized
+  above: business_standards.md (full operating standards), lifestyle_photo_mastery.md,
+  sublimation_standards.md, competitor_research_2026.md, design_quality_research_2026-06.md,
+  action_plan_2026.md, price_tests.md, ceo_operating_playbook.md (CEO/business-operator
+  decision frameworks — weekly metrics, kill criteria, escalation thresholds), and
+  market_research/.
+- CLAUDE.md (the project's full instruction file) is also retrievable by name — it has the
+  complete 3D printer specs, full quality-gate rules, complete product catalog, pricing/tag/
+  photo-prompt libraries, Etsy algorithm rules, and autonomy boundaries in full, beyond what's
+  excerpted into this system prompt.
+- Call read_knowledge_base_doc with no arguments to see what's available, with `filename` to
+  read one in full, or with `query` to search across all of them. Retrieve when a decision
+  genuinely depends on the full detail — don't retrieve for things you can already answer
+  from this prompt or a live tool call.
+
+WHEN YOU DON'T KNOW SOMETHING — check in this order before answering:
+1. A live tool call (get_metrics, list_listings, get_orders, get_reviews, etc.) — anything
+   about current shop state is always a tool call, never a guess.
+2. ops_runbook.md via read_knowledge_base_doc — has this broken or been diagnosed before?
+3. ceo_learnings.md (already in this prompt) — has a past conversation already settled this?
+4. The rest of data/knowledge_base/ via read_knowledge_base_doc, including CLAUDE.md.
+5. A web search — for anything only the live internet knows (see WEB SEARCH above).
+If none of those produce a real answer, do not invent a plausible-sounding one. Default by
+topic: anything touching pricing, legal, tax, or live listing state → ask Scott directly rather
+than estimate. Anything else (a rough trend read, a design opinion, a "my best guess is...")
+→ give a clearly-caveated best-effort estimate and say explicitly that it's an estimate, not a
+looked-up fact. Never blur the two — Scott needs to know which kind of answer he's getting.
+
+TOOL-RECEIPT DISCIPLINE — every factual claim about live shop state must trace to a real
+tool call, never a guess:
+- A number, title, tag, or state you report about the shop (revenue, a listing's price,
+  whether something is active) must come from an actual tool-call result in THIS
+  conversation — not from training data, not from "that sounds about right."
+- Don't restate a number from earlier in a long conversation without re-confirming if
+  several turns have passed — shop state changes (Scott edits a listing, a sale comes in)
+  and a stale repeat can become a confident-sounding lie.
+- If you're not sure whether a number you're about to say came from a tool call or was
+  inferred/remembered, call the tool again rather than guess — a redundant tool call costs
+  nothing; a wrong number reported as fact costs Scott's trust in everything else you say.
+
 How you operate:
 - You analyze, recommend, and can DRAFT changes (titles, tags, descriptions, photo plans,
   quality-gate checklists). You do not publish, change prices, or edit live listings
@@ -906,9 +1190,19 @@ ACT, DON'T NARRATE — this is the most important rule about doing work:
   through Scott's one-tap approval. But you DO run read-only checks and safe automations
   yourself without waiting.
 
-Products live: DP1026 Life Planner ($14.99), DP1027 Student Planner ($9.99),
-DP1028 Budget Planner ($12.99), DP1029 Fitness Planner ($12.99).
-SS1001 America 250 SVG Pack ($14.99) — DRAFT, awaiting Scott's click to publish.
+TOOL ERRORS — when a tool call fails, it returns {"error", "category", "retryable"}:
+- retryable: true means the failure was transient (rate limit, timeout, a 5xx) — one retry
+  of the same call is reasonable before giving up.
+- retryable: false means retrying won't help (bad input, permission, not found, or an
+  unclassified failure) — report the error to Scott plainly instead of retrying blindly
+  or guessing at a workaround.
+
+PRODUCTS & PRICES — never recite a memorized list, always call list_listings:
+- Active listings, draft listings, current prices, and counts all change as Scott publishes
+  new products — a string written into this prompt goes stale the moment that happens.
+- Whenever asked about current products, prices, or what's live vs. draft, call
+  list_listings(state=...) and answer from the real result. Never state a product name or
+  price from memory.
 
 Quality standards:
 - Every listing photo must be generated via gpt-image-1 images.edit with the real
@@ -1153,6 +1447,34 @@ AGENT_TOOLS = [
                 },
             },
             "required": ["command_name", "script_path", "description", "timeout", "long_running"],
+        },
+    },
+    {
+        "name": "read_knowledge_base_doc",
+        "description": (
+            "Read a real doc from data/knowledge_base/ (or CLAUDE.md) on demand, instead of "
+            "relying on the summary baked into your system prompt or guessing from memory. "
+            "Call with no arguments to list every available doc (filename + title + size). "
+            "Call with `filename` to read one doc in full. Call with `query` instead to "
+            "search every doc for a substring and get back matching lines with context. "
+            "Use this any time a decision genuinely depends on ground truth beyond what's "
+            "summarized for you — full quality-gate rules, pricing/tag/photo-prompt "
+            "libraries, competitor research, market research, or CLAUDE.md itself for "
+            "anything not echoed in your system prompt (3D printer specs, autonomy "
+            "boundaries, full product catalog)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string",
+                    "description": "Exact filename to read in full, e.g. business_standards.md or CLAUDE.md.",
+                },
+                "query": {
+                    "type": "string",
+                    "description": "Search term to look up across all docs instead of reading one in full.",
+                },
+            },
         },
     },
     {
@@ -1496,13 +1818,24 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 payload["tags"] = ti["tags"]
             if ti.get("new_state") is not None:
                 payload["new_state"] = ti["new_state"]
+            listing_for_baseline = None
+            if ti.get("action_type") in _ETSY_STAGED_ACTION_TYPES and ti.get("listing_id"):
+                # Best-effort baseline for the approval-time freshness re-check
+                # (_validate_staged_action with at_approval=True) -- a fetch
+                # failure here just means no baseline gets compared later, it
+                # never blocks staging itself.
+                try:
+                    listing_for_baseline = EtsyAPIClient().get_listing(int(ti["listing_id"]))
+                    payload["_state_at_staging"] = listing_for_baseline.get("state")
+                except Exception:
+                    pass
             if ti.get("action_type") == "publish_listing" and ti.get("listing_id"):
                 # Capture-now-render-later snapshot for the Detailed Action Review
                 # mock listing preview — taken at staging time so the card Scott
                 # sees doesn't depend on the listing still existing/unchanged later.
                 try:
                     client = EtsyAPIClient()
-                    listing = client.get_listing(int(ti["listing_id"]))
+                    listing = listing_for_baseline or client.get_listing(int(ti["listing_id"]))
                     images = client.get_listing_images(int(ti["listing_id"]))
                     thumb = ""
                     if images:
@@ -1651,13 +1984,14 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 tags = [_clean_tag(t) for t in raw_tags if str(t).strip()]
                 seen: set[str] = set()
                 tags = [t for t in tags if t and not (t in seen or seen.add(t))]
-                candidate = {"type": "update_tags", "payload": {"listing_id": lid, "tags": tags}}
+                payload = {"listing_id": lid, "tags": tags, "_state_at_staging": listing.get("state")}
+                candidate = {"type": "update_tags", "payload": payload}
                 ok, msg = _validate_staged_action(candidate)
                 if not ok:
                     errors.append({"listing_id": lid, "title": title_short, "error": msg})
                     continue
                 summary = f"Tag fix ({len(tags)}/13): {title_short}"
-                aid = db.enqueue_action("update_tags", summary, {"listing_id": lid, "tags": tags})
+                aid = db.enqueue_action("update_tags", summary, payload)
                 staged.append({"listing_id": lid, "action_id": aid, "tags": tags})
             with _cache_lock:
                 _cache.pop("actions", None)
@@ -1668,18 +2002,16 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             new_state = ti.get("new_state")
             if lid is None:
                 return {"error": "listing_id is required"}
-            candidate = {
-                "type": "toggle_listing_state",
-                "payload": {"listing_id": lid, "new_state": new_state},
-            }
+            payload = {"listing_id": lid, "new_state": new_state}
+            try:
+                payload["_state_at_staging"] = EtsyAPIClient().get_listing(int(lid)).get("state")
+            except Exception:
+                pass
+            candidate = {"type": "toggle_listing_state", "payload": payload}
             ok, msg = _validate_staged_action(candidate)
             if not ok:
                 return {"staged": False, "error": msg}
-            aid = db.enqueue_action(
-                "toggle_listing_state",
-                ti.get("summary", ""),
-                {"listing_id": lid, "new_state": new_state},
-            )
+            aid = db.enqueue_action("toggle_listing_state", ti.get("summary", ""), payload)
             return {
                 "staged": True,
                 "action_id": aid,
@@ -1720,11 +2052,32 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "status": "pending",
                 "note": "Queued for Scott's approval in the Action Center — not yet registered.",
             }
+        if name == "read_knowledge_base_doc":
+            ti = tool_input or {}
+            query = (ti.get("query") or "").strip()
+            filename = (ti.get("filename") or "").strip()
+            if query:
+                return {"query": query, "results": _kb_search(query)}
+            if filename:
+                try:
+                    target = _resolve_kb_doc(filename)
+                except HTTPException as exc:
+                    return {"error": exc.detail, "category": "not_found", "retryable": False}
+                text = target.read_text()
+                return {"filename": filename, "title": _kb_title(target, text), "content": text}
+            docs = _kb_docs()
+            docs.append({
+                "filename": "CLAUDE.md",
+                "title": "Project Instructions (CLAUDE.md)",
+                "note": "Full operating rules: product specs, quality gates, autonomy boundaries, pricing tables.",
+            })
+            return {"docs": docs}
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired:
-        return {"error": f"Command timed out (>{timeout}s)"}
+        return {"error": f"Command timed out (>{timeout}s)", "category": "transient", "retryable": True}
     except Exception as exc:
-        return {"error": str(exc)}
+        category, retryable = classify_tool_exception(exc)
+        return {"error": str(exc), "category": category, "retryable": retryable}
 
 # ── CEO Suggestions system prompt ─────────────────────────────────────────────────
 
@@ -1813,6 +2166,9 @@ Rules:
   its tag count, a phrase from its title or description. No generic advice.
 - If the title is fine, say so and move on — do not invent problems.
 - Be honest and direct; Scott reads this on his phone.
+
+The standards above are a fast-path summary for this diagnosis. If anything here ever
+conflicts with data/knowledge_base/business_standards.md, that file is the source of truth.
 \
 """
 
@@ -1853,7 +2209,10 @@ PRODUCT-SPECIFIC GUIDANCE:
 Respond with ONLY a valid JSON array — no markdown, no explanation, no code fences:
 [{"listing_id": 123, "tags": ["tag one","tag two","tag three","tag four","tag five","tag six","tag seven","tag eight","tag nine","tag ten","tag eleven","tag twelve","tag thirteen"]}, ...]
 
-Each tags array MUST contain exactly 13 strings. Each string MUST be 20 characters or fewer.\
+Each tags array MUST contain exactly 13 strings. Each string MUST be 20 characters or fewer.
+
+The canonical tag sets and product guidance above are a fast-path summary for batch tagging.
+If they ever conflict with data/knowledge_base/business_standards.md, that file is the source of truth.\
 """
 
 
@@ -4155,17 +4514,16 @@ async def set_listing_state(listing_id: int, new_state: str, _token: str = Depen
 
     def _update():
         client = EtsyAPIClient()
-        for attempt in range(3):
-            try:
-                return client.update_listing(listing_id, {"state": new_state})
-            except EtsyAPIError as exc:
-                # PATCH listings/{id} has a documented non-deterministic 403
-                # ("listing is not editable") that's a server-side race condition,
-                # not a real permission error — retry a couple times before giving up.
-                if exc.status == 403 and attempt < 2:
-                    time.sleep(2)
-                    continue
-                raise
+        # PATCH listings/{id} has a documented non-deterministic 403
+        # ("listing is not editable") that's a server-side race condition,
+        # not a real permission error — retry a couple times before giving up.
+        return retry_with_backoff(
+            lambda: client.update_listing(listing_id, {"state": new_state}),
+            max_attempts=3,
+            base_delay=2.0,
+            max_delay=8.0,
+            retryable=lambda e: isinstance(e, EtsyAPIError) and e.status == 403,
+        )
 
     try:
         result = await asyncio.wait_for(asyncio.to_thread(_update), timeout=20.0)
@@ -4305,6 +4663,69 @@ async def get_actions(_token: str = Depends(_auth)):
     return data
 
 
+# ── Shared background-loop retry/backoff/heartbeat helper ────────────────────────
+
+_LOOP_FAILURE_COUNTS: dict[str, int] = {}
+_LOOP_BACKOFF_BASE_DELAY = 5.0  # seconds -- seed for jittered exponential backoff
+
+
+async def _run_loop_iteration(
+    name: str,
+    label: str,
+    fn,
+    *,
+    on_success_detail="ok",
+    on_success_status="ok",
+    on_error_detail=None,
+    base_interval: float,
+    max_interval: float = 3600.0,
+) -> float:
+    """Run one iteration of a background loop with a shared heartbeat +
+    jittered-exponential-backoff policy.
+
+    Before this helper, each of the 5 background loops (`_snapshot_loop`,
+    `_warm_suggestions`, `_token_sync_loop`, `_quality_audit_loop`,
+    `_health_check_loop`) slept a fixed interval regardless of whether the
+    last run failed -- a flaky dependency either got hammered every interval
+    or, on the daily loops, sat broken for up to 24h before the next retry.
+    This centralizes the resilience.py pattern (full-jitter exponential
+    backoff, consecutive-failure tracking, reset on success) so every loop
+    gets the same graceful-degradation behavior for free.
+
+    `fn` is called with no arguments and may be async. On success, the
+    failure counter for `name` resets to 0 and the heartbeat is recorded via
+    `on_success_status`/`on_success_detail` (each may be a plain value or a
+    callable taking fn()'s return value -- this lets a loop report "error"
+    even on a clean run, e.g. a quality audit that ran fine but found
+    failing listings). On an exception, the heartbeat is recorded "error"
+    (detail via `on_error_detail(exc)` if given, else `str(exc)[:300]`) and
+    the failure counter increments.
+
+    Returns the number of seconds the caller should `await asyncio.sleep()`
+    before the next iteration: `base_interval` on success, or a full-jitter
+    backoff delay (seeded at `_LOOP_BACKOFF_BASE_DELAY`, doubling per
+    consecutive failure, capped at `max_interval`) on failure. This never
+    bypasses the Action Center approval gate -- it only changes how often a
+    read-only/internal loop retries, never whether a mutation is allowed.
+    """
+    try:
+        result = await fn()
+        _LOOP_FAILURE_COUNTS[name] = 0
+        detail = on_success_detail(result) if callable(on_success_detail) else on_success_detail
+        status = on_success_status(result) if callable(on_success_status) else on_success_status
+        db.set_agent_heartbeat(name, label, status, detail)
+        return base_interval
+    except Exception as exc:
+        n = _LOOP_FAILURE_COUNTS.get(name, 0) + 1
+        _LOOP_FAILURE_COUNTS[name] = n
+        delay = min(max_interval, _LOOP_BACKOFF_BASE_DELAY * (2 ** (n - 1)))
+        delay = random.uniform(0, delay)  # full jitter
+        detail = on_error_detail(exc) if on_error_detail else str(exc)[:300]
+        print(f"[{name}] error (attempt {n}, retrying in {delay:.0f}s): {exc}", flush=True)
+        db.set_agent_heartbeat(name, label, "error", str(detail)[:300])
+        return delay
+
+
 # ── Persistence: daily snapshots + history ───────────────────────────────────────
 
 
@@ -4318,18 +4739,20 @@ async def _take_snapshot() -> str:
 
 
 async def _snapshot_loop() -> None:
-    """Snapshot at startup, then once every 24h. Upsert-by-day means repeated
-    runs on the same calendar day just refresh that day's row (no duplicates)."""
+    """Snapshot at startup, then once every 24h (sooner on a backoff retry
+    after a failure). Upsert-by-day means repeated runs on the same calendar
+    day just refresh that day's row (no duplicates)."""
     while True:
-        try:
-            await _take_snapshot()
-            db.set_agent_heartbeat("snapshot", "Snapshot", "ok", "Daily metric snapshot recorded")
-        except Exception as exc:
-            print(f"[snapshot] error: {exc}", flush=True)
-            db.set_agent_heartbeat("snapshot", "Snapshot", "error", str(exc)[:300])
+        delay = await _run_loop_iteration(
+            "snapshot", "Snapshot", _take_snapshot,
+            on_success_detail="Daily metric snapshot recorded",
+            base_interval=86_400,
+        )
         # Daily recycle-bin prune (tools/trash.py): drop deletions older than 30 days.
         # Piggybacks on this already-daily loop so expiry is time-based and durable on
         # the live server — no separate cron needed (and no harness-cron 7-day expiry).
+        # Tolerant of its own errors -- a prune failure must never affect the
+        # snapshot's own success/backoff timing above.
         try:
             from tools.trash import prune as _trash_prune
             n = await asyncio.to_thread(_trash_prune)
@@ -4337,7 +4760,7 @@ async def _snapshot_loop() -> None:
                 print(f"[trash] pruned {n} expired entr{'y' if n == 1 else 'ies'}", flush=True)
         except Exception as exc:
             print(f"[trash] prune error: {exc}", flush=True)
-        await asyncio.sleep(86_400)
+        await asyncio.sleep(delay)
 
 
 async def _warm_suggestions() -> None:
@@ -4351,23 +4774,25 @@ async def _warm_suggestions() -> None:
         db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "error", "ANTHROPIC_API_KEY not set")
         return
     await asyncio.sleep(5)  # let the app finish booting first
+
+    async def _iteration():
+        res = await _compute_suggestions()
+        if res.get("error") == "parse_failed":
+            # Not cached (see _compute_suggestions) — a TransientToolError so the
+            # shared helper backs off quickly and retries, rather than waiting the
+            # full refresh-before-TTL interval.
+            raise TransientToolError("suggestions parse failed")
+        return res
+
     while True:
-        try:
-            res = await _compute_suggestions()
-            if res.get("error") == "parse_failed":
-                # Not cached (see _compute_suggestions) — retry soon, don't wait 30min.
-                print("[warm] suggestions parse failed — retrying in 60s", flush=True)
-                db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "error", "parse_failed — retrying")
-                await asyncio.sleep(60)
-                continue
-            print("[warm] suggestions cache primed", flush=True)
-            db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "ok", "CEO diagnostic cache primed")
-        except Exception as exc:
-            print(f"[warm] suggestions priming skipped: {exc}", flush=True)
-            db.set_agent_heartbeat("suggestion_warmer", "Suggestion Warmer", "error", _friendly_error_message(exc))
-            await asyncio.sleep(120)  # back off, then retry
-            continue
-        await asyncio.sleep(_SUGGESTIONS_TTL - 120)  # refresh just before expiry
+        delay = await _run_loop_iteration(
+            "suggestion_warmer", "Suggestion Warmer", _iteration,
+            on_success_detail="CEO diagnostic cache primed",
+            on_error_detail=_friendly_error_message,
+            base_interval=_SUGGESTIONS_TTL - 120,  # refresh just before expiry
+            max_interval=120,
+        )
+        await asyncio.sleep(delay)
 
 
 async def _token_sync_loop() -> None:
@@ -4379,28 +4804,87 @@ async def _token_sync_loop() -> None:
     Polling os.environ here (instead of modifying etsy_api.py) keeps the fix
     isolated to this server and changes zero behavior for any other consumer
     (CI, Scott's local scripts) that imports etsy_api.py directly."""
-    last_access = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
-    last_refresh = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
+    last_tokens = {
+        "access": os.getenv("ETSY_ACCESS_TOKEN", "").strip(),
+        "refresh": os.getenv("ETSY_REFRESH_TOKEN", "").strip(),
+    }
+
+    async def _iteration():
+        cur_access = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
+        cur_refresh = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
+        if cur_access and cur_refresh and (cur_access != last_tokens["access"] or cur_refresh != last_tokens["refresh"]):
+            await asyncio.to_thread(db.save_etsy_tokens, cur_access, cur_refresh, last_tokens["refresh"])
+            print(f"[etsy-tokens] persisted rotated token to {db.DB_PATH}", flush=True)
+            last_tokens["access"], last_tokens["refresh"] = cur_access, cur_refresh
+            return "Etsy token rotation persisted"
+        return "watching for token rotation"
+
+    await asyncio.sleep(60)  # give the app a moment before the first poll
     while True:
-        await asyncio.sleep(60)
-        try:
-            cur_access = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
-            cur_refresh = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
-            if cur_access and cur_refresh and (cur_access != last_access or cur_refresh != last_refresh):
-                await asyncio.to_thread(db.save_etsy_tokens, cur_access, cur_refresh, last_refresh)
-                print(f"[etsy-tokens] persisted rotated token to {db.DB_PATH}", flush=True)
-                last_access, last_refresh = cur_access, cur_refresh
-                db.set_agent_heartbeat("token_sync", "Token Sync", "ok", "Etsy token rotation persisted")
-            else:
-                db.set_agent_heartbeat("token_sync", "Token Sync", "ok", "watching for token rotation")
-        except Exception as exc:
-            print(f"[etsy-tokens] sync error: {exc}", flush=True)
-            db.set_agent_heartbeat("token_sync", "Token Sync", "error", str(exc)[:300])
+        delay = await _run_loop_iteration(
+            "token_sync", "Token Sync", _iteration,
+            on_success_detail=lambda detail: detail,
+            base_interval=60,
+            max_interval=300,
+        )
+        await asyncio.sleep(delay)
 
 
 _QUALITY_AUDIT_SUMMARY_RE = _re.compile(
     r"PASS:\s*(\d+).*?WARN:\s*(\d+).*?FAIL:\s*(\d+)", _re.DOTALL
 )
+
+
+async def _quality_audit_iteration() -> dict:
+    """One run of the daily quality audit: rotate oversized KB files, run the
+    read-only listing integrity check, record the trend, and escalate a FAIL
+    finding to ops_runbook.md. Raises on a genuine run failure (subprocess
+    error, unparseable output) so `_run_loop_iteration` backs off and retries
+    sooner than the normal 24h cadence; returns a result dict on a clean run
+    even if the audit itself found failing listings (that's a content-level
+    signal surfaced via `on_success_status`, not a loop failure)."""
+    for kb_path in (_OPS_RUNBOOK_PATH, _CEO_LEARNINGS_PATH):
+        try:
+            if await asyncio.to_thread(_summarize_and_rotate_kb_file, kb_path):
+                print(f"[kb-rotate] condensed older history in {kb_path.name}", flush=True)
+        except Exception as exc:
+            print(f"[kb-rotate] check failed for {kb_path.name}: {exc}", flush=True)
+
+    try:
+        if await asyncio.to_thread(_promote_recurring_failures, _OPS_RUNBOOK_PATH):
+            print("[ops-runbook] refreshed Known Recurring Issues section", flush=True)
+    except Exception as exc:
+        print(f"[ops-runbook] recurring-issues check failed: {exc}", flush=True)
+
+    result = await asyncio.to_thread(
+        subprocess.run,
+        [sys.executable, str(ROOT / "tools" / "listing_integrity_check.py")],
+        capture_output=True,
+        text=True,
+        timeout=600,
+        cwd=str(ROOT),
+    )
+    out = (result.stdout or "") + "\n" + (result.stderr or "")
+    m = _QUALITY_AUDIT_SUMMARY_RE.search(out)
+    if not m:
+        raise RuntimeError("could not parse summary line")
+    passed, warned, failed = (int(g) for g in m.groups())
+    blocks = out.split("—" * 70)
+    header_idx = next((i for i, b in enumerate(blocks) if "✗ FAIL (" in b), None)
+    fail_block = blocks[header_idx + 1] if header_idx is not None and header_idx + 1 < len(blocks) else ""
+    summary = fail_block.strip()[:1500]
+    try:
+        db.record_quality_audit(passed, warned, failed, summary)
+    except Exception as exc:
+        print(f"[quality-audit] db record failed: {exc}", flush=True)
+    print(f"[quality-audit] PASS:{passed} WARN:{warned} FAIL:{failed}", flush=True)
+    if failed > 0:
+        _append_ops_runbook_entry(
+            f"Automated quality audit — {failed} listing(s) failing",
+            f"Daily listing_integrity_check found {failed} FAIL / {warned} WARN out of "
+            f"{passed + warned + failed} listings audited. Details:\n{summary or '(see logs)'}",
+        )
+    return {"passed": passed, "warned": warned, "failed": failed}
 
 
 async def _quality_audit_loop() -> None:
@@ -4414,49 +4898,60 @@ async def _quality_audit_loop() -> None:
     without anyone needing to remember to run the check manually."""
     await asyncio.sleep(120)  # let the app finish booting first
     while True:
-        try:
-            result = await asyncio.to_thread(
-                subprocess.run,
-                [sys.executable, str(ROOT / "tools" / "listing_integrity_check.py")],
-                capture_output=True,
-                text=True,
-                timeout=600,
-                cwd=str(ROOT),
-            )
-        except Exception as exc:
-            print(f"[quality-audit] run failed: {exc}", flush=True)
-            db.set_agent_heartbeat("quality_audit", "Quality Audit", "error", str(exc)[:300])
-            await asyncio.sleep(86_400)
-            continue
-        out = (result.stdout or "") + "\n" + (result.stderr or "")
-        m = _QUALITY_AUDIT_SUMMARY_RE.search(out)
-        if not m:
-            print("[quality-audit] could not parse summary line", flush=True)
-            db.set_agent_heartbeat("quality_audit", "Quality Audit", "error", "could not parse summary line")
-            await asyncio.sleep(86_400)
-            continue
-        passed, warned, failed = (int(g) for g in m.groups())
-        blocks = out.split("—" * 70)
-        header_idx = next((i for i, b in enumerate(blocks) if "✗ FAIL (" in b), None)
-        fail_block = blocks[header_idx + 1] if header_idx is not None and header_idx + 1 < len(blocks) else ""
-        summary = fail_block.strip()[:1500]
-        try:
-            db.record_quality_audit(passed, warned, failed, summary)
-        except Exception as exc:
-            print(f"[quality-audit] db record failed: {exc}", flush=True)
-        print(f"[quality-audit] PASS:{passed} WARN:{warned} FAIL:{failed}", flush=True)
-        db.set_agent_heartbeat(
-            "quality_audit", "Quality Audit",
-            "error" if failed > 0 else "ok",
-            f"PASS:{passed} WARN:{warned} FAIL:{failed}",
+        delay = await _run_loop_iteration(
+            "quality_audit", "Quality Audit", _quality_audit_iteration,
+            on_success_status=lambda r: "error" if r["failed"] > 0 else "ok",
+            on_success_detail=lambda r: f"PASS:{r['passed']} WARN:{r['warned']} FAIL:{r['failed']}",
+            base_interval=86_400,
         )
-        if failed > 0:
-            _append_ops_runbook_entry(
-                f"Automated quality audit — {failed} listing(s) failing",
-                f"Daily listing_integrity_check found {failed} FAIL / {warned} WARN out of "
-                f"{passed + warned + failed} listings audited. Details:\n{summary or '(see logs)'}",
+        await asyncio.sleep(delay)
+
+
+async def _health_check_iteration() -> dict:
+    """One health-check pass: reap finished background processes, ping Etsy +
+    confirm the Anthropic key is set, and escalate to ops_runbook.md if either
+    dependency is down. Etsy/Anthropic outages are content-level findings (an
+    "error" heartbeat status) rather than loop failures, so they don't trigger
+    `_run_loop_iteration`'s own retry backoff -- the check itself ran fine."""
+    for pid, (proc, cmd_name, started_at) in list(_LONG_RUNNING_PROCS.items()):
+        if proc.poll() is not None:  # finished (crashed or completed)
+            age_s = (datetime.now(timezone.utc) - started_at).total_seconds()
+            print(
+                f"[health-check] reaped {cmd_name} (pid {pid}, ran {age_s:.0f}s, "
+                f"exit={proc.returncode})",
+                flush=True,
             )
-        await asyncio.sleep(86_400)
+            del _LONG_RUNNING_PROCS[pid]
+
+    etsy_ok = True
+    etsy_detail = "ok"
+    etsy_exc: Exception | None = None
+    try:
+        shop = await asyncio.to_thread(EtsyAPIClient().get_shop)
+        etsy_detail = f"ok — {shop.get('shop_name', '?')}"
+    except Exception as exc:
+        etsy_ok = False
+        etsy_detail = f"error: {str(exc)[:200]}"
+        etsy_exc = exc
+
+    anthropic_ok = bool(os.getenv("ANTHROPIC_API_KEY"))
+    all_ok = etsy_ok and anthropic_ok
+    detail = f"Etsy: {etsy_detail} | Anthropic key set: {anthropic_ok}"
+    if not all_ok:
+        context = f"5-minute health loop detected a problem: {detail}"
+        if etsy_exc is not None:
+            # Tier 2/3 -- classify the actual Etsy exception rather than just
+            # logging its string. Anthropic-key-missing (no exception, just an
+            # unset env var) is handled as its own known cause below.
+            _escalate_failure(context, etsy_exc)
+        elif not anthropic_ok:
+            _append_ops_runbook_entry(
+                "Automated health check failure (known cause)",
+                f"{context}\n\n**Diagnosis:** {_KNOWN_FAILURE_REMEDIATIONS['anthropic_key_missing']}",
+            )
+        else:
+            _append_ops_runbook_entry("Automated health check failure", context)
+    return {"all_ok": all_ok, "detail": detail[:300]}
 
 
 async def _health_check_loop() -> None:
@@ -4468,42 +4963,13 @@ async def _health_check_loop() -> None:
     forever in _LONG_RUNNING_PROCS."""
     await asyncio.sleep(60)  # let the app finish booting first
     while True:
-        try:
-            for pid, (proc, cmd_name, started_at) in list(_LONG_RUNNING_PROCS.items()):
-                if proc.poll() is not None:  # finished (crashed or completed)
-                    age_s = (datetime.now(timezone.utc) - started_at).total_seconds()
-                    print(
-                        f"[health-check] reaped {cmd_name} (pid {pid}, ran {age_s:.0f}s, "
-                        f"exit={proc.returncode})",
-                        flush=True,
-                    )
-                    del _LONG_RUNNING_PROCS[pid]
-
-            etsy_ok = True
-            etsy_detail = "ok"
-            try:
-                shop = await asyncio.to_thread(EtsyAPIClient().get_shop)
-                etsy_detail = f"ok — {shop.get('shop_name', '?')}"
-            except Exception as exc:
-                etsy_ok = False
-                etsy_detail = f"error: {str(exc)[:200]}"
-
-            anthropic_ok = bool(os.getenv("ANTHROPIC_API_KEY"))
-            all_ok = etsy_ok and anthropic_ok
-            detail = f"Etsy: {etsy_detail} | Anthropic key set: {anthropic_ok}"
-            db.set_agent_heartbeat("health_check", "Health Check", "ok" if all_ok else "error", detail[:300])
-            if not all_ok:
-                _append_ops_runbook_entry(
-                    "Automated health check failure",
-                    f"5-minute health loop detected a problem: {detail}",
-                )
-        except Exception as exc:
-            print(f"[health-check] loop iteration failed: {exc}", flush=True)
-            try:
-                db.set_agent_heartbeat("health_check", "Health Check", "error", str(exc)[:300])
-            except Exception:
-                pass
-        await asyncio.sleep(300)
+        delay = await _run_loop_iteration(
+            "health_check", "Health Check", _health_check_iteration,
+            on_success_status=lambda r: "ok" if r["all_ok"] else "error",
+            on_success_detail=lambda r: r["detail"],
+            base_interval=300,
+        )
+        await asyncio.sleep(delay)
 
 
 _AGENT_LOOP_LABELS = {
@@ -4946,7 +5412,8 @@ async def _autofix_tags_core(listing_id: int, listing: dict | None = None, reaso
         seen: set = set()
         tags = [t for t in tags if t and not (t in seen or seen.add(t))]
 
-        candidate = {"type": "update_tags", "payload": {"listing_id": listing_id, "tags": tags}}
+        payload = {"listing_id": listing_id, "tags": tags, "_state_at_staging": listing.get("state")}
+        candidate = {"type": "update_tags", "payload": payload}
         ok, msg = _validate_staged_action(candidate)
         if not ok:
             return {"error": f"Quality gate: {msg}", "listing_id": listing_id}
@@ -4954,7 +5421,7 @@ async def _autofix_tags_core(listing_id: int, listing: dict | None = None, reaso
         title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
         prefix = "Reject-fix tag" if reason else "Auto tag fix"
         summary = f"{prefix} ({len(tags)}/13): {title_short}"
-        action_id = db.enqueue_action("update_tags", summary, {"listing_id": listing_id, "tags": tags})
+        action_id = db.enqueue_action("update_tags", summary, payload)
     except Exception as exc:
         return {"error": f"Could not stage tag fix: {exc}", "listing_id": listing_id}
 
@@ -5005,14 +5472,15 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
     try:
         new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
 
-        candidate = {"type": "update_title", "payload": {"listing_id": listing_id, "title": new_title}}
+        payload = {"listing_id": listing_id, "title": new_title, "_state_at_staging": listing.get("state")}
+        candidate = {"type": "update_title", "payload": payload}
         ok, msg = _validate_staged_action(candidate)
         if not ok:
             return {"error": f"Quality gate: {msg}", "listing_id": listing_id}
 
         prefix = "Reject-fix title" if reason else "Auto title fix"
         summary = f"{prefix}: {new_title[:50]}"
-        action_id = db.enqueue_action("update_title", summary, {"listing_id": listing_id, "title": new_title})
+        action_id = db.enqueue_action("update_title", summary, payload)
     except Exception as exc:
         return {"error": f"Could not stage title fix: {exc}", "listing_id": listing_id}
 
@@ -5112,9 +5580,61 @@ _STAGED_ACTION_TYPES = (
 )
 
 
-def _validate_staged_action(a: dict) -> tuple[bool, str]:
+_EXPECTED_LISTING_PHOTO_SIZE = (2400, 2400)  # CLAUDE.md standard listing photo spec
+
+
+def _check_no_pale_background(path: Path) -> str | None:
+    """Port of QualityGate.check_no_pale_background (business_pipeline.py) — samples the
+    4 corners and rejects a washed-out/pale background (CARDINAL CHECK spirit: a listing
+    photo that looks AI-blank or low-effort is always wrong). Returns an error message on
+    failure, None on pass. Hard block, not a warning -- unlike the dimension check below."""
+    try:
+        from PIL import Image
+        img = Image.open(path).convert("RGB")
+        w, h = img.size
+        s = 30
+        corners = [
+            img.crop((0, 0, s, s)),
+            img.crop((w - s, 0, w, s)),
+            img.crop((0, h - s, s, h)),
+            img.crop((w - s, h - s, w, h)),
+        ]
+        for corner in corners:
+            pixels = list(corner.getdata())
+            avg_r = sum(p[0] for p in pixels) / len(pixels)
+            avg_g = sum(p[1] for p in pixels) / len(pixels)
+            avg_b = sum(p[2] for p in pixels) / len(pixels)
+            luminance = 0.299 * avg_r + 0.587 * avg_g + 0.114 * avg_b
+            if luminance > 217:  # ~85% of 255 -- too light/pale
+                return f"photo background too pale (corner luminance {luminance:.0f}/255) -- looks washed out"
+    except Exception as exc:
+        print(f"[quality-gate] pale-background check skipped ({path.name}): {exc}", flush=True)
+        return None
+    return None
+
+
+def _warn_if_unexpected_photo_dimensions(path: Path) -> None:
+    """Port of QualityGate.check_image_dimensions, downgraded to a logged warning rather
+    than a hard block -- legitimate photo slots can vary in source size before the listing
+    pipeline resizes them, so this is informational, not gating."""
+    try:
+        from PIL import Image
+        w, h = Image.open(path).size
+        ew, eh = _EXPECTED_LISTING_PHOTO_SIZE
+        if abs(w - ew) > 10 or abs(h - eh) > 10:
+            print(f"[quality-gate] {path.name} is {w}x{h}, expected ~{ew}x{eh} square", flush=True)
+    except Exception as exc:
+        print(f"[quality-gate] dimension check skipped ({path.name}): {exc}", flush=True)
+
+
+def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool, str]:
     """Quality gate run BOTH at stage time and again at approve time. The gate is
-    code — a change that violates the 2026 standards can never be applied."""
+    code — a change that violates the 2026 standards can never be applied.
+
+    `at_approval=True` additionally re-fetches the listing's live state from Etsy
+    and refuses if it changed since the action was staged (e.g. Scott deactivated
+    it manually in the meantime). Only the approval-time call pays for that
+    network round trip -- staging stays a single fast local validation."""
     t = a.get("type")
     p = a.get("payload", {}) or {}
     if t not in _STAGED_ACTION_TYPES:
@@ -5143,6 +5663,18 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
             new_state = p.get("new_state")
             if new_state not in ("active", "inactive"):
                 return False, "new_state must be 'active' or 'inactive'"
+        if at_approval:
+            try:
+                current = EtsyAPIClient().get_listing(int(p["listing_id"]))
+            except Exception as exc:
+                return False, f"could not reconfirm listing {p['listing_id']} before applying: {exc}"
+            staged_state = p.get("_state_at_staging")
+            current_state = current.get("state")
+            if staged_state is not None and current_state != staged_state:
+                return False, (
+                    f"listing {p['listing_id']} state changed since this action was staged "
+                    f"(was '{staged_state}', now '{current_state}') -- review and re-stage"
+                )
         return True, "ok"
     if t in _PHOTO_STAGED_ACTION_TYPES:
         if not p.get("listing_id"):
@@ -5159,6 +5691,10 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
             return False, f"path escapes the staged_photos root: {path}"
         if not target.is_file():
             return False, f"staged photo file not found: {path}"
+        pale_msg = _check_no_pale_background(target)
+        if pale_msg:
+            return False, pale_msg
+        _warn_if_unexpected_photo_dimensions(target)
         return True, "ok"
     if t in _VIDEO_STAGED_ACTION_TYPES:
         if not p.get("listing_id"):
@@ -5236,27 +5772,42 @@ def _validate_staged_action(a: dict) -> tuple[bool, str]:
     return True, "ok"
 
 
+def _retryable_etsy_error(exc: Exception) -> bool:
+    """Rate limit / server-side hiccup worth one more try -- never a reason to
+    re-issue a *new* mutation, only to retry the one already-approved call."""
+    return isinstance(exc, EtsyAPIError) and exc.status in (429, 500, 502, 503)
+
+
 def _execute_staged_action(a: dict) -> dict:
-    """Apply an approved action to Etsy via update_listing, then bust caches."""
+    """Apply an approved action to Etsy via update_listing, then bust caches.
+
+    Every Etsy call is wrapped in retry_with_backoff -- this only retries an
+    *already-approved* mutation on a transient 429/5xx, it never decides
+    whether a mutation happens (that's still the Action Center approval gate,
+    enforced by the caller before this function is ever invoked)."""
     t = a["type"]
     p = a.get("payload", {}) or {}
     lid = p["listing_id"]
     client = EtsyAPIClient()
+
+    def _retry(fn):
+        return retry_with_backoff(fn, max_attempts=3, base_delay=1.0, max_delay=10.0, retryable=_retryable_etsy_error)
+
     if t == "update_tags":
-        res = client.update_listing(lid, {"tags": p["tags"]})
+        res = _retry(lambda: client.update_listing(lid, {"tags": p["tags"]}))
     elif t == "update_title":
-        res = client.update_listing(lid, {"title": p["title"].strip()})
+        res = _retry(lambda: client.update_listing(lid, {"title": p["title"].strip()}))
     elif t == "publish_listing":
-        res = client.update_listing(lid, {"state": "active"})
+        res = _retry(lambda: client.update_listing(lid, {"state": "active"}))
     elif t == "deactivate_listing":
-        res = client.update_listing(lid, {"state": "inactive"})
+        res = _retry(lambda: client.update_listing(lid, {"state": "inactive"}))
     elif t == "toggle_listing_state":
-        res = client.update_listing(lid, {"state": p["new_state"]})
+        res = _retry(lambda: client.update_listing(lid, {"state": p["new_state"]}))
     elif t == "listing_photo":
         abs_path = _resolve_in_root("staged_photos", p["path"])
         if not abs_path.is_file():
             raise FileNotFoundError(f"staged photo not found: {p['path']}")
-        img = client.upload_listing_image(lid, str(abs_path), rank=p.get("rank", 1))
+        img = _retry(lambda: client.upload_listing_image(lid, str(abs_path), rank=p.get("rank", 1)))
         with _cache_lock:
             for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
                 _cache.pop(k, None)
@@ -5272,7 +5823,7 @@ def _execute_staged_action(a: dict) -> dict:
         abs_path = _resolve_in_root("staged_videos", p["path"])
         if not abs_path.is_file():
             raise FileNotFoundError(f"staged video not found: {p['path']}")
-        vid = client.upload_listing_video(lid, str(abs_path), rank=p.get("rank"))
+        vid = _retry(lambda: client.upload_listing_video(lid, str(abs_path), rank=p.get("rank")))
         with _cache_lock:
             for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
                 _cache.pop(k, None)
@@ -5382,7 +5933,7 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
         raise HTTPException(status_code=404, detail="action not found")
     if a["status"] != "pending":
         raise HTTPException(status_code=409, detail=f"action already {a['status']}")
-    ok, msg = _validate_staged_action(a)
+    ok, msg = await asyncio.to_thread(_validate_staged_action, a, at_approval=True)
     if not ok:
         await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": f"gate failed: {msg}"})
         raise HTTPException(status_code=422, detail=f"quality gate failed: {msg}")
@@ -5393,6 +5944,10 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
         state = await asyncio.to_thread(db.get_relay_state)
         if state.get("killed"):
             raise HTTPException(status_code=409, detail="kill switch is engaged — local actions are suspended")
+    # Mark "executing" before dispatch -- if the process crashes mid-execution, the
+    # row is left at "executing" rather than "pending", so the `status != "pending"`
+    # guard above blocks a retry-approval from firing a duplicate mutation.
+    await asyncio.to_thread(db.set_action_status, action_id, "executing")
     try:
         if is_local:
             result = await asyncio.wait_for(_execute_local_staged_action(a), timeout=45.0)
@@ -5856,7 +6411,8 @@ async def batch_stage_tags(_token: str = Depends(_auth)):
         seen: set[str] = set()
         tags = [t for t in tags if t and not (t in seen or seen.add(t))]
 
-        candidate = {"type": "update_tags", "payload": {"listing_id": lid, "tags": tags}}
+        payload = {"listing_id": lid, "tags": tags, "_state_at_staging": listing.get("state")}
+        candidate = {"type": "update_tags", "payload": payload}
         ok, msg_str = _validate_staged_action(candidate)
         if not ok:
             errors.append({"listing_id": lid, "title": title_short, "error": msg_str})
@@ -5864,7 +6420,7 @@ async def batch_stage_tags(_token: str = Depends(_auth)):
             continue
 
         summary = f"Tag fix ({len(tags)}/13): {title_short}"
-        db.enqueue_action("update_tags", summary, {"listing_id": lid, "tags": tags})
+        db.enqueue_action("update_tags", summary, payload)
         staged += 1
 
     # Bust cached action list so the Action Center refreshes.
