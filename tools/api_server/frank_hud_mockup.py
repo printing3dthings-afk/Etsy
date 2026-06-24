@@ -41,6 +41,9 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/static/icon-192.png">
 <title>FRANK — Command Center (mockup)</title>
+<script type="importmap">
+{"imports": {"onnxruntime-web": "/static/vendor/onnxruntime-web/ort.wasm.bundle.min.mjs"}}
+</script>
 <style>
 :root{
   --bg:#070d16;--panel:#0f1f30;--panel2:#13283d;--border:#1c3349;
@@ -894,6 +897,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         </div>
         <div class="sub" id="talk-sub">tap to speak</div>
       </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="premium-voice-toggle"> Premium voice</label>
       <span class="dots-line"></span>
     </div>
     <button class="brief-btn">Executive Briefing</button>
@@ -974,25 +978,61 @@ function _speakWithBrowserFallback(text){
     window.speechSynthesis.speak(u);
   } catch(err){ setSpeaking(false); }
 }
+// ── Local offline TTS (Piper-web, fully self-hosted — no CDN). This is the default
+// speech-out path; OpenAI TTS only runs when the Premium voice toggle is on. ──
+let _piperSessionPromise = null;
+const _PIPER_VOICE_ID = 'en_US-amy-medium';
+function _loadPiperSession(){
+  if(_piperSessionPromise) return _piperSessionPromise;
+  const talkSubEl = document.getElementById('talk-sub');
+  _piperSessionPromise = import('/static/vendor/piper-tts-web/piper-tts-web.js').then(mod => {
+    return mod.TtsSession.create({
+      voiceId: _PIPER_VOICE_ID,
+      wasmPaths: {
+        onnxWasm: {
+          mjs: '/static/vendor/onnxruntime-web/ort-wasm-simd-threaded.mjs',
+          wasm: '/static/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm'
+        },
+        piperWasm: '/static/vendor/piper-wasm/piper_phonemize.wasm',
+        piperData: '/static/vendor/piper-wasm/piper_phonemize.data'
+      },
+      progress: (p) => {
+        if(!talkSubEl || !_voiceRecording) return;
+        talkSubEl.textContent = 'Setting up offline voice…';
+      }
+    });
+  });
+  _piperSessionPromise.catch(() => { _piperSessionPromise = null; });
+  return _piperSessionPromise;
+}
+async function _speakLocalPiper(text){
+  const session = await _loadPiperSession();
+  return await session.predict(text);
+}
+function _playTtsBlob(blob, fallbackText){
+  if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio = null; }
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  _ttsAudio = audio;
+  audio.onplay = () => setSpeaking(true);
+  audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+  audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+  audio.play().catch(()=>{ _speakWithBrowserFallback(fallbackText); });
+}
 function speakText(text){
   if(!text) return;
-  fetchWithTimeout(BASE+'/api/voice/speak', {
-    method:'POST',
-    headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-    body: JSON.stringify({text})
-  }, 20000).then(r=>{
-    if(!r.ok) throw new Error('speak failed: '+r.status);
-    return r.blob();
-  }).then(blob=>{
-    if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio = null; }
-    const url = URL.createObjectURL(blob);
-    const audio = new Audio(url);
-    _ttsAudio = audio;
-    audio.onplay = () => setSpeaking(true);
-    audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-    audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-    audio.play().catch(()=>{ _speakWithBrowserFallback(text); });
-  }).catch(()=>{ _speakWithBrowserFallback(text); });
+  if(_isPremiumVoice()){
+    fetchWithTimeout(BASE+'/api/voice/speak', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({text})
+    }, 20000).then(r=>{
+      if(!r.ok) throw new Error('speak failed: '+r.status);
+      return r.blob();
+    }).then(blob=>_playTtsBlob(blob, text)).catch(()=>{ _speakWithBrowserFallback(text); });
+    return;
+  }
+  _speakLocalPiper(text).then(blob=>_playTtsBlob(blob, text)).catch(()=>{ _speakWithBrowserFallback(text); });
 }
 
 let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false, _voiceStream = null;
@@ -1151,19 +1191,75 @@ function _useSpeechRecognitionFallbackText(){
   if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
   else { addBubble('⚠️ Could not transcribe audio', 'bot'); }
 }
+// ── Local offline STT (Transformers.js + whisper-tiny.en, fully self-hosted — no
+// CDN). This is the default speech-in path; OpenAI Whisper only runs when the
+// Premium voice toggle is on. ──
+let _whisperPipelinePromise = null;
+function _loadWhisperPipeline(){
+  if(_whisperPipelinePromise) return _whisperPipelinePromise;
+  const talkSubEl = document.getElementById('talk-sub');
+  _whisperPipelinePromise = import('/static/vendor/transformers/transformers.min.js').then(mod => {
+    mod.env.backends.onnx.wasm.wasmPaths = {
+      mjs: '/static/vendor/onnxruntime-web/ort-wasm-simd-threaded.mjs',
+      wasm: '/static/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm'
+    };
+    mod.env.backends.onnx.wasm.proxy = false;
+    return mod.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', {
+      progress_callback: (p) => {
+        if(!talkSubEl) return;
+        if(p.status === 'progress' && p.total){
+          talkSubEl.textContent = 'Setting up offline voice (' + Math.round((p.loaded/p.total)*100) + '%)…';
+        }
+      }
+    });
+  });
+  _whisperPipelinePromise.catch(() => { _whisperPipelinePromise = null; });
+  return _whisperPipelinePromise;
+}
+async function _decodeTo16kMono(blob){
+  const arrayBuf = await blob.arrayBuffer();
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const tmpCtx = new AC();
+  const decoded = await tmpCtx.decodeAudioData(arrayBuf);
+  tmpCtx.close();
+  const offlineCtx = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+  const src = offlineCtx.createBufferSource();
+  src.buffer = decoded;
+  src.connect(offlineCtx.destination);
+  src.start();
+  const rendered = await offlineCtx.startRendering();
+  return rendered.getChannelData(0);
+}
+async function _transcribeLocalWhisper(blob){
+  const pipe = await _loadWhisperPipeline();
+  const audioData = await _decodeTo16kMono(blob);
+  const result = await pipe(audioData);
+  return ((result && result.text) || '').trim();
+}
 function transcribeAndSend(blob){
   const talkSubEl = document.getElementById('talk-sub');
+  if(_isPremiumVoice()){
+    if(talkSubEl) talkSubEl.textContent = 'Transcribing…';
+    fetchWithTimeout(BASE+'/api/voice/transcribe', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'audio/webm'},
+      body: blob
+    }, 30000).then(r=>{
+      if(!r.ok) throw new Error('transcribe failed: '+r.status);
+      return r.json();
+    }).then(d=>{
+      if(talkSubEl) talkSubEl.textContent = 'tap to speak';
+      const text = (d.text||'').trim();
+      if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
+      else { _useSpeechRecognitionFallbackText(); }
+    }).catch(()=>{
+      _useSpeechRecognitionFallbackText();
+    });
+    return;
+  }
   if(talkSubEl) talkSubEl.textContent = 'Transcribing…';
-  fetchWithTimeout(BASE+'/api/voice/transcribe', {
-    method:'POST',
-    headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'audio/webm'},
-    body: blob
-  }, 30000).then(r=>{
-    if(!r.ok) throw new Error('transcribe failed: '+r.status);
-    return r.json();
-  }).then(d=>{
+  _transcribeLocalWhisper(blob).then(text=>{
     if(talkSubEl) talkSubEl.textContent = 'tap to speak';
-    const text = (d.text||'').trim();
     if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
     else { _useSpeechRecognitionFallbackText(); }
   }).catch(()=>{
@@ -1223,6 +1319,21 @@ function dismissWelcomeOverlay() {
     const el = document.getElementById('welcome-overlay');
     if (el) el.style.display = 'flex';
   }
+})();
+// ── Premium voice toggle — OpenAI Whisper/TTS stay dormant until this is on.
+// Default OFF (absent key reads as off). Local offline WASM engines are the
+// default voice path; this only opts back into the paid OpenAI endpoints. ──
+function _isPremiumVoice() {
+  try { return localStorage.getItem('frankPremiumVoice') === '1'; } catch(e) { return false; }
+}
+function _setPremiumVoice(on) {
+  try { localStorage.setItem('frankPremiumVoice', on ? '1' : '0'); } catch(e) {}
+}
+(function(){
+  const cb = document.getElementById('premium-voice-toggle');
+  if (!cb) return;
+  cb.checked = _isPremiumVoice();
+  cb.addEventListener('change', () => _setPremiumVoice(cb.checked));
 })();
 // ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
 // Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.

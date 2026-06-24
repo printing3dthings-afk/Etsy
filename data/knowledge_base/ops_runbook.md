@@ -1242,3 +1242,53 @@ and Phase 2 (forced Etsy 5xx retries with the `executing` status guard holding) 
 `v50`→`v51`.
 **Not touched, by design:** the Action Center approval gate itself, and the prior "Frank Roadmap" plan's
 Phase 3 (distribution/white-label readiness) — both remain exactly as they were before this initiative.
+
+## 2026-06-24 — Frank Voice: fully offline by default (local WASM), OpenAI demoted to dormant opt-in
+
+**Request:** Scott wanted Frank's voice (talk-to-Frank mic input + spoken replies) to work with zero
+internet connection, without paying for OpenAI Whisper/TTS on every use, and without a hidden dependency
+on any third-party CDN — "a complete package in frank."
+
+**Root finding before building:** browser-native `SpeechRecognition` is NOT offline on any current
+desktop/mobile browser — Chrome streams the recorded audio to Google's servers to transcribe it. It was
+demoted from "the offline feature" to a last-resort fallback only.
+
+**What shipped:** `Xenova/whisper-tiny.en` via Transformers.js (speech-in) and Piper-web (speech-out) now
+run as quantized ONNX/WASM models entirely client-side, replacing OpenAI as the default voice engine.
+Self-hosted the full WASM runtime (transformers.min.js, onnxruntime-web's wasm bundle + its `.mjs`/`.wasm`
+glue, piper-tts-web's JS chunks, and the raw Piper phonemizer `.wasm`/`.data` binaries) under
+`tools/api_server/static/vendor/` — ~32MB committed to the repo, explicitly approved by Scott over a
+CDN-dependent alternative, served same-origin via the existing `/static` mount. Model *weights* (the
+Whisper/Piper voice itself) are intentionally NOT vendored — they download once from Hugging Face via the
+libraries' own fetch+cache logic (browser Cache API / OPFS) and persist client-side; no server-side
+storage or Railway Volume implication.
+
+Added a `<script type="importmap">` in `frank_hud_mockup.py`'s `<head>` mapping the bare specifier
+`"onnxruntime-web"` to the self-hosted bundle, since Piper-web loads it via a bare dynamic `import()` —
+without the import map this would have silently resolved to a CDN default. Both Transformers.js and
+Piper-web are explicitly pointed at the same single self-hosted onnxruntime-web copy
+(`env.backends.onnx.wasm.wasmPaths` / `TtsSession.create({wasmPaths})`) to avoid loading two different
+onnxruntime-web versions in the same page. Added `'wasm-unsafe-eval'` to the CSP `script-src` header in
+`main.py` — `WebAssembly.compile()`/`instantiate()` is blocked without it even though plain script loading
+and `fetch()` already worked under `script-src 'self'`.
+
+`speakText()`/`transcribeAndSend()` now branch on a new `frankPremiumVoice` localStorage flag (default
+OFF, toggle checkbox added next to the talk pill) — OFF routes through the new local WASM engines, ON
+routes through the existing `/api/voice/transcribe` and `/api/voice/speak` OpenAI endpoints exactly as
+before. Both paths still fall through to the pre-existing browser `SpeechRecognition`/`speechSynthesis`
+fallback on failure. The OpenAI endpoints themselves were not modified at all. Bumped `_BUILD_ID`
+`v51`→`v52`.
+
+**Verified in this environment:** `py_compile` clean on both files; the embedded classic `<script>` block
+(after Python's own string-literal parsing resolves all escapes) passes `node --check`; the import map JSON
+parses and resolves to the correct vendor path; all 9 vendor files referenced by the new JS exist on disk
+at the exact paths used (`du -sh` confirms 32MB total) and are not gitignored; the `/static` mount already
+serves arbitrary subpaths so no server code change was needed beyond the CSP/`_BUILD_ID` edits.
+
+**Not verified — and cannot be, in this sandboxed, display-less environment:** an actual browser load of
+`/frank`, the real model-weight download from Hugging Face, end-to-end transcription/speech with the
+network disabled, the Premium-voice toggle's live behavior, localStorage persistence across reloads, and
+iOS Safari/PWA behavior. Scott should manually run through the plan's verification checklist (in
+`/root/.claude/plans/atomic-dancing-shamir.md`) once deployed before treating this as fully shipped. Expect
+roughly 10–30 seconds of transcription latency for a short utterance on WASM — the honest tradeoff for
+genuine offline operation, not a bug.

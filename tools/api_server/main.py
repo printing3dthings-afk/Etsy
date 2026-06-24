@@ -236,7 +236,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v51"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v52"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -280,8 +280,11 @@ async def _security_headers(request: Request, call_next):
     # extracting all inline JS/CSS to separate files first, which is a larger follow-up,
     # out of scope here. Even with 'unsafe-inline' this still blocks third-party
     # script/iframe injection, clickjacking, and MIME-sniffing — real wins over zero headers.
+    # 'wasm-unsafe-eval' is required for the offline voice engines (Transformers.js/Whisper,
+    # Piper-web TTS) — WebAssembly.compile()/instantiate() is blocked by CSP without it, even
+    # though plain script loading and fetch() already worked under script-src 'self'.
     response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; "
         "connect-src 'self' wss: https:; frame-ancestors 'none'; object-src 'none'"
     )
