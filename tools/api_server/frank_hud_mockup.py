@@ -211,6 +211,29 @@ canvas#orb{cursor:pointer}
 .qc-btn .qic{width:18px;height:18px;border-radius:50%;background:rgba(58,214,255,.18);color:var(--cyan2);
   display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 
+#toast-stack{position:fixed;top:16px;right:16px;z-index:9000;display:flex;flex-direction:column;
+  gap:8px;max-width:340px;pointer-events:none}
+.toast{background:var(--panel2);border:1px solid var(--border);border-radius:11px;padding:11px 14px;
+  font-size:12.5px;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:auto;
+  border-left:3px solid var(--cyan);animation:toast-in .18s ease-out}
+.toast.ok{border-left-color:var(--green)}
+.toast.err{border-left-color:var(--red)}
+.toast.info{border-left-color:var(--cyan)}
+.toast.out{animation:toast-out .18s ease-in forwards}
+@keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
+
+#welcome-overlay{position:fixed;inset:0;z-index:9500;background:rgba(5,9,16,.72);
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.welcome-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;
+  padding:26px 28px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.welcome-title{font-size:19px;font-weight:700;color:var(--gold);margin-bottom:12px}
+.welcome-body p{font-size:13px;color:var(--text);line-height:1.5;margin:0 0 10px}
+.welcome-body ul{margin:0 0 12px;padding-left:18px;font-size:13px;color:var(--text);line-height:1.6}
+.welcome-note{color:var(--muted)!important;font-size:12px!important}
+.welcome-dismiss{width:100%;background:var(--gold);color:#0D1B2A;border:none;border-radius:10px;
+  padding:11px 0;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
+
 /* Row C: System Monitor | Memory Insights | LLM Status */
 .col-sysmon{flex:1}
 .col-meminsights{flex:1}
@@ -444,6 +467,14 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     flex-wrap:wrap;height:auto;padding:10px;gap:8px;
     padding-bottom:calc(10px + env(safe-area-inset-bottom));
   }
+
+  #toast-stack{
+    top:auto;right:10px;left:10px;bottom:calc(78px + env(safe-area-inset-bottom));
+    max-width:none;
+  }
+
+  .act-btn{font-size:11px;padding:7px 4px}
+  .studio-grid>div:last-child{flex:1 1 100%;min-width:0}
 }
 
 @media (max-width:380px){
@@ -504,11 +535,28 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <div class="vw-title">QUICK COMMANDS</div>
       <button class="qc-btn" onclick="showScreen('tasks');document.getElementById('hud-todo-input').focus()"><span class="qic">+</span>Start New Task</button>
       <button class="qc-btn" onclick="showScreen('calendar')"><span class="qic">▦</span>Open Calendar</button>
-      <button class="qc-btn" onclick="runWorkflow('shop_health_check', this)"><span class="qic">✓</span>Run Health Check</button>
+      <button class="qc-btn" onclick="runWorkflow('shop_health_check', this, false)"><span class="qic">✓</span>Run Health Check</button>
       <button class="qc-btn" onclick="showScreen('workflows')"><span class="qic">⇄</span>Run Workflow</button>
     </div>
   </div>
   <div id="drawer-backdrop"></div>
+  <div id="toast-stack"></div>
+  <div id="welcome-overlay" style="display:none">
+    <div class="welcome-card">
+      <div class="welcome-title">Welcome to Frank</div>
+      <div class="welcome-body">
+        <p>Frank is organized into four groups in the sidebar:</p>
+        <ul>
+          <li><b>Frank</b> — chat, AI core, agents, tasks, and the Action Center</li>
+          <li><b>Knowledge</b> — memory, past conversations, and the knowledge base</li>
+          <li><b>Tools</b> — tools &amp; skills, workflows, and the video studio</li>
+          <li><b>Shop</b> — listings, products, brand kit, files, connections, security</li>
+        </ul>
+        <p class="welcome-note">Nothing that changes your shop, files, or social accounts ever runs without your one-tap approval in the Action Center.</p>
+      </div>
+      <button class="welcome-dismiss" onclick="dismissWelcomeOverlay()">Got it</button>
+    </div>
+  </div>
 
   <!-- ══════════ COMMAND CENTER (home) ══════════ -->
   <div class="screen active" id="screen-cmd">
@@ -896,6 +944,18 @@ function authGet(path, ms=15000){
 function escHtml(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+function showToast(message, type='info', ms=4500){
+  const stack = document.getElementById('toast-stack');
+  if (!stack) return;
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type||'info');
+  t.textContent = message;
+  stack.appendChild(t);
+  setTimeout(()=>{
+    t.classList.add('out');
+    setTimeout(()=>t.remove(), 200);
+  }, ms);
+}
 
 // ── Voice: OpenAI TTS (speech-out) + Whisper (speech-in) — wired to the orb's
 // setSpeaking() and the mic/talk-pill click targets further down this file. ──
@@ -1147,6 +1207,22 @@ const CHAT_SESSION = (function(){
     try { localStorage.setItem('chatSession', s); } catch(e) {}
   }
   return s;
+})();
+// ── First-run welcome overlay — shows once unless dismissed, degrades to
+// showing every time if localStorage is unavailable (same failure mode as
+// the chatSession pattern above). ──
+function dismissWelcomeOverlay() {
+  const el = document.getElementById('welcome-overlay');
+  if (el) el.style.display = 'none';
+  try { localStorage.setItem('frankWelcomeSeen', '1'); } catch(e) {}
+}
+(function(){
+  let seen = false;
+  try { seen = !!localStorage.getItem('frankWelcomeSeen'); } catch(e) {}
+  if (!seen) {
+    const el = document.getElementById('welcome-overlay');
+    if (el) el.style.display = 'flex';
+  }
 })();
 // ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
 // Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
@@ -1633,8 +1709,8 @@ async function loadTools(){
 // ══════════════════════════════════════════════════════════════════════════
 // Action Center — ported from the live Hub's Action Center at / (main.py).
 // The approve/reject queue is the human-in-the-loop safety gate for every Etsy
-// write and local file/exec action — every confirm()/alert() below IS that
-// gate and must never be removed. Same /api/queue + /api/actions endpoints,
+// write and local file/exec action — the confirm() in approveAction() below IS
+// that gate and must never be removed. Same /api/queue + /api/actions endpoints,
 // zero backend changes.
 // ══════════════════════════════════════════════════════════════════════════
 let _actions = [];
@@ -1776,7 +1852,7 @@ async function approveAction(id) {
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     loadActions();
-  } catch(e) { alert('Could not apply: ' + (e.message||e)); }
+  } catch(e) { showToast('Could not apply: ' + (e.message||e), 'err', 6000); }
 }
 function openRejectModal(id) {
   const panel = document.getElementById('reject-modal-'+id);
@@ -1811,7 +1887,7 @@ async function submitRejectReason(id) {
       if (panel) panel.innerHTML = '<div class="hub-listing-meta" style="padding:8px 0">🤖 Fixing — check back in a minute, the corrected version will appear as a new pending item.</div>';
     }
     loadActions();
-  } catch(e) { alert('Could not reject: ' + (e.message||e)); }
+  } catch(e) { showToast('Could not reject: ' + (e.message||e), 'err', 6000); }
 }
 async function fixDraftStage(listingId, actionId, btn) {
   const orig = btn.textContent;
@@ -1824,12 +1900,12 @@ async function fixDraftStage(listingId, actionId, btn) {
     const n = d.staged_count||0;
     btn.textContent = n > 0 ? n+' fix'+(n>1?'es':'')+' staged ✅' : '⚠️ No auto-fixes';
     if (n > 0) { btn.style.background='var(--green)'; btn.style.color='#06140d'; }
-    const errNote = (d.errors&&d.errors.length) ? '\\n\\nErrors: '+d.errors.join(', ') : '';
-    alert('Staged '+n+' fix'+(n!==1?'es':'')+'.\\nApprove the new fixes in Action Center, then come back to approve Publish.'+errNote);
+    const errNote = (d.errors&&d.errors.length) ? ' Errors: '+d.errors.join(', ') : '';
+    showToast('Staged '+n+' fix'+(n!==1?'es':'')+'. Approve the new fixes in Action Center, then come back to approve Publish.'+errNote, 'ok');
     loadActions();
   } catch(e) {
     btn.disabled = false; btn.textContent = orig;
-    alert('Could not fix draft: '+(e.message||e));
+    showToast('Could not fix draft: '+(e.message||e), 'err', 6000);
   }
 }
 async function loadActions() {
@@ -1911,19 +1987,19 @@ function askActionFix(i) {
   sendMsg();
 }
 async function batchStageTags(btn) {
-  if (!confirm('Scan all active listings and stage tag fixes for every listing with fewer than 13 tags?\\n\\nThis may take up to 2 minutes. You review and approve each fix in this Action Center.')) return;
   btn.disabled = true;
   const orig = btn.textContent;
   btn.textContent = '⏳ Generating…';
+  showToast('Scanning active listings for tag fixes — this may take up to 2 minutes…', 'info');
   try {
     const r = await fetchWithTimeout(BASE+'/api/batch/stage-tags', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 180000);
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
-    const errNote = d.errors && d.errors.length ? `\n${d.errors.length} listing(s) had tag-length issues and were skipped.` : '';
-    alert('✅ ' + d.message + errNote);
+    const errNote = d.errors && d.errors.length ? ` ${d.errors.length} listing(s) had tag-length issues and were skipped.` : '';
+    showToast(d.message + errNote, 'ok');
     loadActions();
   } catch(e) {
-    alert('Error: ' + (e.name==='AbortError'?'Request timed out — the batch is still running server-side; check the Action Center in a moment':(e.message||e)));
+    showToast('Error: ' + (e.name==='AbortError'?'Request timed out — the batch is still running server-side; check the Action Center in a moment':(e.message||e)), 'err', 6000);
   } finally {
     btn.disabled = false;
     btn.textContent = orig;
@@ -2107,15 +2183,15 @@ function renderWorkflows(workflows) {
       <div class="act-title">${escHtml(w.name)}</div>
       <div class="act-detail">${escHtml(w.description)}</div>
       <div class="act-btns">
-        <button class="act-btn primary" onclick="runWorkflow('${escHtml(w.id)}', this)">▶ Run</button>
+        <button class="act-btn primary" onclick="runWorkflow('${escHtml(w.id)}', this, ${w.requires_approval ? 'true' : 'false'})">▶ Run</button>
       </div>
       <div id="wf-result-${escHtml(w.id)}" style="margin-top:9px"></div>
     </div>`;
   }).join('');
 }
 
-async function runWorkflow(id, btn) {
-  if (!confirm('Run this workflow now?')) return;
+async function runWorkflow(id, btn, requiresApproval) {
+  if (!requiresApproval && !confirm('Run this workflow now?')) return;
   const resultEl = document.getElementById('wf-result-' + id);
   const orig = btn.textContent;
   btn.disabled = true;
@@ -2127,16 +2203,21 @@ async function runWorkflow(id, btn) {
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     if (d.staged) {
       if (resultEl) resultEl.innerHTML = `<div class="sub">Queued — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Action Center ›</a></div>`;
+      showToast('Queued for Action Center approval.', 'info');
       loadActions();
     } else if (d.started) {
       if (resultEl) resultEl.innerHTML = `<div class="sub">Started (PID ${escHtml(String(d.pid||''))}), running in background.</div>`;
+      showToast('Started, running in background.', 'info');
     } else {
       const ok = d.success !== false;
       if (resultEl) resultEl.innerHTML = `<div class="sub" style="color:${ok?'var(--green)':'var(--red)'}">${ok?'✅ Completed':'❌ Failed'} (exit ${escHtml(String(d.returncode))})</div>` +
         (d.output ? `<pre style="margin-top:6px;max-height:220px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap">${escHtml(d.output)}</pre>` : '');
+      showToast(ok ? 'Workflow completed.' : 'Workflow failed.', ok ? 'ok' : 'err', ok ? 4500 : 6000);
     }
   } catch(e) {
-    if (resultEl) resultEl.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to run')}</div>`;
+    const msg = e.name==='AbortError'?'Request timed out':e.message||'Failed to run';
+    if (resultEl) resultEl.innerHTML = `<div class="empty">${escHtml(msg)}</div>`;
+    showToast(msg, 'err', 6000);
   } finally {
     btn.disabled = false;
     btn.textContent = orig;
@@ -2522,7 +2603,7 @@ async function toggleListingState(listingId, btn) {
     if (badge) { badge.textContent = l.state; badge.className = 'hub-lstate ' + (l.state==='active'?'active':'draft'); }
   } catch(e) {
     btn.disabled = false; btn.textContent = orig;
-    alert('Could not change listing state: ' + (e.message||e));
+    showToast('Could not change listing state: ' + (e.message||e), 'err', 6000);
   }
 }
 

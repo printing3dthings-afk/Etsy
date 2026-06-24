@@ -1082,3 +1082,35 @@ Check" → `runWorkflow('shop_health_check', this)` (same call the Workflows scr
 `addHudTodo()`). Bumped `_BUILD_ID` `v47`→`v48`. Verified: `py_compile` clean, re-extracted `<script>`
 block passes `node --check`, grep confirms all 3 onclicks present and reference real functions.
 **Outcome:** Frank now has zero known broken UI wiring.
+
+### 2026-06-24 — Phase 1 polish pass (toasts, confirm/alert cleanup, welcome overlay, mobile fixes)
+**Ask:** Scott's roadmap (polish → agentic capability → distribution) called for a frontend polish pass
+before Phase 2's new chat tools. All 4 items below are `frank_hud_mockup.py`-only; no backend mutation
+paths or the Action Center approval gate were touched.
+**1. Toast/snackbar primitive.** Added `#toast-stack` (fixed-position, sibling of `#drawer-backdrop` so
+desktop stage-scaling doesn't affect its coordinates) + `showToast(message, type, ms)` with
+`toast-in`/`toast-out` keyframe animations. Wired into `runWorkflow()` so the sidebar "Run Health Check"
+button — previously silent after its confirm — now reports staged/started/success/failure.
+**2. confirm()/alert() standardization.** Inventoried all 13 sites. Kept native `confirm()` only for:
+`approveAction()` (the Action Center gate itself), `toggleListingState()` (bypasses the gate, mutates the
+live storefront directly), and the Instagram/Facebook post actions (irreversible external publishes) —
+4 sites total, matching the plan's invariant. `runWorkflow(id, btn, requiresApproval)` now only confirms
+when `!requiresApproval` (threaded from `w.requires_approval` in `renderWorkflows()`; sidebar button passes
+`false` since health-check is read-only). The remaining 8 sites (including `batchStageTags()`, which only
+ever stages actions for later Action Center approval and so doesn't qualify under the keep-list) now use
+`showToast()`. Final `alert()` count: 0.
+**3. First-run welcome overlay.** `#welcome-overlay` + `.welcome-card` summarizing the 4 nav groupings
+(Frank/Knowledge/Tools/Shop) plus a one-line approval-gate reminder. Shows once via the same
+`localStorage` try/catch pattern already used for `chatSession` (degrades to showing every time if
+localStorage is unavailable) — dismiss button sets `frankWelcomeSeen`.
+**4. Mobile fixes.** Inside the existing `@media (max-width:880px)` block: `.act-btn{font-size:11px;
+padding:7px 4px}` (prevents Action Center Approve/Fix/Reject label clipping) and
+`.studio-grid>div:last-child{flex:1 1 100%;min-width:0}` (Studio's fixed 300px video-list column goes
+full-width on phone instead of staying cramped).
+**Verified:** `py_compile` clean on both files; `<script>` block re-extracted via `ast.literal_eval()` on
+the `_FRANK_HUD_MOCKUP` string (required — naive regex extraction preserves un-decoded Python escapes and
+gives false-positive `node --check` failures) and passes `node --check`; grep confirms exactly one
+`#toast-stack`/`showToast` definition, one `#welcome-overlay`, zero `alert(`, and `runWorkflow`'s signature
+consistent at both call sites. Bumped `_BUILD_ID` `v48`→`v49`.
+**Not verified:** no browser is available in this environment — the mobile CSS changes are unverified
+visually; flagging rather than claiming a check that didn't happen.
