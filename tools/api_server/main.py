@@ -236,7 +236,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v53"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v54"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -6748,6 +6748,84 @@ async def _agents_status_snapshot() -> dict:
 @app.get("/api/agents/status")
 async def get_agents_status(_token: str = Depends(_auth)):
     return await _agents_status_snapshot()
+
+
+@app.get("/api/system/dependencies")
+async def get_system_dependencies(_token: str = Depends(_auth)):
+    """Live circuit-breaker status for every tracked external dependency —
+    backs the HUD's Dependency Health panel. Replaced the old System Monitor
+    CPU/RAM/DISK gauges, which were hardcoded CSS with zero backend. A
+    dependency with no DB row yet has never tripped, so it reports the same
+    default CircuitBreaker._load() uses: closed, 0 failures."""
+    deps = []
+    for dep in ("etsy_api", "anthropic_api", "relay"):
+        cb = await asyncio.to_thread(db.get_circuit_breaker_state, dep)
+        deps.append({
+            "name": dep,
+            "state": cb["state"] if cb else "closed",
+            "consecutive_failures": cb["consecutive_failures"] if cb else 0,
+            "opened_at": cb["opened_at"] if cb else None,
+            "updated_at": cb.get("updated_at") if cb else None,
+        })
+    return {"dependencies": deps}
+
+
+@app.get("/api/alerts")
+async def get_alerts(_token: str = Depends(_auth)):
+    """Aggregates every real alert-worthy condition Frank already tracks into
+    one list + count — backs the HUD's notification bell, which was previously
+    a decorative badge frozen at '3' with no backend. One endpoint (rather than
+    3 client-side fetches) keeps the badge count and dropdown list from ever
+    disagreeing, since both read the same response."""
+    alerts = []
+
+    for dep in ("etsy_api", "anthropic_api", "relay"):
+        cb = await asyncio.to_thread(db.get_circuit_breaker_state, dep)
+        if cb and cb.get("state") == "open":
+            alerts.append({
+                "severity": "critical",
+                "source": "dependency",
+                "title": f"{dep.replace('_', ' ').title()} circuit breaker open",
+                "detail": f"{cb.get('consecutive_failures')} consecutive failures, opened at {cb.get('opened_at')}",
+            })
+
+    tokens = await asyncio.to_thread(db.get_etsy_tokens)
+    if tokens and tokens.get("updated_at"):
+        try:
+            updated = datetime.fromisoformat(tokens["updated_at"])
+            if updated.tzinfo is None:
+                updated = updated.replace(tzinfo=timezone.utc)
+            age_days = (datetime.now(timezone.utc) - updated).days
+            if age_days >= 90:
+                alerts.append({
+                    "severity": "critical",
+                    "source": "etsy_token",
+                    "title": "Etsy refresh token has expired",
+                    "detail": f"Last rotated {age_days} days ago (90-day limit) — run python tools/etsy_oauth.py.",
+                })
+            elif age_days >= 75:
+                alerts.append({
+                    "severity": "warning",
+                    "source": "etsy_token",
+                    "title": "Etsy refresh token nearing expiry",
+                    "detail": f"Last rotated {age_days} days ago — re-authorize before day 90.",
+                })
+        except (ValueError, TypeError):
+            pass
+
+    heartbeats = await asyncio.to_thread(db.list_agent_heartbeats)
+    for h in heartbeats:
+        if h.get("status") == "error":
+            alerts.append({
+                "severity": "warning",
+                "source": "agent_heartbeat",
+                "title": f"Loop '{h.get('label') or h.get('name')}' is in an error state",
+                "detail": h.get("detail") or "",
+            })
+
+    severity_order = {"critical": 0, "warning": 1, "info": 2}
+    alerts.sort(key=lambda a: severity_order.get(a["severity"], 3))
+    return {"alerts": alerts, "count": len(alerts)}
 
 
 @app.get("/api/tools/list")

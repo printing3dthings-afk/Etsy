@@ -1292,3 +1292,50 @@ iOS Safari/PWA behavior. Scott should manually run through the plan's verificati
 `/root/.claude/plans/atomic-dancing-shamir.md`) once deployed before treating this as fully shipped. Expect
 roughly 10–30 seconds of transcription latency for a short utterance on WASM — the honest tradeoff for
 genuine offline operation, not a bug.
+
+## 2026-06-24 — Dependency Health panel, working alert bell, real Settings screen
+
+**Request:** Scott looked at the mobile Command Center and asked (1) whether the panels were backed by
+real data, and (2) why the notification bell and gear icon did nothing. Investigation found Mission
+Timeline / Memory Insights / Shop Performance were all genuinely wired but showing legitimate early-stage
+empty states — no action needed. System Monitor (CPU/RAM/DISK gauges) was the one fake panel: hardcoded
+`conic-gradient` percentages baked into inline CSS, zero JS, zero backend. The bell (frozen badge "3") and
+gear icon were both dead decoration — no click handler, no backend, and for the gear, no target screen at
+all.
+
+**What shipped (`tools/api_server/main.py` + `tools/api_server/frank_hud_mockup.py`):**
+1. **System Monitor → Dependency Health.** New `GET /api/system/dependencies` loops the 3 tracked circuit
+   breakers (`etsy_api`, `anthropic_api`, `relay`) through `db.get_circuit_breaker_state()`; a dependency
+   with no DB row yet (never tripped) reports `state:"closed", consecutive_failures:0` — the same default
+   `CircuitBreaker._load()` uses, not an error. The fake gauge markup and its orphaned `.gauge`/`.gauge-row`/
+   `.ring` CSS were archived via `tools/trash.py` (ids `20260624-007`, `20260624-008`) before deletion, then
+   replaced with a 3-pill row (`loadDependencyHealth()`, green/red/amber dot per state) on the existing 30s
+   `loadAll()` cadence.
+2. **Alert bell → real alerts.** New `GET /api/alerts` aggregates 3 real conditions server-side into one
+   list + count, so the badge and dropdown can never disagree: any circuit breaker in `open` state
+   (critical), the Etsy refresh-token age vs. the 90-day window via `db.get_etsy_tokens()['updated_at']`
+   (warning ≥75 days, critical ≥90), and any `db.list_agent_heartbeats()` row with `status=="error"`
+   (warning). Frontend: badge hides when count is 0, dropdown opens on click and closes on outside-click
+   (`loadAlerts()`, `toggleAlertDropdown()`, `_renderAlerts()`).
+3. **Real Settings screen.** New sidebar nav-item (`data-screen="settings"`) and the previously-dead gear
+   icon (`onclick="showScreen('settings')"`) both land on a new `#screen-settings` panel — no extra JS
+   needed beyond what already existed, since `showScreen()`/the nav-item click binder are fully generic by
+   id. Three sections: Voice (a second Premium-voice checkbox sharing the `.premium-voice-cb` class so it
+   stays in sync with the bottombar toggle via the existing `_isPremiumVoice()`/`_setPremiumVoice()`
+   helpers, plus a plain-language explanation of what the toggle actually does), Connections (a condensed
+   summary card sourced from `/api/credentials/status` + `/api/etsy-tokens`, with jump links to the full
+   Connections/Security screens rather than a duplicate live panel), About (the `v1.0.0 · MOCKUP` string).
+
+Both new endpoints require the existing `_auth` dependency like every other route. Bumped `_BUILD_ID`
+`v53`→`v54`.
+
+**Verified in this environment:** `py_compile` clean on both files; `<div>` tag counts balance globally
+(622/622) and within each newly-edited region individually; both new endpoints confirmed using
+`Depends(_auth)`; the System Monitor removal was archived to `data/trash/DELETED.md` before deletion per
+Scott's standing recycle-bin rule.
+
+**Not verified — cannot be, in this sandboxed, display-less environment:** an actual browser load of
+`/frank` confirming the 3 pills render green, a live circuit-breaker-open test turning a pill red and
+surfacing in the alert dropdown, the bell's open/close-on-outside-click behavior, and the Settings↔bottombar
+voice toggle sync. Scott should run the plan's verification checklist
+(`/root/.claude/plans/atomic-dancing-shamir.md`) once deployed.

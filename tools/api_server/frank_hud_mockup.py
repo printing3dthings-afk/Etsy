@@ -247,6 +247,18 @@ body:not(.cc-open) .bottombar{display:none}
 @keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
 
+.alert-dropdown{position:absolute;top:38px;right:0;width:280px;max-height:320px;overflow-y:auto;
+  background:var(--panel2);border:1px solid var(--border);border-radius:11px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:600;padding:8px;cursor:default;text-align:left}
+.alert-dropdown-title{font-size:10.5px;letter-spacing:1.2px;color:var(--cyan2);text-transform:uppercase;
+  padding:4px 6px 8px}
+.alert-row{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:8px;
+  background:var(--panel);border-left:3px solid var(--cyan);margin-bottom:6px;font-size:11.5px;
+  color:var(--text);font-weight:400;text-transform:none;letter-spacing:normal}
+.alert-row.critical{border-left-color:var(--red)}
+.alert-row.warning{border-left-color:var(--amber)}
+.alert-row .at{font-size:9px;color:var(--muted);margin-top:2px}
+
 #welcome-overlay{position:fixed;inset:0;z-index:9500;background:rgba(5,9,16,.72);
   display:flex;align-items:center;justify-content:center;padding:20px}
 .welcome-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;
@@ -263,14 +275,18 @@ body:not(.cc-open) .bottombar{display:none}
 .col-meminsights{flex:1}
 .col-shop{flex:1.3}
 
-.gauge-row{display:flex;gap:10px;flex:1;align-items:center;justify-content:space-around}
-.gauge{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  position:relative;flex-shrink:0}
-.gauge .ring{position:absolute;inset:0;border-radius:50%}
-.gauge .inner{position:relative;width:56px;height:56px;border-radius:50%;background:var(--panel2);
-  display:flex;flex-direction:column;align-items:center;justify-content:center}
-.gauge .inner .num{font-size:13px;font-weight:700;color:var(--cyan2)}
-.gauge .inner .lab{font-size:8px;color:var(--muted);letter-spacing:.5px}
+.dep-pill-row{display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center}
+.dep-pill{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px}
+.dep-pill .dep-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--green);
+  box-shadow:0 0 6px var(--green)}
+.dep-pill.open .dep-dot{background:var(--red);box-shadow:0 0 6px var(--red)}
+.dep-pill.half_open .dep-dot{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dep-pill .dep-name{font-size:11px;color:var(--text);flex:1}
+.dep-pill .dep-state{font-size:9.5px;color:var(--green);letter-spacing:.4px;text-transform:uppercase}
+.dep-pill.open .dep-state{color:var(--red)}
+.dep-pill.half_open .dep-state{color:var(--amber)}
+.dep-pill .dep-fail{font-size:9px;color:var(--muted)}
 
 .mem-row{display:flex;gap:10px;flex:1;min-height:0}
 .mem-canvas-wrap{flex:1;min-height:0;border-radius:8px;background:var(--panel2);border:1px solid var(--border)}
@@ -530,8 +546,13 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="right">
       <input class="search" placeholder="Search listings, orders, tools, knowledge base…">
       <div class="icon-btn">▦</div>
-      <div class="icon-btn">🔔<span class="badge">3</span></div>
-      <div class="icon-btn">⚙</div>
+      <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()">🔔<span class="badge" id="bell-badge" style="display:none">0</span>
+        <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
+          <div class="alert-dropdown-title">Alerts</div>
+          <div id="alert-dropdown-list"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
+        </div>
+      </div>
+      <div class="icon-btn" onclick="showScreen('settings')">⚙</div>
       <div class="operator"><div class="av">S</div><div><div class="ol1">Scott</div><div class="ol2">OWNER</div></div></div>
     </div>
   </div>
@@ -562,6 +583,9 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="nav-item" data-screen="files"><span class="ic">🗂</span>Files</div>
     <div class="nav-item" data-screen="connections"><span class="ic">🔌</span>Connections</div>
     <div class="nav-item" data-screen="security"><span class="ic">🛡</span>Security</div>
+
+    <div class="nav-section">Settings</div>
+    <div class="nav-item" data-screen="settings"><span class="ic">⚙</span>Settings</div>
 
     <div class="voice-widget" style="text-align:left">
       <div class="vw-title">QUICK COMMANDS</div>
@@ -647,12 +671,8 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
       <div class="mrow rowC">
         <div class="panel brk col-sysmon">
-          <div class="panel-title">System Monitor <span class="src">server stats</span></div>
-          <div class="gauge-row">
-            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 22%, var(--border) 22% 100%)"></div><div class="inner"><div class="num">22%</div><div class="lab">CPU</div></div></div>
-            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 54%, var(--border) 54% 100%)"></div><div class="inner"><div class="num">54%</div><div class="lab">RAM</div></div></div>
-            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 40%, var(--border) 40% 100%)"></div><div class="inner"><div class="num">40%</div><div class="lab">DISK</div></div></div>
-          </div>
+          <div class="panel-title">Dependency Health <span class="src">/api/system/dependencies</span></div>
+          <div class="dep-pill-row" id="dep-pill-row"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
         </div>
 
         <div class="panel brk col-meminsights">
@@ -835,6 +855,40 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     </div>
   </div>
 
+  <!-- ══════════ SETTINGS — voice prefs (localStorage) + connections summary + about ══════════ -->
+  <div class="screen" id="screen-settings">
+    <div class="panel brk" style="height:100%;overflow-y:auto">
+      <div class="panel-title">Settings <span class="src">Voice prefs (localStorage) + /api/credentials/status + /api/etsy-tokens</span></div>
+
+      <div class="hub-section-title">Voice</div>
+      <div class="hub-card">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer">
+          <input type="checkbox" class="premium-voice-cb"> Premium voice (OpenAI Whisper + TTS)
+        </label>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+          When off (default), Frank uses local offline voice engines — Whisper.wasm for speech-to-text and Piper
+          for text-to-speech — which are free, private, and work without an internet connection. Turning this on
+          routes voice through OpenAI's paid Whisper transcription and TTS endpoints instead: it sounds more
+          natural but costs API credits per use and requires internet. This toggle is shared with the one next to
+          "Talk to Frank" in the bottom bar — changing either updates both.
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Connections</div>
+      <div class="hub-card" id="settings-connections-summary"><div class="hub-spinner"></div></div>
+      <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+        <button class="act-btn" onclick="showScreen('connections')">View full Connections ›</button>
+        <button class="act-btn" onclick="showScreen('security')">View Security ›</button>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">About</div>
+      <div class="hub-card">
+        <div style="font-size:13px;font-weight:600">Frank HUD</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">v1.0.0 · MOCKUP</div>
+      </div>
+    </div>
+  </div>
+
   <div class="screen" id="screen-studio">
     <div class="panel brk" style="height:100%;overflow-y:auto">
       <div class="panel-title">Studio — Image-to-Video Generation <span class="src">/api/studio/* — generate, attach to Etsy, post to Instagram/Facebook</span></div>
@@ -912,7 +966,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         </div>
         <div class="sub" id="talk-sub">tap to speak</div>
       </div>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="premium-voice-toggle"> Premium voice</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="premium-voice-toggle" class="premium-voice-cb"> Premium voice</label>
       <span class="dots-line"></span>
     </div>
     <button class="brief-btn">Executive Briefing</button>
@@ -1342,12 +1396,13 @@ function _isPremiumVoice() {
 }
 function _setPremiumVoice(on) {
   try { localStorage.setItem('frankPremiumVoice', on ? '1' : '0'); } catch(e) {}
+  document.querySelectorAll('.premium-voice-cb').forEach(cb => { cb.checked = on; });
 }
 (function(){
-  const cb = document.getElementById('premium-voice-toggle');
-  if (!cb) return;
-  cb.checked = _isPremiumVoice();
-  cb.addEventListener('change', () => _setPremiumVoice(cb.checked));
+  document.querySelectorAll('.premium-voice-cb').forEach(cb => {
+    cb.checked = _isPremiumVoice();
+    cb.addEventListener('change', () => _setPremiumVoice(cb.checked));
+  });
 })();
 // ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
 // Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
@@ -1668,6 +1723,91 @@ function _timeAgo(iso){
   if(h < 24) return h+'h ago';
   return Math.floor(h/24)+'d ago';
 }
+
+// ── Dependency Health — real data from /api/system/dependencies (circuit breakers) ──
+const _DEP_LABELS = {etsy_api:'Etsy API', anthropic_api:'Anthropic API', relay:'Local Relay'};
+function _renderDependencyHealth(d, el, offlineNote){
+  if(!el) return;
+  const deps = d.dependencies||[];
+  el.innerHTML = (offlineNote||'') + deps.map(dep=>{
+    const stateClass = dep.state === 'open' ? 'open' : (dep.state === 'half_open' ? 'half_open' : '');
+    const failText = dep.consecutive_failures ? ' &middot; '+dep.consecutive_failures+' failures' : '';
+    return '<div class="dep-pill '+stateClass+'"><span class="dep-dot"></span>'+
+      '<span class="dep-name">'+escHtml(_DEP_LABELS[dep.name]||dep.name)+'</span>'+
+      '<span class="dep-state">'+escHtml(dep.state)+'</span>'+
+      '<span class="dep-fail">'+failText+'</span></div>';
+  }).join('');
+}
+async function loadDependencyHealth(){
+  const el = document.getElementById('dep-pill-row');
+  try{
+    const r = await authGet('/api/system/dependencies');
+    const d = await r.json();
+    cacheSet('depHealth', d);
+    _renderDependencyHealth(d, el, null);
+  }catch(e){
+    const cached = cacheGet('depHealth');
+    if(cached){
+      _renderDependencyHealth(cached.data, el, _offlineNote(cached.ts));
+    } else if(el){
+      el.innerHTML = '<div style="color:var(--red);font-size:11px">Dependency health offline</div>';
+    }
+  }
+}
+
+// ── Alert bell — real data from /api/alerts (deps + token age + agent heartbeats) ──
+function toggleAlertDropdown(){
+  const dd = document.getElementById('alert-dropdown');
+  if(!dd) return;
+  dd.style.display = (dd.style.display === 'none' || !dd.style.display) ? 'block' : 'none';
+}
+function _renderAlerts(d, badgeEl, listEl, offlineNote){
+  const alerts = (d && d.alerts) || [];
+  if(badgeEl){
+    if(alerts.length > 0){
+      badgeEl.textContent = alerts.length > 99 ? '99+' : alerts.length;
+      badgeEl.style.display = '';
+    } else {
+      badgeEl.style.display = 'none';
+    }
+  }
+  if(!listEl) return;
+  if(alerts.length === 0){
+    listEl.innerHTML = (offlineNote||'') + '<div style="color:var(--muted);font-size:11px;padding:8px">No active alerts</div>';
+    return;
+  }
+  listEl.innerHTML = (offlineNote||'') + alerts.map(a=>{
+    return '<div class="alert-row '+escHtml(a.severity||'')+'">'+
+      '<div>'+escHtml(a.title||'')+'</div>'+
+      (a.detail ? '<div class="at">'+escHtml(a.detail)+'</div>' : '') +
+      '</div>';
+  }).join('');
+}
+async function loadAlerts(){
+  const badgeEl = document.getElementById('bell-badge');
+  const listEl = document.getElementById('alert-dropdown-list');
+  try{
+    const r = await authGet('/api/alerts');
+    const d = await r.json();
+    cacheSet('alerts', d);
+    _renderAlerts(d, badgeEl, listEl, null);
+  }catch(e){
+    const cached = cacheGet('alerts');
+    if(cached){
+      _renderAlerts(cached.data, badgeEl, listEl, _offlineNote(cached.ts));
+    } else if(listEl){
+      listEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:8px">Alerts offline</div>';
+    }
+  }
+}
+document.addEventListener('click', function(e){
+  const dd = document.getElementById('alert-dropdown');
+  const bellBtn = document.getElementById('bell-btn');
+  if(!dd || dd.style.display === 'none' || !dd.style.display) return;
+  if(bellBtn && !bellBtn.contains(e.target)){
+    dd.style.display = 'none';
+  }
+});
 
 // ── Live Intelligence Feed — real data from /api/queue (pending staged actions) ──
 function _renderQueue(d, list, offlineNote){
@@ -3231,6 +3371,32 @@ async function loadConnections() {
   }
 }
 
+// ── Settings → Connections summary card — same data as the Connections screen, condensed ──
+async function loadSettingsConnectionsSummary() {
+  const el = document.getElementById('settings-connections-summary');
+  if (!el) return;
+  try {
+    const [cr, tr] = await Promise.all([
+      authGet('/api/credentials/status', 15000),
+      authGet('/api/etsy-tokens', 15000)
+    ]);
+    const cred = await cr.json().catch(()=>({}));
+    const tok = await tr.json().catch(()=>({}));
+    let ageText = 'unknown';
+    if (tok.updated_at) {
+      const days = Math.floor((Date.now() - new Date(tok.updated_at).getTime()) / 86400000);
+      ageText = days + ' day'+(days===1?'':'s')+' old'+(days>=75?' — re-auth before day 90':'');
+    }
+    const ageColor = (tok.updated_at && Math.floor((Date.now() - new Date(tok.updated_at).getTime()) / 86400000) >= 75) ? 'var(--red)' : 'var(--muted)';
+    el.innerHTML = (cred.etsy_live
+      ? '<div style="color:var(--green);font-size:14px;font-weight:700">✅ Etsy Live</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+escHtml(cred.shop_name||'onbrandcraftz')+'</div>'
+      : '<div style="color:var(--red);font-size:14px;font-weight:700">⚠️ Etsy Ping Failed</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+escHtml(cred.etsy_live_error||'Unknown error')+'</div>')
+      + '<div style="font-size:11px;color:'+ageColor+';margin-top:8px">Refresh token: '+escHtml(ageText)+'</div>';
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:11px">Connections summary offline</div>';
+  }
+}
+
 // ── Security — fully static: security posture checklist ──
 function renderSecurityPosture() {
   const el = document.getElementById('security-content');
@@ -3280,6 +3446,9 @@ function loadAll(){
   renderSecurityPosture();
   loadRelayStatus();
   loadStudioVideos();
+  loadDependencyHealth();
+  loadAlerts();
+  loadSettingsConnectionsSummary();
 }
 loadAll();
 loadActions();

@@ -149,3 +149,39 @@ if(focusToggle) focusToggle.addEventListener('click', function(){
 
 <!-- /TRASH 20260624-006 -->
 
+<!-- TRASH id=20260624-007 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Replaced fake System Monitor placeholder (hardcoded conic-gradient CPU/RAM/DISK gauges, zero backend) with real Dependency Health panel backed by /api/system/dependencies" -->
+## 20260624-007 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Replaced fake System Monitor placeholder (hardcoded conic-gradient CPU/RAM/DISK gauges, zero backend) with real Dependency Health panel backed by /api/system/dependencies  
+**Payload:** `data/trash/files/20260624-007__snippet.txt`
+
+```python
+        <div class="panel brk col-sysmon">
+          <div class="panel-title">System Monitor <span class="src">server stats</span></div>
+          <div class="gauge-row">
+            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 22%, var(--border) 22% 100%)"></div><div class="inner"><div class="num">22%</div><div class="lab">CPU</div></div></div>
+            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 54%, var(--border) 54% 100%)"></div><div class="inner"><div class="num">54%</div><div class="lab">RAM</div></div></div>
+            <div class="gauge"><div class="ring" style="background:conic-gradient(var(--cyan) 0% 40%, var(--border) 40% 100%)"></div><div class="inner"><div class="num">40%</div><div class="lab">DISK</div></div></div>
+          </div>
+        </div>
+```
+
+<!-- /TRASH 20260624-007 -->
+
+<!-- TRASH id=20260624-008 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Orphaned .gauge/.gauge-row/.ring CSS — only consumer was the removed fake System Monitor gauge markup" -->
+## 20260624-008 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Orphaned .gauge/.gauge-row/.ring CSS — only consumer was the removed fake System Monitor gauge markup  
+**Payload:** `data/trash/files/20260624-008__snippet.txt`
+
+```python
+.gauge-row{display:flex;gap:10px;flex:1;align-items:center;justify-content:space-around}
+.gauge{width:78px;height:78px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  position:relative;flex-shrink:0}
+.gauge .ring{position:absolute;inset:0;border-radius:50%}
+.gauge .inner{position:relative;width:56px;height:56px;border-radius:50%;background:var(--panel2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge .inner .num{font-size:13px;font-weight:700;color:var(--cyan2)}
+.gauge .inner .lab{font-size:8px;color:var(--muted);letter-spacing:.5px}
+```
+
+<!-- /TRASH 20260624-008 -->
+
