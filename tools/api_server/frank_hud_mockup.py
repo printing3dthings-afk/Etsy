@@ -89,9 +89,13 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .hdr-bar .right{display:flex;align-items:center;gap:10px}
 .search{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:8px;
   padding:6px 10px;color:var(--text);font-size:11px}
-.drawer-toggle{display:none}
-.drawer-search{display:none}
-#drawer-backdrop{display:none}
+.hamburger-fixed{
+  position:absolute;top:14px;left:14px;z-index:500;
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(15,31,48,.85);color:var(--cyan2);font-size:15px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.hamburger-fixed:hover{border-color:var(--cyan)}
 .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
   background:var(--panel);display:flex;align-items:center;justify-content:center;
   cursor:pointer;position:relative;color:var(--muted);font-size:13px;flex-shrink:0}
@@ -172,6 +176,23 @@ canvas#orb{cursor:pointer}
 .orb-overlay .o3{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:8px}
 .orb-state{margin-top:8px;font-size:10.5px;color:var(--muted);letter-spacing:1px}
 .orb-hint{position:absolute;bottom:8px;font-size:9.5px;color:var(--muted);opacity:.6;letter-spacing:.5px}
+
+#orb-view{
+  position:absolute;inset:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%, rgba(58,214,255,.10), transparent 60%);
+}
+#orb-view canvas#orb{width:340px;height:340px}
+#orb-view .orb-overlay .o1{font-size:36px}
+#orb-view .orb-hint{position:static;margin-top:14px;opacity:.5}
+#orb-view .orb-state{margin-top:10px}
+
+body.cc-open #orb-view{display:none}
+body:not(.cc-open) .hdr-logo,
+body:not(.cc-open) .hdr-bar,
+body:not(.cc-open) .sidebar,
+body:not(.cc-open) .screen,
+body:not(.cc-open) .bottombar{display:none}
 
 .feed-item{padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text);
   display:flex;justify-content:space-between;gap:6px}
@@ -402,7 +423,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 .metric .sub{font-size:11px;color:var(--muted);margin-top:2px}
 .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
 
-/* ══════════ MOBILE LAYOUT — fluid stage, off-canvas drawer nav, stacked rows ══════════
+/* ══════════ MOBILE LAYOUT — fluid stage, stacked inline sidebar nav, stacked rows ══════════
    Single breakpoint, kept in sync with MOBILE_BREAKPOINT in JS. Desktop (>880px) is
    completely untouched — everything below is additive and gated behind this query. ── */
 @media (max-width:880px){
@@ -415,27 +436,22 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
   .hdr-logo{padding:0 8px;gap:6px}
   .hdr-logo .lbl{display:none}
-  .drawer-toggle{display:flex}
+  .hamburger-fixed{
+    position:fixed;
+    top:calc(10px + env(safe-area-inset-top));
+    left:calc(10px + env(safe-area-inset-left));
+  }
 
   .hdr-bar{padding:0 10px;gap:8px}
   .hdr-bar .search,.hdr-bar .clockwrap{display:none}
 
   .sidebar{
-    position:fixed;top:0;left:0;bottom:0;width:78vw;max-width:320px;z-index:200;
-    grid-column:unset;grid-row:unset;
-    transform:translateX(-100%);transition:transform .25s ease;
-    box-shadow:8px 0 24px rgba(0,0,0,.45);
-    padding-top:calc(14px + env(safe-area-inset-top));
-    padding-bottom:calc(14px + env(safe-area-inset-bottom));
-    padding-left:calc(10px + env(safe-area-inset-left));
+    position:static;width:100%;max-width:none;z-index:auto;
+    grid-column:1/-1;grid-row:auto;
+    transform:none;transition:none;box-shadow:none;
+    padding:10px;
+    padding-top:calc(10px + env(safe-area-inset-top));
   }
-  body.drawer-open .sidebar{transform:translateX(0)}
-  .drawer-search{display:block;margin-bottom:12px;width:100%}
-
-  #drawer-backdrop{
-    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;
-  }
-  body.drawer-open #drawer-backdrop{display:block}
 
   .main{grid-column:1/-1;overflow:visible !important;height:auto !important;padding:10px}
   .screen{grid-column:1/-1;height:auto;overflow:visible;padding:10px}
@@ -488,8 +504,22 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 <body>
 <div id="stage-wrap"><div id="stage">
 
+  <button id="hamburger-btn" class="hamburger-fixed" aria-label="Toggle control center">☰</button>
+
+  <div id="orb-view">
+    <div class="orb-hero-stage">
+      <canvas id="orb" width="300" height="300"></canvas>
+      <div class="orb-overlay">
+        <div class="o1">FRANK</div>
+        <div class="o2">COMMAND CORE</div>
+        <div class="o3">v1.0.0 · MOCKUP</div>
+      </div>
+    </div>
+    <div class="orb-state" id="orb-state">IDLE — slow ambient rotation</div>
+    <div class="orb-hint">click the orb (or the talk pill) to start talking to Frank</div>
+  </div>
+
   <div class="hdr-logo brk">
-    <button id="hamburger-btn" class="icon-btn drawer-toggle" aria-label="Open navigation">☰</button>
     <div class="hex">⬡</div>
     <div class="lbl"><div class="l1">FRANK</div><div class="l2">COMMAND CENTER</div></div>
   </div>
@@ -507,7 +537,6 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   </div>
 
   <div class="sidebar">
-    <input class="search drawer-search" placeholder="Search listings, orders, tools, knowledge base…">
     <div class="nav-section">Frank</div>
     <div class="nav-item active" data-screen="cmd"><span class="ic">⌂</span>Command Center</div>
     <div class="nav-item" data-screen="core"><span class="ic">◎</span>AI Core</div>
@@ -542,7 +571,6 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <button class="qc-btn" onclick="showScreen('workflows')"><span class="qic">⇄</span>Run Workflow</button>
     </div>
   </div>
-  <div id="drawer-backdrop"></div>
   <div id="toast-stack"></div>
   <div id="welcome-overlay" style="display:none">
     <div class="welcome-card">
@@ -576,19 +604,6 @@ video{width:100%;border-radius:10px;background:#000;display:block}
             <div class="core-row"><span class="lab"><span class="dotc"></span>LLMs</span><span class="v" id="ac-llms">—</span></div>
             <div class="core-row"><span class="lab"><span class="dotc"></span>System</span><span class="v" id="ac-system">—</span></div>
           </div>
-        </div>
-
-        <div class="panel brk orb-hero col-orb">
-          <div class="orb-hero-stage">
-            <canvas id="orb" width="300" height="300"></canvas>
-            <div class="orb-overlay">
-              <div class="o1">FRANK</div>
-              <div class="o2">COMMAND CORE</div>
-              <div class="o3">v1.0.0 · MOCKUP</div>
-            </div>
-          </div>
-          <div class="orb-state" id="orb-state">IDLE — slow ambient rotation</div>
-          <div class="orb-hint">click the orb (or the talk pill) to start talking to Frank</div>
         </div>
 
         <div class="panel brk col-feed">
@@ -918,18 +933,18 @@ function fitStage(){
   const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
   stage.style.transform = 'scale(' + scale + ')';
 }
-function closeDrawer(){ document.body.classList.remove('drawer-open'); }
-function toggleDrawer(){ document.body.classList.toggle('drawer-open'); }
+function isControlCenterOpen(){ return document.body.classList.contains('cc-open'); }
+function openControlCenter(){ document.body.classList.add('cc-open'); }
+function closeControlCenter(){ document.body.classList.remove('cc-open'); }
+function toggleControlCenter(){ document.body.classList.toggle('cc-open'); }
 function syncMobileClass(){
   document.body.classList.toggle('is-mobile', isMobileMode());
-  if (!isMobileMode()) closeDrawer();
   fitStage();
 }
 window.addEventListener('resize', syncMobileClass);
 mobileMQ.addEventListener('change', syncMobileClass);
 syncMobileClass();
-document.getElementById('hamburger-btn').addEventListener('click', toggleDrawer);
-document.getElementById('drawer-backdrop').addEventListener('click', closeDrawer);
+document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/frank-sw.js', { scope: '/frank' }).catch(()=>{}); }
 
 // ── Real data wiring (Step 2) — same bearer token + fetch pattern as the live
@@ -1282,7 +1297,6 @@ function showScreen(name){
   if (name === 'conversations') loadConversations();
   if (name === 'kb') loadKb();
   if (name === 'workflows') loadWorkflows();
-  if (isMobileMode()) closeDrawer();
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));

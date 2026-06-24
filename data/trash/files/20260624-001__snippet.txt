@@ -1,0 +1,3 @@
+.drawer-toggle{display:none}
+.drawer-search{display:none}
+#drawer-backdrop{display:none}

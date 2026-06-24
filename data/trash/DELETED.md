@@ -78,3 +78,74 @@ if(focusToggle) focusToggle.addEventListener('click', function(){
 
 <!-- /TRASH 20260623-005 -->
 
+<!-- TRASH id=20260624-001 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
+## 20260624-001 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
+**Payload:** `data/trash/files/20260624-001__snippet.txt`
+
+```python
+.drawer-toggle{display:none}
+.drawer-search{display:none}
+#drawer-backdrop{display:none}
+```
+
+<!-- /TRASH 20260624-001 -->
+
+<!-- TRASH id=20260624-002 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
+## 20260624-002 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
+**Payload:** `data/trash/files/20260624-002__snippet.txt`
+
+```python
+  .drawer-toggle{display:flex}
+```
+
+<!-- /TRASH 20260624-002 -->
+
+<!-- TRASH id=20260624-003 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
+## 20260624-003 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
+**Payload:** `data/trash/files/20260624-003__snippet.txt`
+
+```python
+  #drawer-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;
+  }
+  body.drawer-open #drawer-backdrop{display:block}
+```
+
+<!-- /TRASH 20260624-003 -->
+
+<!-- TRASH id=20260624-004 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
+## 20260624-004 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
+**Payload:** `data/trash/files/20260624-004__snippet.txt`
+
+```python
+    <input class="search drawer-search" placeholder="Search listings, orders, tools, knowledge base…">
+```
+
+<!-- /TRASH 20260624-004 -->
+
+<!-- TRASH id=20260624-005 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
+## 20260624-005 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
+**Payload:** `data/trash/files/20260624-005__snippet.txt`
+
+```python
+  <div id="drawer-backdrop"></div>
+```
+
+<!-- /TRASH 20260624-005 -->
+
+<!-- TRASH id=20260624-006 date=2026-06-24 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in." -->
+## 20260624-006 · 2026-06-24 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Retiring off-canvas mobile drawer nav in favor of orb-only/control-center toggle; sidebar now renders inline/stacked on mobile instead of sliding in.  
+**Payload:** `data/trash/files/20260624-006__snippet.txt`
+
+```python
+  <div id="drawer-backdrop"></div>
+```
+
+<!-- /TRASH 20260624-006 -->
+
