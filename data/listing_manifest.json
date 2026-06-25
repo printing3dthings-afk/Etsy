@@ -10,7 +10,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696388+00:00",
+    "last_verified": "2026-06-25T05:44:18.920381+00:00",
     "listing_roles": {
       "P3D_CRYSTAL_GLOW_LAMP": "listing_id"
     },
@@ -28,7 +28,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696409+00:00",
+    "last_verified": "2026-06-25T05:44:18.920404+00:00",
     "listing_roles": {
       "P3D_RIBBED_VASE_FOR_DRIED_FLOWERS": "listing_id"
     },
@@ -46,7 +46,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696412+00:00",
+    "last_verified": "2026-06-25T05:44:18.920408+00:00",
     "listing_roles": {
       "P3D_COFFEE_BAR_SIGN": "listing_id"
     },
@@ -64,7 +64,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696415+00:00",
+    "last_verified": "2026-06-25T05:44:18.920411+00:00",
     "listing_roles": {
       "P3D_SCULPTURAL_MESH_LAMP": "listing_id"
     },
@@ -82,7 +82,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696417+00:00",
+    "last_verified": "2026-06-25T05:44:18.920414+00:00",
     "listing_roles": {
       "P3D_TEXTURED_TEA_LIGHT_HOLDERS": "listing_id"
     },
@@ -100,7 +100,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696420+00:00",
+    "last_verified": "2026-06-25T05:44:18.920418+00:00",
     "listing_roles": {
       "P3D_GEOMETRIC_GLOW_LAMP": "listing_id"
     },
@@ -118,7 +118,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696422+00:00",
+    "last_verified": "2026-06-25T05:44:18.920420+00:00",
     "listing_roles": {
       "P3D_PUFFER_JACKET_CAN_KOOZIE": "listing_id"
     },
@@ -136,7 +136,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696424+00:00",
+    "last_verified": "2026-06-25T05:44:18.920423+00:00",
     "listing_roles": {
       "P3D_SLIM_CAN_KOOZIE": "listing_id"
     },
@@ -154,7 +154,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696426+00:00",
+    "last_verified": "2026-06-25T05:44:18.920426+00:00",
     "listing_roles": {
       "P3D_RIBBED_TEA_LIGHT_HOLDER": "listing_id"
     },
@@ -172,7 +172,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696428+00:00",
+    "last_verified": "2026-06-25T05:44:18.920429+00:00",
     "listing_roles": {
       "P3D_RIBBED_PLANTER_POT": "listing_id"
     },
@@ -190,7 +190,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696430+00:00",
+    "last_verified": "2026-06-25T05:44:18.920431+00:00",
     "listing_roles": {
       "P3D_STANDARD_CAN_KOOZIE": "listing_id"
     },
@@ -208,7 +208,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696432+00:00",
+    "last_verified": "2026-06-25T05:44:18.920434+00:00",
     "listing_roles": {
       "P3D_MINIMALIST_PEN_HOLDER": "listing_id"
     },
@@ -224,7 +224,7 @@
     "expected_file_count": 3,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696434+00:00",
+    "last_verified": "2026-06-25T05:44:18.920437+00:00",
     "listing_roles": {
       "DP1026": "planner_listing_id"
     },
@@ -240,7 +240,7 @@
     "expected_file_count": 3,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696436+00:00",
+    "last_verified": "2026-06-25T05:44:18.920439+00:00",
     "listing_roles": {
       "DP1027": "planner_listing_id"
     },
@@ -256,7 +256,7 @@
     "expected_file_count": 3,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696439+00:00",
+    "last_verified": "2026-06-25T05:44:18.920442+00:00",
     "listing_roles": {
       "DP1028": "planner_listing_id"
     },
@@ -272,7 +272,7 @@
     "expected_file_count": 3,
     "expected_files": [],
     "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696441+00:00",
+    "last_verified": "2026-06-25T05:44:18.920445+00:00",
     "listing_roles": {
       "DP1029": "planner_listing_id"
     },
@@ -287,8 +287,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696442+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920447+00:00",
     "listing_roles": {
       "DP1058": "listing_id"
     },
@@ -303,8 +303,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696444+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920449+00:00",
     "listing_roles": {
       "DP1059": "listing_id"
     },
@@ -319,8 +319,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696446+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920452+00:00",
     "listing_roles": {
       "DP1060": "listing_id"
     },
@@ -335,8 +335,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696448+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920455+00:00",
     "listing_roles": {
       "DP1061": "listing_id"
     },
@@ -353,8 +353,8 @@
     "expected_files": [
       "DP1014_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696450+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920458+00:00",
     "listing_roles": {
       "DP1014": "listing_id"
     },
@@ -371,8 +371,8 @@
     "expected_files": [
       "DP1015_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696452+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920461+00:00",
     "listing_roles": {
       "DP1015": "listing_id"
     },
@@ -387,8 +387,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696454+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920464+00:00",
     "listing_roles": {
       "DP1016": "listing_id"
     },
@@ -405,8 +405,8 @@
     "expected_files": [
       "DP1019_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696457+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920466+00:00",
     "listing_roles": {
       "DP1019": "listing_id"
     },
@@ -423,8 +423,8 @@
     "expected_files": [
       "DP1020_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696458+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920469+00:00",
     "listing_roles": {
       "DP1020": "listing_id"
     },
@@ -441,8 +441,8 @@
     "expected_files": [
       "DP1021_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696461+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920472+00:00",
     "listing_roles": {
       "DP1021": "listing_id"
     },
@@ -459,8 +459,8 @@
     "expected_files": [
       "DP1023_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696463+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920475+00:00",
     "listing_roles": {
       "DP1023": "listing_id"
     },
@@ -475,8 +475,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696466+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920478+00:00",
     "listing_roles": {
       "DP1025": "listing_id"
     },
@@ -493,8 +493,8 @@
     "expected_files": [
       "DP1007_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696468+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920480+00:00",
     "listing_roles": {
       "DP1007": "listing_id"
     },
@@ -511,8 +511,8 @@
     "expected_files": [
       "DP1018_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696471+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920483+00:00",
     "listing_roles": {
       "DP1018": "listing_id"
     },
@@ -529,8 +529,8 @@
     "expected_files": [
       "DP1022_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696473+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920486+00:00",
     "listing_roles": {
       "DP1022": "listing_id"
     },
@@ -547,8 +547,8 @@
     "expected_files": [
       "DP1024_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696475+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920489+00:00",
     "listing_roles": {
       "DP1024": "listing_id"
     },
@@ -565,8 +565,8 @@
     "expected_files": [
       "DP1012_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696503+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920491+00:00",
     "listing_roles": {
       "DP1012": "listing_id"
     },
@@ -583,8 +583,8 @@
     "expected_files": [
       "DP1013_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696506+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920494+00:00",
     "listing_roles": {
       "DP1013": "listing_id"
     },
@@ -599,8 +599,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696508+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920496+00:00",
     "listing_roles": {
       "DP1017": "listing_id"
     },
@@ -617,8 +617,8 @@
     "expected_files": [
       "DP1032_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696510+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920498+00:00",
     "listing_roles": {
       "DP1032": "listing_id"
     },
@@ -635,8 +635,8 @@
     "expected_files": [
       "DP1033_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696512+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920500+00:00",
     "listing_roles": {
       "DP1033": "listing_id"
     },
@@ -653,8 +653,8 @@
     "expected_files": [
       "DP1034_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696513+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920502+00:00",
     "listing_roles": {
       "DP1034": "listing_id"
     },
@@ -671,8 +671,8 @@
     "expected_files": [
       "DP1036_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696515+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920504+00:00",
     "listing_roles": {
       "DP1036": "listing_id"
     },
@@ -689,8 +689,8 @@
     "expected_files": [
       "DP1037_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696518+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920507+00:00",
     "listing_roles": {
       "DP1037": "listing_id"
     },
@@ -707,8 +707,8 @@
     "expected_files": [
       "DP1030_print_sizes.zip"
     ],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696521+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920508+00:00",
     "listing_roles": {
       "DP1030": "listing_id"
     },
@@ -725,8 +725,8 @@
     "expected_files": [
       "DP1031_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696523+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920510+00:00",
     "listing_roles": {
       "DP1031": "listing_id"
     },
@@ -745,7 +745,7 @@
       "DP1035_print_sizes.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696526+00:00",
+    "last_verified": "2026-06-25T05:44:18.920512+00:00",
     "listing_roles": {
       "DP1035": "listing_id",
       "DP1064": "listing_id"
@@ -764,7 +764,7 @@
       "BUNDLE_PLANNER_ALL4"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696528+00:00",
+    "last_verified": "2026-06-25T05:44:18.920515+00:00",
     "listing_roles": {
       "BUNDLE_PLANNER_ALL4": "listing_id"
     },
@@ -782,7 +782,7 @@
       "STICKER_COTTON_CANDY"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696530+00:00",
+    "last_verified": "2026-06-25T05:44:18.920517+00:00",
     "listing_roles": {
       "STICKER_COTTON_CANDY": "listing_id"
     },
@@ -800,7 +800,7 @@
       "STICKER_CORAL_PEACH"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696532+00:00",
+    "last_verified": "2026-06-25T05:44:18.920520+00:00",
     "listing_roles": {
       "STICKER_CORAL_PEACH": "listing_id"
     },
@@ -818,7 +818,7 @@
       "STICKER_BUNDLE_ALL4"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696534+00:00",
+    "last_verified": "2026-06-25T05:44:18.920523+00:00",
     "listing_roles": {
       "STICKER_BUNDLE_ALL4": "listing_id"
     },
@@ -836,7 +836,7 @@
       "STICKER_FREE"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696536+00:00",
+    "last_verified": "2026-06-25T05:44:18.920524+00:00",
     "listing_roles": {
       "STICKER_FREE": "listing_id"
     },
@@ -854,7 +854,7 @@
       "STICKER_LAVENDER"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696538+00:00",
+    "last_verified": "2026-06-25T05:44:18.920527+00:00",
     "listing_roles": {
       "STICKER_LAVENDER": "listing_id"
     },
@@ -872,7 +872,7 @@
       "STICKER_MIDNIGHT_BLUE"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696540+00:00",
+    "last_verified": "2026-06-25T05:44:18.920529+00:00",
     "listing_roles": {
       "STICKER_MIDNIGHT_BLUE": "listing_id"
     },
@@ -892,7 +892,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696542+00:00",
+    "last_verified": "2026-06-25T05:44:18.920531+00:00",
     "listing_roles": {
       "DP1000": "listing_id",
       "DP1001": "listing_id",
@@ -911,8 +911,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696544+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920533+00:00",
     "listing_roles": {
       "DP1038": "listing_id"
     },
@@ -927,8 +927,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696546+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920535+00:00",
     "listing_roles": {
       "DP1039": "listing_id"
     },
@@ -943,8 +943,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696548+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920537+00:00",
     "listing_roles": {
       "DP1040": "listing_id"
     },
@@ -959,8 +959,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696550+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920539+00:00",
     "listing_roles": {
       "DP1041": "listing_id"
     },
@@ -975,8 +975,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696551+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920541+00:00",
     "listing_roles": {
       "DP1042": "listing_id"
     },
@@ -991,8 +991,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696553+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920543+00:00",
     "listing_roles": {
       "DP1044": "listing_id"
     },
@@ -1007,8 +1007,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696555+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920546+00:00",
     "listing_roles": {
       "DP1043": "listing_id"
     },
@@ -1023,8 +1023,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696557+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920548+00:00",
     "listing_roles": {
       "DP1046": "listing_id"
     },
@@ -1039,8 +1039,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696558+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920551+00:00",
     "listing_roles": {
       "DP1045": "listing_id"
     },
@@ -1056,8 +1056,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696561+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920552+00:00",
     "listing_roles": {
       "DP1047": "listing_id",
       "DP1066": "listing_id"
@@ -1073,8 +1073,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696563+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920555+00:00",
     "listing_roles": {
       "DP1049": "individual_listing_id"
     },
@@ -1089,8 +1089,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696565+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920557+00:00",
     "listing_roles": {
       "DP1067": "listing_id"
     },
@@ -1105,8 +1105,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696568+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920559+00:00",
     "listing_roles": {
       "DP1050": "individual_listing_id"
     },
@@ -1121,8 +1121,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696570+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920561+00:00",
     "listing_roles": {
       "DP1051": "individual_listing_id"
     },
@@ -1137,8 +1137,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696572+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920563+00:00",
     "listing_roles": {
       "DP1052": "individual_listing_id"
     },
@@ -1153,8 +1153,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696573+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920565+00:00",
     "listing_roles": {
       "DP1053": "individual_listing_id"
     },
@@ -1169,8 +1169,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696575+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920568+00:00",
     "listing_roles": {
       "DP1054": "individual_listing_id"
     },
@@ -1185,8 +1185,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696577+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920570+00:00",
     "listing_roles": {
       "DP1055": "individual_listing_id"
     },
@@ -1201,8 +1201,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696579+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920572+00:00",
     "listing_roles": {
       "DP1056": "listing_id"
     },
@@ -1218,8 +1218,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696580+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920574+00:00",
     "listing_roles": {
       "DP1057": "listing_id",
       "DP1068": "listing_id"
@@ -1236,8 +1236,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696583+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920577+00:00",
     "listing_roles": {
       "DP1055": "listing_id",
       "DP1069": "listing_id"
@@ -1258,7 +1258,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696584+00:00",
+    "last_verified": "2026-06-25T05:44:18.920580+00:00",
     "listing_roles": {
       "DP1048": "listing_id",
       "DP1049": "listing_id",
@@ -1280,7 +1280,7 @@
     "expected_file_count": 0,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696586+00:00",
+    "last_verified": "2026-06-25T05:44:18.920583+00:00",
     "listing_roles": {
       "WA_PICK_ANY_3_PRINTS": "listing_id"
     },
@@ -1298,7 +1298,7 @@
       "BUNDLE_GALLERY_COASTAL"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696588+00:00",
+    "last_verified": "2026-06-25T05:44:18.920586+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_COASTAL": "listing_id"
     },
@@ -1316,7 +1316,7 @@
       "BUNDLE_GALLERY_BOTANICAL"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696589+00:00",
+    "last_verified": "2026-06-25T05:44:18.920588+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_BOTANICAL": "listing_id"
     },
@@ -1334,7 +1334,7 @@
       "BUNDLE_GALLERY_WOODLAND"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696591+00:00",
+    "last_verified": "2026-06-25T05:44:18.920590+00:00",
     "listing_roles": {
       "BUNDLE_GALLERY_WOODLAND": "listing_id"
     },
@@ -1349,8 +1349,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696592+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920592+00:00",
     "listing_roles": {
       "DP1071": "listing_id"
     },
@@ -1365,8 +1365,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696594+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920596+00:00",
     "listing_roles": {
       "DP1072": "listing_id"
     },
@@ -1381,8 +1381,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696597+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920599+00:00",
     "listing_roles": {
       "DP1073": "listing_id"
     },
@@ -1397,8 +1397,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696599+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920601+00:00",
     "listing_roles": {
       "DP1074": "listing_id"
     },
@@ -1413,8 +1413,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696601+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920603+00:00",
     "listing_roles": {
       "DP1075": "listing_id"
     },
@@ -1429,8 +1429,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696603+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920606+00:00",
     "listing_roles": {
       "DP1076": "listing_id"
     },
@@ -1445,8 +1445,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696605+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920608+00:00",
     "listing_roles": {
       "DP1077": "listing_id"
     },
@@ -1461,8 +1461,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696607+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920610+00:00",
     "listing_roles": {
       "DP1078": "listing_id"
     },
@@ -1477,8 +1477,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696609+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920613+00:00",
     "listing_roles": {
       "DP1079": "listing_id"
     },
@@ -1493,8 +1493,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "WARN",
-    "last_verified": "2026-06-21T14:03:48.696610+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920615+00:00",
     "listing_roles": {
       "DP1080": "listing_id"
     },
@@ -1510,7 +1510,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696612+00:00",
+    "last_verified": "2026-06-25T05:44:18.920617+00:00",
     "listing_roles": {
       "DP1081": "listing_id"
     },
@@ -1526,7 +1526,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696614+00:00",
+    "last_verified": "2026-06-25T05:44:18.920619+00:00",
     "listing_roles": {
       "DP1082": "listing_id"
     },
@@ -1542,7 +1542,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696616+00:00",
+    "last_verified": "2026-06-25T05:44:18.920621+00:00",
     "listing_roles": {
       "DP1083": "listing_id"
     },
@@ -1558,7 +1558,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696618+00:00",
+    "last_verified": "2026-06-25T05:44:18.920623+00:00",
     "listing_roles": {
       "DP1084": "listing_id"
     },
@@ -1574,7 +1574,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696620+00:00",
+    "last_verified": "2026-06-25T05:44:18.920625+00:00",
     "listing_roles": {
       "DP1085": "listing_id"
     },
@@ -1592,7 +1592,7 @@
       "SUBLIMATION_MOM_LIFE"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696622+00:00",
+    "last_verified": "2026-06-25T05:44:18.920628+00:00",
     "listing_roles": {
       "SUBLIMATION_MOM_LIFE": "listing_id"
     },
@@ -1608,7 +1608,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696624+00:00",
+    "last_verified": "2026-06-25T05:44:18.920629+00:00",
     "listing_roles": {
       "DP1086": "listing_id"
     },
@@ -1624,7 +1624,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696626+00:00",
+    "last_verified": "2026-06-25T05:44:18.920632+00:00",
     "listing_roles": {
       "DP1087": "listing_id"
     },
@@ -1642,7 +1642,7 @@
       "COMMERCIAL_STICKER_LAVENDER"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696628+00:00",
+    "last_verified": "2026-06-25T05:44:18.920634+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_LAVENDER": "listing_id"
     },
@@ -1660,7 +1660,7 @@
       "COMMERCIAL_STICKER_COTTON"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696629+00:00",
+    "last_verified": "2026-06-25T05:44:18.920636+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_COTTON": "listing_id"
     },
@@ -1678,7 +1678,7 @@
       "COMMERCIAL_STICKER_MIDNIGHT"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696631+00:00",
+    "last_verified": "2026-06-25T05:44:18.920639+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_MIDNIGHT": "listing_id"
     },
@@ -1694,7 +1694,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696632+00:00",
+    "last_verified": "2026-06-25T05:44:18.920641+00:00",
     "listing_roles": {
       "DP1088": "listing_id"
     },
@@ -1710,7 +1710,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696634+00:00",
+    "last_verified": "2026-06-25T05:44:18.920644+00:00",
     "listing_roles": {
       "DP1089": "listing_id"
     },
@@ -1726,7 +1726,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696636+00:00",
+    "last_verified": "2026-06-25T05:44:18.920648+00:00",
     "listing_roles": {
       "DP1090": "listing_id"
     },
@@ -1742,7 +1742,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696638+00:00",
+    "last_verified": "2026-06-25T05:44:18.920650+00:00",
     "listing_roles": {
       "DP1091": "listing_id"
     },
@@ -1760,7 +1760,7 @@
       "COMMERCIAL_STICKER_CORAL"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696640+00:00",
+    "last_verified": "2026-06-25T05:44:18.920652+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_CORAL": "listing_id"
     },
@@ -1778,7 +1778,7 @@
       "COMMERCIAL_STICKER_BUNDLE"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696642+00:00",
+    "last_verified": "2026-06-25T05:44:18.920655+00:00",
     "listing_roles": {
       "COMMERCIAL_STICKER_BUNDLE": "listing_id"
     },
@@ -1793,8 +1793,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696643+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920657+00:00",
     "listing_roles": {
       "DP1055": "kawaii_listing_id"
     },
@@ -1809,8 +1809,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696645+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920659+00:00",
     "listing_roles": {
       "DP1051": "kawaii_listing_id"
     },
@@ -1825,8 +1825,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696646+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920660+00:00",
     "listing_roles": {
       "DP1050": "kawaii_listing_id"
     },
@@ -1841,8 +1841,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696648+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920663+00:00",
     "listing_roles": {
       "DP1049": "kawaii_listing_id"
     },
@@ -1857,8 +1857,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696650+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920665+00:00",
     "listing_roles": {
       "DP1047": "kawaii_listing_id"
     },
@@ -1873,8 +1873,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696651+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920667+00:00",
     "listing_roles": {
       "DP1046": "kawaii_listing_id"
     },
@@ -1889,8 +1889,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696653+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920669+00:00",
     "listing_roles": {
       "DP1045": "kawaii_listing_id"
     },
@@ -1905,8 +1905,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696655+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920671+00:00",
     "listing_roles": {
       "DP1044": "kawaii_listing_id"
     },
@@ -1921,8 +1921,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696656+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920673+00:00",
     "listing_roles": {
       "DP1043": "kawaii_listing_id"
     },
@@ -1937,8 +1937,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696658+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920676+00:00",
     "listing_roles": {
       "DP1042": "kawaii_listing_id"
     },
@@ -1953,8 +1953,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696660+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920678+00:00",
     "listing_roles": {
       "DP1040": "kawaii_listing_id"
     },
@@ -1969,8 +1969,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696663+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920680+00:00",
     "listing_roles": {
       "DP1057": "kawaii_listing_id"
     },
@@ -1985,8 +1985,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696665+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920682+00:00",
     "listing_roles": {
       "DP1056": "kawaii_listing_id"
     },
@@ -2003,8 +2003,8 @@
     "expected_files": [
       "DP1036_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696666+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920685+00:00",
     "listing_roles": {
       "DP1036": "kawaii_listing_id"
     },
@@ -2021,8 +2021,8 @@
     "expected_files": [
       "DP1033_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696668+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920687+00:00",
     "listing_roles": {
       "DP1033": "kawaii_listing_id"
     },
@@ -2039,8 +2039,8 @@
     "expected_files": [
       "DP1099_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696670+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920689+00:00",
     "listing_roles": {
       "DP1099": "listing_id"
     },
@@ -2055,8 +2055,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696672+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920692+00:00",
     "listing_roles": {
       "DP1048": "kawaii_listing_id"
     },
@@ -2073,8 +2073,8 @@
     "expected_files": [
       "DP1097_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696673+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920694+00:00",
     "listing_roles": {
       "DP1097": "listing_id"
     },
@@ -2091,8 +2091,8 @@
     "expected_files": [
       "DP1096_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696675+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920696+00:00",
     "listing_roles": {
       "DP1096": "listing_id"
     },
@@ -2107,8 +2107,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696677+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920698+00:00",
     "listing_roles": {
       "DP1058": "secondary_listing_id"
     },
@@ -2125,8 +2125,8 @@
     "expected_files": [
       "DP1100_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696678+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920699+00:00",
     "listing_roles": {
       "DP1100": "listing_id"
     },
@@ -2143,8 +2143,8 @@
     "expected_files": [
       "DP1095_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696680+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920702+00:00",
     "listing_roles": {
       "DP1095": "listing_id"
     },
@@ -2160,7 +2160,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696682+00:00",
+    "last_verified": "2026-06-25T05:44:18.920704+00:00",
     "listing_roles": {
       "DP1092": "listing_id"
     },
@@ -2177,8 +2177,8 @@
     "expected_files": [
       "DP1094_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696683+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920706+00:00",
     "listing_roles": {
       "DP1094": "listing_id"
     },
@@ -2193,8 +2193,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696685+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920708+00:00",
     "listing_roles": {
       "DP1041": "kawaii_listing_id"
     },
@@ -2209,8 +2209,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696686+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920711+00:00",
     "listing_roles": {
       "DP1039": "kawaii_listing_id"
     },
@@ -2225,8 +2225,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696688+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920713+00:00",
     "listing_roles": {
       "DP1038": "kawaii_listing_id"
     },
@@ -2243,8 +2243,8 @@
     "expected_files": [
       "DP1037_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696690+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920715+00:00",
     "listing_roles": {
       "DP1037": "kawaii_listing_id"
     },
@@ -2261,8 +2261,8 @@
     "expected_files": [
       "DP1035_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696692+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920717+00:00",
     "listing_roles": {
       "DP1035": "kawaii_listing_id"
     },
@@ -2279,8 +2279,8 @@
     "expected_files": [
       "DP1034_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696694+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920719+00:00",
     "listing_roles": {
       "DP1034": "kawaii_listing_id"
     },
@@ -2297,8 +2297,8 @@
     "expected_files": [
       "DP1098_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696696+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920720+00:00",
     "listing_roles": {
       "DP1098": "listing_id"
     },
@@ -2313,8 +2313,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696697+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920722+00:00",
     "listing_roles": {
       "DP1069": "individual_listing_id"
     },
@@ -2330,7 +2330,7 @@
     "expected_file_count": 1,
     "expected_files": [],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696699+00:00",
+    "last_verified": "2026-06-25T05:44:18.920724+00:00",
     "listing_roles": {
       "DP1093": "listing_id"
     },
@@ -2347,8 +2347,8 @@
     "expected_files": [
       "DP1032_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696701+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920726+00:00",
     "listing_roles": {
       "DP1032": "kawaii_listing_id"
     },
@@ -2365,8 +2365,8 @@
     "expected_files": [
       "DP1031_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696703+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920727+00:00",
     "listing_roles": {
       "DP1031": "kawaii_listing_id"
     },
@@ -2383,8 +2383,8 @@
     "expected_files": [
       "DP1030_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696705+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920729+00:00",
     "listing_roles": {
       "DP1030": "kawaii_listing_id"
     },
@@ -2399,8 +2399,8 @@
     ],
     "expected_file_count": 1,
     "expected_files": [],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696708+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920731+00:00",
     "listing_roles": {
       "WA1026": "listing_id"
     },
@@ -2420,7 +2420,7 @@
       "DP1008_print_sizes.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696709+00:00",
+    "last_verified": "2026-06-25T05:44:18.920733+00:00",
     "listing_roles": {
       "DP1008": "listing_id"
     },
@@ -2440,7 +2440,7 @@
       "DP1009_print_sizes.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696711+00:00",
+    "last_verified": "2026-06-25T05:44:18.920734+00:00",
     "listing_roles": {
       "DP1009": "listing_id"
     },
@@ -2460,7 +2460,7 @@
       "DP1010_print_sizes.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696713+00:00",
+    "last_verified": "2026-06-25T05:44:18.920736+00:00",
     "listing_roles": {
       "DP1010": "listing_id"
     },
@@ -2481,8 +2481,8 @@
       "DP1009_print_sizes.zip",
       "DP1010_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696715+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920738+00:00",
     "listing_roles": {
       "BUNDLE_MED": "listing_id"
     },
@@ -2499,8 +2499,8 @@
     "expected_files": [
       "DP1063_print_sizes.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696717+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920740+00:00",
     "listing_roles": {
       "DP1063": "listing_id"
     },
@@ -2519,8 +2519,8 @@
     "expected_files": [
       "coloring_set_02.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696718+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920742+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_02": "listing_id"
     },
@@ -2539,8 +2539,8 @@
     "expected_files": [
       "coloring_set_03.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696720+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920744+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_03": "listing_id"
     },
@@ -2559,8 +2559,8 @@
     "expected_files": [
       "coloring_set_06.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696722+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920746+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_06": "listing_id"
     },
@@ -2579,8 +2579,8 @@
     "expected_files": [
       "coloring_set_01.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696724+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920748+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_01": "listing_id"
     },
@@ -2599,8 +2599,8 @@
     "expected_files": [
       "coloring_set_04.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696726+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920750+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_04": "listing_id"
     },
@@ -2619,8 +2619,8 @@
     "expected_files": [
       "coloring_set_11.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696727+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920751+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_11": "listing_id"
     },
@@ -2639,8 +2639,8 @@
     "expected_files": [
       "coloring_set_05.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696729+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920753+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_05": "listing_id"
     },
@@ -2659,8 +2659,8 @@
     "expected_files": [
       "coloring_set_07.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696731+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920755+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_07": "listing_id"
     },
@@ -2679,8 +2679,8 @@
     "expected_files": [
       "celestial_night_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696732+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920757+00:00",
     "listing_roles": {
       "PAPER_CELESTIAL_NIGHT_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2699,8 +2699,8 @@
     "expected_files": [
       "coloring_set_08.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696734+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920759+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_08": "listing_id"
     },
@@ -2719,8 +2719,8 @@
     "expected_files": [
       "coloring_set_09.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696736+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920761+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_09": "listing_id"
     },
@@ -2739,8 +2739,8 @@
     "expected_files": [
       "coloring_set_10.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696737+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920763+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_SET_10": "listing_id"
     },
@@ -2759,8 +2759,8 @@
     "expected_files": [
       "lavender_dreams_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696739+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920765+00:00",
     "listing_roles": {
       "PAPER_LAVENDER_DREAMS_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2779,8 +2779,8 @@
     "expected_files": [
       "mermaidcore_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696740+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920767+00:00",
     "listing_roles": {
       "PAPER_MERMAIDCORE_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2799,8 +2799,8 @@
     "expected_files": [
       "midnight_blue_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696742+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920769+00:00",
     "listing_roles": {
       "PAPER_MIDNIGHT_BLUE_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2819,8 +2819,8 @@
     "expected_files": [
       "cherry_blossom_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696744+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920771+00:00",
     "listing_roles": {
       "PAPER_CHERRY_BLOSSOM_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2839,8 +2839,8 @@
     "expected_files": [
       "mocha_latte_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696746+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920773+00:00",
     "listing_roles": {
       "PAPER_MOCHA_LATTE_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2859,8 +2859,8 @@
     "expected_files": [
       "coral_peach_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696748+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920775+00:00",
     "listing_roles": {
       "PAPER_CORAL_PEACH_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2879,8 +2879,8 @@
     "expected_files": [
       "cotton_candy_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696749+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920777+00:00",
     "listing_roles": {
       "PAPER_COTTON_CANDY_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2899,8 +2899,8 @@
     "expected_files": [
       "sunflower_studio_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696751+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920779+00:00",
     "listing_roles": {
       "PAPER_SUNFLOWER_STUDIO_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2919,8 +2919,8 @@
     "expected_files": [
       "matcha_serenity_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696753+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920780+00:00",
     "listing_roles": {
       "PAPER_MATCHA_SERENITY_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2939,8 +2939,8 @@
     "expected_files": [
       "ocean_breeze_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696755+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920782+00:00",
     "listing_roles": {
       "PAPER_OCEAN_BREEZE_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2959,8 +2959,8 @@
     "expected_files": [
       "sage_garden_paper_pack.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696756+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920784+00:00",
     "listing_roles": {
       "PAPER_SAGE_GARDEN_DIGITAL_PAPER_PACK": "listing_id"
     },
@@ -2981,7 +2981,7 @@
       "SS1001_america250_3dprint_pack_vol2.zip"
     ],
     "last_status": "FAIL",
-    "last_verified": "2026-06-21T14:03:48.696758+00:00",
+    "last_verified": "2026-06-25T05:44:18.920786+00:00",
     "listing_roles": {
       "SS_AMERICA_250_SVG": "listing_id"
     },
@@ -3003,8 +3003,8 @@
       "coloring_fun_basic_set_03.zip",
       "coloring_fun_basic_set_04.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696760+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920788+00:00",
     "listing_roles": {
       "COLOR_FUN_ADVENTURE_COLORING_PAGES": "listing_id"
     },
@@ -3026,8 +3026,8 @@
       "coloring_set_03.zip",
       "coloring_set_04.zip"
     ],
-    "last_status": "PASS",
-    "last_verified": "2026-06-21T14:03:48.696761+00:00",
+    "last_status": "FAIL",
+    "last_verified": "2026-06-25T05:44:18.920790+00:00",
     "listing_roles": {
       "COLOR_KAWAII_COLORING_PAGES_PRINTABLE": "listing_id"
     },
