@@ -1613,3 +1613,28 @@ vault to confirm the wiring works (test entry removed afterward — not a real d
 keep it). Did not re-run a live Playwright HUD pass this cycle (out of scope, deferred along with the
 22+ standalone OAuth scripts that ignore `refresh_access_token()`'s return value — both deferred to a
 future cycle per Scott's choice).
+
+## 2026-06-25 — Local Relay dependency pill showing "disconnected"
+
+**Symptom:** Scott reported the live dashboard's dependency status shows the Local Relay as
+disconnected.
+
+**Root cause:** Not a bug — this is the correct, honest status when `tools/relay/frank_relay.py`
+isn't actively running. That script is intentionally a manual process meant to run on Scott's own
+computer (not on Railway) — it opens a websocket to the Hub's `/ws/relay` endpoint so Frank can
+execute `local_*` tool calls on Scott's real filesystem after Action Center approval. Server-side,
+`_relay_ws` (`main.py` ~line 564) is a pure in-memory variable, set only while a websocket client is
+actually connected (set in the `@app.websocket("/ws/relay")` handler ~line 7451, cleared to `None` on
+disconnect ~line 7477-7478). `_relay_dependency_status()` (~line 6808) reports `open`
+(unhealthy/"disconnected") whenever `_relay_ws is None` or the kill switch is engaged — its own detail
+string for this exact case is literally `"no relay connected"` (~line 6879). There is no Railway-side
+process that auto-starts the relay; if it has never been started on Scott's machine, "disconnected" is
+expected, not an outage.
+
+**Fix (or note):** No code change — confirmed via code read, not guessed. Gave Scott the 3-step setup:
+`pip install websockets`; create a `.env` next to `frank_relay.py` with `FRANK_RELAY_URL` (wss://
++ Railway host + `/ws/relay`) and `APP_SECRET_TOKEN` (same token the dashboard uses); run
+`python tools/relay/frank_relay.py` and leave it running (auto-reconnects every 5s, heartbeats every
+20s — the dashboard pill should flip to connected within seconds of a successful connection). Awaiting
+Scott's confirmation on whether this is first-time setup or a previously-working connection that
+dropped, to know if further investigation (network/token) is warranted.
