@@ -156,6 +156,14 @@ CREATE TABLE IF NOT EXISTS circuit_breaker_state (
   opened_at       TEXT,
   updated_at      TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS user_profile (
+  id         INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
+  name       TEXT,
+  email      TEXT,
+  phone      TEXT,
+  timezone   TEXT,
+  updated_at TEXT
+);
 """
 
 
@@ -912,6 +920,37 @@ def set_kill_switch(active: bool, by: str = "scott") -> None:
         conn.commit()
     finally:
         conn.close()
+
+
+def get_user_profile() -> dict:
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute("SELECT * FROM user_profile WHERE id=1").fetchone()
+        if r:
+            return dict(r)
+        return {"id": 1, "name": None, "email": None, "phone": None, "timezone": None, "updated_at": None}
+    finally:
+        conn.close()
+
+
+def save_user_profile(name: str | None, email: str | None, phone: str | None, tz: str | None) -> dict:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO user_profile (id, name, email, phone, timezone, updated_at)
+               VALUES (1, ?, ?, ?, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET
+                 name=excluded.name, email=excluded.email, phone=excluded.phone,
+                 timezone=excluded.timezone, updated_at=excluded.updated_at""",
+            (name, email, phone, tz, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return get_user_profile()
 
 
 # ── Agent heartbeats (live-status registry) — each of the 5 real background

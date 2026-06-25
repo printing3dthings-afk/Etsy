@@ -50,6 +50,11 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
   --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#5d7891;
   --green:#4caf82;--red:#e05555;--amber:#e0a83a;
 }
+/* ── Color themes — override accent vars only; every component already reads
+   var(--cyan)/var(--gold) so no other CSS changes when a theme is switched ── */
+html.theme-gold{--cyan:#e8c96a;--cyan2:#f5dfa0;--gold:#3ad6ff;--gold2:#8fefff}
+html.theme-emerald{--cyan:#2dd4a7;--cyan2:#7ff5d4;--gold:#e0a83a;--gold2:#f0c66a}
+html.theme-rose{--cyan:#ff6fa8;--cyan2:#ffaecb;--gold:#e8c96a;--gold2:#f5dfa0}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;width:100%;overflow:hidden;background:var(--bg)}
 body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
@@ -83,6 +88,10 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
   letter-spacing:.5px;white-space:nowrap}
 .status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);
   box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;flex-shrink:0}
+.status-pill.degraded{color:var(--amber);border-color:rgba(224,168,58,.4);background:rgba(224,168,58,.08)}
+.status-pill.degraded .dot{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.status-pill.error{color:var(--red);border-color:rgba(224,85,85,.4);background:rgba(224,85,85,.08)}
+.status-pill.error .dot{background:var(--red);box-shadow:0 0 8px var(--red)}
 .hdr-bar .clockwrap{text-align:center}
 .hdr-bar .clockwrap .d{font-size:10px;color:var(--muted);letter-spacing:.5px}
 .hdr-bar .clockwrap .t{font-size:17px;color:var(--cyan2);font-weight:700;letter-spacing:1px}
@@ -541,7 +550,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   </div>
 
   <div class="hdr-bar">
-    <div class="status-pill"><span class="dot"></span>SYSTEM STATUS &nbsp;● OPTIMAL</div>
+    <div class="status-pill" id="system-status-pill"><span class="dot"></span>SYSTEM STATUS &nbsp;● <span id="system-status-label">OPTIMAL</span></div>
     <div class="clockwrap"><div class="d" id="dt">--</div><div class="t" id="clk">--:--</div></div>
     <div class="right">
       <input class="search" id="global-search" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
@@ -857,7 +866,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   <!-- ══════════ SETTINGS — voice prefs (localStorage) + connections summary + about ══════════ -->
   <div class="screen" id="screen-settings">
     <div class="panel brk" style="height:100%;overflow-y:auto">
-      <div class="panel-title">Settings <span class="src">Voice prefs (localStorage) + /api/credentials/status + /api/etsy-tokens</span></div>
+      <div class="panel-title">Settings <span class="src">Voice prefs + theme (localStorage) + /api/account + /api/credentials/status + /api/etsy-tokens</span></div>
 
       <div class="hub-section-title">Voice</div>
       <div class="hub-card">
@@ -870,6 +879,41 @@ video{width:100%;border-radius:10px;background:#000;display:block}
           routes voice through OpenAI's paid Whisper transcription and TTS endpoints instead: it sounds more
           natural but costs API credits per use and requires internet. This toggle is shared with the one next to
           "Talk to Frank" in the bottom bar — changing either updates both.
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Appearance</div>
+      <div class="hub-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Color theme</div>
+        <div id="theme-swatch-row" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px">
+          Saved to this device only — every screen repaints instantly, no reload needed.
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">My Account</div>
+      <div class="hub-card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>
+            <input type="text" id="account-name" class="search" style="width:100%" placeholder="Scott">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Email</label>
+            <input type="email" id="account-email" class="search" style="width:100%" placeholder="you@example.com">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Phone</label>
+            <input type="text" id="account-phone" class="search" style="width:100%" placeholder="(555) 555-5555">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Timezone</label>
+            <input type="text" id="account-timezone" class="search" style="width:100%" placeholder="America/New_York">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn" onclick="saveAccountSettings()">Save</button>
+          <div id="account-save-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
 
@@ -1409,6 +1453,78 @@ function _setPremiumVoice(on) {
     cb.addEventListener('change', () => _setPremiumVoice(cb.checked));
   });
 })();
+// ── Color theme — per-device display preference, so localStorage (not the
+// backend) is the right persistence layer. Default 'cyan' matches the
+// original :root values, applied via no class on <html>. ──
+const _UI_THEMES = [
+  {name:'cyan', label:'Cyan', swatch:'#3ad6ff'},
+  {name:'gold', label:'Gold', swatch:'#e8c96a'},
+  {name:'emerald', label:'Emerald', swatch:'#2dd4a7'},
+  {name:'rose', label:'Rose', swatch:'#ff6fa8'},
+];
+function _getTheme() {
+  try { return localStorage.getItem('frankTheme') || 'cyan'; } catch(e) { return 'cyan'; }
+}
+function _setTheme(name) {
+  try { localStorage.setItem('frankTheme', name); } catch(e) {}
+  _UI_THEMES.forEach(t => document.documentElement.classList.remove('theme-'+t.name));
+  if (name !== 'cyan') document.documentElement.classList.add('theme-'+name);
+  _renderThemeSwatches();
+}
+function _renderThemeSwatches() {
+  const row = document.getElementById('theme-swatch-row');
+  if (!row) return;
+  const active = _getTheme();
+  row.innerHTML = _UI_THEMES.map(t =>
+    '<button class="act-btn" style="display:flex;align-items:center;gap:7px;'+
+    (t.name === active ? 'border-color:var(--cyan);color:var(--cyan2)' : '')+
+    '" onclick="_setTheme(\\''+t.name+'\\')">'+
+    '<span style="width:14px;height:14px;border-radius:50%;background:'+t.swatch+';flex-shrink:0;display:inline-block"></span>'+
+    t.label+(t.name === active ? ' ✓' : '')+'</button>'
+  ).join('');
+}
+(function(){
+  _setTheme(_getTheme());
+})();
+// ── My Account — durable across devices, so this is backed by /api/account
+// (a real DB row) rather than localStorage, unlike the theme preference above. ──
+async function loadAccountSettings(){
+  const nameEl = document.getElementById('account-name');
+  if(!nameEl) return;
+  try{
+    const r = await authGet('/api/account');
+    const d = await r.json();
+    nameEl.value = d.name || '';
+    document.getElementById('account-email').value = d.email || '';
+    document.getElementById('account-phone').value = d.phone || '';
+    document.getElementById('account-timezone').value = d.timezone || '';
+  }catch(e){
+    const statusEl = document.getElementById('account-save-status');
+    if(statusEl) statusEl.textContent = 'Could not load saved account info';
+  }
+}
+async function saveAccountSettings(){
+  const statusEl = document.getElementById('account-save-status');
+  const payload = {
+    name: document.getElementById('account-name').value,
+    email: document.getElementById('account-email').value,
+    phone: document.getElementById('account-phone').value,
+    timezone: document.getElementById('account-timezone').value,
+  };
+  if(statusEl) statusEl.textContent = 'Saving…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/account', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }, 15000);
+    await r.json();
+    if(statusEl) statusEl.textContent = 'Saved ✓';
+    showToast('Account info saved', 'ok');
+  }catch(e){
+    if(statusEl) statusEl.textContent = 'Save failed: '+e.message;
+  }
+}
 // ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
 // Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
 // No write-queueing here by design — todos/approvals need a live connection. ──
@@ -1792,6 +1908,32 @@ async function loadDependencyHealth(){
       el.innerHTML = '<div style="color:var(--red);font-size:11px">Dependency health offline</div>';
     }
   }
+}
+
+// ── Header status pill — derived from already-fetched agents/dependency data,
+// no extra network call. Mirrors the dep-pill open/half_open/closed semantics. ──
+function updateSystemStatusPill(){
+  const el = document.getElementById('system-status-pill');
+  const labelEl = document.getElementById('system-status-label');
+  if(!el || !labelEl) return;
+  const agentsCached = cacheGet('agents');
+  const depsCached = cacheGet('depHealth');
+  const agentsData = agentsCached ? agentsCached.data : null;
+  const depsData = depsCached ? depsCached.data : null;
+  if(!agentsData && !depsData){
+    el.className = 'status-pill';
+    labelEl.textContent = 'UNKNOWN';
+    return;
+  }
+  let state = 'optimal';
+  if(depsData && depsData.dependencies.some(d => d.state === 'open')) state = 'error';
+  if(agentsData && agentsData.agents.some(a => a.built && a.status === 'error')) state = 'error';
+  if(state !== 'error'){
+    if(depsData && depsData.dependencies.some(d => d.state === 'half_open')) state = 'degraded';
+    if(agentsData && agentsData.running_count < agentsData.total_count) state = 'degraded';
+  }
+  el.className = 'status-pill' + (state === 'optimal' ? '' : ' '+state);
+  labelEl.textContent = state.toUpperCase();
 }
 
 // ── Alert bell — real data from /api/alerts (deps + token age + agent heartbeats) ──
@@ -3529,7 +3671,7 @@ function renderSecurityPosture() {
 }
 
 function loadAll(){
-  loadAgents();
+  Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill);
   loadCredentialsAndHealth();
   loadShopPerf();
   loadQueue();
@@ -3544,9 +3686,9 @@ function loadAll(){
   renderSecurityPosture();
   loadRelayStatus();
   loadStudioVideos();
-  loadDependencyHealth();
   loadAlerts();
   loadSettingsConnectionsSummary();
+  loadAccountSettings();
 }
 loadAll();
 loadActions();

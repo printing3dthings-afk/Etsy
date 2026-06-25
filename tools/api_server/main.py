@@ -236,7 +236,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v56"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v58"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -6654,6 +6654,21 @@ async def post_etsy_tokens_endpoint(payload: dict, _token: str = Depends(_auth))
     os.environ["ETSY_REFRESH_TOKEN"] = refresh_token
     print("[etsy-tokens] adopted rotated token pair posted by CI", flush=True)
     return {"ok": True}
+
+
+@app.get("/api/account")
+async def get_account_endpoint(_token: str = Depends(_auth)):
+    """Single-row operator profile for the Settings 'My Account' card."""
+    return await asyncio.to_thread(db.get_user_profile)
+
+
+@app.post("/api/account")
+async def post_account_endpoint(payload: dict, _token: str = Depends(_auth)):
+    name = ((payload or {}).get("name") or "").strip() or None
+    email = ((payload or {}).get("email") or "").strip() or None
+    phone = ((payload or {}).get("phone") or "").strip() or None
+    tz = ((payload or {}).get("timezone") or "").strip() or None
+    return await asyncio.to_thread(db.save_user_profile, name, email, phone, tz)
 
 
 # ── Local Relay — status, kill switch, Allowed Folders ──────────────────────────
