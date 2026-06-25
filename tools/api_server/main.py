@@ -236,7 +236,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v55"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v56"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -5153,21 +5153,6 @@ async def _startup() -> None:
     asyncio.create_task(_token_sync_loop())
     asyncio.create_task(_quality_audit_loop())
     asyncio.create_task(_health_check_loop())
-
-
-@app.get("/api/history")
-async def get_history(days: int = 30, _token: str = Depends(_auth)):
-    """Daily shop snapshots (oldest-first) plus simple period deltas for trends."""
-    days = max(1, min(days, 365))
-    rows = await asyncio.to_thread(db.get_metric_history, days)
-    delta = {}
-    if len(rows) >= 2:
-        first, last = rows[0], rows[-1]
-        for k in ("revenue_30d", "active_listings", "total_sales", "total_reviews", "avg_rating"):
-            a, b = first.get(k), last.get(k)
-            if isinstance(a, (int, float)) and isinstance(b, (int, float)):
-                delta[k] = round(b - a, 2)
-    return {"days": days, "count": len(rows), "delta": delta, "snapshots": rows}
 
 
 @app.get("/api/analytics")

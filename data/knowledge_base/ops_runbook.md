@@ -1365,3 +1365,31 @@ actually opening/closing and showing correct data, the bell and briefing dropdow
 fighting each other, the grid icon's visual absence, and zero console errors. Scott should
 run the plan's verification checklist (`/root/.claude/plans/atomic-dancing-shamir.md`) once
 deployed.
+
+### 2026-06-25 — Frank/Hub wiring audit #2: `/api/history` was dead code, removed
+**Symptom:** Scott asked for another wiring audit (screen nav + backend endpoint wiring + a
+re-sweep for orphaned handlers). Direct `Grep`/`Read` cross-reference of every `@app.get/post/
+put/delete` route in `main.py` against every fetch call in `frank_hud_mockup.py` found 13
+routes with no caller in Frank; checking `_WEB_UI` (the Hub, root `/` route, `main.py` lines
+~2495-4198) and every script under `tools/` resolved 11 of the 13 — they're called from the
+Hub or from standalone automation scripts (`tools/stage_p3d_photo_approvals.py`,
+`tools/ci_refresh_etsy_secrets.py`, `tools/sync_files_to_hub.py`), not from Frank's UI.
+**Root cause / finding:** `GET /api/history` had zero callers anywhere — not in `_WEB_UI`, not
+in `frank_hud_mockup.py`, not in any `tools/`, `mobile_app/`, `town_app/`, `agents/`, or
+`commands/` file. It's superseded by `GET /api/analytics` (which `_WEB_UI` does call and which
+returns a superset of the same data — trend arrays, deltas, top-10 listings, snapshot_count).
+Reads as a route that was built then replaced without being deleted. Separately, `POST
+/api/snapshot` also has zero callers, but its own docstring says it's a manual/on-demand
+testing trigger — production snapshotting happens via the internal `_snapshot_loop()`
+background task, not this route. Scott reviewed both findings and decided: delete
+`/api/history`, leave `/api/snapshot` as-is.
+**Fix:** Archived the exact `/api/history` route block via `tools/trash.py`'s
+`archive_snippet()` (id `20260625-001`, reason: dead endpoint, superseded by `/api/analytics`)
+before deleting it from `main.py`. Bumped `_BUILD_ID` `v55`→`v56`.
+**Verified in this environment:** `python -m py_compile` clean on `main.py` and
+`frank_hud_mockup.py` both before and after the edit. Screen navigation (19 nav items ↔ 19
+screen divs ↔ 15 `showScreen()` call sites) and the previously-fixed search/briefing/grid-icon
+work were re-checked and found clean — no new dead UI elements found this pass. Full citation
+table in `/root/.claude/plans/atomic-dancing-shamir.md`.
+**Not verified — cannot be, in this sandboxed, display-less environment:** live behavior of
+anything above; this was a static-analysis audit only.
