@@ -34,6 +34,7 @@ Run:
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import shutil
@@ -210,6 +211,31 @@ def _handle_local_write_file(tool_input: dict) -> dict:
     return {"path": real, "bytes_written": len(content.encode("utf-8"))}
 
 
+def _handle_local_write_binary_file(tool_input: dict) -> dict:
+    """Counterpart to _handle_local_write_file for binary content (PDFs, ZIPs, images).
+    Not in _LOCAL_EXEC_WHITELIST or the server's _LOCAL_STAGED_TOOLS — this is only ever
+    invoked from the dashboard's direct upload action, never by the LLM, so it skips the
+    Action Center approval gate by design."""
+    path = (tool_input or {}).get("path", "")
+    content_b64 = (tool_input or {}).get("content_b64")
+    if not _is_allowed(path):
+        return {"error": f"path not in an Allowed Folder: {path}"}
+    if content_b64 is None:
+        return {"error": "content_b64 is required"}
+    try:
+        data = base64.b64decode(content_b64)
+    except Exception:
+        return {"error": "content_b64 is not valid base64"}
+    real = _resolve_real(path)
+    try:
+        os.makedirs(os.path.dirname(real), exist_ok=True)
+        with open(real, "wb") as f:
+            f.write(data)
+    except OSError as exc:
+        return {"error": str(exc)}
+    return {"path": real, "bytes_written": len(data)}
+
+
 def _handle_local_delete(tool_input: dict) -> dict:
     path = (tool_input or {}).get("path", "")
     if not _is_allowed(path):
@@ -264,6 +290,7 @@ _TOOL_HANDLERS = {
     "local_read_file": _handle_local_read_file,
     "local_list_dir": _handle_local_list_dir,
     "local_write_file": _handle_local_write_file,
+    "local_write_binary_file": _handle_local_write_binary_file,
     "local_delete": _handle_local_delete,
     "local_exec": _handle_local_exec,
 }
@@ -342,7 +369,13 @@ async def _run_once() -> None:
     # can set a real Authorization header on the handshake instead of putting the
     # long-lived APP_TOKEN in the URL (where it'd land in server access logs).
     headers = {"Authorization": f"Bearer {APP_TOKEN}"}
-    async with websockets.connect(RELAY_URL, additional_headers=headers, ping_interval=20, ping_timeout=20) as ws:
+    # max_size bumped from the websockets library's ~1MB default: a base64-encoded
+    # binary upload (see local_write_binary_file) inflates a 30MB file to ~40MB inside
+    # the JSON tool_request envelope the relay receives.
+    async with websockets.connect(
+        RELAY_URL, additional_headers=headers, ping_interval=20, ping_timeout=20,
+        max_size=64 * 1024 * 1024,
+    ) as ws:
         print(f"[relay] connected to {RELAY_URL}", flush=True)
         await asyncio.gather(_receive_loop(ws), _heartbeat_loop(ws))
 

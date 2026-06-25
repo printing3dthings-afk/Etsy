@@ -1677,3 +1677,29 @@ a separate follow-up if Scott needs binary files there.
 
 **Open question for Scott:** whether the current Railway plan/tier supports a second service + a
 second Volume — can't be verified from this environment.
+
+### 2026-06-25 — Solved the binary-file gap: dashboard upload straight into the relay workspace
+**Context:** the relay-deployment entry above flagged that there was no way to get binary files
+(PDFs, ZIPs, images) into the relay's `/data/workspace` — `local_write_file` only ever handled text,
+and `/api/files/upload`/`sync_files_to_hub.py` both write to the main service's own `/data/files`
+volume, never to the relay's. Scott confirmed (when asked) that any new upload widget should always
+push straight to the relay workspace — no destination picker, since Hub storage already has its own
+batch path via `sync_files_to_hub.py`.
+**Fix:**
+- `tools/relay/frank_relay.py` — new `local_write_binary_file` handler (base64-decodes `content_b64`,
+  writes bytes, same `_is_allowed()` realpath check as every other handler). Registered in
+  `_TOOL_HANDLERS`. Bumped the relay's own `websockets.connect(max_size=...)` to 64MB — a base64-encoded
+  30MB upload inflates to ~40MB inside the JSON `tool_request` envelope the relay receives.
+- `tools/api_server/main.py` — new `POST /api/relay/upload?path=...` endpoint: takes the raw body
+  (same convention as `/api/files/upload`), base64-encodes it, dispatches to the relay via
+  `_dispatch_to_relay("local_write_binary_file", ..., timeout=90.0)`, returns 502 if the relay is
+  offline. Reuses the existing `_MAX_UPLOAD_BYTES` (30MB) ceiling.
+- Dashboard: new "Upload File to Relay Workspace" card on the Relay panel (file picker + destination
+  path input, prefilled to `/data/workspace/<filename>`) and an `uploadToRelay()` JS function.
+- `local_write_binary_file` is deliberately **not** added to `_LOCAL_STAGED_TOOLS` — it's only ever
+  triggered by this direct human-initiated dashboard action, never by an LLM tool call, so it skips
+  the Action Center approval gate by design (same reasoning as `addAllowedFolder()`).
+**Verification:** `py_compile` clean on both files; manual confirmation still needed once the relay
+service is live — upload a small PDF to `/data/workspace/test.pdf`, list-dir to confirm byte count,
+restart the Railway service and re-check the file persisted on the Volume, and confirm an upload to a
+path outside Allowed Folders (e.g. `/etc/passwd`) is rejected by `_is_allowed()`.

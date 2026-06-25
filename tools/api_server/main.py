@@ -14,6 +14,7 @@ Deploy to Railway / Render: set env vars + point start command to this file.
 from __future__ import annotations
 
 import asyncio
+import base64
 import io
 import json
 import mimetypes
@@ -269,7 +270,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v61"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v62"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -4044,6 +4045,16 @@ async function _renderRelayPanel() {
       '<button onclick="addAllowedFolder()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Add</button>'+
       '</div>';
     html += '</div>';
+
+    html += '<div class="section-title">Upload File to Relay Workspace</div><div class="card">';
+    html += '<input id="relay-upload-input" type="file" onchange="_relayUploadPicked()" style="width:100%;color:var(--text);font-size:13px">'+
+      '<div style="display:flex;gap:8px;margin-top:10px">'+
+      '<input id="relay-upload-path" type="text" placeholder="/data/workspace/yourfile.pdf" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+      '<button onclick="uploadToRelay()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Upload</button>'+
+      '</div>'+
+      '<div id="relay-upload-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>'+
+      '</div>';
+
     html += '<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px 0">'+
       'The relay re-resolves every path with realpath before allowing access — this list is enforced on Scott\\'s machine, not just the server.'+
       '</div>';
@@ -4087,6 +4098,36 @@ async function removeAllowedFolder(id) {
     if (!r.ok) { const d = await r.json().catch(function(){return {};}); throw new Error(d.detail||'HTTP '+r.status); }
   } catch(e) { alert('Could not remove folder: ' + (e.message||e)); }
   _renderRelayPanel();
+}
+function _relayUploadPicked() {
+  var input = document.getElementById('relay-upload-input');
+  var pathInput = document.getElementById('relay-upload-path');
+  var file = input && input.files[0];
+  if (file && pathInput && !pathInput.value) pathInput.value = '/data/workspace/' + file.name;
+}
+async function uploadToRelay() {
+  var input = document.getElementById('relay-upload-input');
+  var pathInput = document.getElementById('relay-upload-path');
+  var status = document.getElementById('relay-upload-status');
+  var file = input.files[0];
+  if (!file) { alert('Choose a file first'); return; }
+  var path = (pathInput.value || '').trim();
+  if (!path) { alert('Destination path is required'); return; }
+  status.textContent = 'Uploading...';
+  try {
+    var res = await fetchWithTimeout(
+      BASE+'/api/relay/upload?path=' + encodeURIComponent(path),
+      { method: 'POST', headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/octet-stream' }, body: file },
+      120000
+    );
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Upload failed');
+    status.textContent = 'Uploaded ' + data.bytes_written + ' bytes to ' + data.path;
+    input.value = '';
+  } catch (e) {
+    status.textContent = '';
+    alert(e.message || e);
+  }
 }
 function _fileUrl(f, inline){
   return BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
@@ -7043,6 +7084,32 @@ async def delete_allowed_folder(folder_id: int, _token: str = Depends(_auth)):
         raise HTTPException(status_code=404, detail="Folder not found")
     await asyncio.to_thread(db.log_activity, "scott", "allowed_folder_remove", str(folder_id), None, "ok")
     return {"ok": True}
+
+
+@app.post("/api/relay/upload")
+async def upload_to_relay(request: Request, path: str, _token: str = Depends(_auth)):
+    """Push a raw binary file straight into the relay's workspace over the existing
+    /ws/relay websocket — base64-encoded, since the relay protocol is JSON-only.
+
+    Direct human-initiated dashboard action only, never an LLM tool call — local_write_binary_file
+    is intentionally not in _LOCAL_STAGED_TOOLS, so it skips the Action Center approval gate.
+    Body is the raw bytes (Content-Type application/octet-stream), path is a query param."""
+    path = (path or "").strip()
+    if not path:
+        raise HTTPException(status_code=400, detail="path query param is required")
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty body")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+    content_b64 = base64.b64encode(body).decode("ascii")
+    result = await _dispatch_to_relay(
+        "local_write_binary_file", {"path": path, "content_b64": content_b64}, timeout=90.0,
+    )
+    if "error" in result:
+        raise HTTPException(status_code=502, detail=result["error"])
+    await asyncio.to_thread(db.log_activity, "scott", "relay_upload", path, None, "ok")
+    return {"ok": True, "path": result.get("path"), "bytes_written": result.get("bytes_written")}
 
 
 # ── Shared to-do list (Scott + Frank, always visible on the dashboard) ──────────────
