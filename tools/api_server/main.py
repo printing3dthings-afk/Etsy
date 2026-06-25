@@ -269,7 +269,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v59"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v60"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -1883,8 +1883,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 try:
                     listing_for_baseline = EtsyAPIClient().get_listing(int(ti["listing_id"]))
                     payload["_state_at_staging"] = listing_for_baseline.get("state")
-                except Exception:
-                    pass
+                except Exception as exc:
+                    print(f"[stage:{name}] baseline fetch for listing {ti['listing_id']} failed (non-blocking): {exc}", flush=True)
             if ti.get("action_type") == "publish_listing" and ti.get("listing_id"):
                 # Capture-now-render-later snapshot for the Detailed Action Review
                 # mock listing preview — taken at staging time so the card Scott
@@ -2061,8 +2061,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             payload = {"listing_id": lid, "new_state": new_state}
             try:
                 payload["_state_at_staging"] = EtsyAPIClient().get_listing(int(lid)).get("state")
-            except Exception:
-                pass
+            except Exception as exc:
+                print(f"[stage:{name}] baseline fetch for listing {lid} failed (non-blocking): {exc}", flush=True)
             candidate = {"type": "toggle_listing_state", "payload": payload}
             ok, msg = _validate_staged_action(candidate)
             if not ok:
@@ -2226,8 +2226,13 @@ def _find_business_gaps_impl() -> dict:
                     "detail": f"Opened at {cb.get('opened_at')}",
                     "action": f"Diagnose {dep} connectivity before relying on anything that depends on it.",
                 })
-        except Exception:
-            pass
+        except Exception as exc:
+            gaps.append({
+                "gap_type": "diagnostic_error",
+                "urgency": "low",
+                "gap": f"Could not read circuit breaker state for '{dep}': {exc}",
+                "action": "Check that the database is reachable.",
+            })
 
     try:
         pending = db.list_actions(status="pending", limit=200)
@@ -2238,8 +2243,13 @@ def _find_business_gaps_impl() -> dict:
                 "gap": f"{len(pending)} staged actions awaiting Scott's approval in the Action Center",
                 "action": "Review the Action Center -- a growing backlog delays publishing.",
             })
-    except Exception:
-        pass
+    except Exception as exc:
+        gaps.append({
+            "gap_type": "diagnostic_error",
+            "urgency": "low",
+            "gap": f"Could not read pending actions: {exc}",
+            "action": "Check that the database is reachable.",
+        })
 
     # Honest gap, not a guess: no usage tracking exists yet for read_knowledge_base_doc calls,
     # so "under-used KB docs" can only be reported as an inventory, not real usage data.
@@ -2252,8 +2262,13 @@ def _find_business_gaps_impl() -> dict:
             "detail": f"{len(docs)} docs available; cannot tell which are actually consulted vs ignored.",
             "action": "Log each read_knowledge_base_doc call (filename, timestamp) if this becomes worth tracking.",
         })
-    except Exception:
-        pass
+    except Exception as exc:
+        gaps.append({
+            "gap_type": "diagnostic_error",
+            "urgency": "low",
+            "gap": f"Could not read knowledge base docs: {exc}",
+            "action": "Check that the database is reachable.",
+        })
 
     urgency_rank = {"low": 0, "medium": 1, "high": 2, "critical": 3}
     gaps.sort(key=lambda g: -urgency_rank.get(g.get("urgency"), 0))
@@ -5240,8 +5255,8 @@ async def get_analytics(days: int = 30, _token: str = Depends(_auth)):
             for l in top
             if l.get("views", 0) > 0
         ]
-    except Exception:
-        pass
+    except Exception as exc:
+        print(f"[analytics] top_listings enrichment failed (non-blocking): {exc}", flush=True)
 
     return {
         "days": days,
@@ -6766,18 +6781,19 @@ async def _agents_status_snapshot() -> dict:
         "updated_at": relay_state.get("last_heartbeat"),
     })
 
+    cc_hb = heartbeats.get("context_compactor")
     summaries = await asyncio.to_thread(db.list_chat_summaries)
     agents.append({
         "name": "context_compactor",
         "label": "Context Compactor",
         "built": True,
-        "status": "ok",
-        "detail": (
+        "status": cc_hb["status"] if cc_hb else "ok",
+        "detail": cc_hb["detail"] if cc_hb else (
             f"{len(summaries)} session(s) compacted; most recent at {summaries[0]['updated_at']}"
             if summaries
             else "Built — no session has crossed the compaction threshold yet"
         ),
-        "updated_at": summaries[0]["updated_at"] if summaries else None,
+        "updated_at": cc_hb["updated_at"] if cc_hb else (summaries[0]["updated_at"] if summaries else None),
     })
 
     running = sum(1 for a in agents if a["built"] and a["status"] != "error")
@@ -7014,6 +7030,14 @@ async def post_allowed_folder(payload: dict, _token: str = Depends(_auth)):
 
 @app.delete("/api/relay/allowed-folders/{folder_id}")
 async def delete_allowed_folder(folder_id: int, _token: str = Depends(_auth)):
+    from tools.trash import archive_snippet
+    folders = await asyncio.to_thread(db.list_allowed_folders)
+    row = next((f for f in folders if f["id"] == folder_id), None)
+    if row:
+        await asyncio.to_thread(
+            archive_snippet, "db:allowed_folders", json.dumps(row, default=str),
+            f"allowed folder removed via dashboard (id={folder_id})",
+        )
     ok = await asyncio.to_thread(db.remove_allowed_folder, folder_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Folder not found")
@@ -7054,6 +7078,14 @@ async def toggle_todo(todo_id: int, payload: dict, _token: str = Depends(_auth))
 
 @app.delete("/api/todos/{todo_id}")
 async def remove_todo(todo_id: int, _token: str = Depends(_auth)):
+    from tools.trash import archive_snippet
+    todos = await asyncio.to_thread(db.list_todos)
+    row = next((t for t in todos if t["id"] == todo_id), None)
+    if row:
+        await asyncio.to_thread(
+            archive_snippet, "db:todos", json.dumps(row, default=str),
+            f"todo deleted via dashboard (id={todo_id})",
+        )
     ok = await asyncio.to_thread(db.delete_todo, todo_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -7716,8 +7748,13 @@ def _maybe_compact_chat_history(session_id: str) -> None:
             f"into a {len(new_summary)}-char summary through id {new_through_id}",
             flush=True,
         )
+        db.set_agent_heartbeat(
+            "context_compactor", "Context Compactor", "ok",
+            f"folded {len(to_summarize)} messages into a {len(new_summary)}-char summary",
+        )
     except Exception as exc:
         print(f"[context-compactor] compaction failed for session {session_id}: {exc}", flush=True)
+        db.set_agent_heartbeat("context_compactor", "Context Compactor", "error", str(exc)[:300])
 
 
 @app.websocket("/ws/chat")

@@ -1574,3 +1574,42 @@ forgotten: `context_compactor`'s heartbeat is still hardcoded `"ok"` regardless 
 failures, and `tools/trash.py` remains a manual-only safety net (no autonomous code path deletes
 files today, so this is a judgment call, not a live bug). Scott chose to scope this cycle to the
 circuit breakers only.
+
+## 2026-06-25 — Heartbeat honesty, delete safety net, silent-failure logging (7/10 → 9/10 cycle)
+
+Follow-up to the circuit-breaker cycle above — closes the two items deferred there, plus one more
+gap from the same 3-agent audit (silently-swallowed exceptions). Three pure honesty/observability
+fixes, zero behavior change to anything Scott or a buyer would notice.
+
+**Fix 1 — `context_compactor` heartbeat now reports real success/failure.**
+`_maybe_compact_chat_history()` now calls `db.set_agent_heartbeat("context_compactor", ...)` on both
+its success path (after the existing success `print()`) and its `except Exception` path, mirroring
+the pattern the 5 real background loops already use via `_run_loop_iteration()`.
+`_agents_status_snapshot()`'s `context_compactor` block now reads `heartbeats.get("context_compactor")`
+instead of hardcoding `"status": "ok"` — falls back to the existing friendly cold-start message only
+when no heartbeat row exists yet (so today's UI is unchanged until a real compaction run happens).
+
+**Fix 2 — `tools/trash.py` wired into the 2 real DB-delete paths.**
+`delete_allowed_folder` and `remove_todo` (both in `main.py`) now fetch the row via the existing
+`list_allowed_folders()`/`list_todos()` functions and call `archive_snippet()` (JSON-serialized row)
+before deleting, labeled `db:allowed_folders`/`db:todos`. Fetch-then-delete ordering means the 404
+path is unaffected — if the row is already gone, the archive call is skipped and the existing 404
+falls through unchanged. This was the last gap in CLAUDE.md's "nothing we delete should be
+unrecoverable" rule — it was previously a manual convention with no autonomous backend enforcement.
+
+**Fix 3 — logged the 6 silently-swallowed exceptions found in the same audit** (all confirmed
+best-effort/non-critical paths — fix is visibility only, no control-flow change):
+- 2 sites in `_execute_agent_tool()` (staging-time baseline fetch for `publish_listing` and
+  `toggle_listing_state`) — added a one-line print instead of a bare `pass`.
+- 3 sites in `_find_business_gaps_impl()` (circuit breaker state check, pending-actions backlog,
+  KB docs inventory) — these broke the function's own established convention (two sibling blocks
+  already append a `"diagnostic_error"` gap entry on failure instead of a bare log line); made all 3
+  consistent with that existing pattern so Scott sees the failure on the Business Gaps screen.
+- 1 site in `get_analytics()` (live `top_listings` enrichment, 15s-timeout Etsy call) — added a print
+  on failure instead of silently returning an empty list with no trace.
+
+**Verified:** `py_compile` clean; manually ran `archive_snippet()` end-to-end against the live trash
+vault to confirm the wiring works (test entry removed afterward — not a real deletion, no need to
+keep it). Did not re-run a live Playwright HUD pass this cycle (out of scope, deferred along with the
+22+ standalone OAuth scripts that ignore `refresh_access_token()`'s return value — both deferred to a
+future cycle per Scott's choice).
