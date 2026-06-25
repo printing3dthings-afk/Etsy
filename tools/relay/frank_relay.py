@@ -2,12 +2,20 @@
 """
 Frank Local Relay — Step 1 skeleton (sub-step 1c)
 
-Runs on Scott's own computer, not on Railway. Connects to the Hub's /ws/relay
-WebSocket and executes Frank's local_* tool calls there, returning results into
-the same chat turn. The relay is intentionally "dumb" — Frank's hands/ears, not
-a second brain. It owns no conversation and makes no decisions about what to
-run; it only executes what the server asks, after its own independent safety
-checks (kill switch, Allowed Folders realpath check).
+Connects to the Hub's /ws/relay WebSocket and executes Frank's local_* tool
+calls there, returning results into the same chat turn. The relay is
+intentionally "dumb" — Frank's hands/ears, not a second brain. It owns no
+conversation and makes no decisions about what to run; it only executes what
+the server asks, after its own independent safety checks (kill switch,
+Allowed Folders realpath check).
+
+Two supported deployment modes, same script, no code changes needed:
+  1. Scott's own computer — gives Frank access to Scott's local filesystem.
+     Run manually whenever Frank needs that machine's files.
+  2. A dedicated always-on Railway service — gives Frank a persistent cloud
+     workspace (its own Allowed Folder on its own Railway Volume) that's
+     connected 24/7, independent of whether any laptop is open. See
+     tools/relay/Dockerfile for the container build used by that service.
 
 Step 1 scope: local_read_file and local_list_dir only (instant, read-only).
 local_write_file / local_delete / local_exec / local_speak are added in

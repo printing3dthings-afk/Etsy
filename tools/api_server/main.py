@@ -269,7 +269,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v60"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v61"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -4040,7 +4040,7 @@ async function _renderRelayPanel() {
       });
     }
     html += '<div style="display:flex;gap:8px;margin-top:12px">'+
-      '<input id="relay-folder-input" type="text" placeholder="C:\\\\Users\\\\Scott\\\\frank_sandbox" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+      '<input id="relay-folder-input" type="text" placeholder="/data/workspace" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
       '<button onclick="addAllowedFolder()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Add</button>'+
       '</div>';
     html += '</div>';

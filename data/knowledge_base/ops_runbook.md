@@ -1638,3 +1638,42 @@ expected, not an outage.
 20s — the dashboard pill should flip to connected within seconds of a successful connection). Awaiting
 Scott's confirmation on whether this is first-time setup or a previously-working connection that
 dropped, to know if further investigation (network/token) is warranted.
+
+## 2026-06-25 — Local Relay deployed as a second, always-on Railway service
+
+**Follow-up to the entry above.** Scott wants Frank's filesystem tools available "from anywhere,"
+without depending on his laptop being open and running `frank_relay.py` manually. Confirmed via code
+read that the relay script has no hard dependency on Scott's machine (no hardcoded paths, no
+OS-specific calls, no machine-identity coupling — just a portable asyncio websocket client gated by
+the Allowed Folders list it polls from the Hub every 30s). Scott chose: deploy it as a **new, second
+Railway service** in the same project (not a separate VPS), with a **fresh empty cloud workspace**
+folder (not a mirror of his laptop's files).
+
+**Code changes this cycle:**
+- Added `tools/relay/Dockerfile` (no `EXPOSE`/healthcheck — this is an outbound-only websocket
+  client, never an HTTP server) and `tools/relay/requirements.txt` (`websockets`, `psutil` —
+  dedicated, not the bloated root `requirements.txt`).
+- Updated `frank_relay.py`'s module docstring — it previously asserted "Runs on Scott's own computer,
+  not on Railway," which was no longer true; now documents both supported deployment modes.
+- Fixed a pre-existing seeded placeholder: `db.ensure_default_sandbox_folder()` (`db.py`) seeds an
+  Allowed Folder row the first time the table is empty, and was seeding the Windows-style
+  `C:\Users\<you>\frank_sandbox` — almost certainly already seeded into the live production DB.
+  Harmless on Linux (backslash is just a character there) but confusing clutter. Changed the seed
+  default and the dashboard's input placeholder (`main.py`) to `/data/workspace`, the real path the
+  new relay service will use.
+
+**Manual steps required outside the repo (Railway dashboard, Scott):** add a second service
+(e.g. `frank-relay`) in the existing project pointed at this repo, with service variable
+`RAILWAY_DOCKERFILE_PATH=tools/relay/Dockerfile`; attach a new Volume mounted at `/data`; set env vars
+`FRANK_RELAY_URL` (the **main** service's `wss://.../ws/relay` URL — not the new service's own) and
+`APP_SECRET_TOKEN` (same value as the main service). After it connects, remove the old seeded
+Windows-path Allowed Folder via the dashboard and add `/data/workspace` as the real one.
+
+**Known gap, flagged not solved:** no existing path gets *binary* files (PDFs, ZIPs, images) into the
+new workspace — `local_write_file` only handles text content, and the existing file-upload paths
+(`/api/files/upload`, `tools/sync_files_to_hub.py`) write to the main service's own `/data/files`
+volume, a different Railway volume on a different service. Text-file workflows are unaffected; this is
+a separate follow-up if Scott needs binary files there.
+
+**Open question for Scott:** whether the current Railway plan/tier supports a second service + a
+second Volume — can't be verified from this environment.

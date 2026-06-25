@@ -820,7 +820,7 @@ def ensure_default_sandbox_folder() -> None:
     """Seed the default sandbox folder on first run if the allow-list is empty."""
     init_db()
     if not list_allowed_folders():
-        add_allowed_folder(r"C:\Users\<you>\frank_sandbox", added_by="system")
+        add_allowed_folder("/data/workspace", added_by="system")
 
 
 # ── Activity log (permanent, append-only — separate from action_queue, which
