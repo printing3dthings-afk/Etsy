@@ -73,6 +73,28 @@ class EtsyAPIError(Exception):
         super().__init__(f"Etsy API {status}: {message}")
 
 
+# Optional circuit-breaker hook, set once at server boot via set_circuit_breaker_hook().
+# Duck-typed (allow_request/record_success/record_failure) so this module never imports
+# tools/api_server/resilience.py or db.py -- standalone scripts that use EtsyAPIClient
+# outside the FastAPI server never call the setter, so this stays None and behavior is
+# unchanged for them.
+_circuit_breaker_hook = None
+
+
+def set_circuit_breaker_hook(hook) -> None:
+    """Route every EtsyAPIClient._request() call through `hook` for breaker
+    gating/recording. Pass None to disable."""
+    global _circuit_breaker_hook
+    _circuit_breaker_hook = hook
+
+
+# Etsy status codes that indicate the dependency itself is unhealthy (rate limit /
+# server-side) -- mirrors resilience.py's _RETRYABLE_ETSY_STATUSES. A clean 4xx (400,
+# 404, etc.) means Etsy responded correctly and our request was wrong, so it must not
+# trip the breaker.
+_BREAKER_TRIP_STATUSES = {403, 429, 500, 502, 503}
+
+
 class FileContentError(Exception):
     """Raised when a digital file fails the pre-upload content gate.
 
@@ -356,6 +378,25 @@ class EtsyAPIClient:
         return urllib.request.Request(url, data=data, headers=headers, method=method)
 
     def _request(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
+        """Thin gate around `_request_impl` -- consults the circuit-breaker hook
+        (if one was set by main.py at boot) before the call and records the
+        outcome after, so a real Etsy outage shows up in /api/system/dependencies
+        instead of always reporting closed/healthy."""
+        cb = _circuit_breaker_hook
+        if cb is not None and not cb.allow_request():
+            raise EtsyAPIError(0, "circuit breaker open for etsy_api -- skipping call until cooldown elapses")
+        try:
+            result = self._request_impl(method, path, params, body)
+        except EtsyAPIError as e:
+            if cb is not None and (e.status == 0 or e.status in _BREAKER_TRIP_STATUSES):
+                cb.record_failure()
+            raise
+        else:
+            if cb is not None:
+                cb.record_success()
+            return result
+
+    def _request_impl(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
         url = f"{BASE_URL}/{path.lstrip('/')}"
         if params:
             url = f"{url}?{urllib.parse.urlencode(params)}"

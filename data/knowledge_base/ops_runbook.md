@@ -1525,3 +1525,52 @@ Daily listing_integrity_check found 163 FAIL / 2 WARN out of 172 listings audite
     ✗ [photo_count] Only 5 photos (want ≥8)
 
   [4509193231] DP1058 — Sage Lavender Botanical Print, Dusty Rose W
+
+## 2026-06-25 — Circuit breakers wired for real (were defined but never instantiated)
+
+**Symptom:** `tools/api_server/resilience.py` has a complete DB-backed `CircuitBreaker` class, but
+nothing in `main.py` ever instantiated or called it. `/api/system/dependencies` (the endpoint the
+Dependency Health pills and status pill read) only ever read the `circuit_breaker_state` table —
+nothing ever wrote a non-default row, so `etsy_api`, `anthropic_api`, and `relay` always reported
+`closed`/healthy, even during a real outage. Found during a full-disclosure audit Scott requested.
+
+**Root cause:** the breaker class existed in isolation; no caller wired it into a real call path.
+
+**Fix:**
+1. `tools/etsy_api.py` — added an optional, duck-typed `_circuit_breaker_hook` (default `None`) +
+   `set_circuit_breaker_hook()`. Split `_request()` into a thin gate (checks `allow_request()`,
+   records success/failure) wrapping the renamed `_request_impl()` (unchanged retry/refresh logic).
+   Only network errors (`status==0`) and 403/429/500/502/503 trip the breaker — a clean 400/404
+   means Etsy responded correctly and our request was wrong, not a dependency-health signal. The
+   hook stays `None` for standalone scripts that import `etsy_api.py` outside the FastAPI server
+   (verified: `set_circuit_breaker_hook` never called → zero behavior change for them). `main.py`'s
+   `_startup()` now calls `etsy_api.set_circuit_breaker_hook(CircuitBreaker("etsy_api", db_module=db))`.
+2. `anthropic_api` has no single chokepoint (7 call sites across `main.py`), so added a shared
+   `_anthropic_breaker` + `_anthropic_create(client, **kwargs)` helper; trips only on
+   `APIConnectionError`/`RateLimitError`/`InternalServerError` (genuine infra failure, not a bad
+   request/key). Migrated all 6 synchronous `messages.create()` call sites to it. The 7th site
+   (`/ws/chat`'s streaming `messages.stream()` call in `_run_agent_turn`) doesn't fit that helper's
+   shape — it's a context manager iterated chunk-by-chunk in a worker thread — so it's gated inline
+   on the same shared breaker instead (`allow_request()` before the `with` block, `record_failure()`/
+   `record_success()` around it). This was the highest-volume real Anthropic consumer (every chat
+   turn), so leaving it unwired would have defeated most of the point of the fix.
+3. `relay` is a websocket connection, not a retry/backoff dependency, so no breaker was added for it
+   — `circuit_breaker_state` was simply the wrong data source. Added `_relay_dependency_status()`,
+   reusing the same `_relay_ws` + `db.get_relay_state()` signal `_agents_status_snapshot()` already
+   read correctly, mapped into the dependency-pill vocabulary (`closed` when connected and not
+   killed; `open` when the kill switch is engaged or the relay is disconnected — offline is a real
+   outage, not a healthy default). Both `/api/system/dependencies` and `/api/alerts` now special-case
+   `relay` through this helper instead of querying `circuit_breaker_state` for it.
+
+**Verified:** `py_compile` clean on both files; a standalone import of `etsy_api.py` with no hook set
+behaves identically to before; a simulated 5x Etsy 503 against a fake DB module confirmed the breaker
+opens after 3 consecutive failures and correctly rejects further calls until cooldown; a simulated 5x
+clean 404 confirmed it never trips the breaker; a simulated success after prior failures confirmed it
+resets to `closed`/0. Did not yet live-test against the real Etsy/Anthropic APIs or a real relay
+disconnect (out of scope for the local container — no live relay/Railway process here).
+
+**Scope note:** two lower-severity findings from the same audit were explicitly deferred, not
+forgotten: `context_compactor`'s heartbeat is still hardcoded `"ok"` regardless of real compaction
+failures, and `tools/trash.py` remains a manual-only safety net (no autonomous code path deletes
+files today, so this is a judgment call, not a live bug). Scott chose to scope this cycle to the
+circuit breakers only.

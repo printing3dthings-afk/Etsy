@@ -54,8 +54,41 @@ import openai
 import db  # local persistence layer (tools/api_server/db.py)
 import seasonal_keywords  # noqa: E402
 import tax_compliance_tools  # noqa: E402
+import etsy_api
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
-from resilience import classify_tool_exception, retry_with_backoff, TransientToolError  # noqa: E402
+from resilience import (  # noqa: E402
+    classify_tool_exception,
+    retry_with_backoff,
+    TransientToolError,
+    CircuitBreaker,
+    CircuitBreakerOpenError,
+)
+
+# Shared breaker for every Anthropic call site -- main.py has no single chokepoint
+# analogous to EtsyAPIClient._request(), so each of the ~7 call sites routes through
+# _anthropic_create() below instead.
+_anthropic_breaker = CircuitBreaker("anthropic_api", db_module=db)
+
+
+def _anthropic_create(client: "anthropic.Anthropic", **kwargs):
+    """Routes an Anthropic messages.create() call through the shared circuit
+    breaker so a real outage shows up in /api/system/dependencies instead of
+    always reporting closed/healthy. Trips only on genuine transient infra
+    errors (connection failure, rate limit, 5xx) -- a 400/401/403 means
+    Anthropic responded and our request or key was the problem, not a
+    dependency-health signal."""
+    if not _anthropic_breaker.allow_request():
+        raise CircuitBreakerOpenError(
+            "circuit breaker 'anthropic_api' is open -- skipping call until cooldown elapses"
+        )
+    try:
+        result = client.messages.create(**kwargs)
+    except (anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.InternalServerError):
+        _anthropic_breaker.record_failure()
+        raise
+    else:
+        _anthropic_breaker.record_success()
+        return result
 
 
 def _reconcile_etsy_tokens() -> None:
@@ -236,7 +269,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v58"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v59"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -899,7 +932,8 @@ def _summarize_and_rotate_kb_file(
 
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
-        msg = client.messages.create(
+        msg = _anthropic_create(
+            client,
             model="claude-haiku-4-5-20251001",
             max_tokens=2000,
             messages=[{
@@ -2475,7 +2509,8 @@ def _generate_tags_for_listings(listings: list[dict], reason: str = "") -> list[
                 f"fix this specifically:\n{reason}"
             )
 
-        msg = client.messages.create(
+        msg = _anthropic_create(
+            client,
             model="claude-sonnet-4-6",
             max_tokens=8000,
             messages=[{"role": "user", "content": prompt}],
@@ -5140,6 +5175,7 @@ async def _startup() -> None:
         print(f"[db] ready at {db.DB_PATH} (persistent={db.is_persistent()})", flush=True)
     except Exception as exc:
         print(f"[db] init failed: {exc}", flush=True)
+    etsy_api.set_circuit_breaker_hook(CircuitBreaker("etsy_api", db_module=db))
     # Seed every loop's row immediately so the Agents registry always reports
     # all 5 from boot, rather than waiting on each loop's own startup delay
     # (some sleep minutes before their first real run).
@@ -5277,7 +5313,8 @@ async def _compute_suggestions_inner() -> dict:
     try:
         response = await asyncio.wait_for(
             asyncio.to_thread(
-                lambda: ai_client.messages.create(
+                lambda: _anthropic_create(
+                    ai_client,
                     model="claude-sonnet-4-6",
                     max_tokens=4000,  # 8 detailed suggestions overrun 2400 and truncate
                     system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
@@ -5452,7 +5489,8 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
     try:
         response = await asyncio.wait_for(
             asyncio.to_thread(
-                lambda: ai_client.messages.create(
+                lambda: _anthropic_create(
+                    ai_client,
                     model="claude-sonnet-4-6",
                     max_tokens=2000,
                     system=_CONVERSION_DOCTOR_SYSTEM,
@@ -5593,7 +5631,8 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
     try:
         response = await asyncio.wait_for(
             asyncio.to_thread(
-                lambda: ai_client.messages.create(
+                lambda: _anthropic_create(
+                    ai_client,
                     model="claude-sonnet-4-6",
                     max_tokens=100,
                     messages=[{"role": "user", "content": prompt}],
@@ -6750,6 +6789,32 @@ async def get_agents_status(_token: str = Depends(_auth)):
     return await _agents_status_snapshot()
 
 
+async def _relay_dependency_status() -> dict:
+    """Relay health in the dependency-pill vocabulary (closed/open), derived from
+    the real connection-state signal (_relay_ws + db.get_relay_state()) -- the
+    same data _agents_status_snapshot() already reads correctly. A websocket
+    connection has no retry/backoff to drive a CircuitBreaker, so nothing ever
+    writes a circuit_breaker_state row for 'relay'; querying that table for it
+    (the old behavior) meant relay always reported the default closed/healthy
+    row even while genuinely disconnected."""
+    relay_state = await asyncio.to_thread(db.get_relay_state)
+    with _relay_lock:
+        relay_connected = _relay_ws is not None
+    if relay_state.get("killed"):
+        state = "open"  # kill switch engaged -- treat as a tripped dependency
+    elif relay_connected:
+        state = "closed"
+    else:
+        state = "open"  # offline is a real outage, not a healthy default
+    return {
+        "name": "relay",
+        "state": state,
+        "consecutive_failures": 0,
+        "opened_at": None,
+        "updated_at": relay_state.get("last_heartbeat"),
+    }
+
+
 @app.get("/api/system/dependencies")
 async def get_system_dependencies(_token: str = Depends(_auth)):
     """Live circuit-breaker status for every tracked external dependency —
@@ -6759,6 +6824,9 @@ async def get_system_dependencies(_token: str = Depends(_auth)):
     default CircuitBreaker._load() uses: closed, 0 failures."""
     deps = []
     for dep in ("etsy_api", "anthropic_api", "relay"):
+        if dep == "relay":
+            deps.append(await _relay_dependency_status())
+            continue
         cb = await asyncio.to_thread(db.get_circuit_breaker_state, dep)
         deps.append({
             "name": dep,
@@ -6779,7 +6847,7 @@ async def get_alerts(_token: str = Depends(_auth)):
     disagreeing, since both read the same response."""
     alerts = []
 
-    for dep in ("etsy_api", "anthropic_api", "relay"):
+    for dep in ("etsy_api", "anthropic_api"):
         cb = await asyncio.to_thread(db.get_circuit_breaker_state, dep)
         if cb and cb.get("state") == "open":
             alerts.append({
@@ -6788,6 +6856,17 @@ async def get_alerts(_token: str = Depends(_auth)):
                 "title": f"{dep.replace('_', ' ').title()} circuit breaker open",
                 "detail": f"{cb.get('consecutive_failures')} consecutive failures, opened at {cb.get('opened_at')}",
             })
+
+    relay = await _relay_dependency_status()
+    if relay["state"] == "open":
+        relay_state = await asyncio.to_thread(db.get_relay_state)
+        detail = "kill switch engaged" if relay_state.get("killed") else "no relay connected"
+        alerts.append({
+            "severity": "critical",
+            "source": "dependency",
+            "title": "Relay disconnected" if not relay_state.get("killed") else "Relay kill switch engaged",
+            "detail": detail,
+        })
 
     tokens = await asyncio.to_thread(db.get_etsy_tokens)
     if tokens and tokens.get("updated_at"):
@@ -7392,6 +7471,23 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
         queue: asyncio.Queue = asyncio.Queue()
 
         def _produce() -> None:
+            # Doesn't go through _anthropic_create() (that helper wraps a single
+            # messages.create() call; this is a stream() context manager iterated
+            # chunk-by-chunk) but still gates/records on the same shared breaker so
+            # this highest-volume Anthropic call site -- every chat turn -- actually
+            # shows up in /api/system/dependencies during a real outage instead of
+            # only the lower-volume background call sites.
+            if not _anthropic_breaker.allow_request():
+                loop.call_soon_threadsafe(
+                    queue.put_nowait,
+                    (
+                        "error",
+                        CircuitBreakerOpenError(
+                            "circuit breaker 'anthropic_api' is open -- skipping call until cooldown elapses"
+                        ),
+                    ),
+                )
+                return
             try:
                 with ai_client.messages.stream(
                     model="claude-sonnet-4-6",
@@ -7403,9 +7499,14 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     for chunk in stream.text_stream:
                         loop.call_soon_threadsafe(queue.put_nowait, ("chunk", chunk))
                     final_msg = stream.get_final_message()
-                loop.call_soon_threadsafe(queue.put_nowait, ("done", final_msg))
+            except (anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.InternalServerError) as exc:
+                _anthropic_breaker.record_failure()
+                loop.call_soon_threadsafe(queue.put_nowait, ("error", exc))
             except Exception as exc:  # surfaced to the consumer below, never swallowed
                 loop.call_soon_threadsafe(queue.put_nowait, ("error", exc))
+            else:
+                _anthropic_breaker.record_success()
+                loop.call_soon_threadsafe(queue.put_nowait, ("done", final_msg))
 
         producer = asyncio.create_task(asyncio.to_thread(_produce))
         final = None
@@ -7600,7 +7701,8 @@ def _maybe_compact_chat_history(session_id: str) -> None:
         prompt += f"\n\nTranscript:\n\n{transcript}"
 
         client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
-        msg = client.messages.create(
+        msg = _anthropic_create(
+            client,
             model="claude-haiku-4-5-20251001",
             max_tokens=2000,
             messages=[{"role": "user", "content": prompt}],
