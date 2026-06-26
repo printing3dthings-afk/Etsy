@@ -1703,3 +1703,32 @@ batch path via `sync_files_to_hub.py`.
 service is live — upload a small PDF to `/data/workspace/test.pdf`, list-dir to confirm byte count,
 restart the Railway service and re-check the file persisted on the Volume, and confirm an upload to a
 path outside Allowed Folders (e.g. `/etc/passwd`) is rejected by `_is_allowed()`.
+
+### 2026-06-26 — Two historical credential leaks found in git history; one fixed, rotation pending
+**Symptom:** while building the self-host installer (setup wizard work), found two separate places
+where real secrets had been committed in plain text instead of left in `.env`.
+1. `SETUP.bat` (root) — an old commit (`0c85408`, "Add Windows one-click setup and launcher batch
+   files") had `echo ANTHROPIC_API_KEY=...> .env` / `echo ETSY_API_KEY=...>> .env` baked into the
+   script. The working tree had already been fixed in an earlier session (now just
+   `copy .env.example .env`), but the old commit is still in history.
+2. `CLAUDE.md` (root, this file's sibling doctrine doc) — the Credentials section hardcoded the real
+   `ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` values across 30 commits on this branch.
+**Root cause:** both predate the `.env`-only convention being consistently enforced; `CLAUDE.md`'s
+leak was introduced when the Credentials section was first written and never caught since it's a
+doctrine file, not code, so it wasn't in the secrets-scan path.
+**Forensics (compared live `.env` values against the leaked strings by boolean equality, never
+printed actual secrets):** the leaked `ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` in `CLAUDE.md` are still
+the live, active credentials — a real, current exposure. The leaked `ANTHROPIC_API_KEY`/
+`ETSY_API_KEY` in `SETUP.bat`'s history no longer match `.env` — those two were already rotated at
+some prior point.
+**Blast radius (`git merge-base --is-ancestor` + blob-content grep across commits, not diff text):**
+the `SETUP.bat`-leak commit (`0c85408`) is an ancestor of every branch on the remote, including
+`main` — scrubbing it would mean rewriting production's history. The `CLAUDE.md` leak's 30 commits
+are confined entirely to `claude/etsy-automation-agents-WFAPU` — scrubbing only this branch is much
+lower risk.
+**Fix so far:** stripped the literal `ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` values from `CLAUDE.md`'s
+working tree, replaced with a pointer to `.env` (commit `07e4b3b`), pushed.
+**Still open — Scott's action required, tracked as a todo:** rotate the Etsy Keystring + Shared
+Secret via the Etsy Developer dashboard (the live leak), update `.env`, re-run
+`python tools/etsy_oauth.py`. Anthropic/OpenAI keys already appear rotated — no action expected there.
+Git-history scrub (either branch) was explicitly deferred by Scott until after rotation — not done.
