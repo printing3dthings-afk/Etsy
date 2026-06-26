@@ -27,6 +27,8 @@ template lives outside main.py and has no direct access to APP_TOKEN.
 
 import json
 
+import business_config
+
 _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3815,5 +3817,12 @@ def render_frank_hud(app_token: str) -> str:
     at request time. The template is a plain string (not f-string/.format()) because
     its JS is full of literal {} braces, and it lives outside main.py so it has no
     direct access to APP_TOKEN at its own module-definition time — same token, same
-    auth model as the live dashboard at /, just injected via str.replace() instead."""
-    return _FRANK_HUD_MOCKUP.replace("__APP_TOKEN__", json.dumps(app_token))
+    auth model as the live dashboard at /, just injected via str.replace() instead.
+    Business-identity placeholders ("Fucking Frank"/"Frank"/"Scott") are substituted
+    here too, same convention as _WEB_UI in main.py — longest literal first so
+    "Fucking Frank" doesn't get mangled by the plain "Frank" pass."""
+    html = _FRANK_HUD_MOCKUP.replace("__APP_TOKEN__", json.dumps(app_token))
+    html = html.replace("Fucking Frank", business_config.AGENT_NAME)
+    html = html.replace("Frank", business_config.AGENT_NAME_SHORT)
+    html = html.replace("Scott", business_config.OWNER_NAME)
+    return html

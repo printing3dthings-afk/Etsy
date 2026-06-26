@@ -20,14 +20,8 @@ pip install -r requirements.txt
 echo.
 echo  Creating .env file...
 if not exist .env (
-    echo ANTHROPIC_API_KEY=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> .env
-    echo ETSY_API_KEY=fubs9x2li9laade3oq5ef45h>> .env
-    echo ETSY_SHOP_ID=onbrandcraftz>> .env
-    echo PINTEREST_APP_ID=>> .env
-    echo PINTEREST_APP_SECRET=>> .env
-    echo PINTEREST_ACCESS_TOKEN=>> .env
-    echo PINTEREST_REFRESH_TOKEN=>> .env
-    echo  .env file created.
+    copy .env.example .env >nul
+    echo  .env file created from .env.example — open it and fill in your API keys.
 ) else (
     echo  .env file already exists, skipping.
 )

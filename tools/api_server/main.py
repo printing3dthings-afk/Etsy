@@ -52,6 +52,7 @@ if _env.exists():
 
 import anthropic
 import openai
+import business_config
 import db  # local persistence layer (tools/api_server/db.py)
 import seasonal_keywords  # noqa: E402
 import tax_compliance_tools  # noqa: E402
@@ -177,7 +178,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
             "(titles >70 chars, quantity-claim mismatches where a 'Set of N' "
             "title doesn't match the delivered files, etc.). Fast read-only mode. "
             "This is the check that surfaces 'something that needs fixing' — run it "
-            "first, then stage_action the corrections for Scott's approval."
+            f"first, then stage_action the corrections for {business_config.OWNER_NAME}'s approval."
         ),
         "timeout": 330,  # measured ~281.8s against the full live catalog on 2026-06-18; 180s always timed out
         "long_running": False,
@@ -276,7 +277,7 @@ print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool
 
 # ── App setup ──────────────────────────────────────────────────────────────────
 
-app = FastAPI(title="OnBrandCraftz Mobile API", version="1.0.0", docs_url=None, redoc_url=None)
+app = FastAPI(title=f"{business_config.BUSINESS_NAME} Mobile API", version="1.0.0", docs_url=None, redoc_url=None)
 
 # allow_origins=["*"] + allow_credentials=True is actually a no-op/invalid combo per the
 # CORS spec for credentialed requests (browsers refuse to honor "*" once credentials are
@@ -326,6 +327,24 @@ async def _security_headers(request: Request, call_next):
 
 # Serve PWA icons (pre-generated files committed to the repo — no runtime PIL).
 _STATIC_DIR = Path(__file__).parent / "static"
+
+# privacy.html is a plain static file with no templating layer, but its OAuth-app
+# privacy-policy URL (registered with Pinterest/Etsy as /static/privacy.html — the path
+# must stay stable) needs business-identity substitution. Registered before the mount
+# below so this explicit route wins for this one path; every other /static/* file is
+# still served raw by the mount.
+_PRIVACY_HTML_PATH = _STATIC_DIR / "privacy.html"
+
+
+@app.get("/static/privacy.html", response_class=HTMLResponse)
+def privacy_policy():
+    html = _PRIVACY_HTML_PATH.read_text(encoding="utf-8")
+    shop_id = os.getenv("ETSY_SHOP_ID", "onbrandcraftz")
+    html = html.replace("onbrandcraftz", shop_id)
+    html = html.replace("OnBrandCraftz", business_config.BUSINESS_NAME)
+    return HTMLResponse(content=html)
+
+
 if _STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
@@ -443,7 +462,7 @@ _LOGIN_PAGE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OnBrandCraftz Hub — Sign in</title>
+<title>{hub_title} Hub — Sign in</title>
 <style>
   body {{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
     background:#0b0f14; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }}
@@ -459,7 +478,7 @@ _LOGIN_PAGE = """<!DOCTYPE html>
 </head>
 <body>
   <div class="box">
-    <h1>OnBrandCraftz Hub</h1>
+    <h1>{hub_title} Hub</h1>
     <p class="sub">Enter the passphrase to continue.</p>
     {error_html}
     <form method="post" action="/login">
@@ -483,7 +502,7 @@ def _safe_next(next_path: str) -> str:
 def login_page(next: str = "/", error: str = ""):
     error_html = '<p class="err">Incorrect passphrase. Try again.</p>' if error else ""
     return HTMLResponse(
-        _LOGIN_PAGE.format(error_html=error_html, next_path=_safe_next(next)),
+        _LOGIN_PAGE.format(error_html=error_html, next_path=_safe_next(next), hub_title=business_config.BUSINESS_NAME),
         headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
     )
 
@@ -592,7 +611,7 @@ async def _dispatch_to_relay(name: str, tool_input: dict, timeout: float = 15.0)
     with _relay_lock:
         ws = _relay_ws
     if ws is None:
-        return {"error": "relay offline — Frank's local relay is not connected"}
+        return {"error": f"relay offline — {business_config.AGENT_NAME_SHORT}'s local relay is not connected"}
     req_id = str(uuid.uuid4())
     fut: asyncio.Future = asyncio.get_event_loop().create_future()
     _relay_pending[req_id] = fut
@@ -653,7 +672,7 @@ async def _stage_local_action(name: str, tool_input: dict) -> dict:
         "staged": True,
         "action_id": aid,
         "status": "pending",
-        "note": "Queued for Scott's approval in the Action Center — not yet applied.",
+        "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
     }
 
 
@@ -713,12 +732,12 @@ def _append_ops_runbook_entry(heading: str, body: str) -> None:
 #   tried + a clearly-labeled hypothesis instead of "something went wrong".
 
 _KNOWN_FAILURE_REMEDIATIONS: dict[str, str] = {
-    "anthropic_credit": "Frank's AI provider account is out of credits -- top up at console.anthropic.com/settings/billing.",
+    "anthropic_credit": f"{business_config.AGENT_NAME_SHORT}'s AI provider account is out of credits -- top up at console.anthropic.com/settings/billing.",
     "anthropic_rate_limit": "Transient rate limit -- the shared backoff (resilience.py) retries automatically. If it persists past 15 minutes, check console.anthropic.com for an account-wide limit change.",
     "anthropic_auth": "ANTHROPIC_API_KEY is invalid or revoked -- check the key in the deploy environment's env vars against console.anthropic.com/settings/keys and redeploy.",
     "anthropic_overloaded": "Anthropic's API is overloaded shop-wide (not specific to this account) -- the shared backoff retries automatically; no action needed unless it persists past an hour.",
     "anthropic_key_missing": "ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.",
-    "etsy_auth": "Etsy access + refresh tokens are both rejected -- the 90-day refresh token has likely expired. Scott must run `python tools/etsy_oauth.py` to re-authorize.",
+    "etsy_auth": f"Etsy access + refresh tokens are both rejected -- the 90-day refresh token has likely expired. {business_config.OWNER_NAME} must run `python tools/etsy_oauth.py` to re-authorize.",
     "etsy_rate_limit": "Etsy API rate limit hit -- transient, the shared backoff retries automatically honoring the retry-after header.",
     "etsy_server_error": "Etsy's API returned a 5xx -- their side, not ours. Transient, the shared backoff retries automatically.",
     "etsy_unreachable": "Etsy's API is unreachable (network/DNS/timeout) -- check outbound network status; if Etsy's own status page also shows an incident, this resolves on its own.",
@@ -763,7 +782,7 @@ def _write_escalation_report(context: str, attempted_fixes: list[str], hypothesi
         f"**Symptom:** {context}\n\n"
         f"**What was tried:**\n{fixes_block}\n\n"
         f"**Root-cause hypothesis (unconfirmed):** {hypothesis}\n\n"
-        "**Suggested next action:** if this recurs, escalate to Scott with this report rather "
+        f"**Suggested next action:** if this recurs, escalate to {business_config.OWNER_NAME} with this report rather "
         "than re-attempting the same fix a third time."
     )
     _append_ops_runbook_entry(f"Escalation — {context[:80]}", body)
@@ -1105,12 +1124,11 @@ async def get_memory(_token: str = Depends(_auth)):
 
 # ── CEO Agent system prompt ────────────────────────────────────────────────────
 
-_CEO_SYSTEM = """\
-You are Fucking Frank, the CEO Agent for OnBrandCraftz, an Etsy shop selling kawaii
-digital planners, sticker packs, and 3D-print SVG files. You are chatting with Scott,
+_CEO_SYSTEM = f"""\
+You are {business_config.AGENT_NAME}, the CEO Agent for {business_config.BUSINESS_NAME}, {business_config.BUSINESS_DESCRIPTION}. You are chatting with {business_config.OWNER_NAME},
 the shop owner, via his private mobile dashboard. You are the operating brain of the
-business — Scott relies on you so he does NOT have to dig through data or call in an
-engineer for answers. If asked your name, you are Fucking Frank.
+business — {business_config.OWNER_NAME} relies on you so he does NOT have to dig through data or call in an
+engineer for answers. If asked your name, you are {business_config.AGENT_NAME}.
 
 Your role:
 - Answer questions about the business, products, listings, and growth strategy
@@ -1118,7 +1136,7 @@ Your role:
 - Recommend next actions and prioritize what matters most
 - Uphold the shop's #1 rule: never lie to customers — every listing claim must be
   verifiable against the actual files delivered
-- If Scott asks why something broke or what was fixed, check the OPS RUNBOOK section
+- If {business_config.OWNER_NAME} asks why something broke or what was fixed, check the OPS RUNBOOK section
   appended below before answering — it's a real log of incidents Claude Code has
   diagnosed and fixed in this exact codebase, not a guess
 
@@ -1130,7 +1148,7 @@ LIVE DATA — you can read the real shop, do not guess:
   "did we get any sales today" or spotting volume trends. No buyer email/address is exposed.
 - Use get_reviews to read recent review text and ratings — good for spotting a recurring
   complaint or praised feature. You may surface patterns, but never draft or send a review
-  response yourself; that is always Scott's call.
+  response yourself; that is always {business_config.OWNER_NAME}'s call.
 - ALWAYS pull the real numbers with a tool before quoting any figure. Never invent data.
   If a tool returns an error, say so plainly rather than guessing.
 
@@ -1140,7 +1158,7 @@ YOUR COMPOUNDING MEMORY — log_learning:
   This is how you compound — you should sound a little smarter about THIS business every
   month, not start cold every conversation.
 - Use the log_learning tool when a conversation surfaces something genuinely worth carrying
-  forward: a pattern in what converts, a recurring buyer question, a preference Scott stated
+  forward: a pattern in what converts, a recurring buyer question, a preference {business_config.OWNER_NAME} stated
   that should shape future recommendations, or a mistake worth not repeating.
 - Do NOT log routine facts you can re-fetch with a tool (a revenue figure, a listing count) —
   this log is judgment and pattern memory, not a cache. Keep each entry to one or two sentences.
@@ -1152,7 +1170,7 @@ WEB SEARCH — you have live internet access (capped at 3 searches per message):
 - Never use it for anything answerable from your own tools (revenue, listings, orders,
   reviews) — those are ALWAYS get_metrics/list_listings/get_orders/get_reviews, never a guess
   pulled from a web result. Internal shop data is never public on the internet.
-- Tell Scott plainly when a claim comes from a web search vs. the shop's own data — don't
+- Tell {business_config.OWNER_NAME} plainly when a claim comes from a web search vs. the shop's own data — don't
   blur the two. If a search turns up something worth remembering long-term (a durable
   competitor pattern, a confirmed policy change), log_learning it so you don't re-search
   the same thing next month.
@@ -1181,10 +1199,10 @@ WHEN YOU DON'T KNOW SOMETHING — check in this order before answering:
 4. The rest of data/knowledge_base/ via read_knowledge_base_doc, including CLAUDE.md.
 5. A web search — for anything only the live internet knows (see WEB SEARCH above).
 If none of those produce a real answer, do not invent a plausible-sounding one. Default by
-topic: anything touching pricing, legal, tax, or live listing state → ask Scott directly rather
+topic: anything touching pricing, legal, tax, or live listing state → ask {business_config.OWNER_NAME} directly rather
 than estimate. Anything else (a rough trend read, a design opinion, a "my best guess is...")
 → give a clearly-caveated best-effort estimate and say explicitly that it's an estimate, not a
-looked-up fact. Never blur the two — Scott needs to know which kind of answer he's getting.
+looked-up fact. Never blur the two — {business_config.OWNER_NAME} needs to know which kind of answer he's getting.
 For a broad "what needs attention" / "how are we doing" question, call find_business_gaps
 first — one read-only sweep across listing volume, quality-audit trend, loop health, and
 circuit breakers, instead of re-deriving the same picture from five separate tool calls.
@@ -1195,27 +1213,27 @@ tool call, never a guess:
   whether something is active) must come from an actual tool-call result in THIS
   conversation — not from training data, not from "that sounds about right."
 - Don't restate a number from earlier in a long conversation without re-confirming if
-  several turns have passed — shop state changes (Scott edits a listing, a sale comes in)
+  several turns have passed — shop state changes ({business_config.OWNER_NAME} edits a listing, a sale comes in)
   and a stale repeat can become a confident-sounding lie.
 - If you're not sure whether a number you're about to say came from a tool call or was
   inferred/remembered, call the tool again rather than guess — a redundant tool call costs
-  nothing; a wrong number reported as fact costs Scott's trust in everything else you say.
+  nothing; a wrong number reported as fact costs {business_config.OWNER_NAME}'s trust in everything else you say.
 
 How you operate:
 - You analyze, recommend, and can DRAFT changes (titles, tags, descriptions, photo plans,
   quality-gate checklists). You do not publish, change prices, or edit live listings
-  yourself — you prepare the work and Scott approves it. Be explicit about what you'd
+  yourself — you prepare the work and {business_config.OWNER_NAME} approves it. Be explicit about what you'd
   change and why, so a single yes is enough to act.
 - When you have a concrete fix ready (a corrected title, a full replacement tag set, or a
-  draft ready to publish), use the stage_action tool to queue it for Scott's one-tap
+  draft ready to publish), use the stage_action tool to queue it for {business_config.OWNER_NAME}'s one-tap
   approval in the Action Center. ALWAYS read the listing first so the change is accurate.
-  Tell Scott you've staged it and what it will do. Never claim a change is live — it only
+  Tell {business_config.OWNER_NAME} you've staged it and what it will do. Never claim a change is live — it only
   applies after he approves.
 - You CAN execute backend commands directly using the execute_command tool. Use this when
-  Scott asks you to DO something: run the listing integrity check, run a health check,
-  rebuild sticker packs, regenerate files, etc. Brief Scott on what you're about to run,
+  {business_config.OWNER_NAME} asks you to DO something: run the listing integrity check, run a health check,
+  rebuild sticker packs, regenerate files, etc. Brief {business_config.OWNER_NAME} on what you're about to run,
   then call it. Long-running commands (image generation) launch in the background — confirm
-  the PID and tell Scott where to find the output. Quick commands return full terminal
+  the PID and tell {business_config.OWNER_NAME} where to find the output. Quick commands return full terminal
   output for you to summarize.
 
 ACT, DON'T NARRATE — this is the most important rule about doing work:
@@ -1223,23 +1241,23 @@ ACT, DON'T NARRATE — this is the most important rule about doing work:
   "I'll run that now" or "let me check" and then stop — that does nothing. Saying you will
   do something is not doing it. Either call the tool or say plainly you can't.
 - When you spot a fixable problem (a bad title, missing tags, a draft ready to publish),
-  immediately stage_action the concrete fix so it lands in Scott's Action Center for one-tap
+  immediately stage_action the concrete fix so it lands in {business_config.OWNER_NAME}'s Action Center for one-tap
   approval — don't just describe what should change. Read the listing first so the fix is exact.
 - To find problems in the first place, run the listing_integrity_check command — it reports
   exactly which listings violate the 2026 standards. Then stage the fixes it surfaces.
 - You do NOT apply listing edits, publishes, or price changes yourself — those always go
-  through Scott's one-tap approval. But you DO run read-only checks and safe automations
+  through {business_config.OWNER_NAME}'s one-tap approval. But you DO run read-only checks and safe automations
   yourself without waiting.
 
-TOOL ERRORS — when a tool call fails, it returns {"error", "category", "retryable"}:
+TOOL ERRORS — when a tool call fails, it returns {{"error", "category", "retryable"}}:
 - retryable: true means the failure was transient (rate limit, timeout, a 5xx) — one retry
   of the same call is reasonable before giving up.
 - retryable: false means retrying won't help (bad input, permission, not found, or an
-  unclassified failure) — report the error to Scott plainly instead of retrying blindly
+  unclassified failure) — report the error to {business_config.OWNER_NAME} plainly instead of retrying blindly
   or guessing at a workaround.
 
 PRODUCTS & PRICES — never recite a memorized list, always call list_listings:
-- Active listings, draft listings, current prices, and counts all change as Scott publishes
+- Active listings, draft listings, current prices, and counts all change as {business_config.OWNER_NAME} publishes
   new products — a string written into this prompt goes stale the moment that happens.
 - Whenever asked about current products, prices, or what's live vs. draft, call
   list_listings(state=...) and answer from the real result. Never state a product name or
@@ -1251,7 +1269,7 @@ Quality standards:
 - All pre-publish quality gates must pass before any listing goes live
 - Growth is urgent but quality never drops
 
-Keep responses concise and scannable — Scott is reading on his phone.\
+Keep responses concise and scannable — {business_config.OWNER_NAME} is reading on his phone.\
 """
 
 # ── CEO agent tools (read-only live data; the agent calls these mid-conversation) ─
@@ -1291,7 +1309,7 @@ AGENT_TOOLS = [
         "name": "get_listing",
         "description": (
             "Pull ONE listing by its numeric listing_id directly, regardless of state — "
-            "active, draft, inactive, expired, or sold_out. Use this whenever Scott gives "
+            f"active, draft, inactive, expired, or sold_out. Use this whenever {business_config.OWNER_NAME} gives "
             "you a listing ID. Unlike list_listings (which only sees one state bucket at a "
             "time), this fetches the listing straight from Etsy by ID, so it finds expired "
             "listings that won't show up in the active/draft/inactive lists. Returns title, "
@@ -1312,9 +1330,9 @@ AGENT_TOOLS = [
     {
         "name": "stage_action",
         "description": (
-            "Stage a proposed change for Scott's one-tap approval. You do NOT execute "
+            f"Stage a proposed change for {business_config.OWNER_NAME}'s one-tap approval. You do NOT execute "
             "it — it lands in the approval queue (Action Center) and only applies to "
-            "Etsy when Scott taps Approve. Use for fixes you can fully specify: "
+            f"Etsy when {business_config.OWNER_NAME} taps Approve. Use for fixes you can fully specify: "
             "correcting a listing title, replacing its tags, or publishing a draft. "
             "Always fetch the listing first so your change is accurate."
         ),
@@ -1356,7 +1374,7 @@ AGENT_TOOLS = [
         "description": (
             "Generate and stage a corrected, full 13-tag replacement for a listing using "
             "the same autofix logic as the dashboard's Autofix button. Stages into the "
-            "Action Center for Scott's approval — does not apply anything directly."
+            f"Action Center for {business_config.OWNER_NAME}'s approval — does not apply anything directly."
         ),
         "input_schema": {
             "type": "object",
@@ -1375,7 +1393,7 @@ AGENT_TOOLS = [
         "description": (
             "Generate and stage a corrected title for a listing using the same autofix "
             "logic as the dashboard's Autofix button. Stages into the Action Center for "
-            "Scott's approval — does not apply anything directly."
+            f"{business_config.OWNER_NAME}'s approval — does not apply anything directly."
         ),
         "input_schema": {
             "type": "object",
@@ -1393,9 +1411,9 @@ AGENT_TOOLS = [
         "name": "stage_batch_tag_update",
         "description": (
             "Generate and stage corrected tags for up to 10 listings at once. Each listing "
-            "is staged as its own independent Action Center entry — Scott approves or "
+            f"is staged as its own independent Action Center entry — {business_config.OWNER_NAME} approves or "
             "rejects each one individually, never all-or-nothing. Requests for more than "
-            "10 listing_ids are rejected; split the batch and ask Scott which subset to "
+            f"10 listing_ids are rejected; split the batch and ask {business_config.OWNER_NAME} which subset to "
             "run first instead of guessing scope."
         ),
         "input_schema": {
@@ -1420,7 +1438,7 @@ AGENT_TOOLS = [
             "Stage an activate/deactivate change for a listing. This is the chat-only path "
             "to the same effect as the dashboard's Activate/Deactivate button, but since "
             "chat has no confirm() dialog, it always stages into the Action Center for "
-            "Scott's one-tap approval rather than applying immediately."
+            f"{business_config.OWNER_NAME}'s one-tap approval rather than applying immediately."
         ),
         "input_schema": {
             "type": "object",
@@ -1462,11 +1480,11 @@ AGENT_TOOLS = [
     {
         "name": "register_command",
         "description": (
-            "Wire up an EXISTING script under tools/ as a new named command Frank can run. "
+            f"Wire up an EXISTING script under tools/ as a new named command {business_config.AGENT_NAME_SHORT} can run. "
             "This adds a new capability, not a one-time mutation, so it stages into the "
-            "Action Center for Scott's approval like everything else — and the resulting "
+            f"Action Center for {business_config.OWNER_NAME}'s approval like everything else — and the resulting "
             "command always requires approval to run, no matter what is proposed here. "
-            "Use this to register a script Scott or Claude already wrote on disk; this tool "
+            f"Use this to register a script {business_config.OWNER_NAME} or Claude already wrote on disk; this tool "
             "cannot write a new script and register it in the same call — script_path must "
             "already exist."
         ),
@@ -1521,10 +1539,10 @@ AGENT_TOOLS = [
     {
         "name": "execute_command",
         "description": (
-            "Execute a backend automation command — run it NOW. Use this when Scott asks you to actually "
+            f"Execute a backend automation command — run it NOW. Use this when {business_config.OWNER_NAME} asks you to actually "
             "DO something: generate images, run health checks, rebuild files, etc. "
             "Quick commands return full output immediately. Long-running commands (image generation) "
-            "are launched in the background and confirmed with a PID. Always tell Scott what you're "
+            f"are launched in the background and confirmed with a PID. Always tell {business_config.OWNER_NAME} what you're "
             "about to run and what it will do before calling this.\n\n"
             "Available commands:\n"
             + "\n".join(
@@ -1570,7 +1588,7 @@ AGENT_TOOLS = [
         "description": (
             "Recent Etsy reviews: rating, review text, which listing, and date. Use to spot "
             "patterns in buyer feedback (recurring complaints, praised features) or check "
-            "rating trends. Do NOT draft or send review responses yourself — that is Scott's "
+            f"rating trends. Do NOT draft or send review responses yourself — that is {business_config.OWNER_NAME}'s "
             "call (review responses are manual, see CLAUDE.md autonomy boundaries)."
         ),
         "input_schema": {
@@ -1591,7 +1609,7 @@ AGENT_TOOLS = [
             "every future chat turn — this is how you get smarter about THIS business over "
             "time instead of starting cold each conversation. Use sparingly: only for things "
             "worth remembering across sessions — a pattern in what converts, a recurring "
-            "buyer question, a preference Scott stated, a mistake worth not repeating. "
+            f"buyer question, a preference {business_config.OWNER_NAME} stated, a mistake worth not repeating. "
             "Do NOT log routine facts retrievable via get_metrics/list_listings — this is "
             "judgment, not a numbers cache. One or two sentences max per entry."
         ),
@@ -1609,7 +1627,7 @@ AGENT_TOOLS = [
     {
         "name": "list_todos",
         "description": (
-            "View the shared to-do list that you and Scott both see on the dashboard. "
+            f"View the shared to-do list that you and {business_config.OWNER_NAME} both see on the dashboard. "
             "Open items first, then completed ones. Check this before adding a new item "
             "so you don't duplicate something already on the list."
         ),
@@ -1618,8 +1636,8 @@ AGENT_TOOLS = [
     {
         "name": "add_todo",
         "description": (
-            "Add an item to the shared to-do list visible on Scott's dashboard. Use this "
-            "to hand Scott a concrete next step he needs to take himself (e.g. a one-time "
+            f"Add an item to the shared to-do list visible on {business_config.OWNER_NAME}'s dashboard. Use this "
+            f"to hand {business_config.OWNER_NAME} a concrete next step he needs to take himself (e.g. a one-time "
             "manual action like attaching a Railway Volume), or to remind yourself of "
             "follow-up work across sessions. Keep it one short, actionable line."
         ),
@@ -1643,17 +1661,17 @@ AGENT_TOOLS = [
     {
         "name": "local_read_file",
         "description": (
-            "Read a text file on Scott's own computer via the local relay — NOT the "
+            f"Read a text file on {business_config.OWNER_NAME}'s own computer via the local relay — NOT the "
             "Railway server's filesystem. Only works while the relay is connected and "
-            "only for paths inside one of Scott's configured Allowed Folders; anything "
+            f"only for paths inside one of {business_config.OWNER_NAME}'s configured Allowed Folders; anything "
             "else is refused. Instant, read-only, no approval needed. Binary files and "
             "files over ~200KB are not supported. If the relay is offline you'll get a "
-            "clear error instead of a hang — tell Scott to start tools/relay/frank_relay.py."
+            f"clear error instead of a hang — tell {business_config.OWNER_NAME} to start tools/relay/frank_relay.py."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Absolute path on Scott's machine."}
+                "path": {"type": "string", "description": f"Absolute path on {business_config.OWNER_NAME}'s machine."}
             },
             "required": ["path"],
         },
@@ -1661,14 +1679,14 @@ AGENT_TOOLS = [
     {
         "name": "local_list_dir",
         "description": (
-            "List a directory on Scott's own computer via the local relay — NOT the "
+            f"List a directory on {business_config.OWNER_NAME}'s own computer via the local relay — NOT the "
             "Railway server's filesystem. Same Allowed Folders restriction as "
             "local_read_file. Instant, read-only, no approval needed."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Absolute path on Scott's machine."}
+                "path": {"type": "string", "description": f"Absolute path on {business_config.OWNER_NAME}'s machine."}
             },
             "required": ["path"],
         },
@@ -1676,16 +1694,16 @@ AGENT_TOOLS = [
     {
         "name": "local_write_file",
         "description": (
-            "Write/overwrite a text file on Scott's own computer via the local relay. "
-            "This does NOT execute immediately — it is staged for Scott's one-tap "
+            f"Write/overwrite a text file on {business_config.OWNER_NAME}'s own computer via the local relay. "
+            f"This does NOT execute immediately — it is staged for {business_config.OWNER_NAME}'s one-tap "
             "approval in the Action Center, same as stage_action for Etsy changes. "
-            "The current file content (if any) is captured now so Scott sees a real "
+            f"The current file content (if any) is captured now so {business_config.OWNER_NAME} sees a real "
             "diff before approving. Path must be inside an Allowed Folder."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Absolute path on Scott's machine."},
+                "path": {"type": "string", "description": f"Absolute path on {business_config.OWNER_NAME}'s machine."},
                 "content": {"type": "string", "description": "Full new file content."},
                 "summary": {"type": "string", "description": "One-line human summary for the approval card."},
             },
@@ -1695,14 +1713,14 @@ AGENT_TOOLS = [
     {
         "name": "local_delete",
         "description": (
-            "Delete a file on Scott's own computer via the local relay. Staged for "
-            "Scott's one-tap approval — does NOT execute immediately. Path must be "
+            f"Delete a file on {business_config.OWNER_NAME}'s own computer via the local relay. Staged for "
+            f"{business_config.OWNER_NAME}'s one-tap approval — does NOT execute immediately. Path must be "
             "inside an Allowed Folder."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Absolute path on Scott's machine."},
+                "path": {"type": "string", "description": f"Absolute path on {business_config.OWNER_NAME}'s machine."},
                 "summary": {"type": "string", "description": "One-line human summary for the approval card."},
             },
             "required": ["path", "summary"],
@@ -1711,8 +1729,8 @@ AGENT_TOOLS = [
     {
         "name": "local_exec",
         "description": (
-            "Run a whitelisted read-only diagnostic command on Scott's own computer via "
-            "the local relay. Staged for Scott's one-tap approval — does NOT execute "
+            f"Run a whitelisted read-only diagnostic command on {business_config.OWNER_NAME}'s own computer via "
+            f"the local relay. Staged for {business_config.OWNER_NAME}'s one-tap approval — does NOT execute "
             "immediately. Step 1 whitelist is intentionally minimal (read-only diagnostics "
             "only); extra_args may not contain anything that mutates files or chains "
             "commands."
@@ -1730,14 +1748,14 @@ AGENT_TOOLS = [
     {
         "name": "local_speak",
         "description": (
-            "Speak a short reply out loud through Scott's computer. Step 1 stub: no "
+            f"Speak a short reply out loud through {business_config.OWNER_NAME}'s computer. Step 1 stub: no "
             "audio yet — this just logs the text that would be spoken (real TTS ships "
             "later). Output-only, instant, no approval needed."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "text": {"type": "string", "description": "What Frank would say out loud."}
+                "text": {"type": "string", "description": f"What {business_config.AGENT_NAME_SHORT} would say out loud."}
             },
             "required": ["text"],
         },
@@ -1746,13 +1764,13 @@ AGENT_TOOLS = [
         "name": "find_business_gaps",
         "description": (
             "Read-only diagnostic sweep across the real shop and infra state — never stages, "
-            "builds, or publishes anything, purely advisory for a conversation with Scott. "
+            f"builds, or publishes anything, purely advisory for a conversation with {business_config.OWNER_NAME}. "
             "Checks: active listing count against the catalog-growth goal in "
             "action_plan_2026.md, quality-audit trend regressions from recent audit runs, "
             "background-loop health (heartbeats), circuit-breaker trips on etsy_api/"
             "anthropic_api/relay, the Action Center approval backlog, and whether "
             "knowledge_base doc usage is even being tracked (it isn't yet — that gap is "
-            "reported too, not hidden). Use this when Scott asks something like 'what needs "
+            f"reported too, not hidden). Use this when {business_config.OWNER_NAME} asks something like 'what needs "
             "attention' or 'how are we doing' and you want a grounded answer instead of a "
             "vibe-based one."
         ),
@@ -1847,7 +1865,7 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                         "listing_id": lid,
                         "note": (
                             "Etsy returned 404 — no listing with this ID exists on this shop "
-                            "in any state. Double-check the ID Scott gave you."
+                            f"in any state. Double-check the ID {business_config.OWNER_NAME} gave you."
                         ),
                     }
                 return {"found": False, "listing_id": lid, "error": f"Etsy: {exc}"}
@@ -1916,7 +1934,7 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "staged": True,
                 "action_id": aid,
                 "status": "pending",
-                "note": "Queued for Scott's approval in the Action Center — not yet applied.",
+                "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
             }
         if name == "execute_command":
             ti = tool_input or {}
@@ -1930,7 +1948,7 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                     return {
                         "error": (
                             f"Refused: extra_args {bad} would mutate live listings, which must go "
-                            "through Scott's approval. Run the read-only check, then use stage_action."
+                            f"through {business_config.OWNER_NAME}'s approval. Run the read-only check, then use stage_action."
                         )
                     }
             return _run_exec_command(cmd_name, extra_args)
@@ -2012,7 +2030,7 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 return {
                     "error": (
                         f"Refused: {len(listing_ids)} listing_ids exceeds the 10-listing cap "
-                        "for a single batch. Split this into smaller batches and ask Scott "
+                        f"for a single batch. Split this into smaller batches and ask {business_config.OWNER_NAME} "
                         "which subset to run first."
                     )
                 }
@@ -2073,7 +2091,7 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "staged": True,
                 "action_id": aid,
                 "status": "pending",
-                "note": "Queued for Scott's approval in the Action Center — not yet applied.",
+                "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
             }
         if name == "get_conversion_targets":
             return asyncio.run(_get_conversion_targets_core())
@@ -2107,7 +2125,7 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "staged": True,
                 "action_id": aid,
                 "status": "pending",
-                "note": "Queued for Scott's approval in the Action Center — not yet registered.",
+                "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet registered.",
             }
         if name == "read_knowledge_base_doc":
             ti = tool_input or {}
@@ -2157,7 +2175,7 @@ def _find_business_gaps_impl() -> dict:
                 "urgency": "high" if count < _ACTIVE_LISTING_GOAL * 0.5 else "medium",
                 "gap": f"{count} active listings vs the {_ACTIVE_LISTING_GOAL}+ goal in action_plan_2026.md",
                 "detail": "action_plan_2026.md projects $1,000-$3,000/mo at 60-100 active listings.",
-                "action": "Review the product roadmap and launch cadence with Scott.",
+                "action": f"Review the product roadmap and launch cadence with {business_config.OWNER_NAME}.",
             })
     except Exception as exc:
         gaps.append({
@@ -2241,7 +2259,7 @@ def _find_business_gaps_impl() -> dict:
             gaps.append({
                 "gap_type": "approval_backlog",
                 "urgency": "medium",
-                "gap": f"{len(pending)} staged actions awaiting Scott's approval in the Action Center",
+                "gap": f"{len(pending)} staged actions awaiting {business_config.OWNER_NAME}'s approval in the Action Center",
                 "action": "Review the Action Center -- a growing backlog delays publishing.",
             })
     except Exception as exc:
@@ -2277,7 +2295,7 @@ def _find_business_gaps_impl() -> dict:
         "total_gaps": len(gaps),
         "gaps": gaps,
         "priority_gap": gaps[0] if gaps else None,
-        "note": "Read-only diagnostic sweep -- does not stage, build, or publish anything. For discussion with Scott.",
+        "note": f"Read-only diagnostic sweep -- does not stage, build, or publish anything. For discussion with {business_config.OWNER_NAME}.",
     }
 
 
@@ -2321,7 +2339,7 @@ Rules for suggestions:
 - If listings have 0 views after 7+ days, identify which ones and why
 - Tag gaps (<13 tags), title length violations (>70 chars), and zero-view listings are high priority
 \
-"""
+""".replace("OnBrandCraftz", business_config.BUSINESS_NAME).replace("Scott", business_config.OWNER_NAME)
 
 
 # ── Conversion Doctor system prompt (single listing deep-dive) ────────────────────
@@ -2372,7 +2390,7 @@ Rules:
 The standards above are a fast-path summary for this diagnosis. If anything here ever
 conflicts with data/knowledge_base/business_standards.md, that file is the source of truth.
 \
-"""
+""".replace("OnBrandCraftz", business_config.BUSINESS_NAME).replace("Scott", business_config.OWNER_NAME)
 
 
 # ── Batch tag generation (one Claude call → 13 tags for N listings) ──────────────
@@ -2415,11 +2433,11 @@ Each tags array MUST contain exactly 13 strings. Each string MUST be 20 characte
 
 The canonical tag sets and product guidance above are a fast-path summary for batch tagging.
 If they ever conflict with data/knowledge_base/business_standards.md, that file is the source of truth.\
-"""
+""".replace("OnBrandCraftz", business_config.BUSINESS_NAME)
 
 
 _TITLE_FIX_PROMPT = (
-    "Generate a new Etsy listing title for OnBrandCraftz. Shop sells: kawaii digital planners "
+    "Generate a new Etsy listing title for " + business_config.BUSINESS_NAME + ". Shop sells: kawaii digital planners "
     "(GoodNotes/iPad), sticker packs, 3D-print SVG packs, printable wall art.\n\n"
     "TITLE RULES (code-enforced — violation = rejection):\n"
     "1. Maximum 70 characters — hard limit (mobile ranking penalty above 70)\n"
@@ -2455,13 +2473,13 @@ def _friendly_error_message(exc: Exception) -> str:
     server-side for debugging."""
     text = str(exc).lower()
     if "credit balance" in text or "credit_balance" in text:
-        return "Frank's AI provider account is out of credits — let Scott know to top up Anthropic billing."
+        return f"{business_config.AGENT_NAME_SHORT}'s AI provider account is out of credits — let {business_config.OWNER_NAME} know to top up Anthropic billing."
     if "rate_limit" in text or "rate limit" in text or "429" in text:
-        return "Frank's AI is rate-limited right now — try again in a moment."
+        return f"{business_config.AGENT_NAME_SHORT}'s AI is rate-limited right now — try again in a moment."
     if "authentication" in text or "invalid x-api-key" in text or "401" in text:
-        return "Frank's AI provider rejected the API key — let Scott know to check the Anthropic credentials."
+        return f"{business_config.AGENT_NAME_SHORT}'s AI provider rejected the API key — let {business_config.OWNER_NAME} know to check the Anthropic credentials."
     if "overloaded" in text or "529" in text:
-        return "Frank's AI provider is overloaded right now — try again shortly."
+        return f"{business_config.AGENT_NAME_SHORT}'s AI provider is overloaded right now — try again shortly."
     return "Something went wrong talking to the AI provider — try again shortly."
 
 
@@ -2551,12 +2569,12 @@ _WEB_UI = """<!DOCTYPE html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="OnBrandCraftz">
+<meta name="apple-mobile-web-app-title" content=""" + '"' + business_config.BUSINESS_NAME + '"' + """>
 <meta name="theme-color" content="#0D1B2A">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/static/icon-192.png">
-<title>OnBrandCraftz</title>
+<title>""" + business_config.BUSINESS_NAME + """</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -2670,7 +2688,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 </head>
 <body>
   <header>
-    <h1>OnBrandCraftz</h1>
+    <h1>""" + business_config.BUSINESS_NAME + """</h1>
     <div style="text-align:right;line-height:1.4">
       <span id="hdr-sub">Dashboard</span>
       <div style="font-size:9px;color:var(--border);margin-top:1px">""" + _BUILD_ID + """</div>
@@ -2696,9 +2714,9 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
     </div>
     <div style="margin-bottom:8px">
       <button id="ceo-analyze-btn" class="ceo-btn" onclick="getCeoSuggestions(false)" style="display:none">
-        <span>🎯</span><span>Ask Fucking Frank to Analyze</span>
+        <span>🎯</span><span>Ask """ + business_config.AGENT_NAME + """ to Analyze</span>
       </button>
-      <div id="ceo-suggestions"><div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">Fucking Frank is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div></div>
+      <div id="ceo-suggestions"><div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">""" + business_config.AGENT_NAME + """ is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div></div>
     </div>
     <div id="dash-content"><div class="spinner"></div></div>
     <div id="conv-doctor-wrap" style="margin-top:10px">
@@ -2756,7 +2774,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
       <span class="chip" onclick="sendChip(this)">SEO tips</span>
     </div>
     <div class="input-row">
-      <input id="msg-input" type="text" placeholder="Ask Fucking Frank…" autocomplete="off">
+      <input id="msg-input" type="text" placeholder="Ask """ + business_config.AGENT_NAME + """…" autocomplete="off">
       <button id="send-btn" onclick="sendMsg()">
         <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
@@ -3540,7 +3558,7 @@ async function getCeoSuggestions(forceRefresh, _attempt) {
     return;
   }
   if (btn) btn.style.display = 'none';
-  if (!_attempt) el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">Fucking Frank is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
+  if (!_attempt) el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">""" + business_config.AGENT_NAME + """ is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
   try {
     const r = await fetchWithTimeout(BASE+'/api/suggestions', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 120000);
     const d = await r.json().catch(function(){return {};});
@@ -3930,7 +3948,7 @@ async function loadCredentials() {
       {label:'Etsy API Key',         ok:et.api_key,         note:'ETSY_API_KEY / ETSY_CLIENT_ID'},
       {label:'Etsy Access Token',    ok:et.access_token,    note:'Expires every 1 hour — auto-refreshed'},
       {label:'Etsy Refresh Token',   ok:et.refresh_token,   note:'90-day window — re-auth via etsy_oauth.py'},
-      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'Fucking Frank (CEO) · Conversion Doctor · tag gen'},
+      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'""" + business_config.AGENT_NAME + """ (CEO) · Conversion Doctor · tag gen'},
       {label:'OpenAI (DALL-E)',      ok:oa.api_key,         note:'gpt-image-1 listing photo generation'},
       {label:'SMTP Email',           ok:sm.user,            note:'Post-purchase digital delivery'},
       {label:'Pinterest',            ok:pi.api_key,         note:'API v5 · roadmap'}
@@ -4286,7 +4304,7 @@ fetch(BASE + '/health').then(r => r.json()).then(h => {
 }).catch(() => {});
 </script>
 </body>
-</html>"""
+</html>""".replace("Scott", business_config.OWNER_NAME).replace("Frank", business_config.AGENT_NAME_SHORT)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -4318,9 +4336,9 @@ def frank_hud_mockup(request: Request):
 # ── PWA: manifest + service worker (makes the hub installable to home screen) ─────
 
 _MANIFEST = {
-    "name": "OnBrandCraftz Hub",
-    "short_name": "OnBrandCraftz",
-    "description": "OnBrandCraftz Etsy operations hub — live metrics, action center, Fucking Frank (CEO agent).",
+    "name": f"{business_config.BUSINESS_NAME} Hub",
+    "short_name": business_config.BUSINESS_NAME,
+    "description": f"{business_config.BUSINESS_NAME} Etsy operations hub — live metrics, action center, {business_config.AGENT_NAME} (CEO agent).",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
@@ -4376,7 +4394,7 @@ def service_worker():
 _FRANK_MANIFEST = {
     "name": "FRANK Command Center",
     "short_name": "FRANK",
-    "description": "FRANK — OnBrandCraftz CEO agent command center.",
+    "description": f"FRANK — {business_config.BUSINESS_NAME} CEO agent command center.",
     "start_url": "/frank",
     "scope": "/frank",
     "display": "standalone",
@@ -4522,7 +4540,7 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
     else:
         active_count = shop_r.get("listing_active_count", 0)
         out["shop"] = {
-            "name": shop_r.get("shop_name", "OnBrandCraftz"),
+            "name": shop_r.get("shop_name", business_config.BUSINESS_NAME),
             "active_listing_count": active_count,
             "total_sales": shop_r.get("transaction_sold_count", 0),
             "on_vacation": shop_r.get("is_vacation", False),
@@ -7624,7 +7642,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     raise payload
         except asyncio.TimeoutError:
             producer.cancel()  # can't kill the underlying thread, but stop awaiting it
-            raise TimeoutError("Frank's reply stalled (no response for 90s)") from None
+            raise TimeoutError(f"{business_config.AGENT_NAME_SHORT}'s reply stalled (no response for 90s)") from None
 
         # Record the assistant turn (text + any tool_use blocks) verbatim.
         history.append({"role": "assistant", "content": final.content})
@@ -7787,7 +7805,8 @@ def _maybe_compact_chat_history(session_id: str) -> None:
         transcript = "\n\n".join(f"{m['role'].upper()}: {m['content']}" for m in to_summarize)
         prior_summary = existing["summary"] if existing else ""
         prompt = (
-            "Condense this chat transcript between Scott (an Etsy shop owner) and Frank (his "
+            f"Condense this chat transcript between {business_config.OWNER_NAME} (an Etsy shop owner) "
+            f"and {business_config.AGENT_NAME_SHORT} (his "
             "CEO agent) into a single summary (~1500 characters) that preserves every concrete "
             "decision, number, and open question — not a vibe-based recap. Plain prose or short "
             "bullets, oldest-to-newest. No preamble, no meta-commentary."
