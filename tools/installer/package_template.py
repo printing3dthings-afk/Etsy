@@ -175,7 +175,18 @@ def build_file_plan():
                 seed_list.append(rel)
             continue
 
+        if rel == ".dockerignore":
+            override = OVERRIDES_DIR / ".dockerignore"
+            copy_list.append((rel, override if override.exists() else REPO_ROOT / rel))
+            continue
+
         copy_list.append((rel, REPO_ROOT / rel))
+
+    # No root README.md exists today, so the git-file walk above never picks
+    # one up — add the template's README unconditionally.
+    readme_override = OVERRIDES_DIR / "README.md"
+    if readme_override.exists():
+        copy_list.append(("README.md", readme_override))
 
     return copy_list, seed_list, skipped_list
 
