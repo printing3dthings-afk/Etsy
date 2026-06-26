@@ -200,8 +200,8 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
 - `OPENAI_API_KEY` — DALL-E image generation (gpt-image-1)
-- `ETSY_API_KEY` / `ETSY_CLIENT_ID` — `v874xp0m0r4yoh72btmux151`
-- `ETSY_CLIENT_SECRET` — `hjyq1cmrog`
+- `ETSY_API_KEY` / `ETSY_CLIENT_ID` — see `.env`, never paste the literal value here
+- `ETSY_CLIENT_SECRET` — see `.env`, never paste the literal value here
 - `ETSY_ACCESS_TOKEN` / `ETSY_REFRESH_TOKEN` — empty until OAuth is run
 - `SMTP_USER` / `SMTP_PASSWORD` — Outlook email for digital delivery
 
