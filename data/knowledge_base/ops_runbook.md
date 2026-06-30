@@ -1732,3 +1732,15 @@ working tree, replaced with a pointer to `.env` (commit `07e4b3b`), pushed.
 Secret via the Etsy Developer dashboard (the live leak), update `.env`, re-run
 `python tools/etsy_oauth.py`. Anthropic/OpenAI keys already appear rotated — no action expected there.
 Git-history scrub (either branch) was explicitly deferred by Scott until after rotation — not done.
+
+---
+
+### 2026-06-30 — Frank's speak-back was a stub; Studio video tab didn't exist
+
+**Symptom 1:** Frank reported "Step 4 not done" when asked to speak — confusing error from a stale stub.
+**Root cause:** `local_speak` tool handler at main.py:1958 returned `{"spoken": False, "note": "Step 1 stub…real TTS ships in Step 4."}` — a placeholder left from initial scaffolding. The real `/api/voice/speak` OpenAI TTS endpoint already existed and worked but was never connected.
+**Fix:** Updated `_execute_agent_tool` to return `{"spoken": True, "text": text}`. Added WS dispatch in the tool loop to emit `{"type": "speak", "text": text}` before executing `local_speak` — frontend picks this up and plays audio. Added `speakText()` frontend function calling `/api/voice/speak`, a 🔇/🔊 toggle button in the chat input row, and auto-speak-on-done when voice is enabled (stored in localStorage as `frankSpeak`).
+
+**Symptom 2:** "Create video section" had no UI despite the `/api/studio/generate` backend existing and working.
+**Root cause:** Studio endpoints were built server-side (commit history) but no frontend tab was wired in. `video_generator.py` + all deps (numpy/Pillow/moviepy) were confirmed working via background test (generated 176KB MP4 in ~8s with dummy images).
+**Fix:** Added 🎬 Studio hub section button in the Hub nav, `loadStudio()` JS function with listing-ID + style-select generate form, inline `<video>` preview on completion, download link, and previously-generated video list via `/api/studio/videos`. Build ID bumped to v63.

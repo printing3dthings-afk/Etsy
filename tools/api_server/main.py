@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v62"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v63"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -1748,9 +1748,9 @@ AGENT_TOOLS = [
     {
         "name": "local_speak",
         "description": (
-            f"Speak a short reply out loud through {business_config.OWNER_NAME}'s computer. Step 1 stub: no "
-            "audio yet — this just logs the text that would be spoken (real TTS ships "
-            "later). Output-only, instant, no approval needed."
+            f"Speak a short reply out loud through {business_config.OWNER_NAME}'s browser using OpenAI TTS. "
+            "Sends the text to the frontend over the chat WebSocket and plays it as audio "
+            "when voice output is enabled. Output-only, instant, no approval needed."
         ),
         "input_schema": {
             "type": "object",
@@ -1955,7 +1955,7 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
         if name == "local_speak":
             text = (tool_input or {}).get("text", "")
             db.log_activity("frank", "local_speak", text[:500], {"text": text}, outcome="ok")
-            return {"spoken": False, "text": text, "note": "Step 1 stub — logged only, no audio yet (real TTS ships in Step 4)."}
+            return {"spoken": True, "text": text}
         if name == "get_orders":
             limit = min(int((tool_input or {}).get("limit", 25) or 25), 100)
             data = EtsyAPIClient().get_orders(limit=limit)
@@ -2660,6 +2660,8 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 #msg-input:focus{border-color:var(--gold)}
 #send-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #send-btn svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#speak-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;transition:background .15s,border-color .15s}
+#speak-btn.on{background:var(--gold);border-color:var(--gold)}
 .spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
@@ -2757,6 +2759,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
       <button class="hub-section-btn active" onclick="showHubSection(&apos;brand&apos;,this)">🎨 Brand</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;products&apos;,this)">📦 Products</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;files&apos;,this)">📁 Files</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;studio&apos;,this)">🎬 Studio</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;creds&apos;,this)">🔑 Creds</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;security&apos;,this)">🛡️ Security</button>
       <button class="hub-section-btn" onclick="showHubSection(&apos;relay&apos;,this)">🔌 Relay</button>
@@ -2774,6 +2777,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
       <span class="chip" onclick="sendChip(this)">SEO tips</span>
     </div>
     <div class="input-row">
+      <button id="speak-btn" onclick="toggleSpeak()" title="Toggle voice — Frank speaks replies aloud">🔇</button>
       <input id="msg-input" type="text" placeholder="Ask """ + business_config.AGENT_NAME + """…" autocomplete="off">
       <button id="send-btn" onclick="sendMsg()">
         <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -3317,8 +3321,18 @@ async function initWS() {
     } else if (d.type === 'chunk' && bot) {
       if (!bot.dataset.real) { bot.textContent = ''; bot.dataset.real = '1'; bot.classList.remove('typing'); }
       bot.textContent += d.content; scrollMsgs();
-    } else if (d.type === 'done') { _clearStreaming(); scrollMsgs(); }
-    else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
+    } else if (d.type === 'speak') {
+      _speakCalled = true;
+      if (_speakEnabled) speakText(d.text);
+    } else if (d.type === 'done') {
+      const finalText = bot ? bot.textContent : '';
+      _clearStreaming(); scrollMsgs();
+      if (_speakEnabled && !_speakCalled && finalText.trim()) speakText(finalText);
+      _speakCalled = false;
+    } else if (d.type === 'error') {
+      _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot');
+      _speakCalled = false;
+    }
   };
   ws.onerror = () => { _clearStreaming(); };
   ws.onclose = e => {
@@ -3348,6 +3362,7 @@ function sendMsg() {
   const text = inp.value.trim();
   if (!text) return;
   inp.value = '';
+  _speakCalled = false;
   addBubble(text, 'user');
   const bot = addBubble('', 'bot typing');
   bot.id = 'bot-streaming';
@@ -3357,6 +3372,111 @@ function sendMsg() {
 }
 function sendChip(el) { document.getElementById('msg-input').value = el.textContent; sendMsg(); }
 document.getElementById('msg-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+
+// ── Voice speak-back ────────────────────────────────────────────────────────
+let _speakEnabled = (localStorage.getItem('frankSpeak') === '1');
+let _speakCalled = false;  // true if local_speak tool fired this turn (avoid double-speak)
+(function _initSpeakBtn() {
+  const btn = document.getElementById('speak-btn');
+  if (!btn) return;
+  if (_speakEnabled) { btn.classList.add('on'); btn.textContent = '🔊'; }
+})();
+function toggleSpeak() {
+  _speakEnabled = !_speakEnabled;
+  localStorage.setItem('frankSpeak', _speakEnabled ? '1' : '0');
+  const btn = document.getElementById('speak-btn');
+  if (btn) { btn.classList.toggle('on', _speakEnabled); btn.textContent = _speakEnabled ? '🔊' : '🔇'; }
+}
+async function speakText(text) {
+  if (!text || !text.trim()) return;
+  try {
+    const r = await fetch(BASE+'/api/voice/speak', {
+      method: 'POST',
+      headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text.slice(0, 4000)})
+    });
+    if (!r.ok) return;
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = () => URL.revokeObjectURL(url);
+    audio.play().catch(() => {});
+  } catch(e) { /* best effort — audio is non-critical */ }
+}
+
+// ── Studio (video generation) ──────────────────────────────────────────────
+async function loadStudio() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  var genFormHtml = '<div class="card" style="margin-bottom:12px">'+
+    '<div style="font-size:14px;font-weight:700;margin-bottom:10px">Generate Marketing Video</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Ken Burns slideshow from a listing\'s photos — generates an MP4 ready for social media.</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    '<input id="studio-listing-id" type="number" placeholder="Etsy Listing ID" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+    '<select id="studio-style" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+    '<option value="showcase">Showcase — smooth pan across listing photos</option>'+
+    '<option value="new-drop">New Drop — bold title card reveal</option>'+
+    '<option value="feature">Feature — close-up detail focus</option>'+
+    '<option value="minimal">Minimal — clean, quiet aesthetic</option>'+
+    '</select>'+
+    '<button onclick="studioGenerate(this)" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">Generate Video</button>'+
+    '</div></div>';
+  el.innerHTML = genFormHtml + '<div id="studio-result"></div><div id="studio-videos"></div>';
+  loadStudioVideos();
+}
+async function studioGenerate(btn) {
+  var listingId = document.getElementById('studio-listing-id').value.trim();
+  var style = document.getElementById('studio-style').value;
+  var out = document.getElementById('studio-result');
+  if (!listingId) { alert('Enter a listing ID first'); return; }
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating — takes ~30s…';
+  out.innerHTML = '<div class="spinner"></div>';
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/studio/generate', {
+      method: 'POST',
+      headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({listing_id: parseInt(listingId), style})
+    }, 200000);
+    var d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    var vidUrl = BASE+'/api/files/download?root=videos&path='+encodeURIComponent(d.path)+'&token='+TOKEN+'&inline=1';
+    out.innerHTML = '<div class="card" style="margin-bottom:12px">'+
+      '<div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px">✅ Video ready — '+escHtml(d.size_human)+'</div>'+
+      '<video controls style="width:100%;border-radius:8px;background:#000" src="'+escHtml(vidUrl)+'"></video>'+
+      '<a href="'+escHtml(vidUrl)+'" download="'+escHtml(d.path)+'" style="display:block;text-align:center;margin-top:8px;color:var(--gold);font-size:13px;font-weight:600">⬇ Download MP4</a>'+
+      '</div>';
+    loadStudioVideos();
+  } catch(e) {
+    out.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out — try again':e.message||'Generation failed')+'</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Video';
+  }
+}
+async function loadStudioVideos() {
+  var el = document.getElementById('studio-videos');
+  if (!el) return;
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/studio/videos',{headers:{Authorization:'Bearer '+TOKEN}},10000);
+    var d = await r.json().catch(function(){return {};});
+    if (!r.ok || !d.videos || !d.videos.length) { el.innerHTML = ''; return; }
+    var html = '<div class="section-title">Previously Generated ('+d.videos.length+')</div><div class="card">';
+    d.videos.forEach(function(v){
+      var vidUrl = BASE+'/api/files/download?root=videos&path='+encodeURIComponent(v.name)+'&token='+TOKEN+'&inline=1';
+      html += '<div class="listing-item" style="cursor:default">'+
+        '<div class="thumb-placeholder">🎬</div>'+
+        '<div class="listing-info">'+
+          '<div class="listing-title" style="font-size:13px">'+escHtml(v.name)+'</div>'+
+          '<div class="listing-meta">'+escHtml(v.size_human)+'</div>'+
+        '</div>'+
+        '<a href="'+escHtml(vidUrl)+'" target="_blank" style="color:var(--gold);font-size:18px;text-decoration:none">↗</a>'+
+      '</div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) { /* non-critical */ }
+}
 
 // ── Analytics ──────────────────────────────────────────────────────────────
 function buildSparkline(values, color, h) {
@@ -4005,6 +4125,7 @@ function showHubSection(section, btn) {
   if (section==='brand')         document.getElementById('hub-content').innerHTML = _renderBrandKit();
   else if (section==='products') loadProductIndex();
   else if (section==='files')    loadFiles();
+  else if (section==='studio')   loadStudio();
   else if (section==='creds')    loadCredentials();
   else if (section==='security') _renderSecurityPosture();
   else if (section==='relay')    _renderRelayPanel();
@@ -7661,7 +7782,14 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
         tool_results = []
         for block in final.content:
             if getattr(block, "type", None) == "tool_use":
-                if block.name == "execute_command":
+                if block.name == "local_speak":
+                    speak_txt = (block.input or {}).get("text", "")
+                    try:
+                        await websocket.send_text(json.dumps({"type": "speak", "text": speak_txt}))
+                    except Exception:
+                        pass  # best-effort; never block the tool result
+                    status_msg = "🔊 Speaking…"
+                elif block.name == "execute_command":
                     cmd = (block.input or {}).get("command", "command")
                     status_msg = f"⚙ Running {cmd}…"
                 elif block.name == "stage_action":
