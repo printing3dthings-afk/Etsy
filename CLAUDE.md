@@ -223,7 +223,7 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Structure**: Cover → Welcome/Setup (p2) → Dashboard/Home (p3) → Index (p4) → How-to → Content
 - **Sections**: Yearly Overview, Year in Pixels, Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Budget, Meal Plan, Notes × 4
 - **Sticker Library**: 5 pages — Functional Planning, Widget Trackers, Planner & Stationery, Cozy Lifestyle, Seasonal & Holiday
-- **Sticker Pack ZIP**: `DP1026_sticker_pack.zip` — ⚠️ FILE MISSING FROM DISK — must be generated before listing is accurate
+- **Sticker Pack ZIP**: `DP1026_sticker_pack.zip` — 11 sheets, 328 individual stickers, 17.8MB. ⚠️ Listings say "5 sheets / 200+ stickers" — ZIP has 11 sheets; descriptions need updating before re-upload.
 - **Interactive**: Yes — fillable fields, hyperlinked tabs, Dashboard home page, JS popup sticker menu (Acrobat/Xodo)
 - **Footer**: ‹ INDEX + 🏠 HOME buttons on every page
 - **Compatible apps**: GoodNotes 5/6, Notability, PDF Expert, Xodo, Adobe Acrobat Reader
@@ -237,7 +237,7 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Weekly × 52, Daily × 365, Class Schedule, Brain Dump, Priority Matrix, Pomodoro Focus Tracker, Habit Tracker, SMART Goals, Notes × 4
 - **Sticker Library**: 5 pages (same 5-sheet system)
-- **Sticker Pack ZIP**: `DP1027_sticker_pack.zip` — ⚠️ FILE MISSING FROM DISK — must be generated before listing is accurate
+- **Sticker Pack ZIP**: `DP1027_sticker_pack.zip` — 11 sheets, 320 individual stickers, 18.2MB. ⚠️ Listings say "5 sheets / 200+ stickers" — ZIP has 11 sheets; descriptions need updating before re-upload. Note: Sheet 6 individual sticker segmentation failed (stickers too connected in AI output) — sheet PNG is fine for GoodNotes import.
 - **Interactive**: Yes
 - **Target price**: $9.99–$12.99
 - **Target audience**: High school/college students, back to school, study planners
@@ -249,7 +249,7 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Budget Tracker × 12, Debt Payoff Tracker, Savings Goal Tracker, Bill Payment Checklist, Notes × 4
 - **Sticker Library**: 5 pages
-- **Sticker Pack ZIP**: `DP1028_sticker_pack.zip` — ⚠️ FILE MISSING FROM DISK — must be generated before listing is accurate
+- **Sticker Pack ZIP**: `DP1028_sticker_pack.zip` — 11 sheets, 419 individual stickers, 16.3MB. ⚠️ Listings say "5 sheets / 200+ stickers" — ZIP has 11 sheets; descriptions need updating before re-upload.
 - **Interactive**: Yes
 - **Target price**: $12.99–$14.99
 - **Target audience**: Adults tracking finances, budgeters, Dave Ramsey followers, debt payoff community
@@ -261,7 +261,7 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Meal Plan, Progress Photos Log, 30-Day Water Tracker, Sleep Quality Log, Non-Scale Victories, Notes × 4
 - **Sticker Library**: 5 pages
-- **Sticker Pack ZIP**: `DP1029_sticker_pack.zip` — ⚠️ FILE MISSING FROM DISK — must be generated before listing is accurate
+- **Sticker Pack ZIP**: `DP1029_sticker_pack.zip` — 11 sheets, 377 individual stickers, 15.5MB. ⚠️ Listings say "5 sheets / 200+ stickers" — ZIP has 11 sheets; descriptions need updating before re-upload.
 - **Interactive**: Yes
 - **Target price**: $12.99–$14.99
 - **Target audience**: Fitness beginners, wellness journey, weight loss, healthy eating, self-care
