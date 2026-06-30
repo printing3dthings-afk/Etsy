@@ -1759,3 +1759,25 @@ Brief includes: unread message count (Star Seller risk), active/draft listing co
 **Checks:** title length (≤70 chars), exactly 13 tags each ≤20 chars with no special characters, no tag duplicating a title phrase, price suffix (.99/.97/.49), plus product-type-specific keyword and required-description-section checks for digital planners, SVG packs, and wall art (product type auto-detected from title/description, or passed explicitly).
 **Output:** `passed`/`errors`/`warnings`/`reminders` — errors block (must fix before showing Scott), warnings are advisory, reminders are static human-only checks (real product photos, file validation, PDF interactivity, etc.) that the tool can't automate but Frank must still surface.
 **Wiring:** Added to `AGENT_TOOLS`, dispatch branch in `_execute_agent_tool`, WS status message, and an instruction in `_CEO_SYSTEM`'s Quality standards section telling Frank to call this after drafting listing content and before presenting it to Scott. Build ID bumped to v66.
+
+---
+
+## 2026-06-30 — Audit remediation: fixed 2 background loop errors + updated CLAUDE.md
+
+**Symptom:** Two background tasks showing "error" status in the dependency health panel on every boot:
+1. `quality_audit` — "could not parse summary line"
+2. `suggestion_warmer` — "Something went wrong talking to the AI provider"
+
+**Root cause (quality audit):** `data/` is excluded from the Docker build context via `.dockerignore`. On Railway, `data/listing_manifest.json` does not exist. `listing_integrity_check.py` exits early with "ERROR: not found" — no summary line is printed. The summary regex fails to match, raising `RuntimeError("could not parse summary line")`.
+
+**Root cause (suggestion warmer):** `_compute_suggestions_inner()` raises `HTTPException(502, detail="Could not gather shop data: <Etsy error>")` when Etsy data gathering fails at startup. This was passed to `_friendly_error_message()` which is designed for Anthropic errors — the HTTPException falls through to the generic fallback message, hiding the real cause.
+
+**Fix (quality audit):** Added manifest existence check before running the subprocess in `_quality_audit_iteration()`. Returns `{"skipped": True, "reason": "..."}` instead of crashing. `_quality_audit_loop` lambdas updated to show `"warning"` status with the skip reason instead of treating it as an error.
+
+**Fix (suggestion warmer):** Changed `on_error_detail` lambda to extract `exc.detail` from HTTPExceptions before falling back to `_friendly_error_message`. The actual cause (Etsy failure message) now surfaces in the heartbeat instead of the generic Anthropic error message.
+
+**Additional:** Updated CLAUDE.md product catalog — corrected file sizes for DP1026-1029 (were ~15MB/14MB, actual ~7MB each), added ⚠️ warnings for missing sticker ZIPs on DP1026-1029, added note on expanded catalog through DP1034.
+
+**Scott todos posted to Frank:** (1) Mount Railway Volume at /data; (2) Add SMTP env vars to Railway; (3) Generate sticker ZIPs for DP1026-1029.
+
+**Build:** a3c9d1b-v67

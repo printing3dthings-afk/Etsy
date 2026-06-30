@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v66"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "a3c9d1b-v67"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -5275,7 +5275,16 @@ async def _warm_suggestions() -> None:
         delay = await _run_loop_iteration(
             "suggestion_warmer", "Suggestion Warmer", _iteration,
             on_success_detail="CEO diagnostic cache primed",
-            on_error_detail=_friendly_error_message,
+            # HTTPExceptions from _compute_suggestions wrap the real cause in .detail
+            # (e.g. "Could not gather shop data: <Etsy error>"). Passing them through
+            # _friendly_error_message produces the generic "Something went wrong" fallback
+            # which hides the actual cause. Extract .detail first; only call
+            # _friendly_error_message for raw Anthropic errors that don't have .detail.
+            on_error_detail=lambda exc: (
+                str(getattr(exc, "detail", None) or exc)[:300]
+                if hasattr(exc, "detail")
+                else _friendly_error_message(exc)
+            ),
             base_interval=_SUGGESTIONS_TTL - 120,  # refresh just before expiry
             max_interval=120,
         )
@@ -5343,6 +5352,16 @@ async def _quality_audit_iteration() -> dict:
     except Exception as exc:
         print(f"[ops-runbook] recurring-issues check failed: {exc}", flush=True)
 
+    # data/ is excluded from the Docker build context (.dockerignore), so
+    # listing_manifest.json won't exist in fresh Railway deployments until
+    # build_manifest.py has been run at least once. Skip gracefully rather
+    # than crashing the loop — the heartbeat will surface this as a warning.
+    manifest_path = ROOT / "data" / "listing_manifest.json"
+    if not await asyncio.to_thread(manifest_path.exists):
+        print("[quality-audit] skipping — listing_manifest.json not found (run build_manifest.py)", flush=True)
+        return {"skipped": True, "passed": 0, "warned": 0, "failed": 0,
+                "reason": "listing_manifest.json not found — run build_manifest.py first"}
+
     result = await asyncio.to_thread(
         subprocess.run,
         [sys.executable, str(ROOT / "tools" / "listing_integrity_check.py")],
@@ -5354,7 +5373,7 @@ async def _quality_audit_iteration() -> dict:
     out = (result.stdout or "") + "\n" + (result.stderr or "")
     m = _QUALITY_AUDIT_SUMMARY_RE.search(out)
     if not m:
-        raise RuntimeError("could not parse summary line")
+        raise RuntimeError(f"could not parse summary line; script output: {out[:300]!r}")
     passed, warned, failed = (int(g) for g in m.groups())
     blocks = out.split("—" * 70)
     header_idx = next((i for i, b in enumerate(blocks) if "✗ FAIL (" in b), None)
@@ -5387,8 +5406,8 @@ async def _quality_audit_loop() -> None:
     while True:
         delay = await _run_loop_iteration(
             "quality_audit", "Quality Audit", _quality_audit_iteration,
-            on_success_status=lambda r: "error" if r["failed"] > 0 else "ok",
-            on_success_detail=lambda r: f"PASS:{r['passed']} WARN:{r['warned']} FAIL:{r['failed']}",
+            on_success_status=lambda r: "warning" if r.get("skipped") else ("error" if r["failed"] > 0 else "ok"),
+            on_success_detail=lambda r: r.get("reason", f"PASS:{r['passed']} WARN:{r['warned']} FAIL:{r['failed']}"),
             base_interval=86_400,
         )
         await asyncio.sleep(delay)

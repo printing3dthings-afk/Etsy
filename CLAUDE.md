@@ -216,14 +216,14 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 ## Product Catalog
 
 ### DP1026 — Ultimate Digital Life Planner (Lavender Dreams)
-- **File**: `data/digital_products/product_files/DP1026.pdf` (~15MB, 143 pages)
-- **Undated**: `DP1026U.pdf` (~8MB, 143 pages) — perpetual, sells year-round
+- **File**: `data/digital_products/product_files/DP1026.pdf` (~7MB, 143 pages)
+- **Undated**: `DP1026U.pdf` (~7MB, 143 pages) — perpetual, sells year-round
 - **Color scheme**: Lavender Dreams (muted purple #8666AA, soft lavender accent)
 - **Cover**: Full-page kawaii illustrated cover (DALL-E, portrait 1024×1536)
 - **Structure**: Cover → Welcome/Setup (p2) → Dashboard/Home (p3) → Index (p4) → How-to → Content
 - **Sections**: Yearly Overview, Year in Pixels, Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Budget, Meal Plan, Notes × 4
 - **Sticker Library**: 5 pages — Functional Planning, Widget Trackers, Planner & Stationery, Cozy Lifestyle, Seasonal & Holiday
-- **Sticker Pack ZIP**: `DP1026_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
+- **Sticker Pack ZIP**: `DP1026_sticker_pack.zip` — ⚠️ FILE MISSING FROM DISK — must be generated before listing is accurate
 - **Interactive**: Yes — fillable fields, hyperlinked tabs, Dashboard home page, JS popup sticker menu (Acrobat/Xodo)
 - **Footer**: ‹ INDEX + 🏠 HOME buttons on every page
 - **Compatible apps**: GoodNotes 5/6, Notability, PDF Expert, Xodo, Adobe Acrobat Reader
@@ -231,40 +231,45 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Target audience**: Women 18–35, planner lovers, stationery enthusiasts, productivity
 
 ### DP1027 — Student & School Planner 2026 (Cotton Candy)
-- **File**: `data/digital_products/product_files/DP1027.pdf` (~14MB, 131 pages)
+- **File**: `data/digital_products/product_files/DP1027.pdf` (~7MB, 131 pages)
 - **Undated**: `DP1027U.pdf` (~7MB, 131 pages)
 - **Color scheme**: Cotton Candy (pink #DE97C6, sky blue accent)
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Weekly × 52, Daily × 365, Class Schedule, Brain Dump, Priority Matrix, Pomodoro Focus Tracker, Habit Tracker, SMART Goals, Notes × 4
 - **Sticker Library**: 5 pages (same 5-sheet system)
-- **Sticker Pack ZIP**: `DP1027_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
+- **Sticker Pack ZIP**: `DP1027_sticker_pack.zip` — ⚠️ FILE MISSING FROM DISK — must be generated before listing is accurate
 - **Interactive**: Yes
 - **Target price**: $9.99–$12.99
 - **Target audience**: High school/college students, back to school, study planners
 
 ### DP1028 — Budget & Finance Planner 2026 (Midnight Blue)
-- **File**: `data/digital_products/product_files/DP1028.pdf` (~15MB, 144 pages)
-- **Undated**: `DP1028U.pdf` (~8MB, 144 pages)
+- **File**: `data/digital_products/product_files/DP1028.pdf` (~7MB, 144 pages)
+- **Undated**: `DP1028U.pdf` (~7MB, 144 pages)
 - **Color scheme**: Midnight Blue (deep royal blue #1B2568, ice-blue accent)
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Month at a Glance × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Budget Tracker × 12, Debt Payoff Tracker, Savings Goal Tracker, Bill Payment Checklist, Notes × 4
 - **Sticker Library**: 5 pages
-- **Sticker Pack ZIP**: `DP1028_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
+- **Sticker Pack ZIP**: `DP1028_sticker_pack.zip` — ⚠️ FILE MISSING FROM DISK — must be generated before listing is accurate
 - **Interactive**: Yes
 - **Target price**: $12.99–$14.99
 - **Target audience**: Adults tracking finances, budgeters, Dave Ramsey followers, debt payoff community
 
 ### DP1029 — Fitness & Wellness Planner 2026 (Coral Peach)
-- **File**: `data/digital_products/product_files/DP1029.pdf` (~14MB, 133 pages)
+- **File**: `data/digital_products/product_files/DP1029.pdf` (~7MB, 133 pages)
 - **Undated**: `DP1029U.pdf` (~7MB, 133 pages)
 - **Color scheme**: Coral Peach (warm coral #FD6C49, peach-gold accent)
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Weekly × 52, Daily × 365, Brain Dump, Habit Tracker, SMART Goals, Meal Plan, Progress Photos Log, 30-Day Water Tracker, Sleep Quality Log, Non-Scale Victories, Notes × 4
 - **Sticker Library**: 5 pages
-- **Sticker Pack ZIP**: `DP1029_sticker_pack.zip` (5 PNG sheets, 200+ stickers)
+- **Sticker Pack ZIP**: `DP1029_sticker_pack.zip` — ⚠️ FILE MISSING FROM DISK — must be generated before listing is accurate
 - **Interactive**: Yes
 - **Target price**: $12.99–$14.99
 - **Target audience**: Fitness beginners, wellness journey, weight loss, healthy eating, self-care
+
+### DP1030–DP1034 — Expanded Catalog (documentation pending)
+The shop has grown beyond DP1029. Products DP1030–DP1034 exist on disk (`data/digital_products/product_files/`) as PDFs (~7–9MB each, dated + undated versions + v2 finals) with sticker pack ZIPs present for all five. Detailed documentation (titles, sections, color schemes) has not been added to CLAUDE.md yet. Check `data/dp_listing_map.json` for current Etsy listing IDs and titles.
+
+**Note on sticker ZIPs:** DP1030–DP1034 sticker packs exist. DP1026–DP1029 sticker packs do NOT exist on disk and must be generated — see ⚠️ warnings above.
 
 ---
 
