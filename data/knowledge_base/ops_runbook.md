@@ -1744,3 +1744,11 @@ Git-history scrub (either branch) was explicitly deferred by Scott until after r
 **Symptom 2:** "Create video section" had no UI despite the `/api/studio/generate` backend existing and working.
 **Root cause:** Studio endpoints were built server-side (commit history) but no frontend tab was wired in. `video_generator.py` + all deps (numpy/Pillow/moviepy) were confirmed working via background test (generated 176KB MP4 in ~8s with dummy images).
 **Fix:** Added 🎬 Studio hub section button in the Hub nav, `loadStudio()` JS function with listing-ID + style-select generate form, inline `<video>` preview on completion, download link, and previously-generated video list via `/api/studio/videos`. Build ID bumped to v63.
+
+## 2026-06-30 — Daily Brief added (proactive 6AM email)
+
+**What:** Added `tools/daily_brief.py` + `_daily_brief_loop()` background task in `main.py`.
+Frank now emails a daily shop-status brief to printing3dthings@outlook.com at 6AM UTC automatically.
+Manual trigger: `POST /api/brief/run` with `X-App-Token` header, or `python tools/daily_brief.py`.
+Brief includes: unread message count (Star Seller risk), active/draft listing counts, orders last 7 days, recent KB incidents, and a Claude Haiku synthesis for TODAY'S FOCUS.
+**Caveat:** `messaging_r` OAuth scope not granted — unread message count will show 0 until scope is added. 140 active listings confirmed live via Etsy API.

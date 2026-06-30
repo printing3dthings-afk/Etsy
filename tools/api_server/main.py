@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v64"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v65"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -5414,12 +5414,44 @@ async def _health_check_loop() -> None:
         await asyncio.sleep(delay)
 
 
+async def _daily_brief_loop() -> None:
+    """Fire a daily shop-status email at 6 AM UTC. Checks once per hour.
+
+    Does not use _run_loop_iteration because the timing logic is calendar-based
+    (once per calendar day) rather than interval-based (every N seconds).
+    Failures are logged but never crash the server.
+    """
+    db.set_agent_heartbeat("daily_brief", "Daily Brief", "started", "waiting for 6 AM UTC")
+    last_sent_date: date | None = None
+    while True:
+        await asyncio.sleep(3600)
+        now = datetime.utcnow()
+        if now.hour == 6 and now.date() != last_sent_date:
+            db.set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
+            try:
+                from tools.daily_brief import run_daily_brief
+                result = await asyncio.to_thread(run_daily_brief)
+                last_sent_date = now.date()
+                db.set_agent_heartbeat("daily_brief", "Daily Brief", "ok", result)
+                print(f"[daily_brief] {result}", flush=True)
+            except Exception as exc:
+                db.set_agent_heartbeat("daily_brief", "Daily Brief", "error", str(exc))
+                print(f"[daily_brief] error: {exc}", flush=True)
+        else:
+            next_run = "today" if now.hour < 6 else "tomorrow"
+            db.set_agent_heartbeat(
+                "daily_brief", "Daily Brief", "ok",
+                f"next brief {next_run} at 06:00 UTC (last sent: {last_sent_date or 'never'})"
+            )
+
+
 _AGENT_LOOP_LABELS = {
     "snapshot": "Snapshot",
     "suggestion_warmer": "Suggestion Warmer",
     "token_sync": "Token Sync",
     "quality_audit": "Quality Audit",
     "health_check": "Health Check",
+    "daily_brief": "Daily Brief",
 }
 
 
@@ -5444,6 +5476,18 @@ async def _startup() -> None:
     asyncio.create_task(_token_sync_loop())
     asyncio.create_task(_quality_audit_loop())
     asyncio.create_task(_health_check_loop())
+    asyncio.create_task(_daily_brief_loop())
+
+
+@app.post("/api/brief/run")
+async def run_brief_now(request: Request):
+    """Manually trigger the daily brief (for testing). Requires X-App-Token header."""
+    token = request.headers.get("X-App-Token", "")
+    if not secrets.compare_digest(token.encode(), _APP_SECRET_TOKEN.encode()):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    from tools.daily_brief import run_daily_brief
+    result = await asyncio.to_thread(run_daily_brief)
+    return {"status": result}
 
 
 @app.get("/api/analytics")
