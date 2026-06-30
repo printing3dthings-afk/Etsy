@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a3c9d1b-v67"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "a3c9d1b-v68"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -554,9 +554,9 @@ _cache: dict = {}
 _cache_lock = threading.Lock()
 
 # How long the CEO diagnostic stays fresh. Shop data (listings, tags, sales)
-# changes slowly, so a 30-min-old report is fine — and a background loop re-warms
+# changes slowly, so a 4-hour-old report is fine — and a background loop re-warms
 # it before it expires so the dashboard practically never hits the ~60s synthesis.
-_SUGGESTIONS_TTL = 1800
+_SUGGESTIONS_TTL = 14400
 
 
 def _cache_get(key: str, ttl: int = 60):

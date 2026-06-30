@@ -1781,3 +1781,17 @@ Brief includes: unread message count (Star Seller risk), active/draft listing co
 **Scott todos posted to Frank:** (1) Mount Railway Volume at /data; (2) Add SMTP env vars to Railway; (3) Generate sticker ZIPs for DP1026-1029.
 
 **Build:** a3c9d1b-v67
+
+---
+
+## 2026-06-30 — Silent Anthropic credit drain from _warm_suggestions loop
+
+**Symptom:** Scott's Anthropic API credits were draining rapidly with minimal visible usage. After topping up, received "out of credit" email shortly after.
+
+**Root cause:** `_warm_suggestions` background loop in `main.py` fires every `_SUGGESTIONS_TTL - 120` seconds = every 1,680 seconds ≈ 28 minutes, 24/7. Each call invokes the full CEO diagnostic (claude-sonnet-4-6, ~2,000 output tokens). That's ~51 calls/day × ~2,000 tokens × $15/MTok output ≈ **$1.53/day = ~$45/month** in silent background costs. This compound with other background tasks (daily_brief at $0.02/day is negligible; ceo_agent.py uses Opus 4.8 only when Scott explicitly chats with Frank).
+
+**Fix:** Changed `_SUGGESTIONS_TTL = 1800` → `14400` (30 minutes → 4 hours) in `main.py:559`. The `base_interval=_SUGGESTIONS_TTL - 120` and `_cache_get(..., ttl=_SUGGESTIONS_TTL)` both read from this constant, so one change cascades correctly. Reduces background calls from ~51/day to ~6/day — **~88% reduction in background API spend** (~$45/month → ~$5/month). Dashboard still sees a fresh report because the warmer fires proactively before expiry.
+
+**Approved by Scott (2026-06-30).**
+
+**Build:** a3c9d1b-v68
