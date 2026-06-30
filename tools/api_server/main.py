@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v65"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v66"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -1268,6 +1268,11 @@ Quality standards:
   product file as input — never an AI stand-in
 - All pre-publish quality gates must pass before any listing goes live
 - Growth is urgent but quality never drops
+- Maker/Checker: after drafting a listing's title, tags, description, and price, call
+  check_listing_quality before presenting it to {business_config.OWNER_NAME}. If `passed`
+  is false, fix every error yourself and re-run the check — never show him content that
+  fails an automated gate. Always surface the `reminders` list verbatim alongside the
+  content, since those are human-only checks the tool cannot verify.
 
 Keep responses concise and scannable — {business_config.OWNER_NAME} is reading on his phone.\
 """
@@ -1823,6 +1828,37 @@ AGENT_TOOLS = [
             "required": ["query"],
         },
     },
+    {
+        "name": "check_listing_quality",
+        "description": (
+            "Run automated QC gates from CLAUDE.md against draft listing content (Maker/Checker pattern). "
+            "Call this after generating a listing's title, tags, description, and price — BEFORE presenting "
+            "it to Scott for review. Checks title length, tag count/length/duplication, price suffix, and "
+            "product-type-specific keyword and section requirements. If `passed` is false, fix the listed "
+            "errors and re-run before showing the content to Scott. Also returns `reminders` — human-only "
+            "checks (real product photos, file validation, etc.) that must be surfaced to Scott explicitly "
+            "since they can't be automated."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "description": "Draft listing title."},
+                "tags": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Draft listing tags (should be exactly 13).",
+                },
+                "description": {"type": "string", "description": "Draft listing description."},
+                "price": {"type": "number", "description": "Draft listing price in dollars."},
+                "product_type": {
+                    "type": "string",
+                    "enum": ["auto", "digital_planner", "svg_pack", "wall_art"],
+                    "description": "Product type, or 'auto' to detect from title/description (default).",
+                },
+            },
+            "required": ["title", "tags", "description", "price"],
+        },
+    },
     # Native Anthropic-hosted tool (not one of ours — no input_schema, no handler in
     # _execute_agent_tool). Anthropic executes the search server-side and injects
     # results into the same turn; the model keeps generating, so this never trips
@@ -2209,6 +2245,15 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             limit = min(int((tool_input or {}).get("limit", 10)), 20)
             results = search_etsy(query, limit)
             return {"query": query, "count": len(results), "results": results}
+        if name == "check_listing_quality":
+            from tools.listing_qc import check_listing
+            return check_listing(
+                title=(tool_input or {}).get("title", ""),
+                tags=(tool_input or {}).get("tags", []),
+                description=(tool_input or {}).get("description", ""),
+                price=float((tool_input or {}).get("price", 0)),
+                product_type=(tool_input or {}).get("product_type", "auto"),
+            )
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired:
         return {"error": f"Command timed out (>{timeout}s)", "category": "transient", "retryable": True}
@@ -7904,6 +7949,8 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                 elif block.name == "search_etsy":
                     q = (block.input or {}).get("query", "")
                     status_msg = f"🔍 Searching Etsy: {q[:40]}…"
+                elif block.name == "check_listing_quality":
+                    status_msg = "🔍 Running listing QC checklist…"
                 elif block.name in _RELAY_TOOLS:
                     status_msg = f"💻 Asking the relay to run {block.name}…"
                 elif block.name in _LOCAL_STAGED_TOOLS:

@@ -1752,3 +1752,10 @@ Frank now emails a daily shop-status brief to printing3dthings@outlook.com at 6A
 Manual trigger: `POST /api/brief/run` with `X-App-Token` header, or `python tools/daily_brief.py`.
 Brief includes: unread message count (Star Seller risk), active/draft listing counts, orders last 7 days, recent KB incidents, and a Claude Haiku synthesis for TODAY'S FOCUS.
 **Caveat:** `messaging_r` OAuth scope not granted — unread message count will show 0 until scope is added. 140 active listings confirmed live via Etsy API.
+
+## 2026-06-30 — Added automated listing QC gate (Maker/Checker pattern)
+
+**What:** Built `tools/listing_qc.py` and wired it into Frank as the `check_listing_quality` agent tool. Implements the one genuine gap found in the SAMS/Loop Engineering slide assessment: an automated Checker pass between content generation (Maker) and Scott's review.
+**Checks:** title length (≤70 chars), exactly 13 tags each ≤20 chars with no special characters, no tag duplicating a title phrase, price suffix (.99/.97/.49), plus product-type-specific keyword and required-description-section checks for digital planners, SVG packs, and wall art (product type auto-detected from title/description, or passed explicitly).
+**Output:** `passed`/`errors`/`warnings`/`reminders` — errors block (must fix before showing Scott), warnings are advisory, reminders are static human-only checks (real product photos, file validation, PDF interactivity, etc.) that the tool can't automate but Frank must still surface.
+**Wiring:** Added to `AGENT_TOOLS`, dispatch branch in `_execute_agent_tool`, WS status message, and an instruction in `_CEO_SYSTEM`'s Quality standards section telling Frank to call this after drafting listing content and before presenting it to Scott. Build ID bumped to v66.
