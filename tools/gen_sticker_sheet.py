@@ -25,6 +25,135 @@ ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
 
 SHEET_PROMPTS = {
     'DP1026': {
+        1: {
+            'name': 'Functional Planning',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft lavender, muted purple, and cream pastel colors. "
+                "Stickers include: a wide lavender banner strip with a dotted edge for a section header, a small checklist strip with three empty checkboxes and a tiny pen, "
+                "a triangular corner flag in purple for marking important items, a rounded date dot circle with a decorative number shape inside, "
+                "a priority arrow label pointing right in lavender, a small burst badge shape in soft coral-purple, "
+                "a check mark inside a circle for a 'done' sticker, a thin horizontal divider strip with small stars along it, "
+                "a square checkbox sticker for task completion, a small clock with rosy cheeks showing a time for appointments, "
+                "a double underline emphasis bar in muted purple, a sticky note square shape with a smiling face in pale lavender, "
+                "a ribbon banner that curves at both ends for headers in lavender, a small dot with a soft X for a 'canceled' sticker, "
+                "a tiny fire shape sticker in warm coral for hot-priority tasks, a small paper clip in silver for grouping items, "
+                "a washi tape strip with tiny hearts pattern in lavender, a small adhesive flag tab in purple, "
+                "a round badge sticker with a gold star center on lavender, a thumbs-up shape in a lavender circle. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        2: {
+            'name': 'Widget Trackers',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft lavender, muted purple, and cream pastel colors. "
+                "Stickers include: a row of five round kawaii mood faces showing different emotions — happy, sleepy, sad, anxious, excited — each with rosy cheeks, "
+                "a water glass with a cute face showing eight fill-lines as a water intake tracker widget, "
+                "a crescent moon with ZZZ marks as a sleep log widget, "
+                "a row of seven small circles labeled Mon through Sun as a weekly habit streak bubbles widget, "
+                "a battery icon showing charge level with a happy face as an energy meter widget, "
+                "a small sun with a face showing a happy weather mood, a cloud with a sad drizzle showing a low mood, "
+                "a heart rate arc in lavender as a calm heart rate indicator, "
+                "a small footprint pair as a step tracker widget, "
+                "a tiny weekly mini-calendar grid as a weekly summary widget, "
+                "a dot grid of thirty circles as a monthly mood tracker grid, "
+                "a hydration drop with fill lines as a hydration level visual, "
+                "a sleep arc showing hours from 8pm to 8am as a sleep hours tracker, "
+                "a small tomato-shaped timer for focus sessions (Pomodoro), "
+                "a five-star rating badge for stress level, "
+                "an open book with lines as a reading minutes tracker, "
+                "a small heart with a count box as a gratitude log counter, "
+                "a phone silhouette with a clock as a screen time tracker, "
+                "a flame with a number box for calories burned, "
+                "a small water bottle with fill level marks as a hydration bottle tracker. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        3: {
+            'name': 'Planner & Stationery',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft lavender, purple, and cream pastel colors. "
+                "Stickers include: a mini spiral-bound notebook with a happy face on the cover in lavender, "
+                "a cup of fine-tip pens and pencils with colorful tops, "
+                "a washi tape roll in muted purple with a smiling face, "
+                "a ceramic coffee cup with steam curls and rosy cheeks in cream and lavender, "
+                "a pair of round-tipped scissors with soft eyes, "
+                "a chunky pencil with an eraser on top and a kawaii face in lavender, "
+                "a fanned set of paper clips with a tiny face, "
+                "a small stapler with a winking expression in purple, "
+                "a sticky note pad with a wavy smile, "
+                "a ruler with millimeter marks and sleepy eyes, "
+                "a fountain pen with an ink drip and rosy cheeks, "
+                "an envelope with a heart wax seal on the back, "
+                "a paper plane folded from a lavender notebook page, "
+                "an open planner with a pen resting in the gutter, "
+                "a set of three color markers standing upright in purple and teal, "
+                "a hole punch with tiny confetti circles flying out, "
+                "a trio of binder clips with cute little faces, "
+                "a tape dispenser with a bow on top, "
+                "a tiny calculator with a smiley screen, "
+                "a round eraser with a soft smile. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        4: {
+            'name': 'Cozy Lifestyle',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft lavender, warm cream, and purple pastel colors. "
+                "Stickers include: a ceramic mug with steam and a happy kawaii face in lavender, "
+                "a lit pillar candle with a flame and tiny rosy cheeks, "
+                "a stack of three books with a sleepy face on the top book, "
+                "a string of fairy lights looping in a gentle curve with tiny glowing dots, "
+                "a sleeping cat curled into a ball with ZZZ floating above, "
+                "a cozy chunky-knit blanket bundled into a roll with a sleepy face, "
+                "a small potted succulent plant in a terracotta pot with rosy cheeks, "
+                "a ramen noodle bowl with chopsticks resting on it and steam rising, "
+                "a yarn ball with two knitting needles and a content expression, "
+                "an acoustic guitar with music notes floating beside it, "
+                "a vinyl record player with a disc spinning and musical notes, "
+                "a bento box open showing small food items and a smile, "
+                "a vintage globe on a small stand with a curious face, "
+                "a glasses case with a pair of round frames peeking out, "
+                "a tall glass of matcha latte with whipped cream and a straw, "
+                "a scented candle jar with a bow on the lid and a tiny flame, "
+                "a polaroid photo strip with three frames and a bow at the top, "
+                "a pair of fuzzy socks with polka dots and a happy expression, "
+                "a hot water bottle with a cover and a cozy sleepy face, "
+                "a small round armchair with a cushion and a content expression. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        5: {
+            'name': 'Seasonal & Holiday',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft lavender, pastel seasonal colors, and cream. "
+                "Stickers include: a cherry blossom branch with three open pink flowers and petals falling, "
+                "a round orange pumpkin with a kawaii face and green stem, "
+                "a six-pointed snowflake crystal in icy blue, "
+                "a red heart with big kawaii eyes and rosy cheeks for Valentine's Day, "
+                "a rainbow with white fluffy cloud at each end and a smiling arc, "
+                "a bright sunflower with golden petals and a happy face center, "
+                "a small black bat with big eyes for Halloween, "
+                "a tiny decorated Christmas tree with a star on top, "
+                "a pastel Easter egg with stripe and dot decoration, "
+                "a shooting star with a golden tail trailing behind, "
+                "an orange autumn maple leaf with a soft expression, "
+                "a fireworks sparkle burst in festive colors, "
+                "a polka-dot umbrella in the rain with a smiling face, "
+                "a small corn stalk with husks for harvest season, "
+                "a four-leaf clover with a heart center for St. Patrick's Day, "
+                "a bunch of birthday balloons in pastel colors tied together, "
+                "a jack-o-lantern with a triangle-eyed happy grin, "
+                "a candy cane in red and white stripes with rosy cheeks, "
+                "a pink tulip in bloom with a smiling face, "
+                "a cartoon turkey with a fan tail in warm autumn colors. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
         6: {
             'name': 'Self-Care & Wellness',
             'prompt': (
@@ -123,6 +252,135 @@ SHEET_PROMPTS = {
         },
     },
     'DP1027': {
+        1: {
+            'name': 'Functional Planning',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft bubblegum pink and sky blue pastel colors. "
+                "Stickers include: a wide pink banner strip with a dotted edge for a section header, a small checklist strip with three empty checkboxes and a tiny pen in sky blue, "
+                "a triangular corner flag in sky blue for marking important items, a rounded date dot circle in cotton candy pink with a decorative shape inside, "
+                "a priority arrow label pointing right in bubblegum pink, a small burst badge shape in sky blue, "
+                "a check mark inside a circle for a 'done' sticker in sky blue, a thin horizontal divider strip with small hearts along it in pink, "
+                "a square checkbox sticker for task completion in pink, a small clock with rosy cheeks showing a time for appointments, "
+                "a double underline emphasis bar in sky blue, a sticky note square shape with a smiling face in pale blush, "
+                "a ribbon banner that curves at both ends for headers in pink, a small dot with a soft X in sky blue for a 'canceled' sticker, "
+                "a tiny fire shape sticker in warm coral for hot-priority tasks, a small paper clip in silver, "
+                "a washi tape strip with tiny stars pattern in pink and sky blue, a small adhesive flag tab in sky blue, "
+                "a round badge sticker with a gold star center on bubblegum pink, a thumbs-up shape in a sky blue circle. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        2: {
+            'name': 'Widget Trackers',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft bubblegum pink, sky blue, and cream pastel colors. "
+                "Stickers include: a row of five round kawaii mood faces showing different emotions — happy, sleepy, sad, anxious, excited — each with rosy cheeks in pink, "
+                "a water glass with a cute face showing eight fill-lines as a water intake tracker widget in sky blue, "
+                "a crescent moon with ZZZ marks as a sleep log widget in pale pink, "
+                "a row of seven small circles in alternating pink and blue as a weekly habit streak bubbles widget, "
+                "a battery icon showing charge level with a happy face as an energy meter widget in sky blue, "
+                "a small sun with a pink face showing a happy weather mood, a cloud in sky blue with drizzle showing a low mood, "
+                "a heart rate arc in bubblegum pink as a calm heart rate indicator, "
+                "a small footprint pair in pink as a step tracker widget, "
+                "a tiny weekly mini-calendar grid as a weekly summary widget, "
+                "a dot grid of thirty pink circles as a monthly mood tracker grid, "
+                "a hydration drop in sky blue with fill lines as a hydration level visual, "
+                "a sleep arc in soft pink showing hours from 8pm to 8am as a sleep hours tracker, "
+                "a small round tomato-shaped timer in coral for focus sessions (Pomodoro), "
+                "a five-star rating badge in pink for stress level, "
+                "an open book with lines in sky blue as a reading minutes tracker, "
+                "a small pink heart with a count box as a gratitude log counter, "
+                "a phone silhouette in sky blue with a clock as a screen time tracker, "
+                "a pink flame with a number box for exercise minutes, "
+                "a small water bottle in sky blue with fill level marks as a hydration bottle tracker. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        3: {
+            'name': 'Planner & Stationery',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft bubblegum pink, sky blue, and cream pastel colors. "
+                "Stickers include: a mini spiral-bound notebook with a happy face on the cover in cotton candy pink, "
+                "a cup of fine-tip pens and pencils with pink and blue tops, "
+                "a washi tape roll in sky blue with a smiling face, "
+                "a ceramic coffee cup with steam curls and rosy cheeks in pink, "
+                "a pair of round-tipped scissors in sky blue with soft eyes, "
+                "a chunky pencil with an eraser on top and a kawaii face in bubblegum pink, "
+                "a fanned set of paper clips with a tiny face in sky blue, "
+                "a small stapler with a winking expression in cotton candy pink, "
+                "a sticky note pad in pale pink with a wavy smile, "
+                "a ruler with millimeter marks and sleepy eyes in sky blue, "
+                "a fountain pen with an ink drip and rosy cheeks, "
+                "an envelope with a heart wax seal on the back in pink, "
+                "a paper plane folded from a pink notebook page, "
+                "an open planner in pink and blue with a pen resting in the gutter, "
+                "a set of three color markers standing upright in pink and sky blue, "
+                "a hole punch in sky blue with tiny confetti circles flying out, "
+                "a trio of binder clips in pink with cute little faces, "
+                "a tape dispenser with a bow on top in bubblegum pink, "
+                "a tiny calculator with a smiley screen in sky blue, "
+                "a round eraser in cotton candy pink with a soft smile. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        4: {
+            'name': 'Cozy Lifestyle',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft bubblegum pink, sky blue, and warm cream pastel colors. "
+                "Stickers include: a ceramic mug with steam and a happy kawaii face in cotton candy pink, "
+                "a lit pillar candle in sky blue with a flame and tiny rosy cheeks, "
+                "a stack of three books with a sleepy face on the top book in pink and blue, "
+                "a string of fairy lights looping in a gentle curve with tiny pink glowing dots, "
+                "a sleeping cat curled into a ball in cotton candy pink with ZZZ floating above, "
+                "a cozy chunky-knit blanket in sky blue bundled into a roll with a sleepy face, "
+                "a small potted succulent plant in a pink pot with rosy cheeks, "
+                "a ramen noodle bowl in sky blue with chopsticks and steam rising, "
+                "a yarn ball in cotton candy pink with two knitting needles and a content expression, "
+                "an acoustic guitar with music notes floating beside it in cream and pink, "
+                "a vinyl record player with a pink disc spinning and musical notes, "
+                "a bento box open in sky blue showing small food items and a smile, "
+                "a vintage globe on a small stand with a curious face in pink and cream, "
+                "a glasses case in sky blue with a pair of round frames peeking out, "
+                "a tall glass of matcha latte with whipped cream and a pink straw, "
+                "a scented candle jar with a bow on the lid and a tiny flame in bubblegum pink, "
+                "a polaroid photo strip with three frames and a pink bow at the top, "
+                "a pair of fuzzy socks with polka dots in cotton candy pink and a happy expression, "
+                "a hot water bottle with a cover in sky blue and a cozy sleepy face, "
+                "a small round armchair in pink with a cushion and a content expression. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        5: {
+            'name': 'Seasonal & Holiday',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and soft bubblegum pink, sky blue, and pastel seasonal colors. "
+                "Stickers include: a cherry blossom branch with three open pink flowers and petals falling, "
+                "a round orange pumpkin with a kawaii face and green stem, "
+                "a six-pointed snowflake crystal in icy sky blue, "
+                "a red heart with big kawaii eyes and rosy cheeks for Valentine's Day, "
+                "a rainbow with white fluffy cloud at each end and a smiling arc in pink and blue, "
+                "a bright sunflower with golden petals and a happy face center, "
+                "a small black bat with big eyes for Halloween, "
+                "a tiny decorated Christmas tree with a star on top in cotton candy pink and sky blue, "
+                "a pastel pink Easter egg with stripe and dot decoration, "
+                "a shooting star with a pink and gold tail trailing behind, "
+                "an orange autumn maple leaf with a soft expression, "
+                "a fireworks sparkle burst in pink and sky blue, "
+                "a polka-dot umbrella in bubblegum pink in the rain with a smiling face, "
+                "a small corn stalk with husks for harvest season, "
+                "a four-leaf clover with a pink heart center for St. Patrick's Day, "
+                "a bunch of birthday balloons in cotton candy pink and sky blue tied together, "
+                "a jack-o-lantern with a triangle-eyed happy grin in warm orange, "
+                "a candy cane in pink and white stripes with rosy cheeks, "
+                "a pink tulip in bloom with a smiling face, "
+                "a cartoon turkey with a fan tail in warm autumn colors. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
         6: {
             'name': 'School Supplies',
             'prompt': (
@@ -233,6 +491,135 @@ SHEET_PROMPTS = {
         },
     },
     'DP1028': {
+        1: {
+            'name': 'Functional Planning',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and deep navy blue, ice blue, and gold pastel colors. "
+                "Stickers include: a wide navy banner strip with a gold dotted edge for a section header, a small checklist strip with three empty checkboxes and a tiny gold pen, "
+                "a triangular corner flag in ice blue for marking important items, a rounded date dot circle in navy with a decorative shape inside, "
+                "a priority arrow label pointing right in ice blue, a small gold burst badge shape, "
+                "a check mark inside a circle for a 'done' sticker in gold, a thin horizontal divider strip with small stars along it in navy, "
+                "a square checkbox sticker for task completion in ice blue, a small clock with rosy cheeks showing a time for appointments, "
+                "a double underline emphasis bar in navy blue, a sticky note square shape with a smiling face in pale ice blue, "
+                "a ribbon banner that curves at both ends for headers in navy and gold, a small dot with a soft X in ice blue for a 'canceled' sticker, "
+                "a tiny fire shape sticker in gold for high-priority tasks, a small paper clip in gold, "
+                "a washi tape strip with tiny diamond pattern in navy and ice blue, a small adhesive flag tab in gold, "
+                "a round badge sticker with a gold star center on deep navy, a thumbs-up shape in a gold circle. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        2: {
+            'name': 'Widget Trackers',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and deep navy blue, ice blue, and gold pastel colors. "
+                "Stickers include: a row of five round kawaii mood faces showing different emotions — happy, sleepy, sad, anxious, excited — each with rosy cheeks in ice blue, "
+                "a water glass with a cute face showing eight fill-lines as a water intake tracker widget in ice blue, "
+                "a crescent moon in navy with gold ZZZ marks as a sleep log widget, "
+                "a row of seven small circles in alternating navy and ice blue as a weekly habit streak bubbles widget, "
+                "a battery icon in ice blue showing charge level with a happy face as an energy meter widget, "
+                "a small gold sun with a face showing a happy weather mood, a navy cloud with drizzle showing a low mood, "
+                "a heart rate arc in ice blue as a calm heart rate indicator, "
+                "a small footprint pair in navy as a step tracker widget, "
+                "a tiny weekly mini-calendar grid in navy as a weekly summary widget, "
+                "a dot grid of thirty navy circles as a monthly mood tracker grid, "
+                "a hydration drop in ice blue with fill lines as a hydration level visual, "
+                "a sleep arc in navy showing hours from 8pm to 8am as a sleep hours tracker, "
+                "a small round timer in gold for focus sessions (Pomodoro), "
+                "a five-star rating badge in gold for stress level, "
+                "an open book in ice blue with lines as a reading minutes tracker, "
+                "a small navy heart with a count box as a gratitude log counter, "
+                "a phone silhouette in navy with a clock as a screen time tracker, "
+                "a gold flame with a number box for exercise minutes, "
+                "a small water bottle in ice blue with fill level marks as a hydration bottle tracker. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        3: {
+            'name': 'Planner & Stationery',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and deep navy blue, ice blue, and gold pastel colors. "
+                "Stickers include: a mini spiral-bound notebook with a happy face on the cover in midnight navy, "
+                "a cup of fine-tip pens and pencils with navy and gold tops, "
+                "a washi tape roll in ice blue with a smiling face, "
+                "a ceramic coffee cup with steam curls and rosy cheeks in navy, "
+                "a pair of round-tipped scissors in ice blue with soft eyes, "
+                "a chunky pencil with an eraser on top and a kawaii face in navy and gold, "
+                "a fanned set of paper clips with a tiny face in gold, "
+                "a small stapler with a winking expression in midnight blue, "
+                "a sticky note pad in pale ice blue with a wavy smile, "
+                "a ruler with millimeter marks and sleepy eyes in navy, "
+                "a fountain pen with a gold nib and ink drip with rosy cheeks, "
+                "an envelope with a gold wax seal on the back, "
+                "a paper plane folded from a navy notebook page, "
+                "an open planner in navy and gold with a pen resting in the gutter, "
+                "a set of three color markers standing upright in navy and ice blue, "
+                "a hole punch in navy with tiny confetti circles flying out, "
+                "a trio of binder clips in ice blue with cute little faces, "
+                "a tape dispenser with a bow on top in navy, "
+                "a tiny calculator with a smiley screen in ice blue, "
+                "a round eraser in ice blue with a soft smile. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        4: {
+            'name': 'Cozy Lifestyle',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and deep navy blue, ice blue, and warm cream pastel colors. "
+                "Stickers include: a ceramic mug with steam and a happy kawaii face in midnight navy, "
+                "a lit pillar candle in navy with a gold flame and tiny rosy cheeks, "
+                "a stack of three books with a sleepy face on the top book in navy and ice blue, "
+                "a string of fairy lights looping in a gentle curve with tiny gold glowing dots, "
+                "a sleeping cat curled into a ball in navy with ZZZ floating above, "
+                "a cozy chunky-knit blanket in ice blue bundled into a roll with a sleepy face, "
+                "a small potted succulent plant in a navy pot with rosy cheeks, "
+                "a ramen noodle bowl in navy with chopsticks and steam rising, "
+                "a yarn ball in ice blue with two knitting needles and a content expression, "
+                "an acoustic guitar with music notes floating beside it in navy and cream, "
+                "a vinyl record player with a navy disc spinning and gold musical notes, "
+                "a bento box open in ice blue showing small food items and a smile, "
+                "a vintage globe on a small stand with a curious face in navy and gold, "
+                "a glasses case in navy with a pair of round frames peeking out, "
+                "a tall glass of matcha latte with whipped cream and a navy straw, "
+                "a scented candle jar with a gold bow on the lid and a tiny flame, "
+                "a polaroid photo strip with three frames and a navy ribbon at the top, "
+                "a pair of fuzzy socks with polka dots in ice blue and a happy expression, "
+                "a hot water bottle with a cover in navy and a cozy sleepy face, "
+                "a small round armchair in midnight blue with a cushion and a content expression. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        5: {
+            'name': 'Seasonal & Holiday',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and midnight navy, ice blue, gold, and pastel seasonal colors. "
+                "Stickers include: a cherry blossom branch with three open pink flowers and petals falling, "
+                "a round orange pumpkin with a kawaii face and green stem, "
+                "a six-pointed snowflake crystal in ice blue, "
+                "a red heart with big kawaii eyes and rosy cheeks for Valentine's Day, "
+                "a rainbow with white fluffy cloud at each end and a smiling arc in navy and gold, "
+                "a bright sunflower with golden petals and a happy face center, "
+                "a small black bat with big eyes for Halloween, "
+                "a tiny decorated Christmas tree with a gold star on top in navy and cream, "
+                "a pastel blue Easter egg with stripe and dot decoration, "
+                "a shooting star with a gold tail trailing behind, "
+                "an orange autumn maple leaf with a soft expression, "
+                "a fireworks sparkle burst in navy and gold, "
+                "a polka-dot umbrella in navy in the rain with a smiling face, "
+                "a small corn stalk with husks for harvest season, "
+                "a four-leaf clover with a gold heart center for St. Patrick's Day, "
+                "a bunch of birthday balloons in navy and ice blue tied together, "
+                "a jack-o-lantern with a triangle-eyed happy grin in warm orange, "
+                "a candy cane in ice blue and white stripes with rosy cheeks, "
+                "a blue snowdrop flower in bloom with a smiling face, "
+                "a cartoon turkey with a fan tail in warm autumn colors. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
         6: {
             'name': 'Money & Finance',
             'prompt': (
@@ -343,6 +730,135 @@ SHEET_PROMPTS = {
         },
     },
     'DP1029': {
+        1: {
+            'name': 'Functional Planning',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and warm coral, peach-gold, and cream pastel colors. "
+                "Stickers include: a wide coral banner strip with a dotted peach edge for a section header, a small checklist strip with three empty checkboxes and a tiny pen in peach-gold, "
+                "a triangular corner flag in warm coral for marking important items, a rounded date dot circle in coral with a decorative shape inside, "
+                "a priority arrow label pointing right in peach-gold, a small burst badge shape in deep coral, "
+                "a check mark inside a circle for a 'done' sticker in peach-gold, a thin horizontal divider strip with small suns along it in coral, "
+                "a square checkbox sticker for task completion in peach, a small clock with rosy cheeks showing a time for appointments, "
+                "a double underline emphasis bar in warm coral, a sticky note square shape with a smiling face in warm cream, "
+                "a ribbon banner that curves at both ends for headers in coral and peach, a small dot with a soft X in peach-gold for a 'canceled' sticker, "
+                "a tiny fire shape sticker in bright coral for high-priority tasks, a small paper clip in gold, "
+                "a washi tape strip with tiny hearts pattern in coral and peach, a small adhesive flag tab in peach-gold, "
+                "a round badge sticker with a gold star center on coral, a thumbs-up shape in a coral circle. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        2: {
+            'name': 'Widget Trackers',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and warm coral, peach-gold, and cream pastel colors. "
+                "Stickers include: a row of five round kawaii mood faces showing different emotions — happy, sleepy, sad, anxious, excited — each with rosy cheeks in coral tones, "
+                "a water glass with a cute face showing eight fill-lines as a water intake tracker widget in peach-gold, "
+                "a crescent moon in peach with ZZZ marks as a sleep log widget, "
+                "a row of seven small circles in alternating coral and peach as a weekly habit streak bubbles widget, "
+                "a battery icon in peach-gold showing charge level with a happy face as an energy meter widget, "
+                "a small coral sun with a face showing a happy weather mood, a peach cloud with drizzle showing a low mood, "
+                "a heart rate arc in warm coral as a calm heart rate indicator, "
+                "a small footprint pair in coral as a step tracker widget, "
+                "a tiny weekly mini-calendar grid in coral as a weekly summary widget, "
+                "a dot grid of thirty coral circles as a monthly mood tracker grid, "
+                "a hydration drop in peach-gold with fill lines as a hydration level visual, "
+                "a sleep arc in warm coral showing hours from 8pm to 8am as a sleep hours tracker, "
+                "a small round timer in peach-gold for focus sessions (Pomodoro), "
+                "a five-star rating badge in coral for stress level, "
+                "an open book in peach with lines as a reading minutes tracker, "
+                "a small coral heart with a count box as a gratitude log counter, "
+                "a phone silhouette in peach-gold with a clock as a screen time tracker, "
+                "a warm coral flame with a number box for exercise minutes, "
+                "a small water bottle in peach-gold with fill level marks as a hydration bottle tracker. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        3: {
+            'name': 'Planner & Stationery',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and warm coral, peach-gold, and cream pastel colors. "
+                "Stickers include: a mini spiral-bound notebook with a happy face on the cover in warm coral, "
+                "a cup of fine-tip pens and pencils with coral and peach tops, "
+                "a washi tape roll in peach-gold with a smiling face, "
+                "a ceramic coffee cup with steam curls and rosy cheeks in coral, "
+                "a pair of round-tipped scissors in peach with soft eyes, "
+                "a chunky pencil with an eraser on top and a kawaii face in warm coral, "
+                "a fanned set of paper clips with a tiny face in peach-gold, "
+                "a small stapler with a winking expression in coral, "
+                "a sticky note pad in warm cream with a wavy smile, "
+                "a ruler with millimeter marks and sleepy eyes in peach, "
+                "a fountain pen with an ink drip and rosy cheeks in coral, "
+                "an envelope with a peach wax seal on the back, "
+                "a paper plane folded from a coral notebook page, "
+                "an open planner in coral and peach with a pen resting in the gutter, "
+                "a set of three color markers standing upright in coral and peach, "
+                "a hole punch in peach with tiny confetti circles flying out, "
+                "a trio of binder clips in coral with cute little faces, "
+                "a tape dispenser with a bow on top in peach-gold, "
+                "a tiny calculator with a smiley screen in warm coral, "
+                "a round eraser in peach with a soft smile. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        4: {
+            'name': 'Cozy Lifestyle',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and warm coral, peach-gold, and cream pastel colors. "
+                "Stickers include: a ceramic mug with steam and a happy kawaii face in warm coral, "
+                "a lit pillar candle in peach-gold with a flame and tiny rosy cheeks, "
+                "a stack of three books with a sleepy face on the top book in coral and peach, "
+                "a string of fairy lights looping in a gentle curve with tiny peach-gold glowing dots, "
+                "a sleeping cat curled into a ball in warm coral with ZZZ floating above, "
+                "a cozy chunky-knit blanket in peach bundled into a roll with a sleepy face, "
+                "a small potted succulent plant in a coral pot with rosy cheeks, "
+                "a ramen noodle bowl in peach with chopsticks and steam rising, "
+                "a yarn ball in warm coral with two knitting needles and a content expression, "
+                "an acoustic guitar with music notes floating beside it in peach and cream, "
+                "a vinyl record player with a coral disc spinning and peach musical notes, "
+                "a bento box open in peach showing small food items and a smile, "
+                "a vintage globe on a small stand with a curious face in coral and cream, "
+                "a glasses case in peach with a pair of round frames peeking out, "
+                "a tall glass of matcha latte with whipped cream and a coral straw, "
+                "a scented candle jar with a peach bow on the lid and a tiny flame, "
+                "a polaroid photo strip with three frames and a coral ribbon at the top, "
+                "a pair of fuzzy socks with polka dots in warm coral and a happy expression, "
+                "a hot water bottle with a cover in peach and a cozy sleepy face, "
+                "a small round armchair in coral with a cushion and a content expression. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
+        5: {
+            'name': 'Seasonal & Holiday',
+            'prompt': (
+                "A kawaii sticker sheet with a clean white background. "
+                "20 individual kawaii illustrated stickers scattered across the page, each with a thick black outline and warm coral, peach-gold, and pastel seasonal colors. "
+                "Stickers include: a cherry blossom branch with three open pink flowers and petals falling, "
+                "a round orange pumpkin with a kawaii face and green stem, "
+                "a six-pointed snowflake crystal in icy peach-blue, "
+                "a red heart with big kawaii eyes and rosy cheeks for Valentine's Day, "
+                "a rainbow with white fluffy cloud at each end and a smiling arc in coral and peach, "
+                "a bright sunflower with golden petals and a happy face center, "
+                "a small black bat with big eyes for Halloween, "
+                "a tiny decorated Christmas tree with a star on top in coral and cream, "
+                "a pastel peach Easter egg with stripe and dot decoration, "
+                "a shooting star with a peach-gold tail trailing behind, "
+                "an orange autumn maple leaf with a soft expression, "
+                "a fireworks sparkle burst in coral and peach-gold, "
+                "a polka-dot umbrella in warm coral in the rain with a smiling face, "
+                "a small corn stalk with husks for harvest season, "
+                "a four-leaf clover with a peach-gold heart center for St. Patrick's Day, "
+                "a bunch of birthday balloons in coral and peach tied together, "
+                "a jack-o-lantern with a triangle-eyed happy grin in warm orange, "
+                "a candy cane in coral and white stripes with rosy cheeks, "
+                "a peach tulip in bloom with a smiling face, "
+                "a cartoon turkey with a fan tail in warm autumn colors. "
+                "Each sticker is approximately the same size, clean and detailed, kawaii chibi style. No text on stickers. Clean white background."
+            ),
+        },
         6: {
             'name': 'Workout & Exercise',
             'prompt': (
