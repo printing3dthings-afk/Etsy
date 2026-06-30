@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "f4b1e2a-v63"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f4b1e2a-v64"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -1776,6 +1776,53 @@ AGENT_TOOLS = [
         ),
         "input_schema": {"type": "object", "properties": {}},
     },
+    {
+        "name": "browse_web",
+        "description": (
+            "Navigate to any public URL and read its visible text content. "
+            "Use for competitor research, reading Etsy listing pages, checking blog posts or news, "
+            "or any task requiring live web data. Returns up to 8000 characters of cleaned page text. "
+            "Does not execute JavaScript — for plain HTML pages only."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "Full URL to visit (must start with https://).",
+                },
+                "task": {
+                    "type": "string",
+                    "description": "What to look for or extract from the page (helps you filter the text).",
+                },
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "search_etsy",
+        "description": (
+            "Search Etsy for competitor listings and return structured results: "
+            "titles, prices, shop names, review counts, and listing URLs. "
+            f"Use for market research, pricing analysis, keyword gap analysis, and competitor monitoring for {business_config.BUSINESS_NAME}. "
+            "Accepts natural search phrases (e.g. 'kawaii digital planner goodnotes 2026'). "
+            "Returns up to 20 results."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": "Etsy search query (e.g. 'kawaii digital planner goodnotes 2026').",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Max results to return (1–20, default 10).",
+                },
+            },
+            "required": ["query"],
+        },
+    },
     # Native Anthropic-hosted tool (not one of ours — no input_schema, no handler in
     # _execute_agent_tool). Anthropic executes the search server-side and injects
     # results into the same turn; the model keeps generating, so this never trips
@@ -2149,6 +2196,19 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return {"docs": docs}
         if name == "find_business_gaps":
             return _find_business_gaps_impl()
+        if name == "browse_web":
+            from tools.browser_agent import get_page_text
+            url = (tool_input or {}).get("url", "")
+            if not url.startswith("https://") and not url.startswith("http://"):
+                return {"error": "URL must start with https://"}
+            text = get_page_text(url)
+            return {"url": url, "text": text, "chars": len(text)}
+        if name == "search_etsy":
+            from tools.browser_agent import search_etsy
+            query = (tool_input or {}).get("query", "")
+            limit = min(int((tool_input or {}).get("limit", 10)), 20)
+            results = search_etsy(query, limit)
+            return {"query": query, "count": len(results), "results": results}
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired:
         return {"error": f"Command timed out (>{timeout}s)", "category": "transient", "retryable": True}
@@ -7794,6 +7854,12 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     status_msg = f"⚙ Running {cmd}…"
                 elif block.name == "stage_action":
                     status_msg = "📋 Staging action for approval…"
+                elif block.name == "browse_web":
+                    url = (block.input or {}).get("url", "")
+                    status_msg = f"🌐 Browsing {url[:60]}…"
+                elif block.name == "search_etsy":
+                    q = (block.input or {}).get("query", "")
+                    status_msg = f"🔍 Searching Etsy: {q[:40]}…"
                 elif block.name in _RELAY_TOOLS:
                     status_msg = f"💻 Asking the relay to run {block.name}…"
                 elif block.name in _LOCAL_STAGED_TOOLS:
