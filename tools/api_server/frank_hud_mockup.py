@@ -216,6 +216,7 @@ body:not(.cc-open) .hdr-bar,
 body:not(.cc-open) .sidebar,
 body:not(.cc-open) .screen,
 body:not(.cc-open) .bottombar{display:none}
+body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-index:600}
 
 .feed-item{padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text);
   display:flex;justify-content:space-between;gap:6px}
@@ -472,6 +473,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     top:calc(10px + env(safe-area-inset-top));
     left:calc(10px + env(safe-area-inset-left));
   }
+  #orb-desktop-btn{display:none}
 
   .hdr-bar{padding:0 10px;gap:8px}
   .hdr-bar .search,.hdr-bar .clockwrap{display:none}
@@ -567,6 +569,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="clockwrap"><div class="d" id="dt">--</div><div class="t" id="clk">--:--</div></div>
     <div class="right">
       <input class="search" id="global-search" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
+      <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to Frank Orb" style="font-size:16px">⬡</div>
       <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()">🔔<span class="badge" id="bell-badge" style="display:none">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
           <div class="alert-dropdown-title">Alerts</div>
@@ -1090,11 +1093,15 @@ function isControlCenterOpen(){ return document.body.classList.contains('cc-open
 function openControlCenter(){ document.body.classList.add('cc-open'); }
 function closeControlCenter(){ document.body.classList.remove('cc-open'); }
 function toggleControlCenter(){ document.body.classList.toggle('cc-open'); }
+let _prevMobile = null;
 function syncMobileClass(){
-  document.body.classList.toggle('is-mobile', isMobileMode());
-  if (!isMobileMode()) {
+  const mobile = isMobileMode();
+  document.body.classList.toggle('is-mobile', mobile);
+  if (!mobile && (_prevMobile === null || _prevMobile === true)) {
+    // First load on desktop, or transitioning mobile→desktop: open dashboard
     document.body.classList.add('cc-open');
   }
+  _prevMobile = mobile;
   fitStage();
 }
 window.addEventListener('resize', syncMobileClass);
