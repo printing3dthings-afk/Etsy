@@ -117,6 +117,8 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
   display:none;align-items:center;justify-content:center;cursor:pointer;
 }
 .hamburger-fixed:hover{border-color:var(--cyan)}
+#orb-desktop-btn{color:var(--cyan2);border-color:rgba(58,214,255,.35);background:rgba(58,214,255,.06)}
+#orb-desktop-btn:hover{border-color:var(--cyan);background:rgba(58,214,255,.14)}
 .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
   background:var(--panel);display:flex;align-items:center;justify-content:center;
   cursor:pointer;position:relative;color:var(--muted);font-size:13px;flex-shrink:0}
@@ -133,7 +135,8 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 
 /* ── Sidebar ── */
 .sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--border);background:rgba(8,16,26,.55);
-  display:flex;flex-direction:column;padding:14px 10px;overflow:hidden}
+  display:flex;flex-direction:column;padding:14px 10px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .nav-section{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin:12px 10px 6px;text-transform:uppercase}
 .nav-section:first-child{margin-top:2px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;
@@ -155,7 +158,7 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .col-center{display:flex;flex-direction:column;min-height:0;overflow:hidden}
 .col-aicore{flex:0 0 auto}
 .col-sysmon{flex:1;min-height:0}
-.col-timeline{flex:1;min-height:0}
+.col-timeline{flex:0 0 auto;min-height:0}
 .col-chat{flex:1;min-height:0;display:flex;flex-direction:column}
 .col-shop{flex:0 0 auto}
 .col-meminsights{flex:0 0 auto}
@@ -303,9 +306,9 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .dep-pill.half_open .dep-state{color:var(--amber)}
 .dep-pill .dep-fail{font-size:9px;color:var(--muted)}
 
-.mem-row{display:flex;gap:10px;flex:1;min-height:0;overflow-y:auto}
-.mem-canvas-wrap{flex:1;min-height:0;border-radius:8px;background:var(--panel2);border:1px solid var(--border)}
-.mem-stats{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:0 0 86px}
+.mem-row{display:flex;gap:10px;flex:1;min-height:0;overflow-y:auto;align-items:center}
+.mem-canvas-wrap{display:none}
+.mem-stats{display:flex;flex-direction:row;flex-wrap:wrap;gap:16px 24px;flex:1;align-items:center;justify-content:space-around;padding:4px 8px}
 .mem-stat .n{font-size:14px;font-weight:700;color:var(--cyan2)}
 .mem-stat .l{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
 
@@ -366,9 +369,8 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 .lc-bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
 .lc-bubble.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--border);border-bottom-left-radius:4px;white-space:pre-wrap;color:var(--text)}
 .lc-bubble.typing{color:var(--muted);font-style:italic}
-.lc-chips{display:flex;gap:8px;overflow-x:auto;padding:8px 2px;flex-shrink:0;border-top:1px solid var(--border);scrollbar-width:none}
-.lc-chips::-webkit-scrollbar{display:none}
-.lc-chip{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
+.lc-chips{display:flex;gap:8px;flex-wrap:wrap;padding:8px 2px;flex-shrink:0;border-top:1px solid var(--border)}
+.lc-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
 .lc-chip:active{border-color:var(--gold);color:var(--gold)}
 .lc-input-row{display:flex;gap:8px;padding:10px 2px 0;border-top:1px solid var(--border);flex-shrink:0}
 #chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:22px;padding:10px 16px;color:var(--text);font-size:14px;outline:none}
@@ -1960,10 +1962,11 @@ function _renderDependencyHealth(d, el, offlineNote){
   const deps = d.dependencies||[];
   el.innerHTML = (offlineNote||'') + deps.map(dep=>{
     const stateClass = dep.state === 'open' ? 'open' : (dep.state === 'half_open' ? 'half_open' : '');
+    const stateLabel = dep.state === 'closed' ? 'HEALTHY' : dep.state === 'half_open' ? 'TESTING' : 'DOWN';
     const failText = dep.consecutive_failures ? ' &middot; '+dep.consecutive_failures+' failures' : '';
     return '<div class="dep-pill '+stateClass+'"><span class="dep-dot"></span>'+
       '<span class="dep-name">'+escHtml(_DEP_LABELS[dep.name]||dep.name)+'</span>'+
-      '<span class="dep-state">'+escHtml(dep.state)+'</span>'+
+      '<span class="dep-state">'+stateLabel+'</span>'+
       '<span class="dep-fail">'+failText+'</span></div>';
   }).join('');
 }
