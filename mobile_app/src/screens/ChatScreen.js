@@ -12,6 +12,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import { WS_URL, APP_TOKEN } from '../config';
@@ -81,6 +82,7 @@ function Bubble({ role, content, streaming }) {
 }
 
 export default function ChatScreen() {
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -262,10 +264,10 @@ export default function ChatScreen() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={90}
+      keyboardVerticalOffset={insets.top + 44}
     >
       {/* Header */}
-      <LinearGradient colors={['#162033', '#0D1B2A']} style={styles.header}>
+      <LinearGradient colors={['#162033', '#0D1B2A']} style={[styles.header, { paddingTop: insets.top + 14 }]}>
         <View style={styles.headerInner}>
           <View style={styles.headerAvatar}>
             <Text style={styles.headerAvatarText}>🧠</Text>
@@ -358,7 +360,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
 
   header: {
-    paddingTop: 60,
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,

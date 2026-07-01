@@ -1807,3 +1807,23 @@ Three zero-quality-tradeoff optimisations applied to `tools/api_server/main.py` 
 3. **KB file read cache** — `_read_kb_cached()` + `_kb_cache` dict added. `_ops_runbook_block()` and `_ceo_learnings_block()` now re-read their `.md` files at most once every 60 s instead of on every chat turn. Stabilises the dynamic system-block content, improving prompt-cache hit rates. Any `log_learning` write appears within 60 s — no stale-data risk.
 
 All three changes verified by `python -m py_compile`. Main chat model (Sonnet), history window, compaction TTL, suggestions TTL, and Opus-for-code-gen all untouched.
+
+## 2026-07-01 — Display fix: desktop Frank blank + mobile safe-area glitches
+
+**Symptoms reported by Scott:**
+- Desktop Frank (`/frank`) showed only a dark orb — no dashboard, no sidebar, no header
+- Phone app (React Native) had header overlapping status bar / keyboard overlapping input bar on some iPhones
+
+**Root causes found (5 bugs):**
+
+1. **Frank HUD blank on desktop** (`frank_hud_mockup.py`): CSS `body:not(.cc-open) .sidebar, .screen, .hdr-bar, ...{ display:none }` hides all panels until `body.cc-open` is set. That class is only set by the hamburger button click — but the hamburger was `position:absolute` and invisible on desktop (no `display:none` base rule, so technically visible but hard to notice at top-left). `syncMobileClass()` never added `cc-open` on init for desktop. Fix: `syncMobileClass()` now calls `document.body.classList.add('cc-open')` when `!isMobileMode()`. Hamburger also hidden via `display:none` base CSS; shown back in the `@media (max-width:880px)` block.
+
+2. **Both PWA manifests had `"orientation": "portrait"`** (`main.py` lines 4605, 4661): Wrong for the landscape 1440×900 FRANK HUD and unnecessarily restrictive for the mobile PWA. Changed to `"any"` in both.
+
+3. **Persist banner always hidden** (`main.py` line 2839): Banner was `position:static`, placed behind all `position:fixed` screens. Made it `position:fixed; top:0; z-index:300`. JS now also expands `--hdr` by the banner's offsetHeight so screens don't slide under it.
+
+4. **ChatScreen header padding hardcoded** (`ChatScreen.js` line 361): `paddingTop: 60` ignored actual device safe area. Changed to dynamic `insets.top + 14` via `useSafeAreaInsets()`.
+
+5. **KeyboardAvoidingView offset hardcoded** (`ChatScreen.js` line 265): `keyboardVerticalOffset={90}` wrong for tall iPhones. Changed to `insets.top + 44`.
+
+**Files changed:** `frank_hud_mockup.py`, `main.py` (v70), `mobile_app/src/screens/ChatScreen.js`

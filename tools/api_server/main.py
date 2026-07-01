@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v69"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v70"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -2836,7 +2836,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
     </div>
   </header>
 
-  <div id="persist-banner" style="display:none;background:#3a1414;border-bottom:1px solid var(--red);color:#ffb3b3;font-size:12px;font-weight:600;padding:8px 14px;text-align:center">
+  <div id="persist-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:300;background:#3a1414;border-bottom:1px solid var(--red);color:#ffb3b3;font-size:12px;font-weight:600;padding:8px 14px;text-align:center">
     ⚠️ No durable storage attached — data and synced files will be lost on next redeploy. Attach a Railway Volume at /data.
   </div>
 
@@ -4559,7 +4559,11 @@ setTimeout(loadConvTargets, 1800);  // Conversion Doctor worklist on the dashboa
 // only caught by manually hitting /health (diagnosed 2026-06-17, ops_runbook).
 fetch(BASE + '/health').then(r => r.json()).then(h => {
   if (h && h.persistent === false) {
-    document.getElementById('persist-banner').style.display = 'block';
+    const b = document.getElementById('persist-banner');
+    b.style.display = 'block';
+    document.documentElement.style.setProperty(
+      '--hdr', 'calc(52px + ' + b.offsetHeight + 'px + env(safe-area-inset-top,0px))'
+    );
   }
 }).catch(() => {});
 </script>
@@ -4602,7 +4606,7 @@ _MANIFEST = {
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
-    "orientation": "portrait",
+    "orientation": "any",
     "background_color": "#0D1B2A",
     "theme_color": "#0D1B2A",
     "icons": [
@@ -4658,7 +4662,7 @@ _FRANK_MANIFEST = {
     "start_url": "/frank",
     "scope": "/frank",
     "display": "standalone",
-    "orientation": "portrait",
+    "orientation": "any",
     "background_color": "#070d16",
     "theme_color": "#070d16",
     "icons": [

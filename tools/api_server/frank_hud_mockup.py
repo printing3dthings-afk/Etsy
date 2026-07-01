@@ -104,7 +104,7 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
   position:absolute;top:14px;left:14px;z-index:500;
   width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
   background:rgba(15,31,48,.85);color:var(--cyan2);font-size:15px;
-  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  display:none;align-items:center;justify-content:center;cursor:pointer;
 }
 .hamburger-fixed:hover{border-color:var(--cyan)}
 .icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
@@ -464,6 +464,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   .hdr-logo{padding:0 8px;gap:6px}
   .hdr-logo .lbl{display:none}
   .hamburger-fixed{
+    display:flex;
     position:fixed;
     top:calc(10px + env(safe-area-inset-top));
     left:calc(10px + env(safe-area-inset-left));
@@ -1044,6 +1045,9 @@ function closeControlCenter(){ document.body.classList.remove('cc-open'); }
 function toggleControlCenter(){ document.body.classList.toggle('cc-open'); }
 function syncMobileClass(){
   document.body.classList.toggle('is-mobile', isMobileMode());
+  if (!isMobileMode()) {
+    document.body.classList.add('cc-open');
+  }
   fitStage();
 }
 window.addEventListener('resize', syncMobileClass);
