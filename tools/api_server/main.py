@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v70"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v71"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -1874,6 +1874,31 @@ AGENT_TOOLS = [
             "required": ["title", "tags", "description", "price"],
         },
     },
+    {
+        "name": "generate_video",
+        "description": (
+            f"Generate a short Ken Burns slideshow video (1080×1920 MP4, 9:16 vertical) from an "
+            f"Etsy listing's photos. Saves to data/social/videos/ and returns the filename and file "
+            f"size. Use when {business_config.OWNER_NAME} asks to create a TikTok, Reel, or social "
+            f"video for a product. Styles: showcase (default) = full listing showcase; new-drop = "
+            f"launch announcement; feature = feature-first close-up; minimal = clean, no text overlays."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {
+                    "type": "integer",
+                    "description": "Etsy listing ID to pull photos from.",
+                },
+                "style": {
+                    "type": "string",
+                    "enum": ["showcase", "new-drop", "feature", "minimal"],
+                    "description": "Video style (default: showcase).",
+                },
+            },
+            "required": ["listing_id"],
+        },
+    },
     # Native Anthropic-hosted tool (not one of ours — no input_schema, no handler in
     # _execute_agent_tool). Anthropic executes the search server-side and injects
     # results into the same turn; the model keeps generating, so this never trips
@@ -2288,6 +2313,32 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 price=float((tool_input or {}).get("price", 0)),
                 product_type=(tool_input or {}).get("product_type", "auto"),
             )
+        if name == "generate_video":
+            import video_generator
+            ti = tool_input or {}
+            listing_id = ti.get("listing_id")
+            if not listing_id:
+                return {"error": "listing_id is required"}
+            style = ti.get("style", "showcase")
+            if style not in video_generator.STYLES:
+                return {"error": f"style must be one of {list(video_generator.STYLES)}"}
+            client = EtsyAPIClient()
+            imgs, listing = video_generator.fetch_listing_images(int(listing_id), client)
+            title = listing.get("title", "")
+            price = video_generator.get_price_str(listing)
+            digital = video_generator.is_digital(listing)
+            out_path = video_generator.generate_video(
+                imgs, title, style, listing_id, price=price, digital=digital
+            )
+            return {
+                "ok": True,
+                "path": out_path.name,
+                "size_human": _human_size(out_path.stat().st_size),
+                "note": (
+                    f"Video saved to data/social/videos/{out_path.name} — "
+                    "ready to download or post via the Studio tab."
+                ),
+            }
         return {"error": f"unknown tool: {name}"}
     except subprocess.TimeoutExpired:
         return {"error": f"Command timed out (>{timeout}s)", "category": "transient", "retryable": True}
