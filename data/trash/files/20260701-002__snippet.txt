@@ -1,0 +1,4 @@
+/* Row A: AI Core Overview | Orb Hero | Live Intelligence Feed */
+.col-aicore{flex:0 0 218px}
+.col-orb{flex:1 1 auto}
+.col-feed{flex:0 0 270px}

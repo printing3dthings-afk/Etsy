@@ -1906,3 +1906,13 @@ Daily listing_integrity_check found 130 FAIL / 13 WARN out of 172 listings audit
   - **Fix F (dead UI):** `batchStageTags()` and `mem-canvas` render code were already implemented. No change needed.
 - **Files changed:** `tools/api_server/db.py`, `tools/api_server/main.py`, `tools/api_server/frank_hud_mockup.py`
 - **Build:** `b4d0e2c-v82`
+
+## 2026-07-01 — v83: Frank HUD Desktop Layout Overhaul
+
+**Changes:**
+- Fix 1 — Scrollbars: `.dep-pill-row`, `.shop-spark-row`, `.mem-row` now use `overflow-y:auto` + `min-height:0` + `justify-content:flex-start` so content scrolls instead of clipping
+- Fix 2 — 3-column desktop grid: `.main` changed from `display:flex;flex-direction:column` (3 stacked rows) to `display:grid;grid-template-columns:290px 1fr 310px`. Chat panel (`col-center`) now fills the entire center column at full height. Left column: AI Core + Dependency Health + Mission Timeline. Right column: Shop Performance + Memory Insights + Active Agents + Live Feed. Old `.mrow` and row-specific column rules archived via tools/trash.py.
+- Fix 3 — Light theme WCAG AA contrast: `--cyan` 3.39:1→5.88:1, `--cyan2` 2.46:1→8.57:1, `--gold` 3.69:1→5.74:1, `--muted` 5.15:1→7.69:1 (all against `--panel:#ffffff`)
+- Fix 4 — Products screen: `renderProducts()` now calls `/api/products` endpoint (async) instead of `_PRODUCTS_STATIC` hardcoded array. New FastAPI endpoint reads `data/dp_listing_map.json` and checks actual PDF/ZIP files on disk for DP1026–DP1035.
+- Mobile: `.col-center{order:-1}` makes chat appear first on mobile; `#chat-msgs` max-height 55vh→60vh; new column overflow rules replace old `.mrow` rules.
+- `_BUILD_ID` bumped to `b4d0e2c-v83`

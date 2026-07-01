@@ -219,3 +219,59 @@ async def get_history(days: int = 30, _token: str = Depends(_auth)):
 
 <!-- /TRASH 20260625-001 -->
 
+<!-- TRASH id=20260701-001 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: replaced mrow flex rows with col-left/col-center/col-right CSS grid" -->
+## 20260701-001 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** v83 3-column layout: replaced mrow flex rows with col-left/col-center/col-right CSS grid  
+**Payload:** `data/trash/files/20260701-001__snippet.txt`
+
+```python
+.mrow{display:flex;gap:12px;min-height:0}
+.mrow.rowA{flex:1}
+.mrow.rowB{flex:1.25}
+.mrow.rowC{flex:0.95}
+.col-chat{flex:1.6 1 0;min-width:0}
+```
+
+<!-- /TRASH 20260701-001 -->
+
+<!-- TRASH id=20260701-002 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: old rowA column sizes replaced by new column-context flex rules" -->
+## 20260701-002 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** v83 3-column layout: old rowA column sizes replaced by new column-context flex rules  
+**Payload:** `data/trash/files/20260701-002__snippet.txt`
+
+```python
+/* Row A: AI Core Overview | Orb Hero | Live Intelligence Feed */
+.col-aicore{flex:0 0 218px}
+.col-orb{flex:1 1 auto}
+.col-feed{flex:0 0 270px}
+```
+
+<!-- /TRASH 20260701-002 -->
+
+<!-- TRASH id=20260701-003 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: old rowB column sizes replaced by new column-context flex rules" -->
+## 20260701-003 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** v83 3-column layout: old rowB column sizes replaced by new column-context flex rules  
+**Payload:** `data/trash/files/20260701-003__snippet.txt`
+
+```python
+/* Row B: Active Agents | Mission Timeline | Quick Commands */
+.col-agents{flex:1.1}
+.col-timeline{flex:1}
+```
+
+<!-- /TRASH 20260701-003 -->
+
+<!-- TRASH id=20260701-004 date=2026-07-01 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="v83 3-column layout: old rowC column sizes replaced by new column-context flex rules" -->
+## 20260701-004 · 2026-07-01 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** v83 3-column layout: old rowC column sizes replaced by new column-context flex rules  
+**Payload:** `data/trash/files/20260701-004__snippet.txt`
+
+```python
+/* Row C: System Monitor | Memory Insights | LLM Status */
+.col-sysmon{flex:1}
+.col-meminsights{flex:1}
+.col-shop{flex:1.3}
+```
+
+<!-- /TRASH 20260701-004 -->
+

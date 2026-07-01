@@ -54,8 +54,8 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 /* ── Color themes — full bg + panel + accent swap ── */
 html.theme-light{
   --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--border:#b8c5d0;
-  --cyan:#1a8a9a;--cyan2:#2ab4c8;--gold:#9a7c30;--gold2:#c4a035;
-  --text:#1a2332;--muted:#5a7080;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
+  --cyan:#0a6878;--cyan2:#084f5e;--gold:#7a5c10;--gold2:#c4a035;
+  --text:#1a2332;--muted:#3a5263;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
 }
 html.theme-purple{
   --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--border:#2a1945;
@@ -149,13 +149,18 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
   background:var(--panel);text-align:center}
 .voice-widget .vw-title{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
 
-/* ── Main content ── */
-.main{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:12px;padding:12px;overflow:hidden}
-.mrow{display:flex;gap:12px;min-height:0}
-.mrow.rowA{flex:1}
-.mrow.rowB{flex:1.25}
-.mrow.rowC{flex:0.95}
-.col-chat{flex:1.6 1 0;min-width:0}
+/* ── Main content — 3-column CSS grid (left 290px | chat 1fr | right 310px) ── */
+.main{grid-column:2;grid-row:2;display:grid;grid-template-columns:290px 1fr 310px;gap:12px;padding:12px;overflow:hidden}
+.col-left,.col-right{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden}
+.col-center{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.col-aicore{flex:0 0 auto}
+.col-sysmon{flex:1;min-height:0}
+.col-timeline{flex:1;min-height:0}
+.col-chat{flex:1;min-height:0;display:flex;flex-direction:column}
+.col-shop{flex:0 0 auto}
+.col-meminsights{flex:0 0 auto}
+.col-agents{flex:1;min-height:0}
+.col-feed{flex:1;min-height:0}
 
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;
   display:flex;flex-direction:column;overflow:hidden;min-height:0}
@@ -165,10 +170,7 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .panel-title .lnk{font-size:9px;color:var(--cyan);text-transform:none;letter-spacing:0;cursor:pointer}
 .panel-body{overflow-y:auto;min-height:0;flex:1}
 
-/* Row A: AI Core Overview | Orb Hero | Live Intelligence Feed */
-.col-aicore{flex:0 0 218px}
-.col-orb{flex:1 1 auto}
-.col-feed{flex:0 0 270px}
+.orb-col{flex:1 1 auto}
 
 .core-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;
   border-bottom:1px solid var(--border);font-size:11.5px}
@@ -223,10 +225,6 @@ body:not(.cc-open) .bottombar{display:none}
 .feed-tag.info{background:rgba(58,214,255,.15);color:var(--cyan2)}
 .feed-tag.warn{background:rgba(224,168,58,.15);color:var(--amber)}
 .feed-tag.tip{background:rgba(76,175,130,.15);color:var(--green)}
-
-/* Row B: Active Agents | Mission Timeline | Quick Commands */
-.col-agents{flex:1.1}
-.col-timeline{flex:1}
 
 .agents-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1}
 .agent-tile{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
@@ -291,12 +289,7 @@ body:not(.cc-open) .bottombar{display:none}
 .welcome-dismiss{width:100%;background:var(--gold);color:#0D1B2A;border:none;border-radius:10px;
   padding:11px 0;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
 
-/* Row C: System Monitor | Memory Insights | LLM Status */
-.col-sysmon{flex:1}
-.col-meminsights{flex:1}
-.col-shop{flex:1.3}
-
-.dep-pill-row{display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center}
+.dep-pill-row{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;justify-content:flex-start}
 .dep-pill{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);
   border-radius:8px;padding:7px 10px}
 .dep-pill .dep-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--green);
@@ -309,13 +302,13 @@ body:not(.cc-open) .bottombar{display:none}
 .dep-pill.half_open .dep-state{color:var(--amber)}
 .dep-pill .dep-fail{font-size:9px;color:var(--muted)}
 
-.mem-row{display:flex;gap:10px;flex:1;min-height:0}
+.mem-row{display:flex;gap:10px;flex:1;min-height:0;overflow-y:auto}
 .mem-canvas-wrap{flex:1;min-height:0;border-radius:8px;background:var(--panel2);border:1px solid var(--border)}
 .mem-stats{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:0 0 86px}
 .mem-stat .n{font-size:14px;font-weight:700;color:var(--cyan2)}
 .mem-stat .l{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
 
-.shop-spark-row{display:flex;gap:8px;flex:1;min-height:0;overflow:hidden}
+.shop-spark-row{display:flex;gap:8px;flex:1;min-height:0;overflow-y:auto;flex-wrap:wrap}
 .shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
   padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-height:0;overflow:hidden}
 .shop-spark-card .ssc-lab{font-size:9px;color:var(--muted);letter-spacing:.4px}
@@ -491,17 +484,24 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     padding-top:calc(10px + env(safe-area-inset-top));
   }
 
-  .main{grid-column:1/-1;overflow:visible !important;height:auto !important;padding:10px}
+  .main{grid-column:1/-1;display:flex;flex-direction:column;grid-template-columns:none;overflow:visible !important;height:auto !important;padding:10px}
   .screen{grid-column:1/-1;height:auto;overflow:visible;padding:10px}
   .panel{overflow:visible !important}
   .panel-body{overflow:visible !important;max-height:none !important;flex:none !important}
 
-  .mrow{flex-direction:column}
-  .mrow.rowA,.mrow.rowB,.mrow.rowC{flex:none}
-  .col-aicore,.col-orb,.col-feed,.col-agents,.col-chat,.col-timeline,
-  .col-sysmon,.col-meminsights,.col-shop{flex:none !important;width:100% !important}
+  .col-left,.col-center,.col-right{overflow:visible;gap:10px}
+  .col-center{order:-1}
+  .col-left{order:0}
+  .col-right{order:1}
+  .col-left .panel,.col-right .panel{overflow:visible}
+  .col-left .panel-body,.col-right .panel-body,.dep-pill-row,.shop-spark-row,.mem-row{
+    overflow:visible;max-height:none;flex:none
+  }
+  .col-aicore,.col-sysmon,.col-timeline,.col-chat,.col-shop,.col-meminsights,.col-agents,.col-feed{
+    flex:none !important;width:100% !important
+  }
 
-  #chat-msgs{min-height:280px;max-height:55vh;flex:none}
+  #chat-msgs{min-height:280px;max-height:60vh;flex:none}
   .orb-hero{min-height:260px}
   .orb-hero-stage{min-height:220px}
   .mem-canvas-wrap{min-height:160px}
@@ -638,7 +638,8 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   <div class="screen active" id="screen-cmd">
     <div class="main">
 
-      <div class="mrow rowA">
+      <!-- LEFT: system state -->
+      <div class="col-left">
         <div class="panel brk col-aicore">
           <div class="panel-title">AI Core Overview <span class="src">/health</span></div>
           <div class="panel-body">
@@ -651,20 +652,20 @@ video{width:100%;border-radius:10px;background:#000;display:block}
           </div>
         </div>
 
-        <div class="panel brk col-feed">
-          <div class="panel-title">Live Intelligence Feed <span class="src">/api/queue</span></div>
-          <div class="panel-body" id="feed-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+        <div class="panel brk col-sysmon">
+          <div class="panel-title">Dependency Health <span class="src">/api/system/dependencies</span></div>
+          <div class="dep-pill-row" id="dep-pill-row"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+        </div>
+
+        <div class="panel brk col-timeline">
+          <div class="panel-title">Mission Timeline <span class="src">/api/todos</span></div>
+          <div class="panel-body" id="timeline-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('tasks')">View Full Schedule ›</span></div>
         </div>
       </div>
 
-      <div class="mrow rowB">
-        <div class="panel brk col-agents">
-          <div class="panel-title">Active Agents <span class="lnk" onclick="showScreen('agents')" style="cursor:pointer">View All ›</span></div>
-          <div class="agents-grid" id="cmd-agents-grid">
-            <div class="agent-tile idle"><div class="top"><div class="ic">⋯</div><div class="name">Loading…</div></div><div class="stat"><span class="d"></span>—</div></div>
-          </div>
-        </div>
-
+      <!-- CENTER: primary interaction -->
+      <div class="col-center">
         <div class="panel brk col-chat">
           <div class="panel-title">Ask Frank <span class="src">/ws/chat — live, always-on chat</span></div>
           <div id="chat-msgs"></div>
@@ -682,18 +683,21 @@ video{width:100%;border-radius:10px;background:#000;display:block}
             </button>
           </div>
         </div>
-
-        <div class="panel brk col-timeline">
-          <div class="panel-title">Mission Timeline <span class="src">/api/todos</span></div>
-          <div class="panel-body" id="timeline-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
-          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('tasks')">View Full Schedule ›</span></div>
-        </div>
       </div>
 
-      <div class="mrow rowC">
-        <div class="panel brk col-sysmon">
-          <div class="panel-title">Dependency Health <span class="src">/api/system/dependencies</span></div>
-          <div class="dep-pill-row" id="dep-pill-row"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+      <!-- RIGHT: business data + activity -->
+      <div class="col-right">
+        <div class="panel brk col-shop">
+          <div class="panel-title">Shop Performance <span class="src">/api/analytics + /api/metrics</span></div>
+          <div class="shop-spark-row" id="shop-spark-row">
+            <div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div><div class="ssc-val">—</div></div>
+            <div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div><div class="ssc-val">—</div></div>
+          </div>
+          <div class="shop-chip-row" id="shop-chip-row">
+            <div class="shop-chip"><div class="nm">Listings</div><div class="v">—</div></div>
+            <div class="shop-chip"><div class="nm">Total Sales</div><div class="v">—</div></div>
+            <div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">—</div></div>
+          </div>
         </div>
 
         <div class="panel brk col-meminsights">
@@ -708,17 +712,16 @@ video{width:100%;border-radius:10px;background:#000;display:block}
           </div>
         </div>
 
-        <div class="panel brk col-shop">
-          <div class="panel-title">Shop Performance <span class="src">/api/analytics + /api/metrics</span></div>
-          <div class="shop-spark-row" id="shop-spark-row">
-            <div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div><div class="ssc-val">—</div></div>
-            <div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div><div class="ssc-val">—</div></div>
+        <div class="panel brk col-agents">
+          <div class="panel-title">Active Agents <span class="lnk" onclick="showScreen('agents')" style="cursor:pointer">View All ›</span></div>
+          <div class="agents-grid" id="cmd-agents-grid">
+            <div class="agent-tile idle"><div class="top"><div class="ic">⋯</div><div class="name">Loading…</div></div><div class="stat"><span class="d"></span>—</div></div>
           </div>
-          <div class="shop-chip-row" id="shop-chip-row">
-            <div class="shop-chip"><div class="nm">Listings</div><div class="v">—</div></div>
-            <div class="shop-chip"><div class="nm">Total Sales</div><div class="v">—</div></div>
-            <div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">—</div></div>
-          </div>
+        </div>
+
+        <div class="panel brk col-feed">
+          <div class="panel-title">Live Intelligence Feed <span class="src">/api/queue</span></div>
+          <div class="panel-body" id="feed-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
         </div>
       </div>
 
@@ -3189,24 +3192,26 @@ const _PRODUCTS_STATIC = [
   {id:'DP1028',name:'Budget & Finance Planner',   price:'$12.99',pages:102},
   {id:'DP1029',name:'Fitness & Wellness Planner', price:'$12.99',pages:91}
 ];
-function renderProducts() {
+async function renderProducts() {
   const el = document.getElementById('products-content');
   if (!el) return;
-  let html = '<div class="hub-section-title">Core Products</div>';
-  _PRODUCTS_STATIC.forEach((p,i) => {
-    const t = _THEMES[i]||{};
-    html += '<div class="hub-prod-card" style="border-left-color:'+(t.primary||'var(--gold)')+'">'+
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
-        '<div><div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px">'+escHtml(p.id)+'</div>'+
-        '<div style="font-size:14px;font-weight:600;margin-top:3px">'+escHtml(p.name)+'</div></div>'+
-        '<div style="font-size:16px;font-weight:700;color:var(--gold)">'+escHtml(p.price)+'</div>'+
-      '</div>'+
-      '<div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--muted)">'+
-        '<span>📄 '+p.pages+' pages</span><span>🔖 13 tags</span><span>Digital Download</span>'+
-      '</div>'+
-    '</div>';
-  });
-  el.innerHTML = html;
+  el.innerHTML = '<div class="hub-section-title">Loading…</div>';
+  try {
+    const d = await authGet('/api/products').then(r => r.json());
+    let html = '<div class="hub-section-title">Core Products</div>';
+    (d.products || []).forEach((p, i) => {
+      const t = _THEMES[i] || {};
+      const files = (p.pdf_exists ? '✅ PDF' : '❌ PDF') + '  ' + (p.zip_exists ? '✅ ZIP' : '❌ ZIP');
+      html += '<div class="hub-prod-card" style="border-left-color:'+(t.primary||'var(--gold)')+'">'+
+        '<div class="hub-prod-name">'+escHtml(p.title || p.id)+'</div>'+
+        '<div class="hub-prod-meta">'+escHtml(p.id)+(p.listing_id ? ' · Etsy #'+escHtml(String(p.listing_id)) : '')+'</div>'+
+        '<div class="hub-prod-files" style="font-size:11px;opacity:0.8;margin-top:3px">'+files+'</div>'+
+      '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="hub-prod-card">⚠ ' + escHtml(e.message) + '</div>';
+  }
 }
 function renderBrandKit() {
   const el = document.getElementById('brandkit-content');

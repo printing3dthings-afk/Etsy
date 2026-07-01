@@ -309,7 +309,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v82"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v83"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -7275,6 +7275,34 @@ async def studio_list_videos(_token: str = Depends(_auth_session_or_bearer)):
             })
     files.sort(key=lambda f: f["modified"], reverse=True)
     return {"videos": files}
+
+
+@app.get("/api/products")
+async def get_products(_token: str = Depends(_auth_session_or_bearer)):
+    """Return catalog of planner products with on-disk file status."""
+    import json as _json
+    from pathlib import Path as _P
+    try:
+        listing_map = _json.loads(_P("data/dp_listing_map.json").read_text())
+    except OSError:
+        listing_map = {}
+    products = []
+    for dp_id in sorted(
+        k for k in listing_map
+        if k.startswith("DP") and k[2:].isdigit() and 1026 <= int(k[2:]) <= 1035
+    ):
+        e = listing_map[dp_id]
+        pdf = _P(f"data/digital_products/product_files/{dp_id}.pdf")
+        zip_ = _P(f"data/digital_products/product_files/{dp_id}_sticker_pack.zip")
+        products.append({
+            "id": dp_id,
+            "title": e.get("planner_title") or e.get("title", ""),
+            "listing_id": e.get("planner_listing_id") or e.get("listing_id"),
+            "pdf_exists": pdf.exists(),
+            "zip_exists": zip_.exists(),
+            "status": e.get("status", "active"),
+        })
+    return {"products": products}
 
 
 @app.get("/api/studio/diagnose")
