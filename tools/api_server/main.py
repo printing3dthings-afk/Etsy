@@ -270,11 +270,12 @@ _LOCAL_FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--act
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "").strip()
 if not APP_TOKEN:
     raise RuntimeError("APP_SECRET_TOKEN is not set — refusing to start with no auth token.")
-# Username/password for the /frank login page (separate from the bearer API token).
-# FRANK_USERNAME defaults to the owner name lowercased; FRANK_PASSWORD defaults to
-# APP_SECRET_TOKEN so existing deployments keep working without any new env vars.
-FRANK_USERNAME = (os.getenv("FRANK_USERNAME") or business_config.OWNER_NAME).strip().lower()
-FRANK_PASSWORD = (os.getenv("FRANK_PASSWORD") or APP_TOKEN).strip()
+# If FRANK_USERNAME + FRANK_PASSWORD are both explicitly set in the environment,
+# the owner account is seeded automatically at startup (headless / env-controlled
+# deployments). Otherwise the table stays empty and the first visitor to /login
+# is shown a one-time "Create Your Account" setup screen.
+_FRANK_USERNAME_EXPLICIT = os.getenv("FRANK_USERNAME", "").strip().lower()
+_FRANK_PASSWORD_EXPLICIT = os.getenv("FRANK_PASSWORD", "").strip()
 
 
 def _hash_password(password: str) -> str:
@@ -293,11 +294,13 @@ def _verify_password(stored_hash: str, password: str) -> bool:
 
 
 def _seed_owner_if_empty() -> None:
-    """On first startup, seed the owner account from FRANK_USERNAME/FRANK_PASSWORD."""
+    """Seed owner account only when both env vars are explicitly configured."""
+    if not (_FRANK_USERNAME_EXPLICIT and _FRANK_PASSWORD_EXPLICIT):
+        return
     try:
         if db.hub_users_empty():
-            db.create_hub_user(FRANK_USERNAME, _hash_password(FRANK_PASSWORD), role="owner")
-            print(f"[auth] seeded owner account '{FRANK_USERNAME}'", flush=True)
+            db.create_hub_user(_FRANK_USERNAME_EXPLICIT, _hash_password(_FRANK_PASSWORD_EXPLICIT), role="owner")
+            print(f"[auth] seeded owner account '{_FRANK_USERNAME_EXPLICIT}'", flush=True)
     except Exception as exc:
         print(f"[auth] seed failed: {exc}", flush=True)
 
@@ -307,7 +310,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v79"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v80"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -553,6 +556,61 @@ _LOGIN_PAGE = """<!DOCTYPE html>
 </body>
 </html>"""
 
+# Served on /login when the hub_users table is empty (first-ever startup).
+# The owner creates their own credentials — no defaults, no env-var guessing.
+_SETUP_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{hub_title} — Create your account</title>
+<style>
+  *{{box-sizing:border-box}}
+  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
+  .box{{width:360px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
+  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
+  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
+  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
+  .logo-sub{{font-size:12px;color:#5a6a78;margin-top:1px}}
+  .setup-heading{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
+  .setup-hint{{font-size:11px;color:#5a6a78;margin-bottom:18px;line-height:1.5}}
+  label{{display:block;font-size:11px;font-weight:600;color:#5a6a78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
+    background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
+  input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
+  button{{width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
+    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px;transition:background .15s}}
+  button:hover{{background:#38d8d8}}
+  .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
+  .once{{font-size:10px;color:#3a4a56;margin-top:14px;text-align:center}}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">
+      <div class="logo-dot">F</div>
+      <div><div class="logo-text">{hub_title}</div><div class="logo-sub">Operations Hub</div></div>
+    </div>
+    <div class="setup-heading">Create your account</div>
+    <div class="setup-hint">First-time setup — choose a username and password for the owner account. You won't see this screen again.</div>
+    {error_html}
+    <form method="post" action="/login" autocomplete="off">
+      <input type="hidden" name="next" value="{next_path}">
+      <input type="hidden" name="setup_mode" value="1">
+      <label for="su-user">Username</label>
+      <input type="text" id="su-user" name="username" placeholder="e.g. scott" autofocus autocomplete="off" required>
+      <label for="su-pass">Password</label>
+      <input type="password" id="su-pass" name="password" placeholder="Choose a strong password" autocomplete="new-password" required>
+      <label for="su-conf">Confirm password</label>
+      <input type="password" id="su-conf" name="confirm_password" placeholder="Repeat your password" autocomplete="new-password" required>
+      <button type="submit">Create account &amp; sign in</button>
+    </form>
+    <div class="once">This is a one-time setup. After this, use your username and password to sign in.</div>
+  </div>
+</body>
+</html>"""
+
 
 def _safe_next(next_path: str) -> str:
     # Only allow same-site relative paths — never redirect off-site via the next param.
@@ -563,32 +621,65 @@ def _safe_next(next_path: str) -> str:
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(next: str = "/", error: str = ""):
+    safe_next = _safe_next(next)
+    no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
+    if db.hub_users_empty():
+        error_html = f'<div class="err">{error}</div>' if error else ""
+        return HTMLResponse(
+            _SETUP_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME),
+            headers=no_cache,
+        )
     error_html = '<div class="err">Incorrect username or password. Try again.</div>' if error else ""
     return HTMLResponse(
-        _LOGIN_PAGE.format(error_html=error_html, next_path=_safe_next(next), hub_title=business_config.BUSINESS_NAME),
-        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        _LOGIN_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME),
+        headers=no_cache,
     )
 
 
 @app.post("/login")
-def login_submit(request: Request, username: str = Form(""), password: str = Form(""), next: str = Form("/")):
+def login_submit(
+    request: Request,
+    username: str = Form(""),
+    password: str = Form(""),
+    confirm_password: str = Form(""),
+    setup_mode: str = Form(""),
+    next: str = Form("/"),
+):
     ip = _client_ip(request)
     safe_next = _safe_next(next)
+
+    # ── First-run setup: create the owner account ──────────────────────────
+    if setup_mode == "1" or db.hub_users_empty():
+        uname = username.strip().lower()
+        pw = password.strip()
+        cpw = confirm_password.strip()
+        if not uname or not pw:
+            return RedirectResponse(f"/login?error=Username+and+password+are+required&next={safe_next}", status_code=303)
+        if pw != cpw:
+            return RedirectResponse(f"/login?error=Passwords+do+not+match&next={safe_next}", status_code=303)
+        if len(pw) < 8:
+            return RedirectResponse(f"/login?error=Password+must+be+at+least+8+characters&next={safe_next}", status_code=303)
+        if not db.hub_users_empty():
+            # Table was populated between GET and POST (race) — fall through to normal login
+            pass
+        else:
+            db.create_hub_user(uname, _hash_password(pw), role="owner")
+            print(f"[auth] owner account created: '{uname}'", flush=True)
+            sid = _new_session(uname)
+            resp = RedirectResponse(safe_next, status_code=303)
+            resp.set_cookie(SESSION_COOKIE, sid, max_age=SESSION_TTL, httponly=True, secure=True, samesite="lax")
+            return resp
+
+    # ── Normal login ────────────────────────────────────────────────────────
     if _login_rate_limited(ip):
-        return Response(
-            content="Too many failed attempts. Try again in a few minutes.",
-            status_code=429,
-        )
+        return Response(content="Too many failed attempts. Try again in a few minutes.", status_code=429)
     uname = username.strip().lower()
     user_row = db.get_hub_user(uname)
     if user_row and _verify_password(user_row["pw_hash"], password.strip()):
         _reset_login_fails(ip)
         sid = _new_session(uname)
         resp = RedirectResponse(safe_next, status_code=303)
-        resp.set_cookie(
-            SESSION_COOKIE, sid,
-            max_age=SESSION_TTL, httponly=True, secure=True, samesite="lax",
-        )
+        resp.set_cookie(SESSION_COOKIE, sid, max_age=SESSION_TTL, httponly=True, secure=True, samesite="lax")
         return resp
     _record_login_fail(ip)
     return RedirectResponse(f"/login?error=1&next={safe_next}", status_code=303)
@@ -4726,7 +4817,9 @@ def frank_hud_mockup(request: Request):
 @app.get("/api/me")
 async def get_me(request: Request, _token: str = Depends(_auth)):
     """Return the username and role associated with the current session."""
-    uname = _get_session_user(request) or FRANK_USERNAME
+    uname = _get_session_user(request)
+    if not uname:
+        return {"username": "", "role": ""}
     user_row = db.get_hub_user(uname)
     role = user_row["role"] if user_row else "owner"
     return {"username": uname, "role": role}
@@ -4734,7 +4827,9 @@ async def get_me(request: Request, _token: str = Depends(_auth)):
 
 def _require_owner(request: Request) -> None:
     """Raise 403 unless the current session belongs to an owner-role user."""
-    uname = _get_session_user(request) or FRANK_USERNAME
+    uname = _get_session_user(request)
+    if not uname:
+        raise HTTPException(status_code=403, detail="Owner role required")
     user_row = db.get_hub_user(uname)
     if not user_row or user_row["role"] != "owner":
         raise HTTPException(status_code=403, detail="Owner role required")
@@ -4782,7 +4877,7 @@ async def admin_reset_password(username: str, request: Request, body: _PasswordR
     user_row = db.get_hub_user(uname)
     if not user_row:
         raise HTTPException(status_code=404, detail=f"User '{uname}' not found")
-    requester = _get_session_user(request) or FRANK_USERNAME
+    requester = _get_session_user(request)
     if user_row["role"] == "owner" and uname != requester:
         raise HTTPException(status_code=403, detail="Cannot reset another owner's password")
     if not body.password.strip():
