@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "a3c9d1b-v68"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v69"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -681,19 +681,39 @@ async def _stage_local_action(name: str, tool_input: dict) -> dict:
 _OPS_RUNBOOK_PATH = ROOT / "data" / "knowledge_base" / "ops_runbook.md"
 
 
+_kb_cache: dict[str, tuple[float, str]] = {}
+_KB_TTL = 60.0  # re-read KB files at most once per minute; new log_learning entries appear within 60s
+
+
+def _read_kb_cached(path: str, keep_chars: int) -> str:
+    """Read a knowledge-base file, caching the result for _KB_TTL seconds.
+    Caching stabilises the dynamic system-block content, improving prompt-cache
+    hit rates on the Anthropic API without risking stale data (any write Frank
+    makes via log_learning appears within one TTL window)."""
+    now = time.monotonic()
+    entry = _kb_cache.get(path)
+    if entry is not None:
+        ts, content = entry
+        if now - ts < _KB_TTL:
+            return content
+    try:
+        with open(path) as fh:
+            raw = fh.read()
+        content = raw[-keep_chars:]
+    except OSError:
+        content = ""
+    _kb_cache[path] = (now, content)
+    return content
+
+
 def _ops_runbook_block() -> str:
     """Read the ops runbook so Frank can answer 'why was X broken' questions with
     grounded history instead of guessing. Append-only log lives in the repo at
     data/knowledge_base/ops_runbook.md — re-read on every call so new entries are
     picked up immediately, with no code change or redeploy required."""
-    try:
-        text = _OPS_RUNBOOK_PATH.read_text().strip()
-    except OSError:
-        return ""
+    text = _read_kb_cached(str(_OPS_RUNBOOK_PATH), 8000).strip()
     if not text:
         return ""
-    if len(text) > 8000:
-        text = text[-8000:]  # keep the most recent entries (file is append-only, newest at bottom)
     return (
         "\n\n── OPS RUNBOOK (real incidents Claude Code has diagnosed/fixed in this "
         "codebase — use this to answer 'why was X broken' or 'what changed' questions "
@@ -879,14 +899,9 @@ def _ceo_learnings_block() -> str:
     chat session regardless of which device/session Scott is on. This is the
     'evolve over time' mechanism: durable text, not a fine-tune — Frank reads his
     own accumulated notes the same way a human exec reviews past meeting notes."""
-    try:
-        text = _CEO_LEARNINGS_PATH.read_text().strip()
-    except OSError:
-        return ""
+    text = _read_kb_cached(str(_CEO_LEARNINGS_PATH), 6000).strip()
     if not text:
         return ""
-    if len(text) > 6000:
-        text = text[-6000:]  # keep the most recent entries (file is append-only)
     return (
         "\n\n── YOUR LOGGED LEARNINGS (insights you've recorded in past conversations — "
         "build on these, don't repeat the same discovery from scratch) ──\n" + text
@@ -1871,6 +1886,25 @@ AGENT_TOOLS = [
         "user_location": {"type": "approximate", "country": "US"},
     },
 ]
+
+# Prompt-cache constants — built once at import time, reused every chat turn.
+# _CEO_SYSTEM (~2 100 tokens) + AGENT_TOOLS (~2 000 tokens) are completely static
+# between turns; marking them ephemeral saves ~90% on those tokens after the first
+# turn in each 5-minute cache window (cache-read: $0.30/MTok vs full $3/MTok).
+_CACHED_SYSTEM_BLOCK = {
+    "type": "text",
+    "text": _CEO_SYSTEM,
+    "cache_control": {"type": "ephemeral"},
+}
+
+
+def _tools_with_cache() -> list:
+    """Return AGENT_TOOLS with cache_control on the last entry.
+    The Anthropic API caches all tools up to and including the last entry that
+    carries cache_control, so tagging only the last entry is sufficient."""
+    tools = list(AGENT_TOOLS)
+    tools[-1] = {**tools[-1], "cache_control": {"type": "ephemeral"}}
+    return tools
 
 
 # Tracks processes started via the long_running branch below
@@ -5996,7 +6030,7 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
             asyncio.to_thread(
                 lambda: _anthropic_create(
                     ai_client,
-                    model="claude-sonnet-4-6",
+                    model="claude-haiku-4-5-20251001",
                     max_tokens=100,
                     messages=[{"role": "user", "content": prompt}],
                 )
@@ -7898,8 +7932,11 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                 with ai_client.messages.stream(
                     model="claude-sonnet-4-6",
                     max_tokens=1500,
-                    system=_CEO_SYSTEM + _ops_runbook_block() + _ceo_learnings_block(),
-                    tools=AGENT_TOOLS,
+                    system=[
+                        _CACHED_SYSTEM_BLOCK,
+                        {"type": "text", "text": _ops_runbook_block() + _ceo_learnings_block()},
+                    ],
+                    tools=_tools_with_cache(),
                     messages=history,
                 ) as stream:
                     for chunk in stream.text_stream:

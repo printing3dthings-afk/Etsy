@@ -1795,3 +1795,15 @@ Brief includes: unread message count (Star Seller risk), active/draft listing co
 **Approved by Scott (2026-06-30).**
 
 **Build:** a3c9d1b-v68
+
+## 2026-07-01 — Token & cost reduction: prompt caching + Haiku title autofix + KB read cache
+
+Three zero-quality-tradeoff optimisations applied to `tools/api_server/main.py` (v69):
+
+1. **Prompt caching on main CEO chat** — `_CEO_SYSTEM` (~2 100 tok) and `AGENT_TOOLS` (~2 000 tok) are now passed as a list-form `system` with `cache_control: {type: ephemeral}` on the static block, and `_tools_with_cache()` tags the last tool entry. Static content is cached for 5 min; cache reads cost $0.30/MTok vs $3/MTok full price (~90% on those tokens for turns 2+).
+
+2. **Title autofix: Sonnet → Haiku** — `_autofix_title_core` switched from `claude-sonnet-4-6` to `claude-haiku-4-5-20251001`. Output is capped at 100 tokens max (a corrected title); Haiku handles this mechanical task perfectly. 73% per-call saving.
+
+3. **KB file read cache** — `_read_kb_cached()` + `_kb_cache` dict added. `_ops_runbook_block()` and `_ceo_learnings_block()` now re-read their `.md` files at most once every 60 s instead of on every chat turn. Stabilises the dynamic system-block content, improving prompt-cache hit rates. Any `log_learning` write appears within 60 s — no stale-data risk.
+
+All three changes verified by `python -m py_compile`. Main chat model (Sonnet), history window, compaction TTL, suggestions TTL, and Opus-for-code-gen all untouched.
