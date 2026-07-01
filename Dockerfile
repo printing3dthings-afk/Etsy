@@ -1,5 +1,5 @@
 FROM python:3.11-slim
-# build-4
+# build-5
 WORKDIR /app
 COPY . .
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,5 +16,6 @@ RUN pip install --no-cache-dir \
     numpy \
     "Pillow>=10.0" \
     imageio-ffmpeg
+ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
 EXPOSE 8000
 CMD ["python", "tools/api_server/main.py"]

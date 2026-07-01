@@ -444,6 +444,12 @@ def generate_video(images: list[Image.Image], title: str, style: str,
     if len(images) < 2:
         raise ValueError(f"Need at least 2 images, got {len(images)}")
 
+    try:
+        import imageio_ffmpeg as _iio
+        print(f"  ffmpeg binary: {_iio.get_ffmpeg_exe()}")
+    except Exception:
+        pass
+
     builder = STYLES.get(style, build_showcase)
     print(f"  Building '{style}' video ({len(images)} photos, "
           f"{len(images) * (4.0 if style == 'showcase' else 3.0):.0f}s est.)...")
