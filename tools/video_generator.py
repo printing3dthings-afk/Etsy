@@ -302,7 +302,7 @@ def build_showcase(images: list[Image.Image], title: str,
         clip = ken_burns_clip(frame, per_photo, zoom_s, zoom_e, pan_x, pan_y)
         clips.append(fade_clip(clip, fade_in=0.35, fade_out=0.35))
 
-    return concatenate_videoclips(clips, method="compose")
+    return concatenate_videoclips(clips, method="chain")
 
 
 def build_new_drop(images: list[Image.Image], title: str,
@@ -326,7 +326,7 @@ def build_new_drop(images: list[Image.Image], title: str,
         clip = ken_burns_clip(frame, per_photo, 1.0, 1.1, pan_x, pan_y)
         clips.append(fade_clip(clip, fade_in=0.2, fade_out=0.2))
 
-    return concatenate_videoclips(clips, method="compose")
+    return concatenate_videoclips(clips, method="chain")
 
 
 def build_feature(images: list[Image.Image], title: str,
@@ -354,7 +354,7 @@ def build_feature(images: list[Image.Image], title: str,
         clip = ken_burns_clip(frame, per_photo, 1.0, 1.1, pan_x, pan_y)
         clips.append(fade_clip(clip, fade_in=0.3, fade_out=0.3))
 
-    return concatenate_videoclips(clips, method="compose")
+    return concatenate_videoclips(clips, method="chain")
 
 
 def build_minimal(images: list[Image.Image], title: str,
@@ -371,7 +371,7 @@ def build_minimal(images: list[Image.Image], title: str,
         clip = ken_burns_clip(frame, per_photo, zoom_s, zoom_e, pan_x, pan_y)
         clips.append(fade_clip(clip, fade_in=0.5, fade_out=0.5))
 
-    return concatenate_videoclips(clips, method="compose")
+    return concatenate_videoclips(clips, method="chain")
 
 
 STYLES = {
@@ -463,8 +463,16 @@ def generate_video(images: list[Image.Image], title: str, style: str,
         fps=FPS,
         logger=None,  # suppress MoviePy progress output
         preset="fast",
+        pixel_format="yuv420p",  # libx264 requires yuv420p; omitting causes silent 48-byte stub
     )
-    print(f"  ✓ Saved: {out_path} ({out_path.stat().st_size // 1024}KB)")
+    sz = out_path.stat().st_size if out_path.exists() else 0
+    if sz < 10_000:
+        out_path.unlink(missing_ok=True)
+        raise RuntimeError(
+            f"Video encoding produced only {sz} bytes — ffmpeg likely failed. "
+            "Ensure libx264 and yuv420p pixel format are supported."
+        )
+    print(f"  ✓ Saved: {out_path} ({sz // 1024}KB)")
     return out_path
 
 
