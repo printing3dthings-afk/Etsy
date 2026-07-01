@@ -961,6 +961,17 @@ video{width:100%;border-radius:10px;background:#000;display:block}
             <option value="new-drop">New Drop</option>
             <option value="feature">Feature</option>
             <option value="minimal">Minimal</option>
+            <option value="ai-scene">✨ AI Scene (Sora)</option>
+          </select>
+        </div>
+        <div id="studio-ai-fields" style="display:none;margin-bottom:8px">
+          <textarea id="studio-scene-prompt" rows="3"
+            placeholder="Scene description — auto-filled from title, edit before generating"
+            style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
+          <select id="studio-aspect-ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
+            <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
+            <option value="1:1">1:1 Square — Instagram Feed</option>
           </select>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
@@ -3358,6 +3369,21 @@ async function loadStudioVideos() {
 
 document.addEventListener('change', function(e){
   if (e.target && e.target.id === 'studio-file-input') studioUploadImages(e.target.files);
+  if (e.target && e.target.id === 'studio-style') {
+    const isAI = e.target.value === 'ai-scene';
+    const aiFields = document.getElementById('studio-ai-fields');
+    if (aiFields) aiFields.style.display = isAI ? 'block' : 'none';
+    if (isAI) {
+      const sp = document.getElementById('studio-scene-prompt');
+      if (sp && !sp.value) {
+        const t = (document.getElementById('studio-title').value||'').trim();
+        const p = (document.getElementById('studio-price').value||'').trim();
+        sp.value = 'Cinematic product video of "' + (t||'product') + '"' +
+          (p ? ' priced at '+p : '') +
+          '. The product sits on a cozy desk with soft natural window light, subtle camera movement, warm ambient atmosphere. Professional product photography style.';
+      }
+    }
+  }
 });
 
 async function studioUploadImages(fileList) {
@@ -3401,6 +3427,11 @@ async function studioGenerate() {
   const body = {style:style, title:title, price:price, digital:digital};
   if (listingId) body.listing_id = parseInt(listingId, 10);
   else body.image_paths = _studioUploadedPaths;
+  if (style === 'ai-scene') {
+    body.scene_prompt = (document.getElementById('studio-scene-prompt').value||'').trim();
+    body.aspect_ratio = document.getElementById('studio-aspect-ratio').value || '9:16';
+  }
+  const reqTimeout = style === 'ai-scene' ? 310000 : 185000;
 
   btn.disabled = true;
   btn.textContent = '⏳ Generating…';
@@ -3408,7 +3439,7 @@ async function studioGenerate() {
   try {
     const r = await fetchWithTimeout(BASE+'/api/studio/generate', {
       method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'}, body:JSON.stringify(body)
-    }, 185000);
+    }, reqTimeout);
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
     if (status) status.textContent = 'Generated '+d.path+' ('+d.size_human+').';
