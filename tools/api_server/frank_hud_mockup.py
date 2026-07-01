@@ -937,7 +937,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
   <div class="screen" id="screen-studio">
     <div class="panel brk" style="height:100%;overflow-y:auto">
-      <div class="panel-title">Studio — Image-to-Video Generation <span class="src">/api/studio/* — generate, attach to Etsy, post to Instagram/Facebook</span></div>
+      <div class="panel-title">Studio — Image-to-Video Generation <span class="src">/api/studio/* — generate, attach to Etsy, post to Instagram/Facebook</span><span id="studio-build-ver" style="float:right;font-size:10px;opacity:0.4;font-weight:normal"></span></div>
       <div class="studio-grid" style="flex-wrap:wrap">
         <div style="flex:1;min-width:320px">
           <video id="studio-player" controls style="aspect-ratio:16/9"></video>
@@ -3330,6 +3330,10 @@ document.addEventListener('click', function(e){
 async function loadStudioVideos() {
   const el = document.getElementById('studio-videos-list');
   if (!el) return;
+  fetch('/health').then(r=>r.json()).then(d=>{
+    const v = document.getElementById('studio-build-ver');
+    if (v && d.build) v.textContent = d.build;
+  }).catch(()=>{});
   try {
     const r = await authGet('/api/studio/videos', 15000);
     const d = await r.json().catch(()=>({}));

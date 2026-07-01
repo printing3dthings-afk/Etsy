@@ -49,7 +49,7 @@ CACHE_DIR   = BASE / "data" / "social" / "image_cache"
 
 # ── Video constants ───────────────────────────────────────────────────────────
 
-W, H    = 1080, 1920          # 9:16 TikTok/Reels
+W, H    = 720, 1280           # 9:16 TikTok/Reels (720p saves ~55% RAM vs 1080p)
 FPS     = 24
 SHOP    = "OnBrandCraftz"
 ETSY_URL = "etsy.com/shop/OnBrandCraftz"

@@ -1886,3 +1886,9 @@ Daily listing_integrity_check found 130 FAIL / 13 WARN out of 172 listings audit
 - **Root cause 2 (v76 fix):** `subprocess.Popen` stdin pattern — calling `proc.stdin.close()` then `proc.communicate()` raises `ValueError: flush of closed file` because Python's communicate() calls `self.stdin.flush()` unconditionally. Fixed by writing frames in a daemon thread while main thread drains stderr, then calling `proc.wait()` (not `communicate()`).
 - **Fix:** `tools/video_generator.py` — `imageio_ffmpeg.get_ffmpeg_exe()` + threading pattern. `tools/api_server/main.py` — added `/api/studio/diagnose` endpoint, threading fix in mini-encode test, bumped `_BUILD_ID` → `b4d0e2c-v76`.
 - **Verified:** Full HTTP end-to-end test locally — upload 2 JPEG images → POST `/api/studio/generate` → 54.8 KB MP4 returned, file confirmed on disk. `/api/studio/diagnose` returns `mini_encode_ok: true`.
+
+
+## 2026-07-01 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
