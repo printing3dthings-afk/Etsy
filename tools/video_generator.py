@@ -444,12 +444,6 @@ def generate_video(images: list[Image.Image], title: str, style: str,
     if len(images) < 2:
         raise ValueError(f"Need at least 2 images, got {len(images)}")
 
-    try:
-        import imageio_ffmpeg as _iio
-        print(f"  ffmpeg binary: {_iio.get_ffmpeg_exe()}")
-    except Exception:
-        pass
-
     builder = STYLES.get(style, build_showcase)
     print(f"  Building '{style}' video ({len(images)} photos, "
           f"{len(images) * (4.0 if style == 'showcase' else 3.0):.0f}s est.)...")
@@ -461,22 +455,44 @@ def generate_video(images: list[Image.Image], title: str, style: str,
     safe_title = "".join(c if c.isalnum() or c in "-_" else "_" for c in title[:30])
     out_path   = OUTPUT_DIR / f"{listing_id}_{style}_{safe_title}.mp4"
 
-    print(f"  Rendering {duration:.1f}s video → {out_path.name}")
-    clip.write_videofile(
+    # Pipe raw RGB24 frames directly to system ffmpeg — bypasses imageio-ffmpeg
+    # abstraction entirely, works on any CPU architecture (x86_64 or ARM64).
+    import subprocess as _sp
+    W_v, H_v   = clip.size
+    n_frames   = max(1, round(duration * FPS))
+    ffmpeg_cmd = [
+        "/usr/bin/ffmpeg", "-y",
+        "-f", "rawvideo", "-vcodec", "rawvideo",
+        "-s", f"{W_v}x{H_v}", "-pix_fmt", "rgb24",
+        "-r", str(FPS), "-i", "pipe:0",
+        "-vcodec", "libx264", "-pix_fmt", "yuv420p",
+        "-preset", "fast", "-an",
         str(out_path),
-        codec="libx264",
-        audio=False,
-        fps=FPS,
-        logger=None,  # suppress MoviePy progress output
-        preset="fast",
-        pixel_format="yuv420p",  # libx264 requires yuv420p; omitting causes silent 48-byte stub
-    )
+    ]
+    print(f"  Encoding {n_frames} frames ({duration:.1f}s) → {out_path.name}")
+    _proc = _sp.Popen(ffmpeg_cmd, stdin=_sp.PIPE, stderr=_sp.PIPE)
+    try:
+        for _i in range(n_frames):
+            _t = min(_i / FPS, duration - 0.001)
+            _proc.stdin.write(clip.get_frame(_t).tobytes())
+        _proc.stdin.close()
+        _, _stderr = _proc.communicate(timeout=120)
+    except Exception as _exc:
+        _proc.kill()
+        _proc.wait()
+        raise RuntimeError(f"Frame encoding interrupted: {_exc}") from _exc
+    if _proc.returncode != 0:
+        raise RuntimeError(
+            f"ffmpeg failed (rc={_proc.returncode}): "
+            + _stderr.decode("utf-8", errors="replace")[-600:]
+        )
+
     sz = out_path.stat().st_size if out_path.exists() else 0
     if sz < 10_000:
         out_path.unlink(missing_ok=True)
         raise RuntimeError(
-            f"Video encoding produced only {sz} bytes — ffmpeg likely failed. "
-            "Ensure libx264 and yuv420p pixel format are supported."
+            f"Video encoding produced only {sz} bytes (expected >10KB). "
+            f"ffmpeg stderr: {_stderr.decode('utf-8', errors='replace')[-300:]}"
         )
     print(f"  ✓ Saved: {out_path} ({sz // 1024}KB)")
     return out_path

@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v74"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v75"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -6842,9 +6842,6 @@ async def studio_generate_video(body: dict, _token: str = Depends(_auth)):
     filenames relative to studio_uploads/). Runs video_generator.generate_video()
     in-process — this is asset generation only (no Etsy mutation), so it needs no
     approval per CLAUDE.md's autonomy boundaries."""
-    import video_generator
-    from PIL import Image as _PILImage
-
     listing_id = body.get("listing_id")
     image_paths = body.get("image_paths") or []
     style = body.get("style", "showcase")
@@ -6852,37 +6849,42 @@ async def studio_generate_video(body: dict, _token: str = Depends(_auth)):
     price = str(body.get("price") or "")
     digital = bool(body.get("digital", True))
 
-    if style not in video_generator.STYLES:
-        raise HTTPException(status_code=400, detail=f"style must be one of {list(video_generator.STYLES)}")
     if not listing_id and not image_paths:
         raise HTTPException(status_code=400, detail="provide either listing_id or image_paths")
 
-    def _generate() -> Path:
-        if listing_id:
-            client = EtsyAPIClient()
-            imgs, listing = video_generator.fetch_listing_images(int(listing_id), client)
-            t = title or listing.get("title", "")
-            p = price or video_generator.get_price_str(listing)
-            d = digital if "digital" in body else video_generator.is_digital(listing)
-            lid: int | str = listing_id
-        else:
-            root = _FILE_ROOTS["studio_uploads"]
-            imgs = []
-            for name in image_paths:
-                target = _resolve_in_root("studio_uploads", name)
-                if not target.is_file():
-                    raise HTTPException(status_code=404, detail=f"studio upload not found: {name}")
-                imgs.append(_PILImage.open(target).convert("RGB"))
-            t = title or "Product"
-            p = price
-            d = digital
-            lid = "studio_" + uuid.uuid4().hex[:8]
-        return video_generator.generate_video(imgs, t, style, lid, price=p, digital=d)
-
     try:
+        import video_generator          # inside try so ImportError surfaces as JSON 500
+        from PIL import Image as _PILImage
+
+        if style not in video_generator.STYLES:
+            raise ValueError(f"style must be one of {list(video_generator.STYLES)}")
+
+        def _generate() -> Path:
+            if listing_id:
+                client = EtsyAPIClient()
+                imgs, listing = video_generator.fetch_listing_images(int(listing_id), client)
+                t = title or listing.get("title", "")
+                p = price or video_generator.get_price_str(listing)
+                d = digital if "digital" in body else video_generator.is_digital(listing)
+                lid: int | str = listing_id
+            else:
+                imgs = []
+                for name in image_paths:
+                    target = _resolve_in_root("studio_uploads", name)
+                    if not target.is_file():
+                        raise FileNotFoundError(f"studio upload not found: {name}")
+                    imgs.append(_PILImage.open(target).convert("RGB"))
+                t = title or "Product"
+                p = price
+                d = digital
+                lid = "studio_" + uuid.uuid4().hex[:8]
+            return video_generator.generate_video(imgs, t, style, lid, price=p, digital=d)
+
         out_path = await asyncio.wait_for(asyncio.to_thread(_generate), timeout=180.0)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Video generation timed out")
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
