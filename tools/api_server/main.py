@@ -271,7 +271,7 @@ if not APP_TOKEN:
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v75"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v76"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -6916,6 +6916,76 @@ async def studio_list_videos(_token: str = Depends(_auth)):
             })
     files.sort(key=lambda f: f["modified"], reverse=True)
     return {"videos": files}
+
+
+@app.get("/api/studio/diagnose")
+async def studio_diagnose(_token: str = Depends(_auth)):
+    """Probe Railway state: ffmpeg binary, directory writability, mini encode test."""
+    import subprocess as _sp, os as _os, imageio_ffmpeg as _iio_ffmpeg
+    r: dict = {"build_id": _BUILD_ID}
+
+    # Use the same ffmpeg resolution logic as video_generator.py
+    ffp = _iio_ffmpeg.get_ffmpeg_exe()
+    r["ffmpeg_exe"] = ffp
+    r["ffmpeg_exists"] = _os.path.exists(ffp)
+    r["ffmpeg_executable"] = _os.access(ffp, _os.X_OK) if r["ffmpeg_exists"] else False
+    try:
+        v = _sp.run([ffp, "-version"], capture_output=True, text=True, timeout=10)
+        r["ffmpeg_version_line"] = (v.stdout or v.stderr).split("\n")[0]
+        r["ffmpeg_version_rc"] = v.returncode
+    except Exception as _e:
+        r["ffmpeg_version_error"] = str(_e)
+
+    from pathlib import Path as _P
+    for key, path in [("video_dir", _P("data/social/videos")), ("upload_dir", _P("studio_uploads"))]:
+        try:
+            path.mkdir(parents=True, exist_ok=True)
+            (path / ".wtest").write_text("x")
+            (path / ".wtest").unlink()
+            r[f"{key}_writable"] = True
+        except Exception as _e:
+            r[f"{key}_writable"] = False
+            r[f"{key}_error"] = str(_e)
+
+    try:
+        import numpy as _np, tempfile as _tf
+        frame = _np.zeros((10, 10, 3), dtype=_np.uint8)
+        with _tf.NamedTemporaryFile(suffix=".mp4", delete=False) as f:
+            tmp = f.name
+        cmd = [ffp, "-y", "-f", "rawvideo", "-vcodec", "rawvideo",  # ffp from get_ffmpeg_exe()
+               "-s", "10x10", "-pix_fmt", "rgb24", "-r", "1", "-i", "pipe:0",
+               "-vcodec", "libx264", "-pix_fmt", "yuv420p", "-preset", "fast", "-an", tmp]
+        import threading as _th
+        proc = _sp.Popen(cmd, stdin=_sp.PIPE, stderr=_sp.PIPE)
+        frame_bytes = frame.tobytes()
+
+        def _wr():
+            try:
+                proc.stdin.write(frame_bytes)
+            except BrokenPipeError:
+                pass
+            finally:
+                try: proc.stdin.close()
+                except Exception: pass
+
+        _wt = _th.Thread(target=_wr, daemon=True)
+        _wt.start()
+        stderr = proc.stderr.read()
+        _wt.join(timeout=10)
+        proc.wait(timeout=5)
+        r["mini_encode_rc"] = proc.returncode
+        if proc.returncode == 0:
+            r["mini_encode_size"] = _os.path.getsize(tmp)
+            r["mini_encode_ok"] = True
+            _os.unlink(tmp)
+        else:
+            r["mini_encode_ok"] = False
+            r["mini_encode_stderr"] = stderr.decode("utf-8", errors="replace")[-800:]
+    except Exception as _e:
+        r["mini_encode_ok"] = False
+        r["mini_encode_error"] = str(_e)
+
+    return r
 
 
 @app.post("/api/studio/post-instagram")

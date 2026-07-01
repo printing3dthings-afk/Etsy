@@ -455,13 +455,17 @@ def generate_video(images: list[Image.Image], title: str, style: str,
     safe_title = "".join(c if c.isalnum() or c in "-_" else "_" for c in title[:30])
     out_path   = OUTPUT_DIR / f"{listing_id}_{style}_{safe_title}.mp4"
 
-    # Pipe raw RGB24 frames directly to system ffmpeg — bypasses imageio-ffmpeg
-    # abstraction entirely, works on any CPU architecture (x86_64 or ARM64).
+    # Pipe raw RGB24 frames directly to ffmpeg — bypasses imageio-ffmpeg abstraction
+    # entirely. Use imageio_ffmpeg.get_ffmpeg_exe() so that:
+    #   • locally: the bundled x86_64 binary is used (works everywhere)
+    #   • Railway: ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg redirects to system binary
     import subprocess as _sp
+    import imageio_ffmpeg as _iio_ffmpeg
+    _ffmpeg_exe = _iio_ffmpeg.get_ffmpeg_exe()
     W_v, H_v   = clip.size
     n_frames   = max(1, round(duration * FPS))
     ffmpeg_cmd = [
-        "/usr/bin/ffmpeg", "-y",
+        _ffmpeg_exe, "-y",
         "-f", "rawvideo", "-vcodec", "rawvideo",
         "-s", f"{W_v}x{H_v}", "-pix_fmt", "rgb24",
         "-r", str(FPS), "-i", "pipe:0",
@@ -469,18 +473,38 @@ def generate_video(images: list[Image.Image], title: str, style: str,
         "-preset", "fast", "-an",
         str(out_path),
     ]
+    print(f"  ffmpeg: {_ffmpeg_exe}")
     print(f"  Encoding {n_frames} frames ({duration:.1f}s) → {out_path.name}")
+    import threading as _th
     _proc = _sp.Popen(ffmpeg_cmd, stdin=_sp.PIPE, stderr=_sp.PIPE)
-    try:
-        for _i in range(n_frames):
-            _t = min(_i / FPS, duration - 0.001)
-            _proc.stdin.write(clip.get_frame(_t).tobytes())
-        _proc.stdin.close()
-        _, _stderr = _proc.communicate(timeout=120)
-    except Exception as _exc:
+    _write_exc: list = []
+
+    def _write_frames():
+        try:
+            for _i in range(n_frames):
+                _t = min(_i / FPS, duration - 0.001)
+                _proc.stdin.write(clip.get_frame(_t).tobytes())
+        except Exception as _e:
+            _write_exc.append(_e)
+        finally:
+            try:
+                _proc.stdin.close()
+            except Exception:
+                pass
+
+    _writer = _th.Thread(target=_write_frames, daemon=True)
+    _writer.start()
+    _stderr = _proc.stderr.read()   # drain stderr while writer runs (prevents deadlock)
+    _writer.join(timeout=130)
+    if _writer.is_alive():
         _proc.kill()
-        _proc.wait()
-        raise RuntimeError(f"Frame encoding interrupted: {_exc}") from _exc
+        raise RuntimeError("Frame encoding timed out (writer thread still running after 130s)")
+    try:
+        _proc.wait(timeout=10)
+    except _sp.TimeoutExpired:
+        _proc.kill()
+    if _write_exc:
+        raise RuntimeError(f"Frame encoding interrupted: {_write_exc[0]}") from _write_exc[0]
     if _proc.returncode != 0:
         raise RuntimeError(
             f"ffmpeg failed (rc={_proc.returncode}): "
