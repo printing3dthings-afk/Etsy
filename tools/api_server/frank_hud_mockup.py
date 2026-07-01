@@ -52,11 +52,22 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
   --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#5d7891;
   --green:#4caf82;--red:#e05555;--amber:#e0a83a;
 }
-/* ── Color themes — override accent vars only; every component already reads
-   var(--cyan)/var(--gold) so no other CSS changes when a theme is switched ── */
-html.theme-gold{--cyan:#e8c96a;--cyan2:#f5dfa0;--gold:#3ad6ff;--gold2:#8fefff}
-html.theme-emerald{--cyan:#2dd4a7;--cyan2:#7ff5d4;--gold:#e0a83a;--gold2:#f0c66a}
-html.theme-rose{--cyan:#ff6fa8;--cyan2:#ffaecb;--gold:#e8c96a;--gold2:#f5dfa0}
+/* ── Color themes — full bg + panel + accent swap ── */
+html.theme-light{
+  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--border:#b8c5d0;
+  --cyan:#1a8a9a;--cyan2:#2ab4c8;--gold:#9a7c30;--gold2:#c4a035;
+  --text:#1a2332;--muted:#5a7080;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
+}
+html.theme-purple{
+  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--border:#2a1945;
+  --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
+  --text:#ede8f5;--muted:#7060a0;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-charcoal{
+  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--border:#3a3222;
+  --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
+  --text:#f0e8d0;--muted:#7a6e55;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;width:100%;overflow:hidden;background:var(--bg)}
 body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
@@ -1497,18 +1508,18 @@ function _setPremiumVoice(on) {
 // backend) is the right persistence layer. Default 'cyan' matches the
 // original :root values, applied via no class on <html>. ──
 const _UI_THEMES = [
-  {name:'cyan', label:'Cyan', swatch:'#3ad6ff'},
-  {name:'gold', label:'Gold', swatch:'#e8c96a'},
-  {name:'emerald', label:'Emerald', swatch:'#2dd4a7'},
-  {name:'rose', label:'Rose', swatch:'#ff6fa8'},
+  {name:'default', label:'Deep Space',    bg:'#070d16', accent:'#3ad6ff'},
+  {name:'light',   label:'Day Mode',      bg:'#edf1f5', accent:'#1a8a9a'},
+  {name:'purple',  label:'Dark Purple',   bg:'#0c0714', accent:'#9b5de5'},
+  {name:'charcoal',label:'Warm Charcoal', bg:'#13100a', accent:'#e8b84a'},
 ];
 function _getTheme() {
-  try { return localStorage.getItem('frankTheme') || 'cyan'; } catch(e) { return 'cyan'; }
+  try { return localStorage.getItem('frankTheme') || 'default'; } catch(e) { return 'default'; }
 }
 function _setTheme(name) {
   try { localStorage.setItem('frankTheme', name); } catch(e) {}
   _UI_THEMES.forEach(t => document.documentElement.classList.remove('theme-'+t.name));
-  if (name !== 'cyan') document.documentElement.classList.add('theme-'+name);
+  if (name !== 'default') document.documentElement.classList.add('theme-'+name);
   _renderThemeSwatches();
 }
 function _renderThemeSwatches() {
@@ -1519,7 +1530,10 @@ function _renderThemeSwatches() {
     '<button class="act-btn" style="display:flex;align-items:center;gap:7px;'+
     (t.name === active ? 'border-color:var(--cyan);color:var(--cyan2)' : '')+
     '" onclick="_setTheme(\\''+t.name+'\\')">'+
-    '<span style="width:14px;height:14px;border-radius:50%;background:'+t.swatch+';flex-shrink:0;display:inline-block"></span>'+
+    '<span style="width:20px;height:14px;border-radius:4px;flex-shrink:0;display:inline-block;overflow:hidden;border:1px solid rgba(255,255,255,.15)">'+
+      '<span style="display:block;width:50%;height:100%;background:'+t.bg+';float:left"></span>'+
+      '<span style="display:block;width:50%;height:100%;background:'+t.accent+';float:left"></span>'+
+    '</span>'+
     t.label+(t.name === active ? ' ✓' : '')+'</button>'
   ).join('');
 }

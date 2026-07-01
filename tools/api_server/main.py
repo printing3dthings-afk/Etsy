@@ -310,7 +310,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v80"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v81"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -667,7 +667,7 @@ def login_submit(
             print(f"[auth] owner account created: '{uname}'", flush=True)
             sid = _new_session(uname)
             resp = RedirectResponse(safe_next, status_code=303)
-            resp.set_cookie(SESSION_COOKIE, sid, max_age=SESSION_TTL, httponly=True, secure=True, samesite="lax")
+            resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
             return resp
 
     # ── Normal login ────────────────────────────────────────────────────────
@@ -679,7 +679,7 @@ def login_submit(
         _reset_login_fails(ip)
         sid = _new_session(uname)
         resp = RedirectResponse(safe_next, status_code=303)
-        resp.set_cookie(SESSION_COOKIE, sid, max_age=SESSION_TTL, httponly=True, secure=True, samesite="lax")
+        resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
         return resp
     _record_login_fail(ip)
     return RedirectResponse(f"/login?error=1&next={safe_next}", status_code=303)
