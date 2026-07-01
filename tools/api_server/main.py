@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import io
 import json
 import mimetypes
@@ -33,6 +34,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, Security, WebSocket, WebSocketDisconnect
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -268,10 +270,44 @@ _LOCAL_FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--act
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "").strip()
 if not APP_TOKEN:
     raise RuntimeError("APP_SECRET_TOKEN is not set — refusing to start with no auth token.")
+# Username/password for the /frank login page (separate from the bearer API token).
+# FRANK_USERNAME defaults to the owner name lowercased; FRANK_PASSWORD defaults to
+# APP_SECRET_TOKEN so existing deployments keep working without any new env vars.
+FRANK_USERNAME = (os.getenv("FRANK_USERNAME") or business_config.OWNER_NAME).strip().lower()
+FRANK_PASSWORD = (os.getenv("FRANK_PASSWORD") or APP_TOKEN).strip()
+
+
+def _hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 260_000)
+    return f"{salt}${dk.hex()}"
+
+
+def _verify_password(stored_hash: str, password: str) -> bool:
+    try:
+        salt, dk_hex = stored_hash.split("$", 1)
+        dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 260_000)
+        return secrets.compare_digest(dk.hex(), dk_hex)
+    except Exception:
+        return False
+
+
+def _seed_owner_if_empty() -> None:
+    """On first startup, seed the owner account from FRANK_USERNAME/FRANK_PASSWORD."""
+    try:
+        if db.hub_users_empty():
+            db.create_hub_user(FRANK_USERNAME, _hash_password(FRANK_PASSWORD), role="owner")
+            print(f"[auth] seeded owner account '{FRANK_USERNAME}'", flush=True)
+    except Exception as exc:
+        print(f"[auth] seed failed: {exc}", flush=True)
+
+
+_seed_owner_if_empty()
+
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v78"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v79"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -368,7 +404,7 @@ def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str
 # Deliberately in-memory only (same tradeoff as _relay_pending below) — a redeploy
 # clears sessions and Scott logs in again; no DB table needed for one operator.
 
-_sessions: dict[str, float] = {}        # session_id -> expiry (epoch seconds)
+_sessions: dict[str, tuple[float, str]] = {}  # session_id -> (expiry, username)
 _sessions_lock = threading.Lock()
 SESSION_TTL = 60 * 60 * 24 * 30          # 30 days
 
@@ -405,10 +441,10 @@ def _consume_ws_ticket(ticket: str) -> bool:
     return expiry is not None and time.time() <= expiry
 
 
-def _new_session() -> str:
+def _new_session(username: str) -> str:
     sid = secrets.token_urlsafe(32)
     with _sessions_lock:
-        _sessions[sid] = time.time() + SESSION_TTL
+        _sessions[sid] = (time.time() + SESSION_TTL, username)
     return sid
 
 
@@ -417,13 +453,29 @@ def _check_session(request: Request) -> bool:
     if not sid:
         return False
     with _sessions_lock:
-        expiry = _sessions.get(sid)
-        if expiry is None:
+        entry = _sessions.get(sid)
+        if entry is None:
             return False
+        expiry, _ = entry
         if time.time() > expiry:
             del _sessions[sid]
             return False
     return True
+
+
+def _get_session_user(request: Request) -> str:
+    sid = request.cookies.get(SESSION_COOKIE, "")
+    if not sid:
+        return ""
+    with _sessions_lock:
+        entry = _sessions.get(sid)
+        if entry is None:
+            return ""
+        expiry, username = entry
+        if time.time() > expiry:
+            del _sessions[sid]
+            return ""
+    return username
 
 
 def _clear_session(request: Request) -> None:
@@ -462,28 +514,39 @@ _LOGIN_PAGE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{hub_title} Hub — Sign in</title>
+<title>{hub_title} — Sign in</title>
 <style>
-  body {{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
-    background:#0b0f14; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }}
-  .box {{ width:320px; padding:32px; background:#121821; border:1px solid #1f2a36; border-radius:12px; }}
-  .box h1 {{ margin:0 0 6px; font-size:18px; color:#e8eef3; }}
-  .box p.sub {{ margin:0 0 20px; font-size:13px; color:#7c8896; }}
-  input[type=password] {{ width:100%; box-sizing:border-box; padding:10px 12px; margin-bottom:14px;
-    background:#0b0f14; border:1px solid #2a3744; border-radius:8px; color:#e8eef3; font-size:14px; }}
-  button {{ width:100%; padding:10px; background:#2ec4c4; border:none; border-radius:8px;
-    color:#06222a; font-weight:600; font-size:14px; cursor:pointer; }}
-  .err {{ color:#ff6b6b; font-size:13px; margin:0 0 14px; }}
+  *{{box-sizing:border-box}}
+  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
+  .box{{width:340px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
+  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:20px}}
+  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
+  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
+  .logo-sub{{font-size:12px;color:#5a6a78;margin-top:1px}}
+  label{{display:block;font-size:11px;font-weight:600;color:#5a6a78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
+    background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
+  input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
+  button{{width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
+    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px;transition:background .15s}}
+  button:hover{{background:#38d8d8}}
+  .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
 </style>
 </head>
 <body>
   <div class="box">
-    <h1>{hub_title} Hub</h1>
-    <p class="sub">Enter the passphrase to continue.</p>
+    <div class="logo">
+      <div class="logo-dot">F</div>
+      <div><div class="logo-text">{hub_title}</div><div class="logo-sub">Operations Hub</div></div>
+    </div>
     {error_html}
-    <form method="post" action="/login">
+    <form method="post" action="/login" autocomplete="on">
       <input type="hidden" name="next" value="{next_path}">
-      <input type="password" name="passphrase" placeholder="Passphrase" autofocus>
+      <label for="li-user">Username</label>
+      <input type="text" id="li-user" name="username" placeholder="Enter your username" autofocus autocomplete="username">
+      <label for="li-pass">Password</label>
+      <input type="password" id="li-pass" name="password" placeholder="Enter your password" autocomplete="current-password">
       <button type="submit">Sign in</button>
     </form>
   </div>
@@ -500,7 +563,7 @@ def _safe_next(next_path: str) -> str:
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page(next: str = "/", error: str = ""):
-    error_html = '<p class="err">Incorrect passphrase. Try again.</p>' if error else ""
+    error_html = '<div class="err">Incorrect username or password. Try again.</div>' if error else ""
     return HTMLResponse(
         _LOGIN_PAGE.format(error_html=error_html, next_path=_safe_next(next), hub_title=business_config.BUSINESS_NAME),
         headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
@@ -508,7 +571,7 @@ def login_page(next: str = "/", error: str = ""):
 
 
 @app.post("/login")
-def login_submit(request: Request, passphrase: str = Form(""), next: str = Form("/")):
+def login_submit(request: Request, username: str = Form(""), password: str = Form(""), next: str = Form("/")):
     ip = _client_ip(request)
     safe_next = _safe_next(next)
     if _login_rate_limited(ip):
@@ -516,9 +579,11 @@ def login_submit(request: Request, passphrase: str = Form(""), next: str = Form(
             content="Too many failed attempts. Try again in a few minutes.",
             status_code=429,
         )
-    if secrets.compare_digest(passphrase, APP_TOKEN):
+    uname = username.strip().lower()
+    user_row = db.get_hub_user(uname)
+    if user_row and _verify_password(user_row["pw_hash"], password.strip()):
         _reset_login_fails(ip)
-        sid = _new_session()
+        sid = _new_session(uname)
         resp = RedirectResponse(safe_next, status_code=303)
         resp.set_cookie(
             SESSION_COOKIE, sid,
@@ -533,6 +598,14 @@ def login_submit(request: Request, passphrase: str = Form(""), next: str = Form(
 def logout(request: Request):
     _clear_session(request)
     resp = RedirectResponse("/login", status_code=303)
+    resp.delete_cookie(SESSION_COOKIE)
+    return resp
+
+
+@app.post("/logout")
+def logout_post(request: Request):
+    _clear_session(request)
+    resp = JSONResponse({"ok": True})
     resp.delete_cookie(SESSION_COOKIE)
     return resp
 
@@ -4644,8 +4717,92 @@ def frank_hud_mockup(request: Request):
         return RedirectResponse(f"/login?next={request.url.path}", status_code=307)
     return HTMLResponse(
         content=render_frank_hud(APP_TOKEN),
-        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        # private: browser may cache, but not CDN/proxies (token is embedded in JS)
+        # no-cache: must revalidate with server before using cached copy (session check happens)
+        headers={"Cache-Control": "private, no-cache"},
     )
+
+
+@app.get("/api/me")
+async def get_me(request: Request, _token: str = Depends(_auth)):
+    """Return the username and role associated with the current session."""
+    uname = _get_session_user(request) or FRANK_USERNAME
+    user_row = db.get_hub_user(uname)
+    role = user_row["role"] if user_row else "owner"
+    return {"username": uname, "role": role}
+
+
+def _require_owner(request: Request) -> None:
+    """Raise 403 unless the current session belongs to an owner-role user."""
+    uname = _get_session_user(request) or FRANK_USERNAME
+    user_row = db.get_hub_user(uname)
+    if not user_row or user_row["role"] != "owner":
+        raise HTTPException(status_code=403, detail="Owner role required")
+
+
+@app.get("/api/admin/users")
+async def admin_list_users(request: Request, _token: str = Depends(_auth)):
+    """List all hub users (username, role, created_at). Owner only."""
+    _require_owner(request)
+    return {"users": db.list_hub_users()}
+
+
+class _UserCreate(BaseModel):
+    username: str
+    password: str
+    role: str = "admin"
+
+
+@app.post("/api/admin/users")
+async def admin_create_user(request: Request, body: _UserCreate, _token: str = Depends(_auth)):
+    """Create a new hub user. Owner only. Role must be 'admin' (owner cannot be created here)."""
+    _require_owner(request)
+    uname = body.username.strip().lower()
+    if not uname or not body.password.strip():
+        raise HTTPException(status_code=400, detail="username and password are required")
+    if body.role not in ("admin", "owner"):
+        raise HTTPException(status_code=400, detail="role must be 'admin'")
+    if body.role == "owner":
+        raise HTTPException(status_code=400, detail="Cannot create a second owner account")
+    if db.get_hub_user(uname):
+        raise HTTPException(status_code=409, detail=f"User '{uname}' already exists")
+    db.create_hub_user(uname, _hash_password(body.password.strip()), role="admin")
+    return {"ok": True, "username": uname, "role": "admin"}
+
+
+class _PasswordReset(BaseModel):
+    password: str
+
+
+@app.post("/api/admin/users/{username}/reset-password")
+async def admin_reset_password(username: str, request: Request, body: _PasswordReset, _token: str = Depends(_auth)):
+    """Reset a user's password. Owner can reset any admin's password."""
+    _require_owner(request)
+    uname = username.strip().lower()
+    user_row = db.get_hub_user(uname)
+    if not user_row:
+        raise HTTPException(status_code=404, detail=f"User '{uname}' not found")
+    requester = _get_session_user(request) or FRANK_USERNAME
+    if user_row["role"] == "owner" and uname != requester:
+        raise HTTPException(status_code=403, detail="Cannot reset another owner's password")
+    if not body.password.strip():
+        raise HTTPException(status_code=400, detail="password is required")
+    db.update_hub_user_password(uname, _hash_password(body.password.strip()))
+    return {"ok": True}
+
+
+@app.delete("/api/admin/users/{username}")
+async def admin_delete_user(username: str, request: Request, _token: str = Depends(_auth)):
+    """Delete a hub user. Owner only. Cannot delete the owner account."""
+    _require_owner(request)
+    uname = username.strip().lower()
+    user_row = db.get_hub_user(uname)
+    if not user_row:
+        raise HTTPException(status_code=404, detail=f"User '{uname}' not found")
+    if user_row["role"] == "owner":
+        raise HTTPException(status_code=403, detail="Cannot delete the owner account")
+    db.delete_hub_user(uname)
+    return {"ok": True}
 
 
 # ── PWA: manifest + service worker (makes the hub installable to home screen) ─────

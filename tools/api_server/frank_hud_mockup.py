@@ -564,7 +564,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         </div>
       </div>
       <div class="icon-btn" onclick="showScreen('settings')">⚙</div>
-      <div class="operator"><div class="av">S</div><div><div class="ol1">Scott</div><div class="ol2">OWNER</div></div></div>
+      <div class="operator" id="operator-chip" title="Click to log out" onclick="doLogout()" style="cursor:pointer" role="button"><div class="av" id="op-av">…</div><div><div class="ol1" id="op-name">…</div><div class="ol2" id="op-role">…</div></div></div>
     </div>
   </div>
 
@@ -925,6 +925,29 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
         <button class="act-btn" onclick="showScreen('connections')">View full Connections ›</button>
         <button class="act-btn" onclick="showScreen('security')">View Security ›</button>
+      </div>
+
+      <div class="hub-section-title" id="user-mgmt-section" style="margin-top:18px;display:none">User Management</div>
+      <div class="hub-card" id="user-mgmt-card" style="display:none">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Admins have full API access identical to the owner login. Only the owner can manage users.</div>
+        <div id="user-list" style="margin-bottom:14px"><div class="hub-spinner"></div></div>
+        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:6px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Add Admin</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Username</label>
+              <input type="text" id="new-user-name" class="search" style="width:100%" placeholder="jane">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Password</label>
+              <input type="password" id="new-user-pw" class="search" style="width:100%" placeholder="••••••••">
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="act-btn" onclick="addUser()">Add Admin</button>
+            <div id="user-add-status" style="font-size:11px;color:var(--muted)"></div>
+          </div>
+        </div>
       </div>
 
       <div class="hub-section-title" style="margin-top:18px">About</div>
@@ -3740,6 +3763,105 @@ loadKb();
 loadWorkflows();
 setInterval(loadAll, 30000);
 
+// ── Operator chip — load current user from /api/me ──
+let _myRole = 'admin';
+async function loadOperatorChip(){
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/me',{headers:{Authorization:'Bearer '+TOKEN}},5000);
+    if(!r.ok) return;
+    const d = await r.json();
+    const uname = d.username || '?';
+    const role  = (d.role || 'admin').toUpperCase();
+    _myRole = d.role || 'admin';
+    document.getElementById('op-av').textContent   = uname[0].toUpperCase();
+    document.getElementById('op-name').textContent = uname;
+    document.getElementById('op-role').textContent = role;
+    if(_myRole === 'owner'){
+      document.getElementById('user-mgmt-section').style.display = '';
+      document.getElementById('user-mgmt-card').style.display    = '';
+      loadUsers();
+    }
+  } catch(e){ /* silent */ }
+}
+loadOperatorChip();
+
+async function doLogout(){
+  if(!confirm('Log out of Frank?')) return;
+  await fetch(BASE+'/logout',{method:'POST'}).catch(()=>{});
+  location.href='/login';
+}
+
+// ── User management (owner only) ──
+async function loadUsers(){
+  const el = document.getElementById('user-list');
+  if(!el) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/admin/users',{headers:{Authorization:'Bearer '+TOKEN}},5000);
+    if(!r.ok){ el.innerHTML='<div style="color:var(--muted);font-size:11px">Failed to load users</div>'; return; }
+    const d = await r.json();
+    if(!d.users||!d.users.length){ el.innerHTML='<div style="color:var(--muted);font-size:11px">No users yet.</div>'; return; }
+    el.innerHTML = d.users.map(u=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <span style="font-size:12px;font-weight:600">${u.username}</span>
+          <span style="font-size:10px;color:var(--muted);margin-left:6px">${u.role.toUpperCase()}</span>
+          <div style="font-size:10px;color:var(--muted)">${u.created_at||''}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${u.role!=='owner'?`<button class="act-btn" style="font-size:10px;padding:3px 7px" onclick="resetUserPw('${u.username}')">Reset PW</button>
+          <button class="act-btn" style="font-size:10px;padding:3px 7px;background:rgba(220,60,60,.18);border-color:rgba(220,60,60,.4)" onclick="deleteUser('${u.username}')">Remove</button>`:''}
+        </div>
+      </div>`).join('');
+  } catch(e){ el.innerHTML='<div style="color:var(--muted);font-size:11px">Error loading users</div>'; }
+}
+
+async function addUser(){
+  const uname = (document.getElementById('new-user-name').value||'').trim();
+  const pw    = (document.getElementById('new-user-pw').value||'').trim();
+  const st    = document.getElementById('user-add-status');
+  if(!uname||!pw){ st.textContent='Username and password are required.'; return; }
+  st.textContent='Adding…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/admin/users',{
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({username:uname,password:pw,role:'admin'})
+    },8000);
+    const d = await r.json();
+    if(!r.ok){ st.textContent=d.detail||'Error'; return; }
+    st.textContent=`✓ ${uname} added`;
+    document.getElementById('new-user-name').value='';
+    document.getElementById('new-user-pw').value='';
+    loadUsers();
+  } catch(e){ st.textContent='Network error'; }
+}
+
+async function deleteUser(uname){
+  if(!confirm(`Remove user "${uname}"?`)) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/admin/users/'+uname,{
+      method:'DELETE', headers:{Authorization:'Bearer '+TOKEN}
+    },5000);
+    const d = await r.json();
+    if(!r.ok){ showToast(d.detail||'Error removing user'); return; }
+    showToast(`${uname} removed`);
+    loadUsers();
+  } catch(e){ showToast('Network error'); }
+}
+
+async function resetUserPw(uname){
+  const pw = prompt(`New password for "${uname}":`);
+  if(!pw||!pw.trim()) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/admin/users/'+uname+'/reset-password',{
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({password:pw.trim()})
+    },8000);
+    const d = await r.json();
+    if(!r.ok){ showToast(d.detail||'Error'); return; }
+    showToast(`Password reset for ${uname}`);
+  } catch(e){ showToast('Network error'); }
+}
+
 // ── Clock ──
 function tick(){
   const d = new Date();
@@ -3851,6 +3973,9 @@ function drawMem(points){
 </html>"""
 
 
+_frank_html_cache: tuple[str, str] | None = None  # (app_token, rendered_html)
+
+
 def render_frank_hud(app_token: str) -> str:
     """Substitute the real bearer token into the mockup's __APP_TOKEN__ placeholder
     at request time. The template is a plain string (not f-string/.format()) because
@@ -3859,9 +3984,17 @@ def render_frank_hud(app_token: str) -> str:
     auth model as the live dashboard at /, just injected via str.replace() instead.
     Business-identity placeholders ("Fucking Frank"/"Frank"/"Scott") are substituted
     here too, same convention as _WEB_UI in main.py — longest literal first so
-    "Fucking Frank" doesn't get mangled by the plain "Frank" pass."""
+    "Fucking Frank" doesn't get mangled by the plain "Frank" pass.
+
+    The result is cached in-memory keyed by app_token so repeated requests (e.g.
+    browser revalidation after back-navigation) don't redo the 4× str.replace() on
+    a ~400 KB HTML string on every hit."""
+    global _frank_html_cache
+    if _frank_html_cache and _frank_html_cache[0] == app_token:
+        return _frank_html_cache[1]
     html = _FRANK_HUD_MOCKUP.replace("__APP_TOKEN__", json.dumps(app_token))
     html = html.replace("Fucking Frank", business_config.AGENT_NAME)
     html = html.replace("Frank", business_config.AGENT_NAME_SHORT)
     html = html.replace("Scott", business_config.OWNER_NAME)
+    _frank_html_cache = (app_token, html)
     return html

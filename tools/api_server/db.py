@@ -164,6 +164,12 @@ CREATE TABLE IF NOT EXISTS user_profile (
   timezone   TEXT,
   updated_at TEXT
 );
+CREATE TABLE IF NOT EXISTS hub_users (
+  username   TEXT PRIMARY KEY,        -- lowercase
+  pw_hash    TEXT NOT NULL,           -- pbkdf2:sha256:<salt>$<dk_hex>
+  role       TEXT NOT NULL DEFAULT 'admin',  -- 'owner' | 'admin'
+  created_at TEXT NOT NULL
+);
 """
 
 
@@ -1034,5 +1040,80 @@ def set_circuit_breaker_state(
             (dep_name, state, consecutive_failures, opened_at, ts),
         )
         conn.commit()
+    finally:
+        conn.close()
+
+
+# ── Hub user accounts (multi-user login: owner + admins) ────────────────────
+
+
+def get_hub_user(username: str) -> dict | None:
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT username, pw_hash, role, created_at FROM hub_users WHERE username = ?",
+            (username.lower(),),
+        ).fetchone()
+        return dict(r) if r else None
+    finally:
+        conn.close()
+
+
+def list_hub_users() -> list[dict]:
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT username, role, created_at FROM hub_users ORDER BY created_at"
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def create_hub_user(username: str, pw_hash: str, role: str = "admin") -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT INTO hub_users (username, pw_hash, role, created_at) VALUES (?, ?, ?, ?)",
+            (username.lower(), pw_hash, role, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def update_hub_user_password(username: str, pw_hash: str) -> None:
+    init_db()
+    conn = _connect()
+    try:
+        conn.execute(
+            "UPDATE hub_users SET pw_hash = ? WHERE username = ?",
+            (pw_hash, username.lower()),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_hub_user(username: str) -> None:
+    init_db()
+    conn = _connect()
+    try:
+        conn.execute("DELETE FROM hub_users WHERE username = ?", (username.lower(),))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def hub_users_empty() -> bool:
+    init_db()
+    conn = _connect()
+    try:
+        n = conn.execute("SELECT COUNT(*) FROM hub_users").fetchone()[0]
+        return n == 0
     finally:
         conn.close()
