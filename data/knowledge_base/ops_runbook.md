@@ -1892,3 +1892,17 @@ Daily listing_integrity_check found 130 FAIL / 13 WARN out of 172 listings audit
 5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
 
 **Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+---
+**2026-07-01 — Security audit fixes: v82 (APP_SECRET_TOKEN removed from HTML)**
+- **Symptom:** `APP_SECRET_TOKEN` was embedded in page source as `const TOKEN = '...'` in both the mobile PWA (`_WEB_UI` in main.py, line ~3174) and the Frank HUD (via `__APP_TOKEN__` substitution in frank_hud_mockup.py). Any user viewing View Source could extract the admin token.
+- **Additional issues:** Sessions weren't persisted (Railway restart = everyone logged out); password reset didn't invalidate existing sessions; WebSocket disconnect was silent (no user toast).
+- **Fixes (all in v82):**
+  - **Fix A (security):** Removed token injection from HTML. Both UIs now use `const TOKEN = ''` (placeholder). `fetchWithTimeout()` in both files strips `Authorization` headers and sends `credentials:'same-origin'` so the httpOnly session cookie is used automatically. File download URLs no longer include `?token=...`. New FastAPI dep `_auth_session_or_bearer` accepts cookie | Bearer header | `?token=` query param.
+  - **Fix B (security):** Password reset (`/api/admin/users/{u}/reset-password`) now deletes all in-memory sessions and `hub_sessions` DB rows for that user.
+  - **Fix C (reliability):** Sessions persisted to `hub_sessions` SQLite table (schema in db.py). `_get_session_user` falls back to DB on cache miss; warms in-memory cache on hit. Purge runs at startup + hourly.
+  - **Fix D (reliability):** WebSocket `ws.onclose` now calls `showToast('Reconnecting… (N/5)', 'warn')` during retries and `showToast('Connection lost. Refresh the page.', 'error', 0)` at max retries. `showToast(ms=0)` now means persistent (no auto-dismiss).
+  - **Fix E (relay pending):** Confirmed already handled — `_dispatch_to_relay` already had `finally: _relay_pending.pop(req_id, None)`. No change needed.
+  - **Fix F (dead UI):** `batchStageTags()` and `mem-canvas` render code were already implemented. No change needed.
+- **Files changed:** `tools/api_server/db.py`, `tools/api_server/main.py`, `tools/api_server/frank_hud_mockup.py`
+- **Build:** `b4d0e2c-v82`

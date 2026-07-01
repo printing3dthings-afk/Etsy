@@ -264,9 +264,8 @@ _LOCAL_EXEC_COMMANDS: dict[str, str] = {
 _LOCAL_FORBIDDEN_EXEC_FLAGS = ("--fix", "--push", "--publish", "--apply", "--activate", "--delete", "--write", "&&", "|", ";", ">", "<")
 
 # .strip() is critical: Railway env vars set via the dashboard often carry a
-# trailing newline. APP_TOKEN is injected into an inline JS string literal
-# (const TOKEN = '...'); a newline inside it is a fatal SyntaxError that kills
-# the ENTIRE dashboard script — the page renders but no JS runs (frozen spinner).
+# trailing newline. APP_TOKEN is the server secret; it must NOT be injected into
+# any inline JS string literal visible in page source. Auth uses session cookies.
 APP_TOKEN = os.getenv("APP_SECRET_TOKEN", "").strip()
 if not APP_TOKEN:
     raise RuntimeError("APP_SECRET_TOKEN is not set — refusing to start with no auth token.")
@@ -310,7 +309,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v81"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v82"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -396,6 +395,25 @@ def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str
     return credentials.credentials
 
 
+def _auth_session_or_bearer(request: Request) -> str:
+    """Accept any of: session cookie (HUD/PWA browsers), Bearer header (relay/mobile),
+    or ?token= query param (file download links). Returns the validated token or raises 401."""
+    # 1. Session cookie — browser sends this automatically (same-origin httpOnly)
+    if _check_session(request):
+        return APP_TOKEN
+    # 2. Bearer header — relay process, React Native app
+    auth_header = request.headers.get("authorization", "")
+    if auth_header.lower().startswith("bearer "):
+        token = auth_header[7:]
+        if secrets.compare_digest(token, APP_TOKEN):
+            return APP_TOKEN
+    # 3. Query param — file download links (/api/files/download?token=...)
+    token = request.query_params.get("token", "")
+    if token and secrets.compare_digest(token, APP_TOKEN):
+        return APP_TOKEN
+    raise HTTPException(status_code=401, detail="Authentication required")
+
+
 # ── Page login gate ─────────────────────────────────────────────────────────────
 #
 # /api/* and /ws/* stay protected by the bearer/query APP_TOKEN exactly as before.
@@ -446,8 +464,13 @@ def _consume_ws_ticket(ticket: str) -> bool:
 
 def _new_session(username: str) -> str:
     sid = secrets.token_urlsafe(32)
+    expiry = time.time() + SESSION_TTL
     with _sessions_lock:
-        _sessions[sid] = (time.time() + SESSION_TTL, username)
+        _sessions[sid] = (expiry, username)
+    try:
+        db.create_session(sid, username, expiry)
+    except Exception:
+        pass
     return sid
 
 
@@ -457,12 +480,22 @@ def _check_session(request: Request) -> bool:
         return False
     with _sessions_lock:
         entry = _sessions.get(sid)
-        if entry is None:
-            return False
-        expiry, _ = entry
-        if time.time() > expiry:
-            del _sessions[sid]
-            return False
+        if entry is not None:
+            expiry, _ = entry
+            if time.time() > expiry:
+                del _sessions[sid]
+                return False
+            return True
+    # not in memory — fall back to DB (survives Railway restart)
+    try:
+        row = db.get_session(sid)
+    except Exception:
+        return False
+    if not row:
+        return False
+    expiry = datetime.fromisoformat(row["expires_at"]).timestamp()
+    with _sessions_lock:
+        _sessions[sid] = (expiry, row["username"])
     return True
 
 
@@ -472,13 +505,23 @@ def _get_session_user(request: Request) -> str:
         return ""
     with _sessions_lock:
         entry = _sessions.get(sid)
-        if entry is None:
-            return ""
-        expiry, username = entry
-        if time.time() > expiry:
-            del _sessions[sid]
-            return ""
-    return username
+        if entry is not None:
+            expiry, username = entry
+            if time.time() > expiry:
+                del _sessions[sid]
+                return ""
+            return username
+    # not in memory — fall back to DB (survives Railway restart)
+    try:
+        row = db.get_session(sid)
+    except Exception:
+        return ""
+    if not row:
+        return ""
+    expiry = datetime.fromisoformat(row["expires_at"]).timestamp()
+    with _sessions_lock:
+        _sessions[sid] = (expiry, row["username"])
+    return row["username"]
 
 
 def _clear_session(request: Request) -> None:
@@ -486,6 +529,10 @@ def _clear_session(request: Request) -> None:
     if sid:
         with _sessions_lock:
             _sessions.pop(sid, None)
+        try:
+            db.delete_session(sid)
+        except Exception:
+            pass
 
 
 def _client_ip(request: Request) -> str:
@@ -1240,7 +1287,7 @@ def _kb_search(query: str, limit_per_doc: int = 5) -> list[dict]:
 
 
 @app.get("/api/kb")
-async def get_kb(q: str = "", _token: str = Depends(_auth)):
+async def get_kb(q: str = "", _token: str = Depends(_auth_session_or_bearer)):
     if q.strip():
         results = await asyncio.to_thread(_kb_search, q.strip())
         return {"query": q.strip(), "results": results}
@@ -1249,7 +1296,7 @@ async def get_kb(q: str = "", _token: str = Depends(_auth)):
 
 
 @app.get("/api/kb/{filename}")
-async def get_kb_doc(filename: str, _token: str = Depends(_auth)):
+async def get_kb_doc(filename: str, _token: str = Depends(_auth_session_or_bearer)):
     target = await asyncio.to_thread(_resolve_kb_doc, filename)
     text = await asyncio.to_thread(target.read_text)
     return {"filename": filename, "title": _kb_title(target, text), "content": text}
@@ -1277,7 +1324,7 @@ def _ceo_learnings_entries() -> list[dict]:
 
 
 @app.get("/api/memory")
-async def get_memory(_token: str = Depends(_auth)):
+async def get_memory(_token: str = Depends(_auth_session_or_bearer)):
     sessions, kb_docs, learnings = await asyncio.gather(
         asyncio.to_thread(db.list_chat_sessions),
         asyncio.to_thread(_kb_docs),
@@ -3171,7 +3218,7 @@ nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width
 <script>
 const BASE = location.origin;
 const WS_BASE = BASE.replace(/^http/, 'ws');
-const TOKEN = """ + json.dumps(APP_TOKEN) + """;
+const TOKEN = '';  // kept for call-site compatibility; fetchWithTimeout strips auth headers
 
 let ws = null, wsReady = false, pendingMsg = null;
 let _wsHeartbeat = null, _wsReconnectTimer = null, _wsRetries = 0, _wsManualClose = false;
@@ -3214,7 +3261,13 @@ function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function fetchWithTimeout(url, opts, ms=12000){
   const c=new AbortController();
   const t=setTimeout(()=>c.abort(),ms);
-  return fetch(url,{...opts,signal:c.signal}).finally(()=>clearTimeout(t));
+  // Strip explicit Authorization headers — session cookie is sent automatically
+  // by the browser (credentials:'same-origin'). This keeps the APP_SECRET_TOKEN
+  // out of the page source while still authenticating every request.
+  const {headers:h, ...rest} = opts || {};
+  const filtered = {};
+  if (h) Object.entries(h).forEach(([k,v])=>{ if(k.toLowerCase()!=='authorization') filtered[k]=v; });
+  return fetch(url,{...rest, headers:filtered, credentials:'same-origin', signal:c.signal}).finally(()=>clearTimeout(t));
 }
 
 // ── Shared To-Do (Scott + Frank) ────────────────────────────────────────────
@@ -3794,7 +3847,7 @@ async function studioGenerate(btn) {
     }, 200000);
     var d = await r.json().catch(function(){return {};});
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
-    var vidUrl = BASE+'/api/files/download?root=videos&path='+encodeURIComponent(d.path)+'&token='+TOKEN+'&inline=1';
+    var vidUrl = BASE+'/api/files/download?root=videos&path='+encodeURIComponent(d.path)+'&inline=1';
     out.innerHTML = '<div class="card" style="margin-bottom:12px">'+
       '<div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px">✅ Video ready — '+escHtml(d.size_human)+'</div>'+
       '<video controls style="width:100%;border-radius:8px;background:#000" src="'+escHtml(vidUrl)+'"></video>'+
@@ -3817,7 +3870,7 @@ async function loadStudioVideos() {
     if (!r.ok || !d.videos || !d.videos.length) { el.innerHTML = ''; return; }
     var html = '<div class="section-title">Previously Generated ('+d.videos.length+')</div><div class="card">';
     d.videos.forEach(function(v){
-      var vidUrl = BASE+'/api/files/download?root=videos&path='+encodeURIComponent(v.name)+'&token='+TOKEN+'&inline=1';
+      var vidUrl = BASE+'/api/files/download?root=videos&path='+encodeURIComponent(v.name)+'&inline=1';
       html += '<div class="listing-item" style="cursor:default">'+
         '<div class="thumb-placeholder">🎬</div>'+
         '<div class="listing-info">'+
@@ -4624,11 +4677,11 @@ async function uploadToRelay() {
 }
 function _fileUrl(f, inline){
   return BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
-    '&token='+encodeURIComponent(TOKEN)+(inline?'&inline=1':'');
+    (inline?'&inline=1':'');
 }
 function _zipEntryUrl(f, entryName){
   return BASE+'/api/files/zip-entry?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
-    '&entry='+encodeURIComponent(entryName)+'&token='+encodeURIComponent(TOKEN);
+    '&entry='+encodeURIComponent(entryName);
 }
 function _fileIcon(name){
   var n=(name||'').toLowerCase();
@@ -4808,14 +4861,14 @@ def frank_hud_mockup(request: Request):
         return RedirectResponse(f"/login?next={request.url.path}", status_code=307)
     return HTMLResponse(
         content=render_frank_hud(APP_TOKEN),
-        # private: browser may cache, but not CDN/proxies (token is embedded in JS)
+        # private: browser may cache but not CDN/proxies (session-gated page)
         # no-cache: must revalidate with server before using cached copy (session check happens)
         headers={"Cache-Control": "private, no-cache"},
     )
 
 
 @app.get("/api/me")
-async def get_me(request: Request, _token: str = Depends(_auth)):
+async def get_me(request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """Return the username and role associated with the current session."""
     uname = _get_session_user(request)
     if not uname:
@@ -4836,7 +4889,7 @@ def _require_owner(request: Request) -> None:
 
 
 @app.get("/api/admin/users")
-async def admin_list_users(request: Request, _token: str = Depends(_auth)):
+async def admin_list_users(request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """List all hub users (username, role, created_at). Owner only."""
     _require_owner(request)
     return {"users": db.list_hub_users()}
@@ -4849,7 +4902,7 @@ class _UserCreate(BaseModel):
 
 
 @app.post("/api/admin/users")
-async def admin_create_user(request: Request, body: _UserCreate, _token: str = Depends(_auth)):
+async def admin_create_user(request: Request, body: _UserCreate, _token: str = Depends(_auth_session_or_bearer)):
     """Create a new hub user. Owner only. Role must be 'admin' (owner cannot be created here)."""
     _require_owner(request)
     uname = body.username.strip().lower()
@@ -4870,7 +4923,7 @@ class _PasswordReset(BaseModel):
 
 
 @app.post("/api/admin/users/{username}/reset-password")
-async def admin_reset_password(username: str, request: Request, body: _PasswordReset, _token: str = Depends(_auth)):
+async def admin_reset_password(username: str, request: Request, body: _PasswordReset, _token: str = Depends(_auth_session_or_bearer)):
     """Reset a user's password. Owner can reset any admin's password."""
     _require_owner(request)
     uname = username.strip().lower()
@@ -4883,11 +4936,21 @@ async def admin_reset_password(username: str, request: Request, body: _PasswordR
     if not body.password.strip():
         raise HTTPException(status_code=400, detail="password is required")
     db.update_hub_user_password(uname, _hash_password(body.password.strip()))
+    # Fix B: invalidate all existing sessions for this user so a compromised
+    # cookie can't be used after a password reset
+    with _sessions_lock:
+        to_remove = [sid for sid, (_, u) in _sessions.items() if u == uname]
+        for sid in to_remove:
+            del _sessions[sid]
+    try:
+        db.delete_sessions_for_user(uname)
+    except Exception:
+        pass
     return {"ok": True}
 
 
 @app.delete("/api/admin/users/{username}")
-async def admin_delete_user(username: str, request: Request, _token: str = Depends(_auth)):
+async def admin_delete_user(username: str, request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """Delete a hub user. Owner only. Cannot delete the owner account."""
     _require_owner(request)
     uname = username.strip().lower()
@@ -5230,7 +5293,7 @@ def _enrich_sales(listings: list[dict]) -> list[dict]:
 
 
 @app.get("/api/metrics")
-async def get_metrics(_token: str = Depends(_auth)):
+async def get_metrics(_token: str = Depends(_auth_session_or_bearer)):
     """Live business snapshot. 3 Etsy calls in parallel; result cached 60 s."""
     cached = _cache_get("metrics", ttl=60)
     if cached is not None:
@@ -5253,7 +5316,7 @@ async def get_metrics(_token: str = Depends(_auth)):
 
 
 @app.get("/api/listings")
-async def get_listings(state: str = "active", _token: str = Depends(_auth)):
+async def get_listings(state: str = "active", _token: str = Depends(_auth_session_or_bearer)):
     """Return listings with thumbnail URLs. Result cached 30 s."""
     if state not in ("active", "draft", "inactive"):
         raise HTTPException(status_code=400, detail="state must be active, draft, or inactive")
@@ -5289,7 +5352,7 @@ def _shop_sections_sync() -> list[dict]:
 
 
 @app.get("/api/shop-sections")
-async def shop_sections(_token: str = Depends(_auth)):
+async def shop_sections(_token: str = Depends(_auth_session_or_bearer)):
     """Shop sections (Etsy's listing categories) for the Listings filter chips."""
     try:
         sections = await asyncio.wait_for(asyncio.to_thread(_shop_sections_sync), timeout=15.0)
@@ -5299,7 +5362,7 @@ async def shop_sections(_token: str = Depends(_auth)):
 
 
 @app.get("/api/listings/{listing_id}/files")
-async def listing_files(listing_id: int, _token: str = Depends(_auth)):
+async def listing_files(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
     """Digital files attached to a listing — powers the Listings tab expand-to-detail view."""
     cache_key = f"listing_files_{listing_id}"
     cached = _cache_get(cache_key, ttl=300)
@@ -5333,7 +5396,7 @@ async def listing_files(listing_id: int, _token: str = Depends(_auth)):
 
 
 @app.post("/api/listings/{listing_id}/state")
-async def set_listing_state(listing_id: int, new_state: str, _token: str = Depends(_auth)):
+async def set_listing_state(listing_id: int, new_state: str, _token: str = Depends(_auth_session_or_bearer)):
     """Activate or deactivate a listing — powers the Activate/Deactivate button in the
     Listings tab detail panel. Scott clicks this directly; it is not something any
     agent calls autonomously."""
@@ -5478,7 +5541,7 @@ def _compute_actions() -> dict:
 
 
 @app.get("/api/actions")
-async def get_actions(_token: str = Depends(_auth)):
+async def get_actions(_token: str = Depends(_auth_session_or_bearer)):
     """Ranked priorities computed from live listings. Cached 120 s."""
     cached = _cache_get("actions", ttl=120)
     if cached is not None:
@@ -5830,6 +5893,11 @@ async def _daily_brief_loop() -> None:
     last_sent_date: date | None = None
     while True:
         await asyncio.sleep(3600)
+        # Purge expired sessions on every hourly tick
+        try:
+            db.purge_expired_sessions()
+        except Exception:
+            pass
         now = datetime.utcnow()
         if now.hour == 6 and now.date() != last_sent_date:
             db.set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
@@ -5867,6 +5935,13 @@ async def _startup() -> None:
         print(f"[db] ready at {db.DB_PATH} (persistent={db.is_persistent()})", flush=True)
     except Exception as exc:
         print(f"[db] init failed: {exc}", flush=True)
+    # Purge any stale sessions left from previous server runs
+    try:
+        removed = db.purge_expired_sessions()
+        if removed:
+            print(f"[sessions] purged {removed} expired sessions at startup", flush=True)
+    except Exception as exc:
+        print(f"[sessions] startup purge failed: {exc}", flush=True)
     etsy_api.set_circuit_breaker_hook(CircuitBreaker("etsy_api", db_module=db))
     # Seed every loop's row immediately so the Agents registry always reports
     # all 5 from boot, rather than waiting on each loop's own startup delay
@@ -5896,7 +5971,7 @@ async def run_brief_now(request: Request):
 
 
 @app.get("/api/analytics")
-async def get_analytics(days: int = 30, _token: str = Depends(_auth)):
+async def get_analytics(days: int = 30, _token: str = Depends(_auth_session_or_bearer)):
     """Trend data from daily snapshots + live top-listing performance.
 
     Returns parallel trend arrays (oldest→newest) for sparkline charting,
@@ -6057,7 +6132,7 @@ async def _compute_suggestions_inner() -> dict:
 
 
 @app.post("/api/suggestions")
-async def get_suggestions(_token: str = Depends(_auth)):
+async def get_suggestions(_token: str = Depends(_auth_session_or_bearer)):
     """CEO agent synthesises a structured JSON suggestion report from live shop
     data (metrics + active + draft listings). A background loop keeps the cache
     warm so this is normally an instant hit. If the cache IS cold (the ~75s window
@@ -6121,7 +6196,7 @@ async def _get_conversion_targets_core() -> dict:
 
 
 @app.get("/api/conversion-targets")
-async def conversion_targets(_token: str = Depends(_auth)):
+async def conversion_targets(_token: str = Depends(_auth_session_or_bearer)):
     cached = _cache_get("conv_targets", ttl=_CONV_TARGETS_TTL)
     if cached is not None:
         return cached
@@ -6225,7 +6300,7 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
 
 
 @app.post("/api/diagnose/{listing_id}")
-async def diagnose_listing(listing_id: int, _token: str = Depends(_auth)):
+async def diagnose_listing(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
     cache_key = f"diagnose_{listing_id}"
     cached = _cache_get(cache_key, ttl=600)
     if cached is not None:
@@ -6371,7 +6446,7 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
 
 
 @app.post("/api/autofix/tags/{listing_id}")
-async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
+async def autofix_tags(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
     """Generate 13 correct tags for one listing and stage an update_tags action.
 
     Calls Claude once for this specific listing, validates the tags through
@@ -6384,7 +6459,7 @@ async def autofix_tags(listing_id: int, _token: str = Depends(_auth)):
 
 
 @app.post("/api/autofix/title/{listing_id}")
-async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
+async def autofix_title(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
     """Generate a corrected ≤70-char title and stage an update_title action.
 
     Calls Claude once with the listing's full context, validates through the
@@ -6397,7 +6472,7 @@ async def autofix_title(listing_id: int, _token: str = Depends(_auth)):
 
 
 @app.post("/api/autofix/draft/{listing_id}")
-async def autofix_draft(listing_id: int, _token: str = Depends(_auth)):
+async def autofix_draft(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
     """Auto-fix a draft listing's title and tags in one shot.
 
     Generates a corrected ≤70-char title AND a full 13-tag set, validates both
@@ -6434,7 +6509,7 @@ async def autofix_draft(listing_id: int, _token: str = Depends(_auth)):
 
 
 @app.post("/api/snapshot")
-async def post_snapshot(_token: str = Depends(_auth)):
+async def post_snapshot(_token: str = Depends(_auth_session_or_bearer)):
     """Force-capture a snapshot now (useful for testing / on-demand recording)."""
     try:
         d = await asyncio.wait_for(_take_snapshot(), timeout=25.0)
@@ -6798,7 +6873,7 @@ def _execute_script_staged_action(a: dict) -> dict:
 
 
 @app.get("/api/queue")
-async def get_queue(status: str = "pending", _token: str = Depends(_auth)):
+async def get_queue(status: str = "pending", _token: str = Depends(_auth_session_or_bearer)):
     """List staged actions. status=pending (default) or 'all'."""
     st = None if status == "all" else status
     actions = await asyncio.to_thread(db.list_actions, st)
@@ -6806,7 +6881,7 @@ async def get_queue(status: str = "pending", _token: str = Depends(_auth)):
 
 
 @app.post("/api/queue/{action_id}/approve")
-async def approve_action(action_id: int, _token: str = Depends(_auth)):
+async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_bearer)):
     """Run the quality gate, then apply the change to Etsy. Records the result."""
     a = await asyncio.to_thread(db.get_action, action_id)
     if not a:
@@ -6850,7 +6925,7 @@ async def approve_action(action_id: int, _token: str = Depends(_auth)):
 
 
 @app.post("/api/queue/{action_id}/reject")
-async def reject_action(action_id: int, body: dict | None = None, _token: str = Depends(_auth)):
+async def reject_action(action_id: int, body: dict | None = None, _token: str = Depends(_auth_session_or_bearer)):
     """Reject a pending action. If `body` carries a non-empty `reason`, kick off the
     matching auto-fix in the background (fire-and-forget — the HTTP response doesn't
     wait on it) so the corrected replacement shows up as a new pending row shortly after."""
@@ -6986,7 +7061,7 @@ async def stage_photo(
     physics: str = "sign_flat",
     scene_prompt: str = "",
     design_paths: str = "[]",
-    _token: str = Depends(_auth),
+    _token: str = Depends(_auth_session_or_bearer),
 ):
     """Stage a generated listing photo for Scott's approve/reject review. Body is the
     raw image bytes; everything else is a query param (same convention as
@@ -7036,7 +7111,7 @@ async def stage_video(
     listing_id: int,
     rank: int | None = None,
     summary: str = "",
-    _token: str = Depends(_auth),
+    _token: str = Depends(_auth_session_or_bearer),
 ):
     """Stage a generated marketing video for Scott's approve/reject review before it's
     attached to an Etsy listing. Body is the raw video bytes (same convention as
@@ -7069,7 +7144,7 @@ async def stage_video(
 
 
 @app.post("/api/studio/upload-image")
-async def studio_upload_image(request: Request, filename: str, _token: str = Depends(_auth)):
+async def studio_upload_image(request: Request, filename: str, _token: str = Depends(_auth_session_or_bearer)):
     """Accept a raw image body and store it under studio_uploads/ so it can be picked
     for video generation. Same convention as /api/files/upload."""
     safe_name = os.path.basename((filename or "").strip())
@@ -7088,7 +7163,7 @@ async def studio_upload_image(request: Request, filename: str, _token: str = Dep
 
 
 @app.post("/api/studio/generate")
-async def studio_generate_video(body: dict, _token: str = Depends(_auth)):
+async def studio_generate_video(body: dict, _token: str = Depends(_auth_session_or_bearer)):
     """Generate a Ken Burns slideshow video either from an existing Etsy listing's
     photos (listing_id) or from previously-uploaded studio images (image_paths,
     filenames relative to studio_uploads/). Runs video_generator.generate_video()
@@ -7184,7 +7259,7 @@ async def studio_generate_video(body: dict, _token: str = Depends(_auth)):
 
 
 @app.get("/api/studio/videos")
-async def studio_list_videos(_token: str = Depends(_auth)):
+async def studio_list_videos(_token: str = Depends(_auth_session_or_bearer)):
     """List generated videos under data/social/videos/ for the Studio sidebar."""
     root = _FILE_ROOTS["videos"]
     files = []
@@ -7203,7 +7278,7 @@ async def studio_list_videos(_token: str = Depends(_auth)):
 
 
 @app.get("/api/studio/diagnose")
-async def studio_diagnose(_token: str = Depends(_auth)):
+async def studio_diagnose(_token: str = Depends(_auth_session_or_bearer)):
     """Probe Railway state: ffmpeg binary, directory writability, mini encode test."""
     import subprocess as _sp, os as _os, imageio_ffmpeg as _iio_ffmpeg
     r: dict = {"build_id": _BUILD_ID}
@@ -7273,7 +7348,7 @@ async def studio_diagnose(_token: str = Depends(_auth)):
 
 
 @app.post("/api/studio/post-instagram")
-async def studio_post_instagram(body: dict, _token: str = Depends(_auth)):
+async def studio_post_instagram(body: dict, _token: str = Depends(_auth_session_or_bearer)):
     """Post a generated video to Instagram as a Reel. Fires immediately on this call —
     there is no staging queue for social posts because, per CLAUDE.md, posting to
     social media is a Hard Stop that must always be an explicit, direct user action;
@@ -7305,7 +7380,7 @@ async def studio_post_instagram(body: dict, _token: str = Depends(_auth)):
 
 
 @app.post("/api/studio/post-facebook")
-async def studio_post_facebook(body: dict, _token: str = Depends(_auth)):
+async def studio_post_facebook(body: dict, _token: str = Depends(_auth_session_or_bearer)):
     """Post a generated video to the Facebook Page. Fires immediately on this call —
     same Hard Stop reasoning as studio_post_instagram() above: no staging queue,
     the button click itself is the required explicit action."""
@@ -7339,7 +7414,7 @@ async def studio_post_facebook(body: dict, _token: str = Depends(_auth)):
 
 
 @app.post("/api/batch/stage-tags")
-async def batch_stage_tags(_token: str = Depends(_auth)):
+async def batch_stage_tags(_token: str = Depends(_auth_session_or_bearer)):
     """Stage tag-fix actions for every active listing that has fewer than 13 tags.
 
     Calls Claude once (per batch of 40) to generate a corrected 13-tag set for
@@ -7424,7 +7499,7 @@ async def batch_stage_tags(_token: str = Depends(_auth)):
 
 
 @app.get("/api/credentials/status")
-async def credentials_status(_token: str = Depends(_auth)):
+async def credentials_status(_token: str = Depends(_auth_session_or_bearer)):
     """Check which API credentials are configured and live-test the Etsy connection."""
     def _check() -> dict:
         env = os.environ
@@ -7472,7 +7547,7 @@ async def credentials_status(_token: str = Depends(_auth)):
 # which already has lineage-aware reconciliation (_reconcile_etsy_tokens). Reuses
 # the existing APP_SECRET_TOKEN bearer auth — no new secret to provision.
 @app.get("/api/etsy-tokens")
-async def get_etsy_tokens_endpoint(_token: str = Depends(_auth)):
+async def get_etsy_tokens_endpoint(_token: str = Depends(_auth_session_or_bearer)):
     """Current lineage-true Etsy token pair, for the CI workflow to sync against."""
     stored = await asyncio.to_thread(db.get_etsy_tokens)
     if stored:
@@ -7489,7 +7564,7 @@ async def get_etsy_tokens_endpoint(_token: str = Depends(_auth)):
 
 
 @app.post("/api/etsy-tokens")
-async def post_etsy_tokens_endpoint(payload: dict, _token: str = Depends(_auth)):
+async def post_etsy_tokens_endpoint(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
     """Accept a freshly-rotated token pair (e.g. from the GitHub Actions workflow)
     and make it the lineage-true pair: persist to the durable DB and adopt it into
     this process's own os.environ immediately, so this server's next Etsy call
@@ -7507,13 +7582,13 @@ async def post_etsy_tokens_endpoint(payload: dict, _token: str = Depends(_auth))
 
 
 @app.get("/api/account")
-async def get_account_endpoint(_token: str = Depends(_auth)):
+async def get_account_endpoint(_token: str = Depends(_auth_session_or_bearer)):
     """Single-row operator profile for the Settings 'My Account' card."""
     return await asyncio.to_thread(db.get_user_profile)
 
 
 @app.post("/api/account")
-async def post_account_endpoint(payload: dict, _token: str = Depends(_auth)):
+async def post_account_endpoint(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
     name = ((payload or {}).get("name") or "").strip() or None
     email = ((payload or {}).get("email") or "").strip() or None
     phone = ((payload or {}).get("phone") or "").strip() or None
@@ -7525,7 +7600,7 @@ async def post_account_endpoint(payload: dict, _token: str = Depends(_auth)):
 
 
 @app.get("/api/relay/status")
-async def get_relay_status(_token: str = Depends(_auth)):
+async def get_relay_status(_token: str = Depends(_auth_session_or_bearer)):
     """3-state status for the HUD badge: connected, killed, or offline. Connected
     and killed are independent — a killed relay can still be connected (it just
     refuses every tool_request), and an unkilled relay can be offline."""
@@ -7597,7 +7672,7 @@ async def _agents_status_snapshot() -> dict:
 
 
 @app.get("/api/agents/status")
-async def get_agents_status(_token: str = Depends(_auth)):
+async def get_agents_status(_token: str = Depends(_auth_session_or_bearer)):
     return await _agents_status_snapshot()
 
 
@@ -7628,7 +7703,7 @@ async def _relay_dependency_status() -> dict:
 
 
 @app.get("/api/system/dependencies")
-async def get_system_dependencies(_token: str = Depends(_auth)):
+async def get_system_dependencies(_token: str = Depends(_auth_session_or_bearer)):
     """Live circuit-breaker status for every tracked external dependency —
     backs the HUD's Dependency Health panel. Replaced the old System Monitor
     CPU/RAM/DISK gauges, which were hardcoded CSS with zero backend. A
@@ -7651,7 +7726,7 @@ async def get_system_dependencies(_token: str = Depends(_auth)):
 
 
 @app.get("/api/alerts")
-async def get_alerts(_token: str = Depends(_auth)):
+async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
     """Aggregates every real alert-worthy condition Frank already tracks into
     one list + count — backs the HUD's notification bell, which was previously
     a decorative badge frozen at '3' with no backend. One endpoint (rather than
@@ -7720,7 +7795,7 @@ async def get_alerts(_token: str = Depends(_auth)):
 
 
 @app.get("/api/tools/list")
-async def get_tools_list(_token: str = Depends(_auth)):
+async def get_tools_list(_token: str = Depends(_auth_session_or_bearer)):
     """Live registered AGENT_TOOLS — the Tools & Skills screen's source of
     truth. Badge count is always len(AGENT_TOOLS), so it grows automatically
     as local_* relay tools or new tools are added; never hardcoded."""
@@ -7736,7 +7811,7 @@ async def get_tools_list(_token: str = Depends(_auth)):
 
 
 @app.get("/api/workflows")
-async def get_workflows(_token: str = Depends(_auth)):
+async def get_workflows(_token: str = Depends(_auth_session_or_bearer)):
     """Runnable backend scripts for the Workflows screen — distinct from
     /api/tools/list (Frank's chat capabilities). Same _EXEC_COMMANDS registry
     execute_command already runs against."""
@@ -7754,7 +7829,7 @@ async def get_workflows(_token: str = Depends(_auth)):
 
 
 @app.post("/api/workflows/{workflow_id}/run")
-async def post_workflow_run(workflow_id: str, body: dict | None = None, _token: str = Depends(_auth)):
+async def post_workflow_run(workflow_id: str, body: dict | None = None, _token: str = Depends(_auth_session_or_bearer)):
     """Run a workflow. Commands without requires_approval run immediately;
     backup_digital_products (the one command with requires_approval) stages
     through the same action_queue Action Center uses."""
@@ -7776,7 +7851,7 @@ async def post_workflow_run(workflow_id: str, body: dict | None = None, _token: 
 
 
 @app.post("/api/relay/kill")
-async def post_relay_kill(_token: str = Depends(_auth)):
+async def post_relay_kill(_token: str = Depends(_auth_session_or_bearer)):
     """Engage the kill switch. Blocks everything — including read-only
     local_read_file/local_list_dir — until /api/relay/resume is called.
     relay_state.killed is the source of truth (survives a server restart)."""
@@ -7793,7 +7868,7 @@ async def post_relay_kill(_token: str = Depends(_auth)):
 
 
 @app.post("/api/relay/resume")
-async def post_relay_resume(_token: str = Depends(_auth)):
+async def post_relay_resume(_token: str = Depends(_auth_session_or_bearer)):
     await asyncio.to_thread(db.set_kill_switch, False, "scott")
     await asyncio.to_thread(db.log_activity, "scott", "kill_switch", "kill switch released", None, "ok")
     with _relay_lock:
@@ -7807,7 +7882,7 @@ async def post_relay_resume(_token: str = Depends(_auth)):
 
 
 @app.get("/api/relay/allowed-folders")
-async def get_allowed_folders(_token: str = Depends(_auth)):
+async def get_allowed_folders(_token: str = Depends(_auth_session_or_bearer)):
     """The relay polls this (or refreshes periodically) so folder changes take
     effect without restarting the relay process."""
     folders = await asyncio.to_thread(db.list_allowed_folders)
@@ -7815,7 +7890,7 @@ async def get_allowed_folders(_token: str = Depends(_auth)):
 
 
 @app.post("/api/relay/allowed-folders")
-async def post_allowed_folder(payload: dict, _token: str = Depends(_auth)):
+async def post_allowed_folder(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
     path = (payload or {}).get("path", "").strip()
     if not path:
         raise HTTPException(status_code=400, detail="path is required")
@@ -7825,7 +7900,7 @@ async def post_allowed_folder(payload: dict, _token: str = Depends(_auth)):
 
 
 @app.delete("/api/relay/allowed-folders/{folder_id}")
-async def delete_allowed_folder(folder_id: int, _token: str = Depends(_auth)):
+async def delete_allowed_folder(folder_id: int, _token: str = Depends(_auth_session_or_bearer)):
     from tools.trash import archive_snippet
     folders = await asyncio.to_thread(db.list_allowed_folders)
     row = next((f for f in folders if f["id"] == folder_id), None)
@@ -7842,7 +7917,7 @@ async def delete_allowed_folder(folder_id: int, _token: str = Depends(_auth)):
 
 
 @app.post("/api/relay/upload")
-async def upload_to_relay(request: Request, path: str, _token: str = Depends(_auth)):
+async def upload_to_relay(request: Request, path: str, _token: str = Depends(_auth_session_or_bearer)):
     """Push a raw binary file straight into the relay's workspace over the existing
     /ws/relay websocket — base64-encoded, since the relay protocol is JSON-only.
 
@@ -7871,13 +7946,13 @@ async def upload_to_relay(request: Request, path: str, _token: str = Depends(_au
 
 
 @app.get("/api/todos")
-async def get_todos(_token: str = Depends(_auth)):
+async def get_todos(_token: str = Depends(_auth_session_or_bearer)):
     items = await asyncio.to_thread(db.list_todos)
     return {"todos": items, "open_count": sum(1 for t in items if not t["done"])}
 
 
 @app.post("/api/todos")
-async def post_todo(payload: dict, _token: str = Depends(_auth)):
+async def post_todo(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
     text = (payload or {}).get("text", "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="text is required")
@@ -7890,7 +7965,7 @@ async def post_todo(payload: dict, _token: str = Depends(_auth)):
 
 
 @app.post("/api/todos/{todo_id}/toggle")
-async def toggle_todo(todo_id: int, payload: dict, _token: str = Depends(_auth)):
+async def toggle_todo(todo_id: int, payload: dict, _token: str = Depends(_auth_session_or_bearer)):
     done = bool((payload or {}).get("done", True))
     ok = await asyncio.to_thread(db.set_todo_done, todo_id, done)
     if not ok:
@@ -7899,7 +7974,7 @@ async def toggle_todo(todo_id: int, payload: dict, _token: str = Depends(_auth))
 
 
 @app.delete("/api/todos/{todo_id}")
-async def remove_todo(todo_id: int, _token: str = Depends(_auth)):
+async def remove_todo(todo_id: int, _token: str = Depends(_auth_session_or_bearer)):
     from tools.trash import archive_snippet
     todos = await asyncio.to_thread(db.list_todos)
     row = next((t for t in todos if t["id"] == todo_id), None)
@@ -7940,7 +8015,7 @@ _CADENCE_CHECKLISTS = {
 
 
 @app.get("/api/cadence")
-async def get_cadence(_token: str = Depends(_auth)):
+async def get_cadence(_token: str = Depends(_auth_session_or_bearer)):
     today = date.today()
 
     calendar = seasonal_keywords._build_calendar(today.year)
@@ -7986,7 +8061,7 @@ async def get_cadence(_token: str = Depends(_auth)):
 
 
 @app.get("/api/conversations")
-async def get_conversations(q: str = "", _token: str = Depends(_auth)):
+async def get_conversations(q: str = "", _token: str = Depends(_auth_session_or_bearer)):
     """Session list (most-recently-active first), or — when `q` is supplied —
     a cross-session substring search instead."""
     if q.strip():
@@ -7997,7 +8072,7 @@ async def get_conversations(q: str = "", _token: str = Depends(_auth)):
 
 
 @app.get("/api/conversations/{session_id}")
-async def get_conversation_detail(session_id: str, _token: str = Depends(_auth)):
+async def get_conversation_detail(session_id: str, _token: str = Depends(_auth_session_or_bearer)):
     """Full message history for one session."""
     data = await asyncio.to_thread(db.get_chat_session, session_id)
     if not data["messages"]:
@@ -8089,7 +8164,7 @@ def _zip_entries(zip_path: Path) -> list[dict]:
 
 
 @app.get("/api/files")
-async def list_files(_token: str = Depends(_auth)):
+async def list_files(_token: str = Depends(_auth_session_or_bearer)):
     """List every file under data/digital_products/ and data/backups/ so Scott can
     see, open, and download product source files straight from the dashboard —
     these directories are gitignored (machine-local) and have no other UI.
@@ -8155,14 +8230,13 @@ def _resolve_in_root(root: str, path: str) -> Path:
 
 
 @app.get("/api/files/download")
-async def download_file(root: str, path: str, token: str = "", inline: int = 0):
-    """Stream a file from one of the allowed roots. Auth via ?token= (query param,
-    not header) so this URL works as a plain browser/PWA link.
+async def download_file(request: Request, root: str, path: str, token: str = "", inline: int = 0, _auth: str = Depends(_auth_session_or_bearer)):
+    """Stream a file from one of the allowed roots. Auth via session cookie, Bearer
+    header, or ?token= query param — all accepted so browser links and direct
+    file-open requests work without embedding a token in the URL.
 
     inline=1 serves with the real media type and an inline disposition so the phone
     browser previews it (PDF viewer, image) instead of downloading."""
-    if token != APP_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
     target = _resolve_in_root(root, path)
     if not target.is_file():
         raise HTTPException(status_code=404, detail="File not found")
@@ -8181,7 +8255,7 @@ _MAX_UPLOAD_BYTES = 30 * 1024 * 1024
 
 
 @app.post("/api/files/upload")
-async def upload_to_volume(request: Request, path: str, _token: str = Depends(_auth)):
+async def upload_to_volume(request: Request, path: str, _token: str = Depends(_auth_session_or_bearer)):
     """Accept a raw file body and store it under the durable /data/files volume at the
     given relative path. This is how product files get onto the hosted dashboard so they
     show up (and open without unzip) in the phone Files area — tools/sync_files_to_hub.py
@@ -8214,14 +8288,12 @@ async def upload_to_volume(request: Request, path: str, _token: str = Depends(_a
 
 
 @app.get("/api/files/zip-entry")
-async def open_zip_entry(root: str, path: str, entry: str, token: str = "", inline: int = 1):
+async def open_zip_entry(request: Request, root: str, path: str, entry: str, token: str = "", inline: int = 1, _auth: str = Depends(_auth_session_or_bearer)):
     """Stream a single file OUT of a ZIP without the user unzipping anything.
 
     This is the core of Scott's 'open without unzip on a phone' request: tap a
     file inside a sticker pack / print-size ZIP and it opens directly. Default
     inline=1 so PDFs/PNGs preview in the phone browser."""
-    if token != APP_TOKEN:
-        raise HTTPException(status_code=401, detail="Invalid token")
     target = _resolve_in_root(root, path)
     if not target.is_file() or target.suffix.lower() != ".zip":
         raise HTTPException(status_code=404, detail="ZIP not found")
@@ -8243,7 +8315,7 @@ async def open_zip_entry(root: str, path: str, entry: str, token: str = "", inli
 
 
 @app.post("/api/ws-ticket")
-async def post_ws_ticket(_token: str = Depends(_auth)):
+async def post_ws_ticket(_token: str = Depends(_auth_session_or_bearer)):
     """Mint a short-lived, single-use ticket for the /ws/chat handshake. Browser/RN
     WebSocket clients can't send a Bearer header on connect, so this lets them prove
     they hold the real APP_TOKEN (via this normal authenticated REST call) without
@@ -8472,7 +8544,7 @@ _VOICE_CONTENT_TYPE_EXT = {
 
 
 @app.post("/api/voice/transcribe")
-async def transcribe_voice(request: Request, _token: str = Depends(_auth)):
+async def transcribe_voice(request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """Accepts a raw audio blob (Content-Type set by the client, e.g. audio/webm from
     the browser's MediaRecorder, or audio/m4a from the native app) and returns its
     transcript via OpenAI Whisper. Mirrors the raw-bytes body pattern already used by
@@ -8502,7 +8574,7 @@ async def transcribe_voice(request: Request, _token: str = Depends(_auth)):
 
 
 @app.post("/api/voice/speak")
-async def speak_text(payload: dict, _token: str = Depends(_auth)):
+async def speak_text(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
     """Accepts {"text": "..."} and returns MP3 audio bytes from OpenAI TTS — returned
     as a direct audio/mpeg response body (not base64/JSON) so the client can feed it
     straight into an <audio> element (web) or a Sound object (native)."""

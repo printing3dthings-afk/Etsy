@@ -170,6 +170,13 @@ CREATE TABLE IF NOT EXISTS hub_users (
   role       TEXT NOT NULL DEFAULT 'admin',  -- 'owner' | 'admin'
   created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS hub_sessions (
+  session_id TEXT PRIMARY KEY,
+  username   TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_hub_sessions_user ON hub_sessions(username);
 """
 
 
@@ -1115,5 +1122,87 @@ def hub_users_empty() -> bool:
     try:
         n = conn.execute("SELECT COUNT(*) FROM hub_users").fetchone()[0]
         return n == 0
+    finally:
+        conn.close()
+
+
+# ── Hub sessions (persisted so sessions survive Railway restarts) ─────────────
+
+
+def create_session(session_id: str, username: str, expires_at: float) -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    exp_iso = datetime.fromtimestamp(expires_at, tz=timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT OR REPLACE INTO hub_sessions (session_id, username, expires_at, created_at) VALUES (?,?,?,?)",
+            (session_id, username.lower(), exp_iso, ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_session(session_id: str) -> dict | None:
+    """Return {"session_id", "username", "expires_at"} or None if missing/expired."""
+    if not session_id:
+        return None
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT session_id, username, expires_at FROM hub_sessions WHERE session_id=?",
+            (session_id,),
+        ).fetchone()
+        if not r:
+            return None
+        now_iso = datetime.now(timezone.utc).isoformat()
+        if r["expires_at"] < now_iso:
+            conn.execute("DELETE FROM hub_sessions WHERE session_id=?", (session_id,))
+            conn.commit()
+            return None
+        return dict(r)
+    finally:
+        conn.close()
+
+
+def delete_session(session_id: str) -> None:
+    if not session_id:
+        return
+    init_db()
+    conn = _connect()
+    try:
+        conn.execute("DELETE FROM hub_sessions WHERE session_id=?", (session_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_sessions_for_user(username: str) -> int:
+    """Delete all sessions for a user (e.g. after password reset). Returns row count."""
+    if not username:
+        return 0
+    init_db()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "DELETE FROM hub_sessions WHERE username=?", (username.lower(),)
+        )
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
+def purge_expired_sessions() -> int:
+    """Delete all expired sessions. Returns the number of rows deleted."""
+    init_db()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute("DELETE FROM hub_sessions WHERE expires_at < ?", (now_iso,))
+        conn.commit()
+        return cur.rowcount
     finally:
         conn.close()

@@ -19,10 +19,9 @@ tiles, per the "no fake tiles anywhere" rule in the plan.
 
 Step 2 (in progress): wiring real data into this shell, panel by panel. The page is a
 plain string template (not f-string/`.format()`, since the JS below is full of literal
-`{}`) with a single `__APP_TOKEN__` placeholder substituted at request time by
-`render_frank_hud()` — same bearer token used by the existing dashboard at `/`, just
-injected via `str.replace()` instead of being baked in at module-import time, since this
-template lives outside main.py and has no direct access to APP_TOKEN.
+`{}`) rendered by `render_frank_hud()` which substitutes business-identity placeholders
+("Fucking Frank"/"Frank"/"Scott") at startup. Auth uses session cookies — the
+APP_SECRET_TOKEN is never injected into the page source.
 """
 
 import json
@@ -1101,18 +1100,24 @@ syncMobileClass();
 document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/frank-sw.js', { scope: '/frank' }).catch(()=>{}); }
 
-// ── Real data wiring (Step 2) — same bearer token + fetch pattern as the live
-// dashboard at /, injected into this template at request time. ──
+// ── Real data wiring (Step 2) — session-cookie auth. The browser sends the
+// httpOnly session cookie automatically on every same-origin fetch(); no token
+// injection into page source. fetchWithTimeout strips any Authorization header
+// that call sites may supply and enables credentials:'same-origin' so the
+// cookie is included. TOKEN is an empty placeholder kept for call-site compat. ──
 const BASE = location.origin;
 const WS_BASE = BASE.replace(/^http/, 'ws');
-const TOKEN = __APP_TOKEN__;
+const TOKEN = '';  // placeholder — auth uses session cookie, never the real secret
 function fetchWithTimeout(url, opts, ms=12000){
   const c = new AbortController();
   const t = setTimeout(()=>c.abort(), ms);
-  return fetch(url, {...opts, signal: c.signal}).finally(()=>clearTimeout(t));
+  const {headers:h, ...rest} = opts || {};
+  const filtered = {};
+  if (h) Object.entries(h).forEach(([k,v])=>{ if(k.toLowerCase()!=='authorization') filtered[k]=v; });
+  return fetch(url,{...rest, headers:filtered, credentials:'same-origin', signal:c.signal}).finally(()=>clearTimeout(t));
 }
 function authGet(path, ms=15000){
-  return fetchWithTimeout(BASE+path, {headers:{Authorization:'Bearer '+TOKEN}}, ms);
+  return fetchWithTimeout(BASE+path, {}, ms);
 }
 function escHtml(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1124,7 +1129,7 @@ function showToast(message, type='info', ms=4500){
   t.className = 'toast ' + (type||'info');
   t.textContent = message;
   stack.appendChild(t);
-  setTimeout(()=>{
+  if (ms) setTimeout(()=>{
     t.classList.add('out');
     setTimeout(()=>t.remove(), 200);
   }, ms);
@@ -1691,6 +1696,11 @@ async function initWS() {
     if (e.code === 4001) { addBubble('Auth failed — reload to reconnect', 'bot'); return; }
     if (!_wsManualClose) {
       _wsRetries = Math.min(_wsRetries + 1, 5);
+      if (_wsRetries >= 5) {
+        showToast('Connection lost. Refresh the page.', 'error', 0);
+      } else {
+        showToast('Reconnecting… (' + _wsRetries + '/5)', 'warn');
+      }
       const delay = Math.min(1000 * Math.pow(2, _wsRetries - 1), 15000);
       _wsReconnectTimer = setTimeout(() => { if (!ws) initWS(); }, delay);
     }
@@ -2320,7 +2330,7 @@ function _actionPreviewHtml(a) {
   if (a.type === 'update_title') return 'New title: ' + escHtml(p.title || '');
   if (a.type === 'update_tags') return 'New tags: ' + escHtml((p.tags || []).join(', '));
   if (a.type === 'listing_photo') {
-    const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&token='+encodeURIComponent(TOKEN)+'&inline=1';
+    const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&inline=1';
     return `<img src="${url}" loading="lazy" style="max-width:260px;max-height:260px;border-radius:8px;display:block">` +
       `<div style="margin-top:6px">Listing ${escHtml(String(p.listing_id||''))} · rank ${p.rank||''} · ${escHtml(p.sku||'')}</div>`;
   }
@@ -2358,7 +2368,7 @@ function renderApproval(a) {
   const p = a.payload || {};
   let thumb;
   if (a.type === 'listing_photo') {
-    const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&token='+encodeURIComponent(TOKEN)+'&inline=1';
+    const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&inline=1';
     thumb = `<img class="hub-thumb" src="${url}" loading="lazy">`;
   } else if (a.type === 'publish_listing' && (p.preview || {}).thumbnail_url) {
     thumb = `<img class="hub-thumb" src="${escHtml(p.preview.thumbnail_url)}" loading="lazy">`;
@@ -3250,11 +3260,11 @@ function renderBrandKit() {
 // ── Files — real data: /api/files (data/digital_products/ + backups) ──
 function _hubFileUrl(f, inline){
   return BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
-    '&token='+encodeURIComponent(TOKEN)+(inline?'&inline=1':'');
+    (inline?'&inline=1':'');
 }
 function _hubZipEntryUrl(f, entryName){
   return BASE+'/api/files/zip-entry?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
-    '&entry='+encodeURIComponent(entryName)+'&token='+encodeURIComponent(TOKEN);
+    '&entry='+encodeURIComponent(entryName);
 }
 function _hubFileIcon(name){
   const n=(name||'').toLowerCase();
@@ -3346,7 +3356,7 @@ let _studioUploadedPaths = [];
 
 function _studioVideoUrl(name, inline){
   return BASE+'/api/files/download?root=videos&path='+encodeURIComponent(name)+
-    '&token='+encodeURIComponent(TOKEN)+(inline?'&inline=1':'');
+    (inline?'&inline=1':'');
 }
 
 function studioPreviewVideo(name){
@@ -3987,28 +3997,22 @@ function drawMem(points){
 </html>"""
 
 
-_frank_html_cache: tuple[str, str] | None = None  # (app_token, rendered_html)
+_frank_html_cache: str | None = None  # cached rendered HTML
 
 
 def render_frank_hud(app_token: str) -> str:
-    """Substitute the real bearer token into the mockup's __APP_TOKEN__ placeholder
-    at request time. The template is a plain string (not f-string/.format()) because
-    its JS is full of literal {} braces, and it lives outside main.py so it has no
-    direct access to APP_TOKEN at its own module-definition time — same token, same
-    auth model as the live dashboard at /, just injected via str.replace() instead.
+    """Render the Frank HUD template with business-identity substitutions.
+    Auth uses session cookies — APP_SECRET_TOKEN is never injected into the HTML.
     Business-identity placeholders ("Fucking Frank"/"Frank"/"Scott") are substituted
-    here too, same convention as _WEB_UI in main.py — longest literal first so
-    "Fucking Frank" doesn't get mangled by the plain "Frank" pass.
-
-    The result is cached in-memory keyed by app_token so repeated requests (e.g.
-    browser revalidation after back-navigation) don't redo the 4× str.replace() on
-    a ~400 KB HTML string on every hit."""
+    here — longest literal first so "Fucking Frank" isn't mangled by the "Frank" pass.
+    The result is cached so repeated requests don't redo the 3× str.replace() on
+    the ~400 KB HTML string on every hit."""
     global _frank_html_cache
-    if _frank_html_cache and _frank_html_cache[0] == app_token:
-        return _frank_html_cache[1]
-    html = _FRANK_HUD_MOCKUP.replace("__APP_TOKEN__", json.dumps(app_token))
+    if _frank_html_cache is not None:
+        return _frank_html_cache
+    html = _FRANK_HUD_MOCKUP
     html = html.replace("Fucking Frank", business_config.AGENT_NAME)
     html = html.replace("Frank", business_config.AGENT_NAME_SHORT)
     html = html.replace("Scott", business_config.OWNER_NAME)
-    _frank_html_cache = (app_token, html)
+    _frank_html_cache = html
     return html
