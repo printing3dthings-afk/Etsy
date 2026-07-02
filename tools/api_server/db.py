@@ -183,7 +183,6 @@ CREATE INDEX IF NOT EXISTS idx_hub_sessions_user ON hub_sessions(username);
 def _connect() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA busy_timeout=5000")
     return conn
 
@@ -195,6 +194,8 @@ def init_db() -> None:
             return
         conn = _connect()
         try:
+            # WAL mode is a persistent file-level property — set once at init, not per connection
+            conn.execute("PRAGMA journal_mode=WAL")
             conn.executescript(_SCHEMA)
             try:
                 conn.execute("ALTER TABLE todos ADD COLUMN due_date TEXT")

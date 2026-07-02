@@ -91,8 +91,9 @@ def set_circuit_breaker_hook(hook) -> None:
 # Etsy status codes that indicate the dependency itself is unhealthy (rate limit /
 # server-side) -- mirrors resilience.py's _RETRYABLE_ETSY_STATUSES. A clean 4xx (400,
 # 404, etc.) means Etsy responded correctly and our request was wrong, so it must not
-# trip the breaker.
-_BREAKER_TRIP_STATUSES = {403, 429, 500, 502, 503}
+# trip the breaker. 403 specifically means auth failure (stale OAuth token) — NOT a
+# service outage, so it must NOT trip the breaker (would show Etsy as DOWN when UP).
+_BREAKER_TRIP_STATUSES = {429, 500, 502, 503}
 
 
 class FileContentError(Exception):

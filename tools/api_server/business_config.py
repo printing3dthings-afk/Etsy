@@ -11,10 +11,9 @@ BUSINESS_NAME = os.getenv("BUSINESS_NAME", "OnBrandCraftz")
 OWNER_NAME = os.getenv("OWNER_NAME", "Scott")
 AGENT_NAME = os.getenv("AGENT_NAME", "Fucking Frank")
 # Shorter form used in user-facing error toasts where the full AGENT_NAME reads
-# oddly (e.g. "Fucking Frank's AI provider..."). Defaults to AGENT_NAME with any
-# "Fucking " prefix stripped, which reproduces today's literal "Frank" for
-# OnBrandCraftz and falls back to the full AGENT_NAME for any other instance.
-AGENT_NAME_SHORT = os.getenv("AGENT_NAME_SHORT", AGENT_NAME.replace("Fucking ", ""))
+# oddly (e.g. "Fucking Frank's AI provider..."). Set AGENT_NAME_SHORT in .env for
+# any deployment where AGENT_NAME doesn't start with "Fucking ".
+AGENT_NAME_SHORT = os.getenv("AGENT_NAME_SHORT", "Frank")
 BUSINESS_DESCRIPTION = os.getenv(
     "BUSINESS_DESCRIPTION",
     "an Etsy shop selling kawaii\ndigital planners, sticker packs, and 3D-print SVG files",

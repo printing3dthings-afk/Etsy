@@ -309,7 +309,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v86"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v87"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -390,7 +390,7 @@ security = HTTPBearer()
 
 
 def _auth(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
-    if credentials.credentials != APP_TOKEN:
+    if not secrets.compare_digest(credentials.credentials, APP_TOKEN):
         raise HTTPException(status_code=401, detail="Invalid token")
     return credentials.credentials
 
@@ -545,7 +545,10 @@ def _client_ip(request: Request) -> str:
 def _login_rate_limited(ip: str) -> bool:
     with _login_fails_lock:
         fails = [t for t in _login_fails.get(ip, []) if time.time() - t < LOGIN_WINDOW]
-        _login_fails[ip] = fails
+        if fails:
+            _login_fails[ip] = fails
+        else:
+            _login_fails.pop(ip, None)  # prune empty entries to prevent unbounded growth
         return len(fails) >= LOGIN_MAX_FAILS
 
 
@@ -824,7 +827,7 @@ async def _dispatch_to_relay(name: str, tool_input: dict, timeout: float = 15.0)
     if ws is None:
         return {"error": f"relay offline — {business_config.AGENT_NAME_SHORT}'s local relay is not connected"}
     req_id = str(uuid.uuid4())
-    fut: asyncio.Future = asyncio.get_event_loop().create_future()
+    fut: asyncio.Future = asyncio.get_running_loop().create_future()
     _relay_pending[req_id] = fut
     try:
         await ws.send_text(json.dumps({"type": "tool_request", "id": req_id, "tool": name, "input": tool_input or {}}))
@@ -6109,7 +6112,7 @@ async def _startup() -> None:
 async def run_brief_now(request: Request):
     """Manually trigger the daily brief (for testing). Requires X-App-Token header."""
     token = request.headers.get("X-App-Token", "")
-    if not secrets.compare_digest(token.encode(), _APP_SECRET_TOKEN.encode()):
+    if not token or not secrets.compare_digest(token, APP_TOKEN):
         raise HTTPException(status_code=401, detail="Unauthorized")
     from tools.daily_brief import run_daily_brief
     result = await asyncio.to_thread(run_daily_brief)

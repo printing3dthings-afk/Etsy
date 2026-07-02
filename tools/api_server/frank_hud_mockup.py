@@ -1522,7 +1522,7 @@ const CHAT_SESSION = (function(){
   try { s = localStorage.getItem('chatSession'); } catch(e) {}
   if (!s) {
     s = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
-        : 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+        : 'sess-' + Date.now() + '-' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2,'0')).join('');
     try { localStorage.setItem('chatSession', s); } catch(e) {}
   }
   return s;
@@ -1913,6 +1913,7 @@ async function loadCredentialsAndHealth(){
 }
 
 // ── Shop Performance — real data from /api/analytics + /api/metrics ──
+var _miniSparkCounter = 0; // monotonic counter for stable, unique SVG gradient IDs
 function _miniSpark(values, color){
   var h = 16;
   values = (values||[]).filter(function(v){ return v!=null && !isNaN(v); });
@@ -1921,7 +1922,7 @@ function _miniSpark(values, color){
   var pts=values.map(function(v,i){return [pad+(i/(values.length-1))*(W-pad*2), H-pad-((v-mn)/range)*(H-pad*2)];});
   var poly=pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
   var area='M'+pts[0][0].toFixed(1)+','+H+' '+pts.map(function(p){return 'L'+p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+' L'+pts[pts.length-1][0].toFixed(1)+','+H+' Z';
-  var gid='fsg'+Math.random().toString(36).slice(2,8);
+  var gid='fsg'+(++_miniSparkCounter);
   return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px;display:block;overflow:visible">'+
     '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
     '<stop offset="0%" stop-color="'+color+'" stop-opacity="0.3"/>'+
@@ -2318,11 +2319,20 @@ function _renderMissionTimeline(d, list, offlineNote){
     }).join('') : '<div style="color:var(--muted);font-size:12px">All caught up — no open tasks.</div>');
   }
 }
+// Shared in-flight promise so loadMissionTimeline and loadTasks share one /api/todos fetch
+let _todosFetchPromise = null;
+function _sharedTodosFetch(){
+  if(!_todosFetchPromise){
+    _todosFetchPromise = authGet('/api/todos').then(function(r){ return r.json(); })
+      .finally(function(){ _todosFetchPromise = null; });
+  }
+  return _todosFetchPromise;
+}
+
 async function loadMissionTimeline(){
   const list = document.getElementById('timeline-list');
   try{
-    const r = await authGet('/api/todos');
-    const d = await r.json();
+    const d = await _sharedTodosFetch();
     cacheSet('missionTimeline', d);
     _renderMissionTimeline(d, list, null);
   }catch(e){
@@ -2353,8 +2363,7 @@ function _renderTasks(d, list, offlineNote){
 async function loadTasks(){
   const list = document.getElementById('tasks-list');
   try{
-    const r = await authGet('/api/todos');
-    const d = await r.json();
+    const d = await _sharedTodosFetch();
     cacheSet('tasks', d);
     _renderTasks(d, list, null);
     const badge = document.getElementById('badge-tasks');

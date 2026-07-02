@@ -1916,3 +1916,48 @@ Daily listing_integrity_check found 130 FAIL / 13 WARN out of 172 listings audit
 - Fix 4 — Products screen: `renderProducts()` now calls `/api/products` endpoint (async) instead of `_PRODUCTS_STATIC` hardcoded array. New FastAPI endpoint reads `data/dp_listing_map.json` and checks actual PDF/ZIP files on disk for DP1026–DP1035.
 - Mobile: `.col-center{order:-1}` makes chat appear first on mobile; `#chat-msgs` max-height 55vh→60vh; new column overflow rules replace old `.mrow` rules.
 - `_BUILD_ID` bumped to `b4d0e2c-v83`
+
+## 2026-07-02 — v87: Security + correctness fixes from codebase audit (9 issues)
+
+**Triggered by:** Comprehensive codebase audit by senior engineer review agent.
+
+**Fixes applied:**
+
+1. **etsy_api.py:95 — 403 removed from _BREAKER_TRIP_STATUSES**
+   - Root cause: 403 (auth failure / stale OAuth token) was tripping the circuit breaker, showing Etsy as DOWN when the actual problem was an expired access token. Misleading operational signal.
+   - Fix: Removed 403 from the set. It now only trips on 429/500/502/503 (genuine service failures).
+
+2. **main.py:393 — _auth() timing oracle fixed**
+   - Root cause: `credentials.credentials != APP_TOKEN` used plain `!=` (timing-distinguishable). `_auth_session_or_bearer()` already used `secrets.compare_digest()`.
+   - Fix: Both auth paths now use `secrets.compare_digest()`.
+
+3. **main.py:827 — asyncio.get_event_loop() deprecated call**
+   - Root cause: `asyncio.get_event_loop().create_future()` deprecated Python 3.10+, raises in 3.14.
+   - Fix: Changed to `asyncio.get_running_loop().create_future()`.
+
+4. **main.py:6112 — _APP_SECRET_TOKEN undefined variable**
+   - Root cause: `/api/brief/run` endpoint referenced `_APP_SECRET_TOKEN` (undefined) instead of `APP_TOKEN`. Would raise NameError on every call.
+   - Fix: Changed to `secrets.compare_digest(token, APP_TOKEN)` with empty-string guard.
+
+5. **main.py:547 — _login_fails dict unbounded growth**
+   - Root cause: IPs with all-expired failures left an empty list in the dict forever. Under bot traffic this grows without bound.
+   - Fix: Pop key after filtering produces an empty list.
+
+6. **db.py:186 — WAL PRAGMA on every connection open**
+   - Root cause: `journal_mode=WAL` is a persistent file-level property (survives reconnect). Running it on every `_connect()` added two extra SQLite round-trips per query.
+   - Fix: Moved to `init_db()` (runs once at startup). Removed from `_connect()`.
+
+7. **frank_hud_mockup.py:1525 — Math.random() for session ID fallback**
+   - Root cause: Browsers with `window.crypto` but not `randomUUID()` fell back to `Math.random()` which is not cryptographically secure.
+   - Fix: Use `crypto.getRandomValues(new Uint8Array(8))` which IS available everywhere `crypto` exists.
+
+8. **frank_hud_mockup.py:1924 — Math.random() for SVG gradient IDs**
+   - Root cause: `_miniSpark()` generated a random ID on each call. Replaced `Math.random().toString(36)` with a monotonic counter `_miniSparkCounter`. Eliminates randomness, ensures uniqueness within the page session.
+
+9. **frank_hud_mockup.py:2321/2353 — Duplicate /api/todos HTTP fetch**
+   - Root cause: `loadMissionTimeline()` and `loadTasks()` each issued an independent fetch to `/api/todos`, doubling the call count on every dashboard load.
+   - Fix: Added `_sharedTodosFetch()` with a shared in-flight promise. Both callers now share one round-trip per tick.
+
+Also: business_config.py AGENT_NAME_SHORT default changed from derived `AGENT_NAME.replace("Fucking ", "")` to hardcoded `"Frank"` — more predictable for installer deployments.
+
+Build ID: b4d0e2c-v87
