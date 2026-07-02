@@ -355,8 +355,16 @@ def _generate_listing_content(data: dict, store: DataStore) -> str:
     product["updated_at"] = str(date.today())
     _save_product(product, store)
 
+    # Goal-check the draft against the 2026 pre-publish rules NOW, at generation
+    # time — not later at publish. pre_publish_gate() is the same gate create_listing()
+    # enforces (title <=70, exactly 13 tags, "instant download" present, description
+    # length, price ending, etc.). Returning the specific failures here closes the
+    # loop at the agent layer: Frank sees exactly what's wrong and regenerates until
+    # it passes, instead of "generating" content that silently fails at publish.
+    gate_failures = EtsyAPIClient.pre_publish_gate(listing_draft)
+
     result: dict = {
-        "success": True,
+        "success": not gate_failures,
         "product_id": data["product_id"],
         "listing_draft": listing_draft,
         "character_counts": {
@@ -364,10 +372,24 @@ def _generate_listing_content(data: dict, store: DataStore) -> str:
             "description": len(data["description"]),
             "tags": len(clean_tags),
         },
-        "next_step": "Review content, then call publish_digital_listing to go live on Etsy.",
     }
     if tag_warnings:
         result["warnings"] = tag_warnings
+    if gate_failures:
+        result["gate_failures"] = gate_failures
+        result["fix"] = (
+            "This draft does NOT pass the 2026 pre-publish quality gate. Correct every "
+            "item in gate_failures and call generate_listing_content again. Do not "
+            "publish or report the content as done until this returns success=true."
+        )
+        result["next_step"] = (
+            "Fix the gate_failures above, then call generate_listing_content again."
+        )
+    else:
+        result["gate"] = "passed pre-publish quality gate"
+        result["next_step"] = (
+            "Review content, then call publish_digital_listing to go live on Etsy."
+        )
     return json.dumps(result, indent=2)
 
 

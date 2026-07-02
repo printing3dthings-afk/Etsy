@@ -734,56 +734,55 @@ def generate_verified_photo(
         "Completely photorealistic."
     )
 
-    corrections = ""
-    issues: list = []
-    for attempt in range(1, max_attempts + 1):
-        prompt = base_prompt + corrections
-        print(f"  Attempt {attempt}/{max_attempts}: generating...")
+    # The generate → verify-against-source → feed-corrections-back → retry loop
+    # lives in tools/goal_loop.py (run_until_goal). This function just supplies
+    # the three product-specific pieces: how to generate a render, how to verify
+    # it against the source designs, and what to do with a rejected render.
+    from goal_loop import run_until_goal
+
+    def _generate(correction: str) -> "Image.Image":
+        prompt = base_prompt + correction
+        print("  generating...")
         images = [(f"design_{i}.png", _prep(dp), "image/png")
                   for i, dp in enumerate(design_paths, 1)]
-        try:
-            resp = client.images.edit(
-                model="gpt-image-1",
-                image=images if n > 1 else images[0],
-                prompt=prompt,
-                size="1024x1024",
-                quality="high",
-                input_fidelity="high",
-                output_format="png",
-            )
-        except Exception as e:
-            issues = [f"generation error: {e}"]
-            print(f"    generation error: {e}")
-            continue
-
-        render = Image.open(io.BytesIO(
+        resp = client.images.edit(
+            model="gpt-image-1",
+            image=images if n > 1 else images[0],
+            prompt=prompt,
+            size="1024x1024",
+            quality="high",
+            input_fidelity="high",
+            output_format="png",
+        )
+        return Image.open(io.BytesIO(
             base64.b64decode(resp.data[0].b64_json))).convert("RGB")
 
-        print(f"    verifying against source design(s)...")
-        verdict = verify_render(client, design_paths, render, PHYSICS[physics],
-                                "\n".join(fact_lines))
-        if verdict.get("pass"):
-            final = render.resize((MOCKUP_SIZE, MOCKUP_SIZE), Image.LANCZOS)
-            out_path.parent.mkdir(parents=True, exist_ok=True)
-            final.save(out_path, "JPEG", quality=95, dpi=(300, 300))
-            print(f"  ✓ PASSED verification (attempt {attempt}) → {out_path}")
-            return PhotoResult(True, out_path, attempt, [])
+    def _verify(render: "Image.Image") -> dict:
+        print("    verifying against source design(s)...")
+        return verify_render(client, design_paths, render, PHYSICS[physics],
+                             "\n".join(fact_lines))
 
-        issues = verdict.get("issues", [])
+    def _on_reject(attempt: int, render: "Image.Image", issues: list) -> None:
         reject = out_path.parent.parent / "_rejects" / f"{out_path.stem}_reject{attempt}.jpg"
         reject.parent.mkdir(parents=True, exist_ok=True)
         render.save(reject, "JPEG", quality=90)
         print(f"    ✗ verification failed: {issues}")
         print(f"      rejected render saved for audit: {reject}")
-        corrections = (
-            "\n\nPREVIOUS ATTEMPT HAD THESE ERRORS — FIX THEM:\n- "
-            + "\n- ".join(issues)
-        )
 
-    print(f"  ✗ FAILED after {max_attempts} attempts. Issues: {issues}")
+    result = run_until_goal(_generate, _verify, max_attempts=max_attempts,
+                            on_reject=_on_reject)
+
+    if result.passed:
+        final = result.output.resize((MOCKUP_SIZE, MOCKUP_SIZE), Image.LANCZOS)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        final.save(out_path, "JPEG", quality=95, dpi=(300, 300))
+        print(f"  ✓ PASSED verification (attempt {result.attempts}) → {out_path}")
+        return PhotoResult(True, out_path, result.attempts, [])
+
+    print(f"  ✗ FAILED after {result.attempts} attempts. Issues: {result.issues}")
     print("    → Fall back to pixel-perfect flat lay, or swap to a design that "
           "renders reliably (avoid tiny text / fine repeating geometry).")
-    return PhotoResult(False, None, max_attempts, issues)
+    return PhotoResult(False, None, result.attempts, result.issues)
 
 
 # ── Flat lays: zero perspective → pixel-perfect PIL, never AI-rendered ────────

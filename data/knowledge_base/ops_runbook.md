@@ -2020,3 +2020,29 @@ with a real product image → Sora job `video_6a46753f6bb081908ca0d98411eadfcd06
 Decoded with imageio to confirm frames render. MP4 sent to Scott.
 
 **Build ID:** b4d0e2c-v89
+
+## 2026-07-02 · v90 · Loop engineering (goal-verification loops)
+
+**Motivation:** Scott asked to "add loop engineering to any task that can benefit — compare
+to the goal before saying complete." Generalized the one good verify-retry loop we had.
+
+**Added `tools/goal_loop.py`:** `run_until_goal(generate, verify, max_attempts, on_reject)`
++ `LoopResult`. Generate → verify against the goal → feed specific failures back → retry →
+honest pass/fail. Hard rule enforced in code: `passed=True` ONLY when a verify actually
+returned pass=True; on exhaustion returns `passed=False` with the last issues (never
+fabricates success). Distinct from resilience.py (which retries transient/network errors);
+goal_loop retries QUALITY failures where nothing threw but the output is wrong.
+
+**Wired in:**
+- `listing_photo_pipeline.generate_verified_photo` refactored onto `run_until_goal` — parity
+  proven with stubbed known-good/known-bad/recover-on-2 tests (output saved only on real
+  pass, rejects archived per failed attempt, honest fail on exhaustion).
+- `etsy_listing_tools._generate_listing_content` now runs `pre_publish_gate` at generation
+  time and returns `success=false` + specific `gate_failures` when the draft breaks the 2026
+  rules (title >70, <13 tags, missing "instant download", short desc, bad price ending).
+  Closes the loop at the agent layer — Frank can't report content "done" while it fails the
+  gate. (No in-code LLM regenerator added — that would duplicate Frank's brain; the agent is
+  the generator across tool calls.)
+
+**Verified:** goal_loop unit tests (5 cases) + photo-pipeline parity (3 cases) + listing gate
+(bad blocked with feedback, clean passes). All green. Build b4d0e2c-v90.
