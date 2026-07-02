@@ -1986,3 +1986,37 @@ Build ID: b4d0e2c-v87
 - `tools/agents/ceo_agent.py` archived (superseded by HUD chat; ID 20260702-087).
 
 **Build ID:** b4d0e2c-v88
+
+## 2026-07-02 · v89 · Studio AI (Sora) generator fixed — was calling a nonexistent API
+
+**Symptom:** Studio "✨ AI Scene (Sora)" style always failed. `tools/ai_video.py` was
+written against a hallucinated API shape that mirrors images.generate.
+
+**Root cause:** `ai_video.py` called `client.videos.generate(model="sora-1.0-turbo",
+prompt=..., input_images=[<base64 data-urls>], duration=10, n=1, with_audio=True)` and
+expected a synchronous `resp.data[0].url`. None of that exists:
+- `client.videos` has no `.generate()` — the real API is an async JOB: `videos.create`
+  → poll `videos.retrieve` → `videos.download_content(id, variant="video")`.
+- Model `sora-1.0-turbo` is not real. Valid: `sora-2`, `sora-2-pro`.
+- `input_images`/base64 data-urls/`with_audio`/`n` are not params. Sora takes ONE
+  `input_reference` image that must match the output size.
+- `duration=10` invalid — seconds are only "4"/"8"/"12".
+- Size `1:1 → 1080x1080` invalid — Sora sizes are 720x1280 / 1280x720 / 1024x1792 /
+  1792x1024 (no square).
+
+**Fix:**
+- Rewrote `generate_ai_video()` against the real Sora-2 job API (create → poll →
+  download_content). Clamps duration to 4/8/12, maps aspect→valid size, center-crops
+  the product photo to the exact output size for the reference image, polls with a
+  wall-clock cap, and surfaces `video.error` on failure.
+- `main.py` studio_generate_video: changed hardcoded `duration=10` → `8` (valid).
+- `frank_hud_mockup.py`: removed the "1:1 Square" aspect option (Sora can't produce
+  1:1; leaving it would deliver a portrait video when the user picked square — a
+  truthfulness violation).
+
+**Proof (real generation, authorized spend):** org IS Sora-2 enabled. Ran end-to-end
+with a real product image → Sora job `video_6a46753f6bb081908ca0d98411eadfcd06dd273a4ed4440e`
+→ saved a valid 1.7 MB MP4 (ftyp/moov/mdat, 720x1280, 126 frames ≈ 31.5fps, 4s) in 85s.
+Decoded with imageio to confirm frames render. MP4 sent to Scott.
+
+**Build ID:** b4d0e2c-v89

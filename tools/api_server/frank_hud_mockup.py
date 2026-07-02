@@ -1032,7 +1032,6 @@ video{width:100%;border-radius:10px;background:#000;display:block}
           <select id="studio-aspect-ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
             <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
             <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
-            <option value="1:1">1:1 Square — Instagram Feed</option>
           </select>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">

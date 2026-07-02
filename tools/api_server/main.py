@@ -308,7 +308,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v88"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v89"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5390,7 +5390,7 @@ async def studio_generate_video(body: dict, _token: str = Depends(_auth_session_
                 asyncio.to_thread(
                     _ai_video.generate_ai_video,
                     _ai_imgs, _sp, OPENAI_KEY,
-                    10, aspect_ratio, _lid,
+                    8, aspect_ratio, _lid,
                 ),
                 timeout=300.0,
             )
