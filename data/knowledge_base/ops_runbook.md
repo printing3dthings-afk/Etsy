@@ -2074,3 +2074,31 @@ change without an override).
 To upgrade Frank's brain to Sonnet 5: confirm the Anthropic account has claude-sonnet-5
 access, then set env var `MODEL_PRIMARY=claude-sonnet-5` on Railway and redeploy. No code
 change. Revert by unsetting it.
+
+## 2026-07-02 · v92 · Veo 3.1 video engine prepped (Sora shutdown migration)
+
+**Motivation:** OpenAI's Sora API shuts down 2026-09-24. Research picked Google Veo 3.1 as
+the migration target. Prepped the code path now so the switch is low-risk and ready.
+
+**Changes (tools/ai_video.py):**
+- Split into engines behind `generate_ai_video(..., engine=)`: "sora" (proven, default) and
+  "veo" (Google Veo 3.1). Engine resolves from arg → AI_VIDEO_ENGINE env → "sora".
+- `_generate_sora` = the existing proven path, unchanged. main.py's /api/studio/generate
+  contract is unchanged (still calls generate_ai_video with the same args).
+- `_generate_veo` written to the documented google-genai video API (generate_videos → poll
+  operation → download). Reads GEMINI_API_KEY from env (not the OpenAI key).
+- Added `google-genai>=1.0.0` to api_server/requirements.txt (lazy-imported, doesn't affect
+  startup).
+
+**HONESTLY UNPROVEN:** google-genai SDK is not installed in this container and there's no
+GEMINI_API_KEY, so the Veo path has NOT been run end-to-end. All guards fire cleanly (clear
+errors on missing key / missing SDK / unknown engine — verified). Before flipping to Veo in
+production, run one real generation on a real product file and verify the mp4 — same bar as
+the Sora fix. Veo model id / config field names must be confirmed against the live SDK then.
+
+**Build:** b4d0e2c-v92.
+
+### ACTION FOR SCOTT (before Sept 24)
+1. Get a Google Gemini API key (Veo 3.1 access), set `GEMINI_API_KEY` on Railway.
+2. Set `AI_VIDEO_ENGINE=veo` (and optionally `VEO_MODEL`).
+3. Have Claude run one real generation + verify the mp4 before relying on it.
