@@ -1,0 +1,19 @@
+// ── Memory Insights constellation — real per-session message-count sparkline,
+// fed by loadMemory() via updateMemoryWidget(). Canvas stays blank until real
+// data arrives — no fake/random chart is ever drawn. ──
+const mc = document.getElementById('mem-canvas');
+const mctx = mc.getContext('2d');
+function drawMem(points){
+  mctx.clearRect(0,0,220,90);
+  if (!points || !points.length) return;
+  const max = Math.max(...points, 1);
+  const pts = points.map((v,i) => ({
+    x: points.length > 1 ? i*(220/(points.length-1)) : 110,
+    y: 80 - (v/max)*70,
+  }));
+  mctx.strokeStyle = 'rgba(58,214,255,0.35)'; mctx.lineWidth = 1;
+  mctx.beginPath();
+  pts.forEach((p,i)=>{ if(i===0) mctx.moveTo(p.x,p.y); else mctx.lineTo(p.x,p.y); });
+  mctx.stroke();
+  pts.forEach(p=>{ mctx.fillStyle='rgba(122,232,255,0.8)'; mctx.beginPath(); mctx.arc(p.x,p.y,2,0,Math.PI*2); mctx.fill(); });
+}

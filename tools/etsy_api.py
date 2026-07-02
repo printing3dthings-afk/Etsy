@@ -524,11 +524,6 @@ class EtsyAPIClient:
         self._require_oauth()
         return self._request("GET", f"shops/{self.shop_id}/conversations", params={"limit": limit})
 
-    def get_conversation(self, conversation_id: int) -> dict:
-        """Get a single conversation with all messages."""
-        self._require_oauth()
-        return self._request("GET", f"shops/{self.shop_id}/conversations/{conversation_id}")
-
     def send_message(self, conversation_id: int, message: str) -> dict:
         """Send a reply to a conversation. Requires OAuth access token."""
         self._require_oauth()
@@ -647,41 +642,6 @@ class EtsyAPIClient:
         """Update an existing listing. Requires OAuth access token."""
         self._require_oauth()
         return self._request("PATCH", f"shops/{self.shop_id}/listings/{listing_id}", body=updates)
-
-    def update_listing_inventory(
-        self, listing_id: int | str, quantity: int | None = None, price: float | None = None
-    ) -> dict:
-        """Update listing quantity and/or price. Requires OAuth access token.
-
-        Etsy quirk: the top-level `price` field on update_listing() / PATCH listings/{id}
-        is silently ignored for any listing that has an inventory record (which is most
-        listings, including ones with no real variations) — price must be set per-offering
-        via PUT listings/{id}/inventory instead. Fetches current inventory first so
-        sku/property_values/other products aren't wiped out by a partial overwrite.
-        """
-        self._require_oauth()
-        current = self._request("GET", f"listings/{listing_id}/inventory")
-        products = []
-        for p in current["products"]:
-            offerings = []
-            for off in p["offerings"]:
-                offerings.append({
-                    "price": price if price is not None else off["price"],
-                    "quantity": quantity if quantity is not None else off["quantity"],
-                    "is_enabled": off["is_enabled"],
-                })
-            products.append({
-                "sku": p.get("sku", ""),
-                "property_values": p.get("property_values", []),
-                "offerings": offerings,
-            })
-        return self._request(
-            "PUT",
-            f"listings/{listing_id}/inventory",
-            body={"products": products},
-        )
-
-    # ── Shop sections ─────────────────────────────────────────────────────────
 
     def get_shop_sections(self) -> list[dict]:
         """Get all shop sections. Returns list with id, title, rank, active_listing_count."""
@@ -808,11 +768,6 @@ class EtsyAPIClient:
         """Delete a specific image from a listing. Requires OAuth access token."""
         self._require_oauth()
         self._request("DELETE", f"shops/{self.shop_id}/listings/{listing_id}/images/{listing_image_id}")
-
-    def delete_listing_file(self, listing_id: int | str, listing_file_id: int | str) -> None:
-        """Delete a specific digital file from a listing. Requires OAuth access token."""
-        self._require_oauth()
-        self._request("DELETE", f"shops/{self.shop_id}/listings/{listing_id}/files/{listing_file_id}")
 
     # ── Digital file upload ───────────────────────────────────────────────────
 
@@ -965,54 +920,6 @@ class EtsyAPIClient:
 
         return True
 
-    def sync_orders_from_etsy(self) -> list[dict]:
-        """Fetch orders via OAuth and return a normalised list of order dicts.
-
-        Each dict contains: order_id, buyer_name, buyer_email, total_price,
-        items, created_date.
-
-        Returns an empty list when OAuth is not configured or the request fails.
-        """
-        try:
-            raw = self.get_orders()
-        except EtsyAPIError:
-            return []
-
-        receipts = raw.get("results", [])
-        orders = []
-        for r in receipts:
-            # Buyer name: prefer name field, fall back to first+last
-            buyer_name = r.get("name") or (
-                f"{r.get('first_line', '')} {r.get('last_line', '')}".strip()
-            )
-            # Items: list of transaction summaries
-            items = [
-                {
-                    "listing_id": t.get("listing_id"),
-                    "title": t.get("title", ""),
-                    "quantity": t.get("quantity", 1),
-                    "price": t.get("price", {}).get("amount", 0) / max(t.get("price", {}).get("divisor", 100), 1)
-                    if isinstance(t.get("price"), dict)
-                    else t.get("price", 0),
-                }
-                for t in r.get("transactions", [])
-            ]
-            total_raw = r.get("grandtotal") or r.get("total_price") or {}
-            if isinstance(total_raw, dict):
-                total_price = total_raw.get("amount", 0) / max(total_raw.get("divisor", 100), 1)
-            else:
-                total_price = float(total_raw or 0)
-
-            orders.append({
-                "order_id": r.get("receipt_id"),
-                "buyer_name": buyer_name,
-                "buyer_email": r.get("buyer_email", ""),
-                "total_price": round(total_price, 2),
-                "items": items,
-                "created_date": r.get("create_timestamp") or r.get("created_timestamp", ""),
-            })
-        return orders
-
     def get_reviews(self, limit: int = 25, min_created: int | None = None) -> dict:
         """Get shop reviews/feedback. Returns dict with 'results' list and 'count'.
 
@@ -1027,19 +934,6 @@ class EtsyAPIClient:
         if min_created is not None:
             params["min_created"] = min_created
         return self._request("GET", f"shops/{self.shop_id}/reviews", params=params)
-
-    def create_review_response(self, review_id: int, response_text: str) -> dict:
-        """DEPRECATED — Etsy v3 has no review-response endpoint or feedback_w scope.
-
-        Confirmed 2026-06-09: the OAuth server rejects feedback_w as invalid_scope
-        and this POST path returns 404. Review responses must be posted manually
-        in Shop Manager or the Etsy Seller app.
-        """
-        raise EtsyAPIError(
-            0,
-            "Review responses cannot be posted via the Etsy v3 API (no feedback_w "
-            "scope exists). Respond manually: Etsy Seller app → Reviews → Respond.",
-        )
 
     def get_shop_listings_all(self, state: str = "active", limit: int = 100) -> list[dict]:
         """Fetch all listings for the shop (paginates automatically). Returns list of listing dicts."""
@@ -1061,41 +955,6 @@ class EtsyAPIClient:
                 break
         return results
 
-    # ── Shipping profiles ─────────────────────────────────────────────────────
-
-    def get_shipping_profiles(self) -> list[dict]:
-        """Get all shipping profiles for the shop."""
-        self._require_oauth()
-        result = self._request("GET", f"shops/{self.shop_id}/shipping-profiles")
-        return result.get("results", [])
-
-    def create_shipping_profile(
-        self,
-        title: str,
-        origin_country: str = "US",
-        primary_cost: float = 0.0,
-        secondary_cost: float = 0.0,
-        min_processing: int = 3,
-        max_processing: int = 14,
-        processing_unit: str = "business_days",
-    ) -> dict:
-        """Create a shipping profile. Returns the created profile including shipping_profile_id."""
-        self._require_oauth()
-        return self._request(
-            "POST",
-            f"shops/{self.shop_id}/shipping-profiles",
-            body={
-                "title": title,
-                "origin_country_iso": origin_country,
-                "primary_cost": primary_cost,
-                "secondary_cost": secondary_cost,
-                "destination_region": "everywhere",
-                "min_processing_time": min_processing,
-                "max_processing_time": max_processing,
-                "processing_time_unit": processing_unit,
-            },
-        )
-
     def _require_oauth(self) -> None:
         if not self.access_token:
             raise EtsyAPIError(
@@ -1108,6 +967,3 @@ def is_configured() -> bool:
     """Return True if at least an API key is present."""
     return bool(os.getenv("ETSY_API_KEY", ""))
 
-
-def get_client() -> EtsyAPIClient:
-    return EtsyAPIClient()

@@ -1,0 +1,17 @@
+_SW_JS = (
+    "const CACHE='obc-shell-" + _BUILD_ID + "';\n"
+    "self.addEventListener('install',e=>self.skipWaiting());\n"
+    "self.addEventListener('activate',e=>e.waitUntil((async()=>{\n"
+    "  const keys=await caches.keys();\n"
+    "  await Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)));\n"
+    "  await self.clients.claim();\n"
+    "})()));\n"
+    "self.addEventListener('fetch',e=>{\n"
+    "  const req=e.request;\n"
+    "  if(req.method!=='GET') return;\n"
+    "  e.respondWith(fetch(req).then(r=>{\n"
+    "    if(req.mode==='navigate'){const cp=r.clone();caches.open(CACHE).then(c=>c.put('/',cp));}\n"
+    "    return r;\n"
+    "  }).catch(()=>caches.match(req).then(m=>m||caches.match('/'))));\n"
+    "});\n"
+)

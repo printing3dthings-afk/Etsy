@@ -20,7 +20,7 @@ tiles, per the "no fake tiles anywhere" rule in the plan.
 Step 2 (in progress): wiring real data into this shell, panel by panel. The page is a
 plain string template (not f-string/`.format()`, since the JS below is full of literal
 `{}`) rendered by `render_frank_hud()` which substitutes business-identity placeholders
-("Fucking Frank"/"Frank"/"Scott") at startup. Auth uses session cookies — the
+(%%AGENT_NAME%%/%%AGENT_SHORT%%/%%OWNER%%) at startup. Auth uses session cookies — the
 APP_SECRET_TOKEN is never injected into the page source.
 """
 
@@ -173,7 +173,6 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .panel-title .lnk{font-size:9px;color:var(--cyan);text-transform:none;letter-spacing:0;cursor:pointer}
 .panel-body{overflow-y:auto;min-height:0;flex:1}
 
-.orb-col{flex:1 1 auto}
 
 .core-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;
   border-bottom:1px solid var(--border);font-size:11.5px}
@@ -187,11 +186,6 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .core-row .lab .dotc.err{background:var(--red)}
 .core-row .sub{font-size:9.5px;color:var(--muted);display:block}
 
-.orb-hero{align-items:center;justify-content:center;position:relative;
-  background:
-    radial-gradient(circle at 50% 38%, rgba(58,214,255,.14), transparent 60%),
-    radial-gradient(rgba(58,214,255,.10) 1px, transparent 1px);
-  background-size:auto, 22px 22px;background-color:var(--panel)}
 .orb-hero-stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%}
 canvas#orb{cursor:pointer}
 .orb-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
@@ -315,11 +309,6 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .dep-pill.half_open .dep-state{color:var(--amber)}
 .dep-pill .dep-fail{font-size:9px;color:var(--muted)}
 
-.mem-row{display:flex;gap:10px;flex:1;min-height:0;overflow-y:auto;align-items:center}
-.mem-canvas-wrap{display:none}
-.mem-stats{display:flex;flex-direction:row;flex-wrap:wrap;gap:16px 24px;flex:1;align-items:center;justify-content:space-around;padding:4px 8px}
-.mem-stat .n{font-size:14px;font-weight:700;color:var(--cyan2)}
-.mem-stat .l{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
 
 .ss-status{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:12px;display:inline-block;margin-bottom:8px}
 .ss-status.on_track{background:rgba(42,170,100,.18);color:var(--green)}
@@ -359,11 +348,6 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 video{width:100%;border-radius:10px;background:#000;display:block}
 .studio-list-item{padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:11px}
 
-/* Generic placeholder screen */
-.placeholder-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;
-  height:100%;color:var(--muted);text-align:center;gap:8px}
-.placeholder-screen .big{font-size:14px;color:var(--text);letter-spacing:1px}
-.placeholder-screen .small{font-size:11px;max-width:440px}
 
 /* Bottom bar */
 .bottombar{grid-column:1/3;grid-row:3;border-top:1px solid var(--border);background:rgba(8,16,26,.6);
@@ -525,7 +509,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   .col-left{order:0}
   .col-right{order:1}
   .col-left .panel,.col-right .panel{overflow:visible}
-  .col-left .panel-body,.col-right .panel-body,.dep-pill-row,.shop-spark-row,.mem-row{
+  .col-left .panel-body,.col-right .panel-body,.dep-pill-row,.shop-spark-row{
     overflow:visible;max-height:none;flex:none
   }
   .col-aicore,.col-sysmon,.col-timeline,.col-chat,.col-shop,.col-meminsights,.col-agents,.col-feed{
@@ -533,9 +517,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   }
 
   #chat-msgs{min-height:280px;max-height:60vh;flex:none}
-  .orb-hero{min-height:260px}
   .orb-hero-stage{min-height:220px}
-  .mem-canvas-wrap{min-height:160px}
 
   .agents-grid{grid-template-columns:repeat(2,1fr)}
 
@@ -585,7 +567,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       </div>
     </div>
     <div class="orb-state" id="orb-state">IDLE — slow ambient rotation</div>
-    <div class="orb-hint">click the orb (or the talk pill) to start talking to Frank</div>
+    <div class="orb-hint">click the orb (or the talk pill) to start talking to %%AGENT_SHORT%%</div>
   </div>
 
   <div class="hdr-logo brk">
@@ -598,7 +580,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     <div class="clockwrap"><div class="d" id="dt">--</div><div class="t" id="clk">--:--</div></div>
     <div class="right">
       <input class="search" id="global-search" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
-      <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to Frank Orb" style="font-size:16px">⬡</div>
+      <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" style="font-size:16px">⬡</div>
       <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()">🔔<span class="badge" id="bell-badge" style="display:none">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
           <div class="alert-dropdown-title">Alerts</div>
@@ -611,7 +593,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   </div>
 
   <div class="sidebar">
-    <div class="nav-section">Frank</div>
+    <div class="nav-section">%%AGENT_SHORT%%</div>
     <div class="nav-item active" data-screen="cmd"><span class="ic">⌂</span>Command Center</div>
     <div class="nav-item" data-screen="core"><span class="ic">◎</span>AI Core</div>
     <div class="nav-item" data-screen="agents"><span class="ic">⚙</span>Agents</div>
@@ -651,11 +633,11 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   <div id="toast-stack"></div>
   <div id="welcome-overlay" style="display:none">
     <div class="welcome-card">
-      <div class="welcome-title">Welcome to Frank</div>
+      <div class="welcome-title">Welcome to %%AGENT_SHORT%%</div>
       <div class="welcome-body">
-        <p>Frank is organized into four groups in the sidebar:</p>
+        <p>%%AGENT_SHORT%% is organized into four groups in the sidebar:</p>
         <ul>
-          <li><b>Frank</b> — chat, AI core, agents, tasks, and the Action Center</li>
+          <li><b>%%AGENT_SHORT%%</b> — chat, AI core, agents, tasks, and the Action Center</li>
           <li><b>Knowledge</b> — memory, past conversations, and the knowledge base</li>
           <li><b>Tools</b> — tools &amp; skills, workflows, and the video studio</li>
           <li><b>Shop</b> — listings, products, brand kit, files, connections, security</li>
@@ -699,7 +681,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <!-- CENTER: primary interaction -->
       <div class="col-center">
         <div class="panel brk col-chat">
-          <div class="panel-title">Ask Frank <span class="src">/ws/chat — live, always-on chat</span></div>
+          <div class="panel-title">Ask %%AGENT_SHORT%% <span class="src">/ws/chat — live, always-on chat</span></div>
           <div id="chat-msgs"></div>
           <div class="lc-chips">
             <span class="lc-chip" onclick="sendChip(this)">What should I focus on?</span>
@@ -709,7 +691,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
             <span class="lc-chip" onclick="sendChip(this)">SEO tips</span>
           </div>
           <div class="lc-input-row">
-            <input id="chat-input" type="text" placeholder="Ask Fucking Frank…" autocomplete="off">
+            <input id="chat-input" type="text" placeholder="Ask %%AGENT_NAME%%…" autocomplete="off">
             <button id="chat-send" onclick="sendMsg()">
               <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -933,11 +915,11 @@ video{width:100%;border-radius:10px;background:#000;display:block}
           <input type="checkbox" class="premium-voice-cb"> Premium voice (OpenAI Whisper + TTS)
         </label>
         <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
-          When off (default), Frank uses local offline voice engines — Whisper.wasm for speech-to-text and Piper
+          When off (default), %%AGENT_SHORT%% uses local offline voice engines — Whisper.wasm for speech-to-text and Piper
           for text-to-speech — which are free, private, and work without an internet connection. Turning this on
           routes voice through OpenAI's paid Whisper transcription and TTS endpoints instead: it sounds more
           natural but costs API credits per use and requires internet. This toggle is shared with the one next to
-          "Talk to Frank" in the bottom bar — changing either updates both.
+          "Talk to %%AGENT_SHORT%%" in the bottom bar — changing either updates both.
         </div>
       </div>
 
@@ -955,7 +937,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
             <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>
-            <input type="text" id="account-name" class="search" style="width:100%" placeholder="Scott">
+            <input type="text" id="account-name" class="search" style="width:100%" placeholder="%%OWNER%%">
           </div>
           <div>
             <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Email</label>
@@ -1008,7 +990,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 
       <div class="hub-section-title" style="margin-top:18px">About</div>
       <div class="hub-card">
-        <div style="font-size:13px;font-weight:600">Frank HUD</div>
+        <div style="font-size:13px;font-weight:600">%%AGENT_SHORT%% HUD</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px">v1.0.0 · MOCKUP</div>
       </div>
     </div>
@@ -1065,7 +1047,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <div class="hub-section-title" id="studio-actions-title" style="display:none">Actions — <span id="studio-actions-filename"></span></div>
       <div class="hub-card" id="studio-actions-card" style="display:none">
         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for Scott's approval — it is only attached to the listing after approving in the Action Center.</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after approving in the Action Center.</div>
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
           <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
           <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
@@ -1129,8 +1111,6 @@ function fitStage(){
   const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
   stage.style.transform = 'scale(' + scale + ')';
 }
-function isControlCenterOpen(){ return document.body.classList.contains('cc-open'); }
-function openControlCenter(){ document.body.classList.add('cc-open'); }
 function closeControlCenter(){ document.body.classList.remove('cc-open'); }
 function toggleControlCenter(){ document.body.classList.toggle('cc-open'); }
 let _prevMobile = null;
@@ -1513,7 +1493,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
 
 // ── Live Chat — ported verbatim (same protocol/session scheme) from the live Hub's
 // chat-wrap at / (main.py). Same /ws/chat endpoint, same CHAT_SESSION localStorage key,
-// so a conversation continues seamlessly whether Scott is on / or /frank. ──
+// so a conversation continues seamlessly whether %%OWNER%% is on / or /frank. ──
 let ws = null, wsReady = false, pendingMsg = null;
 let _wsHeartbeat = null, _wsReconnectTimer = null, _wsRetries = 0, _wsManualClose = false;
 let _historyApplied = false;
@@ -2840,7 +2820,6 @@ async function loadMemory() {
       badge.textContent = d.learnings_count > 999 ? '999+' : d.learnings_count;
       badge.style.display = d.learnings_count > 0 ? '' : 'none';
     }
-    updateMemoryWidget(d);
   } catch(e) {
     el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadMemory()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
@@ -2859,9 +2838,9 @@ function renderMemory(d) {
   html += `<div class="sub" style="margin-bottom:14px">` +
     (d.total_sessions ? `History spans ${escHtml(oldest||'—')} to ${escHtml(newest||'just now')} — ` : '') +
     `<a href="#" onclick="showScreen('conversations');return false" style="color:var(--cyan2)">view full history ›</a></div>`;
-  html += '<div class="section-title">🧠 What Frank has logged</div>';
+  html += '<div class="section-title">🧠 What %%AGENT_SHORT%% has logged</div>';
   if (!d.learnings.length) {
-    html += '<div class="empty">No durable insights logged yet — Frank appends a line here whenever a conversation surfaces a pattern worth remembering.</div>';
+    html += '<div class="empty">No durable insights logged yet — %%AGENT_SHORT%% appends a line here whenever a conversation surfaces a pattern worth remembering.</div>';
   } else {
     html += d.learnings.map(l => `<div class="tl-item">
       <div class="tl-dotcol"><span class="d"></span></div>
@@ -2876,13 +2855,6 @@ function renderMemory(d) {
   el.innerHTML = html;
 }
 
-function updateMemoryWidget(d) {
-  const memEl = document.getElementById('mem-stat-memories');
-  const turnsEl = document.getElementById('mem-stat-turns');
-  if (memEl) memEl.textContent = d.learnings_count;
-  if (turnsEl) turnsEl.textContent = d.total_messages;
-  drawMem(d.recent_session_sizes || []);
-}
 
 // ══════════════════════════════════════════════════════════════════════════
 // Workflows — real data: /api/workflows, live off the same _EXEC_COMMANDS
@@ -3015,7 +2987,7 @@ function renderConversationList() {
   const el = document.getElementById('conversations-content');
   if (!el) return;
   if (!_convSessions.length) {
-    el.innerHTML = '<div class="empty">No conversations yet — chat history will appear here once Frank has been used.</div>';
+    el.innerHTML = '<div class="empty">No conversations yet — chat history will appear here once %%AGENT_SHORT%% has been used.</div>';
     return;
   }
   el.innerHTML = `<div class="section-title">💬 Sessions (${_convSessions.length})</div>` +
@@ -3023,7 +2995,7 @@ function renderConversationList() {
       <div class="tl-dotcol"><span class="d"></span></div>
       <div class="tl-txt">
         <div class="ttl">${escHtml(_convShortId(s.session_id))} <span style="color:var(--muted);font-weight:400">— ${s.message_count} msg${s.message_count===1?'':'s'}</span></div>
-        <div class="sub">${escHtml(s.last_role === 'user' ? 'Scott' : 'Frank')}: ${escHtml(s.last_snippet || '')} · ${_convTimeAgo(s.last_at)}</div>
+        <div class="sub">${escHtml(s.last_role === 'user' ? '%%OWNER%%' : '%%AGENT_SHORT%%')}: ${escHtml(s.last_snippet || '')} · ${_convTimeAgo(s.last_at)}</div>
       </div>
     </div>`).join('');
 }
@@ -3084,7 +3056,7 @@ function renderConversationSearch(q, results) {
   html += results.length ? results.map(r => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(r.session_id)}')">
       <div class="tl-dotcol"><span class="d"></span></div>
       <div class="tl-txt">
-        <div class="ttl">${escHtml(r.role === 'user' ? 'Scott' : 'Frank')} <span style="color:var(--muted);font-weight:400">in ${escHtml(_convShortId(r.session_id))}</span></div>
+        <div class="ttl">${escHtml(r.role === 'user' ? '%%OWNER%%' : '%%AGENT_SHORT%%')} <span style="color:var(--muted);font-weight:400">in ${escHtml(_convShortId(r.session_id))}</span></div>
         <div class="sub">${escHtml(r.content.length > 160 ? r.content.slice(0,160)+'…' : r.content)} · ${_convTimeAgo(r.created_at)}</div>
       </div>
     </div>`).join('') : '<div class="empty">No messages match that search.</div>';
@@ -3826,7 +3798,7 @@ async function loadConnections() {
       {label:'Etsy API Key',         ok:et.api_key,         note:'ETSY_API_KEY / ETSY_CLIENT_ID'},
       {label:'Etsy Access Token',    ok:et.access_token,    note:'Expires every 1 hour — auto-refreshed'},
       {label:'Etsy Refresh Token',   ok:et.refresh_token,   note:'90-day window — re-auth via etsy_oauth.py'},
-      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'Fucking Frank (CEO) · Conversion Doctor · tag gen'},
+      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'%%AGENT_NAME%% (CEO) · Conversion Doctor · tag gen'},
       {label:'OpenAI (DALL-E)',      ok:oa.api_key,         note:'gpt-image-1 listing photo generation'},
       {label:'SMTP Email',           ok:sm.user,            note:'Post-purchase digital delivery'},
       {label:'Pinterest',            ok:pi.api_key,         note:'API v5 · roadmap'}
@@ -3905,7 +3877,7 @@ function renderSecurityPosture() {
     {ok:true, label:'.env not committed to git',           note:'Credentials stay local, never in version control'},
     {ok:true, label:'APP_SECRET_TOKEN set',                note:'Every dashboard request requires Bearer auth'},
     {ok:true, label:'Quality gate is code',                note:'Title ≤70 · tags ≤13 · validated at stage AND approve'},
-    {ok:true, label:'Staged action queue',                 note:'Every Etsy change requires Scott one-tap approval'},
+    {ok:true, label:'Staged action queue',                 note:'Every Etsy change requires %%OWNER%% one-tap approval'},
     {ok:null, label:'Etsy MFA enabled?',                   note:'Verify in Etsy → Account Settings → Security'},
     {ok:null, label:'Outlook 2FA active?',                 note:'Verify at account.microsoft.com → Security'},
     {ok:null, label:'Pinterest not integrated yet',        note:'No API exposure until keys are added'},
@@ -3983,7 +3955,7 @@ async function loadOperatorChip(){
 loadOperatorChip();
 
 async function doLogout(){
-  if(!confirm('Log out of Frank?')) return;
+  if(!confirm('Log out of %%AGENT_SHORT%%?')) return;
   await fetch(BASE+'/logout',{method:'POST'}).catch(()=>{});
   location.href='/login';
 }
@@ -4139,32 +4111,13 @@ function setSpeaking(on, viaFallback){
     ? (viaFallback ? 'SPEAKING — free voice (OpenAI quota down)' : 'SPEAKING — reacting to live TTS amplitude')
     : 'IDLE — slow ambient rotation';
   if(talkSub) talkSub.textContent = on
-    ? (viaFallback ? 'Frank is speaking… (free voice)' : 'Frank is speaking…')
+    ? (viaFallback ? '%%AGENT_SHORT%% is speaking… (free voice)' : '%%AGENT_SHORT%% is speaking…')
     : 'tap to speak';
 }
 canvas.addEventListener('click', toggleVoiceCapture);
 const talkPillEl = document.getElementById('talk-pill');
 if(talkPillEl) talkPillEl.addEventListener('click', toggleVoiceCapture);
 
-// ── Memory Insights constellation — real per-session message-count sparkline,
-// fed by loadMemory() via updateMemoryWidget(). Canvas stays blank until real
-// data arrives — no fake/random chart is ever drawn. ──
-const mc = document.getElementById('mem-canvas');
-const mctx = mc.getContext('2d');
-function drawMem(points){
-  mctx.clearRect(0,0,220,90);
-  if (!points || !points.length) return;
-  const max = Math.max(...points, 1);
-  const pts = points.map((v,i) => ({
-    x: points.length > 1 ? i*(220/(points.length-1)) : 110,
-    y: 80 - (v/max)*70,
-  }));
-  mctx.strokeStyle = 'rgba(58,214,255,0.35)'; mctx.lineWidth = 1;
-  mctx.beginPath();
-  pts.forEach((p,i)=>{ if(i===0) mctx.moveTo(p.x,p.y); else mctx.lineTo(p.x,p.y); });
-  mctx.stroke();
-  pts.forEach(p=>{ mctx.fillStyle='rgba(122,232,255,0.8)'; mctx.beginPath(); mctx.arc(p.x,p.y,2,0,Math.PI*2); mctx.fill(); });
-}
 </script>
 </body>
 </html>"""
@@ -4173,7 +4126,7 @@ function drawMem(points){
 _frank_html_cache: str | None = None  # cached rendered HTML
 
 
-def render_frank_hud(app_token: str) -> str:
+def render_frank_hud() -> str:
     """Render the Frank HUD template with business-identity substitutions.
     Auth uses session cookies — APP_SECRET_TOKEN is never injected into the HTML.
     Business-identity placeholders ("Fucking Frank"/"Frank"/"Scott") are substituted
@@ -4184,8 +4137,8 @@ def render_frank_hud(app_token: str) -> str:
     if _frank_html_cache is not None:
         return _frank_html_cache
     html = _FRANK_HUD_MOCKUP
-    html = html.replace("Fucking Frank", business_config.AGENT_NAME)
-    html = html.replace("Frank", business_config.AGENT_NAME_SHORT)
-    html = html.replace("Scott", business_config.OWNER_NAME)
+    html = html.replace("%%AGENT_NAME%%", business_config.AGENT_NAME)
+    html = html.replace("%%AGENT_SHORT%%", business_config.AGENT_NAME_SHORT)
+    html = html.replace("%%OWNER%%", business_config.OWNER_NAME)
     _frank_html_cache = html
     return html

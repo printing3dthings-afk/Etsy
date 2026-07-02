@@ -1,0 +1,5 @@
+/* Generic placeholder screen */
+.placeholder-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;color:var(--muted);text-align:center;gap:8px}
+.placeholder-screen .big{font-size:14px;color:var(--text);letter-spacing:1px}
+.placeholder-screen .small{font-size:11px;max-width:440px}

@@ -1,0 +1,1875 @@
+_WEB_UI = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content=""" + '"' + business_config.BUSINESS_NAME + '"' + """>
+<meta name="theme-color" content="#0D1B2A">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/static/icon-192.png">
+<title>""" + business_config.BUSINESS_NAME + """</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0D1B2A;--card:#162033;--border:#1e2d42;--gold:#C9A84C;--gold2:#e8c96a;
+  --text:#e8edf2;--muted:#6b7d91;--green:#4caf82;--red:#e05555;
+  --hdr:calc(52px + env(safe-area-inset-top,0px));
+  --nav:calc(60px + env(safe-area-inset-bottom,0px))
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
+header{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--hdr);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:flex-end;justify-content:space-between;padding:0 16px 14px}
+header h1{font-size:17px;font-weight:700;color:var(--gold)}
+header span{font-size:12px;color:var(--muted)}
+nav{position:fixed;bottom:0;left:0;right:0;z-index:200;height:var(--nav);background:var(--card);border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:8px}
+nav button{flex:1;background:none;border:none;color:var(--muted);font-size:10px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:color .15s;height:44px;-webkit-tap-highlight-color:rgba(201,168,76,.15)}
+nav button.active{color:var(--gold)}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.screen{position:fixed;top:var(--hdr);left:0;right:0;bottom:var(--nav);overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:none;background:var(--bg)}
+.screen.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.card-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.metric{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.metric .label{font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+.metric .value{font-size:24px;font-weight:700;color:var(--text)}
+.metric .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.metric.gold .value{color:var(--gold)}
+.section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.banner{background:#1a2d1a;border:1px solid #2d5a2d;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#7ec87e}
+.listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.listing-item:last-child{border-bottom:none}
+.thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:var(--border);flex-shrink:0}
+.thumb-placeholder{width:52px;height:52px;border-radius:8px;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.listing-info{flex:1;min-width:0}
+.listing-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.listing-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.listing-price{font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:6px}
+.badge.draft{background:#1a2030;color:#6b8ab5;border:1px solid #2a3d5a}
+.badge.active{background:#1a2d1a;color:#4caf82;border:1px solid #2d5a2d}
+.nav-badge{position:absolute;top:2px;margin-left:14px;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:15px;height:15px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px}
+.act-card{background:var(--card);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.act-card.high{border-left-color:var(--red)}
+.act-card.medium{border-left-color:var(--gold)}
+.act-card.low{border-left-color:#4a6b8a}
+.act-sev{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px}
+.act-sev.high{background:#2d1a1a;color:#e07070}
+.act-sev.medium{background:#2d2a1a;color:var(--gold2)}
+.act-sev.low{background:#1a2330;color:#7ba0c2}
+.act-title{font-size:14px;font-weight:600;margin:7px 0 4px;line-height:1.35}
+.act-detail{font-size:12px;color:var(--muted);line-height:1.45}
+.act-sug{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.act-sug b{color:var(--gold2);font-weight:600}
+.act-btns{display:flex;gap:8px;margin-top:9px}
+.act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+.act-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.act-card.approval{border-left-color:var(--green);background:#13241c}
+.act-sev.approval{background:#13241c;color:#5fcf9e;border:1px solid #2d5a44}
+.act-btn.approve{background:var(--green);color:#06140d;border-color:var(--green)}
+.act-btn.reject{color:#e08585;border-color:#5a2d2d}
+.toggle-row{display:flex;gap:8px;margin-bottom:12px}
+.toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.toggle-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.chip-btn{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.chip-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.listing-detail{padding:2px 14px 12px;margin:-2px 0 10px;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;font-size:12px}
+.listing-detail .drow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.listing-detail .drow:last-child{border-bottom:none}
+.listing-detail .drow span{color:var(--muted)}
+.listing-detail .drow b{font-weight:600;text-align:right}
+#chat-wrap{position:fixed;top:var(--hdr);left:0;right:0;bottom:var(--nav);z-index:100;display:none;flex-direction:column;background:var(--bg)}
+#chat-wrap.active{display:flex}
+#msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.bubble{max-width:82%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.5;word-break:break-word}
+.bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
+.bubble.bot{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px;white-space:pre-wrap}
+.bubble.typing{color:var(--muted);font-style:italic}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 16px;scrollbar-width:none;flex-shrink:0;border-top:1px solid var(--border)}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
+.chip:active{border-color:var(--gold);color:var(--gold)}
+.input-row{display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0}
+#msg-input{flex:1;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:10px 16px;color:var(--text);font-size:15px;outline:none}
+#msg-input:focus{border-color:var(--gold)}
+#send-btn{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#send-btn svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#speak-btn{width:40px;height:40px;border-radius:50%;background:var(--card);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;transition:background .15s,border-color .15s}
+#speak-btn.on{background:var(--gold);border-color:var(--gold)}
+.spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;margin:40px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+.star{color:var(--gold)}
+#fab-top{position:fixed;bottom:calc(var(--nav) + 16px);right:16px;width:46px;height:46px;border-radius:50%;background:var(--gold);color:#0D1B2A;border:none;font-size:20px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.55);z-index:150;line-height:1}
+#fab-top.visible{display:flex}
+.sug-card{background:var(--card);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.sug-card .sug-p{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px;border:1px solid currentColor;display:inline-block}
+.sug-card .sug-title{font-size:14px;font-weight:600;margin:7px 0 4px;line-height:1.35}
+.sug-card .sug-detail{font-size:12px;color:var(--muted);line-height:1.45}
+.sug-card .sug-action{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.sug-card .sug-impact{font-size:11px;color:var(--muted);margin-top:5px}
+.ceo-btn{width:100%;background:linear-gradient(135deg,var(--card) 0%,#1a2440 100%);border:1px solid var(--gold);color:var(--gold);border-radius:12px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.collapse-btn{display:block;width:100%;text-align:center;padding:7px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;margin:6px 0 10px;transition:all .15s}
+.collapse-btn:active{border-color:var(--gold);color:var(--gold)}
+.hub-section-btn{flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 8px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.hub-section-btn.active{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.swatch{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-right:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
+.cred-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.cred-row:last-child{border-bottom:none}
+.cred-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.posture-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.posture-row:last-child{border-bottom:none}
+.prod-card{background:var(--card);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+</style>
+</head>
+<body>
+  <header>
+    <h1>""" + business_config.BUSINESS_NAME + """</h1>
+    <div style="text-align:right;line-height:1.4">
+      <span id="hdr-sub">Dashboard</span>
+      <div style="font-size:9px;color:var(--border);margin-top:1px">""" + _BUILD_ID + """</div>
+    </div>
+  </header>
+
+  <div id="persist-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:300;background:#3a1414;border-bottom:1px solid var(--red);color:#ffb3b3;font-size:12px;font-weight:600;padding:8px 14px;text-align:center">
+    ⚠️ No durable storage attached — data and synced files will be lost on next redeploy. Attach a Railway Volume at /data.
+  </div>
+
+  <div id="screen-dash" class="screen active">
+    <div class="card" id="todo-card" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">📋 To-Do — Scott + Frank</div>
+        <span id="todo-count" style="font-size:11px;color:var(--gold);font-weight:600"></span>
+      </div>
+      <div id="todo-list"><div class="spinner" style="margin:10px auto"></div></div>
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <input id="todo-input" type="text" placeholder="Add a to-do…" onkeydown="if(event.key==='Enter')addTodoItem()"
+          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text)">
+        <button onclick="addTodoItem()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <button id="ceo-analyze-btn" class="ceo-btn" onclick="getCeoSuggestions(false)" style="display:none">
+        <span>🎯</span><span>Ask """ + business_config.AGENT_NAME + """ to Analyze</span>
+      </button>
+      <div id="ceo-suggestions"><div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">""" + business_config.AGENT_NAME + """ is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div></div>
+    </div>
+    <div id="dash-content"><div class="spinner"></div></div>
+    <div id="conv-doctor-wrap" style="margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 8px">
+        <div style="font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">🩺 Conversion Doctor</div>
+        <button id="conv-collapse-btn" onclick="toggleConvPanel(this)" style="font-size:11px;color:var(--muted);background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;cursor:pointer">▼ Show</button>
+      </div>
+      <div id="conv-doctor" style="display:none"></div>
+    </div>
+  </div>
+
+  <div id="screen-actions" class="screen">
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="batch-tag-btn" onclick="batchStageTags(this)" style="flex:1;background:var(--card);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:center">⚡ Stage All Tag Fixes</button>
+    </div>
+    <div id="actions-content"><div class="spinner"></div></div>
+  </div>
+
+  <div id="screen-listings" class="screen">
+    <div class="toggle-row">
+      <button class="toggle-btn active" onclick="loadListings('active',this)">Active</button>
+      <button class="toggle-btn" onclick="loadListings('draft',this)">Drafts</button>
+    </div>
+    <div id="listings-content"><div class="spinner"></div></div>
+  </div>
+
+  <div id="screen-analytics" class="screen">
+    <div class="toggle-row" id="analytics-period-row">
+      <button class="toggle-btn" onclick="loadAnalytics(7,this)">7 Days</button>
+      <button class="toggle-btn active" onclick="loadAnalytics(30,this)">30 Days</button>
+      <button class="toggle-btn" onclick="loadAnalytics(90,this)">90 Days</button>
+    </div>
+    <div id="analytics-content"><div class="spinner"></div></div>
+  </div>
+
+  <div id="screen-hub" class="screen">
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button class="hub-section-btn active" onclick="showHubSection(&apos;brand&apos;,this)">🎨 Brand</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;products&apos;,this)">📦 Products</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;files&apos;,this)">📁 Files</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;studio&apos;,this)">🎬 Studio</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;creds&apos;,this)">🔑 Creds</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;security&apos;,this)">🛡️ Security</button>
+      <button class="hub-section-btn" onclick="showHubSection(&apos;relay&apos;,this)">🔌 Relay</button>
+    </div>
+    <div id="hub-content"><div class="spinner"></div></div>
+  </div>
+
+  <div id="chat-wrap">
+    <div id="msgs"></div>
+    <div class="chips">
+      <span class="chip" onclick="sendChip(this)">What should I focus on?</span>
+      <span class="chip" onclick="sendChip(this)">How are sales?</span>
+      <span class="chip" onclick="sendChip(this)">What's my next listing?</span>
+      <span class="chip" onclick="sendChip(this)">Pricing advice</span>
+      <span class="chip" onclick="sendChip(this)">SEO tips</span>
+    </div>
+    <div class="input-row">
+      <button id="speak-btn" onclick="toggleSpeak()" title="Toggle voice — Frank speaks replies aloud">🔇</button>
+      <input id="msg-input" type="text" placeholder="Ask """ + business_config.AGENT_NAME + """…" autocomplete="off">
+      <button id="send-btn" onclick="sendMsg()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <button id="fab-top" aria-label="Back to top">↑</button>
+
+  <nav>
+    <button class="active" onclick="showTab('dash',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dash
+    </button>
+    <button onclick="showTab('actions',this)">
+      <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span id="nav-badge" class="nav-badge" style="display:none">0</span>
+      Actions
+    </button>
+    <button onclick="showTab('analytics',this)">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </button>
+    <button onclick="showTab('chat',this)">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Chat
+    </button>
+    <button onclick="showTab('listings',this)">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Listings
+    </button>
+    <button onclick="showTab('hub',this)">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Hub
+    </button>
+  </nav>
+
+<script>
+const BASE = location.origin;
+const WS_BASE = BASE.replace(/^http/, 'ws');
+const TOKEN = '';  // kept for call-site compatibility; fetchWithTimeout strips auth headers
+
+let ws = null, wsReady = false, pendingMsg = null;
+let _wsHeartbeat = null, _wsReconnectTimer = null, _wsRetries = 0, _wsManualClose = false;
+// Stable per-device chat session so Frank's memory survives reconnects & reloads.
+const CHAT_SESSION = (function(){
+  let s = null;
+  try { s = localStorage.getItem('chatSession'); } catch(e) {}
+  if (!s) {
+    s = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : 'sess-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    try { localStorage.setItem('chatSession', s); } catch(e) {}
+  }
+  return s;
+})();
+let _analyticsDays = 30;
+let _onListings = false;
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('chat-wrap').classList.remove('active');
+  btn.classList.add('active');
+  document.getElementById('hdr-sub').textContent = {dash:'Dashboard',actions:'Action Center',analytics:'Analytics',chat:'Chat',listings:'Listings',hub:'Hub'}[tab];
+  _onListings = (tab === 'listings');
+  if (!_onListings) { const fab=document.getElementById('fab-top'); if(fab)fab.classList.remove('visible'); }
+  if (tab === 'chat') {
+    document.getElementById('chat-wrap').classList.add('active');
+    if (!ws) initWS();
+  } else {
+    document.getElementById('screen-' + tab).classList.add('active');
+    if (tab === 'listings') loadListings('active', document.querySelector('.toggle-btn'));
+    if (tab === 'actions') loadActions();
+    if (tab === 'analytics') loadAnalytics(_analyticsDays);
+    if (tab === 'hub') loadHub();
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fetchWithTimeout(url, opts, ms=12000){
+  const c=new AbortController();
+  const t=setTimeout(()=>c.abort(),ms);
+  // Strip explicit Authorization headers — session cookie is sent automatically
+  // by the browser (credentials:'same-origin'). This keeps the APP_SECRET_TOKEN
+  // out of the page source while still authenticating every request.
+  const {headers:h, ...rest} = opts || {};
+  const filtered = {};
+  if (h) Object.entries(h).forEach(([k,v])=>{ if(k.toLowerCase()!=='authorization') filtered[k]=v; });
+  return fetch(url,{...rest, headers:filtered, credentials:'same-origin', signal:c.signal}).finally(()=>clearTimeout(t));
+}
+
+// ── Shared To-Do (Scott + Frank) ────────────────────────────────────────────
+async function loadTodos(){
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/todos', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const d = await r.json();
+    renderTodos(d.todos || []);
+  } catch(e) {
+    document.getElementById('todo-list').innerHTML = '<div style="color:var(--muted);font-size:12px">Could not load to-dos.</div>';
+  }
+}
+function renderTodos(items){
+  const wrap = document.getElementById('todo-list');
+  const cnt = document.getElementById('todo-count');
+  const openN = items.filter(t=>!t.done).length;
+  cnt.textContent = items.length ? (openN ? openN+' open' : 'all done ✓') : '';
+  if (!items.length) { wrap.innerHTML = '<div style="color:var(--muted);font-size:12px">Nothing on the list yet — add one below.</div>'; return; }
+  wrap.innerHTML = items.map(t => {
+    const who = t.added_by === 'frank' ? '🤖 Frank' : '🧑 Scott';
+    return '<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)'+(t.done?';opacity:.5':'')+'">'+
+      '<input type="checkbox" '+(t.done?'checked':'')+' onchange="toggleTodoItem('+t.id+',this.checked)" style="margin-top:3px;flex-shrink:0;width:16px;height:16px;accent-color:var(--gold)">'+
+      '<div style="flex:1;font-size:13px;color:var(--text)'+(t.done?';text-decoration:line-through':'')+'">'+escHtml(t.text)+
+        '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+who+'</div></div>'+
+      '<button onclick="deleteTodoItem('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 4px">✕</button>'+
+    '</div>';
+  }).join('');
+}
+async function addTodoItem(){
+  const inp = document.getElementById('todo-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  try {
+    await fetchWithTimeout(BASE+'/api/todos', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({text, added_by:'scott'}),
+    }, 15000);
+  } catch(e) {}
+  loadTodos();
+}
+async function toggleTodoItem(id, done){
+  try {
+    await fetchWithTimeout(BASE+'/api/todos/'+id+'/toggle', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({done}),
+    }, 15000);
+  } catch(e) {}
+  loadTodos();
+}
+async function deleteTodoItem(id){
+  try {
+    await fetchWithTimeout(BASE+'/api/todos/'+id, {method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+  } catch(e) {}
+  loadTodos();
+}
+
+// ── Action Center ────────────────────────────────────────────────────────────
+let _actions = [];
+let _pendingActions = [];
+let _actionsSummary = {high:0,medium:0,low:0};
+let _actionFilter = null; // 'high' | 'medium' | 'low' | null (= all)
+function setActionBadge(summary, pending) {
+  const b = document.getElementById('nav-badge');
+  if (!b) return;
+  const n = ((summary && summary.high) || 0) + (pending || 0);  // urgent + awaiting approval
+  if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
+  else { b.style.display = 'none'; }
+}
+function simpleLineDiff(before, after) {
+  const b = String(before == null ? '' : before).split('\\n');
+  const a = String(after == null ? '' : after).split('\\n');
+  const max = Math.max(b.length, a.length);
+  let html = '';
+  for (let i = 0; i < max; i++) {
+    const bl = b[i], al = a[i];
+    if (bl === al) {
+      if (bl !== undefined) html += `<div style="color:#7a8a9a">&nbsp;&nbsp;${escHtml(bl)}</div>`;
+    } else {
+      if (bl !== undefined) html += `<div style="color:#e05555">-&nbsp;${escHtml(bl)}</div>`;
+      if (al !== undefined) html += `<div style="color:#4ade80">+&nbsp;${escHtml(al)}</div>`;
+    }
+  }
+  return html;
+}
+function renderApproval(a) {
+  const p = a.payload || {};
+  let preview = '';
+  if (a.type === 'update_title') preview = 'New title: ' + escHtml(p.title || '');
+  else if (a.type === 'update_tags') preview = 'New tags: ' + escHtml((p.tags || []).join(', '));
+  else if (a.type === 'publish_listing') {
+    const pv = p.preview || {};
+    preview = `<div style="display:flex;gap:10px;align-items:flex-start">` +
+      (pv.thumbnail_url
+        ? `<img class="thumb" src="${escHtml(pv.thumbnail_url)}" loading="lazy" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+        : `<div class="thumb-placeholder" style="width:70px;height:70px;flex-shrink:0">🏷️</div>`) +
+      `<div><div>Publish draft listing ${escHtml(String(p.listing_id || ''))}</div>` +
+      (pv.title ? `<div style="font-weight:600;margin-top:4px">${escHtml(pv.title)}</div>` : '') +
+      (pv.price != null ? `<div>$${escHtml(String(pv.price))} · ${(pv.tags || []).length} tags · ${pv.photo_count || 0} photos</div>` : '') +
+      (pv.error ? `<div style="color:#C9A84C">⚠️ Preview unavailable: ${escHtml(pv.error)}</div>` : '') +
+      `</div></div>`;
+  }
+  else if (a.type === 'local_write_file') {
+    const diffHtml = simpleLineDiff(p.before, p.after);
+    preview = `<div style="margin-bottom:6px"><strong>File:</strong> ${escHtml(p.path || '')}</div>` +
+      (p.before_existed === false ? `<div style="color:#C9A84C;margin-bottom:6px">⚠️ File does not currently exist — this will create it.</div>` : '') +
+      `<div style="max-height:260px;overflow:auto;background:#0a1420;border-radius:8px;padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:#7a8a9a">No changes</span>'}</div>`;
+  }
+  else if (a.type === 'local_delete') {
+    preview = `<div style="color:#e05555">⚠️ This will permanently delete:</div><div style="font-family:monospace;margin-top:4px">${escHtml(p.path || '')}</div>`;
+  }
+  else if (a.type === 'local_exec') {
+    preview = `<div><strong>Run:</strong> <span style="font-family:monospace">${escHtml(p.command || '')}${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>`;
+  }
+  return `<div class="act-card approval">
+    <span class="act-sev approval">awaiting you</span>
+    <div class="act-title">${escHtml(a.summary || a.type)}</div>
+    <div class="act-detail">${preview}</div>
+    <div class="act-btns">
+      <button class="act-btn approve" onclick="approveAction(${a.id})">Approve &amp; Apply</button>
+      ${a.type === 'publish_listing' ? `<button class="act-btn" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix Draft</button>` : ''}
+      <button class="act-btn reject" onclick="rejectAction(${a.id})">Reject</button>
+    </div>
+  </div>`;
+}
+const _APPROVE_CONFIRM_MSGS = {
+  local_write_file: 'Approve and write this file on your computer now?',
+  local_delete: 'Approve and PERMANENTLY DELETE this file on your computer now?',
+  local_exec: 'Approve and run this command on your computer now?'
+};
+async function approveAction(id) {
+  const act = (_pendingActions || []).find(x => x.id === id);
+  const msg = (act && _APPROVE_CONFIRM_MSGS[act.type]) || 'Approve and apply this change to your live Etsy listing now?';
+  if (!confirm(msg)) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/approve', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 50000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    loadActions();
+  } catch(e) { alert('Could not apply: ' + (e.message||e)); }
+}
+async function rejectAction(id) {
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/reject', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    if (!r.ok) { const d = await r.json().catch(()=>({})); throw new Error(d.detail||'HTTP '+r.status); }
+    loadActions();
+  } catch(e) { alert('Could not reject: ' + (e.message||e)); }
+}
+async function fixDraftStage(listingId, actionId, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Fixing…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/autofix/draft/'+listingId,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},120000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const n = d.staged_count||0;
+    btn.textContent = n > 0 ? n+' fix'+(n>1?'es':'')+' staged ✅' : '⚠️ No auto-fixes';
+    if (n > 0) { btn.style.background='var(--green)'; btn.style.color='#06140d'; }
+    const errNote = (d.errors&&d.errors.length) ? '\\n\\nErrors: '+d.errors.join(', ') : '';
+    alert('Staged '+n+' fix'+(n!==1?'es':'')+'.\\nApprove the new fixes in Action Center, then come back to approve Publish.'+errNote);
+    loadActions();
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Could not fix draft: '+(e.message||e));
+  }
+}
+async function loadActions() {
+  const el = document.getElementById('actions-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const [ar, qr] = await Promise.all([
+      fetchWithTimeout(BASE+'/api/actions', {headers:{Authorization:'Bearer '+TOKEN}}, 25000),
+      fetchWithTimeout(BASE+'/api/queue?status=pending', {headers:{Authorization:'Bearer '+TOKEN}}, 15000).catch(()=>null)
+    ]);
+    if (!ar.ok) { const e = await ar.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+ar.status); }
+    const d = await ar.json();
+    let pending = [];
+    if (qr && qr.ok) { const qd = await qr.json().catch(()=>({})); pending = qd.actions || []; }
+    _actions = d.actions || [];
+    _pendingActions = pending;
+    _actionsSummary = d.summary || {high:0,medium:0,low:0};
+    setActionBadge(_actionsSummary, pending.length);
+    renderActionsContent();
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function setActionFilter(sev) {
+  _actionFilter = (_actionFilter === sev) ? null : sev; // tap again to clear
+  renderActionsContent();
+}
+const _SEV_COLORS = {high:'#e05555', medium:'#C9A84C', low:'#7ba0c2'};
+function renderActionsContent() {
+  const el = document.getElementById('actions-content');
+  if (!el) return;
+  const pending = _pendingActions || [];
+  const s = _actionsSummary || {high:0,medium:0,low:0};
+  let html = '';
+  if (pending.length) {
+    html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
+    html += pending.map(renderApproval).join('');
+  }
+  if (!_actions.length && !pending.length) { el.innerHTML = html || '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
+  const sevBtn = sev => {
+    const active = _actionFilter === sev;
+    const c = _SEV_COLORS[sev];
+    const style = active
+      ? `flex:1;text-align:center;padding:10px 6px;cursor:pointer;border-color:${c};background:${c}26`
+      : 'flex:1;text-align:center;padding:10px 6px;cursor:pointer';
+    return `<div class="metric" style="${style}" onclick="setActionFilter('${sev}')"><div class="value" style="color:${c};font-size:20px">${s[sev]||0}</div><div class="sub">${sev}${active?' ✓':''}</div></div>`;
+  };
+  html += `<div class="section-title">Flagged by scan${_actionFilter?` — showing ${_actionFilter} only`:''}</div><div style="display:flex;gap:8px;margin-bottom:14px">`+
+    sevBtn('high')+sevBtn('medium')+sevBtn('low')+
+    `</div>`;
+  const filtered = _actionFilter ? _actions.filter(a => a.severity === _actionFilter) : _actions;
+  if (!filtered.length) {
+    html += `<div class="empty">No ${escHtml(_actionFilter)} severity items.</div>`;
+  } else {
+    html += filtered.map(a => {
+      const i = _actions.indexOf(a);
+      return `
+      <div class="act-card ${escHtml(a.severity)}">
+        <span class="act-sev ${escHtml(a.severity)}">${escHtml(a.severity)}</span>
+        <div class="act-title">${escHtml(a.title)}</div>
+        <div class="act-detail">${escHtml(a.detail)}</div>
+        <div class="act-sug"><b>💡 Fix:</b> ${escHtml(a.suggestion)}</div>
+        <div class="act-btns">
+          <button class="act-btn primary" onclick="askActionFix(${i})">Ask CEO</button>
+          ${a.url ? `<a class="act-btn" href="${escHtml(a.url)}" target="_blank">Open on Etsy</a>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  el.innerHTML = html;
+}
+function askActionFix(i) {
+  const a = _actions[i];
+  if (!a) return;
+  const chatBtn = document.querySelectorAll('nav button')[3]; // dash, actions, analytics, chat, listings
+  showTab('chat', chatBtn);
+  const q = 'How should I fix this? ' + a.title + ' — ' + a.detail;
+  const inp = document.getElementById('msg-input');
+  inp.value = q;
+  sendMsg();
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+function _dashSkeleton() {
+  const hr = new Date().getHours();
+  const greet = hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  const ds = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  return `<div style="margin-bottom:16px"><div style="font-size:22px;font-weight:700">${greet}, Scott 👋</div><div style="color:var(--muted);font-size:13px;margin-top:4px">${ds}</div></div><div id="dash-err"></div><div class="section-title">Revenue</div><div class="card-row"><div class="metric gold"><div class="label">7-Day</div><div class="value" id="v-rev7">…</div><div class="sub" id="s-rev7">loading</div></div><div class="metric gold"><div class="label">30-Day</div><div class="value" id="v-rev30">…</div><div class="sub" id="s-rev30">loading</div></div></div><div class="section-title">Shop</div><div class="card-row"><div class="metric"><div class="label">Active</div><div class="value" id="v-active">…</div><div class="sub">listings</div></div><div class="metric"><div class="label">All-Time</div><div class="value" id="v-sales">…</div><div class="sub">sales</div></div></div><div id="m-reviews"></div><div id="dash-retry" style="display:none;text-align:center;margin-top:8px"><button onclick="fetchDashData()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+}
+async function fetchDashData() {
+  const setId = (id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val;};
+  const setErr = msg=>{const e=document.getElementById('dash-err');if(e)e.innerHTML=msg?`<div style="background:#2d1a1a;border:1px solid #5a2d2d;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#e07070">${msg}</div>`:''};
+  const showRetry = v=>{const r=document.getElementById('dash-retry');if(r)r.style.display=v?'':'none';};
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/metrics',{headers:{Authorization:'Bearer '+TOKEN}},15000);
+    if (!r.ok){const err=await r.json().catch(()=>({}));throw new Error(err.detail||'HTTP '+r.status);}
+    const d = await r.json();
+    const o=d.orders||{},l=d.listings||{},rev=d.reviews||{},sh=d.shop||{};
+    if(o.error||sh.error){setErr('⚠️ Etsy data partially unavailable');showRetry(true);}else{setErr('');showRetry(false);}
+    setId('v-rev7','$'+(o.revenue_7d||0).toFixed(2));setId('s-rev7',(o.last_7_days||0)+' orders');
+    setId('v-rev30','$'+(o.revenue_30d||0).toFixed(2));setId('s-rev30',(o.last_30_days||0)+' orders');
+    setId('v-active',sh.active_listing_count||l.active_count||0);setId('v-sales',sh.total_sales||0);
+    if(rev.avg_rating){const rEl=document.getElementById('m-reviews');if(rEl)rEl.innerHTML=`<div class="section-title">Reviews</div><div class="card"><div style="display:flex;align-items:center;gap:12px"><div style="font-size:36px;font-weight:700;color:var(--gold)">${rev.avg_rating}</div><div><div class="star">${'★'.repeat(Math.round(rev.avg_rating))}${'☆'.repeat(5-Math.round(rev.avg_rating))}</div><div style="font-size:12px;color:var(--muted);margin-top:3px">${rev.total_count||0} reviews · ${rev.five_star_pct||0}% five-star</div></div></div></div>`;}
+  } catch(e) {
+    setErr('⚠️ '+(e.name==='AbortError'?'Request timed out — check connection':escHtml(e.message||'Failed to load')));
+    setId('v-rev7','—');setId('s-rev7','');setId('v-rev30','—');setId('s-rev30','');
+    setId('v-active','—');setId('v-sales','—');
+    showRetry(true);
+  }
+}
+function loadDash() {
+  document.getElementById('dash-content').innerHTML = _dashSkeleton();
+  fetchDashData();
+  getCeoSuggestions(false);
+}
+
+// ── Listings ───────────────────────────────────────────────────────────────
+let _lastState = 'active';
+let _listings = [];
+let _listingState = 'active';
+let _sectionFilter = null; // null = all categories
+let _sectionsMap = null;   // {shop_section_id: title}, fetched once and cached client-side
+let _openDetailId = null;
+async function _ensureSectionsLoaded() {
+  if (_sectionsMap) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/shop-sections', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const d = await r.json();
+    _sectionsMap = {};
+    (d.sections||[]).forEach(s => { _sectionsMap[s.shop_section_id] = s.title; });
+  } catch(e) { _sectionsMap = {}; }
+}
+function _sectionLabel(id) {
+  if (!id) return 'Uncategorized';
+  return (_sectionsMap && _sectionsMap[id]) || ('Section '+id);
+}
+async function loadListings(state, btn) {
+  if (btn) { document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  _lastState = state; _listingState = state; _sectionFilter = null; _openDetailId = null;
+  const el = document.getElementById('listings-content');
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    await _ensureSectionsLoaded();
+    const r = await fetchWithTimeout(BASE+'/api/listings?state='+state, {headers:{Authorization:'Bearer '+TOKEN}}, 20000);
+    if (!r.ok) { const err = await r.json().catch(()=>({})); throw new Error(err.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    _listings = d.listings || [];
+    renderListings();
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastState)" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function setSectionFilter(key) {
+  _sectionFilter = key;
+  _openDetailId = null;
+  renderListings();
+}
+function renderListings() {
+  const el = document.getElementById('listings-content');
+  if (!_listings.length) { el.innerHTML = '<div class="empty">No '+_listingState+' listings</div>'; return; }
+  const seen = {}; const cats = [];
+  _listings.forEach(l => {
+    const key = String(l.shop_section_id || 'none');
+    if (!seen[key]) { seen[key] = true; cats.push({key: key, label: _sectionLabel(l.shop_section_id)}); }
+  });
+  cats.sort((a,b) => a.label.localeCompare(b.label));
+  let html = '';
+  if (cats.length > 1) {
+    html += '<div class="chip-row">';
+    html += `<button class="chip-btn${_sectionFilter===null?' active':''}" onclick="setSectionFilter(null)">All (${_listings.length})</button>`;
+    cats.forEach(c => {
+      const n = _listings.filter(l => String(l.shop_section_id||'none')===c.key).length;
+      html += `<button class="chip-btn${_sectionFilter===c.key?' active':''}" onclick="setSectionFilter('${c.key}')">${escHtml(c.label)} (${n})</button>`;
+    });
+    html += '</div>';
+  }
+  const filtered = _sectionFilter===null ? _listings : _listings.filter(l => String(l.shop_section_id||'none')===_sectionFilter);
+  if (!filtered.length) { html += '<div class="empty">No listings in this category</div>'; el.innerHTML = html; return; }
+  html += filtered.map(l => `
+    <div class="listing-item" style="cursor:pointer" onclick="toggleListingDetail(${l.listing_id})">
+      ${l.thumbnail_url ? `<img class="thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy">` : `<div class="thumb-placeholder">🏷️</div>`}
+      <div class="listing-info">
+        <div class="listing-title">${escHtml(l.title)}</div>
+        <div class="listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="badge-${l.listing_id}" class="badge ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
+      </div>
+      <div class="listing-price">$${(+l.price||0).toFixed(2)}</div>
+    </div>
+    <div id="detail-${l.listing_id}" class="listing-detail" style="display:none"></div>`).join('');
+  el.innerHTML = html;
+}
+async function toggleListingDetail(listingId) {
+  const panel = document.getElementById('detail-'+listingId);
+  if (!panel) return;
+  if (_openDetailId !== null && _openDetailId !== listingId) {
+    const prev = document.getElementById('detail-'+_openDetailId);
+    if (prev) prev.style.display = 'none';
+  }
+  if (_openDetailId === listingId) { panel.style.display = 'none'; _openDetailId = null; return; }
+  const l = _listings.find(x => x.listing_id === listingId);
+  if (!l) return;
+  panel.style.display = 'block';
+  _openDetailId = listingId;
+  panel.innerHTML =
+    `<div class="drow"><span>Listing ID</span><b>${listingId}</b></div>`+
+    `<div class="drow"><span>Category</span><b>${escHtml(_sectionLabel(l.shop_section_id))}</b></div>`+
+    `<div class="drow"><span>Views</span><b>${l.views}</b></div>`+
+    `<div class="drow"><span>Favorites</span><b>${l.num_favorers}</b></div>`+
+    (l.sales!=null ? `<div class="drow"><span>Sold</span><b>${l.sales}</b></div>` : '')+
+    (l.conversion_pct!=null ? `<div class="drow"><span>Conversion</span><b>${l.conversion_pct}%</b></div>` : '')+
+    `<div class="drow"><span>Price</span><b>$${(+l.price||0).toFixed(2)}</b></div>`+
+    `<div id="files-${listingId}"><div class="drow"><span>Digital files</span><b>loading…</b></div></div>`+
+    `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
+    ((l.state==='active'||l.state==='inactive') ? `<button id="state-btn-${listingId}" class="act-btn" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
+    `<a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a>`+
+    `</div>`;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/listings/'+listingId+'/files', {headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const slot = document.getElementById('files-'+listingId);
+    if (!slot) return;
+    if (!r.ok) { slot.innerHTML = '<div class="drow"><span>Digital files</span><b>unavailable</b></div>'; return; }
+    const d = await r.json();
+    const files = d.files || [];
+    if (!files.length) { slot.innerHTML = '<div class="drow"><span>Digital files</span><b>none attached</b></div>'; return; }
+    slot.innerHTML = files.map(f => `<div class="drow"><span>📄 ${escHtml(f.filename||'file')}</span><b>${escHtml(f.size_human||'')}</b></div>`).join('');
+  } catch(e) {
+    const slot = document.getElementById('files-'+listingId);
+    if (slot) slot.innerHTML = '<div class="drow"><span>Digital files</span><b>failed to load</b></div>';
+  }
+}
+async function toggleListingState(listingId, btn) {
+  const l = _listings.find(x => x.listing_id === listingId);
+  if (!l) return;
+  const newState = l.state === 'active' ? 'inactive' : 'active';
+  if (!confirm((newState==='inactive'?'Deactivate':'Activate')+' this listing on Etsy now?')) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Working…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/listings/'+listingId+'/state?new_state='+newState, {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 25000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    l.state = d.state || newState;
+    btn.textContent = l.state==='active' ? '⏸️ Deactivate' : '▶️ Activate';
+    btn.disabled = false;
+    const badge = document.getElementById('badge-'+listingId);
+    if (badge) { badge.textContent = l.state; badge.className = 'badge ' + (l.state==='active'?'active':'draft'); }
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Could not change listing state: ' + (e.message||e));
+  }
+}
+
+// ── Chat ───────────────────────────────────────────────────────────────────
+function _clearStreaming(fallback) {
+  const s = document.getElementById('bot-streaming');
+  if (!s) return;
+  s.id = '';
+  s.classList.remove('typing');
+  if (!s.textContent.trim() && fallback) s.textContent = fallback;
+}
+function _stopHeartbeat() { if (_wsHeartbeat) { clearInterval(_wsHeartbeat); _wsHeartbeat = null; } }
+async function initWS() {
+  if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
+  _wsManualClose = false;
+  let ticket;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/ws-ticket', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 10000);
+    if (!r.ok) throw new Error('ticket request failed: '+r.status);
+    ticket = (await r.json()).ticket;
+  } catch(e) {
+    addBubble('⚠️ Could not start chat session — reload to retry', 'bot');
+    return;
+  }
+  ws = new WebSocket(WS_BASE + '/ws/chat?ticket=' + encodeURIComponent(ticket) + '&session=' + encodeURIComponent(CHAT_SESSION));
+  ws.onopen = () => {
+    wsReady = true; _wsRetries = 0;
+    // Heartbeat keeps the socket warm through mobile carrier/proxy idle timeouts
+    // (otherwise an idle socket dies in ~30-60s and the next message hits a dead pipe).
+    _stopHeartbeat();
+    _wsHeartbeat = setInterval(() => { if (ws && ws.readyState === 1) ws.send(JSON.stringify({type:'ping'})); }, 25000);
+    if (pendingMsg) { ws.send(JSON.stringify({message:pendingMsg, session:CHAT_SESSION})); pendingMsg=null; }
+  };
+  ws.onmessage = e => {
+    const d = JSON.parse(e.data);
+    if (d.type === 'pong') return;
+    const bot = document.getElementById('bot-streaming');
+    if (d.type === 'tool' && bot) {
+      bot.classList.add('typing');
+      if (!bot.dataset.real) bot.textContent = '⚙ ' + d.content;
+      scrollMsgs();
+    } else if (d.type === 'chunk' && bot) {
+      if (!bot.dataset.real) { bot.textContent = ''; bot.dataset.real = '1'; bot.classList.remove('typing'); }
+      bot.textContent += d.content; scrollMsgs();
+    } else if (d.type === 'speak') {
+      _speakCalled = true;
+      if (_speakEnabled) speakText(d.text);
+    } else if (d.type === 'done') {
+      const finalText = bot ? bot.textContent : '';
+      _clearStreaming(); scrollMsgs();
+      if (_speakEnabled && !_speakCalled && finalText.trim()) speakText(finalText);
+      _speakCalled = false;
+    } else if (d.type === 'error') {
+      _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot');
+      _speakCalled = false;
+    }
+  };
+  ws.onerror = () => { _clearStreaming(); };
+  ws.onclose = e => {
+    wsReady = false; ws = null; _stopHeartbeat();
+    _clearStreaming();
+    if (e.code === 4001) { addBubble('Auth failed — reload to reconnect', 'bot'); return; }
+    // Auto-reconnect with capped backoff. Frank's memory is server-side (keyed by
+    // CHAT_SESSION), so reconnecting silently resumes the same thread — no context lost.
+    if (!_wsManualClose) {
+      _wsRetries = Math.min(_wsRetries + 1, 5);
+      const delay = Math.min(1000 * Math.pow(2, _wsRetries - 1), 15000);
+      _wsReconnectTimer = setTimeout(() => { if (!ws) initWS(); }, delay);
+    }
+  };
+}
+function addBubble(text, who) {
+  const el = document.createElement('div');
+  el.className = 'bubble ' + who;
+  el.textContent = text;
+  document.getElementById('msgs').appendChild(el);
+  scrollMsgs();
+  return el;
+}
+function scrollMsgs() { const m=document.getElementById('msgs'); m.scrollTop=m.scrollHeight; }
+function sendMsg() {
+  const inp = document.getElementById('msg-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  _speakCalled = false;
+  addBubble(text, 'user');
+  const bot = addBubble('', 'bot typing');
+  bot.id = 'bot-streaming';
+  bot.textContent = '';
+  if (wsReady) { ws.send(JSON.stringify({message:text})); }
+  else { pendingMsg = text; if(!ws) initWS(); }
+}
+function sendChip(el) { document.getElementById('msg-input').value = el.textContent; sendMsg(); }
+document.getElementById('msg-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+
+// ── Voice speak-back ────────────────────────────────────────────────────────
+let _speakEnabled = (localStorage.getItem('frankSpeak') === '1');
+let _speakCalled = false;  // true if local_speak tool fired this turn (avoid double-speak)
+(function _initSpeakBtn() {
+  const btn = document.getElementById('speak-btn');
+  if (!btn) return;
+  if (_speakEnabled) { btn.classList.add('on'); btn.textContent = '🔊'; }
+})();
+function toggleSpeak() {
+  _speakEnabled = !_speakEnabled;
+  localStorage.setItem('frankSpeak', _speakEnabled ? '1' : '0');
+  const btn = document.getElementById('speak-btn');
+  if (btn) { btn.classList.toggle('on', _speakEnabled); btn.textContent = _speakEnabled ? '🔊' : '🔇'; }
+}
+async function speakText(text) {
+  if (!text || !text.trim()) return;
+  try {
+    const r = await fetch(BASE+'/api/voice/speak', {
+      method: 'POST',
+      headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text.slice(0, 4000)})
+    });
+    if (!r.ok) return;
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = () => URL.revokeObjectURL(url);
+    audio.play().catch(() => {});
+  } catch(e) { /* best effort — audio is non-critical */ }
+}
+
+// ── Studio (video generation) ──────────────────────────────────────────────
+async function loadStudio() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  var genFormHtml = '<div class="card" style="margin-bottom:12px">'+
+    '<div style="font-size:14px;font-weight:700;margin-bottom:10px">Generate Marketing Video</div>'+
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Ken Burns slideshow from a listing\'s photos — generates an MP4 ready for social media.</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    '<input id="studio-listing-id" type="number" placeholder="Etsy Listing ID" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+    '<select id="studio-style" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+    '<option value="showcase">Showcase — smooth pan across listing photos</option>'+
+    '<option value="new-drop">New Drop — bold title card reveal</option>'+
+    '<option value="feature">Feature — close-up detail focus</option>'+
+    '<option value="minimal">Minimal — clean, quiet aesthetic</option>'+
+    '</select>'+
+    '<button onclick="studioGenerate(this)" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer">Generate Video</button>'+
+    '</div></div>';
+  el.innerHTML = genFormHtml + '<div id="studio-result"></div><div id="studio-videos"></div>';
+  loadStudioVideos();
+}
+async function studioGenerate(btn) {
+  var listingId = document.getElementById('studio-listing-id').value.trim();
+  var style = document.getElementById('studio-style').value;
+  var out = document.getElementById('studio-result');
+  if (!listingId) { alert('Enter a listing ID first'); return; }
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating — takes ~30s…';
+  out.innerHTML = '<div class="spinner"></div>';
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/studio/generate', {
+      method: 'POST',
+      headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({listing_id: parseInt(listingId), style})
+    }, 200000);
+    var d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    var vidUrl = BASE+'/api/files/download?root=videos&path='+encodeURIComponent(d.path)+'&inline=1';
+    out.innerHTML = '<div class="card" style="margin-bottom:12px">'+
+      '<div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px">✅ Video ready — '+escHtml(d.size_human)+'</div>'+
+      '<video controls style="width:100%;border-radius:8px;background:#000" src="'+escHtml(vidUrl)+'"></video>'+
+      '<a href="'+escHtml(vidUrl)+'" download="'+escHtml(d.path)+'" style="display:block;text-align:center;margin-top:8px;color:var(--gold);font-size:13px;font-weight:600">⬇ Download MP4</a>'+
+      '</div>';
+    loadStudioVideos();
+  } catch(e) {
+    out.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out — try again':e.message||'Generation failed')+'</div>';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Video';
+  }
+}
+async function loadStudioVideos() {
+  var el = document.getElementById('studio-videos');
+  if (!el) return;
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/studio/videos',{headers:{Authorization:'Bearer '+TOKEN}},10000);
+    var d = await r.json().catch(function(){return {};});
+    if (!r.ok || !d.videos || !d.videos.length) { el.innerHTML = ''; return; }
+    var html = '<div class="section-title">Previously Generated ('+d.videos.length+')</div><div class="card">';
+    d.videos.forEach(function(v){
+      var vidUrl = BASE+'/api/files/download?root=videos&path='+encodeURIComponent(v.name)+'&inline=1';
+      html += '<div class="listing-item" style="cursor:default">'+
+        '<div class="thumb-placeholder">🎬</div>'+
+        '<div class="listing-info">'+
+          '<div class="listing-title" style="font-size:13px">'+escHtml(v.name)+'</div>'+
+          '<div class="listing-meta">'+escHtml(v.size_human)+'</div>'+
+        '</div>'+
+        '<a href="'+escHtml(vidUrl)+'" target="_blank" style="color:var(--gold);font-size:18px;text-decoration:none">↗</a>'+
+      '</div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) { /* non-critical */ }
+}
+
+// ── Analytics ──────────────────────────────────────────────────────────────
+function buildSparkline(values, color, h) {
+  h = h || 64;
+  values = (values || []).filter(function(v){ return v != null && !isNaN(v); });
+  if (values.length < 2) return '<div style="height:'+h+'px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px">📈 Accumulating daily data…</div>';
+  var W=320,H=h,mn=Math.min.apply(null,values),mx=Math.max.apply(null,values),range=mx-mn||1,pad=4;
+  var pts=values.map(function(v,i){return [pad+(i/(values.length-1))*(W-pad*2), H-pad-((v-mn)/range)*(H-pad*2)];});
+  var poly=pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+  var area='M'+pts[0][0].toFixed(1)+','+H+' '+pts.map(function(p){return 'L'+p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+' L'+pts[pts.length-1][0].toFixed(1)+','+H+' Z';
+  var gid='sg'+Math.random().toString(36).slice(2,8);
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px;display:block;overflow:visible">'+
+    '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="'+color+'" stop-opacity="0.25"/>'+
+    '<stop offset="100%" stop-color="'+color+'" stop-opacity="0"/>'+
+    '</linearGradient></defs>'+
+    '<path d="'+area+'" fill="url(#'+gid+')"/>'+
+    '<polyline points="'+poly+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<circle cx="'+pts[pts.length-1][0].toFixed(1)+'" cy="'+pts[pts.length-1][1].toFixed(1)+'" r="3.5" fill="'+color+'"/>'+
+    '</svg>';
+}
+function _deltaSpan(val, isMoney) {
+  if (val == null || val === 0) return '<span style="color:var(--muted)">— stable</span>';
+  var pos=val>0, c=pos?'var(--green)':'var(--red)', a=pos?'↑':'↓';
+  var n=isMoney?('$'+Math.abs(val).toFixed(2)):String(Math.round(Math.abs(val)));
+  return '<span style="color:'+c+'">'+a+' '+n+'</span>';
+}
+function _renderAnalytics(d) {
+  var tr=d.trends||{}, lt=d.latest||{}, del=d.delta||{}, days=d.days||30;
+  var n=d.snapshot_count||0, top=d.top_listings||[];
+  var html='';
+  if (n < 3) {
+    html+='<div style="background:#1a2030;border:1px solid #2a3d5a;border-radius:10px;padding:11px 14px;margin-bottom:14px;font-size:12px;color:#7ba0c2">📅 '+(n===0?'No snapshots yet — the hub records one daily snapshot at startup and midnight.':n+' day'+(n>1?'s':'')+' of history recorded. Trend charts fill in each day automatically.')+'</div>';
+  }
+  // Revenue
+  var rev=lt.revenue_30d;
+  html+='<div class="section-title">Revenue — Rolling 30 Days</div><div class="card">';
+  html+=buildSparkline(tr.revenue_30d,'var(--gold)');
+  if (rev!=null) {
+    html+='<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:flex-end">'+
+      '<div><div style="font-size:26px;font-weight:700;color:var(--gold)">$'+rev.toFixed(2)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">current 30-day window</div></div>'+
+      '<div style="text-align:right;font-size:12px">'+_deltaSpan(del.revenue_30d,true)+'<div style="color:var(--muted);font-size:10px;margin-top:2px">vs '+days+'d ago</div></div>'+
+      '</div>';
+  }
+  html+='</div>';
+  // Orders
+  var ord=lt.orders_30d;
+  html+='<div class="section-title">Orders — Rolling 30 Days</div><div class="card">';
+  html+=buildSparkline(tr.orders_30d,'#5ca8d4');
+  if (ord!=null) {
+    html+='<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:flex-end">'+
+      '<div><div style="font-size:26px;font-weight:700;color:#5ca8d4">'+ord+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">orders in rolling 30 days</div></div>'+
+      '<div style="text-align:right;font-size:12px">'+_deltaSpan(del.orders_30d,false)+'<div style="color:var(--muted);font-size:10px;margin-top:2px">vs '+days+'d ago</div></div>'+
+      '</div>';
+  }
+  html+='</div>';
+  // Shop growth cards
+  var acNow=lt.active_listings, salNow=lt.total_sales;
+  if (acNow!=null||salNow!=null) {
+    html+='<div class="section-title">Shop Growth</div><div class="card-row">';
+    if (acNow!=null) html+='<div class="metric"><div class="label">Listings</div><div class="value">'+acNow+'</div><div class="sub" style="margin-top:5px;font-size:11px">'+_deltaSpan(del.active_listings,false)+' in '+days+'d</div></div>';
+    if (salNow!=null) html+='<div class="metric"><div class="label">Total Sales</div><div class="value">'+salNow+'</div><div class="sub" style="margin-top:5px;font-size:11px">'+_deltaSpan(del.total_sales,false)+' in '+days+'d</div></div>';
+    html+='</div>';
+  }
+  // Listing trend mini-sparkline
+  var acTrend=(tr.active_listings||[]).filter(function(v){return v!=null;});
+  if (acTrend.length>=2) {
+    html+='<div class="card" style="padding:12px 14px 10px">'+buildSparkline(tr.active_listings,'var(--green)',40)+'<div style="font-size:11px;color:var(--muted);margin-top:5px">Active listings over time</div></div>';
+  }
+  // Top listings
+  if (top.length) {
+    html+='<div class="section-title">Top Listings by Views</div><div class="card" style="padding:12px 14px">';
+    html+=top.map(function(l,i){
+      // Real buy rate (sales÷views). Etsy avg is ~1-3%; 0% with views = a problem.
+      var cp=l.conversion_pct||0, sold=l.sales||0;
+      var convColor=cp>=2?'var(--green)':cp>=1?'var(--gold)':sold>0?'#7ba0c2':'var(--red)';
+      return '<div class="listing-item" onclick="window.open(&apos;'+escHtml(l.url)+'&apos;,&apos;_blank&apos;)">'+
+        '<div style="width:22px;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0">#'+(i+1)+'</div>'+
+        '<div class="listing-info">'+
+          '<div class="listing-title">'+escHtml(l.title)+'</div>'+
+          '<div class="listing-meta">'+l.views+' views · '+l.num_favorers+' ♥ · <span style="color:'+convColor+'">'+sold+' sold ('+cp+'%)</span></div>'+
+        '</div>'+
+        '<div class="listing-price">$'+(+l.price||0).toFixed(2)+'</div>'+
+        '</div>';
+    }).join('');
+    html+='</div>';
+  } else {
+    html+='<div class="section-title">Top Listings</div><div class="empty">View data will appear here once listings are active</div>';
+  }
+  // Footer
+  var ts=lt.ts?new Date(lt.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):null;
+  html+='<div style="text-align:center;color:var(--muted);font-size:11px;padding:12px 0 4px">'+(ts?'Last snapshot: '+ts:'No snapshots yet')+' · '+n+' day'+(n!==1?'s':'')+' of history</div>';
+  return html;
+}
+async function loadAnalytics(days, btn) {
+  if (btn) { document.querySelectorAll('#analytics-period-row .toggle-btn').forEach(function(b){b.classList.remove('active');}); btn.classList.add('active'); }
+  if (days) _analyticsDays = days;
+  var el = document.getElementById('analytics-content');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/analytics?days='+_analyticsDays, {headers:{Authorization:'Bearer '+TOKEN}}, 20000);
+    if (!r.ok) { var e=await r.json().catch(function(){return {};}); throw new Error(e.detail||'HTTP '+r.status); }
+    var d = await r.json();
+    el.innerHTML = _renderAnalytics(d);
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadAnalytics()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+
+// ── CEO Analysis (structured suggestion report) ────────────────────────────
+let _lastSuggestions = null;
+
+// Silent background refresh — called after showing a cached report so the display
+// updates to fresh data without ever showing a spinner. 30s timeout; fails silently.
+async function _bgRefreshSuggestions() {
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/suggestions',{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},30000);
+    var d = await r.json().catch(function(){return {};});
+    // Only update if we received a real, complete report (not a 202 warming stub)
+    if (r.status===200 && d && Array.isArray(d.suggestions) && d.suggestions.length && !d.error) {
+      var newer = !_lastSuggestions || (d.generated_at && d.generated_at > (_lastSuggestions.generated_at||''));
+      if (newer) {
+        _lastSuggestions = d;
+        try { sessionStorage.setItem('obc_sug', JSON.stringify(d)); } catch(e2) {}
+        var el2 = document.getElementById('ceo-suggestions');
+        if (el2) { el2.innerHTML = _renderSuggestions(d); updateChips(d); }
+      }
+    }
+  } catch(e) {}
+}
+const _PCOLOR = {critical:'var(--red)',high:'#e08030',medium:'var(--gold)',low:'#7ba0c2'};
+const _PRANK  = {critical:0,high:1,medium:2,low:3};
+function _renderSuggestions(d) {
+  if (!d) return '';
+  if (d.raw) return '<div class="card" style="font-size:13px;white-space:pre-wrap;color:var(--muted)">'+escHtml(d.raw)+'</div>';
+  const ts = d.generated_at ? new Date(d.generated_at).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}) : '';
+  const score = d.score;
+  const scoreColor = score >= 7 ? 'var(--green)' : score >= 4 ? 'var(--gold)' : 'var(--red)';
+  const scoreBg = score >= 7 ? '#13241c' : score >= 4 ? '#2d2a1a' : '#241313';
+  let html = '<div class="card" style="margin-bottom:10px">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+  html += '<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">CEO Report · ' + ts + '</div>';
+  if (score) html += '<div style="background:'+scoreBg+';border:1px solid '+scoreColor+';border-radius:20px;padding:2px 10px;font-size:13px;font-weight:700;color:'+scoreColor+'">'+score+'/10</div>';
+  html += '</div>';
+  if (d.headline) html += '<div style="font-size:14px;line-height:1.5">'+escHtml(d.headline)+'</div>';
+  html += '</div>';
+  if (d.top_win || d.top_risk) {
+    html += '<div class="card-row">';
+    if (d.top_win)  html += '<div class="metric" style="background:#13241c;border-color:#2d5a44"><div class="label" style="color:#5fcf9e">✅ TOP WIN</div><div style="font-size:12px;line-height:1.45;margin-top:4px">'+escHtml(d.top_win)+'</div></div>';
+    if (d.top_risk) html += '<div class="metric" style="background:#241313;border-color:#5a2d2d"><div class="label" style="color:#e07070">⚠️ TOP RISK</div><div style="font-size:12px;line-height:1.45;margin-top:4px">'+escHtml(d.top_risk)+'</div></div>';
+    html += '</div>';
+  }
+  const sugs = (d.suggestions || []).slice().sort(function(a,b){ return (_PRANK[a.priority]||9)-(_PRANK[b.priority]||9); });
+  if (sugs.length) {
+    html += '<div class="section-title">Priorities</div>';
+    sugs.forEach(function(s,i) {
+      const pc = _PCOLOR[s.priority] || 'var(--muted)';
+      html += '<div class="sug-card" style="border-left-color:'+pc+'">';
+      html += '<span class="sug-p" style="color:'+pc+'">'+escHtml(s.priority||'medium')+'</span>';
+      if (s.category) html += '<span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-left:6px">'+escHtml(s.category)+'</span>';
+      html += '<div class="sug-title">'+escHtml(s.title)+'</div>';
+      html += '<div class="sug-detail">'+escHtml(s.detail)+'</div>';
+      if (s.action) html += '<div class="sug-action"><b style="color:var(--gold2)">→ </b>'+escHtml(s.action)+'</div>';
+      if (s.impact) html += '<div class="sug-impact">💡 '+escHtml(s.impact)+'</div>';
+      html += '<div class="act-btns">';
+      if (s.listing_id) html += '<a class="act-btn" href="https://www.etsy.com/listing/'+escHtml(String(s.listing_id))+'" target="_blank">Open Listing</a>';
+      html += '<button class="act-btn primary" onclick="askSuggestionFix('+i+')">🤖 Fix It</button>';
+      html += '</div></div>';
+    });
+  }
+  html += '<div style="text-align:center;margin:8px 0 4px"><button onclick="getCeoSuggestions(true)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:8px 20px;font-size:12px;color:var(--muted);cursor:pointer">↻ Refresh analysis</button></div>';
+  return '<button class="collapse-btn" onclick="toggleCeoPanel(this)">▲ Collapse CEO Analysis</button><div id="ceo-body">'+html+'</div>';
+}
+function toggleCeoPanel(btn) {
+  const el = document.getElementById('ceo-body');
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? '▲ Collapse CEO Analysis' : '▼ Show CEO Analysis';
+}
+async function getCeoSuggestions(forceRefresh, _attempt) {
+  const btn = document.getElementById('ceo-analyze-btn');
+  const el  = document.getElementById('ceo-suggestions');
+  if (!el) return;
+  _attempt = _attempt || 0;
+  // Show cached report immediately — no spinner. A silent background fetch
+  // checks whether the server has a newer report and updates the display when
+  // it arrives. This means the dashboard is instant on every page reload even
+  // right after a Railway deploy (which wipes the server-side in-memory cache).
+  if (_lastSuggestions && !forceRefresh && !_attempt) {
+    if(btn)btn.style.display='none';
+    el.innerHTML=_renderSuggestions(_lastSuggestions);
+    updateChips(_lastSuggestions);
+    setTimeout(_bgRefreshSuggestions, 1500); // silent background check for newer data
+    return;
+  }
+  if (btn) btn.style.display = 'none';
+  if (!_attempt) el.innerHTML = '<div class="card" style="text-align:center;padding:28px 16px"><div class="spinner" style="margin:0 auto 14px"></div><div style="color:var(--text);font-size:14px;font-weight:600">""" + business_config.AGENT_NAME + """ is analyzing your shop…</div><div style="color:var(--muted);font-size:12px;margin-top:6px">Pulling metrics · scanning all listings · checking drafts</div></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/suggestions', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 120000);
+    const d = await r.json().catch(function(){return {};});
+    // 202 = the report is still being computed (cold cache, e.g. just after an
+    // update). Keep the spinner and poll — never block the request for a minute.
+    if (r.status === 202 || (d && d.status === 'warming')) {
+      if (_attempt >= 25) throw new Error('Analysis is taking longer than usual');
+      setTimeout(function(){ getCeoSuggestions(forceRefresh, _attempt + 1); }, 4000);
+      return;
+    }
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    _lastSuggestions = d;
+    try { sessionStorage.setItem('obc_sug', JSON.stringify(d)); } catch(e2) {}
+    el.innerHTML = _renderSuggestions(d);
+    updateChips(d);
+  } catch(e) {
+    const msg = e.name==='AbortError' ? 'Analysis timed out — try again' : escHtml(e.message||'Failed');
+    el.innerHTML = '<div class="empty">'+msg+'</div><div style="text-align:center;margin-top:8px"><button onclick="getCeoSuggestions(true)" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Try Again</button></div>';
+    if (btn) btn.style.display = '';
+  }
+}
+function updateChips(data) {
+  const el = document.querySelector('.chips');
+  if (!el) return;
+  const sugs = ((data && data.suggestions) || [])
+    .slice()
+    .sort(function(a,b){ return (_PRANK[a.priority]||9) - (_PRANK[b.priority]||9); })
+    .slice(0, 2);
+  const chips = [];
+  sugs.forEach(function(s) {
+    if (s.title) chips.push('Fix: ' + (s.title.length > 30 ? s.title.slice(0,28)+'…' : s.title));
+  });
+  const fallbacks = ["What's my next listing?", 'How are sales?', 'Pricing advice', 'SEO tips', 'What should I focus on?'];
+  fallbacks.forEach(function(f) { if (chips.length < 5) chips.push(f); });
+  el.innerHTML = chips.slice(0, 5).map(function(c) {
+    return '<span class="chip" onclick="sendChip(this)">'+escHtml(c)+'</span>';
+  }).join('');
+}
+function askSuggestionFix(i) {
+  if (!_lastSuggestions) return;
+  const s = (_lastSuggestions.suggestions||[])[i];
+  if (!s) return;
+  const chatBtn = document.querySelectorAll('nav button')[3]; // dash,actions,analytics,chat,listings
+  showTab('chat', chatBtn);
+  document.getElementById('msg-input').value = 'Help me fix this: '+s.title+' — '+s.detail;
+  sendMsg();
+}
+
+// ── Conversion Doctor (views but no sales → ranked fixes) ───────────────────
+const _DXCOLOR = {critical:'var(--red)',high:'#e08030',medium:'var(--gold)',low:'#7ba0c2',trust:'var(--gold)'};
+const _AREA_ICON = {photos:'📸',price:'💲',title:'🏷️',description:'📝',tags:'🔖',trust:'🤝'};
+let _convTargets = [];
+let _convDiagnoses = {};
+function toggleConvPanel(btn) {
+  const el = document.getElementById('conv-doctor');
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? '▲ Collapse' : '▼ Show';
+}
+function toggleDxBody(id, btn) {
+  const el = document.getElementById('conv-dx-body-'+id);
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  btn.textContent = hidden ? '▲ Collapse Diagnosis' : '▼ Show Diagnosis';
+}
+async function fixStage(listingId, fixIdx, btn) {
+  const d = _convDiagnoses[listingId];
+  if (!d) return;
+  const f = (d._sortedFixes||[])[fixIdx];
+  if (!f) return;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳ Staging…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/autofix/'+f.area+'/'+listingId,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},90000);
+    const rd = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(rd.detail||'HTTP '+r.status);
+    btn.textContent = '✅ Staged — check Action Center';
+    btn.style.background = 'var(--green)'; btn.style.color = '#06140d';
+    setTimeout(loadActions, 1500);
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Could not stage fix: '+(e.message||e));
+  }
+}
+function fixChat(listingId, fixIdx) {
+  const d = _convDiagnoses[listingId];
+  if (!d) return;
+  const f = (d._sortedFixes||[])[fixIdx];
+  if (!f) return;
+  const title = (d.stats&&d.stats.title)||'';
+  const chatBtn = document.querySelectorAll('nav button')[3];
+  showTab('chat', chatBtn);
+  const inp = document.getElementById('msg-input');
+  inp.value = 'Fix the '+f.area+' for listing "'+title+'": '+f.finding+' — '+f.fix;
+  sendMsg();
+}
+async function fixAllStageable(listingId, btn) {
+  const d = _convDiagnoses[listingId];
+  if (!d) return;
+  const fixes = (d._sortedFixes||[]).filter(function(f){return f.area==='tags'||f.area==='title';});
+  if (!fixes.length) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Staging…';
+  var staged = 0, failed = [];
+  for (var i = 0; i < fixes.length; i++) {
+    try {
+      var r = await fetchWithTimeout(BASE+'/api/autofix/'+fixes[i].area+'/'+listingId,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},90000);
+      var rd = await r.json().catch(function(){return {};});
+      if (!r.ok) throw new Error(rd.detail||'HTTP '+r.status);
+      staged++;
+    } catch(e) {
+      failed.push(fixes[i].area+': '+(e.message||e));
+    }
+  }
+  btn.textContent = staged+'/'+fixes.length+' staged ✅';
+  btn.style.background = 'var(--green)'; btn.style.color = '#06140d';
+  if (failed.length) alert('Some fixes could not be staged:\\n'+failed.join('\\n'));
+  setTimeout(loadActions, 1500);
+}
+function fixAllInChat(listingId) {
+  const d = _convDiagnoses[listingId];
+  if (!d) return;
+  const fixes = (d._sortedFixes||[]).filter(function(f){return f.area!=='tags'&&f.area!=='title';});
+  if (!fixes.length) return;
+  const title = (d.stats&&d.stats.title)||('Listing '+listingId);
+  const chatBtn = document.querySelectorAll('nav button')[3];
+  showTab('chat', chatBtn);
+  const inp = document.getElementById('msg-input');
+  inp.value = 'Fix all issues for listing "'+title+'": '+fixes.map(function(f){return f.area+': '+f.finding+' → '+f.fix;}).join('; ');
+  sendMsg();
+}
+async function loadConvTargets() {
+  const el = document.getElementById('conv-doctor');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/conversion-targets', {headers:{Authorization:'Bearer '+TOKEN}}, 25000);
+    const d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    _convTargets = d.targets||[];
+    if (!_convTargets.length) { el.innerHTML = '<div class="empty" style="padding:20px 0">✅ Nothing to fix — every viewed listing is selling (or has no views yet).</div>'; return; }
+    el.innerHTML = _convTargets.map(function(l){
+      return '<div class="card" style="padding:12px 14px;margin-bottom:8px">'+
+        '<div class="listing-info">'+
+          '<div class="listing-title">'+escHtml(l.title)+'</div>'+
+          '<div class="listing-meta">'+l.views+' views · '+l.num_favorers+' ♥ · <span style="color:var(--red)">0 sold</span> · $'+(+l.price||0).toFixed(2)+'</div>'+
+        '</div>'+
+        '<div class="act-btns">'+
+          '<button class="act-btn primary" onclick="diagnoseConv('+l.listing_id+',this)">🩺 Diagnose</button>'+
+          '<a class="act-btn" href="'+escHtml(l.url)+'" target="_blank">Open on Etsy</a>'+
+        '</div>'+
+        '<div id="conv-dx-'+l.listing_id+'"></div>'+
+      '</div>';
+    }).join('');
+    const cBtn = document.getElementById('conv-collapse-btn');
+    if (cBtn) cBtn.style.display = '';
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadConvTargets()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+async function diagnoseConv(id, btn) {
+  const out = document.getElementById('conv-dx-'+id);
+  if (!out) return;
+  if (btn) { btn.disabled = true; btn.textContent = '🩺 Diagnosing…'; }
+  out.innerHTML = '<div class="card" style="text-align:center;padding:20px 12px;margin-top:8px"><div class="spinner" style="margin:0 auto 10px"></div><div style="color:var(--muted);font-size:12px">Reading title, price, photos, tags &amp; description…</div></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/diagnose/'+id, {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 90000);
+    const d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    out.innerHTML = _renderDiagnosis(d);
+  } catch(e) {
+    out.innerHTML = '<div class="empty" style="padding:14px 0">'+escHtml(e.name==='AbortError'?'Diagnosis timed out — try again':e.message||'Failed')+'</div>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🩺 Diagnose again'; }
+  }
+}
+function _renderDiagnosis(d) {
+  const listingId = d.listing_id;
+  const dx = d.diagnosis||{}, st = d.stats||{};
+  if (dx.raw && !(dx.fixes && dx.fixes.length)) return '<div class="card" style="font-size:13px;white-space:pre-wrap;color:var(--muted);margin-top:8px">'+escHtml(dx.raw)+'</div>';
+  const fixes = (dx.fixes||[]).slice().sort(function(a,b){ return (_PRANK[a.priority]||9)-(_PRANK[b.priority]||9); });
+  _convDiagnoses[listingId] = Object.assign({},d,{_sortedFixes:fixes});
+  let inner = '';
+  inner += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:10px;color:var(--muted)">'+
+    '<span>📸 '+(st.photo_count||0)+'/10</span><span>🔖 '+(st.tag_count||0)+'/13</span><span>🏷️ '+(st.title_length||0)+'/70</span><span>👁 '+(st.views||0)+'</span><span>♥ '+(st.favorites||0)+'</span><span style="color:var(--red)">🛒 '+(st.sales||0)+' sold</span></div>';
+  if (dx.primary_issue) inner += '<div class="card" style="background:#241313;border-color:#5a2d2d;margin-bottom:8px"><div class="label" style="color:#e07070">⚠️ PRIMARY ISSUE</div><div style="font-size:13px;line-height:1.45;margin-top:4px">'+escHtml(dx.primary_issue)+'</div></div>';
+  if (dx.summary) inner += '<div style="font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:8px">'+escHtml(dx.summary)+'</div>';
+  var stageableCount = fixes.filter(function(f){return f.area==='tags'||f.area==='title';}).length;
+  var chatCount = fixes.filter(function(f){return f.area!=='tags'&&f.area!=='title';}).length;
+  if (stageableCount > 0 || chatCount > 0) {
+    inner += '<div class="act-btns" style="margin-bottom:14px">';
+    if (stageableCount > 0) inner += '<button class="act-btn primary" style="font-size:13px;padding:9px" onclick="fixAllStageable('+listingId+',this)">🚀 Stage All ('+stageableCount+')</button>';
+    if (chatCount > 0) inner += '<button class="act-btn" style="font-size:13px;padding:9px" onclick="fixAllInChat('+listingId+')">💬 Chat Fixes ('+chatCount+')</button>';
+    inner += '</div>';
+  }
+  fixes.forEach(function(f,fIdx){
+    const pc = _DXCOLOR[f.priority]||'var(--muted)';
+    const icon = _AREA_ICON[f.area]||'•';
+    const canStage = f.area==='tags'||f.area==='title';
+    inner += '<div class="sug-card" style="border-left-color:'+pc+'">'+
+      '<span class="sug-p" style="color:'+pc+'">'+escHtml(f.priority||'medium')+'</span>'+
+      '<span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-left:6px">'+icon+' '+escHtml(f.area||'')+'</span>'+
+      '<div class="sug-title">'+escHtml(f.finding||'')+'</div>'+
+      (f.fix?'<div class="sug-action"><b style="color:var(--gold2)">→ </b>'+escHtml(f.fix)+'</div>':'')+
+      (f.impact?'<div class="sug-impact">💡 '+escHtml(f.impact)+'</div>':'')+
+      '<div class="act-btns" style="margin-top:8px">'+
+      (canStage
+        ? '<button class="act-btn primary" onclick="fixStage('+listingId+','+fIdx+',this)">⚡ Stage Fix</button>'
+        : '<button class="act-btn" onclick="fixChat('+listingId+','+fIdx+')">💬 Fix in Chat</button>')+
+      '</div>'+
+    '</div>';
+  });
+  return '<div style="margin-top:8px">'+
+    '<button class="collapse-btn" onclick="toggleDxBody('+listingId+',this)">▲ Collapse Diagnosis</button>'+
+    '<div id="conv-dx-body-'+listingId+'">'+inner+'</div>'+
+    '</div>';
+}
+
+// ── Hub (Brand Kit · Products · Creds · Security) ──────────────────────────
+var _THEMES = [
+  {id:'DP1026',name:'Lavender Dreams',primary:'#8666AA',accent:'#C4A8D4',neutral:'#FAF7FF',text:'#2C1A3A'},
+  {id:'DP1027',name:'Cotton Candy',   primary:'#DE97C6',accent:'#97C6DE',neutral:'#FFF6FC',text:'#2C1A2A'},
+  {id:'DP1028',name:'Midnight Blue',  primary:'#1B2568',accent:'#7BA7C2',neutral:'#F0F5FF',text:'#0D1525'},
+  {id:'DP1029',name:'Coral Peach',    primary:'#FD6C49',accent:'#F5B878',neutral:'#FFF8F4',text:'#3A1A0D'}
+];
+var _PRODUCTS_STATIC = [
+  {id:'DP1026',name:'Ultimate Life Planner',      price:'$14.99',pages:104},
+  {id:'DP1027',name:'Student & School Planner',   price:'$9.99', pages:90},
+  {id:'DP1028',name:'Budget & Finance Planner',   price:'$12.99',pages:102},
+  {id:'DP1029',name:'Fitness & Wellness Planner', price:'$12.99',pages:91}
+];
+function _renderBrandKit() {
+  var html = '<div class="section-title">Product Color Palettes</div>';
+  _THEMES.forEach(function(t){
+    html += '<div class="card" style="margin-bottom:10px">';
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">'+escHtml(t.id)+' — '+escHtml(t.name)+'</div>';
+    html += '<div style="display:flex;gap:12px;flex-wrap:wrap">';
+    [{label:'Primary',hex:t.primary},{label:'Accent',hex:t.accent},{label:'Neutral',hex:t.neutral},{label:'Text',hex:t.text}].forEach(function(c){
+      html += '<div style="display:flex;align-items:center;gap:5px">'+
+        '<span class="swatch" style="background:'+escHtml(c.hex)+'"></span>'+
+        '<div style="font-size:11px"><div style="color:var(--muted)">'+escHtml(c.label)+'</div>'+
+        '<div style="font-family:monospace;font-size:10px;color:var(--text)">'+escHtml(c.hex)+'</div></div>'+
+        '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div class="section-title">Listing Standards</div><div class="card">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  [['Title','≤70 chars · keyword first 40 · commas not pipes'],
+   ['Tags','13 tags · each ≤20 chars · multi-word buyer phrases'],
+   ['Photos','10 slots · 2400×2400px · lifestyle hero first'],
+   ['Price','.99 / .97 / .49 endings — never round numbers'],
+   ['AI disclosure','Required in description · who_made: i_did'],
+   ['File limit','20 MB per file (PDF + ZIP · Etsy hard limit)']
+  ].forEach(function(r){
+    html += '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:7px 0;padding-right:10px;color:var(--gold);font-weight:700;white-space:nowrap">'+escHtml(r[0])+'</td>'+
+      '<td style="padding:7px 0;color:var(--muted);line-height:1.4">'+escHtml(r[1])+'</td></tr>';
+  });
+  html += '</table></div>';
+  html += '<div class="section-title">Pricing Tiers</div><div class="card">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  [['DP1026 Life Planner','$14.99','104 pages + sticker pack'],
+   ['DP1027 Student','$9.99','90 pages · student budget'],
+   ['DP1028 Budget','$12.99','102 pages · finance niche'],
+   ['DP1029 Fitness','$12.99','91 pages · wellness niche'],
+   ['SVG 5-pack','$9.99','5 designs · instant DL'],
+   ['SVG 10+ pack','$14.99','10+ designs · instant DL']
+  ].forEach(function(r){
+    html += '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:7px 0;padding-right:8px;font-weight:600">'+escHtml(r[0])+'</td>'+
+      '<td style="padding:7px 0;padding-right:8px;color:var(--gold);font-weight:700;white-space:nowrap">'+escHtml(r[1])+'</td>'+
+      '<td style="padding:7px 0;color:var(--muted)">'+escHtml(r[2])+'</td></tr>';
+  });
+  html += '</table></div>';
+  return html;
+}
+function loadProductIndex() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  var html = '<div class="section-title">Core Products</div>';
+  _PRODUCTS_STATIC.forEach(function(p,i){
+    var t = _THEMES[i]||{};
+    html += '<div class="prod-card" style="border-left-color:'+(t.primary||'var(--gold)')+'">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start">'+
+        '<div><div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.4px">'+escHtml(p.id)+'</div>'+
+        '<div style="font-size:14px;font-weight:600;margin-top:3px">'+escHtml(p.name)+'</div></div>'+
+        '<div style="font-size:16px;font-weight:700;color:var(--gold)">'+escHtml(p.price)+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--muted)">'+
+        '<span>📄 '+p.pages+' pages</span><span>🔖 13 tags</span><span>Digital Download</span>'+
+      '</div>'+
+    '</div>';
+  });
+  html += '<div class="section-title" style="margin-top:8px">Platform Connections</div><div class="card">';
+  [
+    {name:'Etsy',      icon:'🛍️',status:'live',    note:'onbrandcraftz · authorized'},
+    {name:'Pinterest', icon:'📌',        status:'roadmap',note:'API v5 — ready to integrate', steps:[
+      'Create a Pinterest Developer app at developers.pinterest.com',
+      'Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env',
+      'Run: python tools/pinterest_oauth.py — authorizes and saves tokens to .env automatically',
+      'Claim the Etsy shop under Pinterest "Claimed accounts" to enable Rich Pins',
+      'Done — the Social Media Agent can post via tools/pinterest_api.py'
+    ]},
+    {name:'Instagram', icon:'📷',        status:'roadmap',note:'Meta Graph API (app review needed)', steps:[
+      'Create a Meta Business app at developers.facebook.com',
+      'Add the "Instagram Graph API" product to the app',
+      'Connect the Instagram Professional account via a Facebook Page',
+      'Add INSTAGRAM_APP_ID / INSTAGRAM_APP_SECRET to .env',
+      'Generate a long-lived access token (scopes: instagram_basic, instagram_content_publish, instagram_manage_insights, pages_show_list, pages_read_engagement)',
+      'Add INSTAGRAM_USER_ID / INSTAGRAM_ACCESS_TOKEN to .env',
+      'Submit the app for Meta App Review before posting publicly — tools/instagram_api.py is already built and waiting on this'
+    ]},
+    {name:'Facebook',  icon:'📘',        status:'roadmap',note:'Same Meta app as Instagram', steps:[
+      'No separate app needed — reuse the Meta app created for Instagram',
+      'Add the Facebook Page and Pages API permission to that same app',
+      'Generate a Page Access Token with the pages_manage_posts scope',
+      'Add FACEBOOK_PAGE_ID / FACEBOOK_ACCESS_TOKEN to .env once issued'
+    ]},
+    {name:'TikTok',    icon:'🎵',        status:'roadmap',note:'TikTok for Business API', steps:[
+      'App credentials are already configured (TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET)',
+      'Run: python tools/tiktok_oauth.py — log in as @onbrandcraftz and approve',
+      'Tokens save to .env automatically (access token 24h, refresh token 365 days)',
+      'Re-run tools/tiktok_oauth.py whenever the access token expires',
+      'Done — post via tools/tiktok_poster.py'
+    ]},
+    {name:'OneDrive',  icon:'☁️',        status:'roadmap',note:'Microsoft Graph — source file storage', steps:[
+      'Not yet built — no OneDrive code exists in the repo today',
+      'Register an app in the Azure Portal (Microsoft Entra ID → App registrations)',
+      'Grant the Microsoft Graph "Files.ReadWrite" delegated permission',
+      'Add ONEDRIVE_CLIENT_ID / ONEDRIVE_CLIENT_SECRET to .env',
+      'Build tools/onedrive_oauth.py to get access/refresh tokens (does not exist yet)',
+      'Use the Graph API /me/drive/root:/path:/content endpoint to sync source files for backup'
+    ]}
+  ].forEach(function(p){
+    var live = p.status==='live';
+    var key = p.name.toLowerCase();
+    html += '<div class="cred-row" style="flex-wrap:wrap">'+
+      '<div style="display:flex;align-items:center;gap:10px;width:100%">'+
+      '<div style="font-size:20px;flex-shrink:0;width:28px">'+p.icon+'</div>'+
+      '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+escHtml(p.name)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+escHtml(p.note)+'</div></div>'+
+      (live
+        ? '<div style="font-size:11px;font-weight:700;color:var(--green)">✅ Live</div>'
+        : '<div style="font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap" onclick="toggleCredSteps(\\''+key+'\\')">🗺️ Roadmap ›</div>')+
+      '</div>'+
+      (live ? '' :
+        '<div id="cred-steps-'+key+'" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'+
+          '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Steps to complete</div>'+
+          '<ol style="margin:0;padding-left:18px;font-size:12px;line-height:1.6">'+
+            (p.steps||[]).map(function(s){return '<li style="margin-bottom:4px">'+escHtml(s)+'</li>';}).join('')+
+          '</ol>'+
+        '</div>')+
+      '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+function toggleCredSteps(key) {
+  var panel = document.getElementById('cred-steps-'+key);
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+async function loadCredentials() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/credentials/status',{headers:{Authorization:'Bearer '+TOKEN}},15000);
+    var d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    var html = '<div class="card" style="margin-bottom:12px">';
+    if (d.etsy_live) {
+      html += '<div style="color:var(--green);font-size:15px;font-weight:700">✅ Etsy Live</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+escHtml(d.shop_name||'onbrandcraftz')+' · token valid</div>';
+    } else {
+      html += '<div style="color:var(--red);font-size:15px;font-weight:700">⚠️ Etsy Ping Failed</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+escHtml(d.etsy_live_error||'Unknown error')+' — run python tools/etsy_oauth.py</div>';
+    }
+    html += '</div><div class="section-title">API Credentials</div><div class="card">';
+    var et=d.etsy||{}, an=d.anthropic||{}, oa=d.openai||{}, sm=d.smtp||{}, pi=d.pinterest||{};
+    [
+      {label:'Etsy API Key',         ok:et.api_key,         note:'ETSY_API_KEY / ETSY_CLIENT_ID'},
+      {label:'Etsy Access Token',    ok:et.access_token,    note:'Expires every 1 hour — auto-refreshed'},
+      {label:'Etsy Refresh Token',   ok:et.refresh_token,   note:'90-day window — re-auth via etsy_oauth.py'},
+      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'""" + business_config.AGENT_NAME + """ (CEO) · Conversion Doctor · tag gen'},
+      {label:'OpenAI (DALL-E)',      ok:oa.api_key,         note:'gpt-image-1 listing photo generation'},
+      {label:'SMTP Email',           ok:sm.user,            note:'Post-purchase digital delivery'},
+      {label:'Pinterest',            ok:pi.api_key,         note:'API v5 · roadmap'}
+    ].forEach(function(c){
+      var col = c.ok ? 'var(--green)' : 'var(--red)';
+      html += '<div class="cred-row">'+
+        '<div class="cred-dot" style="background:'+col+'"></div>'+
+        '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+escHtml(c.label)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+escHtml(c.note)+'</div></div>'+
+        '<div style="font-size:12px;font-weight:700;color:'+col+'">'+escHtml(c.ok?'Set ✓':'Not set')+'</div>'+
+      '</div>';
+    });
+    html += '</div><div style="font-size:11px;color:var(--muted);text-align:center;padding:10px 0">All tokens stored in .env — never committed to git</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadCredentials()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+function _renderSecurityPosture() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  var html = '<div class="section-title">Security Posture</div><div class="card">';
+  [
+    {ok:true, label:'.env not committed to git',           note:'Credentials stay local, never in version control'},
+    {ok:true, label:'APP_SECRET_TOKEN set',                note:'Every dashboard request requires Bearer auth'},
+    {ok:true, label:'Quality gate is code',                note:'Title ≤70 · tags ≤13 · validated at stage AND approve'},
+    {ok:true, label:'Staged action queue',                 note:'Every Etsy change requires Scott one-tap approval'},
+    {ok:null, label:'Etsy MFA enabled?',                   note:'Verify in Etsy → Account Settings → Security'},
+    {ok:null, label:'Outlook 2FA active?',                 note:'Verify at account.microsoft.com → Security'},
+    {ok:null, label:'Pinterest not integrated yet',        note:'No API exposure until keys are added'},
+    {ok:false,label:'No per-IP rate limiting',             note:'Add nginx or Cloudflare for production hardening'},
+    {ok:false,label:'Token rotation reminder needed',      note:'Etsy refresh tokens expire 90 days — set a calendar alert'}
+  ].forEach(function(c){
+    var icon = c.ok===true?'✅':c.ok===false?'⚠️':'❓';
+    var col  = c.ok===true?'var(--green)':c.ok===false?'var(--red)':'var(--muted)';
+    html += '<div class="posture-row">'+
+      '<div style="font-size:16px;flex-shrink:0;width:24px">'+icon+'</div>'+
+      '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+col+'">'+escHtml(c.label)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+escHtml(c.note)+'</div></div>'+
+    '</div>';
+  });
+  html += '</div>';
+  html += '<div class="card" style="background:#1a2030;border-color:#2a3d5a;margin-top:4px">'+
+    '<div style="font-size:12px;color:#7ba0c2;line-height:1.7">'+
+    '<b style="color:var(--gold)">Re-authorize Etsy:</b> If any API call returns 401, run<br>'+
+    '<code style="font-size:11px;background:#0d1525;padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px">python tools/etsy_oauth.py</code>'+
+    '</div></div>';
+  el.innerHTML = html;
+}
+function showHubSection(section, btn) {
+  document.querySelectorAll('.hub-section-btn').forEach(function(b){b.classList.remove('active');});
+  if (btn) btn.classList.add('active');
+  if (section==='brand')         document.getElementById('hub-content').innerHTML = _renderBrandKit();
+  else if (section==='products') loadProductIndex();
+  else if (section==='files')    loadFiles();
+  else if (section==='studio')   loadStudio();
+  else if (section==='creds')    loadCredentials();
+  else if (section==='security') _renderSecurityPosture();
+  else if (section==='relay')    _renderRelayPanel();
+}
+async function _renderRelayPanel() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    var rs = await fetchWithTimeout(BASE+'/api/relay/status',{headers:{Authorization:'Bearer '+TOKEN}},15000);
+    var status = await rs.json().catch(function(){return {};});
+    if (!rs.ok) throw new Error(status.detail||'HTTP '+rs.status);
+    var rf = await fetchWithTimeout(BASE+'/api/relay/allowed-folders',{headers:{Authorization:'Bearer '+TOKEN}},15000);
+    var fd = await rf.json().catch(function(){return {};});
+    if (!rf.ok) throw new Error(fd.detail||'HTTP '+rf.status);
+    var folders = fd.folders || [];
+
+    var badge, badgeCol;
+    if (status.killed)            { badge = '⛔ Killed';   badgeCol = 'var(--red)'; }
+    else if (status.connected)    { badge = '✅ Online';   badgeCol = 'var(--green)'; }
+    else                          { badge = '⚪ Offline';  badgeCol = 'var(--muted)'; }
+
+    var html = '<div class="card" style="margin-bottom:12px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">'+
+      '<div><div style="font-size:15px;font-weight:700;color:'+badgeCol+'">'+badge+'</div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:4px">'+
+        (status.last_heartbeat ? 'Last heartbeat: '+escHtml(status.last_heartbeat) : 'No heartbeat received yet')+
+      '</div></div>'+
+      (status.killed
+        ? '<button onclick="relayResume()" style="background:var(--green);color:#0D1B2A;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Resume</button>'
+        : '<button onclick="relayKill()" style="background:var(--red);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Kill Switch</button>')+
+      '</div>';
+    if (status.killed && status.killed_at) {
+      html += '<div style="font-size:11px;color:var(--muted);margin-top:8px">Killed at '+escHtml(status.killed_at)+
+        (status.killed_by ? ' by '+escHtml(status.killed_by) : '')+'</div>';
+    }
+    html += '<div style="font-size:11px;color:var(--muted);margin-top:8px">'+
+      'Kill switch blocks every local tool — including read-only file access — until resumed.'+
+      '</div>';
+    html += '</div>';
+
+    html += '<div class="section-title">Allowed Folders</div><div class="card">';
+    if (!folders.length) {
+      html += '<div class="empty">No folders configured yet — the relay can\\'t read or write anything on Scott\\'s machine until at least one is added.</div>';
+    } else {
+      folders.forEach(function(f){
+        html += '<div class="cred-row">'+
+          '<div style="flex:1"><div style="font-size:13px;font-weight:600;word-break:break-all">'+escHtml(f.path)+'</div>'+
+          '<div style="font-size:11px;color:var(--muted)">added by '+escHtml(f.added_by||'system')+' · '+escHtml(f.added_at||'')+'</div></div>'+
+          '<button onclick="removeAllowedFolder('+f.id+')" style="background:none;color:var(--red);border:1px solid var(--red);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer">Remove</button>'+
+        '</div>';
+      });
+    }
+    html += '<div style="display:flex;gap:8px;margin-top:12px">'+
+      '<input id="relay-folder-input" type="text" placeholder="/data/workspace" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+      '<button onclick="addAllowedFolder()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Add</button>'+
+      '</div>';
+    html += '</div>';
+
+    html += '<div class="section-title">Upload File to Relay Workspace</div><div class="card">';
+    html += '<input id="relay-upload-input" type="file" onchange="_relayUploadPicked()" style="width:100%;color:var(--text);font-size:13px">'+
+      '<div style="display:flex;gap:8px;margin-top:10px">'+
+      '<input id="relay-upload-path" type="text" placeholder="/data/workspace/yourfile.pdf" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px">'+
+      '<button onclick="uploadToRelay()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer">Upload</button>'+
+      '</div>'+
+      '<div id="relay-upload-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>'+
+      '</div>';
+
+    html += '<div style="font-size:11px;color:var(--muted);text-align:center;padding:10px 0">'+
+      'The relay re-resolves every path with realpath before allowing access — this list is enforced on Scott\\'s machine, not just the server.'+
+      '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="_renderRelayPanel()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+async function relayKill() {
+  if (!confirm('Engage the kill switch? This blocks ALL local relay actions, including reads, until resumed.')) return;
+  try {
+    await fetchWithTimeout(BASE+'/api/relay/kill', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+  } catch(e) { alert('Could not engage kill switch: ' + (e.message||e)); }
+  _renderRelayPanel();
+}
+async function relayResume() {
+  try {
+    await fetchWithTimeout(BASE+'/api/relay/resume', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+  } catch(e) { alert('Could not resume: ' + (e.message||e)); }
+  _renderRelayPanel();
+}
+async function addAllowedFolder() {
+  var inp = document.getElementById('relay-folder-input');
+  var path = (inp && inp.value || '').trim();
+  if (!path) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/relay/allowed-folders', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({path}),
+    }, 15000);
+    const d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+  } catch(e) { alert('Could not add folder: ' + (e.message||e)); }
+  _renderRelayPanel();
+}
+async function removeAllowedFolder(id) {
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/relay/allowed-folders/'+id, {method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    if (!r.ok) { const d = await r.json().catch(function(){return {};}); throw new Error(d.detail||'HTTP '+r.status); }
+  } catch(e) { alert('Could not remove folder: ' + (e.message||e)); }
+  _renderRelayPanel();
+}
+function _relayUploadPicked() {
+  var input = document.getElementById('relay-upload-input');
+  var pathInput = document.getElementById('relay-upload-path');
+  var file = input && input.files[0];
+  if (file && pathInput && !pathInput.value) pathInput.value = '/data/workspace/' + file.name;
+}
+async function uploadToRelay() {
+  var input = document.getElementById('relay-upload-input');
+  var pathInput = document.getElementById('relay-upload-path');
+  var status = document.getElementById('relay-upload-status');
+  var file = input.files[0];
+  if (!file) { alert('Choose a file first'); return; }
+  var path = (pathInput.value || '').trim();
+  if (!path) { alert('Destination path is required'); return; }
+  status.textContent = 'Uploading...';
+  try {
+    var res = await fetchWithTimeout(
+      BASE+'/api/relay/upload?path=' + encodeURIComponent(path),
+      { method: 'POST', headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/octet-stream' }, body: file },
+      120000
+    );
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Upload failed');
+    status.textContent = 'Uploaded ' + data.bytes_written + ' bytes to ' + data.path;
+    input.value = '';
+  } catch (e) {
+    status.textContent = '';
+    alert(e.message || e);
+  }
+}
+function _fileUrl(f, inline){
+  return BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
+    (inline?'&inline=1':'');
+}
+function _zipEntryUrl(f, entryName){
+  return BASE+'/api/files/zip-entry?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
+    '&entry='+encodeURIComponent(entryName);
+}
+function _fileIcon(name){
+  var n=(name||'').toLowerCase();
+  if(n.match(/\\.(png|jpe?g|gif|webp|svg)$/)) return '🖼️';
+  if(n.endsWith('.pdf')) return '📕';
+  if(n.endsWith('.zip')) return '🗂️';
+  if(n.match(/\\.(txt|md)$/)) return '📃';
+  return '📄';
+}
+function toggleZip(id, btn){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var open=el.style.display==='none';
+  el.style.display=open?'':'none';
+  if(btn) btn.textContent=open?'▾':'▸';
+}
+function openFile(url){ window.open(url,'_blank'); }
+async function loadFiles() {
+  var el = document.getElementById('hub-content');
+  if (!el) return;
+  el.innerHTML = '<div class="spinner"></div>';
+  try {
+    var r = await fetchWithTimeout(BASE+'/api/files',{headers:{Authorization:'Bearer '+TOKEN}},20000);
+    var d = await r.json().catch(function(){return {};});
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    var groups = d.groups||[];
+    if (!groups.length || groups.every(function(g){return !g.files.length;})) {
+      el.innerHTML = '<div class="empty" style="line-height:1.6">'+
+        escHtml(d.empty_reason||'No files yet.')+'</div>';
+      return;
+    }
+    var html = '<div class="card" style="background:#1a2030;border-color:#2a3d5a;margin-bottom:12px">'+
+      '<div style="font-size:12px;color:#7ba0c2;line-height:1.6">The actual product files living on the server '+
+      '(data/digital_products/ and data/backups/). Tap a file to open it. Tap a ZIP to expand it and open any '+
+      'file inside directly — no unzipping needed.</div></div>';
+    var zipIdx=0;
+    groups.forEach(function(g){
+      if (!g.files.length) return;
+      html += '<div class="section-title">'+escHtml(g.label)+' ('+g.files.length+')</div><div class="card">';
+      g.files.forEach(function(f){
+        var when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        if (f.is_zip) {
+          var zid='zip-'+(zipIdx++);
+          var entries=f.entries||[];
+          html += '<div class="listing-item" onclick="toggleZip(&apos;'+zid+'&apos;,this.querySelector(&apos;.zip-caret&apos;))" style="cursor:pointer">'+
+            '<div class="thumb-placeholder">🗂️</div>'+
+            '<div class="listing-info"><div class="listing-title">'+escHtml(f.path)+'</div>'+
+            '<div class="listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+' · '+entries.length+' files inside</div></div>'+
+            '<div class="zip-caret" style="color:var(--gold);font-size:16px">▸</div>'+
+          '</div>';
+          html += '<div id="'+zid+'" style="display:none;margin:0 0 6px 14px;border-left:2px solid #2a3d5a;padding-left:8px">';
+          if(!entries.length){
+            html += '<div class="listing-meta" style="padding:8px 0">Could not read this ZIP\\'s contents.</div>';
+          }
+          entries.forEach(function(en){
+            var eurl=_zipEntryUrl(f,en.name);
+            html += '<div class="listing-item" onclick="openFile(&apos;'+eurl+'&apos;)" style="cursor:pointer;padding:7px 4px">'+
+              '<div class="thumb-placeholder" style="font-size:16px">'+_fileIcon(en.name)+'</div>'+
+              '<div class="listing-info"><div class="listing-title" style="font-size:13px">'+escHtml(en.name)+'</div>'+
+              '<div class="listing-meta">'+escHtml(en.size_human)+(en.inline?' · tap to open':' · tap to download')+'</div></div>'+
+              '<div style="color:var(--gold);font-size:15px">'+(en.inline?'↗':'⬇')+'</div>'+
+            '</div>';
+          });
+          html += '</div>';
+        } else {
+          var url=_fileUrl(f, f.inline?1:0);
+          html += '<div class="listing-item" onclick="openFile(&apos;'+url+'&apos;)" style="cursor:pointer">'+
+            '<div class="thumb-placeholder">'+_fileIcon(f.path)+'</div>'+
+            '<div class="listing-info"><div class="listing-title">'+escHtml(f.path)+'</div>'+
+            '<div class="listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+(f.inline?' · tap to open':' · tap to download')+'</div></div>'+
+            '<div style="color:var(--gold);font-size:18px">'+(f.inline?'↗':'⬇')+'</div>'+
+          '</div>';
+        }
+      });
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load files')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+function loadHub() {
+  var btns = document.querySelectorAll('.hub-section-btn');
+  btns.forEach(function(b){b.classList.remove('active');});
+  if (btns[0]) btns[0].classList.add('active');
+  document.getElementById('hub-content').innerHTML = _renderBrandKit();
+}
+
+// ── Back to top (listings) ─────────────────────────────────────────────────
+(function(){
+  const fab = document.getElementById('fab-top');
+  const screen = document.getElementById('screen-listings');
+  if (!fab || !screen) return;
+  screen.addEventListener('scroll', function(){ fab.classList.toggle('visible', _onListings && screen.scrollTop > 200); }, {passive:true});
+  fab.addEventListener('click', function(){ screen.scrollTo({top:0,behavior:'smooth'}); });
+})();
+
+// ── Batch tag fix ──────────────────────────────────────────────────────────
+async function batchStageTags(btn) {
+  if (!confirm('Scan all active listings and stage tag fixes for every listing with fewer than 13 tags?\\n\\nThis may take up to 2 minutes. You review and approve each fix in this Action Center.')) return;
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Generating…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/batch/stage-tags', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 180000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const errNote = d.errors && d.errors.length ? `\n${d.errors.length} listing(s) had tag-length issues and were skipped.` : '';
+    alert('✅ ' + d.message + errNote);
+    loadActions();
+  } catch(e) {
+    alert('Error: ' + (e.name==='AbortError'?'Request timed out — the batch is still running server-side; check the Action Center in a moment':(e.message||e)));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(()=>{}); }
+// Restore last CEO report from sessionStorage so the dashboard is instant on
+// every page reload — no spinner needed when we already have recent data.
+(function(){
+  try {
+    var _s = sessionStorage.getItem('obc_sug');
+    if (_s) {
+      var _p = JSON.parse(_s);
+      if (_p && _p.generated_at && Array.isArray(_p.suggestions) && _p.suggestions.length && !_p.error) {
+        var _age = Date.now() - new Date(_p.generated_at).getTime();
+        if (_age < 4 * 3600 * 1000) _lastSuggestions = _p; // accept up to 4h old
+      }
+    }
+  } catch(e) {}
+})();
+loadDash();
+loadTodos();
+setTimeout(loadActions, 1200);  // populate Action Center + nav badge without being asked
+setTimeout(loadConvTargets, 1800);  // Conversion Doctor worklist on the dashboard
+
+// Surface a loud warning the moment the durable /data volume isn't attached — this is
+// silent otherwise (the server just falls back to ephemeral storage) and was previously
+// only caught by manually hitting /health (diagnosed 2026-06-17, ops_runbook).
+fetch(BASE + '/health').then(r => r.json()).then(h => {
+  if (h && h.persistent === false) {
+    const b = document.getElementById('persist-banner');
+    b.style.display = 'block';
+    document.documentElement.style.setProperty(
+      '--hdr', 'calc(52px + ' + b.offsetHeight + 'px + env(safe-area-inset-top,0px))'
+    );
+  }
+}).catch(() => {});
+</script>
+</body>
+</html>""".replace("Scott", business_config.OWNER_NAME).replace("Frank", business_config.AGENT_NAME_SHORT)

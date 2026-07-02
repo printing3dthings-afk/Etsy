@@ -1961,3 +1961,28 @@ Daily listing_integrity_check found 130 FAIL / 13 WARN out of 172 listings audit
 Also: business_config.py AGENT_NAME_SHORT default changed from derived `AGENT_NAME.replace("Fucking ", "")` to hardcoded `"Frank"` — more predictable for installer deployments.
 
 Build ID: b4d0e2c-v87
+
+## 2026-07-02 · v88 · Codebase Cleanup
+
+**Motivation:** 88 releases of iterative feature work accumulated dead code, 2 silent bugs, and ~55 one-off scripts never cleaned up.
+
+**Bugs fixed:**
+- `frank_hud_mockup.py`: `#mem-canvas` page-load TypeError — element removed in v85 but JS still called `.getContext('2d')` on null, crashing ALL event listeners registered after that line (orb click and voice capture were silently broken).
+- `main.py`: `studio_generate_video` except block used undefined `logger` → `NameError` masked real video errors with a misleading traceback.
+
+**Dead code removed (all archived to data/trash/ first):**
+- `_WEB_UI` old mobile PWA dashboard (~1874 lines) + `_SW_JS`, `_MANIFEST`, and their routes — superseded by `/frank` HUD.
+- `_auth()` dead function + `HTTPBearer` security imports from main.py.
+- `/api/studio/diagnose` Railway debug endpoint (v76 scaffolding).
+- Revenue calculator triplicated in 3 places → one `_order_revenue()` helper.
+- `datetime.utcnow()` → `datetime.now(timezone.utc)`.
+- `/api/ping` was making unauthenticated Etsy calls — replaced with pure internal response.
+- 8 dead EtsyAPIClient methods: `get_conversation`, `update_listing_inventory`, `delete_listing_file`, `sync_orders_from_etsy`, `create_review_response`, `get_shipping_profiles`, `create_shipping_profile`, `get_client()`.
+- `drawMem()`, `updateMemoryWidget()`, `mc`/`mctx` dead JS + 12 dead CSS rules from `frank_hud_mockup.py`.
+- Dead JS functions: `isControlCenterOpen`, `openControlCenter`.
+- Removed unused `app_token` parameter from `render_frank_hud()`.
+- Switched HUD template to sentinel tokens (`%%AGENT_NAME%%`, `%%AGENT_SHORT%%`, `%%OWNER%%`) replacing fragile literal-string substitution.
+- 55 one-off scripts from `tools/` archived (IDs 20260702-033 → 20260702-087). Recoverable 30 days via `python tools/trash.py --restore <id>`.
+- `tools/agents/ceo_agent.py` archived (superseded by HUD chat; ID 20260702-087).
+
+**Build ID:** b4d0e2c-v88

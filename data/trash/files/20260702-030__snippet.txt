@@ -1,0 +1,12 @@
+    def create_review_response(self, review_id: int, response_text: str) -> dict:
+        """DEPRECATED — Etsy v3 has no review-response endpoint or feedback_w scope.
+
+        Confirmed 2026-06-09: the OAuth server rejects feedback_w as invalid_scope
+        and this POST path returns 404. Review responses must be posted manually
+        in Shop Manager or the Etsy Seller app.
+        """
+        raise EtsyAPIError(
+            0,
+            "Review responses cannot be posted via the Etsy v3 API (no feedback_w "
+            "scope exists). Respond manually: Etsy Seller app → Reviews → Respond.",
+        )

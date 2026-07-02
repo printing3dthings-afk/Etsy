@@ -1,0 +1,3 @@
+@app.get("/manifest.webmanifest")
+def manifest():
+    return JSONResponse(_MANIFEST, media_type="application/manifest+json")
