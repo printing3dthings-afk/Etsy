@@ -2205,3 +2205,25 @@ guards + default confirmed). Build b4d0e2c-v95.
   (fresh Railway key) in Railway, redeploy. Optional IMAGE_MODEL to try gemini-3.1-flash-image.
 - For text-in-image covers/badges: get an Ideogram key, set IDEOGRAM_API_KEY, use engine
   "ideogram" (I'll prove it once the key exists).
+
+## 2026-07-02 · v96 · Upgrade Frank's brain to Sonnet 5 (with safe fallback)
+
+**Change:** MODEL_PRIMARY default flipped claude-sonnet-4-6 → claude-sonnet-5 in
+business_config.py. Takes effect on next Railway deploy of this branch.
+
+**Safety net (so this can't hard-break Frank):** _anthropic_create() in main.py now catches
+NotFoundError/PermissionDeniedError and, if the requested model is unavailable to the account,
+retries ONCE on _MODEL_FALLBACK="claude-sonnet-4-6" and logs it. Verified with a mock (sonnet-5
+unavailable → auto-retry on sonnet-4-6, no crash). So if the Anthropic account lacks Sonnet 5
+access, Frank keeps running on 4.6 and logs the fallback instead of erroring.
+
+**Honest caveat:** couldn't verify claude-sonnet-5 account access from this container (no
+ANTHROPIC key here — only in Railway). The fallback makes that safe. Instant manual rollback:
+set MODEL_PRIMARY=claude-sonnet-4-6 in Railway.
+
+**Build:** b4d0e2c-v96.
+
+### NOTE FOR SCOTT
+After the next deploy, if Frank's logs show "[anthropic] model 'claude-sonnet-5' unavailable
+… falling back to 'claude-sonnet-4-6'", your account isn't enabled for Sonnet 5 — request
+access at console.anthropic.com, or leave it (it runs fine on 4.6).

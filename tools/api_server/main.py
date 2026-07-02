@@ -73,13 +73,24 @@ from resilience import (  # noqa: E402
 _anthropic_breaker = CircuitBreaker("anthropic_api", db_module=db)
 
 
+# Known-good fallback brain. If MODEL_PRIMARY (currently claude-sonnet-5) isn't
+# available to this deploy's Anthropic account, _anthropic_create() drops to this
+# once — so promoting the primary model can never hard-break Frank; it just logs
+# and degrades gracefully. Keep this pointed at a model every account can reach.
+_MODEL_FALLBACK = "claude-sonnet-4-6"
+
+
 def _anthropic_create(client: "anthropic.Anthropic", **kwargs):
     """Routes an Anthropic messages.create() call through the shared circuit
     breaker so a real outage shows up in /api/system/dependencies instead of
     always reporting closed/healthy. Trips only on genuine transient infra
     errors (connection failure, rate limit, 5xx) -- a 400/401/403 means
     Anthropic responded and our request or key was the problem, not a
-    dependency-health signal."""
+    dependency-health signal.
+
+    Also self-heals a model-access gap: if the requested model is unavailable to
+    this account (NotFound/PermissionDenied), it retries once with _MODEL_FALLBACK
+    and logs it, rather than letting a model swap take the agent down."""
     if not _anthropic_breaker.allow_request():
         raise CircuitBreakerOpenError(
             "circuit breaker 'anthropic_api' is open -- skipping call until cooldown elapses"
@@ -88,6 +99,18 @@ def _anthropic_create(client: "anthropic.Anthropic", **kwargs):
         result = client.messages.create(**kwargs)
     except (anthropic.APIConnectionError, anthropic.RateLimitError, anthropic.InternalServerError):
         _anthropic_breaker.record_failure()
+        raise
+    except (anthropic.NotFoundError, anthropic.PermissionDeniedError) as exc:
+        # Requested model isn't available to this account. Fall back once so a
+        # model-access gap (e.g. MODEL_PRIMARY not enabled) can't take Frank down.
+        req_model = kwargs.get("model")
+        if req_model and req_model != _MODEL_FALLBACK:
+            print(f"[anthropic] model {req_model!r} unavailable ({type(exc).__name__}); "
+                  f"falling back to {_MODEL_FALLBACK!r}", flush=True)
+            kwargs["model"] = _MODEL_FALLBACK
+            result = client.messages.create(**kwargs)
+            _anthropic_breaker.record_success()
+            return result
         raise
     else:
         _anthropic_breaker.record_success()
@@ -308,7 +331,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v95"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v96"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""

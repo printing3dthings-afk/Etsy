@@ -28,12 +28,11 @@ BUSINESS_DESCRIPTION = os.getenv(
 # OpenAI is used ONLY for Whisper STT + TTS (see /api/voice in main.py) — it is
 # NOT a reasoning brain, so there is no second brain to consolidate away.
 #
-# Defaults are the CURRENTLY-PROVEN production models. MODEL_PRIMARY defaults to
-# the model Frank already runs on (claude-sonnet-4-6). To promote the primary
-# brain to Sonnet 5 once the Anthropic account is confirmed to have access, set
-# MODEL_PRIMARY=claude-sonnet-5 in the deploy env — we deliberately do NOT hardcode
-# an unverified model as the default, since a missing-access model would break the
-# live agent. Same pattern lets any deployment pick its own tier.
-MODEL_PRIMARY = os.getenv("MODEL_PRIMARY", "claude-sonnet-4-6")          # main agent + routine drafting
+# MODEL_PRIMARY is Frank's brain. Upgraded 2026-07-02 to Sonnet 5 (newer, stronger
+# reasoning/tool-use at comparable price). If a deployment's Anthropic account does
+# NOT have claude-sonnet-5 access, override back with MODEL_PRIMARY=claude-sonnet-4-6
+# in the env — instant rollback, no code change. Same pattern lets any deployment
+# pick its own tier.
+MODEL_PRIMARY = os.getenv("MODEL_PRIMARY", "claude-sonnet-5")            # main agent + routine drafting
 MODEL_CHEAP   = os.getenv("MODEL_CHEAP",   "claude-haiku-4-5-20251001")  # cheap/simple/high-volume tasks
 MODEL_HARD    = os.getenv("MODEL_HARD",    "claude-opus-4-8")            # reserved for hard reasoning (opt-in)
