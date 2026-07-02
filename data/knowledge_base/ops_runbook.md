@@ -2153,3 +2153,22 @@ doc-based video.save(). Default model confirmed correct: veo-3.1-fast-generate-p
    the Sora proof) before flipping Veo on in production.
 
 **Build:** b4d0e2c-v94.
+
+## 2026-07-02 · v94 (proof) · Veo 3.1 PROVEN end-to-end ✅
+
+After billing was enabled, ran a real Veo generation on a real product image:
+- model veo-3.1-fast-generate-preview, aspect 9:16, job completed in 128s
+- output: valid MP4 (ftyp/mdat/moov), 192 frames @ 720x1280 portrait (~24fps), WITH native
+  audio track — decoded via imageio to confirm. MP4 sent to Scott.
+
+**Sora → Veo migration is functionally complete and verified.** ai_video.py "veo" engine works.
+
+**Production rollout (safe default preserved):** code default engine is still "sora" — Veo
+activates only when AI_VIDEO_ENGINE=veo. So production keeps using Sora until Scott sets the
+Railway env vars below. Flip whenever ready (and before Sora's Sept 24 shutdown).
+
+### REMAINING SCOTT ACTIONS
+1. REVOKE the Gemini key pasted in chat (exposed). Create a fresh one.
+2. In Railway → Variables: set GEMINI_API_KEY=<fresh key> and AI_VIDEO_ENGINE=veo, redeploy.
+   That flips the live Studio video engine to Veo. (Optional: VEO_MODEL to pick fast/quality.)
+3. The container's throwaway .env key will die on recycle; only the Railway var matters for prod.
