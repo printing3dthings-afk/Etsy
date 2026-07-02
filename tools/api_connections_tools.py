@@ -394,7 +394,14 @@ def _get_integration_guide(api_name: str) -> str:
                 "callouts, how-to steps, app compatibility labels) that CLAUDE.md otherwise calls "
                 "for 'added in Canva post' on photo slots 2, 6, 7, 9, 10. Used by the Brand Design Agent."
             ),
-            "priority": "MEDIUM — set up when ready to automate listing graphic text overlays",
+            "deprecated": (
+                "DEPRECATED (2026-07 API review) — do NOT wire this up. Everything the pipeline "
+                "needs from Canva (text overlays, callouts, compositing) is already done for free "
+                "with PIL/Pillow, which the codebase uses heavily. The Canva Connect API also pulls "
+                "a paid Canva Pro subscription into the loop for no automation benefit. Kept only as "
+                "dormant scaffolding for a human doing hand-design; the automated path stays on PIL."
+            ),
+            "priority": "SKIP — superseded by PIL; only connect if a human wants Canva's editor",
             "env_var": "CANVA_CLIENT_ID + CANVA_CLIENT_SECRET + CANVA_ACCESS_TOKEN + CANVA_REFRESH_TOKEN",
             "how_to_get": [
                 "1. Go to https://www.canva.com/developers/integrations → Create an Integration",

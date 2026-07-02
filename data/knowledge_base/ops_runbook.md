@@ -2102,3 +2102,26 @@ the Sora fix. Veo model id / config field names must be confirmed against the li
 1. Get a Google Gemini API key (Veo 3.1 access), set `GEMINI_API_KEY` on Railway.
 2. Set `AI_VIDEO_ENGINE=veo` (and optionally `VEO_MODEL`).
 3. Have Claude run one real generation + verify the mp4 before relying on it.
+
+## 2026-07-02 · v93 · Drop Canva (dormant) + split marketing email to Resend
+
+**Canva:** confirmed FULLY DORMANT — no Python module imports the canva client at runtime
+(only reportlab's unrelated `pdfgen.canvas`); no keys set. Nothing to pay for or maintain.
+Did NOT delete files (setup_wizard runs canva_oauth.py as an optional subprocess; deleting
+would break that optional path). Instead marked Canva DEPRECATED/SKIP in the connections
+guide (api_connections_tools.py) so no deploy is steered to wire up a paid tool PIL replaces.
+
+**Email:** `email_marketing_tools._send_newsletter` now prefers Resend for marketing/bulk
+(better deliverability; Outlook/Gmail SMTP throttle + hurt reputation on bulk). Added
+`_send_via_resend` (dependency-free, urllib → api.resend.com). Transport selection: Resend
+when `RESEND_API_KEY` set, else SMTP fallback (unchanged). Transactional file delivery
+(digital_delivery_tools.py) stays on SMTP — untouched. SES documented as the cheaper at-scale
+alternative (needs boto3/SigV4) in a code comment. Verified all 3 branches (resend / smtp
+fallback / clear error when neither configured).
+
+**Build:** b4d0e2c-v93.
+
+### ACTION FOR SCOTT (optional, only if doing email marketing)
+Sign up at resend.com (free ≤3k/mo), verify a sending domain, set `RESEND_API_KEY` and
+`RESEND_FROM=you@yourverifieddomain` on Railway. Newsletters then route via Resend
+automatically; without it they keep using SMTP.

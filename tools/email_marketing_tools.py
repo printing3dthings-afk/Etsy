@@ -291,18 +291,50 @@ def _draft_newsletter(data: dict, store: DataStore) -> str:
     }, indent=2)
 
 
+def _send_via_resend(subscribers: list, draft: dict, sender_name: str) -> tuple:
+    """Send the newsletter through Resend's HTTP API (no extra dependency — uses
+    urllib). Marketing/bulk email should NOT go through Outlook/Gmail SMTP: those
+    throttle and hurt sender reputation. Resend (free ≤3k/mo) handles SPF/DKIM,
+    bounces, and unsubscribes far better. Active only when RESEND_API_KEY is set.
+
+    (SES is the cheaper option at scale, $0.10/1k, but needs AWS SigV4/boto3;
+    Resend is the zero-dependency free-tier default. Add an SES branch here if the
+    monthly volume ever outgrows Resend's free tier.)
+    """
+    import urllib.request
+    api_key = os.getenv("RESEND_API_KEY", "")
+    from_email = os.getenv("RESEND_FROM", "") or os.getenv("SMTP_USER", "")
+    from_hdr = f"{sender_name} <{from_email}>"
+    sent = failed = 0
+    for sub in subscribers:
+        payload = json.dumps({
+            "from": from_hdr,
+            "to": [sub["email"]],
+            "subject": draft["subject"],
+            "html": draft["html_body"],
+        }).encode()
+        req = urllib.request.Request(
+            "https://api.resend.com/emails", data=payload, method="POST",
+            headers={"Authorization": f"Bearer {api_key}",
+                     "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                if resp.status in (200, 201):
+                    sent += 1
+                else:
+                    failed += 1
+                    print(f"  Resend non-2xx for {sub.get('email','?')}: {resp.status}")
+        except Exception as _e:
+            failed += 1
+            print(f"  Resend failed for {sub.get('email', '?')}: {_e}")
+    return sent, failed
+
+
 def _send_newsletter(data: dict, store: DataStore) -> str:
     if not data.get("confirm"):
         return json.dumps({"error": "Set confirm=true to send the newsletter."})
 
-    smtp_user = os.getenv("SMTP_USER", "")
-    smtp_password = os.getenv("SMTP_PASSWORD", "")
-    smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
     sender_name = os.getenv("SENDER_NAME", "OnBrandCraftz")
-
-    if not smtp_user or not smtp_password:
-        return json.dumps({"error": "SMTP_USER and SMTP_PASSWORD must be set in .env to send newsletters."})
 
     drafts = store.get("newsletter_drafts", default=[])
     draft = next((d for d in drafts if d["id"] == data["draft_id"]), None)
@@ -313,27 +345,46 @@ def _send_newsletter(data: dict, store: DataStore) -> str:
     if not subscribers:
         return json.dumps({"warning": "No subscribers to send to. Add subscribers first."})
 
-    sent = 0
-    failed = 0
-    try:
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
-            server.ehlo()
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            for sub in subscribers:
-                try:
-                    msg = MIMEMultipart("alternative")
-                    msg["From"] = f"{sender_name} <{smtp_user}>"
-                    msg["To"] = sub["email"]
-                    msg["Subject"] = draft["subject"]
-                    msg.attach(MIMEText(draft["html_body"], "html"))
-                    server.send_message(msg)
-                    sent += 1
-                except Exception as _e:
-                    failed += 1
-                    print(f"  Failed to send to {sub.get('email', '?')}: {_e}")
-    except Exception as exc:
-        return json.dumps({"error": f"SMTP connection failed: {exc}"})
+    # Transport selection: prefer Resend for marketing/bulk (deliverability); fall
+    # back to SMTP when Resend isn't configured. Transactional file delivery stays
+    # on SMTP (see digital_delivery_tools.py) — this only affects newsletters.
+    use_resend = bool(os.getenv("RESEND_API_KEY"))
+    if use_resend:
+        if not (os.getenv("RESEND_FROM") or os.getenv("SMTP_USER")):
+            return json.dumps({"error": "RESEND_API_KEY is set but no RESEND_FROM "
+                                        "(a verified sender) or SMTP_USER to use as From."})
+        sent, failed = _send_via_resend(subscribers, draft, sender_name)
+        transport = "resend"
+    else:
+        smtp_user = os.getenv("SMTP_USER", "")
+        smtp_password = os.getenv("SMTP_PASSWORD", "")
+        smtp_host = os.getenv("SMTP_HOST", "smtp.gmail.com")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        if not smtp_user or not smtp_password:
+            return json.dumps({"error": "Set RESEND_API_KEY (recommended for marketing) "
+                                        "or SMTP_USER+SMTP_PASSWORD to send newsletters."})
+        sent = 0
+        failed = 0
+        try:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
+                server.ehlo()
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                for sub in subscribers:
+                    try:
+                        msg = MIMEMultipart("alternative")
+                        msg["From"] = f"{sender_name} <{smtp_user}>"
+                        msg["To"] = sub["email"]
+                        msg["Subject"] = draft["subject"]
+                        msg.attach(MIMEText(draft["html_body"], "html"))
+                        server.send_message(msg)
+                        sent += 1
+                    except Exception as _e:
+                        failed += 1
+                        print(f"  Failed to send to {sub.get('email', '?')}: {_e}")
+        except Exception as exc:
+            return json.dumps({"error": f"SMTP connection failed: {exc}"})
+        transport = "smtp"
 
     draft["status"] = "sent"
     draft["sent_at"] = str(date.today())
@@ -347,6 +398,7 @@ def _send_newsletter(data: dict, store: DataStore) -> str:
         "draft_id": data["draft_id"],
         "sent_to": sent,
         "failed": failed,
+        "transport": transport,
         "subject": draft["subject"],
     }, indent=2)
 
