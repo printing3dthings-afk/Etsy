@@ -309,7 +309,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v85"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v86"  # bump on each deploy to confirm Railway is using latest code
 
 print(f"[startup] BUILD={_BUILD_ID} PORT={os.getenv('PORT','?')} TOKEN_SET={bool(os.getenv('APP_SECRET_TOKEN'))} ETSY_TOKEN={bool(os.getenv('ETSY_ACCESS_TOKEN'))} ETSY_REFRESH={bool(os.getenv('ETSY_REFRESH_TOKEN'))} ANTHROPIC={bool(ANTHROPIC_KEY)} OPENAI={bool(OPENAI_KEY)}", flush=True)
 
@@ -5145,6 +5145,21 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
 
         o7 = [o for o in orders if o.get("create_timestamp", 0) > now - 7 * day]
         o30 = [o for o in orders if o.get("create_timestamp", 0) > now - 30 * day]
+        today_start = now - (now % day)  # midnight UTC
+        o_today = [o for o in orders if o.get("create_timestamp", 0) > today_start]
+        recent = sorted(orders, key=lambda o: o.get("create_timestamp", 0), reverse=True)[:5]
+        recent_sales = []
+        for o in recent:
+            gt = o.get("grandtotal", {})
+            divisor = gt.get("divisor", 100) or 100
+            amount = round(gt.get("amount", 0) / divisor, 2)
+            txns = o.get("transactions", [])
+            title = txns[0].get("title", "") if txns else ""
+            recent_sales.append({
+                "amount": amount,
+                "ts": o.get("create_timestamp", 0),
+                "title": title[:40] if title else f"Order #{o.get('receipt_id', '?')}",
+            })
         out["orders"] = {
             "last_7_days": len(o7),
             "last_30_days": len(o30),
@@ -5152,6 +5167,9 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
             "revenue_30d": _revenue(o30),
             "all_time_count": len(orders),
             "all_time_revenue": _revenue(orders),
+            "today_count": len(o_today),
+            "today_revenue": _revenue(o_today),
+            "recent_sales": recent_sales,
         }
 
     if isinstance(reviews_r, Exception):
@@ -5313,6 +5331,134 @@ async def get_metrics(_token: str = Depends(_auth_session_or_bearer)):
     out = _build_metrics(orders_r, reviews_r, shop_r)
     _cache_set("metrics", out)
     return out
+
+
+@app.get("/api/inbox")
+async def get_inbox(_token: str = Depends(_auth_session_or_bearer)):
+    """Etsy inbox: unread messages + recent reviews. Cached 90s."""
+    cached = _cache_get("inbox", ttl=90)
+    if cached is not None:
+        return cached
+
+    def _fetch():
+        client = EtsyAPIClient()
+        now = int(time.time())
+        msgs_r = reviews_r = None
+        try:
+            msgs_r = client.get_messages(limit=25)
+        except Exception as exc:
+            msgs_r = exc
+        try:
+            reviews_r = client.get_reviews(limit=3)
+        except Exception as exc:
+            reviews_r = exc
+
+        out: dict = {"unread_count": 0, "oldest_unread_hours": None, "recent_reviews": []}
+
+        if not isinstance(msgs_r, Exception):
+            convs = msgs_r.get("results", [])
+            unread = [c for c in convs if c.get("unread_count", 0) > 0 or c.get("unread", False)]
+            out["unread_count"] = len(unread)
+            if unread:
+                timestamps = [c.get("last_update_timestamp") or c.get("create_timestamp", now) for c in unread]
+                oldest_ts = min(t for t in timestamps if t)
+                out["oldest_unread_hours"] = round((now - oldest_ts) / 3600, 1)
+        else:
+            out["messages_error"] = str(msgs_r)
+
+        if not isinstance(reviews_r, Exception):
+            for r in reviews_r.get("results", []):
+                out["recent_reviews"].append({
+                    "rating": r.get("rating", 0),
+                    "text": (r.get("review") or "")[:120],
+                    "date": r.get("create_timestamp", 0),
+                })
+        else:
+            out["reviews_error"] = str(reviews_r)
+
+        return out
+
+    try:
+        result = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout")
+    _cache_set("inbox", result)
+    return result
+
+
+@app.get("/api/star-seller")
+async def get_star_seller(_token: str = Depends(_auth_session_or_bearer)):
+    """Star Seller progress metrics. Cached 120s."""
+    cached = _cache_get("star_seller", ttl=120)
+    if cached is not None:
+        return cached
+
+    def _fetch():
+        client = EtsyAPIClient()
+        now = int(time.time())
+        ninety_days_ago = now - (90 * 86_400)
+
+        orders_r = reviews_r = msgs_r = None
+        try:
+            orders_r = client.get_orders(limit=100)
+        except Exception as exc:
+            orders_r = exc
+        try:
+            reviews_r = client.get_reviews(limit=50)
+        except Exception as exc:
+            reviews_r = exc
+        try:
+            msgs_r = client.get_messages(limit=25)
+        except Exception as exc:
+            msgs_r = exc
+
+        out: dict = {"orders_90d": 0, "revenue_90d": 0.0, "avg_rating": 0.0,
+                     "review_count": 0, "unread_messages": 0, "on_time_pct": 100}
+
+        if not isinstance(orders_r, Exception):
+            orders = orders_r.get("results", [])
+            o90 = [o for o in orders if o.get("create_timestamp", 0) > ninety_days_ago]
+
+            def _rev(lst):
+                total = 0.0
+                for o in lst:
+                    gt = o.get("grandtotal", {})
+                    if isinstance(gt, dict):
+                        divisor = gt.get("divisor", 100) or 100
+                        total += gt.get("amount", 0) / divisor
+                return round(total, 2)
+
+            out["orders_90d"] = len(o90)
+            out["revenue_90d"] = _rev(o90)
+
+        if not isinstance(reviews_r, Exception):
+            reviews = reviews_r.get("results", [])
+            ratings = [r["rating"] for r in reviews if r.get("rating")]
+            out["avg_rating"] = round(sum(ratings) / len(ratings), 2) if ratings else 0.0
+            out["review_count"] = len(ratings)
+
+        if not isinstance(msgs_r, Exception):
+            convs = msgs_r.get("results", [])
+            out["unread_messages"] = sum(1 for c in convs if c.get("unread_count", 0) > 0 or c.get("unread", False))
+
+        orders_ok = out["orders_90d"] >= 5
+        revenue_ok = out["revenue_90d"] >= 300.0
+        msgs_ok = out["unread_messages"] == 0
+        if orders_ok and revenue_ok and msgs_ok:
+            out["status"] = "on_track"
+        elif not orders_ok or not revenue_ok:
+            out["status"] = "building"
+        else:
+            out["status"] = "at_risk"
+
+        return out
+
+    try:
+        result = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Etsy API timeout")
+    _cache_set("star_seller", result)
+    return result
 
 
 @app.get("/api/listings")

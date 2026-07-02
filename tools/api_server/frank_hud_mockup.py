@@ -243,6 +243,15 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .agent-tile.idle .stat{color:var(--muted)}
 .agent-tile.idle .stat .d{background:var(--muted)}
 
+.inbox-msg-bar{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.inbox-unread-badge{font-size:18px;font-weight:700;color:var(--cyan2);min-width:28px}
+.inbox-unread-badge.urgent{color:var(--red)}
+.inbox-msg-meta{font-size:11px;color:var(--muted);line-height:1.5}
+.inbox-review{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.inbox-review:last-child{border-bottom:none}
+.inbox-review-stars{color:var(--gold);letter-spacing:1px;font-size:13px}
+.inbox-review-text{color:var(--muted);margin-top:2px;line-height:1.4}
+
 .tl-item{display:flex;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
 .tl-item:last-child{border-bottom:none}
 .tl-time{color:var(--cyan2);font-size:9.5px;width:48px;flex-shrink:0;line-height:1.3}
@@ -312,6 +321,19 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .mem-stat .n{font-size:14px;font-weight:700;color:var(--cyan2)}
 .mem-stat .l{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
 
+.ss-status{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:12px;display:inline-block;margin-bottom:8px}
+.ss-status.on_track{background:rgba(42,170,100,.18);color:var(--green)}
+.ss-status.building{background:rgba(196,160,53,.18);color:var(--gold)}
+.ss-status.at_risk{background:rgba(200,60,60,.18);color:var(--red)}
+.ss-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.ss-row:last-child{border-bottom:none}
+.ss-label{color:var(--muted)}
+.ss-val{font-weight:600;color:var(--text)}
+.ss-bar-wrap{height:4px;background:var(--panel2);border-radius:2px;flex:1;margin:0 8px;min-width:40px}
+.ss-bar{height:4px;border-radius:2px;background:var(--green);transition:width .4s}
+.ss-bar.warn{background:var(--amber)}
+.ss-bar.bad{background:var(--red)}
+
 .shop-spark-row{display:flex;gap:8px;flex:1;min-height:0;overflow-y:auto;flex-wrap:wrap}
 .shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
   padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-height:0;overflow:hidden}
@@ -326,6 +348,11 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
   display:flex;flex-direction:column;gap:3px;justify-content:center}
 .shop-chip .nm{font-size:9px;color:var(--muted);letter-spacing:.3px}
 .shop-chip .v{font-size:12.5px;font-weight:700;color:var(--text)}
+
+.recent-sale-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.recent-sale-row:last-child{border-bottom:none}
+.recent-sale-amt{color:var(--green);font-weight:600}
+.recent-sale-date{color:var(--muted);font-size:10px}
 
 /* Studio tab placeholder */
 .studio-grid{display:flex;gap:14px;height:100%}
@@ -693,34 +720,45 @@ video{width:100%;border-radius:10px;background:#000;display:block}
       <!-- RIGHT: business data + activity -->
       <div class="col-right">
         <div class="panel brk col-shop">
-          <div class="panel-title">Shop Performance <span class="src">/api/analytics + /api/metrics</span></div>
+          <div class="panel-title" style="cursor:pointer;user-select:none" onclick="toggleShopExpand()" id="shop-perf-title">
+            Shop Performance
+            <span style="font-size:10px;opacity:.5;margin-left:4px" id="shop-expand-arrow">▼ expand</span>
+            <span class="src">/api/analytics + /api/metrics</span>
+          </div>
           <div class="shop-spark-row" id="shop-spark-row">
-            <div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div><div class="ssc-val">—</div></div>
-            <div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div><div class="ssc-val">—</div></div>
+            <div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div><div class="ssc-val" id="shop-rev-30d">—</div></div>
+            <div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div><div class="ssc-val" id="shop-ord-30d">—</div></div>
           </div>
           <div class="shop-chip-row" id="shop-chip-row">
-            <div class="shop-chip"><div class="nm">Listings</div><div class="v">—</div></div>
-            <div class="shop-chip"><div class="nm">Total Sales</div><div class="v">—</div></div>
-            <div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">—</div></div>
+            <div class="shop-chip"><div class="nm">Listings</div><div class="v" id="shop-listings">—</div></div>
+            <div class="shop-chip"><div class="nm">Total Sales</div><div class="v" id="shop-total-sales">—</div></div>
+            <div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v" id="shop-alltime-rev">—</div></div>
+          </div>
+          <div id="shop-expanded" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+              <div class="shop-chip"><div class="nm">Revenue · 7d</div><div class="v" id="shop-rev-7d">—</div></div>
+              <div class="shop-chip"><div class="nm">Orders · 7d</div><div class="v" id="shop-ord-7d">—</div></div>
+              <div class="shop-chip"><div class="nm">Revenue · Today</div><div class="v" id="shop-rev-today">—</div></div>
+              <div class="shop-chip"><div class="nm">Orders · Today</div><div class="v" id="shop-ord-today">—</div></div>
+              <div class="shop-chip"><div class="nm">Avg Order Value</div><div class="v" id="shop-aov">—</div></div>
+              <div class="shop-chip"><div class="nm">Active Listings</div><div class="v" id="shop-active">—</div></div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Recent Sales</div>
+            <div id="shop-recent-sales" style="font-size:11px">—</div>
           </div>
         </div>
 
         <div class="panel brk col-meminsights">
-          <div class="panel-title">Memory Insights <span class="lnk" style="cursor:pointer" onclick="showScreen('memory')">View Memory Map ›</span></div>
-          <div class="mem-row">
-            <div class="mem-canvas-wrap"><canvas id="mem-canvas" width="220" height="90" style="width:100%;height:100%"></canvas></div>
-            <div class="mem-stats">
-              <div class="mem-stat"><div class="n" id="mem-stat-memories">—</div><div class="l">MEMORIES</div></div>
-              <div class="mem-stat"><div class="n" id="mem-stat-turns">—</div><div class="l">SESSION TURNS</div></div>
-              <div class="mem-stat"><div class="n">—</div><div class="l">TOOL CALLS</div></div>
-            </div>
+          <div class="panel-title">Star Seller Status <span class="src">/api/star-seller</span></div>
+          <div id="star-seller-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
           </div>
         </div>
 
         <div class="panel brk col-agents">
-          <div class="panel-title">Active Agents <span class="lnk" onclick="showScreen('agents')" style="cursor:pointer">View All ›</span></div>
-          <div class="agents-grid" id="cmd-agents-grid">
-            <div class="agent-tile idle"><div class="top"><div class="ic">⋯</div><div class="name">Loading…</div></div><div class="stat"><span class="d"></span>—</div></div>
+          <div class="panel-title">Inbox &amp; Reviews <span class="src">/api/inbox</span></div>
+          <div id="inbox-body">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
           </div>
         </div>
 
@@ -1905,20 +1943,39 @@ function _renderShopPerf(a, m, sparkEl, chipEl, offlineNote){
   if(sparkEl){
     sparkEl.innerHTML = (offlineNote||'') +
       '<div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div>'+
-        '<div class="ssc-valrow"><div class="ssc-val">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
+        '<div class="ssc-valrow"><div class="ssc-val" id="shop-rev-30d">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
         '<div class="ssc-delta">'+_miniDelta(del.revenue_30d,true)+'</div></div>'+
         '<div class="ssc-spark">'+_miniSpark(tr.revenue_30d,'var(--gold)')+'</div></div>'+
       '<div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div>'+
-        '<div class="ssc-valrow"><div class="ssc-val">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
+        '<div class="ssc-valrow"><div class="ssc-val" id="shop-ord-30d">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
         '<div class="ssc-delta">'+_miniDelta(del.orders_30d,false)+'</div></div>'+
         '<div class="ssc-spark">'+_miniSpark(tr.orders_30d,'var(--cyan2)')+'</div></div>';
   }
   const allTimeRev = (m.orders && m.orders.all_time_revenue!=null) ? m.orders.all_time_revenue : null;
   if(chipEl){
     chipEl.innerHTML =
-      '<div class="shop-chip"><div class="nm">Listings</div><div class="v">'+(lt.active_listings!=null?lt.active_listings:'—')+'</div></div>'+
-      '<div class="shop-chip"><div class="nm">Total Sales</div><div class="v">'+(lt.total_sales!=null?lt.total_sales:'—')+'</div></div>'+
-      '<div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v">'+(allTimeRev!=null?'$'+allTimeRev.toFixed(2):'—')+'</div></div>';
+      '<div class="shop-chip"><div class="nm">Listings</div><div class="v" id="shop-listings">'+(lt.active_listings!=null?lt.active_listings:'—')+'</div></div>'+
+      '<div class="shop-chip"><div class="nm">Total Sales</div><div class="v" id="shop-total-sales">'+(lt.total_sales!=null?lt.total_sales:'—')+'</div></div>'+
+      '<div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v" id="shop-alltime-rev">'+(allTimeRev!=null?'$'+allTimeRev.toFixed(2):'—')+'</div></div>';
+  }
+  // Populate expanded panel IDs
+  const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  const o = m.orders || {};
+  setEl('shop-rev-7d', '$' + (o.revenue_7d||0).toFixed(2));
+  setEl('shop-ord-7d', (o.last_7_days||0) + ' orders');
+  setEl('shop-rev-today', '$' + (o.today_revenue||0).toFixed(2));
+  setEl('shop-ord-today', (o.today_count||0) + ' orders');
+  const aov = (o.last_30_days||0) > 0 ? ('$'+((o.revenue_30d||0)/(o.last_30_days||1)).toFixed(2)) : '—';
+  setEl('shop-aov', aov);
+  setEl('shop-active', (m.shop||{}).active_listing_count||'—');
+  const salesEl = document.getElementById('shop-recent-sales');
+  if(salesEl && o.recent_sales && o.recent_sales.length){
+    salesEl.innerHTML = o.recent_sales.map(s=>{
+      const dt = s.ts ? new Date(s.ts*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      return '<div class="recent-sale-row"><span>'+escHtml(s.title)+'</span><span><span class="recent-sale-amt">$'+s.amount.toFixed(2)+'</span> <span class="recent-sale-date">'+dt+'</span></span></div>';
+    }).join('');
+  } else if(salesEl){
+    salesEl.textContent = 'No recent sales';
   }
 }
 async function loadShopPerf(){
@@ -1940,6 +1997,96 @@ async function loadShopPerf(){
     } else if(sparkEl){
       sparkEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:4px">Shop data offline</div>';
     }
+  }
+}
+
+let _shopExpanded = false;
+function toggleShopExpand(){
+  _shopExpanded = !_shopExpanded;
+  const exp = document.getElementById('shop-expanded');
+  const arrow = document.getElementById('shop-expand-arrow');
+  if(exp) exp.style.display = _shopExpanded ? 'block' : 'none';
+  if(arrow) arrow.textContent = _shopExpanded ? '▲ collapse' : '▼ expand';
+}
+
+async function loadStarSeller(){
+  const el = document.getElementById('star-seller-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/star-seller');
+    const d = await r.json();
+    const statusLabel = d.status==='on_track' ? 'ON TRACK' : d.status==='at_risk' ? 'AT RISK' : 'BUILDING';
+    const statusClass = d.status||'building';
+    const ordPct = Math.min(100, ((d.orders_90d||0)/5)*100);
+    const revPct = Math.min(100, ((d.revenue_90d||0)/300)*100);
+    const ratPct = d.avg_rating ? Math.min(100, ((d.avg_rating-1)/4)*100) : 0;
+    const ordOk = (d.orders_90d||0)>=5;
+    const revOk = (d.revenue_90d||0)>=300;
+    const msgOk = (d.unread_messages||0)===0;
+    el.innerHTML =
+      '<div class="ss-status '+statusClass+'">'+statusLabel+'</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">Orders (90d)</span>'+
+        '<div class="ss-bar-wrap"><div class="ss-bar '+(ordOk?'':'warn')+'" style="width:'+ordPct+'%"></div></div>'+
+        '<span class="ss-val">'+( d.orders_90d||0)+'<span style="color:var(--muted);font-weight:400">/5</span></span>'+
+      '</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">Revenue (90d)</span>'+
+        '<div class="ss-bar-wrap"><div class="ss-bar '+(revOk?'':'warn')+'" style="width:'+revPct+'%"></div></div>'+
+        '<span class="ss-val">$'+(d.revenue_90d||0).toFixed(0)+'<span style="color:var(--muted);font-weight:400">/$300</span></span>'+
+      '</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">Avg Rating</span>'+
+        '<div class="ss-bar-wrap"><div class="ss-bar" style="width:'+ratPct+'%"></div></div>'+
+        '<span class="ss-val">'+(d.avg_rating||'—')+' ★</span>'+
+      '</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">On-time Delivery</span>'+
+        '<span class="ss-val" style="color:var(--green)">100% ✓</span>'+
+      '</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">Unread Messages</span>'+
+        '<span class="ss-val"'+(msgOk?'':' style="color:var(--red)"')+'>'+( d.unread_messages||0)+' '+(msgOk?'✓':'⚠')+'</span>'+
+      '</div>';
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+  }
+}
+
+async function loadInbox(){
+  const el = document.getElementById('inbox-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/inbox');
+    const d = await r.json();
+    const unread = d.unread_count||0;
+    const oldestH = d.oldest_unread_hours;
+    const urgent = oldestH!=null && oldestH>20;
+    let html = '<div class="inbox-msg-bar">';
+    html += '<div class="inbox-unread-badge '+(urgent?'urgent':'')+'">'+unread+'</div>';
+    html += '<div class="inbox-msg-meta">';
+    if(unread===0){
+      html += '<strong style="color:var(--green)">Inbox clear ✓</strong><br>No unread messages';
+    } else {
+      html += '<strong>'+unread+' unread message'+(unread>1?'s':'')+'</strong>';
+      if(oldestH!=null) html += '<br><span '+(urgent?'style="color:var(--red)"':'')+'>Oldest: '+oldestH.toFixed(0)+'h ago'+(urgent?' ⚠ Star Seller risk':'')+'</span>';
+    }
+    html += '</div></div>';
+    const reviews = d.recent_reviews||[];
+    if(reviews.length){
+      html += '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Recent Reviews</div>';
+      reviews.forEach(rev=>{
+        const stars = '★'.repeat(rev.rating)+'☆'.repeat(5-rev.rating);
+        html += '<div class="inbox-review"><div class="inbox-review-stars">'+stars+'</div>';
+        if(rev.text) html += '<div class="inbox-review-text">'+escHtml(rev.text.slice(0,100))+(rev.text.length>100?'…':'')+'</div>';
+        html += '</div>';
+      });
+    } else {
+      html += '<div style="color:var(--muted);font-size:11px;margin-top:8px">No reviews yet</div>';
+    }
+    el.innerHTML = html;
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
   }
 }
 
@@ -3777,6 +3924,8 @@ function loadAll(){
   Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill);
   loadCredentialsAndHealth();
   loadShopPerf();
+  loadStarSeller();
+  loadInbox();
   loadQueue();
   loadMissionTimeline();
   loadTasks();
