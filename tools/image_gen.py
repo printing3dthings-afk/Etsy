@@ -102,6 +102,145 @@ def _post(url: str, body: bytes, headers: dict, retries: int, timeout: int) -> d
     raise ImageGenError(f"image generation failed after {retries} attempts: {last_err}")
 
 
+# ── Engine selection (migration off gpt-image-1, deprecated 2026-10-23) ─────────
+# Providers sit behind an engine flag, same pattern as tools/ai_video.py. OpenAI
+# (gpt-image-1) stays the DEFAULT until a replacement is proven; flip per deploy
+# with IMAGE_ENGINE, or per call with engine=. Engines:
+#   "openai"   — gpt-image-1 (default, unchanged, proven)
+#   "gemini"   — Google "Nano Banana" (gemini-2.5-flash-image); best at keeping the
+#                same product consistent across scenes → ideal for listing mockups
+#   "ideogram" — Ideogram 3.0; best text-in-image (covers/badges); GENERATE-ONLY
+_DEFAULT_ENGINE = "openai"
+_GEMINI_IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gemini-2.5-flash-image")
+
+
+def _engine(engine: str | None) -> str:
+    return (engine or os.getenv("IMAGE_ENGINE", _DEFAULT_ENGINE)).lower().strip()
+
+
+def _gemini_key() -> str:
+    key = os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "")
+    if not key and _ENV_PATH.exists():
+        with open(_ENV_PATH) as fh:
+            for line in fh:
+                line = line.strip()
+                if line.startswith("GEMINI_API_KEY=") and "=" in line:
+                    key = line.split("=", 1)[1].strip()
+                    os.environ.setdefault("GEMINI_API_KEY", key)
+                    break
+    if not key:
+        raise ImageGenError("GEMINI_API_KEY not set (needed for engine='gemini')")
+    return key
+
+
+def _gemini_bytes_from_resp(resp) -> bytes:
+    """Pull the first inline image out of a google-genai generate_content response.
+    Shape verified live against google-genai 2.10: candidates[0].content.parts[].inline_data.data"""
+    cands = getattr(resp, "candidates", None) or []
+    for cand in cands:
+        content = getattr(cand, "content", None)
+        for part in (getattr(content, "parts", None) or []):
+            inline = getattr(part, "inline_data", None)
+            if inline is not None and getattr(inline, "data", None):
+                return inline.data
+    raise ImageGenError("Gemini response contained no image data")
+
+
+def _gemini_generate_bytes(prompt: str, model: str | None = None) -> bytes:
+    from google import genai
+    client = genai.Client(api_key=_gemini_key())
+    resp = client.models.generate_content(
+        model=model or _GEMINI_IMAGE_MODEL, contents=[prompt])
+    return _gemini_bytes_from_resp(resp)
+
+
+def _gemini_edit_bytes(prompt: str, image_paths: list, model: str | None = None) -> bytes:
+    """Nano Banana image edit: prompt + one or more reference images → new image.
+    This is the call that drives the listing-photo pipeline when IMAGE_ENGINE=gemini."""
+    from google import genai
+    from google.genai import types
+    client = genai.Client(api_key=_gemini_key())
+    contents: list = [prompt]
+    for p in image_paths:
+        p = Path(p)
+        mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+        contents.append(types.Part.from_bytes(data=p.read_bytes(), mime_type=mime))
+    resp = client.models.generate_content(
+        model=model or _GEMINI_IMAGE_MODEL, contents=contents)
+    return _gemini_bytes_from_resp(resp)
+
+
+def _ideogram_key() -> str:
+    key = os.getenv("IDEOGRAM_API_KEY", "")
+    if not key and _ENV_PATH.exists():
+        with open(_ENV_PATH) as fh:
+            for line in fh:
+                line = line.strip()
+                if line.startswith("IDEOGRAM_API_KEY=") and "=" in line:
+                    key = line.split("=", 1)[1].strip()
+                    break
+    if not key:
+        raise ImageGenError("IDEOGRAM_API_KEY not set (needed for engine='ideogram')")
+    return key
+
+
+_IDEOGRAM_ASPECT = {SQUARE: "1x1", PORTRAIT: "2x3", LANDSCAPE: "3x2"}
+
+
+def _ideogram_generate_bytes(prompt: str, size: str) -> bytes:
+    """Ideogram 3.0 text→image. UNPROVEN (no IDEOGRAM_API_KEY in this env yet) —
+    written to the documented v3 REST API; confirm endpoint/fields on first real
+    key, same discipline as the Veo path was before its proof."""
+    key = _ideogram_key()
+    boundary = "----ideo" + os.urandom(8).hex()
+    parts: list[bytes] = []
+
+    def _field(name: str, value: str):
+        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"'
+                     f'\r\n\r\n{value}'.encode())
+
+    _field("prompt", prompt)
+    _field("aspect_ratio", _IDEOGRAM_ASPECT.get(size, "2x3"))
+    _field("rendering_speed", "DEFAULT")
+    parts.append(f"--{boundary}--".encode())
+    body = b"\r\n".join(parts)
+    req = urllib.request.Request(
+        "https://api.ideogram.ai/v1/ideogram-v3/generate", data=body, method="POST",
+        headers={"Api-Key": key,
+                 "Content-Type": f"multipart/form-data; boundary={boundary}"})
+    with urllib.request.urlopen(req, timeout=120) as resp:
+        result = json.loads(resp.read())
+    url = (result.get("data") or [{}])[0].get("url")
+    if not url:
+        raise ImageGenError(f"Ideogram response had no image url: {str(result)[:200]}")
+    with urllib.request.urlopen(url, timeout=120) as r:
+        return r.read()
+
+
+def _fit_to_size(raw: bytes, size: str, output_format: str) -> bytes:
+    """Cover-fit provider output to the exact requested WxH so gemini/ideogram honor
+    the same size contract gpt-image-1 does. (Providers emit their own native size.)"""
+    import io
+    from PIL import Image, ImageOps
+    w, h = (int(x) for x in size.split("x"))
+    im = Image.open(io.BytesIO(raw)).convert("RGB")
+    if im.size != (w, h):
+        im = ImageOps.fit(im, (w, h), method=Image.LANCZOS)
+    buf = io.BytesIO()
+    if output_format.lower() == "png":
+        im.save(buf, "PNG")
+    else:
+        im.save(buf, "JPEG", quality=95)
+    return buf.getvalue()
+
+
+def _write(out_path: str | Path, raw: bytes) -> Path:
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_bytes(raw)
+    return out_path
+
+
 def generate_image(
     prompt: str,
     out_path: str | Path,
@@ -111,14 +250,29 @@ def generate_image(
     background: str | None = None,
     retries: int = 3,
     timeout: int = 180,
+    engine: str | None = None,
 ) -> Path:
     """Text -> image. Writes to out_path and returns it. Raises ImageGenError on failure.
 
     Pass background="transparent" (with output_format="png" or "webp") for stickers /
     cut-out assets that must drop onto any page without a white box behind them.
+    engine selects the provider (default IMAGE_ENGINE env, else "openai").
     """
     if size not in _VALID_SIZES:
         raise ImageGenError(f"invalid size {size!r}; use one of {sorted(_VALID_SIZES)}")
+    eng = _engine(engine)
+    if eng != "openai":
+        if background == "transparent":
+            raise ImageGenError(
+                f"engine={eng!r} does not support transparent background — use "
+                "engine='openai' for cut-out/sticker assets")
+        if eng == "gemini":
+            raw = _gemini_generate_bytes(prompt)
+        elif eng == "ideogram":
+            raw = _ideogram_generate_bytes(prompt, size)
+        else:
+            raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gemini/ideogram)")
+        return _write(out_path, _fit_to_size(raw, size, output_format))
     if background == "transparent" and output_format not in ("png", "webp"):
         raise ImageGenError("transparent background requires output_format='png' or 'webp'")
     payload = {
@@ -150,14 +304,27 @@ def edit_image(
     input_fidelity: str | None = None,
     retries: int = 3,
     timeout: int = 180,
+    engine: str | None = None,
 ) -> Path:
     """Image(s)+prompt -> image (the empty-room / single-element-change workflow).
 
     Pass input_fidelity="high" to preserve the input composition while changing one
     element (per the gpt-image-1 notes in CLAUDE.md).
+    engine selects the provider (default IMAGE_ENGINE env, else "openai"). Ideogram
+    is generate-only, so engine='ideogram' on an edit raises a clear error.
     """
     if size not in _VALID_SIZES:
         raise ImageGenError(f"invalid size {size!r}; use one of {sorted(_VALID_SIZES)}")
+    eng = _engine(engine)
+    if eng != "openai":
+        if eng == "gemini":
+            raw = _gemini_edit_bytes(prompt, list(image_paths))
+            return _write(out_path, _fit_to_size(raw, size, "jpeg"))
+        if eng == "ideogram":
+            raise ImageGenError(
+                "engine='ideogram' is generate-only (no reference-image edit) — "
+                "use 'gemini' or 'openai' for edits")
+        raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gemini/ideogram)")
 
     boundary = "----imggen" + os.urandom(8).hex()
     parts: list[bytes] = []

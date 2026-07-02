@@ -35,7 +35,7 @@ Flat lays / collection shots (zero perspective → pixel-perfect, never AI-rende
     build_flat_lay(design_paths, layout, bg_prompt_or_path, out_path)
 """
 
-import re, base64, io, json, sys
+import re, os, base64, io, json, sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
@@ -740,9 +740,19 @@ def generate_verified_photo(
     # it against the source designs, and what to do with a rejected render.
     from goal_loop import run_until_goal
 
+    # Image engine is swappable (gpt-image-1 deprecates 2026-10-23). Default stays
+    # OpenAI; set IMAGE_ENGINE=gemini to drive this same self-verifying loop with
+    # Nano Banana (gemini-2.5-flash-image), which is stronger at keeping the exact
+    # product across scenes. The verify + retry loop below is engine-agnostic.
+    _img_engine = os.getenv("IMAGE_ENGINE", "openai").lower().strip()
+
     def _generate(correction: str) -> "Image.Image":
         prompt = base_prompt + correction
-        print("  generating...")
+        print(f"  generating (engine={_img_engine})...")
+        if _img_engine == "gemini":
+            import image_gen
+            raw = image_gen._gemini_edit_bytes(prompt, list(design_paths))
+            return Image.open(io.BytesIO(raw)).convert("RGB")
         images = [(f"design_{i}.png", _prep(dp), "image/png")
                   for i, dp in enumerate(design_paths, 1)]
         resp = client.images.edit(

@@ -2172,3 +2172,36 @@ Railway env vars below. Flip whenever ready (and before Sora's Sept 24 shutdown)
 2. In Railway → Variables: set GEMINI_API_KEY=<fresh key> and AI_VIDEO_ENGINE=veo, redeploy.
    That flips the live Studio video engine to Veo. (Optional: VEO_MODEL to pick fast/quality.)
 3. The container's throwaway .env key will die on recycle; only the Railway var matters for prod.
+
+## 2026-07-02 · v95 · Image migration — Nano Banana engine (gpt-image-1 deprecation)
+
+**Motivation:** gpt-image-1 deprecates 2026-10-23. Added a swappable image engine, mirroring
+the Veo video migration, and PROVED Nano Banana for real (Gemini key + billing already live).
+
+**Changes:**
+- tools/image_gen.py: generate_image()/edit_image() now dispatch on IMAGE_ENGINE (default
+  "openai", unchanged) → "gemini" (Nano Banana, gemini-2.5-flash-image) / "ideogram" (v3, text
+  →image, generate-only). New engines guarded (missing key/SDK/unknown → clear error).
+  IMAGE_MODEL env overrides the gemini model (3.1-flash-image / imagen-4 are a flip).
+- tools/listing_photo_pipeline.py: generate_verified_photo generate step routes through the
+  engine flag — IMAGE_ENGINE=gemini drives the self-verifying loop with Nano Banana; verify
+  (gpt-4o) + goal_loop unchanged.
+
+**PROVEN this session (real calls):**
+- Nano Banana text→image: valid 1024x1536 image.
+- Nano Banana edit (the listing-photo use): real product art → lifestyle scene, valid 1024x1024.
+  Both sent to Scott.
+- Full pipeline with IMAGE_ENGINE=gemini: generation ran via Nano Banana inside the real loop;
+  gpt-4o verifier correctly rejected a physics-profile mismatch in the test (sign_flat vs a
+  framed print) — the honest-failure guardrail working, not a model fault. Integration proven.
+
+**Ideogram:** written, UNPROVEN (no IDEOGRAM_API_KEY). Guards verified.
+
+**Default stays OpenAI** (zero regression — dispatch only triggers when IMAGE_ENGINE!=openai;
+guards + default confirmed). Build b4d0e2c-v95.
+
+### ACTION FOR SCOTT (before Oct 23)
+- To flip listing photos + mockups to Nano Banana: set IMAGE_ENGINE=gemini and GEMINI_API_KEY
+  (fresh Railway key) in Railway, redeploy. Optional IMAGE_MODEL to try gemini-3.1-flash-image.
+- For text-in-image covers/badges: get an Ideogram key, set IDEOGRAM_API_KEY, use engine
+  "ideogram" (I'll prove it once the key exists).
