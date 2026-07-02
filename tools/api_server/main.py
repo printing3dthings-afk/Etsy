@@ -308,7 +308,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v90"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v91"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1187,7 +1187,7 @@ def _summarize_and_rotate_kb_file(
         client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
         msg = _anthropic_create(
             client,
-            model="claude-haiku-4-5-20251001",
+            model=business_config.MODEL_CHEAP,
             max_tokens=2000,
             messages=[{
                 "role": "user",
@@ -2953,7 +2953,7 @@ def _generate_tags_for_listings(listings: list[dict], reason: str = "") -> list[
 
         msg = _anthropic_create(
             client,
-            model="claude-sonnet-4-6",
+            model=business_config.MODEL_PRIMARY,
             max_tokens=8000,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -4271,7 +4271,7 @@ async def _compute_suggestions_inner() -> dict:
             asyncio.to_thread(
                 lambda: _anthropic_create(
                     ai_client,
-                    model="claude-sonnet-4-6",
+                    model=business_config.MODEL_PRIMARY,
                     max_tokens=4000,  # 8 detailed suggestions overrun 2400 and truncate
                     system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
                     messages=[{"role": "user", "content": user_payload}],
@@ -4447,7 +4447,7 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
             asyncio.to_thread(
                 lambda: _anthropic_create(
                     ai_client,
-                    model="claude-sonnet-4-6",
+                    model=business_config.MODEL_PRIMARY,
                     max_tokens=2000,
                     system=_CONVERSION_DOCTOR_SYSTEM,
                     messages=[{"role": "user", "content": user_payload}],
@@ -4589,7 +4589,7 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
             asyncio.to_thread(
                 lambda: _anthropic_create(
                     ai_client,
-                    model="claude-haiku-4-5-20251001",
+                    model=business_config.MODEL_CHEAP,
                     max_tokens=100,
                     messages=[{"role": "user", "content": prompt}],
                 )
@@ -6552,7 +6552,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                 return
             try:
                 with ai_client.messages.stream(
-                    model="claude-sonnet-4-6",
+                    model=business_config.MODEL_PRIMARY,
                     max_tokens=1500,
                     system=[
                         _CACHED_SYSTEM_BLOCK,
@@ -6784,7 +6784,7 @@ def _maybe_compact_chat_history(session_id: str) -> None:
         client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
         msg = _anthropic_create(
             client,
-            model="claude-haiku-4-5-20251001",
+            model=business_config.MODEL_CHEAP,
             max_tokens=2000,
             messages=[{"role": "user", "content": prompt}],
         )

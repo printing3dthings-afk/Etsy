@@ -2046,3 +2046,31 @@ goal_loop retries QUALITY failures where nothing threw but the output is wrong.
 
 **Verified:** goal_loop unit tests (5 cases) + photo-pipeline parity (3 cases) + listing gate
 (bad blocked with feedback, clean passes). All green. Build b4d0e2c-v90.
+
+## 2026-07-02 · v91 · LLM consolidation (centralized model tiers)
+
+**Motivation:** Research verdict — keep Claude as the brain (leads on tool-use/policy
+adherence), but the ~8 model strings were hardcoded and scattered, and "consolidate away the
+second OpenAI brain" turned out to be a non-issue (OpenAI is only Whisper STT + TTS here, not
+a reasoning brain).
+
+**Changes:**
+- Added model-tier constants to `business_config.py`: MODEL_PRIMARY (default
+  claude-sonnet-4-6), MODEL_CHEAP (claude-haiku-4-5-20251001), MODEL_HARD (claude-opus-4-8).
+  All env-overridable.
+- Replaced the 7 hardcoded model strings in main.py with the constants (4 primary, 3 cheap).
+- Documented that OpenAI = STT/TTS only (no reasoning-brain consolidation needed).
+
+**Honest note on Sonnet 5:** could NOT verify claude-sonnet-5 access — no ANTHROPIC_API_KEY
+in this container (it's injected only in the Railway deploy env). So I did NOT blind-swap the
+live brain to an unverified model. Default stays on the proven claude-sonnet-4-6; promoting to
+Sonnet 5 is now a one-env-var flip (`MODEL_PRIMARY=claude-sonnet-5`) once Scott confirms the
+account has access. Defaults verified byte-identical to prior hardcoded models (zero behavior
+change without an override).
+
+**Build:** b4d0e2c-v91.
+
+### ACTION FOR SCOTT
+To upgrade Frank's brain to Sonnet 5: confirm the Anthropic account has claude-sonnet-5
+access, then set env var `MODEL_PRIMARY=claude-sonnet-5` on Railway and redeploy. No code
+change. Revert by unsetting it.
