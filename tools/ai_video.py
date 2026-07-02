@@ -267,8 +267,16 @@ def _generate_veo(image_paths, scene_prompt, duration, aspect_ratio, listing_id,
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     out_path = OUTPUT_DIR / f"{listing_id}_ai_scene_{uuid.uuid4().hex[:8]}.mp4"
     video = vids[0].video
-    client.files.download(file=video)      # populates video.video_bytes
-    video.save(str(out_path))
+    # google-genai 2.10: files.download() RETURNS the mp4 bytes (verified against
+    # the installed SDK signature). Some versions also populate video.video_bytes —
+    # handle both rather than relying on a .save() that isn't guaranteed to exist.
+    data = client.files.download(file=video)
+    if isinstance(data, (bytes, bytearray)) and data:
+        out_path.write_bytes(data)
+    elif getattr(video, "video_bytes", None):
+        out_path.write_bytes(video.video_bytes)
+    else:
+        raise RuntimeError("Veo returned no downloadable video bytes")
 
     sz = out_path.stat().st_size if out_path.exists() else 0
     if sz < 10_000:

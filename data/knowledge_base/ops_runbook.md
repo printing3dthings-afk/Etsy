@@ -2125,3 +2125,31 @@ fallback / clear error when neither configured).
 Sign up at resend.com (free ≤3k/mo), verify a sending domain, set `RESEND_API_KEY` and
 `RESEND_FROM=you@yourverifieddomain` on Railway. Newsletters then route via Resend
 automatically; without it they keep using SMTP.
+
+## 2026-07-02 · v94 · Veo proof attempt — integration correct, blocked on Google billing
+
+**What happened:** Ran a real Veo generation with a live Gemini API key (google-genai 2.10.0
+installed, key in .env, AI_VIDEO_ENGINE=veo).
+- Key AUTHENTICATED (no 401).
+- Model `veo-3.1-fast-generate-preview` was ACCEPTED (reached quota check → request well-formed,
+  integration correct). `veo-3.1-generate-preview` also accepted. Old `veo-3.0-generate-001`
+  id 404s on Gemini API v1beta (irrelevant fallback).
+- Generation BLOCKED: HTTP 429 RESOURCE_EXHAUSTED — "check your plan and billing details."
+  Veo is not on the Gemini free tier; the project needs billing/paid tier enabled.
+
+**Code correction (verified against the installed SDK):** _generate_veo download now writes the
+bytes returned by client.files.download() (with a video.video_bytes fallback) instead of the
+doc-based video.save(). Default model confirmed correct: veo-3.1-fast-generate-preview.
+
+**Status:** Veo path is proven correct up to the paywall. NOT yet proven end-to-end (no billing).
+
+### ACTION FOR SCOTT
+1. Enable billing / paid tier on Google Cloud project 208375896852 (the one the Gemini key
+   belongs to) so Veo video calls are allowed. In Google Cloud Console → Billing → link a
+   billing account to that project; confirm Veo/Generative AI quota.
+2. REVOKE the Gemini key that was pasted into chat (it's exposed). After billing is on, create
+   a FRESH key and set GEMINI_API_KEY in Railway Variables (not chat).
+3. Then tell Claude "billing is on" → I run the real generation + verify the MP4 (same bar as
+   the Sora proof) before flipping Veo on in production.
+
+**Build:** b4d0e2c-v94.
