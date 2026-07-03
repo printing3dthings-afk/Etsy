@@ -25,3 +25,6 @@ imageio-ffmpeg>=0.5.1
 # presence never affects startup; ships in the image so those features work once
 # GEMINI_API_KEY is set. (Previously only in tools/api_server/requirements.txt.)
 google-genai>=1.0.0
+# yt-dlp — fetches videos from URLs (YouTube, TikTok, direct .mp4, ~1000 sites) for the
+# watch_video tool (tools/video_understanding.py). Lazily imported; pure-python wheel.
+yt-dlp>=2025.1.1

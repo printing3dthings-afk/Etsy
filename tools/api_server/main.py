@@ -370,7 +370,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v101"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v102"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2252,6 +2252,13 @@ import browser_automation as _browser_automation  # tools/ is on sys.path (line 
 AGENT_TOOLS.extend(_browser_automation.TOOL_DEFINITIONS)
 _BROWSER_TOOL_NAMES = {t["name"] for t in _browser_automation.TOOL_DEFINITIONS}
 
+# Video understanding — let Frank WATCH a video (local file or URL) via Gemini's native
+# video model and get a text analysis back. Handlers in tools/video_understanding.py
+# (google-genai + yt-dlp are lazy-imported only when watch_video runs). Needs GEMINI_API_KEY.
+import video_understanding as _video_understanding
+AGENT_TOOLS.extend(_video_understanding.TOOL_DEFINITIONS)
+_VIDEO_TOOL_NAMES = {t["name"] for t in _video_understanding.TOOL_DEFINITIONS}
+
 # Prompt-cache constants — built once at import time, reused every chat turn.
 # _CEO_SYSTEM (~2 100 tokens) + AGENT_TOOLS (~2 000 tokens) are completely static
 # between turns; marking them ephemeral saves ~90% on those tokens after the first
@@ -2337,6 +2344,9 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
         # Playwright browser tools return JSON strings; parse to the dict contract here.
         if name in _BROWSER_TOOL_NAMES:
             return json.loads(_browser_automation.execute_tool(name, tool_input or {}))
+        # Video understanding (watch_video) — same JSON-string → dict reconciliation.
+        if name in _VIDEO_TOOL_NAMES:
+            return json.loads(_video_understanding.execute_tool(name, tool_input or {}))
         if name == "get_metrics":
             return _metrics_sync()
         if name == "list_listings":
@@ -6857,6 +6867,9 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                 elif block.name == "check_etsy_search_rank":
                     kw = (block.input or {}).get("keyword", "")
                     status_msg = f"📈 Checking Etsy rank: {kw[:40]}…"
+                elif block.name == "watch_video":
+                    src = (block.input or {}).get("source", "")
+                    status_msg = f"🎬 Watching {src[:50]}…"
                 elif block.name in _RELAY_TOOLS:
                     status_msg = f"💻 Asking the relay to run {block.name}…"
                 elif block.name in _LOCAL_STAGED_TOOLS:

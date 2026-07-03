@@ -2390,3 +2390,38 @@ once GEMINI_API_KEY is set, Frank can analyze video (Gemini ingests video files 
 larger via File API, or YouTube URLs; samples ~1 FPS + audio).
 
 **Build:** b4d0e2c-v101.
+
+---
+
+## 2026-07-03 — Frank can now WATCH video (Gemini native, watch_video tool)
+
+**What:** New `watch_video(source, question)` agent tool (tools/video_understanding.py).
+Source = a local file path OR a URL (YouTube/TikTok/direct .mp4/~1000 sites via yt-dlp). The
+video is uploaded to Google Gemini's File API and analyzed natively (Gemini samples ~1 fps +
+audio), returning a TEXT description/answer — which is what Frank's Claude brain consumes
+(tool results are text, so Gemini does the "watching" and hands back words). Use cases: QA on a
+generated product/listing video, or watching a competitor's video for research.
+
+**Why this design:** An LLM can't ingest a video file directly — it needs frames+audio. Two
+options: (a) ffmpeg frame-extraction → vision model, or (b) Gemini native. Gemini is cleaner
+and google-genai is already in the image (added in the Dockerfile reconciliation). Frame-
+extraction→Claude is awkward here because tool results are text, not image blocks.
+
+**Proven live (2026-07-03):** built a controlled 3-frame test video (digits 1/2/3) and Gemini
+read them back correctly ("1, 2, 3") — both directly and through the real main.py dispatcher.
+Verified API surface: client.files.upload → poll files.get until FileState.ACTIVE →
+models.generate_content([file, prompt]) → resp.text. Uploaded file is deleted after analysis.
+
+**Changes:**
+- `tools/video_understanding.py` (new) — watch_video tool, Gemini analysis, yt-dlp URL fetch
+  (<=720p mp4 cap), guards for missing key/SDK/file.
+- `tools/api_server/main.py` — registered in AGENT_TOOLS (now 36 tools), dispatch branch
+  (json.loads → dict), status line "🎬 Watching…".
+- `requirements.txt` — added `yt-dlp>=2025.1.1` (pure-python wheel, verified resolves).
+
+**Requires:** GEMINI_API_KEY set on Railway. Honest limits: video is ~300 tokens/sec (prefer
+short clips / specific questions); yt-dlp fetching a site depends on that site not blocking the
+server's datacenter IP (local files always work); the "paste a video into chat" UX still needs
+an upload path + the /data volume (separate follow-up).
+
+**Build:** b4d0e2c-v102.
