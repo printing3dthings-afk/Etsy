@@ -2636,3 +2636,23 @@ admin/auth/HUD (42 nodes). Turned that into a concrete split map:
 `data/knowledge_base/main_py_modularization_map.md` (committed). Interactive `graph.html` (~1.8MB)
 handed to Scott, NOT committed (generated-file bloat). This is a PLANNING artifact — the
 modularization itself is deliberate future surgery, gated behind the CI smoke + quality-gate tests.
+
+---
+
+## 2026-07-03 — smoke test hardened to pin core agent tools + routing (main.py split prep)
+
+**What:** `tests/smoke_test.py` gained two guards ahead of the planned main.py agent-tool-layer
+extraction: (4b) `EXPECTED_CORE_TOOLS` (the 25 dispatcher-handled core tools) must all be in the
+`AGENT_TOOLS` registry; (4c) each core tool must also have a `name == "..."` branch in
+`_execute_agent_tool` (checked by source inspection, since invoking the dispatcher would hit
+Etsy/db/anthropic). Two prod-inert test commits (142deb0, 3bd299f) — no `_BUILD_ID` bump.
+
+**Why:** the old smoke test asserted only `AGENT_TOOLS` len≥25 + the 5 browser/video names, so a
+core tool could be dropped/renamed OR lose its dispatch branch and CI would stay green (padded to
+≥25). That's exactly the failure mode a file-split could introduce. These checks make it fail loud.
+
+**Split status:** the actual extraction (Phase 1) is HELD. Reason: the agent-tool layer is
+entangled with module globals (`_cache`, `db`, anthropic client/breaker, business_config) and Frank
+is currently down (Anthropic credits) so a moved handler can't be runtime-verified. Chose the safe
+source-inspection routing test over a ~360-line blind HANDLERS-dict refactor. Do the split once
+Frank is live for dispatch verification and/or these guards have proven themselves in CI.
