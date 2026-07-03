@@ -2456,3 +2456,25 @@ green. Until then, CI is an early-warning signal, not a deploy blocker.
 "unavailable: needs GEMINI_API_KEY / relay offline" instead of raw errors); harden the
 `get_me` fail-open-to-owner path (main.py:3146) to fail closed; begin extracting main.py (7,135
 lines) into modules.
+
+---
+
+## 2026-07-03 — Capability visibility in Dependency Health (graceful degradation, Unit A)
+
+**From the productivity review:** optional capabilities that need a key/connection can fail
+when someone tries them, with no place showing what's Ready vs Needs-setup. (Tool-level messages
+were already clean — relay dispatch and watch_video return human-readable errors.)
+
+**Unit A (backend):** `/api/system/dependencies` now also returns a `capabilities` list —
+video analysis (Gemini), Gemini image engine, browser, relay — each `{key, label, available,
+hint}`. `_capability_report()` reuses `video_understanding.is_available()`,
+`browser_automation.is_available()`, `bool(os.getenv("GEMINI_API_KEY"))`, and relay
+connected/kill state. Reports booleans + a fix hint only — never a key value.
+
+**Verified:** with the Gemini key present → video/image/browser available:true; without it →
+available:false + hint "needs GEMINI_API_KEY"; relay shows "offline — not connected" when no
+relay. Key value confirmed not leaked in the payload. py_compile + smoke green.
+
+**Next (Unit B):** render these as Ready / Needs-setup pills in the HUD Dependency Health panel.
+
+**Build:** b4d0e2c-v103.

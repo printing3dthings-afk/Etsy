@@ -370,7 +370,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v102"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v103"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6065,13 +6065,54 @@ async def _relay_dependency_status() -> dict:
     }
 
 
+def _capability_report() -> list:
+    """Availability of the optional capabilities that need a key/connection, so the
+    HUD (and anyone testing) sees what's Ready vs Needs-setup instead of discovering
+    it by trial-and-error. Reports booleans + a fix hint only — never a key VALUE."""
+    gemini_ok = bool(os.getenv("GEMINI_API_KEY"))
+    gemini_hint = None if gemini_ok else "needs GEMINI_API_KEY"
+
+    # Browser: Playwright importable (Chromium is bundled in the image after
+    # `playwright install`). is_available() is import-only, so it's cheap + safe.
+    try:
+        browser_ok = _browser_automation.is_available()
+    except Exception:
+        browser_ok = False
+    browser_hint = None if browser_ok else "browser not installed in this image"
+
+    # Video understanding needs BOTH the Gemini SDK and the key.
+    try:
+        video_ok = _video_understanding.is_available()
+    except Exception:
+        video_ok = False
+    video_hint = None if video_ok else "needs GEMINI_API_KEY"
+
+    # Relay: online only when connected and not kill-switched.
+    try:
+        rstate = db.get_relay_state()
+        connected = _relay_ws is not None
+        killed = bool(rstate.get("killed"))
+        relay_ok = connected and not killed
+        relay_hint = None if relay_ok else ("kill switch engaged" if killed else "relay offline — not connected")
+    except Exception:
+        relay_ok, relay_hint = False, "relay status unavailable"
+
+    return [
+        {"key": "video_understanding", "label": "Video analysis (watch_video)", "available": video_ok, "hint": video_hint},
+        {"key": "image_engine_gemini", "label": "Gemini image engine (Nano Banana)", "available": gemini_ok, "hint": gemini_hint},
+        {"key": "browser", "label": "Web browser (render/screenshot)", "available": browser_ok, "hint": browser_hint},
+        {"key": "relay", "label": "Local relay (your PC)", "available": relay_ok, "hint": relay_hint},
+    ]
+
+
 @app.get("/api/system/dependencies")
 async def get_system_dependencies(_token: str = Depends(_auth_session_or_bearer)):
-    """Live circuit-breaker status for every tracked external dependency —
-    backs the HUD's Dependency Health panel. Replaced the old System Monitor
-    CPU/RAM/DISK gauges, which were hardcoded CSS with zero backend. A
-    dependency with no DB row yet has never tripped, so it reports the same
-    default CircuitBreaker._load() uses: closed, 0 failures."""
+    """Live circuit-breaker status for every tracked external dependency, plus a
+    `capabilities` list (optional features that need a key/connection) — backs the
+    HUD's Dependency Health panel. Replaced the old System Monitor CPU/RAM/DISK
+    gauges, which were hardcoded CSS with zero backend. A dependency with no DB row
+    yet has never tripped, so it reports the same default CircuitBreaker._load()
+    uses: closed, 0 failures."""
     deps = []
     for dep in ("etsy_api", "anthropic_api", "relay"):
         if dep == "relay":
@@ -6085,7 +6126,8 @@ async def get_system_dependencies(_token: str = Depends(_auth_session_or_bearer)
             "opened_at": cb["opened_at"] if cb else None,
             "updated_at": cb.get("updated_at") if cb else None,
         })
-    return {"dependencies": deps}
+    capabilities = await asyncio.to_thread(_capability_report)
+    return {"dependencies": deps, "capabilities": capabilities}
 
 
 @app.get("/api/alerts")
