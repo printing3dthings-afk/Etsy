@@ -2203,7 +2203,7 @@ const _DEP_LABELS = {etsy_api:'Etsy API', anthropic_api:'Anthropic API', relay:'
 function _renderDependencyHealth(d, el, offlineNote){
   if(!el) return;
   const deps = d.dependencies||[];
-  el.innerHTML = (offlineNote||'') + deps.map(dep=>{
+  const depHtml = deps.map(dep=>{
     const stateClass = dep.state === 'open' ? 'open' : (dep.state === 'half_open' ? 'half_open' : '');
     const stateLabel = dep.state === 'closed' ? 'HEALTHY' : dep.state === 'half_open' ? 'TESTING' : 'DOWN';
     const failText = dep.consecutive_failures ? ' &middot; '+dep.consecutive_failures+' failures' : '';
@@ -2212,6 +2212,21 @@ function _renderDependencyHealth(d, el, offlineNote){
       '<span class="dep-state">'+stateLabel+'</span>'+
       '<span class="dep-fail">'+failText+'</span></div>';
   }).join('');
+  // Capabilities — optional features that need a key/connection. Green "READY" or
+  // amber "NEEDS SETUP · <hint>" so setup gaps are visible, not discovered by trial.
+  const caps = d.capabilities||[];
+  const capHtml = caps.map(cap=>{
+    const ok = !!cap.available;
+    const cls = ok ? '' : 'half_open';  // amber = needs setup (not a hard outage)
+    const stateLabel = ok ? 'READY' : 'NEEDS SETUP';
+    const hint = (!ok && cap.hint) ? ' &middot; '+escHtml(cap.hint) : '';
+    return '<div class="dep-pill '+cls+'"><span class="dep-dot"></span>'+
+      '<span class="dep-name">'+escHtml(cap.label||cap.key)+'</span>'+
+      '<span class="dep-state">'+stateLabel+'</span>'+
+      '<span class="dep-fail">'+hint+'</span></div>';
+  }).join('');
+  const capHeader = caps.length ? '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 4px">Capabilities</div>' : '';
+  el.innerHTML = (offlineNote||'') + depHtml + capHeader + capHtml;
 }
 async function loadDependencyHealth(){
   const el = document.getElementById('dep-pill-row');

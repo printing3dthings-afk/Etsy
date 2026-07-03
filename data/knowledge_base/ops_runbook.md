@@ -2478,3 +2478,19 @@ relay. Key value confirmed not leaked in the payload. py_compile + smoke green.
 **Next (Unit B):** render these as Ready / Needs-setup pills in the HUD Dependency Health panel.
 
 **Build:** b4d0e2c-v103.
+
+---
+
+## 2026-07-03 — Capability pills in the HUD (graceful degradation, Unit B)
+
+**Unit B (UI):** `_renderDependencyHealth()` in frank_hud_mockup.py now also renders the
+`capabilities` from /api/system/dependencies as pills under a "Capabilities" subheader —
+green "READY" when available, amber "NEEDS SETUP · <hint>" otherwise (e.g. "needs
+GEMINI_API_KEY", "relay offline — not connected"). Reuses the existing .dep-pill / half_open
+styling; escHtml on all fields.
+
+**Verified:** JS render logic run with mock data (Node) → available→READY (green), unavailable
+→NEEDS SETUP (amber) + hint, correct markup; py_compile + smoke green. So a tester now SEES
+what needs setup instead of discovering it by a failed tool call.
+
+**Build:** b4d0e2c-v104.
