@@ -2311,3 +2311,47 @@ new volume starts empty, so one final "create owner account" setup — then it p
 - Zero behavior change when a volume is attached (all guards keyed off `db.is_persistent()`).
 
 **Build:** b4d0e2c-v99.
+
+---
+
+## 2026-07-03 — Gave Frank a real browser (Playwright, wired into the agent)
+
+**What:** Wired the previously-unused `tools/browser_automation.py` into Frank's agent so he
+can SEE rendered pages, not just scrape HTML with requests. Four new tools: `render_page`,
+`screenshot_url`, `check_browser_status`, `check_etsy_search_rank`. Primary purpose: let Frank
+verify his own live listings actually render correctly (the "never lie / show the real product"
+rule), screenshot them, and read JS-heavy research pages the requests-based `browse_web` can't.
+
+**Why now:** Scott asked what GitHub tooling could make Frank more capable. A browser was the
+highest-fit add, and the module already existed — this was a wiring job, not new code.
+
+**Changes:**
+- `tools/browser_automation.py` — made portable off the sandbox: `CHROMIUM_PATH` is now env-
+  overridable and `_launch_context` omits `executable_path` (uses Playwright's bundled Chromium)
+  when that path doesn't exist — the Railway case. `is_available()` no longer path-gates.
+- `Dockerfile` — added `playwright>=1.45.0` to the pip list + `RUN playwright install
+  --with-deps chromium`. This meaningfully grows the image and Chromium peaks ~300–500MB RAM
+  per call (launched on-demand and closed each call, so the spike is transient). Scott chose
+  Railway (autonomous) over relay/hosted knowing this.
+- `tools/api_server/main.py` — bare `import browser_automation` (matches the sibling-module
+  pattern; `tools/` is on sys.path via line 43), `AGENT_TOOLS.extend(...TOOL_DEFINITIONS)`,
+  a dispatch branch in `_execute_agent_tool` that `json.loads` the module's string returns into
+  the dict contract, and status-line labels. Tool count 31 → 35.
+
+**Verified (sandbox, real):** portability fix launches Chromium; full navigate→title→text→
+screenshot pipeline proven via a `data:` URL (no network — sandbox egress is locked for the
+browser, so live-internet render can't be shown here); `import main` loads clean with the bare
+import and routes `render_page` through the real dispatcher returning a dict.
+
+**Post-deploy checks still owed (the real proof):**
+1. Call `check_browser_status` on Railway → Chromium must boot in the image without OOM.
+2. `render_page` on a real onbrandcraftz listing URL → **datacenter-IP question**: Etsy may 403
+   Railway's IP (it 403s the sandbox IP). If 200, autonomous listing verification works; if 403,
+   the browser still serves all non-Etsy pages and the tools report "blocked" honestly.
+
+**Known follow-up (not this change):** the Dockerfile pip list also lacks `google-genai`
+(needed when Scott flips `IMAGE_ENGINE=gemini`/Veo) and `beautifulsoup4`/`lxml`/`requests`
+(used by the existing `browse_web`/`search_etsy`) — worth reconciling the Dockerfile against
+requirements.txt in a dedicated pass.
+
+**Build:** b4d0e2c-v100.

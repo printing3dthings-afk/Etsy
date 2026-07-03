@@ -15,7 +15,11 @@ RUN pip install --no-cache-dir \
     "moviepy>=2.0" \
     numpy \
     "Pillow>=10.0" \
-    imageio-ffmpeg
+    imageio-ffmpeg \
+    "playwright>=1.45.0"
+# Install Chromium + its system libraries for Frank's browser tools
+# (tools/browser_automation.py). --with-deps pulls the required apt packages.
+RUN playwright install --with-deps chromium
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
 EXPOSE 8000
 CMD ["python", "tools/api_server/main.py"]

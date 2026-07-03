@@ -36,7 +36,7 @@ import json
 import os
 import time
 
-CHROMIUM_PATH = "/opt/pw-browsers/chromium"
+CHROMIUM_PATH = os.getenv("CHROMIUM_PATH", "/opt/pw-browsers/chromium")
 DEFAULT_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
@@ -131,7 +131,13 @@ def execute_tool(tool_name: str, tool_input: dict) -> str:
 
 
 def _launch_context(playwright, width: int = 1440, height: int = 900):
-    browser = playwright.chromium.launch(executable_path=CHROMIUM_PATH, headless=True)
+    # Sandbox ships a Chromium at CHROMIUM_PATH (a symlink) that we launch explicitly.
+    # On Railway (and anywhere `playwright install chromium` has run) that path does not
+    # exist — omit executable_path so Playwright uses its own bundled Chromium.
+    launch_kwargs = {"headless": True}
+    if CHROMIUM_PATH and os.path.exists(CHROMIUM_PATH):
+        launch_kwargs["executable_path"] = CHROMIUM_PATH
+    browser = playwright.chromium.launch(**launch_kwargs)
     context = browser.new_context(
         ignore_https_errors=True,
         user_agent=DEFAULT_UA,
@@ -149,11 +155,7 @@ def _check_browser_status() -> str:
             "error": "playwright package not installed. Run: pip install playwright && playwright install chromium",
         })
 
-    if not os.path.exists(CHROMIUM_PATH):
-        return json.dumps({
-            "status": "error",
-            "error": f"Chromium executable not found at {CHROMIUM_PATH}. Environment may differ from expected sandbox setup.",
-        })
+    using_bundled = not (CHROMIUM_PATH and os.path.exists(CHROMIUM_PATH))
 
     start = time.monotonic()
     try:
@@ -166,7 +168,7 @@ def _check_browser_status() -> str:
         latency = round((time.monotonic() - start) * 1000, 1)
         return json.dumps({
             "status": "ok",
-            "chromium_path": CHROMIUM_PATH,
+            "chromium_path": "bundled (playwright default)" if using_bundled else CHROMIUM_PATH,
             "test_page_title": title,
             "test_http_status": resp.status if resp else None,
             "latency_ms": latency,
@@ -317,8 +319,11 @@ def _check_etsy_search_rank(data: dict) -> str:
 
 
 def is_available() -> bool:
+    """True when Playwright is importable. A browser is then either at CHROMIUM_PATH
+    (sandbox) or Playwright's bundled location (Railway, after `playwright install
+    chromium`). Actual launch is confirmed by check_browser_status."""
     try:
         import playwright  # noqa: F401
-        return os.path.exists(CHROMIUM_PATH)
+        return True
     except ImportError:
         return False

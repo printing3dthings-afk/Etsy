@@ -370,7 +370,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v99"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v100"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2242,6 +2242,16 @@ AGENT_TOOLS = [
     },
 ]
 
+# Wire in the Playwright browser tools so Frank can SEE rendered pages — verify his own
+# live listings render correctly (the "never lie / show the real product" rule), screenshot
+# them, and read JS-heavy research pages that the requests-based browse_web can't. Handlers
+# live in tools/browser_automation.py (top-level import is cheap: playwright itself is lazy-
+# imported only when a browser tool actually runs). Appended after web_search so the hosted
+# tool keeps its slot; cache_control is applied to whatever ends up last by _tools_with_cache.
+import browser_automation as _browser_automation  # tools/ is on sys.path (line 43)
+AGENT_TOOLS.extend(_browser_automation.TOOL_DEFINITIONS)
+_BROWSER_TOOL_NAMES = {t["name"] for t in _browser_automation.TOOL_DEFINITIONS}
+
 # Prompt-cache constants — built once at import time, reused every chat turn.
 # _CEO_SYSTEM (~2 100 tokens) + AGENT_TOOLS (~2 000 tokens) are completely static
 # between turns; marking them ephemeral saves ~90% on those tokens after the first
@@ -2324,6 +2334,9 @@ def _run_exec_command(cmd_name: str, extra_args: str = "") -> dict:
 def _execute_agent_tool(name: str, tool_input: dict) -> dict:
     """Run a CEO-agent tool and return a JSON-serializable result. Read-only."""
     try:
+        # Playwright browser tools return JSON strings; parse to the dict contract here.
+        if name in _BROWSER_TOOL_NAMES:
+            return json.loads(_browser_automation.execute_tool(name, tool_input or {}))
         if name == "get_metrics":
             return _metrics_sync()
         if name == "list_listings":
@@ -6833,6 +6846,17 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     status_msg = f"🔍 Searching Etsy: {q[:40]}…"
                 elif block.name == "check_listing_quality":
                     status_msg = "🔍 Running listing QC checklist…"
+                elif block.name == "render_page":
+                    url = (block.input or {}).get("url", "")
+                    status_msg = f"🌐 Rendering {url[:60]}…"
+                elif block.name == "screenshot_url":
+                    url = (block.input or {}).get("url", "")
+                    status_msg = f"📸 Screenshotting {url[:50]}…"
+                elif block.name == "check_browser_status":
+                    status_msg = "🧭 Checking browser…"
+                elif block.name == "check_etsy_search_rank":
+                    kw = (block.input or {}).get("keyword", "")
+                    status_msg = f"📈 Checking Etsy rank: {kw[:40]}…"
                 elif block.name in _RELAY_TOOLS:
                     status_msg = f"💻 Asking the relay to run {block.name}…"
                 elif block.name in _LOCAL_STAGED_TOOLS:
