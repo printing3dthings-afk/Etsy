@@ -1356,6 +1356,9 @@ async function renderPhoneToday(){
   try { const r = await authGet('/api/metrics', 15000); m = await r.json().catch(()=>({})); } catch(e) {}
   try { const r = await authGet('/api/alerts', 15000); const d = await r.json().catch(()=>({}));
         alerts = d.alerts || d.items || (Array.isArray(d) ? d : []) || []; } catch(e) {}
+  let acts = [];
+  try { const r = await authGet('/api/actions', 15000); const d = await r.json().catch(()=>({}));
+        acts = (d.actions||[]).filter(x=>x.severity==='high'||x.severity==='medium'); } catch(e) {}
   const show = v => (v==null||v==='') ? '—' : v;
   const views = show(m.views != null ? m.views : m.total_views);
   const orders = show(m.orders != null ? m.orders : m.orders_7d);
@@ -1368,14 +1371,19 @@ async function renderPhoneToday(){
   const sevOf = s => { s=String(s||'').toLowerCase();
     return (s.includes('crit')||s.includes('high')||s.includes('err')) ? 'crit'
          : (s.includes('warn')||s.includes('med')) ? 'warn' : 'good'; };
-  if (alerts.length){
+  // Needs attention = Frank's ranked recommendations (with a suggested fix each) + alerts.
+  const needs = [];
+  acts.forEach(x => needs.push({sev: x.severity==='high'?'crit':'warn', title: x.title, sub: x.suggestion}));
+  alerts.forEach(x => { const t = x.title||x.message||x.text||x.msg||(typeof x==='string'?x:'')||'Alert';
+    needs.push({sev: sevOf(x.severity||x.level||x.sev), title: String(t), sub: ''}); });
+  if (needs.length){
     html += '<div class="pmore-grp">Needs attention</div>';
-    html += alerts.slice(0,12).map(x=>{
-      const t = x.title||x.message||x.text||x.msg||(typeof x==='string'?x:'')||'Alert';
-      return `<div class="palert ${sevOf(x.severity||x.level||x.sev)}"><span class="pdot"></span><div>${escHtml(String(t))}</div></div>`;
-    }).join('');
+    html += needs.slice(0,20).map(x =>
+      `<div class="palert ${x.sev}"><span class="pdot"></span><div>${escHtml(x.title)}` +
+      (x.sub ? `<div style="color:var(--muted);margin-top:2px">${escHtml(x.sub)}</div>` : '') +
+      `</div></div>`).join('');
   } else {
-    html += '<div class="pp-empty" style="padding:22px 10px">No alerts right now — you\\'re all caught up.</div>';
+    html += '<div class="pp-empty" style="padding:22px 10px">Nothing needs attention right now — you\\'re all caught up.</div>';
   }
   el.innerHTML = html;
 }
@@ -2782,9 +2790,13 @@ function setActionBadge(summary, pending) {
   const n = ((summary && summary.high) || 0) + (pending || 0);  // urgent + awaiting approval
   if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
   else { b.style.display = 'none'; }
-  // Mirror onto the Phone Mode Approvals tab badge (present only in mobile shell).
+  // Phone Approvals tab badge = ONLY items actually awaiting approval (the `pending`
+  // count) — NOT the high-severity recommendations (those live under Today → Needs
+  // attention). This keeps the badge honest: it always matches what the Approvals panel
+  // shows, so a "7" never leads to an empty "All clear" panel.
   const pb = document.getElementById('ptab-badge');
-  if (pb) { if (n > 0) { pb.textContent = n > 99 ? '99+' : n; pb.style.display = 'flex'; } else { pb.style.display = 'none'; } }
+  const pc = pending || 0;
+  if (pb) { if (pc > 0) { pb.textContent = pc > 99 ? '99+' : pc; pb.style.display = 'flex'; } else { pb.style.display = 'none'; } }
 }
 function simpleLineDiff(before, after) {
   const b = String(before == null ? '' : before).split('\\n');

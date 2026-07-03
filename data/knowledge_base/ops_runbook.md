@@ -2735,3 +2735,22 @@ inputs/buttons/imgs. Also nudged the red persist-warning banner below the iOS st
 account, connections, security, listings, products, cmd, core, agents) all measured **0px
 horizontal overflow**; compact Today tiles still 3-across; desktop 1440px keeps its 2-col grids.
 Note: the guard both collapses grids and clips residual, so nothing scrolls sideways.
+
+---
+
+## 2026-07-03 — Phone Approvals badge/panel mismatch fixed (v109)
+
+**What:** Scott: Approvals tab badge showed "7" but the panel said "All clear — nothing to
+approve." Root cause: `setActionBadge(summary, pending)` set the phone badge to `summary.high +
+pending`, i.e. it counted high-severity *recommendations* from `/api/actions` (_compute_actions:
+publish draft, title>70, low-conversion, zero-views), while the phone Approvals panel only renders
+*pending staged actions* from `/api/queue`. So 7 recommendations + 0 pending → badge 7, empty panel.
+Fix: (1) phone `#ptab-badge` now counts ONLY `pending` (real approvals) so the badge matches the
+panel; (2) `renderPhoneToday` now merges the high/medium recommendations (each with its `suggestion`)
+into Today → "Needs attention" alongside alerts, so the recommendations aren't lost — they live
+where they belong. Desktop `#badge-actions` unchanged.
+
+**Verify:** py_compile + smoke green (v109). Playwright, Scott's exact case (7 recs, 0 pending):
+Approvals badge hidden + panel "All clear" (consistent); Today shows 7 recs + 1 alert = 8 items with
+their fixes under "Needs attention"; and the badge still shows the pending count (2) when real
+approvals exist.
