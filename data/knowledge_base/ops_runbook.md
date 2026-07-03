@@ -2656,3 +2656,20 @@ entangled with module globals (`_cache`, `db`, anthropic client/breaker, busines
 is currently down (Anthropic credits) so a moved handler can't be runtime-verified. Chose the safe
 source-inspection routing test over a ~360-line blind HANDLERS-dict refactor. Do the split once
 Frank is live for dispatch verification and/or these guards have proven themselves in CI.
+
+---
+
+## 2026-07-03 — creative-production tooling reviewed (art / 3D / QC GitHub options)
+
+**What:** Scott asked whether we're running the best GitHub options for visual design, digital-art
+production, 3D physical products, and streamlining. Researched the 2026 landscape + our stack;
+wrote the honest scorecard to `data/knowledge_base/creative_tooling_assessment.md`.
+
+**Outcome:** assessment-only, no code. Genuine upgrades (AI upscaling via Real-ESRGAN/Upscayl;
+image→3D via TRELLIS.2/Hunyuan3D) are GPU-heavy and Scott's GPU is weak → local off; the zero-GPU
+cloud-API path (Replicate/Tripo/Meshy) is available if ever wanted, matching our buy-don't-host
+doctrine. Neither is a must-build (Lanczos already clears the wall-art gate; image→3D is a
+strategic new-product bet). SKIPs: sticker SAM2/RMBG (color-flood already solves our flat sheets,
+2026-07-03 fix); vtracer/potrace (output traced-raster SVGs our own validate_digital_file() gate
+rejects for AMS color separation). Design QC (VLM verify_render + goal_loop + gates) already
+stronger than most shops. See the assessment doc for the full table.
