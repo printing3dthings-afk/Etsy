@@ -31,6 +31,22 @@ for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
     if sp not in sys.path:
         sys.path.insert(0, sp)
 
+# The core agent tools the dispatcher (`_execute_agent_tool`, main.py ~2350–2708) handles.
+# Pinning these guards against a core tool being silently dropped/renamed out of the
+# AGENT_TOOLS registry during a refactor — the registry could otherwise stay len>=25 (padded
+# by the browser/video tools) while a core tool vanished, and nothing here would notice.
+# NOTE (honest limit): this checks the REGISTRY only. It does NOT prove the dispatcher still
+# ROUTES each name — the flat if-chain isn't introspectable. A follow-up (HANDLERS dict) is
+# what makes routing itself testable. Keep this list in sync when core tools are added/removed.
+EXPECTED_CORE_TOOLS = {
+    "get_metrics", "list_listings", "get_listing", "stage_action", "execute_command",
+    "local_speak", "get_orders", "get_reviews", "log_learning", "list_todos", "add_todo",
+    "complete_todo", "autofix_listing_tags", "autofix_listing_title", "stage_batch_tag_update",
+    "toggle_listing_state", "get_conversion_targets", "diagnose_listing_conversion",
+    "register_command", "read_knowledge_base_doc", "find_business_gaps", "browse_web",
+    "search_etsy", "check_listing_quality", "generate_video",
+}
+
 
 def main() -> int:
     # 1. Import the server module — the load-bearing check. Any syntax error,
@@ -64,6 +80,12 @@ def main() -> int:
     missing = required - names
     if missing:
         failures.append(f"expected agent tools not registered: {sorted(missing)}")
+
+    # 4b. Every core dispatcher tool is still present in the registry (see EXPECTED_CORE_TOOLS
+    #     above). Registry-only check — a miss means a core tool was dropped/renamed.
+    core_missing = EXPECTED_CORE_TOOLS - names
+    if core_missing:
+        failures.append(f"core agent tools missing from registry: {sorted(core_missing)}")
 
     # 5. The tool dispatcher exists and is callable.
     if not callable(getattr(server, "_execute_agent_tool", None)):
