@@ -2227,3 +2227,20 @@ set MODEL_PRIMARY=claude-sonnet-4-6 in Railway.
 After the next deploy, if Frank's logs show "[anthropic] model 'claude-sonnet-5' unavailable
 … falling back to 'claude-sonnet-4-6'", your account isn't enabled for Sonnet 5 — request
 access at console.anthropic.com, or leave it (it runs fine on 4.6).
+
+## 2026-07-02 · v97 · 4 new color themes + daily-brief deadline surfacing
+
+**Color themes:** added 4 UI themes to the Settings → Appearance picker — Sakura (rose),
+Matcha (green), Ocean Teal, Midnight Kawaii (neon). Edited exactly 2 places in
+frank_hud_mockup.py: the `html.theme-<name>{...14 vars...}` CSS blocks and the `_UI_THEMES`
+JS registry. Now 8 themes total (default + 7). Persistence unchanged (localStorage frankTheme,
+per-device).
+
+**Daily-brief deadlines:** daily_brief.py now surfaces open to-dos with a due_date within 14
+days (or overdue) as an "⏰ DEADLINES APPROACHING" block — in both the AI-synthesized brief
+(preserved verbatim) and the no-AI fallback. Reads db.list_todos(); degrades to no-op if the
+DB is unavailable so the brief still sends. So the two dated to-dos (Veo before Sep 24, Nano
+Banana before Oct 23) auto-surface in Frank's daily brief as their deadlines near.
+Verified: overdue + soon shown, far-future/undated excluded, sorted soonest-first.
+
+**Build:** b4d0e2c-v97.

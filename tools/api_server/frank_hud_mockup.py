@@ -67,6 +67,26 @@ html.theme-charcoal{
   --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
   --text:#f0e8d0;--muted:#7a6e55;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
 }
+html.theme-sakura{
+  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--border:#3d1f30;
+  --cyan:#f4a7b9;--cyan2:#ffd0db;--gold:#c4607a;--gold2:#e58aa5;
+  --text:#f5e8ee;--muted:#a07085;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-matcha{
+  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--border:#263a29;
+  --cyan:#8bc34a;--cyan2:#bce88e;--gold:#d4a96a;--gold2:#e6c48a;
+  --text:#e9f2e6;--muted:#7a9070;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-ocean{
+  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--border:#1d3d38;
+  --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
+  --text:#e6f2f0;--muted:#6a9088;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-kawaii{
+  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--border:#2d2255;
+  --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
+  --text:#f0e6ff;--muted:#8070b0;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;width:100%;overflow:hidden;background:var(--bg)}
 body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
@@ -1546,6 +1566,10 @@ const _UI_THEMES = [
   {name:'light',   label:'Day Mode',      bg:'#edf1f5', accent:'#1a8a9a'},
   {name:'purple',  label:'Dark Purple',   bg:'#0c0714', accent:'#9b5de5'},
   {name:'charcoal',label:'Warm Charcoal', bg:'#13100a', accent:'#e8b84a'},
+  {name:'sakura',  label:'Sakura',        bg:'#140a10', accent:'#f4a7b9'},
+  {name:'matcha',  label:'Matcha',        bg:'#0b120c', accent:'#8bc34a'},
+  {name:'ocean',   label:'Ocean Teal',    bg:'#07120f', accent:'#3ad6c8'},
+  {name:'kawaii',  label:'Midnight Kawaii',bg:'#0d0a1a', accent:'#00e5ff'},
 ];
 function _getTheme() {
   try { return localStorage.getItem('frankTheme') || 'default'; } catch(e) { return 'default'; }

@@ -112,6 +112,47 @@ def _get_kb_context() -> str:
 
 # ── brief generation ──────────────────────────────────────────────────────────
 
+def _get_due_todos(within_days: int = 14) -> list:
+    """Open to-dos with a due_date within `within_days` (or already overdue),
+    soonest first. Returns [(days_left, text, due_str), ...]; [] on any failure so
+    the brief still sends if the DB is unavailable."""
+    try:
+        from tools.api_server import db
+        today = datetime.date.today()
+        out = []
+        for t in db.list_todos(include_done=False):
+            due = t.get("due_date")
+            if not due:
+                continue
+            try:
+                d = datetime.date.fromisoformat(str(due)[:10])
+            except ValueError:
+                continue
+            days = (d - today).days
+            if days <= within_days:
+                out.append((days, (t.get("text") or "").strip(), str(due)[:10]))
+        out.sort(key=lambda x: x[0])
+        return out
+    except Exception:
+        return []
+
+
+def _format_deadlines(due_todos: list) -> str:
+    """Render the approaching-deadline to-dos as a plain-text block (empty if none)."""
+    if not due_todos:
+        return ""
+    lines = ["", "⏰ DEADLINES APPROACHING:"]
+    for days, text, _due in due_todos:
+        if days < 0:
+            tag = f"OVERDUE {-days}d"
+        elif days == 0:
+            tag = "DUE TODAY"
+        else:
+            tag = f"{days}d left"
+        lines.append(f"  • [{tag}] {text}")
+    return "\n".join(lines)
+
+
 def _generate_brief(signals: dict, kb_context: str) -> str:
     """Call Claude Haiku to synthesize signals into a plain-text daily brief."""
     api_key = os.getenv("ANTHROPIC_API_KEY", "")
@@ -138,6 +179,9 @@ def _generate_brief(signals: dict, kb_context: str) -> str:
     )
     if signals.get("etsy_error"):
         signals_text += f"Etsy API note: {signals['etsy_error']}\n"
+    deadlines_text = _format_deadlines(_get_due_todos())
+    if deadlines_text:
+        signals_text += deadlines_text + "\n"
 
     user_msg = (
         f"Today is {date_str} at {time_str}.\n\n"
@@ -145,7 +189,8 @@ def _generate_brief(signals: dict, kb_context: str) -> str:
         f"KNOWLEDGE BASE CONTEXT:\n{kb_context or '(no recent entries)'}\n\n"
         "Write a concise daily brief email body for the shop owner. "
         "Plain text only, no markdown, no HTML. "
-        "Start with the signals block exactly as provided (preserve the ⚠️ flags). "
+        "Start with the signals block exactly as provided (preserve the ⚠️ flags and "
+        "any ⏰ DEADLINES APPROACHING lines verbatim). "
         "Then add a TODAY'S FOCUS section: 1-3 sentences on the single most important "
         "thing to do today, based on the signals and any relevant KB context. "
         "Be direct and specific. End with '— Frank 🤖'."
@@ -188,6 +233,9 @@ def _format_brief_no_ai(signals: dict) -> str:
     ]
     if signals.get("etsy_error"):
         lines.append(f"NOTE: {signals['etsy_error']}")
+    deadlines_text = _format_deadlines(_get_due_todos())
+    if deadlines_text:
+        lines.append(deadlines_text)
     lines += ["", "— Frank 🤖"]
     return "\n".join(lines)
 
