@@ -370,7 +370,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v104"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v105"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3143,7 +3143,10 @@ async def get_me(request: Request, _token: str = Depends(_auth_session_or_bearer
     if not uname:
         return {"username": "", "role": ""}
     user_row = db.get_hub_user(uname)
-    role = user_row["role"] if user_row else "owner"
+    # Fail CLOSED: a session whose user row is gone (deleted/reset) is NOT an owner.
+    # (Matches _require_owner, which already 403s that case — this just stops the UI
+    # from briefly showing owner-only controls to a stale session.)
+    role = user_row["role"] if user_row else ""
     return {"username": uname, "role": role}
 
 

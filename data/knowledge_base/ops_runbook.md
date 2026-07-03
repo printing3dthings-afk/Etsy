@@ -2494,3 +2494,19 @@ styling; escHtml on all fields.
 what needs setup instead of discovering it by a failed tool call.
 
 **Build:** b4d0e2c-v104.
+
+---
+
+## 2026-07-03 — Harden get_me to fail closed (minor, from the review)
+
+**Honest scope correction:** the productivity review flagged get_me as "fails open to owner."
+On reading the code, the REAL enforcement (`_require_owner`, main.py:3150) already fails closed
+(403s an unknown user on every admin action), so this was never an exploitable privilege
+escalation — worst case a stale session (user row deleted/reset) briefly SEES owner-only UI it
+can't actually use.
+
+**Fix:** get_me (main.py:3146) now returns role "" instead of "owner" when the session's user
+row is missing — aligns the UI hint with the fail-closed enforcement. No real owner is affected
+(they always have a row). Verified: py_compile + smoke green.
+
+**Build:** b4d0e2c-v105.
