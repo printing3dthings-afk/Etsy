@@ -2425,3 +2425,34 @@ server's datacenter IP (local files always work); the "paste a video into chat" 
 an upload path + the /data volume (separate follow-up).
 
 **Build:** b4d0e2c-v102.
+
+---
+
+## 2026-07-03 — CI smoke-test gate (first automated test for Frank)
+
+**Problem (from the productivity review):** main.py is 7,135 lines, had ZERO automated
+tests, and Railway auto-deploys every push straight to production with no gate. The most
+common prod-breaker is an import-time crash (bad import / module-scope error) — e.g. the
+`from tools import ...` top-level bug that nearly shipped with the browser tools.
+
+**Fix:**
+- `tests/smoke_test.py` — imports the server module (catches syntax/import crashes in main.py
+  and every module it imports), then asserts the AGENT_TOOLS registry built (≥25 tools),
+  the session's wired tools are present (render_page/screenshot_url/check_browser_status/
+  check_etsy_search_rank/watch_video), the dispatcher is callable, and tool schemas are
+  well-formed. No server start, no background loops, no network/API calls, no secrets.
+- `.github/workflows/ci-smoke.yml` — on every push + PR: setup py3.11, pip install
+  -r requirements.txt, `compileall tools tests`, run the smoke test.
+
+**Verified:** smoke passes locally (36 tools, exit 0); `compileall tools tests` is clean, so
+the first CI run won't red-flag legacy code.
+
+**IMPORTANT — to make this a HARD gate (not just an alarm):** GitHub Actions runs in parallel
+with Railway's deploy; a red check does NOT stop Railway by default. Enable Railway → service →
+Settings → **"Wait for CI to pass"** (Check Suites) so Railway only deploys after this check is
+green. Until then, CI is an early-warning signal, not a deploy blocker.
+
+**Follow-ups from the same review (not done here):** graceful tool degradation (tools self-report
+"unavailable: needs GEMINI_API_KEY / relay offline" instead of raw errors); harden the
+`get_me` fail-open-to-owner path (main.py:3146) to fail closed; begin extracting main.py (7,135
+lines) into modules.
