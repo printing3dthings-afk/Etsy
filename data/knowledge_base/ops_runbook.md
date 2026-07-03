@@ -2619,3 +2619,20 @@ relay or Railway; if the stealth fetch gets a 200 from Etsy there, THEN add scra
 server image and register it as an agent tool. Until then it's a ready-but-unvalidated research
 helper. ToS caution documented in the module (Etsy scraping is low-volume, public-data only;
 Scott opted in and owns that risk).
+
+---
+
+## 2026-07-03 — graphify codebase map (offline) → main.py modularization plan
+
+**What:** Ran `graphify` (safishamsi/graphify — Tree-sitter static graph, FULLY OFFLINE, no LLM
+cost) over `tools/`. 2,157 nodes / 4,232 edges / 142 communities from commit aea4a2b. Install:
+`uv tool install graphifyy && graphify install`; offline rebuild: `graphify update .` (the plain
+`extract` tries an LLM semantic pass on docs/images — use `update` or a code-only folder to stay
+offline; our Anthropic account is out of credits so offline is required).
+
+**Payoff:** graphify auto-flagged "Should main.py be split?" and showed main.py fragments into 3
+low-cohesion communities — route handlers (55 nodes), the agent-tool layer (61 nodes), and
+admin/auth/HUD (42 nodes). Turned that into a concrete split map:
+`data/knowledge_base/main_py_modularization_map.md` (committed). Interactive `graph.html` (~1.8MB)
+handed to Scott, NOT committed (generated-file bloat). This is a PLANNING artifact — the
+modularization itself is deliberate future surgery, gated behind the CI smoke + quality-gate tests.
