@@ -2510,3 +2510,28 @@ row is missing — aligns the UI hint with the fail-closed enforcement. No real 
 (they always have a row). Verified: py_compile + smoke green.
 
 **Build:** b4d0e2c-v105.
+
+---
+
+## 2026-07-03 — Quality gates now have real tests (CI-enforced)
+
+**Symptom / gap:** The code that enforces the #1 rule ("never lie to the customer /
+quality never decreases") — `EtsyAPIClient.pre_publish_gate()` and
+`validate_digital_file()` in `etsy_api.py` — had ZERO tests. A careless edit could
+silently disable a check (title ≤70, all 13 tags, price ending, mislabeled/corrupt/
+empty ZIP, traced-raster SVG rejection, path-traversal) and a violating listing or a
+broken file could ship with nothing to catch it. The existing CI smoke test only
+proves the app *imports*, not that the rules *work*.
+
+**Fix:** Added `tests/test_quality_gates.py` — 28 dependency-light, secret-free tests
+covering every branch of `pre_publish_gate` (title length/floor/phrase, tag count/
+width/special-chars/title-dup, desc length, price floor + .99/.97/.49 ending + cents
+normalization, is_supply) and `validate_digital_file` (missing/empty/oversize,
+extension + magic-byte mismatch, ZIP CRC/empty/no-product-files/path-traversal, clean
+vs traced-raster SVG). Wired into `.github/workflows/ci-smoke.yml` so it runs on every
+push/PR alongside the smoke test. Needs no APP_SECRET_TOKEN, no network, no API keys.
+
+**Note:** The first run caught a real duplication bug — in the *test fixture*, not the
+code: a baseline tag ("budget planner") duplicated a title phrase, which the gate
+correctly rejected. Fixed the fixture; the gate behaved exactly as designed. No runtime
+code changed, so `_BUILD_ID` was intentionally NOT bumped (test/CI-only change).

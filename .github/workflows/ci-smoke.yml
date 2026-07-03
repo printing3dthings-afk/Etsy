@@ -39,3 +39,6 @@ jobs:
 
       - name: Smoke test (import server + tool registry)
         run: python tests/smoke_test.py
+
+      - name: Quality-gate tests (pre_publish_gate + validate_digital_file + SVG)
+        run: python tests/test_quality_gates.py
