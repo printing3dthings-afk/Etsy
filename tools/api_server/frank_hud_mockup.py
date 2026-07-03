@@ -1268,7 +1268,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <nav id="phone-tabbar" aria-label="Phone navigation">
     <button class="ptab on" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
     <button class="ptab" data-ptab="appr" onclick="phoneTab('appr')" aria-label="Approvals"><span class="pti" aria-hidden="true">✓</span>Approvals<span class="pcnt" id="ptab-badge">0</span></button>
-    <button class="ptab" data-ptab="today" onclick="phoneTab('today')" aria-label="Today"><span class="pti" aria-hidden="true">▤</span>Today</button>
+    <button class="ptab" data-ptab="today" onclick="phoneTab('today')" aria-label="Today"><span class="pti" aria-hidden="true">▤</span>Today<span class="pcnt" id="ptab-today-badge">0</span></button>
     <button class="ptab" data-ptab="more" onclick="phoneTab('more')" aria-label="More screens"><span class="pti" aria-hidden="true">⋯</span>More</button>
   </nav>
 
@@ -2797,6 +2797,11 @@ function setActionBadge(summary, pending) {
   const pb = document.getElementById('ptab-badge');
   const pc = pending || 0;
   if (pb) { if (pc > 0) { pb.textContent = pc > 99 ? '99+' : pc; pb.style.display = 'flex'; } else { pb.style.display = 'none'; } }
+  // The urgent-recommendations count lives on the TODAY tab now (that's where the
+  // "Needs attention" items are shown) — not on Approvals.
+  const tb = document.getElementById('ptab-today-badge');
+  const hc = (summary && summary.high) || 0;
+  if (tb) { if (hc > 0) { tb.textContent = hc > 99 ? '99+' : hc; tb.style.display = 'flex'; } else { tb.style.display = 'none'; } }
 }
 function simpleLineDiff(before, after) {
   const b = String(before == null ? '' : before).split('\\n');

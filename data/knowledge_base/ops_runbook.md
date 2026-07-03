@@ -2754,3 +2754,14 @@ where they belong. Desktop `#badge-actions` unchanged.
 Approvals badge hidden + panel "All clear" (consistent); Today shows 7 recs + 1 alert = 8 items with
 their fixes under "Needs attention"; and the badge still shows the pending count (2) when real
 approvals exist.
+
+---
+
+## 2026-07-03 — Move the needs-attention badge to the Today tab (v110)
+
+**What:** Follow-up to v109 (Scott: "move the alert to the correct tab"). Since the high-severity
+recommendations now render under Today → Needs attention, the count badge belongs on the Today tab,
+not Approvals. Added `#ptab-today-badge` to the Today tab button; `setActionBadge` now sets it to
+`summary.high` (the urgent recommendations). Approvals badge stays `pending`-only. Verified
+(Playwright, 7 recs / 0 pending): Approvals badge hidden + "All clear"; Today tab badge shows "7";
+Today panel lists the 7 recs + alert; Approvals badge still shows pending count when approvals exist.
