@@ -152,6 +152,45 @@ def _reconcile_etsy_tokens() -> None:
 _reconcile_etsy_tokens()
 db.ensure_default_sandbox_folder()
 
+
+# ── Runtime settings → live config sync ────────────────────────────────────────
+# The Settings screen stores overrides in db.settings; this pushes them into the
+# exact places the code reads them so they take effect without a redeploy:
+#   • "env" targets  → os.environ (the per-call getenv flags: image/video engine, model)
+#   • "cfg" targets  → business_config module attributes (read live at call time)
+# The agent's self-identity strings (baked into _CEO_SYSTEM / AGENT_TOOLS at import)
+# are refreshed separately by _refresh_identity() so a rename reaches the agent too.
+_SETTINGS_APPLY = {
+    "image_engine":     ("env", "IMAGE_ENGINE"),
+    "video_engine":     ("env", "AI_VIDEO_ENGINE"),
+    "image_model":      ("env", "IMAGE_MODEL"),
+    "model_primary":    ("cfg", "MODEL_PRIMARY"),
+    "agent_name":       ("cfg", "AGENT_NAME"),
+    "agent_name_short": ("cfg", "AGENT_NAME_SHORT"),
+    "owner_name":       ("cfg", "OWNER_NAME"),
+}
+
+
+def _apply_settings_overrides() -> None:
+    """Sync stored runtime settings into env + business_config so they take effect
+    live. Safe to call at startup and after every settings change."""
+    try:
+        stored = db.all_settings()
+    except Exception as exc:
+        print(f"[settings] could not load overrides: {exc}", flush=True)
+        return
+    for key, (kind, target) in _SETTINGS_APPLY.items():
+        val = stored.get(key)
+        if not val:
+            continue
+        if kind == "env":
+            os.environ[target] = val
+        else:
+            setattr(business_config, target, val)
+
+
+_apply_settings_overrides()
+
 # ── Executable command registry (CEO agent can invoke these) ───────────────────
 _EXEC_COMMANDS: dict[str, dict] = {
     "shop_health_check": {
@@ -331,7 +370,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v97"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v98"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1533,6 +1572,42 @@ Quality standards:
 Keep responses concise and scannable — {business_config.OWNER_NAME} is reading on his phone.\
 """
 
+# The identity names baked into _CEO_SYSTEM/AGENT_TOOLS above, captured at import.
+# (_apply_settings_overrides ran before this, so on a fresh process these already
+# equal any stored override — the localize pass below is only for a RUNTIME rename.)
+_IDENTITY_BAKED = (business_config.AGENT_NAME, business_config.AGENT_NAME_SHORT,
+                   business_config.OWNER_NAME)
+
+
+def _localize_identity(text: str) -> str:
+    """Swap the baked-in agent/owner names for the CURRENT ones so a runtime rename
+    reaches the agent's self-identity + tool descriptions without a restart. No-op
+    (returns text unchanged, so prompt-cache still hits) when nothing changed.
+    Replaces longest baked name first so 'Frank' inside 'Fucking Frank' is safe."""
+    current = (business_config.AGENT_NAME, business_config.AGENT_NAME_SHORT,
+               business_config.OWNER_NAME)
+    if current == _IDENTITY_BAKED:
+        return text
+    out = text
+    for baked, now in sorted(zip(_IDENTITY_BAKED, current), key=lambda p: -len(p[0] or "")):
+        if baked and baked != now:
+            out = out.replace(baked, now)
+    return out
+
+
+def _refresh_identity() -> None:
+    """Called after a settings change: re-sync config and bust the HUD html cache so
+    the renamed identity shows up on the next page load. The agent system prompt +
+    tools localize per-request (see _system_block/_tools_with_cache), so they need
+    no cache busting."""
+    _apply_settings_overrides()
+    try:
+        import frank_hud_mockup
+        frank_hud_mockup._frank_html_cache = None
+    except Exception:
+        pass
+
+
 # ── CEO agent tools (read-only live data; the agent calls these mid-conversation) ─
 
 AGENT_TOOLS = [
@@ -2164,11 +2239,25 @@ _CACHED_SYSTEM_BLOCK = {
 }
 
 
+def _system_block() -> dict:
+    """The cached system block, with the current agent/owner name applied. Identical
+    text (so same cache key) unless a runtime rename happened."""
+    return {
+        "type": "text",
+        "text": _localize_identity(_CEO_SYSTEM),
+        "cache_control": {"type": "ephemeral"},
+    }
+
+
 def _tools_with_cache() -> list:
-    """Return AGENT_TOOLS with cache_control on the last entry.
+    """Return AGENT_TOOLS with cache_control on the last entry, and the current
+    agent/owner name applied to descriptions (no-op unless renamed at runtime).
     The Anthropic API caches all tools up to and including the last entry that
     carries cache_control, so tagging only the last entry is sufficient."""
-    tools = list(AGENT_TOOLS)
+    tools = [
+        {**t, "description": _localize_identity(t["description"])} if t.get("description") else t
+        for t in AGENT_TOOLS
+    ]
     tools[-1] = {**tools[-1], "cache_control": {"type": "ephemeral"}}
     return tools
 
@@ -3150,7 +3239,13 @@ _FRANK_SW_JS = (
 
 @app.get("/frank-manifest.webmanifest")
 def frank_manifest():
-    return JSONResponse(_FRANK_MANIFEST, media_type="application/manifest+json")
+    # Localize the PWA name to the current agent name (was hardcoded "FRANK").
+    short = business_config.AGENT_NAME_SHORT
+    m = {**_FRANK_MANIFEST,
+         "name": f"{short} Command Center",
+         "short_name": short,
+         "description": f"{short} — {business_config.BUSINESS_NAME} CEO agent command center."}
+    return JSONResponse(m, media_type="application/manifest+json")
 
 
 @app.get("/frank-sw.js")
@@ -5755,6 +5850,68 @@ async def post_account_endpoint(payload: dict, _token: str = Depends(_auth_sessi
     return await asyncio.to_thread(db.save_user_profile, name, email, phone, tz)
 
 
+# ── Runtime settings (agent name + AI engines) — Settings screen ────────────────
+_VIDEO_ENGINES = ("sora", "veo")
+_IMAGE_ENGINES = ("openai", "gemini", "ideogram")
+
+
+def _effective_settings() -> dict:
+    """Current effective values (stored override already applied to env/config) plus
+    the option lists the Settings dropdowns render from."""
+    return {
+        "agent_name": business_config.AGENT_NAME_SHORT,
+        "video_engine": os.getenv("AI_VIDEO_ENGINE", "sora").lower(),
+        "image_engine": os.getenv("IMAGE_ENGINE", "openai").lower(),
+        "image_model": os.getenv("IMAGE_MODEL", "gemini-2.5-flash-image"),
+        "model_primary": business_config.MODEL_PRIMARY,
+        "options": {
+            "video_engine": list(_VIDEO_ENGINES),
+            "image_engine": list(_IMAGE_ENGINES),
+        },
+    }
+
+
+@app.get("/api/settings")
+async def get_settings_endpoint(_token: str = Depends(_auth_session_or_bearer)):
+    return _effective_settings()
+
+
+@app.post("/api/settings")
+async def post_settings_endpoint(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
+    """Persist runtime overrides for the agent name + AI engines, then apply them
+    live (env + business_config) and bust the HUD cache so the rename shows up."""
+    payload = payload or {}
+
+    if "agent_name" in payload:
+        name = (payload.get("agent_name") or "").strip()
+        if not name or len(name) > 40:
+            raise HTTPException(status_code=400, detail="agent_name must be 1–40 characters")
+        # One field renames both the everyday and full forms (drops the old full name).
+        db.set_setting("agent_name", name)
+        db.set_setting("agent_name_short", name)
+
+    if "video_engine" in payload:
+        v = (payload.get("video_engine") or "").lower().strip()
+        if v not in _VIDEO_ENGINES:
+            raise HTTPException(status_code=400, detail=f"video_engine must be one of {_VIDEO_ENGINES}")
+        db.set_setting("video_engine", v)
+
+    if "image_engine" in payload:
+        v = (payload.get("image_engine") or "").lower().strip()
+        if v not in _IMAGE_ENGINES:
+            raise HTTPException(status_code=400, detail=f"image_engine must be one of {_IMAGE_ENGINES}")
+        db.set_setting("image_engine", v)
+
+    if "image_model" in payload:
+        db.set_setting("image_model", (payload.get("image_model") or "").strip())
+
+    if "model_primary" in payload:
+        db.set_setting("model_primary", (payload.get("model_primary") or "").strip())
+
+    _refresh_identity()   # re-sync env + business_config, bust HUD cache
+    return {"ok": True, "settings": _effective_settings()}
+
+
 # ── Local Relay — status, kill switch, Allowed Folders ──────────────────────────
 
 
@@ -6578,7 +6735,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     model=business_config.MODEL_PRIMARY,
                     max_tokens=1500,
                     system=[
-                        _CACHED_SYSTEM_BLOCK,
+                        _system_block(),
                         {"type": "text", "text": _ops_runbook_block() + _ceo_learnings_block()},
                     ],
                     tools=_tools_with_cache(),

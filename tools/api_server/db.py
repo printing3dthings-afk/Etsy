@@ -177,6 +177,11 @@ CREATE TABLE IF NOT EXISTS hub_sessions (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_hub_sessions_user ON hub_sessions(username);
+CREATE TABLE IF NOT EXISTS settings (
+  key        TEXT PRIMARY KEY,   -- e.g. 'agent_name', 'image_engine', 'model_primary'
+  value      TEXT,               -- string value; NULL/absent = fall back to env/default
+  updated_at TEXT
+);
 """
 
 
@@ -965,6 +970,64 @@ def save_user_profile(name: str | None, email: str | None, phone: str | None, tz
     finally:
         conn.close()
     return get_user_profile()
+
+
+# ── Runtime settings (key-value overrides for env-driven config) ───────────────
+# A value here OVERRIDES the corresponding env var / default at runtime, so the
+# Settings UI can change things like the agent name or AI engine without a
+# redeploy. Absent/empty → the caller falls back to env/default. Reads are cached
+# per-key in-process (invalidated on set) so hot paths (per-request config lookups)
+# don't hit SQLite every time.
+_settings_cache: dict = {}
+
+
+def get_setting(key: str, default: str | None = None) -> str | None:
+    """Return the stored override for `key`, or `default` if unset. Cached."""
+    if key in _settings_cache:
+        val = _settings_cache[key]
+        return val if val is not None else default
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute("SELECT value FROM settings WHERE key=?", (key,)).fetchone()
+    finally:
+        conn.close()
+    val = r["value"] if r else None
+    _settings_cache[key] = val
+    return val if val is not None else default
+
+
+def set_setting(key: str, value: str | None) -> None:
+    """Upsert an override. value=None/'' clears it (falls back to env/default)."""
+    init_db()
+    value = (value or "").strip() or None
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        if value is None:
+            conn.execute("DELETE FROM settings WHERE key=?", (key,))
+        else:
+            conn.execute(
+                """INSERT INTO settings (key, value, updated_at) VALUES (?, ?, ?)
+                   ON CONFLICT(key) DO UPDATE SET value=excluded.value,
+                     updated_at=excluded.updated_at""",
+                (key, value, ts),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+    _settings_cache[key] = value
+
+
+def all_settings() -> dict:
+    """Return every stored override as a plain dict (for the Settings screen)."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute("SELECT key, value FROM settings").fetchall()
+    finally:
+        conn.close()
+    return {r["key"]: r["value"] for r in rows}
 
 
 # ── Agent heartbeats (live-status registry) — each of the 5 real background

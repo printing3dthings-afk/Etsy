@@ -2244,3 +2244,38 @@ Banana before Oct 23) auto-surface in Frank's daily brief as their deadlines nea
 Verified: overdue + soon shown, far-future/undated excluded, sorted soonest-first.
 
 **Build:** b4d0e2c-v97.
+
+## 2026-07-02 · v98 · Settings: runtime agent-name rename + AI engine toggles
+
+**Foundation:** new `settings(key,value)` table in db.py + get_setting/set_setting/all_settings
+(cached). main.py `_apply_settings_overrides()` syncs stored overrides into the exact places
+code reads them — env vars for the per-call flags (IMAGE_ENGINE, AI_VIDEO_ENGINE, IMAGE_MODEL)
+and business_config attributes for live-read values (MODEL_PRIMARY, AGENT_NAME/SHORT/OWNER).
+Runs at startup and after every settings change. Tool modules unchanged (zero-risk).
+
+**AI engine toggles:** Settings → "AI Engines" card: video (sora/veo) + image
+(openai/gemini/ideogram) dropdowns → POST /api/settings → live switch, no Railway edit.
+
+**Agent rename (full dynamic):** Settings → "Branding" card renames the agent. Mechanism:
+- UI/login/manifest already sentinel-templated → reflect the new name on next load (HUD cache
+  busted via _refresh_identity()).
+- Agent self-identity: _system_block() + _tools_with_cache() run `_localize_identity()` per
+  request, swapping the baked-in name for the current one. No-op (byte-identical, prompt-cache
+  still hits) when unchanged → zero behavior change by default; one-time cache miss on rename.
+- Fixed the hardcoded "FRANK" PWA manifest name (now follows AGENT_NAME_SHORT).
+
+**Verified deterministically:** settings roundtrip, apply-sync, localize (clean rename +
+no-op), HUD renders with all cards/themes, no sentinel leaks, all files compile.
+**NOT verified here:** a live agent turn saying the new name (no Anthropic key in this
+container; code not yet deployed). Confirm post-deploy: rename in Settings → ask the agent
+its name.
+
+**Shipping note:** planned as 2 commits but the shared settings foundation entangled the name
++ engine code in the same functions; shipped as 1 to avoid broken intermediate states. The
+send-path name substitution is the only core-loop touch and is clearly delimited/revertible.
+
+**Build:** b4d0e2c-v98.
+
+### NOTE FOR SCOTT
+Rename Frank: Settings → Branding → type a name → Save → reload. Switch AI engines:
+Settings → AI Engines (needs GEMINI_API_KEY for Veo/Nano Banana). All persist in the DB.

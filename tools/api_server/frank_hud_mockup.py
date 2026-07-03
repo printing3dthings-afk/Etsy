@@ -952,6 +952,49 @@ video{width:100%;border-radius:10px;background:#000;display:block}
         </div>
       </div>
 
+      <div class="hub-section-title" style="margin-top:18px">Branding</div>
+      <div class="hub-card">
+        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Agent name</label>
+        <input type="text" id="setting-agent-name" class="search" style="width:100%" maxlength="40" placeholder="%%AGENT_SHORT%%">
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">
+          Renames the agent everywhere — the dashboard, the app name, and how the
+          agent refers to itself. Applies on your next page load.
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn" onclick="saveBranding()">Save name</button>
+          <div id="branding-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">AI Engines</div>
+      <div class="hub-card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video generation</label>
+            <select id="setting-video-engine" class="search" style="width:100%">
+              <option value="sora">OpenAI Sora (retires Sep 24)</option>
+              <option value="veo">Google Veo 3.1</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image generation</label>
+            <select id="setting-image-engine" class="search" style="width:100%">
+              <option value="openai">OpenAI gpt-image-1 (retires Oct 23)</option>
+              <option value="gemini">Google Nano Banana</option>
+              <option value="ideogram">Ideogram 3.0 (text)</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">
+          Switch generation providers without touching Railway. Veo &amp; Nano Banana
+          need GEMINI_API_KEY set; Ideogram needs IDEOGRAM_API_KEY.
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn" onclick="saveEngines()">Save engines</button>
+          <div id="engines-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
       <div class="hub-section-title" style="margin-top:18px">My Account</div>
       <div class="hub-card">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -1636,6 +1679,48 @@ async function saveAccountSettings(){
   }catch(e){
     if(statusEl) statusEl.textContent = 'Save failed: '+e.message;
   }
+}
+// ── Runtime settings — agent name + AI engines (backed by /api/settings, DB) ──
+async function loadRuntimeSettings(){
+  const nameEl = document.getElementById('setting-agent-name');
+  if(!nameEl) return;
+  try{
+    const r = await authGet('/api/settings');
+    const d = await r.json();
+    nameEl.value = d.agent_name || '';
+    const ve = document.getElementById('setting-video-engine');
+    const ie = document.getElementById('setting-image-engine');
+    if(ve && d.video_engine) ve.value = d.video_engine;
+    if(ie && d.image_engine) ie.value = d.image_engine;
+  }catch(e){/* leave placeholders */}
+}
+async function _postSettings(payload, statusId, okMsg){
+  const statusEl = document.getElementById(statusId);
+  if(statusEl) statusEl.textContent = 'Saving…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/settings', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }, 15000);
+    if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.detail||('HTTP '+r.status)); }
+    await r.json();
+    if(statusEl) statusEl.textContent = 'Saved ✓';
+    showToast(okMsg, 'ok');
+  }catch(e){
+    if(statusEl) statusEl.textContent = 'Save failed: '+e.message;
+  }
+}
+function saveBranding(){
+  const name = (document.getElementById('setting-agent-name').value||'').trim();
+  if(!name){ document.getElementById('branding-status').textContent = 'Enter a name first'; return; }
+  _postSettings({agent_name:name}, 'branding-status', 'Agent name saved — reload to see it everywhere');
+}
+function saveEngines(){
+  _postSettings({
+    video_engine: document.getElementById('setting-video-engine').value,
+    image_engine: document.getElementById('setting-image-engine').value,
+  }, 'engines-status', 'AI engines updated');
 }
 // ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
 // Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
@@ -3945,6 +4030,7 @@ function loadAll(){
   loadAlerts();
   loadSettingsConnectionsSummary();
   loadAccountSettings();
+  loadRuntimeSettings();
 }
 loadAll();
 loadActions();
