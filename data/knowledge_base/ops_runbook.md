@@ -2355,3 +2355,38 @@ import and routes `render_page` through the real dispatcher returning a dict.
 requirements.txt in a dedicated pass.
 
 **Build:** b4d0e2c-v100.
+
+---
+
+## 2026-07-03 — Dockerfile reconciled to requirements.txt (dependency drift fix)
+
+**Problem:** The Dockerfile installed a hand-picked pip list that had drifted out of sync
+with the app's real deps. Missing from the image: `requests`/`beautifulsoup4`/`lxml`
+(browse_web/search_etsy), `google-genai` (Veo / Nano Banana / Gemini video understanding),
+`python-multipart` (login form parsing), `PyNaCl` (relay crypto), `apscheduler`, `vtracer`,
+`reportlab`, `flask`. Any feature needing those would fail at runtime on Railway despite
+working locally.
+
+**Fix:**
+- `Dockerfile` now runs `pip install -r requirements.txt` instead of a hand-picked list, so
+  the image can't silently drift from the manifest again. Kept the ffmpeg apt install and the
+  `playwright install --with-deps chromium` step (playwright is in requirements.txt).
+- `requirements.txt`: added `google-genai>=1.0.0` (was only in tools/api_server/requirements.txt);
+  changed `uvicorn>=0.29.0` → `uvicorn[standard]>=0.29.0` **then pinned** `uvicorn[standard]==0.29.0`
+  and `fastapi==0.111.0` to the known-good versions the working image ran on. `[standard]` is
+  required for the WebSocket chat path (pulls websockets/uvloop/httptools/watchfiles).
+
+**Verified:** `pip install --dry-run --ignore-installed -r requirements.txt` resolves 100% to
+prebuilt wheels (no compiler needed on python:3.11-slim) — fastapi-0.111.0, uvicorn-0.29.0,
+starlette-0.37.2, websockets-16.0, vtracer-0.6.15, lxml-6.1.1, PyNaCl-1.6.2, google-genai-2.10.0
+all wheel-resolve. Only fastapi/uvicorn were pinned-vs-float deltas from the old image; every
+other now-added package was simply absent before, so this is strictly additive to the working
+core. Post-deploy proof = /health returns v101 (a successful build means the -r install worked
+in the real Docker build).
+
+**Enables:** google-genai in the image is the missing piece for both the image/video engine
+migrations (IMAGE_ENGINE=gemini, AI_VIDEO_ENGINE=veo) AND Gemini native video understanding —
+once GEMINI_API_KEY is set, Frank can analyze video (Gemini ingests video files <100MB inline,
+larger via File API, or YouTube URLs; samples ~1 FPS + audio).
+
+**Build:** b4d0e2c-v101.

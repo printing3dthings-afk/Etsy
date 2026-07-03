@@ -4,8 +4,11 @@ flask>=3.0.0
 Pillow>=10.0.0
 reportlab>=4.0.0
 openai>=1.0.0
-fastapi>=0.110.0
-uvicorn>=0.29.0
+# fastapi/uvicorn pinned to the versions the working image has run on — the rest of
+# the manifest floats, but these two are load-bearing for the ASGI + WebSocket chat
+# path, so they don't move without an explicit, tested bump.
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
 apscheduler>=3.10.0
 vtracer>=0.6.0
 python-multipart>=0.0.9
@@ -17,3 +20,8 @@ playwright>=1.45.0
 PyPDF2>=3.0.0
 moviepy>=2.0.0
 imageio-ffmpeg>=0.5.1
+# Google GenAI SDK — Veo 3.1 video (AI_VIDEO_ENGINE=veo) + Nano Banana / Gemini image
+# (IMAGE_ENGINE=gemini) + Gemini native video understanding. Lazily imported, so its
+# presence never affects startup; ships in the image so those features work once
+# GEMINI_API_KEY is set. (Previously only in tools/api_server/requirements.txt.)
+google-genai>=1.0.0
