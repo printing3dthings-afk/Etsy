@@ -2673,3 +2673,25 @@ strategic new-product bet). SKIPs: sticker SAM2/RMBG (color-flood already solves
 2026-07-03 fix); vtracer/potrace (output traced-raster SVGs our own validate_digital_file() gate
 rejects for AMS color separation). Design QC (VLM verify_render + goal_loop + gates) already
 stronger than most shops. See the assessment doc for the full table.
+
+---
+
+## 2026-07-03 — Frank Phone Mode: dedicated 4-tab mobile shell (v106)
+
+**What:** Scott: the HUD is too cramped on a phone — 19 desktop screens reflowed into one long
+scroll. Added a phone-only bottom tab bar (Ask / Approvals / Today / More) in
+`frank_hud_mockup.py`, gated entirely behind `body.is-mobile`. Desktop is untouched. Tabs delegate
+to existing machinery — Ask→orb/chat, Approvals→`showScreen('actions')` (Action Center, auto-loads),
+Today→`showScreen('cmd')` (home glance), More→a full-screen overlay of the existing 19-item nav (so
+nothing is lost, just demoted). On phone the floating hamburger + desktop bottom bar are hidden and
+the sidebar is hidden-until-More. Styled through existing theme vars (`--panel/--cyan2/--red/…`) so
+the color-theme selector recolors it too. Approvals badge mirrors `setActionBadge` onto `#ptab-badge`.
+
+**Verify:** py_compile + smoke + quality-gate green. Playwright at 390×844 confirmed all 16 checks —
+tab bar shows, hamburger/sidebar hidden by default, each tab drives the right screen, More overlay
+reveals+closes the nav, and the bar recolors on theme change; at 1440×900 desktop is unchanged
+(no is-mobile, tab bar hidden, sidebar visible). NOT yet proven live: chat replies (need Anthropic
+billing) and a real staged-action approve→Etsy round-trip (need live server) — deferred honestly.
+
+**Note / v1 tradeoff:** "Today" reuses the existing home dashboard screen rather than a bespoke
+compact glance (the mockup showed a tighter card layout). Fast-follow if Scott wants it tighter.

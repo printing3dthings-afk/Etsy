@@ -576,6 +576,43 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   box-shadow:0 2px 12px rgba(0,0,0,.5);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 #persist-warning b{color:#fff}
 #persist-warning.show{display:block}
+
+/* ══ Phone Mode — dedicated 4-tab bottom shell (mobile only; desktop untouched) ══
+   Everything is gated behind body.is-mobile and styled through the existing theme
+   custom properties (--panel/--border/--cyan2/--red/--muted…) so the user's chosen
+   color theme (light/purple/charcoal/sakura/matcha/ocean/kawaii) recolors it too. */
+#phone-tabbar{display:none}
+body.is-mobile #phone-tabbar{
+  display:flex;position:fixed;left:0;right:0;bottom:0;z-index:700;
+  background:var(--panel);border-top:1px solid var(--border);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+body.is-mobile #phone-tabbar .ptab{
+  flex:1;background:none;border:none;cursor:pointer;color:var(--muted);font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:600;padding:6px 2px;position:relative;
+}
+body.is-mobile #phone-tabbar .ptab .pti{font-size:19px;line-height:1}
+body.is-mobile #phone-tabbar .ptab.on{color:var(--cyan2)}
+body.is-mobile #phone-tabbar .ptab:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:8px}
+body.is-mobile #phone-tabbar .ptab .pcnt{
+  position:absolute;top:-1px;right:calc(50% - 20px);background:var(--red);color:#fff;
+  font-size:9.5px;font-weight:800;min-width:15px;height:15px;border-radius:8px;
+  display:none;align-items:center;justify-content:center;padding:0 4px;
+}
+/* the floating hamburger + desktop bottom bar are replaced by the tab bar on phone */
+body.is-mobile .hamburger-fixed{display:none !important}
+body.is-mobile .bottombar{display:none}
+/* leave room so the fixed tab bar never covers content */
+body.is-mobile .main{padding-bottom:74px}
+body.is-mobile #orb-view{padding-bottom:66px}
+/* the 19-item sidebar is hidden by default on phone and revealed on demand via "More" */
+body.is-mobile .sidebar{display:none}
+body.is-mobile.phone-more-open .sidebar{
+  display:block;position:fixed;left:0;right:0;top:0;bottom:58px;z-index:690;
+  overflow-y:auto;background:var(--bg);padding:14px;
+  padding-top:calc(14px + env(safe-area-inset-top));
+}
 </style>
 </head>
 <body>
@@ -1165,6 +1202,14 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     </div>
   </div>
 
+  <!-- ══ Phone Mode bottom tab bar — mobile only (hidden on desktop via CSS) ══ -->
+  <nav id="phone-tabbar" aria-label="Phone navigation">
+    <button class="ptab on" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
+    <button class="ptab" data-ptab="appr" onclick="phoneTab('appr')" aria-label="Approvals"><span class="pti" aria-hidden="true">✓</span>Approvals<span class="pcnt" id="ptab-badge">0</span></button>
+    <button class="ptab" data-ptab="today" onclick="phoneTab('today')" aria-label="Today"><span class="pti" aria-hidden="true">▤</span>Today</button>
+    <button class="ptab" data-ptab="more" onclick="phoneTab('more')" aria-label="More screens"><span class="pti" aria-hidden="true">⋯</span>More</button>
+  </nav>
+
 </div></div>
 
 <script>
@@ -1197,6 +1242,26 @@ window.addEventListener('resize', syncMobileClass);
 mobileMQ.addEventListener('change', syncMobileClass);
 syncMobileClass();
 document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
+
+// ── Phone Mode: 4-tab bottom shell (mobile only). Delegates to the existing
+// orb/chat, Action Center, home dashboard, and the full 19-item nav — no new
+// data paths, so it inherits every screen's live data and the theme colors. ──
+function phoneTab(which){
+  document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab===which));
+  document.body.classList.remove('phone-more-open');
+  if (which === 'ask')   { closeControlCenter(); }              // orb + chat
+  else if (which === 'appr')  { document.body.classList.add('cc-open'); showScreen('actions'); }  // approvals inbox
+  else if (which === 'today') { document.body.classList.add('cc-open'); showScreen('cmd'); }       // home glance
+  else if (which === 'more')  { document.body.classList.add('cc-open','phone-more-open'); }         // full nav overlay
+  const m = document.querySelector('.main'); if (m) m.scrollTop = 0;
+}
+// Picking any screen from the "More" overlay closes it and returns to that screen.
+document.querySelectorAll('.sidebar .nav-item').forEach(it=>it.addEventListener('click',()=>{
+  document.body.classList.remove('phone-more-open');
+}));
+// Keep the Approvals tab badge in sync from the moment the phone loads.
+if (isMobileMode() && typeof loadActions === 'function') { try { loadActions(); } catch(e){} }
+
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/frank-sw.js', { scope: '/frank' }).catch(()=>{}); }
 
 // ── Real data wiring (Step 2) — session-cookie auth. The browser sends the
@@ -2571,6 +2636,9 @@ function setActionBadge(summary, pending) {
   const n = ((summary && summary.high) || 0) + (pending || 0);  // urgent + awaiting approval
   if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
   else { b.style.display = 'none'; }
+  // Mirror onto the Phone Mode Approvals tab badge (present only in mobile shell).
+  const pb = document.getElementById('ptab-badge');
+  if (pb) { if (n > 0) { pb.textContent = n > 99 ? '99+' : n; pb.style.display = 'flex'; } else { pb.style.display = 'none'; } }
 }
 function simpleLineDiff(before, after) {
   const b = String(before == null ? '' : before).split('\\n');
