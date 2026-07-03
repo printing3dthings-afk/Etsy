@@ -237,7 +237,7 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Structure**: Cover → Welcome/Setup → Dashboard/Home → Index → How-to → Content
 - **Sections**: Yearly Overview, Monthly × 12, Monthly Review × 12, Weekly × 52, Daily × 365, Class Schedule, Brain Dump, Priority Matrix, Pomodoro Focus Tracker, Habit Tracker, SMART Goals, Notes × 4
 - **Sticker Library**: 5 pages (same 5-sheet system)
-- **Sticker Pack ZIP**: `DP1027_sticker_pack.zip` — 11 sheets, 320 individual stickers, 18.2MB. ✅ Live on Etsy (STICKER_COTTON_CANDY); descriptions updated to 11 sheets / 320+ stickers. Note: Sheet 6 individual sticker segmentation failed (stickers too connected in AI output) — sheet PNG is fine for GoodNotes import.
+- **Sticker Pack ZIP**: `DP1027_sticker_pack.zip` — 11 sheets, 320 individual stickers, 18.2MB. ✅ Live on Etsy (STICKER_COTTON_CANDY); descriptions updated to 11 sheets / 320+ stickers. Note: Sheet 6 individual segmentation originally produced only 1 blob — root-caused 2026-07-03 to the background remover using a strict pure-white (≥238) test that misses the cream sheet background (~RGB 240,237,232); the stickers were never "too connected." Fixed in `tools/process_sticker_sheets.py` (`remove_white_background` now samples the real background color and floods by similarity): Sheet 6 recovers 1 → 21 individual stickers. Regenerate + reupload the DP1027 pack to apply (Scott-gated).
 - **Interactive**: Yes
 - **Target price**: $9.99–$12.99
 - **Target audience**: High school/college students, back to school, study planners

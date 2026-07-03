@@ -2564,3 +2564,34 @@ healthy while the agent is actually down. Worth wiring the credits/402 error int
 browser render proof (Chromium boots a page + Etsy-IP reachability) is blocked only by the
 out-of-credits issue, since browser tools run through the agent loop. Re-run the browser probe
 once credits are restored.
+
+---
+
+## 2026-07-03 — Fixed DP1027 Sheet 6 sticker segmentation (misdiagnosed as "too connected")
+
+**Symptom:** DP1027 Sheet 6 produced only 1 individual sticker (the whole sheet as one
+blob), vs 23–56 on every other sheet. CLAUDE.md had recorded this as "stickers too connected
+in AI output."
+
+**Root cause (actual):** NOT connected stickers — the stickers are clearly separated. The
+`remove_white_background()` in `tools/process_sticker_sheets.py` removed background only where
+ALL RGB channels were ≥238 (pure white). Sheet 6's background is cream paper (~RGB 240,237,232);
+the blue channel (232) is below 238, so the background was never detected → never removed →
+every sticker stayed fused into one opaque blob → connected-components found 1 region.
+
+**Fix:** `remove_white_background()` now SAMPLES the background color from the four sheet corners
+(median) and floods border-connected pixels within an RGB distance (`BG_COLOR_TOLERANCE=42`) of
+it — a superset of the old pure-white behavior that also handles cream/tinted paper. Safety
+fallback to the strict white≥238 test when corners aren't a uniform light color (so dark/
+full-bleed art is never eaten). Verified on the REAL Sheet 6: **1 → 21** individual stickers,
+clean transparent cutouts; other sheets unregressed (still segment normally). Pure numpy/scipy
+(already deps) — no new dependency in any image.
+
+**rembg was evaluated and REJECTED for this:** rembg/u2net segments foreground-vs-background,
+not instance-vs-instance; on this busy sheet it masked ~93% as one foreground blob and still
+yielded 1 sticker. The lightweight color-flood is both correct AND lighter (no 176MB model,
+no onnxruntime). The plan had assumed rembg; testing on the real file proved otherwise.
+
+**Not done (Scott-gated):** regenerating + reuploading the DP1027 pack to the live Etsy listing.
+The tool is fixed and proven; applying it to the shipped pack touches a live listing = Scott's
+call. No `_BUILD_ID` bump — this is a build-time script, not part of the Railway server image.
