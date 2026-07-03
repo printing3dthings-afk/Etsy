@@ -87,6 +87,30 @@ def main() -> int:
     if core_missing:
         failures.append(f"core agent tools missing from registry: {sorted(core_missing)}")
 
+    # 4c. Every core tool is still ROUTED by the dispatcher. The dispatcher
+    #     (`_execute_agent_tool`) is a flat `if name == "X":` chain, so a tool can be
+    #     registered in AGENT_TOOLS (passes 4b) yet have no dispatch branch — the call would
+    #     fall through to "unknown tool" at runtime. We can't invoke the dispatcher here
+    #     (handlers hit Etsy/db/anthropic and have side effects), so instead we statically
+    #     inspect its source and confirm each core name has a `name == "..."` branch. This is
+    #     the safe substitute for extracting a HANDLERS dict: it makes a routing regression
+    #     (a dropped/renamed branch) fail CI, with zero change to production code. If the
+    #     dispatcher is ever refactored into a dict/registry, replace this with a direct
+    #     `set(HANDLERS) == EXPECTED_CORE_TOOLS` assertion.
+    import inspect
+    dispatch = getattr(server, "_execute_agent_tool", None)
+    if callable(dispatch):
+        try:
+            src = inspect.getsource(dispatch)
+        except (OSError, TypeError):
+            src = ""
+        if src:
+            unrouted = {n for n in EXPECTED_CORE_TOOLS if f'name == "{n}"' not in src}
+            if unrouted:
+                failures.append(
+                    f"core agent tools registered but NOT routed by _execute_agent_tool "
+                    f"(no `name == \"...\"` branch): {sorted(unrouted)}")
+
     # 5. The tool dispatcher exists and is callable.
     if not callable(getattr(server, "_execute_agent_tool", None)):
         failures.append("_execute_agent_tool is not callable")
