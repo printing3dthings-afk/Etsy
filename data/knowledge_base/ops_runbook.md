@@ -2535,3 +2535,32 @@ push/PR alongside the smoke test. Needs no APP_SECRET_TOKEN, no network, no API 
 code: a baseline tag ("budget planner") duplicated a title phrase, which the gate
 correctly rejected. Fixed the fixture; the gate behaved exactly as designed. No runtime
 code changed, so `_BUILD_ID` was intentionally NOT bumped (test/CI-only change).
+
+---
+
+## 2026-07-03 — 🚨 LIVE INCIDENT: Frank's Anthropic account out of credits (agent down)
+
+**Symptom:** Driving the deployed Frank over `/ws/chat` returns an error frame:
+"Frank's AI provider account is out of credits — let Scott know to top up Anthropic billing."
+Every agent turn (owner OR tester) fails right now — Frank's brain is offline. The rest of the
+app (dashboard, endpoints, health) is up; only the Anthropic-backed agent loop is dead.
+
+**Root cause:** The production `ANTHROPIC_API_KEY`'s account balance is depleted (Anthropic
+returns an insufficient-credits error, mapped by `_friendly_error_message`). Not an auth/key
+problem — the key authenticates; the balance is zero.
+
+**Fix (Scott's action):** Top up Anthropic billing (console.anthropic.com → Billing). No code
+change needed; the agent resumes the moment credits are available.
+
+**Secondary finding (smaller follow-up, not fixed here):** `/api/system/dependencies` shows
+`anthropic_api` breaker state "closed" with `updated_at: null` — the out-of-credits failure is
+NOT tripping the Anthropic circuit breaker, so the Dependency Health panel reports Anthropic as
+healthy while the agent is actually down. Worth wiring the credits/402 error into
+`_anthropic_breaker.record_failure()` so the panel reflects reality. Logged for later.
+
+**Verified in the same session:** sandbox→Railway WebSocket egress WORKS (ticket mint via Bearer
++ `/ws/chat` connect both succeeded), and `/api/system/dependencies` reports
+`browser: available:true` on Railway — so Playwright/Chromium is installed in the image. The full
+browser render proof (Chromium boots a page + Etsy-IP reachability) is blocked only by the
+out-of-credits issue, since browser tools run through the agent loop. Re-run the browser probe
+once credits are restored.
