@@ -16,6 +16,11 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # main.py refuses to import without an auth token (a security fail-safe — good).
+      # This dummy value only lets the module import for inspection; no server is
+      # started and no auth is performed, so it is NOT a real secret.
+      APP_SECRET_TOKEN: ci-smoke-inspection-only-not-a-secret
     steps:
       - uses: actions/checkout@v4
 
