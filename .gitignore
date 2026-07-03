@@ -48,3 +48,6 @@ data/social/_rejects/
 
 # Browser tool screenshots (runtime output from tools/browser_automation.py)
 data/browser_screenshots/
+
+# graphify generated codebase-graph output + AST cache (regenerate with `graphify update .`)
+graphify-out/
