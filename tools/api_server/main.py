@@ -370,7 +370,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v98"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v99"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -699,6 +699,8 @@ _SETUP_PAGE = """<!DOCTYPE html>
     color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px;transition:background .15s}}
   button:hover{{background:#38d8d8}}
   .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
+  .warn{{background:#2a1206;border:1px solid #a33;border-radius:7px;color:#ffb27a;font-size:12px;padding:10px 12px;margin-bottom:16px;line-height:1.5}}
+  .warn b{{color:#ff8a5c}}
   .once{{font-size:10px;color:#3a4a56;margin-top:14px;text-align:center}}
 </style>
 </head>
@@ -710,6 +712,7 @@ _SETUP_PAGE = """<!DOCTYPE html>
     </div>
     <div class="setup-heading">Create your account</div>
     <div class="setup-hint">First-time setup — choose a username and password for the owner account. You won't see this screen again.</div>
+    {persist_warning}
     {error_html}
     <form method="post" action="/login" autocomplete="off">
       <input type="hidden" name="next" value="{next_path}">
@@ -741,8 +744,19 @@ def login_page(next: str = "/", error: str = ""):
     no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
     if db.hub_users_empty():
         error_html = f'<div class="err">{error}</div>' if error else ""
+        # If storage is ephemeral, landing on this setup page usually means the DB was
+        # wiped by a container restart (Railway has no /data volume) — not a genuine
+        # first run. Say so loudly so the account you're about to create doesn't just
+        # vanish on the next deploy.
+        persist_warning = "" if db.is_persistent() else (
+            '<div class="warn">⚠️ <b>Storage is not persistent.</b> You\'re seeing this '
+            'setup screen because the database resets on every restart. Attach a Railway '
+            'Volume mounted at <b>/data</b>, or the account you create here (and everything '
+            'else) will be lost on the next deploy.</div>'
+        )
         return HTMLResponse(
-            _SETUP_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME),
+            _SETUP_PAGE.format(error_html=error_html, next_path=safe_next,
+                               hub_title=business_config.BUSINESS_NAME, persist_warning=persist_warning),
             headers=no_cache,
         )
     error_html = '<div class="err">Incorrect username or password. Try again.</div>' if error else ""
@@ -4228,6 +4242,16 @@ async def _startup() -> None:
     try:
         db.init_db()
         print(f"[db] ready at {db.DB_PATH} (persistent={db.is_persistent()})", flush=True)
+        if not db.is_persistent():
+            print(
+                "[db] " + "!" * 60 + "\n"
+                "[db] ⚠️  EPHEMERAL STORAGE — the database is NOT on a durable volume.\n"
+                "[db]     Every restart/redeploy WIPES all data (todos, settings, login\n"
+                "[db]     accounts, sessions, saved files, metric history, Etsy tokens).\n"
+                "[db]     FIX: attach a Railway Volume mounted at /data (code auto-uses it).\n"
+                "[db] " + "!" * 60,
+                flush=True,
+            )
     except Exception as exc:
         print(f"[db] init failed: {exc}", flush=True)
     # Purge any stale sessions left from previous server runs

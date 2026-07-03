@@ -2279,3 +2279,35 @@ send-path name substitution is the only core-loop touch and is clearly delimited
 ### NOTE FOR SCOTT
 Rename Frank: Settings → Branding → type a name → Save → reload. Switch AI engines:
 Settings → AI Engines (needs GEMINI_API_KEY for Veo/Nano Banana). All persist in the DB.
+
+---
+
+## 2026-07-03 — "Nothing saves when I log out" = ephemeral storage (no /data volume)
+
+**Symptom (Scott):** Every time he logs out / comes back to Frank, his data is gone —
+todos, Settings (agent name, engine toggles), even his login account (back to the
+first-run "create account" setup screen).
+
+**Root cause:** The Railway service has **no Volume mounted at `/data`**. Confirmed live:
+`GET /health` → `"persistent":false`. `db._resolve_db_path()` then falls back to the
+ephemeral in-container path (`hub_data/hub.db`). Because Railway auto-deploys on every push
+to `claude/etsy-automation-agents-WFAPU` AND recycles the container on its own, every restart
+starts on a fresh empty disk — wiping the entire SQLite DB (todos, settings, `hub_users`,
+`hub_sessions`, saved files, metric history, rotated Etsy tokens). Empty `hub_users` → login
+shows the first-run setup page, so it *feels* like logout erased everything. Same root cause
+as the earlier "7 todos vanished" incident.
+
+**The actual fix (Scott, Railway dashboard):** attach a Volume with mount path `/data`. The
+code already prefers `/data/hub.db` automatically once it exists (no code change needed). The
+new volume starts empty, so one final "create owner account" setup — then it persists forever.
+
+**Safeguard shipped this session (so it can never be silent again):**
+- `main.py` startup now prints a loud multi-line `[db] ⚠️ EPHEMERAL STORAGE` banner to logs
+  when `not db.is_persistent()`.
+- `_SETUP_PAGE` (login/setup screen) shows a red warning block when not persistent — exactly
+  where the wipe dumps you — explaining to attach a `/data` volume. Empty on a real volume.
+- HUD (`frank_hud_mockup.py`) shows a fixed red top banner "DATA IS NOT BEING SAVED …" driven
+  by `checkPersistence()` → `fetch('/health')`; auto-hides once `persistent:true`.
+- Zero behavior change when a volume is attached (all guards keyed off `db.is_persistent()`).
+
+**Build:** b4d0e2c-v99.

@@ -570,9 +570,16 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 @media (max-width:380px){
   .agents-grid{grid-template-columns:1fr}
 }
+#persist-warning{position:fixed;top:0;left:0;right:0;z-index:99999;display:none;
+  background:#7a1a00;color:#ffd9c2;font-size:13px;font-weight:600;line-height:1.4;
+  padding:9px 16px;text-align:center;border-bottom:2px solid #ff5a1f;
+  box-shadow:0 2px 12px rgba(0,0,0,.5);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+#persist-warning b{color:#fff}
+#persist-warning.show{display:block}
 </style>
 </head>
 <body>
+<div id="persist-warning">⚠️ <b>DATA IS NOT BEING SAVED.</b> Every change resets when the server restarts. Attach a Railway Volume mounted at <b>/data</b> to make data persist.</div>
 <div id="stage-wrap"><div id="stage">
 
   <button id="hamburger-btn" class="hamburger-fixed" aria-label="Toggle control center">☰</button>
@@ -4031,6 +4038,20 @@ function loadAll(){
   loadSettingsConnectionsSummary();
   loadAccountSettings();
   loadRuntimeSettings();
+  checkPersistence();
+}
+
+// Storage-durability guard: /health reports whether the DB is on a durable volume.
+// If not, every change resets on restart — surface a loud, un-dismissible banner so
+// data loss can never happen silently (see main.py db.is_persistent()).
+async function checkPersistence(){
+  try{
+    const r = await fetch('/health', {cache:'no-store'});
+    if(!r.ok) return;
+    const j = await r.json();
+    const el = document.getElementById('persist-warning');
+    if(el) el.classList.toggle('show', j && j.persistent === false);
+  }catch(e){ /* health unreachable — don't block the HUD */ }
 }
 loadAll();
 loadActions();
