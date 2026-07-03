@@ -1,0 +1,10 @@
+# Optional competitor/keyword-intelligence dependencies for tools/competitor_intel.py.
+# Deliberately NOT in requirements.txt (the Railway server image) — Scrapling pulls a
+# browser-impersonation stack (curl_cffi, browserforge) that would bloat the lean server
+# and whose stealth benefit is unproven until validated on a real network. Install where
+# you actually run competitor research (Scott's PC / relay, or a deliberate Railway test):
+#   pip install -r requirements-research.txt
+#   python tools/competitor_intel.py --selfcheck
+scrapling[fetchers]>=0.4.9
+curl_cffi>=0.7.0
+browserforge>=1.2.0

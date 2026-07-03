@@ -2595,3 +2595,27 @@ no onnxruntime). The plan had assumed rembg; testing on the real file proved oth
 **Not done (Scott-gated):** regenerating + reuploading the DP1027 pack to the live Etsy listing.
 The tool is fixed and proven; applying it to the shipped pack touches a live listing = Scott's
 call. No `_BUILD_ID` bump — this is a build-time script, not part of the Railway server image.
+
+---
+
+## 2026-07-03 — Added Scrapling competitor-intel tool (parser proven; stealth unverified here)
+
+**What:** New `tools/competitor_intel.py` (competitor/keyword/trend research via Scrapling's
+adaptive parser + stealth fetch, with a plain-requests fallback). Optional deps in
+`requirements-research.txt` — deliberately NOT in `requirements.txt`/the Railway server image,
+since Scrapling pulls a browser-impersonation stack (curl_cffi, browserforge) and its core
+benefit is unproven.
+
+**Honest verification status:** Scrapling's PARSER is verified (css/xpath/regex extraction on
+real HTML). The stealth FETCH (curl_cffi TLS impersonation — the thing that would beat Etsy's
+datacenter-IP 403) could NOT be validated in the build sandbox: that environment routes egress
+through a MITM HTTPS proxy that resets curl_cffi's custom TLS ("connection reset by peer"), so
+the tool falls back to plain requests and Etsy still 403s. This is a sandbox artifact, not a
+Scrapling flaw — on a normal network (Scott's PC via relay, or Railway) there's no such proxy.
+
+**Not wired into Frank yet — on purpose.** Wiring it as a live agent tool would imply the Etsy
+path works, which is unproven. Gate: run `python tools/competitor_intel.py --selfcheck` on the
+relay or Railway; if the stealth fetch gets a 200 from Etsy there, THEN add scrapling to the
+server image and register it as an agent tool. Until then it's a ready-but-unvalidated research
+helper. ToS caution documented in the module (Etsy scraping is low-volume, public-data only;
+Scott opted in and owns that risk).
