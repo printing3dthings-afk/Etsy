@@ -2715,3 +2715,23 @@ critically **the More panel scrolls** (scrollHeight>clientHeight, scrollTop=300)
 theme change; desktop (1440×900) unchanged. Live approve→Etsy + live metrics still need Frank on
 billing. Note: More's destination screens remain desktop-style for now (occasional access) — a v3
 could phone-optimize individual screens if Scott wants.
+
+---
+
+## 2026-07-03 — Frank Phone Mode v3: kill horizontal overflow on desktop screens (v108)
+
+**What:** Scott's phone shots still showed content too wide (cards/rows cut off, page scrolled
+sideways). Two things: (1) the shots were the OLD build — every tab opened a desktop screen;
+v107's compact panels hadn't loaded yet (the /frank-sw.js SW is network-first for navigations,
+so a reopen after the Railway build pulls latest — deploy lag, no SW change). (2) Real bug: the
+19 desktop screens use inline `grid-template-columns:1fr 1fr` blocks that never collapse on phone.
+Fix (CSS, mobile-gated, desktop untouched): `body.is-mobile .screen [style*="1fr 1fr"]{grid-
+template-columns:1fr !important}` (an !important rule beats non-important inline styles), plus a
+hard `overflow-x:hidden` + `max-width:100vw` guard on #stage/.main/.screen/.panel and width caps on
+inputs/buttons/imgs. Also nudged the red persist-warning banner below the iOS status bar
+(safe-area-inset-top) since it overlapped the clock.
+
+**Verify:** py_compile + smoke green (v108). Playwright at 390px: 9 desktop screens (settings,
+account, connections, security, listings, products, cmd, core, agents) all measured **0px
+horizontal overflow**; compact Today tiles still 3-across; desktop 1440px keeps its 2-col grids.
+Note: the guard both collapses grids and clips residual, so nothing scrolls sideways.

@@ -572,7 +572,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 }
 #persist-warning{position:fixed;top:0;left:0;right:0;z-index:99999;display:none;
   background:#7a1a00;color:#ffd9c2;font-size:13px;font-weight:600;line-height:1.4;
-  padding:9px 16px;text-align:center;border-bottom:2px solid #ff5a1f;
+  padding:9px 16px;padding-top:calc(9px + env(safe-area-inset-top));text-align:center;border-bottom:2px solid #ff5a1f;
   box-shadow:0 2px 12px rgba(0,0,0,.5);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 #persist-warning b{color:#fff}
 #persist-warning.show{display:block}
@@ -652,6 +652,21 @@ body.is-mobile.phone-panel .hdr-bar{display:none !important}
 .pmore-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .pmore-item .pmi{width:24px;text-align:center;font-size:16px}
 .pmore-item .pmc{margin-left:auto;color:var(--muted)}
+
+/* ══ Phone Mode v3 — fit the desktop screens to the phone width (no sideways scroll) ══
+   The 19 desktop screens use inline `grid-template-columns:1fr 1fr` blocks that never
+   collapse on a phone (Phone|Timezone, Username|Password, Revenue|Orders, button pairs),
+   pushing content off-screen. Collapse them to one column + hard overflow guard. All
+   mobile-gated; desktop untouched. Compact phone panels use CLASS grids, so unaffected. */
+body.is-mobile{overflow-x:hidden}
+body.is-mobile #stage-wrap,body.is-mobile #stage,body.is-mobile .main,
+body.is-mobile .screen,body.is-mobile .panel{max-width:100vw;overflow-x:hidden}
+/* an !important stylesheet rule beats a non-important inline style → 2-/3-col → 1-col */
+body.is-mobile .screen [style*="1fr 1fr"],
+body.is-mobile .main [style*="1fr 1fr"]{grid-template-columns:1fr !important}
+body.is-mobile .screen input,body.is-mobile .screen textarea,
+body.is-mobile .screen select,body.is-mobile .screen button,
+body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-sizing:border-box}
 </style>
 </head>
 <body>
