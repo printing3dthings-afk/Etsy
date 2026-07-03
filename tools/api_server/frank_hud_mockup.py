@@ -613,6 +613,45 @@ body.is-mobile.phone-more-open .sidebar{
   overflow-y:auto;background:var(--bg);padding:14px;
   padding-top:calc(14px + env(safe-area-inset-top));
 }
+
+/* ══ Phone Mode v2 — dedicated native panels (own classes → immune to the desktop
+   @media !important overrides that broke v1's reuse; real internal scroll). ══ */
+#phone-body{display:none}
+body.is-mobile.phone-panel #phone-body{
+  display:block;position:fixed;left:0;right:0;top:0;bottom:58px;z-index:680;
+  background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:14px 13px calc(20px + env(safe-area-inset-bottom));
+  padding-top:calc(14px + env(safe-area-inset-top));
+}
+/* when a native panel is up, hide the desktop content + header behind it */
+body.is-mobile.phone-panel .main,
+body.is-mobile.phone-panel .hdr-logo,
+body.is-mobile.phone-panel .hdr-bar{display:none !important}
+.pp{display:none}
+.pp.on{display:block}
+.pp-h{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:2px 2px 12px}
+.pcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px}
+.pcard .pt{font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px;line-height:1.35}
+.pcard .pm{font-size:12px;color:var(--muted);word-break:break-word}
+.pp-acts{display:flex;gap:8px;margin-top:11px}
+.pp-btn{flex:1;border:1px solid transparent;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.pp-btn.ok{background:var(--cyan);color:#04121b}
+.pp-btn.no{background:transparent;color:var(--muted);border-color:var(--border)}
+.pp-empty{text-align:center;color:var(--muted);font-size:13px;padding:34px 10px;line-height:1.5}
+.ptiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+.ptile{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center}
+.ptile .n{font-size:20px;font-weight:800;color:var(--text)}
+.ptile .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.palert{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:11px;margin-bottom:8px;font-size:12.5px;color:var(--text);line-height:1.4}
+.palert .pdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none;background:var(--muted)}
+.palert.warn .pdot{background:var(--amber)}
+.palert.crit .pdot{background:var(--red)}
+.palert.good .pdot{background:var(--green)}
+.pmore-grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 2px 7px}
+.pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px}
+.pmore-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.pmore-item .pmi{width:24px;text-align:center;font-size:16px}
+.pmore-item .pmc{margin-left:auto;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -1202,6 +1241,14 @@ body.is-mobile.phone-more-open .sidebar{
     </div>
   </div>
 
+  <!-- ══ Phone Mode v2 — native panels (mobile only). Own classes so the desktop
+       @media !important rules never touch them; scrolls internally. ══ -->
+  <div id="phone-body">
+    <section class="pp" id="pp-appr"><div class="pp-h">Waiting on you</div><div id="pp-appr-body"></div></section>
+    <section class="pp" id="pp-today"><div class="pp-h">Today</div><div id="pp-today-body"></div></section>
+    <section class="pp" id="pp-more"><div class="pp-h">All screens</div><div id="pp-more-body"></div></section>
+  </div>
+
   <!-- ══ Phone Mode bottom tab bar — mobile only (hidden on desktop via CSS) ══ -->
   <nav id="phone-tabbar" aria-label="Phone navigation">
     <button class="ptab on" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
@@ -1243,17 +1290,101 @@ mobileMQ.addEventListener('change', syncMobileClass);
 syncMobileClass();
 document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
 
-// ── Phone Mode: 4-tab bottom shell (mobile only). Delegates to the existing
-// orb/chat, Action Center, home dashboard, and the full 19-item nav — no new
-// data paths, so it inherits every screen's live data and the theme colors. ──
+// ── Phone Mode v2: 4-tab shell with dedicated NATIVE panels (mobile only).
+// Ask = the orb. Approvals/Today/More render their own compact, phone-sized
+// panels wired to the SAME live data + action fns (approveAction, openRejectModal,
+// /api/metrics, /api/alerts, showScreen) — not the desktop screens (which were too
+// big). Styled via theme vars so the color selector recolors them. ──
 function phoneTab(which){
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab===which));
-  document.body.classList.remove('phone-more-open');
-  if (which === 'ask')   { closeControlCenter(); }              // orb + chat
-  else if (which === 'appr')  { document.body.classList.add('cc-open'); showScreen('actions'); }  // approvals inbox
-  else if (which === 'today') { document.body.classList.add('cc-open'); showScreen('cmd'); }       // home glance
-  else if (which === 'more')  { document.body.classList.add('cc-open','phone-more-open'); }         // full nav overlay
-  const m = document.querySelector('.main'); if (m) m.scrollTop = 0;
+  document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
+  if (which === 'ask'){
+    document.body.classList.remove('phone-panel');
+    closeControlCenter();                                  // orb + chat
+  } else {
+    document.body.classList.add('phone-panel');
+    if (which === 'appr'){ document.getElementById('pp-appr').classList.add('on'); renderPhoneApprovals(); }
+    else if (which === 'today'){ document.getElementById('pp-today').classList.add('on'); renderPhoneToday(); }
+    else if (which === 'more'){ document.getElementById('pp-more').classList.add('on'); renderPhoneMore(); }
+  }
+  const pb = document.getElementById('phone-body'); if (pb) pb.scrollTop = 0;
+}
+// Approvals — only the pending items, compact; reuses approveAction/openRejectModal.
+async function renderPhoneApprovals(){
+  const el = document.getElementById('pp-appr-body');
+  el.innerHTML = '<div class="pp-empty">Loading…</div>';
+  try {
+    const r = await authGet('/api/queue?status=pending', 15000);
+    const d = await r.json().catch(()=>({}));
+    if (d && d.actions) _pendingActions = d.actions;
+  } catch(e) {}
+  const list = _pendingActions || [];
+  if (!list.length){ el.innerHTML = '<div class="pp-empty">✅ All clear — nothing needs your approval.</div>'; return; }
+  el.innerHTML = list.map(a=>{
+    const p = a.payload || {};
+    let meta = String(a.type||'').replace(/_/g,' ');
+    if (a.type==='publish_listing' && (p.preview||{}).price!=null) meta += ` · $${escHtml(String(p.preview.price))} · ${(p.preview.tags||[]).length} tags`;
+    else if (a.type==='update_tags') meta += ` · ${escHtml((p.tags||[]).join(', ')).slice(0,90)}`;
+    else if (a.type==='update_title') meta += ` · "${escHtml(p.title||'')}"`;
+    return `<div class="pcard"><div class="pt">${escHtml(a.summary||a.type)}</div><div class="pm">${escHtml(meta)}</div>
+      <div class="pp-acts"><button class="pp-btn ok" onclick="phoneApprove(${a.id})">Approve</button>
+      <button class="pp-btn no" onclick="openRejectModal(${a.id})">Reject</button></div>
+      <div id="reject-modal-${a.id}" style="display:none"></div></div>`;
+  }).join('');
+}
+async function phoneApprove(id){ await approveAction(id); renderPhoneApprovals(); }
+// Today — compact tiles + alerts from the same endpoints the dashboard uses.
+async function renderPhoneToday(){
+  const el = document.getElementById('pp-today-body');
+  el.innerHTML = '<div class="pp-empty">Loading…</div>';
+  let m = {}, alerts = [];
+  try { const r = await authGet('/api/metrics', 15000); m = await r.json().catch(()=>({})); } catch(e) {}
+  try { const r = await authGet('/api/alerts', 15000); const d = await r.json().catch(()=>({}));
+        alerts = d.alerts || d.items || (Array.isArray(d) ? d : []) || []; } catch(e) {}
+  const show = v => (v==null||v==='') ? '—' : v;
+  const views = show(m.views != null ? m.views : m.total_views);
+  const orders = show(m.orders != null ? m.orders : m.orders_7d);
+  const conv = (m.conversion_pct!=null) ? m.conversion_pct+'%' : show(m.conversion);
+  let html = `<div class="ptiles">
+    <div class="ptile"><div class="n">${escHtml(String(views))}</div><div class="l">Views</div></div>
+    <div class="ptile"><div class="n">${escHtml(String(orders))}</div><div class="l">Orders</div></div>
+    <div class="ptile"><div class="n">${escHtml(String(conv))}</div><div class="l">Conv.</div></div>
+  </div>`;
+  const sevOf = s => { s=String(s||'').toLowerCase();
+    return (s.includes('crit')||s.includes('high')||s.includes('err')) ? 'crit'
+         : (s.includes('warn')||s.includes('med')) ? 'warn' : 'good'; };
+  if (alerts.length){
+    html += '<div class="pmore-grp">Needs attention</div>';
+    html += alerts.slice(0,12).map(x=>{
+      const t = x.title||x.message||x.text||x.msg||(typeof x==='string'?x:'')||'Alert';
+      return `<div class="palert ${sevOf(x.severity||x.level||x.sev)}"><span class="pdot"></span><div>${escHtml(String(t))}</div></div>`;
+    }).join('');
+  } else {
+    html += '<div class="pp-empty" style="padding:22px 10px">No alerts right now — you\\'re all caught up.</div>';
+  }
+  el.innerHTML = html;
+}
+// More — a scrollable launcher for the other screens (fixes v1's unscrollable overlay).
+const _PHONE_MORE = [
+  ['Shop', [['listings','🏷','Listings'],['products','📦','Products'],['studio','▶','Studio'],['brandkit','🎨','Brand kit']]],
+  ['Work', [['tasks','☑','Tasks'],['calendar','▦','Calendar'],['workflows','⇄','Workflows'],['conversations','💬','Conversations'],['kb','📚','Knowledge base'],['memory','✦','Memory']]],
+  ['Agents & tools', [['agents','⚙','Agents'],['tools','🛠','Tools'],['core','◎','Core']]],
+  ['System', [['connections','🔌','Connections'],['security','🛡','Security'],['files','🗂','Files'],['settings','⚙','Settings']]],
+];
+function renderPhoneMore(){
+  const el = document.getElementById('pp-more-body');
+  el.innerHTML = _PHONE_MORE.map(([g, items]) =>
+    `<div class="pmore-grp">${g}</div>` + items.map(([s, ic, lbl]) =>
+      `<div class="pmore-item" role="button" tabindex="0" onclick="phoneOpenScreen('${s}')"><span class="pmi">${ic}</span>${lbl}<span class="pmc">›</span></div>`
+    ).join('')).join('');
+}
+// Opening a screen from More exits the phone panel and shows that (desktop) screen.
+function phoneOpenScreen(name){
+  document.body.classList.remove('phone-panel');
+  document.body.classList.add('cc-open');
+  document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
+  showScreen(name);
 }
 // Picking any screen from the "More" overlay closes it and returns to that screen.
 document.querySelectorAll('.sidebar .nav-item').forEach(it=>it.addEventListener('click',()=>{

@@ -9066,3 +9066,25 @@ QUALITY_STANDARDS: dict[str, dict] = {
 
 <!-- /TRASH 20260702-087 -->
 
+<!-- TRASH id=20260703-001 date=2026-07-03 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Phone Mode v1 phoneTab reused desktop screens (cramped); replaced by v2 native panels" -->
+## 20260703-001 · 2026-07-03 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Phone Mode v1 phoneTab reused desktop screens (cramped); replaced by v2 native panels  
+**Payload:** `data/trash/files/20260703-001__snippet.txt`
+
+```python
+// ── Phone Mode: 4-tab bottom shell (mobile only). Delegates to the existing
+// orb/chat, Action Center, home dashboard, and the full 19-item nav — no new
+// data paths, so it inherits every screen's live data and the theme colors. ──
+function phoneTab(which){
+  document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab===which));
+  document.body.classList.remove('phone-more-open');
+  if (which === 'ask')   { closeControlCenter(); }              // orb + chat
+  else if (which === 'appr')  { document.body.classList.add('cc-open'); showScreen('actions'); }  // approvals inbox
+  else if (which === 'today') { document.body.classList.add('cc-open'); showScreen('cmd'); }       // home glance
+  else if (which === 'more')  { document.body.classList.add('cc-open','phone-more-open'); }         // full nav overlay
+  const m = document.querySelector('.main'); if (m) m.scrollTop = 0;
+}
+```
+
+<!-- /TRASH 20260703-001 -->
+

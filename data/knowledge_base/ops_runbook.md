@@ -2695,3 +2695,23 @@ billing) and a real staged-action approve→Etsy round-trip (need live server) �
 
 **Note / v1 tradeoff:** "Today" reuses the existing home dashboard screen rather than a bespoke
 compact glance (the mockup showed a tighter card layout). Fast-follow if Scott wants it tighter.
+
+---
+
+## 2026-07-03 — Frank Phone Mode v2: native panels + More scroll fix (v107)
+
+**What:** Scott tested v1 on his phone — Ask + the tab bar were great, but Approvals/Today reused
+DESKTOP screens (too big) and More reused the desktop sidebar which the mobile @media forced to
+position:static + overflow:visible !important → couldn't scroll. Fixed by building 3 dedicated
+phone-native panels in a new `#phone-body` (own classes, immune to the desktop overrides):
+Approvals = compact `_pendingActions` cards reusing `approveAction`/`openRejectModal`; Today =
+metric tiles (/api/metrics) + alerts (/api/alerts); More = a scrollable launcher → `showScreen`.
+Ask still = orb. Styled through theme vars so the color selector recolors it. v1 phoneTab archived
+via trash.py (20260703-001) before replacement.
+
+**Verify:** py_compile + smoke green (v107). Playwright at 390×844 — 20 checks incl. Approvals
+renders compact cards wired to phoneApprove, Today shows tiles+alerts from stubbed endpoints, and
+critically **the More panel scrolls** (scrollHeight>clientHeight, scrollTop=300); panels recolor on
+theme change; desktop (1440×900) unchanged. Live approve→Etsy + live metrics still need Frank on
+billing. Note: More's destination screens remain desktop-style for now (occasional access) — a v3
+could phone-optimize individual screens if Scott wants.
