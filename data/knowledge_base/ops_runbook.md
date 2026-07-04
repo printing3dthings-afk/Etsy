@@ -2765,3 +2765,20 @@ not Approvals. Added `#ptab-today-badge` to the Today tab button; `setActionBadg
 `summary.high` (the urgent recommendations). Approvals badge stays `pending`-only. Verified
 (Playwright, 7 recs / 0 pending): Approvals badge hidden + "All clear"; Today tab badge shows "7";
 Today panel lists the 7 recs + alert; Approvals badge still shows pending count when approvals exist.
+
+---
+
+## 2026-07-03 — Phone: reachable bottom controls + dismissible persist banner (v111)
+
+**What:** Scott (Studio screen on phone): couldn't tap Generate Video — it sat under the fixed
+bottom tab bar and wouldn't scroll into reach; also wanted to dismiss the red "DATA IS NOT BEING
+SAVED" banner. Fixes: (1) bottom clearance on phone was `body.is-mobile .main{padding-bottom:74px}`
+< the bar height (58px + safe-area ≈ 90px), so the last control couldn't clear it → changed to
+`.main,.screen{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}` (scales with the
+bar). (2) Added an `×` to `#persist-warning` → `dismissPersistWarning()` sets `.show` off + a
+`_persistWarnDismissed` guard so `checkPersistence()` won't re-show it this session (returns on a
+fresh reload — real warning until /data volume is attached). Desktop untouched.
+
+**Verify:** py_compile + smoke green (v111). Playwright 390×844: Studio 'Generate Video' button
+bottom (716) ≤ tab-bar top (785) and on-screen (tappable); banner shows when persistent:false, hides
+on ×, stays hidden after re-running checkPersistence; desktop 1440 has no tab bar.

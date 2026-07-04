@@ -575,7 +575,12 @@ video{width:100%;border-radius:10px;background:#000;display:block}
   padding:9px 16px;padding-top:calc(9px + env(safe-area-inset-top));text-align:center;border-bottom:2px solid #ff5a1f;
   box-shadow:0 2px 12px rgba(0,0,0,.5);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 #persist-warning b{color:#fff}
-#persist-warning.show{display:block}
+#persist-warning.show{display:flex;align-items:flex-start;gap:10px}
+#persist-warning .pw-txt{flex:1}
+#persist-warning-x{flex:none;background:rgba(255,255,255,.15);border:none;color:#fff;
+  font-size:15px;line-height:1;width:28px;height:28px;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;margin-top:-2px}
+#persist-warning-x:active{background:rgba(255,255,255,.3)}
 
 /* ══ Phone Mode — dedicated 4-tab bottom shell (mobile only; desktop untouched) ══
    Everything is gated behind body.is-mobile and styled through the existing theme
@@ -603,8 +608,10 @@ body.is-mobile #phone-tabbar .ptab .pcnt{
 /* the floating hamburger + desktop bottom bar are replaced by the tab bar on phone */
 body.is-mobile .hamburger-fixed{display:none !important}
 body.is-mobile .bottombar{display:none}
-/* leave room so the fixed tab bar never covers content */
-body.is-mobile .main{padding-bottom:74px}
+/* leave room so the fixed tab bar never covers content — must exceed the bar height
+   (58px + safe-area). The last control (e.g. Studio's Generate Video button) has to be
+   able to scroll fully above the bar to be tappable. */
+body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}
 body.is-mobile #orb-view{padding-bottom:66px}
 /* the 19-item sidebar is hidden by default on phone and revealed on demand via "More" */
 body.is-mobile .sidebar{display:none}
@@ -670,7 +677,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 </style>
 </head>
 <body>
-<div id="persist-warning">⚠️ <b>DATA IS NOT BEING SAVED.</b> Every change resets when the server restarts. Attach a Railway Volume mounted at <b>/data</b> to make data persist.</div>
+<div id="persist-warning"><span class="pw-txt">⚠️ <b>DATA IS NOT BEING SAVED.</b> Every change resets when the server restarts. Attach a Railway Volume mounted at <b>/data</b> to make data persist.</span><button id="persist-warning-x" aria-label="Dismiss" onclick="dismissPersistWarning()">✕</button></div>
 <div id="stage-wrap"><div id="stage">
 
   <button id="hamburger-btn" class="hamburger-fixed" aria-label="Toggle control center">☰</button>
@@ -4290,13 +4297,21 @@ function loadAll(){
 // Storage-durability guard: /health reports whether the DB is on a durable volume.
 // If not, every change resets on restart — surface a loud, un-dismissible banner so
 // data loss can never happen silently (see main.py db.is_persistent()).
+let _persistWarnDismissed = false;
+function dismissPersistWarning(){
+  _persistWarnDismissed = true;
+  const el = document.getElementById('persist-warning');
+  if(el) el.classList.remove('show');
+}
 async function checkPersistence(){
   try{
     const r = await fetch('/health', {cache:'no-store'});
     if(!r.ok) return;
     const j = await r.json();
     const el = document.getElementById('persist-warning');
-    if(el) el.classList.toggle('show', j && j.persistent === false);
+    // Respect a manual dismiss — don't re-show it this session (it's ephemeral storage,
+    // so it returns on a fresh reload until the /data volume is attached).
+    if(el) el.classList.toggle('show', !_persistWarnDismissed && j && j.persistent === false);
   }catch(e){ /* health unreachable — don't block the HUD */ }
 }
 loadAll();
