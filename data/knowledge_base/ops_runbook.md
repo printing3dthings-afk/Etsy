@@ -2782,3 +2782,29 @@ fresh reload — real warning until /data volume is attached). Desktop untouched
 **Verify:** py_compile + smoke green (v111). Playwright 390×844: Studio 'Generate Video' button
 bottom (716) ≤ tab-bar top (785) and on-screen (tappable); banner shows when persistent:false, hides
 on ×, stays hidden after re-running checkPersistence; desktop 1440 has no tab bar.
+
+---
+
+## 2026-07-03 — Phone Today: tappable cards → fix-it/view-on-Etsy sheet + metrics tile fix (v112)
+
+**What:** Scott asked for each "Needs attention" card on the phone Today tab to be tappable with a
+popup: let Frank fix it, or view the listing on Etsy. Same screenshot showed the ORDERS tile
+rendering "[object Object]". Implemented in frank_hud_mockup.py:
+1. **Action sheet** `#phone-sheet` (+ backdrop, themed vars): "🤖 Let Frank fix it" → prefills
+   `#chat-input` with a targeted prompt ("Diagnose and fix Etsy listing <id> — issue flagged:
+   <title>. …stage for my approval, don't change the live listing without me") → `sendMsg()` (real
+   WS chat path) → navigates to the cmd screen so the reply is visible + toast. "🏷 View listing on
+   Etsy" → `window.open(card.url || etsy.com/listing/<id>)`. Cancel/backdrop closes.
+2. **Tappable cards:** recommendations from `/api/actions` keep `listing_id`/`url`; listing-linked
+   cards render `role=button` + chevron → `phoneNeedsSheet(i)` (data via `_phoneNeeds[]`, no attr-
+   escaping). Plain alerts stay non-tappable.
+3. **Tile fix:** `/api/metrics` returns `orders` as an OBJECT and has no top-level views/conversion
+   → tiles now use the real shape: `orders.last_7_days`, `orders.revenue_7d` ($, 2dp),
+   `shop.total_sales` ("Orders · 7d / Rev · 7d / Total sales"). No more [object Object].
+
+**Verify:** py_compile + smoke green (v112). Playwright 390×844 (stubbed real-shape APIs): 13/13 —
+tiles 6 / $71.94 / 21; 2 of 4 cards tappable (listing-linked only); sheet opens w/ title; View
+opens https://www.etsy.com/listing/101 (context-stubbed); Fix-it lands the targeted prompt in chat
+on the cmd screen; backdrop closes; desktop sheet hidden. Test gotcha logged: Playwright matches
+routes in REVERSE registration order — register catch-alls FIRST. Caveat: with Anthropic billing
+still empty, Frank replies to fix-it with the credit error until topped up (UI path verified).

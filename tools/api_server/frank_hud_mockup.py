@@ -659,6 +659,23 @@ body.is-mobile.phone-panel .hdr-bar{display:none !important}
 .pmore-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .pmore-item .pmi{width:24px;text-align:center;font-size:16px}
 .pmore-item .pmc{margin-left:auto;color:var(--muted)}
+/* tappable needs-attention cards */
+.palert.tappable{cursor:pointer}
+.palert.tappable:active{background:var(--panel2)}
+.palert .pchev{margin-left:auto;color:var(--muted);flex:none;align-self:center}
+/* phone action sheet */
+#phone-sheet-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55)}
+#phone-sheet{display:none;position:fixed;left:0;right:0;bottom:0;z-index:901;
+  background:var(--panel);border-top:1px solid var(--border);border-radius:18px 18px 0 0;
+  padding:18px 16px calc(16px + env(safe-area-inset-bottom));flex-direction:column;gap:9px}
+body.phone-sheet-open #phone-sheet-backdrop{display:block}
+body.phone-sheet-open #phone-sheet{display:flex}
+#phone-sheet-title{font-weight:700;font-size:14.5px;color:var(--text);line-height:1.4}
+#phone-sheet-sub{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.4}
+.psheet-btn{border:1px solid var(--border);border-radius:12px;padding:13px;font-size:14px;
+  font-weight:700;cursor:pointer;font-family:inherit;background:var(--panel2);color:var(--text)}
+.psheet-btn.primary{background:var(--cyan);border-color:transparent;color:#04121b}
+.psheet-btn.cancel{background:transparent;color:var(--muted)}
 
 /* ══ Phone Mode v3 — fit the desktop screens to the phone width (no sideways scroll) ══
    The 19 desktop screens use inline `grid-template-columns:1fr 1fr` blocks that never
@@ -1271,6 +1288,16 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <section class="pp" id="pp-more"><div class="pp-h">All screens</div><div id="pp-more-body"></div></section>
   </div>
 
+  <!-- ══ Phone action sheet — tap a Needs-attention card → fix-it / view-on-Etsy ══ -->
+  <div id="phone-sheet-backdrop" onclick="phoneSheetClose()"></div>
+  <div id="phone-sheet" role="dialog" aria-modal="true">
+    <div id="phone-sheet-title"></div>
+    <div id="phone-sheet-sub"></div>
+    <button class="psheet-btn primary" id="phone-sheet-fix" onclick="phoneSheetFix()">🤖 Let Frank fix it</button>
+    <button class="psheet-btn" id="phone-sheet-view" onclick="phoneSheetView()">🏷 View listing on Etsy</button>
+    <button class="psheet-btn cancel" onclick="phoneSheetClose()">Cancel</button>
+  </div>
+
   <!-- ══ Phone Mode bottom tab bar — mobile only (hidden on desktop via CSS) ══ -->
   <nav id="phone-tabbar" aria-label="Phone navigation">
     <button class="ptab on" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
@@ -1366,33 +1393,77 @@ async function renderPhoneToday(){
   let acts = [];
   try { const r = await authGet('/api/actions', 15000); const d = await r.json().catch(()=>({}));
         acts = (d.actions||[]).filter(x=>x.severity==='high'||x.severity==='medium'); } catch(e) {}
+  // Real /api/metrics shape: orders is an OBJECT ({last_7_days, revenue_7d, ...}),
+  // shop.total_sales is the all-time count. (Rendering m.orders directly printed
+  // "[object Object]" — caught by Scott on-device.)
+  const mo = m.orders || {}, ms = m.shop || {};
   const show = v => (v==null||v==='') ? '—' : v;
-  const views = show(m.views != null ? m.views : m.total_views);
-  const orders = show(m.orders != null ? m.orders : m.orders_7d);
-  const conv = (m.conversion_pct!=null) ? m.conversion_pct+'%' : show(m.conversion);
+  const orders7 = show(mo.last_7_days);
+  const rev7 = (mo.revenue_7d != null) ? '$' + Number(mo.revenue_7d).toFixed(2) : '—';
+  const totalSales = show(ms.total_sales);
   let html = `<div class="ptiles">
-    <div class="ptile"><div class="n">${escHtml(String(views))}</div><div class="l">Views</div></div>
-    <div class="ptile"><div class="n">${escHtml(String(orders))}</div><div class="l">Orders</div></div>
-    <div class="ptile"><div class="n">${escHtml(String(conv))}</div><div class="l">Conv.</div></div>
+    <div class="ptile"><div class="n">${escHtml(String(orders7))}</div><div class="l">Orders · 7d</div></div>
+    <div class="ptile"><div class="n">${escHtml(String(rev7))}</div><div class="l">Rev · 7d</div></div>
+    <div class="ptile"><div class="n">${escHtml(String(totalSales))}</div><div class="l">Total sales</div></div>
   </div>`;
   const sevOf = s => { s=String(s||'').toLowerCase();
     return (s.includes('crit')||s.includes('high')||s.includes('err')) ? 'crit'
          : (s.includes('warn')||s.includes('med')) ? 'warn' : 'good'; };
   // Needs attention = Frank's ranked recommendations (with a suggested fix each) + alerts.
+  // Recommendations carry listing_id/url → tappable card → action sheet (fix it / view on Etsy).
   const needs = [];
-  acts.forEach(x => needs.push({sev: x.severity==='high'?'crit':'warn', title: x.title, sub: x.suggestion}));
+  acts.forEach(x => needs.push({sev: x.severity==='high'?'crit':'warn', title: x.title, sub: x.suggestion,
+    listing_id: x.listing_id, url: x.url}));
   alerts.forEach(x => { const t = x.title||x.message||x.text||x.msg||(typeof x==='string'?x:'')||'Alert';
     needs.push({sev: sevOf(x.severity||x.level||x.sev), title: String(t), sub: ''}); });
+  _phoneNeeds = needs.slice(0,20);
   if (needs.length){
     html += '<div class="pmore-grp">Needs attention</div>';
-    html += needs.slice(0,20).map(x =>
-      `<div class="palert ${x.sev}"><span class="pdot"></span><div>${escHtml(x.title)}` +
-      (x.sub ? `<div style="color:var(--muted);margin-top:2px">${escHtml(x.sub)}</div>` : '') +
-      `</div></div>`).join('');
+    html += _phoneNeeds.map((x,i) => {
+      const tap = (x.listing_id || x.url)
+        ? ` tappable" role="button" tabindex="0" onclick="phoneNeedsSheet(${i})` : '';
+      return `<div class="palert ${x.sev}${tap}"><span class="pdot"></span><div>${escHtml(x.title)}` +
+        (x.sub ? `<div style="color:var(--muted);margin-top:2px">${escHtml(x.sub)}</div>` : '') +
+        `</div>` + ((x.listing_id || x.url) ? '<span class="pchev">›</span>' : '') + `</div>`;
+    }).join('');
   } else {
     html += '<div class="pp-empty" style="padding:22px 10px">Nothing needs attention right now — you\\'re all caught up.</div>';
   }
   el.innerHTML = html;
+}
+// Action sheet for a tapped Needs-attention card: Frank fixes it, or open on Etsy.
+let _phoneNeeds = [];
+let _phoneSheetItem = null;
+function phoneNeedsSheet(i){
+  const it = _phoneNeeds[i];
+  if (!it || (!it.listing_id && !it.url)) return;
+  _phoneSheetItem = it;
+  document.getElementById('phone-sheet-title').textContent = it.title || 'Listing issue';
+  document.getElementById('phone-sheet-sub').textContent = it.sub || '';
+  document.body.classList.add('phone-sheet-open');
+}
+function phoneSheetClose(){
+  document.body.classList.remove('phone-sheet-open');
+  _phoneSheetItem = null;
+}
+function phoneSheetView(){
+  const it = _phoneSheetItem; if (!it) return;
+  const url = it.url || (it.listing_id ? 'https://www.etsy.com/listing/' + it.listing_id : null);
+  phoneSheetClose();
+  if (url) window.open(url, '_blank');
+}
+function phoneSheetFix(){
+  const it = _phoneSheetItem; if (!it) return;
+  const ref = it.listing_id ? ('Etsy listing ' + it.listing_id) : 'this listing';
+  const prompt = 'Diagnose and fix ' + ref + ' — issue flagged: "' + (it.title || '') + '". '
+    + 'Investigate the root cause, then stage your recommended fix for my approval. '
+    + 'Do not change the live listing without my approval.';
+  phoneSheetClose();
+  phoneOpenScreen('cmd');  // the screen that contains the chat panel, so the reply is visible
+  const inp = document.getElementById('chat-input');
+  if (inp) inp.value = prompt;
+  if (typeof sendMsg === 'function') sendMsg();
+  showToast('Sent — %%AGENT_SHORT%% is on it. His reply will appear in the chat below.', 'info', 5000);
 }
 // More — a scrollable launcher for the other screens (fixes v1's unscrollable overlay).
 const _PHONE_MORE = [
