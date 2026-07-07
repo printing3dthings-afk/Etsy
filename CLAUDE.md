@@ -1494,13 +1494,15 @@ These rules apply regardless of product category. Violations block publishing.
 **Lifestyle photos must be generated with an edit-style call (`tools/image_gen.py`'s `edit_image()`) using the actual downloadable product file as input.** No AI-generated stand-in products. No placeholder art. The exact files the customer downloads are passed in as the input image. This is the only method that guarantees the listing photo shows what the customer actually receives. See THE STANDARD LIFESTYLE METHOD in the Image Generation section.
 
 **EVERY photo in EVERY listing must be generated with an approved AI image engine — HARD RULE (Scott, June 2026; updated July 2026 for multi-engine).** Approved engines, selected via the existing `engine=` param / `IMAGE_ENGINE` setting in `tools/image_gen.py` — never a hardcoded choice in a script:
-- **gpt-image-1** (OpenAI) — default engine, proven, use when unsure
+- **gpt-image-1** (OpenAI) — current default, proven, use when unsure. **Shuts down 2026-10-23** (confirmed on OpenAI's deprecations page) — the only engine that supports `background="transparent"` for sticker/cut-out assets, so it must stay available for that use case even after gpt-image-2 becomes the default for everything else.
+- **gpt-image-2** (OpenAI) — gpt-image-1's successor (shipped 2026-04-21), same account/API key. Native reasoning, sharper in-image text, flexible sizes. Does **not** support `background="transparent"` — `tools/image_gen.py` raises a clear error if you try; use gpt-image-1 for stickers/cut-outs until/unless that changes.
 - **Gemini "Nano Banana"** (`gemini-2.5-flash-image`) — best at keeping the same product consistent across scenes; prefer for multi-photo listing mockups
 - **Ideogram 3.0** — best in-image text (covers/badges); generate-only, no edit/input-image support
-This applies to all 10 slots, not just lifestyle shots. No PIL-only graphics, no plain solid-color backgrounds, no other image software (Stable Diffusion, ComfyUI, or any self-hosted generator) unless a demonstrably better tool replaces one of the three above. Per-slot method:
-- Lifestyle / detail shots: a pure generate call is never acceptable here — use the engine's edit path with the real product file(s) as input (Ideogram can't do this — use gpt-image-1 or Gemini for these slots)
+This applies to all 10 slots, not just lifestyle shots. No PIL-only graphics, no plain solid-color backgrounds, no other image software (Stable Diffusion, ComfyUI, or any self-hosted generator) unless a demonstrably better tool replaces one of the four above. Per-slot method:
+- Lifestyle / detail shots: a pure generate call is never acceptable here — use the engine's edit path with the real product file(s) as input (Ideogram can't do this — use gpt-image-1/2 or Gemini for these slots)
 - Flat lays / collection shots with multiple designs: generate the background + pixel-perfect PIL paste of the REAL design files on top (edit-style calls garble small text with 5+ inputs, regardless of engine)
-- Infographics / spec sheets / how-to graphics: generate the background + PIL text overlay (no engine reliably renders text baked into the image — Ideogram is the closest, still verify before shipping)
+- Infographics / spec sheets / how-to graphics: generate the background + PIL text overlay (no engine reliably renders text baked into the image — Ideogram and gpt-image-2 are the closest, still verify before shipping)
+- Stickers / cut-out assets requiring a transparent background: engine="openai" (gpt-image-1) only — gpt-image-2 cannot do this
 
 **Every listing undergoes a complete pre-publish checklist before going live.** A listing cannot be submitted for Scott's review unless every gate below for its category has been run and passed. "Looks good" is not a gate. The gate is code.
 

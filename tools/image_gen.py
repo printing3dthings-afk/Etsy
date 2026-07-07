@@ -106,12 +106,33 @@ def _post(url: str, body: bytes, headers: dict, retries: int, timeout: int) -> d
 # Providers sit behind an engine flag, same pattern as tools/ai_video.py. OpenAI
 # (gpt-image-1) stays the DEFAULT until a replacement is proven; flip per deploy
 # with IMAGE_ENGINE, or per call with engine=. Engines:
-#   "openai"   — gpt-image-1 (default, unchanged, proven)
-#   "gemini"   — Google "Nano Banana" (gemini-2.5-flash-image); best at keeping the
-#                same product consistent across scenes → ideal for listing mockups
-#   "ideogram" — Ideogram 3.0; best text-in-image (covers/badges); GENERATE-ONLY
+#   "openai"     — gpt-image-1 (default, unchanged, proven). Shuts down 2026-10-23
+#                  per OpenAI's deprecations page — migrate call sites to
+#                  "gpt-image-2" before then, EXCEPT anywhere background="transparent"
+#                  is used (stickers/cut-outs) — see the note below.
+#   "gpt-image-2" — OpenAI's gpt-image-1 successor (shipped 2026-04-21). Same REST
+#                  endpoints/response shape as gpt-image-1 (this module reuses the
+#                  same call path, just swaps the model string), native reasoning,
+#                  sharper text-in-image, flexible sizes beyond the 3 canonical
+#                  constants below if ever needed. LIMITATION: does NOT support
+#                  background="transparent" (verified against OpenAI's docs,
+#                  2026-07) — generate_image()/edit_image() raise a clear
+#                  ImageGenError if you try, same as the gemini/ideogram guard
+#                  below. Sticker/cut-out generation must keep using engine="openai"
+#                  (or a future transparency-capable engine) until/unless that
+#                  changes. Also omits input_fidelity on edits — gpt-image-2
+#                  processes every input at high fidelity automatically, the API
+#                  doesn't accept overriding it.
+#   "gemini"     — Google "Nano Banana" (gemini-2.5-flash-image); best at keeping the
+#                  same product consistent across scenes → ideal for listing mockups
+#   "ideogram"   — Ideogram 3.0; best text-in-image (covers/badges); GENERATE-ONLY
 _DEFAULT_ENGINE = "openai"
 _GEMINI_IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gemini-2.5-flash-image")
+_OPENAI_COMPATIBLE_ENGINES = {"openai", "gpt-image-2"}
+
+
+def _openai_model_for(eng: str) -> str:
+    return "gpt-image-2" if eng == "gpt-image-2" else _MODEL
 
 
 def _engine(engine: str | None) -> str:
@@ -261,7 +282,7 @@ def generate_image(
     if size not in _VALID_SIZES:
         raise ImageGenError(f"invalid size {size!r}; use one of {sorted(_VALID_SIZES)}")
     eng = _engine(engine)
-    if eng != "openai":
+    if eng not in _OPENAI_COMPATIBLE_ENGINES:
         if background == "transparent":
             raise ImageGenError(
                 f"engine={eng!r} does not support transparent background — use "
@@ -271,12 +292,16 @@ def generate_image(
         elif eng == "ideogram":
             raw = _ideogram_generate_bytes(prompt, size)
         else:
-            raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gemini/ideogram)")
+            raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gemini/ideogram)")
         return _write(out_path, _fit_to_size(raw, size, output_format))
+    if eng == "gpt-image-2" and background == "transparent":
+        raise ImageGenError(
+            "engine='gpt-image-2' does not support transparent background — use "
+            "engine='openai' (gpt-image-1) for cut-out/sticker assets")
     if background == "transparent" and output_format not in ("png", "webp"):
         raise ImageGenError("transparent background requires output_format='png' or 'webp'")
     payload = {
-        "model": _MODEL,
+        "model": _openai_model_for(eng),
         "prompt": prompt,
         "size": size,
         "quality": quality,
@@ -316,7 +341,7 @@ def edit_image(
     if size not in _VALID_SIZES:
         raise ImageGenError(f"invalid size {size!r}; use one of {sorted(_VALID_SIZES)}")
     eng = _engine(engine)
-    if eng != "openai":
+    if eng not in _OPENAI_COMPATIBLE_ENGINES:
         if eng == "gemini":
             raw = _gemini_edit_bytes(prompt, list(image_paths))
             return _write(out_path, _fit_to_size(raw, size, "jpeg"))
@@ -324,7 +349,7 @@ def edit_image(
             raise ImageGenError(
                 "engine='ideogram' is generate-only (no reference-image edit) — "
                 "use 'gemini' or 'openai' for edits")
-        raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gemini/ideogram)")
+        raise ImageGenError(f"unknown IMAGE_ENGINE {eng!r} (expected openai/gpt-image-2/gemini/ideogram)")
 
     boundary = "----imggen" + os.urandom(8).hex()
     parts: list[bytes] = []
@@ -334,11 +359,13 @@ def edit_image(
             f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}'.encode()
         )
 
-    _field("model", _MODEL)
+    _field("model", _openai_model_for(eng))
     _field("prompt", prompt)
     _field("size", size)
     _field("quality", quality)
-    if input_fidelity:
+    # gpt-image-2 processes every input at high fidelity automatically and doesn't
+    # accept input_fidelity as a parameter — omit it for that engine even if passed.
+    if input_fidelity and eng != "gpt-image-2":
         _field("input_fidelity", input_fidelity)
 
     for p in image_paths:

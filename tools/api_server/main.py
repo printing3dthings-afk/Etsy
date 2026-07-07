@@ -367,6 +367,34 @@ def _seed_owner_if_empty() -> None:
 
 _seed_owner_if_empty()
 
+# ── Default tester login (Scott, July 2026) — always active, credentials are
+# overridable env vars. SECURITY NOTE: there is no restricted/read-only role in
+# this system (see _require_owner / "Add Admin" — role is only "owner" or "admin",
+# and admins have full API access identical to the owner). This account is
+# therefore full-access, not a sandboxed viewer. It's created idempotently (never
+# overwrites an existing password on restart) and only for local/private testing —
+# rotate TEST_LOGIN_PASSWORD (or disable by setting it to an empty string) before
+# this deploy is ever meant to be hardened. ──
+_TEST_LOGIN_USERNAME = os.getenv("TEST_LOGIN_USERNAME", "tester").strip().lower()
+_TEST_LOGIN_PASSWORD = os.getenv("TEST_LOGIN_PASSWORD", "TesterOnly!2026").strip()
+
+
+def _seed_test_user_if_missing() -> None:
+    """Create the default tester account once, if it doesn't already exist. Set
+    TEST_LOGIN_PASSWORD="" to opt out entirely (no account is created/kept)."""
+    if not _TEST_LOGIN_PASSWORD:
+        return
+    try:
+        if not db.get_hub_user(_TEST_LOGIN_USERNAME):
+            db.create_hub_user(_TEST_LOGIN_USERNAME, _hash_password(_TEST_LOGIN_PASSWORD), role="admin")
+            print(f"[auth] seeded default tester account '{_TEST_LOGIN_USERNAME}' (full admin access — "
+                  "see the security note in main.py if this deploy stops being just for testing)", flush=True)
+    except Exception as exc:
+        print(f"[auth] tester seed failed: {exc}", flush=True)
+
+
+_seed_test_user_if_missing()
+
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
@@ -651,6 +679,9 @@ _LOGIN_PAGE = """<!DOCTYPE html>
     color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px;transition:background .15s}}
   button:hover{{background:#38d8d8}}
   .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
+  .cross-link{{text-align:center;margin-top:16px}}
+  .cross-link a{{color:#2ec4c4;font-size:12px;text-decoration:none}}
+  .cross-link a:hover{{text-decoration:underline}}
 </style>
 </head>
 <body>
@@ -668,6 +699,7 @@ _LOGIN_PAGE = """<!DOCTYPE html>
       <input type="password" id="li-pass" name="password" placeholder="Enter your password" autocomplete="current-password">
       <button type="submit">Sign in</button>
     </form>
+    {cross_link}
   </div>
 </body>
 </html>"""
@@ -702,6 +734,9 @@ _SETUP_PAGE = """<!DOCTYPE html>
   .warn{{background:#2a1206;border:1px solid #a33;border-radius:7px;color:#ffb27a;font-size:12px;padding:10px 12px;margin-bottom:16px;line-height:1.5}}
   .warn b{{color:#ff8a5c}}
   .once{{font-size:10px;color:#3a4a56;margin-top:14px;text-align:center}}
+  .cross-link{{text-align:center;margin-top:16px}}
+  .cross-link a{{color:#2ec4c4;font-size:12px;text-decoration:none}}
+  .cross-link a:hover{{text-decoration:underline}}
 </style>
 </head>
 <body>
@@ -726,6 +761,7 @@ _SETUP_PAGE = """<!DOCTYPE html>
       <button type="submit">Create account &amp; sign in</button>
     </form>
     <div class="once">This is a one-time setup. After this, use your username and password to sign in.</div>
+    {signin_link}
   </div>
 </body>
 </html>"""
@@ -739,10 +775,18 @@ def _safe_next(next_path: str) -> str:
 
 
 @app.get("/login", response_class=HTMLResponse)
-def login_page(next: str = "/", error: str = ""):
+def login_page(next: str = "/", error: str = "", mode: str = ""):
     safe_next = _safe_next(next)
     no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
-    if db.hub_users_empty():
+    empty = db.hub_users_empty()
+    # mode=signin is the "Already have an account? Sign in instead" escape hatch on
+    # the setup page — forces the plain sign-in form even while the table is empty,
+    # so a account creation isn't the only path shown. If storage keeps getting
+    # wiped (see the persist-warning below), setting FRANK_USERNAME/FRANK_PASSWORD
+    # in Railway auto-recreates the real owner account on every restart, which is
+    # the actual fix for repeatedly landing on the setup screen — this link is a
+    # manual fallback, not a substitute for that.
+    if empty and mode != "signin":
         error_html = f'<div class="err">{error}</div>' if error else ""
         # If storage is ephemeral, landing on this setup page usually means the DB was
         # wiped by a container restart (Railway has no /data volume) — not a genuine
@@ -754,14 +798,26 @@ def login_page(next: str = "/", error: str = ""):
             'Volume mounted at <b>/data</b>, or the account you create here (and everything '
             'else) will be lost on the next deploy.</div>'
         )
+        signin_link = (
+            f'<div class="cross-link"><a href="/login?mode=signin&next={safe_next}">'
+            'Already have an account? Sign in instead</a></div>'
+        )
         return HTMLResponse(
-            _SETUP_PAGE.format(error_html=error_html, next_path=safe_next,
-                               hub_title=business_config.BUSINESS_NAME, persist_warning=persist_warning),
+            _SETUP_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME,
+                               persist_warning=persist_warning, signin_link=signin_link),
             headers=no_cache,
         )
-    error_html = '<div class="err">Incorrect username or password. Try again.</div>' if error else ""
+    if error == "noaccount":
+        error_html = '<div class="err">No account exists yet with that username. Use "Create one instead" below, or ask the owner to set one up.</div>'
+    else:
+        error_html = '<div class="err">Incorrect username or password. Try again.</div>' if error else ""
+    cross_link = (
+        f'<div class="cross-link"><a href="/login?next={safe_next}">First time? Create an account instead</a></div>'
+        if empty else ""
+    )
     return HTMLResponse(
-        _LOGIN_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME),
+        _LOGIN_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME,
+                           cross_link=cross_link),
         headers=no_cache,
     )
 
@@ -779,7 +835,13 @@ def login_submit(
     safe_next = _safe_next(next)
 
     # ── First-run setup: create the owner account ──────────────────────────
-    if setup_mode == "1" or db.hub_users_empty():
+    # Gated on the explicit setup_mode=1 hidden field (only _SETUP_PAGE's form sends
+    # it) — NOT on db.hub_users_empty() alone. A plain login-form POST (no
+    # confirm_password field) landing here while the table happens to be empty used
+    # to fall into this branch and fail with a confusing "Passwords do not match"
+    # (confirm_password arrives blank). That case is now handled explicitly below
+    # with an accurate message instead.
+    if setup_mode == "1":
         uname = username.strip().lower()
         pw = password.strip()
         cpw = confirm_password.strip()
@@ -801,6 +863,12 @@ def login_submit(
             return resp
 
     # ── Normal login ────────────────────────────────────────────────────────
+    # Someone used the "Already have an account? Sign in instead" link but the
+    # table is genuinely empty (no account exists here right now) — say so plainly
+    # rather than a generic "incorrect password", and keep them on the sign-in form
+    # (mode=signin) instead of silently bouncing back to account creation.
+    if db.hub_users_empty():
+        return RedirectResponse(f"/login?mode=signin&error=noaccount&next={safe_next}", status_code=303)
     if _login_rate_limited(ip):
         return Response(content="Too many failed attempts. Try again in a few minutes.", status_code=429)
     uname = username.strip().lower()
@@ -5903,9 +5971,47 @@ async def post_account_endpoint(payload: dict, _token: str = Depends(_auth_sessi
     return await asyncio.to_thread(db.save_user_profile, name, email, phone, tz)
 
 
+class _SelfPasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@app.post("/api/me/change-password")
+async def change_my_password(body: _SelfPasswordChange, request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """Self-service password change for the logged-in user (owner or admin) — Settings
+    'My Account' card. Requires a real browser session (not just a bearer token) since
+    "my own password" only means something for an identified user, and verifies the
+    current password before changing anything, unlike the owner-only admin reset-
+    password endpoint this deliberately does not reuse."""
+    uname = _get_session_user(request)
+    if not uname:
+        raise HTTPException(status_code=401, detail="Log in with your account to change your password")
+    user_row = db.get_hub_user(uname)
+    if not user_row:
+        raise HTTPException(status_code=404, detail="Account not found")
+    if not _verify_password(user_row["pw_hash"], body.current_password.strip()):
+        raise HTTPException(status_code=403, detail="Current password is incorrect")
+    new_pw = body.new_password.strip()
+    if len(new_pw) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters")
+    db.update_hub_user_password(uname, _hash_password(new_pw))
+    # Same session-invalidation as the admin reset-password endpoint: kill every
+    # session for this user (including the one making this request) so a stale
+    # cookie can't outlive a password the owner just changed. The caller re-logs in.
+    with _sessions_lock:
+        to_remove = [sid for sid, (_, u) in _sessions.items() if u == uname]
+        for sid in to_remove:
+            del _sessions[sid]
+    try:
+        db.delete_sessions_for_user(uname)
+    except Exception:
+        pass
+    return {"ok": True}
+
+
 # ── Runtime settings (agent name + AI engines) — Settings screen ────────────────
 _VIDEO_ENGINES = ("sora", "veo")
-_IMAGE_ENGINES = ("openai", "gemini", "ideogram")
+_IMAGE_ENGINES = ("openai", "gpt-image-2", "gemini", "ideogram")
 
 
 def _effective_settings() -> dict:
@@ -6106,6 +6212,7 @@ def _capability_report() -> list:
     return [
         {"key": "video_understanding", "label": "Video analysis (watch_video)", "available": video_ok, "hint": video_hint},
         {"key": "image_engine_gemini", "label": "Gemini image engine (Nano Banana)", "available": gemini_ok, "hint": gemini_hint},
+        {"key": "image_engine_gpt2", "label": "gpt-image-2 (no transparent bg)", "available": bool(OPENAI_KEY), "hint": None if OPENAI_KEY else "needs OPENAI_API_KEY"},
         {"key": "browser", "label": "Web browser (render/screenshot)", "available": browser_ok, "hint": browser_hint},
         {"key": "relay", "label": "Local relay (your PC)", "available": relay_ok, "hint": relay_hint},
     ]

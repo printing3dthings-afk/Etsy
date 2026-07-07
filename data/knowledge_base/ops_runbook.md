@@ -2845,3 +2845,64 @@ other image software unless... OpenAI" phrasing is gone and the new multi-engine
 place. Known follow-up (not done, out of scope for this change): the deeper "STANDARD LIFESTYLE
 METHOD" section further down CLAUDE.md still uses OpenAI-specific example language in its prose —
 functionally fine since gpt-image-1 stays the default engine, but could be generalized later.
+
+---
+
+## 2026-07-03 — Self-service password reset, sign-in escape hatch, tester login, gpt-image-2 (v113)
+
+**What:** Four requests: (1) reset-password in Settings, (2) an "already have a login" way to
+skip the setup screen, (3) a default tester login, (4) support the gpt-image-1 successor.
+
+**1. Self-service change-password.** New `POST /api/me/change-password` (session-identified via
+`_get_session_user`, verifies current password with `_verify_password` before allowing a change,
+min 8 chars, reuses the same all-sessions-invalidated pattern as the existing owner-only admin
+reset endpoint). New "Password" card in Settings → My Account. Previously only the OWNER could
+reset an admin's password (and had no way to reset their OWN); this closes that gap for anyone
+logged in.
+
+**2. Setup-screen sign-in escape hatch.** Root cause of "I keep seeing the create-account screen":
+storage is still ephemeral (confirmed via the persist-warning banner), so `hub_users_empty()` is
+true on every restart. The REAL fix is setting `FRANK_USERNAME`/`FRANK_PASSWORD` in Railway —
+`_seed_owner_if_empty()` already auto-recreates that exact account on every restart when those are
+set (this existed already; just wasn't being used). Also added, as the literal UI ask: an "Already
+have an account? Sign in instead" link on the setup page (`mode=signin` query param forces the
+plain sign-in form even while the table is empty) and fixed a real bug this exposed — any
+login-form POST while the table was empty used to fall into the setup/account-creation branch and
+fail with a confusing "Passwords do not match" (confirm_password arrives blank from that form). Now
+gated strictly on the `setup_mode=1` hidden field; an empty-table sign-in attempt gets a plain "No
+account exists yet" message and stays on the sign-in form instead of bouncing back to setup.
+
+**3. Default tester login.** `_seed_test_user_if_missing()` (mirrors `_seed_owner_if_empty`),
+called at startup: username `tester` (override `TEST_LOGIN_USERNAME`), password default
+`TesterOnly!2026` (override `TEST_LOGIN_PASSWORD`; set to `""` to disable entirely), role=`admin`
+(idempotent — never resets an already-changed password on restart). **Security note, flagged to
+Scott directly**: there is no restricted/read-only role in this system — `admin` has full API
+access identical to the owner — so this account is full-access, not a sandboxed viewer. Rotate
+`TEST_LOGIN_PASSWORD` (or disable it) before this deploy is meant to be hardened.
+
+**4. gpt-image-2 support.** Verified via live web search (not guessed): gpt-image-1 shuts down
+2026-10-23 per OpenAI's own deprecations page; gpt-image-2 (shipped 2026-04-21) is the confirmed
+successor, same REST endpoints/response shape. Added as a 4th engine in `tools/image_gen.py`
+(`_OPENAI_COMPATIBLE_ENGINES`, `_openai_model_for()`) — **critically, gpt-image-2 does NOT support
+`background="transparent"`** (verified against OpenAI's docs), so `generate_image()` now raises a
+clear `ImageGenError` if you try that combination, same pattern as the existing gemini/ideogram
+guard. Confirmed zero live risk: grepped the whole repo and no call site currently uses
+`background="transparent"` — the sticker pipeline already does its own PIL-based background
+removal post-generation (`process_sticker_sheets.py`), not the API parameter. Also omits
+`input_fidelity` on gpt-image-2 edits (the API doesn't accept overriding it — every input is
+processed at high fidelity automatically). Added to `_IMAGE_ENGINES` tuple, a new Settings
+capability pill, the Settings dropdown, and CLAUDE.md's image-engine rule.
+
+**Verify:** py_compile + smoke green (v113 — no HUD rebuild needed for the image-engine backend
+work, though the auth/UI changes are in frank_hud_mockup.py too). Login-flow: 17/17 checks against
+a real FastAPI TestClient on a throwaway sqlite DB (never touched the live one) — setup page, the
+sign-in escape hatch, the corrected no-account error, real account creation, normal login,
+self-service password change including wrong-current-password rejection and session invalidation.
+Tester-login: seeds correctly, idempotent across a simulated restart (doesn't clobber a
+Scott-changed password). Engine dispatch: 7/7 checks — model resolution, routing, the transparency
+guard raising cleanly for gpt-image-2, and confirmation the existing openai+transparent sticker
+path is untouched.
+
+**Not done (flagged, not silently skipped):** Scott also asked me to fix the infra issues visible
+in his phone Today tab (Relay disconnected, 3 loops in error state, Etsy drafts/active-listings
+load failures) — that's a separate, real diagnostic task queued next, not yet investigated.

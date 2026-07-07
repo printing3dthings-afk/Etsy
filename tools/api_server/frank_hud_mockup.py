@@ -1102,6 +1102,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image generation</label>
             <select id="setting-image-engine" class="search" style="width:100%">
               <option value="openai">OpenAI gpt-image-1 (retires Oct 23)</option>
+              <option value="gpt-image-2">OpenAI gpt-image-2 (no transparent bg)</option>
               <option value="gemini">Google Nano Banana</option>
               <option value="ideogram">Ideogram 3.0 (text)</option>
             </select>
@@ -1140,6 +1141,30 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
           <button class="act-btn" onclick="saveAccountSettings()">Save</button>
           <div id="account-save-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Password</div>
+      <div class="hub-card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Current password</label>
+            <input type="password" id="pw-current" class="search" style="width:100%" autocomplete="current-password">
+          </div>
+          <div></div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">New password</label>
+            <input type="password" id="pw-new" class="search" style="width:100%" autocomplete="new-password">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Confirm new password</label>
+            <input type="password" id="pw-confirm" class="search" style="width:100%" autocomplete="new-password">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">At least 8 characters. Changing your password signs you out everywhere — you'll need to log back in.</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn" onclick="changeMyPassword()">Change password</button>
+          <div id="pw-change-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
 
@@ -1982,6 +2007,32 @@ async function saveAccountSettings(){
     showToast('Account info saved', 'ok');
   }catch(e){
     if(statusEl) statusEl.textContent = 'Save failed: '+e.message;
+  }
+}
+async function changeMyPassword(){
+  const statusEl = document.getElementById('pw-change-status');
+  const cur = document.getElementById('pw-current').value;
+  const pw1 = document.getElementById('pw-new').value;
+  const pw2 = document.getElementById('pw-confirm').value;
+  if(!cur){ if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent='Enter your current password';} return; }
+  if(pw1.length < 8){ if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent='New password must be at least 8 characters';} return; }
+  if(pw1 !== pw2){ if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent='New passwords do not match';} return; }
+  if(statusEl){statusEl.style.color='var(--muted)';statusEl.textContent='Changing…';}
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/me/change-password', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({current_password: cur, new_password: pw1})
+    }, 15000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok){ if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent = d.detail || 'Change failed';} return; }
+    document.getElementById('pw-current').value = '';
+    document.getElementById('pw-new').value = '';
+    document.getElementById('pw-confirm').value = '';
+    showToast('Password changed — signing you out…', 'ok');
+    setTimeout(()=>{ window.location.href = '/login'; }, 1200);
+  }catch(e){
+    if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent = 'Network error';}
   }
 }
 // ── Runtime settings — agent name + AI engines (backed by /api/settings, DB) ──
