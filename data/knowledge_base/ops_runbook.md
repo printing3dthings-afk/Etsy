@@ -2906,3 +2906,64 @@ path is untouched.
 **Not done (flagged, not silently skipped):** Scott also asked me to fix the infra issues visible
 in his phone Today tab (Relay disconnected, 3 loops in error state, Etsy drafts/active-listings
 load failures) — that's a separate, real diagnostic task queued next, not yet investigated.
+
+---
+
+## 2026-07-03 — Diagnosed: Relay disconnected + 3 loops in error state + Etsy load failures
+
+**What Scott saw (phone Today tab):** "Couldn't load drafts", "Couldn't load active listings",
+"Relay disconnected", and Health Check / Snapshot / Suggestion Warmer all in an error state.
+Investigated each with live calls against the real environment — not guessed.
+
+**Root cause 1 of 2 — Etsy app credentials are being rejected (confirmed live):**
+`_listings_sync("draft")` and `_listings_sync("active")` both fail right now with
+`EtsyAPIError: Etsy API 403: API key not found or not active, or incorrect shared secret for API key.`
+This is a DIFFERENT problem from an expired OAuth token (401) — it's Etsy rejecting the app's own
+`ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` pair. Correlates directly with the still-pending task
+"Rotate leaked Etsy + Anthropic credentials (Scott action)" — if these were rotated/revoked on
+Etsy's side after being flagged as leaked, this exact symptom follows. **Fix requires Scott**: open
+the Etsy Developer Console (etsy.com/developers/your-apps) → the app → copy the current keystring
++ shared secret (behind a reveal icon) → update `ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` in Railway's
+env vars (and local `.env`) → redeploy. Running `etsy_oauth.py` will NOT fix this — that only
+refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+**Root cause 2 of 2 — Anthropic billing/key unavailable (already known, confirmed again):** every
+startup log this session shows `ANTHROPIC=False`. `_warm_suggestions()` explicitly checks for this
+and reports "error: ANTHROPIC_API_KEY not set" by design — not a bug, working as intended.
+
+**How these 2 root causes explain all 4 symptoms — not 4 separate bugs:**
+- "Couldn't load drafts/active listings" → directly root cause 1.
+- "Loop 'Health Check' error" → `_health_check_iteration` checks both Etsy AND Anthropic every 5
+  min; correctly reports error because both are genuinely down. Working as designed (the alarm).
+- "Loop 'Snapshot' error" → `_take_snapshot()` calls `_listings_sync("active")`, same root cause 1.
+- "Loop 'Suggestion Warmer' error" → root cause 2, by explicit design.
+- "Relay disconnected" → SEPARATE, unrelated to both above. `_relay_ws` is a purely in-memory
+  server-side WebSocket handle (main.py:946) — it resets to None on every server restart (this
+  server has redeployed 9 times in this session alone, v106→v114). The relay CLIENT
+  (`tools/relay/frank_relay.py`) already has correct auto-reconnect logic with backoff
+  (confirmed by reading it — a `while True` loop, not a one-shot connect). This means either (a)
+  it hasn't reconnected yet since the last redeploy (transient, self-heals), or (b) Scott's local
+  relay process isn't currently running on his machine. Nothing to fix in code — check whether the
+  relay process is running locally.
+
+**What I actually fixed (the diagnosable part):** `_classify_known_failure()` had no branch for
+this specific 403 — a generic Etsy 403 is deliberately NOT treated as a circuit-breaker-tripping
+service outage (see the 2026-06 entry on 403 removed from `_BREAKER_TRIP_STATUSES`), so this exact
+credential-rejection case was falling through to a generic Tier-3 "unconfirmed hypothesis" report
+instead of a precise diagnosis. Added a new `etsy_app_credentials_invalid` category (matched on the
+literal Etsy error text: "api key not found" / "incorrect shared secret") with the specific,
+correct remediation above — distinct from `etsy_auth` (401, expired token, run etsy_oauth.py).
+Wired into both the Action Center cards ("Couldn't load drafts/active listings" now shows this
+exact remediation instead of the generic "check /api/ping" hint Scott was looking at) and the
+Health Check loop's automatic ops_runbook escalation, so this self-documents correctly if it
+recurs.
+
+**Verify:** py_compile + smoke green. Confirmed live against the real (currently broken) Etsy
+credentials: the classifier now returns `etsy_app_credentials_invalid` and the Action Center card
+Scott would see right now shows the specific Developer-Console remediation, word for word. 3/3
+regression checks (unrelated 403 not misclassified, exact known message classifies correctly, 401
+still classifies as the pre-existing `etsy_auth` category, unchanged).
+
+**Not fixed (cannot be, from code):** the Etsy credentials themselves, Anthropic billing, and
+whether Scott's local relay process is running — all three require Scott's direct action, not a
+code change. Told him plainly rather than implying more was fixed than actually was.

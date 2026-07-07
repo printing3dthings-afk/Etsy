@@ -1120,6 +1120,14 @@ _KNOWN_FAILURE_REMEDIATIONS: dict[str, str] = {
     "anthropic_overloaded": "Anthropic's API is overloaded shop-wide (not specific to this account) -- the shared backoff retries automatically; no action needed unless it persists past an hour.",
     "anthropic_key_missing": "ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.",
     "etsy_auth": f"Etsy access + refresh tokens are both rejected -- the 90-day refresh token has likely expired. {business_config.OWNER_NAME} must run `python tools/etsy_oauth.py` to re-authorize.",
+    "etsy_app_credentials_invalid": (
+        f"Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET "
+        f"don't match what Etsy has on file for this app. {business_config.OWNER_NAME} must open the Etsy "
+        "Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + "
+        "shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET "
+        "in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT "
+        "fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret."
+    ),
     "etsy_rate_limit": "Etsy API rate limit hit -- transient, the shared backoff retries automatically honoring the retry-after header.",
     "etsy_server_error": "Etsy's API returned a 5xx -- their side, not ours. Transient, the shared backoff retries automatically.",
     "etsy_unreachable": "Etsy's API is unreachable (network/DNS/timeout) -- check outbound network status; if Etsy's own status page also shows an incident, this resolves on its own.",
@@ -1143,6 +1151,13 @@ def _classify_known_failure(exc: Exception) -> str | None:
     if isinstance(exc, EtsyAPIError):
         if status == 401:
             return "etsy_auth"
+        if status == 403 and ("api key not found" in text or "incorrect shared secret" in text):
+            # Distinct from a generic 403 (which the circuit breaker deliberately does
+            # NOT trip on -- see ops_runbook.md 2026-xx-xx "403 removed from
+            # _BREAKER_TRIP_STATUSES"). This exact Etsy error text means the app's own
+            # client_id/client_secret are being rejected, not an expired token -- a
+            # completely different remediation from etsy_auth above.
+            return "etsy_app_credentials_invalid"
         if status == 429:
             return "etsy_rate_limit"
         if status in (500, 502, 503):
@@ -3841,6 +3856,18 @@ async def set_listing_state(listing_id: int, new_state: str, _token: str = Depen
 _SEVERITY_RANK = {"high": 0, "medium": 1, "low": 2}
 
 
+def _etsy_fetch_suggestion(exc: Exception) -> str:
+    """The Action Center card's 'suggestion' line for a failed Etsy fetch. Reuses
+    the same classification background loops use (_classify_known_failure) so a
+    credential problem gets the SPECIFIC remediation (which .env var, which
+    console) instead of the generic 'check /api/ping' hint that doesn't tell
+    Scott what to actually go do."""
+    category = _classify_known_failure(exc)
+    if category:
+        return _KNOWN_FAILURE_REMEDIATIONS[category]
+    return "Retry shortly; if it persists, check the Etsy connection on /api/ping."
+
+
 def _compute_actions() -> dict:
     """Scan live drafts + active listings and return ranked action cards.
 
@@ -3876,7 +3903,7 @@ def _compute_actions() -> dict:
         add("medium", "data_error",
             "Couldn't load drafts",
             f"Etsy draft fetch failed: {exc}",
-            "Retry shortly; if it persists, check the Etsy connection on /api/ping.")
+            _etsy_fetch_suggestion(exc))
     for l in drafts:
         add("high", "draft_unpublished",
             f"Publish: {l['title'][:60]}" if l.get("title") else "Publish draft listing",
@@ -3892,7 +3919,7 @@ def _compute_actions() -> dict:
         add("medium", "data_error",
             "Couldn't load active listings",
             f"Etsy active fetch failed: {exc}",
-            "Retry shortly; if it persists, check the Etsy connection on /api/ping.")
+            _etsy_fetch_suggestion(exc))
 
     for l in active:
         title = l.get("title", "") or ""
