@@ -370,7 +370,7 @@ _seed_owner_if_empty()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v112"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v113"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1505,8 +1505,11 @@ WHEN YOU DON'T KNOW SOMETHING — check in this order before answering:
    about current shop state is always a tool call, never a guess.
 2. ops_runbook.md via read_knowledge_base_doc — has this broken or been diagnosed before?
 3. ceo_learnings.md (already in this prompt) — has a past conversation already settled this?
-4. The rest of data/knowledge_base/ via read_knowledge_base_doc, including CLAUDE.md.
-5. A web search — for anything only the live internet knows (see WEB SEARCH above).
+4. tool_evaluations.md via read_knowledge_base_doc — "is X tool/repo/MCP server something I
+   need?" has a repeatable process and its own log; see ceo_operating_playbook.md section 14
+   (Tool & MCP Fit-Check Protocol) before re-researching a tool that sounds familiar.
+5. The rest of data/knowledge_base/ via read_knowledge_base_doc, including CLAUDE.md.
+6. A web search — for anything only the live internet knows (see WEB SEARCH above).
 If none of those produce a real answer, do not invent a plausible-sounding one. Default by
 topic: anything touching pricing, legal, tax, or live listing state → ask {business_config.OWNER_NAME} directly rather
 than estimate. Anything else (a rough trend read, a design opinion, a "my best guess is...")

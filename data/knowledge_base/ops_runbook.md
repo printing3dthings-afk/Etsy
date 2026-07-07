@@ -2808,3 +2808,40 @@ opens https://www.etsy.com/listing/101 (context-stubbed); Fix-it lands the targe
 on the cmd screen; backdrop closes; desktop sheet hidden. Test gotcha logged: Playwright matches
 routes in REVERSE registration order — register catch-alls FIRST. Caveat: with Anthropic billing
 still empty, Frank replies to fix-it with the credit error until topped up (UI path verified).
+
+---
+
+## 2026-07-03 — CLAUDE.md multi-engine image rule + Tool & MCP Fit-Check Protocol (v113)
+
+**What:** Scott added GEMINI_API_KEY (Gemini image production live) and asked three things: (1)
+update CLAUDE.md's image-generation hard rule, which still said "OpenAI gpt-image-1 only," to
+reflect the multi-engine dispatch (`openai`/`gemini`/`ideogram`) that's actually been live in
+`tools/image_gen.py` since task #110; (2) whether 3 MCP servers (Tavily, Firecrawl, Notion) from
+screenshots were needed; (3) noticed he'd now asked "is this GitHub tool something I need" twice
+in one session and asked for a tool so he can stop re-asking it.
+
+**Changes (docs/prompt only, no HUD change):**
+- `CLAUDE.md`: rewrote the hard rule at the Universal Listing Rules section — now names all three
+  approved engines (gpt-image-1 default, Gemini for cross-scene product consistency, Ideogram for
+  in-image text), routed through the existing `engine=`/`IMAGE_ENGINE` mechanism, explicitly bans
+  self-hosted generators (Stable Diffusion/ComfyUI/etc.) unless one demonstrably beats all three.
+  Also generalized the adjacent lifestyle-photo rule's "OpenAI images.edit" wording to the engine-
+  agnostic `edit_image()` function it actually calls.
+- MCP assessment (answered directly, no code): Tavily ≡ Frank's existing native `web_search` tool;
+  Firecrawl ≡ Frank's existing `browse_web` tool (`browser_agent.get_page_text`); Notion — no
+  existing usage, situational only if Scott already runs a personal Notion workspace.
+- New `data/knowledge_base/ceo_operating_playbook.md` section 14 "Tool & MCP Fit-Check Protocol" —
+  teaches Frank the exact process just run manually: check the new evaluations log first, web_search
+  if unfamiliar, cross-check for an existing equivalent, give a plain verdict, log it.
+- New `data/knowledge_base/tool_evaluations.md` — ops_runbook-style log, seeded with today's two
+  real verdicts (the 5 SD/FLUX repos; the 3 MCP servers).
+- One-line pointer added to `_CEO_SYSTEM`'s "WHEN YOU DON'T KNOW SOMETHING" list (main.py ~1506)
+  so Frank consults this unprompted — Scott can now ask this class of question straight from the
+  phone chat, no coding session needed.
+
+**Verify:** py_compile + smoke green (v113). Confirmed `_kb_docs()` (glob-based, no code change
+needed) already lists `tool_evaluations.md` — 13 docs total, up from 12. Confirmed the stale "no
+other image software unless... OpenAI" phrasing is gone and the new multi-engine rule text is in
+place. Known follow-up (not done, out of scope for this change): the deeper "STANDARD LIFESTYLE
+METHOD" section further down CLAUDE.md still uses OpenAI-specific example language in its prose —
+functionally fine since gpt-image-1 stays the default engine, but could be generalized later.

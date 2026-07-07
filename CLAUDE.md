@@ -1491,12 +1491,16 @@ These rules apply regardless of product category. Violations block publishing.
 
 **No duplicate images.** All 10 photo slots must contain unique images. No photo may appear more than once in a listing. Verified by MD5 hash before upload.
 
-**Lifestyle photos must be generated with OpenAI images.edit using the actual downloadable product file as input.** No AI-generated stand-in products. No placeholder art. The exact files the customer downloads are passed to `images.edit` as the input image. This is the only method that guarantees the listing photo shows what the customer actually receives. See THE STANDARD LIFESTYLE METHOD in the Image Generation section.
+**Lifestyle photos must be generated with an edit-style call (`tools/image_gen.py`'s `edit_image()`) using the actual downloadable product file as input.** No AI-generated stand-in products. No placeholder art. The exact files the customer downloads are passed in as the input image. This is the only method that guarantees the listing photo shows what the customer actually receives. See THE STANDARD LIFESTYLE METHOD in the Image Generation section.
 
-**EVERY photo in EVERY listing must be generated with OpenAI gpt-image-1 — HARD RULE (Scott, June 2026).** This applies to all 10 slots, not just lifestyle shots. No PIL-only graphics, no plain solid-color backgrounds, no other image software unless a demonstrably better tool replaces OpenAI. Per-slot method:
-- Lifestyle / detail shots: `images.generate` is never acceptable here — use `images.edit` with the real product file(s) as input
-- Flat lays / collection shots with multiple designs: `images.generate` for the background + pixel-perfect PIL paste of the REAL design files on top (images.edit garbles small text with 5+ inputs)
-- Infographics / spec sheets / how-to graphics: `images.generate` for the background + PIL text overlay (AI cannot render reliable text)
+**EVERY photo in EVERY listing must be generated with an approved AI image engine — HARD RULE (Scott, June 2026; updated July 2026 for multi-engine).** Approved engines, selected via the existing `engine=` param / `IMAGE_ENGINE` setting in `tools/image_gen.py` — never a hardcoded choice in a script:
+- **gpt-image-1** (OpenAI) — default engine, proven, use when unsure
+- **Gemini "Nano Banana"** (`gemini-2.5-flash-image`) — best at keeping the same product consistent across scenes; prefer for multi-photo listing mockups
+- **Ideogram 3.0** — best in-image text (covers/badges); generate-only, no edit/input-image support
+This applies to all 10 slots, not just lifestyle shots. No PIL-only graphics, no plain solid-color backgrounds, no other image software (Stable Diffusion, ComfyUI, or any self-hosted generator) unless a demonstrably better tool replaces one of the three above. Per-slot method:
+- Lifestyle / detail shots: a pure generate call is never acceptable here — use the engine's edit path with the real product file(s) as input (Ideogram can't do this — use gpt-image-1 or Gemini for these slots)
+- Flat lays / collection shots with multiple designs: generate the background + pixel-perfect PIL paste of the REAL design files on top (edit-style calls garble small text with 5+ inputs, regardless of engine)
+- Infographics / spec sheets / how-to graphics: generate the background + PIL text overlay (no engine reliably renders text baked into the image — Ideogram is the closest, still verify before shipping)
 
 **Every listing undergoes a complete pre-publish checklist before going live.** A listing cannot be submitted for Scott's review unless every gate below for its category has been run and passed. "Looks good" is not a gate. The gate is code.
 
