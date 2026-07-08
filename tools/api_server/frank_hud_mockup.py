@@ -1099,6 +1099,27 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
       </div>
 
+      <div class="hub-section-title" style="margin-top:18px">Orb / Brand Mark</div>
+      <div class="hub-card">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <canvas id="brand-mark-preview" width="64" height="64" style="border-radius:10px;background:var(--panel2);border:1px solid var(--border)"></canvas>
+          <div style="flex:1;min-width:200px">
+            <label for="brand-mark-file" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Custom orb image</label>
+            <input type="file" id="brand-mark-file" accept="image/png,image/jpeg,image/webp" style="width:100%;color:var(--text);font-size:12px">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+          Upload a logo (transparent PNG works best) and the orb rebuilds itself from its shape —
+          same glow, rotation, and audio-reactive pulse the default orb already has, just a
+          different form. Applies on your next page load.
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="act-btn" onclick="uploadBrandMark()">Upload</button>
+          <button class="act-btn" onclick="resetBrandMark()">Reset to default orb</button>
+          <div id="brand-mark-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
       <div class="hub-section-title" style="margin-top:18px">AI Engines</div>
       <div class="hub-card">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -2083,7 +2104,58 @@ async function loadRuntimeSettings(){
     const ie = document.getElementById('setting-image-engine');
     if(ve && d.video_engine) ve.value = d.video_engine;
     if(ie && d.image_engine) ie.value = d.image_engine;
+    window._brandMarkDataUrl = d.brand_mark_data_url || null;
+    renderBrandMarkPreview();
+    if(window._brandMarkDataUrl && typeof applyBrandMarkToOrb === 'function') applyBrandMarkToOrb(window._brandMarkDataUrl);
   }catch(e){/* leave placeholders */}
+}
+function renderBrandMarkPreview(){
+  const cv = document.getElementById('brand-mark-preview');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(!window._brandMarkDataUrl){
+    ctx.fillStyle = 'rgba(58,214,255,0.25)';
+    ctx.font = '28px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('⬡', cv.width/2, cv.height/2+2);
+    return;
+  }
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const s = Math.min(cv.width/img.width, cv.height/img.height);
+    const w = img.width*s, h = img.height*s;
+    ctx.drawImage(img, (cv.width-w)/2, (cv.height-h)/2, w, h);
+  };
+  img.src = window._brandMarkDataUrl;
+}
+async function uploadBrandMark(){
+  const fileEl = document.getElementById('brand-mark-file');
+  const statusEl = document.getElementById('brand-mark-status');
+  const f = fileEl && fileEl.files && fileEl.files[0];
+  if(!f){ if(statusEl) statusEl.textContent = 'Choose an image first'; return; }
+  if(statusEl) statusEl.textContent = 'Uploading…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/settings/brand-mark', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body: f
+    }, 30000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail || ('HTTP '+r.status));
+    window._brandMarkDataUrl = d.data_url;
+    renderBrandMarkPreview();
+    if(typeof applyBrandMarkToOrb === 'function') applyBrandMarkToOrb(d.data_url);
+    if(statusEl) statusEl.textContent = 'Uploaded ✓';
+    showToast('Orb updated with your image', 'ok');
+  }catch(e){
+    if(statusEl) statusEl.textContent = 'Upload failed: '+e.message;
+  }
+}
+async function resetBrandMark(){
+  const ok = await _postSettings({brand_mark_data_url:null}, 'brand-mark-status', 'Orb reset to default');
+  if(!ok) return;
+  window._brandMarkDataUrl = null;
+  renderBrandMarkPreview();
+  if(typeof resetOrbToDefault === 'function') resetOrbToDefault();
 }
 async function _postSettings(payload, statusId, okMsg){
   const statusEl = document.getElementById(statusId);
@@ -2098,8 +2170,10 @@ async function _postSettings(payload, statusId, okMsg){
     await r.json();
     if(statusEl) statusEl.textContent = 'Saved ✓';
     showToast(okMsg, 'ok');
+    return true;
   }catch(e){
     if(statusEl) statusEl.textContent = 'Save failed: '+e.message;
+    return false;
   }
 }
 function saveBranding(){
@@ -4599,19 +4673,95 @@ function tick(){
 tick(); setInterval(tick, 1000);
 
 
-// ── Orb: idle rotating wireframe particle sphere, audio-reactive on click (demo only) ──
+// ── Orb: idle rotating wireframe particle cloud, audio-reactive on click. Default
+// shape is a sphere; uploading a Settings > Brand Mark image swaps the particle
+// generator to sample that image's silhouette instead — the rotation/projection/
+// glow/audio-reactive rendering in frame() below is shared by both and untouched. ──
 const canvas = document.getElementById('orb');
 const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height, CX = W/2, CY = H/2, R = 108;
-let particles = [];
-const N_LAT = 12, N_LON = 18;
-for(let i=0;i<=N_LAT;i++){
-  const lat = Math.PI * (i/N_LAT - 0.5);
-  for(let j=0;j<N_LON;j++){
-    const lon = 2*Math.PI * (j/N_LON);
-    particles.push({lat, lon});
+let particles = [];   // sphere mode: {lat,lon} · image mode: {x0,y0,z0}
+let edges = [];        // [particleIndexA, particleIndexB] pairs to connect with a line
+let orbMode = 'sphere';
+
+function buildSphereParticles(){
+  const N_LAT = 12, N_LON = 18;
+  const pts = [], eg = [];
+  for(let i=0;i<=N_LAT;i++){
+    const lat = Math.PI * (i/N_LAT - 0.5);
+    for(let j=0;j<N_LON;j++){
+      pts.push({lat, lon: 2*Math.PI * (j/N_LON)});
+    }
   }
+  for(let i=0;i<N_LAT;i++){
+    for(let j=0;j<N_LON;j++){
+      eg.push([i*N_LON+j, i*N_LON+((j+1)%N_LON)]);
+      eg.push([i*N_LON+j, (i+1)*N_LON+j]);
+    }
+  }
+  return {pts, eg};
 }
+function resetOrbToDefault(){
+  const built = buildSphereParticles();
+  particles = built.pts; edges = built.eg; orbMode = 'sphere';
+}
+resetOrbToDefault();
+
+function applyBrandMarkToOrb(dataUrl){
+  const img = new Image();
+  img.onload = () => {
+    const GRID = 64, MAX_PARTICLES = 800;
+    const off = document.createElement('canvas');
+    off.width = GRID; off.height = GRID;
+    const octx = off.getContext('2d', {willReadFrequently:true});
+    const s = Math.min(GRID/img.width, GRID/img.height);
+    const dw = img.width*s, dh = img.height*s;
+    octx.drawImage(img, (GRID-dw)/2, (GRID-dh)/2, dw, dh);
+    const data = octx.getImageData(0,0,GRID,GRID).data;
+    let hasAlpha = false;
+    for(let k=3;k<data.length;k+=4){ if(data[k] < 250){ hasAlpha = true; break; } }
+    const keep = new Array(GRID*GRID).fill(false);
+    let keptCount = 0;
+    for(let gy=0; gy<GRID; gy++){
+      for(let gx=0; gx<GRID; gx++){
+        const idx = (gy*GRID+gx)*4;
+        const isMark = hasAlpha
+          ? data[idx+3] > 40
+          : (data[idx]+data[idx+1]+data[idx+2])/3 < 235; // no alpha channel: assume a light background
+        keep[gy*GRID+gx] = isMark;
+        if(isMark) keptCount++;
+      }
+    }
+    if(keptCount < 8) return;  // too sparse to read as a shape — keep whatever orb is active
+    const stride = Math.max(1, Math.ceil(Math.sqrt(keptCount/MAX_PARTICLES)));
+    const idxLookup = new Array(GRID*GRID).fill(-1);
+    const pts = [];
+    for(let gy=0; gy<GRID; gy++){
+      for(let gx=0; gx<GRID; gx++){
+        if(!keep[gy*GRID+gx] || gx%stride!==0 || gy%stride!==0) continue;
+        const nx = (gx/(GRID-1))*2-1, ny = (gy/(GRID-1))*2-1;   // -1..1
+        const dist = Math.min(Math.sqrt(nx*nx+ny*ny), 1);
+        idxLookup[gy*GRID+gx] = pts.length;
+        pts.push({
+          x0: nx*R, y0: ny*R,
+          z0: Math.cos(dist*Math.PI/2) * (R*0.32),   // gentle radial bump — simulated "layered" depth, not real 3D
+        });
+      }
+    }
+    const eg = [];
+    for(let gy=0; gy<GRID; gy++){
+      for(let gx=0; gx<GRID; gx++){
+        const here = idxLookup[gy*GRID+gx];
+        if(here < 0) continue;
+        for(let dx=1; dx<=stride; dx++){ const r = idxLookup[gy*GRID+(gx+dx)]; if(r>=0){ eg.push([here,r]); break; } }
+        for(let dy=1; dy<=stride; dy++){ const b = idxLookup[(gy+dy)*GRID+gx]; if(b>=0){ eg.push([here,b]); break; } }
+      }
+    }
+    particles = pts; edges = eg; orbMode = 'image';
+  };
+  img.src = dataUrl;
+}
+
 let rot = 0, speaking = false, speakT = 0;
 const orbState = document.getElementById('orb-state');
 const talkSub = document.getElementById('talk-sub');
@@ -4629,24 +4779,30 @@ function frame(){
   ctx.shadowColor = speaking ? 'rgba(122,232,255,'+glow+')' : 'rgba(58,214,255,0.3)';
 
   const pts = particles.map(p=>{
-    const lon = p.lon + rot;
-    const rr = R * (1 + (speaking ? amp*0.16*Math.sin(p.lat*4+speakT*2) : 0));
-    const x = rr * Math.cos(p.lat) * Math.cos(lon);
-    const y = rr * Math.sin(p.lat);
-    const z = rr * Math.cos(p.lat) * Math.sin(lon);
+    let x, y, z;
+    if(orbMode === 'image'){
+      const wob = speaking ? amp*0.16*Math.sin((p.x0+p.y0)*0.02 + speakT*2) : 0;
+      const rx = p.x0*(1+wob), rz = p.z0*(1+wob);
+      x = rx*Math.cos(rot) - rz*Math.sin(rot);
+      z = rx*Math.sin(rot) + rz*Math.cos(rot);
+      y = p.y0*(1+wob);
+    } else {
+      const lon = p.lon + rot;
+      const rr = R * (1 + (speaking ? amp*0.16*Math.sin(p.lat*4+speakT*2) : 0));
+      x = rr * Math.cos(p.lat) * Math.cos(lon);
+      y = rr * Math.sin(p.lat);
+      z = rr * Math.cos(p.lat) * Math.sin(lon);
+    }
     const scale = 320 / (320 - z);
     return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
   });
 
   ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.45)' : 'rgba(58,214,255,0.2)';
   ctx.lineWidth = 0.6;
-  for(let i=0;i<N_LAT;i++){
-    for(let j=0;j<N_LON;j++){
-      const a = pts[i*N_LON+j], b = pts[i*N_LON+((j+1)%N_LON)], c = pts[(i+1)*N_LON+j];
-      if(a && b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
-      if(a && c){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(c.x,c.y);ctx.stroke();}
-    }
-  }
+  edges.forEach(([ai,bi])=>{
+    const a = pts[ai], b = pts[bi];
+    if(a && b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+  });
   pts.forEach(p=>{
     const sz = p.scale > 1 ? 1.8 : 1.1;
     ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';

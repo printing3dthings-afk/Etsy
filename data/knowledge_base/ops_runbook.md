@@ -3052,3 +3052,74 @@ version bump.
 items above. Existing accounts created before this shipped have no recovery code on file — expected;
 the next account created (Scott's, since his account resets on every Railway restart with no
 `/data` volume attached) gets one automatically.
+
+---
+
+## 2026-07-08 — Custom "Brand Mark" orb: upload a logo, same glow/rotation/audio-reactive treatment (v116)
+
+Scott wants the HUD orb (the animated Canvas 2D particle-sphere he taps to talk to Frank) replaced
+with his own S+J monogram (Scott + Jessee), rendered with the *same visual treatment* the sphere
+already has, not a plain image swap — and wants this reusable from Settings so he can change the
+brand mark again later without a code change.
+
+**How the default orb works (unchanged):** `canvas#orb`'s `frame()` loop rotates a 234-point
+lat/lon sphere around the vertical axis, projects it with a simple perspective divide, connects
+grid-neighbor points into a wireframe mesh, and reacts to Frank's TTS amplitude (`speaking`) with
+extra glow/jitter. Colors are fixed cyan, not theme-reactive (unchanged, out of scope).
+
+**What shipped:**
+1. **`POST /api/settings/brand-mark`** (main.py) — raw-body image upload, same convention as the
+   existing `/api/relay/upload` and `/api/studio/upload-image` routes (browser sends the raw `File`
+   as the fetch body, server reads `request.body()`). Validates with PIL (`Image.open` failure →
+   400), converts to RGBA, downsizes to ≤320px on the long side (`Image.thumbnail`, matches the
+   orb's own coordinate scale), re-encodes as PNG (keeps alpha for the particle sampler), stores as
+   a `data:image/png;base64,...` string via the existing runtime-settings store
+   (`db.get_setting`/`set_setting` — same mechanism already backing `agent_name`/`image_engine`,
+   not a new persistence tier). Capped at 8MB raw (tighter than the blanket 30MB upload cap, since
+   this becomes a DB text blob, not a disk file). `_effective_settings()` now returns
+   `brand_mark_data_url`; clearing it goes through the existing `POST /api/settings` payload
+   handler (`brand_mark_data_url: null`) — no separate delete route.
+2. **Settings → Branding → "Orb / Brand Mark" card** (frank_hud_mockup.py) — preview thumbnail,
+   file input, Upload + "Reset to default orb" buttons. Upload JS mirrors `studioUploadImages()`
+   (raw `File` object as the fetch body, browser sets `Content-Type` natively).
+3. **Image → particle-cloud generator swap** (the actual "same treatment, new shape" part): the
+   sphere's rotation math (`x = x0·cos(rot) − z0·sin(rot); z = x0·sin(rot) + z0·cos(rot); y = y0`)
+   only rotates a point cloud around the vertical axis — it doesn't care if the cloud is a sphere or
+   a flat shape with a little depth. So `applyBrandMarkToOrb(dataUrl)` draws the uploaded image to
+   an offscreen 64×64 sampling canvas, keeps cells above an alpha threshold (falls back to a
+   luminance threshold for images with no alpha channel — flagged to Scott: transparent PNG gives
+   the cleanest result), assigns each kept cell a small synthetic radial-bump depth (a **simulated**
+   "layered" feel, not a real reconstruction of the source art's actual layers — said plainly, not
+   oversold), and connects grid neighbors into the same kind of mesh the sphere already draws.
+   Total particles are capped at 800 via an adaptive stride so a dense/solid logo can't blow up the
+   frame budget. `frame()`'s glow, dot-drawing, radial gradient core, and the entire
+   `speaking`/amplitude audio-reactive block are **completely untouched** — only the point-source
+   generator and the per-particle position formula are mode-switched (`orbMode: 'sphere'|'image'`).
+   No brand mark set (default, or image decode fails) → the original sphere renders exactly as
+   before; zero behavior change for the unconfigured case.
+
+**Auth note:** the upload route uses the same `_auth_session_or_bearer` level every other
+`/api/settings` field already uses (not owner-only) — a judgment call flagged in the plan, not a
+silent decision; Scott can ask for owner-only if he'd rather restrict it.
+
+**Verify:** py_compile both files clean. Node `--check` on the actual rendered `<script>` block
+(pulled through `render_frank_hud()`, not the raw Python source, to sidestep Python-level string
+escaping) — real JS syntax validation, not just Python compiling around an opaque string. A
+standalone Node run of the particle-sampling/stride/rotation math against synthetic dense-fill,
+thin-ring, and blank-image cases confirmed the 800-particle cap holds, sparse shapes still produce
+a readable point count, blank images bail cleanly, and the rotation formula preserves vector
+magnitude. TestClient suite (12 checks): upload → PNG round-trips through the data URL and decodes
+back to a real image ≤320px; `GET /api/settings` reflects it; clearing works; non-image bytes → 400;
+empty body → 400; 9MB body → 413; unauthenticated upload → 401. Real Playwright run (17 checks, not
+markup inspection): default orb starts in sphere mode with the original 234 particles and renders
+non-blank pixels; `applyBrandMarkToOrb()` on an in-page-drawn ring shape flips `orbMode` to
+`'image'`, produces a differently-sized particle cloud, and the canvas keeps rendering non-blank
+pixels; `resetOrbToDefault()` restores the exact original sphere; the new Settings controls exist
+and are wired. Re-ran the login-flow (17), recovery-code (17), and keyboard-nav (20) regression
+suites from the prior batch — all still green, no interference from these changes.
+`_BUILD_ID` bumped v115 → v116.
+
+**Not yet done:** Scott's actual S+J logo file isn't in this repo and was never sourced by me — the
+pipeline is built generically; he uploads his real artwork through the new Settings control once
+this deploys, and that's the point where the visual result becomes his call, not something I can
+verify blind.

@@ -422,7 +422,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v115"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v116"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6266,6 +6266,7 @@ def _effective_settings() -> dict:
         "image_engine": os.getenv("IMAGE_ENGINE", "openai").lower(),
         "image_model": os.getenv("IMAGE_MODEL", "gemini-2.5-flash-image"),
         "model_primary": business_config.MODEL_PRIMARY,
+        "brand_mark_data_url": db.get_setting("brand_mark_data_url"),
         "options": {
             "video_engine": list(_VIDEO_ENGINES),
             "image_engine": list(_IMAGE_ENGINES),
@@ -6310,8 +6311,46 @@ async def post_settings_endpoint(payload: dict, _token: str = Depends(_auth_sess
     if "model_primary" in payload:
         db.set_setting("model_primary", (payload.get("model_primary") or "").strip())
 
+    if "brand_mark_data_url" in payload and payload.get("brand_mark_data_url") is None:
+        # Clear only — setting a real value goes through POST /api/settings/brand-mark below
+        # (needs PIL validation/resize), not this generic JSON endpoint.
+        db.set_setting("brand_mark_data_url", None)
+
     _refresh_identity()   # re-sync env + business_config, bust HUD cache
     return {"ok": True, "settings": _effective_settings()}
+
+
+_MAX_BRAND_MARK_UPLOAD_BYTES = 8 * 1024 * 1024  # stored as a DB text blob, not a disk file — tighter cap than _MAX_UPLOAD_BYTES
+_BRAND_MARK_MAX_SIDE = 320  # matches the orb canvas's own coordinate scale (R=108 on a 300x300 canvas)
+
+
+@app.post("/api/settings/brand-mark")
+async def upload_brand_mark(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """Upload a custom image (e.g. a logo) to replace the orb's default particle-sphere
+    shape. Raw-body upload, same convention as /api/relay/upload and
+    /api/studio/upload-image. Validates + downsizes with PIL, re-encodes as PNG (keeps
+    alpha for the client-side particle sampler), stores as a data URL via the existing
+    runtime-settings store — same persistence tier as agent_name/image_engine, not a
+    separate mechanism."""
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty body")
+    if len(body) > _MAX_BRAND_MARK_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_BRAND_MARK_UPLOAD_BYTES)} limit")
+    from PIL import Image
+    try:
+        img = Image.open(io.BytesIO(body))
+        img.load()
+    except Exception:
+        raise HTTPException(status_code=400, detail="not a readable image")
+    img = img.convert("RGBA")
+    img.thumbnail((_BRAND_MARK_MAX_SIDE, _BRAND_MARK_MAX_SIDE), Image.Resampling.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    data_url = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+    db.set_setting("brand_mark_data_url", data_url)
+    await asyncio.to_thread(db.log_activity, "scott", "brand_mark_upload", None, None, "ok")
+    return {"ok": True, "data_url": data_url, "width": img.width, "height": img.height}
 
 
 # ── Local Relay — status, kill switch, Allowed Folders ──────────────────────────
