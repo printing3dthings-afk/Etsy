@@ -422,7 +422,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v123"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v124"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5814,6 +5814,44 @@ async def studio_upload_image(request: Request, filename: str, _token: str = Dep
     return {"ok": True, "path": out_path.name, "size": len(body), "size_human": _human_size(len(body))}
 
 
+@app.post("/api/studio/convert-svg")
+async def studio_convert_svg(request: Request, mode: str = "color", _token: str = Depends(_auth_session_or_bearer)):
+    """Trace a raw reference-photo body into an SVG (Studio "SVG Converter" tool).
+    Same raw-body convention as /api/studio/upload-image. mode is 'color'|'bw'|'silhouette'.
+    Always runs the real clean-vector quality check (the same one that gates SS-series
+    ZIP uploads) on the result and returns it, so the caller sees an honest pass/fail
+    rather than assuming a traced photo is print-ready."""
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty body")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+
+    from tools import svg_converter
+    from tools.etsy_api import check_svg_quality
+
+    try:
+        svg_text = await asyncio.to_thread(svg_converter.convert_to_svg, body, mode)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"conversion failed: {exc}")
+
+    quality = check_svg_quality(svg_text)
+
+    root = _FILE_ROOTS["svg_conversions"]
+    root.mkdir(parents=True, exist_ok=True)
+    out_name = f"{uuid.uuid4().hex[:8]}_{mode}.svg"
+    (root / out_name).write_text(svg_text, encoding="utf-8")
+
+    return {
+        "ok": True,
+        "path": out_name,
+        "mode": mode,
+        "quality": quality,
+    }
+
+
 @app.post("/api/studio/generate")
 async def studio_generate_video(body: dict, _token: str = Depends(_auth_session_or_bearer)):
     """Generate a Ken Burns slideshow video either from an existing Etsy listing's
@@ -6915,6 +6953,9 @@ _FILE_ROOTS["staged_photos"] = (
 _FILE_ROOTS["videos"] = ROOT / "data" / "social" / "videos"
 _FILE_ROOTS["studio_uploads"] = ROOT / "data" / "social" / "studio_uploads"
 _FILE_ROOTS["staged_videos"] = ROOT / "data" / "social" / "staged_videos"
+# SVG Converter tool output — regeneratable (re-run the conversion any time), not
+# source-of-truth product assets, so same non-durable local dir as studio_uploads.
+_FILE_ROOTS["svg_conversions"] = ROOT / "data" / "social" / "svg_conversions"
 
 
 def _human_size(n: int) -> str:
@@ -7001,6 +7042,7 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
             "staged_photos": "Staged Photos (pending approval)",
             "videos": "Generated Videos", "studio_uploads": "Studio Uploads",
             "staged_videos": "Staged Videos (pending approval)",
+            "svg_conversions": "SVG Conversions",
         }
         groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
     # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so

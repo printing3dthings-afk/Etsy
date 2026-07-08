@@ -3473,3 +3473,65 @@ holds with the larger displacement (no box reappeared even with geometry now ext
 from center). Confirmed brand-mark/image mode unaffected (untouched code path, orbMode/canvas
 toggle checked directly). `py_compile` both files; `tests/smoke_test.py` green.
 `_BUILD_ID` bumped v122→v123.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — New Studio tool: SVG Converter (photo → vector) (v124)
+
+**Ask:** Scott wanted an "SVG file converter" in Studio with a drag-and-drop zone for reference
+photos, usable for every digital product line, well organized for any user.
+
+**Discovery before building anything:** this tool already existed — twice — in code that was
+never deployed. `command_center.py` (a standalone Flask app, not referenced in Dockerfile/
+railway.toml) had a `/svg` page + `/api/convert-svg` route titled "SVG Converter," almost
+word-for-word matching Scott's ask, with tuned `vtracer` parameter sets for 3 modes (color/bw/
+silhouette). `town_app/server.py` had a second, independent implementation of the same idea.
+Neither is live. Rather than re-deriving the parameter tuning from scratch, it was ported into a
+new module that IS wired into the deployed app. `vtracer` was already a pinned dependency in the
+root `requirements.txt` (installed via `Dockerfile`), so this shipped with zero new dependencies.
+
+**The real tension, handled honestly:** CLAUDE.md hard-requires 3D-print SVG packs (SS-series) to
+be clean vectors — `validate_digital_file()` rejects >20 unique fill colors, >200 path elements,
+or (combined with either) >150 KB, because a traced photo produces 500+ colors/600-900 paths and
+can't be color-separated for AMS printing. A naive photo-trace tool would silently hand Scott
+files that fail this gate. Fixed by extracting the exact threshold logic already used to gate real
+ZIP uploads (`_validate_svgs_in_zip` in `tools/etsy_api.py`) into a standalone
+`check_svg_quality(svg_text)` helper, called on every conversion — the UI shows a real pass/fail
+with actual numbers immediately, using the literal same code that gates real uploads, not a
+second copy of the thresholds that could drift.
+
+**What shipped:**
+- `tools/svg_converter.py` (new) — `convert_to_svg(image_bytes, mode)`, 3 modes (color/bw/
+  silhouette), ported from `command_center.py`'s proven parameter tuning.
+- `tools/etsy_api.py` — extracted `check_svg_quality()` from inside `_validate_svgs_in_zip()`
+  (behavior-identical refactor, verified with a before/after regression test — same errors on the
+  same test ZIP).
+- `tools/api_server/main.py` — `POST /api/studio/convert-svg?mode=...` (raw-body upload, same
+  convention as `/api/studio/upload-image`), new `_FILE_ROOTS["svg_conversions"]` (served for free
+  through the existing generic `/api/files/download` route — no new download route needed).
+- `tools/api_server/frank_hud_mockup.py` — new "SVG Converter" card in the Studio screen: a real
+  drag-and-drop zone (first one in this codebase — no prior drop-zone pattern existed, confirmed
+  via grep), a "What's this for?" selector (3D-Print Sign / Wall Art / Sticker Pack Source Art /
+  Planner Cover Art / Just give me an SVG) that picks a sensible default mode and shows one honest
+  line of guidance per product line — most lines are pure raster and don't need a vector file at
+  all, and the tool says so rather than pretending otherwise. Mode override always available.
+  Result panel: inline SVG preview, download link, and the real pass/fail quality readout for the
+  3D-print case.
+
+**Verify:** unit-tested `convert_to_svg()` (all 3 modes produce valid SVG from a test image) and
+`check_svg_quality()` (correctly distinguishes a clean 2-fill SVG from a 300-fill/300-path one);
+regression-tested `_validate_svgs_in_zip()` post-refactor against the same clean/dirty test ZIP —
+identical error output before and after. Live Playwright check against the actual Studio screen:
+confirmed all 5 target-selector options correctly set mode + hint text, uploaded a real test image
+through the file-input path, confirmed the SVG preview rendered, confirmed the quality readout
+showed real numbers ("1 colors, 1 paths, 2KB — passes the gate" for a simple silhouette trace).
+`tests/smoke_test.py` green (36 tools, unaffected — Studio UI feature, not an agent tool).
+`_BUILD_ID` bumped v123→v124.
+
+**Not touched:** `command_center.py`/`town_app/` stay as-is (dead, undeployed) — only referenced
+as the source for the parameter tuning ported into `tools/svg_converter.py`.

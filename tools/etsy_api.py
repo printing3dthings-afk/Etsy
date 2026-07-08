@@ -104,19 +104,73 @@ class FileContentError(Exception):
     """
 
 
-def _validate_svgs_in_zip(zf, svg_names: list) -> list[str]:
-    """Check each SVG in an open ZipFile for clean vector art quality.
+def check_svg_quality(svg_text: str) -> dict:
+    """Check one SVG's text for clean-vector-art quality — the single source of
+    truth for the "is this a traced raster or a real vector" thresholds, used
+    both by the real upload gate (_validate_svgs_in_zip below) and by the
+    Studio SVG Converter tool's live pass/fail preview (tools/svg_converter.py
+    callers), so the two never drift apart.
 
     A traced raster masquerading as an SVG has 500+ unique fill colors and 500+
     paths — it looks like an SVG but is pixel-data encoded as bezier segments.
     Such a file cannot be used for 3D printing as a clean multi-color design.
 
-    Thresholds (per SVG):
+    Thresholds:
       - unique fill colors > 20  → traced raster, not a print-ready vector
       - path elements > 200      → traced raster
       - file size > 150 KB       → clean vector SVGs are typically < 50 KB
+        (only flagged when combined with the above — see inline note)
+
+    Returns {unique_fills, path_count, size_kb, passes_gate, problems: [...]}.
     """
     import re as _re
+    size_kb = len(svg_text.encode()) / 1024
+
+    # Count path elements (handle namespace prefixes like ns0:path)
+    path_count = len(_re.findall(r"<(?:\w+:)?path[\s>]", svg_text))
+
+    # Count unique hex fill colors
+    fills = _re.findall(r'fill="(#[0-9a-fA-F]{3,6})"', svg_text)
+    unique_fills = len(set(f for f in fills if f.lower() != "none"))
+
+    problems = []
+    if unique_fills > 20:
+        problems.append(
+            f"{unique_fills} unique fill colors — clean 3D-print SVGs have ≤4 discrete fills. "
+            f"This is a traced raster image, not a vector design. "
+            f"Buyers cannot use the Color Painting Fill tool on this file."
+        )
+    if path_count > 200:
+        problems.append(
+            f"{path_count} path elements — clean vector designs have <200. "
+            f"This indicates auto-traced raster art."
+        )
+    # Size is only a red flag when combined with bad fills/paths.
+    # Single-file multi-color SVGs (4 color layers merged) legitimately run
+    # 200–400 KB; individual layer files should be <150 KB.
+    is_clean = unique_fills <= 20 and path_count <= 200
+    if size_kb > 500:
+        problems.append(
+            f"{size_kb:.0f} KB — even a multi-color single-file SVG should be <500 KB. "
+            f"Likely raster-trace origin."
+        )
+    elif size_kb > 150 and not is_clean:
+        problems.append(
+            f"{size_kb:.0f} KB — oversized for a layer SVG and has other quality problems. "
+            f"Likely raster-trace origin."
+        )
+    return {
+        "unique_fills": unique_fills,
+        "path_count": path_count,
+        "size_kb": size_kb,
+        "passes_gate": is_clean and size_kb <= 500,
+        "problems": problems,
+    }
+
+
+def _validate_svgs_in_zip(zf, svg_names: list) -> list[str]:
+    """Check each SVG in an open ZipFile for clean vector art quality —
+    see check_svg_quality() for the actual thresholds."""
     errors = []
     for name in svg_names:
         try:
@@ -124,43 +178,9 @@ def _validate_svgs_in_zip(zf, svg_names: list) -> list[str]:
         except Exception as exc:
             errors.append(f"{name}: could not read ({exc})")
             continue
-        size_kb = len(content.encode()) / 1024
-
-        # Count path elements (handle namespace prefixes like ns0:path)
-        path_count = len(_re.findall(r"<(?:\w+:)?path[\s>]", content))
-
-        # Count unique hex fill colors
-        fills = _re.findall(r'fill="(#[0-9a-fA-F]{3,6})"', content)
-        unique_fills = len(set(f for f in fills if f.lower() != "none"))
-
-        problems = []
-        if unique_fills > 20:
-            problems.append(
-                f"{unique_fills} unique fill colors — clean 3D-print SVGs have ≤4 discrete fills. "
-                f"This is a traced raster image, not a vector design. "
-                f"Buyers cannot use the Color Painting Fill tool on this file."
-            )
-        if path_count > 200:
-            problems.append(
-                f"{path_count} path elements — clean vector designs have <200. "
-                f"This indicates auto-traced raster art."
-            )
-        # Size is only a red flag when combined with bad fills/paths.
-        # Single-file multi-color SVGs (4 color layers merged) legitimately run
-        # 200–400 KB; individual layer files should be <150 KB.
-        is_clean = unique_fills <= 20 and path_count <= 200
-        if size_kb > 500:
-            problems.append(
-                f"{size_kb:.0f} KB — even a multi-color single-file SVG should be <500 KB. "
-                f"Likely raster-trace origin."
-            )
-        elif size_kb > 150 and not is_clean:
-            problems.append(
-                f"{size_kb:.0f} KB — oversized for a layer SVG and has other quality problems. "
-                f"Likely raster-trace origin."
-            )
-        if problems:
-            errors.append(f"{name}: " + "; ".join(problems))
+        result = check_svg_quality(content)
+        if result["problems"]:
+            errors.append(f"{name}: " + "; ".join(result["problems"]))
     return errors
 
 

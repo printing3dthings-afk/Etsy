@@ -1320,6 +1320,43 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <button class="act-btn" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
         <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
+
+      <div class="hub-section-title" style="margin-top:18px">SVG Converter — Reference Photo to Vector</div>
+      <div class="hub-card">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Drop a reference photo below to trace it into an SVG — a photo you took, a screenshot, something you found on Pinterest.</div>
+
+        <div id="svgc-dropzone" onclick="document.getElementById('svgc-file-input').click()"
+          style="border:2px dashed var(--border);border-radius:10px;padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:12px;transition:border-color .15s,background .15s">
+          <div style="font-size:22px;margin-bottom:6px">📥</div>
+          Drop a reference photo here, or click to browse
+        </div>
+        <input type="file" id="svgc-file-input" accept="image/*" style="display:none">
+
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <select id="svgc-target" style="flex:1;min-width:160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            <option value="3dprint">3D-Print Sign (SS-series)</option>
+            <option value="wallart">Wall Art</option>
+            <option value="sticker">Sticker Pack Source Art</option>
+            <option value="planner">Planner Cover Art</option>
+            <option value="none">Just give me an SVG</option>
+          </select>
+          <select id="svgc-mode" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            <option value="silhouette">Silhouette (single shape, cleanest)</option>
+            <option value="bw">Black &amp; White (line art)</option>
+            <option value="color">Full Color</option>
+          </select>
+        </div>
+        <div id="svgc-hint" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+        <div id="svgc-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+
+        <div id="svgc-result" style="display:none">
+          <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center">
+            <img id="svgc-preview" style="max-width:100%;max-height:280px;background:#fff;border-radius:6px" alt="Converted SVG preview">
+          </div>
+          <div id="svgc-quality" style="font-size:12px;margin-bottom:10px"></div>
+          <a id="svgc-download" class="act-btn" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download SVG</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4245,6 +4282,96 @@ async function studioUploadImages(fileList) {
     }
   }
   if (status) status.textContent = _studioUploadedPaths.length+' image(s) ready to generate.';
+}
+
+// ── SVG Converter — Studio tool. Traces a dropped/picked reference photo into an
+// SVG via /api/studio/convert-svg (vtracer under the hood). The "What's this for?"
+// target selector picks a sensible default trace mode and shows one honest line of
+// guidance per product line — most of our product lines are pure raster and don't
+// need a vector file at all, so this never pretends otherwise. For the 3D-Print
+// Sign target specifically, the real clean-vector quality gate
+// (etsy_api.check_svg_quality — the same thresholds that gate real ZIP uploads)
+// runs on every conversion and its actual pass/fail shows up immediately, not a
+// guess. ──
+const SVGC_TARGETS = {
+  '3dprint': {mode:'silhouette', hint:'3D-print signs need clean vectors (≤20 colors, ≤200 paths) for multi-color AMS printing — the quality check below is the real gate, not an estimate. If it fails, try a higher-contrast source photo or Silhouette mode.'},
+  'wallart': {mode:'color', hint:'Wall art doesn’t need a vector file — this SVG is just useful as illustrated source art. For the actual print-ready deliverable, run finished art through the existing upscale/print-size pipeline.'},
+  'sticker': {mode:'color', hint:'The sticker pipeline works on raster PNGs, not SVGs — this is a clean-line starting point for a new design, not a drop-in replacement for that pipeline.'},
+  'planner': {mode:'color', hint:'The planner pipeline is pure PDF/raster — this SVG would need to be rendered to a raster image first if you want to use it as cover art.'},
+  'none': {mode:'color', hint:''},
+};
+
+function svgcUpdateHint(){
+  const targetEl = document.getElementById('svgc-target');
+  const modeEl = document.getElementById('svgc-mode');
+  const hintEl = document.getElementById('svgc-hint');
+  if (!targetEl || !modeEl || !hintEl) return;
+  const cfg = SVGC_TARGETS[targetEl.value] || SVGC_TARGETS.none;
+  modeEl.value = cfg.mode;
+  hintEl.textContent = cfg.hint;
+}
+
+document.addEventListener('change', function(e){
+  if (e.target && e.target.id === 'svgc-file-input' && e.target.files[0]) svgcConvert(e.target.files[0]);
+  if (e.target && e.target.id === 'svgc-target') svgcUpdateHint();
+});
+
+(function(){
+  const zone = document.getElementById('svgc-dropzone');
+  if (!zone) return;
+  ['dragover','dragenter'].forEach(function(evt){ zone.addEventListener(evt, function(e){
+    e.preventDefault(); e.stopPropagation();
+    zone.style.borderColor = 'var(--cyan)'; zone.style.background = 'rgba(58,214,255,.06)';
+  }); });
+  ['dragleave','dragend'].forEach(function(evt){ zone.addEventListener(evt, function(e){
+    e.preventDefault(); e.stopPropagation();
+    zone.style.borderColor = 'var(--border)'; zone.style.background = '';
+  }); });
+  zone.addEventListener('drop', function(e){
+    e.preventDefault(); e.stopPropagation();
+    zone.style.borderColor = 'var(--border)'; zone.style.background = '';
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) svgcConvert(f);
+  });
+  svgcUpdateHint();
+})();
+
+async function svgcConvert(file){
+  if (!file) return;
+  const status = document.getElementById('svgc-status');
+  const resultEl = document.getElementById('svgc-result');
+  const modeEl = document.getElementById('svgc-mode');
+  const mode = modeEl ? modeEl.value : 'color';
+  if (resultEl) resultEl.style.display = 'none';
+  if (status) status.textContent = 'Converting "'+file.name+'"…';
+  try {
+    const r = await fetchWithTimeout(
+      BASE+'/api/studio/convert-svg?mode='+encodeURIComponent(mode),
+      {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:file},
+      45000
+    );
+    const d = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const dlUrl = BASE+'/api/files/download?root=svg_conversions&path='+encodeURIComponent(d.path)+'&token='+encodeURIComponent(TOKEN);
+    const previewEl = document.getElementById('svgc-preview');
+    const downloadEl = document.getElementById('svgc-download');
+    if (previewEl) previewEl.src = dlUrl+'&inline=1';
+    if (downloadEl) { downloadEl.href = dlUrl; downloadEl.setAttribute('download', d.path); }
+    const q = d.quality || {};
+    const qEl = document.getElementById('svgc-quality');
+    if (qEl) {
+      if (q.passes_gate) {
+        qEl.innerHTML = '<span style="color:var(--green)">✓ '+q.unique_fills+' colors, '+q.path_count+' paths, '+Math.round(q.size_kb)+'KB — passes the 3D-print clean-vector gate</span>';
+      } else {
+        const firstProblem = (q.problems && q.problems[0]) ? escHtml(q.problems[0]) : '';
+        qEl.innerHTML = '<span style="color:var(--red)">✗ '+q.unique_fills+' colors, '+q.path_count+' paths, '+Math.round(q.size_kb)+'KB — too complex for a color-separated 3D print.</span>'+(firstProblem?'<div style="color:var(--muted);margin-top:4px">'+firstProblem+'</div>':'');
+      }
+    }
+    if (resultEl) resultEl.style.display = 'block';
+    if (status) status.textContent = '';
+  } catch(e) {
+    if (status) status.textContent = 'Conversion failed: '+(e.message||e);
+  }
 }
 
 async function studioGenerate() {
