@@ -3442,3 +3442,34 @@ already-cleared buffer and give a false "it's fine" result. And when compositing
 post-processing (especially bloom) over a page background, a CSS mask on the canvas element is a
 more reliable transparency guarantee than chasing alpha through a post-processing library's
 internals.
+
+
+## 2026-07-08 — Orb waviness increased to match reference (v123)
+
+**Ask:** After the box-cutoff fix landed (v122), Scott sent a reference screenshot and said "I
+want the waviness that's in this orb" — the reference showed pronounced, large-scale lobes
+across the sphere's silhouette (a "crumpled ball" look with clear peaks and valleys), noticeably
+more dramatic than our shipped version, which read as gently fuzzy/round rather than genuinely
+lumpy.
+
+**Root cause:** the vertex shader (`_ORB_VERT`, `frank_hud_mockup.py`) sampled a single noise
+octave at `uFreq=1.6` with a small displacement range (`0.08 ± ~0.10`, roughly 8-15% of the
+sphere's 1.15 radius) — too subtle to read as "waviness," and a single octave can't produce both
+big lobes and fine surface detail at once anyway.
+
+**Fix:** switched to two noise octaves sampled from the same `snoise()` function at different
+spatial frequencies/time speeds:
+- `nBig` at `uFreq * 0.42` (low frequency → a handful of large, graceful lobes — the actual
+  "waviness" of the silhouette)
+- `nFine` at `uFreq * 2.2` (higher frequency → the fine wireframe surface crinkle, preserved from
+  before)
+- Displacement: `0.20 + nBig*(0.42 + uAmp*0.32) + nFine*(0.08 + uAmp*0.10)` — roughly 3-4x the
+  previous amplitude range, so the silhouette now visibly deviates from a sphere into distinct
+  lobes rather than just a soft fuzzy ball.
+
+**Verify:** live Playwright screenshots at idle and speaking states — both show pronounced,
+reference-matching lobes; confirmed the v122 box-fix (CSS mask + pulled-back bloom radius) still
+holds with the larger displacement (no box reappeared even with geometry now extending further
+from center). Confirmed brand-mark/image mode unaffected (untouched code path, orbMode/canvas
+toggle checked directly). `py_compile` both files; `tests/smoke_test.py` green.
+`_BUILD_ID` bumped v122→v123.

@@ -4823,8 +4823,14 @@ uniform float uTime;
 uniform float uAmp;
 uniform float uFreq;
 void main(){
-  float n = snoise(position * uFreq + vec3(0.0, 0.0, uTime));
-  float disp = 0.08 + n * (0.10 + uAmp * 0.34);
+  // Two noise octaves, not one: a LOW-frequency layer makes a handful of big, graceful
+  // lobes (the "waviness" of the whole silhouette), a higher-frequency layer riding on
+  // top adds the finer surface crinkle -- a single mid-frequency octave (the original
+  // approach) couldn't do both at once, so the ball read as gently fuzzy rather than
+  // genuinely wavy/lumpy like the reference.
+  float nBig = snoise(position * (uFreq * 0.42) + vec3(0.0, 0.0, uTime * 0.7));
+  float nFine = snoise(position * (uFreq * 2.2) + vec3(0.0, 0.0, uTime * 1.4));
+  float disp = 0.20 + nBig * (0.42 + uAmp * 0.32) + nFine * (0.08 + uAmp * 0.10);
   vec3 newPos = position + normal * disp;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
 }
