@@ -4733,7 +4733,6 @@ function applyBrandMarkToOrb(dataUrl){
       }
     }
     const keep = new Array(GRID*GRID).fill(false);
-    let keptCount = 0;
     for(let gy=0; gy<GRID; gy++){
       for(let gx=0; gx<GRID; gx++){
         const idx = (gy*GRID+gx)*4;
@@ -4741,9 +4740,29 @@ function applyBrandMarkToOrb(dataUrl){
         // reading as "black" (luminance 0) if alpha is ignored. Gate both branches on
         // alpha>40 so the sub-pixel letterbox margin (see the hasAlpha comment above)
         // can't masquerade as dark ink in the luminance path either.
-        const isMark = data[idx+3] > 40 && (hasAlpha || (data[idx]+data[idx+1]+data[idx+2])/3 < 235);
-        keep[gy*GRID+gx] = isMark;
-        if(isMark) keptCount++;
+        keep[gy*GRID+gx] = data[idx+3] > 40 && (hasAlpha || (data[idx]+data[idx+1]+data[idx+2])/3 < 235);
+      }
+    }
+    // Outline extraction: a filled "ink" cell survives only if at least one of its
+    // 4 grid-neighbors is NOT ink (out-of-bounds counts as not-ink, so the true outer
+    // silhouette registers too) — i.e. boundary = region minus its own interior. This
+    // is what makes bold solid letterforms render as hollow outlines instead of filled
+    // blobs, per Scott's "only outline the logo, don't make it an orb" feedback — a
+    // thin stroke (the wordmark, the circle ring) is mostly boundary already and looks
+    // much the same; a thick fill (the S/J letterforms) loses its solid interior.
+    const outline = new Array(GRID*GRID).fill(false);
+    let keptCount = 0;
+    for(let gy=0; gy<GRID; gy++){
+      for(let gx=0; gx<GRID; gx++){
+        if(!keep[gy*GRID+gx]) continue;
+        const up    = gy>0      ? keep[(gy-1)*GRID+gx] : false;
+        const down  = gy<GRID-1 ? keep[(gy+1)*GRID+gx] : false;
+        const left  = gx>0      ? keep[gy*GRID+(gx-1)] : false;
+        const right = gx<GRID-1 ? keep[gy*GRID+(gx+1)] : false;
+        if(!up || !down || !left || !right){
+          outline[gy*GRID+gx] = true;
+          keptCount++;
+        }
       }
     }
     if(keptCount < 8) return;  // too sparse to read as a shape — keep whatever orb is active
@@ -4752,7 +4771,7 @@ function applyBrandMarkToOrb(dataUrl){
     const pts = [];
     for(let gy=0; gy<GRID; gy++){
       for(let gx=0; gx<GRID; gx++){
-        if(!keep[gy*GRID+gx] || gx%stride!==0 || gy%stride!==0) continue;
+        if(!outline[gy*GRID+gx] || gx%stride!==0 || gy%stride!==0) continue;
         const nx = (gx/(GRID-1))*2-1, ny = (gy/(GRID-1))*2-1;   // -1..1
         const dist = Math.min(Math.sqrt(nx*nx+ny*ny), 1);
         idxLookup[gy*GRID+gx] = pts.length;

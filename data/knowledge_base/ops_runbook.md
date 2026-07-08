@@ -3171,3 +3171,29 @@ image and looked at the actual pixels — a synthetic test shape drawn directly 
 go through `img.onload`/`drawImage` letterboxing the same way a real uploaded photo does. Caught
 only because Scott sent his actual file before uploading it live and I ran it through the pipeline
 myself instead of asking him to test it blind.
+
+---
+
+## 2026-07-08 — Brand-mark orb: outline-only, not a filled blob (v118)
+
+After seeing a real screenshot of v117 (his SJ Layered Design logo rendered as a rotating filled
+particle cloud), Scott's feedback: "Make the dots only outline the logo. Do not make the logo an
+orb." Confirmed via follow-up questions: full edge detection (not just the outer silhouette — the
+S/J letterforms should read as hollow outlines, not solid blobs), keep the existing 3D
+vertical-axis rotation (he explicitly wants the turn/tilt to stay, just not filled), and this only
+applies to uploaded logos — the default/unconfigured sphere is untouched.
+
+**Fix (`applyBrandMarkToOrb`, frank_hud_mockup.py):** added one pass between the existing
+alpha/luminance `keep` mask and the existing particle-build loop. A filled cell survives into the
+new `outline` mask only if at least one of its 4 grid-neighbors is NOT filled (out-of-bounds counts
+as not-filled, so the true outer edge registers too) — standard "boundary = region minus its own
+interior" extraction on the 64×64 boolean grid. Everything downstream (stride/800-particle cap,
+neighbor edge-list, `{x0,y0,z0}` assignment, the shared `frame()` rotation/glow/audio-reactive
+code) is unchanged — only which pixels become particles changed.
+
+**Verify:** re-ran the same real-logo Playwright screenshot check used to catch the v117 bugs — the
+S and J letterforms now render as hollow line-art instead of filled blobs, still rotating in 3D,
+still reacting correctly under `setSpeaking(true)`. Confirmed the default sphere is byte-for-byte
+unaffected (still exactly 234 particles / 432 edges). Re-ran the full existing regression suite
+(brand-mark backend, brand-mark orb, login-flow, recovery-code, keyboard-nav) — all green.
+`_BUILD_ID` bumped v117 → v118.
