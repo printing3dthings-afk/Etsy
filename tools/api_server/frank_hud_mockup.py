@@ -222,7 +222,16 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 
 .orb-hero-stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%}
 canvas#orb{cursor:pointer}
-canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:pointer;display:none}
+canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:pointer;display:none;
+  /* UnrealBloomPass's additive alpha blending doesn't stay transparent all the way to
+     the render target's edges (measured: fully opaque, alpha 255, at the canvas corner
+     even after a correct renderer.setClearColor(0,0) — a known rough edge with that
+     pass upstream). Rather than fight Three.js internals further, fade the CANVAS
+     ELEMENT itself via a CSS mask so the sphere+glow floats on the page's own
+     background with no visible rectangle, regardless of the WebGL layer's own alpha. */
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 40%,rgba(0,0,0,.5) 50%,transparent 64%);
+  mask-image:radial-gradient(circle at 50% 50%,#000 40%,rgba(0,0,0,.5) 50%,transparent 64%);
+}
 .orb-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
   pointer-events:none;width:100%}
 .orb-overlay .o1{font-size:30px;font-weight:800;letter-spacing:6px;color:#eafcff;
@@ -4843,6 +4852,13 @@ async function initOrbGL(){
     camera.position.z = 3.4;
 
     glRenderer = new THREE.WebGLRenderer({canvas: orbGlCanvas, alpha:true, antialias:true});
+    // The `alpha:true` context option only lets the drawing buffer SUPPORT an alpha
+    // channel — it does not default the clear to transparent. Without this, the
+    // renderer's ambient clear alpha stays at its default of 1 (opaque), RenderPass
+    // inherits that for its offscreen scene render, and the result is a solid black
+    // square baked into every frame — exactly the "box cut off" Scott flagged from his
+    // real device. This one call is the actual fix.
+    glRenderer.setClearColor(0x000000, 0);
     glRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
     glRenderer.setSize(640, 640, false);
 
@@ -4866,7 +4882,12 @@ async function initOrbGL(){
 
     const composer = new EffectComposer(glRenderer);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(640,640), 0.9, 0.85, 0.12));
+    // radius pulled back from 0.85 -- at that width the blur's residual haze reached all
+    // the way to the render target's corners, which is what the CSS mask above is
+    // fading out; a tighter radius keeps the glow's own natural falloff more contained
+    // so there's less haze for the mask to have to hide, especially at speaking-state
+    // brightness.
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(640,640), 0.9, 0.45, 0.12));
     glComposer = composer;
     glClock = new THREE.Clock();
 
