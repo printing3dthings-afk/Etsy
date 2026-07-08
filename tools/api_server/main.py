@@ -152,6 +152,7 @@ def _reconcile_etsy_tokens() -> None:
 
 _reconcile_etsy_tokens()
 db.ensure_default_sandbox_folder()
+db.seed_correction_plan_todos()
 
 
 # ── Runtime settings → live config sync ────────────────────────────────────────
@@ -276,6 +277,18 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "args": ["--no-sync"],
         "description": "Create a timestamped ZIP backup of digital_products/ (local only, no Etsy mutation)",
         "timeout": 120,
+        "long_running": False,
+        "requires_approval": True,
+    },
+    "backup_hub_db": {
+        "script": "tools/backup_hub_db.py",
+        "description": (
+            "Export non-secret hub.db state (todos, settings, action/activity history, "
+            "user list) to data/hub_db_backups/hub_db_state.json -- the interim recovery "
+            "path until a Railway Volume is attached, since the live DB currently wipes on "
+            "every redeploy. Commit + push the output file to actually preserve it."
+        ),
+        "timeout": 30,
         "long_running": False,
         "requires_approval": True,
     },
@@ -423,7 +436,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v130"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v131"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1165,8 +1178,14 @@ def forgot_password_submit(
             del _sessions[sid]
     try:
         db.delete_sessions_for_user(uname)
-    except Exception:
-        pass
+    except Exception as exc:
+        # This DB call is what makes a password reset actually revoke sessions that
+        # survive a restart (the in-memory _sessions cleanup above only covers this
+        # process's lifetime) -- silently swallowing a failure here would mean a
+        # stale/compromised cookie could outlive the password change with zero trace
+        # of why (2026-07-08 correction pass: previously bare `except Exception: pass`).
+        print(f"[auth] delete_sessions_for_user({uname!r}) failed -- sessions may not be "
+              f"fully revoked: {exc}", flush=True)
     return RedirectResponse("/login", status_code=303)
 
 
@@ -3615,8 +3634,14 @@ async def admin_reset_password(username: str, request: Request, body: _PasswordR
             del _sessions[sid]
     try:
         db.delete_sessions_for_user(uname)
-    except Exception:
-        pass
+    except Exception as exc:
+        # This DB call is what makes a password reset actually revoke sessions that
+        # survive a restart (the in-memory _sessions cleanup above only covers this
+        # process's lifetime) -- silently swallowing a failure here would mean a
+        # stale/compromised cookie could outlive the password change with zero trace
+        # of why (2026-07-08 correction pass: previously bare `except Exception: pass`).
+        print(f"[auth] delete_sessions_for_user({uname!r}) failed -- sessions may not be "
+              f"fully revoked: {exc}", flush=True)
     return {"ok": True}
 
 
@@ -6476,8 +6501,14 @@ async def change_my_password(body: _SelfPasswordChange, request: Request, _token
             del _sessions[sid]
     try:
         db.delete_sessions_for_user(uname)
-    except Exception:
-        pass
+    except Exception as exc:
+        # This DB call is what makes a password reset actually revoke sessions that
+        # survive a restart (the in-memory _sessions cleanup above only covers this
+        # process's lifetime) -- silently swallowing a failure here would mean a
+        # stale/compromised cookie could outlive the password change with zero trace
+        # of why (2026-07-08 correction pass: previously bare `except Exception: pass`).
+        print(f"[auth] delete_sessions_for_user({uname!r}) failed -- sessions may not be "
+              f"fully revoked: {exc}", flush=True)
     return {"ok": True}
 
 
@@ -6759,6 +6790,20 @@ async def get_system_dependencies(_token: str = Depends(_auth_session_or_bearer)
         })
     capabilities = await asyncio.to_thread(_capability_report)
     return {"dependencies": deps, "capabilities": capabilities}
+
+
+@app.post("/api/system/recheck-credentials")
+async def recheck_credentials(_token: str = Depends(_auth_session_or_bearer)):
+    """Force an immediate Etsy + Anthropic credential check instead of waiting up to
+    5 minutes for the next _health_check_loop tick -- lets Scott confirm a credential
+    rotation actually worked right away (2026-07-08 correction pass). Reuses
+    _health_check_iteration() exactly, so this is the same real Etsy API call
+    (get_shop()) the background loop already makes, not a separate probe -- the
+    circuit breaker updates as a normal side effect of that call via etsy_api.py's
+    existing _circuit_breaker_hook, so the Dependency Health panel reflects the
+    result immediately too."""
+    result = await _health_check_iteration()
+    return result
 
 
 @app.get("/api/alerts")

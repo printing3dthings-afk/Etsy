@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import os
 import json
+import re
 import time
 import random
 import urllib.request
@@ -299,6 +300,70 @@ def validate_digital_file(
         facts["pdf_pages"] = pages
 
     return facts
+
+
+# Anchored to the exact "Pages: N" label format CLAUDE.md's own pre-written listing
+# templates use in every TECHNICAL DETAILS section (e.g. "• Pages: 143 (each version)").
+# Deliberately NOT a bare `\d+ pages` match -- description body copy routinely mentions
+# unrelated numbers next to the word "pages" in a different sense ("365 Daily Pages" is
+# a section name, not a total-page-count claim) and a loose match would false-positive
+# on those.
+_PAGE_CLAIM_RE = re.compile(r"pages?\s*[:\-]\s*(\d{1,4})", re.IGNORECASE)
+# Looser on purpose -- see check_description_count_claims()'s docstring for why this
+# one is safe as a one-directional floor check even with multiple/loose matches.
+_STICKER_CLAIM_RE = re.compile(r"(\d{1,5})\+?\s*(?:individual\s+)?stickers\b", re.IGNORECASE)
+
+
+def check_description_count_claims(description: str, facts: dict) -> list[str]:
+    """Cross-checks numeric claims in a listing description against the real, computed
+    facts of the file actually being uploaded (from validate_digital_file()). This is
+    the code-level enforcement CLAUDE.md's 'NEVER LIE TO THE CUSTOMER' rule describes
+    but, before this, only checked via manual review -- catches exactly the failure
+    modes it calls out by name: a '200+ stickers' claim when the ZIP contains fewer, a
+    page count that doesn't match the real PDF.
+
+    Returns a list of human-readable mismatch descriptions (empty = no claims found, or
+    every claim found is consistent with the facts). Never raises -- the caller decides
+    whether a mismatch is a hard block or a loud warning.
+
+    Two different check shapes, deliberately:
+      - PDF page count: exact-equality against facts['pdf_pages'] via the anchored
+        "Pages: N" label format. A planner's total page count is an unambiguous fact
+        once the file exists, so exact match is the right bar.
+      - ZIP sticker/item count: only flagged if the claimed count EXCEEDS
+        facts['zip_members'] (total file count in the ZIP). A real sticker pack
+        legitimately contains MORE files than its claimed sticker count (a README,
+        PNG reference sheets, a GoodNotes book, individual crops) -- so this is a
+        one-directional "you cannot promise more than physically exists in the box"
+        floor check, not an exact-match check. Safe even if the description mentions
+        stickers more than once; the largest claimed number is what's checked.
+    """
+    if not description:
+        return []
+    problems: list[str] = []
+
+    page_matches = [int(m.group(1)) for m in _PAGE_CLAIM_RE.finditer(description)]
+    if page_matches and "pdf_pages" in facts:
+        real_pages = facts["pdf_pages"]
+        bad = [c for c in page_matches if c != real_pages]
+        if bad:
+            problems.append(
+                f"description claims {sorted(set(bad))} page(s) but the actual PDF has "
+                f"{real_pages} page(s) — fix the description or the file before shipping"
+            )
+
+    sticker_matches = [int(m.group(1)) for m in _STICKER_CLAIM_RE.finditer(description)]
+    if sticker_matches and "zip_members" in facts:
+        claimed = max(sticker_matches)
+        actual = facts["zip_members"]
+        if claimed > actual:
+            problems.append(
+                f"description claims '{claimed}+ stickers' but the ZIP only contains "
+                f"{actual} file(s) total — the claim cannot be true, fix the description "
+                f"or regenerate the pack before shipping"
+            )
+
+    return problems
 
 
 def _dp_code_listing_mismatch(listing_id: int | str, file_path: str) -> str | None:
@@ -832,6 +897,23 @@ class EtsyAPIClient:
             mismatch = _dp_code_listing_mismatch(listing_id, file_path)
             if mismatch:
                 raise FileContentError(mismatch)
+            # Code-level enforcement of the "never lie to the customer" rule: the
+            # listing's own description claims are checked against this file's real,
+            # computed facts (page count, file count) rather than resting only on the
+            # AI's self-report and manual review (2026-07-08 correction pass). Fails
+            # open on a fetch error -- an Etsy API hiccup here shouldn't block an
+            # upload the way a genuine content mismatch should.
+            try:
+                live_description = self.get_listing(listing_id).get("description", "")
+            except Exception as exc:
+                print(f"  (description count-claim check skipped -- could not fetch listing: {exc})")
+            else:
+                count_problems = check_description_count_claims(live_description, facts)
+                if count_problems:
+                    raise FileContentError(
+                        "description makes a claim the file doesn't back up:\n"
+                        + "\n".join(f"  ✗ {p}" for p in count_problems)
+                    )
         self._require_oauth()
         filename = os.path.basename(file_path)
         with open(file_path, "rb") as f:

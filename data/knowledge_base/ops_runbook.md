@@ -4028,3 +4028,110 @@ status` confirmed no unintended changes after reverting two rounds of local-test
 pollution (`ops_runbook.md`'s auto-generated health-loop entry, `listing_manifest.json`'s
 `last_verified` timestamps -- both written by background loops during local testing, neither
 a real change). `_BUILD_ID` bumped to `b4d0e2c-v130`.
+
+---
+
+## 2026-07-08 — Post-audit correction pass: two real todo lists + 6 code fixes (v131)
+
+**Context:** Following the "why won't this work" audit (3 parallel research agents covering
+infrastructure fragility, code reliability, and business-model risk), Scott asked for two
+concrete todo lists -- one for Frank, one for Scott -- built inside Frank itself (not just
+narrated in chat), then asked Frank to execute everything on its own list. Explicit
+instruction: self-screen every item genuinely, since Frank has previously handed Scott tasks
+it could have done itself.
+
+**Both lists are now real rows in the `todos` table**, seeded idempotently at every startup
+via `db.seed_correction_plan_todos()` (called from `main.py` right after
+`db.ensure_default_sandbox_folder()`), marked by a `[Correction plan 2026-07-08]` prefix and
+deduplicated by that marker so it's safe to call on every boot -- necessary specifically
+because the live DB currently has no persistent volume and wipes on every redeploy (see
+below), so without this the whole list would silently vanish after the next push.
+
+**Scott's list (3 items, self-screened -- genuinely requires his own account access, nothing
+Frank could reach via any existing tool/API key):**
+1. Rotate the leaked Etsy Client ID + Secret at the Etsy Developer Console -- confirmed still
+   live and unrotated; live-tested during this session (`EtsyAPIClient().get_reviews()` and
+   the new recheck-credentials endpoint both returned a real 403 against the actual Etsy API).
+2. Attach a Railway Volume at /data (or upgrade to a plan that includes one) so the database
+   survives redeploys -- Frank has no billing/Railway-dashboard access.
+3. Optional: decide whether to pursue a second sales channel -- a platform/account decision,
+   not a code fix.
+
+**Frank's list (6 items, all shipped in this pass):**
+
+1. **`tools/backup_hub_db.py`** -- exports non-secret hub.db state (todos, settings minus any
+   token/secret-looking key, action_queue, activity_log, hub_users minus password hashes) to
+   `data/hub_db_backups/hub_db_state.json`. Registered as `_EXEC_COMMANDS["backup_hub_db"]`
+   (requires_approval, mirrors `backup_digital_products`'s shape). Explicitly documented: this
+   only becomes a real safety net once the output is committed + pushed -- writing to the
+   ephemeral container's disk alone doesn't survive a redeploy any more than hub.db itself
+   does. The actual fix for the underlying problem is Scott's Volume (item 2 above); this is
+   the interim mitigation. Deliberately excludes etsy_tokens/hub_sessions -- the exact class of
+   secret already leaked once via a git-committed file, never again.
+
+2. **Code-enforced description-vs-file content check** (`tools/etsy_api.py`) --
+   `check_description_count_claims(description, facts)` cross-checks a listing description's
+   claimed page count (anchored to the "Pages: N" label format CLAUDE.md's own templates use,
+   avoiding false positives on unrelated numbers like "365 Daily Pages") against
+   `validate_digital_file()`'s real `pdf_pages` fact (exact match), and claimed sticker counts
+   against `zip_members` (one-directional floor check -- a real pack always contains more files
+   than its sticker count due to sheets/README/etc, so this only fires when the claim
+   physically cannot be true). Wired into `upload_listing_file()` right after the existing
+   DP-code mismatch check, fails open on an Etsy fetch error (infrastructure hiccup ≠ content
+   violation) but hard-blocks on a genuine mismatch. This is the first code-level enforcement
+   of CLAUDE.md's "NEVER LIE TO THE CUSTOMER" numeric claims -- previously rested entirely on
+   AI self-report and manual review. 9 new tests in `tests/test_quality_gates.py`.
+
+3. **3 silently-swallowed session-revocation exceptions fixed** (`main.py:1180, 3630→3636,
+   6491→6503`) -- all three `db.delete_sessions_for_user(uname)` call sites (password reset,
+   admin reset, self-service change-password) now log loudly on failure instead of bare
+   `except Exception: pass`, matching the established `[tag] detail: {exc}` convention. A
+   failed revocation here previously had zero trace -- a stale/compromised cookie could have
+   outlived a password change silently.
+
+4. **`tests/test_http_routes.py`** (14 tests, new file) -- the first request-level test
+   coverage in the repo. Previously 105 tests existed across 4 files, all exercising pure
+   functions directly (`import main as server`); none ever drove an actual HTTP request. Uses
+   FastAPI's TestClient against the real `app` (no live server, no network). Covers: login
+   page load, wrong-password rejection, correct-password session cookie, protected-route 401
+   without auth, 200 with session cookie, 200 with Bearer token, 401 with wrong Bearer token,
+   logout actually revoking the session, login lockout engaging after repeated failures
+   (isolated to a throwaway username so it doesn't poison other tests' shared test account),
+   and the todos API end-to-end (list/add/toggle-404), including a live proof that the seeded
+   correction-plan todos are reachable through the real HTTP path, not just the direct db.py
+   call. One real gotcha hit and fixed during this work: TestClient's default `http://`
+   base_url silently drops the app's `Secure`-flagged session cookie (correct app behavior,
+   wrong test setup) -- fixed by using `base_url="https://testserver"`. Wired into
+   `.github/workflows/ci-smoke.yml`.
+
+5. **`/api/system/recheck-credentials`** (`main.py`, POST) -- forces an immediate Etsy +
+   Anthropic credential check by calling the existing `_health_check_iteration()` directly,
+   instead of waiting up to 5 minutes for the next background loop tick. Reuses the exact same
+   real `EtsyAPIClient().get_shop()` call the health loop already makes, so the circuit breaker
+   updates as a normal side effect via etsy_api.py's existing `_circuit_breaker_hook` -- no
+   separate probe logic. Wired to a new "Recheck now" link on the Dependency Health panel title
+   (`frank_hud_mockup.py`), with toast feedback and an automatic panel refresh. Directly closes
+   the "wait 5 minutes to confirm my rotation worked" friction for Scott's item 1 above.
+   Live-verified twice: via curl (real 403 against real Etsy, correctly reported, not faked)
+   and via Playwright (clicked the actual button, confirmed the toast showed the real failure
+   detail and the button state reset correctly).
+
+6. **Seeded todo lists themselves** (`tools/api_server/db.py`) --
+   `seed_correction_plan_todos()` + the marker-based idempotency described above.
+
+**Self-screening note (per Scott's explicit instruction):** before finalizing Scott's list,
+Frank checked whether it could determine the shop's current Etsy review count itself (a fact
+mentioned in the earlier business-risk audit) rather than asking Scott for it --
+`EtsyAPIClient().get_reviews()` was called directly and correctly failed with the same real
+403 as everything else blocked on the unrotated credential, confirming this is genuinely
+blocked on Scott's action, not a task Frank was offloading unnecessarily. No item was placed
+on Scott's list without first confirming Frank has no existing tool/API path to do it itself.
+
+**Verified:** `python -m compileall tools tests` clean; all 5 test suites green (142 tests
+total: smoke 36 tools, quality-gates 37, resilience 26, staged-actions 51, http-routes 14);
+live Playwright + curl verification of the seeded todos (both lists reachable via
+`GET /api/todos`, correctly split by `added_by`) and the recheck-credentials button end-to-end;
+`git status` confirmed no unintended changes after reverting one round of local-test-harness
+pollution (`ops_runbook.md`'s auto-generated health-loop entries -- written by the background
+health loop hitting the same known-broken live credential during local testing, not a real
+change). `_BUILD_ID` bumped to `b4d0e2c-v131`.

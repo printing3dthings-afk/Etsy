@@ -855,7 +855,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
 
         <div class="panel brk col-sysmon">
-          <div class="panel-title">Dependency Health <span class="src">/api/system/dependencies</span></div>
+          <div class="panel-title">Dependency Health <span class="lnk" id="recheck-creds-btn" onclick="recheckCredentials()" role="button" tabindex="0">Recheck now</span></div>
           <div class="dep-pill-row" id="dep-pill-row"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
         </div>
 
@@ -2881,6 +2881,27 @@ function _renderDependencyHealth(d, el, offlineNote){
   }).join('');
   const capHeader = caps.length ? '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 4px">Capabilities</div>' : '';
   el.innerHTML = (offlineNote||'') + depHtml + capHeader + capHtml;
+}
+async function recheckCredentials(){
+  // Forces an immediate Etsy + Anthropic credential check instead of waiting up to
+  // 5 minutes for the next background health-loop tick -- lets Scott confirm a
+  // credential rotation actually worked right away (2026-07-08 correction pass).
+  const btn = document.getElementById('recheck-creds-btn');
+  const original = btn ? btn.textContent : '';
+  if(btn){ btn.textContent = 'Checking…'; btn.style.pointerEvents = 'none'; }
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/system/recheck-credentials', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN},
+    }, 20000);
+    const d = await r.json();
+    showToast(d.all_ok ? 'Credentials OK ✓' : ('Still failing: '+d.detail), d.all_ok ? 'ok' : 'error', 6000);
+    await loadDependencyHealth();
+  }catch(e){
+    showToast('Recheck failed: '+e.message, 'error');
+  }finally{
+    if(btn){ btn.textContent = original || 'Recheck now'; btn.style.pointerEvents = ''; }
+  }
 }
 async function loadDependencyHealth(){
   const el = document.getElementById('dep-pill-row');

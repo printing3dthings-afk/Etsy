@@ -48,3 +48,6 @@ jobs:
 
       - name: Staged-action approval tests (Action Center gate)
         run: python tests/test_staged_actions.py
+
+      - name: HTTP route tests (login/session/logout + todos API, real requests)
+        run: python tests/test_http_routes.py

@@ -1,0 +1,82 @@
+{
+  "exported_at": "2026-07-08T23:20:54.276522+00:00",
+  "note": "Non-secret state only. See tools/backup_hub_db.py docstring for what's excluded and why. Restore is manual (re-insert rows) -- there is no automated restore script, since a wipe is rare enough that a hand-checked restore is safer than a blind automated one.",
+  "todos": [
+    {
+      "id": 1,
+      "text": "[Correction plan 2026-07-08] URGENT: Rotate the leaked Etsy Client ID + Secret at etsy.com/developers/your-apps -> your app -> reveal + copy Keystring and Shared Secret -> paste into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway env vars and local .env -> redeploy. This is not hypothetical: it is causing live 403 errors on listing sync and review checks right now. Frank cannot do this -- it requires your Etsy Developer Console login.",
+      "added_by": "scott",
+      "done": 0,
+      "created_at": "2026-07-08T23:20:54.242177+00:00",
+      "completed_at": null,
+      "due_date": null
+    },
+    {
+      "id": 2,
+      "text": "[Correction plan 2026-07-08] Attach a Railway Volume at /data (or upgrade to a plan that includes one, ~$5/mo) so the database survives redeploys. Right now /health reports persistent=false -- every push wipes every login, chat history, setting, and this very todo list back to empty. Frank cannot purchase or attach this -- it requires your Railway billing access.",
+      "added_by": "scott",
+      "done": 0,
+      "created_at": "2026-07-08T23:20:54.246704+00:00",
+      "completed_at": null,
+      "due_date": null
+    },
+    {
+      "id": 3,
+      "text": "[Correction plan 2026-07-08] Optional, your call: decide whether to pursue a second sales channel (Shopify, Gumroad, etc.) so revenue isn't 100% dependent on Etsy's cascade-penalty risk. Frank can research options and draft a comparison if you want one -- the platform choice and account setup still need to be yours.",
+      "added_by": "scott",
+      "done": 0,
+      "created_at": "2026-07-08T23:20:54.251027+00:00",
+      "completed_at": null,
+      "due_date": null
+    },
+    {
+      "id": 4,
+      "text": "[Correction plan 2026-07-08] Build a git-committed backup of the live database's non-secret state (todos, settings, action history, user list minus password hashes) so a redeploy wipe has a real recovery path even before a Volume exists.",
+      "added_by": "frank",
+      "done": 0,
+      "created_at": "2026-07-08T23:20:54.255542+00:00",
+      "completed_at": null,
+      "due_date": null
+    },
+    {
+      "id": 5,
+      "text": "[Correction plan 2026-07-08] Add a code-enforced check that a listing description's claimed page/sticker counts actually match the real uploaded file's contents, instead of resting only on the AI's self-report and manual review.",
+      "added_by": "frank",
+      "done": 0,
+      "created_at": "2026-07-08T23:20:54.258730+00:00",
+      "completed_at": null,
+      "due_date": null
+    },
+    {
+      "id": 6,
+      "text": "[Correction plan 2026-07-08] Add real HTTP-level tests (not just pure-function tests) for the highest-risk routes -- login/session handling and the staged-action approve/reject flow -- since currently zero of the 89+ live routes have request-level test coverage.",
+      "added_by": "frank",
+      "done": 0,
+      "created_at": "2026-07-08T23:20:54.263095+00:00",
+      "completed_at": null,
+      "due_date": null
+    },
+    {
+      "id": 7,
+      "text": "[Correction plan 2026-07-08] Fix 3 places where a failed session-revocation after a password change is silently swallowed instead of logged, so a real failure is actually visible instead of invisible.",
+      "added_by": "frank",
+      "done": 0,
+      "created_at": "2026-07-08T23:20:54.267102+00:00",
+      "completed_at": null,
+      "due_date": null
+    },
+    {
+      "id": 8,
+      "text": "[Correction plan 2026-07-08] Add a one-click 'recheck Etsy credentials now' action so credential status doesn't wait on the 5-minute health loop -- makes it fast for Scott to confirm his credential rotation (item above) actually worked.",
+      "added_by": "frank",
+      "done": 0,
+      "created_at": "2026-07-08T23:20:54.270934+00:00",
+      "completed_at": null,
+      "due_date": null
+    }
+  ],
+  "hub_users": [],
+  "settings": {},
+  "action_queue": [],
+  "activity_log": []
+}

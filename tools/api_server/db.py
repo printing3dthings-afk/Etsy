@@ -862,6 +862,93 @@ def ensure_default_sandbox_folder() -> None:
         add_allowed_folder("/data/workspace", added_by="system")
 
 
+_CORRECTION_PLAN_MARKER = "[Correction plan 2026-07-08]"
+
+_CORRECTION_PLAN_TODOS = [
+    # (text, added_by) -- added_by='frank' = Claude will do this without Scott.
+    # added_by='scott' = genuinely requires Scott's own account/identity/payment access,
+    # not something Frank can do via any existing tool or API key.
+    (
+        f"{_CORRECTION_PLAN_MARKER} URGENT: Rotate the leaked Etsy Client ID + Secret at "
+        "etsy.com/developers/your-apps -> your app -> reveal + copy Keystring and Shared "
+        "Secret -> paste into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway env vars and "
+        "local .env -> redeploy. This is not hypothetical: it is causing live 403 errors on "
+        "listing sync and review checks right now. Frank cannot do this -- it requires your "
+        "Etsy Developer Console login.",
+        "scott",
+    ),
+    (
+        f"{_CORRECTION_PLAN_MARKER} Attach a Railway Volume at /data (or upgrade to a plan "
+        "that includes one, ~$5/mo) so the database survives redeploys. Right now /health "
+        "reports persistent=false -- every push wipes every login, chat history, setting, "
+        "and this very todo list back to empty. Frank cannot purchase or attach this -- it "
+        "requires your Railway billing access.",
+        "scott",
+    ),
+    (
+        f"{_CORRECTION_PLAN_MARKER} Optional, your call: decide whether to pursue a second "
+        "sales channel (Shopify, Gumroad, etc.) so revenue isn't 100% dependent on Etsy's "
+        "cascade-penalty risk. Frank can research options and draft a comparison if you want "
+        "one -- the platform choice and account setup still need to be yours.",
+        "scott",
+    ),
+    (
+        f"{_CORRECTION_PLAN_MARKER} Build a git-committed backup of the live database's "
+        "non-secret state (todos, settings, action history, user list minus password "
+        "hashes) so a redeploy wipe has a real recovery path even before a Volume exists.",
+        "frank",
+    ),
+    (
+        f"{_CORRECTION_PLAN_MARKER} Add a code-enforced check that a listing description's "
+        "claimed page/sticker counts actually match the real uploaded file's contents, "
+        "instead of resting only on the AI's self-report and manual review.",
+        "frank",
+    ),
+    (
+        f"{_CORRECTION_PLAN_MARKER} Add real HTTP-level tests (not just pure-function tests) "
+        "for the highest-risk routes -- login/session handling and the staged-action "
+        "approve/reject flow -- since currently zero of the 89+ live routes have request-level "
+        "test coverage.",
+        "frank",
+    ),
+    (
+        f"{_CORRECTION_PLAN_MARKER} Fix 3 places where a failed session-revocation after a "
+        "password change is silently swallowed instead of logged, so a real failure is "
+        "actually visible instead of invisible.",
+        "frank",
+    ),
+    (
+        f"{_CORRECTION_PLAN_MARKER} Add a one-click 'recheck Etsy credentials now' action so "
+        "credential status doesn't wait on the 5-minute health loop -- makes it fast for "
+        "Scott to confirm his credential rotation (item above) actually worked.",
+        "frank",
+    ),
+]
+
+
+def seed_correction_plan_todos() -> int:
+    """One-time seed of the post-audit correction-plan todos (2026-07-08), split into
+    what Frank can do unassisted vs. what genuinely requires Scott's own account access.
+    Idempotent by marker prefix so it's safe to call on every boot -- important because
+    the production DB currently has no persistent volume and gets wiped on every
+    redeploy (see the Scott-list item about attaching one), so without this the whole
+    list would silently vanish after the very next push. Returns how many rows were
+    inserted (0 if the marker is already present, i.e. not the first boot since wipe)."""
+    init_db()
+    conn = _connect()
+    try:
+        existing = conn.execute(
+            "SELECT COUNT(*) FROM todos WHERE text LIKE ?", (f"{_CORRECTION_PLAN_MARKER}%",)
+        ).fetchone()[0]
+        if existing:
+            return 0
+    finally:
+        conn.close()
+    for text, added_by in _CORRECTION_PLAN_TODOS:
+        add_todo(text, added_by=added_by)
+    return len(_CORRECTION_PLAN_TODOS)
+
+
 # ── Activity log (permanent, append-only — separate from action_queue, which
 # clears once a pending item is decided). Gives a durable "everything Frank
 # has done" history for review, queryable by type/date/actor for an audit UI. ──

@@ -343,6 +343,71 @@ def test_validate_traced_raster_svg_rejected():
                       "traced-raster SVG must be rejected as not clean vector art")
 
 
+# ── check_description_count_claims (2026-07-08 correction pass) ────────────────
+from etsy_api import check_description_count_claims  # noqa: E402
+
+
+def test_page_claim_matching_real_pages_passes():
+    desc = "A complete planner.\n\nTECHNICAL DETAILS\n• Pages: 143 (each version)\n"
+    problems = check_description_count_claims(desc, {"pdf_pages": 143})
+    check(problems == [], f"a page claim matching the real PDF should pass, got: {problems}")
+
+
+def test_page_claim_mismatching_real_pages_fails():
+    desc = "TECHNICAL DETAILS\n• Pages: 143 (each version)\n"
+    problems = check_description_count_claims(desc, {"pdf_pages": 88})
+    check(len(problems) == 1, f"a claimed 143 pages vs. real 88 must be flagged, got: {problems}")
+    check("143" in problems[0] and "88" in problems[0], f"message should cite both numbers: {problems}")
+
+
+def test_unrelated_page_mentions_are_not_false_positives():
+    # "365 Daily Pages" is a section name, not a total-page-count claim -- must not
+    # match the loose "\d+ pages" shape, only the anchored "Pages: N" label format.
+    desc = "Includes 365 Daily Pages and 52 Weekly Spreads.\n• Pages: 143 (each version)\n"
+    problems = check_description_count_claims(desc, {"pdf_pages": 143})
+    check(problems == [], f"unrelated 'N Daily Pages' mentions must not false-positive, got: {problems}")
+
+
+def test_no_page_claim_present_is_not_flagged():
+    problems = check_description_count_claims("A lovely planner with no page count listed.",
+                                                {"pdf_pages": 143})
+    check(problems == [], f"absence of a claim should never be flagged, got: {problems}")
+
+
+def test_sticker_claim_within_zip_file_count_passes():
+    desc = "Includes a Kawaii Sticker Pack ZIP — 5 PNG sticker sheets (200+ stickers)."
+    problems = check_description_count_claims(desc, {"zip_members": 250})
+    check(problems == [], f"a claim the ZIP can back up should pass, got: {problems}")
+
+
+def test_sticker_claim_exceeding_zip_file_count_fails():
+    desc = "Kawaii Sticker Pack ZIP — 200+ stickers, transparent background."
+    problems = check_description_count_claims(desc, {"zip_members": 21})
+    check(len(problems) == 1, f"a 200+ claim against only 21 real files must be flagged, got: {problems}")
+    check("200" in problems[0] and "21" in problems[0], f"message should cite both numbers: {problems}")
+
+
+def test_sticker_claim_takes_max_of_multiple_mentions():
+    # Two different sticker-count mentions in the same description (e.g. hook + bullet)
+    # -- the check must use the larger claim, since that's the one that would be false.
+    desc = "150 stickers in the hook, but the bullet says 400+ stickers included."
+    problems = check_description_count_claims(desc, {"zip_members": 200})
+    check(len(problems) == 1, f"should flag against the larger (400) claim, got: {problems}")
+    check("400" in problems[0], f"message should cite the larger claim: {problems}")
+
+
+def test_no_facts_available_skips_check_gracefully():
+    # A .zip-only listing (no PDF) has no 'pdf_pages' fact -- a page claim in the
+    # description must not be flagged against a fact that doesn't exist.
+    problems = check_description_count_claims("Pages: 143", {"zip_members": 50})
+    check(problems == [], f"missing fact key should skip that check, not fail it, got: {problems}")
+
+
+def test_empty_description_returns_no_problems():
+    problems = check_description_count_claims("", {"pdf_pages": 143, "zip_members": 50})
+    check(problems == [], f"empty description should never be flagged, got: {problems}")
+
+
 # ── runner ────────────────────────────────────────────────────────────────────
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
