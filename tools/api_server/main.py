@@ -38,6 +38,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 
 ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
@@ -422,7 +423,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v129"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v130"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -491,6 +492,14 @@ async def _security_headers(request: Request, call_next):
     )
     return response
 
+
+# No compression existed anywhere before this — the /frank dashboard alone ships a
+# ~314KB inline HTML/CSS/JS payload, and every JSON API response was uncompressed too
+# (2026-07-08 performance pass). Registered after CORS/security-headers so it wraps
+# them (Starlette's last-registered middleware becomes outermost) and compresses their
+# final output as well.
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
 # Serve PWA icons (pre-generated files committed to the repo — no runtime PIL).
 _STATIC_DIR = Path(__file__).parent / "static"
 
@@ -511,8 +520,25 @@ def privacy_policy():
     return HTMLResponse(content=html)
 
 
+class _CachedStaticFiles(StaticFiles):
+    """Adds a Cache-Control header to vendored library assets (Three.js,
+    onnxruntime-web, transformers.js, piper-tts) so browsers stop refetching them on
+    every page load. Scoped to /vendor/ only -- these paths are NOT content-hashed, so
+    a long immutable header would risk serving stale JS after an in-place vendor
+    upgrade; 7 days is a safe compromise that still eliminates most of this weight
+    from routine dashboard polling (2026-07-08 performance pass). privacy.html and the
+    PWA icons are untouched (default browser heuristic caching)."""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        path = str(args[0]).replace(os.sep, "/")
+        if "/vendor/" in path:
+            response.headers["Cache-Control"] = "public, max-age=604800"
+        return response
+
+
 if _STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+    app.mount("/static", _CachedStaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 
 
@@ -4618,6 +4644,12 @@ async def _daily_brief_loop() -> None:
             db.purge_expired_sessions()
         except Exception:
             pass
+        # Prune old executed/rejected action_queue rows so the table doesn't grow
+        # unbounded (2026-07-08 performance pass).
+        try:
+            db.prune_old_actions()
+        except Exception:
+            pass
         now = datetime.now(timezone.utc)
         if now.hour == 6 and now.date() != last_sent_date:
             db.set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
@@ -7184,52 +7216,60 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
     For each ZIP we also expand its contents so individual files (PDFs, sticker
     PNGs, SVGs) can be opened directly on a phone WITHOUT downloading and
     unzipping first (Scott's request, 2026-06-17)."""
-    groups = []
-    for root_key, root_path in _FILE_ROOTS.items():
-        if not root_path.exists():
-            continue
-        files = []
-        for p in sorted(root_path.rglob("*")):
-            if not p.is_file():
+
+    # rglob + stat() + per-zip central-directory reads across every file root is
+    # synchronous filesystem work that can take real wall-clock time with several
+    # backup/product zips present -- run off the event loop so it doesn't freeze the
+    # whole single-process app while it scans (2026-07-08 performance pass).
+    def _scan() -> dict:
+        groups = []
+        for root_key, root_path in _FILE_ROOTS.items():
+            if not root_path.exists():
                 continue
-            stat = p.stat()
-            rel = str(p.relative_to(root_path))
-            ext = p.suffix.lower()
-            entry = {
-                "path": rel,
-                "root": root_key,
-                "size": stat.st_size,
-                "size_human": _human_size(stat.st_size),
-                "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
-                "inline": ext in _INLINE_EXTS,
-                "is_zip": ext == ".zip",
+            files = []
+            for p in sorted(root_path.rglob("*")):
+                if not p.is_file():
+                    continue
+                stat = p.stat()
+                rel = str(p.relative_to(root_path))
+                ext = p.suffix.lower()
+                entry = {
+                    "path": rel,
+                    "root": root_key,
+                    "size": stat.st_size,
+                    "size_human": _human_size(stat.st_size),
+                    "modified": datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(),
+                    "inline": ext in _INLINE_EXTS,
+                    "is_zip": ext == ".zip",
+                }
+                if ext == ".zip":
+                    entry["entries"] = _zip_entries(p)
+                files.append(entry)
+            files.sort(key=lambda f: f["modified"], reverse=True)
+            _labels = {
+                "backups": "Backups", "volume": "Saved Files (persistent)", "products": "Product Files",
+                "staged_photos": "Staged Photos (pending approval)",
+                "videos": "Generated Videos", "studio_uploads": "Studio Uploads",
+                "staged_videos": "Staged Videos (pending approval)",
+                "svg_conversions": "SVG Conversions",
+                "lifestyle_photos": "Lifestyle Photos",
             }
-            if ext == ".zip":
-                entry["entries"] = _zip_entries(p)
-            files.append(entry)
-        files.sort(key=lambda f: f["modified"], reverse=True)
-        _labels = {
-            "backups": "Backups", "volume": "Saved Files (persistent)", "products": "Product Files",
-            "staged_photos": "Staged Photos (pending approval)",
-            "videos": "Generated Videos", "studio_uploads": "Studio Uploads",
-            "staged_videos": "Staged Videos (pending approval)",
-            "svg_conversions": "SVG Conversions",
-            "lifestyle_photos": "Lifestyle Photos",
+            groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
+        # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so
+        # nothing shows unless the files were produced/backed up on this same machine.
+        has_any = any(g["files"] for g in groups)
+        return {
+            "groups": groups,
+            "empty_reason": (
+                None if has_any else
+                "No product files are present on this server. data/digital_products/ and "
+                "data/backups/ are machine-local (gitignored) and do not survive a redeploy "
+                "on the hosted dashboard. Generate or restore them on the machine running "
+                "this server, or run tools/backup_digital_products.py there, to see them here."
+            ),
         }
-        groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
-    # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so
-    # nothing shows unless the files were produced/backed up on this same machine.
-    has_any = any(g["files"] for g in groups)
-    return {
-        "groups": groups,
-        "empty_reason": (
-            None if has_any else
-            "No product files are present on this server. data/digital_products/ and "
-            "data/backups/ are machine-local (gitignored) and do not survive a redeploy "
-            "on the hosted dashboard. Generate or restore them on the machine running "
-            "this server, or run tools/backup_digital_products.py there, to see them here."
-        ),
-    }
+
+    return await asyncio.to_thread(_scan)
 
 
 def _resolve_in_root(root: str, path: str) -> Path:
@@ -7308,8 +7348,14 @@ async def upload_to_volume(request: Request, path: str, _token: str = Depends(_a
         raise HTTPException(status_code=400, detail="empty body")
     if len(body) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(body)
+
+    def _write() -> None:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(body)
+
+    # Synchronous disk write for a payload up to 30MB -- run off the event loop so a
+    # large sync upload doesn't stall every other request (2026-07-08 performance pass).
+    await asyncio.to_thread(_write)
     return {"ok": True, "path": rel, "size": len(body), "size_human": _human_size(len(body))}
 
 
@@ -7323,12 +7369,19 @@ async def open_zip_entry(request: Request, root: str, path: str, entry: str, tok
     target = _resolve_in_root(root, path)
     if not target.is_file() or target.suffix.lower() != ".zip":
         raise HTTPException(status_code=404, detail="ZIP not found")
-    try:
+
+    def _read_entry() -> bytes:
         with zipfile.ZipFile(target) as zf:
-            try:
-                data = zf.read(entry)
-            except KeyError:
-                raise HTTPException(status_code=404, detail="Entry not found in ZIP")
+            return zf.read(entry)
+
+    # Decompressing a ZIP entry (a multi-MB PDF/PNG) is synchronous I/O -- run off
+    # the event loop so previewing a file doesn't stall every other request for the
+    # duration (2026-07-08 performance pass). Exception mapping stays outside the
+    # thread call, same convention as studio_upload_image/upload_brand_mark.
+    try:
+        data = await asyncio.to_thread(_read_entry)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Entry not found in ZIP")
     except zipfile.BadZipFile:
         raise HTTPException(status_code=422, detail="File is not a valid ZIP")
     name = os.path.basename(entry) or "file"

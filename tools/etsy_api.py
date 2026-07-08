@@ -32,6 +32,7 @@ import random
 import urllib.request
 import urllib.parse
 import urllib.error
+import requests
 from typing import Any
 
 # Auto-load .env on import so every consumer (scripts, ad-hoc python -c, agents)
@@ -47,6 +48,16 @@ if os.path.exists(_ENV_PATH):
                 os.environ.setdefault(_k.strip(), _v.strip())
 
 BASE_URL = "https://openapi.etsy.com/v3/application"
+
+# A fresh EtsyAPIClient() is instantiated at every call site in main.py (never a
+# singleton), so connection reuse has to live at module scope rather than on the
+# client instance -- this session outlives any individual client and eliminates a
+# fresh TCP+TLS handshake (~100-300ms) from every Etsy call, the most frequently
+# invoked external dependency in the app (2026-07-08 performance pass). Safe for
+# concurrent use across threads (requests.Session is backed by urllib3's thread-safe
+# PoolManager) as long as no caller mutates session.headers/session.cookies per-call
+# -- this module never does; headers are built fresh per request in _build_request.
+_session = requests.Session()
 
 # Etsy hard limit: 20 MB per digital file
 MAX_DIGITAL_FILE_BYTES = 20 * 1024 * 1024
@@ -384,7 +395,10 @@ class EtsyAPIClient:
         if sec is not None and sec <= 2:
             time.sleep(1.0)
 
-    def _build_request(self, method: str, url: str, body: dict | None) -> urllib.request.Request:
+    def _build_request(self, body: dict | None) -> tuple[dict, bytes | None]:
+        """Returns (headers, data) for a requests.Session call -- the method/url
+        no longer need to be threaded through here since the caller passes them
+        directly to _session.request()."""
         headers = {"Content-Type": "application/json"}
         if not self.api_key and not self.access_token:
             raise EtsyAPIError(0, "No API key or access token configured. Add ETSY_API_KEY to your .env file.")
@@ -396,7 +410,7 @@ class EtsyAPIClient:
         if self.access_token:
             headers["Authorization"] = f"Bearer {self.access_token}"
         data = json.dumps(body).encode() if body else None
-        return urllib.request.Request(url, data=data, headers=headers, method=method)
+        return headers, data
 
     def _request(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
         """Thin gate around `_request_impl` -- consults the circuit-breaker hook
@@ -418,6 +432,13 @@ class EtsyAPIClient:
             return result
 
     def _request_impl(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
+        """requests-based rewrite (2026-07-08 performance pass) of what was a raw
+        urllib.request.urlopen() call per attempt -- now goes through the module-level
+        _session so repeated calls reuse the underlying TCP+TLS connection. requests
+        does not raise on 4xx/5xx like urllib.error.HTTPError did, so every branch below
+        checks resp.status_code explicitly instead of catching an exception; the retry
+        count, backoff/jitter, 429/503-retry, and 401-refresh-and-retry-once behavior
+        are otherwise unchanged from the previous implementation."""
         url = f"{BASE_URL}/{path.lstrip('/')}"
         if params:
             url = f"{url}?{urllib.parse.urlencode(params)}"
@@ -428,65 +449,59 @@ class EtsyAPIClient:
         def _jittered(base: float) -> float:
             return base * (0.75 + random.random() * 0.5)  # ±25% jitter
 
+        def _error_message(resp: requests.Response) -> str:
+            try:
+                err = resp.json()
+                return err.get("error", resp.text)
+            except Exception:
+                return resp.text
+
         last_exc: Exception | None = None
         for attempt in range(3):
             if attempt > 0:
                 time.sleep(_jittered(base_delays[attempt - 1]))
             self._throttle_if_needed()
             try:
-                req = self._build_request(method, url, body)
-                with urllib.request.urlopen(req, timeout=15) as resp:
-                    self._record_rate_limit(resp.headers)
-                    raw = resp.read().decode()
-                    return json.loads(raw) if raw.strip() else {}
-            except urllib.error.HTTPError as e:
-                self._record_rate_limit(e.headers)
-                if e.code == 401 and self.access_token and self.refresh_access_token():
-                    # Token refreshed — retry once immediately (not counted as a backoff attempt)
-                    try:
-                        req = self._build_request(method, url, body)
-                        with urllib.request.urlopen(req, timeout=15) as resp:
-                            self._record_rate_limit(resp.headers)
-                            return json.loads(resp.read().decode())
-                    except urllib.error.HTTPError as e2:
-                        body_text = e2.read().decode()
-                        try:
-                            err = json.loads(body_text)
-                            msg = err.get("error", body_text)
-                        except Exception:
-                            msg = body_text
-                        raise EtsyAPIError(e2.code, msg)
-                if e.code in retryable_http:
-                    # Honour the server's retry-after header when present
-                    retry_after = e.headers.get("retry-after") or e.headers.get("Retry-After")
-                    if retry_after:
-                        try:
-                            time.sleep(float(retry_after) * (0.75 + random.random() * 0.5))
-                        except ValueError:
-                            pass
-                    last_exc = e
-                    continue  # retry with backoff
-                # Non-retryable HTTP error (including 4xx auth errors other than 401)
-                body_text = e.read().decode()
-                try:
-                    err = json.loads(body_text)
-                    msg = err.get("error", body_text)
-                except Exception:
-                    msg = body_text
-                raise EtsyAPIError(e.code, msg)
-            except (OSError, urllib.error.URLError) as e:
+                headers, data = self._build_request(body)
+                resp = _session.request(method, url, data=data, headers=headers, timeout=15)
+            except requests.exceptions.RequestException as e:
                 last_exc = e
                 continue  # retry on network errors
 
+            self._record_rate_limit(resp.headers)
+            if resp.status_code < 400:
+                raw = resp.text
+                return json.loads(raw) if raw.strip() else {}
+
+            if resp.status_code == 401 and self.access_token and self.refresh_access_token():
+                # Token refreshed — retry once immediately (not counted as a backoff attempt).
+                # A network error here propagates uncaught, matching the prior urllib
+                # behavior (the inner except only caught HTTPError, never OSError/URLError).
+                headers, data = self._build_request(body)
+                resp2 = _session.request(method, url, data=data, headers=headers, timeout=15)
+                self._record_rate_limit(resp2.headers)
+                if resp2.status_code >= 400:
+                    raise EtsyAPIError(resp2.status_code, _error_message(resp2))
+                raw = resp2.text
+                return json.loads(raw) if raw.strip() else {}
+
+            if resp.status_code in retryable_http:
+                # Honour the server's retry-after header when present
+                retry_after = resp.headers.get("retry-after") or resp.headers.get("Retry-After")
+                if retry_after:
+                    try:
+                        time.sleep(float(retry_after) * (0.75 + random.random() * 0.5))
+                    except ValueError:
+                        pass
+                last_exc = EtsyAPIError(resp.status_code, _error_message(resp))
+                continue  # retry with backoff
+
+            # Non-retryable HTTP error (including 4xx auth errors other than 401)
+            raise EtsyAPIError(resp.status_code, _error_message(resp))
+
         # All attempts exhausted
-        if isinstance(last_exc, urllib.error.HTTPError):
-            body_text = last_exc.read().decode()
-            try:
-                err = json.loads(body_text)
-                msg = err.get("error", body_text)
-            except Exception:
-                msg = body_text
-            raise EtsyAPIError(last_exc.code, msg)
+        if isinstance(last_exc, EtsyAPIError):
+            raise last_exc
         raise EtsyAPIError(0, f"Network error after retries: {last_exc}")
 
     # ── Public endpoints (API key only) ──────────────────────────────────────

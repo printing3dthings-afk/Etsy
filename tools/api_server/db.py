@@ -25,7 +25,7 @@ import json
 import os
 import sqlite3
 import threading
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -82,6 +82,10 @@ CREATE TABLE IF NOT EXISTS action_queue (
   result_json  TEXT,
   decided_at   TEXT
 );
+-- Composite index satisfies both list_actions(status=...)'s WHERE and its
+-- ORDER BY created_at DESC from the index directly (2026-07-08 performance pass —
+-- this table previously did a full scan on every /api/queue and /api/actions poll).
+CREATE INDEX IF NOT EXISTS idx_action_queue_status ON action_queue(status, created_at DESC);
 CREATE TABLE IF NOT EXISTS chat_messages (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   session_id  TEXT NOT NULL,
@@ -135,6 +139,9 @@ CREATE TABLE IF NOT EXISTS activity_log (
   outcome      TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_activity_ts ON activity_log(ts);
+-- Satisfies list_activity(action_type=...)'s WHERE + ORDER BY id DESC (2026-07-08
+-- performance pass).
+CREATE INDEX IF NOT EXISTS idx_activity_action_type ON activity_log(action_type, id DESC);
 CREATE TABLE IF NOT EXISTS relay_state (
   id             INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
   last_heartbeat TEXT,
@@ -191,6 +198,13 @@ def _connect() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA busy_timeout=5000")
+    # synchronous is a per-connection session setting (unlike journal_mode, which is a
+    # persistent file property set once in init_db()) -- it resets to SQLite's FULL
+    # default on every new connection, and this codebase opens one connection per
+    # operation, so it belongs here. NORMAL is the standard safe pairing with WAL:
+    # committed transactions remain durable, only protection against an OS-level crash
+    # mid-write is relaxed (2026-07-08 performance pass).
+    conn.execute("PRAGMA synchronous=NORMAL")
     return conn
 
 
@@ -1272,6 +1286,25 @@ def purge_expired_sessions() -> int:
     conn = _connect()
     try:
         cur = conn.execute("DELETE FROM hub_sessions WHERE expires_at < ?", (now_iso,))
+        conn.commit()
+        return cur.rowcount
+    finally:
+        conn.close()
+
+
+def prune_old_actions(days: int = 90) -> int:
+    """Delete executed/rejected action_queue rows older than `days`. Pending/approved
+    rows are never touched regardless of age -- this only stops the table from growing
+    unbounded (2026-07-08 performance pass; the table had no index-backed cleanup at all
+    before this). Returns the number of rows deleted."""
+    init_db()
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "DELETE FROM action_queue WHERE status IN ('executed','rejected') AND created_at < ?",
+            (cutoff,),
+        )
         conn.commit()
         return cur.rowcount
     finally:

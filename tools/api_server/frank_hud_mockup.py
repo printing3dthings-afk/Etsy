@@ -2055,6 +2055,42 @@ function transcribeAndSend(blob){
 
 // ── Nav switching — also called directly by in-panel links like
 // "View All ›" / "Manage Providers ›", not just the sidebar. ──
+// Screen-scoped polling (2026-07-08 performance pass): loadAll() used to fire every
+// load*/render* function in the app every 30s regardless of which of the 18 screens was
+// actually open. _SCREEN_LOADERS maps each screen to the loaders that populate ONLY that
+// screen's content; _GLOBAL_LOADERS covers chrome that lives outside any .screen div
+// (header status pill, bottombar relay pill, alert bell) plus two dual-purpose loaders
+// that must keep running everywhere: loadQueue() also sets sidebar nav badges, and
+// loadShopPerf() also feeds the Executive Briefing panel's cache (reachable from any
+// screen), so scoping either to a single screen would make chrome outside that screen
+// go stale.
+const _SCREEN_LOADERS = {
+  cmd: [loadCredentialsAndHealth, loadStarSeller, loadInbox, loadMissionTimeline],
+  core: [loadCredentialsAndHealth],
+  agents: [],  // covered by the global loadAgents() call below
+  tasks: [loadTasks],
+  actions: [loadActions],
+  calendar: [loadCalendar],
+  memory: [loadMemory],
+  conversations: [loadConversations],
+  kb: [loadKb],
+  tools: [loadTools],
+  workflows: [loadWorkflows],
+  listings: [() => loadListings(_lastListingState)],
+  products: [renderProducts],
+  brandkit: [renderBrandKit],
+  files: [loadFiles],
+  connections: [loadConnections],
+  security: [renderSecurityPosture],
+  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings],
+  studio: [loadStudioVideos],
+};
+const _GLOBAL_LOADERS = [
+  () => Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill),
+  loadRelayStatus, loadAlerts, checkPersistence, loadQueue, loadShopPerf,
+];
+let _activeScreen = 'cmd';
+
 function showScreen(name){
   document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
   const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
@@ -2062,12 +2098,8 @@ function showScreen(name){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el = document.getElementById('screen-'+name);
   if(el) el.classList.add('active');
-  if (name === 'actions') loadActions();
-  if (name === 'calendar') loadCalendar();
-  if (name === 'memory') loadMemory();
-  if (name === 'conversations') loadConversations();
-  if (name === 'kb') loadKb();
-  if (name === 'workflows') loadWorkflows();
+  _activeScreen = name;
+  (_SCREEN_LOADERS[name] || []).forEach(fn => fn());
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
@@ -4906,29 +4938,17 @@ function renderSecurityPosture() {
 }
 
 function loadAll(){
-  Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill);
-  loadCredentialsAndHealth();
-  loadShopPerf();
-  loadStarSeller();
-  loadInbox();
-  loadQueue();
-  loadMissionTimeline();
-  loadTasks();
-  loadTools();
-  loadListings(_lastListingState);
-  renderProducts();
-  renderBrandKit();
-  loadFiles();
-  loadConnections();
-  renderSecurityPosture();
-  loadRelayStatus();
-  loadStudioVideos();
-  loadAlerts();
-  loadSettingsConnectionsSummary();
-  loadAccountSettings();
-  loadRuntimeSettings();
-  checkPersistence();
+  // Backgrounded tab: the setInterval timer below keeps firing (cheap — it's just a JS
+  // timer), but every tick becomes a no-op until the tab is visible again, at which
+  // point the visibilitychange listener triggers one immediate catch-up refresh
+  // (2026-07-08 performance pass).
+  if (document.hidden) return;
+  _GLOBAL_LOADERS.forEach(fn => fn());
+  (_SCREEN_LOADERS[_activeScreen] || []).forEach(fn => fn());
 }
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) loadAll();
+});
 
 // Storage-durability guard: /health reports whether the DB is on a durable volume.
 // If not, every change resets on restart — surface a loud, un-dismissible banner so
@@ -4950,13 +4970,13 @@ async function checkPersistence(){
     if(el) el.classList.toggle('show', !_persistWarnDismissed && j && j.persistent === false);
   }catch(e){ /* health unreachable — don't block the HUD */ }
 }
+// _activeScreen defaults to 'cmd' (the screen marked active in the HTML), so this
+// initial loadAll() fires the same globals + cmd-screen loaders as before. The five
+// screens formerly eager-loaded here unconditionally (actions/calendar/memory/
+// conversations/kb/workflows) now load on first navigation via showScreen()'s own
+// dispatch instead — they show "Loading…" on first visit rather than being silently
+// pre-fetched in the background (2026-07-08 performance pass).
 loadAll();
-loadActions();
-loadCalendar();
-loadMemory();
-loadConversations();
-loadKb();
-loadWorkflows();
 setInterval(loadAll, 30000);
 
 // ── Operator chip — load current user from /api/me ──
@@ -5266,7 +5286,11 @@ async function initOrbGL(){
 
 function orbGLFrame(){
   requestAnimationFrame(orbGLFrame);
-  if(orbGLPaused || !orbGLReady) return;
+  // Skip the full Three.js render (bloom post-processing included) when the orb isn't
+  // actually on screen: the tab is backgrounded, or the dashboard's Control Center is
+  // open (#orb-view and the 18-screen dashboard are mutually exclusive via 'cc-open' on
+  // body). Previously this ran unconditionally forever (2026-07-08 performance pass).
+  if(orbGLPaused || !orbGLReady || document.hidden || document.body.classList.contains('cc-open')) return;
   const dt = glClock.getDelta();
   const amp = currentVoiceAmp();
   glUniforms.uTime.value += dt * (0.12 + amp*0.5);
@@ -5488,7 +5512,7 @@ function frame(){
   // Default ("sphere") mode renders entirely on the WebGL #orb-gl canvas now (see
   // orbGLFrame below) — this 2D canvas is hidden in that mode, so skip all 2D work
   // rather than waste CPU drawing something nobody sees.
-  if(orbMode === 'sphere'){ requestAnimationFrame(frame); return; }
+  if(orbMode === 'sphere' || document.hidden || document.body.classList.contains('cc-open')){ requestAnimationFrame(frame); return; }
   ctx.clearRect(0,0,W,H);
   rot += speaking ? 0.028 : (_reducedMotion ? 0 : 0.010);
   const amp = currentVoiceAmp();

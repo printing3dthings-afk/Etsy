@@ -3927,3 +3927,104 @@ root-level one-off scripts); the dead Instagram photo/carousel posting code path
 `instagram_api.py` (only video posting is wired up). Full menu, including business-side
 candidates from CLAUDE.md's own roadmap (cover system, sticker pack expansion, Phase 2 products),
 is in the plan file from this session.
+
+---
+
+## 2026-07-08 — "Make everything incredibly faster" performance pass (v130)
+
+**Context:** Scott asked for a comprehensive, no-scope-limit performance pass across the
+whole app. Ran 3 parallel research agents (backend/main.py, frontend/frank_hud_mockup.py,
+DB+infra config) plus a Plan agent that verified exact code before implementation. Shipped
+all 8 identified fixes in one session, each independently revertible.
+
+**1. GZip compression middleware (`tools/api_server/main.py`).** No compression existed
+anywhere before this. Added `GZipMiddleware` (Starlette) after the existing security-headers
+middleware so it wraps and compresses everything, including the `/frank` dashboard's inline
+HTML/CSS/JS payload. Verified live: 313,694 bytes uncompressed -> 79,938 bytes gzipped (~75%
+reduction) on the actual authenticated `/frank` response.
+
+**2. `PRAGMA synchronous=NORMAL` (`tools/api_server/db.py`).** WAL mode was already enabled
+(a persistent file property, correctly set once in `init_db()`), but `synchronous` is a
+per-connection session setting that resets to SQLite's default `FULL` on every new
+connection -- and this codebase opens one connection per operation. Added the pragma to
+`_connect()` itself so it actually applies everywhere. Standard safe pairing with WAL.
+
+**3. Indexes + pruning on `action_queue`/`activity_log` (`tools/api_server/db.py`).**
+`action_queue` had no index on `status` despite `list_actions(status="pending")` being
+polled every 120s (full table scan), and the table was never pruned. Added composite
+indexes (`(status, created_at DESC)` and `(action_type, id DESC)`) that satisfy both the
+WHERE and ORDER BY directly, plus a new `prune_old_actions(days=90)` mirroring the existing
+`purge_expired_sessions()` shape exactly -- deletes only `executed`/`rejected` rows past the
+cutoff, never touches `pending`/`approved`. Wired into the same hourly tick that already
+prunes sessions.
+
+**4. `asyncio.to_thread` wraps on 3 synchronous handlers (`tools/api_server/main.py`).**
+`list_files()` (full `rglob`+`stat`+zip-central-directory scan across every file root),
+`open_zip_entry()` (`zipfile.read()` decompression), and `upload_to_volume()`
+(`write_bytes()` for up to 30MB) were all still running synchronously inside `async def`
+handlers, freezing the single-process app for their duration. Wrapped each following the
+exact closure pattern already shipped for `studio_upload_image`/`upload_brand_mark` (v129).
+
+**5. Orb `requestAnimationFrame` loops now pause when not visible
+(`tools/api_server/frank_hud_mockup.py`).** Both the WebGL orb loop (`orbGLFrame()`, full
+Three.js render + bloom post-processing) and the legacy 2D canvas loop (`frame()`) ran
+unconditionally forever. Confirmed the orb and the 18-screen dashboard are mutually
+exclusive via the existing `cc-open` class on `<body>` -- extended both loops' existing
+early-return short-circuit with `document.hidden || document.body.classList.contains('cc-open')`.
+No new state, reuses an already-existing signal.
+
+**6. Screen-scoped polling + visibility pause (`tools/api_server/frank_hud_mockup.py`) --
+the single biggest perceived-speed fix.** `loadAll()` fired ~18-20 `load*`/`render*`
+functions every 30s via `setInterval`, regardless of which of 18 screens was actually open,
+with zero `document.visibilityState` handling anywhere. Built a verified mapping (by reading
+`showScreen()`, the screen DOM, and every function's actual target element) of 6 "global"
+loaders (header status pill, bottombar relay pill, alert bell, plus `loadQueue`/`loadShopPerf`
+which are dual-purpose and must stay global) vs. ~14-15 screen-scoped loaders. `showScreen()`
+now dispatches only its own screen's loaders on switch; `loadAll()` runs globals + only the
+active screen's loaders; a `visibilitychange` listener triggers an immediate refresh when the
+tab becomes visible again, and `loadAll()` no-ops while `document.hidden`.
+Verified live via Playwright against the local test harness: on the Files screen, `loadAll()`
+fired exactly 8 API calls (6 global + 1 screen-local `loadFiles`, one global batches 2 calls);
+switching to Tasks fired exactly 1 immediate call (`loadTasks`'s `/api/todos`);
+`document.hidden=true` reduced `loadAll()` to 0 calls; toggling back to visible fired exactly
+8 calls again (globals + the now-active Tasks screen).
+
+**7. Etsy API connection reuse (`tools/etsy_api.py`) -- the most delicate change in this
+pass.** `EtsyAPIClient()` is instantiated fresh at ~20 call sites in main.py (never a
+singleton), so the fix is a module-level `requests.Session()` that outlives any individual
+client, removing a fresh TCP+TLS handshake (~100-300ms) from every Etsy call -- the most
+frequently invoked external dependency in the app. Required rewriting `_build_request`
+(now returns `(headers, data)` instead of a `urllib.request.Request`) and `_request_impl`
+(now checks `resp.status_code` explicitly since `requests` doesn't raise on 4xx/5xx like
+`urllib.error.HTTPError` did) while preserving the exact retry-count, backoff/jitter,
+429/503-retry, and 401-refresh-and-retry-once behavior. `refresh_access_token()` was left on
+raw `urllib` (rare cold path, not worth the added risk).
+Verified two ways: (a) a live call against the real Etsy API returned a real, correctly-
+mapped `EtsyAPIError(status=403, ...)` matching the exact prior error-message format,
+proving the request/response/error-mapping path works end-to-end; (b) mocked
+`_session.request` to exercise all 4 control-flow branches directly -- 429-then-success
+(3 attempts), 401-refresh-then-success (2 calls), non-retryable 404 (1 call, raises
+immediately), and 503-exhausts-all-retries (3 calls then raises) -- all matched expected
+behavior exactly.
+
+**8. Static asset cache headers for vendored libraries (`tools/api_server/main.py`).**
+Three.js/onnxruntime-web/transformers.js/piper-tts assets under `/static/vendor/` had no
+cache headers. Subclassed `StaticFiles` to add `Cache-Control: public, max-age=604800` (7
+days) scoped to `/vendor/` paths only -- these aren't content-hashed, so a long `immutable`
+header would risk serving stale JS after an in-place vendor upgrade; PWA icons/privacy.html
+are untouched. Verified live: `three.module.js` returns the header, `icon-192.png` does not.
+
+**Explicit anti-goal, not done:** multi-worker uvicorn. `_relay_ws`/`_relay_lock`, the
+in-process `_cache`, and the `/ws/chat`/`/ws/relay` connection registries are all in-process
+global state with no cross-worker sync (no Redis/shared store) -- multiple workers would
+silently fragment the relay connection, cache, and WebSocket sessions for a single-operator
+dashboard with no real concurrent-request pressure. A correctness regression, not a perf win.
+
+**Verified:** `python -m compileall tools tests` clean; all 4 test suites green
+(`smoke_test.py`: 36 tools; `test_quality_gates.py`: 28 passed; `test_resilience.py`: 26
+passed; `test_staged_actions.py`: 51 passed); live Playwright pass against the local test
+harness proved items 6 and 8 as described above; live + mocked calls proved item 7; `git
+status` confirmed no unintended changes after reverting two rounds of local-test-harness
+pollution (`ops_runbook.md`'s auto-generated health-loop entry, `listing_manifest.json`'s
+`last_verified` timestamps -- both written by background loops during local testing, neither
+a real change). `_BUILD_ID` bumped to `b4d0e2c-v130`.
