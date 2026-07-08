@@ -4680,9 +4680,15 @@ tick(); setInterval(tick, 1000);
 const canvas = document.getElementById('orb');
 const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height, CX = W/2, CY = H/2, R = 230;
-let particles = [];   // sphere mode: {lat,lon} · image mode: {x0,y0,z0}
-let edges = [];        // [particleIndexA, particleIndexB] pairs to connect with a line
+let particles = [];   // sphere mode only: {lat,lon}
+let edges = [];        // sphere mode only: [particleIndexA, particleIndexB] line pairs
 let orbMode = 'sphere';
+// Image mode (a custom brand-mark logo) is a real extruded slab, not a single point
+// cloud: front face + back face (each {x0,y0,z0}) connected by mesh edges, plus a
+// sparse set of "strut" edges only along the true outer silhouette so it reads as a
+// solid object with thickness rather than every internal line growing a pointless
+// vertical bar. See applyBrandMarkToOrb below for how these are built.
+let imgFront = [], imgBack = [], imgFrontEdges = [], imgBackEdges = [], imgStruts = [];
 
 function buildSphereParticles(){
   const N_LAT = 12, N_LON = 18;
@@ -4704,13 +4710,91 @@ function buildSphereParticles(){
 function resetOrbToDefault(){
   const built = buildSphereParticles();
   particles = built.pts; edges = built.eg; orbMode = 'sphere';
+  imgFront = []; imgBack = []; imgFrontEdges = []; imgBackEdges = []; imgStruts = [];
 }
 resetOrbToDefault();
+
+// Flood-fill the NOT-ink region starting from the grid border (4-connectivity). A kept
+// ("ink") cell adjacent to a flood-reached cell touches the image's true background —
+// i.e. it's on the real outer silhouette, not an inner hole (like inside an "S" loop,
+// or the gap between the S and J). Used to decide which cells get a front-to-back
+// "strut" edge — only the true outer edge should look like it has physical thickness;
+// interior ink stays two flat parallel layers, not a forest of vertical bars.
+function classifyOuterSilhouette(keep, GRID){
+  const reached = new Array(GRID*GRID).fill(false);
+  const stack = [];
+  for(let gx=0; gx<GRID; gx++){
+    if(!keep[gx]) { reached[gx]=true; stack.push([0,gx]); }
+    const lastRow = (GRID-1)*GRID+gx;
+    if(!keep[lastRow]) { reached[lastRow]=true; stack.push([GRID-1,gx]); }
+  }
+  for(let gy=0; gy<GRID; gy++){
+    if(!keep[gy*GRID]) { reached[gy*GRID]=true; stack.push([gy,0]); }
+    const lastCol = gy*GRID+(GRID-1);
+    if(!keep[lastCol]) { reached[lastCol]=true; stack.push([gy,GRID-1]); }
+  }
+  while(stack.length){
+    const [gy,gx] = stack.pop();
+    const nbrs = [[gy-1,gx],[gy+1,gx],[gy,gx-1],[gy,gx+1]];
+    for(const [ny,nx] of nbrs){
+      if(ny<0||ny>=GRID||nx<0||nx>=GRID) continue;
+      const idx = ny*GRID+nx;
+      if(reached[idx] || keep[idx]) continue;
+      reached[idx] = true;
+      stack.push([ny,nx]);
+    }
+  }
+  const outer = new Array(GRID*GRID).fill(false);
+  for(let gy=0; gy<GRID; gy++){
+    for(let gx=0; gx<GRID; gx++){
+      if(!keep[gy*GRID+gx]) continue;
+      const nbrs = [[gy-1,gx],[gy+1,gx],[gy,gx-1],[gy,gx+1]];
+      for(const [ny,nx] of nbrs){
+        const outOfBounds = ny<0||ny>=GRID||nx<0||nx>=GRID;
+        if(outOfBounds || reached[ny*GRID+nx]){ outer[gy*GRID+gx] = true; break; }
+      }
+    }
+  }
+  return outer;
+}
+
+function rgbToHue(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  const sat = max===0 ? 0 : d/max;
+  let h = 0;
+  if(d!==0){
+    if(max===r) h = ((g-b)/d) % 6;
+    else if(max===g) h = (b-r)/d + 2;
+    else h = (r-g)/d + 4;
+    h *= 60; if(h<0) h += 360;
+  }
+  return {hue:h, sat};
+}
+// "Layered Design" made literal: a color-based depth offset added on top of the
+// front/back split below, so differently-colored parts of the logo (e.g. a gold "S"
+// vs a teal "J") visibly separate from each other as the slab rotates, not just from
+// front to back as one flat pair of planes. Bucketed by hue so this works generically
+// for any future upload, not hardcoded to this specific logo's colors. Low-saturation
+// (near-black/near-white) pixels — typically body text — get no offset, sitting at
+// the base depth of whichever face they're on.
+function colorZOffset(data, gx, gy, GRID, magnitude){
+  const idx = (gy*GRID+gx)*4;
+  const {hue,sat} = rgbToHue(data[idx],data[idx+1],data[idx+2]);
+  if(sat < 0.25) return 0;
+  if(hue < 90) return +magnitude;
+  if(hue < 180) return -magnitude;
+  if(hue < 270) return -magnitude*0.4;
+  return +magnitude*0.4;
+}
 
 function applyBrandMarkToOrb(dataUrl){
   const img = new Image();
   img.onload = () => {
-    const GRID = 240, MAX_PARTICLES = 4000;
+    const GRID = 240;
+    const T_SLAB = R * 0.7;       // extrusion thickness — "noticeably deeper" per Scott
+    const COLOR_MAG = R * 0.25;   // secondary per-color depth offset within each face
+    const MAX_PER_FACE = 2600;    // tuned against measured frame time, see comment below
     const off = document.createElement('canvas');
     off.width = GRID; off.height = GRID;
     const octx = off.getContext('2d', {willReadFrequently:true});
@@ -4745,68 +4829,65 @@ function applyBrandMarkToOrb(dataUrl){
     }
     // Cells within `inset` of the grid border are left false (never "ink"), same margin
     // as the hasAlpha check above. Reproduced live: a resize/JPEG edge artifact along the
-    // image's literal last pixel row read as faint "ink", and because out-of-bounds
-    // counts as not-ink for outline purposes, that entire noisy border row trivially
-    // qualified as "boundary" and rendered as a long stray line far from the real logo.
-    // Real logo art virtually always has padding well inside this margin, so excluding
-    // it costs nothing for a normal upload but closes off this whole class of edge noise.
-    // Outline extraction: a filled "ink" cell survives only if at least one of its
-    // 4 grid-neighbors is NOT ink (out-of-bounds counts as not-ink, so the true outer
-    // silhouette registers too) — i.e. boundary = region minus its own interior. This
-    // is what makes bold solid letterforms render as hollow outlines instead of filled
-    // blobs, per Scott's "only outline the logo, don't make it an orb" feedback — a
-    // thin stroke (the wordmark, the circle ring) is mostly boundary already and looks
-    // much the same; a thick fill (the S/J letterforms) loses its solid interior.
-    const outline = new Array(GRID*GRID).fill(false);
+    // image's literal last pixel row read as faint "ink" and, once misread as part of a
+    // real boundary, rendered as a long stray line far from the real logo. Real logo art
+    // virtually always has padding well inside this margin, so excluding it costs nothing
+    // for a normal upload but closes off this whole class of edge noise.
     let keptCount = 0;
+    for(let i=0;i<keep.length;i++) if(keep[i]) keptCount++;
+    if(keptCount < 8) return;  // too sparse to read as a shape — keep whatever orb is active
+
+    // Dense whole-shape dot grid (samples the FILLED mask, not just its outline) with
+    // real front/back extrusion + a per-color depth offset — "more dots and more 3D...
+    // I want a dot grid" plus the "Layered Design" color-separation idea, combined per
+    // Scott's direction. Full density (every filled cell, both faces) measured ~26fps in
+    // a worst-case headless/no-GPU render — too heavy to run continuously on a real
+    // phone. A diagonal-checkerboard half-thin (keep cells where gx+gy is even) measured
+    // a smooth 60fps while still landing ~20% denser than the previous outline-only
+    // version — the density/smoothness trade a senior-design pass should actually make,
+    // not just "more particles at any cost." Only fall back to further integer-stride
+    // thinning on top of that for a logo dense enough to still exceed budget.
+    const useCheckerboard = keptCount > MAX_PER_FACE;
+    const halvedCount = useCheckerboard ? Math.ceil(keptCount/2) : keptCount;
+    const stride = Math.max(1, Math.ceil(Math.sqrt(halvedCount/MAX_PER_FACE)));
+    const outer = classifyOuterSilhouette(keep, GRID);
+
+    const idxF = new Array(GRID*GRID).fill(-1), idxB = new Array(GRID*GRID).fill(-1);
+    const front = [], back = [], struts = [];
     for(let gy=0; gy<GRID; gy++){
       for(let gx=0; gx<GRID; gx++){
-        if(!keep[gy*GRID+gx]) continue;
-        const up    = gy>0      ? keep[(gy-1)*GRID+gx] : false;
-        const down  = gy<GRID-1 ? keep[(gy+1)*GRID+gx] : false;
-        const left  = gx>0      ? keep[gy*GRID+(gx-1)] : false;
-        const right = gx<GRID-1 ? keep[gy*GRID+(gx+1)] : false;
-        if(!up || !down || !left || !right){
-          outline[gy*GRID+gx] = true;
-          keptCount++;
+        if(useCheckerboard && (gx+gy)%2!==0) continue;
+        if(!keep[gy*GRID+gx] || gx%stride!==0 || gy%stride!==0) continue;
+        const nx = (gx/(GRID-1))*2-1, ny = (gy/(GRID-1))*2-1;   // -1..1
+        const cz = colorZOffset(data, gx, gy, GRID, COLOR_MAG);
+        idxF[gy*GRID+gx] = front.length; front.push({x0:nx*R, y0:ny*R, z0:+T_SLAB/2+cz});
+        idxB[gy*GRID+gx] = back.length;  back.push({x0:nx*R, y0:ny*R, z0:-T_SLAB/2+cz});
+        if(outer[gy*GRID+gx]) struts.push([idxF[gy*GRID+gx], idxB[gy*GRID+gx]]);
+      }
+    }
+    // When the checkerboard thin is active, same-parity neighbors along a row/col are 2
+    // grid-steps apart (the cell in between is the opposite, filtered-out parity) — the
+    // adjacency search radius has to account for that or it finds nothing and every dot
+    // renders disconnected. Same flat-array bounds-check fix as before on the x-search
+    // (a stray-edge bug already found and fixed once at this resolution — see the
+    // 2026-07-08 v119 ops_runbook entry).
+    const searchStride = stride * (useCheckerboard ? 2 : 1);
+    function buildFaceEdges(idxLookup){
+      const eg = [];
+      for(let gy=0; gy<GRID; gy++){
+        for(let gx=0; gx<GRID; gx++){
+          const here = idxLookup[gy*GRID+gx];
+          if(here < 0) continue;
+          for(let dx=1; dx<=searchStride && gx+dx<GRID; dx++){ const r = idxLookup[gy*GRID+(gx+dx)]; if(r>=0){ eg.push([here,r]); break; } }
+          for(let dy=1; dy<=searchStride; dy++){ const b = idxLookup[(gy+dy)*GRID+gx]; if(b>=0){ eg.push([here,b]); break; } }
         }
       }
+      return eg;
     }
-    if(keptCount < 8) return;  // too sparse to read as a shape — keep whatever orb is active
-    const stride = Math.max(1, Math.ceil(Math.sqrt(keptCount/MAX_PARTICLES)));
-    const idxLookup = new Array(GRID*GRID).fill(-1);
-    const pts = [];
-    for(let gy=0; gy<GRID; gy++){
-      for(let gx=0; gx<GRID; gx++){
-        if(!outline[gy*GRID+gx] || gx%stride!==0 || gy%stride!==0) continue;
-        const nx = (gx/(GRID-1))*2-1, ny = (gy/(GRID-1))*2-1;   // -1..1
-        const dist = Math.min(Math.sqrt(nx*nx+ny*ny), 1);
-        idxLookup[gy*GRID+gx] = pts.length;
-        pts.push({
-          x0: nx*R, y0: ny*R,
-          z0: Math.cos(dist*Math.PI/2) * (R*0.32),   // gentle radial bump — simulated "layered" depth, not real 3D
-        });
-      }
-    }
-    const eg = [];
-    for(let gy=0; gy<GRID; gy++){
-      for(let gx=0; gx<GRID; gx++){
-        const here = idxLookup[gy*GRID+gx];
-        if(here < 0) continue;
-        // Bounds-check gx+dx explicitly — idxLookup is a flat 1D array, so an
-        // unchecked gx+dx>=GRID silently reads into the START of the NEXT row
-        // instead of failing, wiring a bogus long edge across the whole shape
-        // between two spatially unrelated points (reproduced live: a stray
-        // diagonal line appeared once GRID got large enough for this to bite).
-        // The dy loop doesn't need the same guard — (gy+dy)*GRID+gx naturally
-        // runs past the end of the whole array when gy+dy>=GRID, and a JS
-        // array read past its length returns undefined, which safely fails
-        // the `r>=0` check below rather than aliasing into row 0 of a new grid.
-        for(let dx=1; dx<=stride && gx+dx<GRID; dx++){ const r = idxLookup[gy*GRID+(gx+dx)]; if(r>=0){ eg.push([here,r]); break; } }
-        for(let dy=1; dy<=stride; dy++){ const b = idxLookup[(gy+dy)*GRID+gx]; if(b>=0){ eg.push([here,b]); break; } }
-      }
-    }
-    particles = pts; edges = eg; orbMode = 'image';
+    imgFront = front; imgBack = back;
+    imgFrontEdges = buildFaceEdges(idxF); imgBackEdges = buildFaceEdges(idxB);
+    imgStruts = struts;
+    orbMode = 'image';
   };
   img.src = dataUrl;
 }
@@ -4827,47 +4908,96 @@ function frame(){
   ctx.shadowBlur = 18 + amp*36;
   ctx.shadowColor = speaking ? 'rgba(122,232,255,'+glow+')' : 'rgba(58,214,255,0.3)';
 
-  const pts = particles.map(p=>{
-    let x, y, z;
-    if(orbMode === 'image'){
-      const wob = speaking ? amp*0.16*Math.sin((p.x0+p.y0)*0.02 + speakT*2) : 0;
-      const rx = p.x0*(1+wob), rz = p.z0*(1+wob);
-      x = rx*Math.cos(rot) - rz*Math.sin(rot);
-      z = rx*Math.sin(rot) + rz*Math.cos(rot);
-      y = p.y0*(1+wob);
-    } else {
-      const lon = p.lon + rot;
-      const rr = R * (1 + (speaking ? amp*0.16*Math.sin(p.lat*4+speakT*2) : 0));
-      x = rr * Math.cos(p.lat) * Math.cos(lon);
-      y = rr * Math.sin(p.lat);
-      z = rr * Math.cos(p.lat) * Math.sin(lon);
-    }
-    const scale = 683 / (683 - z);
-    return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
-  });
-
   // Batch every line/dot into a single path each (one stroke()/fill() call for the
-  // whole frame) instead of the old per-edge/per-dot beginPath+stroke pattern — with
-  // thousands of particles at the higher sampling resolution below, one beginPath+
+  // whole frame) instead of a per-edge/per-dot beginPath+stroke pattern — with
+  // thousands of particles at the sampling resolution used below, one beginPath+
   // stroke() PER segment would tank the frame rate; one path for all segments is the
   // standard canvas2D fix and keeps this smooth even at a few thousand points.
-  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.45)' : 'rgba(58,214,255,0.2)';
-  ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  edges.forEach(([ai,bi])=>{
-    const a = pts[ai], b = pts[bi];
-    if(a && b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
-  });
-  ctx.stroke();
+  function project(x0, y0, z0, wobMag){
+    const wob = speaking ? amp*wobMag*Math.sin((x0+y0)*0.02 + speakT*2) : 0;
+    const rx = x0*(1+wob), rz = z0*(1+wob);
+    const x = rx*Math.cos(rot) - rz*Math.sin(rot);
+    const z = rx*Math.sin(rot) + rz*Math.cos(rot);
+    const y = y0*(1+wob);
+    const scale = 683 / (683 - z);
+    return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
+  }
 
-  ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
-  ctx.beginPath();
-  pts.forEach(p=>{
-    const sz = p.scale > 1 ? 1.4 : 0.9;
-    ctx.moveTo(p.x+sz, p.y);
-    ctx.arc(p.x,p.y,sz,0,Math.PI*2);
-  });
-  ctx.fill();
+  if(orbMode === 'image'){
+    // A real extruded slab (front face + back face + edge struts), not a single flat
+    // point cloud — see applyBrandMarkToOrb for how imgFront/imgBack/imgStruts are
+    // built. shadowBlur is the dominant per-frame cost at this particle count (measured
+    // live: disabling it nearly doubled FPS), so it's only paid for the front layer —
+    // the back layer is already heavily dimmed/receded so it shouldn't glow as bright
+    // as the foreground anyway, which makes this a visual correctness fix as much as a
+    // performance one.
+    const frontPts = imgFront.map(p => project(p.x0, p.y0, p.z0, 0.16));
+    const backPts = imgBack.map(p => project(p.x0, p.y0, p.z0, 0.16));
+    const frontShadow = ctx.shadowBlur, frontShadowColor = ctx.shadowColor;
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.22)' : 'rgba(58,214,255,0.10)';
+    ctx.lineWidth = 0.4;
+    ctx.beginPath();
+    imgBackEdges.forEach(([ai,bi])=>{ const a=backPts[ai], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.30)' : 'rgba(58,214,255,0.14)';
+    ctx.lineWidth = 0.45;
+    ctx.beginPath();
+    imgStruts.forEach(([fi,bi])=>{ const a=frontPts[fi], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+    ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.5)' : 'rgba(58,214,255,0.22)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    imgFrontEdges.forEach(([ai,bi])=>{ const a=frontPts[ai], b=frontPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    // Back dots must read as clearly BEHIND the front, not equally prominent, or an
+    // off-angle/edge-on view of the rotation looks like two unrelated overlapping
+    // copies instead of one solid object with a near side and a far side.
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = speaking ? 'rgba(122,232,255,0.28)' : 'rgba(58,214,255,0.16)';
+    ctx.beginPath();
+    backPts.forEach(p=>{ const sz=p.scale>1?1.0:0.65; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+    ctx.fill();
+
+    ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+    ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
+    ctx.beginPath();
+    frontPts.forEach(p=>{ const sz=p.scale>1?1.4:0.9; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+    ctx.fill();
+  } else {
+    const pts = particles.map(p=>{
+      const lon = p.lon + rot;
+      const rr = R * (1 + (speaking ? amp*0.16*Math.sin(p.lat*4+speakT*2) : 0));
+      const x = rr * Math.cos(p.lat) * Math.cos(lon);
+      const y = rr * Math.sin(p.lat);
+      const z = rr * Math.cos(p.lat) * Math.sin(lon);
+      const scale = 683 / (683 - z);
+      return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
+    });
+
+    ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.45)' : 'rgba(58,214,255,0.2)';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    edges.forEach(([ai,bi])=>{
+      const a = pts[ai], b = pts[bi];
+      if(a && b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
+    ctx.beginPath();
+    pts.forEach(p=>{
+      const sz = p.scale > 1 ? 1.4 : 0.9;
+      ctx.moveTo(p.x+sz, p.y);
+      ctx.arc(p.x,p.y,sz,0,Math.PI*2);
+    });
+    ctx.fill();
+  }
 
   const grad = ctx.createRadialGradient(CX,CY,8,CX,CY,55+amp*30);
   grad.addColorStop(0, speaking ? 'rgba(180,240,255,'+ (0.7+amp*0.25) +')' : 'rgba(58,214,255,0.4)');

@@ -3244,3 +3244,59 @@ not just the flat plate with a subtle bump it has today. Clarified he wants to s
 comparisons of two depth approaches (real extrusion vs. per-element color-layered depth) crossed
 with wireframe-only vs. faint-surface-fill before picking one to ship. Comparison variants are
 scratchpad-only until he chooses; nothing further ships until then.
+
+---
+
+## 2026-07-08 — Brand-mark orb: dense dot-grid + combined extrusion/color-layer depth (v120)
+
+Scott's follow-up after seeing the 3 comparison GIFs: "More dots and more 3D. I want a dot grid,"
+then confirmed via questions — fill the WHOLE shape (not just the outline), combine BOTH ideas
+(real front/back extrusion AND per-color depth layering) rather than picking one, and "just make
+it noticeably deeper." Then: "Keep trying. We need to be flawless. Act as a senior designer" — so
+this went through a real critique-and-iterate loop before shipping, not a single-shot render.
+
+**What shipped (`applyBrandMarkToOrb` + `frame()`, frank_hud_mockup.py):** particle source
+switched from the outline mask (v118/v119) to the FILLED mask, sampled at a regular grid stride —
+this is what makes it read as an actual dot-grid fill across solid letterform areas instead of
+hollow line-art. Every sampled cell gets a front point AND a back point (real extrusion, slab
+thickness `T_SLAB = R*0.7`), connected by front-to-front and back-to-back mesh edges plus sparse
+"strut" edges — but only along the TRUE outer silhouette (found via a flood-fill from the grid
+border through non-ink cells; a kept cell adjacent to the reached region is on the real edge, not
+an inner hole like inside an "S"), so interior ink stays two flat layers instead of every internal
+line growing a pointless vertical bar. On top of that, each particle gets a secondary depth offset
+from its own pixel's hue (`colorZOffset` — up to ~4 hue bands, low-saturation/dark pixels sit at
+the base depth) so differently-colored parts of the logo genuinely separate from each other as it
+rotates, not just front from back — the two depth ideas combined, not chosen between.
+
+**Senior-designer critique pass — two real problems found and fixed, not shipped on the first
+render:**
+1. **Back layer as bright as the front.** At full density with the naive first pass, the back
+   face's dots (not just its edges) rendered at the same opacity as the front — off-angle/edge-on
+   rotation looked like two unrelated overlapping copies of the logo instead of one solid object
+   with a near side and a far side. Fixed by dimming the back-face dot fill to match the back-edge
+   dimming that already existed.
+2. **Performance.** Sampling every filled cell (front+back, ~4,748 particles per face) measured
+   ~26fps in a worst-case headless/no-GPU render — too heavy to run continuously, especially on a
+   phone. Root-caused to `ctx.shadowBlur`: disabling it entirely nearly doubled the frame rate, and
+   the cost turned out to be roughly binary (any nonzero blur radius cost almost as much as the
+   full radius) — so blur is now only applied to the front layer (the back is already dimmed and
+   doesn't need to glow as bright anyway) rather than reduced in strength. Density was also capped
+   via a diagonal-checkerboard half-thin (keep cells where `gx+gy` is even) rather than accepting
+   either "too sparse" or "too slow" — this measured a smooth ~57-60fps at ~20% MORE particles than
+   the previous outline-only version had, which is the actual trade a density/smoothness call
+   should make, not maximum literal dot count regardless of frame rate. Real per-device performance
+   should be better than this headless/no-GPU benchmark, not worse.
+
+**Verify:** re-ran the real-logo Playwright check after each fix — confirmed the S/J/wordmark stay
+legible, the depth reads as one coherent object across a full rotation cycle (checked 4 angles +
+speaking state, not just one flattering frame), and default (unconfigured) sphere orb is
+byte-for-byte unaffected (still exactly 234 particles / 432 edges — confirmed via `imgFront.length
+=== 0` before any upload and `particles.length` unchanged after one). Re-ran the full existing
+regression suite (brand-mark backend, login-flow, recovery-code, keyboard-nav) — all green.
+Measured 56.6fps on the actual shipped code (same worst-case headless environment).
+`_BUILD_ID` bumped v119 → v120.
+
+**Process note:** this session was interrupted mid-implementation by an explicit "stop for tonight"
+request; the half-finished edit (particle data built but the render loop not yet updated to draw
+it) was stashed rather than committed, since committing broken rendering code would have been
+worse than pausing. Resumed and finished cleanly once given the go-ahead to continue unattended.
