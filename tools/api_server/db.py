@@ -168,7 +168,9 @@ CREATE TABLE IF NOT EXISTS hub_users (
   username   TEXT PRIMARY KEY,        -- lowercase
   pw_hash    TEXT NOT NULL,           -- pbkdf2:sha256:<salt>$<dk_hex>
   role       TEXT NOT NULL DEFAULT 'admin',  -- 'owner' | 'admin'
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  recovery_code_hash TEXT             -- same pbkdf2 format as pw_hash; shown once at
+                                       -- creation, lets "Forgot password?" reset without email
 );
 CREATE TABLE IF NOT EXISTS hub_sessions (
   session_id TEXT PRIMARY KEY,
@@ -204,6 +206,10 @@ def init_db() -> None:
             conn.executescript(_SCHEMA)
             try:
                 conn.execute("ALTER TABLE todos ADD COLUMN due_date TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE hub_users ADD COLUMN recovery_code_hash TEXT")
             except sqlite3.OperationalError:
                 pass  # column already exists
             conn.commit()
@@ -1123,7 +1129,7 @@ def get_hub_user(username: str) -> dict | None:
     conn = _connect()
     try:
         r = conn.execute(
-            "SELECT username, pw_hash, role, created_at FROM hub_users WHERE username = ?",
+            "SELECT username, pw_hash, role, created_at, recovery_code_hash FROM hub_users WHERE username = ?",
             (username.lower(),),
         ).fetchone()
         return dict(r) if r else None
@@ -1143,14 +1149,14 @@ def list_hub_users() -> list[dict]:
         conn.close()
 
 
-def create_hub_user(username: str, pw_hash: str, role: str = "admin") -> None:
+def create_hub_user(username: str, pw_hash: str, role: str = "admin", recovery_code_hash: str | None = None) -> None:
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
         conn.execute(
-            "INSERT INTO hub_users (username, pw_hash, role, created_at) VALUES (?, ?, ?, ?)",
-            (username.lower(), pw_hash, role, ts),
+            "INSERT INTO hub_users (username, pw_hash, role, created_at, recovery_code_hash) VALUES (?, ?, ?, ?, ?)",
+            (username.lower(), pw_hash, role, ts, recovery_code_hash),
         )
         conn.commit()
     finally:

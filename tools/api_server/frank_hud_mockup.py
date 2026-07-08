@@ -32,7 +32,10 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- maximum-scale=1/user-scalable=no removed 2026-07-08 (accessibility review, WCAG 1.4.4/1.4.10):
+     blocking pinch/browser zoom locks out low-vision users entirely. fitStage() below no longer
+     fights a deliberate zoom either — see the isMobileMode()/devicePixelRatio guard there. -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -48,7 +51,7 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <style>
 :root{
   --bg:#070d16;--panel:#0f1f30;--panel2:#13283d;--border:#1c3349;
-  --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#5d7891;
+  --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#6d88a1;
   --green:#4caf82;--red:#e05555;--amber:#e0a83a;
 }
 /* ── Color themes — full bg + panel + accent swap ── */
@@ -60,12 +63,12 @@ html.theme-light{
 html.theme-purple{
   --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--border:#2a1945;
   --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
-  --text:#ede8f5;--muted:#7060a0;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+  --text:#ede8f5;--muted:#8274ac;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-charcoal{
   --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--border:#3a3222;
   --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
-  --text:#f0e8d0;--muted:#7a6e55;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
+  --text:#f0e8d0;--muted:#908264;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
 }
 html.theme-sakura{
   --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--border:#3d1f30;
@@ -85,7 +88,7 @@ html.theme-ocean{
 html.theme-kawaii{
   --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--border:#2d2255;
   --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
-  --text:#f0e6ff;--muted:#8070b0;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+  --text:#f0e6ff;--muted:#8475b3;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;width:100%;overflow:hidden;background:var(--bg)}
@@ -143,6 +146,7 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
   background:var(--panel);display:flex;align-items:center;justify-content:center;
   cursor:pointer;position:relative;color:var(--muted);font-size:13px;flex-shrink:0}
 .icon-btn:hover{border-color:var(--cyan);color:var(--cyan2)}
+.icon-btn:focus-visible,.operator:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .badge{position:absolute;top:-5px;right:-5px;background:var(--cyan);color:#06141f;
   font-size:9px;font-weight:700;border-radius:8px;min-width:15px;height:15px;
   display:flex;align-items:center;justify-content:center;padding:0 3px}
@@ -167,6 +171,13 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
   color:var(--cyan2);border-left:2px solid var(--cyan)}
 .nav-item .nbadge{margin-left:auto;background:var(--panel2);color:var(--cyan2);
   font-size:9.5px;font-weight:700;border-radius:9px;padding:1px 7px;border:1px solid var(--border)}
+.nav-item:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
+/* Real heading elements (2026-07-08 accessibility review) reuse the exact same visual
+   rules as before — this reset stops browser default h1/h2 margin+size from touching
+   layout. The tag changed, the look didn't. */
+h1.hdr-title-h1{margin:0;font:inherit}
+h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;color:var(--muted);
+  text-transform:uppercase;font-weight:400}
 
 .voice-widget{margin-top:auto;border:1px solid var(--border);border-radius:12px;padding:14px 10px;
   background:var(--panel);text-align:center}
@@ -713,56 +724,56 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   </div>
 
   <div class="hdr-logo brk">
-    <div class="hex">⬡</div>
-    <div class="lbl"><div class="l1">FRANK</div><div class="l2">COMMAND CENTER</div></div>
+    <div class="hex" aria-hidden="true">⬡</div>
+    <div class="lbl"><h1 class="l1 hdr-title-h1">FRANK</h1><div class="l2">COMMAND CENTER</div></div>
   </div>
 
   <div class="hdr-bar">
     <div class="status-pill" id="system-status-pill"><span class="dot"></span>SYSTEM STATUS &nbsp;● <span id="system-status-label">OPTIMAL</span></div>
     <div class="clockwrap"><div class="d" id="dt">--</div><div class="t" id="clk">--:--</div></div>
     <div class="right">
-      <input class="search" id="global-search" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
-      <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" style="font-size:16px">⬡</div>
-      <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()">🔔<span class="badge" id="bell-badge" style="display:none">0</span>
+      <input class="search" id="global-search" aria-label="Search listings, orders, tools, knowledge base" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
+      <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" aria-label="Switch to %%AGENT_SHORT%% Orb" role="button" tabindex="0" style="font-size:16px">⬡</div>
+      <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
           <div class="alert-dropdown-title">Alerts</div>
           <div id="alert-dropdown-list"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
         </div>
       </div>
-      <div class="icon-btn" onclick="showScreen('settings')">⚙</div>
-      <div class="operator" id="operator-chip" title="Click to log out" onclick="doLogout()" style="cursor:pointer" role="button"><div class="av" id="op-av">…</div><div><div class="ol1" id="op-name">…</div><div class="ol2" id="op-role">…</div></div></div>
+      <div class="icon-btn" onclick="showScreen('settings')" aria-label="Settings" role="button" tabindex="0">⚙</div>
+      <div class="operator" id="operator-chip" title="Click to log out" onclick="doLogout()" style="cursor:pointer" role="button" tabindex="0" aria-label="Log out"><div class="av" id="op-av">…</div><div><div class="ol1" id="op-name">…</div><div class="ol2" id="op-role">…</div></div></div>
     </div>
   </div>
 
-  <div class="sidebar">
-    <div class="nav-section">%%AGENT_SHORT%%</div>
-    <div class="nav-item active" data-screen="cmd"><span class="ic">⌂</span>Command Center</div>
-    <div class="nav-item" data-screen="core"><span class="ic">◎</span>AI Core</div>
-    <div class="nav-item" data-screen="agents"><span class="ic">⚙</span>Agents</div>
-    <div class="nav-item" data-screen="tasks"><span class="ic">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="actions"><span class="ic">✓</span>Action Center<span class="nbadge" id="badge-actions" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="calendar"><span class="ic">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
+  <div class="sidebar" role="navigation" aria-label="Primary">
+    <h2 class="nav-section nav-section-h2" id="nav-heading-frank">%%AGENT_SHORT%%</h2>
+    <div class="nav-item active" data-screen="cmd" role="button" tabindex="0" aria-current="page"><span class="ic" aria-hidden="true">⌂</span>Command Center</div>
+    <div class="nav-item" data-screen="core" role="button" tabindex="0"><span class="ic" aria-hidden="true">◎</span>AI Core</div>
+    <div class="nav-item" data-screen="agents" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Agents</div>
+    <div class="nav-item" data-screen="tasks" role="button" tabindex="0"><span class="ic" aria-hidden="true">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="actions" role="button" tabindex="0"><span class="ic" aria-hidden="true">✓</span>Action Center<span class="nbadge" id="badge-actions" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="calendar" role="button" tabindex="0"><span class="ic" aria-hidden="true">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
 
-    <div class="nav-section">Knowledge</div>
-    <div class="nav-item" data-screen="memory"><span class="ic">✦</span>Memory<span class="nbadge" id="badge-memory" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="conversations"><span class="ic">💬</span>Conversations<span class="nbadge" id="badge-conversations" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="kb"><span class="ic">📚</span>Knowledge Base<span class="nbadge" id="badge-kb" style="display:none">—</span></div>
+    <h2 class="nav-section nav-section-h2">Knowledge</h2>
+    <div class="nav-item" data-screen="memory" role="button" tabindex="0"><span class="ic" aria-hidden="true">✦</span>Memory<span class="nbadge" id="badge-memory" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="conversations" role="button" tabindex="0"><span class="ic" aria-hidden="true">💬</span>Conversations<span class="nbadge" id="badge-conversations" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="kb" role="button" tabindex="0"><span class="ic" aria-hidden="true">📚</span>Knowledge Base<span class="nbadge" id="badge-kb" style="display:none">—</span></div>
 
-    <div class="nav-section">Tools</div>
-    <div class="nav-item" data-screen="tools"><span class="ic">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="workflows"><span class="ic">⇄</span>Workflows</div>
-    <div class="nav-item" data-screen="studio"><span class="ic">▶</span>Studio</div>
+    <h2 class="nav-section nav-section-h2">Tools</h2>
+    <div class="nav-item" data-screen="tools" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="workflows" role="button" tabindex="0"><span class="ic" aria-hidden="true">⇄</span>Workflows</div>
+    <div class="nav-item" data-screen="studio" role="button" tabindex="0"><span class="ic" aria-hidden="true">▶</span>Studio</div>
 
-    <div class="nav-section">Shop</div>
-    <div class="nav-item" data-screen="listings"><span class="ic">🏷</span>Listings</div>
-    <div class="nav-item" data-screen="products"><span class="ic">📦</span>Products</div>
-    <div class="nav-item" data-screen="brandkit"><span class="ic">🎨</span>Brand Kit</div>
-    <div class="nav-item" data-screen="files"><span class="ic">🗂</span>Files</div>
-    <div class="nav-item" data-screen="connections"><span class="ic">🔌</span>Connections</div>
-    <div class="nav-item" data-screen="security"><span class="ic">🛡</span>Security</div>
+    <h2 class="nav-section nav-section-h2">Shop</h2>
+    <div class="nav-item" data-screen="listings" role="button" tabindex="0"><span class="ic" aria-hidden="true">🏷</span>Listings</div>
+    <div class="nav-item" data-screen="products" role="button" tabindex="0"><span class="ic" aria-hidden="true">📦</span>Products</div>
+    <div class="nav-item" data-screen="brandkit" role="button" tabindex="0"><span class="ic" aria-hidden="true">🎨</span>Brand Kit</div>
+    <div class="nav-item" data-screen="files" role="button" tabindex="0"><span class="ic" aria-hidden="true">🗂</span>Files</div>
+    <div class="nav-item" data-screen="connections" role="button" tabindex="0"><span class="ic" aria-hidden="true">🔌</span>Connections</div>
+    <div class="nav-item" data-screen="security" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛡</span>Security</div>
 
-    <div class="nav-section">Settings</div>
-    <div class="nav-item" data-screen="settings"><span class="ic">⚙</span>Settings</div>
+    <h2 class="nav-section nav-section-h2">Settings</h2>
+    <div class="nav-item" data-screen="settings" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Settings</div>
 
     <div class="voice-widget" style="text-align:left">
       <div class="vw-title">QUICK COMMANDS</div>
@@ -792,7 +803,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <!-- ══════════ COMMAND CENTER (home) ══════════ -->
   <div class="screen active" id="screen-cmd">
-    <div class="main">
+    <div class="main" role="main">
 
       <!-- LEFT: system state -->
       <div class="col-left">
@@ -1076,7 +1087,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
       <div class="hub-section-title" style="margin-top:18px">Branding</div>
       <div class="hub-card">
-        <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Agent name</label>
+        <label for="setting-agent-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Agent name</label>
         <input type="text" id="setting-agent-name" class="search" style="width:100%" maxlength="40" placeholder="%%AGENT_SHORT%%">
         <div style="font-size:11px;color:var(--muted);margin-top:8px">
           Renames the agent everywhere — the dashboard, the app name, and how the
@@ -1092,14 +1103,14 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-card">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video generation</label>
+            <label for="setting-video-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video generation</label>
             <select id="setting-video-engine" class="search" style="width:100%">
               <option value="sora">OpenAI Sora (retires Sep 24)</option>
               <option value="veo">Google Veo 3.1</option>
             </select>
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image generation</label>
+            <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image generation</label>
             <select id="setting-image-engine" class="search" style="width:100%">
               <option value="openai">OpenAI gpt-image-1 (retires Oct 23)</option>
               <option value="gpt-image-2">OpenAI gpt-image-2 (no transparent bg)</option>
@@ -1122,19 +1133,19 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-card">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>
+            <label for="account-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>
             <input type="text" id="account-name" class="search" style="width:100%" placeholder="%%OWNER%%">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Email</label>
+            <label for="account-email" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Email</label>
             <input type="email" id="account-email" class="search" style="width:100%" placeholder="you@example.com">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Phone</label>
+            <label for="account-phone" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Phone</label>
             <input type="text" id="account-phone" class="search" style="width:100%" placeholder="(555) 555-5555">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Timezone</label>
+            <label for="account-timezone" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Timezone</label>
             <input type="text" id="account-timezone" class="search" style="width:100%" placeholder="America/New_York">
           </div>
         </div>
@@ -1148,16 +1159,16 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-card">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Current password</label>
+            <label for="pw-current" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Current password</label>
             <input type="password" id="pw-current" class="search" style="width:100%" autocomplete="current-password">
           </div>
           <div></div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">New password</label>
+            <label for="pw-new" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">New password</label>
             <input type="password" id="pw-new" class="search" style="width:100%" autocomplete="new-password">
           </div>
           <div>
-            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Confirm new password</label>
+            <label for="pw-confirm" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Confirm new password</label>
             <input type="password" id="pw-confirm" class="search" style="width:100%" autocomplete="new-password">
           </div>
         </div>
@@ -1183,11 +1194,11 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:12px;font-weight:600;margin-bottom:8px">Add Admin</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div>
-              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Username</label>
+              <label for="new-user-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Username</label>
               <input type="text" id="new-user-name" class="search" style="width:100%" placeholder="jane">
             </div>
             <div>
-              <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Password</label>
+              <label for="new-user-pw" style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Password</label>
               <input type="password" id="new-user-pw" class="search" style="width:100%" placeholder="••••••••">
             </div>
           </div>
@@ -1341,8 +1352,18 @@ const MOBILE_BREAKPOINT = 880;
 const stage = document.getElementById('stage');
 const mobileMQ = window.matchMedia('(max-width:' + MOBILE_BREAKPOINT + 'px)');
 function isMobileMode(){ return mobileMQ.matches; }
+// devicePixelRatio changes when the user zooms (in or out); a plain window resize
+// (dragging the window edge, rotating a device) leaves it unchanged. Re-fitting on
+// every resize is correct — re-fitting on a ZOOM just cancels the zoom the user
+// asked for, which is what used to happen here (2026-07-08 accessibility review,
+// WCAG 1.4.4/1.4.10: browser zoom was silently neutralized). Skip the re-fit when
+// the ratio changed so a real zoom actually enlarges the content instead.
+let _lastDPR = window.devicePixelRatio;
 function fitStage(){
   if (isMobileMode()){ stage.style.transform = 'none'; return; }
+  const dprChanged = window.devicePixelRatio !== _lastDPR;
+  _lastDPR = window.devicePixelRatio;
+  if (dprChanged) return;
   const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
   stage.style.transform = 'scale(' + scale + ')';
 }
@@ -1865,9 +1886,9 @@ function transcribeAndSend(blob){
 // ── Nav switching — also called directly by in-panel links like
 // "View All ›" / "Manage Providers ›", not just the sidebar. ──
 function showScreen(name){
-  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
   const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
-  if(navItem) navItem.classList.add('active');
+  if(navItem){ navItem.classList.add('active'); navItem.setAttribute('aria-current','page'); }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el = document.getElementById('screen-'+name);
   if(el) el.classList.add('active');
@@ -1880,6 +1901,21 @@ function showScreen(name){
 }
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
+});
+// ── Keyboard activation for every custom role="button" control (sidebar nav,
+// icon buttons, quick-reply chips, phone "needs attention" rows, the More list,
+// the operator/logout chip, etc.) — Enter/Space triggers .click(), matching
+// native <button> behavior. One handler closes the keyboard-activation gap
+// across all of them at once (2026-07-08 accessibility review: several already
+// had role="button" tabindex="0" but nothing bound Enter/Space to actually
+// activate them). ──
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const t = e.target;
+  if (t && t.getAttribute && t.getAttribute('role') === 'button') {
+    e.preventDefault();
+    t.click();
+  }
 });
 
 // ── Live Chat — ported verbatim (same protocol/session scheme) from the live Hub's
@@ -2623,7 +2659,10 @@ function updateSystemStatusPill(){
 function toggleAlertDropdown(){
   const dd = document.getElementById('alert-dropdown');
   if(!dd) return;
-  dd.style.display = (dd.style.display === 'none' || !dd.style.display) ? 'block' : 'none';
+  const opening = (dd.style.display === 'none' || !dd.style.display);
+  dd.style.display = opening ? 'block' : 'none';
+  const btn = document.getElementById('bell-btn');
+  if(btn) btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
 }
 function _renderAlerts(d, badgeEl, listEl, offlineNote){
   const alerts = (d && d.alerts) || [];
@@ -4514,6 +4553,13 @@ async function addUser(){
     document.getElementById('new-user-name').value='';
     document.getElementById('new-user-pw').value='';
     loadUsers();
+    // Blocking alert is deliberate here, not an oversight — this code is shown
+    // exactly once and never stored in plaintext anywhere, so it needs to be
+    // impossible to accidentally dismiss without reading (same reasoning as a
+    // password manager's one-time backup-code screen).
+    if (d.recovery_code) {
+      alert(`Save ${uname}'s account recovery code now — it will never be shown again:\n\n${d.recovery_code}\n\nThis is what "Forgot password?" on the sign-in screen will ask for if ${uname} ever loses their password. Write it down or save it in a password manager.`);
+    }
   } catch(e){ st.textContent='Network error'; }
 }
 

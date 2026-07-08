@@ -2967,3 +2967,88 @@ still classifies as the pre-existing `etsy_auth` category, unchanged).
 **Not fixed (cannot be, from code):** the Etsy credentials themselves, Anthropic billing, and
 whether Scott's local relay process is running — all three require Scott's direct action, not a
 code change. Told him plainly rather than implying more was fixed than actually was.
+
+---
+
+## 2026-07-08 — Security + WCAG 2.2 AA accessibility hardening (pre-launch batch, v115)
+
+Scott asked for a full pre-launch security review ("no security holes," "anti-hacker") plus ADA/
+accessibility compliance ahead of taking Frank live. Two full audits were run (security: `main.py`/
+`db.py`/`etsy_api.py`/CI config; accessibility: `frank_hud_mockup.py` + login/setup pages against
+WCAG 2.2 AA). Scott approved doing the security criticals and accessibility blockers together as
+one batch, plus a same-day addition (item 11) prompted by Scott's own real lockout.
+
+**Security fixes shipped:**
+1. **Always-on tester account disabled by default.** `_seed_test_user_if_missing()` previously
+   seeded a full-admin `tester`/`TesterOnly!2026` account on every boot unconditionally (a decision
+   made earlier the same day, before go-live raised the stakes). Now opt-in only, gated on
+   `ENABLE_TEST_LOGIN=true` — mirrors the existing `_seed_owner_if_empty` pattern. Reversing my own
+   earlier call, logged here rather than silently changed.
+2. **`GET /api/etsy-tokens` locked to the owner.** Previously any authenticated admin (including
+   the tester account) could read live Etsy access + refresh tokens via `_auth_session_or_bearer`.
+   Added `_require_owner_or_automation()` — a new helper that still allows the existing bearer-token
+   CI automation path through unchanged, but requires the session caller to be the owner role.
+3. **8-char minimum password enforced everywhere.** `admin_create_user` and `admin_reset_password`
+   only checked non-empty; `login_submit`/`change_my_password` already enforced `len(pw) >= 8`.
+   Brought the two admin routes in line with the existing rule instead of reinventing it.
+4. **`GET /logout` no longer logs out.** A bare state-changing GET is a forced-logout CSRF surface.
+   The GET route now just redirects to `/login`; the real logout is the existing `POST /logout`,
+   which the operator-chip UI already used.
+
+**Accessibility fixes shipped (WCAG 2.2 AA):**
+5. **Keyboard-accessible sidebar nav (2.1.1 blocker).** All 19 `.nav-item` divs were mouse-only —
+   no way to reach or activate them from a keyboard. Added `role="button" tabindex="0"` to each,
+   plus one generic `keydown` handler (Enter/Space → `.click()` on any `[role="button"]`) that
+   incidentally also fixed the same dead-keyboard problem on the phone "needs attention" cards and
+   quick-reply chips, which already had the ARIA role but no activation handler at all.
+6. **Zoom no longer blocked.** Removed `user-scalable=no, maximum-scale=1` from the viewport meta
+   tag; `fitStage()` now tracks `devicePixelRatio` and only re-fits on a genuine resize, not on a
+   deliberate pinch-zoom.
+7. **Real heading elements added.** The HUD had zero `<h1>`–`<h3>` anywhere (pure divs styled to
+   look like headings) — a screen-reader user had no page structure to navigate by. Added a real
+   `<h1>` for the app title and `<h2>` for each of the 5 sidebar nav sections, with a CSS reset so
+   layout didn't shift.
+8. **Icon-only buttons labeled.** ⬡ (orb), 🔔 (alerts), ⚙ (settings), and the operator chip had no
+   accessible name. Added `role="button" tabindex="0" aria-label="..."`; the alert bell also got
+   `aria-haspopup`/`aria-expanded`, kept in sync with the existing dropdown toggle.
+9. **26 form inputs given real `<label for=>` pairs** across My Account, Password, and Add Admin —
+   copied the exact pattern `_LOGIN_PAGE` already used correctly.
+10. **Contrast fixed.** `--muted` failed the 4.5:1 minimum in 4 of 8 color themes (default,
+    purple, charcoal, kawaii); the login/setup page's field-label color also failed. Corrected the
+    hex values and verified the actual computed contrast ratio with a script — not eyeballed.
+
+**11. Added mid-batch — no-email "Forgot password?" recovery-code flow.** Prompted directly by
+Scott getting locked out of Frank the same day with no way back in. New DB column
+`hub_users.recovery_code_hash`. A one-time recovery code (`XXXX-XXXX-XXXX`) is generated and shown
+exactly once — at account creation (both the owner-setup flow and Add Admin) — hashed with the same
+PBKDF2 scheme as the password itself, never stored or logged in plaintext. `/forgot-password`
+(new page + POST route) verifies the code against the hash, enforces the same 8-char minimum,
+updates the password, and invalidates all of that user's existing sessions. Reuses the existing
+login rate-limiter so this can't be brute-forced either. Login page now links to it.
+
+**Explicitly deferred (real findings, not silently dropped — larger/architectural, tracked for a
+follow-up batch):** the single shared `APP_SECRET_TOKEN` blast radius (one token = all bearer
+automation), admin==owner role redesign, an SSRF deny-list on `render_page`/`screenshot_url`,
+rate limiting beyond `/login`, remaining MODERATE/MINOR accessibility items (`aria-live` on
+toasts/errors, image alt text, `prefers-reduced-motion`, a few remaining focus-visible gaps,
+per-screen heading coverage beyond the header/nav sections, all-px font sizing), and a dependency
+version bump.
+
+**Verify:** py_compile all 3 touched files (`main.py`, `frank_hud_mockup.py`, `db.py`) green.
+3 independent test scripts, all passing in full:
+- Login-flow regression (17 checks) — setup, sign-in, empty-table messaging, self-service
+  change-password, session invalidation on password change.
+- Recovery-code lifecycle (17 checks) — code shown once at creation, wrong code rejected, correct
+  code resets the password and invalidates the old session, cross-account isolation (scott's code
+  cannot reset jane's password), Add Admin's own generated code also works.
+- Real Playwright keyboard-only navigation (20 checks) — Tab+focus+Enter/Space actually switches
+  screens (not just markup inspection), `aria-current` moves correctly, icon buttons focusable with
+  labels, viewport meta no longer blocks zoom, real `<h1>`/5×`<h2>` present, nav/main landmarks
+  present, spot-checked labels resolve on the Settings screen.
+`tests/smoke_test.py` still green (36 agent tools registered, dispatcher routing pinned).
+`_BUILD_ID` bumped v114 → v115.
+
+**Not fixed (by design, per the approved plan — not gaps I missed):** the deferred architectural
+items above. Existing accounts created before this shipped have no recovery code on file — expected;
+the next account created (Scott's, since his account resets on every Railway restart with no
+`/data` volume attached) gets one automatically.

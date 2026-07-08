@@ -338,10 +338,28 @@ _FRANK_USERNAME_EXPLICIT = os.getenv("FRANK_USERNAME", "").strip().lower()
 _FRANK_PASSWORD_EXPLICIT = os.getenv("FRANK_PASSWORD", "").strip()
 
 
+_MIN_PASSWORD_LEN = 8  # enforced everywhere a password is set — setup, self-service change, admin create/reset
+
+
 def _hash_password(password: str) -> str:
     salt = secrets.token_hex(16)
     dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 260_000)
     return f"{salt}${dk.hex()}"
+
+
+# Excludes visually-ambiguous characters (0/O, 1/I/L) so a handwritten copy of the
+# code is never misread — this is meant to be written down once and typed back in,
+# not memorized.
+_RECOVERY_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def _generate_recovery_code() -> str:
+    """A one-time account-recovery code, shown once at account creation and never
+    again (only its pbkdf2 hash is stored — same format/strength as a password).
+    No email dependency: this is the 'Forgot password?' mechanism for a
+    single-operator system where email delivery isn't a given (2026-07-08)."""
+    groups = ["".join(secrets.choice(_RECOVERY_ALPHABET) for _ in range(4)) for _ in range(3)]
+    return "-".join(groups)
 
 
 def _verify_password(stored_hash: str, password: str) -> bool:
@@ -377,12 +395,18 @@ _seed_owner_if_empty()
 # this deploy is ever meant to be hardened. ──
 _TEST_LOGIN_USERNAME = os.getenv("TEST_LOGIN_USERNAME", "tester").strip().lower()
 _TEST_LOGIN_PASSWORD = os.getenv("TEST_LOGIN_PASSWORD", "TesterOnly!2026").strip()
+_ENABLE_TEST_LOGIN = os.getenv("ENABLE_TEST_LOGIN", "").strip().lower() in ("1", "true", "yes")
 
 
 def _seed_test_user_if_missing() -> None:
-    """Create the default tester account once, if it doesn't already exist. Set
-    TEST_LOGIN_PASSWORD="" to opt out entirely (no account is created/kept)."""
-    if not _TEST_LOGIN_PASSWORD:
+    """Create the default tester account once, if it doesn't already exist — but
+    ONLY when explicitly opted in via ENABLE_TEST_LOGIN=true. Reversed from
+    active-by-default (2026-07-03) after the pre-launch security review flagged
+    an always-on, full-admin, well-known-password account as a go-live blocker —
+    said plainly here rather than silently: this was the right call for a quick
+    private test, wrong for a system about to go live. Set TEST_LOGIN_PASSWORD=""
+    to additionally hard-disable even if ENABLE_TEST_LOGIN is set."""
+    if not _ENABLE_TEST_LOGIN or not _TEST_LOGIN_PASSWORD:
         return
     try:
         if not db.get_hub_user(_TEST_LOGIN_USERNAME):
@@ -398,7 +422,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v114"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v115"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -670,8 +694,8 @@ _LOGIN_PAGE = """<!DOCTYPE html>
   .logo{{display:flex;align-items:center;gap:10px;margin-bottom:20px}}
   .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
   .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  .logo-sub{{font-size:12px;color:#5a6a78;margin-top:1px}}
-  label{{display:block;font-size:11px;font-weight:600;color:#5a6a78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  .logo-sub{{font-size:12px;color:#6a7d8d;margin-top:1px}}
+  label{{display:block;font-size:11px;font-weight:600;color:#6a7d8d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
   input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
     background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
   input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
@@ -699,6 +723,7 @@ _LOGIN_PAGE = """<!DOCTYPE html>
       <input type="password" id="li-pass" name="password" placeholder="Enter your password" autocomplete="current-password">
       <button type="submit">Sign in</button>
     </form>
+    <div class="cross-link"><a href="/forgot-password">Forgot password?</a></div>
     {cross_link}
   </div>
 </body>
@@ -720,10 +745,10 @@ _SETUP_PAGE = """<!DOCTYPE html>
   .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
   .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
   .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  .logo-sub{{font-size:12px;color:#5a6a78;margin-top:1px}}
+  .logo-sub{{font-size:12px;color:#6a7d8d;margin-top:1px}}
   .setup-heading{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
-  .setup-hint{{font-size:11px;color:#5a6a78;margin-bottom:18px;line-height:1.5}}
-  label{{display:block;font-size:11px;font-weight:600;color:#5a6a78;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  .setup-hint{{font-size:11px;color:#6a7d8d;margin-bottom:18px;line-height:1.5}}
+  label{{display:block;font-size:11px;font-weight:600;color:#6a7d8d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
   input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
     background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
   input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
@@ -762,6 +787,104 @@ _SETUP_PAGE = """<!DOCTYPE html>
     </form>
     <div class="once">This is a one-time setup. After this, use your username and password to sign in.</div>
     {signin_link}
+  </div>
+</body>
+</html>"""
+
+# Shown exactly once, immediately after an account is created (setup or Add Admin).
+# The code itself is never stored — only its pbkdf2 hash — so this is the only chance
+# to see/save it. No email dependency: see _generate_recovery_code().
+_RECOVERY_CODE_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{hub_title} — Save your recovery code</title>
+<style>
+  *{{box-sizing:border-box}}
+  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
+  .box{{width:380px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
+  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
+  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
+  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
+  h1{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
+  .hint{{font-size:12px;color:#a8b4bf;margin-bottom:18px;line-height:1.6}}
+  .warn{{background:#2a1206;border:1px solid #a33;border-radius:7px;color:#ffb27a;font-size:12px;padding:10px 12px;margin-bottom:16px;line-height:1.5}}
+  .warn b{{color:#ff8a5c}}
+  .code{{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:20px;font-weight:700;
+    letter-spacing:2px;color:#7cf0f0;background:#0b0f14;border:1px solid #2a3744;border-radius:8px;
+    padding:16px;text-align:center;margin-bottom:18px;user-select:all;word-break:break-all}}
+  button,a.btn{{display:block;width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
+    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;text-align:center;
+    text-decoration:none;box-sizing:border-box}}
+  button:hover,a.btn:hover{{background:#38d8d8}}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">
+      <div class="logo-dot">F</div>
+      <div class="logo-text">{hub_title}</div>
+    </div>
+    <h1>Save your account recovery code</h1>
+    <div class="warn">⚠️ <b>This is shown ONE TIME only.</b> If you lose both your password and this code, the only way back in is wiping the account entirely. Write it down or save it in a password manager now.</div>
+    <div class="code">{recovery_code}</div>
+    <div class="hint">If you ever forget your password, use "Forgot password?" on the sign-in screen with the username <b>{username}</b> and this code to set a new one — no email needed.</div>
+    <a class="btn" href="{next_path}">I've saved it — Continue</a>
+  </div>
+</body>
+</html>"""
+
+# "Forgot password?" — username + recovery code + new password, no email involved.
+_FORGOT_PASSWORD_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{hub_title} — Reset your password</title>
+<style>
+  *{{box-sizing:border-box}}
+  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
+  .box{{width:340px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
+  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
+  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
+  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
+  h1{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
+  .hint{{font-size:11px;color:#6a7d8d;margin-bottom:18px;line-height:1.5}}
+  label{{display:block;font-size:11px;font-weight:600;color:#6a7d8d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
+    background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
+  input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
+  button{{width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
+    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px}}
+  button:hover{{background:#38d8d8}}
+  .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
+  .cross-link{{text-align:center;margin-top:16px}}
+  .cross-link a{{color:#2ec4c4;font-size:12px;text-decoration:none}}
+  .cross-link a:hover{{text-decoration:underline}}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">
+      <div class="logo-dot">F</div>
+      <div class="logo-text">{hub_title}</div>
+    </div>
+    <h1>Reset your password</h1>
+    <div class="hint">Enter your username, the recovery code you saved when the account was created, and a new password.</div>
+    {error_html}
+    <form method="post" action="/forgot-password" autocomplete="off">
+      <label for="fp-user">Username</label>
+      <input type="text" id="fp-user" name="username" autofocus autocomplete="username" required>
+      <label for="fp-code">Recovery code</label>
+      <input type="text" id="fp-code" name="recovery_code" placeholder="XXXX-XXXX-XXXX" autocomplete="off" required>
+      <label for="fp-pass">New password</label>
+      <input type="password" id="fp-pass" name="new_password" autocomplete="new-password" required>
+      <button type="submit">Reset password</button>
+    </form>
+    <div class="cross-link"><a href="/login">Back to sign in</a></div>
   </div>
 </body>
 </html>"""
@@ -849,16 +972,23 @@ def login_submit(
             return RedirectResponse(f"/login?error=Username+and+password+are+required&next={safe_next}", status_code=303)
         if pw != cpw:
             return RedirectResponse(f"/login?error=Passwords+do+not+match&next={safe_next}", status_code=303)
-        if len(pw) < 8:
+        if len(pw) < _MIN_PASSWORD_LEN:
             return RedirectResponse(f"/login?error=Password+must+be+at+least+8+characters&next={safe_next}", status_code=303)
         if not db.hub_users_empty():
             # Table was populated between GET and POST (race) — fall through to normal login
             pass
         else:
-            db.create_hub_user(uname, _hash_password(pw), role="owner")
+            recovery_code = _generate_recovery_code()
+            db.create_hub_user(uname, _hash_password(pw), role="owner",
+                                recovery_code_hash=_hash_password(recovery_code))
             print(f"[auth] owner account created: '{uname}'", flush=True)
             sid = _new_session(uname)
-            resp = RedirectResponse(safe_next, status_code=303)
+            no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
+            resp = HTMLResponse(
+                _RECOVERY_CODE_PAGE.format(hub_title=business_config.BUSINESS_NAME,
+                                           recovery_code=recovery_code, username=uname, next_path=safe_next),
+                headers=no_cache,
+            )
             resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
             return resp
 
@@ -883,12 +1013,66 @@ def login_submit(
     return RedirectResponse(f"/login?error=1&next={safe_next}", status_code=303)
 
 
+@app.get("/forgot-password", response_class=HTMLResponse)
+def forgot_password_page(error: str = ""):
+    error_html = ""
+    if error == "badcode":
+        error_html = '<div class="err">Username or recovery code is incorrect.</div>'
+    elif error == "short":
+        error_html = f'<div class="err">New password must be at least {_MIN_PASSWORD_LEN} characters.</div>'
+    no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
+    return HTMLResponse(
+        _FORGOT_PASSWORD_PAGE.format(hub_title=business_config.BUSINESS_NAME, error_html=error_html),
+        headers=no_cache,
+    )
+
+
+@app.post("/forgot-password")
+def forgot_password_submit(
+    request: Request,
+    username: str = Form(""),
+    recovery_code: str = Form(""),
+    new_password: str = Form(""),
+):
+    # Same brute-force protection as normal login — a recovery code is exactly the
+    # kind of secret someone could try to guess, and this reuses the identical
+    # per-IP lockout rather than inventing a second rate limiter.
+    ip = _client_ip(request)
+    if _login_rate_limited(ip):
+        return Response(content="Too many attempts. Try again in a few minutes.", status_code=429)
+    uname = username.strip().lower()
+    code = recovery_code.strip().upper()
+    user_row = db.get_hub_user(uname)
+    if (
+        not user_row
+        or not user_row.get("recovery_code_hash")
+        or not _verify_password(user_row["recovery_code_hash"], code)
+    ):
+        _record_login_fail(ip)
+        return RedirectResponse("/forgot-password?error=badcode", status_code=303)
+    new_pw = new_password.strip()
+    if len(new_pw) < _MIN_PASSWORD_LEN:
+        return RedirectResponse("/forgot-password?error=short", status_code=303)
+    _reset_login_fails(ip)
+    db.update_hub_user_password(uname, _hash_password(new_pw))
+    with _sessions_lock:
+        to_remove = [sid for sid, (_, u) in _sessions.items() if u == uname]
+        for sid in to_remove:
+            del _sessions[sid]
+    try:
+        db.delete_sessions_for_user(uname)
+    except Exception:
+        pass
+    return RedirectResponse("/login", status_code=303)
+
+
 @app.get("/logout")
 def logout(request: Request):
-    _clear_session(request)
-    resp = RedirectResponse("/login", status_code=303)
-    resp.delete_cookie(SESSION_COOKIE)
-    return resp
+    """No longer clears the session — a bare GET is a state-changing action reachable
+    by any cross-site link/redirect (2026-07-08 security review). The app's own UI
+    already only ever logs out via POST /logout (doLogout() in the HUD). This route
+    is kept only so an old bookmark/link lands somewhere sane instead of erroring."""
+    return RedirectResponse("/login", status_code=303)
 
 
 @app.post("/logout")
@@ -3246,6 +3430,24 @@ def _require_owner(request: Request) -> None:
         raise HTTPException(status_code=403, detail="Owner role required")
 
 
+def _require_owner_or_automation(request: Request) -> None:
+    """For endpoints with a legitimate machine-to-machine caller (CI workflows using
+    the shared APP_SECRET_TOKEN as a bearer token) that ALSO must not be casually
+    browsable by any logged-in admin session — highest-sensitivity data (e.g. raw
+    Etsy OAuth tokens) is the motivating case. A request with no session cookie is
+    treated as the accepted automation path (already gated by the bearer secret
+    upstream in _auth_session_or_bearer); a request WITH a session cookie must
+    belong to the owner specifically, closing the "any admin, including the
+    tester account, can just load this URL in a browser" gap flagged in the
+    2026-07-08 security review."""
+    uname = _get_session_user(request)
+    if not uname:
+        return  # bearer-only (CI) call — accepted, unchanged from before
+    user_row = db.get_hub_user(uname)
+    if not user_row or user_row["role"] != "owner":
+        raise HTTPException(status_code=403, detail="Owner role required")
+
+
 @app.get("/api/admin/users")
 async def admin_list_users(request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """List all hub users (username, role, created_at). Owner only."""
@@ -3266,14 +3468,19 @@ async def admin_create_user(request: Request, body: _UserCreate, _token: str = D
     uname = body.username.strip().lower()
     if not uname or not body.password.strip():
         raise HTTPException(status_code=400, detail="username and password are required")
+    if len(body.password.strip()) < _MIN_PASSWORD_LEN:
+        raise HTTPException(status_code=400, detail=f"Password must be at least {_MIN_PASSWORD_LEN} characters")
     if body.role not in ("admin", "owner"):
         raise HTTPException(status_code=400, detail="role must be 'admin'")
     if body.role == "owner":
         raise HTTPException(status_code=400, detail="Cannot create a second owner account")
     if db.get_hub_user(uname):
         raise HTTPException(status_code=409, detail=f"User '{uname}' already exists")
-    db.create_hub_user(uname, _hash_password(body.password.strip()), role="admin")
-    return {"ok": True, "username": uname, "role": "admin"}
+    recovery_code = _generate_recovery_code()
+    db.create_hub_user(uname, _hash_password(body.password.strip()), role="admin",
+                        recovery_code_hash=_hash_password(recovery_code))
+    # Shown once, same as the setup-page flow — never stored or logged in plaintext.
+    return {"ok": True, "username": uname, "role": "admin", "recovery_code": recovery_code}
 
 
 class _PasswordReset(BaseModel):
@@ -3293,6 +3500,8 @@ async def admin_reset_password(username: str, request: Request, body: _PasswordR
         raise HTTPException(status_code=403, detail="Cannot reset another owner's password")
     if not body.password.strip():
         raise HTTPException(status_code=400, detail="password is required")
+    if len(body.password.strip()) < _MIN_PASSWORD_LEN:
+        raise HTTPException(status_code=400, detail=f"Password must be at least {_MIN_PASSWORD_LEN} characters")
     db.update_hub_user_password(uname, _hash_password(body.password.strip()))
     # Fix B: invalidate all existing sessions for this user so a compromised
     # cookie can't be used after a password reset
@@ -5949,8 +6158,12 @@ async def credentials_status(_token: str = Depends(_auth_session_or_bearer)):
 # which already has lineage-aware reconciliation (_reconcile_etsy_tokens). Reuses
 # the existing APP_SECRET_TOKEN bearer auth — no new secret to provision.
 @app.get("/api/etsy-tokens")
-async def get_etsy_tokens_endpoint(_token: str = Depends(_auth_session_or_bearer)):
-    """Current lineage-true Etsy token pair, for the CI workflow to sync against."""
+async def get_etsy_tokens_endpoint(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """Current lineage-true Etsy token pair, for the CI workflow to sync against.
+    Returns raw Etsy OAuth credentials — restricted to the automation (bearer-only)
+    path this was built for, or the owner specifically if loaded from a browser
+    session (2026-07-08 security review: was reachable by any admin session)."""
+    _require_owner_or_automation(request)
     stored = await asyncio.to_thread(db.get_etsy_tokens)
     if stored:
         return {
@@ -5966,11 +6179,14 @@ async def get_etsy_tokens_endpoint(_token: str = Depends(_auth_session_or_bearer
 
 
 @app.post("/api/etsy-tokens")
-async def post_etsy_tokens_endpoint(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
+async def post_etsy_tokens_endpoint(payload: dict, request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """Accept a freshly-rotated token pair (e.g. from the GitHub Actions workflow)
     and make it the lineage-true pair: persist to the durable DB and adopt it into
     this process's own os.environ immediately, so this server's next Etsy call
-    uses the same token CI just minted instead of a now-invalidated one."""
+    uses the same token CI just minted instead of a now-invalidated one. Same
+    automation-or-owner restriction as the GET above — an admin session
+    overwriting live Etsy tokens is exactly as sensitive as reading them."""
+    _require_owner_or_automation(request)
     access_token = (payload or {}).get("access_token", "").strip()
     refresh_token = (payload or {}).get("refresh_token", "").strip()
     if not access_token or not refresh_token:
@@ -6019,7 +6235,7 @@ async def change_my_password(body: _SelfPasswordChange, request: Request, _token
     if not _verify_password(user_row["pw_hash"], body.current_password.strip()):
         raise HTTPException(status_code=403, detail="Current password is incorrect")
     new_pw = body.new_password.strip()
-    if len(new_pw) < 8:
+    if len(new_pw) < _MIN_PASSWORD_LEN:
         raise HTTPException(status_code=400, detail="New password must be at least 8 characters")
     db.update_hub_user_password(uname, _hash_password(new_pw))
     # Same session-invalidation as the admin reset-password endpoint: kill every
