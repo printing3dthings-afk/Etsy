@@ -3718,3 +3718,124 @@ login (agent name "Frank" -- the currently configured business_config.AGENT_NAME
 appears correctly templated in the orb/header/bottom-bar/title, both build-version spots
 show the real live build id, Studio's title and src-span show the new copy, no layout
 regressions on Settings or Studio). `_BUILD_ID` bumped to `b4d0e2c-v127`.
+
+
+## 2026-07-08 — Full security + WCAG 2.1 AA accessibility fix pass (v128)
+Scott asked for a full audit of security issues (users + himself as owner) and full ADA/
+accessibility compliance. Three parallel research passes (server security, frontend a11y,
+git-history/infra exposure) produced concrete, file:line-backed findings; this entry covers
+what was actually fixed. Confirmed already-clean and not re-touched: SQL fully parameterized,
+no eval/exec/shell-injection paths, path-traversal containment (`_resolve_in_root`) sound,
+password hashing (PBKDF2-SHA256, 260k iterations) adequate, session cookies correctly flagged,
+CORS an explicit allowlist, and the 2026-07-08-earlier hardening batch (tester-account gating,
+etsy-tokens owner-lock, POST-only logout, partial keyboard/contrast/heading fixes) still
+correctly in place.
+
+**Scott action item, not a code fix -- flagging prominently because it's still outstanding:**
+the git-history audit re-confirms (cross-referenced against this runbook's own 2026-06-26
+forensics) that the Etsy Client ID/Secret leaked via `CLAUDE.md` on the pushed feature branch
+is still the live production credential. **Rotate this at the Etsy Developer Console.** A
+git-history rewrite to actually purge the old leak commits (`SETUP.bat` on `main`, `CLAUDE.md`
+on this branch) was deliberately NOT done here -- it's destructive and collaborator-affecting,
+needs Scott's explicit separate go-ahead, and should happen only after rotation.
+
+**Security fixes shipped (`tools/api_server/main.py`):**
+- **Critical -- stored XSS via unvalidated upload + inline SVG serving.** `studio_upload_image`
+  now validates the body actually decodes as an image (`PIL.Image.open(...).load()`, mirrors
+  `upload_brand_mark`'s existing check) before saving -- an uploaded `<svg><script>...` used to
+  save and, when opened inline, execute same-origin under the viewer's session. `download_file`
+  now forces `Content-Disposition: attachment` for `.svg`/`.html`/`.htm` outside the
+  `svg_conversions` root (server-generated SVGs from the converter are safe by construction),
+  regardless of the `inline=1` param -- closes the same hole for the `/api/files/upload`
+  volume-upload path, which legitimately needs to accept non-image files.
+- **High -- `APP_SECRET_TOKEN` (the app's master bearer secret) leaked to Meta's servers on
+  every Instagram/Facebook post.** The video URL handed to Meta's Graph API embedded
+  `token={APP_TOKEN}` in plaintext. Added `_new_file_ticket`/`_consume_file_ticket` (generalizes
+  the existing single-use WS-ticket pattern, `_new_ws_ticket`/`_consume_ws_ticket`) -- a 10-
+  minute, single-file-scoped ticket now replaces the raw token in both social-post call sites;
+  `download_file` accepts `?ticket=` as a narrower alternative to `?token=`.
+- **Medium -- login/forgot-password lockout bypassable via spoofed `X-Forwarded-For`.** The
+  5-attempts/15-min brute-force lockout was keyed on `_client_ip()`, which trusts a client-
+  supplied header with no trusted-proxy validation in front of this app -- a fresh fake IP per
+  attempt defeated it entirely. Switched the lockout key from IP to the attempted username
+  (matches the real threat model: brute-forcing one known account, and isn't spoofable the same
+  way). `_client_ip` removed as dead code.
+- **Medium-High -- no rate limiting on AI-generation or Etsy/social-mutating endpoints.** Added
+  a generic sliding-window `_rate_limited(key, max_calls, window_seconds)` helper and a
+  `_rate_limited_auth` FastAPI dependency (drop-in replacement for `_auth_session_or_bearer`,
+  30 calls/hour per session-user or shared "bearer" bucket) applied to: listing-state mutation,
+  `/api/diagnose/*`, `/api/autofix/*` (tags/title/draft), lifestyle-photo + video generation,
+  Instagram/Facebook posting, and batch tag-staging. `/ws/chat` got its own per-connection
+  message-rate cap in the receive loop (same budget) since a WS ticket carries no username to
+  key a shared bucket by.
+- **Low-Medium cleanup batch:** the 3 `localhost:*` dev CORS origins are now gated behind
+  `RAILWAY_PUBLIC_DOMAIN` being unset (prod no longer carries dead dev-origin weight); 12
+  `HTTPException(detail=f"...{exc}")` sites that skipped the app's own truncation policy now
+  consistently use `str(exc)[:200]`; both `Dockerfile`s gained a non-root `USER` directive
+  (previously ran as root by default -- `PLAYWRIGHT_BROWSERS_PATH` pinned to a fixed,
+  user-independent path first so the browser tools don't break across the user switch, `a+rwX`
+  on `/app` as a safety margin against a Railway Volume mount owned by a different uid);
+  `.gitignore` gained `*.pem`/`*.key`/`*.crt`/`*.p12`/`*.pfx` (defense-in-depth, nothing
+  currently tracked matches).
+- **Explicitly not changed, flagged as recommendations only:** admin==owner privilege scope
+  (`main.py:388-392`) is a documented deliberate simplification, not a bug -- redesigning role
+  separation is a Scott feature decision. `fastapi==0.111.0`/`uvicorn==0.29.0` are ~2 years
+  stale but intentionally pinned per their own comment; bumping needs its own test pass, not a
+  drive-by change bundled into this batch. CSP `script-src 'unsafe-inline'` is architecturally
+  required by the single-inline-HTML-string app structure -- the real mitigation was closing
+  the XSS entry point itself (above), not rearchitecting script loading.
+
+**Accessibility fixes shipped (`tools/api_server/frank_hud_mockup.py`, WCAG 2.1 AA):**
+- **High -- 23 onclick `<div>`/`<span>` elements had no `role="button"`/`tabindex`**, so they
+  were mouse-only even though the existing global keydown handler already fires Enter/Space on
+  anything with `role="button"`. Added the missing attributes across chat quick-reply chips,
+  Action Center cards, severity filter tiles, Conversations/KB/Listings rows, Files-screen rows,
+  the SVG-converter dropzone, and the credential-steps disclosure.
+- **High -- chat send button had no accessible name** -- added `aria-label="Send message"`.
+- **High -- no Escape-key dismissal anywhere** -- added a shared keydown handler closing the
+  alert dropdown, Executive Briefing panel, phone action sheet, and (separately) the welcome
+  overlay, restoring focus to the trigger where applicable.
+- **High -- dynamic `<img>` thumbnails had no `alt`** -- added meaningful alt text (listing/
+  preview title where available) at all 5 sites, `aria-hidden="true"` on the emoji fallback.
+- **High -- alert/briefing severity was color-only** (WCAG 1.4.1) -- added a "Critical:"/
+  "Warning:" text prefix, matching the text treatment Action Center badges and dependency pills
+  already used correctly.
+- **High -- ~20 placeholder-only form fields with no label** across Tasks, Chat, Conversations,
+  Knowledge Base, and the entire Studio/SVG-Converter/Lifestyle-Photo tooling -- added
+  `aria-label` to each.
+- **Medium-High -- `--muted` text on `--panel2` background failed AA (4.07-4.44:1) in 7 of 8
+  color themes** (prior contrast fix only checked `--muted` against `--panel`/`--bg`). Computed
+  new `--muted` values per theme (script-verified >=4.5:1 against all three backgrounds,
+  re-verified after the edit) -- `light` theme already passed, untouched.
+- **Low-Medium -- login page label color** (`#6a7d8d` on `#121821`) computed to 4.18:1 -- bumped
+  to `#708392` (4.54:1, script-verified).
+- **Medium -- no `aria-live` regions** -- added `aria-live="polite"` to the toast stack and
+  `#chat-msgs`, `aria-live="polite" aria-atomic="true"` on the alert-count badge.
+- **Medium -- no focus-trap/restore on dropdowns/panels** -- the Escape handler above restores
+  focus to the trigger; the welcome overlay gained `role="dialog" aria-modal="true"
+  aria-labelledby` plus focus-on-open to its dismiss button.
+- **Medium -- no `prefers-reduced-motion` support** -- added a `@media (prefers-reduced-motion:
+  reduce)` block stopping the status-pill pulse/mini-wave/spinner CSS animations, and gated the
+  orb's idle rotation (both the 2D canvas and WebGL noise-sphere paths) behind a JS
+  `_reducedMotion` check -- voice-reactive motion while actually speaking is untouched, that's
+  functional feedback not decoration.
+- **High but handled carefully -- zoom-band content clipping.** Between ~105-145% browser zoom
+  on a desktop-width window, the fixed 1440x900 stage's content could overflow the shrunk
+  viewport with `overflow:hidden` giving no way to reach it (before the 880px mobile breakpoint
+  kicks in). Changed `html,body` to `overflow:auto` -- only shows scrollbars when something
+  actually overflows, so normal rendering is unchanged.
+- **Low polish:** widened `:focus-visible` CSS coverage to `.act-btn`/`.qc-btn`/
+  `.hub-toggle-btn`/`.psheet-btn`/`.hub-chip-btn`/`.lc-chip`/`[role="button"]` (the last one
+  automatically covers all 23 newly-added interactive divs above); bumped `.nav-item` mobile
+  and `.psheet-btn` padding a few px to clear the 44px Apple HIG guideline (both already passed
+  the WCAG 24px AA minimum).
+
+Verified: `py_compile` clean on all touched files, `tests/smoke_test.py` green (36 tools, no
+agent-tool surface touched), a script-level WCAG contrast re-check confirmed all 8 themes'
+`--muted`-on-`--panel2` and the login label now clear 4.5:1, div-balance check clean (783/783),
+and a live Playwright pass against the local test harness proved (not just asserted): the
+upload endpoint genuinely rejects a fake-SVG body with 400 "not a readable image" (proves the
+XSS fix is real, not just present in source); a chat chip has `role="button" tabindex="0"`; the
+send button's accessible name is "Send message"; Escape actually closes the alert dropdown
+(`display:block` -> `none`); a sampled Studio field has its `aria-label`. `_BUILD_ID` bumped to
+`b4d0e2c-v128`.

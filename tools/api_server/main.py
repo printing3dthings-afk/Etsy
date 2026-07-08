@@ -422,7 +422,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v127"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v128"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -447,12 +447,16 @@ app = FastAPI(title=f"{business_config.BUSINESS_NAME} Mobile API", version="1.0.
 # no browser Origin header at all, so tightening this list cannot break the mobile app.
 # The only legitimate cross-origin caller is the web UI itself (same-origin, BASE = location.origin).
 _RAILWAY_DOMAIN = os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip()
+# Dev-only localhost origins are only included when NOT running on Railway (reuses
+# the same signal already used for the prod domain above, rather than a second env
+# var) — they were previously always allowed, which is unneeded surface in prod
+# (2026-07-08 security review; low exploitability, still dead weight to close).
 _CORS_ALLOWED_ORIGINS = [
     o for o in (
-        f"https://{_RAILWAY_DOMAIN}" if _RAILWAY_DOMAIN else None,
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "http://localhost:19006",
+        (f"https://{_RAILWAY_DOMAIN}" if _RAILWAY_DOMAIN else None),
+        (None if _RAILWAY_DOMAIN else "http://localhost:3000"),
+        (None if _RAILWAY_DOMAIN else "http://localhost:8000"),
+        (None if _RAILWAY_DOMAIN else "http://localhost:19006"),
     )
     if o
 ]
@@ -547,7 +551,7 @@ _sessions: dict[str, tuple[float, str]] = {}  # session_id -> (expiry, username)
 _sessions_lock = threading.Lock()
 SESSION_TTL = 60 * 60 * 24 * 30          # 30 days
 
-_login_fails: dict[str, list[float]] = {}  # ip -> recent failure timestamps
+_login_fails: dict[str, list[float]] = {}  # username -> recent failure timestamps
 _login_fails_lock = threading.Lock()
 LOGIN_MAX_FAILS = 5
 LOGIN_WINDOW = 15 * 60                    # 15 minutes
@@ -578,6 +582,41 @@ def _consume_ws_ticket(ticket: str) -> bool:
     with _ws_tickets_lock:
         expiry = _ws_tickets.pop(ticket, None)
     return expiry is not None and time.time() <= expiry
+
+
+# ── File-download tickets ───────────────────────────────────────────────────────
+#
+# Same problem as the WS tickets above, different trigger: handing a video URL to a
+# third party (Instagram/Facebook's Graph API, which fetches it server-side) used to
+# embed the long-lived master APP_SECRET_TOKEN in that URL — the same secret that
+# authenticates almost every endpoint in this app — so it ended up in Meta's request
+# logs on every single social post (2026-07-08 security review). A ticket here is
+# scoped to exactly one root+path (not general API access like APP_TOKEN), single-use,
+# and short-lived — worthless to anyone who intercepts it after the one fetch it was
+# minted for.
+_file_tickets: dict[str, tuple[float, str, str]] = {}  # ticket -> (expiry, root, path)
+_file_tickets_lock = threading.Lock()
+_FILE_TICKET_TTL = 600  # seconds — generous enough for a third party to fetch the file once
+
+
+def _new_file_ticket(root: str, path: str) -> str:
+    ticket = secrets.token_urlsafe(32)
+    with _file_tickets_lock:
+        _file_tickets[ticket] = (time.time() + _FILE_TICKET_TTL, root, path)
+    return ticket
+
+
+def _consume_file_ticket(ticket: str, root: str, path: str) -> bool:
+    """Single-use and scoped to exactly one root+path — returns True and deletes the
+    ticket iff it exists, hasn't expired, and matches the requested file exactly."""
+    if not ticket:
+        return False
+    with _file_tickets_lock:
+        entry = _file_tickets.pop(ticket, None)
+    if entry is None:
+        return False
+    expiry, t_root, t_path = entry
+    return time.time() <= expiry and t_root == root and t_path == path
 
 
 def _new_session(username: str) -> str:
@@ -653,31 +692,74 @@ def _clear_session(request: Request) -> None:
             pass
 
 
-def _client_ip(request: Request) -> str:
-    fwd = request.headers.get("x-forwarded-for", "")
-    if fwd:
-        return fwd.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
-
-
-def _login_rate_limited(ip: str) -> bool:
+def _login_rate_limited(username: str) -> bool:
+    """Keyed on the attempted username, not client IP — Railway's edge means
+    X-Forwarded-For is attacker-supplied with no trusted-proxy validation in front
+    of this app, so an IP-keyed lockout was trivially bypassed by sending a fresh
+    fake IP on every request (2026-07-08 security review). Username-keyed lockout
+    matches the real threat model (brute-forcing one known account) and isn't
+    defeated by header spoofing."""
     with _login_fails_lock:
-        fails = [t for t in _login_fails.get(ip, []) if time.time() - t < LOGIN_WINDOW]
+        fails = [t for t in _login_fails.get(username, []) if time.time() - t < LOGIN_WINDOW]
         if fails:
-            _login_fails[ip] = fails
+            _login_fails[username] = fails
         else:
-            _login_fails.pop(ip, None)  # prune empty entries to prevent unbounded growth
+            _login_fails.pop(username, None)  # prune empty entries to prevent unbounded growth
         return len(fails) >= LOGIN_MAX_FAILS
 
 
-def _record_login_fail(ip: str) -> None:
+def _record_login_fail(username: str) -> None:
     with _login_fails_lock:
-        _login_fails.setdefault(ip, []).append(time.time())
+        _login_fails.setdefault(username, []).append(time.time())
 
 
-def _reset_login_fails(ip: str) -> None:
+def _reset_login_fails(username: str) -> None:
     with _login_fails_lock:
-        _login_fails.pop(ip, None)
+        _login_fails.pop(username, None)
+
+
+# ── Generic per-user rate limiting for AI-spend / Etsy-mutating endpoints ───────
+#
+# Endpoints that call Anthropic/OpenAI (real $ per call) or mutate live Etsy/social
+# state had no throttle beyond auth — a leaked token or scripted abuse could run up
+# the bill or spam actions unbounded (2026-07-08 security review). This is a soft
+# guardrail, not a hard product limit — generous enough for normal interactive use.
+_rate_buckets: dict[str, list[float]] = {}
+_rate_buckets_lock = threading.Lock()
+
+_AI_SPEND_RATE_MAX = 30
+_AI_SPEND_RATE_WINDOW = 3600  # 1 hour
+
+
+def _rate_limited(key: str, max_calls: int, window_seconds: int) -> bool:
+    """Generic sliding-window limiter — True if `key` already made max_calls within
+    the last window_seconds (and does NOT record this call in that case, so a
+    blocked caller doesn't get charged for the attempt that was rejected)."""
+    now = time.time()
+    with _rate_buckets_lock:
+        calls = [t for t in _rate_buckets.get(key, []) if now - t < window_seconds]
+        if len(calls) >= max_calls:
+            _rate_buckets[key] = calls
+            return True
+        calls.append(now)
+        _rate_buckets[key] = calls
+        return False
+
+
+def _rate_limited_auth(request: Request) -> str:
+    """Drop-in replacement for _auth_session_or_bearer on endpoints that spend real
+    API budget or mutate live Etsy/social state per call. Session users are limited
+    per-username; bearer/token callers (relay, automation) share one bucket since
+    this app has a single shared APP_SECRET_TOKEN, not per-caller credentials."""
+    token = _auth_session_or_bearer(request)
+    uname = _get_session_user(request) or "bearer"
+    if _rate_limited(f"spend:{uname}", _AI_SPEND_RATE_MAX, _AI_SPEND_RATE_WINDOW):
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded — max {_AI_SPEND_RATE_MAX} AI-generation/"
+                   f"Etsy-mutating calls per hour. Try again later.",
+        )
+    return token
 
 
 _LOGIN_PAGE = """<!DOCTYPE html>
@@ -694,8 +776,8 @@ _LOGIN_PAGE = """<!DOCTYPE html>
   .logo{{display:flex;align-items:center;gap:10px;margin-bottom:20px}}
   .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
   .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  .logo-sub{{font-size:12px;color:#6a7d8d;margin-top:1px}}
-  label{{display:block;font-size:11px;font-weight:600;color:#6a7d8d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  .logo-sub{{font-size:12px;color:#708392;margin-top:1px}}
+  label{{display:block;font-size:11px;font-weight:600;color:#708392;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
   input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
     background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
   input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
@@ -745,10 +827,10 @@ _SETUP_PAGE = """<!DOCTYPE html>
   .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
   .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
   .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
-  .logo-sub{{font-size:12px;color:#6a7d8d;margin-top:1px}}
+  .logo-sub{{font-size:12px;color:#708392;margin-top:1px}}
   .setup-heading{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
-  .setup-hint{{font-size:11px;color:#6a7d8d;margin-bottom:18px;line-height:1.5}}
-  label{{display:block;font-size:11px;font-weight:600;color:#6a7d8d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  .setup-hint{{font-size:11px;color:#708392;margin-bottom:18px;line-height:1.5}}
+  label{{display:block;font-size:11px;font-weight:600;color:#708392;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
   input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
     background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
   input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
@@ -852,8 +934,8 @@ _FORGOT_PASSWORD_PAGE = """<!DOCTYPE html>
   .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
   .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
   h1{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
-  .hint{{font-size:11px;color:#6a7d8d;margin-bottom:18px;line-height:1.5}}
-  label{{display:block;font-size:11px;font-weight:600;color:#6a7d8d;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  .hint{{font-size:11px;color:#708392;margin-bottom:18px;line-height:1.5}}
+  label{{display:block;font-size:11px;font-weight:600;color:#708392;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
   input[type=text],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
     background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
   input[type=text]:focus,input[type=password]:focus{{border-color:#2ec4c4}}
@@ -947,14 +1029,12 @@ def login_page(next: str = "/", error: str = "", mode: str = ""):
 
 @app.post("/login")
 def login_submit(
-    request: Request,
     username: str = Form(""),
     password: str = Form(""),
     confirm_password: str = Form(""),
     setup_mode: str = Form(""),
     next: str = Form("/"),
 ):
-    ip = _client_ip(request)
     safe_next = _safe_next(next)
 
     # ── First-run setup: create the owner account ──────────────────────────
@@ -999,17 +1079,17 @@ def login_submit(
     # (mode=signin) instead of silently bouncing back to account creation.
     if db.hub_users_empty():
         return RedirectResponse(f"/login?mode=signin&error=noaccount&next={safe_next}", status_code=303)
-    if _login_rate_limited(ip):
-        return Response(content="Too many failed attempts. Try again in a few minutes.", status_code=429)
     uname = username.strip().lower()
+    if _login_rate_limited(uname):
+        return Response(content="Too many failed attempts. Try again in a few minutes.", status_code=429)
     user_row = db.get_hub_user(uname)
     if user_row and _verify_password(user_row["pw_hash"], password.strip()):
-        _reset_login_fails(ip)
+        _reset_login_fails(uname)
         sid = _new_session(uname)
         resp = RedirectResponse(safe_next, status_code=303)
         resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
         return resp
-    _record_login_fail(ip)
+    _record_login_fail(uname)
     return RedirectResponse(f"/login?error=1&next={safe_next}", status_code=303)
 
 
@@ -1029,18 +1109,16 @@ def forgot_password_page(error: str = ""):
 
 @app.post("/forgot-password")
 def forgot_password_submit(
-    request: Request,
     username: str = Form(""),
     recovery_code: str = Form(""),
     new_password: str = Form(""),
 ):
     # Same brute-force protection as normal login — a recovery code is exactly the
     # kind of secret someone could try to guess, and this reuses the identical
-    # per-IP lockout rather than inventing a second rate limiter.
-    ip = _client_ip(request)
-    if _login_rate_limited(ip):
-        return Response(content="Too many attempts. Try again in a few minutes.", status_code=429)
+    # per-username lockout rather than inventing a second rate limiter.
     uname = username.strip().lower()
+    if _login_rate_limited(uname):
+        return Response(content="Too many attempts. Try again in a few minutes.", status_code=429)
     code = recovery_code.strip().upper()
     user_row = db.get_hub_user(uname)
     if (
@@ -1048,12 +1126,12 @@ def forgot_password_submit(
         or not user_row.get("recovery_code_hash")
         or not _verify_password(user_row["recovery_code_hash"], code)
     ):
-        _record_login_fail(ip)
+        _record_login_fail(uname)
         return RedirectResponse("/forgot-password?error=badcode", status_code=303)
     new_pw = new_password.strip()
     if len(new_pw) < _MIN_PASSWORD_LEN:
         return RedirectResponse("/forgot-password?error=short", status_code=303)
-    _reset_login_fails(ip)
+    _reset_login_fails(uname)
     db.update_hub_user_password(uname, _hash_password(new_pw))
     with _sessions_lock:
         to_remove = [sid for sid, (_, u) in _sessions.items() if u == uname]
@@ -4026,7 +4104,7 @@ async def listing_files(listing_id: int, _token: str = Depends(_auth_session_or_
 
 
 @app.post("/api/listings/{listing_id}/state")
-async def set_listing_state(listing_id: int, new_state: str, _token: str = Depends(_auth_session_or_bearer)):
+async def set_listing_state(listing_id: int, new_state: str, _token: str = Depends(_rate_limited_auth)):
     """Activate or deactivate a listing — powers the Activate/Deactivate button in the
     Listings tab detail panel. Scott clicks this directly; it is not something any
     agent calls autonomously."""
@@ -4731,7 +4809,7 @@ async def _compute_suggestions_inner() -> dict:
             asyncio.to_thread(_execute_agent_tool, "list_listings", {"state": "draft"}),
         )
     except Exception as exc:  # noqa: BLE001 — surface a real message, not a bare 500
-        raise HTTPException(status_code=502, detail=f"Could not gather shop data: {exc}")
+        raise HTTPException(status_code=502, detail=f"Could not gather shop data: {str(exc)[:200]}")
 
     ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
     user_payload = (
@@ -4881,7 +4959,7 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
     except EtsyAPIError as exc:
-        raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+        raise HTTPException(status_code=502, detail=f"Etsy: {str(exc)[:200]}")
 
     listing = gathered["listing"]
     title = listing.get("title", "") or ""
@@ -4952,7 +5030,7 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
 
 
 @app.post("/api/diagnose/{listing_id}")
-async def diagnose_listing(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
+async def diagnose_listing(listing_id: int, _token: str = Depends(_rate_limited_auth)):
     cache_key = f"diagnose_{listing_id}"
     cached = _cache_get(cache_key, ttl=600)
     if cached is not None:
@@ -4975,9 +5053,9 @@ async def _fetch_listing_for_autofix(listing_id: int) -> dict:
     except EtsyAPIError as exc:
         if getattr(exc, "status", None) == 404:
             raise HTTPException(status_code=404, detail=f"Listing {listing_id} not found on Etsy (it may be expired/deleted)")
-        raise HTTPException(status_code=502, detail=f"Etsy: {exc}")
+        raise HTTPException(status_code=502, detail=f"Etsy: {str(exc)[:200]}")
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Could not fetch listing {listing_id}: {exc}")
+        raise HTTPException(status_code=502, detail=f"Could not fetch listing {listing_id}: {str(exc)[:200]}")
 
 
 async def _autofix_tags_core(listing_id: int, listing: dict | None = None, reason: str = "") -> dict:
@@ -5098,7 +5176,7 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
 
 
 @app.post("/api/autofix/tags/{listing_id}")
-async def autofix_tags(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
+async def autofix_tags(listing_id: int, _token: str = Depends(_rate_limited_auth)):
     """Generate 13 correct tags for one listing and stage an update_tags action.
 
     Calls Claude once for this specific listing, validates the tags through
@@ -5111,7 +5189,7 @@ async def autofix_tags(listing_id: int, _token: str = Depends(_auth_session_or_b
 
 
 @app.post("/api/autofix/title/{listing_id}")
-async def autofix_title(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
+async def autofix_title(listing_id: int, _token: str = Depends(_rate_limited_auth)):
     """Generate a corrected ≤70-char title and stage an update_title action.
 
     Calls Claude once with the listing's full context, validates through the
@@ -5124,7 +5202,7 @@ async def autofix_title(listing_id: int, _token: str = Depends(_auth_session_or_
 
 
 @app.post("/api/autofix/draft/{listing_id}")
-async def autofix_draft(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
+async def autofix_draft(listing_id: int, _token: str = Depends(_rate_limited_auth)):
     """Auto-fix a draft listing's title and tags in one shot.
 
     Generates a corrected ≤70-char title AND a full 13-tag set, validates both
@@ -5571,7 +5649,7 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
             result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
     except Exception as exc:
         await asyncio.to_thread(db.set_action_status, action_id, "failed", {"error": str(exc)})
-        raise HTTPException(status_code=502, detail=f"execution failed: {exc}")
+        raise HTTPException(status_code=502, detail=f"execution failed: {str(exc)[:200]}")
     await asyncio.to_thread(db.set_action_status, action_id, "executed", result)
     return {"status": "executed", "id": action_id, "result": result}
 
@@ -5798,7 +5876,15 @@ async def stage_video(
 @app.post("/api/studio/upload-image")
 async def studio_upload_image(request: Request, filename: str, _token: str = Depends(_auth_session_or_bearer)):
     """Accept a raw image body and store it under studio_uploads/ so it can be picked
-    for video generation. Same convention as /api/files/upload."""
+    for video generation. Same convention as /api/files/upload.
+
+    Validates the body actually decodes as an image before storing it (mirrors
+    upload_brand_mark's check) — this endpoint is documented as accepting photos, and
+    without this check an uploaded .svg with an embedded <script> would be stored and,
+    if later opened inline, execute same-origin under the viewer's session
+    (2026-07-08 security review). The original bytes are stored as-is (not
+    re-encoded) since downstream video generation needs the real file, not a
+    PIL-normalized copy."""
     safe_name = os.path.basename((filename or "").strip())
     if not safe_name:
         raise HTTPException(status_code=400, detail="filename query param is required")
@@ -5807,6 +5893,11 @@ async def studio_upload_image(request: Request, filename: str, _token: str = Dep
         raise HTTPException(status_code=400, detail="empty body")
     if len(body) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+    from PIL import Image
+    try:
+        Image.open(io.BytesIO(body)).load()
+    except Exception:
+        raise HTTPException(status_code=400, detail="not a readable image")
     root = _FILE_ROOTS["studio_uploads"]
     root.mkdir(parents=True, exist_ok=True)
     out_path = root / f"{uuid.uuid4().hex[:8]}_{safe_name}"
@@ -5834,7 +5925,7 @@ async def studio_convert_svg(request: Request, mode: str = "color", _token: str 
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"conversion failed: {exc}")
+        raise HTTPException(status_code=500, detail=f"conversion failed: {str(exc)[:200]}")
 
     quality = etsy_api.check_svg_quality(svg_text)
 
@@ -5852,7 +5943,7 @@ async def studio_convert_svg(request: Request, mode: str = "color", _token: str 
 
 
 @app.post("/api/studio/generate-lifestyle-photo")
-async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_auth_session_or_bearer)):
+async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_rate_limited_auth)):
     """Generate a real, self-verified lifestyle photo from actual uploaded product
     file(s) — wraps tools/listing_photo_pipeline.generate_verified_photo(), THE
     STANDARD LIFESTYLE METHOD documented in CLAUDE.md: the real downloadable file is
@@ -5901,7 +5992,7 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_aut
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Generation timed out — try again, or simplify the scene prompt")
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"generation failed: {exc}")
+        raise HTTPException(status_code=500, detail=f"generation failed: {str(exc)[:200]}")
 
     return {
         "ok": result.passed,
@@ -5912,7 +6003,7 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_aut
 
 
 @app.post("/api/studio/generate")
-async def studio_generate_video(body: dict, _token: str = Depends(_auth_session_or_bearer)):
+async def studio_generate_video(body: dict, _token: str = Depends(_rate_limited_auth)):
     """Generate a Ken Burns slideshow video either from an existing Etsy listing's
     photos (listing_id) or from previously-uploaded studio images (image_paths,
     filenames relative to studio_uploads/). Runs video_generator.generate_video()
@@ -5997,7 +6088,7 @@ async def studio_generate_video(body: dict, _token: str = Depends(_auth_session_
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
         print(f"studio_generate_video error: {type(exc).__name__}: {exc}", flush=True)
-        raise HTTPException(status_code=500, detail=f"Video generation failed: {type(exc).__name__}: {exc}")
+        raise HTTPException(status_code=500, detail=f"Video generation failed: {type(exc).__name__}: {str(exc)[:200]}")
 
     return {
         "ok": True,
@@ -6056,7 +6147,7 @@ async def get_products(_token: str = Depends(_auth_session_or_bearer)):
 
 
 @app.post("/api/studio/post-instagram")
-async def studio_post_instagram(body: dict, _token: str = Depends(_auth_session_or_bearer)):
+async def studio_post_instagram(body: dict, _token: str = Depends(_rate_limited_auth)):
     """Post a generated video to Instagram as a Reel. Fires immediately on this call —
     there is no staging queue for social posts because, per CLAUDE.md, posting to
     social media is a Hard Stop that must always be an explicit, direct user action;
@@ -6076,19 +6167,20 @@ async def studio_post_instagram(body: dict, _token: str = Depends(_auth_session_
     railway_url = os.getenv("RAILWAY_APP_URL", "").rstrip("/")
     if not railway_url:
         return {"error": "not configured", "detail": "RAILWAY_APP_URL is not set — needed to serve the video to Instagram"}
-    video_url = f"{railway_url}/api/files/download?root=videos&path={video_name}&token={APP_TOKEN}&inline=1"
+    ticket = _new_file_ticket("videos", video_name)
+    video_url = f"{railway_url}/api/files/download?root=videos&path={video_name}&ticket={ticket}&inline=1"
 
     client = instagram_api.get_client()
     try:
         result = await asyncio.to_thread(client.post_video, video_url, caption, is_reel)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Instagram post failed: {exc}")
+        raise HTTPException(status_code=502, detail=f"Instagram post failed: {str(exc)[:200]}")
     db.log_activity("frank", "post_instagram", f"Posted {video_name} to Instagram", body, outcome="ok")
     return {"ok": True, "result": result}
 
 
 @app.post("/api/studio/post-facebook")
-async def studio_post_facebook(body: dict, _token: str = Depends(_auth_session_or_bearer)):
+async def studio_post_facebook(body: dict, _token: str = Depends(_rate_limited_auth)):
     """Post a generated video to the Facebook Page. Fires immediately on this call —
     same Hard Stop reasoning as studio_post_instagram() above: no staging queue,
     the button click itself is the required explicit action."""
@@ -6107,13 +6199,14 @@ async def studio_post_facebook(body: dict, _token: str = Depends(_auth_session_o
     railway_url = os.getenv("RAILWAY_APP_URL", "").rstrip("/")
     if not railway_url:
         return {"error": "not configured", "detail": "RAILWAY_APP_URL is not set — needed to serve the video to Facebook"}
-    video_url = f"{railway_url}/api/files/download?root=videos&path={video_name}&token={APP_TOKEN}&inline=1"
+    ticket = _new_file_ticket("videos", video_name)
+    video_url = f"{railway_url}/api/files/download?root=videos&path={video_name}&ticket={ticket}&inline=1"
 
     client = facebook_api.get_client()
     try:
         result = await asyncio.to_thread(client.post_video, video_url, description, title)
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Facebook post failed: {exc}")
+        raise HTTPException(status_code=502, detail=f"Facebook post failed: {str(exc)[:200]}")
     db.log_activity("frank", "post_facebook", f"Posted {video_name} to Facebook", body, outcome="ok")
     return {"ok": True, "result": result}
 
@@ -6122,7 +6215,7 @@ async def studio_post_facebook(body: dict, _token: str = Depends(_auth_session_o
 
 
 @app.post("/api/batch/stage-tags")
-async def batch_stage_tags(_token: str = Depends(_auth_session_or_bearer)):
+async def batch_stage_tags(_token: str = Depends(_rate_limited_auth)):
     """Stage tag-fix actions for every active listing that has fewer than 13 tags.
 
     Calls Claude once (per batch of 40) to generate a corrected 13-tag set for
@@ -6160,9 +6253,9 @@ async def batch_stage_tags(_token: str = Depends(_auth_session_or_bearer)):
             timeout=180.0,
         )
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=502, detail=f"Tag generation returned invalid JSON: {exc}")
+        raise HTTPException(status_code=502, detail=f"Tag generation returned invalid JSON: {str(exc)[:200]}")
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Tag generation failed: {exc}")
+        raise HTTPException(status_code=502, detail=f"Tag generation failed: {str(exc)[:200]}")
 
     listing_map = {l["listing_id"]: l for l in to_fix}
     staged = 0
@@ -7137,17 +7230,29 @@ def _resolve_in_root(root: str, path: str) -> Path:
 
 
 @app.get("/api/files/download")
-async def download_file(request: Request, root: str, path: str, token: str = "", inline: int = 0, _auth: str = Depends(_auth_session_or_bearer)):
+async def download_file(request: Request, root: str, path: str, token: str = "", ticket: str = "", inline: int = 0):
     """Stream a file from one of the allowed roots. Auth via session cookie, Bearer
     header, or ?token= query param — all accepted so browser links and direct
-    file-open requests work without embedding a token in the URL.
+    file-open requests work without embedding a token in the URL. A single-use
+    ?ticket= (see _new_file_ticket) is also accepted as a narrower alternative for
+    handing a one-time link to a third party (e.g. Meta fetching a video to post) —
+    checked first since it's more restrictive and self-invalidates.
 
     inline=1 serves with the real media type and an inline disposition so the phone
-    browser previews it (PDF viewer, image) instead of downloading."""
+    browser previews it (PDF viewer, image) instead of downloading — except .svg/
+    .html/.htm outside the svg_conversions root (server-generated, safe by
+    construction), which always download as an attachment: an uploaded SVG can carry
+    an embedded <script>, and this app's CSP allows inline scripts for its own single-
+    page-app reasons, so inline-serving an arbitrary uploaded SVG would let it execute
+    same-origin with the viewer's session (2026-07-08 security review)."""
+    if not _consume_file_ticket(ticket, root, path):
+        _auth_session_or_bearer(request)
     target = _resolve_in_root(root, path)
     if not target.is_file():
         raise HTTPException(status_code=404, detail="File not found")
-    if inline:
+    ext = target.suffix.lower()
+    force_download = ext in (".svg", ".html", ".htm") and root != "svg_conversions"
+    if inline and not force_download:
         return FileResponse(
             target,
             media_type=_media_type_for(target.name),
@@ -7634,6 +7739,13 @@ async def chat_ws(websocket: WebSocket):
     if history:
         await websocket.send_text(json.dumps({"type": "history", "messages": history}))
 
+    # Per-connection rate limit — a leaked/reused ws ticket shouldn't be able to spam
+    # unlimited Anthropic calls through one long-lived socket (2026-07-08 security
+    # review). Same budget as the REST AI-spend endpoints; kept local to this
+    # connection (not the shared _rate_buckets store) since a ws ticket carries no
+    # username to key a per-user bucket by.
+    _chat_msg_times: list[float] = []
+
     try:
         while True:
             raw = await websocket.receive_text()
@@ -7646,6 +7758,17 @@ async def chat_ws(websocket: WebSocket):
             user_text = msg.get("message", "").strip()
             if not user_text:
                 continue
+
+            now = time.time()
+            _chat_msg_times[:] = [t for t in _chat_msg_times if now - t < _AI_SPEND_RATE_WINDOW]
+            if len(_chat_msg_times) >= _AI_SPEND_RATE_MAX:
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "content": f"Rate limit exceeded — max {_AI_SPEND_RATE_MAX} messages per "
+                               f"hour on this connection. Try again later.",
+                }))
+                continue
+            _chat_msg_times.append(now)
 
             # Snapshot length so a mid-turn failure can be rolled back cleanly.
             # Without this, a dangling user message (no assistant reply) leaves

@@ -54,7 +54,7 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <style>
 :root{
   --bg:#070d16;--panel:#0f1f30;--panel2:#13283d;--border:#1c3349;
-  --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#6d88a1;
+  --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#7690a7;
   --green:#4caf82;--red:#e05555;--amber:#e0a83a;
 }
 /* ── Color themes — full bg + panel + accent swap ── */
@@ -66,35 +66,41 @@ html.theme-light{
 html.theme-purple{
   --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--border:#2a1945;
   --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
-  --text:#ede8f5;--muted:#8274ac;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+  --text:#ede8f5;--muted:#8679af;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-charcoal{
   --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--border:#3a3222;
   --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
-  --text:#f0e8d0;--muted:#908264;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
+  --text:#f0e8d0;--muted:#96896c;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
 }
 html.theme-sakura{
   --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--border:#3d1f30;
   --cyan:#f4a7b9;--cyan2:#ffd0db;--gold:#c4607a;--gold2:#e58aa5;
-  --text:#f5e8ee;--muted:#a07085;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+  --text:#f5e8ee;--muted:#a4758a;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-matcha{
   --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--border:#263a29;
   --cyan:#8bc34a;--cyan2:#bce88e;--gold:#d4a96a;--gold2:#e6c48a;
-  --text:#e9f2e6;--muted:#7a9070;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
+  --text:#e9f2e6;--muted:#7c9172;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-ocean{
   --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--border:#1d3d38;
   --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
-  --text:#e6f2f0;--muted:#6a9088;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+  --text:#e6f2f0;--muted:#6f948c;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-kawaii{
   --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--border:#2d2255;
   --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
-  --text:#f0e6ff;--muted:#8475b3;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+  --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;width:100%;overflow:hidden;background:var(--bg)}
+/* overflow:auto (not hidden) — at 105-145% browser zoom on a desktop-width window,
+   the fixed 1440x900 stage's scale() can exceed the shrunk viewport before the
+   880px mobile breakpoint kicks in; overflow:hidden clipped that content with no
+   way to reach it. auto only shows scrollbars when something actually overflows,
+   so normal (non-zoomed) rendering is unchanged (2026-07-08 accessibility review,
+   WCAG 1.4.10 Reflow). */
+html,body{height:100%;width:100%;overflow:auto;background:var(--bg)}
 body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
 
 #stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
@@ -150,6 +156,8 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
   cursor:pointer;position:relative;color:var(--muted);font-size:13px;flex-shrink:0}
 .icon-btn:hover{border-color:var(--cyan);color:var(--cyan2)}
 .icon-btn:focus-visible,.operator:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.act-btn:focus-visible,.qc-btn:focus-visible,.hub-toggle-btn:focus-visible,.psheet-btn:focus-visible,
+.hub-chip-btn:focus-visible,.lc-chip:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .badge{position:absolute;top:-5px;right:-5px;background:var(--cyan);color:#06141f;
   font-size:9px;font-weight:700;border-radius:8px;min-width:15px;height:15px;
   display:flex;align-items:center;justify-content:center;padding:0 3px}
@@ -570,7 +578,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
     max-height:none !important;overflow:visible !important;
   }
 
-  .nav-item{padding:12px 14px;font-size:14px}
+  .nav-item{padding:14px;font-size:14px}
   .icon-btn{width:40px;height:40px}
   .qc-btn{padding:12px 10px}
   #chat-send{width:44px;height:44px}
@@ -696,7 +704,7 @@ body.phone-sheet-open #phone-sheet-backdrop{display:block}
 body.phone-sheet-open #phone-sheet{display:flex}
 #phone-sheet-title{font-weight:700;font-size:14.5px;color:var(--text);line-height:1.4}
 #phone-sheet-sub{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.4}
-.psheet-btn{border:1px solid var(--border);border-radius:12px;padding:13px;font-size:14px;
+.psheet-btn{border:1px solid var(--border);border-radius:12px;padding:15px 13px;font-size:14px;
   font-weight:700;cursor:pointer;font-family:inherit;background:var(--panel2);color:var(--text)}
 .psheet-btn.primary{background:var(--cyan);border-color:transparent;color:#04121b}
 .psheet-btn.cancel{background:transparent;color:var(--muted)}
@@ -715,6 +723,19 @@ body.is-mobile .main [style*="1fr 1fr"]{grid-template-columns:1fr !important}
 body.is-mobile .screen input,body.is-mobile .screen textarea,
 body.is-mobile .screen select,body.is-mobile .screen button,
 body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-sizing:border-box}
+
+/* ── Respect prefers-reduced-motion — none of the continuous decorative
+   animations (status pulse, mini-wave, spinner) served any functional purpose
+   that requires motion; stop them for users who've asked the OS not to
+   animate (2026-07-08 accessibility review). The orb's own idle rotation is
+   gated in JS (see applyReducedMotion()) since it's a canvas render loop, not
+   CSS. Voice-reactive motion while %%AGENT_SHORT%% is actually speaking stays
+   on regardless — that's functional feedback, not decoration. ──*/
+@media (prefers-reduced-motion: reduce){
+  .status-pill .dot{animation:none}
+  .mini-wave span{animation:none;height:10px}
+  .hub-spinner{animation:none}
+}
 </style>
 </head>
 <body>
@@ -748,7 +769,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="right">
       <input class="search" id="global-search" aria-label="Search listings, orders, tools, knowledge base" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
       <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" aria-label="Switch to %%AGENT_SHORT%% Orb" role="button" tabindex="0" style="font-size:16px">⬡</div>
-      <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none">0</span>
+      <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none" aria-live="polite" aria-atomic="true">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
           <div class="alert-dropdown-title">Alerts</div>
           <div id="alert-dropdown-list"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
@@ -797,10 +818,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <button class="qc-btn" onclick="showScreen('workflows')"><span class="qic">⇄</span>Run Workflow</button>
     </div>
   </div>
-  <div id="toast-stack"></div>
-  <div id="welcome-overlay" style="display:none">
+  <div id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+  <div id="welcome-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="welcome-overlay-title">
     <div class="welcome-card">
-      <div class="welcome-title">Welcome to %%AGENT_SHORT%%</div>
+      <div class="welcome-title" id="welcome-overlay-title">Welcome to %%AGENT_SHORT%%</div>
       <div class="welcome-body">
         <p>%%AGENT_SHORT%% is organized into four groups in the sidebar:</p>
         <ul>
@@ -811,7 +832,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </ul>
         <p class="welcome-note">Nothing that changes your shop, files, or social accounts ever runs without your one-tap approval in the Action Center.</p>
       </div>
-      <button class="welcome-dismiss" onclick="dismissWelcomeOverlay()">Got it</button>
+      <button class="welcome-dismiss" id="welcome-dismiss-btn" onclick="dismissWelcomeOverlay()">Got it</button>
     </div>
   </div>
 
@@ -841,7 +862,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div class="panel brk col-timeline">
           <div class="panel-title">Mission Timeline <span class="src">/api/todos</span></div>
           <div class="panel-body" id="timeline-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
-          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('tasks')">View Full Schedule ›</span></div>
+          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('tasks')" role="button" tabindex="0">View Full Schedule ›</span></div>
         </div>
       </div>
 
@@ -849,17 +870,17 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="col-center">
         <div class="panel brk col-chat">
           <div class="panel-title">Ask %%AGENT_SHORT%% <span class="src">/ws/chat — live, always-on chat</span></div>
-          <div id="chat-msgs"></div>
+          <div id="chat-msgs" aria-live="polite"></div>
           <div class="lc-chips">
-            <span class="lc-chip" onclick="sendChip(this)">What should I focus on?</span>
-            <span class="lc-chip" onclick="sendChip(this)">How are sales?</span>
-            <span class="lc-chip" onclick="sendChip(this)">What's my next listing?</span>
-            <span class="lc-chip" onclick="sendChip(this)">Pricing advice</span>
-            <span class="lc-chip" onclick="sendChip(this)">SEO tips</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">What should I focus on?</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">How are sales?</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">What's my next listing?</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">Pricing advice</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">SEO tips</span>
           </div>
           <div class="lc-input-row">
-            <input id="chat-input" type="text" placeholder="Ask %%AGENT_NAME%%…" autocomplete="off">
-            <button id="chat-send" onclick="sendMsg()">
+            <input id="chat-input" type="text" placeholder="Ask %%AGENT_NAME%%…" autocomplete="off" aria-label="Message">
+            <button id="chat-send" onclick="sendMsg()" aria-label="Send message">
               <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
           </div>
@@ -869,7 +890,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <!-- RIGHT: business data + activity -->
       <div class="col-right">
         <div class="panel brk col-shop">
-          <div class="panel-title" style="cursor:pointer;user-select:none" onclick="toggleShopExpand()" id="shop-perf-title">
+          <div class="panel-title" style="cursor:pointer;user-select:none" onclick="toggleShopExpand()" id="shop-perf-title" role="button" tabindex="0">
             Shop Performance
             <span style="font-size:10px;opacity:.5;margin-left:4px" id="shop-expand-arrow">▼ expand</span>
             <span class="src">/api/analytics + /api/metrics</span>
@@ -946,8 +967,9 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="panel-title">Tasks <span class="src">/api/todos</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
         <input id="hud-todo-input" type="text" placeholder="Add a to-do…" onkeydown="if(event.key==='Enter')addHudTodo()"
+          aria-label="New to-do"
           style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text)">
-        <input id="hud-todo-due" type="date" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text)">
+        <input id="hud-todo-due" type="date" aria-label="Due date" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text)">
         <button onclick="addHudTodo()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
       </div>
       <div id="tasks-list" style="margin-top:10px;overflow-y:auto;max-height:700px">
@@ -984,7 +1006,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Conversations <span class="src">/api/conversations — persisted chat_messages history</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
-        <input id="conv-search-input" type="text" placeholder="Search all conversations…" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
+        <input id="conv-search-input" type="text" placeholder="Search all conversations…" aria-label="Search all conversations" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
         <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
       </div>
       <div id="conversations-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
@@ -994,7 +1016,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Knowledge Base <span class="src">/api/kb — real markdown docs in data/knowledge_base/</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
-        <input id="kb-search-input" type="text" placeholder="Search all docs…" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
+        <input id="kb-search-input" type="text" placeholder="Search all docs…" aria-label="Search all knowledge base docs" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
         <button onclick="searchKb()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
       </div>
       <div id="kb-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
@@ -1269,11 +1291,11 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-section-title" style="margin-top:18px">Generate a New Video</div>
       <div class="hub-card">
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Upload images below, or leave images empty and enter an existing Etsy listing ID to pull its photos automatically.</div>
-        <input type="file" id="studio-file-input" accept="image/*" multiple style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
+        <input type="file" id="studio-file-input" accept="image/*" multiple aria-label="Source images for video" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
         <div id="studio-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
-          <select id="studio-style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" aria-label="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <select id="studio-style" aria-label="Video style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
             <option value="showcase">Showcase</option>
             <option value="new-drop">New Drop</option>
             <option value="feature">Feature</option>
@@ -1284,15 +1306,16 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div id="studio-ai-fields" style="display:none;margin-bottom:8px">
           <textarea id="studio-scene-prompt" rows="3"
             placeholder="Scene description — auto-filled from title, edit before generating"
+            aria-label="Scene description"
             style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
-          <select id="studio-aspect-ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <select id="studio-aspect-ratio" aria-label="Video aspect ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
             <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
             <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
           </select>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-          <input id="studio-title" type="text" placeholder="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
-          <input id="studio-price" type="text" placeholder="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-title" type="text" placeholder="Title (optional)" aria-label="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
         </div>
         <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
@@ -1304,19 +1327,19 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after approving in the Action Center.</div>
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
-          <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
         </div>
         <button class="act-btn" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
         <div id="studio-stage-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
 
         <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Instagram</div>
-        <textarea id="studio-ig-caption" placeholder="Caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+        <textarea id="studio-ig-caption" placeholder="Caption" aria-label="Instagram caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
         <button class="act-btn" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
         <div id="studio-ig-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
 
         <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Facebook</div>
-        <textarea id="studio-fb-caption" placeholder="Description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+        <textarea id="studio-fb-caption" placeholder="Description" aria-label="Facebook description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
         <button class="act-btn" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
         <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
@@ -1326,21 +1349,22 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Drop a reference photo below to trace it into an SVG — a photo you took, a screenshot, something you found on Pinterest.</div>
 
         <div id="svgc-dropzone" onclick="document.getElementById('svgc-file-input').click()"
+          role="button" tabindex="0" aria-label="Upload reference photo"
           style="border:2px dashed var(--border);border-radius:10px;padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:12px;transition:border-color .15s,background .15s">
-          <div style="font-size:22px;margin-bottom:6px">📥</div>
+          <div style="font-size:22px;margin-bottom:6px" aria-hidden="true">📥</div>
           Drop a reference photo here, or click to browse
         </div>
-        <input type="file" id="svgc-file-input" accept="image/*" style="display:none">
+        <input type="file" id="svgc-file-input" accept="image/*" style="display:none" aria-label="Reference photo file">
 
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <select id="svgc-target" style="flex:1;min-width:160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <select id="svgc-target" aria-label="What's this SVG for?" style="flex:1;min-width:160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
             <option value="3dprint">3D-Print Sign (SS-series)</option>
             <option value="wallart">Wall Art</option>
             <option value="sticker">Sticker Pack Source Art</option>
             <option value="planner">Planner Cover Art</option>
             <option value="none">Just give me an SVG</option>
           </select>
-          <select id="svgc-mode" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <select id="svgc-mode" aria-label="Conversion mode" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
             <option value="silhouette">Silhouette (single shape, cleanest)</option>
             <option value="bw">Black &amp; White (line art)</option>
             <option value="color">Full Color</option>
@@ -1362,10 +1386,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-card">
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Upload the REAL product file(s) — the actual thing being sold, never a stand-in — and generate a photorealistic lifestyle photo. Self-verified against your file; if a render doesn't actually match it, it retries automatically instead of handing you something wrong.</div>
 
-        <input type="file" id="lsg-file-input" accept="image/*,.pdf,.svg" multiple style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
+        <input type="file" id="lsg-file-input" accept="image/*,.pdf,.svg" multiple aria-label="Real product file(s)" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
         <div id="lsg-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
 
-        <select id="lsg-category" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+        <select id="lsg-category" aria-label="Product category" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
           <option value="sign_flat">3D-Print Sign (flat face)</option>
           <option value="tumbler_wrap">Tumbler / Koozie Wrap</option>
           <option value="framed_print">Framed Wall Art</option>
@@ -1380,6 +1404,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
         <textarea id="lsg-scene-prompt" rows="3"
           placeholder="Scene description — auto-filled below, edit before generating"
+          aria-label="Scene description"
           style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
 
         <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">Each attempt calls the real image-generation API — real cost per click — up to 2 tries if the first doesn't verify against your source file.</div>
@@ -1455,6 +1480,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 </div></div>
 
 <script>
+// Users who've asked their OS not to animate — gates the orb's idle rotation
+// (CSS keyframe animations are gated directly via @media in <style> above). Voice-
+// reactive motion while actually speaking stays on; that's functional feedback,
+// not decoration (2026-07-08 accessibility review).
+const _reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // ── Auto-scale the fixed 1440x900 stage to fit any viewport, desktop only — below
 // MOBILE_BREAKPOINT the stage goes fluid via CSS instead (see isMobileMode()). ──
 const STAGE_W = 1440, STAGE_H = 900;
@@ -2086,9 +2117,18 @@ function dismissWelcomeOverlay() {
   try { seen = !!localStorage.getItem('frankWelcomeSeen'); } catch(e) {}
   if (!seen) {
     const el = document.getElementById('welcome-overlay');
-    if (el) el.style.display = 'flex';
+    if (el) {
+      el.style.display = 'flex';
+      const btn = document.getElementById('welcome-dismiss-btn');
+      if (btn) btn.focus();
+    }
   }
 })();
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  const el = document.getElementById('welcome-overlay');
+  if (el && el.style.display !== 'none') dismissWelcomeOverlay();
+});
 // ── Premium voice toggle — OpenAI Whisper/TTS stay dormant until this is on.
 // Default OFF (absent key reads as off). Local offline WASM engines are the
 // default voice path; this only opts back into the paid OpenAI endpoints. ──
@@ -2878,8 +2918,12 @@ function _renderAlerts(d, badgeEl, listEl, offlineNote){
     return;
   }
   listEl.innerHTML = (offlineNote||'') + alerts.map(a=>{
-    return '<div class="alert-row '+escHtml(a.severity||'')+'">'+
-      '<div>'+escHtml(a.title||'')+'</div>'+
+    const sev = a.severity || '';
+    // Severity was conveyed by the left-border color alone (WCAG 1.4.1 — not color
+    // alone); prefix a text label so it reads without relying on color perception.
+    const sevLabel = sev === 'critical' ? 'Critical: ' : sev === 'warning' ? 'Warning: ' : '';
+    return '<div class="alert-row '+escHtml(sev)+'">'+
+      '<div>'+(sevLabel ? '<strong>'+sevLabel+'</strong>' : '')+escHtml(a.title||'')+'</div>'+
       (a.detail ? '<div class="at">'+escHtml(a.detail)+'</div>' : '') +
       '</div>';
   }).join('');
@@ -2950,9 +2994,11 @@ function renderExecutiveBriefing(){
     if(alerts.length === 0){
       rows.push('<div style="color:var(--muted)">No active alerts</div>');
     } else {
-      rows.push(alerts.map(a=>
-        '<div class="alert-row '+escHtml(a.severity||'')+'">'+escHtml(a.title||'')+'</div>'
-      ).join(''));
+      rows.push(alerts.map(a=>{
+        const sev = a.severity || '';
+        const sevLabel = sev === 'critical' ? 'Critical: ' : sev === 'warning' ? 'Warning: ' : '';
+        return '<div class="alert-row '+escHtml(sev)+'">'+(sevLabel ? '<strong>'+sevLabel+'</strong>' : '')+escHtml(a.title||'')+'</div>';
+      }).join(''));
     }
   } else {
     rows.push('<div style="color:var(--muted)">Alerts: not yet loaded — try again in a few seconds</div>');
@@ -2966,6 +3012,28 @@ document.addEventListener('click', function(e){
   if(!panel || panel.style.display === 'none' || !panel.style.display) return;
   if(briefWrap && !briefWrap.contains(e.target)){
     panel.style.display = 'none';
+  }
+});
+
+// ── Escape-key dismissal for the alert dropdown, Executive Briefing panel, and
+// phone action sheet — none of these had a keyboard way to close other than
+// re-finding the trigger button (2026-07-08 accessibility review). ──
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  const dd = document.getElementById('alert-dropdown');
+  if(dd && dd.style.display !== 'none' && dd.style.display){
+    dd.style.display = 'none';
+    const btn = document.getElementById('bell-btn');
+    if(btn){ btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
+  }
+  const panel = document.getElementById('brief-panel');
+  if(panel && panel.style.display !== 'none' && panel.style.display){
+    panel.style.display = 'none';
+    const briefBtn = document.querySelector('.brief-btn');
+    if(briefBtn) briefBtn.focus();
+  }
+  if(document.body.classList.contains('phone-sheet-open')){
+    phoneSheetClose();
   }
 });
 
@@ -3207,14 +3275,14 @@ function _actionPreviewHtml(a) {
   if (a.type === 'update_tags') return 'New tags: ' + escHtml((p.tags || []).join(', '));
   if (a.type === 'listing_photo') {
     const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&inline=1';
-    return `<img src="${url}" loading="lazy" style="max-width:260px;max-height:260px;border-radius:8px;display:block">` +
+    return `<img src="${url}" loading="lazy" alt="Staged photo for listing ${escHtml(String(p.listing_id||''))}" style="max-width:260px;max-height:260px;border-radius:8px;display:block">` +
       `<div style="margin-top:6px">Listing ${escHtml(String(p.listing_id||''))} · rank ${p.rank||''} · ${escHtml(p.sku||'')}</div>`;
   }
   if (a.type === 'publish_listing') {
     const pv = p.preview || {};
     return `<div style="display:flex;gap:10px;align-items:flex-start">` +
       (pv.thumbnail_url
-        ? `<img src="${escHtml(pv.thumbnail_url)}" loading="lazy" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+        ? `<img src="${escHtml(pv.thumbnail_url)}" loading="lazy" alt="${escHtml(pv.title||'Listing preview')}" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
         : '') +
       `<div><div>Publish draft listing ${escHtml(String(p.listing_id || ''))}</div>` +
       (pv.title ? `<div style="font-weight:600;margin-top:4px">${escHtml(pv.title)}</div>` : '') +
@@ -3245,9 +3313,9 @@ function renderApproval(a) {
   let thumb;
   if (a.type === 'listing_photo') {
     const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&inline=1';
-    thumb = `<img class="hub-thumb" src="${url}" loading="lazy">`;
+    thumb = `<img class="hub-thumb" src="${url}" loading="lazy" alt="Staged listing photo">`;
   } else if (a.type === 'publish_listing' && (p.preview || {}).thumbnail_url) {
-    thumb = `<img class="hub-thumb" src="${escHtml(p.preview.thumbnail_url)}" loading="lazy">`;
+    thumb = `<img class="hub-thumb" src="${escHtml(p.preview.thumbnail_url)}" loading="lazy" alt="${escHtml(p.preview.title||'Listing preview')}">`;
   } else {
     thumb = `<div class="hub-thumb-ph">${_ACT_TYPE_GLYPH[a.type] || '❓'}</div>`;
   }
@@ -3259,7 +3327,7 @@ function renderApproval(a) {
     meta += ` · $${escHtml(String(p.preview.price))} · ${(p.preview.tags || []).length} tags · ${p.preview.photo_count || 0} photos`;
   } else if (a.type === 'update_title') meta += ` · "${escHtml(p.title || '')}"`;
   else if (a.type === 'update_tags') meta += ` · ${escHtml((p.tags || []).join(', '))}`;
-  return `<div class="hub-listing-item" style="cursor:pointer" onclick="toggleActionDetail(${a.id})">
+  return `<div class="hub-listing-item" style="cursor:pointer" onclick="toggleActionDetail(${a.id})" role="button" tabindex="0">
     ${thumb}
     <div class="hub-listing-info">
       <div class="hub-listing-title">${escHtml(a.summary || a.type)}</div>
@@ -3308,6 +3376,7 @@ function openRejectModal(id) {
   panel.innerHTML = `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
     <div class="hub-listing-meta" style="margin-bottom:6px">Why is this being rejected? A reason lets the right agent fix and re-stage it automatically.</div>
     <textarea id="reject-reason-${id}" rows="2" placeholder="e.g. shade is too dark, brighten it"
+      aria-label="Reason for rejecting"
       style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-size:13px;font-family:inherit"></textarea>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="act-btn reject" onclick="submitRejectReason(${id})">Submit &amp; Fix</button>
@@ -3396,7 +3465,7 @@ function renderActionsContent() {
     const style = active
       ? `flex:1;text-align:center;padding:10px 6px;cursor:pointer;border-color:${c};background:${c}26`
       : 'flex:1;text-align:center;padding:10px 6px;cursor:pointer';
-    return `<div class="metric" style="${style}" onclick="setActionFilter('${sev}')"><div class="value" style="color:${c};font-size:20px">${s[sev]||0}</div><div class="sub">${sev}${active?' ✓':''}</div></div>`;
+    return `<div class="metric" style="${style}" onclick="setActionFilter('${sev}')" role="button" tabindex="0"><div class="value" style="color:${c};font-size:20px">${s[sev]||0}</div><div class="sub">${sev}${active?' ✓':''}</div></div>`;
   };
   html += `<div class="section-title">Flagged by scan${_actionFilter?` — showing ${_actionFilter} only`:''}</div><div style="display:flex;gap:8px;margin-bottom:14px">`+
     sevBtn('high')+sevBtn('medium')+sevBtn('low')+
@@ -3718,7 +3787,7 @@ function renderConversationList() {
     return;
   }
   el.innerHTML = `<div class="section-title">💬 Sessions (${_convSessions.length})</div>` +
-    _convSessions.map(s => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(s.session_id)}')">
+    _convSessions.map(s => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(s.session_id)}')" role="button" tabindex="0">
       <div class="tl-dotcol"><span class="d"></span></div>
       <div class="tl-txt">
         <div class="ttl">${escHtml(_convShortId(s.session_id))} <span style="color:var(--muted);font-weight:400">— ${s.message_count} msg${s.message_count===1?'':'s'}</span></div>
@@ -3780,7 +3849,7 @@ function renderConversationSearch(q, results) {
     <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
     <span style="font-size:12px;color:var(--muted)">${results.length} match${results.length===1?'':'es'} for "${escHtml(q)}"</span>
   </div>`;
-  html += results.length ? results.map(r => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(r.session_id)}')">
+  html += results.length ? results.map(r => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(r.session_id)}')" role="button" tabindex="0">
       <div class="tl-dotcol"><span class="d"></span></div>
       <div class="tl-txt">
         <div class="ttl">${escHtml(r.role === 'user' ? '%%OWNER%%' : '%%AGENT_SHORT%%')} <span style="color:var(--muted);font-weight:400">in ${escHtml(_convShortId(r.session_id))}</span></div>
@@ -3834,7 +3903,7 @@ function renderKbList() {
     return;
   }
   el.innerHTML = `<div class="section-title">📚 Docs (${_kbDocs.length})</div>` +
-    _kbDocs.map(d => `<div class="tl-item" style="cursor:pointer" onclick="openKbDoc('${escHtml(d.filename)}')">
+    _kbDocs.map(d => `<div class="tl-item" style="cursor:pointer" onclick="openKbDoc('${escHtml(d.filename)}')" role="button" tabindex="0">
       <div class="tl-dotcol"><span class="d"></span></div>
       <div class="tl-txt">
         <div class="ttl">${escHtml(d.title)}</div>
@@ -3894,7 +3963,7 @@ function renderKbSearch(q, results) {
   html += results.length ? results.map(r => `<div class="tl-item" style="cursor:default">
       <div class="tl-dotcol"><span class="d"></span></div>
       <div class="tl-txt" style="width:100%">
-        <div class="ttl" style="cursor:pointer" onclick="openKbDoc('${escHtml(r.filename)}')">${escHtml(r.title)} <span style="color:var(--muted);font-weight:400">— ${r.match_count} match${r.match_count===1?'':'es'}</span></div>
+        <div class="ttl" style="cursor:pointer" onclick="openKbDoc('${escHtml(r.filename)}')" role="button" tabindex="0">${escHtml(r.title)} <span style="color:var(--muted);font-weight:400">— ${r.match_count} match${r.match_count===1?'':'es'}</span></div>
         ${r.matches.map(m => `<div class="sub" style="margin-top:6px">line ${m.line_no}</div>` + _kbPre(m.context)).join('')}
       </div>
     </div>`).join('') : '<div class="empty">No docs match that search.</div>';
@@ -3971,8 +4040,8 @@ function renderListings() {
   const filtered = _sectionFilter===null ? _listings : _listings.filter(l => String(l.shop_section_id||'none')===_sectionFilter);
   if (!filtered.length) { html += '<div class="hub-empty">No listings in this category</div>'; el.innerHTML = html; return; }
   html += filtered.map(l => `
-    <div class="hub-listing-item" style="cursor:pointer" onclick="toggleListingDetail(${l.listing_id})">
-      ${l.thumbnail_url ? `<img class="hub-thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy">` : `<div class="hub-thumb-ph">🏷️</div>`}
+    <div class="hub-listing-item" style="cursor:pointer" onclick="toggleListingDetail(${l.listing_id})" role="button" tabindex="0">
+      ${l.thumbnail_url ? `<img class="hub-thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy" alt="${escHtml(l.title||'Listing photo')}">` : `<div class="hub-thumb-ph" aria-hidden="true">🏷️</div>`}
       <div class="hub-listing-info">
         <div class="hub-listing-title">${escHtml(l.title)}</div>
         <div class="hub-listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="hub-state-${l.listing_id}" class="hub-lstate ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
@@ -4179,7 +4248,7 @@ async function loadFiles() {
         if (f.is_zip) {
           const zid='hub-zip-'+(zipIdx++);
           const entries=f.entries||[];
-          html += '<div class="hub-listing-item" onclick="toggleZip(\\''+zid+'\\',this.querySelector(\\'.hub-zip-caret\\'))" style="cursor:pointer">'+
+          html += '<div class="hub-listing-item" onclick="toggleZip(\\''+zid+'\\',this.querySelector(\\'.hub-zip-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
             '<div class="hub-thumb-ph">🗂️</div>'+
             '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
             '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+' · '+entries.length+' files inside</div></div>'+
@@ -4191,7 +4260,7 @@ async function loadFiles() {
           }
           entries.forEach(en => {
             const eurl=_hubZipEntryUrl(f,en.name);
-            html += '<div class="hub-listing-item" onclick="openFile(\\''+eurl+'\\')" style="cursor:pointer;padding:7px 4px">'+
+            html += '<div class="hub-listing-item" onclick="openFile(\\''+eurl+'\\')" style="cursor:pointer;padding:7px 4px" role="button" tabindex="0">'+
               '<div class="hub-thumb-ph" style="font-size:16px">'+_hubFileIcon(en.name)+'</div>'+
               '<div class="hub-listing-info"><div class="hub-listing-title" style="font-size:13px">'+escHtml(en.name)+'</div>'+
               '<div class="hub-listing-meta">'+escHtml(en.size_human)+(en.inline?' · tap to open':' · tap to download')+'</div></div>'+
@@ -4201,7 +4270,7 @@ async function loadFiles() {
           html += '</div>';
         } else {
           const url=_hubFileUrl(f, f.inline?1:0);
-          html += '<div class="hub-listing-item" onclick="openFile(\\''+url+'\\')" style="cursor:pointer">'+
+          html += '<div class="hub-listing-item" onclick="openFile(\\''+url+'\\')" style="cursor:pointer" role="button" tabindex="0">'+
             '<div class="hub-thumb-ph">'+_hubFileIcon(f.path)+'</div>'+
             '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
             '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+(f.inline?' · tap to open':' · tap to download')+'</div></div>'+
@@ -4758,7 +4827,7 @@ async function loadConnections() {
         '<div style="font-size:11px;color:var(--muted)">'+escHtml(p.note)+'</div></div>'+
         (live
           ? '<div style="font-size:11px;font-weight:700;color:var(--green)">✅ Live</div>'
-          : '<div style="font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap" onclick="toggleCredSteps(\\''+key+'\\')">🗺️ Roadmap ›</div>')+
+          : '<div style="font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap" onclick="toggleCredSteps(\\''+key+'\\')" role="button" tabindex="0">🗺️ Roadmap ›</div>')+
         '</div>'+
         (live ? '' :
           '<div id="hub-cred-steps-'+key+'" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'+
@@ -5204,8 +5273,8 @@ function orbGLFrame(){
   glUniforms.uAmp.value = amp;
   glUniforms.uColor.value.setRGB((58+(122-58)*amp)/255, (214+(232-214)*amp)/255, 1.0);
   glUniforms.uOpacity.value = 0.65 + amp*0.3;
-  glMesh.rotation.y += 0.0022 + amp*0.01;
-  glMesh.rotation.x += 0.0006 + amp*0.003;
+  glMesh.rotation.y += (_reducedMotion ? 0 : 0.0022) + amp*0.01;
+  glMesh.rotation.x += (_reducedMotion ? 0 : 0.0006) + amp*0.003;
   glComposer.render();
 }
 
@@ -5421,7 +5490,7 @@ function frame(){
   // rather than waste CPU drawing something nobody sees.
   if(orbMode === 'sphere'){ requestAnimationFrame(frame); return; }
   ctx.clearRect(0,0,W,H);
-  rot += speaking ? 0.028 : 0.010;
+  rot += speaking ? 0.028 : (_reducedMotion ? 0 : 0.010);
   const amp = currentVoiceAmp();
   const glow = speaking ? 0.55 + amp*0.45 : 0.3;
   ctx.shadowBlur = 18 + amp*36;
