@@ -3670,3 +3670,51 @@ Also fixed in the same pass: a JS-breaking Python string-escaping bug in the new
 text (`didn\'t` inside a non-raw triple-quoted Python string collapses to a bare `'` at runtime,
 breaking the embedded JS) -- reworded to avoid the apostrophe rather than double-escaping.
 `_BUILD_ID` bumped to `b4d0e2c-v126`.
+
+
+## 2026-07-08 — UI polish pass: fixed hardcoded identity text + stale version strings (v127)
+Scott asked for a full visual audit of Frank -- everything organized, neatly displayed,
+details fixed, functionality/visual clarity prioritized. Full page-by-page pass over
+`frank_hud_mockup.py` (5,500+ lines, all 19 screens, the CSS design-token system, nav). Most
+of it checked out clean: one shared `:root` CSS variable block with 9 named color themes, one
+`.hub-card`/`.hub-section-title` definition used consistently everywhere including the two
+newest Studio cards (SVG Converter, Lifestyle Photo Generator), only one `<style>` block in
+the whole file, a single consistent button system, and all 19 nav items map 1:1 to real
+screens with no orphans. Deliberately left alone: the same input/select inline `style="..."`
+string is repeated ~10 times across cards -- a code-hygiene nit, not a visible defect, not
+worth the risk of a mechanical find/replace across a 5,500-line file for zero visible change.
+
+What was actually broken, found and fixed:
+
+1. **The single biggest text on the screen ignored the rename feature.** The orb hero title
+   (`.o1`), the header logo (`.l1`), and the bottom-bar "TALK TO FRANK" pill all had `FRANK`
+   as a hardcoded string literal instead of the `%%AGENT_SHORT%%` placeholder every other
+   piece of agent-identity text in this file already uses (verified via grep -- 15+ correct
+   usages elsewhere, including one line below the orb title). Settings -> Branding explicitly
+   promises "Renames the agent everywhere -- the dashboard, the app name, and how the agent
+   refers to itself"; that promise was false for the 3 most visually prominent labels in the
+   product. Same bug in the `<title>` tag and the `apple-mobile-web-app-title` PWA meta tag.
+   All 5 spots now use `%%AGENT_SHORT%%`, substituted by the existing `render_frank_hud()`
+   mechanism and correctly cache-busted on rename via `main.py:_refresh_identity()` -- no new
+   plumbing needed, this mechanism was already proven correct.
+2. **Two stale "v1.0.0 - MOCKUP" placeholders** (orb subtitle, Settings -> About) never got
+   updated once the product went live -- meanwhile the Studio screen already had a working
+   `#studio-build-ver` span fetching `/health` for the real `_BUILD_ID`. Gave both spots real
+   IDs (`#orb-build-ver`, `#settings-build-ver`) and wired them into the existing
+   `loadCredentialsAndHealth()` poll (which already fetches `/health` on every cycle -- no new
+   network call), mirroring the proven Studio pattern. Both now show `Build b4d0e2c-vNNN`.
+3. **Inconsistent tagline**: orb said "COMMAND CORE", header logo and title tag said
+   "COMMAND CENTER". Unified to "COMMAND CENTER" everywhere.
+4. **Studio's panel title was stale**: read "Studio -- Image-to-Video Generation" even though
+   the screen now stacks 4 distinct tools (video gen, Etsy/social Actions, SVG Converter,
+   Lifestyle Photo Generator added last session). Retitled to "Studio -- Media & Content
+   Tools" and widened the endpoint-summary span to name all 4 tool groups.
+
+Verified: `py_compile` clean, `tests/smoke_test.py` green (36 tools, no agent-tool surface
+touched -- pure UI/copy), a script-level div-balance check on the HTML string (783 open ==
+783 close), zero remaining "FRANK"/"MOCKUP" string literals in the template, and a live
+Playwright pass against the local test harness confirmed every fix renders correctly post-
+login (agent name "Frank" -- the currently configured business_config.AGENT_NAME_SHORT --
+appears correctly templated in the orb/header/bottom-bar/title, both build-version spots
+show the real live build id, Studio's title and src-span show the new copy, no layout
+regressions on Settings or Studio). `_BUILD_ID` bumped to `b4d0e2c-v127`.

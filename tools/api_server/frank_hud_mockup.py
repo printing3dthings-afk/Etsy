@@ -39,12 +39,12 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FRANK">
+<meta name="apple-mobile-web-app-title" content="%%AGENT_SHORT%%">
 <meta name="theme-color" content="#070d16">
 <link rel="manifest" href="/frank-manifest.webmanifest">
 <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="/static/icon-192.png">
-<title>FRANK — Command Center (mockup)</title>
+<title>%%AGENT_SHORT%% — Command Center</title>
 <script type="importmap">
 {"imports": {
   "onnxruntime-web": "/static/vendor/onnxruntime-web/ort.wasm.bundle.min.mjs",
@@ -728,9 +728,9 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <canvas id="orb" width="640" height="640"></canvas>
       <canvas id="orb-gl" width="640" height="640"></canvas>
       <div class="orb-overlay">
-        <div class="o1">FRANK</div>
-        <div class="o2">COMMAND CORE</div>
-        <div class="o3">v1.0.0 · MOCKUP</div>
+        <div class="o1">%%AGENT_SHORT%%</div>
+        <div class="o2">COMMAND CENTER</div>
+        <div class="o3" id="orb-build-ver">Build —</div>
       </div>
     </div>
     <div class="orb-state" id="orb-state">IDLE — slow ambient rotation</div>
@@ -739,7 +739,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <div class="hdr-logo brk">
     <div class="hex" aria-hidden="true">⬡</div>
-    <div class="lbl"><h1 class="l1 hdr-title-h1">FRANK</h1><div class="l2">COMMAND CENTER</div></div>
+    <div class="lbl"><h1 class="l1 hdr-title-h1">%%AGENT_SHORT%%</h1><div class="l2">COMMAND CENTER</div></div>
   </div>
 
   <div class="hdr-bar">
@@ -1247,14 +1247,14 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-section-title" style="margin-top:18px">About</div>
       <div class="hub-card">
         <div style="font-size:13px;font-weight:600">%%AGENT_SHORT%% HUD</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">v1.0.0 · MOCKUP</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="settings-build-ver">Build —</div>
       </div>
     </div>
   </div>
 
   <div class="screen" id="screen-studio">
     <div class="panel brk" style="height:100%;overflow-y:auto">
-      <div class="panel-title">Studio — Image-to-Video Generation <span class="src">/api/studio/* — generate, attach to Etsy, post to Instagram/Facebook</span><span id="studio-build-ver" style="float:right;font-size:10px;opacity:0.4;font-weight:normal"></span></div>
+      <div class="panel-title">Studio — Media &amp; Content Tools <span class="src">/api/studio/* — video generation, Etsy/social actions, SVG converter, lifestyle photos</span><span id="studio-build-ver" style="float:right;font-size:10px;opacity:0.4;font-weight:normal"></span></div>
       <div class="studio-grid" style="flex-wrap:wrap">
         <div style="flex:1;min-width:320px">
           <video id="studio-player" controls style="aspect-ratio:16/9"></video>
@@ -1409,7 +1409,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="talk-pill" id="talk-pill">
         <div class="row1">
           <div class="mini-wave"><span></span><span></span><span></span><span></span></div>
-          <span class="label">TALK TO FRANK</span>
+          <span class="label">TALK TO %%AGENT_SHORT%%</span>
           <div class="mini-wave"><span></span><span></span><span></span><span></span></div>
         </div>
         <div class="sub" id="talk-sub">tap to speak</div>
@@ -2541,6 +2541,12 @@ async function loadCredentialsAndHealth(){
   const voiceDot = document.getElementById('ac-voice-dot');
   if(health){
     if(acCore){ acCore.textContent = 'Online · build '+escHtml(health.build||'?'); acCore.className='v'; }
+    if(health.build){
+      const orbVer = document.getElementById('orb-build-ver');
+      if(orbVer) orbVer.textContent = 'Build '+health.build;
+      const setVer = document.getElementById('settings-build-ver');
+      if(setVer) setVer.textContent = 'Build '+health.build;
+    }
     if(acSystem){
       acSystem.textContent = health.persistent ? 'Persistent storage' : 'Ephemeral (volume not attached)';
       acSystem.className = 'v'+(health.persistent?'':' warn');
