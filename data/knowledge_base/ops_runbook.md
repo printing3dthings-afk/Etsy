@@ -3197,3 +3197,50 @@ still reacting correctly under `setSpeaking(true)`. Confirmed the default sphere
 unaffected (still exactly 234 particles / 432 edges). Re-ran the full existing regression suite
 (brand-mark backend, brand-mark orb, login-flow, recovery-code, keyboard-nav) — all green.
 `_BUILD_ID` bumped v117 → v118.
+
+---
+
+## 2026-07-08 — Brand-mark orb: much higher detail + two real bugs caught at the new resolution (v119)
+
+Scott: "I need an astronomical amount of more detail. I need to read the words. Make it bigger if
+needed" — the "LAYERED DESIGN" wordmark was illegible at v118's original 64×64 sampling grid.
+
+**Resolution bump (`applyBrandMarkToOrb` + the shared `frame()`/canvas, frank_hud_mockup.py):**
+canvas intrinsic size 300→640px (display 340px→`min(85vw,620px)`, responsive), `R` 108→230,
+perspective distance constant 320→683 (all scaled together ~2.13× so proportions hold), sampling
+`GRID` 64→240, `MAX_PARTICLES` 800→4000 so the finer grid doesn't get stride-downsampled back into
+blur, dot/line sizes tuned down slightly for crispness at the new density. Batched the edge-lines
+and dots into one `beginPath()`+one `stroke()`/`fill()` each per frame instead of one PER edge/dot —
+needed for the particle count increase to stay smooth, and speeds up the default sphere for free
+too since it's the same shared draw code.
+
+**Two real bugs found by screenshotting Scott's actual logo at the new resolution** — neither was
+caught by any prior unit test, same lesson as the v117 postmortem (synthetic test shapes don't
+exercise the same code paths a real uploaded photo does):
+1. **Row-wrap in the neighbor-edge search.** `idxLookup[gy*GRID+(gx+dx)]` had no `gx+dx<GRID`
+   bounds check. Since `idxLookup` is a flat 1D array with no row separator, walking off the right
+   edge of one row silently reads into the START of the next row instead of failing — occasionally
+   wiring a bogus long edge across the whole shape between two spatially unrelated points. Fixed by
+   adding the explicit bound to the loop condition. (The vertical/`dy` search didn't need the same
+   fix — reading past the end of the whole array returns `undefined` in JS, which already fails the
+   `>=0` check safely.)
+2. **Border-row image artifact.** A resize/JPEG edge artifact left faint "ink" along the literal
+   last pixel row of the source image. Because the outline rule treats out-of-bounds as "not ink"
+   (so the shape's true outer silhouette registers), that whole noisy border row trivially
+   qualified as "boundary" and rendered as a long stray diagonal line floating below the logo —
+   confirmed via a diagnostic dump showing ~15+ particles all sitting at exactly `y0=R` (the grid's
+   last row). Fixed by excluding the same `inset` margin already used for `hasAlpha` detection from
+   the `keep` mask entirely — real logo art has padding well inside that margin, so this costs
+   nothing for a normal upload.
+
+**Verify:** re-ran the real-logo Playwright screenshot check — the stray line is gone, "LAYERED"
+and "DESIGN" are both clearly legible, still rotating correctly. Confirmed the default
+(unconfigured) sphere is still byte-for-byte unaffected (234 particles / 432 edges). Re-ran the
+full existing regression suite (brand-mark backend/orb, login-flow, recovery-code, keyboard-nav) —
+all green. `_BUILD_ID` bumped v118 → v119.
+
+**Next (separate, in progress):** Scott then asked to make the orb "3-dimensional" — real depth,
+not just the flat plate with a subtle bump it has today. Clarified he wants to see actual rendered
+comparisons of two depth approaches (real extrusion vs. per-element color-layered depth) crossed
+with wireframe-only vs. faint-surface-fill before picking one to ship. Comparison variants are
+scratchpad-only until he chooses; nothing further ships until then.

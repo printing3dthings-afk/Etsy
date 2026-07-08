@@ -233,7 +233,7 @@ canvas#orb{cursor:pointer}
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:radial-gradient(ellipse at 50% 40%, rgba(58,214,255,.10), transparent 60%);
 }
-#orb-view canvas#orb{width:340px;height:340px}
+#orb-view canvas#orb{width:min(85vw,620px);height:min(85vw,620px)}
 #orb-view .orb-overlay .o1{font-size:36px}
 #orb-view .orb-hint{position:static;margin-top:14px;opacity:.5}
 #orb-view .orb-state{margin-top:10px}
@@ -712,7 +712,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <div id="orb-view">
     <div class="orb-hero-stage">
-      <canvas id="orb" width="300" height="300"></canvas>
+      <canvas id="orb" width="640" height="640"></canvas>
       <div class="orb-overlay">
         <div class="o1">FRANK</div>
         <div class="o2">COMMAND CORE</div>
@@ -4679,7 +4679,7 @@ tick(); setInterval(tick, 1000);
 // glow/audio-reactive rendering in frame() below is shared by both and untouched. ──
 const canvas = document.getElementById('orb');
 const ctx = canvas.getContext('2d');
-const W = canvas.width, H = canvas.height, CX = W/2, CY = H/2, R = 108;
+const W = canvas.width, H = canvas.height, CX = W/2, CY = H/2, R = 230;
 let particles = [];   // sphere mode: {lat,lon} · image mode: {x0,y0,z0}
 let edges = [];        // [particleIndexA, particleIndexB] pairs to connect with a line
 let orbMode = 'sphere';
@@ -4710,7 +4710,7 @@ resetOrbToDefault();
 function applyBrandMarkToOrb(dataUrl){
   const img = new Image();
   img.onload = () => {
-    const GRID = 64, MAX_PARTICLES = 800;
+    const GRID = 240, MAX_PARTICLES = 4000;
     const off = document.createElement('canvas');
     off.width = GRID; off.height = GRID;
     const octx = off.getContext('2d', {willReadFrequently:true});
@@ -4733,8 +4733,8 @@ function applyBrandMarkToOrb(dataUrl){
       }
     }
     const keep = new Array(GRID*GRID).fill(false);
-    for(let gy=0; gy<GRID; gy++){
-      for(let gx=0; gx<GRID; gx++){
+    for(let gy=inset; gy<GRID-inset; gy++){
+      for(let gx=inset; gx<GRID-inset; gx++){
         const idx = (gy*GRID+gx)*4;
         // Unpainted canvas pixels default to rgba(0,0,0,0) — fully transparent, but
         // reading as "black" (luminance 0) if alpha is ignored. Gate both branches on
@@ -4743,6 +4743,13 @@ function applyBrandMarkToOrb(dataUrl){
         keep[gy*GRID+gx] = data[idx+3] > 40 && (hasAlpha || (data[idx]+data[idx+1]+data[idx+2])/3 < 235);
       }
     }
+    // Cells within `inset` of the grid border are left false (never "ink"), same margin
+    // as the hasAlpha check above. Reproduced live: a resize/JPEG edge artifact along the
+    // image's literal last pixel row read as faint "ink", and because out-of-bounds
+    // counts as not-ink for outline purposes, that entire noisy border row trivially
+    // qualified as "boundary" and rendered as a long stray line far from the real logo.
+    // Real logo art virtually always has padding well inside this margin, so excluding
+    // it costs nothing for a normal upload but closes off this whole class of edge noise.
     // Outline extraction: a filled "ink" cell survives only if at least one of its
     // 4 grid-neighbors is NOT ink (out-of-bounds counts as not-ink, so the true outer
     // silhouette registers too) — i.e. boundary = region minus its own interior. This
@@ -4786,7 +4793,16 @@ function applyBrandMarkToOrb(dataUrl){
       for(let gx=0; gx<GRID; gx++){
         const here = idxLookup[gy*GRID+gx];
         if(here < 0) continue;
-        for(let dx=1; dx<=stride; dx++){ const r = idxLookup[gy*GRID+(gx+dx)]; if(r>=0){ eg.push([here,r]); break; } }
+        // Bounds-check gx+dx explicitly — idxLookup is a flat 1D array, so an
+        // unchecked gx+dx>=GRID silently reads into the START of the NEXT row
+        // instead of failing, wiring a bogus long edge across the whole shape
+        // between two spatially unrelated points (reproduced live: a stray
+        // diagonal line appeared once GRID got large enough for this to bite).
+        // The dy loop doesn't need the same guard — (gy+dy)*GRID+gx naturally
+        // runs past the end of the whole array when gy+dy>=GRID, and a JS
+        // array read past its length returns undefined, which safely fails
+        // the `r>=0` check below rather than aliasing into row 0 of a new grid.
+        for(let dx=1; dx<=stride && gx+dx<GRID; dx++){ const r = idxLookup[gy*GRID+(gx+dx)]; if(r>=0){ eg.push([here,r]); break; } }
         for(let dy=1; dy<=stride; dy++){ const b = idxLookup[(gy+dy)*GRID+gx]; if(b>=0){ eg.push([here,b]); break; } }
       }
     }
@@ -4808,7 +4824,7 @@ function frame(){
     amp = (Math.sin(speakT*3.1)*0.5+0.5) * (Math.sin(speakT*1.7)*0.3+0.7);
   }
   const glow = speaking ? 0.55 + amp*0.45 : 0.3;
-  ctx.shadowBlur = 16 + amp*34;
+  ctx.shadowBlur = 18 + amp*36;
   ctx.shadowColor = speaking ? 'rgba(122,232,255,'+glow+')' : 'rgba(58,214,255,0.3)';
 
   const pts = particles.map(p=>{
@@ -4826,27 +4842,38 @@ function frame(){
       y = rr * Math.sin(p.lat);
       z = rr * Math.cos(p.lat) * Math.sin(lon);
     }
-    const scale = 320 / (320 - z);
+    const scale = 683 / (683 - z);
     return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
   });
 
+  // Batch every line/dot into a single path each (one stroke()/fill() call for the
+  // whole frame) instead of the old per-edge/per-dot beginPath+stroke pattern — with
+  // thousands of particles at the higher sampling resolution below, one beginPath+
+  // stroke() PER segment would tank the frame rate; one path for all segments is the
+  // standard canvas2D fix and keeps this smooth even at a few thousand points.
   ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.45)' : 'rgba(58,214,255,0.2)';
-  ctx.lineWidth = 0.6;
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
   edges.forEach(([ai,bi])=>{
     const a = pts[ai], b = pts[bi];
-    if(a && b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+    if(a && b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
   });
-  pts.forEach(p=>{
-    const sz = p.scale > 1 ? 1.8 : 1.1;
-    ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
-    ctx.beginPath();ctx.arc(p.x,p.y,sz,0,Math.PI*2);ctx.fill();
-  });
+  ctx.stroke();
 
-  const grad = ctx.createRadialGradient(CX,CY,4,CX,CY,38+amp*24);
+  ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
+  ctx.beginPath();
+  pts.forEach(p=>{
+    const sz = p.scale > 1 ? 1.4 : 0.9;
+    ctx.moveTo(p.x+sz, p.y);
+    ctx.arc(p.x,p.y,sz,0,Math.PI*2);
+  });
+  ctx.fill();
+
+  const grad = ctx.createRadialGradient(CX,CY,8,CX,CY,55+amp*30);
   grad.addColorStop(0, speaking ? 'rgba(180,240,255,'+ (0.7+amp*0.25) +')' : 'rgba(58,214,255,0.4)');
   grad.addColorStop(1, 'rgba(58,214,255,0)');
   ctx.fillStyle = grad;
-  ctx.beginPath();ctx.arc(CX,CY,38+amp*24,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(CX,CY,55+amp*30,0,Math.PI*2);ctx.fill();
 
   ctx.shadowBlur = 0;
   requestAnimationFrame(frame);
