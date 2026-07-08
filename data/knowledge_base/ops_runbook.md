@@ -3123,3 +3123,51 @@ suites from the prior batch — all still green, no interference from these chan
 pipeline is built generically; he uploads his real artwork through the new Settings control once
 this deploys, and that's the point where the visual result becomes his call, not something I can
 verify blind.
+
+---
+
+## 2026-07-08 — Brand-mark orb rendered as a solid block instead of the logo shape (v117)
+
+**Symptom:** Scott shared his real logo (SJ Layered Design, a 1091×1119 flat JPEG, no alpha
+channel) to test the brand-mark orb feature (v116) before uploading it live. Running it through
+the actual particle-sampling code produced a solid rectangular wall of dots — not remotely the
+logo's shape — instead of the clean silhouette a manual pixel-mask dump of the same image showed
+was achievable.
+
+**Root cause (two stacked bugs, found by screenshotting the actual orb render, not just unit-
+testing the math):**
+1. `applyBrandMarkToOrb`'s `hasAlpha` check scanned the *entire* 64×64 sampling grid for any
+   pixel with alpha < 250. The logo (312×320 after the server's resize, not a perfect square)
+   centered inside the square sampling canvas leaves a razor-thin (~0.8px) transparent letterbox
+   margin — enough to flip `hasAlpha` true even though the source has no real transparency. Once
+   `hasAlpha` was (wrongly) true, the code used the alpha-threshold path, which treats the entire
+   *opaque* image — including its white background — as "part of the mark," since a flat JPEG
+   converted to RGBA has alpha=255 everywhere except that hairline margin.
+2. Once alpha-based detection was fixed to only scan an inset interior region (skipping the outer
+   `~6%` margin, so the letterbox strip can't trigger it), a second, related bug surfaced: the
+   luminance fallback path (`(r+g+b)/3 < 235`) doesn't check alpha at all. An unpainted canvas
+   pixel defaults to `rgba(0,0,0,0)` — fully transparent, but reads as pure *black* if you only
+   look at RGB — so the same letterbox margin was still being counted as "dark ink" by the
+   luminance path, producing a border frame of stray dots around the shape.
+
+**Fix (`frank_hud_mockup.py`, `applyBrandMarkToOrb`):** `hasAlpha` detection now only scans an
+inset region (`Math.max(2, round(GRID*0.06))` px in from each edge). Both the alpha-path and the
+luminance-fallback-path `isMark` checks now require `alpha > 40` first — a fully-transparent pixel
+is never "ink," regardless of which detection branch is active.
+
+**Verify:** re-ran the actual uploaded logo through the pipeline end-to-end after each fix
+attempt (not just re-running the existing unit tests, which had already passed on a synthetic
+ring shape that happened not to trigger this) — captured real Playwright screenshots of the orb
+canvas at each step. First fix alone still showed a border-framed block; the RGB-of-transparent-
+pixels issue was caught by the same visual check on the next screenshot, not by any assertion.
+After both fixes: the SJ monogram and "LAYERED DESIGN" wordmark render as a clean, legible
+particle cloud, rotating correctly and still reacting properly under `setSpeaking(true)`. Re-ran
+the full existing suite (login-flow, recovery-code, keyboard-nav, brand-mark backend, brand-mark
+orb — 83 checks total) — all still green. `_BUILD_ID` bumped v116 → v117.
+
+**Lesson logged plainly:** the original ship (v116) passed every automated check I wrote *and*
+still had two live-breaking bugs, because none of those checks rendered a real non-square opaque
+image and looked at the actual pixels — a synthetic test shape drawn directly on a canvas doesn't
+go through `img.onload`/`drawImage` letterboxing the same way a real uploaded photo does. Caught
+only because Scott sent his actual file before uploading it live and I ran it through the pipeline
+myself instead of asking him to test it blind.

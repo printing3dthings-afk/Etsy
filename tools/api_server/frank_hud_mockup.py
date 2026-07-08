@@ -4718,16 +4718,30 @@ function applyBrandMarkToOrb(dataUrl){
     const dw = img.width*s, dh = img.height*s;
     octx.drawImage(img, (GRID-dw)/2, (GRID-dh)/2, dw, dh);
     const data = octx.getImageData(0,0,GRID,GRID).data;
+    // Detect real transparency from an INSET region only, skipping the outer few px.
+    // A non-square image centered in this square grid leaves a razor-thin transparent
+    // letterbox margin at the edges even when the source has no real alpha channel —
+    // scanning the full grid falsely flags that margin as "has alpha", which then makes
+    // the alpha-threshold path treat the whole opaque background as part of the mark
+    // (reproduced live on a 312x320 flat JPEG logo — it rendered as a solid dot-filled
+    // rectangle instead of the logo's actual silhouette until this inset was added).
     let hasAlpha = false;
-    for(let k=3;k<data.length;k+=4){ if(data[k] < 250){ hasAlpha = true; break; } }
+    const inset = Math.max(2, Math.round(GRID*0.06));
+    for(let gy=inset; gy<GRID-inset && !hasAlpha; gy++){
+      for(let gx=inset; gx<GRID-inset; gx++){
+        if(data[(gy*GRID+gx)*4+3] < 250){ hasAlpha = true; break; }
+      }
+    }
     const keep = new Array(GRID*GRID).fill(false);
     let keptCount = 0;
     for(let gy=0; gy<GRID; gy++){
       for(let gx=0; gx<GRID; gx++){
         const idx = (gy*GRID+gx)*4;
-        const isMark = hasAlpha
-          ? data[idx+3] > 40
-          : (data[idx]+data[idx+1]+data[idx+2])/3 < 235; // no alpha channel: assume a light background
+        // Unpainted canvas pixels default to rgba(0,0,0,0) — fully transparent, but
+        // reading as "black" (luminance 0) if alpha is ignored. Gate both branches on
+        // alpha>40 so the sub-pixel letterbox margin (see the hasAlpha comment above)
+        // can't masquerade as dark ink in the luminance path either.
+        const isMark = data[idx+3] > 40 && (hasAlpha || (data[idx]+data[idx+1]+data[idx+2])/3 < 235);
         keep[gy*GRID+gx] = isMark;
         if(isMark) keptCount++;
       }
