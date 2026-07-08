@@ -1,6 +1,6 @@
 @echo off
 echo.
-echo  OnBrandCraftz Agent Hub - Setup
+echo  OnBrandCraftz Frank - Setup
 echo  ================================
 echo.
 
@@ -28,6 +28,6 @@ if not exist .env (
 
 echo.
 echo  Setup complete!
-echo  Run START_HUB.bat to launch the Agent Hub.
+echo  Run "Start Frank Local.bat" to launch Frank.
 echo.
 pause

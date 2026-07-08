@@ -422,7 +422,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v128"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v129"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5894,14 +5894,21 @@ async def studio_upload_image(request: Request, filename: str, _token: str = Dep
     if len(body) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
     from PIL import Image
-    try:
+
+    def _validate_and_store() -> Path:
         Image.open(io.BytesIO(body)).load()
+        root = _FILE_ROOTS["studio_uploads"]
+        root.mkdir(parents=True, exist_ok=True)
+        out_path = root / f"{uuid.uuid4().hex[:8]}_{safe_name}"
+        out_path.write_bytes(body)
+        return out_path
+
+    # PIL decode + disk write are synchronous/CPU-bound; run off the event loop
+    # so a large upload doesn't stall every other concurrent request (2026-07-08).
+    try:
+        out_path = await asyncio.to_thread(_validate_and_store)
     except Exception:
         raise HTTPException(status_code=400, detail="not a readable image")
-    root = _FILE_ROOTS["studio_uploads"]
-    root.mkdir(parents=True, exist_ok=True)
-    out_path = root / f"{uuid.uuid4().hex[:8]}_{safe_name}"
-    out_path.write_bytes(body)
     return {"ok": True, "path": out_path.name, "size": len(body), "size_human": _human_size(len(body))}
 
 
@@ -6528,19 +6535,26 @@ async def upload_brand_mark(request: Request, _token: str = Depends(_auth_sessio
     if len(body) > _MAX_BRAND_MARK_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_BRAND_MARK_UPLOAD_BYTES)} limit")
     from PIL import Image
-    try:
+
+    def _decode_resize_encode():
         img = Image.open(io.BytesIO(body))
         img.load()
+        img = img.convert("RGBA")
+        img.thumbnail((_BRAND_MARK_MAX_SIDE, _BRAND_MARK_MAX_SIDE), Image.Resampling.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue(), img.width, img.height
+
+    # Decode + LANCZOS resample + re-encode is CPU-bound; run off the event loop
+    # so a logo upload doesn't stall every other concurrent request (2026-07-08).
+    try:
+        png_bytes, width, height = await asyncio.to_thread(_decode_resize_encode)
     except Exception:
         raise HTTPException(status_code=400, detail="not a readable image")
-    img = img.convert("RGBA")
-    img.thumbnail((_BRAND_MARK_MAX_SIDE, _BRAND_MARK_MAX_SIDE), Image.Resampling.LANCZOS)
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    data_url = "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+    data_url = "data:image/png;base64," + base64.b64encode(png_bytes).decode("ascii")
     db.set_setting("brand_mark_data_url", data_url)
     await asyncio.to_thread(db.log_activity, "scott", "brand_mark_upload", None, None, "ok")
-    return {"ok": True, "data_url": data_url, "width": img.width, "height": img.height}
+    return {"ok": True, "data_url": data_url, "width": width, "height": height}
 
 
 # ── Local Relay — status, kill switch, Allowed Folders ──────────────────────────

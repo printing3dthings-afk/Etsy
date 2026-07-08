@@ -42,3 +42,9 @@ jobs:
 
       - name: Quality-gate tests (pre_publish_gate + validate_digital_file + SVG)
         run: python tests/test_quality_gates.py
+
+      - name: Resilience tests (retry/backoff + circuit breaker)
+        run: python tests/test_resilience.py
+
+      - name: Staged-action approval tests (Action Center gate)
+        run: python tests/test_staged_actions.py

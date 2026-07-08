@@ -3839,3 +3839,91 @@ XSS fix is real, not just present in source); a chat chip has `role="button" tab
 send button's accessible name is "Send message"; Escape actually closes the alert dropdown
 (`display:block` -> `none`); a sampled Studio field has its `aria-label`. `_BUILD_ID` bumped to
 `b4d0e2c-v128`.
+
+---
+
+## 2026-07-08 — Post-hardening upgrade pass: test coverage, blocking I/O, dead code (v129)
+
+**Context:** Scott asked "where else could we use some upgrades" after three straight
+hardening passes (UI polish, security, WCAG accessibility). Ran a codebase-wide survey
+(Explore agent) and picked the three highest-value, lowest-risk items from the resulting
+menu to ship in the same session; the rest (observability gaps, dependency manifest drift,
+smaller dead-code cleanup, dead Instagram photo/carousel path) were left as documented
+recommendations, not implemented.
+
+**1. Fixed two blocking PIL calls inside `async def` route handlers (`tools/api_server/main.py`).**
+`studio_upload_image` and `upload_brand_mark` both did synchronous `Image.open(...).load()`
+(plus, for the brand-mark route, a LANCZOS resample + re-encode) directly inside an `async def`
+handler -- on this single-process server, that stalls the event loop, and therefore every other
+concurrent request/websocket connection, for the duration of the decode. Every other CPU-bound
+call site in the codebase already wraps this in `asyncio.to_thread` (`_execute_agent_tool`,
+`_run_exec_command`, `_generate_tags_for_listings`, etc.) -- these two were the exceptions. Fix:
+wrapped the decode/resize/write logic of each in a local closure and ran it via
+`await asyncio.to_thread(...)`, catching the resulting exception the same way the original
+try/except did. No behavior change, no new failure mode -- purely moves CPU-bound work off the
+event loop.
+
+**2. Archived a dead, ~5,150-line parallel agent-framework cluster.** The `agents/` package (25
+files, 4,925 lines) plus `hub.py` (229 lines) implemented a second, independent agent-dispatch
+architecture, never imported by the live server (`tools/api_server/main.py` has its own separate
+`AGENT_TOOLS`/`_execute_agent_tool` dispatch) -- confirmed via grep that its only consumer was
+`web/app.py`, a Flask prototype launched by `START_HUB.bat`, itself superseded 2026-06-22 by
+`Start Frank Local.bat` -> `tools/api_server/main.py` (the actual entrypoint documented in
+CLAUDE.md). Despite being fully dead to the live deploy, `agents/` had still received a real
+feature commit as recently as 2026-06-18 (Canva Connect integration wired into
+`BrandDesignAgent`) -- meaning work was occasionally landing in code nothing runs. Archived
+every file via `tools/trash.py` (`archive_file`, ids `20260708-003` through `20260708-035`,
+covering `agents/*.py`, `hub.py`, `web/app.py`, `web/static/*`, `web/templates/index.html`,
+`START_HUB.bat`) before deletion, per the mandatory recycle-bin rule -- all recoverable for 30
+days via `python tools/trash.py --restore <id>`. Fixed the one dangling reference this left
+behind: `SETUP.bat`'s closing instruction pointed at the now-archived `START_HUB.bat` and used
+the stale "Agent Hub" name -- updated to point at `Start Frank Local.bat` and say "Frank".
+`command_center.py` and `town_app/` (a related, larger prototype cluster, already self-documented
+in-repo as abandoned) were deliberately left untouched -- lower urgency, separate cleanup.
+
+**3. Added real unit test coverage where there was none.** Before this, the only test files were
+`tests/smoke_test.py` (import-crash detection only -- never exercises actual logic) and
+`tests/test_quality_gates.py` (covers `etsy_api.py`'s validation rules only). Zero coverage
+existed for `resilience.py`'s retry/circuit-breaker primitives or `_validate_staged_action`, the
+single choke point every Etsy mutation, local file write, and script execution passes through
+before it can reach Scott's Action Center approval queue -- exactly the code where a silent
+regression is expensive. Added:
+- `tests/test_resilience.py` (26 tests) -- `retry_with_backoff` (succeeds-first-try,
+  retries-then-succeeds, exhausts-and-reraises, respects `retryable()`, `on_retry` callback
+  fires correctly), `classify_tool_exception` (every `ToolError` subclass, bare
+  `ConnectionError`/`TimeoutError`, Etsy 403/429 quirk-retryable, 404 not-retryable, unclassified
+  exception defaults terminal), and `CircuitBreaker`'s full closed -> open -> half_open -> closed
+  state machine (driven via a fake in-memory `db_module`, the seam the module already documents
+  as existing "for callers that only want the in-memory behavior (e.g. unit tests)" -- no real
+  sqlite, no real sleep).
+- `tests/test_staged_actions.py` (51 tests) -- every branch of `_validate_staged_action` across
+  all 11 action types: title length (69/70/71 chars), tag count/length (13/14, 20/21 chars),
+  `toggle_listing_state` state enum, bool-as-int guards on `rank`/`timeout` (a bare `isinstance
+  int` check would silently accept `True` as `1`), listing-photo path traversal + missing-file +
+  the pale-background CARDINAL CHECK (real PIL-generated fixture images, cleaned up after each
+  test), listing-video the same, `local_write_file`/`local_delete`'s Allowed-Folder gate (via a
+  monkeypatched `db.is_path_allowed`, restored after each test -- no dependency on real
+  allowed-folder state), `local_exec`/`run_script`'s forbidden-flag denylist and
+  `requires_approval` gate (using real `_LOCAL_EXEC_COMMANDS`/`_EXEC_COMMANDS` entries so the
+  test breaks if those registries' shape changes), and `register_command`'s full validation
+  chain (duplicate name, path traversal, must-resolve-under-`tools/`, must-exist-on-disk, invalid
+  timeout). One test also proves `at_approval=True` degrades to a clean rejection (not a crash)
+  when Etsy credentials aren't reachable, without requiring real credentials in CI.
+- Wired both into `.github/workflows/ci-smoke.yml` as new required steps alongside the existing
+  smoke test and quality-gate tests.
+
+**Verified:** `python -m compileall tools tests` clean; all four test files green locally
+(`smoke_test.py`: 36 tools registered; `test_quality_gates.py`: 28 passed;
+`test_resilience.py`: 26 passed; `test_staged_actions.py`: 51 passed); `git status` confirmed no
+unintended changes beyond the archived files, the two edited handlers, the new test files, the
+CI workflow edit, and the `SETUP.bat` string fix. `_BUILD_ID` bumped to `b4d0e2c-v129`.
+
+**Not done in this pass (left as recommendations for Scott to prioritize):** observability
+(no structured logging, no APM/error-tracking tool, no spend/failure-count-specific alerting --
+only generic uptime/credential checks); dependency manifest drift (`fitz`/`fontTools`/`scipy`
+used by standalone tools but absent from any requirements file -- none on a live server path
+today); smaller dead-code cleanup (`command_center.py`, `town_app/`, `nixpacks.toml`, 8 stale
+root-level one-off scripts); the dead Instagram photo/carousel posting code path in
+`instagram_api.py` (only video posting is wired up). Full menu, including business-side
+candidates from CLAUDE.md's own roadmap (cover system, sticker pack expansion, Phase 2 products),
+is in the plan file from this session.
