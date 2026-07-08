@@ -1,0 +1,75 @@
+  if(orbMode === 'image'){
+    // A real extruded slab (front face + back face + edge struts), not a single flat
+    // point cloud — see applyBrandMarkToOrb for how imgFront/imgBack/imgStruts are
+    // built. shadowBlur is the dominant per-frame cost at this particle count (measured
+    // live: disabling it nearly doubled FPS), so it's only paid for the front layer —
+    // the back layer is already heavily dimmed/receded so it shouldn't glow as bright
+    // as the foreground anyway, which makes this a visual correctness fix as much as a
+    // performance one.
+    const frontPts = imgFront.map(p => project(p.x0, p.y0, p.z0, 0.16));
+    const backPts = imgBack.map(p => project(p.x0, p.y0, p.z0, 0.16));
+    const frontShadow = ctx.shadowBlur, frontShadowColor = ctx.shadowColor;
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = speaking ? "rgba(122,232,255,0.22)" : "rgba(58,214,255,0.10)";
+    ctx.lineWidth = 0.4;
+    ctx.beginPath();
+    imgBackEdges.forEach(([ai,bi])=>{ const a=backPts[ai], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    ctx.strokeStyle = speaking ? "rgba(122,232,255,0.30)" : "rgba(58,214,255,0.14)";
+    ctx.lineWidth = 0.45;
+    ctx.beginPath();
+    imgStruts.forEach(([fi,bi])=>{ const a=frontPts[fi], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+    ctx.strokeStyle = speaking ? "rgba(122,232,255,0.5)" : "rgba(58,214,255,0.22)";
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    imgFrontEdges.forEach(([ai,bi])=>{ const a=frontPts[ai], b=frontPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    // Back dots must read as clearly BEHIND the front, not equally prominent, or an
+    // off-angle/edge-on view of the rotation looks like two unrelated overlapping
+    // copies instead of one solid object with a near side and a far side.
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = speaking ? "rgba(122,232,255,0.28)" : "rgba(58,214,255,0.16)";
+    ctx.beginPath();
+    backPts.forEach(p=>{ const sz=p.scale>1?1.0:0.65; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+    ctx.fill();
+
+    ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+    ctx.fillStyle = speaking ? "rgba(122,232,255,0.9)" : "rgba(58,214,255,0.65)";
+    ctx.beginPath();
+    frontPts.forEach(p=>{ const sz=p.scale>1?1.4:0.9; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+    ctx.fill();
+  } else {
+    const pts = particles.map(p=>{
+      const lon = p.lon + rot;
+      const rr = R * (1 + (speaking ? amp*0.16*Math.sin(p.lat*4+speakT*2) : 0));
+      const x = rr * Math.cos(p.lat) * Math.cos(lon);
+      const y = rr * Math.sin(p.lat);
+      const z = rr * Math.cos(p.lat) * Math.sin(lon);
+      const scale = 683 / (683 - z);
+      return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
+    });
+
+    ctx.strokeStyle = speaking ? "rgba(122,232,255,0.45)" : "rgba(58,214,255,0.2)";
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    edges.forEach(([ai,bi])=>{
+      const a = pts[ai], b = pts[bi];
+      if(a && b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = speaking ? "rgba(122,232,255,0.9)" : "rgba(58,214,255,0.65)";
+    ctx.beginPath();
+    pts.forEach(p=>{
+      const sz = p.scale > 1 ? 1.4 : 0.9;
+      ctx.moveTo(p.x+sz, p.y);
+      ctx.arc(p.x,p.y,sz,0,Math.PI*2);
+    });
+    ctx.fill();
+  }

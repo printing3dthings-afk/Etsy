@@ -46,7 +46,10 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 <link rel="icon" type="image/png" href="/static/icon-192.png">
 <title>FRANK — Command Center (mockup)</title>
 <script type="importmap">
-{"imports": {"onnxruntime-web": "/static/vendor/onnxruntime-web/ort.wasm.bundle.min.mjs"}}
+{"imports": {
+  "onnxruntime-web": "/static/vendor/onnxruntime-web/ort.wasm.bundle.min.mjs",
+  "three": "/static/vendor/three/build/three.module.js"
+}}
 </script>
 <style>
 :root{
@@ -219,6 +222,7 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 
 .orb-hero-stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%}
 canvas#orb{cursor:pointer}
+canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:pointer;display:none}
 .orb-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
   pointer-events:none;width:100%}
 .orb-overlay .o1{font-size:30px;font-weight:800;letter-spacing:6px;color:#eafcff;
@@ -233,7 +237,7 @@ canvas#orb{cursor:pointer}
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:radial-gradient(ellipse at 50% 40%, rgba(58,214,255,.10), transparent 60%);
 }
-#orb-view canvas#orb{width:min(85vw,620px);height:min(85vw,620px)}
+#orb-view canvas#orb,#orb-view canvas#orb-gl{width:min(85vw,620px);height:min(85vw,620px)}
 #orb-view .orb-overlay .o1{font-size:36px}
 #orb-view .orb-hint{position:static;margin-top:14px;opacity:.5}
 #orb-view .orb-state{margin-top:10px}
@@ -713,6 +717,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <div id="orb-view">
     <div class="orb-hero-stage">
       <canvas id="orb" width="640" height="640"></canvas>
+      <canvas id="orb-gl" width="640" height="640"></canvas>
       <div class="orb-overlay">
         <div class="o1">FRANK</div>
         <div class="o2">COMMAND CORE</div>
@@ -1646,11 +1651,40 @@ async function _speakLocalPiper(text){
   const session = await _loadPiperSession();
   return await session.predict(text);
 }
+// ── Real audio-reactive amplitude for the orb (both TTS paths above produce a blob
+// played through this function). A fresh AnalyserNode is wired per Audio element since
+// createMediaElementSource() can only ever be called once per element. Mirrors the
+// existing mic-input AnalyserNode pattern used for silence detection further down —
+// same technique, different source. Wrapped defensively: any failure here (no
+// AudioContext, called twice, autoplay-blocked) leaves _ttsAnalyser null and
+// currentVoiceAmp() falls back to the old synthetic pulse — it never breaks playback
+// itself, since audio.play() below doesn't depend on this succeeding. ──
+let _ttsAudioCtx = null, _ttsAnalyser = null, _ttsAnalyserBuf = null;
+function _setupTtsAnalyser(audioEl){
+  _ttsAnalyser = null;
+  try{
+    if(!_ttsAudioCtx) _ttsAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(_ttsAudioCtx.state === 'suspended') _ttsAudioCtx.resume().catch(()=>{});
+    const source = _ttsAudioCtx.createMediaElementSource(audioEl);
+    const analyser = _ttsAudioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    // Route through the analyser AND on to speakers — createMediaElementSource silently
+    // reroutes ALL of this element's audio into the Web Audio graph, so skipping the
+    // destination connection here would make Frank's voice go silent.
+    source.connect(analyser);
+    analyser.connect(_ttsAudioCtx.destination);
+    _ttsAnalyser = analyser;
+    _ttsAnalyserBuf = new Uint8Array(analyser.fftSize);
+  }catch(e){
+    _ttsAnalyser = null;
+  }
+}
 function _playTtsBlob(blob, fallbackText){
   if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio = null; }
   const url = URL.createObjectURL(blob);
   const audio = new Audio(url);
   _ttsAudio = audio;
+  _setupTtsAnalyser(audio);
   audio.onplay = () => setSpeaking(true);
   audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
   audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
@@ -4680,8 +4714,6 @@ tick(); setInterval(tick, 1000);
 const canvas = document.getElementById('orb');
 const ctx = canvas.getContext('2d');
 const W = canvas.width, H = canvas.height, CX = W/2, CY = H/2, R = 230;
-let particles = [];   // sphere mode only: {lat,lon}
-let edges = [];        // sphere mode only: [particleIndexA, particleIndexB] line pairs
 let orbMode = 'sphere';
 // Image mode (a custom brand-mark logo) is a real extruded slab, not a single point
 // cloud: front face + back face (each {x0,y0,z0}) connected by mesh edges, plus a
@@ -4690,28 +4722,177 @@ let orbMode = 'sphere';
 // vertical bar. See applyBrandMarkToOrb below for how these are built.
 let imgFront = [], imgBack = [], imgFrontEdges = [], imgBackEdges = [], imgStruts = [];
 
-function buildSphereParticles(){
-  const N_LAT = 12, N_LON = 18;
-  const pts = [], eg = [];
-  for(let i=0;i<=N_LAT;i++){
-    const lat = Math.PI * (i/N_LAT - 0.5);
-    for(let j=0;j<N_LON;j++){
-      pts.push({lat, lon: 2*Math.PI * (j/N_LON)});
-    }
+// Default ("sphere") mode is now a real Three.js/WebGL noise-displaced icosphere on a
+// separate #orb-gl canvas layered over this one — see initOrbGL()/orbGL* below. A
+// <canvas> can only ever have one context type, so the 2D #orb canvas (this one) and
+// the WebGL #orb-gl canvas both stay in the DOM permanently; only one is shown+running
+// at a time, toggled by setOrbCanvasMode(). Image mode keeps using this 2D canvas
+// exactly as before — applyBrandMarkToOrb is untouched.
+const orbGlCanvas = document.getElementById('orb-gl');
+function setOrbCanvasMode(mode){
+  orbMode = mode;
+  if(mode === 'image'){
+    if(orbGlCanvas) orbGlCanvas.style.display = 'none';
+    canvas.style.display = '';
+    orbGLPaused = true;
+  } else {
+    canvas.style.display = 'none';
+    // The CSS default for #orb-gl is display:none (so it never flashes visible before
+    // JS decides the mode); 'block' is needed here, not '' — an empty inline style
+    // would just fall back to that CSS default and stay hidden.
+    if(orbGlCanvas){ orbGlCanvas.style.display = 'block'; initOrbGL(); orbGLPaused = false; }
   }
-  for(let i=0;i<N_LAT;i++){
-    for(let j=0;j<N_LON;j++){
-      eg.push([i*N_LON+j, i*N_LON+((j+1)%N_LON)]);
-      eg.push([i*N_LON+j, (i+1)*N_LON+j]);
-    }
-  }
-  return {pts, eg};
 }
 function resetOrbToDefault(){
-  const built = buildSphereParticles();
-  particles = built.pts; edges = built.eg; orbMode = 'sphere';
   imgFront = []; imgBack = []; imgFrontEdges = []; imgBackEdges = []; imgStruts = [];
+  setOrbCanvasMode('sphere');
 }
+
+// ── WebGL voice-reactive noise-sphere (default "sphere" mode) — Three.js, vendored
+// under /static/vendor/three/ (no CDN — CSP is script-src 'self' only). A wireframe
+// icosphere whose vertices are displaced along their normals by a 3D simplex noise
+// field in the vertex shader (GPU-side, so it stays smooth even at high triangle
+// counts), with UnrealBloomPass for real glow instead of Canvas2D's shadowBlur
+// approximation. uAmp is driven by REAL TTS playback amplitude via an AnalyserNode
+// tapped off the premium-voice <audio> element (see currentVoiceAmp()/_setupTtsAnalyser
+// below) — the old orb-state label claimed "reacting to live TTS amplitude" while
+// actually running a fake dual-sine pulse; this makes that claim true. ──
+let orbGLPaused = true, orbGLReady = false, orbGLLoading = false;
+let glMesh = null, glComposer = null, glRenderer = null, glClock = null, glUniforms = null;
+
+const _ORB_NOISE_GLSL = `
+vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
+vec4 mod289(vec4 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
+vec4 permute(vec4 x){ return mod289(((x*34.0)+1.0)*x); }
+vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
+float snoise(vec3 v){
+  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+  vec3 i  = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g.xyz, l.zxy);
+  vec3 i2 = max(g.xyz, l.zxy);
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy;
+  vec3 x3 = x0 - D.yyy;
+  i = mod289(i);
+  vec4 p = permute(permute(permute(
+             i.z + vec4(0.0, i1.z, i2.z, 1.0))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 0.142857142857;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_);
+  vec4 x = x_ * ns.x + ns.yyyy;
+  vec4 y = y_ * ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 p0 = vec3(a0.xy, h.x);
+  vec3 p1 = vec3(a0.zw, h.y);
+  vec3 p2 = vec3(a1.xy, h.z);
+  vec3 p3 = vec3(a1.zw, h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+}
+`;
+
+const _ORB_VERT = _ORB_NOISE_GLSL + `
+uniform float uTime;
+uniform float uAmp;
+uniform float uFreq;
+void main(){
+  float n = snoise(position * uFreq + vec3(0.0, 0.0, uTime));
+  float disp = 0.08 + n * (0.10 + uAmp * 0.34);
+  vec3 newPos = position + normal * disp;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
+}
+`;
+
+const _ORB_FRAG = `
+uniform vec3 uColor;
+uniform float uOpacity;
+void main(){
+  gl_FragColor = vec4(uColor, uOpacity);
+}
+`;
+
+async function initOrbGL(){
+  if(orbGLReady || orbGLLoading) return;
+  orbGLLoading = true;
+  try{
+    const THREE = await import('/static/vendor/three/build/three.module.js');
+    const { EffectComposer } = await import('/static/vendor/three/examples/jsm/postprocessing/EffectComposer.js');
+    const { RenderPass } = await import('/static/vendor/three/examples/jsm/postprocessing/RenderPass.js');
+    const { UnrealBloomPass } = await import('/static/vendor/three/examples/jsm/postprocessing/UnrealBloomPass.js');
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+    camera.position.z = 3.4;
+
+    glRenderer = new THREE.WebGLRenderer({canvas: orbGlCanvas, alpha:true, antialias:true});
+    glRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    glRenderer.setSize(640, 640, false);
+
+    const geo = new THREE.IcosahedronGeometry(1.15, 16);
+    glUniforms = {
+      uTime: {value: 0},
+      uAmp: {value: 0},
+      uFreq: {value: 1.6},
+      uColor: {value: new THREE.Color('rgb(58,214,255)')},
+      uOpacity: {value: 0.85},
+    };
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: _ORB_VERT,
+      fragmentShader: _ORB_FRAG,
+      uniforms: glUniforms,
+      wireframe: true,
+      transparent: true,
+    });
+    glMesh = new THREE.Mesh(geo, mat);
+    scene.add(glMesh);
+
+    const composer = new EffectComposer(glRenderer);
+    composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(640,640), 0.9, 0.85, 0.12));
+    glComposer = composer;
+    glClock = new THREE.Clock();
+
+    orbGLReady = true;
+    orbGLLoading = false;
+    requestAnimationFrame(orbGLFrame);
+  }catch(e){
+    orbGLLoading = false;
+    console.error('[orb-gl] WebGL noise-sphere failed to initialize — orb will stay blank in sphere mode until this is fixed', e);
+  }
+}
+
+function orbGLFrame(){
+  requestAnimationFrame(orbGLFrame);
+  if(orbGLPaused || !orbGLReady) return;
+  const dt = glClock.getDelta();
+  const amp = currentVoiceAmp();
+  glUniforms.uTime.value += dt * (0.12 + amp*0.5);
+  glUniforms.uAmp.value = amp;
+  glUniforms.uColor.value.setRGB((58+(122-58)*amp)/255, (214+(232-214)*amp)/255, 1.0);
+  glUniforms.uOpacity.value = 0.65 + amp*0.3;
+  glMesh.rotation.y += 0.0022 + amp*0.01;
+  glMesh.rotation.x += 0.0006 + amp*0.003;
+  glComposer.render();
+}
+
 resetOrbToDefault();
 
 // Flood-fill the NOT-ink region starting from the grid border (4-connectivity). A kept
@@ -4887,7 +5068,7 @@ function applyBrandMarkToOrb(dataUrl){
     imgFront = front; imgBack = back;
     imgFrontEdges = buildFaceEdges(idxF); imgBackEdges = buildFaceEdges(idxB);
     imgStruts = struts;
-    orbMode = 'image';
+    setOrbCanvasMode('image');
   };
   img.src = dataUrl;
 }
@@ -4896,14 +5077,36 @@ let rot = 0, speaking = false, speakT = 0;
 const orbState = document.getElementById('orb-state');
 const talkSub = document.getElementById('talk-sub');
 
+// Shared amplitude source for BOTH orb render paths (2D image-mode wobble and the
+// WebGL sphere's uAmp) — real RMS amplitude read off the actual TTS audio via
+// _setupTtsAnalyser() below when available, falling back to the old synthetic
+// dual-sine pulse only when there's no audio graph to analyze (the plain
+// speechSynthesis fallback voice has no MediaElementSource to tap). speakT keeps
+// advancing whenever speaking regardless of which branch supplies the amplitude, so
+// the existing wobble/flow terms that key off speakT stay animated either way.
+function currentVoiceAmp(){
+  if(!speaking) return 0;
+  speakT += 0.18;
+  if(_ttsAnalyser && _ttsAnalyserBuf){
+    _ttsAnalyser.getByteTimeDomainData(_ttsAnalyserBuf);
+    let sumSq = 0;
+    for(let i=0;i<_ttsAnalyserBuf.length;i++){ const v = (_ttsAnalyserBuf[i]-128)/128; sumSq += v*v; }
+    const rms = Math.sqrt(sumSq/_ttsAnalyserBuf.length);
+    // Typical speech RMS sits well under 1.0 — scale up so normal speech reads as a
+    // healthy, visible pulse rather than a barely-there flicker.
+    return Math.min(1, rms*3.2);
+  }
+  return (Math.sin(speakT*3.1)*0.5+0.5) * (Math.sin(speakT*1.7)*0.3+0.7);
+}
+
 function frame(){
+  // Default ("sphere") mode renders entirely on the WebGL #orb-gl canvas now (see
+  // orbGLFrame below) — this 2D canvas is hidden in that mode, so skip all 2D work
+  // rather than waste CPU drawing something nobody sees.
+  if(orbMode === 'sphere'){ requestAnimationFrame(frame); return; }
   ctx.clearRect(0,0,W,H);
   rot += speaking ? 0.028 : 0.010;
-  let amp = 0;
-  if(speaking){
-    speakT += 0.18;
-    amp = (Math.sin(speakT*3.1)*0.5+0.5) * (Math.sin(speakT*1.7)*0.3+0.7);
-  }
+  const amp = currentVoiceAmp();
   const glow = speaking ? 0.55 + amp*0.45 : 0.3;
   ctx.shadowBlur = 18 + amp*36;
   ctx.shadowColor = speaking ? 'rgba(122,232,255,'+glow+')' : 'rgba(58,214,255,0.3)';
@@ -4923,81 +5126,51 @@ function frame(){
     return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
   }
 
-  if(orbMode === 'image'){
-    // A real extruded slab (front face + back face + edge struts), not a single flat
-    // point cloud — see applyBrandMarkToOrb for how imgFront/imgBack/imgStruts are
-    // built. shadowBlur is the dominant per-frame cost at this particle count (measured
-    // live: disabling it nearly doubled FPS), so it's only paid for the front layer —
-    // the back layer is already heavily dimmed/receded so it shouldn't glow as bright
-    // as the foreground anyway, which makes this a visual correctness fix as much as a
-    // performance one.
-    const frontPts = imgFront.map(p => project(p.x0, p.y0, p.z0, 0.16));
-    const backPts = imgBack.map(p => project(p.x0, p.y0, p.z0, 0.16));
-    const frontShadow = ctx.shadowBlur, frontShadowColor = ctx.shadowColor;
+  // A real extruded slab (front face + back face + edge struts), not a single flat
+  // point cloud — see applyBrandMarkToOrb for how imgFront/imgBack/imgStruts are
+  // built. shadowBlur is the dominant per-frame cost at this particle count (measured
+  // live: disabling it nearly doubled FPS), so it's only paid for the front layer —
+  // the back layer is already heavily dimmed/receded so it shouldn't glow as bright
+  // as the foreground anyway, which makes this a visual correctness fix as much as a
+  // performance one.
+  const frontPts = imgFront.map(p => project(p.x0, p.y0, p.z0, 0.16));
+  const backPts = imgBack.map(p => project(p.x0, p.y0, p.z0, 0.16));
+  const frontShadow = ctx.shadowBlur, frontShadowColor = ctx.shadowColor;
 
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.22)' : 'rgba(58,214,255,0.10)';
-    ctx.lineWidth = 0.4;
-    ctx.beginPath();
-    imgBackEdges.forEach(([ai,bi])=>{ const a=backPts[ai], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
-    ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.22)' : 'rgba(58,214,255,0.10)';
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  imgBackEdges.forEach(([ai,bi])=>{ const a=backPts[ai], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+  ctx.stroke();
 
-    ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.30)' : 'rgba(58,214,255,0.14)';
-    ctx.lineWidth = 0.45;
-    ctx.beginPath();
-    imgStruts.forEach(([fi,bi])=>{ const a=frontPts[fi], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
-    ctx.stroke();
+  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.30)' : 'rgba(58,214,255,0.14)';
+  ctx.lineWidth = 0.45;
+  ctx.beginPath();
+  imgStruts.forEach(([fi,bi])=>{ const a=frontPts[fi], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+  ctx.stroke();
 
-    ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
-    ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.5)' : 'rgba(58,214,255,0.22)';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    imgFrontEdges.forEach(([ai,bi])=>{ const a=frontPts[ai], b=frontPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
-    ctx.stroke();
+  ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.5)' : 'rgba(58,214,255,0.22)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  imgFrontEdges.forEach(([ai,bi])=>{ const a=frontPts[ai], b=frontPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+  ctx.stroke();
 
-    // Back dots must read as clearly BEHIND the front, not equally prominent, or an
-    // off-angle/edge-on view of the rotation looks like two unrelated overlapping
-    // copies instead of one solid object with a near side and a far side.
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = speaking ? 'rgba(122,232,255,0.28)' : 'rgba(58,214,255,0.16)';
-    ctx.beginPath();
-    backPts.forEach(p=>{ const sz=p.scale>1?1.0:0.65; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
-    ctx.fill();
+  // Back dots must read as clearly BEHIND the front, not equally prominent, or an
+  // off-angle/edge-on view of the rotation looks like two unrelated overlapping
+  // copies instead of one solid object with a near side and a far side.
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = speaking ? 'rgba(122,232,255,0.28)' : 'rgba(58,214,255,0.16)';
+  ctx.beginPath();
+  backPts.forEach(p=>{ const sz=p.scale>1?1.0:0.65; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+  ctx.fill();
 
-    ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
-    ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
-    ctx.beginPath();
-    frontPts.forEach(p=>{ const sz=p.scale>1?1.4:0.9; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
-    ctx.fill();
-  } else {
-    const pts = particles.map(p=>{
-      const lon = p.lon + rot;
-      const rr = R * (1 + (speaking ? amp*0.16*Math.sin(p.lat*4+speakT*2) : 0));
-      const x = rr * Math.cos(p.lat) * Math.cos(lon);
-      const y = rr * Math.sin(p.lat);
-      const z = rr * Math.cos(p.lat) * Math.sin(lon);
-      const scale = 683 / (683 - z);
-      return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
-    });
-
-    ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.45)' : 'rgba(58,214,255,0.2)';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    edges.forEach(([ai,bi])=>{
-      const a = pts[ai], b = pts[bi];
-      if(a && b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
-    });
-    ctx.stroke();
-
-    ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
-    ctx.beginPath();
-    pts.forEach(p=>{
-      const sz = p.scale > 1 ? 1.4 : 0.9;
-      ctx.moveTo(p.x+sz, p.y);
-      ctx.arc(p.x,p.y,sz,0,Math.PI*2);
-    });
-    ctx.fill();
-  }
+  ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+  ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
+  ctx.beginPath();
+  frontPts.forEach(p=>{ const sz=p.scale>1?1.4:0.9; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+  ctx.fill();
 
   const grad = ctx.createRadialGradient(CX,CY,8,CX,CY,55+amp*30);
   grad.addColorStop(0, speaking ? 'rgba(180,240,255,'+ (0.7+amp*0.25) +')' : 'rgba(58,214,255,0.4)');
@@ -5020,6 +5193,7 @@ function setSpeaking(on, viaFallback){
     : 'tap to speak';
 }
 canvas.addEventListener('click', toggleVoiceCapture);
+if(orbGlCanvas) orbGlCanvas.addEventListener('click', toggleVoiceCapture);
 const talkPillEl = document.getElementById('talk-pill');
 if(talkPillEl) talkPillEl.addEventListener('click', toggleVoiceCapture);
 

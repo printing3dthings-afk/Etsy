@@ -9088,3 +9088,130 @@ function phoneTab(which){
 
 <!-- /TRASH 20260703-001 -->
 
+<!-- TRASH id=20260708-001 date=2026-07-08 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Replaced by Three.js/WebGL noise-sphere orb (round 6, 2026-07-08) — the plain lat/lon-grid Canvas2D sphere generator and its particles/edges arrays are superseded by a GPU noise-displaced icosphere; resetOrbToDefault now just toggles canvas visibility instead of rebuilding a particle grid." -->
+## 20260708-001 · 2026-07-08 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Replaced by Three.js/WebGL noise-sphere orb (round 6, 2026-07-08) — the plain lat/lon-grid Canvas2D sphere generator and its particles/edges arrays are superseded by a GPU noise-displaced icosphere; resetOrbToDefault now just toggles canvas visibility instead of rebuilding a particle grid.  
+**Payload:** `data/trash/files/20260708-001__snippet.txt`
+
+```python
+let particles = [];   // sphere mode only: {lat,lon}
+let edges = [];        // sphere mode only: [particleIndexA, particleIndexB] line pairs
+let orbMode = 'sphere';
+// Image mode (a custom brand-mark logo) is a real extruded slab, not a single point
+// cloud: front face + back face (each {x0,y0,z0}) connected by mesh edges, plus a
+// sparse set of "strut" edges only along the true outer silhouette so it reads as a
+// solid object with thickness rather than every internal line growing a pointless
+// vertical bar. See applyBrandMarkToOrb below for how these are built.
+let imgFront = [], imgBack = [], imgFrontEdges = [], imgBackEdges = [], imgStruts = [];
+
+function buildSphereParticles(){
+  const N_LAT = 12, N_LON = 18;
+  const pts = [], eg = [];
+  for(let i=0;i<=N_LAT;i++){
+    const lat = Math.PI * (i/N_LAT - 0.5);
+    for(let j=0;j<N_LON;j++){
+      pts.push({lat, lon: 2*Math.PI * (j/N_LON)});
+    }
+  }
+  for(let i=0;i<N_LAT;i++){
+    for(let j=0;j<N_LON;j++){
+      eg.push([i*N_LON+j, i*N_LON+((j+1)%N_LON)]);
+      eg.push([i*N_LON+j, (i+1)*N_LON+j]);
+    }
+  }
+  return {pts, eg};
+}
+function resetOrbToDefault(){
+  const built = buildSphereParticles();
+  particles = built.pts; edges = built.eg; orbMode = 'sphere';
+  imgFront = []; imgBack = []; imgFrontEdges = []; imgBackEdges = []; imgStruts = [];
+}
+```
+
+<!-- /TRASH 20260708-001 -->
+
+<!-- TRASH id=20260708-002 date=2026-07-08 kind=snippet source="tools/api_server/frank_hud_mockup.py" reason="Removed the dead lat/lon-sphere Canvas2D draw branch (round 6, 2026-07-08) — orbMode==sphere now renders via the new WebGL noise-icosphere on #orb-gl, so the 2D canvas frame() early-returns in that mode and this branch would never execute. The image-mode branch is preserved unchanged, just un-nested from the if/else." -->
+## 20260708-002 · 2026-07-08 · snippet · `tools/api_server/frank_hud_mockup.py`
+**Reason:** Removed the dead lat/lon-sphere Canvas2D draw branch (round 6, 2026-07-08) — orbMode==sphere now renders via the new WebGL noise-icosphere on #orb-gl, so the 2D canvas frame() early-returns in that mode and this branch would never execute. The image-mode branch is preserved unchanged, just un-nested from the if/else.  
+**Payload:** `data/trash/files/20260708-002__snippet.txt`
+
+```python
+  if(orbMode === 'image'){
+    // A real extruded slab (front face + back face + edge struts), not a single flat
+    // point cloud — see applyBrandMarkToOrb for how imgFront/imgBack/imgStruts are
+    // built. shadowBlur is the dominant per-frame cost at this particle count (measured
+    // live: disabling it nearly doubled FPS), so it's only paid for the front layer —
+    // the back layer is already heavily dimmed/receded so it shouldn't glow as bright
+    // as the foreground anyway, which makes this a visual correctness fix as much as a
+    // performance one.
+    const frontPts = imgFront.map(p => project(p.x0, p.y0, p.z0, 0.16));
+    const backPts = imgBack.map(p => project(p.x0, p.y0, p.z0, 0.16));
+    const frontShadow = ctx.shadowBlur, frontShadowColor = ctx.shadowColor;
+
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = speaking ? "rgba(122,232,255,0.22)" : "rgba(58,214,255,0.10)";
+    ctx.lineWidth = 0.4;
+    ctx.beginPath();
+    imgBackEdges.forEach(([ai,bi])=>{ const a=backPts[ai], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    ctx.strokeStyle = speaking ? "rgba(122,232,255,0.30)" : "rgba(58,214,255,0.14)";
+    ctx.lineWidth = 0.45;
+    ctx.beginPath();
+    imgStruts.forEach(([fi,bi])=>{ const a=frontPts[fi], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+    ctx.strokeStyle = speaking ? "rgba(122,232,255,0.5)" : "rgba(58,214,255,0.22)";
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    imgFrontEdges.forEach(([ai,bi])=>{ const a=frontPts[ai], b=frontPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+    ctx.stroke();
+
+    // Back dots must read as clearly BEHIND the front, not equally prominent, or an
+    // off-angle/edge-on view of the rotation looks like two unrelated overlapping
+    // copies instead of one solid object with a near side and a far side.
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = speaking ? "rgba(122,232,255,0.28)" : "rgba(58,214,255,0.16)";
+    ctx.beginPath();
+    backPts.forEach(p=>{ const sz=p.scale>1?1.0:0.65; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+    ctx.fill();
+
+    ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+    ctx.fillStyle = speaking ? "rgba(122,232,255,0.9)" : "rgba(58,214,255,0.65)";
+    ctx.beginPath();
+    frontPts.forEach(p=>{ const sz=p.scale>1?1.4:0.9; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+    ctx.fill();
+  } else {
+    const pts = particles.map(p=>{
+      const lon = p.lon + rot;
+      const rr = R * (1 + (speaking ? amp*0.16*Math.sin(p.lat*4+speakT*2) : 0));
+      const x = rr * Math.cos(p.lat) * Math.cos(lon);
+      const y = rr * Math.sin(p.lat);
+      const z = rr * Math.cos(p.lat) * Math.sin(lon);
+      const scale = 683 / (683 - z);
+      return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
+    });
+
+    ctx.strokeStyle = speaking ? "rgba(122,232,255,0.45)" : "rgba(58,214,255,0.2)";
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    edges.forEach(([ai,bi])=>{
+      const a = pts[ai], b = pts[bi];
+      if(a && b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);}
+    });
+    ctx.stroke();
+
+    ctx.fillStyle = speaking ? "rgba(122,232,255,0.9)" : "rgba(58,214,255,0.65)";
+    ctx.beginPath();
+    pts.forEach(p=>{
+      const sz = p.scale > 1 ? 1.4 : 0.9;
+      ctx.moveTo(p.x+sz, p.y);
+      ctx.arc(p.x,p.y,sz,0,Math.PI*2);
+    });
+    ctx.fill();
+  }
+```
+
+<!-- /TRASH 20260708-002 -->
+
