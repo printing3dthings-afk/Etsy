@@ -422,7 +422,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v125"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v126"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5851,6 +5851,66 @@ async def studio_convert_svg(request: Request, mode: str = "color", _token: str 
     }
 
 
+@app.post("/api/studio/generate-lifestyle-photo")
+async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_auth_session_or_bearer)):
+    """Generate a real, self-verified lifestyle photo from actual uploaded product
+    file(s) — wraps tools/listing_photo_pipeline.generate_verified_photo(), THE
+    STANDARD LIFESTYLE METHOD documented in CLAUDE.md: the real downloadable file is
+    passed as the edit-source image (never an AI-invented stand-in), the render is
+    verified against that source with a vision model, and a failing render is retried
+    (never silently returned as if it passed). design_paths are filenames already
+    uploaded via /api/studio/upload-image (relative to studio_uploads/) — upload the
+    real product file(s) first, then call this."""
+    import listing_photo_pipeline
+
+    design_names = body.get("design_paths") or []
+    category = (body.get("category") or "sign_flat").strip()
+    scene_prompt = (body.get("scene_prompt") or "").strip()
+    # Capped at 2 by default (not the pipeline's own 3) -- this is an interactive,
+    # pay-per-call tool (real image-gen API cost per attempt), not an unattended batch
+    # script; 2 attempts is a deliberate cost/quality tradeoff for that context.
+    max_attempts = max(1, min(int(body.get("max_attempts") or 2), 3))
+
+    if not design_names:
+        raise HTTPException(status_code=400, detail="design_paths is required — upload at least one real product file first")
+    if not scene_prompt:
+        raise HTTPException(status_code=400, detail="scene_prompt is required")
+    if category not in listing_photo_pipeline.PHYSICS:
+        raise HTTPException(status_code=400, detail=f"unknown category {category!r}, expected one of {sorted(listing_photo_pipeline.PHYSICS)}")
+
+    design_paths = []
+    for n in design_names:
+        p = _resolve_in_root("studio_uploads", n)
+        if not p.is_file():
+            raise HTTPException(status_code=400, detail=f"uploaded file not found: {n}")
+        design_paths.append(p)
+
+    out_root = _FILE_ROOTS["lifestyle_photos"]
+    out_root.mkdir(parents=True, exist_ok=True)
+    out_name = f"{uuid.uuid4().hex[:8]}_lifestyle.jpg"
+    out_path = out_root / out_name
+
+    try:
+        result = await asyncio.wait_for(
+            asyncio.to_thread(
+                listing_photo_pipeline.generate_verified_photo,
+                design_paths, scene_prompt, out_path, category, max_attempts,
+            ),
+            timeout=280,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Generation timed out — try again, or simplify the scene prompt")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"generation failed: {exc}")
+
+    return {
+        "ok": result.passed,
+        "path": out_name if result.passed else None,
+        "attempts": result.attempts,
+        "issues": result.issues,
+    }
+
+
 @app.post("/api/studio/generate")
 async def studio_generate_video(body: dict, _token: str = Depends(_auth_session_or_bearer)):
     """Generate a Ken Burns slideshow video either from an existing Etsy listing's
@@ -6955,6 +7015,11 @@ _FILE_ROOTS["staged_videos"] = ROOT / "data" / "social" / "staged_videos"
 # SVG Converter tool output — regeneratable (re-run the conversion any time), not
 # source-of-truth product assets, so same non-durable local dir as studio_uploads.
 _FILE_ROOTS["svg_conversions"] = ROOT / "data" / "social" / "svg_conversions"
+# Lifestyle Photo Generator output — same regeneratable-working-file reasoning as
+# svg_conversions above. Passed products still go through the existing staged_photos
+# root + Action Center approval, not this one — this is the standalone generation
+# tool's own scratch output before anything is staged for a real listing.
+_FILE_ROOTS["lifestyle_photos"] = ROOT / "data" / "social" / "lifestyle_photos"
 
 
 def _human_size(n: int) -> str:
@@ -7042,6 +7107,7 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
             "videos": "Generated Videos", "studio_uploads": "Studio Uploads",
             "staged_videos": "Staged Videos (pending approval)",
             "svg_conversions": "SVG Conversions",
+            "lifestyle_photos": "Lifestyle Photos",
         }
         groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
     # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so

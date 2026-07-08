@@ -46,6 +46,7 @@ data/social/staged_videos/
 data/social/image_proofs/
 data/social/_rejects/
 data/social/svg_conversions/
+data/social/lifestyle_photos/
 
 # Browser tool screenshots (runtime output from tools/browser_automation.py)
 data/browser_screenshots/

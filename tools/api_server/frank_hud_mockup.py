@@ -1357,6 +1357,44 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <a id="svgc-download" class="act-btn" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download SVG</a>
         </div>
       </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Lifestyle Photo Generator</div>
+      <div class="hub-card">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Upload the REAL product file(s) — the actual thing being sold, never a stand-in — and generate a photorealistic lifestyle photo. Self-verified against your file; if a render doesn't actually match it, it retries automatically instead of handing you something wrong.</div>
+
+        <input type="file" id="lsg-file-input" accept="image/*,.pdf,.svg" multiple style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
+        <div id="lsg-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+
+        <select id="lsg-category" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <option value="sign_flat">3D-Print Sign (flat face)</option>
+          <option value="tumbler_wrap">Tumbler / Koozie Wrap</option>
+          <option value="framed_print">Framed Wall Art</option>
+          <option value="flat_paper">Flat Printed Paper / Card</option>
+          <option value="ipad_lifestyle">iPad / Digital Planner Screen</option>
+          <option value="sticker_sheet_flat">Sticker Sheet (overhead flat lay)</option>
+          <option value="3d_print_lamp">3D-Print Lamp (lit)</option>
+          <option value="3d_print_vase">3D-Print Vase</option>
+          <option value="3d_print_holder">3D-Print Holder</option>
+          <option value="3d_print_planter">3D-Print Planter</option>
+        </select>
+
+        <textarea id="lsg-scene-prompt" rows="3"
+          placeholder="Scene description — auto-filled below, edit before generating"
+          style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
+
+        <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">Each attempt calls the real image-generation API — real cost per click — up to 2 tries if the first doesn't verify against your source file.</div>
+
+        <button class="act-btn primary" style="width:100%" onclick="lsgGenerate()" id="lsg-generate-btn">Generate Lifestyle Photo</button>
+        <div id="lsg-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+        <div id="lsg-result" style="display:none;margin-top:10px">
+          <div id="lsg-preview-wrap" style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center">
+            <img id="lsg-preview" style="max-width:100%;max-height:320px;border-radius:6px" alt="Generated lifestyle photo">
+          </div>
+          <div id="lsg-outcome" style="font-size:12px;margin-bottom:10px"></div>
+          <a id="lsg-download" class="act-btn" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download Photo</a>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4371,6 +4409,124 @@ async function svgcConvert(file){
     if (status) status.textContent = '';
   } catch(e) {
     if (status) status.textContent = 'Conversion failed: '+(e.message||e);
+  }
+}
+
+// ── Lifestyle Photo Generator — Studio tool. Wraps THE STANDARD LIFESTYLE METHOD
+// (tools/listing_photo_pipeline.py::generate_verified_photo, documented in CLAUDE.md):
+// upload the REAL product file(s), generate a photorealistic scene, self-verify the
+// render against the source, retry on mismatch. Category defaults mirror the
+// PHYSICS keys in that module so the "what's this for" choice picks the right
+// surface-realism template server-side. Real per-click API cost, so unlike the SVG
+// converter this is deliberately capped at 2 attempts, not the pipeline's own 3. ──
+const LSG_SCENE_DEFAULTS = {
+  'sign_flat': 'displayed on a cozy living room wall above a console table, warm natural window light, a small potted plant and a stack of books as props',
+  'tumbler_wrap': 'held on a rustic wooden outdoor table next to a folded picnic blanket, bright natural daylight',
+  'framed_print': 'hung on a warm cream gallery wall above a boucle sofa, soft morning light from the left',
+  'flat_paper': 'lying flat on a cream linen surface next to a cup of coffee and a small potted succulent',
+  'ipad_lifestyle': 'on a cozy wooden desk at a 30-degree angle, a latte and a small succulent nearby, soft window light from the left',
+  'sticker_sheet_flat': 'on a clean cream desk surface with washi tape and a pen nearby, bright even overhead light',
+  '3d_print_lamp': 'on a nightstand in a softly lit bedroom in the evening, warm ambient light',
+  '3d_print_vase': 'on a wooden console table with a few dried flower stems, soft daylight',
+  '3d_print_holder': 'on a tidy desk beside a laptop and a cup of pens, bright clean daylight',
+  '3d_print_planter': 'on a sunny windowsill, bright natural light',
+};
+
+let _lsgUploadedPaths = [];
+
+function lsgFillDefaultPrompt(){
+  const catEl = document.getElementById('lsg-category');
+  const promptEl = document.getElementById('lsg-scene-prompt');
+  if (!catEl || !promptEl) return;
+  // Only auto-fill if the box is empty or still holds a PREVIOUS auto-fill --
+  // never overwrite something the user actually typed themselves.
+  if (!promptEl.value || promptEl.dataset.auto === '1') {
+    promptEl.value = LSG_SCENE_DEFAULTS[catEl.value] || '';
+    promptEl.dataset.auto = '1';
+  }
+}
+
+document.addEventListener('change', function(e){
+  if (e.target && e.target.id === 'lsg-file-input' && e.target.files.length) lsgUploadFiles(e.target.files);
+  if (e.target && e.target.id === 'lsg-category') lsgFillDefaultPrompt();
+});
+document.addEventListener('input', function(e){
+  if (e.target && e.target.id === 'lsg-scene-prompt') e.target.dataset.auto = '0';
+});
+
+async function lsgUploadFiles(fileList){
+  const status = document.getElementById('lsg-upload-status');
+  const files = Array.from(fileList||[]);
+  if (!files.length) return;
+  _lsgUploadedPaths = [];
+  for (let i=0; i<files.length; i++){
+    const f = files[i];
+    if (status) status.textContent = 'Uploading '+(i+1)+'/'+files.length+'…';
+    try {
+      const r = await fetchWithTimeout(
+        BASE+'/api/studio/upload-image?filename='+encodeURIComponent(f.name),
+        {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:f},
+        30000
+      );
+      const d = await r.json().catch(function(){ return {}; });
+      if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+      _lsgUploadedPaths.push(d.path);
+    } catch(e) {
+      if (status) status.textContent = 'Upload failed on "'+f.name+'": '+(e.message||e);
+      return;
+    }
+  }
+  if (status) status.textContent = _lsgUploadedPaths.length+' file(s) ready to generate.';
+}
+
+async function lsgGenerate(){
+  const status = document.getElementById('lsg-status');
+  const resultEl = document.getElementById('lsg-result');
+  const previewWrap = document.getElementById('lsg-preview-wrap');
+  const downloadEl = document.getElementById('lsg-download');
+  const outcomeEl = document.getElementById('lsg-outcome');
+  if (!_lsgUploadedPaths.length) {
+    if (status) status.textContent = 'Upload at least one real product file first.';
+    return;
+  }
+  const category = document.getElementById('lsg-category').value;
+  const scenePrompt = (document.getElementById('lsg-scene-prompt').value || '').trim();
+  if (!scenePrompt) {
+    if (status) status.textContent = 'Scene description is required.';
+    return;
+  }
+  if (resultEl) resultEl.style.display = 'none';
+  const btn = document.getElementById('lsg-generate-btn');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = 'Generating — this can take up to a couple of minutes (real image generation + verification against your file)…';
+  try {
+    const r = await fetchWithTimeout(
+      BASE+'/api/studio/generate-lifestyle-photo',
+      {method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+       body: JSON.stringify({design_paths:_lsgUploadedPaths, category:category, scene_prompt:scenePrompt})},
+      290000
+    );
+    const d = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (d.ok && d.path) {
+      const dlUrl = BASE+'/api/files/download?root=lifestyle_photos&path='+encodeURIComponent(d.path)+'&token='+encodeURIComponent(TOKEN);
+      const previewEl = document.getElementById('lsg-preview');
+      if (previewEl) previewEl.src = dlUrl+'&inline=1';
+      if (downloadEl) { downloadEl.href = dlUrl; downloadEl.setAttribute('download', d.path); downloadEl.style.display = 'block'; }
+      if (previewWrap) previewWrap.style.display = 'block';
+      if (outcomeEl) outcomeEl.innerHTML = '<span style="color:var(--green)">✓ Passed verification (attempt '+d.attempts+') — matches your real product file.</span>';
+    } else {
+      if (previewWrap) previewWrap.style.display = 'none';
+      if (downloadEl) downloadEl.style.display = 'none';
+      const firstIssue = (d.issues && d.issues[0]) ? escHtml(d.issues[0]) : '';
+      if (outcomeEl) outcomeEl.innerHTML = '<span style="color:var(--red)">✗ Failed verification after '+(d.attempts||0)+' attempt(s) — the render did not reliably match your source file.</span>'+(firstIssue?'<div style="color:var(--muted);margin-top:4px">'+firstIssue+'</div>':'');
+    }
+    if (resultEl) resultEl.style.display = 'block';
+    if (status) status.textContent = '';
+  } catch(e) {
+    if (status) status.textContent = 'Generation failed: '+(e.message||e);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
