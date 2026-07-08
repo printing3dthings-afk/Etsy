@@ -19,6 +19,7 @@ Run locally:  python tests/smoke_test.py
 In CI:        see .github/workflows/ci-smoke.yml
 Exit code 0 = pass, non-zero = fail (prints what broke).
 """
+import re as _re
 import sys
 import traceback
 from pathlib import Path
@@ -124,6 +125,35 @@ def main() -> int:
             if not t.get("name") or "input_schema" not in t:
                 failures.append(f"malformed tool schema: {t.get('name') or t}")
                 break
+
+    # 7. No `from tools.X import Y` anywhere in main.py's source. That import form
+    #    only resolves if the repo ROOT is on sys.path — main.py's real runtime
+    #    sys.path only has tools/api_server (implicit script dir) + tools/ (explicit
+    #    insert at startup), never the repo root, so `from tools.X import Y` raises
+    #    ModuleNotFoundError the moment it actually runs. Import 2 (`import main`)
+    #    can't catch this class of bug when the bad import is deferred inside a
+    #    function body (lazy import) rather than at module top level — the function
+    #    has to actually be CALLED to trigger it, and most of these are behind auth/
+    #    request handling that this dependency-light smoke test never exercises.
+    #    Found (and fixed) 9 real instances of this on 2026-07-08, all deferred
+    #    imports inside route handlers/background loops — this check exists so the
+    #    same mistake can't silently ship again. The fix is always the same: `import
+    #    X` (bare — X is already importable since tools/ is on sys.path) instead of
+    #    `from tools.X import Y`, then call `X.Y(...)`.
+    main_py = ROOT / "tools" / "api_server" / "main.py"
+    try:
+        src_text = main_py.read_text()
+        bad_imports = [
+            line.strip() for line in src_text.splitlines()
+            if _re.match(r"\s*from tools\.", line)
+        ]
+        if bad_imports:
+            failures.append(
+                "main.py has 'from tools.X import Y' imports that will fail in "
+                f"production (repo root isn't on sys.path there): {bad_imports}"
+            )
+    except Exception as exc:
+        failures.append(f"could not scan main.py for bad import pattern: {exc}")
 
     if failures:
         print("SMOKE FAIL:", file=sys.stderr)

@@ -3535,3 +3535,65 @@ showed real numbers ("1 colors, 1 paths, 2KB — passes the gate" for a simple s
 
 **Not touched:** `command_center.py`/`town_app/` stay as-is (dead, undeployed) — only referenced
 as the source for the parameter tuning ported into `tools/svg_converter.py`.
+
+
+## 2026-07-08 — Found + fixed a systemic import bug: `from tools.X import Y` breaks in real production (v125)
+
+**How this was found:** while wiring the new SVG Converter's backend route, I used
+`from tools import svg_converter` / `from tools.etsy_api import check_svg_quality` — these
+worked in every local test I ran, because my own ad-hoc verification (`python3 -c "..."` and a
+custom `run_server.py` test harness) always added the repo root to `sys.path` one way or
+another. Real production does not: `main.py` is launched as `python tools/api_server/main.py`
+from `WORKDIR /app`, which puts only the *script's own directory* (`tools/api_server`) on
+`sys.path` automatically, plus one explicit `sys.path.insert(0, str(ROOT/"tools"))` — the repo
+root itself is never added. `from tools.X import Y` requires `tools` to be importable as a
+*package*, which requires the repo root on `sys.path` — so it raises `ModuleNotFoundError: No
+module named 'tools'` the instant it actually runs in production, even though it imports fine
+in a dev shell where cwd happens to be the repo root.
+
+**Scope — this wasn't just my new code.** Grepping for the same pattern turned up **8 more
+pre-existing instances**, all deferred (lazy) imports inside function bodies, meaning
+`tests/smoke_test.py`'s existing `import main` check (which explicitly exists to catch import
+bugs, per its own docstring — it already caught one *top-level* instance of this exact mistake
+once before) could never catch these, since a lazy import only fires when that specific
+function is actually called, and the smoke test never calls into route handlers or triggers
+background loops. Confirmed broken in real production right now:
+- `browse_web`, `search_etsy`, `check_listing_quality` — 3 of Frank's core **agent tools**,
+  meaning Frank has been unable to actually search Etsy, browse the web, or QC a listing during
+  a live chat turn this entire time; every call would have raised an exception.
+- The daily 6am UTC **Daily Brief** loop and its manual-trigger route — has likely never
+  successfully run; the loop catches the exception and logs an error heartbeat rather than
+  crashing, so this failed silently with no visible symptom beyond "Daily Brief" always showing
+  an error state.
+- **Reject-fix photo regeneration** (`_refix_listing_photo`) — rejecting a staged listing photo
+  with a reason and asking for a redo would have 500'd instead of regenerating.
+- **`DELETE /api/relay/allowed-folders/{id}`** and **`DELETE /api/todos/{id}`** — both crash
+  before deleting, because the archive-before-delete call (the hard "nothing we delete should be
+  unrecoverable" rule) is unreachable code today. Deleting a todo or an allowed-folder entry via
+  the dashboard has been completely broken.
+- The daily `tools/trash.py` prune cron (expires 30-day-old trash entries) — silently failing
+  every day (caught + logged, same failure mode as Daily Brief).
+
+**Fix:** converted all 9 sites (+ my own 2 new ones) from `from tools.X import Y` to bare
+`import X` then `X.Y(...)` — the correct form, since `tools/` is already directly on
+`sys.path` and `X` resolves as a top-level module there (this is the same pattern already used
+correctly elsewhere in the file, e.g. `import etsy_api`, `import video_understanding as
+_video_understanding`).
+
+**Regression-proofed, not just patched:** added a new check to `tests/smoke_test.py` (#7) that
+scans `main.py`'s raw source text for the `from tools\.` pattern and fails the build if it finds
+any — a cheap, mechanical, file-wide check that catches this exact bug class regardless of
+whether the bad import is at module top level or buried in a function body, closing the gap that
+let 9 instances ship unnoticed. Verified: (a) the check currently passes (zero matches after the
+fix), (b) reverting any one of the 9 fixes makes it fail, (c) directly re-imported all 9 affected
+modules under a sys.path deliberately restricted to match real production exactly (no repo root)
+— all resolve cleanly now, where they previously would have raised `ModuleNotFoundError`.
+
+Shipped standalone, ahead of the (separate, still-in-progress) lifestyle-photo-generator Studio
+feature — a fix this severe shouldn't wait on an unrelated feature build. `_BUILD_ID` bumped.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.

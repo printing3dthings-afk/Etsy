@@ -422,7 +422,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v124"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v125"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2929,21 +2929,21 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
         if name == "find_business_gaps":
             return _find_business_gaps_impl()
         if name == "browse_web":
-            from tools.browser_agent import get_page_text
+            import browser_agent
             url = (tool_input or {}).get("url", "")
             if not url.startswith("https://") and not url.startswith("http://"):
                 return {"error": "URL must start with https://"}
-            text = get_page_text(url)
+            text = browser_agent.get_page_text(url)
             return {"url": url, "text": text, "chars": len(text)}
         if name == "search_etsy":
-            from tools.browser_agent import search_etsy
+            import browser_agent
             query = (tool_input or {}).get("query", "")
             limit = min(int((tool_input or {}).get("limit", 10)), 20)
-            results = search_etsy(query, limit)
+            results = browser_agent.search_etsy(query, limit)
             return {"query": query, "count": len(results), "results": results}
         if name == "check_listing_quality":
-            from tools.listing_qc import check_listing
-            return check_listing(
+            import listing_qc
+            return listing_qc.check_listing(
                 title=(tool_input or {}).get("title", ""),
                 tags=(tool_input or {}).get("tags", []),
                 description=(tool_input or {}).get("description", ""),
@@ -4287,8 +4287,8 @@ async def _snapshot_loop() -> None:
         # Tolerant of its own errors -- a prune failure must never affect the
         # snapshot's own success/backoff timing above.
         try:
-            from tools.trash import prune as _trash_prune
-            n = await asyncio.to_thread(_trash_prune)
+            import trash as _trash
+            n = await asyncio.to_thread(_trash.prune)
             if n:
                 print(f"[trash] pruned {n} expired entr{'y' if n == 1 else 'ies'}", flush=True)
         except Exception as exc:
@@ -4544,8 +4544,8 @@ async def _daily_brief_loop() -> None:
         if now.hour == 6 and now.date() != last_sent_date:
             db.set_agent_heartbeat("daily_brief", "Daily Brief", "running", "generating brief")
             try:
-                from tools.daily_brief import run_daily_brief
-                result = await asyncio.to_thread(run_daily_brief)
+                import daily_brief as _daily_brief
+                result = await asyncio.to_thread(_daily_brief.run_daily_brief)
                 last_sent_date = now.date()
                 db.set_agent_heartbeat("daily_brief", "Daily Brief", "ok", result)
                 print(f"[daily_brief] {result}", flush=True)
@@ -4617,8 +4617,8 @@ async def run_brief_now(request: Request):
     token = request.headers.get("X-App-Token", "")
     if not token or not secrets.compare_digest(token, APP_TOKEN):
         raise HTTPException(status_code=401, detail="Unauthorized")
-    from tools.daily_brief import run_daily_brief
-    result = await asyncio.to_thread(run_daily_brief)
+    import daily_brief as _daily_brief
+    result = await asyncio.to_thread(_daily_brief.run_daily_brief)
     return {"status": result}
 
 
@@ -5631,7 +5631,7 @@ async def _refix_listing_photo(action: dict, reason: str) -> dict:
     """Re-run generate_verified_photo() with the reject reason folded in as corrective
     feedback, then re-stage the result as a fresh listing_photo action chained to the
     original via fixes_action_id."""
-    from tools.listing_photo_pipeline import generate_verified_photo
+    import listing_photo_pipeline
 
     p = action.get("payload") or {}
     sku = p.get("sku") or "unknown"
@@ -5647,7 +5647,7 @@ async def _refix_listing_photo(action: dict, reason: str) -> dict:
     out_path = out_dir / f"photo_{uuid.uuid4().hex[:8]}.jpg"
 
     result = await asyncio.to_thread(
-        generate_verified_photo, design_paths, scene_prompt, str(out_path), physics,
+        listing_photo_pipeline.generate_verified_photo, design_paths, scene_prompt, str(out_path), physics,
     )
     if not result.passed:
         raise RuntimeError(f"regeneration failed verification: {result.issues}")
@@ -5827,8 +5827,7 @@ async def studio_convert_svg(request: Request, mode: str = "color", _token: str 
     if len(body) > _MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
 
-    from tools import svg_converter
-    from tools.etsy_api import check_svg_quality
+    import svg_converter
 
     try:
         svg_text = await asyncio.to_thread(svg_converter.convert_to_svg, body, mode)
@@ -5837,7 +5836,7 @@ async def studio_convert_svg(request: Request, mode: str = "color", _token: str 
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"conversion failed: {exc}")
 
-    quality = check_svg_quality(svg_text)
+    quality = etsy_api.check_svg_quality(svg_text)
 
     root = _FILE_ROOTS["svg_conversions"]
     root.mkdir(parents=True, exist_ok=True)
@@ -6739,12 +6738,12 @@ async def post_allowed_folder(payload: dict, _token: str = Depends(_auth_session
 
 @app.delete("/api/relay/allowed-folders/{folder_id}")
 async def delete_allowed_folder(folder_id: int, _token: str = Depends(_auth_session_or_bearer)):
-    from tools.trash import archive_snippet
+    import trash
     folders = await asyncio.to_thread(db.list_allowed_folders)
     row = next((f for f in folders if f["id"] == folder_id), None)
     if row:
         await asyncio.to_thread(
-            archive_snippet, "db:allowed_folders", json.dumps(row, default=str),
+            trash.archive_snippet, "db:allowed_folders", json.dumps(row, default=str),
             f"allowed folder removed via dashboard (id={folder_id})",
         )
     ok = await asyncio.to_thread(db.remove_allowed_folder, folder_id)
@@ -6813,12 +6812,12 @@ async def toggle_todo(todo_id: int, payload: dict, _token: str = Depends(_auth_s
 
 @app.delete("/api/todos/{todo_id}")
 async def remove_todo(todo_id: int, _token: str = Depends(_auth_session_or_bearer)):
-    from tools.trash import archive_snippet
+    import trash
     todos = await asyncio.to_thread(db.list_todos)
     row = next((t for t in todos if t["id"] == todo_id), None)
     if row:
         await asyncio.to_thread(
-            archive_snippet, "db:todos", json.dumps(row, default=str),
+            trash.archive_snippet, "db:todos", json.dumps(row, default=str),
             f"todo deleted via dashboard (id={todo_id})",
         )
     ok = await asyncio.to_thread(db.delete_todo, todo_id)
