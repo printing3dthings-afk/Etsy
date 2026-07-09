@@ -29,7 +29,7 @@ import threading
 import time
 import uuid
 import zipfile
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import uvicorn
@@ -448,7 +448,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v133"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v134"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4491,16 +4491,58 @@ async def _token_sync_loop() -> None:
         "access": os.getenv("ETSY_ACCESS_TOKEN", "").strip(),
         "refresh": os.getenv("ETSY_REFRESH_TOKEN", "").strip(),
     }
+    last_expiry_check: date | None = None
+
+    def _check_refresh_token_staleness() -> str | None:
+        """Etsy rotates the refresh token (and resets its 90-day clock) on
+        every successful access-token refresh — so the real risk isn't a
+        calendar countdown, it's auto-refresh having silently stopped working
+        for a long time. `etsy_tokens.updated_at` already records the last
+        successful rotation; if it's gone stale for ~75+ days (a safety
+        margin before the true 90-day cliff), auto-refresh has been broken
+        for long enough that Scott should know before a 401 surprises him.
+        Checked once/day (guarded by last_expiry_check in the enclosing
+        scope), not every 60s poll."""
+        tokens = db.get_etsy_tokens()
+        if not tokens or not tokens.get("updated_at"):
+            return None
+        try:
+            updated_at = datetime.fromisoformat(tokens["updated_at"])
+        except (ValueError, TypeError):
+            return None
+        if updated_at.tzinfo is None:
+            updated_at = updated_at.replace(tzinfo=timezone.utc)
+        days_stale = (datetime.now(timezone.utc) - updated_at).days
+        if days_stale >= 75:
+            db.add_todo(
+                f"Etsy OAuth token hasn't rotated in {days_stale} days — the refresh token "
+                f"expires after 90 days of no successful refresh. Run `python tools/etsy_oauth.py` "
+                f"to re-authorize before it expires and Etsy calls start failing with 401.",
+                added_by="frank",
+            )
+            return f"refresh token stale ({days_stale}d, re-authorize soon)"
+        return None
 
     async def _iteration():
+        nonlocal last_expiry_check
         cur_access = os.getenv("ETSY_ACCESS_TOKEN", "").strip()
         cur_refresh = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
+        rotated = False
         if cur_access and cur_refresh and (cur_access != last_tokens["access"] or cur_refresh != last_tokens["refresh"]):
             await asyncio.to_thread(db.save_etsy_tokens, cur_access, cur_refresh, last_tokens["refresh"])
             print(f"[etsy-tokens] persisted rotated token to {db.DB_PATH}", flush=True)
             last_tokens["access"], last_tokens["refresh"] = cur_access, cur_refresh
-            return "Etsy token rotation persisted"
-        return "watching for token rotation"
+            rotated = True
+
+        today = datetime.now(timezone.utc).date()
+        staleness_note = None
+        if today != last_expiry_check:
+            last_expiry_check = today
+            staleness_note = await asyncio.to_thread(_check_refresh_token_staleness)
+
+        if rotated:
+            return "Etsy token rotation persisted" + (f" — {staleness_note}" if staleness_note else "")
+        return staleness_note or "watching for token rotation"
 
     await asyncio.sleep(60)  # give the app a moment before the first poll
     while True:
@@ -4707,6 +4749,266 @@ async def _daily_brief_loop() -> None:
             )
 
 
+# ── Calendar-gated tasks: weekly monitors, monthly/seasonal checks, ads
+#    threshold watch (2026-07-09 automation-loop pass) ───────────────────────
+#
+# All four sub-tasks below are read-only or notify-only — none write to Etsy,
+# none message buyers, none spend money. Confirmed by direct read of each
+# script before wiring them in here (see ops_runbook.md 2026-07-09 entry for
+# the audit). Findings/recommendations are surfaced as todos (db.add_todo) for
+# Scott to act on — nothing here bypasses the one-tap-approval pattern the
+# rest of this system uses for anything that actually changes Etsy.
+
+_WEEKLY_MONITOR_SCRIPTS = [
+    "weekly_report.py",
+    "listing_performance_monitor.py",
+    "listing_drop_monitor.py",
+    "review_monitor.py",
+    "order_notifier.py",
+    # Stages tag fixes for approval (refactored 2026-07-09 — no longer writes
+    # to Etsy directly, see the script's own module docstring). Fits CLAUDE.md's
+    # stated trigger ("run after any batch of new listings") well enough on a
+    # weekly cadence without needing a dedicated "batch just published" hook.
+    "audit_fix_wall_art_tags.py",
+]
+
+# Mid-July, mid-October, early January, mid-January — the exact 4 dates
+# CLAUDE.md's "Seasonal Keyword Calendar" documents (6 weeks before each peak).
+_SEASONAL_TRIGGER_DATES = {(7, 15), (10, 15), (1, 5), (1, 15)}
+
+_ADS_KILL_SPEND_USD = 30.0
+_ADS_KILL_ROAS = 1.5
+_ADS_SCALE_ROAS = 4.0
+_ADS_STALE_LOG_DAYS = 7
+_ADS_MIN_DAYS_FOR_MONTHLY_VERDICT = 20  # ~30 days of logging before judging monthly ROAS
+
+
+def _run_weekly_monitors() -> str:
+    """Runs the previously-orphaned weekly monitor scripts and posts one
+    digest todo + ops_runbook entry. Most were built for exactly this purpose
+    (each script's own docstring describes a weekly cadence) but were never
+    wired into any cron/loop after the dead tools/agents/business_pipeline.py
+    orchestrator that was meant to run them got archived (task #204). Each
+    script's own failure is isolated so one broken script doesn't hide the
+    others' results. 600s timeout (not 300s) because audit_fix_wall_art_tags.py
+    makes one Claude API call per flagged listing with a 0.5s rate-limit gap —
+    slower than the other scripts on a shop with many wall art listings."""
+    lines = []
+    for script in _WEEKLY_MONITOR_SCRIPTS:
+        try:
+            result = subprocess.run(
+                [sys.executable, str(ROOT / "tools" / script)],
+                capture_output=True, text=True, timeout=600, cwd=str(ROOT),
+            )
+            out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+            tail = out[-600:] if out else "(no output)"
+            lines.append(f"### {script}\n{tail}")
+        except Exception as exc:
+            lines.append(f"### {script}\nERROR: {exc}")
+    digest = "\n\n".join(lines)
+    db.add_todo(
+        "Weekly monitor digest ready — see this week's ops_runbook entry for "
+        "weekly_report / listing_performance / listing_drop / review / order_notifier output.",
+        added_by="frank",
+    )
+    _append_ops_runbook_entry("Weekly monitor digest", digest[:4000])
+    return f"ran {len(_WEEKLY_MONITOR_SCRIPTS)} scripts"
+
+
+def _run_monthly_shop_health() -> str:
+    """Runs shop_health_check.py — already existed with a chat-triggerable
+    button, but CLAUDE.md's own Monthly checklist still required a human to
+    remember to run it on the 1st. Read-only report, no Etsy writes."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "shop_health_check.py")],
+        capture_output=True, text=True, timeout=300, cwd=str(ROOT),
+    )
+    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+    db.add_todo("Monthly shop health check ready — see this month's ops_runbook entry.", added_by="frank")
+    _append_ops_runbook_entry("Monthly shop health check", out[:4000])
+    return "ran shop_health_check.py"
+
+
+def _run_seasonal_keyword_check() -> str:
+    """Runs seasonal_keywords.py --dry-run only on the 4 documented calendar
+    dates. The --push step (which actually edits live listings) stays a
+    manual, explicit action per Autonomy Boundaries — this only ever surfaces
+    the recommendation as a todo for Scott to review and push himself."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "seasonal_keywords.py"), "--dry-run"],
+        capture_output=True, text=True, timeout=300, cwd=str(ROOT),
+    )
+    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+    db.add_todo(
+        "Seasonal keyword window is open — dry-run recommendation ready for your review "
+        "(run `python tools/seasonal_keywords.py --push` yourself once you've checked it).",
+        added_by="frank",
+    )
+    _append_ops_runbook_entry("Seasonal keyword dry-run", out[:4000])
+    return "ran seasonal_keywords.py --dry-run"
+
+
+def _check_ads_thresholds() -> str:
+    """Read-only: flags a todo if the manually-logged Etsy Ads spend data
+    (tools/etsy_ads_tools.py's spend_log, via tools/data_store.py's DataStore)
+    crosses one of CLAUDE.md's documented kill/scale thresholds, or if the log
+    itself has gone stale. Etsy's public Open API v3 has no ads/campaign/stats
+    endpoint for third-party apps, so there is no live ad-performance data to
+    pull — this can only ever check whatever Scott has manually logged via
+    _log_ad_spend, which is why the stale-log check exists alongside the
+    threshold check (2026-07-09, confirmed with Scott before building this).
+    Never touches ad spend/budgets itself — flags only."""
+    from data_store import DataStore  # tools/ is on sys.path (line 56), not the repo root
+
+    store = DataStore()
+    ads_data = store.get("etsy_ads", default={})
+    spend_log = ads_data.get("spend_log", [])
+    if not spend_log:
+        return "no ad spend logged yet — nothing to check"
+
+    today = date.today()
+
+    def _safe_date(s):
+        try:
+            return date.fromisoformat(s)
+        except (ValueError, TypeError):
+            return date(2000, 1, 1)
+
+    latest_entry_date = max((_safe_date(e.get("date", "")) for e in spend_log), default=date(2000, 1, 1))
+    days_since_log = (today - latest_entry_date).days
+    notes = []
+
+    if days_since_log >= _ADS_STALE_LOG_DAYS:
+        db.add_todo(
+            f"Etsy Ads spend hasn't been logged in {days_since_log} days — log this week's "
+            f"numbers from Etsy Shop Manager → Marketing → Etsy Ads so this automated "
+            f"threshold check has current data to work with.",
+            added_by="frank",
+        )
+        notes.append(f"stale log ({days_since_log}d)")
+
+    week_cutoff = today - timedelta(days=7)
+    week_entries = [e for e in spend_log if _safe_date(e.get("date", "")) >= week_cutoff]
+    week_spend = sum(e.get("spend_usd", 0) for e in week_entries)
+    week_revenue = sum(e.get("revenue_from_ads", 0) for e in week_entries)
+    if week_spend >= _ADS_KILL_SPEND_USD and week_revenue == 0:
+        db.add_todo(
+            f"Etsy Ads: ${week_spend:.2f} spent this week with $0 revenue — this crosses your "
+            f"own kill rule (spend≥$30 / 0 orders). Consider pausing in Shop Manager.",
+            added_by="frank",
+        )
+        notes.append(f"kill-signal (${week_spend:.2f}/$0)")
+
+    month_cutoff = today.replace(day=1)
+    month_entries = [e for e in spend_log if _safe_date(e.get("date", "")) >= month_cutoff]
+    month_spend = sum(e.get("spend_usd", 0) for e in month_entries)
+    month_revenue = sum(e.get("revenue_from_ads", 0) for e in month_entries)
+    month_roas = round(month_revenue / month_spend, 2) if month_spend > 0 else 0
+    if len(month_entries) >= _ADS_MIN_DAYS_FOR_MONTHLY_VERDICT:
+        if month_roas < _ADS_KILL_ROAS:
+            db.add_todo(
+                f"Etsy Ads: this month's ROAS is {month_roas}x, below your 1.5x kill threshold "
+                f"after 30 days of data — consider pausing underperforming ads.",
+                added_by="frank",
+            )
+            notes.append(f"low ROAS ({month_roas}x)")
+        elif month_roas > _ADS_SCALE_ROAS:
+            db.add_todo(
+                f"Etsy Ads: this month's ROAS is {month_roas}x, above your 4x scale threshold — "
+                f"consider raising budget 20-30% per your own strategy.",
+                added_by="frank",
+            )
+            notes.append(f"scale-eligible ({month_roas}x)")
+
+    return "checked: " + (", ".join(notes) if notes else "no thresholds crossed")
+
+
+def _run_scheduled_art_check() -> str:
+    """Runs post_scheduled_art.py with no flags every day — the script's own
+    main() already self-gates on data/art_schedule.json's next_post_date, so
+    this just needs to run daily and let it decide whether today is actually
+    its every-other-day turn. As of 2026-07-09 the script no longer publishes
+    live on its own — it generates the listing as a draft, uploads photos/file,
+    then stages a publish_listing action for approval (see the script's module
+    docstring). This function only ever runs the generation step; the actual
+    Etsy activation always waits for a human tap in the Action Center."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "post_scheduled_art.py")],
+        capture_output=True, text=True, timeout=900, cwd=str(ROOT),
+    )
+    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+    if "[SCHEDULED] Not due yet" in out or "[SCHEDULED] Not due" in out:
+        return "not due today"
+    _append_ops_runbook_entry("Scheduled art run", out[:3000])
+    return "ran (see ops_runbook for output)"
+
+
+async def _calendar_tasks_loop() -> None:
+    """Hourly-tick calendar-gated loop (same shape as _daily_brief_loop) for
+    tasks that fire on a specific day/date rather than a fixed interval:
+    weekly monitor digest (Sunday), monthly shop health check (1st), seasonal
+    keyword dry-run (4 documented dates), a daily Etsy Ads threshold check,
+    and a daily scheduled-art check (the script's own every-other-day gating
+    decides whether it actually does anything). Each sub-task tracks its own
+    "last ran" date so a missed hour (deploy, restart) doesn't skip that day
+    entirely — it just fires the next time the loop wakes up and the date
+    still matches."""
+    db.set_agent_heartbeat("calendar_tasks", "Calendar Tasks", "started", "waiting for next scheduled check")
+    last_weekly: date | None = None
+    last_monthly: date | None = None
+    last_seasonal: date | None = None
+    last_ads_check: date | None = None
+    last_art_check: date | None = None
+    while True:
+        await asyncio.sleep(3600)
+        now = datetime.now(timezone.utc)
+        today = now.date()
+        ran = []
+        if now.weekday() == 6 and today != last_weekly:  # Sunday
+            try:
+                await asyncio.to_thread(_run_weekly_monitors)
+                last_weekly = today
+                ran.append("weekly-monitors")
+            except Exception as exc:
+                print(f"[calendar-tasks] weekly monitors error: {exc}", flush=True)
+        if today.day == 1 and today != last_monthly:
+            try:
+                await asyncio.to_thread(_run_monthly_shop_health)
+                last_monthly = today
+                ran.append("monthly-shop-health")
+            except Exception as exc:
+                print(f"[calendar-tasks] monthly shop health error: {exc}", flush=True)
+        if (today.month, today.day) in _SEASONAL_TRIGGER_DATES and today != last_seasonal:
+            try:
+                await asyncio.to_thread(_run_seasonal_keyword_check)
+                last_seasonal = today
+                ran.append("seasonal-keywords")
+            except Exception as exc:
+                print(f"[calendar-tasks] seasonal keyword check error: {exc}", flush=True)
+        if today != last_ads_check:
+            try:
+                detail = await asyncio.to_thread(_check_ads_thresholds)
+                last_ads_check = today
+                ran.append(f"ads-check:{detail}")
+            except Exception as exc:
+                print(f"[calendar-tasks] ads threshold check error: {exc}", flush=True)
+        if today != last_art_check:
+            try:
+                detail = await asyncio.to_thread(_run_scheduled_art_check)
+                last_art_check = today
+                ran.append(f"scheduled-art:{detail}")
+            except Exception as exc:
+                print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
+        db.set_agent_heartbeat(
+            "calendar_tasks", "Calendar Tasks", "ok",
+            "; ".join(ran) if ran else (
+                f"no scheduled task due today (last: weekly={last_weekly}, "
+                f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
+                f"art={last_art_check})"
+            ),
+        )
+
+
 _AGENT_LOOP_LABELS = {
     "snapshot": "Snapshot",
     "suggestion_warmer": "Suggestion Warmer",
@@ -4714,6 +5016,7 @@ _AGENT_LOOP_LABELS = {
     "quality_audit": "Quality Audit",
     "health_check": "Health Check",
     "daily_brief": "Daily Brief",
+    "calendar_tasks": "Calendar Tasks",
 }
 
 
@@ -4756,6 +5059,31 @@ async def _startup() -> None:
     asyncio.create_task(_quality_audit_loop())
     asyncio.create_task(_health_check_loop())
     asyncio.create_task(_daily_brief_loop())
+    asyncio.create_task(_calendar_tasks_loop())
+
+
+@app.post("/api/calendar-tasks/run")
+async def run_calendar_tasks_now(request: Request):
+    """Manually trigger each calendar-gated task once, ignoring its normal date
+    gate (for testing). Requires X-App-Token header. Read-only/notify-only —
+    see _run_weekly_monitors/_run_monthly_shop_health/_run_seasonal_keyword_check/
+    _check_ads_thresholds docstrings for exactly what each one does."""
+    token = request.headers.get("X-App-Token", "")
+    if not token or not secrets.compare_digest(token, APP_TOKEN):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    results = {}
+    for name, fn in [
+        ("weekly_monitors", _run_weekly_monitors),
+        ("monthly_shop_health", _run_monthly_shop_health),
+        ("seasonal_keywords", _run_seasonal_keyword_check),
+        ("ads_threshold", _check_ads_thresholds),
+        ("scheduled_art", _run_scheduled_art_check),
+    ]:
+        try:
+            results[name] = await asyncio.to_thread(fn)
+        except Exception as exc:
+            results[name] = f"ERROR: {exc}"
+    return results
 
 
 @app.post("/api/brief/run")

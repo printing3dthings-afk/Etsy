@@ -6,7 +6,12 @@ Steps:
 1. Fetch all active listings, filter to wall art only
 2. Analyze tags for duplicates, single-word tags, invalid length, empty slots
 3. Generate improved tags via Claude API for listings with issues
-4. Push tag updates via Etsy API
+4. Stage tag updates in the Action Center for one-tap approval (NOT a direct
+   Etsy write — this used to call client.update_listing() straight away,
+   bypassing the same approval queue every other Etsy write in this system
+   goes through; fixed 2026-07-09 as part of wiring this script into the
+   automated weekly loop, since an unattended job must never write to a live
+   listing without a human tap)
 5. Print full report
 """
 
@@ -33,7 +38,8 @@ with open(_env_path) as _f:
 os.environ.update(env)
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+from tools.etsy_api import EtsyAPIClient
+from tools.api_server import db as _db
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -327,29 +333,37 @@ def main():
     print(f"  Generated new tags for {len(update_plan)} listing(s)")
     print()
 
-    # ── Step 4: Push updates via Etsy API ────────────────────────────────────
-    print("Step 4: Pushing tag updates to Etsy...")
-    success_count = 0
+    # ── Step 4: Stage updates for Scott's one-tap approval ───────────────────
+    # NOT a direct Etsy write — every proposed tag change lands in the same
+    # Action Center queue as any other Etsy change in this system. Nothing
+    # here touches a live listing; approving or rejecting each one happens
+    # in the dashboard, same as a chat-generated "Stage All Tag Fixes" run.
+    print("Step 4: Staging tag updates for approval...")
+    staged_count = 0
     fail_count = 0
     failed_ids: list[int] = []
+    listing_lookup = {l["listing_id"]: l for l in wall_art_listings}
 
     for j, plan in enumerate(update_plan):
         lid = plan["listing_id"]
         title = plan["title"]
         new_tags = plan["new_tags"]
+        listing = listing_lookup.get(lid, {})
 
-        print(f"  [{j+1}/{len(update_plan)}] Updating listing {lid}: {title[:50]}...")
+        print(f"  [{j+1}/{len(update_plan)}] Staging listing {lid}: {title[:50]}...")
         try:
-            client.update_listing(lid, {"tags": new_tags})
-            print(f"    ✓ Updated successfully")
-            success_count += 1
-        except EtsyAPIError as e:
-            print(f"    ✗ Failed: {e}")
+            payload = {"listing_id": lid, "tags": new_tags, "_state_at_staging": listing.get("state")}
+            summary = f"Tag fix ({len(new_tags)}/13): {title[:50]}"
+            _db.enqueue_action("update_tags", summary, payload)
+            print(f"    ✓ Staged for approval")
+            staged_count += 1
+        except Exception as e:
+            print(f"    ✗ Failed to stage: {e}")
             fail_count += 1
             failed_ids.append(lid)
 
-        # Rate limit between Etsy API calls
-        time.sleep(0.5)
+        # Small pacing gap, consistent with the rest of this script's rate limiting
+        time.sleep(0.1)
 
     print()
 
@@ -361,10 +375,12 @@ def main():
     print(f"Total wall art listings audited : {total}")
     print(f"Listings with tag issues        : {with_issues}")
     print(f"Listings already optimized      : {total - with_issues}")
-    print(f"Listings updated successfully   : {success_count}")
-    print(f"Updates failed                  : {fail_count}")
+    print(f"Listings staged for approval    : {staged_count}")
+    print(f"Staging failed                  : {fail_count}")
     if failed_ids:
         print(f"Failed listing IDs              : {failed_ids}")
+    if staged_count:
+        print(f"\n{staged_count} tag fix(es) are waiting in the Action Center for your one-tap approval.")
     print()
 
     # Breakdown of issue types
