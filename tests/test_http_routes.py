@@ -189,6 +189,112 @@ def test_toggle_nonexistent_todo_returns_404():
     check(resp.status_code == 404, f"toggling a nonexistent todo should 404, got {resp.status_code}")
 
 
+# ── staged-action queue (the actual Etsy/TikTok/local write path) ──────────────
+# Found in the 2026-07-09 weakness audit: ~90 HTTP routes exist but only ~7 were
+# ever exercised via real HTTP (login/session/todos above). The single highest-risk
+# gap was /api/queue/{id}/approve|reject -- the route that actually executes staged
+# mutations -- which only had direct-function-call coverage (test_staged_actions.py
+# calls _validate_staged_action() directly, never through HTTP + auth + the real
+# approve/reject dispatch). These two tests close that gap using local_write_file
+# (monkeypatching db.is_path_allowed + _dispatch_to_relay the same way
+# test_staged_actions.py already does, so no live relay connection or real Etsy/
+# TikTok call is needed) to prove: approve actually reaches execution and reject
+# never does.
+def test_queue_approve_executes_local_write_file_action():
+    original_allowed = server.db.is_path_allowed
+    original_dispatch = server._dispatch_to_relay
+    calls = []
+
+    async def _fake_dispatch(name, tool_input, timeout=15.0):
+        calls.append((name, tool_input))
+        return {"ok": True}
+
+    server.db.is_path_allowed = lambda path: True
+    server._dispatch_to_relay = _fake_dispatch
+    try:
+        action_id = server.db.enqueue_action(
+            "local_write_file",
+            "HTTP integration test write",
+            {"path": "/data/workspace/http_test_marker.txt", "after": "hello from http test"},
+        )
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.post(f"/api/queue/{action_id}/approve")
+        check(resp.status_code == 200, f"approve should 200, got {resp.status_code}: {resp.text}")
+        check(resp.json().get("status") == "executed",
+              f"approve response should report executed, got {resp.json()}")
+        check(len(calls) == 1, f"approving should dispatch exactly once, got {len(calls)} calls")
+        if calls:
+            check(calls[0] == ("local_write_file",
+                                {"path": "/data/workspace/http_test_marker.txt", "content": "hello from http test"}),
+                  f"dispatch should carry the staged path/content through (payload's 'after' -> relay's "
+                  f"'content'), got {calls[0]}")
+        stored = server.db.get_action(action_id)
+        check(stored["status"] == "executed", f"DB row should be 'executed', got {stored['status']}")
+    finally:
+        server.db.is_path_allowed = original_allowed
+        server._dispatch_to_relay = original_dispatch
+
+
+def test_queue_reject_never_executes():
+    original_allowed = server.db.is_path_allowed
+    original_dispatch = server._dispatch_to_relay
+    calls = []
+
+    async def _fake_dispatch(name, tool_input, timeout=15.0):
+        calls.append((name, tool_input))
+        return {"ok": True}
+
+    server.db.is_path_allowed = lambda path: True
+    server._dispatch_to_relay = _fake_dispatch
+    try:
+        action_id = server.db.enqueue_action(
+            "local_write_file",
+            "HTTP integration test write (should be rejected)",
+            {"path": "/data/workspace/http_test_marker_rejected.txt", "after": "should never be written"},
+        )
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.post(f"/api/queue/{action_id}/reject")
+        check(resp.status_code == 200, f"reject should 200, got {resp.status_code}: {resp.text}")
+        check(resp.json().get("status") == "rejected",
+              f"reject response should report rejected, got {resp.json()}")
+        check(len(calls) == 0, f"rejecting must never dispatch, got {len(calls)} call(s)")
+        stored = server.db.get_action(action_id)
+        check(stored["status"] == "rejected", f"DB row should be 'rejected', got {stored['status']}")
+    finally:
+        server.db.is_path_allowed = original_allowed
+        server._dispatch_to_relay = original_dispatch
+
+
+def test_queue_approve_nonexistent_action_returns_404():
+    c, _ = _login(_TEST_USER, _TEST_PASS)
+    resp = c.post("/api/queue/999999999/approve")
+    check(resp.status_code == 404, f"approving a nonexistent action should 404, got {resp.status_code}")
+
+
+def test_queue_approve_already_executed_action_returns_409():
+    original_allowed = server.db.is_path_allowed
+    original_dispatch = server._dispatch_to_relay
+    server.db.is_path_allowed = lambda path: True
+
+    async def _fake_dispatch(name, tool_input, timeout=15.0):
+        return {"ok": True}
+
+    server._dispatch_to_relay = _fake_dispatch
+    try:
+        action_id = server.db.enqueue_action(
+            "local_write_file", "double-approve probe",
+            {"path": "/data/workspace/http_test_double_approve.txt", "after": "x"},
+        )
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        first = c.post(f"/api/queue/{action_id}/approve")
+        check(first.status_code == 200, f"first approve should 200, got {first.status_code}")
+        second = c.post(f"/api/queue/{action_id}/approve")
+        check(second.status_code == 409, f"re-approving an executed action should 409, got {second.status_code}")
+    finally:
+        server.db.is_path_allowed = original_allowed
+        server._dispatch_to_relay = original_dispatch
+
+
 # ── health endpoint (unauthenticated by design -- external watchdog hits this) ──
 def test_health_endpoint_is_unauthenticated_and_reports_persistence():
     c = TestClient(server.app, base_url="https://testserver")

@@ -267,9 +267,9 @@ Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, pro
 - **Target audience**: Fitness beginners, wellness journey, weight loss, healthy eating, self-care
 
 ### DP1030–DP1034 — Expanded Catalog (documentation pending)
-The shop has grown beyond DP1029. Products DP1030–DP1034 exist on disk (`data/digital_products/product_files/`) as PDFs (~7–9MB each, dated + undated versions + v2 finals) with sticker pack ZIPs present for all five. Detailed documentation (titles, sections, color schemes) has not been added to CLAUDE.md yet. Check `data/dp_listing_map.json` for current Etsy listing IDs and titles.
+The shop has grown beyond DP1029. Products DP1030–DP1034 exist on disk (`data/digital_products/product_files/`) as PDFs (~7–9MB each, dated + undated versions + v2 finals) with sticker pack ZIPs present for all five. Detailed documentation (titles, sections, color schemes) has not been added to CLAUDE.md yet — draft listing content exists for DP1030 (ADHD Planner) and DP1033 (Teacher Planner) in `data/dp1030_listing.json` / `data/dp1033_listing.json`; DP1031, DP1032, DP1034 have no listing content authored yet. None of DP1030–1034 are published (`status: draft`/`ready_for_review`, `etsy_listing_id: ""` in `data/product_catalog.json`). **`data/dp_listing_map.json` does NOT have entries for these codes** — those keys were previously double-booked with 5 already-published wall-art listings, since renamed to `WA1030`–`WA1034` (2026-07-09, same treatment as the earlier `DP1026`→`WA1026` fix). Add real `DP1030`–`DP1034` entries to `dp_listing_map.json` when each planner is actually published.
 
-**Note on sticker ZIPs:** DP1030–DP1034 sticker packs exist. DP1026–DP1029 sticker packs do NOT exist on disk and must be generated — see ⚠️ warnings above.
+**Note on sticker ZIPs:** DP1026–DP1034 sticker packs all exist on disk and are all live/complete now. DP1030–1034's packs were regenerated 2026-07-09 — they were previously broken (built 2026-06-30, before the background-removal fix below, or on themed-color backgrounds the fix didn't yet handle) and shipped as 9 sheets × 1 sticker each. `tools/process_sticker_sheets.py`'s background detection was generalized to trust any uniform corner color (not just light backgrounds) and re-run; all five now have 9 real sheets and 240–470+ individual stickers each. See `tools/qc_sweep.py`'s `check_sticker_zip()` — an individual-sticker count under 50 is now a hard FAIL (this exact defect class), not just a warning.
 
 ---
 
@@ -2438,12 +2438,21 @@ Set this in Etsy Dashboard → Shop Manager → Messages → Auto-reply.
 - S-Corp salary draw if applicable
 
 ### Seasonal Keyword Calendar (6 weeks before each peak)
+Corrected 2026-07-09 — this table previously listed only 4 of the 6 seasons
+`tools/seasonal_keywords.py` actually tracks, and its "Update By" dates were
+rough approximations that didn't match the script's real computed/hardcoded
+deadlines (e.g. Back to School's real deadline is July 4, not "mid-July").
+The dates below are the script's actual values; `_SEASONAL_TRIGGER_DATES` in
+`tools/api_server/main.py` fires a few days to two weeks before each one.
+
 | Peak Season | Update By | Keywords to Add |
 |---|---|---|
-| Back to school | Mid-July | student planner 2026, school planner, academic planner |
-| Holiday gifting / New Year | Mid-October | new year planner, 2027 planner, gift for planner lover |
-| Valentine's Day | Early January | valentine gift, love journal, self care |
-| Spring reset | Mid-January | spring planner, fresh start, habit tracker |
+| Back to school | July 4 | student planner 2026, school planner, academic planner |
+| Holiday gifting / New Year | November 8 | new year planner, 2027 planner, gift for planner lover |
+| Valentine's Day | ~January 3 (6wk before Feb 14) | valentine gift digital, love journal, self care planner |
+| Spring reset | ~February 6 (6wk before Mar 20) | spring planner, fresh start planner, new beginnings journal |
+| Mother's Day | March 30 | mothers day gift digital, gift for mom, mom planner |
+| Teacher Appreciation | March 25 | teacher appreciation gift, gift for teacher, teacher digital download |
 
 ---
 

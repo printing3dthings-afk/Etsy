@@ -38,6 +38,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 
 if getattr(sys, "frozen", False):
@@ -448,7 +449,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v135"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v136"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -524,6 +525,36 @@ async def _security_headers(request: Request, call_next):
 # them (Starlette's last-registered middleware becomes outermost) and compresses their
 # final output as well.
 app.add_middleware(GZipMiddleware, minimum_size=500)
+
+# Found in the 2026-07-09 weakness audit: file-upload routes each enforce their own
+# cap (_MAX_UPLOAD_BYTES = 30MB), but ordinary JSON-body POST routes (/api/settings,
+# /api/account, /api/workflows/{id}/run, etc.) had NO body-size limit at any layer —
+# FastAPI/Starlette buffer the entire body before parsing, so an arbitrarily large
+# payload could be sent to any of them. This is a blanket outer safety net, not a
+# replacement for the tighter per-route upload checks: the cap here (35MB) sits just
+# above the largest existing upload limit so it never interferes with a legitimate
+# upload — it only catches bodies no real client would ever send. Checked via
+# Content-Length before the handler runs, so an oversized request never reaches
+# route logic or gets buffered into memory at all.
+_MAX_REQUEST_BODY_BYTES = 35 * 1024 * 1024
+
+
+class _BodySizeLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        content_length = request.headers.get("content-length")
+        if content_length is not None:
+            try:
+                if int(content_length) > _MAX_REQUEST_BODY_BYTES:
+                    return JSONResponse(
+                        status_code=413,
+                        content={"detail": f"Request body exceeds {_MAX_REQUEST_BODY_BYTES // (1024*1024)}MB limit"},
+                    )
+            except ValueError:
+                pass
+        return await call_next(request)
+
+
+app.add_middleware(_BodySizeLimitMiddleware)
 
 # Serve PWA icons (pre-generated files committed to the repo — no runtime PIL).
 _STATIC_DIR = ROOT / "tools" / "api_server" / "static"
@@ -4825,9 +4856,24 @@ _WEEKLY_MONITOR_SCRIPTS = [
     "audit_fix_wall_art_tags.py",
 ]
 
-# Mid-July, mid-October, early January, mid-January — the exact 4 dates
-# CLAUDE.md's "Seasonal Keyword Calendar" documents (6 weeks before each peak).
-_SEASONAL_TRIGGER_DATES = {(7, 15), (10, 15), (1, 5), (1, 15)}
+# Fixed 2026-07-09 (weakness audit): this set used to be built to match CLAUDE.md's
+# documented table, but the table itself didn't match tools/seasonal_keywords.py's
+# real computed/hardcoded `update_by` deadlines — 2 of the 4 dates fired AFTER their
+# season's actual deadline (Back to School's real deadline is Jul 4, not "mid-July";
+# Valentine's is ~Jan 3, not Jan 5), and 2 of the script's 6 seasons (Mother's Day,
+# Teacher Appreciation) had no trigger at all. Each date below now sits a few days to
+# two weeks BEFORE that season's real deadline (computed the same way
+# seasonal_keywords.py's own _build_calendar()/_update_by() do) so the check always
+# fires with room to act, never after the window has already closed:
+#   Back to School   — deadline Jul 4   -> trigger Jun 20
+#   Holiday/New Year — deadline Nov 8   -> trigger Oct 15 (already early, unchanged)
+#   Valentine's      — deadline ~Jan 3  -> trigger Dec 28 (of the prior year)
+#   Spring Reset     — deadline ~Feb 6  -> trigger Jan 15 (already early, unchanged)
+#   Mother's Day     — deadline Mar 30  -> trigger Mar 20 (new)
+#   Teacher Appreciation — deadline Mar 25 -> trigger Mar 15 (new)
+_SEASONAL_TRIGGER_DATES = {
+    (6, 20), (10, 15), (12, 28), (1, 15), (3, 20), (3, 15),
+}
 
 _ADS_KILL_SPEND_USD = 30.0
 _ADS_KILL_ROAS = 1.5
@@ -4917,7 +4963,25 @@ def _check_ads_thresholds() -> str:
     ads_data = store.get("etsy_ads", default={})
     spend_log = ads_data.get("spend_log", [])
     if not spend_log:
-        return "no ad spend logged yet — nothing to check"
+        # Found in the 2026-07-09 weakness audit: this used to just return silently
+        # forever if ads were never turned on at all, with no separate signal telling
+        # Scott that Ads is an available, unused growth lever — the monitor was built
+        # to watch spend that doesn't exist, not to flag its absence. Nudge at most
+        # once per quarter (db.get_setting/set_setting, same key-value store the
+        # Settings screen uses) so this doesn't spam a daily todo.
+        today = date.today()
+        last_nudge_str = db.get_setting("ads_never_used_nudge_date")
+        last_nudge = date.fromisoformat(last_nudge_str) if last_nudge_str else None
+        if last_nudge is None or (today - last_nudge).days >= 90:
+            db.add_todo(
+                "Etsy Ads has never been used — consider a small test budget "
+                "(CLAUDE.md's Etsy Ads Strategy: $3-5/day starting budget, only once a "
+                "listing has some organic proof of life). Low priority, your call.",
+                added_by="frank",
+            )
+            db.set_setting("ads_never_used_nudge_date", today.isoformat())
+            return "no ad spend logged yet — quarterly nudge added"
+        return "no ad spend logged yet — nothing to check (nudged recently)"
 
     today = date.today()
 
@@ -8151,7 +8215,7 @@ _VOICE_CONTENT_TYPE_EXT = {
 
 
 @app.post("/api/voice/transcribe")
-async def transcribe_voice(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+async def transcribe_voice(request: Request, _token: str = Depends(_rate_limited_auth)):
     """Accepts a raw audio blob (Content-Type set by the client, e.g. audio/webm from
     the browser's MediaRecorder, or audio/m4a from the native app) and returns its
     transcript via OpenAI Whisper. Mirrors the raw-bytes body pattern already used by
@@ -8181,7 +8245,7 @@ async def transcribe_voice(request: Request, _token: str = Depends(_auth_session
 
 
 @app.post("/api/voice/speak")
-async def speak_text(payload: dict, _token: str = Depends(_auth_session_or_bearer)):
+async def speak_text(payload: dict, _token: str = Depends(_rate_limited_auth)):
     """Accepts {"text": "..."} and returns MP3 audio bytes from OpenAI TTS — returned
     as a direct audio/mpeg response body (not base64/JSON) so the client can feed it
     straight into an <audio> element (web) or a Sound object (native)."""

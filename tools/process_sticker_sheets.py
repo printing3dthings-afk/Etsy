@@ -91,6 +91,15 @@ def _save_png(rgba: Image.Image, path: Path, colors: int = 256) -> None:
 # never touching; the cream background (blue channel 232 < 238) was simply never
 # removed. Sampling the real background color and flooding by similarity fixes it
 # (verified 2026-07-03 on the real Sheet 6: recovered 1 -> 21 individual stickers).
+#
+# DP1030-1034 sheets surfaced a second variant of the same defect (found
+# 2026-07-09): those sheets are generated on solid THEMED-COLOR backgrounds
+# (matcha green, midnight navy, mustard gold, etc — not white/cream at all), so
+# the original light-only trust gate (bg.min() >= 170) never fired and every
+# sheet fused into a single 1-sticker blob. A uniform corner sample (spread≈0)
+# is background regardless of its brightness — only the UNIFORMITY test
+# actually distinguishes "flat background" from "detailed art in the corner",
+# so the brightness requirement was dropped.
 BG_COLOR_TOLERANCE = 42   # RGB distance; count was stable across 20-70 on real sheets
 
 
@@ -98,15 +107,18 @@ def remove_white_background(img: Image.Image) -> Image.Image:
     """Return an RGBA image with the edge-connected sheet background made transparent.
 
     The background color is SAMPLED from the sheet corners (handles cream/off-white/
-    tinted paper, not just pure white), then border-connected pixels within
-    BG_COLOR_TOLERANCE of it are flooded away. Interior highlights (catch-lights,
-    white fills fully enclosed by a design) are preserved because only regions that
-    touch the sheet border count as background — same rule as before, just with a
-    color-aware background test instead of a pure-white one.
+    tinted paper and solid themed-color backgrounds, not just pure white), then
+    border-connected pixels within BG_COLOR_TOLERANCE of it are flooded away.
+    Interior highlights (catch-lights, white fills fully enclosed by a design) are
+    preserved because only regions that touch the sheet border count as background —
+    same rule as before, just with a color-aware background test instead of a
+    pure-white one.
 
-    Safety: if the sampled corners are not a uniform light color (e.g. a full-bleed
-    dark design, or a sheet already delivered on transparency), fall back to the
-    original strict white>=238 test so a legitimately dark/edge design is never eaten.
+    Safety: if the sampled corners are NOT uniform (e.g. detailed art reaches into a
+    corner), fall back to the original strict white>=238 test so a legitimately busy
+    edge design is never eaten. Uniformity, not brightness, is what actually signals
+    "this is a flat background" — a dark or saturated color that is identical across
+    all four corners is just as clearly a background as a light one.
     """
     rgb = np.asarray(img.convert("RGB"), dtype=np.int16)
     h, w = rgb.shape[:2]
@@ -122,12 +134,12 @@ def remove_white_background(img: Image.Image) -> Image.Image:
     bg = np.median(corners, axis=0)
     corner_spread = float(np.median(np.abs(corners - bg)))
 
-    # Only trust the sampled color if the corners are a uniform, light background.
-    if bg.min() >= 170 and corner_spread <= 18:
+    # Only trust the sampled color if the corners are uniform (any brightness/hue).
+    if corner_spread <= 18:
         dist = np.sqrt(((rgb - bg) ** 2).sum(axis=2))
         bgish = dist <= BG_COLOR_TOLERANCE
     else:
-        # Fallback: original strict pure-white test (safe for dark/full-bleed art).
+        # Fallback: original strict pure-white test (safe for busy/detailed edges).
         bgish = np.all(rgb >= WHITE_THRESHOLD, axis=2)
 
     labeled, n = ndimage.label(bgish, structure=structure)

@@ -4725,3 +4725,110 @@ up from 36 at the start of this session). `_BUILD_ID` bumped v134 -> v135.
 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
 
 **Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-09 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-09 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-09 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-09 — Manual deploy rollback procedure (no automated rollback exists)
+Found during the weakness audit: Railway auto-deploys this repo on every push to the
+tracked branch, and `railway.toml` only configures `healthcheckPath=/health` +
+`restartPolicyType=on_failure` (10 retries). That recovers a container that crash-loops
+on boot -- it does NOT revert to a prior image if a bad deploy passes the health check
+but is functionally broken (e.g. a route that 500s, a UI regression, wrong behavior that
+still returns 200 on /health). There is currently no automated rollback.
+
+**To roll back manually:** Railway dashboard -> select the service -> Deployments tab ->
+find the last known-good deployment -> click it -> "Redeploy". This re-runs that exact
+prior build/image immediately; it does not require a new git push or revert commit
+(though following up with a real `git revert` on the branch is still worth doing so the
+next normal push doesn't reintroduce the same bad state).
+
+**Recommended one-time hardening (Scott action, not code):** `.github/workflows/ci-smoke.yml`
+runs the full test suite on every push but is currently only a soft gate -- a red run is
+an early warning, it does not block Railway's auto-deploy. Enabling Railway -> service ->
+Settings -> "Wait for CI to pass" (Check Suites) turns it into a hard gate, so a broken
+commit never reaches production in the first place. This has been suggested before
+(see the `ci-smoke.yml` build/ship note) but not yet confirmed enabled.
+
+
+## 2026-07-09 — Weakness audit: fixed all 16 findings (Product/Security/Infra/Ops)
+Following a 4-domain weakness audit, implemented fixes across all findings. Build
+bumped v135 -> v136.
+
+**Product & Data Integrity (the critical one):**
+- DP1030-1034 sticker packs were 9 sheets x 1 sticker each (built 2026-06-30, before
+  the DP1027-sheet-6 background-removal fix landed 2026-07-03). Re-running the fixed
+  script still produced 1-sticker-per-sheet — root cause was actually a SECOND,
+  distinct defect: these sheets use solid THEMED-COLOR backgrounds (matcha green,
+  midnight navy, etc.), not white/cream, and the fix's trust gate only accepted light
+  backgrounds (`bg.min() >= 170`). Generalized `remove_white_background()` in
+  `tools/process_sticker_sheets.py` to trust any UNIFORM corner color regardless of
+  brightness (uniformity, not brightness, is what actually signals "flat background").
+  Regenerated all 5 packs: 247-474 real individual stickers each (old broken zips
+  archived via tools/trash.py first, ids 20260709-001..005).
+- Found and fixed a second, causally-related bug while regenerating: DP1030-1034
+  product codes collided with 5 already-published wall-art listings in
+  `dp_listing_map.json` (same class of bug as the earlier DP1026->WA1026 fix, never
+  applied here). This meant the quality gate silently checked the wrong product's
+  files when reviewing those wall-art listings. Renamed to WA1030-1034.
+- `qc_sweep.py`'s sticker undercount check was WARN-only regardless of how low the
+  count was (the 9-sticker bug would have passed it). Now hard-FAILs under 50.
+- `approve_listing.py`'s "no DP code mapped" path used to print a message and let
+  publish proceed. Now fails closed — blocks without `--force`.
+- `qc_sweep.py`'s `PLANNER_PAGES` dict had guessed page counts 5-36 pages off actual
+  files for DP1030-1033, and was missing DP1034 entirely. Corrected against real
+  pypdf counts; added `dp_code_from_stem()` so version-suffixed filenames (e.g.
+  `DP1034_v2_final.pdf`) still resolve to the right DP code.
+- `data/dp1030_listing.json` / `dp1033_listing.json` claimed "91/120 pages" and "5
+  PNG sticker sheets (200+ stickers)" — corrected to real page counts and sheet/
+  sticker counts.
+- Added a `product_catalog.json` entry for DP1034 (was missing entirely).
+- Fixed CLAUDE.md's stale claim that DP1026-1029 packs "do NOT exist on disk."
+
+**Security:** `/api/voice/transcribe` and `/api/voice/speak` weren't rate-limited
+despite calling paid OpenAI APIs — swapped to `_rate_limited_auth`.
+
+**Infrastructure:**
+- `requirements.txt` exact-pinned (was mostly loose `>=`, no lockfile). Archived the
+  stale, drifted, unused duplicate `tools/api_server/requirements.txt`.
+- Added a global request body-size-limit middleware (35MB, Content-Length check) —
+  ordinary JSON routes had no cap at any layer before this.
+- Added 4 HTTP-level tests for `/api/queue/{id}/approve|reject` — the highest-risk
+  untested surface (the actual Etsy/TikTok write path).
+- Documented the manual Railway rollback procedure (no automated rollback exists).
+
+**Business Operations:**
+- `daily_brief.py`'s Star Seller message check silently defaulted to "0 unread"
+  when the messages call 403s (no messaging_r scope) — looked covered, wasn't. Now
+  surfaces an explicit "message check unavailable" line instead.
+- Archived orphaned `tools/customer_service_tools.py` (consumer already trashed).
+- Fixed the seasonal-keyword three-way drift between `seasonal_keywords.py`'s real
+  computed deadlines, `main.py`'s `_SEASONAL_TRIGGER_DATES`, and CLAUDE.md's table —
+  added Mother's Day/Teacher Appreciation triggers (previously never fired), fixed
+  Back to School/Valentine's triggers that fired after their real deadline. Changed
+  Spring Reset's tag swap from removing the permanent `habit tracker pdf` tag to
+  swapping `planner bundle` instead (Scott's call).
+- Ads-threshold monitor now nudges once per quarter if Ads has never been used,
+  instead of silently returning nothing forever.
+- `listing_drop_monitor.py`'s price check was floor-only. Added target/upper-bound
+  drift detection (+10%) for products with one fixed documented price, and added
+  DP1030-1034 floor/target entries.
+
+All 5 test suites pass (139 tests total). Full weakness-audit report + fix details
+in the corresponding chat session.
