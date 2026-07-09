@@ -4868,3 +4868,55 @@ Also set `GEMINI_API_KEY` this session (via Railway's GraphQL `variableUpsert` m
 project 323e677f-2c1a-4a21-845d-79aae274a225 / service "Etsy" / env "production") --
 `video_understanding` and `image_engine_gemini` (Nano Banana) capabilities now report
 `available: true`.
+
+### 2026-07-09 — Persistent /data Volume attached + full-shop listing compliance sweep
+
+**Persistence fix (two separate gaps, both now closed):** `/health` was reporting
+`persistent: false` even after a Railway Volume was attached at `/data` -- root cause was
+the volume mounts owned by root, and the Dockerfile's build-time `USER appuser` couldn't
+reach a path that only exists at container runtime. Fixed via `entrypoint.sh` (runs as
+root, `chown -R appuser:appuser /data`, then `exec gosu appuser "$@"` to drop privileges)
+plus removing the `USER appuser` Dockerfile directive. Second, separate gap found while
+investigating: `ops_runbook.md` (this file), `ceo_learnings.md`, and
+`registered_commands.json` never existed inside any container at all, ever -- swallowed
+outright by `.dockerignore`'s blanket `data/` exclusion rule, unrelated to the Volume.
+Fixed via `.dockerignore`'s glob-form `data/*` + negations, and a new
+`db.resolve_persistent_path()` helper in `db.py` that all three files now route through
+(seeds from the git-committed copy on first boot if the `/data` copy doesn't exist yet).
+Verified end-to-end: a todo added before a live redeploy survived it, and this very entry
+is being written to the persistent path -- if you're reading this from Frank's live KB
+tab, that's the proof.
+
+**Full-shop listing compliance sweep (`tools/listing_compliance_sweep.py`, new):**
+Scott asked for a full compliance check of every live Etsy listing, with violators taken
+down and staged for review. Extends `tools/listing_integrity_check.py`'s existing
+manifest-scoped audit engine to cover literally every listing Etsy shows as active --
+pulls `get_shop_listings_all(state="active")` and cross-references against
+`data/listing_manifest.json`; any listing with zero manifest mapping fails closed (its
+own FAIL, "quality gate never ran for it") rather than being silently skipped, matching
+the DP1030-1034 collision-fix precedent from earlier this session. First live run
+(2026-07-09, fast mode only, no photo-hash check): **140 active listings audited, 81
+PASS / 24 WARN / 35 FAIL** in ~3.5 minutes. Every FAIL got a staged `deactivate_listing`
+action in the Action Center (Scott's one-tap approve/reject -- nothing was actually taken
+down by this script) plus a linked todo; every WARN got a todo only. Full report:
+`review_batches/compliance_sweep_20260709_1854.txt`. Dominant FAIL patterns: a batch of
+`svg_bundle`/`3d_print_physical` listings below the required photo-count minimum (4-6
+photos vs 8+ required), several bundle-type listings (`gallery_bundle`, `bundle`,
+`sticker_bundle`) whose manifest `expected_files` pattern predates a since-changed
+per-design ZIP naming scheme (files ARE present and correct, just don't match the stale
+expected-filename pattern -- needs a manifest fix, not a listing fix), and one legitimate
+SVG listing (4520524435) genuinely short on photos and missing description keywords.
+
+**Test coverage added alongside:** `tests/test_listing_integrity.py` (new, 8 tests,
+fixture-based `audit_listing()`/`render_report()` checks, zero coverage before today) and
+3 new tests in `tests/test_http_routes.py` covering the todos toggle route and the
+`deactivate_listing` staged-action path end-to-end (approve executes exactly one
+`update_listing(lid, state=inactive)` call; a stale/changed listing state at approval time
+is correctly refused). Both wired into `.github/workflows/ci-smoke.yml`.
+
+**Known gap, not closed by this pass:** photo-authenticity and compatibility-claim
+verification (CLAUDE.md's CARDINAL CHECK) remain uncovered by any automated check --
+`listing_integrity_check.py --full` mode has a perceptual-hash art-in-photos check but it
+was deliberately not run in this sweep (too slow for a first full-shop pass; ~131 listings
+x ~10 photos each). Should be run as its own follow-up pass, not assumed covered by this
+FAST-mode sweep.
