@@ -4707,3 +4707,9 @@ console and sets the new values in Railway env vars + `.env`. Added an URGENT to
 
 **Verified:** all 5 test suites green (129 tests + smoke, 45 agent tools registered,
 up from 36 at the start of this session). `_BUILD_ID` bumped v134 -> v135.
+
+
+## 2026-07-09 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
