@@ -9,8 +9,17 @@ fills in real counts/costs/suppliers only he knows.
 This is a one-off deliverable generator (not a runtime app dependency) -- openpyxl
 isn't added to requirements.txt for that reason, same as PyInstaller isn't.
 
+Written into data/backups/ -- the same root main.py's _FILE_ROOTS["backups"] already
+serves under the Files screen's "Backups" label, so this shows up in Frank with zero
+new UI/API code. IMPORTANT: data/backups/ is covered by data/.gitignore's `backups/`
+rule, so this file never travels via `git push` to the hosted Railway deployment --
+it only appears in a Files screen that's reading from a filesystem this file actually
+sits on (this repo checkout, run locally or via the desktop app). Getting it into the
+LIVE hosted Frank's Files screen still requires either uploading it there directly
+(same tools/sync_files_to_hub.py pattern used for product files) or attaching the
+Railway Volume (correction-plan todo) and syncing once.
+
 Run:  python tools/generate_business_tracker.py
-Output: written next to this script's invocation dir (see OUT_PATH below).
 """
 from pathlib import Path
 
@@ -19,7 +28,8 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.formatting.rule import CellIsRule
 from openpyxl.utils import get_column_letter
 
-OUT_PATH = Path("OnBrandCraftz_Business_Tracker.xlsx")
+REPO_ROOT = Path(__file__).resolve().parent.parent
+OUT_PATH = REPO_ROOT / "data" / "backups" / "OnBrandCraftz_Business_Tracker.xlsx"
 
 # ── shared styling (matches the app's cyan/navy palette, kept professional) ────────
 HEADER_FILL = PatternFill("solid", fgColor="1B2568")  # midnight blue, same family as DP1028
