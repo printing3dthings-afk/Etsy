@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Wander Often Wonder Always</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,66.0 83.5,76.5 94.0,80.0 83.5,83.5 80.0,94.0 76.5,83.5 66.0,80.0 76.5,76.5" fill="#F07A1A"/>
+  <polygon points="720.0,66.0 723.5,76.5 734.0,80.0 723.5,83.5 720.0,94.0 716.5,83.5 706.0,80.0 716.5,76.5" fill="#1B9E8A"/>
+  <polygon points="80.0,706.0 83.5,716.5 94.0,720.0 83.5,723.5 80.0,734.0 76.5,723.5 66.0,720.0 76.5,716.5" fill="#F07A1A"/>
+  <polygon points="720.0,706.0 723.5,716.5 734.0,720.0 723.5,723.5 720.0,734.0 716.5,723.5 706.0,720.0 716.5,716.5" fill="#1B9E8A"/>
+  <text x="400" y="200" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#F07A1A" letter-spacing="5">WANDER</text>
+  <circle cx="334.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="356.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="378.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="400.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="422.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="444.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <circle cx="466.0" cy="232.0" r="5" fill="#F07A1A"/>
+  <text x="400" y="360" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#F07A1A">often</text>
+  <circle cx="334.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="356.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="378.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="400.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="422.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="444.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <circle cx="466.0" cy="402.0" r="5" fill="#1B9E8A"/>
+  <text x="400" y="522" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#1B9E8A">wonder</text>
+  <circle cx="334.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="356.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="378.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="400.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="422.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="444.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <circle cx="466.0" cy="564.0" r="5" fill="#F07A1A"/>
+  <text x="400" y="636" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="80" fill="#1B9E8A" letter-spacing="5">ALWAYS</text>
+</svg>

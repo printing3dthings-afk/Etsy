@@ -1,2 +1,8 @@
+[build]
+builder = "dockerfile"
+
 [deploy]
-startCommand = "python web/app.py"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10

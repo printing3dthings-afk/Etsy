@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Trust In The Lord SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <defs>
+        <style>
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+      @font-face { font-family: 'CinzelDecReg'; src: url('/usr/local/share/fonts/CinzelDecorative-Regular.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <path d="M 400,40 L 760,400 L 400,760 L 40,400 Z" fill="black"/>
+  <path d="M 400,80 L 720,400 L 400,720 L 80,400 Z" fill="white"/>
+  <path d="M 605.061,605.061 C 605.061,612.761 627.061,608.361 627.061,605.061 C 627.061,601.761 605.061,597.361 605.061,605.061 Z" fill="black"/>
+  <path d="M 605.061,605.061 C 598.393,608.911 613.203,625.764 616.061,624.114 C 618.919,622.464 611.729,601.211 605.061,605.061 Z" fill="black"/>
+  <path d="M 605.061,605.061 C 598.393,601.211 591.203,622.464 594.061,624.114 C 596.919,625.764 611.729,608.911 605.061,605.061 Z" fill="black"/>
+  <path d="M 605.061,605.061 C 605.061,597.361 583.061,601.761 583.061,605.061 C 583.061,608.361 605.061,612.761 605.061,605.061 Z" fill="black"/>
+  <path d="M 605.061,605.061 C 611.729,601.211 596.919,584.358 594.061,586.008 C 591.203,587.658 598.393,608.911 605.061,605.061 Z" fill="black"/>
+  <path d="M 605.061,605.061 C 611.729,608.911 618.919,587.658 616.061,586.008 C 613.203,584.358 598.393,601.211 605.061,605.061 Z" fill="black"/>
+  <circle cx="605.1" cy="605.1" r="6" fill="white"/>
+  <path d="M 194.939,605.061 C 194.939,612.761 216.939,608.361 216.939,605.061 C 216.939,601.761 194.939,597.361 194.939,605.061 Z" fill="black"/>
+  <path d="M 194.939,605.061 C 188.271,608.911 203.081,625.764 205.939,624.114 C 208.797,622.464 201.607,601.211 194.939,605.061 Z" fill="black"/>
+  <path d="M 194.939,605.061 C 188.271,601.211 181.081,622.464 183.939,624.114 C 186.797,625.764 201.607,608.911 194.939,605.061 Z" fill="black"/>
+  <path d="M 194.939,605.061 C 194.939,597.361 172.939,601.761 172.939,605.061 C 172.939,608.361 194.939,612.761 194.939,605.061 Z" fill="black"/>
+  <path d="M 194.939,605.061 C 201.607,601.211 186.797,584.358 183.939,586.008 C 181.081,587.658 188.271,608.911 194.939,605.061 Z" fill="black"/>
+  <path d="M 194.939,605.061 C 201.607,608.911 208.797,587.658 205.939,586.008 C 203.081,584.358 188.271,601.211 194.939,605.061 Z" fill="black"/>
+  <circle cx="194.9" cy="605.1" r="6" fill="white"/>
+  <path d="M 194.939,194.939 C 194.939,202.639 216.939,198.239 216.939,194.939 C 216.939,191.639 194.939,187.239 194.939,194.939 Z" fill="black"/>
+  <path d="M 194.939,194.939 C 188.271,198.789 203.081,215.642 205.939,213.992 C 208.797,212.342 201.607,191.089 194.939,194.939 Z" fill="black"/>
+  <path d="M 194.939,194.939 C 188.271,191.089 181.081,212.342 183.939,213.992 C 186.797,215.642 201.607,198.789 194.939,194.939 Z" fill="black"/>
+  <path d="M 194.939,194.939 C 194.939,187.239 172.939,191.639 172.939,194.939 C 172.939,198.239 194.939,202.639 194.939,194.939 Z" fill="black"/>
+  <path d="M 194.939,194.939 C 201.607,191.089 186.797,174.236 183.939,175.886 C 181.081,177.536 188.271,198.789 194.939,194.939 Z" fill="black"/>
+  <path d="M 194.939,194.939 C 201.607,198.789 208.797,177.536 205.939,175.886 C 203.081,174.236 188.271,191.089 194.939,194.939 Z" fill="black"/>
+  <circle cx="194.9" cy="194.9" r="6" fill="white"/>
+  <path d="M 605.061,194.939 C 605.061,202.639 627.061,198.239 627.061,194.939 C 627.061,191.639 605.061,187.239 605.061,194.939 Z" fill="black"/>
+  <path d="M 605.061,194.939 C 598.393,198.789 613.203,215.642 616.061,213.992 C 618.919,212.342 611.729,191.089 605.061,194.939 Z" fill="black"/>
+  <path d="M 605.061,194.939 C 598.393,191.089 591.203,212.342 594.061,213.992 C 596.919,215.642 611.729,198.789 605.061,194.939 Z" fill="black"/>
+  <path d="M 605.061,194.939 C 605.061,187.239 583.061,191.639 583.061,194.939 C 583.061,198.239 605.061,202.639 605.061,194.939 Z" fill="black"/>
+  <path d="M 605.061,194.939 C 611.729,191.089 596.919,174.236 594.061,175.886 C 591.203,177.536 598.393,198.789 605.061,194.939 Z" fill="black"/>
+  <path d="M 605.061,194.939 C 611.729,198.789 618.919,177.536 616.061,175.886 C 613.203,174.236 598.393,191.089 605.061,194.939 Z" fill="black"/>
+  <circle cx="605.1" cy="194.9" r="6" fill="white"/>
+  <path d="M 400,120 L 680,400 L 400,680 L 120,400 Z" fill="none" stroke="black" stroke-width="2"/>
+  <path d="M 400,135 L 665,400 L 400,665 L 135,400 Z" fill="none" stroke="black" stroke-width="1"/>
+  <text x="400" y="315" text-anchor="middle" font-family="Cormorant, serif" font-size="24" fill="black" letter-spacing="5">TRUST IN</text>
+  <text x="400" y="370" text-anchor="middle" font-family="GreatVibes, cursive" font-size="30" fill="black">the Lord</text>
+  <text x="400" y="432" text-anchor="middle" font-family="CinzelDec, serif" font-size="56" fill="black" letter-spacing="2">WITH ALL</text>
+  <text x="400" y="488" text-anchor="middle" font-family="Cormorant, serif" font-size="26" fill="black" letter-spacing="3">YOUR HEART</text>
+  <text x="400" y="544" text-anchor="middle" font-family="CormorantItalic, serif" font-size="14" fill="black" letter-spacing="4">PROVERBS  3:5</text>
+</svg>

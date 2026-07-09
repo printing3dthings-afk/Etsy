@@ -1,0 +1,8 @@
+            def _rev(lst):
+                total = 0.0
+                for o in lst:
+                    gt = o.get("grandtotal", {})
+                    if isinstance(gt, dict):
+                        divisor = gt.get("divisor", 100) or 100
+                        total += gt.get("amount", 0) / divisor
+                return round(total, 2)

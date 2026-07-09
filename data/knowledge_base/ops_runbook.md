@@ -1,0 +1,4250 @@
+# Ops Runbook — Infrastructure Incidents & Fixes
+
+Append-only log of infrastructure/dashboard problems and how they were diagnosed
+and fixed. This file is loaded into the CEO Agent's (Fucking Frank) system prompt
+at request time, so Scott can ask Frank directly ("why was X broken?") and get a
+grounded answer instead of a guess. Keep entries short — a few lines each.
+
+---
+
+### 2026-06-16 — OpenAI marked "Not set" in Hub > Creds despite being in local .env
+**Symptom:** Creds tab showed OpenAI, SMTP, and Pinterest as "Not set" even though
+OPENAI_API_KEY had a real value in the project's `.env` file.
+**Root cause:** `.env` is gitignored (credentials must never be committed — see
+CLAUDE.md). Railway builds the container straight from the GitHub repo, so it never
+receives the local `.env` at all. Etsy/Anthropic showed "Set" because those were
+added directly as Railway environment variables at some point; OpenAI never was.
+**Fix:** Set `OPENAI_API_KEY` directly on the live Railway service via the Railway
+GraphQL API (`variableUpsert` mutation) using an account-level API token
+(`Authorization: Bearer <token>` header, endpoint `https://backboard.railway.app/graphql/v2`).
+Railway auto-redeploys on variable change.
+**Future fix for this class of issue:** Any time a credential is added to local
+`.env`, it must ALSO be added to Railway's service Variables (dashboard or API) —
+the two are not connected. SMTP_PASSWORD and Pinterest keys are still genuinely
+unset (no real values exist yet anywhere) — that's expected, not a bug.
+
+### 2026-06-16 — Duplicate/abandoned Railway project
+**Symptom:** Railway account had two projects: `calm-light` (live, matches the
+deployed APP_SECRET_TOKEN) and `enchanting-purpose` (created 2026-06-12, one
+service named "Etsy", zero environment variables, one successful + several failed
+deployments).
+**Root cause:** Leftover from an earlier deployment attempt before `calm-light`
+became the real production deployment.
+**Fix:** Deleted `enchanting-purpose` via `projectDelete` mutation after confirming
+it had no variables and wasn't the one matching the live token. `calm-light` is the
+only project now.
+
+### 2026-06-16 — Dashboard spinners ("Fucking Frank is analyzing your shop…",
+Conversion Doctor) appeared stuck
+**Symptom:** Both spinners on the Dash tab spun indefinitely.
+**Root cause:** `/api/suggestions` was returning HTTP 500 because the Anthropic API
+itself was returning `InternalServerError: Error code: 500 - Internal server error`
+on `messages.create` — a transient outage on Anthropic's side, not a bug in this
+codebase. Confirmed via Railway deployment logs (full traceback ends in
+`anthropic.InternalServerError`).
+**Fix:** None needed in code that time — `getCeoSuggestions()` already has proper
+try/catch + "Try Again" handling. If this happens again: check whether
+`/api/suggestions` is slow to fail (Anthropic outage, self-resolving, just wait) vs
+hangs past 120s (real bug). Don't assume it's a frontend bug — verify with a direct
+curl against `/api/suggestions` and check Railway logs for the actual exception first.
+
+### 2026-06-16 — Spinner stuck again a couple hours later — this time a real bug
+**Symptom:** Same "Fucking Frank is analyzing your shop…" spinner, reported stuck
+again at 18:49 UTC. `curl -X POST /api/suggestions` returned bare `HTTP 500
+"Internal Server Error"` after ~73s.
+**Root cause:** Different from the earlier entry — this time it was a real bug, not
+an Anthropic outage. `/api/suggestions` wrapped EACH individual `messages.create`
+call in `asyncio.wait_for(..., timeout=60.0)`, but the frontend's own fetch timeout
+is 120s (`fetchWithTimeout(..., 120000)`). The 3-tool-call diagnostic sequence's
+final synthesis call (up to 3500 output tokens, large context from 3 rounds of tool
+results) legitimately took >60s on a normal, non-outage Anthropic response — direct
+test confirmed Anthropic responded to a trivial call in 1.1s, so the API itself was
+healthy. The `asyncio.TimeoutError` this raised was never caught, so FastAPI
+returned a bare unhandled-exception 500 with no `detail` field — which is why the
+frontend showed a generic failure instead of a helpful message.
+**Fix:** Replaced the flat per-call 60s timeout with a single 100s overall budget
+shared across all loop iterations (`deadline = time.monotonic() + 100.0`, remaining
+budget passed to each `wait_for` call) — leaves headroom under the frontend's 120s
+limit while not starving a legitimately-slower synthesis call. Wrapped the loop in
+try/except for `asyncio.TimeoutError` (-> HTTP 504 with a clear `detail` message)
+and `anthropic.APIError` (-> HTTP 502 with the real error message), so any future
+failure surfaces a real message in the UI instead of bare "Internal Server Error".
+**Lesson:** When a transient symptom recurs, re-verify — don't assume the earlier
+diagnosis still holds. The first occurrence really was an Anthropic outage; this one
+was a latent timeout bug that outage exposed me to investigating but didn't itself
+cause.
+
+### 2026-06-16 — Same spinner, third layer: 200 OK but suggestions silently empty
+**Symptom:** After the timeout fix above went live, `/api/suggestions` returned HTTP
+200 (no more 500/504), but the dashboard showed an empty/low-value report — headline
+"Analysis complete", zero suggestions — even though Claude had clearly generated a
+real, detailed diagnostic (it later turned out to include a genuinely valuable finding:
+~40 wall-art listings all carrying mismatched "kawaii" tags on non-kawaii designs).
+**Root cause:** The JSON-extraction code only stripped a ` ```json ` fence if the
+model's response text *started* with it (`if text.startswith(fence)`). Claude's actual
+response began with a conversational sentence ("Compiling the full diagnostic now.")
+before the fenced block, so the check failed, `json.loads()` raised, and the code fell
+into its fallback path — silently discarding the real report into an unrendered `raw`
+field instead of surfacing it.
+**Fix:** Added a shared `_extract_json_object()` helper (`main.py`) that searches for a
+fenced ```json block *anywhere* in the text (regex), then falls back to the outermost
+`{...}` span, then a bare `json.loads()` — used at all three sites that parse a model
+JSON response (`/api/suggestions`, `/api/diagnose/{id}` conversion doctor, and the
+batch tag generator). Verified live: response now has 8 real suggestions, no `error`
+field, full headline/score/top_win/top_risk populated.
+**Lesson:** A 200 status code is not proof a feature is actually working — always check
+the response *body* makes sense, not just the HTTP status. This bug shipped silently
+inside what looked like a successful fix.
+
+### 2026-06-16 — Spinner STILL stuck: the real cause was raw latency (~80s), not a crash
+**Symptom:** Scott reported the "Fucking Frank is analyzing your shop…" spinner still
+looked stuck even after the 500 and parse fixes above. Backend was returning HTTP 200
+with a valid 8-suggestion report — but only after ~75–80 seconds.
+**Root cause:** `/api/suggestions` ran the data gathering as an agentic tool loop — the
+model was made to call get_metrics, then list_listings(active), then list_listings(draft)
+one at a time = 4 sequential Claude round-trips before the report. That's ~80s. The
+in-memory cache (`_cache`) is wiped on every redeploy (db is `persistent: false`), so
+right after any deploy the first dashboard load hit the full cold 80s path — dangerously
+close to the frontend's 120s fetch timeout, and long enough that it reads as "stuck."
+**Fix (3 commits):** (1) Gather the 3 known data pulls directly in Python with
+`asyncio.gather` and do ONE synthesis call instead of a tool loop. (2) This alone was
+still ~60–80s for the single big call, so the durable fix is a background warm loop
+(`_warm_suggestions`): prime the cache ~5s after boot, then re-prime ~2min before each
+expiry; suggestions cache TTL raised 300s → 1800s. The dashboard now serves an instant
+(<1s) cache hit on every load; only the one-time ~60s window right after a fresh deploy
+is cold. (3) Don't cache a parse_failed/truncated result (would freeze a broken report
+for 30min); warm loop retries in 60s on parse failure. NOTE: cutting max_tokens to 2400
+truncated the JSON and caused a parse fail — kept at 4000.
+**Lesson:** "Spinner stuck" can mean "genuinely too slow," not "crashed." When an
+endpoint is correct but slow AND its cache resets on deploy, the fix is to keep the
+cache warm in the background, not to chase a nonexistent exception. Verify a fix by
+timing a real cold call, not just checking it returns 200.
+
+### 2026-06-16 — Spinner, final layer: make the cold path non-blocking (202 + poll)
+**Symptom:** Scott sent a screen recording of the dashboard still spinning. The warm
+cache had already finished priming ~85s earlier, so a fresh load *should* have been an
+instant hit — meaning the recording caught a request that was made while the cache was
+cold (the ~75s window right after a deploy) and was BLOCKING for the full synthesis. A
+minute-long blocking request behind a plain spinner is indistinguishable from "hung,"
+and I'd been triggering fresh cold windows by repeatedly redeploying (even doc-only
+commits redeploy and wipe the in-memory cache).
+**Root cause:** `/api/suggestions` blocked the HTTP request for the entire ~60-75s
+synthesis whenever the cache was cold. Warm-on-boot reduced how often that happened but
+didn't remove the blocking path itself.
+**Fix:** Cold cache no longer blocks. The endpoint returns an instant HTTP 202
+`{"status":"warming"}` (ensuring a background synthesis is running, guarded by a
+`_suggestions_warming` flag so it never stacks with the warm loop), and the frontend
+`getCeoSuggestions` polls every 4s (up to ~100s) while it sees 202, keeping the spinner
+but never hanging on one long request. Verified live: during the post-deploy window the
+endpoint returned 202 in <1s repeatedly, then flipped to the full 8-suggestion 200
+report the instant the warm finished (~55s); steady-state load is ~0.17s.
+**Lesson:** Never put a multi-second, let alone minute-long, synchronous AI call on a
+user's hot path. Return fast with a "working on it" status and let the client poll.
+
+### 2026-06-16 — Spinner still perceived "stuck" after 202+poll fix — root cause was no client-side persistence
+**Symptom:** Scott reported spinner still spinning even after the 202+poll non-blocking fix was confirmed
+working. Backend was returning correct 200 with 8 suggestions after ~75s; 202+poll architecture was intact.
+**Root cause:** `_lastSuggestions` (the JS variable holding the last report) was initialized to `null`
+on every page load — there was no browser-side persistence. The sessionStorage write in `getCeoSuggestions`
+and `_bgRefreshSuggestions` was saving the report correctly, but the missing piece was an init IIFE before
+`loadDash()` that reads it back. So on every reload (and every Railway redeploy triggers a page reload to
+pick up the new service worker cache), the spinner ran again from scratch even though the browser already
+had a valid report from 5 minutes ago.
+**Fix:** Added an IIFE immediately before `loadDash()` that reads `sessionStorage.getItem('obc_sug')`,
+validates the stored report (must have `generated_at`, non-empty `suggestions`, no `error`, and be <4h old),
+and populates `_lastSuggestions`. `getCeoSuggestions` already checks `_lastSuggestions` first and shows it
+instantly with a silent background refresh for newer data — so the only missing link was the init IIFE.
+Also added a 2-minute server-side cache to `/api/conversion-targets` to prevent the Conversion Doctor
+from hitting the Etsy API on every panel open. Bump to BUILD_ID v23.
+**Lesson:** Client-side JS variables reset on every page load. If state needs to survive a reload, write
+it to sessionStorage (or localStorage for longer persistence) AND read it back on init. The write without
+the read is a silent no-op from the user's perspective.
+
+### 2026-06-16 — REAL root cause of the permanently-stuck spinner: a JS SyntaxError froze the entire dashboard script
+**Symptom:** Scott reported the spinner "will not go past the spinning stage" even after the v23
+sessionStorage fix above — and *nothing* on the dashboard ever updated, not just the CEO report.
+**Root cause:** The Files/Backups browser feature built a download link with:
+`onclick="window.open(\''+url.replace(/'/g,"\\'")+'\',\'_blank\')"`. This was written inside `_WEB_UI`,
+a **non-raw** Python triple-quoted string (`_WEB_UI = """..."""`, not `r"""..."""`). Python processes
+backslash escapes in non-raw strings even inside triple quotes, so `\'` and `\\'` in the source got
+unescaped by Python *before* the text ever reached the browser — turning what was meant to be an escaped
+quote inside a JS string into a bare `'` that closed the string literal early. The result was a genuine
+JavaScript `SyntaxError: Unexpected string` partway through the `<script>` block. A SyntaxError anywhere
+in a `<script>` tag prevents the **entire script from executing** — not just the broken line. That meant
+`loadDash()`, `getCeoSuggestions()`, the 202+poll loop, the sessionStorage restore IIFE — literally none
+of it ever ran. Every spinner on the page was the static HTML placeholder baked into the page source,
+which nothing ever replaced. This is why none of the v21–v23 backend/JS fixes (warm cache, 202+poll,
+sessionStorage persistence) made any visible difference: the browser never got far enough to execute any
+of that code. Caught by pulling the live production HTML with curl, extracting the `<script>` body, and
+running it through `node --check` — this is now the standard verification step for any dashboard JS change.
+**Fix:** Replaced the backslash-escaped quotes with the `&apos;` HTML-entity pattern already used
+successfully elsewhere in the same file (Top Listings panel), which needs zero backslash escaping and
+sidesteps the double-unescaping problem entirely. `url` here is already `encodeURIComponent`-safe so no
+quote-escaping was ever actually necessary. Verified clean with `node --check` against both the locally
+evaluated `_WEB_UI` Python expression and the live redeployed page. Bump to BUILD_ID v24.
+**Lesson:** `_WEB_UI` embeds a large inline `<script>` inside a non-raw Python string — any backslash
+written in that JS (regex escapes, quote escapes, etc.) is silently reinterpreted by Python's own string
+parser first. Always verify dashboard JS changes with `node --check` against the *actual rendered output*
+(curl the live page or eval the `_WEB_UI` expression with `ast`), not just by reading the Python source —
+the source and the runtime JS are not the same text whenever a backslash is involved. A single SyntaxError
+anywhere in the script silently kills 100% of the dashboard's interactivity with no visible error to the
+user — just frozen static HTML. This class of bug is invisible to Python's own syntax checks
+(`py_compile` passes fine) because the bug only exists in the *string value*, not the Python syntax.
+
+### 2026-06-17 — Listings category filter chips never filtered (only "All" worked)
+**Symptom:** Scott reported only the "All" filter chip on the Listings tab did anything; clicking any
+named category (e.g. "Botanical and Floral Art") left the list unchanged.
+**Root cause:** `shop_section_id` arrives from `/api/listings` as a JSON number. The filter chip's
+`onclick="setSectionFilter('${c.key}')"` template literal always wrapped the value in quotes, so
+`_sectionFilter` became a string while `l.shop_section_id` stayed a number — `===` comparison in
+`renderListings()` never matched except by coincidence for the synthetic `'none'` (uncategorized) bucket,
+which is why that one looked like it might have worked.
+**Fix:** Normalized both sides of every comparison with `String(...)` (grouping key, filter compare, and
+the active-chip highlight check). Bump to BUILD_ID v27.
+**Separately confirmed NOT a bug:** Scott also reported listing detail panels showing "Uncategorized" —
+checked live Etsy data directly via curl and confirmed those specific listings (e.g. 4522868228) genuinely
+have `shop_section_id: null` on Etsy itself (87 of 164 active listings, mostly newer ones, were never
+assigned to a shop section). The dashboard was reporting this correctly.
+**Lesson:** Any value compared with `===` after passing through an HTML template-literal attribute
+(`onclick="fn('${x}')"`) silently becomes a string, even if the original value was a number. Normalize
+explicitly with `String()` on both sides rather than relying on type to survive the round trip through
+the DOM.
+
+### 2026-06-17 — CEO Agent chat ("Frank") permanently 400s mid-session after firing multiple tool calls
+**Symptom:** Scott asked Frank to fix mismatched kawaii tags on 30+ wall art listings. Frank staged the
+fixes and started "firing them all simultaneously." The next message in the same chat session immediately
+failed with Anthropic API error 400 `invalid_request_error`: "tool_use ids were found without tool_result
+blocks immediately after" — listing 8 `toolu_...` ids — and every subsequent message in that session kept
+failing the same way.
+**Root cause:** In `_run_agent_turn()`, the assistant's turn (including its `tool_use` blocks) is appended
+to `history` *before* the tools are executed. The Anthropic API requires every `tool_use` block to be
+followed by a matching `tool_result` in the very next message. If anything threw while iterating the tool
+calls — most likely `await websocket.send_text(...)` for a status update failing on a flaky mobile
+connection while Frank was firing many `stage_action` calls back-to-back — the loop aborted before
+`history.append({"role": "user", "content": tool_results})` ever ran. That left `history` (an in-memory,
+per-websocket-connection list with no persistence or self-repair) permanently corrupted for the rest of
+that connection: every later turn sent the same orphaned `tool_use` blocks to Claude and got the same 400.
+**Fix:** Wrapped both the status-update `send_text` and the `_execute_agent_tool` call in their own
+try/except inside the per-block loop in `_run_agent_turn()`, so a failure on one tool call can no longer
+abort the loop before a `tool_result` is recorded for every `tool_use` block. A failed status send is now
+silently ignored (best-effort only); a failed tool execution now produces an `{"error": ...}` result
+instead of an unhandled exception. `history.append(...)` for `tool_results` is now unconditional once the
+loop starts. Bump to BUILD_ID v28. Redeploying also force-closed the corrupted in-memory session, so Scott
+just needs to reopen the chat to get a clean `history`.
+**Lesson:** Any conversation-history list fed back into the Anthropic API must guarantee `tool_use` →
+`tool_result` pairing is atomic — either both happen or neither does. Appending the assistant's `tool_use`
+turn before the results are known creates a window where any unrelated failure (a flaky websocket send,
+not just a tool bug) corrupts that history for the rest of the session, since there is no persistence or
+truncation/recovery logic to drop a bad trailing turn. Catch exceptions at the smallest possible scope
+around side-effecting calls (websocket sends, tool execution) rather than relying on an outer handler.
+
+---
+
+## Known Recurring Issues
+*Auto-generated by the quality-audit loop -- a failure heading that's appeared 3+ times below. Investigate the root cause rather than re-fixing the symptom each time.*
+
+- **automated health check failure (known cause)** — seen 8 times
+- **5-minute health loop detected a problem: etsy: error: etsy api 403: api key not  (known cause)** — seen 7 times
+
+## 2026-06-17 — Frank chat continuity + execution hardening (and Etsy-token-on-restart landmine)
+**What changed (CEO chat / Frank):**
+- **Chat now survives reconnects & restarts.** Previously the conversation lived only in an in-memory
+  per-WebSocket list, so any mobile socket drop (backgrounding, network switch, carrier idle-timeout)
+  silently reset Frank to amnesiac while the old bubbles stayed on screen — it *looked* like the chat
+  continued but Frank had forgotten everything. Added a `chat_messages` SQLite table + a stable
+  `CHAT_SESSION` id (localStorage) passed as `?session=`; `chat_ws` loads prior history on connect and
+  persists each completed exchange. Only plain text is persisted — never tool_use/tool_result blocks
+  (persisting half a pair would 400 on replay).
+- **Heartbeat + auto-reconnect.** Client pings every 25s (server replies pong) to keep the socket warm
+  through proxy idle-timeouts; on unexpected close the client auto-reconnects with capped backoff and
+  silently resumes the same server-side thread.
+- **Dangling-message wedge fixed.** A mid-turn stream/API failure used to leave a user message with no
+  assistant reply, so the next turn sent two user turns back-to-back → API 400 → chat wedged until reload.
+  `chat_ws` now snapshots `history` length and rolls back this turn's additions on any exception.
+- **Frank now actually executes.** Added `listing_integrity_check` to his command registry (the read-only
+  check that surfaces truthfulness/quantity-claim violations) and tightened the system prompt with an
+  "ACT, DON'T NARRATE" rule so he calls the tool / stages the fix instead of saying "I'll run that."
+- **Approval gate hardened.** `execute_command` extra_args are now screened against a denylist
+  (`--fix/--push/--publish/--apply/--activate/--delete/--write`) so neither Frank nor a prompt-injection
+  can push a live listing mutation through a CLI flag — those must still go through Scott's one-tap approval.
+  Per Scott's call (2026-06-17), Frank stays at "stage for approval" for all live-listing edits.
+
+**Open landmine (diagnosed, NOT yet fixed):** On Railway the live server refreshes the Etsy token lazily on
+a 401 and writes the rotated refresh token to `.env` — but Railway's filesystem is ephemeral and re-injects
+the *old* `ETSY_REFRESH_TOKEN` env var on every restart/redeploy. Etsy rotates the refresh token on each
+use, so after the next restart the server will present an already-consumed token → `invalid_grant` → the
+whole Etsy integration goes dark until Scott re-runs `python tools/etsy_oauth.py`. Same class of bug already
+solved for GitHub Actions (write rotated token back to the secret store). Recommended durable fix: persist
+rotated tokens to the `/data` SQLite volume and prefer the newer of DB-vs-env on startup. Deferred because a
+botched token-precedence change could itself cause an outage and can't be tested against live Railway here.
+
+**2026-06-17 (later same day) — landmine fixed.** Added a durable `etsy_tokens` table to `db.py`
+(`save_etsy_tokens()` / `get_etsy_tokens()`, singleton row on the `/data` volume) plus two small additions
+to `main.py`, deliberately **without touching `tools/etsy_api.py`** so every other consumer (CI's own
+already-working rotation via `ci_refresh_etsy_secrets.py`, Scott's local scripts) is completely unaffected:
+- `_reconcile_etsy_tokens()` runs once at import time, before any `EtsyAPIClient()` is constructed. It
+  compares the env `ETSY_REFRESH_TOKEN` against the DB row's `refresh_token` *and* `parent_refresh_token`
+  (lineage, not a timestamp race) — if the DB is a forward rotation of the current env token, the DB wins
+  and overwrites `os.environ`; if the env token doesn't match the DB's lineage at all (Scott manually
+  re-authorized via `etsy_oauth.py` and updated the Railway dashboard since the DB was last written), env
+  wins untouched. Empty DB (first boot ever) is a no-op.
+- `_token_sync_loop()` (background task, started in `_startup()`, polls every 60s) watches `os.environ` for
+  a token change — `refresh_access_token()` already updates it in-memory the instant it rotates — and
+  persists the new pair to the DB with the previous refresh token recorded as `parent_refresh_token`, so
+  the next boot's lineage check has something to match against.
+- Verified with 4 standalone scenario scripts (not committed — ad hoc): DB-forward-rotation-wins,
+  fresh-reauth-in-env-wins, empty-DB-is-noop, and a full rotate→persist→simulated-restart→restore cycle.
+  All passed. `python -m py_compile` clean on both files.
+- Risk note: this only takes effect on the *next* Railway deploy. Until then the current single
+  outstanding (working) token is unaffected — nothing about the existing token's validity changed today.
+
+### 2026-06-17 (later still) — two independent Etsy token rotation lineages (Railway vs. GitHub Actions)
+**Symptom (latent, not yet observed in production — found by code audit, not an incident report):**
+the fix above deliberately left `ci_refresh_etsy_secrets.py`'s rotation untouched because it was "already
+working" in isolation. But "isolation" was the problem: the live Railway server refreshes the Etsy access
+token **reactively** (on a 401, `etsy_api.py` line ~382) from its own `ETSY_REFRESH_TOKEN` env var, while the
+`listing_integrity_daily.yml` GitHub Actions workflow refreshes **proactively, every single scheduled run**
+from a completely separate copy of the same credential stored as a GH repo secret. Etsy invalidates the
+previous refresh token on every use. Two independent actors rotating the same credential with no shared
+state means whichever one refreshes most recently silently invalidates the other's copy — there is no
+self-healing; the stale side just hard-fails with `invalid_grant` next time it tries to refresh, requiring
+a manual `tools/etsy_oauth.py` re-auth. Risk went up (not down) after adding `_quality_audit_loop()` earlier
+today: that loop guarantees a real Etsy API call from inside the Railway process once a day, every day,
+independent of whether Scott or Frank happen to be using the dashboard — raising the floor on how often the
+Railway side touches the lineage and collides with GH Actions' fixed daily 13:00 UTC run.
+**Fix:** added a single source of truth both sides can sync through, reusing the existing `APP_SECRET_TOKEN`
+bearer auth (no new secret needed for the server side):
+- `GET /api/etsy-tokens` / `POST /api/etsy-tokens` on the live server — read/write the durable `/data` DB's
+  `etsy_tokens` row (the same lineage-aware store `_reconcile_etsy_tokens()` already uses).
+- `tools/ci_refresh_etsy_secrets.py` now optionally takes `RAILWAY_APP_URL` + `APP_SECRET_TOKEN`: if set, it
+  fetches the live server's current refresh token before refreshing (prefers it if newer than its own GH
+  secret) and pushes the rotated pair back to the server after refreshing, in addition to updating the GH
+  secrets as before. Falls back to GH-secrets-only rotation if either var is unset — not a breaking change.
+- `listing_integrity_daily.yml` passes both through as `${{ secrets.RAILWAY_APP_URL }}` /
+  `${{ secrets.APP_SECRET_TOKEN }}`. **Action needed from Scott:** add these two as GitHub repo secrets
+  (Settings → Secrets and variables → Actions) — `APP_SECRET_TOKEN` should be the exact same value already
+  set on the Railway service. Until both are added, CI rotation still works exactly as before, just without
+  the collision protection.
+- Verified: `python -m py_compile` clean on `main.py` and `ci_refresh_etsy_secrets.py`.
+
+### 2026-06-17 (later still) — autoresponder built but never scheduled; two scripts broken on Railway by hardcoded `/home/user/Etsy` paths
+**Finding 1 — dead capability:** `tools/etsy_autoresponder.py` exists specifically to close the Star Seller
+message-response-rate gap (CLAUDE.md flags this as the "main challenge" for digital products — every other
+Star Seller criterion is near-automatic for instant digital delivery). Nothing was ever invoking it — no
+cron, no background loop, no `_EXEC_COMMANDS` entry. It had also never been run on Railway, so its
+unguarded `with open(_env_path) as _f:` (no existence check) would have crashed immediately with
+`FileNotFoundError` — Railway has no `.env` file at all; env vars are injected directly by the platform.
+**Fix:** guarded the `.env` open with `if os.path.exists(_env_path):` (matching the pattern `main.py`
+already uses for its own `.env` load), then wired it into `main.py`'s existing background-task pattern as
+`_autoresponder_loop()` (added to `_startup()`'s task list, staggered 180s after the other loops, runs once
+daily). It only drafts replies and emails Scott a digest — sending to a buyer is a separate explicit
+`--send`/`--send-all` CLI step Scott runs by hand — so this stays inside the "Tier 1 support drafting"
+autonomy CLAUDE.md already grants; nothing here sends a buyer-facing message automatically. Note: its dedup
+state (`data/message_drafts/sent_log.json`) lives on Railway's ephemeral filesystem, not the durable `/data`
+volume, so a redeploy can cause a re-drafted (never re-sent) duplicate in the next digest — harmless,
+not worth the complexity of moving to the DB unless it proves annoying in practice.
+
+**Finding 2 — live capability silently broken:** while auditing other "Automate" table scripts for the same
+`.env`-loading bug class, found `tools/shop_health_check.py` had it worse than the autoresponder did —
+hardcoded `sys.path.insert(0, '/home/user/Etsy')`, `open('/home/user/Etsy/.env')`, and three more
+`/home/user/Etsy/...` constants (`UPSCALED_DIR`, `PRODUCT_FILES_DIR`, `SNAPSHOT_FILE`, `MANIFEST_PATH`).
+Unlike the autoresponder, this one is **already registered in `main.py`'s `_EXEC_COMMANDS` registry**
+(`"shop_health_check"`) — meaning Frank could already invoke it via the `execute_command` tool, and it would
+have failed every time on Railway. **Fix:** replaced every hardcoded path with `ROOT = Path(__file__).resolve().parent.parent`-relative
+equivalents and guarded the `.env` open the same way. Also fixed the same unguarded-open bug in
+`tools/pinterest_post_queue.py` (lower priority — that one's a manual local-only CLI tool, not Railway- or
+Frank-invoked, but cheap to fix while in the file). Residual known limitation, same class as the
+autoresponder's: `SNAPSHOT_FILE`/`MANIFEST_PATH` still write under the repo's `data/` dir, not the durable
+`/data` volume, so trend-comparison and hero-art-drift detection reset on every Railway redeploy — the
+health check itself still runs and reports correctly each time, only the week-over-week comparison is lost.
+- Verified: `python -m py_compile` clean on `main.py`, `etsy_autoresponder.py`, `shop_health_check.py`,
+  `pinterest_post_queue.py`, `ci_refresh_etsy_secrets.py`.
+
+### 2026-06-17 (later still) — gave Frank the seasonal keyword tool CLAUDE.md already grants him
+CLAUDE.md's autonomy boundaries explicitly list "Run seasonal keyword reports and dry-run previews" under
+Fully Autonomous, but `tools/seasonal_keywords.py` had no `_EXEC_COMMANDS` entry — Frank had no way to
+actually run it. Added two read-only entries: `seasonal_keywords_report` (default invocation, shows
+upcoming/overdue seasonal swaps) and `seasonal_keywords_preview` (`--dry-run`, shows exactly which tags
+would change on which listings). Neither writes to Etsy — `--push` is the only flag that does, it's in
+neither command's `args`, and `_FORBIDDEN_EXEC_FLAGS` already refuses it if ever smuggled in via
+`extra_args`, so the only real path to applying a seasonal swap is still Scott approving a `stage_action` in
+the Action Center. While wiring it in, found and fixed the same unguarded `.env` open bug as the other two
+scripts above (`tools/seasonal_keywords.py` line ~26) — would have crashed on Railway the first time Frank
+tried to call it. Verified `python -m py_compile` clean and ran `python tools/seasonal_keywords.py --weeks 10`
+locally to confirm the report still renders correctly after the guard fix.
+
+### 2026-06-17 (later still) — Frank couldn't pull a listing by ID; autofix "tags: HTTP 500"; Files area
+Three issues surfaced by Scott from the live phone app (screenshots):
+1. **Frank said a real listing "doesn't exist."** Scott gave Frank a listing ID; Frank reported it "not in
+   active or inactive inventory… not active, not draft, not inactive." The listing was actually **expired**.
+   Frank's only lookup path was `list_listings`, which fetches ONE state bucket at a time and never covered
+   expired/sold_out. **Fix:** added a dedicated `get_listing` agent tool that calls
+   `EtsyAPIClient.get_listing(id)` directly — that endpoint returns a listing in ANY state (active, draft,
+   inactive, expired, sold_out), so Frank now finds expired listings and only says "doesn't exist" on a true
+   Etsy 404. Also widened `list_listings` / `_listings_sync` allowed states to include expired + sold_out.
+2. **"Some fixes could not be staged: tags: HTTP 500."** `/api/autofix/tags/{id}` (and `/title/`) only
+   caught `asyncio.TimeoutError` + `EtsyAPIError` around the listing fetch; every other failure (incl. the
+   post-fetch local work: tag cleaning, quality-gate validation, `db.enqueue_action`) fell through as a bare
+   FastAPI 500 with no detail. **Fix:** both endpoints now catch generic fetch errors (502), special-case
+   404 (listing expired/deleted → 404 with a clear message), wrap the Anthropic call (502 on failure), and
+   wrap all post-fetch local work so a failure returns "Could not stage tag/title fix: <reason>" instead of
+   an opaque 500. The dashboard already surfaces `detail`, so Scott now sees WHY instead of "HTTP 500".
+3. **Hub → Files showed "No files yet" and ZIPs couldn't be opened on a phone.** Two parts. (a) The endpoint
+   only scanned the repo's `data/digital_products` + `data/backups`, which on Railway are ephemeral +
+   gitignored, so nothing is ever present there — now `/api/files` also scans the durable `/data/files`
+   Volume location (survives redeploys) and returns an honest `empty_reason` explaining where files must live
+   if none are found. (b) Scott can't unzip on a phone, so `/api/files` now expands each ZIP's contents and a
+   new `/api/files/zip-entry` endpoint streams a single file straight out of a ZIP with the correct media
+   type + inline disposition — tap a sticker PNG or PDF inside a pack and it opens directly, no unzip. Plain
+   files also gained an `inline=1` open mode (PDF/image preview) vs. force-download. `__MACOSX` junk filtered;
+   path-traversal still blocked; bad token still 401.
+- **Still true / Scott action:** the file BYTES live on Scott's machine (Etsy's API exposes file metadata
+  only — no content download URL, by design, since only buyers get download links). To make product files
+  appear in the phone Files area on the hosted dashboard, drop them into the `/data/files` Volume on Railway
+  (or run on a machine where `data/digital_products/` is populated). The open-without-unzip behavior works
+  wherever the files physically are.
+- Verified: `python -m py_compile` clean; exercised `/api/files`, `/api/files/download?inline=1`, and
+  `/api/files/zip-entry` end-to-end with a real temp ZIP via FastAPI TestClient (PDF→application/pdf inline,
+  PNG/TXT out of ZIP with correct types, 401 on bad token, 400 on traversal, 404 on missing entry, honest
+  empty_reason when no files); confirmed `get_listing` tool registered and the no-id guard returns a clean
+  error.
+
+### 2026-06-17 (later still) — one-command file sync to the durable volume
+Follow-up to the Files-area work above: Scott asked for a one-command way to actually get the local product
+files onto the hosted dashboard so they show up on his phone. Built it:
+- **Server:** `POST /api/files/upload?path=<rel>` (bearer auth, raw body) writes into the durable `/data/files`
+  volume. Path-traversal rejected, empty body rejected (400), 30MB cap (413, mirrors Etsy's 20MB per-file),
+  503 if no volume is attached. Added a `HUB_FILES_DIR` env override for the volume location (also makes it
+  locally testable).
+- **Client:** `tools/sync_files_to_hub.py` — walks local `data/digital_products/`, GETs `/api/files` to see
+  what's already in the volume, and uploads only new/changed files (size compare), so re-runs are cheap.
+  Reads `RAILWAY_APP_URL` + `APP_SECRET_TOKEN` from `.env`; skips 0-byte `.gitkeep` placeholders; never
+  deletes anything on the server. Usage: `python tools/sync_files_to_hub.py` (`--dry-run`, `--all` available).
+  This is a LOCAL tool (runs where the files are) — deliberately NOT added to `_EXEC_COMMANDS`, since Frank
+  on Railway has no files to sync.
+- **Verified end-to-end live:** started the server exactly as production does (`python tools/api_server/main.py`,
+  the Dockerfile CMD) against a temp volume + temp DB, ran the real urllib client against it: 102 real files
+  (~201MB) uploaded, second run skipped all 102 as already-present, the synced ZIP's inner files were openable
+  via `/api/files/zip-entry` — confirming the full phone flow (sync → browse → open-without-unzip). First run
+  surfaced 7 "failures" that were all empty `.gitkeep` files; fixed the client to skip 0-byte files so the run
+  is clean (exit 0, no server 400s).
+- **Scott action to populate the phone:** add `RAILWAY_APP_URL` (the dashboard's public URL) and
+  `APP_SECRET_TOKEN` (same value as on Railway) to the local `.env`, then run `python tools/sync_files_to_hub.py`.
+  Re-run it any time new products are generated. Requires a Railway Volume mounted at `/data` (already used by
+  the DB).
+
+### 2026-06-17 (later still) — CRITICAL: production has NO /data volume → DB + files are ephemeral
+**Symptom:** Auto-syncing product files to the phone failed for every file with
+`HTTP 503 {"detail":"No persistent /data volume on this server …"}`. The v38 upload endpoint ran correctly
+— it's the server that has no `/data`.
+**Root cause:** The live Railway service (`calm-light`) has **no Volume mounted at `/data`**. The app's
+`db._resolve_db_path()` AND the Files-area volume root both gate on `Path("/data").is_dir()`, so with no
+volume BOTH fall back to ephemeral container storage. Practical impact: the SQLite DB (etsy token lineage,
+staged actions, CEO learnings, weekly snapshots) is wiped on every redeploy — all the durable-DB token-sync
+work from earlier 2026-06-17 has had no durable store to write to. And product files can't be synced for the
+phone Files area. This had been *assumed* attached in prior entries; it never actually was.
+**What I could/couldn't do:** the `RAILWAY_TOKEN` in `.env` can't reach the Railway GraphQL API — `me` →
+"Not Authorized" (not an account token), `projectToken` → "Project Token not found" (not a valid project
+token either); likely expired/deploy-only. (Note for next time: Railway's API is behind Cloudflare which
+**blocks the default python-urllib User-Agent with HTTP 403 "error code: 1010"** — must send a browser UA.)
+So the volume cannot be attached via API with the current token; it needs the dashboard or a fresh account
+token.
+**Fix (done in code):** `/health` now returns `build`, `persistent` (db.is_persistent()), and `files_volume`
+so volume/deploy state is verifiable at a glance, no auth: `curl https://etsy-production-b2f1.up.railway.app/health`.
+**Action needed from Scott (one-time, ~30s, fixes BOTH the DB durability AND the phone files):**
+Railway dashboard → project `calm-light` → the Etsy service → **Settings → Volumes → New Volume**, mount
+path **`/data`** → redeploy. After it redeploys, `/health` should show `"persistent": true` and
+`"files_volume": true`; then run `python tools/sync_files_to_hub.py` (or it auto-runs after
+`backup_digital_products.py`) and the files appear in Hub → Files on the phone.
+- Note: `RAILWAY_APP_URL=https://etsy-production-b2f1.up.railway.app` was added to the local `.env` (URL
+  taken from `mobile_app/src/config.js`, confirmed against the address bar in Scott's screenshots);
+  `APP_SECRET_TOKEN` was already present, so the sync tool is fully configured locally now.
+
+### 2026-06-17 (later still) — sync auto-runs after backup
+`tools/backup_digital_products.py` now calls `tools/sync_files_to_hub.py` after writing the backup ZIP
+(skippable with `--no-sync`), so a freshly generated product lands on the phone in one step. Best-effort:
+if RAILWAY_APP_URL/APP_SECRET_TOKEN are unset or the server is unreachable, the backup still succeeds and it
+just prints a note — a sync hiccup never fails the backup. Also made that script's paths ROOT-relative and
+gave it a guarded `.env` loader (was `Path("data/...")` relative to CWD before).
+
+### 2026-06-18 — dashboard now warns visibly when persistent storage is missing
+Scott confirmed via `/health` screenshot that production is still running `"persistent": false,
+"files_volume": false` on build c7e503a-v38 — the volume still hasn't been attached (see the entry above;
+this still needs the one-time Railway dashboard action). Until that's done, the failure mode was silent —
+nothing on the dashboard told Scott data wasn't durable. **Fix:** the dashboard now fetches `/health` on
+load and shows a red banner ("No durable storage attached — data and synced files will be lost on next
+redeploy") whenever `persistent` is false, instead of requiring a manual `/health` check to notice. Build
+bumped to d2a619f-v39.
+
+### 2026-06-18 (later) — Volumes confirmed plan-gated, not missing; to-do list seeded
+Scott scrolled through every section of the Railway service's Settings (Build, Deploy, Teardown, Cron
+Schedule, Healthcheck, Serverless, Restart Policy, Config-as-code, Feature-flags, Delete Service) and
+confirmed there is no Volumes section at all on the current Trial plan — it's gated behind a paid upgrade
+(~$5/mo Hobby plan), not a UI/navigation issue. Scott has decided to hold off on upgrading for now. Seeded
+the live to-do list with this item plus the still-open GitHub repo secrets item (`RAILWAY_APP_URL` /
+`APP_SECRET_TOKEN` need to be added under repo Settings → Secrets and variables → Actions so the daily
+GitHub Action and Railway stop racing each other on Etsy token rotation — see the two-lineage entry above).
+
+### 2026-06-18 (later still) — audited every command Frank/the dashboard can execute; found 3 bugs in 9
+Ran every entry in `_EXEC_COMMANDS` end-to-end (same subprocess invocation `execute_command` uses) to verify
+each one actually completes within its configured timeout. Confirmed working correctly as registered:
+`generate_coloring_pages_preview`, `qc_sweep`, `seasonal_keywords_report`, `seasonal_keywords_preview`.
+`generate_coloring_pages` / `generate_coloring_pages_quick` were not executed (real paid gpt-image-1 calls,
+3–15 min runtime) — confirmed by inspection only that their `timeout: 30` is irrelevant since both are
+`long_running: True` (fire-and-forget `Popen`, no wait-for-completion), so no timeout bug exists there.
+
+Found and fixed:
+- **`shop_health_check` timeout too short.** Registered at 60s; measured real runtime against the full live
+  catalog is ~118s. Always timed out via the dashboard/Frank path even though the script itself runs fine
+  and surfaces real findings (duplicate hero art across several Digital Paper Pack listings at pHash
+  dist=0/64, unanswered reviews). Bumped to `timeout: 150`.
+- **`listing_integrity_check` timeout too short.** Registered at 180s; measured real runtime is ~281.8s.
+  Same failure mode — script works and returns real findings (e.g. exact-duplicate hero art, "WRONG ART in
+  hero"), but always times out before Frank ever sees the result. Bumped to `timeout: 330`.
+- **`rebuild_sticker_pack.py` hardcoded `/home/user/Etsy` paths + unguarded `.env` open.** Same bug class
+  fixed elsewhere on 2026-06-17 (autoresponder, shop_health_check, pinterest_post_queue) but missed for this
+  file — would have crashed with `FileNotFoundError` immediately on Railway. Rewritten to the same
+  `ROOT = Path(__file__).resolve().parent.parent` + guarded-`.env`-open pattern. Verified clean via
+  `py_compile`.
+- **`rebuild_sticker_pack` removed from `_EXEC_COMMANDS` entirely (not just timeout/path-fixed).** Two
+  separate problems beyond the path bug: (1) the registry entry passes zero CLI args, but the script
+  requires `--pid`/`--sheets`/`--listing` with no safe defaults — it could never have completed via this
+  invocation regardless. (2) More importantly, the script DELETEs the live digital file, uploads a
+  replacement, and PATCHes the listing description directly against the Etsy API — there is no
+  `stage_action()` approval step anywhere in it, unlike every other mutation path in this codebase. Leaving
+  it registered (even after fixing the path crash) would have silently handed Frank a fully autonomous way
+  to change what a customer receives and rewrite a live listing description, in direct conflict with
+  CLAUDE.md's autonomy boundaries and the "NEVER LIE TO THE CUSTOMER" rule. Removed the registry entry
+  (script itself is left fixed and runnable by Scott by hand) with a comment explaining why, pending a
+  decision on refactoring it to use `stage_action()` before it's ever re-exposed to Frank.
+
+Build bumped to f4b1e2a-v41. Verified `python -m py_compile` clean on `main.py`.
+
+---
+
+**2026-06-18 — Dashboard stuck spinning, root cause: broken JS from single- vs double-backslash escaping.**
+Symptom: dashboard reported "spinning again" after the Platform Connections roadmap-steps feature shipped.
+`python -m py_compile` on `main.py` passed clean (it's valid Python), which is why the earlier
+push looked safe — the bug only exists in the JS text the Python string *emits*, not in the Python
+syntax itself. Root cause: `_WEB_UI` is one giant non-raw `"""..."""` Python string containing the
+dashboard's HTML/JS. To make the embedded JS contain a literal `\'` (escaped quote inside a JS string),
+the Python source must write `\\'` (double backslash) — a single `\'` gets collapsed by Python's own
+string-escape processing into a bare `'` before it ever reaches the browser. The `toggleCredSteps`
+onclick handler added in commit `e0157e7` used `\''+key+'\'` (single backslash), which rendered as
+`''+key+''` in the actual served JS — `Unexpected string` syntax error, confirmed with
+`node --check` on the extracted `<script>` block, which aborted the entire script tag and froze every
+dashboard tab on its loading spinner. Fixed by doubling the backslashes (`\\''+key+'\\'`), matching the
+one other pre-existing correct example of this pattern at the "ZIP's contents" string. Verified by
+re-fetching `/` from a locally running instance and running `node --check` on the extracted script —
+passes clean now.
+**Takeaway:** `py_compile` only proves the Python is valid — it can't catch bugs in *text the Python
+generates*. Any future edit to `_WEB_UI` must extract the `<script>...</script>` block from a live
+response and run `node --check` on it before pushing.
+
+---
+
+**2026-06-18 (later) — Chat (Frank) and Conversion Doctor both failing: Anthropic account out of credits, plus a real bug in the Diagnose endpoint.**
+Symptom: Scott reported two failures at once. (1) Frank's chat returned a raw `Error code: 400` block on
+every message: `'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing
+to upgrade or purchase credits.'` (2) The Conversion Doctor "Diagnose again" button on a listing returned
+a bare, uninformative `HTTP 500` with no message.
+Root cause of (1) is account-level, not code — the Anthropic API key backing this app has run out of
+credits. **This cannot be fixed by Claude Code.** Scott needs to go to console.anthropic.com → Plans &
+Billing and add credits; nothing in the codebase is broken here. The chat path already had correct error
+handling (`chat_ws` catches `Exception` and sends the raw message text back over the websocket), which is
+why the user saw the real Anthropic error text in the chat — that's the system working as intended,
+surfacing a billing problem instead of swallowing it.
+Root cause of (2) was a separate, real code bug: `diagnose_listing` (`/api/diagnose/{listing_id}`) only
+caught `asyncio.TimeoutError` around its `ai_client.messages.create()` call — no `except anthropic.APIError`
+handler, unlike `_compute_suggestions_inner` which already had the correct pattern. So the exact same
+billing error that showed cleanly in chat instead crashed this endpoint into an unhandled exception, and
+FastAPI's default 500 has no `detail` field, so the frontend's `d.detail||'HTTP '+r.status` fallback
+rendered the unhelpful bare "HTTP 500". Fixed by adding:
+`except anthropic.APIError as exc: raise HTTPException(status_code=502, detail=f"Anthropic API error: {exc}")`
+immediately after the existing timeout handler, mirroring `_compute_suggestions_inner`. Verified with
+`python -m py_compile` (no JS/`_WEB_UI` text was touched, so no `node --check` was needed this time).
+**Takeaway:** every endpoint that calls `ai_client.messages.create()` directly needs both a timeout
+handler and an `anthropic.APIError` handler — copy the pattern from `_compute_suggestions_inner`, don't
+let any new endpoint skip it. This fix makes future Anthropic errors show a real message instead of a
+bare 500, but does not and cannot fix the underlying billing issue — that's purely Scott's action.
+
+### 2026-06-19 — Railway volume still not attached (re-verified, FRANK Command Center build start)
+Symptom: kicking off the FRANK Command Center rebuild, Step 0 is "fix persistence." Re-checked
+`/health` — still `"persistent": false, "files_volume": false`. Re-tested `RAILWAY_TOKEN` against
+`backboard.railway.app/graphql/v2` (`me` query) — still "Not Authorized," same as 2026-06-17. No change;
+this token cannot attach a volume via API.
+**Action still needed from Scott (unchanged, ~30s):** Railway dashboard → project `calm-light` → Etsy
+service → Settings → Volumes → New Volume → mount path `/data` → redeploy. Confirms via
+`curl https://etsy-production-b2f1.up.railway.app/health` showing `persistent: true`.
+**What I did instead:** proceeded with the parts of the FRANK Command Center plan that don't depend on
+the volume — starting with the static HTML/CSS mockup (Build Order step 0.5) — so the dashboard rebuild
+isn't blocked waiting on a manual click only Scott can do.
+
+### 2026-06-19 — FRANK Command Center static mockup live at /frank (Build Order step 0.5)
+Added `tools/api_server/frank_hud_mockup.py` (self-contained HTML/CSS/canvas-JS, no external deps,
+matches existing no-webfont/no-framework convention) and a new `/frank` route in `main.py` serving it,
+fully separate from the live `/` dashboard so production is never at risk while this is reviewed.
+Mockup covers the full reference layout: left nav (Command Center/AI Core/Agents/Tasks/Calendar/Memory/
+Conversations/Knowledge Base/Tools & Skills/Workflows/Studio + Voice Status/Focus Mode widget), top bar,
+AI Core Overview column, animated canvas orb (idle rotation, click-to-preview "speaking" reactive distortion
+— real audio-amplitude wiring is Step 4), Active Agents tile row (5 real loops + Local Relay + Context
+Compactor marked "not built"), System Monitor, Live Intelligence Feed, Mission Timeline, Quick Commands,
+bottom Talk-to-Frank bar. Every placeholder panel has an inline comment naming its real future data source
+— no invented numbers presented as fact. Bumped `_BUILD_ID` to f4b1e2a-v42. No backend wiring; Step 1 (real
+local file tools + approval gate detail view) is next once Scott signs off on the look.
+
+### 2026-06-19 — FRANK mockup v2: fixed mobile rendering + orb/layout structure (Scott feedback)
+Scott reviewed the v1 /frank mockup and sent two corrections: (1) reference screenshot showing the orb
+was missing/buried and panels felt "compressed into the middle instead of having clear layer out
+sections," and (2) an actual mobile Safari screenshot showing the page rendering squished into the top
+third of the screen with a large blank area below. Root cause of (2): `<meta viewport width=1440>` +
+`body{height:100vh}` doesn't scale reliably on mobile browsers. Fix: rebuilt the page around a fixed
+1440x900 `#stage` div with `width=device-width` viewport meta + JS `fitStage()` that computes
+`scale=min(innerWidth/1440, innerHeight/900)` and applies `transform:scale()` on load/resize — renders
+at correct proportions (letterboxed) on any screen. Root cause of (1): `.main` was a single 3-column CSS
+grid burying a small 220px orb among other panels. Fix: restructured into 3 explicit flex rows (rowA:
+AI Core Overview | large dedicated Orb Hero panel (300px canvas) with text overlay | Live Intelligence
+Feed; rowB: Active Agents | Mission Timeline | Quick Commands; rowC: System Monitor | Memory Insights |
+LLM Status), proportions matched to the reference image, plus corner-bracket (`.brk`) panel accents for
+clearer section separation. Verified via FastAPI TestClient hit on /frank (200 OK, all new markers
+present) before deploy. Bumped `_BUILD_ID` to f4b1e2a-v43.
+
+### 2026-06-19 — FRANK mockup: added 6 missing Hub tabs (Listings/Products/Brand Kit/Files/Connections/Security)
+Scott asked "It will have the roadmap section and everything from the hub in it?" — surfaced a real plan
+gap: the nav-mapping table only covered tabs present in the JARVIS reference image, silently dropping six
+real, currently-used Hub sections (Listings, Brand Kit, Products, Files, Credentials+Platform Connections
+Roadmap, Security Posture). Researched the live Hub code to confirm each one's real source function
+(loadListings() main.py:1592, loadProductIndex() main.py:2263, _renderBrandKit() main.py:2217, loadFiles()
+main.py:2455, loadCredentials() main.py:2349 + Roadmap array main.py:2280-2394, _renderSecurityPosture()
+main.py:2391), asked Scott how to reconcile them with the fixed reference nav, and per his answer ("Add
+new dedicated tabs") added each as its own top-level tab under a new "Shop" nav-section in
+frank_hud_mockup.py, following the existing placeholder-screen pattern (each names its real source +
+line number, states "restyled into the HUD shell in Step 2" since these are working screens being ported,
+not new builds). Verified via FastAPI TestClient hit on /frank (200 OK, all 6 new nav-item + screen markers
+present) before deploy. Bumped `_BUILD_ID` to f4b1e2a-v44.
+
+### 2026-06-19 — Autoresponder agent: Etsy API has no messaging endpoint (silent "ok", never actually working)
+**Symptom:** the live-status agent registry showed `autoresponder` as `status: "ok"`, but its detail field
+embedded "Etsy API 404: Resource not found" inside the supposedly-healthy status. The autoresponder loop has
+likely never fetched a single buyer message despite reporting healthy every run.
+**Root cause:** Etsy Open API v3 has **no buyer-seller messaging/conversations endpoint** for third-party
+apps. Confirmed by probing through the already-correctly-authed `EtsyAPIClient`: `shops/{id}/listings/active`
+→ 200 and `shops/{id}/receipts` → 200 (proves the token/scopes are fine), but both `shops/{id}/conversations`
+and `shops/{id}/messages` → 404. Separately confirmed a real scope denial returns 403, not 404 — so a 404 on
+an otherwise-authorized account means the route simply does not exist, not a permissions problem. In
+`tools/etsy_autoresponder.py`, the failure is caught, printed, and the script `return`s → exit code 0 →
+`_autoresponder_loop` (main.py) sets heartbeat "ok" purely from `returncode == 0` without inspecting stdout
+for an embedded failure message.
+**Fix (pending Scott):** re-authorizing with more scopes will not help — the endpoint doesn't exist on Etsy's
+side. This matches CLAUDE.md's own note that Etsy has no API-driven buyer messaging, only Shop Manager Quick
+Replies / Auto-Reply (manual or built-in auto-reply windows only). The autoresponder agent as designed can't
+do its job via the API. Options for Scott: retire the agent, or convert it to an honest no-op/disabled state;
+either way the heartbeat check should be fixed to inspect actual output instead of trusting exit code 0. No
+code changed yet — flagged for a decision.
+
+### 2026-06-19 — Quality Audit agent "could not parse summary line" error not reproducible
+**Symptom:** the live-status registry showed `quality_audit` as `status: "error"`, detail "could not parse
+summary line".
+**Investigation:** ran `tools/listing_integrity_check.py` to completion against the live shop (172 listings,
+~280s) — it finished clean and printed a summary line that matches main.py's summary-parsing regex exactly
+("✓ PASS / ⚠ WARN / ✗ FAIL" counts). Not a deterministic bug reproduced on this run; most likely a transient
+unhandled exception mid-run (e.g. one bad live Etsy API call) before the summary print on the run that
+actually failed.
+**Observability gap to fix later:** when the regex fails, `_quality_audit_loop` discards the real `stdout`/
+`stderr` and persists only the generic "could not parse summary line", making the actual root cause
+invisible from the HUD. Should persist a truncated tail of the real output on parse failure so a future
+occurrence is diagnosable instead of guessed at.
+
+### 2026-06-19 — Two "Set of 4" listings may deliver only 1 design (Cardinal Rule risk, not infra)
+**Surfaced by:** `tools/listing_integrity_check.py`'s `quantity_claim_mismatch` gate, which flags when a
+listing's title claims a design count (e.g. "Set of 4") that doesn't match the number of digital files
+actually attached. `4512301880` (Boho Botanical Set of 4) and `4512784922` (Four Seasons Set of 4) each have
+a single `DP10xx_print_sizes.zip` attached — `generate_print_sizes.py`'s naming convention produces one such
+ZIP per design (multiple print *sizes* of one design, not multiple designs). Prior `fix_queue.json` work on
+both was photos-only ("using DP1065/DP1070 art source", singular) — the underlying file-quantity question was
+never addressed by that work.
+**Cannot fully confirm ZIP internals from this cloud container** (source files are gitignored locally and
+Etsy's API exposes only file metadata, not content download, for the seller's own listings), but every
+available signal (title says 4, one ZIP attached, naming convention implies one design per ZIP) points to
+customers paying for 4 designs and receiving 1.
+**Note:** the third "Set of 4" listing checked as a possible control case, `4512784817` (Coastal Set of 4),
+is NOT a clean comparison — `data/listing_audit_report.json` already separately flags it with its own
+unrelated Cardinal Rule issue ("IMAGE CONTENT: MISMATCH: the image shows a single framed artwork of a turtle
+instead of a set of four coastal art prints") plus missing AI disclosure and only 6/10 photos uploaded. So no
+verified "this is what a correct Set-of-4 listing looks like" example was confirmed in this pass — don't cite
+it as a control case in future reasoning about this issue.
+**Action:** flagged to Scott for a fix-or-pull decision on `4512301880`/`4512784922` — Hard Stop, no
+listing/file changes made autonomously. Logged here for the record, not as a fixed item.
+
+### 2026-06-19 — Resolved: autoresponder retired, two mismatched listings staged for deactivation
+Scott decided both items above. **Autoresponder:** `_autoresponder_loop`, its `_AGENT_LOOP_LABELS` entry, and
+its `asyncio.create_task(...)` registration were removed from `main.py` (the standalone
+`tools/etsy_autoresponder.py` script itself was left in place, just unscheduled). The stale `autoresponder`
+row in `agent_heartbeats` was cleared via a new `db.delete_agent_heartbeat()` function so the Agents HUD
+doesn't show a frozen tile for a loop that no longer runs.
+**Quantity-mismatch listings:** added a `deactivate_listing` staged-action type (same pattern as
+`publish_listing`, sets `state: "inactive"`) since no staged path for deactivation existed before — only a
+direct human-only endpoint. Staged both `4512301880` and `4512784922` via `db.enqueue_action` referencing this
+finding; both sit as `pending` in the Action Center queue. Nothing on Etsy has changed — Scott must still tap
+Approve for either listing to actually go inactive.
+
+### 2026-06-19 — Closed: both quantity-mismatch listings approved and taken off the storefront
+Scott explicitly approved ("I want you to deactivate those"). Ran `approve_action`'s code path (validate →
+`_execute_staged_action` → `client.update_listing(lid, {"state": "inactive"})`) for queue IDs `1` and `2`.
+Both now show `status: "executed"` in `action_queue`.
+**API quirk found:** Etsy's PATCH response reports `state: "edit"` for both listings, not `"inactive"` as
+requested. This is a real, distinct Etsy listing state (not an error) — likely returned because the PATCH
+payload only sets `state` without re-sending other listing fields Etsy wants on a full update. Confirmed by
+paginating the full `shops/{shop_id}/listings/active` feed (140 results) end to end: neither `4512301880` nor
+`4512784922` appears, so the practical effect (off the public storefront, not purchasable) is achieved even
+though the literal state string differs from what was requested. If a future check needs to confirm "is this
+listing live," do not rely on `state == "inactive"` alone — also check absence from the `listings/active` feed,
+since Etsy may return `edit` for what is functionally the same outcome.
+**Result:** `4512301880` (Boho Botanical Set of 4) and `4512784922` (Four Seasons Set of 4) are confirmed off
+the storefront. Finding fully closed — not just staged.
+
+### 2026-06-20 — DP1026–DP1029 sticker pack ZIPs missing locally; live listings unaffected
+New pre-publish file gate (`approve_listing.py`'s `check_product_files()`, added this session) flagged
+`DP1026_sticker_pack.zip` / `DP1027` / `DP1028` / `DP1029` as missing from
+`data/digital_products/product_files/`. Checked `client.get_listing_files()` against all four live listing
+IDs (4509179201, 4509184958, 4509184962, 4509184968) — each still has its sticker pack ZIP, PDF, and undated
+PDF attached and correctly sized on Etsy's side. **No customer-facing problem; did not deactivate anything.**
+Tried to restore the local copies and could not: (1) Etsy API v3 exposes no download URL on
+`GET .../listings/{id}/files` — sellers cannot pull back an already-uploaded digital file via API by design;
+(2) neither `data/backups/digital_products_backup_20260616_163922.zip` nor the 06-17 backup contains these
+sticker ZIPs (they predate this gap or never captured them); (3) `tools/rebuild_sticker_pack.py` needs source
+sheet PNGs (`sheet_01_functional_planning.png` etc.) to rebuild a pack, and those aren't present locally either
+— only `DP102[6-9]_cover.png` survived. Only manual path: Scott downloads the file from Etsy Shop Manager's
+listing-edit UI (it has a download icon per file even though the API doesn't), or pulls it from wherever he
+saved the original backup ZIP from `backup_digital_products.py`. Left open — informational, not urgent.
+
+### 2026-06-20 — DP1026–DP1029 listing descriptions understated real page counts (truthfulness fix)
+The same file-gate work above led to comparing each PDF's actual content against the published description.
+Used `pypdf.PdfReader(...).outline` on the live `data/digital_products/product_files/DP102[6-9].pdf` files and
+found real page counts of 143/131/144/133 — all higher than what the live Etsy descriptions and
+`qc_sweep.py`'s `PLANNER_PAGES` dict claimed (104/90/102/91). Confirmed via the outline that the extra pages
+are real, intentional sections already on CLAUDE.md's roadmap (Daily Pages × 365, Brain Dump, SMART Goals,
+Year in Pixels, Class Schedule, Priority Matrix, Pomodoro Focus Tracker, Debt Payoff Tracker, Savings Goal
+Tracker, Bill Payment Checklist, Progress Photos Log, 30-Day Water Tracker, Sleep Quality Log, Non-Scale
+Victories) — not a generation bug or duplicate pages. This was a real violation of CLAUDE.md's "never lie to
+the customer" rule (wrong page count + missing sections in description). **Fix:** rewrote each live
+description via regex-anchored substitution (`/tmp/desc_work/fix_descriptions.py` — anchors on the
+surrounding text rather than an exact hand-typed match, to avoid the byte-mismatch bug from an earlier
+attempt) and pushed via `client.update_listing()` to all four listings (4509179201, 4509184958, 4509184962,
+4509184968) — confirmed live with correct page counts and the new section bullets. Also updated
+`tools/qc_sweep.py`'s `PLANNER_PAGES` dict (104→143, 90→131, 102→144, 91→133) so the count-accuracy gate stops
+flagging these as WARN, and synced CLAUDE.md's "Product Catalog" and "Pre-Written Listing Content" sections to
+match. **Still open:** Scott should be told the underlying PDFs grew without anyone updating the listing
+copy — worth a quick process check on whatever workflow regenerates these PDFs, so the description doesn't
+drift again next time content is added.
+
+### 2026-06-20 — Western SVG commercial license listing told buyers to purchase a second listing that doesn't exist (truthfulness fix)
+**Symptom:** While deciding what to do about `SVG_WESTERN`'s `"incomplete"` catalog status, found it isn't
+just a dormant unbuilt product — it's tied to a live, active $24.99 listing (4515437442, "Commercial
+License, Western SVG Bundle 12 Designs"). Its description said "Purchase the personal use listing (linked
+in the description above) to receive the files" and "You receive the same files as the personal use listing
+PLUS this commercial license certificate," and its FAQ said "Yes — this listing is the license only.
+Purchase the regular listing for the design files."
+**Root cause:** No such "personal use listing" exists or ever existed — confirmed via `c.get_listing_files()`
+that the design ZIP (`OnBrandCraftz_western_SVG_Bundle.zip`, 15.98MB, 12 designs) is already directly attached
+to and deliverable by this very license listing, and via a shop-wide search of all 140 active listings that
+zero other listings contain "western" in the title. The description text was carried over from a planned
+two-listing (personal-use + commercial-license) model that was apparently never actually built, leaving buyers
+told to go find and purchase a listing that doesn't exist in order to receive files they already paid for.
+**Fix:** Edited the live description via `client.update_listing(4515437442, {"description": ...})` — removed
+the "purchase the personal use listing" line, the matching "same files as the personal use listing" line, and
+the FAQ Q&A, replacing all three with accurate statements that this purchase includes both the commercial
+license and the full design file set, delivered instantly. Verified live: false text gone, ZIP attachment
+(filename/size/file_id) unchanged. Did not touch price, photos, tags, or `product_catalog.json`'s
+`SVG_WESTERN` `"incomplete"` status — that entry tracks a separate personal-use product that was never built
+(build-vs-abandon decision, out of scope for this fix).
+
+### 2026-06-20 — DP1034 (Ultimate Celestial Life Planner) sticker pack was short of the 200+ standard, and rebuilding it blew the 20MB Etsy file limit
+**Symptom:** `DP1034_sticker_pack.zip` (Celestial Night theme, built by `tools/generate_celestial_assets.py`)
+shipped with only 115 individual stickers across 5 sheets — short of CLAUDE.md's 5-sheet/200+ minimum. After
+generating 4 more sheets (6-9: Zodiac & Affirmations, Bonus Celestial Extras, Date Dots & Labels, Mini Icons
+& Motivational Tags) to bring the count to 233, the rebuilt ZIP came out at 28MB — over the 20MB Etsy hard
+limit (`ZIP size: under 20 MB` per the sticker pack QC checklist).
+**Root cause:** gpt-image-1 PNG output for these transparent sticker sheets is full 32-bit RGBA with no
+palette reduction — 9 sheets + 233 cropped individuals at that bit depth totalled ~29MB uncompressed, and PNG
+deflate gets almost no win on already-noisy AI-generated raster art.
+**Fix:** Added `--append-sheets` to `generate_celestial_assets.py` so new sheets can be generated and merged
+into the existing pack without regenerating sheets already on disk. Quantized every sheet and individual
+sticker PNG to a 256-color adaptive palette via `Image.quantize(colors=256, method=Image.Quantize.FASTOCTREE)`
+(alpha channel preserved correctly — verified anti-aliased edges still gradient, not hard-cut) before
+rezipping. Final pack: 9 sheets, 233 individual stickers, 2.7MB total (was 28MB). Spot-checked sheets 6 and 8
+visually post-quantization — flat kawaii cel-shaded art shows no visible quality loss at 256 colors.
+**Note for future sticker packs:** quantize every PNG (sheets + individuals) to 256 colors before zipping by
+default — don't wait to discover the 20MB limit after the fact.
+
+### 2026-06-20 — Cover-art destructive-overwrite bug shipped the wrong cover on 4 LIVE listings (DP1026-1029)
+**Symptom:** DP1030's freshly AI-generated matcha-themed cover was found replaced by a generic indigo/gold
+"Celestial Night" design. Investigating the code path revealed the bug was systemic, not a one-off — DP1026,
+DP1027, DP1028, and DP1029 (all live, currently-selling listings) had been shipping the same indigo/gold
+placeholder cover instead of their documented Lavender Dreams / Cotton Candy / Midnight Blue / Coral Peach
+covers. This violated the "NEVER LIE TO THE CUSTOMER" rule — customers were receiving planners whose cover
+didn't match the listing's theme.
+**Root cause:** `generate_planner_v2.py` wrote newly-generated AI cover art to `{pid}_cover.png`, but
+`planner_hyperlinker.py`'s `finalize()` checked for a *different* filename (`{pid}_cover_ai.png`) to decide
+whether real AI art existed. Since that file never existed for these products, `finalize()` always fell
+through to `build_cover_png()`, which wrote directly into `{pid}_cover.png` — silently destroying the real
+AI art that had just been generated there. Both cover builders also used hardcoded module-level "Celestial
+Night" color constants regardless of which product was being built, so the placeholder was always indigo/gold.
+**Fix:** Renamed the AI-cover output path in `generate_planner_v2.py` to `{pid}_cover_ai.png` so it matches
+what `finalize()` looks for. Parameterized `build_cover_png()`/`compose_ai_cover()` in `planner_hyperlinker.py`
+to accept the product's real theme/accent/bg/dark colors instead of always using the hardcoded constants
+(DP1034 pinned to the legacy defaults — its exact 3-tone gradient can't be reconstructed from the 4 generic
+theme colors; verified byte-for-byte identical output post-fix). Regenerated theme-correct AI covers for
+DP1026-1030 via `tools.image_gen.generate_image()`, rebuilt all dated+undated PDFs through the fixed pipeline,
+visually confirmed each cover matches its documented theme, and re-uploaded the corrected `{pid}.pdf`/
+`{pid}U.pdf` files to the 4 live listings (4509179201/4509184958/4509184962/4509184968) via
+`delete_listing_file()` + `upload_listing_file()` — all 8 files passed `validate_digital_file()` with zero
+errors. DP1030 remains an unpublished pilot; its files were fixed but no new listing was published.
+
+### 2026-06-21 — `/` and `/frank` had zero auth; the API bearer token was readable in their page source
+**Symptom:** Investigating "is Frank protected," found `GET /` and `GET /frank` had no auth check at all —
+anyone with the URL got the full page, no token needed. That's worse than it sounds, because the same page
+embeds the literal `APP_TOKEN` value used for every `/api/*` Bearer check and both `/ws/*` query-param checks
+(`const TOKEN = ...` in `_WEB_UI`, `render_frank_hud(APP_TOKEN)`). So the API's "auth" was theater — loading
+the unauthenticated page handed over the key to everything else. Also found `APP_TOKEN` defaulted to the
+literal string `"changeme"` if `APP_SECRET_TOKEN` was ever unset (fails open, not closed).
+**Fix:** Added a passphrase login gate in `tools/api_server/main.py` (only file touched) in front of both
+`/` and `/frank`: `GET /login` / `POST /login` check the submitted passphrase against the existing
+`APP_SECRET_TOKEN` (no new credential), set an HttpOnly/Secure/SameSite=Lax session cookie on success
+(in-memory session store, 30-day TTL), and `GET /logout` clears it. `web_ui()`/`frank_hud_mockup()` now
+redirect (307) to `/login?next=...` if the session cookie is missing/expired. Added a per-IP login rate
+limiter (5 failed attempts / 15 min → 429) since there was no rate limiting anywhere in the app before.
+Removed the `"changeme"` default — the server now raises `RuntimeError` at startup if `APP_SECRET_TOKEN`
+is unset, instead of silently accepting a guessable token. `/api/*` Bearer auth and `/ws/*` query-token auth
+are unchanged. Verified end-to-end: unauthenticated `GET /`/`/frank` → 307; 6th bad passphrase from one IP →
+429; correct passphrase → cookie set + redirect; cookie then grants `/` and `/frank` normally; `/api/listings`
+still 403 without Bearer token, 200 with it. Deferred (not done this round): moving the WS token off the URL,
+tightening CORS, adding CSP/security headers.
+
+
+## 2026-06-21 — Automated quality audit — 44 listing(s) failing
+Daily listing_integrity_check found 44 FAIL / 24 WARN out of 172 listings audited. Details:
+[4488477854] P3D_CRYSTAL_GLOW_LAMP — Crystal Glow Lamp, 3D Printed Faceted RGB Table Lamp, U…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488532602] P3D_RIBBED_VASE_FOR_DRIED_FLOWERS — Ribbed Vase for Dried Flowers, 3D Printed Boho Decor, M…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488666558] P3D_COFFEE_BAR_SIGN — Coffee Bar Sign, 3D Printed Cat Kitchen Decor, Housewar…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4490472707] P3D_SCULPTURAL_MESH_LAMP — Sculptural Mesh Lamp, 3D Printed Geometric Table Lamp, …
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4492610660] P3D_TEXTURED_TEA_LIGHT_HOLDERS — Textured Tea Light Holders, 3D Printed Candle Holder Se…
+  Type: 3d_print_physical | Photos: 4 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 4 photos (want ≥8)
+
+  [4497392795] P3D_GEOMETRIC_GLOW_LAMP — Geometric Glow Lamp, 3D Printed Table Lamp, Modern Home…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4507783049] P3D_MINIMALIST_PEN_HOLDER — Minimalist Pen Holder, 3D Printed Desk Organizer, Moder…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4509600086] DP1035, DP1064 — Tropical Leaves Print, Bold Monster
+
+
+## 2026-06-21 — Automated quality audit — 44 listing(s) failing
+Daily listing_integrity_check found 44 FAIL / 24 WARN out of 172 listings audited. Details:
+[4488477854] P3D_CRYSTAL_GLOW_LAMP — Crystal Glow Lamp, 3D Printed Faceted RGB Table Lamp, U…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488532602] P3D_RIBBED_VASE_FOR_DRIED_FLOWERS — Ribbed Vase for Dried Flowers, 3D Printed Boho Decor, M…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488666558] P3D_COFFEE_BAR_SIGN — Coffee Bar Sign, 3D Printed Cat Kitchen Decor, Housewar…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4490472707] P3D_SCULPTURAL_MESH_LAMP — Sculptural Mesh Lamp, 3D Printed Geometric Table Lamp, …
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4492610660] P3D_TEXTURED_TEA_LIGHT_HOLDERS — Textured Tea Light Holders, 3D Printed Candle Holder Se…
+  Type: 3d_print_physical | Photos: 4 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 4 photos (want ≥8)
+
+  [4497392795] P3D_GEOMETRIC_GLOW_LAMP — Geometric Glow Lamp, 3D Printed Table Lamp, Modern Home…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4507783049] P3D_MINIMALIST_PEN_HOLDER — Minimalist Pen Holder, 3D Printed Desk Organizer, Moder…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4509600086] DP1035, DP1064 — Tropical Leaves Print, Bold Monster
+
+## 2026-06-22 — Production crash-loop fixed (server had been stuck on stale code) + Railway token fix
+**Symptom:** Three consecutive deploys after the Part A/B security-hardening commits never went live —
+production kept serving an old build. Railway CLI auth also appeared broken (`railway whoami`/`railway
+status` failed with "Invalid RAILWAY_TOKEN" using Scott's new personal token).
+
+**Root cause 1 (Railway CLI auth):** Scott's token is an account-level personal token, not a project-scoped
+token. Railway CLI only accepts personal tokens via the `RAILWAY_API_TOKEN` env var — `RAILWAY_TOKEN` is for
+project-scoped tokens only, and silently produces a misleading "Invalid RAILWAY_TOKEN" instead of a
+wrong-token-type error. Confirmed valid by querying the GraphQL API directly (`query { me { email } }`)
+before touching the CLI var name. Fixed by renaming the `.env` key from `RAILWAY_TOKEN` to
+`RAILWAY_API_TOKEN`.
+
+**Root cause 2 (the actual production outage):** `tools/api_server/main.py` has imported `openai` since the
+voice-feature commit (`ec034aa`), but `Dockerfile`'s hand-picked `pip install` list was never updated to
+match — `requirements.txt` lists `openai` but is NOT what governs the Docker build (`railway.toml` uses
+`builder = "dockerfile"`, which ignores `requirements.txt` entirely). Every deploy since `ec034aa` crashed
+on `ModuleNotFoundError: No module named 'openai'` at startup, looped through all 10 restart attempts, failed
+health checks, and Railway kept serving the last build that had actually gone live — silently, with no
+error surfaced anywhere obvious. `PyPDF2` (used by `etsy_api.py`'s digital-file PDF validation) was also
+missing from the same list — found via an AST-based audit of all of `main.py`'s real dependencies before it
+could cause a second crash-loop cycle.
+
+**Fix:** added `"openai>=1.0.0"` and `"PyPDF2>=3.0.0"` to `Dockerfile`'s pip install (quoted to avoid the
+`PyPDF2>=3.0.0` → shell `2>` redirect parsing trap). Commit `4c3737d`, pushed to
+`claude/etsy-automation-agents-WFAPU`. Deploy `eb0abf50` succeeded and is now `RUNNING`; verified live:
+`/health` returns 200, all new security headers present (CSP, X-Frame-Options, HSTS, etc.), `/api/ws-ticket`
+now exists (403 without auth, not 404) — confirming the security-hardening work from earlier the same day is
+finally actually live, not just committed.
+
+---
+
+## 2026-06-22 — Voice in/out broken on live Frank: OpenAI account out of quota
+
+**Symptom:** Scott reported "voice communication is not working" in the Frank PWA on his phone.
+
+**Diagnosis:** Hit the live TTS endpoint directly —
+`POST /api/voice/speak {"text":"..."}` on the production URL returned HTTP 502 with body
+`speech synthesis failed: Error code: 429 - insufficient_quota` ("You exceeded your current quota,
+please check your plan and billing details"). Both voice endpoints depend on OpenAI
+(`/api/voice/speak` → OpenAI TTS `tts-1`; `/api/voice/transcribe` → Whisper `whisper-1`), so an
+account-level quota exhaustion takes out voice in AND out simultaneously. Same `429 insufficient_quota`
+was also observed when testing the new reject-with-reason photo auto-regeneration (gpt-image-1), confirming
+this is account-wide, not endpoint-specific.
+
+**Root cause:** The OpenAI account behind `OPENAI_API_KEY` has exceeded its quota / has a billing issue —
+NOT a code or deploy bug. `OPENAI=True` at startup (key is present and loaded); the key is simply rejected
+at spend time.
+
+**Fix:** Billing-side only — add credits / fix payment method at platform.openai.com → Settings → Billing.
+No redeploy needed; all OpenAI-backed features (voice TTS+Whisper, gpt-image-1 photo generation, the
+reject-fix photo loop) resume the moment the account has quota again.
+
+---
+
+## 2026-06-23 — Raw Anthropic error text leaking to users + 2 mislabeled "AI Core Overview" status dots
+
+**Symptom:** Scott sent a screenshot of the live Frank dashboard: "There are still a lot of errors in
+frank." The chat bubble showed a raw `Error code: 400 - {'type': 'error', ...'Your credit balance is too
+low...'}` dump when he asked Frank to talk back, the Suggestion Warmer widget showed the same raw
+`Anthropic API error: <exc>` string as its heartbeat detail, and "AI Core Overview" showed "Voice: Offline
+— not built yet" and "Memory: Not wired yet" even though both features are fully built and working.
+
+**Diagnosis:**
+1. The trigger was a real Anthropic billing issue (credit balance too low) — but the chat WS handler
+   (`main.py` `chat_ws`) and two suggestion-generation endpoints (`_compute_suggestions_inner`,
+   `diagnose_listing`) all forwarded `str(exc)` / `f"Anthropic API error: {exc}"` straight to the client,
+   so any Anthropic exception (billing, rate limit, auth, overload) dumped raw Python exception text into
+   the UI instead of a readable message.
+2. `frank_hud_mockup.py`'s "Voice" AI-Core-Overview indicator was bound to the `local_relay` agent's
+   status (a leftover copy-paste from when Voice and Relay were being built around the same time) —
+   Voice has zero dependency on the relay, it's a stateless feature of this same server
+   (`/api/voice/transcribe`, `/api/voice/speak`), so it always showed the relay's "not built yet"
+   placeholder regardless of whether voice itself worked.
+3. "Memory" was a permanent hardcoded stub (`'Not wired yet'`) that was never wired to the already-working
+   `/api/memory` endpoint (used elsewhere on the dashboard's Memory tab).
+
+**Confirmed NOT bugs (left untouched, called out to Scott separately):** "System: Ephemeral (volume not
+attached)" is accurate — no Railway persistent volume is attached (see 2026-06-17 entry above) — and
+"Local Relay: Offline" is accurate — `tools/relay/frank_relay.py` is fully built but has never been
+started on Scott's machine. Both require action outside this repo, not a code fix.
+
+**Fix:** Added `_friendly_error_message(exc)` in `main.py` that maps known Anthropic failure signatures
+(credit balance, rate limit, auth, overload) to short human-readable strings, with a generic fallback;
+wired it into the chat WS error path, both suggestion-endpoint `HTTPException` details, and the Suggestion
+Warmer's stored heartbeat — raw exception text is still printed server-side for debugging, just never sent
+to the client. In `frank_hud_mockup.py`, removed the relay-bound Voice block from `loadAgents()` and
+instead set Voice to Online/Offline based on whether `/health` answers (inside
+`loadCredentialsAndHealth()`); replaced the Memory stub with a live fetch of `/api/memory`, rendering
+real session/learnings counts.
+
+---
+
+## 2026-06-23 — Frank's installed PWA was unusable on Scott's phone (content cut off, no mobile nav)
+
+**Symptom:** Scott: "I need the app on my home screen to be able to show everything on Frank's main page
+and not be cut off... I want to make sure I can work from my phone without losing function." The installed
+home-screen PWA showed the desktop layout shrunk to ~27% size with most screens' content clipped.
+
+**Diagnosis (confirmed via grep against the 3,000+ line inline template in `frank_hud_mockup.py`, no
+guessing):**
+1. The entire dashboard is a fixed 1440×900px `#stage` that JS (`fitStage()`) uniformly scaled down to fit
+   any viewport via `transform:scale()` — on an iPhone (390×844) that's `scale≈0.271`. Zero `@media`
+   queries existed anywhere in the CSS; the scale hack was the only "mobile" handling, and it reflowed
+   nothing.
+2. 8 screens (Tasks, Action Center, Calendar, Memory, Conversations, Knowledge Base, Tools & Skills,
+   Workflows) plus `.hub-scroll` (Listings/Products/Brand Kit/Files/Connections/Security) and Studio's
+   video list hardcoded inline `max-height:700px`/`760px`/`420px`, sized for the 900px-tall desktop stage —
+   these clipped content on a phone regardless of the stage-scaling fix.
+3. The 226px-fixed sidebar nav (16 screens, 4 groups) had no mobile pattern — at 390px wide it would have
+   eaten 58% of the screen.
+
+**Fix (all in `frank_hud_mockup.py` unless noted):**
+- Viewport meta tag: added `viewport-fit=cover` so `env(safe-area-inset-*)` resolves on iOS standalone mode.
+- `fitStage()`: now checks `window.matchMedia('(max-width:880px)')` and skips the scale transform on
+  mobile (`stage.style.transform='none'`); a `syncMobileClass()` function toggles `body.is-mobile` on
+  resize/orientation-change so CSS and JS agree on mode.
+- New `@media (max-width:880px)` block (plus a nested `@media (max-width:380px)` for small phones):
+  `#stage` goes fluid and the whole page becomes a normal scrolling document (`html,body{overflow-y:auto}`,
+  `#stage{height:auto}`); the sidebar becomes a fixed off-canvas drawer
+  (`translateX(-100%)` ↔ `translateX(0)` via `body.drawer-open`) with its own backdrop and a duplicate
+  search input (the header search/clock are hidden on mobile to make room for the hamburger button);
+  `.mrow` panel rows stack vertically full-width instead of sitting in fixed-width columns; the agents grid
+  collapses 4→2→1 columns; every one of the 8 hardcoded `max-height` clamps plus `.hub-scroll` and
+  `#studio-videos-list` get `max-height:none !important;overflow:visible !important`; touch targets
+  (`.nav-item`, `.icon-btn`, `.qc-btn`, `#chat-send`, `.talk-pill`) were bumped to ~40-44px; safe-area-inset
+  padding was added to the header/footer/drawer for the iPhone notch/home-indicator.
+- Hamburger button (`#hamburger-btn`, CSS-hidden on desktop) wired to `openDrawer()`/`closeDrawer()`/
+  `toggleDrawer()`; drawer auto-closes on navigation via one added line in the existing `showScreen()`
+  chokepoint (`if (isMobileMode()) closeDrawer();`), which covers every nav path (sidebar clicks, "View
+  All ›" links, Quick Commands) without touching each call-site individually.
+- Bumped `_BUILD_ID` in `main.py` (`f4b1e2a-v45` → `v46`) so Scott's already-installed PWA's service
+  worker cache-busts and fetches this new shell instead of serving the old cached one indefinitely.
+- Desktop (≥881px) is untouched — every change is gated behind the `880px` media query / `body.is-mobile`,
+  confirmed by re-grepping `STAGE_W`/`STAGE_H`/`innerWidth`/`innerHeight` to verify they're still only
+  referenced inside the now-mobile-gated `fitStage()`, and by a CSS brace-balance + `node --check` pass on
+  the extracted inline `<script>` block (118KB, no syntax errors).
+
+---
+
+## 2026-06-23 — Recycle-bin safety net + mic auto-stop-on-silence + dashboard dead-code cleanup
+
+Three changes shipped together at Scott's request.
+
+**1. Recycle bin (`tools/trash.py` + `data/trash/`).** Scott: "I want a file that keeps anything you
+delete for 30 days so in case it was accidentally removed or caused an issue we can pull whatever we need
+back." Built a deletion safety net: `archive_snippet(source, content, reason)` / `archive_file(path, reason)`
+write to a committed, human-readable ledger `data/trash/DELETED.md` (machine-parseable per-entry header
+comment + verbatim content in an adaptive backtick fence) plus a byte-exact payload copy under
+`data/trash/files/` so restores never depend on re-parsing markdown. `restore(id[, dest])` recovers a
+snippet (stdout/file) or a whole file (back to its original path). `prune(days=30)` drops expired entries +
+their payloads and runs automatically after every archive. **The vault is committed to git on purpose** —
+this remote environment's container is ephemeral, so an uncommitted vault would vanish with the session.
+Time-based expiry is driven by a one-liner added to the existing daily `_snapshot_loop()` in `main.py`
+(calls `trash.prune()` every 24h) — chosen over a separate cron because that loop already runs continuously
+on the live Railway server, so there's nothing extra to keep alive. A hard rule was added to CLAUDE.md
+("Archive anything before deleting it") so future sessions use it. Tested: snippet round-trip is byte-exact,
+a synthetic 40-day-old entry is pruned with its payload, and the adaptive fence survives content containing
+triple backticks.
+
+**2. Microphone auto-stop on silence (`frank_hud_mockup.py`).** Previously the talk-pill/orb recorded until
+a *second* tap — there was zero silence detection. Added `_startSilenceMonitor()`/`_stopSilenceMonitor()`:
+a Web Audio `AnalyserNode` (fftSize 512) on the persistent mic stream computes RMS in a
+`requestAnimationFrame` loop; once the user has spoken (RMS > 0.025) and then stayed quiet (RMS < 0.015) for
+1500ms, it stops the **recorder** — which fires the existing `onstop` → transcribe path. A 30s hard cap
+prevents a noisy room recording forever. Wired in after `_voiceRecorder.start()` and torn down in `onstop`
+(so manual re-tap still stops immediately). **Critically preserves the beb230b fix**: it stops only the
+`MediaRecorder`, never the `_voiceStream` tracks, and reuses one `AudioContext`/analyser across recordings.
+If Web Audio is unavailable it silently degrades to the old manual tap-to-stop (no regression). Bumped
+`_BUILD_ID` `v46`→`v47` so the installed PWA picks up the new shell.
+
+**3. Dead-code cleanup (`frank_hud_mockup.py`).** Removed ~1.7KB of confirmed-dead remnants of the original
+voice-widget UI (replaced long ago by the QUICK COMMANDS buttons + bottom talk-pill): CSS `.wave-row`,
+`.mic-circle`(+`.live`), `.vw-sub`, `.vw-tap`, `.focus-btn`(+`.on`), `@keyframes micpulse`, `.col-quick`;
+and dead JS `openDrawer()` (never called) + the `#focus-toggle` handler (no such element exists). Each block
+was archived to the new recycle bin *before* removal (ids 20260623-001..005), so it's all recoverable.
+Verified: greps for the 9 removed symbols return zero; kept symbols (`@keyframes wave`, `.vw-title`,
+`.mini-wave`, `closeDrawer`, `toggleDrawer`) still present; CSS braces balanced (267/267); `node --check`
+clean. **Backend "wasted code" was investigated but NOT touched** — candidate unused endpoints
+(`/api/history`, `/api/snapshot`, `/api/conversion-targets`, `/api/autofix/{tags,title}`, etc.) and tool
+scripts all plausibly have external/agent/manual callers a frontend grep can't see, so they're left for
+Scott to confirm before any removal. Also noted: 3 of 4 "QUICK COMMANDS" sidebar buttons ("Start New Task",
+"Run Health Check", "Run Workflow") have no `onclick` and currently do nothing — wiring them is a separate
+small feature, not done here.
+
+### 2026-06-23 — Full-wiring audit of Frank (frontend + backend) per Scott's request
+**Ask:** Confirm every function/button/endpoint in Frank is actually wired up and running, not just
+"not dead code." Two independent Explore agents audited the frontend (`frank_hud_mockup.py`, every
+onclick/addEventListener/fetch/nav screen/voice+chat wiring) and the backend (`main.py`, all 67
+REST/WebSocket endpoints, all 5 background loops, all local module imports).
+**Result:** Backend is fully wired — no missing imports, no broken routes, no stub endpoints standing
+in for real ones, all background loops have proper error handling. Frontend had exactly one gap: the
+3 dead "QUICK COMMANDS" sidebar buttons flagged (but left unfixed) in the prior cleanup session above
+still had no `onclick`.
+**Fix:** Wired all 3 to existing, already-proven functions instead of writing new code — "Run Health
+Check" → `runWorkflow('shop_health_check', this)` (same call the Workflows screen's buttons already use;
+`shop_health_check` is a registered `_EXEC_COMMANDS` key); "Run Workflow" → `showScreen('workflows')`
+(navigates to the screen that lists every workflow with its own working Run button); "Start New Task" →
+`showScreen('tasks')` + `.focus()` on the existing always-in-DOM `#hud-todo-input` (already wired to
+`addHudTodo()`). Bumped `_BUILD_ID` `v47`→`v48`. Verified: `py_compile` clean, re-extracted `<script>`
+block passes `node --check`, grep confirms all 3 onclicks present and reference real functions.
+**Outcome:** Frank now has zero known broken UI wiring.
+
+### 2026-06-24 — Phase 1 polish pass (toasts, confirm/alert cleanup, welcome overlay, mobile fixes)
+**Ask:** Scott's roadmap (polish → agentic capability → distribution) called for a frontend polish pass
+before Phase 2's new chat tools. All 4 items below are `frank_hud_mockup.py`-only; no backend mutation
+paths or the Action Center approval gate were touched.
+**1. Toast/snackbar primitive.** Added `#toast-stack` (fixed-position, sibling of `#drawer-backdrop` so
+desktop stage-scaling doesn't affect its coordinates) + `showToast(message, type, ms)` with
+`toast-in`/`toast-out` keyframe animations. Wired into `runWorkflow()` so the sidebar "Run Health Check"
+button — previously silent after its confirm — now reports staged/started/success/failure.
+**2. confirm()/alert() standardization.** Inventoried all 13 sites. Kept native `confirm()` only for:
+`approveAction()` (the Action Center gate itself), `toggleListingState()` (bypasses the gate, mutates the
+live storefront directly), and the Instagram/Facebook post actions (irreversible external publishes) —
+4 sites total, matching the plan's invariant. `runWorkflow(id, btn, requiresApproval)` now only confirms
+when `!requiresApproval` (threaded from `w.requires_approval` in `renderWorkflows()`; sidebar button passes
+`false` since health-check is read-only). The remaining 8 sites (including `batchStageTags()`, which only
+ever stages actions for later Action Center approval and so doesn't qualify under the keep-list) now use
+`showToast()`. Final `alert()` count: 0.
+**3. First-run welcome overlay.** `#welcome-overlay` + `.welcome-card` summarizing the 4 nav groupings
+(Frank/Knowledge/Tools/Shop) plus a one-line approval-gate reminder. Shows once via the same
+`localStorage` try/catch pattern already used for `chatSession` (degrades to showing every time if
+localStorage is unavailable) — dismiss button sets `frankWelcomeSeen`.
+**4. Mobile fixes.** Inside the existing `@media (max-width:880px)` block: `.act-btn{font-size:11px;
+padding:7px 4px}` (prevents Action Center Approve/Fix/Reject label clipping) and
+`.studio-grid>div:last-child{flex:1 1 100%;min-width:0}` (Studio's fixed 300px video-list column goes
+full-width on phone instead of staying cramped).
+**Verified:** `py_compile` clean on both files; `<script>` block re-extracted via `ast.literal_eval()` on
+the `_FRANK_HUD_MOCKUP` string (required — naive regex extraction preserves un-decoded Python escapes and
+gives false-positive `node --check` failures) and passes `node --check`; grep confirms exactly one
+`#toast-stack`/`showToast` definition, one `#welcome-overlay`, zero `alert(`, and `runWorkflow`'s signature
+consistent at both call sites. Bumped `_BUILD_ID` `v48`→`v49`.
+**Not verified:** no browser is available in this environment — the mobile CSS changes are unverified
+visually; flagging rather than claiming a check that didn't happen.
+
+### 2026-06-24 — Phase 2 agentic capability expansion (chat ↔ REST bridge, 7 new tools)
+**Ask:** Scott's roadmap's second phase — close the gap between "Frank has a tool-use loop" and "Frank
+can do everything the dashboard's buttons can do." Every new mutating tool stages through the existing
+`db.enqueue_action()` → Action Center → approve → executor pipeline; the approval gate itself was never
+touched. All changes in `tools/api_server/main.py`.
+**M1 — autofix/batch-tag/listing-state bridged into chat.** `autofix_listing_tags`/`autofix_listing_title`
+wrap the existing `_autofix_tags_core()`/`_autofix_title_core()` verbatim — pure exposure, no new staging
+logic. `stage_batch_tag_update` is new orchestration: hard-capped at 10 listing_ids (rejects above, never
+silently truncates, per CLAUDE.md's existing bulk-edit rule), stages each listing's tag update as its own
+separate Action Center row so Scott approves/rejects per-listing, never all-or-nothing. `toggle_listing_state`
+got a **second, chat-only path** — the dashboard's `POST /api/listings/{id}/state` stays exactly as-is
+(still gated only by its own `confirm()`), but chat has no UI confirm dialog, so its tool always stages via
+a new `toggle_listing_state` action type with its own `_validate_staged_action` branch and a new
+`_execute_staged_action` dispatch branch.
+**M2 — read-only conversion diagnostics exposed to chat.** Extracted `GET /api/conversion-targets` and
+`POST /api/diagnose/{listing_id}`'s bodies into standalone `_get_conversion_targets_core()` /
+`_diagnose_listing_core(listing_id)`; the REST routes became thin cache-wrapped callers, and two new
+read-only `AGENT_TOOLS` (`get_conversion_targets`, `diagnose_listing_conversion`) call the same core
+functions directly (bypassing the HTTP-layer cache, as expected). No staging — pure reads. Fixed a latent
+bug surfaced during extraction: the diagnose core function referenced an undefined `cache_key` left over
+from before the extraction; removed it from the core function and gave the route its own local `cache_key`.
+**M3 — `register_command` self-extension tool.** Lets Claude wire up an *existing* script under `tools/`
+as a new named command — a new capability, not a one-time mutation, so it gets the same staging mechanism
+plus extra guardrails: the tool's input schema has no `requires_approval` field at all, and the executor
+(`_execute_register_command_staged_action`) hardcodes `requires_approval: True` on every registration
+regardless of what's proposed — Claude can never register a command that skips approval. Validation (in
+`_validate_staged_action`) rejects: `script_path` outside `tools/` or containing `..`, a `script_path` that
+doesn't exist on disk yet (Claude can wire up an existing script, not write-and-register in one call), a
+`command_name` that collides with an existing `_EXEC_COMMANDS` entry, and a non-positive `timeout`. New
+sidecar `data/registered_commands.json` (starts as `{}`, git-tracked) persists approved registrations
+across restarts — `_load_registered_commands()` merges it into the in-memory `_EXEC_COMMANDS` dict at
+import time, forcibly re-stamping `requires_approval: True` on every loaded entry as a second hardcoding
+layer. `approve_action`'s three-way dispatch (`is_local`/`is_script`/else) became four-way with a new
+`is_register_command` branch.
+**Verified:** `py_compile` clean. Live-import simulation (`import main as m` from `tools/api_server/`,
+calling `_execute_agent_tool` via `asyncio.to_thread`) exercised every new tool: `get_conversion_targets`
+completed a real successful Etsy API call; `diagnose_listing_conversion` correctly returned a clean
+`{"error": ...}` (not a crash) when `ANTHROPIC_API_KEY` is unset; `register_command` correctly rejected a
+`script_path` outside `tools/`, a `script_path` containing `..`, a nonexistent `script_path`, and a
+duplicate `command_name` against a real existing `_EXEC_COMMANDS` key (`shop_health_check`); a valid
+registration staged successfully, and running the approved action through
+`_execute_register_command_staged_action` correctly wrote `requires_approval: True` into both the live
+`_EXEC_COMMANDS` dict and `data/registered_commands.json` on disk, and a fresh `_load_registered_commands()`
+call reloaded it correctly. Test action and sidecar entry were cleaned up (action rejected, sidecar reset
+to `{}`) after verification — no test artifacts left in the live system. Bumped `_BUILD_ID` `v49`→`v50`.
+**M4 (revisiting the approval gate itself) stays explicitly deferred** — not part of this pass, per Scott's
+standing instruction that approval remains mandatory for every mutating action.
+
+### 2026-06-24 — Frank Reliability & CEO-Knowledge Upgrade (Phases 0–3, full initiative)
+**Ask:** Scott's goal — Frank should hit "98% functionality without having to keep using Claude Code,"
+meaning 98% of Frank's day-to-day operation shouldn't require Scott invoking Claude Code to fix something
+broken. Four sub-goals: never assume (every claim traces to a real answer), agent loops converge correctly
+the first time, Frank diagnoses/fixes his own problems where safe, and Frank reasons with CEO-grade
+judgment. **Standing constraint preserved everywhere in this pass:** every mutating action still requires
+Action Center approval — "self-healing" means better diagnosis/retry/escalation, never auto-bypassing
+approval. Tier-1 auto-heal stays Etsy-free. `ceo_agent.py`'s `tool_approve_and_publish`/`tool_build_agent`
+were studied for patterns only, never ported (they bypass the approval gate by design).
+
+**Phase 0 — Foundations.** New `tools/api_server/resilience.py`: `retry_with_backoff()` (exponential
+backoff + full jitter, category-aware `retryable` predicate) and `CircuitBreaker` (per-dependency
+open/half-open/closed state, persisted via new `circuit_breaker_state` table in `db.py`). New structured
+tool-error taxonomy (`ToolError`/`TransientToolError`/`ValidationToolError`/`NotFoundToolError`/
+`TerminalToolError`) replaced the blanket `except Exception` closing `_execute_agent_tool` — tool errors
+now return `{"error", "category", "retryable"}` so the model knows whether a retry is worth attempting.
+
+**Phase 1 — Close the knowledge-loading gap.** `_summarize_and_rotate_kb_file()` rotates `ops_runbook.md`/
+`ceo_learnings.md` once they exceed ~20KB (Haiku-tier summarization of everything older than a recent tail)
+so the existing hard truncation in `_ops_runbook_block`/`_ceo_learnings_block` becomes a safety net instead
+of silent data loss. New `read_knowledge_base_doc` agent tool (thin wrapper on the existing
+`_resolve_kb_doc`/`_kb_docs`/`_kb_search`) gives Frank on-demand retrieval across all of
+`data/knowledge_base/`, including `CLAUDE.md` itself (special-cased in `_resolve_kb_doc`). Deleted the
+hardcoded product/price list from `_CEO_SYSTEM` — Frank now always calls `list_listings(state='active')`
+for current catalog/pricing instead of reciting a string that drifts from reality. New
+`ceo_operating_playbook.md` (Bezos one-way/two-way-door framework, pre-mortems, kill criteria, SKU-renewal
+ROI rule, financial cadence, etc.) — on-demand retrieval only, never baked into every prompt. New "WHEN YOU
+DON'T KNOW SOMETHING" protocol in `_CEO_SYSTEM`: tools → ops_runbook → ceo_learnings → knowledge base → web
+search → ask Scott (pricing/legal/tax/live-listing topics) or give a clearly-caveated estimate (everything
+else) — never invent a plausible-sounding answer silently.
+
+**Phase 2 — Consistent retry/backoff everywhere.** All 5 background loops (`_snapshot_loop`,
+`_warm_suggestions`, `_token_sync_loop`, `_quality_audit_loop`, `_health_check_loop`) migrated onto a
+shared `_run_loop_iteration()` built on Phase 0's primitives — jittered exponential backoff replaces fixed
+sleeps, each loop trips its own circuit breaker on repeated failure. The one-off Etsy 403 retry became a
+`retry_with_backoff()` call. `_execute_staged_action`'s Etsy calls (`update_listing`/`upload_listing_image`/
+`upload_listing_video`) now retry on 429/500/502/503 — only on an *already-approved* mutation, never a new
+one. New `"executing"` action status (alongside `pending`/`executed`/`failed`/`rejected`) set before
+`_execute_staged_action` runs, so a crash mid-execution can't leave an action silently re-approvable for a
+duplicate publish/upload.
+
+**Phase 3 — Self-diagnosis, safe remediation, CEO-grade reasoning.** Three-tier escalation for the health/
+quality loops: Tier 1 auto-heals cache invalidation, reaping crashed processes, transient Anthropic-API
+retries — never touches Etsy. Tier 2 alerts with a looked-up remediation from `_KNOWN_FAILURE_REMEDIATIONS`.
+Tier 3 writes a blameless-postmortem-style report (`_write_escalation_report`) into `ops_runbook.md` for
+novel failures — symptoms, what was tried, root-cause hypothesis labeled as a hypothesis. The KB-rotation
+pass now also promotes a failure category appearing 3+ times into a `## Known Recurring Issues` section at
+the top of `ops_runbook.md`. New "TOOL-RECEIPT DISCIPLINE" rule in `_CEO_SYSTEM`: every factual claim about
+live shop state must trace to an actual tool-call result from the current conversation, never a restated
+number from several turns back. `_validate_staged_action` now re-fetches a listing's live state at
+*approval* time (not staging time) for Etsy-facing staged actions and refuses if it changed since staging.
+Ported `QualityGate.check_image_dimensions`/`check_no_pale_background` from `business_pipeline.py` into
+`_validate_staged_action`'s `listing_photo` branch using PIL directly — pale/washed-out background is a
+hard block, wrong dimensions is a warning (legitimate source sizes vary before pipeline resize).
+New read-only `find_business_gaps` agent tool — advisory diagnostics (active-listing count vs. goal,
+quality-audit trend, under-used KB docs); never auto-builds agents or auto-publishes; `_CEO_SYSTEM` points
+to it for broad "how are we doing" questions instead of Frank re-deriving the same picture from five
+separate tool calls. New `context_compactor` agent (flips the `/api/agents/status` placeholder from
+`not_built` to real, data-driven status): new `chat_summaries` table (`db.py`) holds one running summary
+per session; `_maybe_compact_chat_history()` folds everything older than the live replay tail into a Haiku
+summary once a session's tail exceeds 60 messages (keeping the most recent 30 untouched), walking the cut
+point backward to land immediately after a complete assistant turn so role-alternation is never violated
+on replay. `/ws/chat`'s history load now splices a session's summary in ahead of its live tail instead of
+relying on `load_chat_history`'s hard cutoff, which silently dropped anything past its `limit`.
+**check_zip_size from `business_pipeline.py` was explicitly NOT ported** — no staged-action type exists for
+digital-file/ZIP uploads (those go through standalone scripts directly via `EtsyAPIClient.upload_listing_file()`,
+never through Action Center), so the gate would be dead code; noted here so it isn't mistaken for an
+oversight later.
+**Verified:** `py_compile` clean across `main.py`/`db.py`/`resilience.py`/`ceo_agent.py`. Phase 0 exercised
+directly in a REPL: `retry_with_backoff` showed jittered delays and succeeded after forced transient
+failures; `CircuitBreaker` tripped after the configured failure count and half-opened after cooldown.
+`context_compactor` exercised end-to-end against a throwaway SQLite DB with the real Anthropic client
+mocked: seeded 80 messages (40 pairs) into a session, confirmed compaction folded 50 into a summary and
+left 30 in the tail, and confirmed the kept tail starts on a `user` role (required for valid replay).
+Earlier segments verified Phase 1 (KB-doc retrieval and `list_listings` fire correctly instead of guessing)
+and Phase 2 (forced Etsy 5xx retries with the `executing` status guard holding) directly. Bumped `_BUILD_ID`
+`v50`→`v51`.
+**Not touched, by design:** the Action Center approval gate itself, and the prior "Frank Roadmap" plan's
+Phase 3 (distribution/white-label readiness) — both remain exactly as they were before this initiative.
+
+## 2026-06-24 — Frank Voice: fully offline by default (local WASM), OpenAI demoted to dormant opt-in
+
+**Request:** Scott wanted Frank's voice (talk-to-Frank mic input + spoken replies) to work with zero
+internet connection, without paying for OpenAI Whisper/TTS on every use, and without a hidden dependency
+on any third-party CDN — "a complete package in frank."
+
+**Root finding before building:** browser-native `SpeechRecognition` is NOT offline on any current
+desktop/mobile browser — Chrome streams the recorded audio to Google's servers to transcribe it. It was
+demoted from "the offline feature" to a last-resort fallback only.
+
+**What shipped:** `Xenova/whisper-tiny.en` via Transformers.js (speech-in) and Piper-web (speech-out) now
+run as quantized ONNX/WASM models entirely client-side, replacing OpenAI as the default voice engine.
+Self-hosted the full WASM runtime (transformers.min.js, onnxruntime-web's wasm bundle + its `.mjs`/`.wasm`
+glue, piper-tts-web's JS chunks, and the raw Piper phonemizer `.wasm`/`.data` binaries) under
+`tools/api_server/static/vendor/` — ~32MB committed to the repo, explicitly approved by Scott over a
+CDN-dependent alternative, served same-origin via the existing `/static` mount. Model *weights* (the
+Whisper/Piper voice itself) are intentionally NOT vendored — they download once from Hugging Face via the
+libraries' own fetch+cache logic (browser Cache API / OPFS) and persist client-side; no server-side
+storage or Railway Volume implication.
+
+Added a `<script type="importmap">` in `frank_hud_mockup.py`'s `<head>` mapping the bare specifier
+`"onnxruntime-web"` to the self-hosted bundle, since Piper-web loads it via a bare dynamic `import()` —
+without the import map this would have silently resolved to a CDN default. Both Transformers.js and
+Piper-web are explicitly pointed at the same single self-hosted onnxruntime-web copy
+(`env.backends.onnx.wasm.wasmPaths` / `TtsSession.create({wasmPaths})`) to avoid loading two different
+onnxruntime-web versions in the same page. Added `'wasm-unsafe-eval'` to the CSP `script-src` header in
+`main.py` — `WebAssembly.compile()`/`instantiate()` is blocked without it even though plain script loading
+and `fetch()` already worked under `script-src 'self'`.
+
+`speakText()`/`transcribeAndSend()` now branch on a new `frankPremiumVoice` localStorage flag (default
+OFF, toggle checkbox added next to the talk pill) — OFF routes through the new local WASM engines, ON
+routes through the existing `/api/voice/transcribe` and `/api/voice/speak` OpenAI endpoints exactly as
+before. Both paths still fall through to the pre-existing browser `SpeechRecognition`/`speechSynthesis`
+fallback on failure. The OpenAI endpoints themselves were not modified at all. Bumped `_BUILD_ID`
+`v51`→`v52`.
+
+**Verified in this environment:** `py_compile` clean on both files; the embedded classic `<script>` block
+(after Python's own string-literal parsing resolves all escapes) passes `node --check`; the import map JSON
+parses and resolves to the correct vendor path; all 9 vendor files referenced by the new JS exist on disk
+at the exact paths used (`du -sh` confirms 32MB total) and are not gitignored; the `/static` mount already
+serves arbitrary subpaths so no server code change was needed beyond the CSP/`_BUILD_ID` edits.
+
+**Not verified — and cannot be, in this sandboxed, display-less environment:** an actual browser load of
+`/frank`, the real model-weight download from Hugging Face, end-to-end transcription/speech with the
+network disabled, the Premium-voice toggle's live behavior, localStorage persistence across reloads, and
+iOS Safari/PWA behavior. Scott should manually run through the plan's verification checklist (in
+`/root/.claude/plans/atomic-dancing-shamir.md`) once deployed before treating this as fully shipped. Expect
+roughly 10–30 seconds of transcription latency for a short utterance on WASM — the honest tradeoff for
+genuine offline operation, not a bug.
+
+## 2026-06-24 — Dependency Health panel, working alert bell, real Settings screen
+
+**Request:** Scott looked at the mobile Command Center and asked (1) whether the panels were backed by
+real data, and (2) why the notification bell and gear icon did nothing. Investigation found Mission
+Timeline / Memory Insights / Shop Performance were all genuinely wired but showing legitimate early-stage
+empty states — no action needed. System Monitor (CPU/RAM/DISK gauges) was the one fake panel: hardcoded
+`conic-gradient` percentages baked into inline CSS, zero JS, zero backend. The bell (frozen badge "3") and
+gear icon were both dead decoration — no click handler, no backend, and for the gear, no target screen at
+all.
+
+**What shipped (`tools/api_server/main.py` + `tools/api_server/frank_hud_mockup.py`):**
+1. **System Monitor → Dependency Health.** New `GET /api/system/dependencies` loops the 3 tracked circuit
+   breakers (`etsy_api`, `anthropic_api`, `relay`) through `db.get_circuit_breaker_state()`; a dependency
+   with no DB row yet (never tripped) reports `state:"closed", consecutive_failures:0` — the same default
+   `CircuitBreaker._load()` uses, not an error. The fake gauge markup and its orphaned `.gauge`/`.gauge-row`/
+   `.ring` CSS were archived via `tools/trash.py` (ids `20260624-007`, `20260624-008`) before deletion, then
+   replaced with a 3-pill row (`loadDependencyHealth()`, green/red/amber dot per state) on the existing 30s
+   `loadAll()` cadence.
+2. **Alert bell → real alerts.** New `GET /api/alerts` aggregates 3 real conditions server-side into one
+   list + count, so the badge and dropdown can never disagree: any circuit breaker in `open` state
+   (critical), the Etsy refresh-token age vs. the 90-day window via `db.get_etsy_tokens()['updated_at']`
+   (warning ≥75 days, critical ≥90), and any `db.list_agent_heartbeats()` row with `status=="error"`
+   (warning). Frontend: badge hides when count is 0, dropdown opens on click and closes on outside-click
+   (`loadAlerts()`, `toggleAlertDropdown()`, `_renderAlerts()`).
+3. **Real Settings screen.** New sidebar nav-item (`data-screen="settings"`) and the previously-dead gear
+   icon (`onclick="showScreen('settings')"`) both land on a new `#screen-settings` panel — no extra JS
+   needed beyond what already existed, since `showScreen()`/the nav-item click binder are fully generic by
+   id. Three sections: Voice (a second Premium-voice checkbox sharing the `.premium-voice-cb` class so it
+   stays in sync with the bottombar toggle via the existing `_isPremiumVoice()`/`_setPremiumVoice()`
+   helpers, plus a plain-language explanation of what the toggle actually does), Connections (a condensed
+   summary card sourced from `/api/credentials/status` + `/api/etsy-tokens`, with jump links to the full
+   Connections/Security screens rather than a duplicate live panel), About (the `v1.0.0 · MOCKUP` string).
+
+Both new endpoints require the existing `_auth` dependency like every other route. Bumped `_BUILD_ID`
+`v53`→`v54`.
+
+**Verified in this environment:** `py_compile` clean on both files; `<div>` tag counts balance globally
+(622/622) and within each newly-edited region individually; both new endpoints confirmed using
+`Depends(_auth)`; the System Monitor removal was archived to `data/trash/DELETED.md` before deletion per
+Scott's standing recycle-bin rule.
+
+**Not verified — cannot be, in this sandboxed, display-less environment:** an actual browser load of
+`/frank` confirming the 3 pills render green, a live circuit-breaker-open test turning a pill red and
+surfacing in the alert dropdown, the bell's open/close-on-outside-click behavior, and the Settings↔bottombar
+voice toggle sync. Scott should run the plan's verification checklist
+(`/root/.claude/plans/atomic-dancing-shamir.md`) once deployed.
+
+### 2026-06-24 — Frank follow-up audit: 3 more dead elements (search, briefing button, grid icon)
+**Symptom:** Scott asked again whether anything on Frank is still not wired up after the
+Dependency Health/Alert Bell/Settings fix above. A fresh 3-agent audit of
+`frank_hud_mockup.py` found 3 elements with zero JS handler of any kind: the topbar global
+search input, the bottom-bar "Executive Briefing" button, and a topbar grid icon (▦) with no
+discoverable original intent anywhere in code or git history.
+**Root cause:** All three were left unwired when originally added — no listener, no backend
+route, nothing.
+**Fix:** Search input now has `id="global-search"` + an Enter-key handler calling
+`runGlobalSearch()`, which does a client-side substring match (listings → tasks → tools → KB
+docs, first match wins) over data already loaded by existing loaders (`_listings`,
+`cacheGet('tasks')`, `cacheGet('tools')`, `_kbDocs`) and navigates to the matching
+screen/item, or toasts "No matches" if nothing hits. The Executive Briefing button now opens
+a `#brief-panel` dropdown (same `.alert-dropdown` pattern as the bell, anchored upward via
+`bottom:42px`) whose `renderExecutiveBriefing()` reads already-cached `shopPerf`,
+`_actionsSummary`/`_pendingActions`, and `alerts` data — zero new fetches, zero new backend
+endpoints. The grid icon was archived via `tools/trash.py` (id `20260624-009`) then deleted —
+no replacement, since no intent for it was ever found. Bumped `_BUILD_ID` `v54`→`v55`.
+**Verified in this environment:** `py_compile` clean on both files; `<div>` balance checked
+manually around both new markup regions. **Not verified — cannot be, in this sandboxed,
+display-less environment:** live search navigation per entity type, the briefing panel
+actually opening/closing and showing correct data, the bell and briefing dropdowns not
+fighting each other, the grid icon's visual absence, and zero console errors. Scott should
+run the plan's verification checklist (`/root/.claude/plans/atomic-dancing-shamir.md`) once
+deployed.
+
+### 2026-06-25 — Frank/Hub wiring audit #2: `/api/history` was dead code, removed
+**Symptom:** Scott asked for another wiring audit (screen nav + backend endpoint wiring + a
+re-sweep for orphaned handlers). Direct `Grep`/`Read` cross-reference of every `@app.get/post/
+put/delete` route in `main.py` against every fetch call in `frank_hud_mockup.py` found 13
+routes with no caller in Frank; checking `_WEB_UI` (the Hub, root `/` route, `main.py` lines
+~2495-4198) and every script under `tools/` resolved 11 of the 13 — they're called from the
+Hub or from standalone automation scripts (`tools/stage_p3d_photo_approvals.py`,
+`tools/ci_refresh_etsy_secrets.py`, `tools/sync_files_to_hub.py`), not from Frank's UI.
+**Root cause / finding:** `GET /api/history` had zero callers anywhere — not in `_WEB_UI`, not
+in `frank_hud_mockup.py`, not in any `tools/`, `mobile_app/`, `town_app/`, `agents/`, or
+`commands/` file. It's superseded by `GET /api/analytics` (which `_WEB_UI` does call and which
+returns a superset of the same data — trend arrays, deltas, top-10 listings, snapshot_count).
+Reads as a route that was built then replaced without being deleted. Separately, `POST
+/api/snapshot` also has zero callers, but its own docstring says it's a manual/on-demand
+testing trigger — production snapshotting happens via the internal `_snapshot_loop()`
+background task, not this route. Scott reviewed both findings and decided: delete
+`/api/history`, leave `/api/snapshot` as-is.
+**Fix:** Archived the exact `/api/history` route block via `tools/trash.py`'s
+`archive_snippet()` (id `20260625-001`, reason: dead endpoint, superseded by `/api/analytics`)
+before deleting it from `main.py`. Bumped `_BUILD_ID` `v55`→`v56`.
+**Verified in this environment:** `python -m py_compile` clean on `main.py` and
+`frank_hud_mockup.py` both before and after the edit. Screen navigation (19 nav items ↔ 19
+screen divs ↔ 15 `showScreen()` call sites) and the previously-fixed search/briefing/grid-icon
+work were re-checked and found clean — no new dead UI elements found this pass. Full citation
+table in `/root/.claude/plans/atomic-dancing-shamir.md`.
+**Not verified — cannot be, in this sandboxed, display-less environment:** live behavior of
+anything above; this was a static-analysis audit only.
+
+
+## 2026-06-25 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+
+## 2026-06-25 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+
+## 2026-06-25 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+
+## 2026-06-25 — Automated quality audit — 164 listing(s) failing
+Daily listing_integrity_check found 164 FAIL / 2 WARN out of 172 listings audited. Details:
+[4488477854] P3D_CRYSTAL_GLOW_LAMP — Crystal Glow Lamp, 3D Printed Faceted RGB Table Lamp, U…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488532602] P3D_RIBBED_VASE_FOR_DRIED_FLOWERS — Ribbed Vase for Dried Flowers, 3D Printed Boho Decor, M…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488666558] P3D_COFFEE_BAR_SIGN — Coffee Bar Sign, 3D Printed Cat Kitchen Decor, Housewar…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4490472707] P3D_SCULPTURAL_MESH_LAMP — Sculptural Mesh Lamp, 3D Printed Geometric Table Lamp, …
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4492610660] P3D_TEXTURED_TEA_LIGHT_HOLDERS — Textured Tea Light Holders, 3D Printed Candle Holder Se…
+  Type: 3d_print_physical | Photos: 4 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 4 photos (want ≥8)
+
+  [4497392795] P3D_GEOMETRIC_GLOW_LAMP — Geometric Glow Lamp, 3D Printed Table Lamp, Modern Home…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4507783049] P3D_MINIMALIST_PEN_HOLDER — Minimalist Pen Holder, 3D Printed Desk Organizer, Moder…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4509184968] DP1029 — Digital Fitness Planner 2026 Undated, GoodN
+
+
+## 2026-06-25 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+## 2026-06-25 — Frank HUD: live status pill, color theme selector, My Account — shipped + live-verified
+
+Three Settings features added to `frank_hud_mockup.py`, each live-tested with a headless
+Playwright script against a running `main.py` instance (not just static review):
+
+1. **Live status pill** (header) — replaced the hardcoded "SYSTEM STATUS ● OPTIMAL" text
+   with a pill driven by the already-polled `/api/agents/status` + `/api/system/dependencies`
+   responses: red ERROR if any agent/dependency reports `error`/`open`, amber DEGRADED if
+   `running_count < total_count` or any dependency is `half_open`, else green OPTIMAL.
+   Verified showing ERROR correctly in this sandbox because `ANTHROPIC_API_KEY` is blank
+   here (see the recurring health-check entries above) — confirmed this is the pill
+   reflecting a real condition, not a wiring bug.
+2. **Color theme selector** (Settings > Appearance) — 4 swatches (Cyan/Gold/Emerald/Rose)
+   toggle a `theme-*` class on `<html>`, persisted via `localStorage['frankTheme']`
+   (per-device display preference, not synced to the backend by design). Verified all 4
+   swatches produce a real visible repaint of sidebar/header/button accents via screenshot,
+   not just a class-name change.
+3. **My Account** (Settings) — new `user_profile` DB table + `GET`/`POST /api/account`,
+   persists name/email/phone/timezone server-side. Verified end-to-end: saved via the UI,
+   confirmed `POST /api/account` -> `200 OK` in the server log, reloaded the page, and the
+   4 fields repopulated from the backend (not stale DOM/localStorage).
+
+**Two real JS bugs found and fixed during build, both only caught by live
+console/pageerror-instrumented browser testing — static review missed both:**
+- Theme swatch `onclick` attribute was built with single-backslash escaping inside a JS
+  string that itself needed the backslash escaped, producing broken HTML; fixed to use a
+  properly double-escaped quote.
+- The new theme array was originally named `const _THEMES`, colliding with a pre-existing,
+  unrelated `const _THEMES` (Products/Brand Kit color palettes) in the same `<script>`
+  block ~1700 lines away — `SyntaxError: Identifier '_THEMES' has already been declared`
+  silently broke the entire script block, not just the new code. Fixed by renaming the new
+  array to `_UI_THEMES`.
+
+**Lesson:** both bugs were invisible to `py_compile`/code review and only surfaced via
+`page.on("pageerror")` during live testing — reinforces always live-verifying JS changes
+in this file, not just compiling the Python that emits it.
+
+
+## 2026-06-25 — Automated quality audit — 163 listing(s) failing
+Daily listing_integrity_check found 163 FAIL / 2 WARN out of 172 listings audited. Details:
+[4488477854] P3D_CRYSTAL_GLOW_LAMP — Crystal Glow Lamp, 3D Printed Faceted RGB Table Lamp, U…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488532602] P3D_RIBBED_VASE_FOR_DRIED_FLOWERS — Ribbed Vase for Dried Flowers, 3D Printed Boho Decor, M…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488666558] P3D_COFFEE_BAR_SIGN — Coffee Bar Sign, 3D Printed Cat Kitchen Decor, Housewar…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4490472707] P3D_SCULPTURAL_MESH_LAMP — Sculptural Mesh Lamp, 3D Printed Geometric Table Lamp, …
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4492610660] P3D_TEXTURED_TEA_LIGHT_HOLDERS — Textured Tea Light Holders, 3D Printed Candle Holder Se…
+  Type: 3d_print_physical | Photos: 4 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 4 photos (want ≥8)
+
+  [4497392795] P3D_GEOMETRIC_GLOW_LAMP — Geometric Glow Lamp, 3D Printed Table Lamp, Modern Home…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4507783049] P3D_MINIMALIST_PEN_HOLDER — Minimalist Pen Holder, 3D Printed Desk Organizer, Moder…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4509193231] DP1058 — Sage Lavender Botanical Print, Dusty Rose W
+
+## 2026-06-25 — Circuit breakers wired for real (were defined but never instantiated)
+
+**Symptom:** `tools/api_server/resilience.py` has a complete DB-backed `CircuitBreaker` class, but
+nothing in `main.py` ever instantiated or called it. `/api/system/dependencies` (the endpoint the
+Dependency Health pills and status pill read) only ever read the `circuit_breaker_state` table —
+nothing ever wrote a non-default row, so `etsy_api`, `anthropic_api`, and `relay` always reported
+`closed`/healthy, even during a real outage. Found during a full-disclosure audit Scott requested.
+
+**Root cause:** the breaker class existed in isolation; no caller wired it into a real call path.
+
+**Fix:**
+1. `tools/etsy_api.py` — added an optional, duck-typed `_circuit_breaker_hook` (default `None`) +
+   `set_circuit_breaker_hook()`. Split `_request()` into a thin gate (checks `allow_request()`,
+   records success/failure) wrapping the renamed `_request_impl()` (unchanged retry/refresh logic).
+   Only network errors (`status==0`) and 403/429/500/502/503 trip the breaker — a clean 400/404
+   means Etsy responded correctly and our request was wrong, not a dependency-health signal. The
+   hook stays `None` for standalone scripts that import `etsy_api.py` outside the FastAPI server
+   (verified: `set_circuit_breaker_hook` never called → zero behavior change for them). `main.py`'s
+   `_startup()` now calls `etsy_api.set_circuit_breaker_hook(CircuitBreaker("etsy_api", db_module=db))`.
+2. `anthropic_api` has no single chokepoint (7 call sites across `main.py`), so added a shared
+   `_anthropic_breaker` + `_anthropic_create(client, **kwargs)` helper; trips only on
+   `APIConnectionError`/`RateLimitError`/`InternalServerError` (genuine infra failure, not a bad
+   request/key). Migrated all 6 synchronous `messages.create()` call sites to it. The 7th site
+   (`/ws/chat`'s streaming `messages.stream()` call in `_run_agent_turn`) doesn't fit that helper's
+   shape — it's a context manager iterated chunk-by-chunk in a worker thread — so it's gated inline
+   on the same shared breaker instead (`allow_request()` before the `with` block, `record_failure()`/
+   `record_success()` around it). This was the highest-volume real Anthropic consumer (every chat
+   turn), so leaving it unwired would have defeated most of the point of the fix.
+3. `relay` is a websocket connection, not a retry/backoff dependency, so no breaker was added for it
+   — `circuit_breaker_state` was simply the wrong data source. Added `_relay_dependency_status()`,
+   reusing the same `_relay_ws` + `db.get_relay_state()` signal `_agents_status_snapshot()` already
+   read correctly, mapped into the dependency-pill vocabulary (`closed` when connected and not
+   killed; `open` when the kill switch is engaged or the relay is disconnected — offline is a real
+   outage, not a healthy default). Both `/api/system/dependencies` and `/api/alerts` now special-case
+   `relay` through this helper instead of querying `circuit_breaker_state` for it.
+
+**Verified:** `py_compile` clean on both files; a standalone import of `etsy_api.py` with no hook set
+behaves identically to before; a simulated 5x Etsy 503 against a fake DB module confirmed the breaker
+opens after 3 consecutive failures and correctly rejects further calls until cooldown; a simulated 5x
+clean 404 confirmed it never trips the breaker; a simulated success after prior failures confirmed it
+resets to `closed`/0. Did not yet live-test against the real Etsy/Anthropic APIs or a real relay
+disconnect (out of scope for the local container — no live relay/Railway process here).
+
+**Scope note:** two lower-severity findings from the same audit were explicitly deferred, not
+forgotten: `context_compactor`'s heartbeat is still hardcoded `"ok"` regardless of real compaction
+failures, and `tools/trash.py` remains a manual-only safety net (no autonomous code path deletes
+files today, so this is a judgment call, not a live bug). Scott chose to scope this cycle to the
+circuit breakers only.
+
+## 2026-06-25 — Heartbeat honesty, delete safety net, silent-failure logging (7/10 → 9/10 cycle)
+
+Follow-up to the circuit-breaker cycle above — closes the two items deferred there, plus one more
+gap from the same 3-agent audit (silently-swallowed exceptions). Three pure honesty/observability
+fixes, zero behavior change to anything Scott or a buyer would notice.
+
+**Fix 1 — `context_compactor` heartbeat now reports real success/failure.**
+`_maybe_compact_chat_history()` now calls `db.set_agent_heartbeat("context_compactor", ...)` on both
+its success path (after the existing success `print()`) and its `except Exception` path, mirroring
+the pattern the 5 real background loops already use via `_run_loop_iteration()`.
+`_agents_status_snapshot()`'s `context_compactor` block now reads `heartbeats.get("context_compactor")`
+instead of hardcoding `"status": "ok"` — falls back to the existing friendly cold-start message only
+when no heartbeat row exists yet (so today's UI is unchanged until a real compaction run happens).
+
+**Fix 2 — `tools/trash.py` wired into the 2 real DB-delete paths.**
+`delete_allowed_folder` and `remove_todo` (both in `main.py`) now fetch the row via the existing
+`list_allowed_folders()`/`list_todos()` functions and call `archive_snippet()` (JSON-serialized row)
+before deleting, labeled `db:allowed_folders`/`db:todos`. Fetch-then-delete ordering means the 404
+path is unaffected — if the row is already gone, the archive call is skipped and the existing 404
+falls through unchanged. This was the last gap in CLAUDE.md's "nothing we delete should be
+unrecoverable" rule — it was previously a manual convention with no autonomous backend enforcement.
+
+**Fix 3 — logged the 6 silently-swallowed exceptions found in the same audit** (all confirmed
+best-effort/non-critical paths — fix is visibility only, no control-flow change):
+- 2 sites in `_execute_agent_tool()` (staging-time baseline fetch for `publish_listing` and
+  `toggle_listing_state`) — added a one-line print instead of a bare `pass`.
+- 3 sites in `_find_business_gaps_impl()` (circuit breaker state check, pending-actions backlog,
+  KB docs inventory) — these broke the function's own established convention (two sibling blocks
+  already append a `"diagnostic_error"` gap entry on failure instead of a bare log line); made all 3
+  consistent with that existing pattern so Scott sees the failure on the Business Gaps screen.
+- 1 site in `get_analytics()` (live `top_listings` enrichment, 15s-timeout Etsy call) — added a print
+  on failure instead of silently returning an empty list with no trace.
+
+**Verified:** `py_compile` clean; manually ran `archive_snippet()` end-to-end against the live trash
+vault to confirm the wiring works (test entry removed afterward — not a real deletion, no need to
+keep it). Did not re-run a live Playwright HUD pass this cycle (out of scope, deferred along with the
+22+ standalone OAuth scripts that ignore `refresh_access_token()`'s return value — both deferred to a
+future cycle per Scott's choice).
+
+## 2026-06-25 — Local Relay dependency pill showing "disconnected"
+
+**Symptom:** Scott reported the live dashboard's dependency status shows the Local Relay as
+disconnected.
+
+**Root cause:** Not a bug — this is the correct, honest status when `tools/relay/frank_relay.py`
+isn't actively running. That script is intentionally a manual process meant to run on Scott's own
+computer (not on Railway) — it opens a websocket to the Hub's `/ws/relay` endpoint so Frank can
+execute `local_*` tool calls on Scott's real filesystem after Action Center approval. Server-side,
+`_relay_ws` (`main.py` ~line 564) is a pure in-memory variable, set only while a websocket client is
+actually connected (set in the `@app.websocket("/ws/relay")` handler ~line 7451, cleared to `None` on
+disconnect ~line 7477-7478). `_relay_dependency_status()` (~line 6808) reports `open`
+(unhealthy/"disconnected") whenever `_relay_ws is None` or the kill switch is engaged — its own detail
+string for this exact case is literally `"no relay connected"` (~line 6879). There is no Railway-side
+process that auto-starts the relay; if it has never been started on Scott's machine, "disconnected" is
+expected, not an outage.
+
+**Fix (or note):** No code change — confirmed via code read, not guessed. Gave Scott the 3-step setup:
+`pip install websockets`; create a `.env` next to `frank_relay.py` with `FRANK_RELAY_URL` (wss://
++ Railway host + `/ws/relay`) and `APP_SECRET_TOKEN` (same token the dashboard uses); run
+`python tools/relay/frank_relay.py` and leave it running (auto-reconnects every 5s, heartbeats every
+20s — the dashboard pill should flip to connected within seconds of a successful connection). Awaiting
+Scott's confirmation on whether this is first-time setup or a previously-working connection that
+dropped, to know if further investigation (network/token) is warranted.
+
+## 2026-06-25 — Local Relay deployed as a second, always-on Railway service
+
+**Follow-up to the entry above.** Scott wants Frank's filesystem tools available "from anywhere,"
+without depending on his laptop being open and running `frank_relay.py` manually. Confirmed via code
+read that the relay script has no hard dependency on Scott's machine (no hardcoded paths, no
+OS-specific calls, no machine-identity coupling — just a portable asyncio websocket client gated by
+the Allowed Folders list it polls from the Hub every 30s). Scott chose: deploy it as a **new, second
+Railway service** in the same project (not a separate VPS), with a **fresh empty cloud workspace**
+folder (not a mirror of his laptop's files).
+
+**Code changes this cycle:**
+- Added `tools/relay/Dockerfile` (no `EXPOSE`/healthcheck — this is an outbound-only websocket
+  client, never an HTTP server) and `tools/relay/requirements.txt` (`websockets`, `psutil` —
+  dedicated, not the bloated root `requirements.txt`).
+- Updated `frank_relay.py`'s module docstring — it previously asserted "Runs on Scott's own computer,
+  not on Railway," which was no longer true; now documents both supported deployment modes.
+- Fixed a pre-existing seeded placeholder: `db.ensure_default_sandbox_folder()` (`db.py`) seeds an
+  Allowed Folder row the first time the table is empty, and was seeding the Windows-style
+  `C:\Users\<you>\frank_sandbox` — almost certainly already seeded into the live production DB.
+  Harmless on Linux (backslash is just a character there) but confusing clutter. Changed the seed
+  default and the dashboard's input placeholder (`main.py`) to `/data/workspace`, the real path the
+  new relay service will use.
+
+**Manual steps required outside the repo (Railway dashboard, Scott):** add a second service
+(e.g. `frank-relay`) in the existing project pointed at this repo, with service variable
+`RAILWAY_DOCKERFILE_PATH=tools/relay/Dockerfile`; attach a new Volume mounted at `/data`; set env vars
+`FRANK_RELAY_URL` (the **main** service's `wss://.../ws/relay` URL — not the new service's own) and
+`APP_SECRET_TOKEN` (same value as the main service). After it connects, remove the old seeded
+Windows-path Allowed Folder via the dashboard and add `/data/workspace` as the real one.
+
+**Known gap, flagged not solved:** no existing path gets *binary* files (PDFs, ZIPs, images) into the
+new workspace — `local_write_file` only handles text content, and the existing file-upload paths
+(`/api/files/upload`, `tools/sync_files_to_hub.py`) write to the main service's own `/data/files`
+volume, a different Railway volume on a different service. Text-file workflows are unaffected; this is
+a separate follow-up if Scott needs binary files there.
+
+**Open question for Scott:** whether the current Railway plan/tier supports a second service + a
+second Volume — can't be verified from this environment.
+
+### 2026-06-25 — Solved the binary-file gap: dashboard upload straight into the relay workspace
+**Context:** the relay-deployment entry above flagged that there was no way to get binary files
+(PDFs, ZIPs, images) into the relay's `/data/workspace` — `local_write_file` only ever handled text,
+and `/api/files/upload`/`sync_files_to_hub.py` both write to the main service's own `/data/files`
+volume, never to the relay's. Scott confirmed (when asked) that any new upload widget should always
+push straight to the relay workspace — no destination picker, since Hub storage already has its own
+batch path via `sync_files_to_hub.py`.
+**Fix:**
+- `tools/relay/frank_relay.py` — new `local_write_binary_file` handler (base64-decodes `content_b64`,
+  writes bytes, same `_is_allowed()` realpath check as every other handler). Registered in
+  `_TOOL_HANDLERS`. Bumped the relay's own `websockets.connect(max_size=...)` to 64MB — a base64-encoded
+  30MB upload inflates to ~40MB inside the JSON `tool_request` envelope the relay receives.
+- `tools/api_server/main.py` — new `POST /api/relay/upload?path=...` endpoint: takes the raw body
+  (same convention as `/api/files/upload`), base64-encodes it, dispatches to the relay via
+  `_dispatch_to_relay("local_write_binary_file", ..., timeout=90.0)`, returns 502 if the relay is
+  offline. Reuses the existing `_MAX_UPLOAD_BYTES` (30MB) ceiling.
+- Dashboard: new "Upload File to Relay Workspace" card on the Relay panel (file picker + destination
+  path input, prefilled to `/data/workspace/<filename>`) and an `uploadToRelay()` JS function.
+- `local_write_binary_file` is deliberately **not** added to `_LOCAL_STAGED_TOOLS` — it's only ever
+  triggered by this direct human-initiated dashboard action, never by an LLM tool call, so it skips
+  the Action Center approval gate by design (same reasoning as `addAllowedFolder()`).
+**Verification:** `py_compile` clean on both files; manual confirmation still needed once the relay
+service is live — upload a small PDF to `/data/workspace/test.pdf`, list-dir to confirm byte count,
+restart the Railway service and re-check the file persisted on the Volume, and confirm an upload to a
+path outside Allowed Folders (e.g. `/etc/passwd`) is rejected by `_is_allowed()`.
+
+### 2026-06-26 — Two historical credential leaks found in git history; one fixed, rotation pending
+**Symptom:** while building the self-host installer (setup wizard work), found two separate places
+where real secrets had been committed in plain text instead of left in `.env`.
+1. `SETUP.bat` (root) — an old commit (`0c85408`, "Add Windows one-click setup and launcher batch
+   files") had `echo ANTHROPIC_API_KEY=...> .env` / `echo ETSY_API_KEY=...>> .env` baked into the
+   script. The working tree had already been fixed in an earlier session (now just
+   `copy .env.example .env`), but the old commit is still in history.
+2. `CLAUDE.md` (root, this file's sibling doctrine doc) — the Credentials section hardcoded the real
+   `ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` values across 30 commits on this branch.
+**Root cause:** both predate the `.env`-only convention being consistently enforced; `CLAUDE.md`'s
+leak was introduced when the Credentials section was first written and never caught since it's a
+doctrine file, not code, so it wasn't in the secrets-scan path.
+**Forensics (compared live `.env` values against the leaked strings by boolean equality, never
+printed actual secrets):** the leaked `ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` in `CLAUDE.md` are still
+the live, active credentials — a real, current exposure. The leaked `ANTHROPIC_API_KEY`/
+`ETSY_API_KEY` in `SETUP.bat`'s history no longer match `.env` — those two were already rotated at
+some prior point.
+**Blast radius (`git merge-base --is-ancestor` + blob-content grep across commits, not diff text):**
+the `SETUP.bat`-leak commit (`0c85408`) is an ancestor of every branch on the remote, including
+`main` — scrubbing it would mean rewriting production's history. The `CLAUDE.md` leak's 30 commits
+are confined entirely to `claude/etsy-automation-agents-WFAPU` — scrubbing only this branch is much
+lower risk.
+**Fix so far:** stripped the literal `ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` values from `CLAUDE.md`'s
+working tree, replaced with a pointer to `.env` (commit `07e4b3b`), pushed.
+**Still open — Scott's action required, tracked as a todo:** rotate the Etsy Keystring + Shared
+Secret via the Etsy Developer dashboard (the live leak), update `.env`, re-run
+`python tools/etsy_oauth.py`. Anthropic/OpenAI keys already appear rotated — no action expected there.
+Git-history scrub (either branch) was explicitly deferred by Scott until after rotation — not done.
+
+---
+
+### 2026-06-30 — Frank's speak-back was a stub; Studio video tab didn't exist
+
+**Symptom 1:** Frank reported "Step 4 not done" when asked to speak — confusing error from a stale stub.
+**Root cause:** `local_speak` tool handler at main.py:1958 returned `{"spoken": False, "note": "Step 1 stub…real TTS ships in Step 4."}` — a placeholder left from initial scaffolding. The real `/api/voice/speak` OpenAI TTS endpoint already existed and worked but was never connected.
+**Fix:** Updated `_execute_agent_tool` to return `{"spoken": True, "text": text}`. Added WS dispatch in the tool loop to emit `{"type": "speak", "text": text}` before executing `local_speak` — frontend picks this up and plays audio. Added `speakText()` frontend function calling `/api/voice/speak`, a 🔇/🔊 toggle button in the chat input row, and auto-speak-on-done when voice is enabled (stored in localStorage as `frankSpeak`).
+
+**Symptom 2:** "Create video section" had no UI despite the `/api/studio/generate` backend existing and working.
+**Root cause:** Studio endpoints were built server-side (commit history) but no frontend tab was wired in. `video_generator.py` + all deps (numpy/Pillow/moviepy) were confirmed working via background test (generated 176KB MP4 in ~8s with dummy images).
+**Fix:** Added 🎬 Studio hub section button in the Hub nav, `loadStudio()` JS function with listing-ID + style-select generate form, inline `<video>` preview on completion, download link, and previously-generated video list via `/api/studio/videos`. Build ID bumped to v63.
+
+## 2026-06-30 — Daily Brief added (proactive 6AM email)
+
+**What:** Added `tools/daily_brief.py` + `_daily_brief_loop()` background task in `main.py`.
+Frank now emails a daily shop-status brief to printing3dthings@outlook.com at 6AM UTC automatically.
+Manual trigger: `POST /api/brief/run` with `X-App-Token` header, or `python tools/daily_brief.py`.
+Brief includes: unread message count (Star Seller risk), active/draft listing counts, orders last 7 days, recent KB incidents, and a Claude Haiku synthesis for TODAY'S FOCUS.
+**Caveat:** `messaging_r` OAuth scope not granted — unread message count will show 0 until scope is added. 140 active listings confirmed live via Etsy API.
+
+## 2026-06-30 — Added automated listing QC gate (Maker/Checker pattern)
+
+**What:** Built `tools/listing_qc.py` and wired it into Frank as the `check_listing_quality` agent tool. Implements the one genuine gap found in the SAMS/Loop Engineering slide assessment: an automated Checker pass between content generation (Maker) and Scott's review.
+**Checks:** title length (≤70 chars), exactly 13 tags each ≤20 chars with no special characters, no tag duplicating a title phrase, price suffix (.99/.97/.49), plus product-type-specific keyword and required-description-section checks for digital planners, SVG packs, and wall art (product type auto-detected from title/description, or passed explicitly).
+**Output:** `passed`/`errors`/`warnings`/`reminders` — errors block (must fix before showing Scott), warnings are advisory, reminders are static human-only checks (real product photos, file validation, PDF interactivity, etc.) that the tool can't automate but Frank must still surface.
+**Wiring:** Added to `AGENT_TOOLS`, dispatch branch in `_execute_agent_tool`, WS status message, and an instruction in `_CEO_SYSTEM`'s Quality standards section telling Frank to call this after drafting listing content and before presenting it to Scott. Build ID bumped to v66.
+
+---
+
+## 2026-06-30 — Audit remediation: fixed 2 background loop errors + updated CLAUDE.md
+
+**Symptom:** Two background tasks showing "error" status in the dependency health panel on every boot:
+1. `quality_audit` — "could not parse summary line"
+2. `suggestion_warmer` — "Something went wrong talking to the AI provider"
+
+**Root cause (quality audit):** `data/` is excluded from the Docker build context via `.dockerignore`. On Railway, `data/listing_manifest.json` does not exist. `listing_integrity_check.py` exits early with "ERROR: not found" — no summary line is printed. The summary regex fails to match, raising `RuntimeError("could not parse summary line")`.
+
+**Root cause (suggestion warmer):** `_compute_suggestions_inner()` raises `HTTPException(502, detail="Could not gather shop data: <Etsy error>")` when Etsy data gathering fails at startup. This was passed to `_friendly_error_message()` which is designed for Anthropic errors — the HTTPException falls through to the generic fallback message, hiding the real cause.
+
+**Fix (quality audit):** Added manifest existence check before running the subprocess in `_quality_audit_iteration()`. Returns `{"skipped": True, "reason": "..."}` instead of crashing. `_quality_audit_loop` lambdas updated to show `"warning"` status with the skip reason instead of treating it as an error.
+
+**Fix (suggestion warmer):** Changed `on_error_detail` lambda to extract `exc.detail` from HTTPExceptions before falling back to `_friendly_error_message`. The actual cause (Etsy failure message) now surfaces in the heartbeat instead of the generic Anthropic error message.
+
+**Additional:** Updated CLAUDE.md product catalog — corrected file sizes for DP1026-1029 (were ~15MB/14MB, actual ~7MB each), added ⚠️ warnings for missing sticker ZIPs on DP1026-1029, added note on expanded catalog through DP1034.
+
+**Scott todos posted to Frank:** (1) Mount Railway Volume at /data; (2) Add SMTP env vars to Railway; (3) Generate sticker ZIPs for DP1026-1029.
+
+**Build:** a3c9d1b-v67
+
+---
+
+## 2026-06-30 — Silent Anthropic credit drain from _warm_suggestions loop
+
+**Symptom:** Scott's Anthropic API credits were draining rapidly with minimal visible usage. After topping up, received "out of credit" email shortly after.
+
+**Root cause:** `_warm_suggestions` background loop in `main.py` fires every `_SUGGESTIONS_TTL - 120` seconds = every 1,680 seconds ≈ 28 minutes, 24/7. Each call invokes the full CEO diagnostic (claude-sonnet-4-6, ~2,000 output tokens). That's ~51 calls/day × ~2,000 tokens × $15/MTok output ≈ **$1.53/day = ~$45/month** in silent background costs. This compound with other background tasks (daily_brief at $0.02/day is negligible; ceo_agent.py uses Opus 4.8 only when Scott explicitly chats with Frank).
+
+**Fix:** Changed `_SUGGESTIONS_TTL = 1800` → `14400` (30 minutes → 4 hours) in `main.py:559`. The `base_interval=_SUGGESTIONS_TTL - 120` and `_cache_get(..., ttl=_SUGGESTIONS_TTL)` both read from this constant, so one change cascades correctly. Reduces background calls from ~51/day to ~6/day — **~88% reduction in background API spend** (~$45/month → ~$5/month). Dashboard still sees a fresh report because the warmer fires proactively before expiry.
+
+**Approved by Scott (2026-06-30).**
+
+**Build:** a3c9d1b-v68
+
+## 2026-07-01 — Token & cost reduction: prompt caching + Haiku title autofix + KB read cache
+
+Three zero-quality-tradeoff optimisations applied to `tools/api_server/main.py` (v69):
+
+1. **Prompt caching on main CEO chat** — `_CEO_SYSTEM` (~2 100 tok) and `AGENT_TOOLS` (~2 000 tok) are now passed as a list-form `system` with `cache_control: {type: ephemeral}` on the static block, and `_tools_with_cache()` tags the last tool entry. Static content is cached for 5 min; cache reads cost $0.30/MTok vs $3/MTok full price (~90% on those tokens for turns 2+).
+
+2. **Title autofix: Sonnet → Haiku** — `_autofix_title_core` switched from `claude-sonnet-4-6` to `claude-haiku-4-5-20251001`. Output is capped at 100 tokens max (a corrected title); Haiku handles this mechanical task perfectly. 73% per-call saving.
+
+3. **KB file read cache** — `_read_kb_cached()` + `_kb_cache` dict added. `_ops_runbook_block()` and `_ceo_learnings_block()` now re-read their `.md` files at most once every 60 s instead of on every chat turn. Stabilises the dynamic system-block content, improving prompt-cache hit rates. Any `log_learning` write appears within 60 s — no stale-data risk.
+
+All three changes verified by `python -m py_compile`. Main chat model (Sonnet), history window, compaction TTL, suggestions TTL, and Opus-for-code-gen all untouched.
+
+## 2026-07-01 — Display fix: desktop Frank blank + mobile safe-area glitches
+
+**Symptoms reported by Scott:**
+- Desktop Frank (`/frank`) showed only a dark orb — no dashboard, no sidebar, no header
+- Phone app (React Native) had header overlapping status bar / keyboard overlapping input bar on some iPhones
+
+**Root causes found (5 bugs):**
+
+1. **Frank HUD blank on desktop** (`frank_hud_mockup.py`): CSS `body:not(.cc-open) .sidebar, .screen, .hdr-bar, ...{ display:none }` hides all panels until `body.cc-open` is set. That class is only set by the hamburger button click — but the hamburger was `position:absolute` and invisible on desktop (no `display:none` base rule, so technically visible but hard to notice at top-left). `syncMobileClass()` never added `cc-open` on init for desktop. Fix: `syncMobileClass()` now calls `document.body.classList.add('cc-open')` when `!isMobileMode()`. Hamburger also hidden via `display:none` base CSS; shown back in the `@media (max-width:880px)` block.
+
+2. **Both PWA manifests had `"orientation": "portrait"`** (`main.py` lines 4605, 4661): Wrong for the landscape 1440×900 FRANK HUD and unnecessarily restrictive for the mobile PWA. Changed to `"any"` in both.
+
+3. **Persist banner always hidden** (`main.py` line 2839): Banner was `position:static`, placed behind all `position:fixed` screens. Made it `position:fixed; top:0; z-index:300`. JS now also expands `--hdr` by the banner's offsetHeight so screens don't slide under it.
+
+4. **ChatScreen header padding hardcoded** (`ChatScreen.js` line 361): `paddingTop: 60` ignored actual device safe area. Changed to dynamic `insets.top + 14` via `useSafeAreaInsets()`.
+
+5. **KeyboardAvoidingView offset hardcoded** (`ChatScreen.js` line 265): `keyboardVerticalOffset={90}` wrong for tall iPhones. Changed to `insets.top + 44`.
+
+**Files changed:** `frank_hud_mockup.py`, `main.py` (v70), `mobile_app/src/screens/ChatScreen.js`
+
+
+## 2026-07-01 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+
+## 2026-07-01 — Automated quality audit — 130 listing(s) failing
+Daily listing_integrity_check found 130 FAIL / 13 WARN out of 172 listings audited. Details:
+[4488477854] P3D_CRYSTAL_GLOW_LAMP — Crystal Glow Lamp, 3D Printed Faceted RGB Table Lamp, U…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488532602] P3D_RIBBED_VASE_FOR_DRIED_FLOWERS — Ribbed Vase for Dried Flowers, 3D Printed Boho Decor, M…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4488666558] P3D_COFFEE_BAR_SIGN — Coffee Bar Sign, 3D Printed Cat Kitchen Decor, Housewar…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4490472707] P3D_SCULPTURAL_MESH_LAMP — Sculptural Mesh Lamp, 3D Printed Geometric Table Lamp, …
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4492610660] P3D_TEXTURED_TEA_LIGHT_HOLDERS — Textured Tea Light Holders, 3D Printed Candle Holder Se…
+  Type: 3d_print_physical | Photos: 4 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 4 photos (want ≥8)
+
+  [4497392795] P3D_GEOMETRIC_GLOW_LAMP — Geometric Glow Lamp, 3D Printed Table Lamp, Modern Home…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4507783049] P3D_MINIMALIST_PEN_HOLDER — Minimalist Pen Holder, 3D Printed Desk Organizer, Moder…
+  Type: 3d_print_physical | Photos: 5 | Files: 0 | Tags: 13
+    ✗ [photo_count] Only 5 photos (want ≥8)
+
+  [4509600086] DP1035, DP1064 — Tropical Leaves Print, Bold Monster
+
+
+## 2026-07-01 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+
+## 2026-07-01 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+---
+**2026-07-01 — Studio Video Generation: v76 fix (build-7)**
+- **Symptom:** Studio tab Generate Video button returned HTTP 500 on Railway; UI showed "HTTP 500" with no detail. 48-byte MP4 stubs from older v72-era attempts visible in video list.
+- **Root cause 1 (v75 fix partially wrong):** `video_generator.py` hardcoded `/usr/bin/ffmpeg` but that binary only exists on Railway (apt-installed). Local dev has only the imageio-ffmpeg bundled binary. Using `imageio_ffmpeg.get_ffmpeg_exe()` instead resolves both: locally uses bundled binary, Railway (with `ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg`) uses system binary.
+- **Root cause 2 (v76 fix):** `subprocess.Popen` stdin pattern — calling `proc.stdin.close()` then `proc.communicate()` raises `ValueError: flush of closed file` because Python's communicate() calls `self.stdin.flush()` unconditionally. Fixed by writing frames in a daemon thread while main thread drains stderr, then calling `proc.wait()` (not `communicate()`).
+- **Fix:** `tools/video_generator.py` — `imageio_ffmpeg.get_ffmpeg_exe()` + threading pattern. `tools/api_server/main.py` — added `/api/studio/diagnose` endpoint, threading fix in mini-encode test, bumped `_BUILD_ID` → `b4d0e2c-v76`.
+- **Verified:** Full HTTP end-to-end test locally — upload 2 JPEG images → POST `/api/studio/generate` → 54.8 KB MP4 returned, file confirmed on disk. `/api/studio/diagnose` returns `mini_encode_ok: true`.
+
+
+## 2026-07-01 — Automated health check failure (known cause)
+5-minute health loop detected a problem: Etsy: ok — OnBrandCraftz | Anthropic key set: False
+
+**Diagnosis:** ANTHROPIC_API_KEY is unset in this environment -- set it in the deploy environment's env vars (or .env locally) and redeploy/restart.
+
+---
+**2026-07-01 — Security audit fixes: v82 (APP_SECRET_TOKEN removed from HTML)**
+- **Symptom:** `APP_SECRET_TOKEN` was embedded in page source as `const TOKEN = '...'` in both the mobile PWA (`_WEB_UI` in main.py, line ~3174) and the Frank HUD (via `__APP_TOKEN__` substitution in frank_hud_mockup.py). Any user viewing View Source could extract the admin token.
+- **Additional issues:** Sessions weren't persisted (Railway restart = everyone logged out); password reset didn't invalidate existing sessions; WebSocket disconnect was silent (no user toast).
+- **Fixes (all in v82):**
+  - **Fix A (security):** Removed token injection from HTML. Both UIs now use `const TOKEN = ''` (placeholder). `fetchWithTimeout()` in both files strips `Authorization` headers and sends `credentials:'same-origin'` so the httpOnly session cookie is used automatically. File download URLs no longer include `?token=...`. New FastAPI dep `_auth_session_or_bearer` accepts cookie | Bearer header | `?token=` query param.
+  - **Fix B (security):** Password reset (`/api/admin/users/{u}/reset-password`) now deletes all in-memory sessions and `hub_sessions` DB rows for that user.
+  - **Fix C (reliability):** Sessions persisted to `hub_sessions` SQLite table (schema in db.py). `_get_session_user` falls back to DB on cache miss; warms in-memory cache on hit. Purge runs at startup + hourly.
+  - **Fix D (reliability):** WebSocket `ws.onclose` now calls `showToast('Reconnecting… (N/5)', 'warn')` during retries and `showToast('Connection lost. Refresh the page.', 'error', 0)` at max retries. `showToast(ms=0)` now means persistent (no auto-dismiss).
+  - **Fix E (relay pending):** Confirmed already handled — `_dispatch_to_relay` already had `finally: _relay_pending.pop(req_id, None)`. No change needed.
+  - **Fix F (dead UI):** `batchStageTags()` and `mem-canvas` render code were already implemented. No change needed.
+- **Files changed:** `tools/api_server/db.py`, `tools/api_server/main.py`, `tools/api_server/frank_hud_mockup.py`
+- **Build:** `b4d0e2c-v82`
+
+## 2026-07-01 — v83: Frank HUD Desktop Layout Overhaul
+
+**Changes:**
+- Fix 1 — Scrollbars: `.dep-pill-row`, `.shop-spark-row`, `.mem-row` now use `overflow-y:auto` + `min-height:0` + `justify-content:flex-start` so content scrolls instead of clipping
+- Fix 2 — 3-column desktop grid: `.main` changed from `display:flex;flex-direction:column` (3 stacked rows) to `display:grid;grid-template-columns:290px 1fr 310px`. Chat panel (`col-center`) now fills the entire center column at full height. Left column: AI Core + Dependency Health + Mission Timeline. Right column: Shop Performance + Memory Insights + Active Agents + Live Feed. Old `.mrow` and row-specific column rules archived via tools/trash.py.
+- Fix 3 — Light theme WCAG AA contrast: `--cyan` 3.39:1→5.88:1, `--cyan2` 2.46:1→8.57:1, `--gold` 3.69:1→5.74:1, `--muted` 5.15:1→7.69:1 (all against `--panel:#ffffff`)
+- Fix 4 — Products screen: `renderProducts()` now calls `/api/products` endpoint (async) instead of `_PRODUCTS_STATIC` hardcoded array. New FastAPI endpoint reads `data/dp_listing_map.json` and checks actual PDF/ZIP files on disk for DP1026–DP1035.
+- Mobile: `.col-center{order:-1}` makes chat appear first on mobile; `#chat-msgs` max-height 55vh→60vh; new column overflow rules replace old `.mrow` rules.
+- `_BUILD_ID` bumped to `b4d0e2c-v83`
+
+## 2026-07-02 — v87: Security + correctness fixes from codebase audit (9 issues)
+
+**Triggered by:** Comprehensive codebase audit by senior engineer review agent.
+
+**Fixes applied:**
+
+1. **etsy_api.py:95 — 403 removed from _BREAKER_TRIP_STATUSES**
+   - Root cause: 403 (auth failure / stale OAuth token) was tripping the circuit breaker, showing Etsy as DOWN when the actual problem was an expired access token. Misleading operational signal.
+   - Fix: Removed 403 from the set. It now only trips on 429/500/502/503 (genuine service failures).
+
+2. **main.py:393 — _auth() timing oracle fixed**
+   - Root cause: `credentials.credentials != APP_TOKEN` used plain `!=` (timing-distinguishable). `_auth_session_or_bearer()` already used `secrets.compare_digest()`.
+   - Fix: Both auth paths now use `secrets.compare_digest()`.
+
+3. **main.py:827 — asyncio.get_event_loop() deprecated call**
+   - Root cause: `asyncio.get_event_loop().create_future()` deprecated Python 3.10+, raises in 3.14.
+   - Fix: Changed to `asyncio.get_running_loop().create_future()`.
+
+4. **main.py:6112 — _APP_SECRET_TOKEN undefined variable**
+   - Root cause: `/api/brief/run` endpoint referenced `_APP_SECRET_TOKEN` (undefined) instead of `APP_TOKEN`. Would raise NameError on every call.
+   - Fix: Changed to `secrets.compare_digest(token, APP_TOKEN)` with empty-string guard.
+
+5. **main.py:547 — _login_fails dict unbounded growth**
+   - Root cause: IPs with all-expired failures left an empty list in the dict forever. Under bot traffic this grows without bound.
+   - Fix: Pop key after filtering produces an empty list.
+
+6. **db.py:186 — WAL PRAGMA on every connection open**
+   - Root cause: `journal_mode=WAL` is a persistent file-level property (survives reconnect). Running it on every `_connect()` added two extra SQLite round-trips per query.
+   - Fix: Moved to `init_db()` (runs once at startup). Removed from `_connect()`.
+
+7. **frank_hud_mockup.py:1525 — Math.random() for session ID fallback**
+   - Root cause: Browsers with `window.crypto` but not `randomUUID()` fell back to `Math.random()` which is not cryptographically secure.
+   - Fix: Use `crypto.getRandomValues(new Uint8Array(8))` which IS available everywhere `crypto` exists.
+
+8. **frank_hud_mockup.py:1924 — Math.random() for SVG gradient IDs**
+   - Root cause: `_miniSpark()` generated a random ID on each call. Replaced `Math.random().toString(36)` with a monotonic counter `_miniSparkCounter`. Eliminates randomness, ensures uniqueness within the page session.
+
+9. **frank_hud_mockup.py:2321/2353 — Duplicate /api/todos HTTP fetch**
+   - Root cause: `loadMissionTimeline()` and `loadTasks()` each issued an independent fetch to `/api/todos`, doubling the call count on every dashboard load.
+   - Fix: Added `_sharedTodosFetch()` with a shared in-flight promise. Both callers now share one round-trip per tick.
+
+Also: business_config.py AGENT_NAME_SHORT default changed from derived `AGENT_NAME.replace("Fucking ", "")` to hardcoded `"Frank"` — more predictable for installer deployments.
+
+Build ID: b4d0e2c-v87
+
+## 2026-07-02 · v88 · Codebase Cleanup
+
+**Motivation:** 88 releases of iterative feature work accumulated dead code, 2 silent bugs, and ~55 one-off scripts never cleaned up.
+
+**Bugs fixed:**
+- `frank_hud_mockup.py`: `#mem-canvas` page-load TypeError — element removed in v85 but JS still called `.getContext('2d')` on null, crashing ALL event listeners registered after that line (orb click and voice capture were silently broken).
+- `main.py`: `studio_generate_video` except block used undefined `logger` → `NameError` masked real video errors with a misleading traceback.
+
+**Dead code removed (all archived to data/trash/ first):**
+- `_WEB_UI` old mobile PWA dashboard (~1874 lines) + `_SW_JS`, `_MANIFEST`, and their routes — superseded by `/frank` HUD.
+- `_auth()` dead function + `HTTPBearer` security imports from main.py.
+- `/api/studio/diagnose` Railway debug endpoint (v76 scaffolding).
+- Revenue calculator triplicated in 3 places → one `_order_revenue()` helper.
+- `datetime.utcnow()` → `datetime.now(timezone.utc)`.
+- `/api/ping` was making unauthenticated Etsy calls — replaced with pure internal response.
+- 8 dead EtsyAPIClient methods: `get_conversation`, `update_listing_inventory`, `delete_listing_file`, `sync_orders_from_etsy`, `create_review_response`, `get_shipping_profiles`, `create_shipping_profile`, `get_client()`.
+- `drawMem()`, `updateMemoryWidget()`, `mc`/`mctx` dead JS + 12 dead CSS rules from `frank_hud_mockup.py`.
+- Dead JS functions: `isControlCenterOpen`, `openControlCenter`.
+- Removed unused `app_token` parameter from `render_frank_hud()`.
+- Switched HUD template to sentinel tokens (`%%AGENT_NAME%%`, `%%AGENT_SHORT%%`, `%%OWNER%%`) replacing fragile literal-string substitution.
+- 55 one-off scripts from `tools/` archived (IDs 20260702-033 → 20260702-087). Recoverable 30 days via `python tools/trash.py --restore <id>`.
+- `tools/agents/ceo_agent.py` archived (superseded by HUD chat; ID 20260702-087).
+
+**Build ID:** b4d0e2c-v88
+
+## 2026-07-02 · v89 · Studio AI (Sora) generator fixed — was calling a nonexistent API
+
+**Symptom:** Studio "✨ AI Scene (Sora)" style always failed. `tools/ai_video.py` was
+written against a hallucinated API shape that mirrors images.generate.
+
+**Root cause:** `ai_video.py` called `client.videos.generate(model="sora-1.0-turbo",
+prompt=..., input_images=[<base64 data-urls>], duration=10, n=1, with_audio=True)` and
+expected a synchronous `resp.data[0].url`. None of that exists:
+- `client.videos` has no `.generate()` — the real API is an async JOB: `videos.create`
+  → poll `videos.retrieve` → `videos.download_content(id, variant="video")`.
+- Model `sora-1.0-turbo` is not real. Valid: `sora-2`, `sora-2-pro`.
+- `input_images`/base64 data-urls/`with_audio`/`n` are not params. Sora takes ONE
+  `input_reference` image that must match the output size.
+- `duration=10` invalid — seconds are only "4"/"8"/"12".
+- Size `1:1 → 1080x1080` invalid — Sora sizes are 720x1280 / 1280x720 / 1024x1792 /
+  1792x1024 (no square).
+
+**Fix:**
+- Rewrote `generate_ai_video()` against the real Sora-2 job API (create → poll →
+  download_content). Clamps duration to 4/8/12, maps aspect→valid size, center-crops
+  the product photo to the exact output size for the reference image, polls with a
+  wall-clock cap, and surfaces `video.error` on failure.
+- `main.py` studio_generate_video: changed hardcoded `duration=10` → `8` (valid).
+- `frank_hud_mockup.py`: removed the "1:1 Square" aspect option (Sora can't produce
+  1:1; leaving it would deliver a portrait video when the user picked square — a
+  truthfulness violation).
+
+**Proof (real generation, authorized spend):** org IS Sora-2 enabled. Ran end-to-end
+with a real product image → Sora job `video_6a46753f6bb081908ca0d98411eadfcd06dd273a4ed4440e`
+→ saved a valid 1.7 MB MP4 (ftyp/moov/mdat, 720x1280, 126 frames ≈ 31.5fps, 4s) in 85s.
+Decoded with imageio to confirm frames render. MP4 sent to Scott.
+
+**Build ID:** b4d0e2c-v89
+
+## 2026-07-02 · v90 · Loop engineering (goal-verification loops)
+
+**Motivation:** Scott asked to "add loop engineering to any task that can benefit — compare
+to the goal before saying complete." Generalized the one good verify-retry loop we had.
+
+**Added `tools/goal_loop.py`:** `run_until_goal(generate, verify, max_attempts, on_reject)`
++ `LoopResult`. Generate → verify against the goal → feed specific failures back → retry →
+honest pass/fail. Hard rule enforced in code: `passed=True` ONLY when a verify actually
+returned pass=True; on exhaustion returns `passed=False` with the last issues (never
+fabricates success). Distinct from resilience.py (which retries transient/network errors);
+goal_loop retries QUALITY failures where nothing threw but the output is wrong.
+
+**Wired in:**
+- `listing_photo_pipeline.generate_verified_photo` refactored onto `run_until_goal` — parity
+  proven with stubbed known-good/known-bad/recover-on-2 tests (output saved only on real
+  pass, rejects archived per failed attempt, honest fail on exhaustion).
+- `etsy_listing_tools._generate_listing_content` now runs `pre_publish_gate` at generation
+  time and returns `success=false` + specific `gate_failures` when the draft breaks the 2026
+  rules (title >70, <13 tags, missing "instant download", short desc, bad price ending).
+  Closes the loop at the agent layer — Frank can't report content "done" while it fails the
+  gate. (No in-code LLM regenerator added — that would duplicate Frank's brain; the agent is
+  the generator across tool calls.)
+
+**Verified:** goal_loop unit tests (5 cases) + photo-pipeline parity (3 cases) + listing gate
+(bad blocked with feedback, clean passes). All green. Build b4d0e2c-v90.
+
+## 2026-07-02 · v91 · LLM consolidation (centralized model tiers)
+
+**Motivation:** Research verdict — keep Claude as the brain (leads on tool-use/policy
+adherence), but the ~8 model strings were hardcoded and scattered, and "consolidate away the
+second OpenAI brain" turned out to be a non-issue (OpenAI is only Whisper STT + TTS here, not
+a reasoning brain).
+
+**Changes:**
+- Added model-tier constants to `business_config.py`: MODEL_PRIMARY (default
+  claude-sonnet-4-6), MODEL_CHEAP (claude-haiku-4-5-20251001), MODEL_HARD (claude-opus-4-8).
+  All env-overridable.
+- Replaced the 7 hardcoded model strings in main.py with the constants (4 primary, 3 cheap).
+- Documented that OpenAI = STT/TTS only (no reasoning-brain consolidation needed).
+
+**Honest note on Sonnet 5:** could NOT verify claude-sonnet-5 access — no ANTHROPIC_API_KEY
+in this container (it's injected only in the Railway deploy env). So I did NOT blind-swap the
+live brain to an unverified model. Default stays on the proven claude-sonnet-4-6; promoting to
+Sonnet 5 is now a one-env-var flip (`MODEL_PRIMARY=claude-sonnet-5`) once Scott confirms the
+account has access. Defaults verified byte-identical to prior hardcoded models (zero behavior
+change without an override).
+
+**Build:** b4d0e2c-v91.
+
+### ACTION FOR SCOTT
+To upgrade Frank's brain to Sonnet 5: confirm the Anthropic account has claude-sonnet-5
+access, then set env var `MODEL_PRIMARY=claude-sonnet-5` on Railway and redeploy. No code
+change. Revert by unsetting it.
+
+## 2026-07-02 · v92 · Veo 3.1 video engine prepped (Sora shutdown migration)
+
+**Motivation:** OpenAI's Sora API shuts down 2026-09-24. Research picked Google Veo 3.1 as
+the migration target. Prepped the code path now so the switch is low-risk and ready.
+
+**Changes (tools/ai_video.py):**
+- Split into engines behind `generate_ai_video(..., engine=)`: "sora" (proven, default) and
+  "veo" (Google Veo 3.1). Engine resolves from arg → AI_VIDEO_ENGINE env → "sora".
+- `_generate_sora` = the existing proven path, unchanged. main.py's /api/studio/generate
+  contract is unchanged (still calls generate_ai_video with the same args).
+- `_generate_veo` written to the documented google-genai video API (generate_videos → poll
+  operation → download). Reads GEMINI_API_KEY from env (not the OpenAI key).
+- Added `google-genai>=1.0.0` to api_server/requirements.txt (lazy-imported, doesn't affect
+  startup).
+
+**HONESTLY UNPROVEN:** google-genai SDK is not installed in this container and there's no
+GEMINI_API_KEY, so the Veo path has NOT been run end-to-end. All guards fire cleanly (clear
+errors on missing key / missing SDK / unknown engine — verified). Before flipping to Veo in
+production, run one real generation on a real product file and verify the mp4 — same bar as
+the Sora fix. Veo model id / config field names must be confirmed against the live SDK then.
+
+**Build:** b4d0e2c-v92.
+
+### ACTION FOR SCOTT (before Sept 24)
+1. Get a Google Gemini API key (Veo 3.1 access), set `GEMINI_API_KEY` on Railway.
+2. Set `AI_VIDEO_ENGINE=veo` (and optionally `VEO_MODEL`).
+3. Have Claude run one real generation + verify the mp4 before relying on it.
+
+## 2026-07-02 · v93 · Drop Canva (dormant) + split marketing email to Resend
+
+**Canva:** confirmed FULLY DORMANT — no Python module imports the canva client at runtime
+(only reportlab's unrelated `pdfgen.canvas`); no keys set. Nothing to pay for or maintain.
+Did NOT delete files (setup_wizard runs canva_oauth.py as an optional subprocess; deleting
+would break that optional path). Instead marked Canva DEPRECATED/SKIP in the connections
+guide (api_connections_tools.py) so no deploy is steered to wire up a paid tool PIL replaces.
+
+**Email:** `email_marketing_tools._send_newsletter` now prefers Resend for marketing/bulk
+(better deliverability; Outlook/Gmail SMTP throttle + hurt reputation on bulk). Added
+`_send_via_resend` (dependency-free, urllib → api.resend.com). Transport selection: Resend
+when `RESEND_API_KEY` set, else SMTP fallback (unchanged). Transactional file delivery
+(digital_delivery_tools.py) stays on SMTP — untouched. SES documented as the cheaper at-scale
+alternative (needs boto3/SigV4) in a code comment. Verified all 3 branches (resend / smtp
+fallback / clear error when neither configured).
+
+**Build:** b4d0e2c-v93.
+
+### ACTION FOR SCOTT (optional, only if doing email marketing)
+Sign up at resend.com (free ≤3k/mo), verify a sending domain, set `RESEND_API_KEY` and
+`RESEND_FROM=you@yourverifieddomain` on Railway. Newsletters then route via Resend
+automatically; without it they keep using SMTP.
+
+## 2026-07-02 · v94 · Veo proof attempt — integration correct, blocked on Google billing
+
+**What happened:** Ran a real Veo generation with a live Gemini API key (google-genai 2.10.0
+installed, key in .env, AI_VIDEO_ENGINE=veo).
+- Key AUTHENTICATED (no 401).
+- Model `veo-3.1-fast-generate-preview` was ACCEPTED (reached quota check → request well-formed,
+  integration correct). `veo-3.1-generate-preview` also accepted. Old `veo-3.0-generate-001`
+  id 404s on Gemini API v1beta (irrelevant fallback).
+- Generation BLOCKED: HTTP 429 RESOURCE_EXHAUSTED — "check your plan and billing details."
+  Veo is not on the Gemini free tier; the project needs billing/paid tier enabled.
+
+**Code correction (verified against the installed SDK):** _generate_veo download now writes the
+bytes returned by client.files.download() (with a video.video_bytes fallback) instead of the
+doc-based video.save(). Default model confirmed correct: veo-3.1-fast-generate-preview.
+
+**Status:** Veo path is proven correct up to the paywall. NOT yet proven end-to-end (no billing).
+
+### ACTION FOR SCOTT
+1. Enable billing / paid tier on Google Cloud project 208375896852 (the one the Gemini key
+   belongs to) so Veo video calls are allowed. In Google Cloud Console → Billing → link a
+   billing account to that project; confirm Veo/Generative AI quota.
+2. REVOKE the Gemini key that was pasted into chat (it's exposed). After billing is on, create
+   a FRESH key and set GEMINI_API_KEY in Railway Variables (not chat).
+3. Then tell Claude "billing is on" → I run the real generation + verify the MP4 (same bar as
+   the Sora proof) before flipping Veo on in production.
+
+**Build:** b4d0e2c-v94.
+
+## 2026-07-02 · v94 (proof) · Veo 3.1 PROVEN end-to-end ✅
+
+After billing was enabled, ran a real Veo generation on a real product image:
+- model veo-3.1-fast-generate-preview, aspect 9:16, job completed in 128s
+- output: valid MP4 (ftyp/mdat/moov), 192 frames @ 720x1280 portrait (~24fps), WITH native
+  audio track — decoded via imageio to confirm. MP4 sent to Scott.
+
+**Sora → Veo migration is functionally complete and verified.** ai_video.py "veo" engine works.
+
+**Production rollout (safe default preserved):** code default engine is still "sora" — Veo
+activates only when AI_VIDEO_ENGINE=veo. So production keeps using Sora until Scott sets the
+Railway env vars below. Flip whenever ready (and before Sora's Sept 24 shutdown).
+
+### REMAINING SCOTT ACTIONS
+1. REVOKE the Gemini key pasted in chat (exposed). Create a fresh one.
+2. In Railway → Variables: set GEMINI_API_KEY=<fresh key> and AI_VIDEO_ENGINE=veo, redeploy.
+   That flips the live Studio video engine to Veo. (Optional: VEO_MODEL to pick fast/quality.)
+3. The container's throwaway .env key will die on recycle; only the Railway var matters for prod.
+
+## 2026-07-02 · v95 · Image migration — Nano Banana engine (gpt-image-1 deprecation)
+
+**Motivation:** gpt-image-1 deprecates 2026-10-23. Added a swappable image engine, mirroring
+the Veo video migration, and PROVED Nano Banana for real (Gemini key + billing already live).
+
+**Changes:**
+- tools/image_gen.py: generate_image()/edit_image() now dispatch on IMAGE_ENGINE (default
+  "openai", unchanged) → "gemini" (Nano Banana, gemini-2.5-flash-image) / "ideogram" (v3, text
+  →image, generate-only). New engines guarded (missing key/SDK/unknown → clear error).
+  IMAGE_MODEL env overrides the gemini model (3.1-flash-image / imagen-4 are a flip).
+- tools/listing_photo_pipeline.py: generate_verified_photo generate step routes through the
+  engine flag — IMAGE_ENGINE=gemini drives the self-verifying loop with Nano Banana; verify
+  (gpt-4o) + goal_loop unchanged.
+
+**PROVEN this session (real calls):**
+- Nano Banana text→image: valid 1024x1536 image.
+- Nano Banana edit (the listing-photo use): real product art → lifestyle scene, valid 1024x1024.
+  Both sent to Scott.
+- Full pipeline with IMAGE_ENGINE=gemini: generation ran via Nano Banana inside the real loop;
+  gpt-4o verifier correctly rejected a physics-profile mismatch in the test (sign_flat vs a
+  framed print) — the honest-failure guardrail working, not a model fault. Integration proven.
+
+**Ideogram:** written, UNPROVEN (no IDEOGRAM_API_KEY). Guards verified.
+
+**Default stays OpenAI** (zero regression — dispatch only triggers when IMAGE_ENGINE!=openai;
+guards + default confirmed). Build b4d0e2c-v95.
+
+### ACTION FOR SCOTT (before Oct 23)
+- To flip listing photos + mockups to Nano Banana: set IMAGE_ENGINE=gemini and GEMINI_API_KEY
+  (fresh Railway key) in Railway, redeploy. Optional IMAGE_MODEL to try gemini-3.1-flash-image.
+- For text-in-image covers/badges: get an Ideogram key, set IDEOGRAM_API_KEY, use engine
+  "ideogram" (I'll prove it once the key exists).
+
+## 2026-07-02 · v96 · Upgrade Frank's brain to Sonnet 5 (with safe fallback)
+
+**Change:** MODEL_PRIMARY default flipped claude-sonnet-4-6 → claude-sonnet-5 in
+business_config.py. Takes effect on next Railway deploy of this branch.
+
+**Safety net (so this can't hard-break Frank):** _anthropic_create() in main.py now catches
+NotFoundError/PermissionDeniedError and, if the requested model is unavailable to the account,
+retries ONCE on _MODEL_FALLBACK="claude-sonnet-4-6" and logs it. Verified with a mock (sonnet-5
+unavailable → auto-retry on sonnet-4-6, no crash). So if the Anthropic account lacks Sonnet 5
+access, Frank keeps running on 4.6 and logs the fallback instead of erroring.
+
+**Honest caveat:** couldn't verify claude-sonnet-5 account access from this container (no
+ANTHROPIC key here — only in Railway). The fallback makes that safe. Instant manual rollback:
+set MODEL_PRIMARY=claude-sonnet-4-6 in Railway.
+
+**Build:** b4d0e2c-v96.
+
+### NOTE FOR SCOTT
+After the next deploy, if Frank's logs show "[anthropic] model 'claude-sonnet-5' unavailable
+… falling back to 'claude-sonnet-4-6'", your account isn't enabled for Sonnet 5 — request
+access at console.anthropic.com, or leave it (it runs fine on 4.6).
+
+## 2026-07-02 · v97 · 4 new color themes + daily-brief deadline surfacing
+
+**Color themes:** added 4 UI themes to the Settings → Appearance picker — Sakura (rose),
+Matcha (green), Ocean Teal, Midnight Kawaii (neon). Edited exactly 2 places in
+frank_hud_mockup.py: the `html.theme-<name>{...14 vars...}` CSS blocks and the `_UI_THEMES`
+JS registry. Now 8 themes total (default + 7). Persistence unchanged (localStorage frankTheme,
+per-device).
+
+**Daily-brief deadlines:** daily_brief.py now surfaces open to-dos with a due_date within 14
+days (or overdue) as an "⏰ DEADLINES APPROACHING" block — in both the AI-synthesized brief
+(preserved verbatim) and the no-AI fallback. Reads db.list_todos(); degrades to no-op if the
+DB is unavailable so the brief still sends. So the two dated to-dos (Veo before Sep 24, Nano
+Banana before Oct 23) auto-surface in Frank's daily brief as their deadlines near.
+Verified: overdue + soon shown, far-future/undated excluded, sorted soonest-first.
+
+**Build:** b4d0e2c-v97.
+
+## 2026-07-02 · v98 · Settings: runtime agent-name rename + AI engine toggles
+
+**Foundation:** new `settings(key,value)` table in db.py + get_setting/set_setting/all_settings
+(cached). main.py `_apply_settings_overrides()` syncs stored overrides into the exact places
+code reads them — env vars for the per-call flags (IMAGE_ENGINE, AI_VIDEO_ENGINE, IMAGE_MODEL)
+and business_config attributes for live-read values (MODEL_PRIMARY, AGENT_NAME/SHORT/OWNER).
+Runs at startup and after every settings change. Tool modules unchanged (zero-risk).
+
+**AI engine toggles:** Settings → "AI Engines" card: video (sora/veo) + image
+(openai/gemini/ideogram) dropdowns → POST /api/settings → live switch, no Railway edit.
+
+**Agent rename (full dynamic):** Settings → "Branding" card renames the agent. Mechanism:
+- UI/login/manifest already sentinel-templated → reflect the new name on next load (HUD cache
+  busted via _refresh_identity()).
+- Agent self-identity: _system_block() + _tools_with_cache() run `_localize_identity()` per
+  request, swapping the baked-in name for the current one. No-op (byte-identical, prompt-cache
+  still hits) when unchanged → zero behavior change by default; one-time cache miss on rename.
+- Fixed the hardcoded "FRANK" PWA manifest name (now follows AGENT_NAME_SHORT).
+
+**Verified deterministically:** settings roundtrip, apply-sync, localize (clean rename +
+no-op), HUD renders with all cards/themes, no sentinel leaks, all files compile.
+**NOT verified here:** a live agent turn saying the new name (no Anthropic key in this
+container; code not yet deployed). Confirm post-deploy: rename in Settings → ask the agent
+its name.
+
+**Shipping note:** planned as 2 commits but the shared settings foundation entangled the name
++ engine code in the same functions; shipped as 1 to avoid broken intermediate states. The
+send-path name substitution is the only core-loop touch and is clearly delimited/revertible.
+
+**Build:** b4d0e2c-v98.
+
+### NOTE FOR SCOTT
+Rename Frank: Settings → Branding → type a name → Save → reload. Switch AI engines:
+Settings → AI Engines (needs GEMINI_API_KEY for Veo/Nano Banana). All persist in the DB.
+
+---
+
+## 2026-07-03 — "Nothing saves when I log out" = ephemeral storage (no /data volume)
+
+**Symptom (Scott):** Every time he logs out / comes back to Frank, his data is gone —
+todos, Settings (agent name, engine toggles), even his login account (back to the
+first-run "create account" setup screen).
+
+**Root cause:** The Railway service has **no Volume mounted at `/data`**. Confirmed live:
+`GET /health` → `"persistent":false`. `db._resolve_db_path()` then falls back to the
+ephemeral in-container path (`hub_data/hub.db`). Because Railway auto-deploys on every push
+to `claude/etsy-automation-agents-WFAPU` AND recycles the container on its own, every restart
+starts on a fresh empty disk — wiping the entire SQLite DB (todos, settings, `hub_users`,
+`hub_sessions`, saved files, metric history, rotated Etsy tokens). Empty `hub_users` → login
+shows the first-run setup page, so it *feels* like logout erased everything. Same root cause
+as the earlier "7 todos vanished" incident.
+
+**The actual fix (Scott, Railway dashboard):** attach a Volume with mount path `/data`. The
+code already prefers `/data/hub.db` automatically once it exists (no code change needed). The
+new volume starts empty, so one final "create owner account" setup — then it persists forever.
+
+**Safeguard shipped this session (so it can never be silent again):**
+- `main.py` startup now prints a loud multi-line `[db] ⚠️ EPHEMERAL STORAGE` banner to logs
+  when `not db.is_persistent()`.
+- `_SETUP_PAGE` (login/setup screen) shows a red warning block when not persistent — exactly
+  where the wipe dumps you — explaining to attach a `/data` volume. Empty on a real volume.
+- HUD (`frank_hud_mockup.py`) shows a fixed red top banner "DATA IS NOT BEING SAVED …" driven
+  by `checkPersistence()` → `fetch('/health')`; auto-hides once `persistent:true`.
+- Zero behavior change when a volume is attached (all guards keyed off `db.is_persistent()`).
+
+**Build:** b4d0e2c-v99.
+
+---
+
+## 2026-07-03 — Gave Frank a real browser (Playwright, wired into the agent)
+
+**What:** Wired the previously-unused `tools/browser_automation.py` into Frank's agent so he
+can SEE rendered pages, not just scrape HTML with requests. Four new tools: `render_page`,
+`screenshot_url`, `check_browser_status`, `check_etsy_search_rank`. Primary purpose: let Frank
+verify his own live listings actually render correctly (the "never lie / show the real product"
+rule), screenshot them, and read JS-heavy research pages the requests-based `browse_web` can't.
+
+**Why now:** Scott asked what GitHub tooling could make Frank more capable. A browser was the
+highest-fit add, and the module already existed — this was a wiring job, not new code.
+
+**Changes:**
+- `tools/browser_automation.py` — made portable off the sandbox: `CHROMIUM_PATH` is now env-
+  overridable and `_launch_context` omits `executable_path` (uses Playwright's bundled Chromium)
+  when that path doesn't exist — the Railway case. `is_available()` no longer path-gates.
+- `Dockerfile` — added `playwright>=1.45.0` to the pip list + `RUN playwright install
+  --with-deps chromium`. This meaningfully grows the image and Chromium peaks ~300–500MB RAM
+  per call (launched on-demand and closed each call, so the spike is transient). Scott chose
+  Railway (autonomous) over relay/hosted knowing this.
+- `tools/api_server/main.py` — bare `import browser_automation` (matches the sibling-module
+  pattern; `tools/` is on sys.path via line 43), `AGENT_TOOLS.extend(...TOOL_DEFINITIONS)`,
+  a dispatch branch in `_execute_agent_tool` that `json.loads` the module's string returns into
+  the dict contract, and status-line labels. Tool count 31 → 35.
+
+**Verified (sandbox, real):** portability fix launches Chromium; full navigate→title→text→
+screenshot pipeline proven via a `data:` URL (no network — sandbox egress is locked for the
+browser, so live-internet render can't be shown here); `import main` loads clean with the bare
+import and routes `render_page` through the real dispatcher returning a dict.
+
+**Post-deploy checks still owed (the real proof):**
+1. Call `check_browser_status` on Railway → Chromium must boot in the image without OOM.
+2. `render_page` on a real onbrandcraftz listing URL → **datacenter-IP question**: Etsy may 403
+   Railway's IP (it 403s the sandbox IP). If 200, autonomous listing verification works; if 403,
+   the browser still serves all non-Etsy pages and the tools report "blocked" honestly.
+
+**Known follow-up (not this change):** the Dockerfile pip list also lacks `google-genai`
+(needed when Scott flips `IMAGE_ENGINE=gemini`/Veo) and `beautifulsoup4`/`lxml`/`requests`
+(used by the existing `browse_web`/`search_etsy`) — worth reconciling the Dockerfile against
+requirements.txt in a dedicated pass.
+
+**Build:** b4d0e2c-v100.
+
+---
+
+## 2026-07-03 — Dockerfile reconciled to requirements.txt (dependency drift fix)
+
+**Problem:** The Dockerfile installed a hand-picked pip list that had drifted out of sync
+with the app's real deps. Missing from the image: `requests`/`beautifulsoup4`/`lxml`
+(browse_web/search_etsy), `google-genai` (Veo / Nano Banana / Gemini video understanding),
+`python-multipart` (login form parsing), `PyNaCl` (relay crypto), `apscheduler`, `vtracer`,
+`reportlab`, `flask`. Any feature needing those would fail at runtime on Railway despite
+working locally.
+
+**Fix:**
+- `Dockerfile` now runs `pip install -r requirements.txt` instead of a hand-picked list, so
+  the image can't silently drift from the manifest again. Kept the ffmpeg apt install and the
+  `playwright install --with-deps chromium` step (playwright is in requirements.txt).
+- `requirements.txt`: added `google-genai>=1.0.0` (was only in tools/api_server/requirements.txt);
+  changed `uvicorn>=0.29.0` → `uvicorn[standard]>=0.29.0` **then pinned** `uvicorn[standard]==0.29.0`
+  and `fastapi==0.111.0` to the known-good versions the working image ran on. `[standard]` is
+  required for the WebSocket chat path (pulls websockets/uvloop/httptools/watchfiles).
+
+**Verified:** `pip install --dry-run --ignore-installed -r requirements.txt` resolves 100% to
+prebuilt wheels (no compiler needed on python:3.11-slim) — fastapi-0.111.0, uvicorn-0.29.0,
+starlette-0.37.2, websockets-16.0, vtracer-0.6.15, lxml-6.1.1, PyNaCl-1.6.2, google-genai-2.10.0
+all wheel-resolve. Only fastapi/uvicorn were pinned-vs-float deltas from the old image; every
+other now-added package was simply absent before, so this is strictly additive to the working
+core. Post-deploy proof = /health returns v101 (a successful build means the -r install worked
+in the real Docker build).
+
+**Enables:** google-genai in the image is the missing piece for both the image/video engine
+migrations (IMAGE_ENGINE=gemini, AI_VIDEO_ENGINE=veo) AND Gemini native video understanding —
+once GEMINI_API_KEY is set, Frank can analyze video (Gemini ingests video files <100MB inline,
+larger via File API, or YouTube URLs; samples ~1 FPS + audio).
+
+**Build:** b4d0e2c-v101.
+
+---
+
+## 2026-07-03 — Frank can now WATCH video (Gemini native, watch_video tool)
+
+**What:** New `watch_video(source, question)` agent tool (tools/video_understanding.py).
+Source = a local file path OR a URL (YouTube/TikTok/direct .mp4/~1000 sites via yt-dlp). The
+video is uploaded to Google Gemini's File API and analyzed natively (Gemini samples ~1 fps +
+audio), returning a TEXT description/answer — which is what Frank's Claude brain consumes
+(tool results are text, so Gemini does the "watching" and hands back words). Use cases: QA on a
+generated product/listing video, or watching a competitor's video for research.
+
+**Why this design:** An LLM can't ingest a video file directly — it needs frames+audio. Two
+options: (a) ffmpeg frame-extraction → vision model, or (b) Gemini native. Gemini is cleaner
+and google-genai is already in the image (added in the Dockerfile reconciliation). Frame-
+extraction→Claude is awkward here because tool results are text, not image blocks.
+
+**Proven live (2026-07-03):** built a controlled 3-frame test video (digits 1/2/3) and Gemini
+read them back correctly ("1, 2, 3") — both directly and through the real main.py dispatcher.
+Verified API surface: client.files.upload → poll files.get until FileState.ACTIVE →
+models.generate_content([file, prompt]) → resp.text. Uploaded file is deleted after analysis.
+
+**Changes:**
+- `tools/video_understanding.py` (new) — watch_video tool, Gemini analysis, yt-dlp URL fetch
+  (<=720p mp4 cap), guards for missing key/SDK/file.
+- `tools/api_server/main.py` — registered in AGENT_TOOLS (now 36 tools), dispatch branch
+  (json.loads → dict), status line "🎬 Watching…".
+- `requirements.txt` — added `yt-dlp>=2025.1.1` (pure-python wheel, verified resolves).
+
+**Requires:** GEMINI_API_KEY set on Railway. Honest limits: video is ~300 tokens/sec (prefer
+short clips / specific questions); yt-dlp fetching a site depends on that site not blocking the
+server's datacenter IP (local files always work); the "paste a video into chat" UX still needs
+an upload path + the /data volume (separate follow-up).
+
+**Build:** b4d0e2c-v102.
+
+---
+
+## 2026-07-03 — CI smoke-test gate (first automated test for Frank)
+
+**Problem (from the productivity review):** main.py is 7,135 lines, had ZERO automated
+tests, and Railway auto-deploys every push straight to production with no gate. The most
+common prod-breaker is an import-time crash (bad import / module-scope error) — e.g. the
+`from tools import ...` top-level bug that nearly shipped with the browser tools.
+
+**Fix:**
+- `tests/smoke_test.py` — imports the server module (catches syntax/import crashes in main.py
+  and every module it imports), then asserts the AGENT_TOOLS registry built (≥25 tools),
+  the session's wired tools are present (render_page/screenshot_url/check_browser_status/
+  check_etsy_search_rank/watch_video), the dispatcher is callable, and tool schemas are
+  well-formed. No server start, no background loops, no network/API calls, no secrets.
+- `.github/workflows/ci-smoke.yml` — on every push + PR: setup py3.11, pip install
+  -r requirements.txt, `compileall tools tests`, run the smoke test.
+
+**Verified:** smoke passes locally (36 tools, exit 0); `compileall tools tests` is clean, so
+the first CI run won't red-flag legacy code.
+
+**IMPORTANT — to make this a HARD gate (not just an alarm):** GitHub Actions runs in parallel
+with Railway's deploy; a red check does NOT stop Railway by default. Enable Railway → service →
+Settings → **"Wait for CI to pass"** (Check Suites) so Railway only deploys after this check is
+green. Until then, CI is an early-warning signal, not a deploy blocker.
+
+**Follow-ups from the same review (not done here):** graceful tool degradation (tools self-report
+"unavailable: needs GEMINI_API_KEY / relay offline" instead of raw errors); harden the
+`get_me` fail-open-to-owner path (main.py:3146) to fail closed; begin extracting main.py (7,135
+lines) into modules.
+
+---
+
+## 2026-07-03 — Capability visibility in Dependency Health (graceful degradation, Unit A)
+
+**From the productivity review:** optional capabilities that need a key/connection can fail
+when someone tries them, with no place showing what's Ready vs Needs-setup. (Tool-level messages
+were already clean — relay dispatch and watch_video return human-readable errors.)
+
+**Unit A (backend):** `/api/system/dependencies` now also returns a `capabilities` list —
+video analysis (Gemini), Gemini image engine, browser, relay — each `{key, label, available,
+hint}`. `_capability_report()` reuses `video_understanding.is_available()`,
+`browser_automation.is_available()`, `bool(os.getenv("GEMINI_API_KEY"))`, and relay
+connected/kill state. Reports booleans + a fix hint only — never a key value.
+
+**Verified:** with the Gemini key present → video/image/browser available:true; without it →
+available:false + hint "needs GEMINI_API_KEY"; relay shows "offline — not connected" when no
+relay. Key value confirmed not leaked in the payload. py_compile + smoke green.
+
+**Next (Unit B):** render these as Ready / Needs-setup pills in the HUD Dependency Health panel.
+
+**Build:** b4d0e2c-v103.
+
+---
+
+## 2026-07-03 — Capability pills in the HUD (graceful degradation, Unit B)
+
+**Unit B (UI):** `_renderDependencyHealth()` in frank_hud_mockup.py now also renders the
+`capabilities` from /api/system/dependencies as pills under a "Capabilities" subheader —
+green "READY" when available, amber "NEEDS SETUP · <hint>" otherwise (e.g. "needs
+GEMINI_API_KEY", "relay offline — not connected"). Reuses the existing .dep-pill / half_open
+styling; escHtml on all fields.
+
+**Verified:** JS render logic run with mock data (Node) → available→READY (green), unavailable
+→NEEDS SETUP (amber) + hint, correct markup; py_compile + smoke green. So a tester now SEES
+what needs setup instead of discovering it by a failed tool call.
+
+**Build:** b4d0e2c-v104.
+
+---
+
+## 2026-07-03 — Harden get_me to fail closed (minor, from the review)
+
+**Honest scope correction:** the productivity review flagged get_me as "fails open to owner."
+On reading the code, the REAL enforcement (`_require_owner`, main.py:3150) already fails closed
+(403s an unknown user on every admin action), so this was never an exploitable privilege
+escalation — worst case a stale session (user row deleted/reset) briefly SEES owner-only UI it
+can't actually use.
+
+**Fix:** get_me (main.py:3146) now returns role "" instead of "owner" when the session's user
+row is missing — aligns the UI hint with the fail-closed enforcement. No real owner is affected
+(they always have a row). Verified: py_compile + smoke green.
+
+**Build:** b4d0e2c-v105.
+
+---
+
+## 2026-07-03 — Quality gates now have real tests (CI-enforced)
+
+**Symptom / gap:** The code that enforces the #1 rule ("never lie to the customer /
+quality never decreases") — `EtsyAPIClient.pre_publish_gate()` and
+`validate_digital_file()` in `etsy_api.py` — had ZERO tests. A careless edit could
+silently disable a check (title ≤70, all 13 tags, price ending, mislabeled/corrupt/
+empty ZIP, traced-raster SVG rejection, path-traversal) and a violating listing or a
+broken file could ship with nothing to catch it. The existing CI smoke test only
+proves the app *imports*, not that the rules *work*.
+
+**Fix:** Added `tests/test_quality_gates.py` — 28 dependency-light, secret-free tests
+covering every branch of `pre_publish_gate` (title length/floor/phrase, tag count/
+width/special-chars/title-dup, desc length, price floor + .99/.97/.49 ending + cents
+normalization, is_supply) and `validate_digital_file` (missing/empty/oversize,
+extension + magic-byte mismatch, ZIP CRC/empty/no-product-files/path-traversal, clean
+vs traced-raster SVG). Wired into `.github/workflows/ci-smoke.yml` so it runs on every
+push/PR alongside the smoke test. Needs no APP_SECRET_TOKEN, no network, no API keys.
+
+**Note:** The first run caught a real duplication bug — in the *test fixture*, not the
+code: a baseline tag ("budget planner") duplicated a title phrase, which the gate
+correctly rejected. Fixed the fixture; the gate behaved exactly as designed. No runtime
+code changed, so `_BUILD_ID` was intentionally NOT bumped (test/CI-only change).
+
+---
+
+## 2026-07-03 — 🚨 LIVE INCIDENT: Frank's Anthropic account out of credits (agent down)
+
+**Symptom:** Driving the deployed Frank over `/ws/chat` returns an error frame:
+"Frank's AI provider account is out of credits — let Scott know to top up Anthropic billing."
+Every agent turn (owner OR tester) fails right now — Frank's brain is offline. The rest of the
+app (dashboard, endpoints, health) is up; only the Anthropic-backed agent loop is dead.
+
+**Root cause:** The production `ANTHROPIC_API_KEY`'s account balance is depleted (Anthropic
+returns an insufficient-credits error, mapped by `_friendly_error_message`). Not an auth/key
+problem — the key authenticates; the balance is zero.
+
+**Fix (Scott's action):** Top up Anthropic billing (console.anthropic.com → Billing). No code
+change needed; the agent resumes the moment credits are available.
+
+**Secondary finding (smaller follow-up, not fixed here):** `/api/system/dependencies` shows
+`anthropic_api` breaker state "closed" with `updated_at: null` — the out-of-credits failure is
+NOT tripping the Anthropic circuit breaker, so the Dependency Health panel reports Anthropic as
+healthy while the agent is actually down. Worth wiring the credits/402 error into
+`_anthropic_breaker.record_failure()` so the panel reflects reality. Logged for later.
+
+**Verified in the same session:** sandbox→Railway WebSocket egress WORKS (ticket mint via Bearer
++ `/ws/chat` connect both succeeded), and `/api/system/dependencies` reports
+`browser: available:true` on Railway — so Playwright/Chromium is installed in the image. The full
+browser render proof (Chromium boots a page + Etsy-IP reachability) is blocked only by the
+out-of-credits issue, since browser tools run through the agent loop. Re-run the browser probe
+once credits are restored.
+
+---
+
+## 2026-07-03 — Fixed DP1027 Sheet 6 sticker segmentation (misdiagnosed as "too connected")
+
+**Symptom:** DP1027 Sheet 6 produced only 1 individual sticker (the whole sheet as one
+blob), vs 23–56 on every other sheet. CLAUDE.md had recorded this as "stickers too connected
+in AI output."
+
+**Root cause (actual):** NOT connected stickers — the stickers are clearly separated. The
+`remove_white_background()` in `tools/process_sticker_sheets.py` removed background only where
+ALL RGB channels were ≥238 (pure white). Sheet 6's background is cream paper (~RGB 240,237,232);
+the blue channel (232) is below 238, so the background was never detected → never removed →
+every sticker stayed fused into one opaque blob → connected-components found 1 region.
+
+**Fix:** `remove_white_background()` now SAMPLES the background color from the four sheet corners
+(median) and floods border-connected pixels within an RGB distance (`BG_COLOR_TOLERANCE=42`) of
+it — a superset of the old pure-white behavior that also handles cream/tinted paper. Safety
+fallback to the strict white≥238 test when corners aren't a uniform light color (so dark/
+full-bleed art is never eaten). Verified on the REAL Sheet 6: **1 → 21** individual stickers,
+clean transparent cutouts; other sheets unregressed (still segment normally). Pure numpy/scipy
+(already deps) — no new dependency in any image.
+
+**rembg was evaluated and REJECTED for this:** rembg/u2net segments foreground-vs-background,
+not instance-vs-instance; on this busy sheet it masked ~93% as one foreground blob and still
+yielded 1 sticker. The lightweight color-flood is both correct AND lighter (no 176MB model,
+no onnxruntime). The plan had assumed rembg; testing on the real file proved otherwise.
+
+**Not done (Scott-gated):** regenerating + reuploading the DP1027 pack to the live Etsy listing.
+The tool is fixed and proven; applying it to the shipped pack touches a live listing = Scott's
+call. No `_BUILD_ID` bump — this is a build-time script, not part of the Railway server image.
+
+---
+
+## 2026-07-03 — Added Scrapling competitor-intel tool (parser proven; stealth unverified here)
+
+**What:** New `tools/competitor_intel.py` (competitor/keyword/trend research via Scrapling's
+adaptive parser + stealth fetch, with a plain-requests fallback). Optional deps in
+`requirements-research.txt` — deliberately NOT in `requirements.txt`/the Railway server image,
+since Scrapling pulls a browser-impersonation stack (curl_cffi, browserforge) and its core
+benefit is unproven.
+
+**Honest verification status:** Scrapling's PARSER is verified (css/xpath/regex extraction on
+real HTML). The stealth FETCH (curl_cffi TLS impersonation — the thing that would beat Etsy's
+datacenter-IP 403) could NOT be validated in the build sandbox: that environment routes egress
+through a MITM HTTPS proxy that resets curl_cffi's custom TLS ("connection reset by peer"), so
+the tool falls back to plain requests and Etsy still 403s. This is a sandbox artifact, not a
+Scrapling flaw — on a normal network (Scott's PC via relay, or Railway) there's no such proxy.
+
+**Not wired into Frank yet — on purpose.** Wiring it as a live agent tool would imply the Etsy
+path works, which is unproven. Gate: run `python tools/competitor_intel.py --selfcheck` on the
+relay or Railway; if the stealth fetch gets a 200 from Etsy there, THEN add scrapling to the
+server image and register it as an agent tool. Until then it's a ready-but-unvalidated research
+helper. ToS caution documented in the module (Etsy scraping is low-volume, public-data only;
+Scott opted in and owns that risk).
+
+---
+
+## 2026-07-03 — graphify codebase map (offline) → main.py modularization plan
+
+**What:** Ran `graphify` (safishamsi/graphify — Tree-sitter static graph, FULLY OFFLINE, no LLM
+cost) over `tools/`. 2,157 nodes / 4,232 edges / 142 communities from commit aea4a2b. Install:
+`uv tool install graphifyy && graphify install`; offline rebuild: `graphify update .` (the plain
+`extract` tries an LLM semantic pass on docs/images — use `update` or a code-only folder to stay
+offline; our Anthropic account is out of credits so offline is required).
+
+**Payoff:** graphify auto-flagged "Should main.py be split?" and showed main.py fragments into 3
+low-cohesion communities — route handlers (55 nodes), the agent-tool layer (61 nodes), and
+admin/auth/HUD (42 nodes). Turned that into a concrete split map:
+`data/knowledge_base/main_py_modularization_map.md` (committed). Interactive `graph.html` (~1.8MB)
+handed to Scott, NOT committed (generated-file bloat). This is a PLANNING artifact — the
+modularization itself is deliberate future surgery, gated behind the CI smoke + quality-gate tests.
+
+---
+
+## 2026-07-03 — smoke test hardened to pin core agent tools + routing (main.py split prep)
+
+**What:** `tests/smoke_test.py` gained two guards ahead of the planned main.py agent-tool-layer
+extraction: (4b) `EXPECTED_CORE_TOOLS` (the 25 dispatcher-handled core tools) must all be in the
+`AGENT_TOOLS` registry; (4c) each core tool must also have a `name == "..."` branch in
+`_execute_agent_tool` (checked by source inspection, since invoking the dispatcher would hit
+Etsy/db/anthropic). Two prod-inert test commits (142deb0, 3bd299f) — no `_BUILD_ID` bump.
+
+**Why:** the old smoke test asserted only `AGENT_TOOLS` len≥25 + the 5 browser/video names, so a
+core tool could be dropped/renamed OR lose its dispatch branch and CI would stay green (padded to
+≥25). That's exactly the failure mode a file-split could introduce. These checks make it fail loud.
+
+**Split status:** the actual extraction (Phase 1) is HELD. Reason: the agent-tool layer is
+entangled with module globals (`_cache`, `db`, anthropic client/breaker, business_config) and Frank
+is currently down (Anthropic credits) so a moved handler can't be runtime-verified. Chose the safe
+source-inspection routing test over a ~360-line blind HANDLERS-dict refactor. Do the split once
+Frank is live for dispatch verification and/or these guards have proven themselves in CI.
+
+---
+
+## 2026-07-03 — creative-production tooling reviewed (art / 3D / QC GitHub options)
+
+**What:** Scott asked whether we're running the best GitHub options for visual design, digital-art
+production, 3D physical products, and streamlining. Researched the 2026 landscape + our stack;
+wrote the honest scorecard to `data/knowledge_base/creative_tooling_assessment.md`.
+
+**Outcome:** assessment-only, no code. Genuine upgrades (AI upscaling via Real-ESRGAN/Upscayl;
+image→3D via TRELLIS.2/Hunyuan3D) are GPU-heavy and Scott's GPU is weak → local off; the zero-GPU
+cloud-API path (Replicate/Tripo/Meshy) is available if ever wanted, matching our buy-don't-host
+doctrine. Neither is a must-build (Lanczos already clears the wall-art gate; image→3D is a
+strategic new-product bet). SKIPs: sticker SAM2/RMBG (color-flood already solves our flat sheets,
+2026-07-03 fix); vtracer/potrace (output traced-raster SVGs our own validate_digital_file() gate
+rejects for AMS color separation). Design QC (VLM verify_render + goal_loop + gates) already
+stronger than most shops. See the assessment doc for the full table.
+
+---
+
+## 2026-07-03 — Frank Phone Mode: dedicated 4-tab mobile shell (v106)
+
+**What:** Scott: the HUD is too cramped on a phone — 19 desktop screens reflowed into one long
+scroll. Added a phone-only bottom tab bar (Ask / Approvals / Today / More) in
+`frank_hud_mockup.py`, gated entirely behind `body.is-mobile`. Desktop is untouched. Tabs delegate
+to existing machinery — Ask→orb/chat, Approvals→`showScreen('actions')` (Action Center, auto-loads),
+Today→`showScreen('cmd')` (home glance), More→a full-screen overlay of the existing 19-item nav (so
+nothing is lost, just demoted). On phone the floating hamburger + desktop bottom bar are hidden and
+the sidebar is hidden-until-More. Styled through existing theme vars (`--panel/--cyan2/--red/…`) so
+the color-theme selector recolors it too. Approvals badge mirrors `setActionBadge` onto `#ptab-badge`.
+
+**Verify:** py_compile + smoke + quality-gate green. Playwright at 390×844 confirmed all 16 checks —
+tab bar shows, hamburger/sidebar hidden by default, each tab drives the right screen, More overlay
+reveals+closes the nav, and the bar recolors on theme change; at 1440×900 desktop is unchanged
+(no is-mobile, tab bar hidden, sidebar visible). NOT yet proven live: chat replies (need Anthropic
+billing) and a real staged-action approve→Etsy round-trip (need live server) — deferred honestly.
+
+**Note / v1 tradeoff:** "Today" reuses the existing home dashboard screen rather than a bespoke
+compact glance (the mockup showed a tighter card layout). Fast-follow if Scott wants it tighter.
+
+---
+
+## 2026-07-03 — Frank Phone Mode v2: native panels + More scroll fix (v107)
+
+**What:** Scott tested v1 on his phone — Ask + the tab bar were great, but Approvals/Today reused
+DESKTOP screens (too big) and More reused the desktop sidebar which the mobile @media forced to
+position:static + overflow:visible !important → couldn't scroll. Fixed by building 3 dedicated
+phone-native panels in a new `#phone-body` (own classes, immune to the desktop overrides):
+Approvals = compact `_pendingActions` cards reusing `approveAction`/`openRejectModal`; Today =
+metric tiles (/api/metrics) + alerts (/api/alerts); More = a scrollable launcher → `showScreen`.
+Ask still = orb. Styled through theme vars so the color selector recolors it. v1 phoneTab archived
+via trash.py (20260703-001) before replacement.
+
+**Verify:** py_compile + smoke green (v107). Playwright at 390×844 — 20 checks incl. Approvals
+renders compact cards wired to phoneApprove, Today shows tiles+alerts from stubbed endpoints, and
+critically **the More panel scrolls** (scrollHeight>clientHeight, scrollTop=300); panels recolor on
+theme change; desktop (1440×900) unchanged. Live approve→Etsy + live metrics still need Frank on
+billing. Note: More's destination screens remain desktop-style for now (occasional access) — a v3
+could phone-optimize individual screens if Scott wants.
+
+---
+
+## 2026-07-03 — Frank Phone Mode v3: kill horizontal overflow on desktop screens (v108)
+
+**What:** Scott's phone shots still showed content too wide (cards/rows cut off, page scrolled
+sideways). Two things: (1) the shots were the OLD build — every tab opened a desktop screen;
+v107's compact panels hadn't loaded yet (the /frank-sw.js SW is network-first for navigations,
+so a reopen after the Railway build pulls latest — deploy lag, no SW change). (2) Real bug: the
+19 desktop screens use inline `grid-template-columns:1fr 1fr` blocks that never collapse on phone.
+Fix (CSS, mobile-gated, desktop untouched): `body.is-mobile .screen [style*="1fr 1fr"]{grid-
+template-columns:1fr !important}` (an !important rule beats non-important inline styles), plus a
+hard `overflow-x:hidden` + `max-width:100vw` guard on #stage/.main/.screen/.panel and width caps on
+inputs/buttons/imgs. Also nudged the red persist-warning banner below the iOS status bar
+(safe-area-inset-top) since it overlapped the clock.
+
+**Verify:** py_compile + smoke green (v108). Playwright at 390px: 9 desktop screens (settings,
+account, connections, security, listings, products, cmd, core, agents) all measured **0px
+horizontal overflow**; compact Today tiles still 3-across; desktop 1440px keeps its 2-col grids.
+Note: the guard both collapses grids and clips residual, so nothing scrolls sideways.
+
+---
+
+## 2026-07-03 — Phone Approvals badge/panel mismatch fixed (v109)
+
+**What:** Scott: Approvals tab badge showed "7" but the panel said "All clear — nothing to
+approve." Root cause: `setActionBadge(summary, pending)` set the phone badge to `summary.high +
+pending`, i.e. it counted high-severity *recommendations* from `/api/actions` (_compute_actions:
+publish draft, title>70, low-conversion, zero-views), while the phone Approvals panel only renders
+*pending staged actions* from `/api/queue`. So 7 recommendations + 0 pending → badge 7, empty panel.
+Fix: (1) phone `#ptab-badge` now counts ONLY `pending` (real approvals) so the badge matches the
+panel; (2) `renderPhoneToday` now merges the high/medium recommendations (each with its `suggestion`)
+into Today → "Needs attention" alongside alerts, so the recommendations aren't lost — they live
+where they belong. Desktop `#badge-actions` unchanged.
+
+**Verify:** py_compile + smoke green (v109). Playwright, Scott's exact case (7 recs, 0 pending):
+Approvals badge hidden + panel "All clear" (consistent); Today shows 7 recs + 1 alert = 8 items with
+their fixes under "Needs attention"; and the badge still shows the pending count (2) when real
+approvals exist.
+
+---
+
+## 2026-07-03 — Move the needs-attention badge to the Today tab (v110)
+
+**What:** Follow-up to v109 (Scott: "move the alert to the correct tab"). Since the high-severity
+recommendations now render under Today → Needs attention, the count badge belongs on the Today tab,
+not Approvals. Added `#ptab-today-badge` to the Today tab button; `setActionBadge` now sets it to
+`summary.high` (the urgent recommendations). Approvals badge stays `pending`-only. Verified
+(Playwright, 7 recs / 0 pending): Approvals badge hidden + "All clear"; Today tab badge shows "7";
+Today panel lists the 7 recs + alert; Approvals badge still shows pending count when approvals exist.
+
+---
+
+## 2026-07-03 — Phone: reachable bottom controls + dismissible persist banner (v111)
+
+**What:** Scott (Studio screen on phone): couldn't tap Generate Video — it sat under the fixed
+bottom tab bar and wouldn't scroll into reach; also wanted to dismiss the red "DATA IS NOT BEING
+SAVED" banner. Fixes: (1) bottom clearance on phone was `body.is-mobile .main{padding-bottom:74px}`
+< the bar height (58px + safe-area ≈ 90px), so the last control couldn't clear it → changed to
+`.main,.screen{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}` (scales with the
+bar). (2) Added an `×` to `#persist-warning` → `dismissPersistWarning()` sets `.show` off + a
+`_persistWarnDismissed` guard so `checkPersistence()` won't re-show it this session (returns on a
+fresh reload — real warning until /data volume is attached). Desktop untouched.
+
+**Verify:** py_compile + smoke green (v111). Playwright 390×844: Studio 'Generate Video' button
+bottom (716) ≤ tab-bar top (785) and on-screen (tappable); banner shows when persistent:false, hides
+on ×, stays hidden after re-running checkPersistence; desktop 1440 has no tab bar.
+
+---
+
+## 2026-07-03 — Phone Today: tappable cards → fix-it/view-on-Etsy sheet + metrics tile fix (v112)
+
+**What:** Scott asked for each "Needs attention" card on the phone Today tab to be tappable with a
+popup: let Frank fix it, or view the listing on Etsy. Same screenshot showed the ORDERS tile
+rendering "[object Object]". Implemented in frank_hud_mockup.py:
+1. **Action sheet** `#phone-sheet` (+ backdrop, themed vars): "🤖 Let Frank fix it" → prefills
+   `#chat-input` with a targeted prompt ("Diagnose and fix Etsy listing <id> — issue flagged:
+   <title>. …stage for my approval, don't change the live listing without me") → `sendMsg()` (real
+   WS chat path) → navigates to the cmd screen so the reply is visible + toast. "🏷 View listing on
+   Etsy" → `window.open(card.url || etsy.com/listing/<id>)`. Cancel/backdrop closes.
+2. **Tappable cards:** recommendations from `/api/actions` keep `listing_id`/`url`; listing-linked
+   cards render `role=button` + chevron → `phoneNeedsSheet(i)` (data via `_phoneNeeds[]`, no attr-
+   escaping). Plain alerts stay non-tappable.
+3. **Tile fix:** `/api/metrics` returns `orders` as an OBJECT and has no top-level views/conversion
+   → tiles now use the real shape: `orders.last_7_days`, `orders.revenue_7d` ($, 2dp),
+   `shop.total_sales` ("Orders · 7d / Rev · 7d / Total sales"). No more [object Object].
+
+**Verify:** py_compile + smoke green (v112). Playwright 390×844 (stubbed real-shape APIs): 13/13 —
+tiles 6 / $71.94 / 21; 2 of 4 cards tappable (listing-linked only); sheet opens w/ title; View
+opens https://www.etsy.com/listing/101 (context-stubbed); Fix-it lands the targeted prompt in chat
+on the cmd screen; backdrop closes; desktop sheet hidden. Test gotcha logged: Playwright matches
+routes in REVERSE registration order — register catch-alls FIRST. Caveat: with Anthropic billing
+still empty, Frank replies to fix-it with the credit error until topped up (UI path verified).
+
+---
+
+## 2026-07-03 — CLAUDE.md multi-engine image rule + Tool & MCP Fit-Check Protocol (v113)
+
+**What:** Scott added GEMINI_API_KEY (Gemini image production live) and asked three things: (1)
+update CLAUDE.md's image-generation hard rule, which still said "OpenAI gpt-image-1 only," to
+reflect the multi-engine dispatch (`openai`/`gemini`/`ideogram`) that's actually been live in
+`tools/image_gen.py` since task #110; (2) whether 3 MCP servers (Tavily, Firecrawl, Notion) from
+screenshots were needed; (3) noticed he'd now asked "is this GitHub tool something I need" twice
+in one session and asked for a tool so he can stop re-asking it.
+
+**Changes (docs/prompt only, no HUD change):**
+- `CLAUDE.md`: rewrote the hard rule at the Universal Listing Rules section — now names all three
+  approved engines (gpt-image-1 default, Gemini for cross-scene product consistency, Ideogram for
+  in-image text), routed through the existing `engine=`/`IMAGE_ENGINE` mechanism, explicitly bans
+  self-hosted generators (Stable Diffusion/ComfyUI/etc.) unless one demonstrably beats all three.
+  Also generalized the adjacent lifestyle-photo rule's "OpenAI images.edit" wording to the engine-
+  agnostic `edit_image()` function it actually calls.
+- MCP assessment (answered directly, no code): Tavily ≡ Frank's existing native `web_search` tool;
+  Firecrawl ≡ Frank's existing `browse_web` tool (`browser_agent.get_page_text`); Notion — no
+  existing usage, situational only if Scott already runs a personal Notion workspace.
+- New `data/knowledge_base/ceo_operating_playbook.md` section 14 "Tool & MCP Fit-Check Protocol" —
+  teaches Frank the exact process just run manually: check the new evaluations log first, web_search
+  if unfamiliar, cross-check for an existing equivalent, give a plain verdict, log it.
+- New `data/knowledge_base/tool_evaluations.md` — ops_runbook-style log, seeded with today's two
+  real verdicts (the 5 SD/FLUX repos; the 3 MCP servers).
+- One-line pointer added to `_CEO_SYSTEM`'s "WHEN YOU DON'T KNOW SOMETHING" list (main.py ~1506)
+  so Frank consults this unprompted — Scott can now ask this class of question straight from the
+  phone chat, no coding session needed.
+
+**Verify:** py_compile + smoke green (v113). Confirmed `_kb_docs()` (glob-based, no code change
+needed) already lists `tool_evaluations.md` — 13 docs total, up from 12. Confirmed the stale "no
+other image software unless... OpenAI" phrasing is gone and the new multi-engine rule text is in
+place. Known follow-up (not done, out of scope for this change): the deeper "STANDARD LIFESTYLE
+METHOD" section further down CLAUDE.md still uses OpenAI-specific example language in its prose —
+functionally fine since gpt-image-1 stays the default engine, but could be generalized later.
+
+---
+
+## 2026-07-03 — Self-service password reset, sign-in escape hatch, tester login, gpt-image-2 (v113)
+
+**What:** Four requests: (1) reset-password in Settings, (2) an "already have a login" way to
+skip the setup screen, (3) a default tester login, (4) support the gpt-image-1 successor.
+
+**1. Self-service change-password.** New `POST /api/me/change-password` (session-identified via
+`_get_session_user`, verifies current password with `_verify_password` before allowing a change,
+min 8 chars, reuses the same all-sessions-invalidated pattern as the existing owner-only admin
+reset endpoint). New "Password" card in Settings → My Account. Previously only the OWNER could
+reset an admin's password (and had no way to reset their OWN); this closes that gap for anyone
+logged in.
+
+**2. Setup-screen sign-in escape hatch.** Root cause of "I keep seeing the create-account screen":
+storage is still ephemeral (confirmed via the persist-warning banner), so `hub_users_empty()` is
+true on every restart. The REAL fix is setting `FRANK_USERNAME`/`FRANK_PASSWORD` in Railway —
+`_seed_owner_if_empty()` already auto-recreates that exact account on every restart when those are
+set (this existed already; just wasn't being used). Also added, as the literal UI ask: an "Already
+have an account? Sign in instead" link on the setup page (`mode=signin` query param forces the
+plain sign-in form even while the table is empty) and fixed a real bug this exposed — any
+login-form POST while the table was empty used to fall into the setup/account-creation branch and
+fail with a confusing "Passwords do not match" (confirm_password arrives blank from that form). Now
+gated strictly on the `setup_mode=1` hidden field; an empty-table sign-in attempt gets a plain "No
+account exists yet" message and stays on the sign-in form instead of bouncing back to setup.
+
+**3. Default tester login.** `_seed_test_user_if_missing()` (mirrors `_seed_owner_if_empty`),
+called at startup: username `tester` (override `TEST_LOGIN_USERNAME`), password default
+`TesterOnly!2026` (override `TEST_LOGIN_PASSWORD`; set to `""` to disable entirely), role=`admin`
+(idempotent — never resets an already-changed password on restart). **Security note, flagged to
+Scott directly**: there is no restricted/read-only role in this system — `admin` has full API
+access identical to the owner — so this account is full-access, not a sandboxed viewer. Rotate
+`TEST_LOGIN_PASSWORD` (or disable it) before this deploy is meant to be hardened.
+
+**4. gpt-image-2 support.** Verified via live web search (not guessed): gpt-image-1 shuts down
+2026-10-23 per OpenAI's own deprecations page; gpt-image-2 (shipped 2026-04-21) is the confirmed
+successor, same REST endpoints/response shape. Added as a 4th engine in `tools/image_gen.py`
+(`_OPENAI_COMPATIBLE_ENGINES`, `_openai_model_for()`) — **critically, gpt-image-2 does NOT support
+`background="transparent"`** (verified against OpenAI's docs), so `generate_image()` now raises a
+clear `ImageGenError` if you try that combination, same pattern as the existing gemini/ideogram
+guard. Confirmed zero live risk: grepped the whole repo and no call site currently uses
+`background="transparent"` — the sticker pipeline already does its own PIL-based background
+removal post-generation (`process_sticker_sheets.py`), not the API parameter. Also omits
+`input_fidelity` on gpt-image-2 edits (the API doesn't accept overriding it — every input is
+processed at high fidelity automatically). Added to `_IMAGE_ENGINES` tuple, a new Settings
+capability pill, the Settings dropdown, and CLAUDE.md's image-engine rule.
+
+**Verify:** py_compile + smoke green (v113 — no HUD rebuild needed for the image-engine backend
+work, though the auth/UI changes are in frank_hud_mockup.py too). Login-flow: 17/17 checks against
+a real FastAPI TestClient on a throwaway sqlite DB (never touched the live one) — setup page, the
+sign-in escape hatch, the corrected no-account error, real account creation, normal login,
+self-service password change including wrong-current-password rejection and session invalidation.
+Tester-login: seeds correctly, idempotent across a simulated restart (doesn't clobber a
+Scott-changed password). Engine dispatch: 7/7 checks — model resolution, routing, the transparency
+guard raising cleanly for gpt-image-2, and confirmation the existing openai+transparent sticker
+path is untouched.
+
+**Not done (flagged, not silently skipped):** Scott also asked me to fix the infra issues visible
+in his phone Today tab (Relay disconnected, 3 loops in error state, Etsy drafts/active-listings
+load failures) — that's a separate, real diagnostic task queued next, not yet investigated.
+
+---
+
+## 2026-07-03 — Diagnosed: Relay disconnected + 3 loops in error state + Etsy load failures
+
+**What Scott saw (phone Today tab):** "Couldn't load drafts", "Couldn't load active listings",
+"Relay disconnected", and Health Check / Snapshot / Suggestion Warmer all in an error state.
+Investigated each with live calls against the real environment — not guessed.
+
+**Root cause 1 of 2 — Etsy app credentials are being rejected (confirmed live):**
+`_listings_sync("draft")` and `_listings_sync("active")` both fail right now with
+`EtsyAPIError: Etsy API 403: API key not found or not active, or incorrect shared secret for API key.`
+This is a DIFFERENT problem from an expired OAuth token (401) — it's Etsy rejecting the app's own
+`ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` pair. Correlates directly with the still-pending task
+"Rotate leaked Etsy + Anthropic credentials (Scott action)" — if these were rotated/revoked on
+Etsy's side after being flagged as leaked, this exact symptom follows. **Fix requires Scott**: open
+the Etsy Developer Console (etsy.com/developers/your-apps) → the app → copy the current keystring
++ shared secret (behind a reveal icon) → update `ETSY_CLIENT_ID`/`ETSY_CLIENT_SECRET` in Railway's
+env vars (and local `.env`) → redeploy. Running `etsy_oauth.py` will NOT fix this — that only
+refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+**Root cause 2 of 2 — Anthropic billing/key unavailable (already known, confirmed again):** every
+startup log this session shows `ANTHROPIC=False`. `_warm_suggestions()` explicitly checks for this
+and reports "error: ANTHROPIC_API_KEY not set" by design — not a bug, working as intended.
+
+**How these 2 root causes explain all 4 symptoms — not 4 separate bugs:**
+- "Couldn't load drafts/active listings" → directly root cause 1.
+- "Loop 'Health Check' error" → `_health_check_iteration` checks both Etsy AND Anthropic every 5
+  min; correctly reports error because both are genuinely down. Working as designed (the alarm).
+- "Loop 'Snapshot' error" → `_take_snapshot()` calls `_listings_sync("active")`, same root cause 1.
+- "Loop 'Suggestion Warmer' error" → root cause 2, by explicit design.
+- "Relay disconnected" → SEPARATE, unrelated to both above. `_relay_ws` is a purely in-memory
+  server-side WebSocket handle (main.py:946) — it resets to None on every server restart (this
+  server has redeployed 9 times in this session alone, v106→v114). The relay CLIENT
+  (`tools/relay/frank_relay.py`) already has correct auto-reconnect logic with backoff
+  (confirmed by reading it — a `while True` loop, not a one-shot connect). This means either (a)
+  it hasn't reconnected yet since the last redeploy (transient, self-heals), or (b) Scott's local
+  relay process isn't currently running on his machine. Nothing to fix in code — check whether the
+  relay process is running locally.
+
+**What I actually fixed (the diagnosable part):** `_classify_known_failure()` had no branch for
+this specific 403 — a generic Etsy 403 is deliberately NOT treated as a circuit-breaker-tripping
+service outage (see the 2026-06 entry on 403 removed from `_BREAKER_TRIP_STATUSES`), so this exact
+credential-rejection case was falling through to a generic Tier-3 "unconfirmed hypothesis" report
+instead of a precise diagnosis. Added a new `etsy_app_credentials_invalid` category (matched on the
+literal Etsy error text: "api key not found" / "incorrect shared secret") with the specific,
+correct remediation above — distinct from `etsy_auth` (401, expired token, run etsy_oauth.py).
+Wired into both the Action Center cards ("Couldn't load drafts/active listings" now shows this
+exact remediation instead of the generic "check /api/ping" hint Scott was looking at) and the
+Health Check loop's automatic ops_runbook escalation, so this self-documents correctly if it
+recurs.
+
+**Verify:** py_compile + smoke green. Confirmed live against the real (currently broken) Etsy
+credentials: the classifier now returns `etsy_app_credentials_invalid` and the Action Center card
+Scott would see right now shows the specific Developer-Console remediation, word for word. 3/3
+regression checks (unrelated 403 not misclassified, exact known message classifies correctly, 401
+still classifies as the pre-existing `etsy_auth` category, unchanged).
+
+**Not fixed (cannot be, from code):** the Etsy credentials themselves, Anthropic billing, and
+whether Scott's local relay process is running — all three require Scott's direct action, not a
+code change. Told him plainly rather than implying more was fixed than actually was.
+
+---
+
+## 2026-07-08 — Security + WCAG 2.2 AA accessibility hardening (pre-launch batch, v115)
+
+Scott asked for a full pre-launch security review ("no security holes," "anti-hacker") plus ADA/
+accessibility compliance ahead of taking Frank live. Two full audits were run (security: `main.py`/
+`db.py`/`etsy_api.py`/CI config; accessibility: `frank_hud_mockup.py` + login/setup pages against
+WCAG 2.2 AA). Scott approved doing the security criticals and accessibility blockers together as
+one batch, plus a same-day addition (item 11) prompted by Scott's own real lockout.
+
+**Security fixes shipped:**
+1. **Always-on tester account disabled by default.** `_seed_test_user_if_missing()` previously
+   seeded a full-admin `tester`/`TesterOnly!2026` account on every boot unconditionally (a decision
+   made earlier the same day, before go-live raised the stakes). Now opt-in only, gated on
+   `ENABLE_TEST_LOGIN=true` — mirrors the existing `_seed_owner_if_empty` pattern. Reversing my own
+   earlier call, logged here rather than silently changed.
+2. **`GET /api/etsy-tokens` locked to the owner.** Previously any authenticated admin (including
+   the tester account) could read live Etsy access + refresh tokens via `_auth_session_or_bearer`.
+   Added `_require_owner_or_automation()` — a new helper that still allows the existing bearer-token
+   CI automation path through unchanged, but requires the session caller to be the owner role.
+3. **8-char minimum password enforced everywhere.** `admin_create_user` and `admin_reset_password`
+   only checked non-empty; `login_submit`/`change_my_password` already enforced `len(pw) >= 8`.
+   Brought the two admin routes in line with the existing rule instead of reinventing it.
+4. **`GET /logout` no longer logs out.** A bare state-changing GET is a forced-logout CSRF surface.
+   The GET route now just redirects to `/login`; the real logout is the existing `POST /logout`,
+   which the operator-chip UI already used.
+
+**Accessibility fixes shipped (WCAG 2.2 AA):**
+5. **Keyboard-accessible sidebar nav (2.1.1 blocker).** All 19 `.nav-item` divs were mouse-only —
+   no way to reach or activate them from a keyboard. Added `role="button" tabindex="0"` to each,
+   plus one generic `keydown` handler (Enter/Space → `.click()` on any `[role="button"]`) that
+   incidentally also fixed the same dead-keyboard problem on the phone "needs attention" cards and
+   quick-reply chips, which already had the ARIA role but no activation handler at all.
+6. **Zoom no longer blocked.** Removed `user-scalable=no, maximum-scale=1` from the viewport meta
+   tag; `fitStage()` now tracks `devicePixelRatio` and only re-fits on a genuine resize, not on a
+   deliberate pinch-zoom.
+7. **Real heading elements added.** The HUD had zero `<h1>`–`<h3>` anywhere (pure divs styled to
+   look like headings) — a screen-reader user had no page structure to navigate by. Added a real
+   `<h1>` for the app title and `<h2>` for each of the 5 sidebar nav sections, with a CSS reset so
+   layout didn't shift.
+8. **Icon-only buttons labeled.** ⬡ (orb), 🔔 (alerts), ⚙ (settings), and the operator chip had no
+   accessible name. Added `role="button" tabindex="0" aria-label="..."`; the alert bell also got
+   `aria-haspopup`/`aria-expanded`, kept in sync with the existing dropdown toggle.
+9. **26 form inputs given real `<label for=>` pairs** across My Account, Password, and Add Admin —
+   copied the exact pattern `_LOGIN_PAGE` already used correctly.
+10. **Contrast fixed.** `--muted` failed the 4.5:1 minimum in 4 of 8 color themes (default,
+    purple, charcoal, kawaii); the login/setup page's field-label color also failed. Corrected the
+    hex values and verified the actual computed contrast ratio with a script — not eyeballed.
+
+**11. Added mid-batch — no-email "Forgot password?" recovery-code flow.** Prompted directly by
+Scott getting locked out of Frank the same day with no way back in. New DB column
+`hub_users.recovery_code_hash`. A one-time recovery code (`XXXX-XXXX-XXXX`) is generated and shown
+exactly once — at account creation (both the owner-setup flow and Add Admin) — hashed with the same
+PBKDF2 scheme as the password itself, never stored or logged in plaintext. `/forgot-password`
+(new page + POST route) verifies the code against the hash, enforces the same 8-char minimum,
+updates the password, and invalidates all of that user's existing sessions. Reuses the existing
+login rate-limiter so this can't be brute-forced either. Login page now links to it.
+
+**Explicitly deferred (real findings, not silently dropped — larger/architectural, tracked for a
+follow-up batch):** the single shared `APP_SECRET_TOKEN` blast radius (one token = all bearer
+automation), admin==owner role redesign, an SSRF deny-list on `render_page`/`screenshot_url`,
+rate limiting beyond `/login`, remaining MODERATE/MINOR accessibility items (`aria-live` on
+toasts/errors, image alt text, `prefers-reduced-motion`, a few remaining focus-visible gaps,
+per-screen heading coverage beyond the header/nav sections, all-px font sizing), and a dependency
+version bump.
+
+**Verify:** py_compile all 3 touched files (`main.py`, `frank_hud_mockup.py`, `db.py`) green.
+3 independent test scripts, all passing in full:
+- Login-flow regression (17 checks) — setup, sign-in, empty-table messaging, self-service
+  change-password, session invalidation on password change.
+- Recovery-code lifecycle (17 checks) — code shown once at creation, wrong code rejected, correct
+  code resets the password and invalidates the old session, cross-account isolation (scott's code
+  cannot reset jane's password), Add Admin's own generated code also works.
+- Real Playwright keyboard-only navigation (20 checks) — Tab+focus+Enter/Space actually switches
+  screens (not just markup inspection), `aria-current` moves correctly, icon buttons focusable with
+  labels, viewport meta no longer blocks zoom, real `<h1>`/5×`<h2>` present, nav/main landmarks
+  present, spot-checked labels resolve on the Settings screen.
+`tests/smoke_test.py` still green (36 agent tools registered, dispatcher routing pinned).
+`_BUILD_ID` bumped v114 → v115.
+
+**Not fixed (by design, per the approved plan — not gaps I missed):** the deferred architectural
+items above. Existing accounts created before this shipped have no recovery code on file — expected;
+the next account created (Scott's, since his account resets on every Railway restart with no
+`/data` volume attached) gets one automatically.
+
+---
+
+## 2026-07-08 — Custom "Brand Mark" orb: upload a logo, same glow/rotation/audio-reactive treatment (v116)
+
+Scott wants the HUD orb (the animated Canvas 2D particle-sphere he taps to talk to Frank) replaced
+with his own S+J monogram (Scott + Jessee), rendered with the *same visual treatment* the sphere
+already has, not a plain image swap — and wants this reusable from Settings so he can change the
+brand mark again later without a code change.
+
+**How the default orb works (unchanged):** `canvas#orb`'s `frame()` loop rotates a 234-point
+lat/lon sphere around the vertical axis, projects it with a simple perspective divide, connects
+grid-neighbor points into a wireframe mesh, and reacts to Frank's TTS amplitude (`speaking`) with
+extra glow/jitter. Colors are fixed cyan, not theme-reactive (unchanged, out of scope).
+
+**What shipped:**
+1. **`POST /api/settings/brand-mark`** (main.py) — raw-body image upload, same convention as the
+   existing `/api/relay/upload` and `/api/studio/upload-image` routes (browser sends the raw `File`
+   as the fetch body, server reads `request.body()`). Validates with PIL (`Image.open` failure →
+   400), converts to RGBA, downsizes to ≤320px on the long side (`Image.thumbnail`, matches the
+   orb's own coordinate scale), re-encodes as PNG (keeps alpha for the particle sampler), stores as
+   a `data:image/png;base64,...` string via the existing runtime-settings store
+   (`db.get_setting`/`set_setting` — same mechanism already backing `agent_name`/`image_engine`,
+   not a new persistence tier). Capped at 8MB raw (tighter than the blanket 30MB upload cap, since
+   this becomes a DB text blob, not a disk file). `_effective_settings()` now returns
+   `brand_mark_data_url`; clearing it goes through the existing `POST /api/settings` payload
+   handler (`brand_mark_data_url: null`) — no separate delete route.
+2. **Settings → Branding → "Orb / Brand Mark" card** (frank_hud_mockup.py) — preview thumbnail,
+   file input, Upload + "Reset to default orb" buttons. Upload JS mirrors `studioUploadImages()`
+   (raw `File` object as the fetch body, browser sets `Content-Type` natively).
+3. **Image → particle-cloud generator swap** (the actual "same treatment, new shape" part): the
+   sphere's rotation math (`x = x0·cos(rot) − z0·sin(rot); z = x0·sin(rot) + z0·cos(rot); y = y0`)
+   only rotates a point cloud around the vertical axis — it doesn't care if the cloud is a sphere or
+   a flat shape with a little depth. So `applyBrandMarkToOrb(dataUrl)` draws the uploaded image to
+   an offscreen 64×64 sampling canvas, keeps cells above an alpha threshold (falls back to a
+   luminance threshold for images with no alpha channel — flagged to Scott: transparent PNG gives
+   the cleanest result), assigns each kept cell a small synthetic radial-bump depth (a **simulated**
+   "layered" feel, not a real reconstruction of the source art's actual layers — said plainly, not
+   oversold), and connects grid neighbors into the same kind of mesh the sphere already draws.
+   Total particles are capped at 800 via an adaptive stride so a dense/solid logo can't blow up the
+   frame budget. `frame()`'s glow, dot-drawing, radial gradient core, and the entire
+   `speaking`/amplitude audio-reactive block are **completely untouched** — only the point-source
+   generator and the per-particle position formula are mode-switched (`orbMode: 'sphere'|'image'`).
+   No brand mark set (default, or image decode fails) → the original sphere renders exactly as
+   before; zero behavior change for the unconfigured case.
+
+**Auth note:** the upload route uses the same `_auth_session_or_bearer` level every other
+`/api/settings` field already uses (not owner-only) — a judgment call flagged in the plan, not a
+silent decision; Scott can ask for owner-only if he'd rather restrict it.
+
+**Verify:** py_compile both files clean. Node `--check` on the actual rendered `<script>` block
+(pulled through `render_frank_hud()`, not the raw Python source, to sidestep Python-level string
+escaping) — real JS syntax validation, not just Python compiling around an opaque string. A
+standalone Node run of the particle-sampling/stride/rotation math against synthetic dense-fill,
+thin-ring, and blank-image cases confirmed the 800-particle cap holds, sparse shapes still produce
+a readable point count, blank images bail cleanly, and the rotation formula preserves vector
+magnitude. TestClient suite (12 checks): upload → PNG round-trips through the data URL and decodes
+back to a real image ≤320px; `GET /api/settings` reflects it; clearing works; non-image bytes → 400;
+empty body → 400; 9MB body → 413; unauthenticated upload → 401. Real Playwright run (17 checks, not
+markup inspection): default orb starts in sphere mode with the original 234 particles and renders
+non-blank pixels; `applyBrandMarkToOrb()` on an in-page-drawn ring shape flips `orbMode` to
+`'image'`, produces a differently-sized particle cloud, and the canvas keeps rendering non-blank
+pixels; `resetOrbToDefault()` restores the exact original sphere; the new Settings controls exist
+and are wired. Re-ran the login-flow (17), recovery-code (17), and keyboard-nav (20) regression
+suites from the prior batch — all still green, no interference from these changes.
+`_BUILD_ID` bumped v115 → v116.
+
+**Not yet done:** Scott's actual S+J logo file isn't in this repo and was never sourced by me — the
+pipeline is built generically; he uploads his real artwork through the new Settings control once
+this deploys, and that's the point where the visual result becomes his call, not something I can
+verify blind.
+
+---
+
+## 2026-07-08 — Brand-mark orb rendered as a solid block instead of the logo shape (v117)
+
+**Symptom:** Scott shared his real logo (SJ Layered Design, a 1091×1119 flat JPEG, no alpha
+channel) to test the brand-mark orb feature (v116) before uploading it live. Running it through
+the actual particle-sampling code produced a solid rectangular wall of dots — not remotely the
+logo's shape — instead of the clean silhouette a manual pixel-mask dump of the same image showed
+was achievable.
+
+**Root cause (two stacked bugs, found by screenshotting the actual orb render, not just unit-
+testing the math):**
+1. `applyBrandMarkToOrb`'s `hasAlpha` check scanned the *entire* 64×64 sampling grid for any
+   pixel with alpha < 250. The logo (312×320 after the server's resize, not a perfect square)
+   centered inside the square sampling canvas leaves a razor-thin (~0.8px) transparent letterbox
+   margin — enough to flip `hasAlpha` true even though the source has no real transparency. Once
+   `hasAlpha` was (wrongly) true, the code used the alpha-threshold path, which treats the entire
+   *opaque* image — including its white background — as "part of the mark," since a flat JPEG
+   converted to RGBA has alpha=255 everywhere except that hairline margin.
+2. Once alpha-based detection was fixed to only scan an inset interior region (skipping the outer
+   `~6%` margin, so the letterbox strip can't trigger it), a second, related bug surfaced: the
+   luminance fallback path (`(r+g+b)/3 < 235`) doesn't check alpha at all. An unpainted canvas
+   pixel defaults to `rgba(0,0,0,0)` — fully transparent, but reads as pure *black* if you only
+   look at RGB — so the same letterbox margin was still being counted as "dark ink" by the
+   luminance path, producing a border frame of stray dots around the shape.
+
+**Fix (`frank_hud_mockup.py`, `applyBrandMarkToOrb`):** `hasAlpha` detection now only scans an
+inset region (`Math.max(2, round(GRID*0.06))` px in from each edge). Both the alpha-path and the
+luminance-fallback-path `isMark` checks now require `alpha > 40` first — a fully-transparent pixel
+is never "ink," regardless of which detection branch is active.
+
+**Verify:** re-ran the actual uploaded logo through the pipeline end-to-end after each fix
+attempt (not just re-running the existing unit tests, which had already passed on a synthetic
+ring shape that happened not to trigger this) — captured real Playwright screenshots of the orb
+canvas at each step. First fix alone still showed a border-framed block; the RGB-of-transparent-
+pixels issue was caught by the same visual check on the next screenshot, not by any assertion.
+After both fixes: the SJ monogram and "LAYERED DESIGN" wordmark render as a clean, legible
+particle cloud, rotating correctly and still reacting properly under `setSpeaking(true)`. Re-ran
+the full existing suite (login-flow, recovery-code, keyboard-nav, brand-mark backend, brand-mark
+orb — 83 checks total) — all still green. `_BUILD_ID` bumped v116 → v117.
+
+**Lesson logged plainly:** the original ship (v116) passed every automated check I wrote *and*
+still had two live-breaking bugs, because none of those checks rendered a real non-square opaque
+image and looked at the actual pixels — a synthetic test shape drawn directly on a canvas doesn't
+go through `img.onload`/`drawImage` letterboxing the same way a real uploaded photo does. Caught
+only because Scott sent his actual file before uploading it live and I ran it through the pipeline
+myself instead of asking him to test it blind.
+
+---
+
+## 2026-07-08 — Brand-mark orb: outline-only, not a filled blob (v118)
+
+After seeing a real screenshot of v117 (his SJ Layered Design logo rendered as a rotating filled
+particle cloud), Scott's feedback: "Make the dots only outline the logo. Do not make the logo an
+orb." Confirmed via follow-up questions: full edge detection (not just the outer silhouette — the
+S/J letterforms should read as hollow outlines, not solid blobs), keep the existing 3D
+vertical-axis rotation (he explicitly wants the turn/tilt to stay, just not filled), and this only
+applies to uploaded logos — the default/unconfigured sphere is untouched.
+
+**Fix (`applyBrandMarkToOrb`, frank_hud_mockup.py):** added one pass between the existing
+alpha/luminance `keep` mask and the existing particle-build loop. A filled cell survives into the
+new `outline` mask only if at least one of its 4 grid-neighbors is NOT filled (out-of-bounds counts
+as not-filled, so the true outer edge registers too) — standard "boundary = region minus its own
+interior" extraction on the 64×64 boolean grid. Everything downstream (stride/800-particle cap,
+neighbor edge-list, `{x0,y0,z0}` assignment, the shared `frame()` rotation/glow/audio-reactive
+code) is unchanged — only which pixels become particles changed.
+
+**Verify:** re-ran the same real-logo Playwright screenshot check used to catch the v117 bugs — the
+S and J letterforms now render as hollow line-art instead of filled blobs, still rotating in 3D,
+still reacting correctly under `setSpeaking(true)`. Confirmed the default sphere is byte-for-byte
+unaffected (still exactly 234 particles / 432 edges). Re-ran the full existing regression suite
+(brand-mark backend, brand-mark orb, login-flow, recovery-code, keyboard-nav) — all green.
+`_BUILD_ID` bumped v117 → v118.
+
+---
+
+## 2026-07-08 — Brand-mark orb: much higher detail + two real bugs caught at the new resolution (v119)
+
+Scott: "I need an astronomical amount of more detail. I need to read the words. Make it bigger if
+needed" — the "LAYERED DESIGN" wordmark was illegible at v118's original 64×64 sampling grid.
+
+**Resolution bump (`applyBrandMarkToOrb` + the shared `frame()`/canvas, frank_hud_mockup.py):**
+canvas intrinsic size 300→640px (display 340px→`min(85vw,620px)`, responsive), `R` 108→230,
+perspective distance constant 320→683 (all scaled together ~2.13× so proportions hold), sampling
+`GRID` 64→240, `MAX_PARTICLES` 800→4000 so the finer grid doesn't get stride-downsampled back into
+blur, dot/line sizes tuned down slightly for crispness at the new density. Batched the edge-lines
+and dots into one `beginPath()`+one `stroke()`/`fill()` each per frame instead of one PER edge/dot —
+needed for the particle count increase to stay smooth, and speeds up the default sphere for free
+too since it's the same shared draw code.
+
+**Two real bugs found by screenshotting Scott's actual logo at the new resolution** — neither was
+caught by any prior unit test, same lesson as the v117 postmortem (synthetic test shapes don't
+exercise the same code paths a real uploaded photo does):
+1. **Row-wrap in the neighbor-edge search.** `idxLookup[gy*GRID+(gx+dx)]` had no `gx+dx<GRID`
+   bounds check. Since `idxLookup` is a flat 1D array with no row separator, walking off the right
+   edge of one row silently reads into the START of the next row instead of failing — occasionally
+   wiring a bogus long edge across the whole shape between two spatially unrelated points. Fixed by
+   adding the explicit bound to the loop condition. (The vertical/`dy` search didn't need the same
+   fix — reading past the end of the whole array returns `undefined` in JS, which already fails the
+   `>=0` check safely.)
+2. **Border-row image artifact.** A resize/JPEG edge artifact left faint "ink" along the literal
+   last pixel row of the source image. Because the outline rule treats out-of-bounds as "not ink"
+   (so the shape's true outer silhouette registers), that whole noisy border row trivially
+   qualified as "boundary" and rendered as a long stray diagonal line floating below the logo —
+   confirmed via a diagnostic dump showing ~15+ particles all sitting at exactly `y0=R` (the grid's
+   last row). Fixed by excluding the same `inset` margin already used for `hasAlpha` detection from
+   the `keep` mask entirely — real logo art has padding well inside that margin, so this costs
+   nothing for a normal upload.
+
+**Verify:** re-ran the real-logo Playwright screenshot check — the stray line is gone, "LAYERED"
+and "DESIGN" are both clearly legible, still rotating correctly. Confirmed the default
+(unconfigured) sphere is still byte-for-byte unaffected (234 particles / 432 edges). Re-ran the
+full existing regression suite (brand-mark backend/orb, login-flow, recovery-code, keyboard-nav) —
+all green. `_BUILD_ID` bumped v118 → v119.
+
+**Next (separate, in progress):** Scott then asked to make the orb "3-dimensional" — real depth,
+not just the flat plate with a subtle bump it has today. Clarified he wants to see actual rendered
+comparisons of two depth approaches (real extrusion vs. per-element color-layered depth) crossed
+with wireframe-only vs. faint-surface-fill before picking one to ship. Comparison variants are
+scratchpad-only until he chooses; nothing further ships until then.
+
+---
+
+## 2026-07-08 — Brand-mark orb: dense dot-grid + combined extrusion/color-layer depth (v120)
+
+Scott's follow-up after seeing the 3 comparison GIFs: "More dots and more 3D. I want a dot grid,"
+then confirmed via questions — fill the WHOLE shape (not just the outline), combine BOTH ideas
+(real front/back extrusion AND per-color depth layering) rather than picking one, and "just make
+it noticeably deeper." Then: "Keep trying. We need to be flawless. Act as a senior designer" — so
+this went through a real critique-and-iterate loop before shipping, not a single-shot render.
+
+**What shipped (`applyBrandMarkToOrb` + `frame()`, frank_hud_mockup.py):** particle source
+switched from the outline mask (v118/v119) to the FILLED mask, sampled at a regular grid stride —
+this is what makes it read as an actual dot-grid fill across solid letterform areas instead of
+hollow line-art. Every sampled cell gets a front point AND a back point (real extrusion, slab
+thickness `T_SLAB = R*0.7`), connected by front-to-front and back-to-back mesh edges plus sparse
+"strut" edges — but only along the TRUE outer silhouette (found via a flood-fill from the grid
+border through non-ink cells; a kept cell adjacent to the reached region is on the real edge, not
+an inner hole like inside an "S"), so interior ink stays two flat layers instead of every internal
+line growing a pointless vertical bar. On top of that, each particle gets a secondary depth offset
+from its own pixel's hue (`colorZOffset` — up to ~4 hue bands, low-saturation/dark pixels sit at
+the base depth) so differently-colored parts of the logo genuinely separate from each other as it
+rotates, not just front from back — the two depth ideas combined, not chosen between.
+
+**Senior-designer critique pass — two real problems found and fixed, not shipped on the first
+render:**
+1. **Back layer as bright as the front.** At full density with the naive first pass, the back
+   face's dots (not just its edges) rendered at the same opacity as the front — off-angle/edge-on
+   rotation looked like two unrelated overlapping copies of the logo instead of one solid object
+   with a near side and a far side. Fixed by dimming the back-face dot fill to match the back-edge
+   dimming that already existed.
+2. **Performance.** Sampling every filled cell (front+back, ~4,748 particles per face) measured
+   ~26fps in a worst-case headless/no-GPU render — too heavy to run continuously, especially on a
+   phone. Root-caused to `ctx.shadowBlur`: disabling it entirely nearly doubled the frame rate, and
+   the cost turned out to be roughly binary (any nonzero blur radius cost almost as much as the
+   full radius) — so blur is now only applied to the front layer (the back is already dimmed and
+   doesn't need to glow as bright anyway) rather than reduced in strength. Density was also capped
+   via a diagonal-checkerboard half-thin (keep cells where `gx+gy` is even) rather than accepting
+   either "too sparse" or "too slow" — this measured a smooth ~57-60fps at ~20% MORE particles than
+   the previous outline-only version had, which is the actual trade a density/smoothness call
+   should make, not maximum literal dot count regardless of frame rate. Real per-device performance
+   should be better than this headless/no-GPU benchmark, not worse.
+
+**Verify:** re-ran the real-logo Playwright check after each fix — confirmed the S/J/wordmark stay
+legible, the depth reads as one coherent object across a full rotation cycle (checked 4 angles +
+speaking state, not just one flattering frame), and default (unconfigured) sphere orb is
+byte-for-byte unaffected (still exactly 234 particles / 432 edges — confirmed via `imgFront.length
+=== 0` before any upload and `particles.length` unchanged after one). Re-ran the full existing
+regression suite (brand-mark backend, login-flow, recovery-code, keyboard-nav) — all green.
+Measured 56.6fps on the actual shipped code (same worst-case headless environment).
+`_BUILD_ID` bumped v119 → v120.
+
+**Process note:** this session was interrupted mid-implementation by an explicit "stop for tonight"
+request; the half-finished edit (particle data built but the render loop not yet updated to draw
+it) was stashed rather than committed, since committing broken rendering code would have been
+worse than pausing. Resumed and finished cleanly once given the go-ahead to continue unattended.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — Orb rebuilt as a real Three.js/WebGL voice-reactive noise-sphere (v121)
+
+**What changed:** Scott sent a reference screenshot (a Three.js audio-visualizer tutorial) and
+asked for "something like this... a voice visualization, fluid when speaking" — a complete pivot
+away from the session's earlier SJ-logo bead-wireframe direction. The default ("sphere") orb mode
+is now a genuine WebGL scene: an `IcosahedronGeometry` wireframe whose vertices are displaced along
+their normals by a 3D simplex noise field in a custom vertex shader (GPU-side), with
+`UnrealBloomPass` for real bloom instead of Canvas2D's `shadowBlur` approximation. Three.js core +
+postprocessing (EffectComposer/RenderPass/ShaderPass/UnrealBloomPass/Pass/MaskPass +
+CopyShader/LuminosityHighPassShader) are vendored under `tools/api_server/static/vendor/three/`
+(no CDN — CSP is `script-src 'self'` only), same self-hosting pattern already used for
+onnxruntime-web/transformers.js/piper-tts-web. An importmap entry (`"three": ".../three.module.js"`)
+lets the vendored postprocessing files' internal `from 'three'` bare-specifier imports resolve.
+
+**Two-canvas split (a real architectural constraint, not a style choice):** a `<canvas>` can only
+ever hold one context type for its lifetime — `2d` and `webgl` are mutually exclusive on the same
+element. So a new `<canvas id="orb-gl">` was added, layered exactly on top of the existing
+`<canvas id="orb">` via CSS. `setOrbCanvasMode(mode)` toggles which one is visible+actively
+rendering: `'sphere'` shows/runs `#orb-gl` (new WebGL scene) and hides/pauses `#orb`; `'image'`
+(the existing brand-mark/logo feature, shipped earlier this session) shows `#orb` exactly as
+before and hides/pauses `#orb-gl`. The old lat/lon-grid Canvas2D sphere generator
+(`buildSphereParticles`, ~30 lines) and its draw branch in `frame()` were removed as genuinely dead
+code (archived via `tools/trash.py`, ids `20260708-001`/`20260708-002`) rather than left
+unreachable — `frame()` now early-returns when `orbMode==='sphere'` since the WebGL canvas handles
+that mode entirely. Brand-mark/image mode itself (`applyBrandMarkToOrb`) is untouched.
+
+**Real audio reactivity, not simulated:** the orb-state label has claimed "reacting to live TTS
+amplitude" for a while, but the actual amplitude was 100% a synthetic dual-sine fake — no real
+audio analysis. Fixed: `_setupTtsAnalyser()` taps a fresh `AnalyserNode` onto the TTS `<audio>`
+element on every play (mirrors the existing mic-input analyser pattern used for silence detection),
+routed through to `audioCtx.destination` so playback isn't silenced. `currentVoiceAmp()` now reads
+real RMS amplitude off that analyser when available (covers both premium OpenAI TTS and local
+Piper — both play through the same `_playTtsBlob`), falling back to the old synthetic pulse only
+for the plain browser `speechSynthesis` fallback voice, which has no `MediaElementSource` to tap.
+This amplitude feeds both the new WebGL shader's `uAmp` uniform (displacement magnitude + noise
+flow speed + color shift) and the existing 2D image-mode wobble, so both orb modes are consistently
+driven by the same real signal now.
+
+**Bugs caught during Playwright verification (fixed before shipping):**
+1. `orbGlCanvas.style.display = ''` didn't actually show the canvas — the CSS default for
+   `#orb-gl` is `display:none` (so it never flashes visible before JS decides the mode), and an
+   empty inline style just falls back to that default. Needed `'block'`, not `''`.
+2. Verified via real frame-diff proof (two `canvas.toDataURL()` captures 600ms apart, confirmed
+   non-identical) that the WebGL RAF loop is genuinely animating, not a static first frame.
+
+**Verify:** live Playwright run against a locally-started server (tester login) — zero console
+errors related to the vendored Three.js files (the only 4xx/5xx seen were pre-existing/unrelated:
+fake Etsy creds in the test env, owner-only `/api/etsy-tokens` correctly 403ing a non-owner tester).
+Confirmed `orbMode`/`orbGLReady`/`orbGLPaused` state transitions correctly in both directions
+(sphere→image via `applyBrandMarkToOrb`, image→sphere via `resetOrbToDefault`), confirmed the
+brand-mark/logo particle cloud still renders correctly and unaffected on `#orb` in image mode,
+confirmed the WebGL sphere visibly changes (brighter color + more turbulent displacement) when
+`speaking=true`. Screenshots sent to Scott match the reference tutorial's aesthetic closely.
+Node `--check` syntax-validated the extracted inline script (via the real Python module import, not
+a raw file read, since the source uses Python string escaping that only resolves correctly when
+actually parsed by Python). `py_compile` both touched files; `tests/smoke_test.py` green (36 agent
+tools registered, unaffected — this is a pure front-end/HUD change). `_BUILD_ID` bumped v120→v121.
+
+**Honest limits, not yet verified:** real mobile GPU performance/feel on Scott's actual iPhone is
+unverified here (headless Chromium + swiftshader software rendering only) — same class of
+device-dependent caveat as the Etsy-datacenter-IP browser limitation logged earlier. The
+`speechSynthesis`-fallback voice path (no premium TTS, no local Piper) still uses the synthetic
+amplitude pulse, stated plainly above rather than silently left as an unstated gap.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — WebGL orb "box cut off" — UnrealBloomPass alpha leak, fixed with a CSS mask (v122)
+
+**Symptom:** Scott tested the new voice-reactive noise-sphere orb (v121) on his actual iPhone and
+sent a screenshot: the sphere rendered inside a visible, hard-edged rectangle — a different shade
+than the surrounding page — instead of floating seamlessly like his reference image. Ask: "can it
+not float in the environment... look great and spectacular."
+
+**Root cause, found by actually reading the vendored source (not guessed):**
+1. First suspect: `WebGLRenderer({alpha:true})` doesn't default the clear alpha to transparent —
+   that option only lets the drawing buffer SUPPORT an alpha channel. Added
+   `glRenderer.setClearColor(0x000000, 0)` after creating the renderer — correct practice, but a
+   real pixel readback (via `gl.readPixels`, with `preserveDrawingBuffer` forced true so the read
+   wasn't sampling an already-cleared buffer — the first, unforced readback gave a false-positive
+   all-zero result) showed the canvas corner was STILL fully opaque (alpha 255) after this fix,
+   with a non-black RGB (`8,30,36`) baked in.
+2. Real cause: `UnrealBloomPass`'s composite/blend chain (`examples/jsm/postprocessing/
+   UnrealBloomPass.js:204-297`) does correctly force a transparent clear for its own passes, but
+   its blur kernels (`radius` was 0.85, close to the max of 1.0) spread a faint haze across the
+   ENTIRE render target, including the corners — clipped to the canvas's square bounds, this haze
+   reads as a visible rectangle once composited onto the page, worse at higher bloom intensity
+   (i.e. worse specifically in the "speaking" state, which boosts bloom). This is a known rough
+   edge with `UnrealBloomPass` + transparent backgrounds, not something worth patching inside the
+   vendored library.
+
+**Fix (two parts, `frank_hud_mockup.py`):**
+1. Kept the `setClearColor(0x000000, 0)` call (still correct, harmless).
+2. Added a CSS `mask-image`/`-webkit-mask-image: radial-gradient(...)` on `canvas#orb-gl` —
+   fades the CANVAS ELEMENT itself to invisible well before its true edges, independent of
+   whatever the WebGL layer's own alpha is doing. This is a page-compositing-level fix, so it's
+   guaranteed to work regardless of Three.js internals.
+3. Pulled `UnrealBloomPass`'s `radius` down from 0.85 to 0.45 — reduces how far the haze spreads
+   toward the corners in the first place, so the mask has less to hide (confirmed via screenshot:
+   first mask attempt at 82% outer radius still showed a faint rounded-box ghost specifically in
+   the brighter "speaking" state; tightening the mask to 64% outer radius + the lower bloom radius
+   together removed it completely at both idle and speaking intensity).
+
+**Verify:** live Playwright screenshots at idle, speaking (simulated), and brand-mark/image mode
+(regression check) — full-phone-width screenshots matching Scott's original framing, all three
+show the orb floating cleanly with no visible rectangle. `preserveDrawingBuffer`-forced pixel
+readback confirmed the underlying methodology issue (first check was a false pass); the CSS mask
+fix doesn't depend on that readback being correct, so it's robust regardless.
+`python -m py_compile` both files; `tests/smoke_test.py` green (unaffected, pure front-end
+change). `_BUILD_ID` bumped v121→v122.
+
+**Lesson for next time:** don't trust `gl.readPixels` outside the render loop unless
+`preserveDrawingBuffer:true` was set at context creation — it can silently read an
+already-cleared buffer and give a false "it's fine" result. And when compositing WebGL +
+post-processing (especially bloom) over a page background, a CSS mask on the canvas element is a
+more reliable transparency guarantee than chasing alpha through a post-processing library's
+internals.
+
+
+## 2026-07-08 — Orb waviness increased to match reference (v123)
+
+**Ask:** After the box-cutoff fix landed (v122), Scott sent a reference screenshot and said "I
+want the waviness that's in this orb" — the reference showed pronounced, large-scale lobes
+across the sphere's silhouette (a "crumpled ball" look with clear peaks and valleys), noticeably
+more dramatic than our shipped version, which read as gently fuzzy/round rather than genuinely
+lumpy.
+
+**Root cause:** the vertex shader (`_ORB_VERT`, `frank_hud_mockup.py`) sampled a single noise
+octave at `uFreq=1.6` with a small displacement range (`0.08 ± ~0.10`, roughly 8-15% of the
+sphere's 1.15 radius) — too subtle to read as "waviness," and a single octave can't produce both
+big lobes and fine surface detail at once anyway.
+
+**Fix:** switched to two noise octaves sampled from the same `snoise()` function at different
+spatial frequencies/time speeds:
+- `nBig` at `uFreq * 0.42` (low frequency → a handful of large, graceful lobes — the actual
+  "waviness" of the silhouette)
+- `nFine` at `uFreq * 2.2` (higher frequency → the fine wireframe surface crinkle, preserved from
+  before)
+- Displacement: `0.20 + nBig*(0.42 + uAmp*0.32) + nFine*(0.08 + uAmp*0.10)` — roughly 3-4x the
+  previous amplitude range, so the silhouette now visibly deviates from a sphere into distinct
+  lobes rather than just a soft fuzzy ball.
+
+**Verify:** live Playwright screenshots at idle and speaking states — both show pronounced,
+reference-matching lobes; confirmed the v122 box-fix (CSS mask + pulled-back bloom radius) still
+holds with the larger displacement (no box reappeared even with geometry now extending further
+from center). Confirmed brand-mark/image mode unaffected (untouched code path, orbMode/canvas
+toggle checked directly). `py_compile` both files; `tests/smoke_test.py` green.
+`_BUILD_ID` bumped v122→v123.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — New Studio tool: SVG Converter (photo → vector) (v124)
+
+**Ask:** Scott wanted an "SVG file converter" in Studio with a drag-and-drop zone for reference
+photos, usable for every digital product line, well organized for any user.
+
+**Discovery before building anything:** this tool already existed — twice — in code that was
+never deployed. `command_center.py` (a standalone Flask app, not referenced in Dockerfile/
+railway.toml) had a `/svg` page + `/api/convert-svg` route titled "SVG Converter," almost
+word-for-word matching Scott's ask, with tuned `vtracer` parameter sets for 3 modes (color/bw/
+silhouette). `town_app/server.py` had a second, independent implementation of the same idea.
+Neither is live. Rather than re-deriving the parameter tuning from scratch, it was ported into a
+new module that IS wired into the deployed app. `vtracer` was already a pinned dependency in the
+root `requirements.txt` (installed via `Dockerfile`), so this shipped with zero new dependencies.
+
+**The real tension, handled honestly:** CLAUDE.md hard-requires 3D-print SVG packs (SS-series) to
+be clean vectors — `validate_digital_file()` rejects >20 unique fill colors, >200 path elements,
+or (combined with either) >150 KB, because a traced photo produces 500+ colors/600-900 paths and
+can't be color-separated for AMS printing. A naive photo-trace tool would silently hand Scott
+files that fail this gate. Fixed by extracting the exact threshold logic already used to gate real
+ZIP uploads (`_validate_svgs_in_zip` in `tools/etsy_api.py`) into a standalone
+`check_svg_quality(svg_text)` helper, called on every conversion — the UI shows a real pass/fail
+with actual numbers immediately, using the literal same code that gates real uploads, not a
+second copy of the thresholds that could drift.
+
+**What shipped:**
+- `tools/svg_converter.py` (new) — `convert_to_svg(image_bytes, mode)`, 3 modes (color/bw/
+  silhouette), ported from `command_center.py`'s proven parameter tuning.
+- `tools/etsy_api.py` — extracted `check_svg_quality()` from inside `_validate_svgs_in_zip()`
+  (behavior-identical refactor, verified with a before/after regression test — same errors on the
+  same test ZIP).
+- `tools/api_server/main.py` — `POST /api/studio/convert-svg?mode=...` (raw-body upload, same
+  convention as `/api/studio/upload-image`), new `_FILE_ROOTS["svg_conversions"]` (served for free
+  through the existing generic `/api/files/download` route — no new download route needed).
+- `tools/api_server/frank_hud_mockup.py` — new "SVG Converter" card in the Studio screen: a real
+  drag-and-drop zone (first one in this codebase — no prior drop-zone pattern existed, confirmed
+  via grep), a "What's this for?" selector (3D-Print Sign / Wall Art / Sticker Pack Source Art /
+  Planner Cover Art / Just give me an SVG) that picks a sensible default mode and shows one honest
+  line of guidance per product line — most lines are pure raster and don't need a vector file at
+  all, and the tool says so rather than pretending otherwise. Mode override always available.
+  Result panel: inline SVG preview, download link, and the real pass/fail quality readout for the
+  3D-print case.
+
+**Verify:** unit-tested `convert_to_svg()` (all 3 modes produce valid SVG from a test image) and
+`check_svg_quality()` (correctly distinguishes a clean 2-fill SVG from a 300-fill/300-path one);
+regression-tested `_validate_svgs_in_zip()` post-refactor against the same clean/dirty test ZIP —
+identical error output before and after. Live Playwright check against the actual Studio screen:
+confirmed all 5 target-selector options correctly set mode + hint text, uploaded a real test image
+through the file-input path, confirmed the SVG preview rendered, confirmed the quality readout
+showed real numbers ("1 colors, 1 paths, 2KB — passes the gate" for a simple silhouette trace).
+`tests/smoke_test.py` green (36 tools, unaffected — Studio UI feature, not an agent tool).
+`_BUILD_ID` bumped v123→v124.
+
+**Not touched:** `command_center.py`/`town_app/` stay as-is (dead, undeployed) — only referenced
+as the source for the parameter tuning ported into `tools/svg_converter.py`.
+
+
+## 2026-07-08 — Found + fixed a systemic import bug: `from tools.X import Y` breaks in real production (v125)
+
+**How this was found:** while wiring the new SVG Converter's backend route, I used
+`from tools import svg_converter` / `from tools.etsy_api import check_svg_quality` — these
+worked in every local test I ran, because my own ad-hoc verification (`python3 -c "..."` and a
+custom `run_server.py` test harness) always added the repo root to `sys.path` one way or
+another. Real production does not: `main.py` is launched as `python tools/api_server/main.py`
+from `WORKDIR /app`, which puts only the *script's own directory* (`tools/api_server`) on
+`sys.path` automatically, plus one explicit `sys.path.insert(0, str(ROOT/"tools"))` — the repo
+root itself is never added. `from tools.X import Y` requires `tools` to be importable as a
+*package*, which requires the repo root on `sys.path` — so it raises `ModuleNotFoundError: No
+module named 'tools'` the instant it actually runs in production, even though it imports fine
+in a dev shell where cwd happens to be the repo root.
+
+**Scope — this wasn't just my new code.** Grepping for the same pattern turned up **8 more
+pre-existing instances**, all deferred (lazy) imports inside function bodies, meaning
+`tests/smoke_test.py`'s existing `import main` check (which explicitly exists to catch import
+bugs, per its own docstring — it already caught one *top-level* instance of this exact mistake
+once before) could never catch these, since a lazy import only fires when that specific
+function is actually called, and the smoke test never calls into route handlers or triggers
+background loops. Confirmed broken in real production right now:
+- `browse_web`, `search_etsy`, `check_listing_quality` — 3 of Frank's core **agent tools**,
+  meaning Frank has been unable to actually search Etsy, browse the web, or QC a listing during
+  a live chat turn this entire time; every call would have raised an exception.
+- The daily 6am UTC **Daily Brief** loop and its manual-trigger route — has likely never
+  successfully run; the loop catches the exception and logs an error heartbeat rather than
+  crashing, so this failed silently with no visible symptom beyond "Daily Brief" always showing
+  an error state.
+- **Reject-fix photo regeneration** (`_refix_listing_photo`) — rejecting a staged listing photo
+  with a reason and asking for a redo would have 500'd instead of regenerating.
+- **`DELETE /api/relay/allowed-folders/{id}`** and **`DELETE /api/todos/{id}`** — both crash
+  before deleting, because the archive-before-delete call (the hard "nothing we delete should be
+  unrecoverable" rule) is unreachable code today. Deleting a todo or an allowed-folder entry via
+  the dashboard has been completely broken.
+- The daily `tools/trash.py` prune cron (expires 30-day-old trash entries) — silently failing
+  every day (caught + logged, same failure mode as Daily Brief).
+
+**Fix:** converted all 9 sites (+ my own 2 new ones) from `from tools.X import Y` to bare
+`import X` then `X.Y(...)` — the correct form, since `tools/` is already directly on
+`sys.path` and `X` resolves as a top-level module there (this is the same pattern already used
+correctly elsewhere in the file, e.g. `import etsy_api`, `import video_understanding as
+_video_understanding`).
+
+**Regression-proofed, not just patched:** added a new check to `tests/smoke_test.py` (#7) that
+scans `main.py`'s raw source text for the `from tools\.` pattern and fails the build if it finds
+any — a cheap, mechanical, file-wide check that catches this exact bug class regardless of
+whether the bad import is at module top level or buried in a function body, closing the gap that
+let 9 instances ship unnoticed. Verified: (a) the check currently passes (zero matches after the
+fix), (b) reverting any one of the 9 fixes makes it fail, (c) directly re-imported all 9 affected
+modules under a sys.path deliberately restricted to match real production exactly (no repo root)
+— all resolve cleanly now, where they previously would have raised `ModuleNotFoundError`.
+
+Shipped standalone, ahead of the (separate, still-in-progress) lifestyle-photo-generator Studio
+feature — a fix this severe shouldn't wait on an unrelated feature build. `_BUILD_ID` bumped.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — Automated quality audit — 172 listing(s) failing
+Daily listing_integrity_check found 172 FAIL / 0 WARN out of 172 listings audited. Details:
+[4488477854] P3D_CRYSTAL_GLOW_LAMP — 
+  Type: 3d_print_physical | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 403: API key not found or not active, or incorrect shared secret for API key.
+
+  [4488532602] P3D_RIBBED_VASE_FOR_DRIED_FLOWERS — 
+  Type: 3d_print_physical | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 403: API key not found or not active, or incorrect shared secret for API key.
+
+  [4488666558] P3D_COFFEE_BAR_SIGN — 
+  Type: 3d_print_physical | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 403: API key not found or not active, or incorrect shared secret for API key.
+
+  [4490472707] P3D_SCULPTURAL_MESH_LAMP — 
+  Type: 3d_print_physical | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 403: API key not found or not active, or incorrect shared secret for API key.
+
+  [4492610660] P3D_TEXTURED_TEA_LIGHT_HOLDERS — 
+  Type: 3d_print_physical | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 403: API key not found or not active, or incorrect shared secret for API key.
+
+  [4497392795] P3D_GEOMETRIC_GLOW_LAMP — 
+  Type: 3d_print_physical | Photos: 0 | Files: 0 | Tags: 0
+    ✗ [listing_fetch] Could not fetch listing: Etsy API 403: API key not found or not active, or incorrect shared secret for API key.
+
+  [4497769840] P3D_PUFFER_JACKET_CAN_KOOZIE — 
+  Type: 3d_print_physical |
+
+
+## 2026-07-08 — 5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not  (known cause)
+5-minute health loop detected a problem: Etsy: error: Etsy API 403: API key not found or not active, or incorrect shared secret for API key. | Anthropic key set: False
+
+**Diagnosis:** Etsy rejected the app credentials themselves (not a token) -- ETSY_CLIENT_ID / ETSY_CLIENT_SECRET don't match what Etsy has on file for this app. Scott must open the Etsy Developer Console (etsy.com/developers/your-apps), open the app, and copy the current keystring + shared secret (the shared secret is hidden behind a reveal icon) into ETSY_CLIENT_ID / ETSY_CLIENT_SECRET in Railway's environment variables (and local .env), then redeploy. Re-running etsy_oauth.py will NOT fix this -- that only refreshes the access/refresh token pair, not the app's own client_id/secret.
+
+
+## 2026-07-08 — Lifestyle Photo Generator shipped to Studio (v126)
+New Studio card: "Lifestyle Photo Generator." Scott asked for a lifestyle-photo generator;
+`tools/listing_photo_pipeline.py::generate_verified_photo()` (THE STANDARD LIFESTYLE METHOD
+already mandated in CLAUDE.md) existed but was only ever called from the reject-fix regen path
+-- there was no route to trigger a fresh generation from the UI. Added `POST
+/api/studio/generate-lifestyle-photo`: takes real uploaded product file(s) (never an
+AI-invented stand-in), a product-type category (one of the 10 `PHYSICS` keys), and a scene
+prompt; runs the real edit+verify+retry pipeline (capped at 2 attempts by default here, vs. the
+pipeline's own default of 3, since each attempt is a real paid image-gen API call triggered
+interactively rather than an unattended batch job); returns pass/fail + issues, never fabricates
+success. New Studio card uploads file(s), lets Scott pick a category (auto-fills a sensible
+scene prompt per category, editable), shows real cost-per-click reminder, and renders the result
+(preview + download link) or the failure reason.
+
+**Honest status: plumbing proven, a real successful generation is NOT yet proven.** Verified via
+Playwright: all UI wiring correct (upload -> category auto-fill -> validation guards -> POST ->
+render). Ran exactly one real paid end-to-end test (max_attempts overridden to 1 to minimize
+cost) using an actual product file (`DP1027_sticker_sheet_1.jpg`, category
+`sticker_sheet_flat`). It failed with `Error code: 429 - insufficient_quota` from OpenAI -- the
+connected OpenAI account is out of API quota/billing, not a code bug. The error round-tripped
+correctly through every layer (pipeline -> route -> JS -> UI), proving the failure path works,
+but a genuine successful render has not been demonstrated yet. **Action needed from Scott:**
+check billing/quota at platform.openai.com for the account behind `OPENAI_API_KEY`, then this
+tool can be re-tested for a real pass.
+
+Also fixed in the same pass: a JS-breaking Python string-escaping bug in the new card's failure-
+text (`didn\'t` inside a non-raw triple-quoted Python string collapses to a bare `'` at runtime,
+breaking the embedded JS) -- reworded to avoid the apostrophe rather than double-escaping.
+`_BUILD_ID` bumped to `b4d0e2c-v126`.
+
+
+## 2026-07-08 — UI polish pass: fixed hardcoded identity text + stale version strings (v127)
+Scott asked for a full visual audit of Frank -- everything organized, neatly displayed,
+details fixed, functionality/visual clarity prioritized. Full page-by-page pass over
+`frank_hud_mockup.py` (5,500+ lines, all 19 screens, the CSS design-token system, nav). Most
+of it checked out clean: one shared `:root` CSS variable block with 9 named color themes, one
+`.hub-card`/`.hub-section-title` definition used consistently everywhere including the two
+newest Studio cards (SVG Converter, Lifestyle Photo Generator), only one `<style>` block in
+the whole file, a single consistent button system, and all 19 nav items map 1:1 to real
+screens with no orphans. Deliberately left alone: the same input/select inline `style="..."`
+string is repeated ~10 times across cards -- a code-hygiene nit, not a visible defect, not
+worth the risk of a mechanical find/replace across a 5,500-line file for zero visible change.
+
+What was actually broken, found and fixed:
+
+1. **The single biggest text on the screen ignored the rename feature.** The orb hero title
+   (`.o1`), the header logo (`.l1`), and the bottom-bar "TALK TO FRANK" pill all had `FRANK`
+   as a hardcoded string literal instead of the `%%AGENT_SHORT%%` placeholder every other
+   piece of agent-identity text in this file already uses (verified via grep -- 15+ correct
+   usages elsewhere, including one line below the orb title). Settings -> Branding explicitly
+   promises "Renames the agent everywhere -- the dashboard, the app name, and how the agent
+   refers to itself"; that promise was false for the 3 most visually prominent labels in the
+   product. Same bug in the `<title>` tag and the `apple-mobile-web-app-title` PWA meta tag.
+   All 5 spots now use `%%AGENT_SHORT%%`, substituted by the existing `render_frank_hud()`
+   mechanism and correctly cache-busted on rename via `main.py:_refresh_identity()` -- no new
+   plumbing needed, this mechanism was already proven correct.
+2. **Two stale "v1.0.0 - MOCKUP" placeholders** (orb subtitle, Settings -> About) never got
+   updated once the product went live -- meanwhile the Studio screen already had a working
+   `#studio-build-ver` span fetching `/health` for the real `_BUILD_ID`. Gave both spots real
+   IDs (`#orb-build-ver`, `#settings-build-ver`) and wired them into the existing
+   `loadCredentialsAndHealth()` poll (which already fetches `/health` on every cycle -- no new
+   network call), mirroring the proven Studio pattern. Both now show `Build b4d0e2c-vNNN`.
+3. **Inconsistent tagline**: orb said "COMMAND CORE", header logo and title tag said
+   "COMMAND CENTER". Unified to "COMMAND CENTER" everywhere.
+4. **Studio's panel title was stale**: read "Studio -- Image-to-Video Generation" even though
+   the screen now stacks 4 distinct tools (video gen, Etsy/social Actions, SVG Converter,
+   Lifestyle Photo Generator added last session). Retitled to "Studio -- Media & Content
+   Tools" and widened the endpoint-summary span to name all 4 tool groups.
+
+Verified: `py_compile` clean, `tests/smoke_test.py` green (36 tools, no agent-tool surface
+touched -- pure UI/copy), a script-level div-balance check on the HTML string (783 open ==
+783 close), zero remaining "FRANK"/"MOCKUP" string literals in the template, and a live
+Playwright pass against the local test harness confirmed every fix renders correctly post-
+login (agent name "Frank" -- the currently configured business_config.AGENT_NAME_SHORT --
+appears correctly templated in the orb/header/bottom-bar/title, both build-version spots
+show the real live build id, Studio's title and src-span show the new copy, no layout
+regressions on Settings or Studio). `_BUILD_ID` bumped to `b4d0e2c-v127`.
+
+
+## 2026-07-08 — Full security + WCAG 2.1 AA accessibility fix pass (v128)
+Scott asked for a full audit of security issues (users + himself as owner) and full ADA/
+accessibility compliance. Three parallel research passes (server security, frontend a11y,
+git-history/infra exposure) produced concrete, file:line-backed findings; this entry covers
+what was actually fixed. Confirmed already-clean and not re-touched: SQL fully parameterized,
+no eval/exec/shell-injection paths, path-traversal containment (`_resolve_in_root`) sound,
+password hashing (PBKDF2-SHA256, 260k iterations) adequate, session cookies correctly flagged,
+CORS an explicit allowlist, and the 2026-07-08-earlier hardening batch (tester-account gating,
+etsy-tokens owner-lock, POST-only logout, partial keyboard/contrast/heading fixes) still
+correctly in place.
+
+**Scott action item, not a code fix -- flagging prominently because it's still outstanding:**
+the git-history audit re-confirms (cross-referenced against this runbook's own 2026-06-26
+forensics) that the Etsy Client ID/Secret leaked via `CLAUDE.md` on the pushed feature branch
+is still the live production credential. **Rotate this at the Etsy Developer Console.** A
+git-history rewrite to actually purge the old leak commits (`SETUP.bat` on `main`, `CLAUDE.md`
+on this branch) was deliberately NOT done here -- it's destructive and collaborator-affecting,
+needs Scott's explicit separate go-ahead, and should happen only after rotation.
+
+**Security fixes shipped (`tools/api_server/main.py`):**
+- **Critical -- stored XSS via unvalidated upload + inline SVG serving.** `studio_upload_image`
+  now validates the body actually decodes as an image (`PIL.Image.open(...).load()`, mirrors
+  `upload_brand_mark`'s existing check) before saving -- an uploaded `<svg><script>...` used to
+  save and, when opened inline, execute same-origin under the viewer's session. `download_file`
+  now forces `Content-Disposition: attachment` for `.svg`/`.html`/`.htm` outside the
+  `svg_conversions` root (server-generated SVGs from the converter are safe by construction),
+  regardless of the `inline=1` param -- closes the same hole for the `/api/files/upload`
+  volume-upload path, which legitimately needs to accept non-image files.
+- **High -- `APP_SECRET_TOKEN` (the app's master bearer secret) leaked to Meta's servers on
+  every Instagram/Facebook post.** The video URL handed to Meta's Graph API embedded
+  `token={APP_TOKEN}` in plaintext. Added `_new_file_ticket`/`_consume_file_ticket` (generalizes
+  the existing single-use WS-ticket pattern, `_new_ws_ticket`/`_consume_ws_ticket`) -- a 10-
+  minute, single-file-scoped ticket now replaces the raw token in both social-post call sites;
+  `download_file` accepts `?ticket=` as a narrower alternative to `?token=`.
+- **Medium -- login/forgot-password lockout bypassable via spoofed `X-Forwarded-For`.** The
+  5-attempts/15-min brute-force lockout was keyed on `_client_ip()`, which trusts a client-
+  supplied header with no trusted-proxy validation in front of this app -- a fresh fake IP per
+  attempt defeated it entirely. Switched the lockout key from IP to the attempted username
+  (matches the real threat model: brute-forcing one known account, and isn't spoofable the same
+  way). `_client_ip` removed as dead code.
+- **Medium-High -- no rate limiting on AI-generation or Etsy/social-mutating endpoints.** Added
+  a generic sliding-window `_rate_limited(key, max_calls, window_seconds)` helper and a
+  `_rate_limited_auth` FastAPI dependency (drop-in replacement for `_auth_session_or_bearer`,
+  30 calls/hour per session-user or shared "bearer" bucket) applied to: listing-state mutation,
+  `/api/diagnose/*`, `/api/autofix/*` (tags/title/draft), lifestyle-photo + video generation,
+  Instagram/Facebook posting, and batch tag-staging. `/ws/chat` got its own per-connection
+  message-rate cap in the receive loop (same budget) since a WS ticket carries no username to
+  key a shared bucket by.
+- **Low-Medium cleanup batch:** the 3 `localhost:*` dev CORS origins are now gated behind
+  `RAILWAY_PUBLIC_DOMAIN` being unset (prod no longer carries dead dev-origin weight); 12
+  `HTTPException(detail=f"...{exc}")` sites that skipped the app's own truncation policy now
+  consistently use `str(exc)[:200]`; both `Dockerfile`s gained a non-root `USER` directive
+  (previously ran as root by default -- `PLAYWRIGHT_BROWSERS_PATH` pinned to a fixed,
+  user-independent path first so the browser tools don't break across the user switch, `a+rwX`
+  on `/app` as a safety margin against a Railway Volume mount owned by a different uid);
+  `.gitignore` gained `*.pem`/`*.key`/`*.crt`/`*.p12`/`*.pfx` (defense-in-depth, nothing
+  currently tracked matches).
+- **Explicitly not changed, flagged as recommendations only:** admin==owner privilege scope
+  (`main.py:388-392`) is a documented deliberate simplification, not a bug -- redesigning role
+  separation is a Scott feature decision. `fastapi==0.111.0`/`uvicorn==0.29.0` are ~2 years
+  stale but intentionally pinned per their own comment; bumping needs its own test pass, not a
+  drive-by change bundled into this batch. CSP `script-src 'unsafe-inline'` is architecturally
+  required by the single-inline-HTML-string app structure -- the real mitigation was closing
+  the XSS entry point itself (above), not rearchitecting script loading.
+
+**Accessibility fixes shipped (`tools/api_server/frank_hud_mockup.py`, WCAG 2.1 AA):**
+- **High -- 23 onclick `<div>`/`<span>` elements had no `role="button"`/`tabindex`**, so they
+  were mouse-only even though the existing global keydown handler already fires Enter/Space on
+  anything with `role="button"`. Added the missing attributes across chat quick-reply chips,
+  Action Center cards, severity filter tiles, Conversations/KB/Listings rows, Files-screen rows,
+  the SVG-converter dropzone, and the credential-steps disclosure.
+- **High -- chat send button had no accessible name** -- added `aria-label="Send message"`.
+- **High -- no Escape-key dismissal anywhere** -- added a shared keydown handler closing the
+  alert dropdown, Executive Briefing panel, phone action sheet, and (separately) the welcome
+  overlay, restoring focus to the trigger where applicable.
+- **High -- dynamic `<img>` thumbnails had no `alt`** -- added meaningful alt text (listing/
+  preview title where available) at all 5 sites, `aria-hidden="true"` on the emoji fallback.
+- **High -- alert/briefing severity was color-only** (WCAG 1.4.1) -- added a "Critical:"/
+  "Warning:" text prefix, matching the text treatment Action Center badges and dependency pills
+  already used correctly.
+- **High -- ~20 placeholder-only form fields with no label** across Tasks, Chat, Conversations,
+  Knowledge Base, and the entire Studio/SVG-Converter/Lifestyle-Photo tooling -- added
+  `aria-label` to each.
+- **Medium-High -- `--muted` text on `--panel2` background failed AA (4.07-4.44:1) in 7 of 8
+  color themes** (prior contrast fix only checked `--muted` against `--panel`/`--bg`). Computed
+  new `--muted` values per theme (script-verified >=4.5:1 against all three backgrounds,
+  re-verified after the edit) -- `light` theme already passed, untouched.
+- **Low-Medium -- login page label color** (`#6a7d8d` on `#121821`) computed to 4.18:1 -- bumped
+  to `#708392` (4.54:1, script-verified).
+- **Medium -- no `aria-live` regions** -- added `aria-live="polite"` to the toast stack and
+  `#chat-msgs`, `aria-live="polite" aria-atomic="true"` on the alert-count badge.
+- **Medium -- no focus-trap/restore on dropdowns/panels** -- the Escape handler above restores
+  focus to the trigger; the welcome overlay gained `role="dialog" aria-modal="true"
+  aria-labelledby` plus focus-on-open to its dismiss button.
+- **Medium -- no `prefers-reduced-motion` support** -- added a `@media (prefers-reduced-motion:
+  reduce)` block stopping the status-pill pulse/mini-wave/spinner CSS animations, and gated the
+  orb's idle rotation (both the 2D canvas and WebGL noise-sphere paths) behind a JS
+  `_reducedMotion` check -- voice-reactive motion while actually speaking is untouched, that's
+  functional feedback not decoration.
+- **High but handled carefully -- zoom-band content clipping.** Between ~105-145% browser zoom
+  on a desktop-width window, the fixed 1440x900 stage's content could overflow the shrunk
+  viewport with `overflow:hidden` giving no way to reach it (before the 880px mobile breakpoint
+  kicks in). Changed `html,body` to `overflow:auto` -- only shows scrollbars when something
+  actually overflows, so normal rendering is unchanged.
+- **Low polish:** widened `:focus-visible` CSS coverage to `.act-btn`/`.qc-btn`/
+  `.hub-toggle-btn`/`.psheet-btn`/`.hub-chip-btn`/`.lc-chip`/`[role="button"]` (the last one
+  automatically covers all 23 newly-added interactive divs above); bumped `.nav-item` mobile
+  and `.psheet-btn` padding a few px to clear the 44px Apple HIG guideline (both already passed
+  the WCAG 24px AA minimum).
+
+Verified: `py_compile` clean on all touched files, `tests/smoke_test.py` green (36 tools, no
+agent-tool surface touched), a script-level WCAG contrast re-check confirmed all 8 themes'
+`--muted`-on-`--panel2` and the login label now clear 4.5:1, div-balance check clean (783/783),
+and a live Playwright pass against the local test harness proved (not just asserted): the
+upload endpoint genuinely rejects a fake-SVG body with 400 "not a readable image" (proves the
+XSS fix is real, not just present in source); a chat chip has `role="button" tabindex="0"`; the
+send button's accessible name is "Send message"; Escape actually closes the alert dropdown
+(`display:block` -> `none`); a sampled Studio field has its `aria-label`. `_BUILD_ID` bumped to
+`b4d0e2c-v128`.
+
+---
+
+## 2026-07-08 — Post-hardening upgrade pass: test coverage, blocking I/O, dead code (v129)
+
+**Context:** Scott asked "where else could we use some upgrades" after three straight
+hardening passes (UI polish, security, WCAG accessibility). Ran a codebase-wide survey
+(Explore agent) and picked the three highest-value, lowest-risk items from the resulting
+menu to ship in the same session; the rest (observability gaps, dependency manifest drift,
+smaller dead-code cleanup, dead Instagram photo/carousel path) were left as documented
+recommendations, not implemented.
+
+**1. Fixed two blocking PIL calls inside `async def` route handlers (`tools/api_server/main.py`).**
+`studio_upload_image` and `upload_brand_mark` both did synchronous `Image.open(...).load()`
+(plus, for the brand-mark route, a LANCZOS resample + re-encode) directly inside an `async def`
+handler -- on this single-process server, that stalls the event loop, and therefore every other
+concurrent request/websocket connection, for the duration of the decode. Every other CPU-bound
+call site in the codebase already wraps this in `asyncio.to_thread` (`_execute_agent_tool`,
+`_run_exec_command`, `_generate_tags_for_listings`, etc.) -- these two were the exceptions. Fix:
+wrapped the decode/resize/write logic of each in a local closure and ran it via
+`await asyncio.to_thread(...)`, catching the resulting exception the same way the original
+try/except did. No behavior change, no new failure mode -- purely moves CPU-bound work off the
+event loop.
+
+**2. Archived a dead, ~5,150-line parallel agent-framework cluster.** The `agents/` package (25
+files, 4,925 lines) plus `hub.py` (229 lines) implemented a second, independent agent-dispatch
+architecture, never imported by the live server (`tools/api_server/main.py` has its own separate
+`AGENT_TOOLS`/`_execute_agent_tool` dispatch) -- confirmed via grep that its only consumer was
+`web/app.py`, a Flask prototype launched by `START_HUB.bat`, itself superseded 2026-06-22 by
+`Start Frank Local.bat` -> `tools/api_server/main.py` (the actual entrypoint documented in
+CLAUDE.md). Despite being fully dead to the live deploy, `agents/` had still received a real
+feature commit as recently as 2026-06-18 (Canva Connect integration wired into
+`BrandDesignAgent`) -- meaning work was occasionally landing in code nothing runs. Archived
+every file via `tools/trash.py` (`archive_file`, ids `20260708-003` through `20260708-035`,
+covering `agents/*.py`, `hub.py`, `web/app.py`, `web/static/*`, `web/templates/index.html`,
+`START_HUB.bat`) before deletion, per the mandatory recycle-bin rule -- all recoverable for 30
+days via `python tools/trash.py --restore <id>`. Fixed the one dangling reference this left
+behind: `SETUP.bat`'s closing instruction pointed at the now-archived `START_HUB.bat` and used
+the stale "Agent Hub" name -- updated to point at `Start Frank Local.bat` and say "Frank".
+`command_center.py` and `town_app/` (a related, larger prototype cluster, already self-documented
+in-repo as abandoned) were deliberately left untouched -- lower urgency, separate cleanup.
+
+**3. Added real unit test coverage where there was none.** Before this, the only test files were
+`tests/smoke_test.py` (import-crash detection only -- never exercises actual logic) and
+`tests/test_quality_gates.py` (covers `etsy_api.py`'s validation rules only). Zero coverage
+existed for `resilience.py`'s retry/circuit-breaker primitives or `_validate_staged_action`, the
+single choke point every Etsy mutation, local file write, and script execution passes through
+before it can reach Scott's Action Center approval queue -- exactly the code where a silent
+regression is expensive. Added:
+- `tests/test_resilience.py` (26 tests) -- `retry_with_backoff` (succeeds-first-try,
+  retries-then-succeeds, exhausts-and-reraises, respects `retryable()`, `on_retry` callback
+  fires correctly), `classify_tool_exception` (every `ToolError` subclass, bare
+  `ConnectionError`/`TimeoutError`, Etsy 403/429 quirk-retryable, 404 not-retryable, unclassified
+  exception defaults terminal), and `CircuitBreaker`'s full closed -> open -> half_open -> closed
+  state machine (driven via a fake in-memory `db_module`, the seam the module already documents
+  as existing "for callers that only want the in-memory behavior (e.g. unit tests)" -- no real
+  sqlite, no real sleep).
+- `tests/test_staged_actions.py` (51 tests) -- every branch of `_validate_staged_action` across
+  all 11 action types: title length (69/70/71 chars), tag count/length (13/14, 20/21 chars),
+  `toggle_listing_state` state enum, bool-as-int guards on `rank`/`timeout` (a bare `isinstance
+  int` check would silently accept `True` as `1`), listing-photo path traversal + missing-file +
+  the pale-background CARDINAL CHECK (real PIL-generated fixture images, cleaned up after each
+  test), listing-video the same, `local_write_file`/`local_delete`'s Allowed-Folder gate (via a
+  monkeypatched `db.is_path_allowed`, restored after each test -- no dependency on real
+  allowed-folder state), `local_exec`/`run_script`'s forbidden-flag denylist and
+  `requires_approval` gate (using real `_LOCAL_EXEC_COMMANDS`/`_EXEC_COMMANDS` entries so the
+  test breaks if those registries' shape changes), and `register_command`'s full validation
+  chain (duplicate name, path traversal, must-resolve-under-`tools/`, must-exist-on-disk, invalid
+  timeout). One test also proves `at_approval=True` degrades to a clean rejection (not a crash)
+  when Etsy credentials aren't reachable, without requiring real credentials in CI.
+- Wired both into `.github/workflows/ci-smoke.yml` as new required steps alongside the existing
+  smoke test and quality-gate tests.
+
+**Verified:** `python -m compileall tools tests` clean; all four test files green locally
+(`smoke_test.py`: 36 tools registered; `test_quality_gates.py`: 28 passed;
+`test_resilience.py`: 26 passed; `test_staged_actions.py`: 51 passed); `git status` confirmed no
+unintended changes beyond the archived files, the two edited handlers, the new test files, the
+CI workflow edit, and the `SETUP.bat` string fix. `_BUILD_ID` bumped to `b4d0e2c-v129`.
+
+**Not done in this pass (left as recommendations for Scott to prioritize):** observability
+(no structured logging, no APM/error-tracking tool, no spend/failure-count-specific alerting --
+only generic uptime/credential checks); dependency manifest drift (`fitz`/`fontTools`/`scipy`
+used by standalone tools but absent from any requirements file -- none on a live server path
+today); smaller dead-code cleanup (`command_center.py`, `town_app/`, `nixpacks.toml`, 8 stale
+root-level one-off scripts); the dead Instagram photo/carousel posting code path in
+`instagram_api.py` (only video posting is wired up). Full menu, including business-side
+candidates from CLAUDE.md's own roadmap (cover system, sticker pack expansion, Phase 2 products),
+is in the plan file from this session.
+
+---
+
+## 2026-07-08 — "Make everything incredibly faster" performance pass (v130)
+
+**Context:** Scott asked for a comprehensive, no-scope-limit performance pass across the
+whole app. Ran 3 parallel research agents (backend/main.py, frontend/frank_hud_mockup.py,
+DB+infra config) plus a Plan agent that verified exact code before implementation. Shipped
+all 8 identified fixes in one session, each independently revertible.
+
+**1. GZip compression middleware (`tools/api_server/main.py`).** No compression existed
+anywhere before this. Added `GZipMiddleware` (Starlette) after the existing security-headers
+middleware so it wraps and compresses everything, including the `/frank` dashboard's inline
+HTML/CSS/JS payload. Verified live: 313,694 bytes uncompressed -> 79,938 bytes gzipped (~75%
+reduction) on the actual authenticated `/frank` response.
+
+**2. `PRAGMA synchronous=NORMAL` (`tools/api_server/db.py`).** WAL mode was already enabled
+(a persistent file property, correctly set once in `init_db()`), but `synchronous` is a
+per-connection session setting that resets to SQLite's default `FULL` on every new
+connection -- and this codebase opens one connection per operation. Added the pragma to
+`_connect()` itself so it actually applies everywhere. Standard safe pairing with WAL.
+
+**3. Indexes + pruning on `action_queue`/`activity_log` (`tools/api_server/db.py`).**
+`action_queue` had no index on `status` despite `list_actions(status="pending")` being
+polled every 120s (full table scan), and the table was never pruned. Added composite
+indexes (`(status, created_at DESC)` and `(action_type, id DESC)`) that satisfy both the
+WHERE and ORDER BY directly, plus a new `prune_old_actions(days=90)` mirroring the existing
+`purge_expired_sessions()` shape exactly -- deletes only `executed`/`rejected` rows past the
+cutoff, never touches `pending`/`approved`. Wired into the same hourly tick that already
+prunes sessions.
+
+**4. `asyncio.to_thread` wraps on 3 synchronous handlers (`tools/api_server/main.py`).**
+`list_files()` (full `rglob`+`stat`+zip-central-directory scan across every file root),
+`open_zip_entry()` (`zipfile.read()` decompression), and `upload_to_volume()`
+(`write_bytes()` for up to 30MB) were all still running synchronously inside `async def`
+handlers, freezing the single-process app for their duration. Wrapped each following the
+exact closure pattern already shipped for `studio_upload_image`/`upload_brand_mark` (v129).
+
+**5. Orb `requestAnimationFrame` loops now pause when not visible
+(`tools/api_server/frank_hud_mockup.py`).** Both the WebGL orb loop (`orbGLFrame()`, full
+Three.js render + bloom post-processing) and the legacy 2D canvas loop (`frame()`) ran
+unconditionally forever. Confirmed the orb and the 18-screen dashboard are mutually
+exclusive via the existing `cc-open` class on `<body>` -- extended both loops' existing
+early-return short-circuit with `document.hidden || document.body.classList.contains('cc-open')`.
+No new state, reuses an already-existing signal.
+
+**6. Screen-scoped polling + visibility pause (`tools/api_server/frank_hud_mockup.py`) --
+the single biggest perceived-speed fix.** `loadAll()` fired ~18-20 `load*`/`render*`
+functions every 30s via `setInterval`, regardless of which of 18 screens was actually open,
+with zero `document.visibilityState` handling anywhere. Built a verified mapping (by reading
+`showScreen()`, the screen DOM, and every function's actual target element) of 6 "global"
+loaders (header status pill, bottombar relay pill, alert bell, plus `loadQueue`/`loadShopPerf`
+which are dual-purpose and must stay global) vs. ~14-15 screen-scoped loaders. `showScreen()`
+now dispatches only its own screen's loaders on switch; `loadAll()` runs globals + only the
+active screen's loaders; a `visibilitychange` listener triggers an immediate refresh when the
+tab becomes visible again, and `loadAll()` no-ops while `document.hidden`.
+Verified live via Playwright against the local test harness: on the Files screen, `loadAll()`
+fired exactly 8 API calls (6 global + 1 screen-local `loadFiles`, one global batches 2 calls);
+switching to Tasks fired exactly 1 immediate call (`loadTasks`'s `/api/todos`);
+`document.hidden=true` reduced `loadAll()` to 0 calls; toggling back to visible fired exactly
+8 calls again (globals + the now-active Tasks screen).
+
+**7. Etsy API connection reuse (`tools/etsy_api.py`) -- the most delicate change in this
+pass.** `EtsyAPIClient()` is instantiated fresh at ~20 call sites in main.py (never a
+singleton), so the fix is a module-level `requests.Session()` that outlives any individual
+client, removing a fresh TCP+TLS handshake (~100-300ms) from every Etsy call -- the most
+frequently invoked external dependency in the app. Required rewriting `_build_request`
+(now returns `(headers, data)` instead of a `urllib.request.Request`) and `_request_impl`
+(now checks `resp.status_code` explicitly since `requests` doesn't raise on 4xx/5xx like
+`urllib.error.HTTPError` did) while preserving the exact retry-count, backoff/jitter,
+429/503-retry, and 401-refresh-and-retry-once behavior. `refresh_access_token()` was left on
+raw `urllib` (rare cold path, not worth the added risk).
+Verified two ways: (a) a live call against the real Etsy API returned a real, correctly-
+mapped `EtsyAPIError(status=403, ...)` matching the exact prior error-message format,
+proving the request/response/error-mapping path works end-to-end; (b) mocked
+`_session.request` to exercise all 4 control-flow branches directly -- 429-then-success
+(3 attempts), 401-refresh-then-success (2 calls), non-retryable 404 (1 call, raises
+immediately), and 503-exhausts-all-retries (3 calls then raises) -- all matched expected
+behavior exactly.
+
+**8. Static asset cache headers for vendored libraries (`tools/api_server/main.py`).**
+Three.js/onnxruntime-web/transformers.js/piper-tts assets under `/static/vendor/` had no
+cache headers. Subclassed `StaticFiles` to add `Cache-Control: public, max-age=604800` (7
+days) scoped to `/vendor/` paths only -- these aren't content-hashed, so a long `immutable`
+header would risk serving stale JS after an in-place vendor upgrade; PWA icons/privacy.html
+are untouched. Verified live: `three.module.js` returns the header, `icon-192.png` does not.
+
+**Explicit anti-goal, not done:** multi-worker uvicorn. `_relay_ws`/`_relay_lock`, the
+in-process `_cache`, and the `/ws/chat`/`/ws/relay` connection registries are all in-process
+global state with no cross-worker sync (no Redis/shared store) -- multiple workers would
+silently fragment the relay connection, cache, and WebSocket sessions for a single-operator
+dashboard with no real concurrent-request pressure. A correctness regression, not a perf win.
+
+**Verified:** `python -m compileall tools tests` clean; all 4 test suites green
+(`smoke_test.py`: 36 tools; `test_quality_gates.py`: 28 passed; `test_resilience.py`: 26
+passed; `test_staged_actions.py`: 51 passed); live Playwright pass against the local test
+harness proved items 6 and 8 as described above; live + mocked calls proved item 7; `git
+status` confirmed no unintended changes after reverting two rounds of local-test-harness
+pollution (`ops_runbook.md`'s auto-generated health-loop entry, `listing_manifest.json`'s
+`last_verified` timestamps -- both written by background loops during local testing, neither
+a real change). `_BUILD_ID` bumped to `b4d0e2c-v130`.
+
+---
+
+## 2026-07-08 — Post-audit correction pass: two real todo lists + 6 code fixes (v131)
+
+**Context:** Following the "why won't this work" audit (3 parallel research agents covering
+infrastructure fragility, code reliability, and business-model risk), Scott asked for two
+concrete todo lists -- one for Frank, one for Scott -- built inside Frank itself (not just
+narrated in chat), then asked Frank to execute everything on its own list. Explicit
+instruction: self-screen every item genuinely, since Frank has previously handed Scott tasks
+it could have done itself.
+
+**Both lists are now real rows in the `todos` table**, seeded idempotently at every startup
+via `db.seed_correction_plan_todos()` (called from `main.py` right after
+`db.ensure_default_sandbox_folder()`), marked by a `[Correction plan 2026-07-08]` prefix and
+deduplicated by that marker so it's safe to call on every boot -- necessary specifically
+because the live DB currently has no persistent volume and wipes on every redeploy (see
+below), so without this the whole list would silently vanish after the next push.
+
+**Scott's list (3 items, self-screened -- genuinely requires his own account access, nothing
+Frank could reach via any existing tool/API key):**
+1. Rotate the leaked Etsy Client ID + Secret at the Etsy Developer Console -- confirmed still
+   live and unrotated; live-tested during this session (`EtsyAPIClient().get_reviews()` and
+   the new recheck-credentials endpoint both returned a real 403 against the actual Etsy API).
+2. Attach a Railway Volume at /data (or upgrade to a plan that includes one) so the database
+   survives redeploys -- Frank has no billing/Railway-dashboard access.
+3. Optional: decide whether to pursue a second sales channel -- a platform/account decision,
+   not a code fix.
+
+**Frank's list (6 items, all shipped in this pass):**
+
+1. **`tools/backup_hub_db.py`** -- exports non-secret hub.db state (todos, settings minus any
+   token/secret-looking key, action_queue, activity_log, hub_users minus password hashes) to
+   `data/hub_db_backups/hub_db_state.json`. Registered as `_EXEC_COMMANDS["backup_hub_db"]`
+   (requires_approval, mirrors `backup_digital_products`'s shape). Explicitly documented: this
+   only becomes a real safety net once the output is committed + pushed -- writing to the
+   ephemeral container's disk alone doesn't survive a redeploy any more than hub.db itself
+   does. The actual fix for the underlying problem is Scott's Volume (item 2 above); this is
+   the interim mitigation. Deliberately excludes etsy_tokens/hub_sessions -- the exact class of
+   secret already leaked once via a git-committed file, never again.
+
+2. **Code-enforced description-vs-file content check** (`tools/etsy_api.py`) --
+   `check_description_count_claims(description, facts)` cross-checks a listing description's
+   claimed page count (anchored to the "Pages: N" label format CLAUDE.md's own templates use,
+   avoiding false positives on unrelated numbers like "365 Daily Pages") against
+   `validate_digital_file()`'s real `pdf_pages` fact (exact match), and claimed sticker counts
+   against `zip_members` (one-directional floor check -- a real pack always contains more files
+   than its sticker count due to sheets/README/etc, so this only fires when the claim
+   physically cannot be true). Wired into `upload_listing_file()` right after the existing
+   DP-code mismatch check, fails open on an Etsy fetch error (infrastructure hiccup ≠ content
+   violation) but hard-blocks on a genuine mismatch. This is the first code-level enforcement
+   of CLAUDE.md's "NEVER LIE TO THE CUSTOMER" numeric claims -- previously rested entirely on
+   AI self-report and manual review. 9 new tests in `tests/test_quality_gates.py`.
+
+3. **3 silently-swallowed session-revocation exceptions fixed** (`main.py:1180, 3630→3636,
+   6491→6503`) -- all three `db.delete_sessions_for_user(uname)` call sites (password reset,
+   admin reset, self-service change-password) now log loudly on failure instead of bare
+   `except Exception: pass`, matching the established `[tag] detail: {exc}` convention. A
+   failed revocation here previously had zero trace -- a stale/compromised cookie could have
+   outlived a password change silently.
+
+4. **`tests/test_http_routes.py`** (14 tests, new file) -- the first request-level test
+   coverage in the repo. Previously 105 tests existed across 4 files, all exercising pure
+   functions directly (`import main as server`); none ever drove an actual HTTP request. Uses
+   FastAPI's TestClient against the real `app` (no live server, no network). Covers: login
+   page load, wrong-password rejection, correct-password session cookie, protected-route 401
+   without auth, 200 with session cookie, 200 with Bearer token, 401 with wrong Bearer token,
+   logout actually revoking the session, login lockout engaging after repeated failures
+   (isolated to a throwaway username so it doesn't poison other tests' shared test account),
+   and the todos API end-to-end (list/add/toggle-404), including a live proof that the seeded
+   correction-plan todos are reachable through the real HTTP path, not just the direct db.py
+   call. One real gotcha hit and fixed during this work: TestClient's default `http://`
+   base_url silently drops the app's `Secure`-flagged session cookie (correct app behavior,
+   wrong test setup) -- fixed by using `base_url="https://testserver"`. Wired into
+   `.github/workflows/ci-smoke.yml`.
+
+5. **`/api/system/recheck-credentials`** (`main.py`, POST) -- forces an immediate Etsy +
+   Anthropic credential check by calling the existing `_health_check_iteration()` directly,
+   instead of waiting up to 5 minutes for the next background loop tick. Reuses the exact same
+   real `EtsyAPIClient().get_shop()` call the health loop already makes, so the circuit breaker
+   updates as a normal side effect via etsy_api.py's existing `_circuit_breaker_hook` -- no
+   separate probe logic. Wired to a new "Recheck now" link on the Dependency Health panel title
+   (`frank_hud_mockup.py`), with toast feedback and an automatic panel refresh. Directly closes
+   the "wait 5 minutes to confirm my rotation worked" friction for Scott's item 1 above.
+   Live-verified twice: via curl (real 403 against real Etsy, correctly reported, not faked)
+   and via Playwright (clicked the actual button, confirmed the toast showed the real failure
+   detail and the button state reset correctly).
+
+6. **Seeded todo lists themselves** (`tools/api_server/db.py`) --
+   `seed_correction_plan_todos()` + the marker-based idempotency described above.
+
+**Self-screening note (per Scott's explicit instruction):** before finalizing Scott's list,
+Frank checked whether it could determine the shop's current Etsy review count itself (a fact
+mentioned in the earlier business-risk audit) rather than asking Scott for it --
+`EtsyAPIClient().get_reviews()` was called directly and correctly failed with the same real
+403 as everything else blocked on the unrotated credential, confirming this is genuinely
+blocked on Scott's action, not a task Frank was offloading unnecessarily. No item was placed
+on Scott's list without first confirming Frank has no existing tool/API path to do it itself.
+
+**Verified:** `python -m compileall tools tests` clean; all 5 test suites green (142 tests
+total: smoke 36 tools, quality-gates 37, resilience 26, staged-actions 51, http-routes 14);
+live Playwright + curl verification of the seeded todos (both lists reachable via
+`GET /api/todos`, correctly split by `added_by`) and the recheck-credentials button end-to-end;
+`git status` confirmed no unintended changes after reverting one round of local-test-harness
+pollution (`ops_runbook.md`'s auto-generated health-loop entries -- written by the background
+health loop hitting the same known-broken live credential during local testing, not a real
+change). `_BUILD_ID` bumped to `b4d0e2c-v131`.
+
+---
+
+## 2026-07-09 — Downloadable desktop app (Windows + Mac) + business tracker workbook (v132)
+
+**Context:** Scott asked for Frank as a fully installed desktop application (own icon,
+own window, Start Menu/Applications entry, chosen over a simpler browser-tab launcher
+after confirming the tradeoff with him) for both Windows and Mac, plus an Excel
+workbook to track products, inventory, and consumables. Nothing like the desktop app
+existed before this: `start_frank_local.sh`/`Start Frank Local.bat` require a
+pre-installed Python and a manually-created `.env`; `tools/installer/` is a white-label
+packager for *other* businesses' own deployments, not a personal desktop app.
+
+**Architecture: Electron shell spawns a PyInstaller-bundled Python backend as a child
+process, then loads it into a native window.**
+
+1. **`tools/desktop/backend.spec` + `build_backend.py`** — PyInstaller bundles
+   `tools/api_server/main.py` and its full dependency tree into a standalone
+   executable (onedir mode, not onefile — chosen specifically because main.py's
+   `sys.path.insert(0, ROOT / "tools")` sibling-import pattern needs `tools/` to exist
+   as real files on disk next to the executable, which onedir gives for free by
+   copying the whole tree via `datas`). Built and fully verified in this sandbox
+   (Linux binary): `/health`, `/frank`, static vendor assets, first-run owner-account
+   setup, and the correction-plan todos seeded in the last session's work all confirmed
+   working from a completely standalone binary run outside the source tree.
+   - **Real bug found and fixed during this**: `ROOT = Path(sys.executable).resolve().parent`
+     was wrong for PyInstaller 6.x onedir builds — the executable sits in
+     `dist/frank-backend/`, but modern PyInstaller collects bundled `datas` one level
+     deeper, in `dist/frank-backend/_internal/`. First build attempt correctly started
+     the server but 404'd on every static asset. Fixed by using `sys._MEIPASS`
+     (PyInstaller's own documented "where the bundle actually is" attribute) instead of
+     deriving from `sys.executable`.
+   - `tools/api_server/main.py` gained a minimal, backward-compatible frozen-detection
+     branch for `ROOT` (falls through to the exact original `Path(__file__).parent.parent.parent`
+     when not frozen — verified byte-identical behavior via the full test suite) and
+     `_STATIC_DIR` was changed from a `Path(__file__).parent`-relative expression to a
+     `ROOT`-relative one (behaviorally identical in the non-frozen case, since main.py
+     lives at `tools/api_server/main.py` either way — also verified via full test suite).
+
+2. **`tools/desktop/generate_icon.py`** — generates the app icon from the same
+   cyan/blue palette already used by the orb's voice-reactive glow in
+   `frank_hud_mockup.py` (no new external brand asset needed, and nothing touches
+   `data/brand/`, which is gitignored/machine-local). Produces `desktop/build/icon.png`
+   (1024px master) and `desktop/build/icon.ico` (Windows, built directly with Pillow --
+   `.icns` for Mac is generated in the CI job itself via `iconutil`, a macOS-only tool
+   that can't run here).
+
+3. **`desktop/main.js` + `package.json`** — Electron main process. First launch
+   auto-generates `<userData>/.env` (a random `APP_SECRET_TOKEN` + a `DB_PATH` inside
+   the same OS-appropriate app-data directory, never inside the installed app bundle
+   itself so data survives updates/reinstalls) -- Anthropic/Etsy keys are deliberately
+   not required for this step since the backend already degrades gracefully without
+   them; Scott adds those afterward via the app's own Settings screen or the new "Edit
+   API Keys..." menu item, which just opens the `.env` file in the OS's default editor.
+   Every launch re-reads that file and passes its contents as real process environment
+   variables to the spawned backend (not relying on the backend finding a `.env` itself
+   via its own ROOT-relative lookup, since ROOT resolves to `sys._MEIPASS` when frozen,
+   not the app-data directory). Polls `/health` before loading the window; kills the
+   child process on quit; restarts once on an unexpected crash.
+   - **Verified as much as this sandbox allows**: `node --check main.js` (syntax), and
+     a standalone Node script replicating main.js's env-file + spawn + health-poll logic
+     ran against the real built Linux backend binary from a fresh temp app-data
+     directory end-to-end successfully (`.env` auto-generated, backend spawned with the
+     right env vars, `/health` returned 200, `DB_PATH` correctly redirected outside the
+     source tree). **Could not verify Electron itself** -- `npm install` for the
+     `electron` package failed with a 403: this sandbox's egress policy allowlists
+     `registry.npmjs.org`/`pypi.org`/etc. but not `github.com` (where Electron's
+     postinstall script downloads a prebuilt binary from). Per this environment's own
+     proxy guidance, an org-policy 403 is reported, not routed around. The actual
+     Electron packaging + full app launch only gets proven for real by the CI workflow
+     below, which runs on GitHub-hosted runners with normal internet access.
+
+4. **`.github/workflows/build-desktop.yml`** — matrix build on `windows-latest` +
+   `macos-latest` (manual `workflow_dispatch` trigger, not on every push -- this is a
+   slow, heavy build unlike `ci-smoke.yml`). Each OS builds its own PyInstaller backend
+   natively (required -- PyInstaller does not cross-compile) and runs
+   `electron-builder` for its own installer format (`nsis` .exe / `dmg`), uploaded as
+   workflow artifacts. This is what actually produces the installable binaries, since
+   neither can be built in this Linux sandbox.
+
+**Known limitations flagged, not silently hidden:**
+- The macOS build is unsigned/unnotarized (no $99/yr Apple Developer certificate
+  configured) -- Gatekeeper will show "unidentified developer" on first launch;
+  right-click → Open bypasses it. Acceptable for personal use, revisit if ever
+  distributed more broadly.
+- `data/staged_photos/`, `data/digital_products/`, etc. are NOT relocated to the
+  app-data directory in this pass -- only `DB_PATH` (the state audited in the
+  correction-plan session) is redirected. Those directories are regeneratable working
+  files per their own existing code comments, lower urgency than the database.
+
+**Business tracker workbook** (`tools/generate_business_tracker.py`, delivered directly
+to Scott via file, not committed -- it's his working file): 8 sheets (Dashboard,
+Products, Physical Inventory, Consumables & Reorder, Suppliers, COGS & Pricing,
+Equipment & Assets, Expense & Tax Tracker), pre-filled with the known product catalog
+(DP1026-1029 confirmed live, DP1030-1034 flagged as existing-but-undocumented per
+CLAUDE.md), the Bambu Lab P1S's documented filament/nozzle/build-plate types, and
+CLAUDE.md's own Etsy fee structure (6.5% transaction + $0.20 listing + 3%+$0.25
+processing) as a live formula rather than a hardcoded number. Round-trip verified via
+openpyxl (all 8 sheets, formulas, and conditional formatting survive save/reload) --
+LibreOffice headless formula-evaluation was attempted as a second check but failed on
+even a trivial file, confirmed to be an environment-wide sandbox limitation, not a
+defect in the generated workbook.
+
+**Verified:** `python -m compileall tools tests` clean; all 5 test suites green (145
+tests total across smoke/quality-gates/resilience/staged-actions/http-routes -- zero
+regressions from the ROOT/`_STATIC_DIR` frozen-detection changes); the real PyInstaller
+backend binary tested standalone from multiple fresh temp directories outside the
+source tree; `.github/workflows/build-desktop.yml` YAML syntax validated; `git status`
+confirmed no unintended changes. `.gitignore` updated: `/build/` (anchored to repo
+root only, so `desktop/build/`'s committed icon assets are unaffected) added alongside
+the existing unanchored `dist/` entry, since `tools/desktop/build_backend.py`'s
+PyInstaller workpath is ~92MB of build artifacts that should never be committed.
+`_BUILD_ID` bumped to `b4d0e2c-v132`.

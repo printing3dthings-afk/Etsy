@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Dream Chaser</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#7B35B0"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#0D1B3E"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#7B35B0"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#0D1B3E"/>
+  <text x="400" y="256" text-anchor="middle" font-family="Cormorant, sans-serif" font-size="26" fill="#BBBBBB" letter-spacing="12">D R E A M</text>
+  <text x="400" y="390" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="110" fill="#7B35B0">Dream</text>
+  <rect x="250" y="420" width="300" height="5" fill="#7B35B0" rx="2"/>
+  <text x="400" y="510" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="96" fill="#0D1B3E" letter-spacing="6">CHASER</text>
+  <circle cx="344.0" cy="558.0" r="7" fill="#7B35B0"/>
+  <circle cx="372.0" cy="558.0" r="7" fill="#7B35B0"/>
+  <circle cx="400.0" cy="558.0" r="7" fill="#7B35B0"/>
+  <circle cx="428.0" cy="558.0" r="7" fill="#7B35B0"/>
+  <circle cx="456.0" cy="558.0" r="7" fill="#7B35B0"/>
+</svg>

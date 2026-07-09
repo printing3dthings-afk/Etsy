@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Grad Mode On SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <polygon points="724.8,587.5 400.0,775.0 75.2,587.5 75.2,212.5 400.0,25.0 724.8,212.5" fill="black"/>
+  <polygon points="703.1,575.0 400.0,750.0 96.9,575.0 96.9,225.0 400.0,50.0 703.1,225.0" fill="none" stroke="white" stroke-width="2.5"/>
+  <polygon points="690.1,567.5 400.0,735.0 109.9,567.5 109.9,232.5 400.0,65.0 690.1,232.5" fill="none" stroke="white" stroke-width="1"/>
+  <path d="M 400,72 L 470,105 L 400,139 L 330,105 Z" fill="white"/>
+  <path d="M 363,105 L 437,105 L 449,161 L 351,161 Z" fill="white"/>
+  <line x1="470" y1="105" x2="470" y2="203" stroke="white" stroke-width="4"/>
+  <circle cx="470" cy="203" r="7" fill="white"/>
+  <line x1="463.0" y1="210" x2="461.0" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="464.8" y1="210" x2="462.8" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="466.5" y1="210" x2="464.5" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="468.2" y1="210" x2="466.2" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="470.0" y1="210" x2="468.0" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="471.8" y1="210" x2="469.8" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="473.5" y1="210" x2="471.5" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="475.2" y1="210" x2="473.2" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="477.0" y1="210" x2="475.0" y2="220" stroke="white" stroke-width="2.2"/>
+  <line x1="100" y1="270" x2="700" y2="270" stroke="white" stroke-width="2.5"/>
+  <line x1="100" y1="277" x2="700" y2="277" stroke="white" stroke-width="1"/>
+  <line x1="100" y1="540" x2="700" y2="540" stroke="white" stroke-width="2.5"/>
+  <line x1="100" y1="547" x2="700" y2="547" stroke="white" stroke-width="1"/>
+  <text x="400" y="247" text-anchor="middle" font-family="Georgia,serif" font-size="20" fill="white" letter-spacing="9">CLASS OF 2026</text>
+  <text x="400" y="390" text-anchor="middle" font-family="Georgia,serif" font-size="90" font-weight="bold" fill="white" letter-spacing="2">GRAD</text>
+  <text x="400" y="466" text-anchor="middle" font-family="Georgia,serif" font-size="52" fill="white" letter-spacing="6">MODE</text>
+  <text x="400" y="560" text-anchor="middle" font-family="Georgia,serif" font-size="90" font-weight="bold" fill="white" letter-spacing="6">ON</text>
+  <text x="400" y="607" text-anchor="middle" font-family="Georgia,serif" font-size="18" fill="white" letter-spacing="7">SENIOR GRADUATE</text>
+</svg>

@@ -71,7 +71,7 @@ def _update_env(key: str, value: str) -> None:
 def main():
     if not APP_ID or not APP_SECRET:
         print("ERROR: PINTEREST_APP_ID and PINTEREST_APP_SECRET not set in .env")
-        print("Get them from https://developers.pinterest.com/ → your app")
+        print("Get them from https://developers.pinterest.com/ -> your app")
         sys.exit(1)
 
     state = secrets.token_urlsafe(16)
@@ -83,7 +83,7 @@ def main():
         "state": state,
     })
 
-    print("\n── Pinterest OAuth Setup ────────────────────────────────")
+    print("\n-- Pinterest OAuth Setup ----------------------------------------")
     print("Open this URL in your browser to connect your Pinterest:\n")
     print(f"{AUTH_URL}?{params}")
     print("\nWaiting for Pinterest to redirect back...")
@@ -99,7 +99,8 @@ def main():
         sys.exit(1)
 
     # Exchange code for tokens
-    credentials = urllib.parse.quote(f"{APP_ID}:{APP_SECRET}")
+    import base64
+    credentials = base64.b64encode(f"{APP_ID}:{APP_SECRET}".encode()).decode()
     token_data = urllib.parse.urlencode({
         "grant_type": "authorization_code",
         "code": _auth_code,
@@ -115,8 +116,8 @@ def main():
         },
     )
     try:
-        with urllib.request.urlopen(req) as resp:
-            tokens = json.loads(resp.read())
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            tokens = json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         print(f"Token exchange failed: {e.read().decode()}")
         sys.exit(1)

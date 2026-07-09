@@ -1,0 +1,392 @@
+{
+  "coastal_living": {
+    "name": "Coastal Living Room",
+    "category": "living_room",
+    "aesthetic": "coastal",
+    "art_styles": [
+      "ocean_coastal",
+      "landscape",
+      "botanical",
+      "abstract",
+      "watercolor_floral"
+    ],
+    "lighting": "clean_bright",
+    "file": "empty_rooms/coastal_living.jpg",
+    "note": "EXISTING \u2014 skip regeneration unless --force used"
+  },
+  "warm_living": {
+    "name": "Warm Boho Living Room",
+    "category": "living_room",
+    "aesthetic": "warm_boho",
+    "art_styles": [
+      "watercolor_floral",
+      "abstract",
+      "botanical",
+      "landscape",
+      "animal_portrait"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/warm_living.jpg",
+    "note": "EXISTING \u2014 skip regeneration unless --force used"
+  },
+  "japandi_living": {
+    "name": "Japandi Living Room",
+    "category": "living_room",
+    "aesthetic": "japandi",
+    "art_styles": [
+      "minimalist_line_art",
+      "zen",
+      "abstract",
+      "landscape",
+      "celestial"
+    ],
+    "lighting": "clean_bright",
+    "file": "empty_rooms/japandi_living.jpg",
+    "note": ""
+  },
+  "moody_living": {
+    "name": "Moody Dark Living Room",
+    "category": "living_room",
+    "aesthetic": "dark_moody",
+    "art_styles": [
+      "dark_moody",
+      "celestial",
+      "animal_portrait",
+      "abstract",
+      "landscape"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/moody_living.jpg",
+    "note": ""
+  },
+  "cottage_living": {
+    "name": "English Cottage Living Room",
+    "category": "living_room",
+    "aesthetic": "english_cottage",
+    "art_styles": [
+      "botanical",
+      "landscape",
+      "animal_portrait",
+      "watercolor_floral",
+      "food_art"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/cottage_living.jpg",
+    "note": ""
+  },
+  "maximalist_living": {
+    "name": "Curated Maximalist Living Room",
+    "category": "living_room",
+    "aesthetic": "curated_maximalism",
+    "art_styles": [
+      "abstract",
+      "portrait",
+      "colorful",
+      "pop_art",
+      "landscape"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/maximalist_living.jpg",
+    "note": ""
+  },
+  "biophilic_living": {
+    "name": "Biophilic Living Room",
+    "category": "living_room",
+    "aesthetic": "biophilic",
+    "art_styles": [
+      "botanical",
+      "landscape",
+      "abstract",
+      "watercolor_floral",
+      "nature_scenes"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/biophilic_living.jpg",
+    "note": ""
+  },
+  "art_deco_living": {
+    "name": "Art Deco Living Room",
+    "category": "living_room",
+    "aesthetic": "art_deco",
+    "art_styles": [
+      "geometric",
+      "abstract",
+      "pop_art",
+      "bold_graphic",
+      "celestial"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/art_deco_living.jpg",
+    "note": ""
+  },
+  "warm_bedroom": {
+    "name": "Warm Minimal Bedroom",
+    "category": "bedroom",
+    "aesthetic": "warm_minimal",
+    "art_styles": [
+      "watercolor_floral",
+      "botanical",
+      "abstract",
+      "celestial",
+      "line_art"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/warm_bedroom.jpg",
+    "note": "EXISTING \u2014 skip regeneration unless --force used"
+  },
+  "japandi_bedroom": {
+    "name": "Japandi Bedroom",
+    "category": "bedroom",
+    "aesthetic": "japandi",
+    "art_styles": [
+      "minimalist_line_art",
+      "zen",
+      "abstract",
+      "nature_silhouette",
+      "botanical"
+    ],
+    "lighting": "clean_bright",
+    "file": "empty_rooms/japandi_bedroom.jpg",
+    "note": ""
+  },
+  "romantic_bedroom": {
+    "name": "Romantic Maximalist Bedroom",
+    "category": "bedroom",
+    "aesthetic": "romantic_maximalist",
+    "art_styles": [
+      "watercolor_floral",
+      "abstract",
+      "portrait",
+      "celestial",
+      "botanical"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/romantic_bedroom.jpg",
+    "note": ""
+  },
+  "dark_bedroom": {
+    "name": "Dark Moody Bedroom",
+    "category": "bedroom",
+    "aesthetic": "dark_moody",
+    "art_styles": [
+      "dark_moody",
+      "celestial",
+      "abstract",
+      "landscape",
+      "animal_portrait"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/dark_bedroom.jpg",
+    "note": ""
+  },
+  "boho_bedroom": {
+    "name": "Boho Bedroom",
+    "category": "bedroom",
+    "aesthetic": "boho",
+    "art_styles": [
+      "watercolor_floral",
+      "abstract",
+      "celestial",
+      "botanical",
+      "landscape"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/boho_bedroom.jpg",
+    "note": ""
+  },
+  "coastal_bedroom": {
+    "name": "Coastal Bedroom",
+    "category": "bedroom",
+    "aesthetic": "coastal",
+    "art_styles": [
+      "ocean_coastal",
+      "botanical",
+      "abstract",
+      "watercolor_floral",
+      "landscape"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/coastal_bedroom.jpg",
+    "note": ""
+  },
+  "coastal_office": {
+    "name": "Coastal Office",
+    "category": "office",
+    "aesthetic": "coastal",
+    "art_styles": [
+      "ocean_coastal",
+      "botanical",
+      "abstract",
+      "typography",
+      "minimalist"
+    ],
+    "lighting": "clean_bright",
+    "file": "empty_rooms/coastal_office.jpg",
+    "note": "EXISTING \u2014 skip regeneration unless --force used"
+  },
+  "warm_office": {
+    "name": "Warm Minimal Office",
+    "category": "office",
+    "aesthetic": "warm_minimal",
+    "art_styles": [
+      "typography",
+      "abstract",
+      "botanical",
+      "minimalist",
+      "motivational"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/warm_office.jpg",
+    "note": ""
+  },
+  "dark_academia_study": {
+    "name": "Dark Academia Study",
+    "category": "office",
+    "aesthetic": "dark_academia",
+    "art_styles": [
+      "typography",
+      "dark_moody",
+      "portrait",
+      "landscape",
+      "celestial"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/dark_academia_study.jpg",
+    "note": ""
+  },
+  "biophilic_office": {
+    "name": "Biophilic Office",
+    "category": "office",
+    "aesthetic": "biophilic",
+    "art_styles": [
+      "botanical",
+      "abstract",
+      "landscape",
+      "nature_scenes",
+      "typography"
+    ],
+    "lighting": "clean_bright",
+    "file": "empty_rooms/biophilic_office.jpg",
+    "note": ""
+  },
+  "modern_office": {
+    "name": "Clean Modern Office",
+    "category": "office",
+    "aesthetic": "modern_minimal",
+    "art_styles": [
+      "geometric",
+      "abstract",
+      "typography",
+      "minimalist",
+      "bold_graphic"
+    ],
+    "lighting": "clean_bright",
+    "file": "empty_rooms/modern_office.jpg",
+    "note": ""
+  },
+  "rustic_kitchen": {
+    "name": "Rustic Farmhouse Kitchen",
+    "category": "kitchen_dining",
+    "aesthetic": "farmhouse_rustic",
+    "art_styles": [
+      "food_art",
+      "botanical",
+      "watercolor_floral",
+      "typography",
+      "landscape"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/rustic_kitchen.jpg",
+    "note": ""
+  },
+  "modern_dining": {
+    "name": "Modern Dining Room",
+    "category": "kitchen_dining",
+    "aesthetic": "modern_warm",
+    "art_styles": [
+      "abstract",
+      "geometric",
+      "food_art",
+      "landscape",
+      "typography"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/modern_dining.jpg",
+    "note": ""
+  },
+  "french_kitchen": {
+    "name": "French Bistro Kitchen",
+    "category": "kitchen_dining",
+    "aesthetic": "french_bistro",
+    "art_styles": [
+      "food_art",
+      "watercolor_floral",
+      "typography",
+      "botanical",
+      "landscape"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/french_kitchen.jpg",
+    "note": ""
+  },
+  "modern_entryway": {
+    "name": "Modern Entryway",
+    "category": "entryway",
+    "aesthetic": "modern_minimal",
+    "art_styles": [
+      "abstract",
+      "typography",
+      "geometric",
+      "minimalist",
+      "botanical"
+    ],
+    "lighting": "clean_bright",
+    "file": "empty_rooms/modern_entryway.jpg",
+    "note": ""
+  },
+  "cottage_entryway": {
+    "name": "Cottage Entryway",
+    "category": "entryway",
+    "aesthetic": "english_cottage",
+    "art_styles": [
+      "botanical",
+      "landscape",
+      "watercolor_floral",
+      "typography",
+      "animal_portrait"
+    ],
+    "lighting": "soft_window",
+    "file": "empty_rooms/cottage_entryway.jpg",
+    "note": ""
+  },
+  "japandi_entryway": {
+    "name": "Japandi Entryway",
+    "category": "entryway",
+    "aesthetic": "japandi",
+    "art_styles": [
+      "minimalist_line_art",
+      "zen",
+      "abstract",
+      "botanical",
+      "nature_scenes"
+    ],
+    "lighting": "clean_bright",
+    "file": "empty_rooms/japandi_entryway.jpg",
+    "note": ""
+  },
+  "reading_nook": {
+    "name": "Cozy Reading Nook",
+    "category": "specialty",
+    "aesthetic": "cozy_cottage",
+    "art_styles": [
+      "typography",
+      "abstract",
+      "botanical",
+      "landscape",
+      "dark_moody"
+    ],
+    "lighting": "warm_ambient",
+    "file": "empty_rooms/reading_nook.jpg",
+    "note": ""
+  }
+}

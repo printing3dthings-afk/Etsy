@@ -1,0 +1,3037 @@
+{
+  "4488477854": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:13.614953+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_CRYSTAL_GLOW_LAMP"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.390976+00:00",
+    "listing_roles": {
+      "P3D_CRYSTAL_GLOW_LAMP": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4488532602": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:12.180018+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_RIBBED_VASE_FOR_DRIED_FLOWERS"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391005+00:00",
+    "listing_roles": {
+      "P3D_RIBBED_VASE_FOR_DRIED_FLOWERS": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4488666558": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:11.793532+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_COFFEE_BAR_SIGN"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391012+00:00",
+    "listing_roles": {
+      "P3D_COFFEE_BAR_SIGN": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4490472707": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:10.414640+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_SCULPTURAL_MESH_LAMP"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391017+00:00",
+    "listing_roles": {
+      "P3D_SCULPTURAL_MESH_LAMP": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4492610660": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:10.038516+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_TEXTURED_TEA_LIGHT_HOLDERS"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391021+00:00",
+    "listing_roles": {
+      "P3D_TEXTURED_TEA_LIGHT_HOLDERS": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4497392795": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:09.643783+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_GEOMETRIC_GLOW_LAMP"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391025+00:00",
+    "listing_roles": {
+      "P3D_GEOMETRIC_GLOW_LAMP": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4497769840": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:08.264549+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_PUFFER_JACKET_CAN_KOOZIE"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391029+00:00",
+    "listing_roles": {
+      "P3D_PUFFER_JACKET_CAN_KOOZIE": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4506555435": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:03.350254+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_SLIM_CAN_KOOZIE"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391034+00:00",
+    "listing_roles": {
+      "P3D_SLIM_CAN_KOOZIE": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4506557906": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:06.896841+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_RIBBED_TEA_LIGHT_HOLDER"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391038+00:00",
+    "listing_roles": {
+      "P3D_RIBBED_TEA_LIGHT_HOLDER": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4506559866": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:06.510046+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_RIBBED_PLANTER_POT"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391042+00:00",
+    "listing_roles": {
+      "P3D_RIBBED_PLANTER_POT": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4506562262": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:05.135765+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_STANDARD_CAN_KOOZIE"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391045+00:00",
+    "listing_roles": {
+      "P3D_STANDARD_CAN_KOOZIE": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4507783049": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:04.727435+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "P3D_MINIMALIST_PEN_HOLDER"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391051+00:00",
+    "listing_roles": {
+      "P3D_MINIMALIST_PEN_HOLDER": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "3d_print_physical"
+  },
+  "4509179201": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1026"
+    ],
+    "expected_file_count": 3,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391055+00:00",
+    "listing_roles": {
+      "DP1026": "planner_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "planner"
+  },
+  "4509184958": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1027"
+    ],
+    "expected_file_count": 3,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391061+00:00",
+    "listing_roles": {
+      "DP1027": "planner_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "planner"
+  },
+  "4509184962": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1028"
+    ],
+    "expected_file_count": 3,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391066+00:00",
+    "listing_roles": {
+      "DP1028": "planner_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "planner"
+  },
+  "4509184968": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1029"
+    ],
+    "expected_file_count": 3,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391107+00:00",
+    "listing_roles": {
+      "DP1029": "planner_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "planner"
+  },
+  "4509193231": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1058"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391111+00:00",
+    "listing_roles": {
+      "DP1058": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509193237": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1059"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391114+00:00",
+    "listing_roles": {
+      "DP1059": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509198434": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1060"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391117+00:00",
+    "listing_roles": {
+      "DP1060": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509198446": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1061"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391120+00:00",
+    "listing_roles": {
+      "DP1061": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509213345": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1014"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1014_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391123+00:00",
+    "listing_roles": {
+      "DP1014": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509213533": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1015"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1015_print_sizes.zip"
+    ],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391125+00:00",
+    "listing_roles": {
+      "DP1015": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509213667": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1016"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391128+00:00",
+    "listing_roles": {
+      "DP1016": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509214051": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1019"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1019_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391130+00:00",
+    "listing_roles": {
+      "DP1019": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509214237": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1020"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1020_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391133+00:00",
+    "listing_roles": {
+      "DP1020": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509214477": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1021"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1021_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391135+00:00",
+    "listing_roles": {
+      "DP1021": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509214803": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1023"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1023_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391138+00:00",
+    "listing_roles": {
+      "DP1023": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509215145": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1025"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391140+00:00",
+    "listing_roles": {
+      "DP1025": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509218152": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1007"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1007_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391143+00:00",
+    "listing_roles": {
+      "DP1007": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509218860": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1018"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1018_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391145+00:00",
+    "listing_roles": {
+      "DP1018": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509219594": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1022"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1022_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391148+00:00",
+    "listing_roles": {
+      "DP1022": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509219904": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1024"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1024_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391151+00:00",
+    "listing_roles": {
+      "DP1024": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509258172": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1012"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1012_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391154+00:00",
+    "listing_roles": {
+      "DP1012": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509258700": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1013"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1013_print_sizes.zip"
+    ],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391156+00:00",
+    "listing_roles": {
+      "DP1013": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509259354": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1017"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391159+00:00",
+    "listing_roles": {
+      "DP1017": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509593487": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1032"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1032_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391161+00:00",
+    "listing_roles": {
+      "DP1032": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509593623": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1033"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1033_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391164+00:00",
+    "listing_roles": {
+      "DP1033": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509593697": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1034"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1034_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391167+00:00",
+    "listing_roles": {
+      "DP1034": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509596017": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1036"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1036_print_sizes.zip"
+    ],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391170+00:00",
+    "listing_roles": {
+      "DP1036": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509597559": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1037"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1037_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391173+00:00",
+    "listing_roles": {
+      "DP1037": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509598660": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1030"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1030_print_sizes.zip"
+    ],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391175+00:00",
+    "listing_roles": {
+      "DP1030": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509598784": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1031"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1031_print_sizes.zip"
+    ],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391178+00:00",
+    "listing_roles": {
+      "DP1031": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4509600086": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1035",
+      "DP1064"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1035_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391180+00:00",
+    "listing_roles": {
+      "DP1035": "listing_id",
+      "DP1064": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_set"
+  },
+  "4512188970": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "BUNDLE_PLANNER_ALL4"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "BUNDLE_PLANNER_ALL4"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391182+00:00",
+    "listing_roles": {
+      "BUNDLE_PLANNER_ALL4": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "bundle"
+  },
+  "4512254015": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "STICKER_COTTON_CANDY"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "STICKER_COTTON_CANDY"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391184+00:00",
+    "listing_roles": {
+      "STICKER_COTTON_CANDY": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "sticker_pack"
+  },
+  "4512254027": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "STICKER_CORAL_PEACH"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "STICKER_CORAL_PEACH"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391186+00:00",
+    "listing_roles": {
+      "STICKER_CORAL_PEACH": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "sticker_pack"
+  },
+  "4512254035": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "STICKER_BUNDLE_ALL4"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "STICKER_BUNDLE_ALL4"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391188+00:00",
+    "listing_roles": {
+      "STICKER_BUNDLE_ALL4": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "sticker_bundle"
+  },
+  "4512255508": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "STICKER_FREE"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "STICKER_FREE"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391190+00:00",
+    "listing_roles": {
+      "STICKER_FREE": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "sticker_pack"
+  },
+  "4512255514": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "STICKER_LAVENDER"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "STICKER_LAVENDER"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391192+00:00",
+    "listing_roles": {
+      "STICKER_LAVENDER": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "sticker_pack"
+  },
+  "4512255536": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "STICKER_MIDNIGHT_BLUE"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "STICKER_MIDNIGHT_BLUE"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391195+00:00",
+    "listing_roles": {
+      "STICKER_MIDNIGHT_BLUE": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "sticker_pack"
+  },
+  "4512301880": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1003",
+      "DP1002",
+      "DP1001",
+      "DP1000",
+      "DP1065"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391198+00:00",
+    "listing_roles": {
+      "DP1000": "listing_id",
+      "DP1001": "listing_id",
+      "DP1002": "listing_id",
+      "DP1003": "listing_id",
+      "DP1065": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_set"
+  },
+  "4512747600": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1038"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391200+00:00",
+    "listing_roles": {
+      "DP1038": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512750191": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1039"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391209+00:00",
+    "listing_roles": {
+      "DP1039": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512753302": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1040"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "WARN",
+    "last_verified": "2026-07-01T12:28:30.391211+00:00",
+    "listing_roles": {
+      "DP1040": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512755568": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1041"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391214+00:00",
+    "listing_roles": {
+      "DP1041": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512756952": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1042"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391216+00:00",
+    "listing_roles": {
+      "DP1042": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512758123": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1044"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391219+00:00",
+    "listing_roles": {
+      "DP1044": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512758458": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1043"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "PASS",
+    "last_verified": "2026-07-01T12:28:30.391222+00:00",
+    "listing_roles": {
+      "DP1043": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512760671": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1046"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391225+00:00",
+    "listing_roles": {
+      "DP1046": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512760918": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1045"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391227+00:00",
+    "listing_roles": {
+      "DP1045": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512763302": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1047",
+      "DP1066"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391229+00:00",
+    "listing_roles": {
+      "DP1047": "listing_id",
+      "DP1066": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_set"
+  },
+  "4512768771": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1049"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391231+00:00",
+    "listing_roles": {
+      "DP1049": "individual_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512768858": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1067"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391234+00:00",
+    "listing_roles": {
+      "DP1067": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512770031": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1050"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391236+00:00",
+    "listing_roles": {
+      "DP1050": "individual_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512772452": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1051"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391238+00:00",
+    "listing_roles": {
+      "DP1051": "individual_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512772539": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1052"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391240+00:00",
+    "listing_roles": {
+      "DP1052": "individual_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512774863": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1053"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391243+00:00",
+    "listing_roles": {
+      "DP1053": "individual_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512776173": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1054"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391245+00:00",
+    "listing_roles": {
+      "DP1054": "individual_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512780614": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1055"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391247+00:00",
+    "listing_roles": {
+      "DP1055": "individual_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512780869": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1056"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391249+00:00",
+    "listing_roles": {
+      "DP1056": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4512783077": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1057",
+      "DP1068"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391251+00:00",
+    "listing_roles": {
+      "DP1057": "listing_id",
+      "DP1068": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_set"
+  },
+  "4512784817": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1055",
+      "DP1069"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391254+00:00",
+    "listing_roles": {
+      "DP1055": "listing_id",
+      "DP1069": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_set"
+  },
+  "4512784922": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1048",
+      "DP1049",
+      "DP1050",
+      "DP1051",
+      "DP1070"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391256+00:00",
+    "listing_roles": {
+      "DP1048": "listing_id",
+      "DP1049": "listing_id",
+      "DP1050": "listing_id",
+      "DP1051": "listing_id",
+      "DP1070": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_set"
+  },
+  "4513637740": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:14.364326+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "WA_PICK_ANY_3_PRINTS"
+    ],
+    "expected_file_count": 0,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391258+00:00",
+    "listing_roles": {
+      "WA_PICK_ANY_3_PRINTS": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4513713044": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "BUNDLE_GALLERY_COASTAL"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "BUNDLE_GALLERY_COASTAL"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391261+00:00",
+    "listing_roles": {
+      "BUNDLE_GALLERY_COASTAL": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_bundle"
+  },
+  "4513713106": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "BUNDLE_GALLERY_BOTANICAL"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "BUNDLE_GALLERY_BOTANICAL"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391264+00:00",
+    "listing_roles": {
+      "BUNDLE_GALLERY_BOTANICAL": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_bundle"
+  },
+  "4513713142": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "BUNDLE_GALLERY_WOODLAND"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "BUNDLE_GALLERY_WOODLAND"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391266+00:00",
+    "listing_roles": {
+      "BUNDLE_GALLERY_WOODLAND": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_bundle"
+  },
+  "4513713514": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1071"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391269+00:00",
+    "listing_roles": {
+      "DP1071": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4513713712": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1072"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391271+00:00",
+    "listing_roles": {
+      "DP1072": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4513713805": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1073"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391273+00:00",
+    "listing_roles": {
+      "DP1073": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4513713922": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1074"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391275+00:00",
+    "listing_roles": {
+      "DP1074": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4513713936": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1075"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391277+00:00",
+    "listing_roles": {
+      "DP1075": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4513713945": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1076"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391279+00:00",
+    "listing_roles": {
+      "DP1076": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4513713962": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1077"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391281+00:00",
+    "listing_roles": {
+      "DP1077": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4513713984": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1078"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391284+00:00",
+    "listing_roles": {
+      "DP1078": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4513714013": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1079"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391286+00:00",
+    "listing_roles": {
+      "DP1079": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4513714191": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1080"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391288+00:00",
+    "listing_roles": {
+      "DP1080": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4514130045": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1081"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391290+00:00",
+    "listing_roles": {
+      "DP1081": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4514134583": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1082"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391292+00:00",
+    "listing_roles": {
+      "DP1082": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4514136783": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1083"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391294+00:00",
+    "listing_roles": {
+      "DP1083": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4514392281": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1084"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391296+00:00",
+    "listing_roles": {
+      "DP1084": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4514536935": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1085"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391298+00:00",
+    "listing_roles": {
+      "DP1085": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4514777212": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "SUBLIMATION_MOM_LIFE"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "SUBLIMATION_MOM_LIFE"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391300+00:00",
+    "listing_roles": {
+      "SUBLIMATION_MOM_LIFE": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "sublimation"
+  },
+  "4515437432": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1086"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391301+00:00",
+    "listing_roles": {
+      "DP1086": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4515437442": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1087"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391304+00:00",
+    "listing_roles": {
+      "DP1087": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4515437452": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "COMMERCIAL_STICKER_LAVENDER"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "COMMERCIAL_STICKER_LAVENDER"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391305+00:00",
+    "listing_roles": {
+      "COMMERCIAL_STICKER_LAVENDER": "listing_id"
+    },
+    "min_photo_count": 2,
+    "type": "commercial_license"
+  },
+  "4515437456": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "COMMERCIAL_STICKER_COTTON"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "COMMERCIAL_STICKER_COTTON"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391307+00:00",
+    "listing_roles": {
+      "COMMERCIAL_STICKER_COTTON": "listing_id"
+    },
+    "min_photo_count": 2,
+    "type": "commercial_license"
+  },
+  "4515437464": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "COMMERCIAL_STICKER_MIDNIGHT"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "COMMERCIAL_STICKER_MIDNIGHT"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391309+00:00",
+    "listing_roles": {
+      "COMMERCIAL_STICKER_MIDNIGHT": "listing_id"
+    },
+    "min_photo_count": 2,
+    "type": "commercial_license"
+  },
+  "4515439743": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1088"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391312+00:00",
+    "listing_roles": {
+      "DP1088": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4515439751": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1089"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391314+00:00",
+    "listing_roles": {
+      "DP1089": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4515439755": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1090"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391316+00:00",
+    "listing_roles": {
+      "DP1090": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4515439763": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1091"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391318+00:00",
+    "listing_roles": {
+      "DP1091": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4515439799": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "COMMERCIAL_STICKER_CORAL"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "COMMERCIAL_STICKER_CORAL"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391320+00:00",
+    "listing_roles": {
+      "COMMERCIAL_STICKER_CORAL": "listing_id"
+    },
+    "min_photo_count": 2,
+    "type": "commercial_license"
+  },
+  "4515439809": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "COMMERCIAL_STICKER_BUNDLE"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "COMMERCIAL_STICKER_BUNDLE"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391323+00:00",
+    "listing_roles": {
+      "COMMERCIAL_STICKER_BUNDLE": "listing_id"
+    },
+    "min_photo_count": 2,
+    "type": "commercial_license"
+  },
+  "4515668698": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1055"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391325+00:00",
+    "listing_roles": {
+      "DP1055": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515669140": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1051"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391327+00:00",
+    "listing_roles": {
+      "DP1051": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515669246": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1050"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391329+00:00",
+    "listing_roles": {
+      "DP1050": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515669370": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1049"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391331+00:00",
+    "listing_roles": {
+      "DP1049": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515669596": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1047"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391333+00:00",
+    "listing_roles": {
+      "DP1047": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515670946": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1046"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391335+00:00",
+    "listing_roles": {
+      "DP1046": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515671216": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1045"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391337+00:00",
+    "listing_roles": {
+      "DP1045": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515671336": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1044"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391339+00:00",
+    "listing_roles": {
+      "DP1044": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515671458": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1043"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391342+00:00",
+    "listing_roles": {
+      "DP1043": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515671558": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1042"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391343+00:00",
+    "listing_roles": {
+      "DP1042": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515671764": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1040"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391345+00:00",
+    "listing_roles": {
+      "DP1040": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515671951": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1057"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391348+00:00",
+    "listing_roles": {
+      "DP1057": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515672065": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1056"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391350+00:00",
+    "listing_roles": {
+      "DP1056": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515672204": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1036"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1036_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391352+00:00",
+    "listing_roles": {
+      "DP1036": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515672496": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1033"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1033_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391355+00:00",
+    "listing_roles": {
+      "DP1033": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515672588": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1099"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1099_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391357+00:00",
+    "listing_roles": {
+      "DP1099": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515672895": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1048"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391359+00:00",
+    "listing_roles": {
+      "DP1048": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515672972": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1097"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1097_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391361+00:00",
+    "listing_roles": {
+      "DP1097": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515673064": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1096"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1096_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391363+00:00",
+    "listing_roles": {
+      "DP1096": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515673828": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1058"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391365+00:00",
+    "listing_roles": {
+      "DP1058": "secondary_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515674042": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1100"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1100_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391367+00:00",
+    "listing_roles": {
+      "DP1100": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515674144": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1095"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1095_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391369+00:00",
+    "listing_roles": {
+      "DP1095": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515674250": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1092"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391371+00:00",
+    "listing_roles": {
+      "DP1092": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4515674594": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1094"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1094_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391373+00:00",
+    "listing_roles": {
+      "DP1094": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515675145": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1041"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391375+00:00",
+    "listing_roles": {
+      "DP1041": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515675373": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1039"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391377+00:00",
+    "listing_roles": {
+      "DP1039": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515675481": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1038"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391379+00:00",
+    "listing_roles": {
+      "DP1038": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515675583": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1037"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1037_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391381+00:00",
+    "listing_roles": {
+      "DP1037": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515675813": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1035"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1035_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391383+00:00",
+    "listing_roles": {
+      "DP1035": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515675887": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1034"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1034_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391385+00:00",
+    "listing_roles": {
+      "DP1034": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515676185": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1098"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1098_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391387+00:00",
+    "listing_roles": {
+      "DP1098": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515676301": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1069"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391389+00:00",
+    "listing_roles": {
+      "DP1069": "individual_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515676915": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1093"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391391+00:00",
+    "listing_roles": {
+      "DP1093": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4515678198": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1032"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1032_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391394+00:00",
+    "listing_roles": {
+      "DP1032": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515678344": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1031"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1031_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391396+00:00",
+    "listing_roles": {
+      "DP1031": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515682013": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1030"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1030_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391398+00:00",
+    "listing_roles": {
+      "DP1030": "kawaii_listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4515682147": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "WA1026"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391400+00:00",
+    "listing_roles": {
+      "WA1026": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "unknown"
+  },
+  "4519185019": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:37.740400+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "DP1008"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1008_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391402+00:00",
+    "listing_roles": {
+      "DP1008": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4519185199": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:38.144407+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "DP1009"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1009_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391404+00:00",
+    "listing_roles": {
+      "DP1009": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4519185236": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:39.557420+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "DP1010"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1010_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391406+00:00",
+    "listing_roles": {
+      "DP1010": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4519185376": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:39.920535+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "BUNDLE_MED"
+    ],
+    "expected_file_count": 3,
+    "expected_files": [
+      "DP1008_print_sizes.zip",
+      "DP1009_print_sizes.zip",
+      "DP1010_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391408+00:00",
+    "listing_roles": {
+      "BUNDLE_MED": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "gallery_bundle"
+  },
+  "4519288171": {
+    "art_hashes": {},
+    "art_sources": {},
+    "dp_codes": [
+      "DP1063"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "DP1063_print_sizes.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391410+00:00",
+    "listing_roles": {
+      "DP1063": "listing_id"
+    },
+    "min_photo_count": 8,
+    "type": "wall_art"
+  },
+  "4519453196": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:02.604479+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_02"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_02.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391412+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_02": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519453332": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:01.200388+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_03"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_03.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391414+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_03": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519453732": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:59.032598+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_06"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_06.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391416+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_06": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519453983": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:02.971817+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_01"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_01.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391418+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_01": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454361": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:00.794542+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_04"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_04.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391420+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_04": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454376": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:53.739663+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_11"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_11.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391422+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_11": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454497": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:59.408420+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_05"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_05.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391424+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_05": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454743": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:57.261013+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_07"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_07.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391426+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_07": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519454834": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:52.347113+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_CELESTIAL_NIGHT_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "celestial_night_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391449+00:00",
+    "listing_roles": {
+      "PAPER_CELESTIAL_NIGHT_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519454887": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:55.872038+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_08"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_08.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391453+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_08": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519455049": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:55.504768+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_09"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_09.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391456+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_09": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519455175": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:54.103891+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_SET_10"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coloring_set_10.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391458+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_SET_10": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4519455342": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:49.836919+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_LAVENDER_DREAMS_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "lavender_dreams_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391461+00:00",
+    "listing_roles": {
+      "PAPER_LAVENDER_DREAMS_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519455652": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:48.071163+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_MERMAIDCORE_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "mermaidcore_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391463+00:00",
+    "listing_roles": {
+      "PAPER_MERMAIDCORE_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519455834": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:47.670458+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_MIDNIGHT_BLUE_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "midnight_blue_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391465+00:00",
+    "listing_roles": {
+      "PAPER_MIDNIGHT_BLUE_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519455899": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:51.981434+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_CHERRY_BLOSSOM_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "cherry_blossom_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391468+00:00",
+    "listing_roles": {
+      "PAPER_CHERRY_BLOSSOM_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519455964": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:46.272128+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_MOCHA_LATTE_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "mocha_latte_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391470+00:00",
+    "listing_roles": {
+      "PAPER_MOCHA_LATTE_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519456025": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:51.593411+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_CORAL_PEACH_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "coral_peach_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391472+00:00",
+    "listing_roles": {
+      "PAPER_CORAL_PEACH_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519456175": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:50.210490+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_COTTON_CANDY_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "cotton_candy_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391474+00:00",
+    "listing_roles": {
+      "PAPER_COTTON_CANDY_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519456348": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:43.126109+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_SUNFLOWER_STUDIO_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "sunflower_studio_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391476+00:00",
+    "listing_roles": {
+      "PAPER_SUNFLOWER_STUDIO_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519456441": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:48.431106+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_MATCHA_SERENITY_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "matcha_serenity_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391478+00:00",
+    "listing_roles": {
+      "PAPER_MATCHA_SERENITY_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519457007": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:44.896878+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_OCEAN_BREEZE_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "ocean_breeze_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391480+00:00",
+    "listing_roles": {
+      "PAPER_OCEAN_BREEZE_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4519457131": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:44.515497+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "PAPER_SAGE_GARDEN_DIGITAL_PAPER_PACK"
+    ],
+    "expected_file_count": 1,
+    "expected_files": [
+      "sage_garden_paper_pack.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391482+00:00",
+    "listing_roles": {
+      "PAPER_SAGE_GARDEN_DIGITAL_PAPER_PACK": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "paper_pack"
+  },
+  "4520524435": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:12:13.974513+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "SS_AMERICA_250_SVG"
+    ],
+    "expected_file_count": 2,
+    "expected_files": [
+      "SS1001_america250_3dprint_pack_vol1.zip",
+      "SS1001_america250_3dprint_pack_vol2.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391485+00:00",
+    "listing_roles": {
+      "SS_AMERICA_250_SVG": "listing_id"
+    },
+    "min_photo_count": 3,
+    "type": "svg_bundle"
+  },
+  "4522863662": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:42.741434+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_FUN_ADVENTURE_COLORING_PAGES"
+    ],
+    "expected_file_count": 4,
+    "expected_files": [
+      "coloring_fun_basic_set_01.zip",
+      "coloring_fun_basic_set_02.zip",
+      "coloring_fun_basic_set_03.zip",
+      "coloring_fun_basic_set_04.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391487+00:00",
+    "listing_roles": {
+      "COLOR_FUN_ADVENTURE_COLORING_PAGES": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  },
+  "4522868228": {
+    "art_hashes": {},
+    "art_sources": {},
+    "baseline_captured": "2026-06-17T17:11:41.316562+00:00",
+    "baseline_source": "extend_manifest_from_catalog.py",
+    "dp_codes": [
+      "COLOR_KAWAII_COLORING_PAGES_PRINTABLE"
+    ],
+    "expected_file_count": 4,
+    "expected_files": [
+      "coloring_set_01.zip",
+      "coloring_set_02.zip",
+      "coloring_set_03.zip",
+      "coloring_set_04.zip"
+    ],
+    "last_status": "FAIL",
+    "last_verified": "2026-07-01T12:28:30.391490+00:00",
+    "listing_roles": {
+      "COLOR_KAWAII_COLORING_PAGES_PRINTABLE": "listing_id"
+    },
+    "min_photo_count": 5,
+    "type": "coloring_pages"
+  }
+}

@@ -122,6 +122,7 @@ TOOL_DEFINITIONS = [
 ]
 
 BOARDS = [
+    # ── 3D Print / Original boards ────────────────────────────────────────────
     {"name": "OnBrandCraftz Etsy Shop", "focus": "All products — main shop showcase board", "pins": 0},
     {"name": "3D Printed Home Décor", "focus": "All 3D printed decor items", "pins": 1},
     {"name": "Cozy Home Lighting & Lamps", "focus": "Crystal lamp, mesh lamp, geometric lamp", "pins": 1},
@@ -132,9 +133,28 @@ BOARDS = [
     {"name": "Unique Gift Ideas for Home", "focus": "All products framed as gifts", "pins": 0},
     {"name": "Modern Minimalist Living Room", "focus": "Lamps, vases, centerpieces", "pins": 0},
     {"name": "3D Printing & Maker Projects", "focus": "Behind-the-scenes, process, inspiration", "pins": 0},
+    # ── Wall Art / Digital Print boards ──────────────────────────────────────
+    {"name": "Wall Art Prints & Decor", "focus": "All digital wall art prints — main showcase", "pins": 0},
+    {"name": "Botanical & Floral Art Prints", "focus": "Botanical, floral, plant, and nature art prints", "pins": 0},
+    {"name": "Abstract & Modern Art Prints", "focus": "Abstract, contemporary, and bold modern art", "pins": 0},
+    {"name": "Kitchen & Food Wall Art", "focus": "Lemon, Italian, food-themed kitchen art", "pins": 0},
+    {"name": "Celestial & Space Art", "focus": "Moon, stars, galaxy, space, and mystical art", "pins": 0},
+    {"name": "Coastal & Landscape Art", "focus": "Ocean, coastal, national parks, landscape art", "pins": 0},
+    {"name": "Funny & Novelty Wall Art", "focus": "Funny, quirky, novelty, and pop art prints", "pins": 0},
+    {"name": "Digital Art Printables", "focus": "All instant download art prints from the Etsy shop", "pins": 0},
+    {"name": "Travel & Paris Art Prints", "focus": "Eiffel Tower, Paris, and travel destination art", "pins": 0},
+    {"name": "Minimalist & Japandi Decor", "focus": "Minimalist, Japandi, and zen-inspired wall art", "pins": 0},
+    # ── Digital Planner boards ────────────────────────────────────────────────
+    {"name": "Digital Planners & Printables", "focus": "All digital planners — GoodNotes, Notability, iPad", "pins": 0},
+    {"name": "Kawaii Planner & Stationery", "focus": "Kawaii-themed planners, sticker packs, cute organization", "pins": 0},
+    {"name": "iPad Planner & GoodNotes Tips", "focus": "GoodNotes and Notability planner tips, digital planning", "pins": 0},
+    {"name": "Budget & Finance Planning", "focus": "Budget planners, savings trackers, money organization", "pins": 0},
+    {"name": "Fitness & Wellness Planner", "focus": "Health, fitness, habit tracking, wellness planning", "pins": 0},
+    {"name": "Student & Study Planner", "focus": "Student planners, study tips, academic organization", "pins": 0},
 ]
 
 LISTING_BOARD_MAP = {
+    # 3D print listings
     "L001": ["Cozy Home Lighting & Lamps", "3D Printed Home Décor", "OnBrandCraftz Etsy Shop", "Unique Gift Ideas for Home"],
     "L002": ["Boho Home Decor & Vases", "3D Printed Home Décor", "Modern Minimalist Living Room"],
     "L003": ["Coffee Bar Decor & Kitchen Gifts", "Unique Gift Ideas for Home", "OnBrandCraftz Etsy Shop"],
@@ -145,9 +165,132 @@ LISTING_BOARD_MAP = {
     "L008": ["Coffee Bar Decor & Kitchen Gifts", "Unique Gift Ideas for Home", "OnBrandCraftz Etsy Shop"],
     "L009": ["Housewarming Gift Ideas", "Unique Gift Ideas for Home", "OnBrandCraftz Etsy Shop"],
     "L010": ["Housewarming Gift Ideas", "Unique Gift Ideas for Home", "OnBrandCraftz Etsy Shop"],
+    # Wall art digital print listings
+    "DP1007": ["Kitchen & Food Wall Art", "Wall Art Prints & Decor", "OnBrandCraftz Etsy Shop", "Digital Art Printables"],
+    "DP1012": ["Abstract & Modern Art Prints", "Wall Art Prints & Decor", "Digital Art Printables", "OnBrandCraftz Etsy Shop"],
+    "DP1013": ["Botanical & Floral Art Prints", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1014": ["Wall Art Prints & Decor", "Unique Gift Ideas for Home", "Digital Art Printables"],
+    "DP1015": ["Wall Art Prints & Decor", "Unique Gift Ideas for Home", "Digital Art Printables"],
+    "DP1016": ["Minimalist & Japandi Decor", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1017": ["Abstract & Modern Art Prints", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1018": ["Minimalist & Japandi Decor", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1019": ["Botanical & Floral Art Prints", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1020": ["Botanical & Floral Art Prints", "Wall Art Prints & Decor", "Unique Gift Ideas for Home", "Digital Art Printables"],
+    "DP1021": ["Funny & Novelty Wall Art", "Wall Art Prints & Decor", "Unique Gift Ideas for Home", "Digital Art Printables"],
+    "DP1022": ["Coastal & Landscape Art", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1023": ["Celestial & Space Art", "Funny & Novelty Wall Art", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1024": ["Funny & Novelty Wall Art", "Wall Art Prints & Decor", "Unique Gift Ideas for Home", "Digital Art Printables"],
+    "DP1025": ["Funny & Novelty Wall Art", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1030": ["Celestial & Space Art", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1031": ["Abstract & Modern Art Prints", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1032": ["Botanical & Floral Art Prints", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1033": ["Travel & Paris Art Prints", "Wall Art Prints & Decor", "Unique Gift Ideas for Home", "Digital Art Printables"],
+    "DP1034": ["Coastal & Landscape Art", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1035": ["Botanical & Floral Art Prints", "Coastal & Landscape Art", "Wall Art Prints & Decor", "Digital Art Printables"],
+    "DP1036": ["Abstract & Modern Art Prints", "Wall Art Prints & Decor", "Unique Gift Ideas for Home", "Digital Art Printables"],
+    "DP1037": ["Kitchen & Food Wall Art", "Travel & Paris Art Prints", "Wall Art Prints & Decor", "Digital Art Printables"],
+    # Digital Planner listings
+    "DP1026": ["Digital Planners & Printables", "Kawaii Planner & Stationery", "iPad Planner & GoodNotes Tips", "OnBrandCraftz Etsy Shop"],
+    "DP1027": ["Digital Planners & Printables", "Student & Study Planner", "Kawaii Planner & Stationery", "iPad Planner & GoodNotes Tips"],
+    "DP1028": ["Digital Planners & Printables", "Budget & Finance Planning", "Kawaii Planner & Stationery", "iPad Planner & GoodNotes Tips"],
+    "DP1029": ["Digital Planners & Printables", "Fitness & Wellness Planner", "Kawaii Planner & Stationery", "iPad Planner & GoodNotes Tips"],
 }
 
 PIN_DESCRIPTIONS = {
+    # ── Wall Art listings ─────────────────────────────────────────────────────
+    "DP1007": {
+        "title": "Lemon Kitchen Wall Art Print | Mediterranean Digital Download",
+        "description": "🍋 Bring the warmth of the Mediterranean into your kitchen! This sun-drenched lemon print is giving major Italian holiday vibes — bright, vivid, and absolutely gorgeous framed above the stove or dining table. Instant download, print at home or at any print shop! ✨ Shop link in bio!\n\n#LemonWallArt #KitchenWallDecor #MediterraneanDecor #LemonPrint #KitchenArt #WallArtPrint #DigitalDownload #InstantDownload #PrintableArt #HomeDecorInspo",
+    },
+    "DP1012": {
+        "title": "Abstract Wall Art Print | Bold Modern Digital Download",
+        "description": "🎨 Instant gallery wall upgrade! This stunning abstract art print is bold, modern, and endlessly versatile — perfect for living rooms, offices, and creative spaces. Instant download in multiple sizes. 🖼️ Shop link in bio!\n\n#AbstractWallArt #AbstractPrint #ModernArt #WallArtPrint #DigitalDownload #PrintableArt #GalleryWall #HomeDecorIdeas #ContemporaryArt #InstantDownload",
+    },
+    "DP1013": {
+        "title": "Botanical Wall Art Print | Floral Digital Download Printable",
+        "description": "🌿 Bring the outdoors in! This gorgeous botanical print is perfect for bedrooms, living rooms, and gallery walls. Fresh, modern, and effortlessly beautiful. Instant download! 🌱 Shop link in bio!\n\n#BotanicalArt #BotanicalPrint #WallArtPrint #FlowerPrint #GreenWallArt #DigitalDownload #PrintableArt #HomeDecorInspo #NatureArt #InstantDownload",
+    },
+    "DP1014": {
+        "title": "Inspirational Quote Print | Feminine Wall Art Digital Download",
+        "description": "✨ Every morning needs this wall art! This elegant quote print is perfect for home offices, bedrooms, and dressing rooms — gorgeous framed above a desk or vanity. Instant download! 💕 Shop link in bio!\n\n#QuotePrint #WallQuote #InspirationalQuote #HomeOfficeDecor #FeminineDecor #WallArtPrint #DigitalDownload #PrintableArt #DeskDecor #InstantDownload",
+    },
+    "DP1015": {
+        "title": "Feminine Floral Quote Print | Wall Art Digital Download",
+        "description": "💖 This soft, feminine wall art is pure Pinterest-room energy! Perfect for bedrooms, vanity areas, and home offices. So pretty framed in gold! Instant download in all standard sizes. 🌸 Shop link in bio!\n\n#FeminineWallArt #QuotePrint #BedroomWallArt #GirlBoss #PinkDecor #WallArtPrint #DigitalDownload #PrintableArt #DressingRoom #InstantDownload",
+    },
+    "DP1016": {
+        "title": "Minimalist Japandi Wall Art | Nature Print Digital Download",
+        "description": "🍃 Serene, calm, and beautifully minimal. This Japandi-inspired wall art brings instant tranquility to any bedroom or living room. Instant download, print at home! 🏡 Shop link in bio!\n\n#JapandiDecor #MinimalistArt #WallArtPrint #NatureArt #SereneHome #DigitalDownload #PrintableArt #BedroomDecor #CalmHome #InstantDownload",
+    },
+    "DP1017": {
+        "title": "Dark Abstract Wall Art | Bold Moody Art Print Digital Download",
+        "description": "🖤 This dark, dramatic abstract is SO stunning as a statement piece! Bold, moody, and gallery-worthy — perfect for modern living rooms and sophisticated home offices. Instant download! 🎨 Shop link in bio!\n\n#DarkWallArt #AbstractArt #BoldArt #StatementPiece #ModernDecor #WallArtPrint #DigitalDownload #PrintableArt #GalleryWall #InstantDownload",
+    },
+    "DP1018": {
+        "title": "Japandi Nature Art Print | Minimalist Wall Decor Digital Download",
+        "description": "🌿 Clean, minimalist, and utterly beautiful. This Japandi nature print is the perfect addition to any calm, collected home — bedroom, study, or living room. Instant download! ✨ Shop link in bio!\n\n#JapandiArt #NaturePrint #MinimalistDecor #WallArtPrint #PeacefulHome #DigitalDownload #PrintableArt #ZenDecor #HomeDecorInspo #InstantDownload",
+    },
+    "DP1019": {
+        "title": "Autumn Botanical Wall Art | Nature Print Digital Download",
+        "description": "🍂 Cozy season vibes all year round with this gorgeous autumn botanical print! So warm and inviting — perfect for living rooms and reading nooks. Instant download, print tonight! 🌾 Shop link in bio!\n\n#AutumnArt #BotanicalPrint #NatureArt #CozyHome #WallArtPrint #DigitalDownload #PrintableArt #FallDecor #HomeDecorIdeas #InstantDownload",
+    },
+    "DP1020": {
+        "title": "Floral Wall Art Print | Botanical Pink Digital Download",
+        "description": "🌸 Pink, pretty, and perfectly feminine! This floral botanical print is everything you need on your gallery wall — soft, fresh, and so easy to style. Instant download! 🌷 Shop link in bio!\n\n#FloralWallArt #BotanicalPrint #FeminineDecor #PinkDecor #WallArtPrint #DigitalDownload #PrintableArt #FlowerArt #GalleryWall #InstantDownload",
+    },
+    "DP1021": {
+        "title": "Funny Dog Wall Art Print | Pub Novelty Digital Download",
+        "description": "🐶🍺 The wall art your man cave has been MISSING! Funny, charming, and the ultimate conversation starter — perfect gift for dog lovers and pub fans. Instant download! 😂 Shop link in bio!\n\n#FunnyWallArt #DogArt #ManCaveDecor #PubDecor #NoveltyArt #WallArtPrint #DigitalDownload #PrintableArt #GiftForHim #InstantDownload",
+    },
+    "DP1022": {
+        "title": "Coastal Ocean Wall Art Print | Navy Blue Digital Download",
+        "description": "🌊 Bring the coast home! This moody coastal print is stunning in any bedroom or living room — navy blues, ocean vibes, pure serenity. Instant download in multiple sizes. 🏖️ Shop link in bio!\n\n#CoastalArt #OceanWallArt #BeachDecor #NavyBlue #CoastalDecor #WallArtPrint #DigitalDownload #PrintableArt #SeaArt #InstantDownload",
+    },
+    "DP1023": {
+        "title": "Space Wall Art Print | Astronomy Rocket Digital Download",
+        "description": "🚀 To infinity and beyond! This space and astronomy print is out of this world — perfect for home offices, teen bedrooms, and science lovers. Instant download! ⭐ Shop link in bio!\n\n#SpaceArt #AstronomyPrint #CelestialArt #RocketArt #StarsPrint #WallArtPrint #DigitalDownload #PrintableArt #ScienceDecor #InstantDownload",
+    },
+    "DP1024": {
+        "title": "Vintage Car Wall Art Print | Automotive Digital Download",
+        "description": "🏎️ Rev up your walls! This classic automotive art is the ultimate man cave upgrade — bold, masculine, and so cool framed in a garage or home office. Instant download! 🔧 Shop link in bio!\n\n#CarWallArt #AutomotiveArt #VintageCarPrint #ManCaveDecor #GarageArt #WallArtPrint #DigitalDownload #PrintableArt #GiftForHim #InstantDownload",
+    },
+    "DP1025": {
+        "title": "Day of the Dead Wall Art | Mexican Folk Art Digital Download",
+        "description": "💀🌸 Vibrant, bold, and absolutely stunning! This Day of the Dead folk art print adds instant personality and color to any wall. Instant download — print and frame tonight! 🎨 Shop link in bio!\n\n#DayOfTheDead #MexicanFolkArt #DiaDeLosMuertos #ColorfulWallArt #FolkArt #WallArtPrint #DigitalDownload #PrintableArt #BohoDecor #InstantDownload",
+    },
+    "DP1030": {
+        "title": "Celestial Moon Wall Art | Mystical Space Print Digital Download",
+        "description": "🌙✨ Mystical, moody, and absolutely magical! This celestial moon print is perfect for bedrooms, reading nooks, and anyone with a witchy aesthetic. Instant download! 💫 Shop link in bio!\n\n#CelestialArt #MoonArt #MysticalDecor #WitchyAesthetic #StarsPrint #WallArtPrint #DigitalDownload #PrintableArt #CosmicArt #InstantDownload",
+    },
+    "DP1031": {
+        "title": "Abstract Canvas Art Print | Modern Bold Digital Download",
+        "description": "🎨 Gallery wall GOALS right here! This bold abstract canvas-style print brings instant sophistication to any space — looks incredible large-format! Instant download! 🖼️ Shop link in bio!\n\n#AbstractArt #CanvasArt #ModernArt #GalleryWall #BoldArt #WallArtPrint #DigitalDownload #PrintableArt #ContemporaryArt #InstantDownload",
+    },
+    "DP1032": {
+        "title": "Botanical Fern Art Print | Green Nature Wall Digital Download",
+        "description": "🌿 Lush, verdant, and absolutely fresh! This botanical fern print brings life and texture to any wall — perfect for the plant lover in your life. Instant download! 🪴 Shop link in bio!\n\n#FernArt #BotanicalPrint #NatureArt #GreenWallArt #PlantLover #WallArtPrint #DigitalDownload #PrintableArt #BotanicalDecor #InstantDownload",
+    },
+    "DP1033": {
+        "title": "Paris Eiffel Tower Wall Art | Travel Print Digital Download",
+        "description": "🗼🥂 Oui oui! This romantic Parisian print is giving major French girl energy — perfect above a bed, desk, or dining area. Instant download, print and frame tonight! ✨ Shop link in bio!\n\n#ParisWallArt #EiffelTower #FrenchDecor #TravelArt #ParisianStyle #WallArtPrint #DigitalDownload #PrintableArt #RomanticDecor #InstantDownload",
+    },
+    "DP1034": {
+        "title": "National Parks Wall Art | Landscape Adventure Print Digital Download",
+        "description": "🏔️🌵 Adventure is calling! This stunning landscape print is perfect for cabins, home offices, and any living room with personality — national parks inspired. Instant download! 🌄 Shop link in bio!\n\n#NationalParks #LandscapeArt #AdventureDecor #CabinDecor #NatureWallArt #WallArtPrint #DigitalDownload #PrintableArt #OutdoorDecor #InstantDownload",
+    },
+    "DP1035": {
+        "title": "Tropical Monstera Wall Art | Botanical Plant Print Digital Download",
+        "description": "🌴🌿 Tropical paradise on your walls! This lush monstera plant print is giving pure resort vibes — perfect for sunrooms, living rooms, and jungle-lover homes. Instant download! 🏝️ Shop link in bio!\n\n#MonsteraArt #TropicalWallArt #PlantArt #TropicalDecor #BotanicalPrint #WallArtPrint #DigitalDownload #PrintableArt #JungleVibes #InstantDownload",
+    },
+    "DP1036": {
+        "title": "Feminine Art Print | Abstract Woman Wall Art Digital Download",
+        "description": "💕 This soft, feminine art print is everything! Elegant, artistic, and so beautiful framed in a bedroom or dressing room. The perfect gift for her! Instant download! 🌸 Shop link in bio!\n\n#FeminineArt #WomanArt #WallArtPrint #GiftForHer #BedroomDecor #ElegantArt #DigitalDownload #PrintableArt #GirlsRoom #InstantDownload",
+    },
+    "DP1037": {
+        "title": "Italian Kitchen Wall Art | Pasta Food Print Digital Download",
+        "description": "🍝🫒 Mamma mia! This Italian kitchen art is everything a food lover's home needs — so warm, inviting, and full of la dolce vita energy. Instant download! ✨ Shop link in bio!\n\n#ItalianKitchenDecor #FoodWallArt #PastaArt #KitchenDecor #ItalianDecor #WallArtPrint #DigitalDownload #PrintableArt #FoodArt #InstantDownload",
+    },
+    # ── 3D Print listings ─────────────────────────────────────────────────────
     "L001": {
         "description": "✨ This 3D printed crystal glow lamp is giving total fairy-tale vibes! Faceted geometric design casts the most beautiful light patterns. Made to order in Indiana. 🛍️ Shop link in bio!\n\n#3DPrintedLamp #CrystalLamp #GlowLamp #GeometricDecor #HomeDecorInspo #ModernHomeDecor #NightLight #3DPrinting #EtsyFinds #UniqueHomeDecor",
         "title": "3D Printed Crystal Glow Lamp | Faceted Geometric Night Light",
@@ -187,6 +330,23 @@ PIN_DESCRIPTIONS = {
     "L010": {
         "description": "💎 Organize your jewelry in style! This hand painted boho wooden jewelry organizer has the prettiest floral details. Makes the most thoughtful gift for any occasion! 🌸 Shop link in bio!\n\n#JewelryOrganizer #HandPainted #BohoDecor #JewelryStorage #GiftForHer #WoodJewelryBox #HandmadeGifts #EtsyShop #UniqueGifts #JewelryBox",
         "title": "Hand Painted Boho Wood Jewelry Organizer | Decorative Storage with Drawers",
+    },
+    # ── Digital Planner listings ──────────────────────────────────────────────
+    "DP1026": {
+        "title": "Kawaii Digital Life Planner 2026 | GoodNotes iPad Planner | 104 Pages + Sticker Pack",
+        "description": "✨ Stay cute AND organized! This kawaii digital life planner for GoodNotes has EVERYTHING — 104 pages, 52 weekly spreads, monthly calendars, budget tracker, habit tracker, meal plan, and 200+ kawaii stickers included FREE! 🌸 Instant download, works on iPad + iPhone!\n\n#DigitalPlanner #GoodNotesPlanner #KawaiiPlanner #IPadPlanner #DigitalDownload #NotabilityPlanner #2026Planner #PlannerGirl #KawaiiStickers #FillablePlanner #InstantDownload #PlannerCommunity #DigitalPlannerGirl",
+    },
+    "DP1027": {
+        "title": "Kawaii Student Planner 2026 | GoodNotes School Planner | Academic Planner iPad",
+        "description": "🎓 Make school actually fun! This adorable kawaii student planner for GoodNotes is the study upgrade you didn't know you needed — 90 pages, weekly layouts, monthly calendars, habit tracker, and 200+ kawaii stickers! 💕 Instant download for iPad!\n\n#StudentPlanner #DigitalPlanner #GoodNotesPlanner #SchoolPlanner #KawaiiPlanner #StudyPlanner #AcademicPlanner #BackToSchool #IPadPlanner #DigitalDownload #KawaiiStickers #NotabilityPlanner #StudyWithMe",
+    },
+    "DP1028": {
+        "title": "Kawaii Budget Planner 2026 | Digital Finance Planner GoodNotes | Money Tracker iPad",
+        "description": "💰 Glow up your finances! This kawaii digital budget planner makes money management actually enjoyable — 102 pages with monthly budgets, savings trackers, debt payoff pages, and 200+ kawaii stickers! ✨ Instant download for GoodNotes + Notability!\n\n#BudgetPlanner #DigitalPlanner #FinancePlanner #GoodNotesPlanner #MoneyPlanner #SavingsTracker #DebtPayoff #KawaiiPlanner #IPadPlanner #DigitalDownload #BudgetTracker #FillablePlanner #FinanceGirl",
+    },
+    "DP1029": {
+        "title": "Kawaii Fitness Planner 2026 | Wellness Planner GoodNotes | Habit Tracker iPad",
+        "description": "🌸 Your glow-up starts NOW! This kawaii fitness + wellness planner for GoodNotes has everything you need — 91 pages with workout logs, meal planning, habit tracker, monthly reviews, and 200+ kawaii stickers! 💪 Instant download for iPad!\n\n#FitnessPlanner #WellnessPlanner #DigitalPlanner #GoodNotesPlanner #HabitTracker #MealPlanner #HealthPlanner #KawaiiPlanner #IPadPlanner #DigitalDownload #SelfCarePlanner #FitnessJourney #GlowUp",
     },
 }
 

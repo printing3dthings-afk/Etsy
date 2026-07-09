@@ -1,8 +1,26 @@
 """Tool definitions and implementations for the Marketing Agent."""
 
 import json
+from datetime import date
 from tools.data_store import DataStore
 from tools import etsy_api
+from tools.idea_tools import SUBMIT_IDEA_DEFINITION, handle_submit_idea
+
+# Seasonal promotion calendar indexed by month number
+_SEASONAL_CALENDAR = {
+    1:  ("January",   "New Year planners, goal-setting printables, fresh start journals, 2026 planner bundles"),
+    2:  ("February",  "Valentine's Day printables, love wall art, galentines gifts, romantic home decor"),
+    3:  ("March",     "Spring wall art, St. Patrick's Day, spring home decor, spring planner"),
+    4:  ("April",     "Easter printables, spring planner, earth day nature art, garden wall art"),
+    5:  ("May",       "Mother's Day gifts, personalized items, floral wall art, spring home decor"),
+    6:  ("June",      "Father's Day printables, summer wall art, boho summer decor, graduation gifts"),
+    7:  ("July",      "Fourth of July printables, mid-year reset planner, summer digital downloads"),
+    8:  ("August",    "Back to school planner, student organizer, academic planner 2026"),
+    9:  ("September", "Fall home decor, autumn wall art, fall planner, cozy season printables"),
+    10: ("October",   "Halloween printables, spooky digital download, fall decor, pumpkin art"),
+    11: ("November",  "Black Friday sale, Thanksgiving printables, holiday gift guides, winter prep"),
+    12: ("December",  "Christmas printables, holiday gift digital, winter wall art, New Year planner"),
+}
 
 TOOL_DEFINITIONS = [
     {
@@ -85,6 +103,7 @@ TOOL_DEFINITIONS = [
             "required": ["keywords"],
         },
     },
+    SUBMIT_IDEA_DEFINITION,
 ]
 
 
@@ -103,6 +122,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: DataStore) -> str:
         return _get_top_search_terms(store)
     if tool_name == "search_competitor_prices":
         return _search_competitor_prices(tool_input["keywords"], tool_input.get("limit", 10), store)
+    if tool_name == "submit_idea":
+        return handle_submit_idea(tool_input)
     return f"Unknown marketing tool: {tool_name}"
 
 
@@ -218,12 +239,18 @@ def _get_promotion_suggestions(store: DataStore) -> str:
         suggestions.append(
             {"type": "conversion", "suggestion": f"'{high_view_low_sale[0]['title']}' has high views but low sales. Consider improving photos or adjusting price."}
         )
-    suggestions.append(
-        {"type": "seasonal", "suggestion": "May: promote Mother's Day gifts, personalized items, and spring home decor."}
-    )
-    suggestions.append(
-        {"type": "seo", "suggestion": "Add long-tail tags like 'gift for mom 2026' and 'personalized Mother's Day gift' to listings."}
-    )
+    month_num = date.today().month
+    month_name, seasonal_focus = _SEASONAL_CALENDAR[month_num]
+    suggestions.append({
+        "type": "seasonal",
+        "suggestion": f"{month_name}: {seasonal_focus}.",
+    })
+    next_month_num = (month_num % 12) + 1
+    next_name, next_focus = _SEASONAL_CALENDAR[next_month_num]
+    suggestions.append({
+        "type": "upcoming_seasonal",
+        "suggestion": f"Coming up — {next_name}: start adding tags for {next_focus.split(',')[0]} now (4 weeks ahead).",
+    })
     return json.dumps({"promotion_suggestions": suggestions}, indent=2)
 
 

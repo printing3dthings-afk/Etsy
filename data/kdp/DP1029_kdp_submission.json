@@ -1,0 +1,228 @@
+{
+  "product_id": "DP1029",
+  "generated_date": "2026-06-02",
+  "kdp_metadata": {
+    "title": "Fitness & Wellness Planner 2026 \u2014 Coral Peach Edition",
+    "subtitle": "91-Page Health Tracker with Habit Log, Meal Planner, Workout Journal & Wellness Goals",
+    "author": "OnBrandCraftz",
+    "description": "Start your wellness journey with the Fitness & Wellness Planner 2026 in the energizing Coral Peach theme. This 91-page planner includes monthly fitness calendars for all 12 months, 52 weekly workout and meal planning spreads, habit tracker, progress measurement pages, goals, and notes. Designed for beginners and dedicated athletes alike \u2014 track workouts, meals, water intake, sleep, and self-care all in one beautiful book.",
+    "keywords": [
+      "fitness planner 2026",
+      "wellness journal notebook",
+      "workout planner women",
+      "health tracker journal 2026",
+      "meal planner fitness book",
+      "habit tracker fitness",
+      "self care planner notebook"
+    ],
+    "categories": [
+      "Health & Wellness",
+      "Calendars & Planners"
+    ],
+    "language": "English",
+    "publication_date": "2026-06-02"
+  },
+  "interior": {
+    "pdf_file": "/home/user/Etsy/data/digital_products/product_files/DP1029.pdf",
+    "interior_type": "color",
+    "paper_color": "white",
+    "trim_size": "8.5x11",
+    "page_count": 102,
+    "bleed": false,
+    "inspection": {
+      "file": "/home/user/Etsy/data/digital_products/product_files/DP1029.pdf",
+      "exists": true,
+      "size_mb": 15.54,
+      "page_count": 102,
+      "page_size_inches": [
+        8.5,
+        11.0
+      ],
+      "page_size_ok": true,
+      "pypdf2_used": true,
+      "checks": {
+        "file_size": true,
+        "page_count": true,
+        "page_size": true,
+        "pdf_format": true
+      },
+      "passed": true,
+      "issues": [],
+      "warnings": []
+    }
+  },
+  "cover": {
+    "cover_file": null,
+    "cover_exists": false,
+    "spine_width_inches": 0.4797,
+    "spine_width_mm": 12.18,
+    "full_bleed_required": true,
+    "cover_note": "Cover file 'DP1029_kawaii_cover.jpg' not found. A separate full-bleed KDP cover PDF must be created using KDP Cover Creator or a compatible design tool. The spine width above is the critical measurement.",
+    "cover_dimensions_note": "Full bleed cover dimensions: (9.4797)\" wide \u00d7 11.25\" tall (includes 0.25\" bleed on all sides)"
+  },
+  "pricing": {
+    "target_list_price_usd": 16.99,
+    "optimal_list_price_usd": 19.99,
+    "royalty_at_target": {
+      "list_price": 16.99,
+      "pages": 102,
+      "printing_cost": 2.074,
+      "gross_royalty": 10.194,
+      "net_royalty": 8.12,
+      "margin_pct": 47.8,
+      "breakeven_price": 3.46
+    },
+    "optimal_royalty": {
+      "list_price": 19.99,
+      "pages": 102,
+      "printing_cost": 2.074,
+      "gross_royalty": 11.994,
+      "net_royalty": 9.92,
+      "margin_pct": 49.6,
+      "breakeven_price": 3.46
+    },
+    "royalty_table_all_prices": [
+      {
+        "list_price": 14.99,
+        "pages": 102,
+        "printing_cost": 2.074,
+        "gross_royalty": 8.994,
+        "net_royalty": 6.92,
+        "margin_pct": 46.2,
+        "breakeven_price": 3.46
+      },
+      {
+        "list_price": 15.99,
+        "pages": 102,
+        "printing_cost": 2.074,
+        "gross_royalty": 9.594,
+        "net_royalty": 7.52,
+        "margin_pct": 47.0,
+        "breakeven_price": 3.46
+      },
+      {
+        "list_price": 16.99,
+        "pages": 102,
+        "printing_cost": 2.074,
+        "gross_royalty": 10.194,
+        "net_royalty": 8.12,
+        "margin_pct": 47.8,
+        "breakeven_price": 3.46
+      },
+      {
+        "list_price": 17.99,
+        "pages": 102,
+        "printing_cost": 2.074,
+        "gross_royalty": 10.794,
+        "net_royalty": 8.72,
+        "margin_pct": 48.5,
+        "breakeven_price": 3.46
+      },
+      {
+        "list_price": 18.99,
+        "pages": 102,
+        "printing_cost": 2.074,
+        "gross_royalty": 11.394,
+        "net_royalty": 9.32,
+        "margin_pct": 49.1,
+        "breakeven_price": 3.46
+      },
+      {
+        "list_price": 19.99,
+        "pages": 102,
+        "printing_cost": 2.074,
+        "gross_royalty": 11.994,
+        "net_royalty": 9.92,
+        "margin_pct": 49.6,
+        "breakeven_price": 3.46
+      }
+    ],
+    "etsy_price": 12.99,
+    "pricing_note": "KDP price set higher than Etsy to account for physical printing costs. Color interior printing cost included in royalty calculation. Recommend pricing $2-4 above Etsy price for comparable perceived value."
+  },
+  "distribution": {
+    "territories": "worldwide",
+    "kdp_select": false,
+    "kdp_select_note": "Do NOT enroll in KDP Select (Kindle Unlimited exclusivity). We sell the digital version on Etsy \u2014 exclusivity would block that.",
+    "expanded_distribution": true,
+    "expanded_distribution_note": "Enable Expanded Distribution to reach bookstores and libraries. Royalty drops to 40% for expanded distribution sales."
+  },
+  "checklist": [
+    {
+      "step": 1,
+      "task": "Create KDP publisher account at kdp.amazon.com",
+      "status": "pending",
+      "notes": "Use Printing3dthings@outlook.com. Need bank account and tax info (EIN or SSN)."
+    },
+    {
+      "step": 2,
+      "task": "Complete tax interview in KDP account",
+      "status": "pending",
+      "notes": "Required before first royalty payment. US persons use SSN/EIN on W-9."
+    },
+    {
+      "step": 3,
+      "task": "Interior PDF \u2014 verify file",
+      "status": "passed",
+      "notes": "PDF passes all KDP requirements.",
+      "file": "/home/user/Etsy/data/digital_products/product_files/DP1029.pdf"
+    },
+    {
+      "step": 4,
+      "task": "Create KDP cover PDF",
+      "status": "pending",
+      "notes": "Use KDP Cover Creator (free, in KDP dashboard) or Canva/InDesign. Spine width: 0.4797\" (12.18 mm). Include front cover + spine + back cover as one PDF."
+    },
+    {
+      "step": 5,
+      "task": "Set up new paperback title in KDP",
+      "status": "pending",
+      "notes": "KDP Dashboard \u2192 Create \u2192 Paperback. Fill in title, subtitle, author, description, keywords, categories. Select: Color interior, white paper, 8.5\u00d711 trim size."
+    },
+    {
+      "step": 6,
+      "task": "Upload interior PDF",
+      "status": "pending",
+      "notes": "Upload the interior PDF. KDP will run automated checks and show a preview. Review every page in the online previewer before continuing."
+    },
+    {
+      "step": 7,
+      "task": "Upload or create cover",
+      "status": "pending",
+      "notes": "Upload the cover PDF or use KDP Cover Creator. Ensure the spine text is readable and spine width matches calculation."
+    },
+    {
+      "step": 8,
+      "task": "Set pricing and distribution",
+      "status": "pending",
+      "notes": "Set list price to $16.99. Enable Expanded Distribution. Do NOT enroll in KDP Select. Review royalty calculation in KDP dashboard before publishing."
+    },
+    {
+      "step": 9,
+      "task": "Add AI content disclosure",
+      "status": "pending",
+      "notes": "KDP requires AI disclosure for AI-generated content (effective Jan 2024). In the KDP listing, check 'Yes' for AI-generated content. Add to book description: 'Cover art and interior design created with AI tools.'"
+    },
+    {
+      "step": 10,
+      "task": "Submit for review",
+      "status": "pending",
+      "notes": "KDP review takes 24-72 hours. You will receive an email when approved. The book will appear on Amazon within 72 hours of approval."
+    },
+    {
+      "step": 11,
+      "task": "Add Amazon link to Etsy listing",
+      "status": "pending",
+      "notes": "Once live on Amazon, add to Etsy listing description: 'Prefer a physical copy? Order the printed version on Amazon \u2192 [link]'. This adds perceived value without cannibalizing digital sales."
+    }
+  ],
+  "color_theme": "Coral Peach",
+  "primary_color": "#FD6C49",
+  "target_audience": "Fitness beginners, wellness journey, weight loss, healthy eating",
+  "format": {
+    "paper_size": "US Letter (8.5 \u00d7 11 inches)",
+    "orientation": "portrait",
+    "color_space": "sRGB",
+    "dpi_recommendation": "300 DPI minimum for all images"
+  }
+}

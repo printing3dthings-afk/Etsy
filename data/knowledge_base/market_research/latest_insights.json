@@ -1,0 +1,933 @@
+{
+  "research_date": "2026-06-03",
+  "categories": {
+    "wall_art": {
+      "category": "wall_art",
+      "total_listings_sampled": 250,
+      "top_title_words": [
+        [
+          "art",
+          422
+        ],
+        [
+          "wall",
+          382
+        ],
+        [
+          "decor",
+          135
+        ],
+        [
+          "abstract",
+          74
+        ],
+        [
+          "poster",
+          60
+        ],
+        [
+          "set",
+          57
+        ],
+        [
+          "prints",
+          54
+        ],
+        [
+          "modern",
+          51
+        ],
+        [
+          "nursery",
+          50
+        ],
+        [
+          "minimalist",
+          48
+        ],
+        [
+          "vintage",
+          45
+        ],
+        [
+          "botanical",
+          42
+        ],
+        [
+          "quote",
+          40
+        ],
+        [
+          "boho",
+          39
+        ],
+        [
+          "gallery",
+          37
+        ],
+        [
+          "watercolor",
+          36
+        ],
+        [
+          "home",
+          36
+        ],
+        [
+          "dark",
+          34
+        ],
+        [
+          "painting",
+          32
+        ],
+        [
+          "(digital",
+          31
+        ],
+        [
+          "download)",
+          30
+        ],
+        [
+          "neutral",
+          29
+        ],
+        [
+          "academia",
+          27
+        ],
+        [
+          "floral",
+          26
+        ],
+        [
+          "inspirational",
+          24
+        ],
+        [
+          "room",
+          22
+        ],
+        [
+          "gift",
+          16
+        ],
+        [
+          "pink",
+          16
+        ],
+        [
+          "living",
+          15
+        ],
+        [
+          "flower",
+          15
+        ]
+      ],
+      "top_tags": [
+        [
+          "printable wall art",
+          84
+        ],
+        [
+          "instant download",
+          61
+        ],
+        [
+          "digital download",
+          58
+        ],
+        [
+          "printable art",
+          30
+        ],
+        [
+          "wall art",
+          29
+        ],
+        [
+          "abstract wall art",
+          28
+        ],
+        [
+          "minimalist wall art",
+          26
+        ],
+        [
+          "gallery wall set",
+          25
+        ],
+        [
+          "home decor",
+          22
+        ],
+        [
+          "botanical wall art",
+          22
+        ],
+        [
+          "wall decor",
+          18
+        ],
+        [
+          "digital print",
+          18
+        ],
+        [
+          "inspirational quote",
+          15
+        ],
+        [
+          "modern wall art",
+          15
+        ],
+        [
+          "digital download art",
+          15
+        ],
+        [
+          "living room decor",
+          15
+        ],
+        [
+          "digital wall art",
+          14
+        ],
+        [
+          "nursery wall art",
+          14
+        ],
+        [
+          "neutral wall art",
+          13
+        ],
+        [
+          "living room wall art",
+          12
+        ],
+        [
+          "minimalist print",
+          12
+        ],
+        [
+          "botanical print",
+          12
+        ],
+        [
+          "digital prints",
+          11
+        ],
+        [
+          "nursery decor",
+          11
+        ],
+        [
+          "boho wall art",
+          11
+        ],
+        [
+          "contemporary art",
+          11
+        ],
+        [
+          "boho wall decor",
+          10
+        ],
+        [
+          "bedroom wall art",
+          10
+        ],
+        [
+          "cottagecore decor",
+          10
+        ],
+        [
+          "floral wall art",
+          9
+        ]
+      ],
+      "price_distribution": {
+        "under_3": 22,
+        "3_to_6": 73,
+        "6_to_10": 62,
+        "10_to_20": 39,
+        "over_20": 54
+      },
+      "avg_price": 34.32,
+      "median_price": 7.99,
+      "top_performers": [
+        {
+          "title": "Vintage Botanical Wall Art Printable Earth Tone Floral Print | Boho Cottagecore Decor | Digital Watercolor",
+          "price": 4.49,
+          "favorites": 1648
+        },
+        {
+          "title": "Vintage Owl Painting, Dark Academia Wall Art Print, Gothic Owl, Moody Wall Decor, Rustic Bird, Forestcore, Cottagecore, Animal 6-GOT042",
+          "price": 17.95,
+          "favorites": 1441
+        },
+        {
+          "title": "Bunny Nursery Wall Art, Digital Download Nursery Print, Instant Download, Kids Prints, Animal Nursery Art, Gray Nursery Decor, Kids Wall Art",
+          "price": 7.0,
+          "favorites": 1066
+        },
+        {
+          "title": "Beige Geometric Watercolor Print, Abstract Boho Wall Art (Digital Print)",
+          "price": 4.2,
+          "favorites": 739
+        },
+        {
+          "title": "Set of 4 Print, Gallery Wall Set, Printable Wall Art, Gallery Wall Prints, Set of Prints, Abstract Art, Watercolor Wall Art, Abstract Art",
+          "price": 16.0,
+          "favorites": 625
+        },
+        {
+          "title": "Mickey Mouse & Friends Prints, Donald, Goofy, Minnie, Daisy, Nursery Wall Art,  (Digital Download)",
+          "price": 1499.0,
+          "favorites": 464
+        },
+        {
+          "title": "Difference Maker Definition Print: Minimalist Wall Art (Instant Download)",
+          "price": 3.6,
+          "favorites": 367
+        },
+        {
+          "title": "Inspirational Quote Print, Wall Art Printable Quote, Digital Download Art, Wall Print Quote, Typography Wall Art, Motivational Quote Art",
+          "price": 6.0,
+          "favorites": 295
+        },
+        {
+          "title": "Brush Stroke Print Abstract Watercolor Wall Art Prints Downloadable Art Teal Green Blush Pink Ochre Art Modern Large Wall Art Bedroom Decor",
+          "price": 5.94,
+          "favorites": 221
+        },
+        {
+          "title": "Vintage Muted Seascape Gallery Wall Set, Printable Seacoast Neutral Gallery Wall, Coastal Gallery Art Print Set of 10, Digital Download",
+          "price": 13.25,
+          "favorites": 218
+        }
+      ]
+    },
+    "svg": {
+      "category": "svg",
+      "total_listings_sampled": 250,
+      "top_title_words": [
+        [
+          "cricut",
+          163
+        ],
+        [
+          "png",
+          117
+        ],
+        [
+          "silhouette",
+          114
+        ],
+        [
+          "teacher",
+          73
+        ],
+        [
+          "designs",
+          55
+        ],
+        [
+          "boho",
+          53
+        ],
+        [
+          "clipart",
+          53
+        ],
+        [
+          "quotes",
+          51
+        ],
+        [
+          "farmhouse",
+          42
+        ],
+        [
+          "floral",
+          40
+        ],
+        [
+          "farm",
+          40
+        ],
+        [
+          "retro",
+          33
+        ],
+        [
+          "(digital",
+          31
+        ],
+        [
+          "dxf",
+          31
+        ],
+        [
+          "bundle:",
+          31
+        ],
+        [
+          "christian",
+          31
+        ],
+        [
+          "mama",
+          30
+        ],
+        [
+          "quote",
+          29
+        ],
+        [
+          "faith",
+          29
+        ],
+        [
+          "shirt",
+          27
+        ],
+        [
+          "download)",
+          26
+        ],
+        [
+          "western",
+          26
+        ],
+        [
+          "motivational",
+          26
+        ],
+        [
+          "life",
+          24
+        ],
+        [
+          "cowboy",
+          23
+        ],
+        [
+          "school",
+          23
+        ],
+        [
+          "eps",
+          22
+        ],
+        [
+          "inspirational",
+          22
+        ],
+        [
+          "sign",
+          20
+        ],
+        [
+          "home",
+          20
+        ]
+      ],
+      "top_tags": [
+        [
+          "svg bundle",
+          35
+        ],
+        [
+          "instant download",
+          27
+        ],
+        [
+          "boho svg bundle",
+          26
+        ],
+        [
+          "teacher svg bundle",
+          25
+        ],
+        [
+          "farmhouse svg bundle",
+          25
+        ],
+        [
+          "motivational svg",
+          25
+        ],
+        [
+          "svg files for cricut",
+          24
+        ],
+        [
+          "digital download",
+          23
+        ],
+        [
+          "cricut svg",
+          20
+        ],
+        [
+          "silhouette",
+          20
+        ],
+        [
+          "cricut",
+          18
+        ],
+        [
+          "inspirational svg",
+          18
+        ],
+        [
+          "silhouette svg",
+          17
+        ],
+        [
+          "bible verse svg",
+          15
+        ],
+        [
+          "religious svg",
+          15
+        ],
+        [
+          "cricut cut file",
+          14
+        ],
+        [
+          "commercial use svg",
+          13
+        ],
+        [
+          "jesus svg",
+          13
+        ],
+        [
+          "faith svg",
+          13
+        ],
+        [
+          "svg",
+          12
+        ],
+        [
+          "cricut cut files",
+          12
+        ],
+        [
+          "teacher svg",
+          12
+        ],
+        [
+          "back to school svg",
+          12
+        ],
+        [
+          "png",
+          11
+        ],
+        [
+          "cut file",
+          11
+        ],
+        [
+          "svg for cricut",
+          11
+        ],
+        [
+          "christian svg",
+          11
+        ],
+        [
+          "teacher life svg",
+          11
+        ],
+        [
+          "funny teacher svg",
+          10
+        ],
+        [
+          "cowboy silhouette",
+          9
+        ]
+      ],
+      "price_distribution": {
+        "under_3": 95,
+        "3_to_6": 101,
+        "6_to_10": 25,
+        "10_to_20": 11,
+        "over_20": 18
+      },
+      "avg_price": 493.91,
+      "median_price": 3.5,
+      "top_performers": [
+        {
+          "title": "Christian svg bundle, Religious svg, Scripture svg, Bible Verse svg, Blessed svg, Jesus Svg, God Svg, Faith svg, Cut Files for Cricut",
+          "price": 3.33,
+          "favorites": 6645
+        },
+        {
+          "title": "Faith SVG Bundle / Cut Files / Commercial use / Cricut / Clip art / Bible Verse SVG / Religious SVG / Inspirational Quotes / Christian Svg",
+          "price": 9.4,
+          "favorites": 6553
+        },
+        {
+          "title": "Christian Quotes Bundle SVG, Faith Bundle SVG, Scripture, Bible Verses Bundle, Religious SVG, Cricut Cut Files,  Jesus, God, Faith Clipart",
+          "price": 1.39,
+          "favorites": 4111
+        },
+        {
+          "title": "SVG, PNG, Farmhouse Svg Bundle, Farmhouse Sign Svg, Farmhouse Sign Png, Vintage Svg, Vintage Sign Svg, Bar Sign Svg, Wine Svg, Home Svg",
+          "price": 5.96,
+          "favorites": 2245
+        },
+        {
+          "title": "Dandelion SVG, PNG, EPS, Dandelions SVg Bundle, Instant Download,  Digital Download, Floral Clipart, Flower Silhouette SvG",
+          "price": 3.75,
+          "favorites": 2087
+        },
+        {
+          "title": "Teacher Svg Bundle, Teacher Quote Svg, Teacher Shirt Svg, Teach Svg, Back To School Svg, School Quote Svg, Teacher Sayings Svg Png Cut File",
+          "price": 5.98,
+          "favorites": 1336
+        },
+        {
+          "title": "COWBOY BUNDLE SVG, Cowboy Svg, Cowboy hat svg, Cowboy Cut Files For Silhouette,Western Svg, Guns Cowboy Svg,Cowboy Clipart,Cowboy Boots Svg",
+          "price": 3.5,
+          "favorites": 1048
+        },
+        {
+          "title": "Gym Motivation SVG Bundle / Workout Bundle SVG / Cut Files / Commercial use / Cricut / Clip art / Fitness SVG / Gym Svg",
+          "price": 9.4,
+          "favorites": 819
+        },
+        {
+          "title": "Inspirational Christian Quote SVG Bundle: Sassy Mom, Retro Mama png, Cricut & Sublimation Files, Motivational, Positivity, Empowerment",
+          "price": 2.47,
+          "favorites": 733
+        },
+        {
+          "title": "Mama and Mini SVG Bundle, Mommy and Me SVG, Mothers Day SVG Bundle, Matching Shirt Svg, Png, Files For Cricut, Sublimation Designs Downloads",
+          "price": 5.84,
+          "favorites": 584
+        }
+      ]
+    },
+    "sublimation": {
+      "category": "sublimation",
+      "total_listings_sampled": 200,
+      "top_title_words": [
+        [
+          "tumbler",
+          352
+        ],
+        [
+          "sublimation",
+          228
+        ],
+        [
+          "wrap",
+          201
+        ],
+        [
+          "png",
+          192
+        ],
+        [
+          "skinny",
+          72
+        ],
+        [
+          "20oz",
+          65
+        ],
+        [
+          "teacher",
+          51
+        ],
+        [
+          "nurse",
+          50
+        ],
+        [
+          "floral",
+          40
+        ],
+        [
+          "western",
+          37
+        ],
+        [
+          "mama",
+          33
+        ],
+        [
+          "download)",
+          32
+        ],
+        [
+          "(digital",
+          24
+        ],
+        [
+          "inspirational",
+          23
+        ],
+        [
+          "seamless",
+          20
+        ],
+        [
+          "40oz",
+          20
+        ],
+        [
+          "straight",
+          19
+        ],
+        [
+          "designs",
+          18
+        ],
+        [
+          "mom",
+          17
+        ],
+        [
+          "cow",
+          16
+        ],
+        [
+          "(png",
+          16
+        ],
+        [
+          "day",
+          16
+        ],
+        [
+          "gift",
+          15
+        ],
+        [
+          "(png)",
+          13
+        ],
+        [
+          "wrap:",
+          13
+        ],
+        [
+          "tapered",
+          11
+        ],
+        [
+          "leopard",
+          11
+        ],
+        [
+          "retro",
+          10
+        ],
+        [
+          "life",
+          10
+        ],
+        [
+          "appreciation",
+          10
+        ]
+      ],
+      "top_tags": [
+        [
+          "sublimation design",
+          72
+        ],
+        [
+          "tumbler wrap",
+          53
+        ],
+        [
+          "tumbler sublimation",
+          49
+        ],
+        [
+          "digital download",
+          48
+        ],
+        [
+          "20oz tumbler wrap",
+          39
+        ],
+        [
+          "tumbler design",
+          37
+        ],
+        [
+          "sublimation designs",
+          35
+        ],
+        [
+          "sublimation tumbler",
+          32
+        ],
+        [
+          "skinny tumbler",
+          29
+        ],
+        [
+          "tumbler png",
+          28
+        ],
+        [
+          "tumbler wrap png",
+          26
+        ],
+        [
+          "sublimation png",
+          25
+        ],
+        [
+          "teacher tumbler wrap",
+          17
+        ],
+        [
+          "20oz skinny tumbler",
+          15
+        ],
+        [
+          "20oz skinny",
+          15
+        ],
+        [
+          "instant download",
+          14
+        ],
+        [
+          "20 oz tumbler",
+          13
+        ],
+        [
+          "sublimation",
+          13
+        ],
+        [
+          "sublimation wrap",
+          12
+        ],
+        [
+          "tumbler template",
+          12
+        ],
+        [
+          "png",
+          12
+        ],
+        [
+          "skinny tumbler wrap",
+          12
+        ],
+        [
+          "20 oz skinny tumbler",
+          12
+        ],
+        [
+          "20 oz skinny",
+          11
+        ],
+        [
+          "teacher appreciation",
+          11
+        ],
+        [
+          "floral tumbler wrap",
+          11
+        ],
+        [
+          "sublimation template",
+          10
+        ],
+        [
+          "nurse tumbler wrap",
+          10
+        ],
+        [
+          "20oz tumbler",
+          9
+        ],
+        [
+          "mom tumbler wrap",
+          9
+        ]
+      ],
+      "price_distribution": {
+        "under_3": 49,
+        "3_to_6": 110,
+        "6_to_10": 20,
+        "10_to_20": 8,
+        "over_20": 13
+      },
+      "avg_price": 540.64,
+      "median_price": 3.99,
+      "top_performers": [
+        {
+          "title": "Nurse Tumbler Wrap Png,Nurse Sublimation Designs,20 oz Skinny Tumbler Png",
+          "price": 1.97,
+          "favorites": 688
+        },
+        {
+          "title": "Western Love Png Sublimation Design, Love Western Png, Western Sublimation Design Png, Bull Skull Png, Gemstone Clipart, Instant Download",
+          "price": 75.0,
+          "favorites": 587
+        },
+        {
+          "title": "Western Tumbler Wrap Png, 20oz Skinny Sublimation Tumbler Design, Western Sublimation Design Png, Watercolor Cowboy Tumbler Png Downloads",
+          "price": 54.99,
+          "favorites": 570
+        },
+        {
+          "title": "Inflated Nurse Tumbler Wrap PNG,3D Nursing Tumble Sublimation, 20oz Medical Coat, Syringe Heart Design",
+          "price": 7.0,
+          "favorites": 453
+        },
+        {
+          "title": "1500+ Round Earring Sublimation Design Bundle (PNG Digital Download)",
+          "price": 1.99,
+          "favorites": 347
+        },
+        {
+          "title": "Converse Chuck Taylor sublimation tumbler wrap 20oz seamless template",
+          "price": 3.49,
+          "favorites": 328
+        },
+        {
+          "title": "Cornbread Sarcastic Tumbler Wrap Design, Sublimation Tumbler Wrap, 20oz Skinny Tumbler PNG, Digital Download, Funny Mom Tumbler png",
+          "price": 3.85,
+          "favorites": 324
+        },
+        {
+          "title": "Cow Tag Sublimation Design Bundle PNG, Southwest Cattle Earring Ear Tag Template, Western Key Chain Clip Art Instant Download",
+          "price": 3.0,
+          "favorites": 285
+        },
+        {
+          "title": "Add Your Own Name Tumbler Wrap Seamless Blue Floral Tumbler Wrap Sublimation Design 20oz Skinny Tumbler PNG Digital Download",
+          "price": 2.49,
+          "favorites": 258
+        },
+        {
+          "title": "Neon Moon Png, Desert Png, Png, Retro Sublimation, Neon Clipart, Western Sublimation Design, Png Sublimation Design, Instant Download",
+          "price": 111.0,
+          "favorites": 198
+        }
+      ]
+    }
+  },
+  "synthesis_available": true
+}

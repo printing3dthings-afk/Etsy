@@ -1,0 +1,405 @@
+{
+  "art_pipeline": [
+    {
+      "id": "WA001",
+      "title": "Wildflower Stem Trio",
+      "style": "Minimalist line art",
+      "niche": "Botanical / neutral minimalist",
+      "format": "Portrait",
+      "status": "pending_generation",
+      "market_rank": 1,
+      "suggested_price": 4.99,
+      "color_palette": {
+        "cream": "#F5F1EB",
+        "ink": "#1A1A1A"
+      },
+      "dall_e_prompt": "Fine art digital illustration, vertical portrait format. Three wildflower stems arranged simply on a warm cream (#F5F1EB) background — a delicate poppy center, a sprig of lavender left, a single cosmos bloom right. Minimalist continuous single-weight ink line art style, no fills, no shading. Stems cross subtly at the base. Loose gestural quality — hand-drawn feel, not mechanical. Small imperfections in the line weight give it an authentic feel. No frame, no background elements, no text. Elegant and simple.",
+      "lifestyle_prompts": {
+        "hero": "Professional interior lifestyle photo, 2400x2400px square. A framed minimalist wildflower line art print — thin black single-weight stems on cream — hung on a smooth white wall above a low natural oak sideboard. On the sideboard: a small white ceramic bud vase with a single dried stem, a folded cream linen cloth, one small round grey stone. Nothing else. Abundant soft natural light from a window left of frame. Scandinavian interior aesthetic — clean, quiet, airy. Camera eye-level. Art fills center 50% of frame. No clutter.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The minimalist wildflower line art in a thin natural wood frame, hung on a white wall just above and to the right of a bed — white linen pillows and a folded sage green blanket visible in lower frame. On the nightstand: a small white ceramic mug, a single open book face-down. Soft warm morning light from the left. Minimal, calm, feminine. Scandinavian bedroom aesthetic. Camera slightly above eye-level."
+      },
+      "tags": [
+        "botanical line art",
+        "wildflower print",
+        "minimalist wall art",
+        "line art print",
+        "botanical poster",
+        "boho wall art",
+        "floral line art",
+        "neutral wall decor",
+        "instant download",
+        "printable wall art",
+        "simple wall art",
+        "plant print",
+        "wildflower poster"
+      ],
+      "hand_painted_medium": null
+    },
+    {
+      "id": "WA002",
+      "title": "Antique Pine & Cone Specimen",
+      "style": "Vintage herbarium / botanical illustration",
+      "niche": "Dark academia / vintage botanical",
+      "format": "Portrait",
+      "status": "pending_generation",
+      "market_rank": 2,
+      "suggested_price": 5.99,
+      "color_palette": {
+        "parchment": "#EDE8DC",
+        "olive": "#5A6B40",
+        "umber": "#7A5A30",
+        "gold": "#C8A84A"
+      },
+      "dall_e_prompt": "Vintage botanical illustration in the style of 1800s naturalist herbarium plates. Subject: a single Pinus sylvestris (Scots pine) branch with two pine cones, rendered in muted watercolor over fine pencil linework. Aged cream/parchment background (#EDE8DC) with subtle foxing texture. Handwritten Latin specimen label below: 'Pinus sylvestris — Scots Pine'. Small measurement scale bar at bottom right. Muted olive green, warm umber, and dusty gold palette. Square or portrait format. No modern elements.",
+      "lifestyle_prompts": {
+        "hero": "Interior lifestyle photo, 2400x2400px square. The antique pine specimen print in a thin dark walnut frame hung on a warm cream-white wall above a dark mahogany writing desk. On the desk: a stack of three aged leather-bound books, a glass inkwell, a single cream pillar candle (unlit), a small dry pine cone. Warm amber desk lamp light from the right. Dark academia aesthetic — rich, intellectual, quiet. Camera eye-level. Art prominent in upper center of frame.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. Three antique botanical prints in matching thin dark walnut frames arranged in a horizontal row on a warm linen-colored wall — the pine specimen flanked by two similar specimen prints (fern left, oak branch right). Below the row: the top of a dark wood console table with a small clay pot plant. Even soft diffused light. Gallery wall aesthetic, museum-like arrangement."
+      },
+      "tags": [
+        "botanical print",
+        "vintage botanical",
+        "herbarium print",
+        "pine print",
+        "dark academia",
+        "antique botanical",
+        "nature print",
+        "forest wall art",
+        "botanical poster",
+        "vintage wall art",
+        "instant download",
+        "printable art",
+        "specimen print"
+      ],
+      "hand_painted_medium": "watercolor"
+    },
+    {
+      "id": "WA003",
+      "title": "Misty River Valley at Dusk",
+      "style": "Impressionist panoramic landscape",
+      "niche": "Above-sofa panoramic / wilderness",
+      "format": "Panoramic 3:1",
+      "status": "pending_generation",
+      "market_rank": 3,
+      "suggested_price": 6.99,
+      "color_palette": {
+        "taupe_sky": "#C9B8A8",
+        "slate_blue": "#7A8B9A",
+        "dark_pine": "#3A3830",
+        "warm_gold": "#C8A86A"
+      },
+      "dall_e_prompt": "Panoramic horizontal impressionistic oil painting, approximately 3:1 aspect ratio. A wide river valley at dusk: rolling forested hills recede into hazy blue-purple distance, a broad calm river reflects the pale golden sky in the foreground, silhouetted dark pine trees frame both edges, warm amber light catches the tree tops. Very muted, desaturated palette — dusty rose sky (#C9B8A8), slate blue mountains (#7A8B9A), dark olive tree silhouettes (#3A3830), warm gold reflection (#C8A86A). Thick visible brushstrokes, impressionistic technique, vintage oil painting aesthetic. No figures.",
+      "lifestyle_prompts": {
+        "hero": "Professional interior lifestyle photo, 2400x2400px square. A wide panoramic misty river valley landscape in a dark grey float frame hung on a deep sage green wall (#4A6550), centered above a wide taupe-linen sofa. The ultra-wide frame spans nearly the full width of the sofa. One blush cushion left, one charcoal cushion right on the sofa. A small dark walnut side table to the left holds a white ceramic vase with a small leafy green plant. Round dark coffee table partially visible in foreground. Natural light from camera left. Professional interior editorial style. Eye-level camera. Sofa occupies lower 50% of frame, art upper 40%.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The panoramic landscape in a dark grey float frame on a warm plaster-white wall, centered with generous white space above and below. A single large dried pampas grass stem in a tall thin terracotta vase stands on the floor below-left of the frame — the only prop. Soft natural light from the right. Calm and editorial. The panoramic width of the art is the hero of this shot."
+      },
+      "tags": [
+        "panoramic wall art",
+        "landscape print",
+        "above sofa art",
+        "wide wall art",
+        "mountain print",
+        "river landscape",
+        "impressionist art",
+        "nature wall art",
+        "forest print",
+        "instant download",
+        "large wall art",
+        "panoramic print",
+        "wilderness art"
+      ],
+      "hand_painted_medium": "oil_painting"
+    },
+    {
+      "id": "WA004",
+      "title": "Desert Arroyo — Abstract Landscape",
+      "style": "Abstract earth tone / neutral maximalism",
+      "niche": "Mid-century modern / neutral abstract",
+      "format": "Square",
+      "status": "pending_generation",
+      "market_rank": 4,
+      "suggested_price": 5.99,
+      "color_palette": {
+        "terracotta": "#C4714A",
+        "sand": "#D4C4A8",
+        "sage_grey": "#8A9E9A",
+        "umber": "#5A3A20"
+      },
+      "dall_e_prompt": "Abstract landscape painting, square format. Horizontal color field bands suggesting a desert scene: warm terracotta (#C4714A) lower third, dusty sandy beige (#D4C4A8) middle, muted sage blue-grey (#8A9E9A) upper sky. Gestural brushwork — no sharp edges, soft transitions. A single thin dark brown arroyo line winds through the middle band. Spare and meditative. Visible canvas texture. Palette: terracotta, warm sand, sage grey, deep umber accent. No figures, no text. Oil or acrylic painting aesthetic.",
+      "lifestyle_prompts": {
+        "hero": "Interior lifestyle photo, 2400x2400px square. The abstract terracotta and sand square painting in a simple thin natural wood frame, hung on a warm cream wall above a mid-century modern low-profile sofa in burnt orange or camel fabric. A round teak side table to the right holds a small terracotta pot with a cactus. Warm afternoon light from the left casting soft shadows. Mid-century modern aesthetic — clean lines, warm natural materials. Camera eye-level, slightly wide. Art centered in upper 45% of frame.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The abstract desert square painting in a natural oak float frame centered above a simple white plaster fireplace mantel. On the mantel: two small unglazed clay vessels of different heights, a smooth grey river stone. Warm ambient light. Architectural and calm. The art is the clear focal point."
+      },
+      "tags": [
+        "abstract wall art",
+        "earth tone art",
+        "terracotta print",
+        "boho wall art",
+        "neutral wall art",
+        "abstract landscape",
+        "desert art",
+        "modern wall art",
+        "minimalist art",
+        "instant download",
+        "living room art",
+        "abstract print",
+        "mid century art"
+      ],
+      "hand_painted_medium": null
+    },
+    {
+      "id": "WA005",
+      "title": "Fog Between the Pines",
+      "style": "Moody atmospheric forest",
+      "niche": "Dark academia / moody forest",
+      "format": "Portrait",
+      "status": "pending_generation",
+      "market_rank": 5,
+      "suggested_price": 5.99,
+      "color_palette": {
+        "forest_charcoal": "#2A3020",
+        "olive": "#5A6B40",
+        "sage_mist": "#C0CAB8",
+        "ivory": "#EDE8D8"
+      },
+      "dall_e_prompt": "Atmospheric oil painting, portrait format. Deep fog filling a dense pine forest at dawn or dusk — the trees are barely visible silhouettes in charcoal and deep forest green, becoming lighter and more ghostly as they recede into the mist. A soft diffused golden-white light source glows faintly through the fog center. Very moody and still. Palette: deep forest charcoal (#2A3020), mid olive green (#5A6B40), pale sage mist (#C0CAB8), warm ivory light (#EDE8D8). Visible impressionistic brushwork. No figures. Quiet, contemplative, cinematic.",
+      "lifestyle_prompts": {
+        "hero": "Interior lifestyle photo, 2400x2400px square. The moody fog and pine forest painting in a dark espresso wood frame hung on a deep charcoal-green wall (#2A3020). Below and left: the corner of a dark linen upholstered chair. On a small dark side table: a matte black ceramic vase with two dried eucalyptus stems, a small amber glass candle holder (glowing). Very low warm light from the candle and a soft off-screen lamp. Moody, cinematic, still. Dark academia meets forest cabin aesthetic. Eye-level camera.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The moody forest painting in a dark frame centered above a bed with deep forest green linen duvet and charcoal pillows. The art takes up the upper 40% of the frame; the pillows fill the lower 35%. One small bedside lamp glows warmly on the right edge. Dark and atmospheric. The painting feels like a window into a forest."
+      },
+      "tags": [
+        "dark forest print",
+        "moody wall art",
+        "forest art",
+        "dark academia",
+        "atmospheric art",
+        "pine tree print",
+        "foggy forest",
+        "nature wall art",
+        "dark wall art",
+        "instant download",
+        "moody landscape",
+        "woodland art",
+        "gothic art"
+      ],
+      "hand_painted_medium": "oil_painting"
+    },
+    {
+      "id": "WA006",
+      "title": "Garden Roses in Soft Rain",
+      "style": "Soft watercolor floral",
+      "niche": "Romantic floral / bedroom / gifting",
+      "format": "Portrait",
+      "status": "pending_generation",
+      "market_rank": 6,
+      "suggested_price": 4.99,
+      "color_palette": {
+        "blush": "#F0C4C4",
+        "dusty_rose": "#D4909A",
+        "sage": "#8A9E7A",
+        "cream": "#FFF8F2"
+      },
+      "dall_e_prompt": "Soft watercolor painting, portrait format. A loose bouquet of garden roses rendered in wet-on-wet watercolor technique — petals bleeding softly at the edges, colors merging. Palette: blush pink (#F0C4C4), dusty rose (#D4909A), sage green stems and leaves (#8A9E7A), warm cream background (#FFF8F2). A few falling petals scattered below the bouquet. No hard outlines — pure watercolor, fluid and romantic. Large areas of white paper showing through for a light, airy feel. No frame, no text. Delicate and feminine.",
+      "lifestyle_prompts": {
+        "hero": "Interior lifestyle photo, 2400x2400px square. The blush watercolor rose bouquet print in a thin white or pale gold frame hung on a soft blush-pink wall (#F5E8E4). Below the art: the corner of a white upholstered bed — crisp white linen duvet, one blush pink pillow, one white pillow. On the nightstand: a small clear glass vase with two fresh white roses and a eucalyptus sprig. Soft warm morning window light from the left. Romantic, feminine, gentle. Bedroom lifestyle, eye-level.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The rose watercolor print in a thin gold oval or rectangular frame propped on a white marble vanity top, leaning against the wall. On the vanity: a small glass perfume bottle, a blush pink hair ribbon, a white ceramic ring dish, fresh rose petals scattered. Soft diffused natural light. Feminine and aspirational. Close-crop — art fills 55% of frame."
+      },
+      "tags": [
+        "floral wall art",
+        "rose print",
+        "watercolor floral",
+        "botanical print",
+        "blush wall art",
+        "romantic art",
+        "flower print",
+        "bedroom wall art",
+        "feminine art",
+        "instant download",
+        "watercolor print",
+        "pink wall art",
+        "rose wall art"
+      ],
+      "hand_painted_medium": "watercolor"
+    },
+    {
+      "id": "WA007",
+      "title": "Lunar Cycle — Antique Celestial Chart",
+      "style": "Antique astronomical illustration",
+      "niche": "Celestial / mystical / astrology",
+      "format": "Portrait",
+      "status": "pending_generation",
+      "market_rank": 7,
+      "suggested_price": 5.99,
+      "color_palette": {
+        "parchment": "#EDE8DC",
+        "midnight_ink": "#1A1A2A",
+        "gold": "#C8A84A"
+      },
+      "dall_e_prompt": "Antique astronomical chart illustration. Eight moon phases arranged in a horizontal arc across the center — from new moon (left) to full moon (center) to new moon (right). Each phase rendered in fine stippling and hatching in the style of 1800s scientific illustration. Warm cream/parchment background (#EDE8DC). Surrounding the arc: delicate hand-drawn constellation lines and small star dots. Elegant serif title below center: 'Phases of the Moon'. Fine ornamental border around the edge. Palette: deep midnight ink (#1A1A2A) on aged parchment, with subtle gold (#C8A84A) highlights on the full moon. Portrait format.",
+      "lifestyle_prompts": {
+        "hero": "Interior lifestyle photo, 2400x2400px square. The antique lunar cycle chart in a thin dark or aged gold frame hung on a deep navy or midnight blue wall (#1A1E35). On a dark wood shelf below: a small clear quartz crystal cluster, a white taper candle in a brass holder (lit), a small open book with an illustrated page visible. Very low warm candlelight supplemented by soft ambient lamp. Celestial, mystical, intimate. The gold in the frame and candle echo the gold in the moon illustration. Eye-level camera.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The lunar chart print in a thin antique gold frame on a warm white wall. Below: a simple cream plaster shelf holds a single dried white lunaria (money plant) stem in a bud vase. Soft natural light from the right. Clean and elegant — lets the detailed illustration speak. Minimalist, art-gallery feel."
+      },
+      "tags": [
+        "moon phase print",
+        "celestial wall art",
+        "lunar print",
+        "moon art",
+        "astronomy print",
+        "celestial print",
+        "mystical wall art",
+        "boho moon art",
+        "antique chart",
+        "instant download",
+        "witchy wall art",
+        "moon phases",
+        "astrology print"
+      ],
+      "hand_painted_medium": null
+    },
+    {
+      "id": "WA008",
+      "title": "Pacific Northwest — Vintage Travel Poster",
+      "style": "WPA vintage travel poster",
+      "niche": "National parks / travel / adventure",
+      "format": "Portrait",
+      "status": "pending_generation",
+      "market_rank": 8,
+      "suggested_price": 4.99,
+      "color_palette": {
+        "forest_green": "#2A4A2A",
+        "slate_blue": "#4A6A8A",
+        "cream": "#F0E8D0",
+        "amber": "#C8843A"
+      },
+      "dall_e_prompt": "Vintage travel poster illustration in the style of 1930s-1940s WPA national park posters. Subject: a dramatic Pacific Northwest mountain scene — a snow-capped peak reflected in a glacial lake, flanked by dark green fir trees, with bold stylized clouds. Flat bold color areas with visible grain texture. Palette: deep forest green (#2A4A2A), slate blue (#4A6A8A), warm cream (#F0E8D0), golden amber (#C8843A), dark ink outline. Bold sans-serif title at top: 'PACIFIC NORTHWEST' — subtitle: 'The Wilderness Awaits'. Rectangular vertical poster format. Retro, graphic, striking.",
+      "lifestyle_prompts": {
+        "hero": "Interior lifestyle photo, 2400x2400px square. The bold Pacific Northwest WPA vintage poster in a simple black or dark wood frame hung on a warm whitewashed plank wall. Below-left: the top of a raw-edge wooden shelf holding a vintage brass compass, a small folded topographic map, a worn leather notebook. Warm amber late-afternoon light from the right. Adventure/cabin aesthetic — rugged but styled. Camera eye-level. Art fills center 55% of frame.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The vintage travel poster as the centerpiece of a small gallery wall — flanked by two smaller framed antique maps in the same dark frame style. Hung on a warm cream wall above a simple dark wood desk. On the desk: an open laptop (screen off), a coffee mug, a small succulent. Natural daylight. Clean and aspirational home office."
+      },
+      "tags": [
+        "national park print",
+        "travel poster",
+        "vintage poster",
+        "pacific northwest",
+        "mountain print",
+        "retro wall art",
+        "WPA poster",
+        "adventure art",
+        "hiking art",
+        "instant download",
+        "washington print",
+        "outdoor wall art",
+        "wilderness art"
+      ],
+      "hand_painted_medium": null
+    },
+    {
+      "id": "WA009",
+      "title": "Low Tide, Still Morning",
+      "style": "Abstract coastal / minimalist seascape",
+      "niche": "Coastal / bedroom / calm",
+      "format": "Wide 2:1",
+      "status": "pending_generation",
+      "market_rank": 9,
+      "suggested_price": 5.99,
+      "color_palette": {
+        "warm_sand": "#C8B898",
+        "silver_blue": "#A8B8C0",
+        "pale_sky": "#C0CAD0",
+        "horizon": "#6A7A80"
+      },
+      "dall_e_prompt": "Abstract coastal oil painting, wide horizontal format (approx 2:1 ratio). A calm, abstract seascape at low tide: the lower 40% is wet sand with soft reflections — thin horizontal brushstrokes in warm sand (#C8B898) and silver-blue (#A8B8C0). A thin horizon line divides it from the sky — pale hazy blue-grey above (#C0CAD0) with soft warm cloud tones. Very little happening — enormous quiet. Palette: warm sand, silver-blue, pale grey-sky, horizon dark line (#6A7A80). Visible palette knife and brush texture. Minimalist, meditative, coastal. No figures, no boats, no props.",
+      "lifestyle_prompts": {
+        "hero": "Interior lifestyle photo, 2400x2400px square. The wide abstract seascape in a thin light natural wood or driftwood-grey frame hung on a pale sandy-white wall (#F5F0E8). Below: the back edge of a bed with natural linen duvet in warm oatmeal tones, one pale blue pillow, one cream pillow. On the nightstand: a small piece of smooth driftwood, a white ceramic dish with two smooth sea glass pebbles. Pale cool morning light flooding from the left. Coastal, calm, serene. Wide art emphasizes the horizontal quiet of the room.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The abstract coastal painting in a driftwood-grey frame above a low cream linen sofa. One natural woven throw pillow. To the right of the sofa: a tall thin driftwood branch in a sand-colored ceramic vase. Pale cool natural light. Coastal Scandinavian aesthetic — clean, quiet, airy. Camera eye-level."
+      },
+      "tags": [
+        "coastal wall art",
+        "ocean print",
+        "beach art",
+        "seascape print",
+        "abstract ocean",
+        "coastal decor",
+        "nautical art",
+        "wide wall art",
+        "bedroom wall art",
+        "instant download",
+        "calm art",
+        "minimalist seascape",
+        "ocean wall art"
+      ],
+      "hand_painted_medium": "gouache"
+    },
+    {
+      "id": "WA010",
+      "title": "Golden Hour Over the Alpine Meadow",
+      "style": "Impressionist golden hour landscape",
+      "niche": "Nature / golden hour / landscape",
+      "format": "Portrait",
+      "status": "pending_generation",
+      "market_rank": 10,
+      "suggested_price": 5.99,
+      "color_palette": {
+        "amber": "#D4943A",
+        "coral": "#C46840",
+        "deep_olive": "#3A4830",
+        "slate": "#7A8A9E",
+        "sky": "#E8C870"
+      },
+      "dall_e_prompt": "Impressionistic oil painting, vertical portrait format. A mountain alpine meadow at golden hour: the foreground filled with wildflowers in warm orange, yellow, and red catching the last horizontal light, a dark pine forest mid-ground in deep olive and charcoal green, dramatic mountain peaks in slate blue-purple behind, a luminous golden-amber sky above. Thick impasto brushstrokes, paint texture visible. The light source is low — everything warm in the foreground, cool in the distance. Palette: golden amber (#D4943A), warm coral (#C46840), deep olive (#3A4830), slate mountain (#7A8A9E), luminous sky (#E8C870). Bold and rich, museum quality feel.",
+      "lifestyle_prompts": {
+        "hero": "Interior lifestyle photo, 2400x2400px square. The vivid impressionist alpine meadow painting in a warm antique gold float frame hung on a warm white or very light warm grey wall. Below: a natural linen sofa in warm oatmeal with a chunky knit amber/ochre throw blanket draped over one arm. On a round dark walnut side table: a ceramic mug of coffee, a small open nature journal. Warm afternoon golden light from the left — the light matches the golden tones in the painting. Cozy, aspirational, nature-loving aesthetic. Camera eye-level.",
+        "secondary": "Interior lifestyle photo, 2400x2400px square. The alpine meadow painting as a large statement piece on a staircase landing wall — white wall, wide dark wood stair banister visible at lower right for scale context. The painting is large and commanding. A single round wall sconce lamp glows warmly at lower left, illuminating the painting. Dramatic and architectural. Shows the art's impact at large scale."
+      },
+      "tags": [
+        "landscape print",
+        "mountain print",
+        "golden hour art",
+        "nature wall art",
+        "wildflower print",
+        "impressionist art",
+        "alpine art",
+        "sunset print",
+        "landscape wall art",
+        "instant download",
+        "living room art",
+        "scenic art",
+        "meadow print"
+      ],
+      "hand_painted_medium": null
+    }
+  ],
+  "lifestyle_photo_references": {
+    "research_findings": {
+      "highest_converting_style": "Room scene mockups — answer buyer question 'what will this look like in my home?'",
+      "top_interior_aesthetics": [
+        "Scandinavian",
+        "Mid-century modern",
+        "Minimalist bedroom",
+        "Dark academia",
+        "Coastal",
+        "Boho"
+      ],
+      "key_rules": [
+        "Neutral walls so art stays focal point",
+        "Realistic natural shadows behind frame",
+        "Minimal props — 2-3 max, thematically matched to art",
+        "Natural light preferred over artificial",
+        "Art fills 40-55% of frame",
+        "All 10 photo slots used — room scenes rank 1-3, detail shots rank 4-6, info graphics rank 7-10"
+      ],
+      "room_type_by_art_niche": {
+        "botanical_line_art": "Scandinavian bedroom or white sideboard",
+        "dark_academia_botanical": "Study desk or gallery wall with dark walnut frames",
+        "panoramic_landscape": "Living room above sofa (sage green wall)",
+        "abstract_earth_tone": "Mid-century modern living room or fireplace mantel",
+        "moody_forest": "Dark charcoal bedroom or reading nook",
+        "watercolor_floral": "Romantic bedroom or vanity",
+        "celestial_chart": "Navy wall with candles or minimalist white wall",
+        "vintage_travel_poster": "Adventure cabin shelf or home office gallery wall",
+        "abstract_coastal": "Coastal bedroom or linen sofa living room",
+        "golden_hour_landscape": "Warm linen sofa living room or staircase landing"
+      }
+    }
+  }
+}

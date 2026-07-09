@@ -1,0 +1,5 @@
+.mrow{display:flex;gap:12px;min-height:0}
+.mrow.rowA{flex:1}
+.mrow.rowB{flex:1.25}
+.mrow.rowC{flex:0.95}
+.col-chat{flex:1.6 1 0;min-width:0}

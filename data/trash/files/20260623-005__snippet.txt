@@ -1,0 +1,6 @@
+// ── Focus mode toggle (visual only; element only present when the voice widget is shown) ──
+const focusToggle = document.getElementById('focus-toggle');
+if(focusToggle) focusToggle.addEventListener('click', function(){
+  this.classList.toggle('on');
+  this.textContent = this.classList.contains('on') ? 'FOCUS MODE: ON' : 'FOCUS MODE: OFF';
+});

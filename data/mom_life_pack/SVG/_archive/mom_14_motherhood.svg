@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Motherhood SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+    </style>
+  </defs>
+
+  <circle cx="400" cy="400" r="322" fill="none" stroke="black" stroke-width="2.5"/>
+<circle cx="400" cy="400" r="304" fill="none" stroke="black" stroke-width="1"/>
+  <circle cx="687.00" cy="400.00" r="1.8" fill="black"/>
+<circle cx="684.91" cy="434.59" r="1.8" fill="black"/>
+<circle cx="678.66" cy="468.68" r="1.8" fill="black"/>
+<circle cx="668.35" cy="501.77" r="1.8" fill="black"/>
+<circle cx="654.13" cy="533.38" r="1.8" fill="black"/>
+<circle cx="636.20" cy="563.03" r="1.8" fill="black"/>
+<circle cx="614.82" cy="590.32" r="1.8" fill="black"/>
+<circle cx="590.32" cy="614.82" r="1.8" fill="black"/>
+<circle cx="563.03" cy="636.20" r="1.8" fill="black"/>
+<circle cx="533.38" cy="654.13" r="1.8" fill="black"/>
+<circle cx="501.77" cy="668.35" r="1.8" fill="black"/>
+<circle cx="468.68" cy="678.66" r="1.8" fill="black"/>
+<circle cx="434.59" cy="684.91" r="1.8" fill="black"/>
+<circle cx="400.00" cy="687.00" r="1.8" fill="black"/>
+<circle cx="365.41" cy="684.91" r="1.8" fill="black"/>
+<circle cx="331.32" cy="678.66" r="1.8" fill="black"/>
+<circle cx="298.23" cy="668.35" r="1.8" fill="black"/>
+<circle cx="266.62" cy="654.13" r="1.8" fill="black"/>
+<circle cx="236.97" cy="636.20" r="1.8" fill="black"/>
+<circle cx="209.68" cy="614.82" r="1.8" fill="black"/>
+<circle cx="185.18" cy="590.32" r="1.8" fill="black"/>
+<circle cx="163.80" cy="563.03" r="1.8" fill="black"/>
+<circle cx="145.87" cy="533.38" r="1.8" fill="black"/>
+<circle cx="131.65" cy="501.77" r="1.8" fill="black"/>
+<circle cx="121.34" cy="468.68" r="1.8" fill="black"/>
+<circle cx="115.09" cy="434.59" r="1.8" fill="black"/>
+<circle cx="113.00" cy="400.00" r="1.8" fill="black"/>
+<circle cx="115.09" cy="365.41" r="1.8" fill="black"/>
+<circle cx="121.34" cy="331.32" r="1.8" fill="black"/>
+<circle cx="131.65" cy="298.23" r="1.8" fill="black"/>
+<circle cx="145.87" cy="266.62" r="1.8" fill="black"/>
+<circle cx="163.80" cy="236.97" r="1.8" fill="black"/>
+<circle cx="185.18" cy="209.68" r="1.8" fill="black"/>
+<circle cx="209.68" cy="185.18" r="1.8" fill="black"/>
+<circle cx="236.97" cy="163.80" r="1.8" fill="black"/>
+<circle cx="266.62" cy="145.87" r="1.8" fill="black"/>
+<circle cx="298.23" cy="131.65" r="1.8" fill="black"/>
+<circle cx="331.32" cy="121.34" r="1.8" fill="black"/>
+<circle cx="365.41" cy="115.09" r="1.8" fill="black"/>
+<circle cx="400.00" cy="113.00" r="1.8" fill="black"/>
+<circle cx="434.59" cy="115.09" r="1.8" fill="black"/>
+<circle cx="468.68" cy="121.34" r="1.8" fill="black"/>
+<circle cx="501.77" cy="131.65" r="1.8" fill="black"/>
+<circle cx="533.38" cy="145.87" r="1.8" fill="black"/>
+<circle cx="563.03" cy="163.80" r="1.8" fill="black"/>
+<circle cx="590.32" cy="185.18" r="1.8" fill="black"/>
+<circle cx="614.82" cy="209.68" r="1.8" fill="black"/>
+<circle cx="636.20" cy="236.97" r="1.8" fill="black"/>
+<circle cx="654.13" cy="266.62" r="1.8" fill="black"/>
+<circle cx="668.35" cy="298.23" r="1.8" fill="black"/>
+<circle cx="678.66" cy="331.32" r="1.8" fill="black"/>
+<circle cx="684.91" cy="365.41" r="1.8" fill="black"/>
+  <text x="400" y="244" text-anchor="middle" font-family="Cormorant, serif" font-size="21" fill="black" letter-spacing="7">THE ART OF</text>
+  <line x1="295.0" y1="264" x2="390" y2="264" stroke="black" stroke-width="1"/><polygon points="400,258 406,264 400,270 394,264" fill="black"/><line x1="410" y1="264" x2="505.0" y2="264" stroke="black" stroke-width="1"/>
+  <text x="400" y="370" text-anchor="middle" font-family="GreatVibes, cursive" font-size="96" fill="black">Motherhood</text>
+  <line x1="295.0" y1="392" x2="390" y2="392" stroke="black" stroke-width="1"/><polygon points="400,386 406,392 400,398 394,392" fill="black"/><line x1="410" y1="392" x2="505.0" y2="392" stroke="black" stroke-width="1"/>
+  <text x="400" y="448" text-anchor="middle" font-family="Cormorant, serif" font-size="20" fill="black" letter-spacing="5">LOVE WITHOUT LIMITS</text>
+  <text x="400" y="480" text-anchor="middle" font-family="Cormorant, serif" font-size="20" fill="black" letter-spacing="5">GRACE WITHOUT END</text>
+  <text x="400" y="516" text-anchor="middle" font-family="CormorantItalic, serif" font-size="16" fill="black" letter-spacing="3">my greatest work</text>
+
+</svg>

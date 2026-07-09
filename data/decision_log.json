@@ -1,0 +1,22 @@
+[
+  {
+    "timestamp": "2026-06-02T17:46:36.979422Z",
+    "event_type": "weekly_report",
+    "description": "Generated weekly report \u2014 93 listings, $20.45 net revenue last 7 days",
+    "data": {
+      "report_path": "data/reports/2026-06-02_weekly_report.md",
+      "listing_count": 93
+    },
+    "outcome": "success"
+  },
+  {
+    "timestamp": "2026-06-02T17:46:41.449079Z",
+    "event_type": "weekly_report",
+    "description": "Generated weekly report \u2014 93 listings, $20.45 net revenue last 7 days",
+    "data": {
+      "report_path": "data/reports/2026-06-02_weekly_report.md",
+      "listing_count": 93
+    },
+    "outcome": "success"
+  }
+]

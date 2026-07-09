@@ -1,0 +1,65 @@
+{
+  "DP1094": {
+    "status": "success",
+    "listing_id": 4515674594,
+    "uploaded": "DP1094_print_sizes.zip",
+    "deleted": [
+      "DP1070_print_sizes.zip"
+    ],
+    "file_id": 1491358907300
+  },
+  "DP1095": {
+    "status": "success",
+    "listing_id": 4515674144,
+    "uploaded": "DP1095_print_sizes.zip",
+    "deleted": [
+      "DP1070_print_sizes.zip"
+    ],
+    "file_id": 1491358913902
+  },
+  "DP1096": {
+    "status": "success",
+    "listing_id": 4515673064,
+    "uploaded": "DP1096_print_sizes.zip",
+    "deleted": [
+      "DP1070_print_sizes.zip"
+    ],
+    "file_id": 1492522694195
+  },
+  "DP1097": {
+    "status": "success",
+    "listing_id": 4515672972,
+    "uploaded": "DP1097_print_sizes.zip",
+    "deleted": [
+      "DP1070_print_sizes.zip"
+    ],
+    "file_id": 1492522699255
+  },
+  "DP1098": {
+    "status": "success",
+    "listing_id": 4515676185,
+    "uploaded": "DP1098_print_sizes.zip",
+    "deleted": [
+      "DP1070_print_sizes.zip"
+    ],
+    "file_id": 1492522704243
+  },
+  "DP1099": {
+    "status": "success",
+    "listing_id": 4515672588,
+    "uploaded": "DP1099_print_sizes.zip",
+    "deleted": [
+      "DP1070_print_sizes.zip"
+    ],
+    "file_id": 1492522710843
+  },
+  "DP1100": {
+    "status": "success",
+    "listing_id": 4515674042,
+    "uploaded": "DP1100_print_sizes.zip",
+    "deleted": [
+      "DP1084_print_sizes.zip"
+    ],
+    "file_id": 1491358943112
+  }
+}

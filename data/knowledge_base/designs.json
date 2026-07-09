@@ -1,0 +1,35 @@
+[
+  {
+    "id": "des_1778926537863",
+    "agent": "Art Creation Agent",
+    "style_name": "Boho Botanical Watercolor \u2014 Earthy Wildflower",
+    "description": "Loose expressive watercolor wildflower bouquet combining pampas grass, dried lavender, eucalyptus, daisy clusters and seed heads. Cottagecore-meets-boho aesthetic with gallery-ready negative space composition. Translucent layered washes, visible paper texture, warm-brown linework (no black). Centered vertical format. Strong performer in home decor niche.",
+    "target_audience": "Millennial women, boho home decor lovers, cottagecore enthusiasts, gallery wall collectors",
+    "color_palette": "Sage green: #9CAF88, #7A9B6C, #5B7A4E | Dusty rose: #D4A5A5, #C08080, #E8C4C4 | Warm cream background: #F5F0E8, #F0E8D8 | Warm brown accents: #8B7355, #C4A882",
+    "example_products": "DP1000 \u2014 Boho Wildflower Botanical Watercolor Print",
+    "trend_strength": "rising",
+    "saved_at": "2026-05-16T10:15:37.863407"
+  },
+  {
+    "id": "des_1778927828957",
+    "agent": "Brand Design Agent",
+    "style_name": "Boho Watercolor Botanical \u2014 Sage + Dusty Rose",
+    "description": "Loose watercolor wildflower bouquet with generous negative space (~60%+ warm cream background). Named botanical species (pampas, lavender, eucalyptus, daisy clusters). Warm brown linework \u2014 not black. Vertical format. Cottagecore-meets-boho. Gallery wall ready. Rising trend with low competition window as of Summer 2025/2026.",
+    "target_audience": "Millennial women 25\u201340, boho + cottagecore home decor shoppers, gallery wall collectors",
+    "color_palette": "Sage green #9CAF88 / #7A9B6C, Dusty rose #D4A5A5 / #C08080, Warm cream #F5F0E8 / #F0E8D8, Warm brown #8B7355 / #C4A882",
+    "example_products": "DP1000 \u2014 Boho Wildflower Botanical Watercolor Print (3000\u00d74500px, 300 DPI)",
+    "trend_strength": "rising",
+    "saved_at": "2026-05-16T10:37:08.957864"
+  },
+  {
+    "id": "des_1778930276380",
+    "agent": "Art Creation Agent",
+    "style_name": "Boho Botanical Minimal \u2014 Single-Stem Gallery Series",
+    "description": "High-converting gallery wall series format: one bold wildflower anchor print (DP1000) paired with three single-subject minimal botanical companions (eucalyptus branch, sage+lavender herb bundle, pampas grass plume). Each companion uses the same linework color, background, and technique as the anchor but with progressively simpler subject matter \u2014 creating visual rhythm across a gallery wall. The pampas print intentionally near-monochrome acts as breathing room between colorful anchor and herbal companion.",
+    "target_audience": "Millennial boho home decor buyers, gallery wall collectors, cottagecore enthusiasts, earthy neutral aesthetic seekers",
+    "color_palette": "Sage green #9CAF88 / #7A9B6C, Dusty rose #D4A5A5 / #C08080, Soft lavender #C4B5D4, Warm cream #F5F0E8 / #F0E8D8, Warm beige #D4C4A8, Warm brown linework #8B7355 / #C4A882",
+    "example_products": "DP1000 (anchor), DP1001 (eucalyptus), DP1002 (sage+lavender), DP1003 (pampas)",
+    "trend_strength": "peak",
+    "saved_at": "2026-05-16T11:17:56.380836"
+  }
+]

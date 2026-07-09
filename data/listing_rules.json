@@ -1,0 +1,220 @@
+{
+  "wall_art": {
+    "min_photos": 10,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "file_pattern": "_print_sizes.zip",
+    "art_photo_check": true,
+    "art_min_photo_matches": 1,
+    "art_match_threshold": 90,
+    "required_description_keywords": [
+      "instant download",
+      "printable"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "photo_sequence_required": false,
+    "notes": "Each listing needs exactly 1 print ZIP. At least 1 of the 10 photos must show the source art (hash distance <=90). Threshold raised from 80→90 to account for JPEG compression drift in flat preview photos.",
+    "fulfillment": "digital"
+  },
+  "planner": {
+    "min_photos": 8,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 2,
+    "file_pattern": ".pdf",
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "goodnotes",
+      "instant digital download",
+      "fillable"
+    ],
+    "required_description_sections": [
+      "WHAT_INCLUDED",
+      "COMPATIBLE_APPS",
+      "FAQ",
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Planner listings must have at least 2 files (dated PDF + sticker ZIP). Undated PDF adds a 3rd. Photo check skipped since we have no planner art source file to hash.",
+    "fulfillment": "digital"
+  },
+  "sticker_pack": {
+    "min_photos": 8,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "file_pattern": "_sticker_pack.zip",
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "goodnotes",
+      "instant download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "One sticker ZIP per listing.",
+    "fulfillment": "digital"
+  },
+  "svg_bundle": {
+    "min_photos": 8,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "file_pattern": ".zip",
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download",
+      "cricut"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "SVG bundles are for Cricut/Silhouette. One ZIP per listing.",
+    "fulfillment": "digital"
+  },
+  "commercial_license": {
+    "min_photos": 2,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "commercial license",
+      "instant download"
+    ],
+    "required_description_sections": [],
+    "notes": "Commercial license listings — minimal photo requirement.",
+    "fulfillment": "digital"
+  },
+  "gallery_bundle": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 3,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download",
+      "printable"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Gallery bundle = set of multiple prints in one listing, multiple ZIP files. quantity_claim_check intentionally NOT set here: the manifest's dp_codes for this type is always 1 entry (one catalog row per listing) regardless of how many prints are actually bundled inside, so there's no reliable ground truth to compare a title's \"Set of N\" claim against. Only gallery_set tracks per-design dp_codes.",
+    "fulfillment": "digital"
+  },
+  "gallery_set": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Gallery set = multiple DP codes but one shared listing/ZIP. The only type whose manifest dp_codes reliably tracks one entry per bundled design, which is why quantity_claim_check is enabled here and nowhere else (see Four Seasons listing 4512784922).",
+    "fulfillment": "digital",
+    "quantity_claim_check": true
+  },
+  "bundle": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 2,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [],
+    "notes": "Generic bundle listing.",
+    "fulfillment": "digital"
+  },
+  "sticker_bundle": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 2,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Multi-pack sticker bundle.",
+    "fulfillment": "digital"
+  },
+  "sublimation": {
+    "min_photos": 3,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [],
+    "notes": "Sublimation design files.",
+    "fulfillment": "digital"
+  },
+  "unknown": {
+    "min_photos": 3,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant download"
+    ],
+    "required_description_sections": [],
+    "notes": "Fallback rules for unclassified listing types.",
+    "fulfillment": "digital"
+  },
+  "3d_print_physical": {
+    "min_photos": 8,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 0,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "3d printed"
+    ],
+    "required_description_sections": [],
+    "notes": "Made-to-order physical 3D print, shipped — no digital file to verify. fulfillment=physical so check_fulfillment_match (which guards against digital listings claiming a shipped item) is a no-op here by design.",
+    "fulfillment": "physical"
+  },
+  "paper_pack": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant digital download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Digital paper pattern pack, one ZIP per listing.",
+    "fulfillment": "digital"
+  },
+  "coloring_pages": {
+    "min_photos": 5,
+    "min_tags": 13,
+    "max_title_chars": 70,
+    "file_count": 1,
+    "art_photo_check": false,
+    "required_description_keywords": [
+      "instant digital download"
+    ],
+    "required_description_sections": [
+      "AI_DISCLOSURE"
+    ],
+    "notes": "Printable coloring page set(s). The combined 4-set listing has 4 ZIPs — file_count=1 is a floor, not a cap (check_files only fails on fewer than expected).",
+    "fulfillment": "digital"
+  }
+}

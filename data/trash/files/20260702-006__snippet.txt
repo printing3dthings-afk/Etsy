@@ -1,0 +1,5 @@
+.orb-hero{align-items:center;justify-content:center;position:relative;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(58,214,255,.14), transparent 60%),
+    radial-gradient(rgba(58,214,255,.10) 1px, transparent 1px);
+  background-size:auto, 22px 22px;background-color:var(--panel)}

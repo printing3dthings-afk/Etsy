@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Life Is Colorful</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,66.0 83.5,76.5 94.0,80.0 83.5,83.5 80.0,94.0 76.5,83.5 66.0,80.0 76.5,76.5" fill="#D93030"/>
+  <polygon points="720.0,66.0 723.5,76.5 734.0,80.0 723.5,83.5 720.0,94.0 716.5,83.5 706.0,80.0 716.5,76.5" fill="#E87B2A"/>
+  <polygon points="80.0,706.0 83.5,716.5 94.0,720.0 83.5,723.5 80.0,734.0 76.5,723.5 66.0,720.0 76.5,716.5" fill="#2B8A3E"/>
+  <polygon points="720.0,706.0 723.5,716.5 734.0,720.0 723.5,723.5 720.0,734.0 716.5,723.5 706.0,720.0 716.5,716.5" fill="#1E6FCC"/>
+  <text x="400" y="264" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="100" fill="#D93030">life</text>
+  <text x="400" y="360" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="100" fill="#2B8A3E">is</text>
+  <text x="400" y="456" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="100" fill="#7B35B0">colorful</text>
+  <circle cx="344.0" cy="506.0" r="6" fill="#E87B2A"/>
+  <circle cx="372.0" cy="506.0" r="6" fill="#E87B2A"/>
+  <circle cx="400.0" cy="506.0" r="6" fill="#E87B2A"/>
+  <circle cx="428.0" cy="506.0" r="6" fill="#E87B2A"/>
+  <circle cx="456.0" cy="506.0" r="6" fill="#E87B2A"/>
+  <text x="400" y="560" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="20" fill="#BBBBBB" letter-spacing="3">embrace every shade</text>
+</svg>

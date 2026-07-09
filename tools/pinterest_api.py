@@ -14,13 +14,17 @@ Setup (one-time):
 
 After setup, the Social Media Agent can post pins directly.
 """
+from __future__ import annotations
 
 import os
 import json
+import base64
 import urllib.request
 import urllib.parse
 import urllib.error
 from typing import Any
+
+ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 
 BASE_URL = "https://api.pinterest.com/v5"
 
@@ -36,6 +40,67 @@ class PinterestClient:
 
     def __init__(self, access_token: str = ""):
         self.access_token = access_token or os.getenv("PINTEREST_ACCESS_TOKEN", "")
+
+    def _update_env(self, key: str, value: str) -> None:
+        lines = []
+        found = False
+        if os.path.exists(ENV_FILE):
+            with open(ENV_FILE) as f:
+                lines = f.readlines()
+        for i, line in enumerate(lines):
+            if line.startswith(f"{key}="):
+                lines[i] = f"{key}={value}\n"
+                found = True
+                break
+        if not found:
+            lines.append(f"{key}={value}\n")
+        with open(ENV_FILE, "w") as f:
+            f.writelines(lines)
+
+    def refresh_access_token(self) -> bool:
+        """Refresh the access token using the stored refresh token.
+
+        Uses PINTEREST_APP_ID and PINTEREST_APP_SECRET from env for Basic auth.
+        On success, updates self.access_token and persists both tokens to .env.
+        Returns True on success, False on failure.
+        """
+        app_id = os.getenv("PINTEREST_APP_ID", "")
+        app_secret = os.getenv("PINTEREST_APP_SECRET", "")
+        refresh_token = os.getenv("PINTEREST_REFRESH_TOKEN", "")
+
+        if not app_id or not app_secret or not refresh_token:
+            return False
+
+        credentials = base64.b64encode(f"{app_id}:{app_secret}".encode()).decode()
+        token_data = urllib.parse.urlencode({
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+        }).encode()
+
+        req = urllib.request.Request(
+            "https://api.pinterest.com/v5/oauth/token",
+            data=token_data,
+            headers={
+                "Authorization": f"Basic {credentials}",
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                tokens = json.loads(resp.read().decode())
+        except Exception:
+            return False
+
+        new_access_token = tokens.get("access_token", "")
+        new_refresh_token = tokens.get("refresh_token", "")
+        if not new_access_token:
+            return False
+
+        self.access_token = new_access_token
+        self._update_env("PINTEREST_ACCESS_TOKEN", new_access_token)
+        if new_refresh_token:
+            self._update_env("PINTEREST_REFRESH_TOKEN", new_refresh_token)
+        return True
 
     def _request(self, method: str, path: str, params: dict | None = None, body: dict | None = None) -> dict:
         url = f"{BASE_URL}/{path.lstrip('/')}"
@@ -59,6 +124,22 @@ class PinterestClient:
             with urllib.request.urlopen(req, timeout=15) as resp:
                 return json.loads(resp.read().decode())
         except urllib.error.HTTPError as e:
+            if e.code == 401 and self.access_token:
+                if self.refresh_access_token():
+                    # Retry once with the new token
+                    headers["Authorization"] = f"Bearer {self.access_token}"
+                    req2 = urllib.request.Request(url, data=data, headers=headers, method=method)
+                    try:
+                        with urllib.request.urlopen(req2, timeout=15) as resp:
+                            return json.loads(resp.read().decode())
+                    except urllib.error.HTTPError as e2:
+                        body_text = e2.read().decode()
+                        try:
+                            err = json.loads(body_text)
+                            msg = err.get("message", body_text)
+                        except Exception:
+                            msg = body_text
+                        raise PinterestAPIError(e2.code, msg)
             body_text = e.read().decode()
             try:
                 err = json.loads(body_text)
@@ -82,6 +163,15 @@ class PinterestClient:
             if board.get("name", "").lower() == name_lower:
                 return board["id"]
         return None
+
+    def create_board(self, name: str, description: str = "") -> dict:
+        """Create a new public board and return the created board dict."""
+        body = {
+            "name": name,
+            "description": description,
+            "privacy": "PUBLIC",
+        }
+        return self._request("POST", "boards", body=body)
 
     # ── Pins ─────────────────────────────────────────────────────────────────
 

@@ -1,0 +1,113 @@
+{
+  "research_date": "2026-05-26",
+  "source": "Etsy trending 3D printed products analysis",
+  "new_product_ideas": [
+    {
+      "id": "3DP-I001",
+      "name": "Floating Wall Shelf with Hidden Hardware",
+      "category": "Home Decor",
+      "etsy_search_volume": "high",
+      "avg_price_range": "$18-35",
+      "material": "PLA+ or PETG",
+      "build_fits_p1s": true,
+      "notes": "Minimalist floating shelves with concealed mounting bracket. Print in neutral PLA+, use PETG for heavier load versions. Trending in home organization niche."
+    },
+    {
+      "id": "3DP-I002",
+      "name": "Propagation Station / Plant Vase Set",
+      "category": "Home & Garden",
+      "etsy_search_volume": "very high",
+      "avg_price_range": "$12-28",
+      "material": "PETG (moisture resistant)",
+      "build_fits_p1s": true,
+      "notes": "Modular vase sets for plant cuttings. PETG handles water contact. Top-selling 3D print category on Etsy. Boho and minimalist variants both sell well."
+    },
+    {
+      "id": "3DP-I003",
+      "name": "Bathroom Organizer Set (toothbrush holder, soap dish, cup)",
+      "category": "Bathroom",
+      "etsy_search_volume": "high",
+      "avg_price_range": "$22-45 (set)",
+      "material": "PETG",
+      "build_fits_p1s": true,
+      "notes": "Matching 3-piece bathroom set. PETG required for moisture and soap resistance. Bundle pricing drives higher AOV."
+    },
+    {
+      "id": "3DP-I004",
+      "name": "Entryway Key & Mail Organizer",
+      "category": "Home Organization",
+      "etsy_search_volume": "high",
+      "avg_price_range": "$15-30",
+      "material": "PLA+ or PETG",
+      "build_fits_p1s": true,
+      "notes": "Wall-mounted with hooks and a small tray. Practical gift item. Personalizable with initials or house number."
+    },
+    {
+      "id": "3DP-I005",
+      "name": "Hexagonal Wall Planter Set",
+      "category": "Home & Garden",
+      "etsy_search_volume": "very high",
+      "avg_price_range": "$20-45",
+      "material": "PETG",
+      "build_fits_p1s": true,
+      "notes": "Geometric hexagon wall-mounted planters. Silk PLA for display/no-plant use, PETG if holding soil. Group of 3 or 6 arrangement photos drive conversions."
+    },
+    {
+      "id": "3DP-I006",
+      "name": "Coaster Set with Holder (4-pack)",
+      "category": "Kitchen & Dining",
+      "etsy_search_volume": "medium-high",
+      "avg_price_range": "$18-32",
+      "material": "PETG or ABS",
+      "build_fits_p1s": true,
+      "notes": "Heat-resistant coasters with a matching vertical holder. PETG or ABS for heat tolerance. Geometric or boho patterns. Great gift item."
+    },
+    {
+      "id": "3DP-I007",
+      "name": "MagSafe Desk Dock / Phone Stand",
+      "category": "Tech Accessories",
+      "etsy_search_volume": "high",
+      "avg_price_range": "$12-25",
+      "material": "PLA+ or Silk PLA",
+      "build_fits_p1s": true,
+      "notes": "Desk dock that holds iPhone at 45-degree angle, compatible with MagSafe charger. Tech/productivity niche. Silk PLA for premium look."
+    },
+    {
+      "id": "3DP-I008",
+      "name": "Wall-Mounted Spice Rack",
+      "category": "Kitchen Organization",
+      "etsy_search_volume": "medium",
+      "avg_price_range": "$20-40",
+      "material": "PETG",
+      "build_fits_p1s": true,
+      "notes": "Modular wall spice rack, holds standard spice jars. PETG for food-adjacent use. Modular design = buyers purchase multiple units."
+    },
+    {
+      "id": "3DP-I009",
+      "name": "Decorative Bookends (animal or geometric)",
+      "category": "Home Decor",
+      "etsy_search_volume": "medium-high",
+      "avg_price_range": "$22-40",
+      "material": "Silk PLA",
+      "build_fits_p1s": true,
+      "notes": "Weighted bookends with kawaii animal or geometric designs. Silk PLA for premium metallic finish. Kawaii cat or bear designs align with shop aesthetic."
+    },
+    {
+      "id": "3DP-I010",
+      "name": "Cable Management Clips (desk organizer set)",
+      "category": "Office & Tech",
+      "etsy_search_volume": "medium",
+      "avg_price_range": "$8-18 (set of 10)",
+      "material": "PLA or TPU",
+      "build_fits_p1s": true,
+      "notes": "Desk cable clips and cord organizers. TPU for flexibility, PLA for rigidity. Low material cost, fast print time = high margin. Productivity/WFH niche."
+    }
+  ],
+  "priority_order": [
+    "3DP-I002 (Propagation Station) — highest Etsy volume, PETG is ideal for P1S",
+    "3DP-I005 (Hexagonal Wall Planters) — photogenic, group sale potential",
+    "3DP-I003 (Bathroom Set) — bundle = high AOV, PETG is a P1S strength",
+    "3DP-I007 (MagSafe Dock) — low material cost, fast print, tech niche",
+    "3DP-I009 (Bookends) — Silk PLA = premium appearance, aligns with kawaii brand"
+  ]
+}

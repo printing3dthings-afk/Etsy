@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Soul on Fire</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#C43020"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#E8A020"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#C43020"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#E8A020"/>
+  <circle cx="348.0" cy="216.0" r="6" fill="#E8A020"/>
+  <circle cx="374.0" cy="216.0" r="6" fill="#E8A020"/>
+  <circle cx="400.0" cy="216.0" r="6" fill="#E8A020"/>
+  <circle cx="426.0" cy="216.0" r="6" fill="#E8A020"/>
+  <circle cx="452.0" cy="216.0" r="6" fill="#E8A020"/>
+  <text x="400" y="352" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="116" fill="#C43020">Soul</text>
+  <rect x="280" y="380" width="240" height="5" fill="#E8A020" rx="2"/>
+  <text x="400" y="454" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="88" fill="#E8A020" letter-spacing="6">ON FIRE</text>
+  <rect x="280" y="484" width="240" height="4" fill="#C43020" rx="2"/>
+  <text x="400" y="548" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="22" fill="#AAAAAA" letter-spacing="3">burning bright</text>
+</svg>

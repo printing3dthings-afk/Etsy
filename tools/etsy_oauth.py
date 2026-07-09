@@ -1,25 +1,16 @@
 """
 Etsy OAuth 2.0 setup — run this once to authorize shop management.
 
-Usage:
-    python tools/etsy_oauth.py
+Two-step usage:
+    Step 1: python tools/etsy_oauth.py
+            Opens the auth URL. Click Allow on Etsy. Browser shows "can't connect" — that's fine.
+            Copy the full URL from the address bar and paste it to Claude.
 
-Requirements in .env:
-    ETSY_CLIENT_ID=your_keystring_from_etsy_developers
-    ETSY_CLIENT_SECRET=your_shared_secret_from_etsy_developers
+    Step 2: python tools/etsy_oauth.py --exchange "<full callback URL>"
+            Claude runs this after you paste the URL. Saves tokens to .env.
 
 After completing the flow, ETSY_ACCESS_TOKEN and ETSY_REFRESH_TOKEN
-are written to your .env file. The agents will use them automatically.
-
-Scopes requested:
-    shops_r, shops_w          — read/write shop info
-    listings_r, listings_w    — read/write listings
-    transactions_r            — read orders
-    billing_r                 — read billing
-    profile_r                 — read profile
-    email_r                   — read email
-    feedback_r                — read reviews
-    address_r                 — read addresses (for order shipping)
+are written to your .env file automatically.
 """
 
 import os
@@ -31,40 +22,30 @@ import secrets
 import urllib.request
 import urllib.parse
 import urllib.error
-from http.server import HTTPServer, BaseHTTPRequestHandler
+import tempfile
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Parse .env manually — never use load_dotenv()
+_env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+with open(_env_path) as _f:
+    for _line in _f:
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
-CLIENT_ID = os.getenv("ETSY_CLIENT_ID", "")
-CLIENT_SECRET = os.getenv("ETSY_CLIENT_SECRET", "")
+CLIENT_ID    = os.getenv("ETSY_CLIENT_ID", "")
 REDIRECT_URI = "http://localhost:3003/callback"
-AUTH_URL = "https://www.etsy.com/oauth/connect"
-TOKEN_URL = "https://api.etsy.com/v3/public/oauth/token"
-SCOPES = "shops_r shops_w listings_r listings_w transactions_r billing_r profile_r email_r feedback_r address_r"
-
-ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
-
-_auth_code: str = ""
-_state_received: str = ""
-
-
-class CallbackHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        global _auth_code, _state_received
-        parsed = urllib.parse.urlparse(self.path)
-        params = urllib.parse.parse_qs(parsed.query)
-        _auth_code = params.get("code", [""])[0]
-        _state_received = params.get("state", [""])[0]
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"<h2>Authorization complete! You can close this tab.</h2>")
-
-    def log_message(self, *args):
-        pass
+AUTH_URL     = "https://www.etsy.com/oauth/connect"
+TOKEN_URL    = "https://api.etsy.com/v3/public/oauth/token"
+# NOTE: Etsy v3 has NO feedback_w scope — review responses cannot be posted via API.
+# Reviews must be answered manually in Shop Manager or the Etsy Seller app.
+SCOPES       = "shops_r shops_w listings_r listings_w listings_d transactions_r billing_r profile_r email_r feedback_r address_r"
+ENV_FILE     = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+STATE_FILE   = os.path.join(tempfile.gettempdir(), "etsy_oauth_state.json")
 
 
 def _pkce():
-    verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b"=").decode()
+    verifier  = base64.urlsafe_b64encode(secrets.token_bytes(32)).rstrip(b"=").decode()
     challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
     return verifier, challenge
 
@@ -86,48 +67,65 @@ def _update_env(key: str, value: str) -> None:
         f.writelines(lines)
 
 
-def main():
+def step1_generate_url():
     if not CLIENT_ID:
         print("ERROR: ETSY_CLIENT_ID not set in .env")
-        print("Get your Keystring from https://www.etsy.com/developers/")
         sys.exit(1)
 
     verifier, challenge = _pkce()
     state = secrets.token_urlsafe(16)
 
+    # Save verifier + state so step 2 can use them
+    with open(STATE_FILE, "w") as f:
+        json.dump({"verifier": verifier, "state": state}, f)
+
     params = urllib.parse.urlencode({
-        "response_type": "code",
-        "redirect_uri": REDIRECT_URI,
-        "scope": SCOPES,
-        "client_id": CLIENT_ID,
-        "state": state,
-        "code_challenge": challenge,
+        "response_type":         "code",
+        "redirect_uri":          REDIRECT_URI,
+        "scope":                 SCOPES,
+        "client_id":             CLIENT_ID,
+        "state":                 state,
+        "code_challenge":        challenge,
         "code_challenge_method": "S256",
     })
 
-    auth_link = f"{AUTH_URL}?{params}"
-    print("\n── Etsy OAuth Setup ─────────────────────────────────────")
-    print("Open this URL in your browser to authorize the hub:\n")
-    print(auth_link)
-    print("\nWaiting for Etsy to redirect back...")
+    print("\n-- Etsy OAuth Setup ---------------------------------------------")
+    print("Open this URL in your browser:\n")
+    print(f"https://www.etsy.com/oauth/connect?{params}")
+    print("\nClick Allow on Etsy.")
+    print("Your browser will show \"can't connect\" — that's expected.")
+    print("Copy the full URL from the address bar and paste it to Claude.")
+    print("Claude will run:  python tools/etsy_oauth.py --exchange \"<url>\"")
 
-    server = HTTPServer(("localhost", 3003), CallbackHandler)
-    server.handle_request()
 
-    if not _auth_code:
-        print("ERROR: No authorization code received.")
+def step2_exchange(callback_url: str):
+    if not os.path.exists(STATE_FILE):
+        print("ERROR: No OAuth state found. Run step 1 first: python tools/etsy_oauth.py")
         sys.exit(1)
 
-    if _state_received != state:
-        print("ERROR: State mismatch — possible CSRF. Aborting.")
+    with open(STATE_FILE) as f:
+        saved = json.load(f)
+    verifier = saved["verifier"]
+    state    = saved["state"]
+
+    parsed         = urllib.parse.urlparse(callback_url)
+    params         = urllib.parse.parse_qs(parsed.query)
+    code           = params.get("code",  [""])[0]
+    state_received = params.get("state", [""])[0]
+
+    if not code:
+        print("ERROR: No authorization code in URL.")
         sys.exit(1)
 
-    # Exchange code for tokens
+    if state_received != state:
+        print("ERROR: State mismatch — run step 1 again to get a fresh URL.")
+        sys.exit(1)
+
     token_data = urllib.parse.urlencode({
-        "grant_type": "authorization_code",
-        "client_id": CLIENT_ID,
-        "redirect_uri": REDIRECT_URI,
-        "code": _auth_code,
+        "grant_type":    "authorization_code",
+        "client_id":     CLIENT_ID,
+        "redirect_uri":  REDIRECT_URI,
+        "code":          code,
         "code_verifier": verifier,
     }).encode()
 
@@ -137,21 +135,29 @@ def main():
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
     try:
-        with urllib.request.urlopen(req) as resp:
-            tokens = json.loads(resp.read())
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            tokens = json.loads(resp.read().decode())
     except urllib.error.HTTPError as e:
         print(f"Token exchange failed: {e.read().decode()}")
         sys.exit(1)
 
-    access_token = tokens.get("access_token", "")
-    refresh_token = tokens.get("refresh_token", "")
+    _update_env("ETSY_ACCESS_TOKEN",   tokens.get("access_token", ""))
+    _update_env("ETSY_REFRESH_TOKEN",  tokens.get("refresh_token", ""))
+    # Track issue date so health_check.py can warn before 90-day refresh token expiry
+    from datetime import date as _date, timedelta as _td
+    _update_env("ETSY_TOKEN_ISSUED_DATE", str(_date.today()))
 
-    _update_env("ETSY_ACCESS_TOKEN", access_token)
-    _update_env("ETSY_REFRESH_TOKEN", refresh_token)
-
-    print("\nSuccess! Tokens saved to .env")
-    print("Your hub can now manage orders, listings, and messages directly on Etsy.")
+    os.remove(STATE_FILE)
+    print("Success! Tokens saved to .env — Etsy API is now authorized.")
+    print(f"Refresh token expires in 90 days — next re-auth needed by: {_date.today() + _td(days=90)}")
 
 
 if __name__ == "__main__":
-    main()
+    if "--exchange" in sys.argv:
+        idx = sys.argv.index("--exchange")
+        if idx + 1 >= len(sys.argv):
+            print("Usage: python tools/etsy_oauth.py --exchange \"<callback URL>\"")
+            sys.exit(1)
+        step2_exchange(sys.argv[idx + 1])
+    else:
+        step1_generate_url()

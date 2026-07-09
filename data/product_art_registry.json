@@ -1,0 +1,936 @@
+{
+  "DP1012": {
+    "file_size_mb": 5.01,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509258172
+    ],
+    "registered_at": "2026-06-06T07:08:27Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1012.jpg",
+    "source_hash": "c6a9e636c33ccca9f690e680e559d69cdb30db20e4dcdb60db61c698ed58c558"
+  },
+  "DP1030": {
+    "file_size_mb": 3.17,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509598660,
+      4515682013
+    ],
+    "registered_at": "2026-06-06T07:08:27Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1030.jpg",
+    "source_hash": "d366d264d62cce14ce24c69cc698c618c69ccf0cd224ce94ceb4dfb4c694ce1c"
+  },
+  "DP1031": {
+    "file_size_mb": 5.65,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509598784,
+      4515678344
+    ],
+    "registered_at": "2026-06-06T07:08:28Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1031.jpg",
+    "source_hash": "68b061946128f028f87cee3c6198e3d8e7f8ef98e718e6f8f0e0f030f278f238"
+  },
+  "DP1032": {
+    "file_size_mb": 4.94,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509593487,
+      4515678198
+    ],
+    "registered_at": "2026-06-06T07:08:28Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1032.jpg",
+    "source_hash": "75a969e932c33ad3326330edd0add1e532712679b1d370a970d164e134e414e4"
+  },
+  "DP1033": {
+    "file_size_mb": 1.71,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509593623,
+      4515672496
+    ],
+    "registered_at": "2026-06-06T07:08:28Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1033.jpg",
+    "source_hash": "00000100008001200520051405235964594cd8da86820b210400000000000000"
+  },
+  "DP1034": {
+    "file_size_mb": 4.94,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509593697,
+      4515675887
+    ],
+    "registered_at": "2026-06-06T07:08:28Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1034.jpg",
+    "source_hash": "83ca831eb20eb1f6a4eeba7aacd28cd29c8ebc068f8e898eb6ceb2da89e28fae"
+  },
+  "DP1035": {
+    "file_size_mb": 4.16,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509600086,
+      4515675813
+    ],
+    "registered_at": "2026-06-06T07:08:29Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1035.jpg",
+    "source_hash": "f318931cd58cf48cdb0cb526c46cd6b2d1b4d324eb28fa4af256dab6daac98cc"
+  },
+  "DP1036": {
+    "file_size_mb": 2.58,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509596017,
+      4515672204
+    ],
+    "registered_at": "2026-06-06T07:08:29Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1036.jpg",
+    "source_hash": "b2d069596cd476d0d320cdb9cbc066e969e269a00cd0346926f25ab093313731"
+  },
+  "DP1037": {
+    "file_size_mb": 5.19,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509597559,
+      4515675583
+    ],
+    "registered_at": "2026-06-06T07:08:29Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1037.jpg",
+    "source_hash": "f9acfdd0e4c8ece0f862eca2e4a678acc9ccc915ccc2e4cef0daf312b364ced4"
+  },
+  "DP1038": {
+    "file_size_mb": 4.49,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512747600,
+      4515675481
+    ],
+    "registered_at": "2026-06-06T07:08:30Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1038.jpg",
+    "source_hash": "d1c8c0c8d4c0cd14cd14ce30cd70ca58c9ccc5c4c6c4c690ef88cf18ec78ded0"
+  },
+  "DP1039": {
+    "file_size_mb": 5.39,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512750191,
+      4515675373
+    ],
+    "registered_at": "2026-06-06T07:08:30Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1039.jpg",
+    "source_hash": "e198f32ca524db18cc24b4c6bccae98adab0d894f258c498cda8e4d8c4f2cb22"
+  },
+  "DP1040": {
+    "file_size_mb": 4.26,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512753302,
+      4515671764
+    ],
+    "registered_at": "2026-06-06T07:08:30Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1040.jpg",
+    "source_hash": "c8ec90a480be884ad86a996c9accd888cd0ccc9cd81cb8c4fda4f5a8f808c930"
+  },
+  "DP1041": {
+    "file_size_mb": 5.08,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512755568,
+      4515675145
+    ],
+    "registered_at": "2026-06-06T07:08:30Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1041.jpg",
+    "source_hash": "a0c6901692068e0686ce816c807ab0faa0feb0fe80fe865e861c822e802e8286"
+  },
+  "DP1042": {
+    "file_size_mb": 4.46,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512756952,
+      4515671558
+    ],
+    "registered_at": "2026-06-06T07:08:31Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1042.jpg",
+    "source_hash": "e0cac858c6b4e99ad8ecb076d5fac59ab25cd0a4c9bcf076b25cdf1cf1ccf570"
+  },
+  "DP1043": {
+    "file_size_mb": 5.37,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512758458,
+      4515671458
+    ],
+    "registered_at": "2026-06-06T07:08:31Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1043.jpg",
+    "source_hash": "9bb49934d974c9f6d9f4c9f4e070ce748ce6a6b6a7e6e5a6e5a4cba4c984e73c"
+  },
+  "DP1044": {
+    "file_size_mb": 4.91,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512758123,
+      4515671336
+    ],
+    "registered_at": "2026-06-06T07:08:31Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1044.jpg",
+    "source_hash": "9836f018e0cac06c806080acc08ec04ee04ed04eec8e8e0e82e8f00e8c18c232"
+  },
+  "DP1045": {
+    "file_size_mb": 5.5,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512760918,
+      4515671216
+    ],
+    "registered_at": "2026-06-06T07:08:32Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1045.jpg",
+    "source_hash": "e498e52ce464e1cea38ad740caacd258b34cc936cc30d598f108f48cf9a0e180"
+  },
+  "DP1046": {
+    "file_size_mb": 4.23,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512760671,
+      4515670946
+    ],
+    "registered_at": "2026-06-06T07:08:32Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1046.jpg",
+    "source_hash": "8f8c99e49164936492f49278937cb33ca39cc27cc13cbd8c85acf39cba4ce68c"
+  },
+  "DP1047": {
+    "file_size_mb": 4.84,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512763302,
+      4515669596
+    ],
+    "registered_at": "2026-06-06T07:08:32Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1047.jpg",
+    "source_hash": "e4c4e6e4c4e6c5e4f134d132c360c6c0c4d0e7a4e38cbd88cc90c694c6b4c4bc"
+  },
+  "DP1048": {
+    "file_size_mb": 3.03,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512784922,
+      4515672895
+    ],
+    "registered_at": "2026-06-06T07:08:32Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1048.jpg",
+    "source_hash": "d69af5b6e96cd0d8f0f0f3a0f720bb60f320e660eec08f8099349b928d8cce18"
+  },
+  "DP1049": {
+    "file_size_mb": 4.43,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512768771,
+      4512784922,
+      4515669370
+    ],
+    "registered_at": "2026-06-06T07:08:33Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1049.jpg",
+    "source_hash": "b382f3c0c740c702b342ebc2a6e29e289d3a9a12bc9899129e32c672e2ee928c"
+  },
+  "DP1050": {
+    "file_size_mb": 4.78,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512770031,
+      4512784922,
+      4515669246
+    ],
+    "registered_at": "2026-06-06T07:08:33Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1050.jpg",
+    "source_hash": "c0f0d0f4d0dce0fcd078e0fce0fce0fce0fce8fce8f4c0f4e0fcd07cc0fcc0fc"
+  },
+  "DP1051": {
+    "file_size_mb": 3.8,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512772452,
+      4512784922,
+      4515669140
+    ],
+    "registered_at": "2026-06-06T07:08:33Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1051.jpg",
+    "source_hash": "ab34e984e314a998c9d0c0fce4d8edf8e834f8b4fda4cd44e1d0c9d8c9f0e9d8"
+  },
+  "DP1052": {
+    "file_size_mb": 5.93,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512772539,
+      4512784817,
+      4515672499
+    ],
+    "registered_at": "2026-06-06T07:08:34Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1052.jpg",
+    "source_hash": "86bc84bec49ec8dcebdcb718d9a689ccc9d8c7a4c0fcc1f4cfc4df84bd048f18"
+  },
+  "DP1053": {
+    "file_size_mb": 5.27,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512774863,
+      4512784817,
+      4515672435
+    ],
+    "registered_at": "2026-06-06T07:08:34Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1053.jpg",
+    "source_hash": "9904b034d000d002b118b110f11ce198e218d10cfd82b4b0d8e0ec82b40cc00a"
+  },
+  "DP1054": {
+    "file_size_mb": 5.28,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512776173,
+      4512784817,
+      4515672331
+    ],
+    "registered_at": "2026-06-06T07:08:34Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1054.jpg",
+    "source_hash": "a4dcd89cdaecd8bc993cd3388cd88e9cc33c89908f6497388338bb3899c6d0d8"
+  },
+  "DP1055": {
+    "file_size_mb": 4.75,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512780614,
+      4512784817,
+      4515668698
+    ],
+    "registered_at": "2026-06-06T07:08:35Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1055.jpg",
+    "source_hash": "c64cc370d384dcd4bb00e72cce78d85cf0bcc85cd05cb03cf13cf21cf024f010"
+  },
+  "DP1056": {
+    "file_size_mb": 4.55,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512780869,
+      4515672065
+    ],
+    "registered_at": "2026-06-06T07:08:35Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1056.jpg",
+    "source_hash": "88ce8c5e8f5e8c9a9e2e8a6eca4e89ee89eec44c844c860cc79ce5b0ed22ed10"
+  },
+  "DP1057": {
+    "file_size_mb": 4.06,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512783077,
+      4515671951
+    ],
+    "registered_at": "2026-06-06T07:08:35Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1057.jpg",
+    "source_hash": "d8d4c8d4c874c054d254da30d714de9cdaccdb84da84cc14ca94c3e4d464d474"
+  },
+  "DP1058": {
+    "file_size_mb": 0.88,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4509193231,
+      4515673828
+    ],
+    "registered_at": "2026-06-06T07:08:35Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1058.jpg",
+    "source_hash": "596499644218e9c099a2fb10e310f252f3cca74ab7b48b20412a00118000f6c0"
+  },
+  "DP1059": {
+    "file_size_mb": 3.59,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509193237
+    ],
+    "registered_at": "2026-06-06T07:08:36Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1059.jpg",
+    "source_hash": "030007000f000f010f021f000f001f002f001f0017000b200b00050029001300"
+  },
+  "DP1060": {
+    "file_size_mb": 3.81,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509198434
+    ],
+    "registered_at": "2026-06-06T07:08:36Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1060.jpg",
+    "source_hash": "3192b9b439a919aa5c62ed29e579de503b6c6d6935b03b191ae22e4402080b10"
+  },
+  "DP1061": {
+    "file_size_mb": 3.5,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509198446
+    ],
+    "registered_at": "2026-06-06T07:08:36Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1061.jpg",
+    "source_hash": "16401fc45cc85e492dc559c45cc81c402dc459845cc89cc0ad842c880e104620"
+  },
+  "DP1062": {
+    "file_size_mb": 7.89,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509214477
+    ],
+    "registered_at": "2026-06-06T07:08:36Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1062.jpg",
+    "source_hash": "e1acc9ae882e886c94f8903d826ce40ee03ee08ec79fc24f98cf188f3a3da87f"
+  },
+  "DP1063": {
+    "file_size_mb": 6.48,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509258700
+    ],
+    "registered_at": "2026-06-06T07:08:37Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1063.jpg",
+    "source_hash": "f2d0fb54e58cf9c4f8c0da84f384d694ec90e680e600fea0f688f640fe80fb00"
+  },
+  "DP1064": {
+    "file_size_mb": 4.7,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4509600086
+    ],
+    "registered_at": "2026-06-06T07:08:37Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1064.jpg",
+    "source_hash": "e520b120b258b8988d90b930e86ef33ac4f6ed88eb5ce6b4e629e659f692e6a2"
+  },
+  "DP1065": {
+    "file_size_mb": 0.86,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4512301880
+    ],
+    "registered_at": "2026-06-06T07:08:37Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1065.jpg",
+    "source_hash": "1da0333239623c423cd23dd23d12384235523c4239423d523d123d5218c00318"
+  },
+  "DP1066": {
+    "file_size_mb": 1.69,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4512763302
+    ],
+    "registered_at": "2026-06-06T07:08:37Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1066.jpg",
+    "source_hash": "016f123712b712a616af032f02a602a70d6e036a032b332ff16ff16b80e74007"
+  },
+  "DP1067": {
+    "file_size_mb": 4.56,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4512768858
+    ],
+    "registered_at": "2026-06-06T07:08:38Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1067.jpg",
+    "source_hash": "cc186490b57179325e34ca64664a87cb95841cc444ce24e02ba293a483d1cb52"
+  },
+  "DP1068": {
+    "file_size_mb": 1.21,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4512783077
+    ],
+    "registered_at": "2026-06-06T07:08:38Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1068.jpg",
+    "source_hash": "00cf096f096f096f096f08cf060700070207008f011b01c901cc019428dc40dc"
+  },
+  "DP1069": {
+    "file_size_mb": 1.3,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4512784817,
+      4515676301
+    ],
+    "registered_at": "2026-06-06T07:08:38Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1069.jpg",
+    "source_hash": "0d48b6c2b6c2bcc2bcc2bcc2b8c2b2c237c2b2e2bac2bcc2bcc2bcc2bcc2296a"
+  },
+  "DP1070": {
+    "file_size_mb": 1.23,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4512784922
+    ],
+    "registered_at": "2026-06-06T07:08:38Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1070.jpg",
+    "source_hash": "2ec835523ce23ce23dc23dc239e239c23c52b4c236e236d2b6c2b4a03c622b42"
+  },
+  "DP1071": {
+    "file_size_mb": 5.94,
+    "image_dimensions": [
+      3000,
+      4500
+    ],
+    "listing_ids": [
+      4513713514
+    ],
+    "registered_at": "2026-06-06T07:08:38Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1071.jpg",
+    "source_hash": "1c17340b14452c252d235c232c2714471c0b0c354c470c410c450c432c492c4b"
+  },
+  "DP1072": {
+    "file_size_mb": 2.28,
+    "image_dimensions": [
+      3000,
+      4500
+    ],
+    "listing_ids": [
+      4513713712
+    ],
+    "registered_at": "2026-06-06T07:08:38Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1072.jpg",
+    "source_hash": "d366d264d62cce14ce24c69cc698c618c69ccf0cd224ce9ccfb4dfb4c694ce1c"
+  },
+  "DP1073": {
+    "file_size_mb": 5.85,
+    "image_dimensions": [
+      3000,
+      4500
+    ],
+    "listing_ids": [
+      4513713805
+    ],
+    "registered_at": "2026-06-06T07:08:39Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1073.jpg",
+    "source_hash": "9e9a96c29e829d24df18ecc2fb60ba22bb60bcc2be82d908b4a4b0a2ba8aba92"
+  },
+  "DP1074": {
+    "file_size_mb": 1.1,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4513713922
+    ],
+    "registered_at": "2026-06-06T07:08:39Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1074.jpg",
+    "source_hash": "1fef13b712b712b71337123712b712b71def1fdc23f8662966397a19721536db"
+  },
+  "DP1075": {
+    "file_size_mb": 1.79,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4513713936
+    ],
+    "registered_at": "2026-06-06T07:08:39Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1075.jpg",
+    "source_hash": "886622b633b612bc12b492b692b613b6122f0a154a174b0c66e6466553695278"
+  },
+  "DP1076": {
+    "file_size_mb": 2.74,
+    "image_dimensions": [
+      3000,
+      4500
+    ],
+    "listing_ids": [
+      4513713945
+    ],
+    "registered_at": "2026-06-06T07:08:39Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1076.jpg",
+    "source_hash": "75a969e932d33ad3326330edd06dd1e532712679b1d370a978d164e134e414e4"
+  },
+  "DP1077": {
+    "file_size_mb": 0.84,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4513713962
+    ],
+    "registered_at": "2026-06-06T07:08:39Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1077.jpg",
+    "source_hash": "044f08ef02af032f02af032f0b2f096f068f091f081b182112ec112310161416"
+  },
+  "DP1078": {
+    "file_size_mb": 6.79,
+    "image_dimensions": [
+      4096,
+      6144
+    ],
+    "listing_ids": [
+      4513713984
+    ],
+    "registered_at": "2026-06-06T07:08:39Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1078.jpg",
+    "source_hash": "e104e252d644c282e2c4c7ccc1e6bc34a64ca66cde24b9e0c2d0e660e564e540"
+  },
+  "DP1079": {
+    "file_size_mb": 0.86,
+    "image_dimensions": [
+      3000,
+      4500
+    ],
+    "listing_ids": [
+      4513714013
+    ],
+    "registered_at": "2026-06-06T07:08:40Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1079.jpg",
+    "source_hash": "0000000012c001200120011005235964594cd8da86820b210400000000000000"
+  },
+  "DP1080": {
+    "file_size_mb": 1.02,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4513714191
+    ],
+    "registered_at": "2026-06-06T07:08:40Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1080.jpg",
+    "source_hash": "00070407086712a712a1132612be133c133e4a3acd8ad34bf843c886c98ec947"
+  },
+  "DP1081": {
+    "file_size_mb": 0.9,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4514130045
+    ],
+    "registered_at": "2026-06-06T07:08:40Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1081.jpg",
+    "source_hash": "0000000000000000c218716ad32db30ce34dd8c3b253402810800884000089a6"
+  },
+  "DP1082": {
+    "file_size_mb": 0.78,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4514134583
+    ],
+    "registered_at": "2026-06-06T07:08:40Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1082.jpg",
+    "source_hash": "00000000000010906c2c63cbe34dcbcccbccbbcb37c848301000040200000d93"
+  },
+  "DP1083": {
+    "file_size_mb": 0.98,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4514136783
+    ],
+    "registered_at": "2026-06-06T07:08:40Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1083.jpg",
+    "source_hash": "00000000000050002b19b1c7532ccb1ccb5cb9cf1143021010000442000024d3"
+  },
+  "DP1084": {
+    "file_size_mb": 0.84,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4514392281
+    ],
+    "registered_at": "2026-06-06T07:08:40Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1084.jpg",
+    "source_hash": "000000000000002aa6951c06ce2ece295e293d333832024800200082000089a6"
+  },
+  "DP1086": {
+    "file_size_mb": 0.84,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4515437432
+    ],
+    "registered_at": "2026-06-06T07:08:40Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1086.jpg",
+    "source_hash": "000000000000002aa6951c06ce2ece295e293d333832024800200082000089a6"
+  },
+  "DP1087": {
+    "file_size_mb": 1.19,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4515437442
+    ],
+    "registered_at": "2026-06-06T07:08:40Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1087.jpg",
+    "source_hash": "21118acecacacacacaae8acaaeaac8aac8ca8cae88ac8cac8cac315386800e80"
+  },
+  "DP1088": {
+    "file_size_mb": 0.9,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4515439743
+    ],
+    "registered_at": "2026-06-06T07:08:41Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1088.jpg",
+    "source_hash": "0000000000000000c218716ad32db30ce34dd8c3b353402810800884000089a6"
+  },
+  "DP1089": {
+    "file_size_mb": 0.78,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4515439751
+    ],
+    "registered_at": "2026-06-06T07:08:41Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1089.jpg",
+    "source_hash": "00000000000010906c2c63cbe34dcbcccbccbbcb37c848301000040200000dd3"
+  },
+  "DP1090": {
+    "file_size_mb": 0.98,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4515439755
+    ],
+    "registered_at": "2026-06-06T07:08:41Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1090.jpg",
+    "source_hash": "00000000000050002b19b1c7532ccb1ccb5cb9cf1143021010000442000024d3"
+  },
+  "DP1091": {
+    "file_size_mb": 0.77,
+    "image_dimensions": [
+      3000,
+      3000
+    ],
+    "listing_ids": [
+      4515439763
+    ],
+    "registered_at": "2026-06-06T07:08:41Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1091.jpg",
+    "source_hash": "000000000000088822415a8ecbceca4c5ece3ccbcd4c00301008008200000d96"
+  },
+  "DP1094": {
+    "file_size_mb": 5.46,
+    "image_dimensions": [
+      8192,
+      8192
+    ],
+    "listing_ids": [
+      4515674594
+    ],
+    "registered_at": "2026-06-06T07:08:42Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1094.jpg",
+    "source_hash": "1800000038c038c03a603b203c8039b03922b642ba62b652b692389000001000"
+  },
+  "DP1095": {
+    "file_size_mb": 4.71,
+    "image_dimensions": [
+      8192,
+      8192
+    ],
+    "listing_ids": [
+      4515674144
+    ],
+    "registered_at": "2026-06-06T07:08:43Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1095.jpg",
+    "source_hash": "109000003c903c803cc03cc03e803e803fa03e803f003f003700370000001000"
+  },
+  "DP1096": {
+    "file_size_mb": 4.24,
+    "image_dimensions": [
+      8192,
+      8192
+    ],
+    "listing_ids": [
+      4515673064
+    ],
+    "registered_at": "2026-06-06T07:08:44Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1096.jpg",
+    "source_hash": "100000003b403f203e003ec039403a9038603f6036803a403f103d0000001000"
+  },
+  "DP1097": {
+    "file_size_mb": 2.94,
+    "image_dimensions": [
+      8192,
+      8192
+    ],
+    "listing_ids": [
+      4515672972
+    ],
+    "registered_at": "2026-06-06T07:08:44Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1097.jpg",
+    "source_hash": "080000003cc03d403d403ac03f203ec03cc03f003cc03f003f40306000001400"
+  },
+  "DP1098": {
+    "file_size_mb": 6.57,
+    "image_dimensions": [
+      8192,
+      8192
+    ],
+    "listing_ids": [
+      4515676185
+    ],
+    "registered_at": "2026-06-06T07:08:45Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1098.jpg",
+    "source_hash": "1800000058a0ba60b682bf22be82bd02be82bf02bb24bd825ba059a400001800"
+  },
+  "DP1099": {
+    "file_size_mb": 5.47,
+    "image_dimensions": [
+      8192,
+      8192
+    ],
+    "listing_ids": [
+      4515672588
+    ],
+    "registered_at": "2026-06-06T07:08:46Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1099.jpg",
+    "source_hash": "100000003250b670b610b610b610b610b610b650b650b650b650365000001200"
+  },
+  "DP1100": {
+    "file_size_mb": 3.12,
+    "image_dimensions": [
+      8192,
+      8192
+    ],
+    "listing_ids": [
+      4515674042
+    ],
+    "registered_at": "2026-06-06T07:08:47Z",
+    "source_file": "data/digital_products/product_files/upscaled/DP1100.jpg",
+    "source_hash": "0080000030e032c03100379036903d303f301a503e103c903490341000000000"
+  }
+}

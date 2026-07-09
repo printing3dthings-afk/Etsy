@@ -1,0 +1,53 @@
+name: CI Smoke
+
+# Fast pre-deploy gate for Frank. Runs on every push and PR. Because Railway
+# auto-deploys this repo on push, a red run here is the early-warning that a commit
+# is broken. To make it a HARD gate (block the deploy), enable Railway → service →
+# Settings → "Wait for CI to pass" (a.k.a. Check Suites) so Railway only deploys
+# after this check is green. Needs no secrets by design — it imports the app and
+# inspects the tool registry; it never starts the server or calls any API.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # main.py refuses to import without an auth token (a security fail-safe — good).
+      # This dummy value only lets the module import for inspection; no server is
+      # started and no auth is performed, so it is NOT a real secret.
+      APP_SECRET_TOKEN: ci-smoke-inspection-only-not-a-secret
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile all Python (syntax check)
+        run: python -m compileall -q tools tests
+
+      - name: Smoke test (import server + tool registry)
+        run: python tests/smoke_test.py
+
+      - name: Quality-gate tests (pre_publish_gate + validate_digital_file + SVG)
+        run: python tests/test_quality_gates.py
+
+      - name: Resilience tests (retry/backoff + circuit breaker)
+        run: python tests/test_resilience.py
+
+      - name: Staged-action approval tests (Action Center gate)
+        run: python tests/test_staged_actions.py
+
+      - name: HTTP route tests (login/session/logout + todos API, real requests)
+        run: python tests/test_http_routes.py

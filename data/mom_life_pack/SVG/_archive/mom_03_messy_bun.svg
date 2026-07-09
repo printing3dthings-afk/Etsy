@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Messy Bun SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+    </style>
+  </defs>
+
+  <polygon points="400.0,60.0 704.3,281.1 588.1,638.9 211.9,638.9 95.7,281.1" fill="none" stroke="black" stroke-width="2.5"/>
+  <polygon points="400.0,78.0 687.2,286.7 577.5,624.3 222.5,624.3 112.8,286.7" fill="none" stroke="black" stroke-width="1"/>
+  <text x="400" y="196" text-anchor="middle" font-family="Cormorant, serif" font-size="18" fill="black" letter-spacing="5">★  OFFICIALLY A  ★</text>
+  <text x="400" y="304" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="70" fill="black" letter-spacing="2">MESSY BUN</text>
+  <text x="400" y="364" text-anchor="middle" font-family="GreatVibes, cursive" font-size="72" fill="black">&amp; getting</text>
+  <text x="400" y="424" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="50" fill="black" letter-spacing="4">STUFF DONE</text>
+  <text x="400" y="476" text-anchor="middle" font-family="CormorantItalic, serif" font-size="17" fill="black" letter-spacing="4">· mom life ·</text>
+  <text x="400" y="560" text-anchor="middle" font-family="Cormorant, serif" font-size="17" fill="black" letter-spacing="3">PROUD MEMBER CLUB</text>
+
+</svg>

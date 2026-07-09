@@ -1,0 +1,166 @@
+{
+  "DP1026": {
+    "listing_id": "4509179201",
+    "before_files": [
+      {
+        "filename": "DP1026_sticker_pack.zip",
+        "id": 1490711541139
+      },
+      {
+        "filename": "DP1026.pdf",
+        "id": 1488058590880
+      }
+    ],
+    "deleted": [
+      "DP1026.pdf"
+    ],
+    "uploaded": [
+      {
+        "filename": "DP1026.pdf",
+        "id": 1494196279098
+      },
+      {
+        "filename": "DP1026U.pdf",
+        "id": 1495362425547
+      }
+    ],
+    "description_updated": true,
+    "after_files": [
+      {
+        "filename": "DP1026_sticker_pack.zip",
+        "id": 1490711541139
+      },
+      {
+        "filename": "DP1026.pdf",
+        "id": 1494196279098
+      },
+      {
+        "filename": "DP1026U.pdf",
+        "id": 1495362425547
+      }
+    ]
+  },
+  "DP1027": {
+    "listing_id": "4509184958",
+    "before_files": [
+      {
+        "filename": "DP1027_sticker_pack.zip",
+        "id": 1490711567237
+      },
+      {
+        "filename": "DP1027.pdf",
+        "id": 1489225805425
+      }
+    ],
+    "deleted": [
+      "DP1027.pdf"
+    ],
+    "uploaded": [
+      {
+        "filename": "DP1027.pdf",
+        "id": 1495362438999
+      },
+      {
+        "filename": "DP1027U.pdf",
+        "id": 1495362441477
+      }
+    ],
+    "description_updated": true,
+    "after_files": [
+      {
+        "filename": "DP1027_sticker_pack.zip",
+        "id": 1490711567237
+      },
+      {
+        "filename": "DP1027.pdf",
+        "id": 1495362438999
+      },
+      {
+        "filename": "DP1027U.pdf",
+        "id": 1495362441477
+      }
+    ]
+  },
+  "DP1028": {
+    "listing_id": "4509184962",
+    "before_files": [
+      {
+        "filename": "DP1028_sticker_pack.zip",
+        "id": 1489544117512
+      },
+      {
+        "filename": "DP1028.pdf",
+        "id": 1489225810275
+      }
+    ],
+    "deleted": [
+      "DP1028.pdf"
+    ],
+    "uploaded": [
+      {
+        "filename": "DP1028.pdf",
+        "id": 1494196307092
+      },
+      {
+        "filename": "DP1028U.pdf",
+        "id": 1495362454005
+      }
+    ],
+    "description_updated": true,
+    "after_files": [
+      {
+        "filename": "DP1028_sticker_pack.zip",
+        "id": 1489544117512
+      },
+      {
+        "filename": "DP1028.pdf",
+        "id": 1494196307092
+      },
+      {
+        "filename": "DP1028U.pdf",
+        "id": 1495362454005
+      }
+    ]
+  },
+  "DP1029": {
+    "listing_id": "4509184968",
+    "before_files": [
+      {
+        "filename": "DP1029_sticker_pack.zip",
+        "id": 1490711589205
+      },
+      {
+        "filename": "DP1029.pdf",
+        "id": 1489225816231
+      }
+    ],
+    "deleted": [
+      "DP1029.pdf"
+    ],
+    "uploaded": [
+      {
+        "filename": "DP1029.pdf",
+        "id": 1495362469017
+      },
+      {
+        "filename": "DP1029U.pdf",
+        "id": 1495362470989
+      }
+    ],
+    "description_updated": true,
+    "after_files": [
+      {
+        "filename": "DP1029_sticker_pack.zip",
+        "id": 1490711589205
+      },
+      {
+        "filename": "DP1029.pdf",
+        "id": 1495362469017
+      },
+      {
+        "filename": "DP1029U.pdf",
+        "id": 1495362470989
+      }
+    ]
+  }
+}

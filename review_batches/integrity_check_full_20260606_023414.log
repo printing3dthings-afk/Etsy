@@ -1,0 +1,745 @@
+Auditing 131 listings (full mode)…
+WARNING: full mode downloads hero images — this may take 15-30 minutes.
+
+  ⚠ [1/131] 4509179201 (DP1026) — WARN
+  ✗ [2/131] 4509184958 (DP1027) — FAIL
+      ↳ tag_count: Only 12 tags (need 13)
+  ⚠ [3/131] 4509184962 (DP1028) — WARN
+  ⚠ [4/131] 4509184968 (DP1029) — WARN
+  ⚠ [5/131] 4509193231 (DP1058) — WARN
+  ⚠ [6/131] 4509193237 (DP1059) — WARN
+  ⚠ [7/131] 4509198434 (DP1060) — WARN
+  ⚠ [8/131] 4509198446 (DP1061) — WARN
+  ⚠ [9/131] 4509213345 (DP1014) — WARN
+  ⚠ [10/131] 4509213533 (DP1015) — WARN
+  ✓ [11/131] 4509213667 (DP1016) — PASS
+  ⚠ [12/131] 4509214051 (DP1019) — WARN
+  ⚠ [13/131] 4509214237 (DP1020) — WARN
+  ⚠ [14/131] 4509214477 (DP1021, DP1062) — WARN
+  ⚠ [15/131] 4509214803 (DP1023) — WARN
+  ⚠ [16/131] 4509215145 (DP1025) — WARN
+  ⚠ [17/131] 4509218152 (DP1007) — WARN
+  ✓ [18/131] 4509218860 (DP1018) — PASS
+  ⚠ [19/131] 4509219594 (DP1022) — WARN
+  ⚠ [20/131] 4509219904 (DP1024) — WARN
+  ✗ [21/131] 4509258172 (DP1012) — FAIL
+      ↳ art_in_photos: DP1012 art not found in any of 10 photos (closest: slot 9, distance 113 > 80)
+  ⚠ [22/131] 4509258700 (DP1013, DP1063) — WARN
+  ⚠ [23/131] 4509259354 (DP1017) — WARN
+  ✗ [24/131] 4509593487 (DP1032) — FAIL
+      ↳ art_in_photos: DP1032 art not found in any of 10 photos (closest: slot 7, distance 106 > 80)
+  ⚠ [25/131] 4509593623 (DP1033) — WARN
+  ✗ [26/131] 4509593697 (DP1034) — FAIL
+      ↳ art_in_photos: DP1034 art not found in any of 10 photos (closest: slot 8, distance 84 > 80)
+  ✗ [27/131] 4509596017 (DP1036) — FAIL
+      ↳ art_in_photos: DP1036 art not found in any of 10 photos (closest: slot 6, distance 91 > 80)
+  ✗ [28/131] 4509597559 (DP1037) — FAIL
+      ↳ art_in_photos: DP1037 art not found in any of 10 photos (closest: slot 7, distance 96 > 80)
+  ✗ [29/131] 4509598660 (DP1030) — FAIL
+      ↳ tag_count: Only 12 tags (need 13)
+      ↳ art_in_photos: DP1030 art not found in any of 10 photos (closest: slot 3, distance 99 > 80)
+  ✗ [30/131] 4509598784 (DP1031) — FAIL
+      ↳ art_in_photos: DP1031 art not found in any of 10 photos (closest: slot 8, distance 101 > 80)
+  ⚠ [31/131] 4509600086 (DP1035, DP1064) — WARN
+  ✓ [32/131] 4512188970 (BUNDLE_PLANNER_ALL4) — PASS
+  ⚠ [33/131] 4512254015 (STICKER_COTTON_CANDY) — WARN
+  ⚠ [34/131] 4512254027 (STICKER_CORAL_PEACH) — WARN
+  ⚠ [35/131] 4512254035 (STICKER_BUNDLE_ALL4) — WARN
+  ⚠ [36/131] 4512255508 (STICKER_FREE) — WARN
+  ⚠ [37/131] 4512255514 (STICKER_LAVENDER) — WARN
+  ⚠ [38/131] 4512255536 (STICKER_MIDNIGHT_BLUE) — WARN
+  ✓ [39/131] 4512301880 (DP1003, DP1002) — PASS
+  ⚠ [40/131] 4512747600 (DP1038) — WARN
+  ⚠ [41/131] 4512750191 (DP1039) — WARN
+  ⚠ [42/131] 4512753302 (DP1040) — WARN
+  ⚠ [43/131] 4512755568 (DP1041) — WARN
+  ⚠ [44/131] 4512756952 (DP1042) — WARN
+  ⚠ [45/131] 4512758123 (DP1044) — WARN
+  ⚠ [46/131] 4512758458 (DP1043) — WARN
+  ⚠ [47/131] 4512760671 (DP1046) — WARN
+  ⚠ [48/131] 4512760918 (DP1045) — WARN
+  ⚠ [49/131] 4512763302 (DP1047, DP1066) — WARN
+  ⚠ [50/131] 4512768771 (DP1049) — WARN
+  ⚠ [51/131] 4512768858 (DP1067) — WARN
+  ✓ [52/131] 4512770031 (DP1050) — PASS
+  ✓ [53/131] 4512772452 (DP1051) — PASS
+  ✓ [54/131] 4512772539 (DP1052) — PASS
+  ✓ [55/131] 4512774863 (DP1053) — PASS
+  ✓ [56/131] 4512776173 (DP1054) — PASS
+  ⚠ [57/131] 4512780614 (DP1055) — WARN
+  ⚠ [58/131] 4512780869 (DP1056) — WARN
+  ⚠ [59/131] 4512783077 (DP1057, DP1068) — WARN
+  ✓ [60/131] 4512784817 (DP1052, DP1053) — PASS
+  ✓ [61/131] 4512784922 (DP1048, DP1049) — PASS
+  ✓ [62/131] 4513713044 (BUNDLE_GALLERY_COASTAL) — PASS
+  ✓ [63/131] 4513713106 (BUNDLE_GALLERY_BOTANICAL) — PASS
+  ✓ [64/131] 4513713142 (BUNDLE_GALLERY_WOODLAND) — PASS
+  ⚠ [65/131] 4513713514 (DP1071) — WARN
+  ⚠ [66/131] 4513713712 (DP1072) — WARN
+  ⚠ [67/131] 4513713805 (DP1073) — WARN
+  ⚠ [68/131] 4513713922 (DP1074) — WARN
+  ⚠ [69/131] 4513713936 (DP1075) — WARN
+  ⚠ [70/131] 4513713945 (DP1076) — WARN
+  ⚠ [71/131] 4513713962 (DP1077) — WARN
+  ⚠ [72/131] 4513713984 (DP1078) — WARN
+  ⚠ [73/131] 4513714013 (DP1079) — WARN
+  ⚠ [74/131] 4513714191 (DP1080) — WARN
+  ✓ [75/131] 4514130045 (DP1081) — PASS
+  ✓ [76/131] 4514134583 (DP1082) — PASS
+  ✓ [77/131] 4514136783 (DP1083) — PASS
+  ✓ [78/131] 4514392281 (DP1084) — PASS
+  ✓ [79/131] 4514536935 (DP1085) — PASS
+  ✓ [80/131] 4514777212 (SUBLIMATION_MOM_LIFE) — PASS
+  ⚠ [81/131] 4515437432 (DP1086) — WARN
+  ⚠ [82/131] 4515437442 (DP1087) — WARN
+  ⚠ [83/131] 4515437452 (COMMERCIAL_STICKER_LAVENDER) — WARN
+  ⚠ [84/131] 4515437456 (COMMERCIAL_STICKER_COTTON) — WARN
+  ⚠ [85/131] 4515437464 (COMMERCIAL_STICKER_MIDNIGHT) — WARN
+  ⚠ [86/131] 4515439743 (DP1088) — WARN
+  ⚠ [87/131] 4515439751 (DP1089) — WARN
+  ⚠ [88/131] 4515439755 (DP1090) — WARN
+  ⚠ [89/131] 4515439763 (DP1091) — WARN
+  ⚠ [90/131] 4515439799 (COMMERCIAL_STICKER_CORAL) — WARN
+  ⚠ [91/131] 4515439809 (COMMERCIAL_STICKER_BUNDLE) — WARN
+  ✗ [92/131] 4515668698 (DP1055) — FAIL
+      ↳ art_in_photos: DP1055 art not found in any of 10 photos (closest: slot 2, distance 111 > 80)
+  ✗ [93/131] 4515669140 (DP1051) — FAIL
+      ↳ art_in_photos: DP1051 art not found in any of 10 photos (closest: slot 7, distance 107 > 80)
+  ✗ [94/131] 4515669246 (DP1050) — FAIL
+      ↳ art_in_photos: DP1050 art not found in any of 10 photos (closest: slot 1, distance 94 > 80)
+  ✗ [95/131] 4515669370 (DP1049) — FAIL
+      ↳ art_in_photos: DP1049 art not found in any of 10 photos (closest: slot 10, distance 87 > 80)
+  ✗ [96/131] 4515669596 (DP1047) — FAIL
+      ↳ art_in_photos: DP1047 art not found in any of 10 photos (closest: slot 10, distance 98 > 80)
+  ✗ [97/131] 4515670946 (DP1046) — FAIL
+      ↳ art_in_photos: DP1046 art not found in any of 10 photos (closest: slot 6, distance 99 > 80)
+  ✗ [98/131] 4515671216 (DP1045) — FAIL
+      ↳ art_in_photos: DP1045 art not found in any of 10 photos (closest: slot 7, distance 101 > 80)
+  ✗ [99/131] 4515671336 (DP1044) — FAIL
+      ↳ art_in_photos: DP1044 art not found in any of 10 photos (closest: slot 7, distance 89 > 80)
+  ✗ [100/131] 4515671458 (DP1043) — FAIL
+      ↳ art_in_photos: DP1043 art not found in any of 10 photos (closest: slot 10, distance 106 > 80)
+  ✗ [101/131] 4515671558 (DP1042) — FAIL
+      ↳ art_in_photos: DP1042 art not found in any of 10 photos (closest: slot 8, distance 100 > 80)
+  ✗ [102/131] 4515671764 (DP1040) — FAIL
+      ↳ art_in_photos: DP1040 art not found in any of 10 photos (closest: slot 5, distance 106 > 80)
+  ✗ [103/131] 4515671951 (DP1057) — FAIL
+      ↳ art_in_photos: DP1057 art not found in any of 10 photos (closest: slot 2, distance 89 > 80)
+  ✗ [104/131] 4515672065 (DP1056) — FAIL
+      ↳ art_in_photos: DP1056 art not found in any of 10 photos (closest: slot 5, distance 94 > 80)
+  ✗ [105/131] 4515672204 (DP1036) — FAIL
+      ↳ art_in_photos: DP1036 art not found in any of 10 photos (closest: slot 10, distance 104 > 80)
+  ✗ [106/131] 4515672331 (DP1054) — FAIL
+      ↳ art_in_photos: DP1054 art not found in any of 10 photos (closest: slot 8, distance 111 > 80)
+  ✗ [107/131] 4515672435 (DP1053) — FAIL
+      ↳ art_in_photos: DP1053 art not found in any of 10 photos (closest: slot 7, distance 85 > 80)
+  ✓ [108/131] 4515672496 (DP1033) — PASS
+  ✗ [109/131] 4515672499 (DP1052) — FAIL
+      ↳ art_in_photos: DP1052 art not found in any of 10 photos (closest: slot 6, distance 89 > 80)
+  ✓ [110/131] 4515672588 (DP1099) — PASS
+  ✗ [111/131] 4515672895 (DP1048) — FAIL
+      ↳ art_in_photos: DP1048 art not found in any of 10 photos (closest: slot 7, distance 108 > 80)
+  ✓ [112/131] 4515672972 (DP1097) — PASS
+  ✓ [113/131] 4515673064 (DP1096) — PASS
+  ✗ [114/131] 4515673828 (DP1058) — FAIL
+      ↳ art_in_photos: DP1058 art not found in any of 10 photos (closest: slot 7, distance 91 > 80)
+  ✓ [115/131] 4515674042 (DP1100) — PASS
+  ✓ [116/131] 4515674144 (DP1095) — PASS
+  ⚠ [117/131] 4515674250 (DP1092) — WARN
+  ✓ [118/131] 4515674594 (DP1094) — PASS
+  ✗ [119/131] 4515675145 (DP1041) — FAIL
+      ↳ art_in_photos: DP1041 art not found in any of 10 photos (closest: slot 8, distance 83 > 80)
+  ✗ [120/131] 4515675373 (DP1039) — FAIL
+      ↳ art_in_photos: DP1039 art not found in any of 10 photos (closest: slot 10, distance 96 > 80)
+  ✗ [121/131] 4515675481 (DP1038) — FAIL
+      ↳ art_in_photos: DP1038 art not found in any of 10 photos (closest: slot 7, distance 97 > 80)
+  ✗ [122/131] 4515675583 (DP1037) — FAIL
+      ↳ art_in_photos: DP1037 art not found in any of 10 photos (closest: slot 7, distance 97 > 80)
+  ✗ [123/131] 4515675813 (DP1035) — FAIL
+      ↳ art_in_photos: DP1035 art not found in any of 10 photos (closest: slot 10, distance 104 > 80)
+  ✗ [124/131] 4515675887 (DP1034) — FAIL
+      ↳ art_in_photos: DP1034 art not found in any of 10 photos (closest: slot 8, distance 84 > 80)
+  ✓ [125/131] 4515676185 (DP1098) — PASS
+  ✓ [126/131] 4515676301 (DP1069) — PASS
+  ⚠ [127/131] 4515676915 (DP1093) — WARN
+  ✗ [128/131] 4515678198 (DP1032) — FAIL
+      ↳ art_in_photos: DP1032 art not found in any of 10 photos (closest: slot 1, distance 98 > 80)
+  ✗ [129/131] 4515678344 (DP1031) — FAIL
+      ↳ art_in_photos: DP1031 art not found in any of 10 photos (closest: slot 8, distance 100 > 80)
+  ✗ [130/131] 4515682013 (DP1030) — FAIL
+      ↳ art_in_photos: DP1030 art not found in any of 10 photos (closest: slot 5, distance 98 > 80)
+  ⚠ [131/131] 4515682147 (DP1026) — WARN
+
+======================================================================
+LISTING INTEGRITY REPORT
+Generated: 2026-06-06 02:42 UTC
+======================================================================
+
+SUMMARY: 131 listings audited in 491s
+  ✓ PASS: 29   ⚠ WARN: 66   ✗ FAIL: 36
+
+——————————————————————————————————————————————————————————————————————
+✗ FAIL (36 listings)
+——————————————————————————————————————————————————————————————————————
+
+  [4509184958] DP1027 — Kawaii Student Planner 2026, GoodNotes iPad, Instant Do…
+  Type: planner | Photos: 11 | Files: 2 | Tags: 12
+    ✗ [tag_count] Only 12 tags (need 13)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4509258172] DP1012 — Checkerboard Floral Printable Wall Art, Instant Downloa…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1012 art not found in any of 10 photos (closest: slot 9, distance 113 > 80)
+
+  [4509593487] DP1032 — Vintage Botanical Printable Wall Art, Instant Download,…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1032 art not found in any of 10 photos (closest: slot 7, distance 106 > 80)
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509593697] DP1034 — Grand Canyon Printable Wall Art, Instant Download, Vint…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1034 art not found in any of 10 photos (closest: slot 8, distance 84 > 80)
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509596017] DP1036 — Abstract Woman Portrait Print, Feminist Line Art, Insta…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1036 art not found in any of 10 photos (closest: slot 6, distance 91 > 80)
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+
+  [4509597559] DP1037 — Italian Kitchen Printable Wall Art, Instant Download, F…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1037 art not found in any of 10 photos (closest: slot 7, distance 96 > 80)
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509598660] DP1030 — Moon Phases Print, Celestial Wall Art, Lunar Cycle, Ins…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 12
+    ✗ [tag_count] Only 12 tags (need 13)
+    ✗ [art_in_photos] DP1030 art not found in any of 10 photos (closest: slot 3, distance 99 > 80)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+
+  [4509598784] DP1031 — Abstract Brushstroke Printable Art, Instant Download, M…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1031 art not found in any of 10 photos (closest: slot 8, distance 101 > 80)
+
+  [4515668698] DP1055 — Kawaii Art Print No.1055 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1055 art not found in any of 10 photos (closest: slot 2, distance 111 > 80)
+
+  [4515669140] DP1051 — Kawaii Art Print No.1051 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1051 art not found in any of 10 photos (closest: slot 7, distance 107 > 80)
+
+  [4515669246] DP1050 — Kawaii Art Print No.1050 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1050 art not found in any of 10 photos (closest: slot 1, distance 94 > 80)
+
+  [4515669370] DP1049 — Kawaii Art Print No.1049 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1049 art not found in any of 10 photos (closest: slot 10, distance 87 > 80)
+
+  [4515669596] DP1047 — Kawaii Art Print No.1047 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1047 art not found in any of 10 photos (closest: slot 10, distance 98 > 80)
+
+  [4515670946] DP1046 — Kawaii Art Print No.1046 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1046 art not found in any of 10 photos (closest: slot 6, distance 99 > 80)
+
+  [4515671216] DP1045 — Kawaii Art Print No.1045 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1045 art not found in any of 10 photos (closest: slot 7, distance 101 > 80)
+
+  [4515671336] DP1044 — Kawaii Art Print No.1044 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1044 art not found in any of 10 photos (closest: slot 7, distance 89 > 80)
+
+  [4515671458] DP1043 — Kawaii Art Print No.1043 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1043 art not found in any of 10 photos (closest: slot 10, distance 106 > 80)
+
+  [4515671558] DP1042 — Kawaii Art Print No.1042 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1042 art not found in any of 10 photos (closest: slot 8, distance 100 > 80)
+
+  [4515671764] DP1040 — Kawaii Art Print No.1040 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1040 art not found in any of 10 photos (closest: slot 5, distance 106 > 80)
+
+  [4515671951] DP1057 — Kawaii Art Print No.1057 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1057 art not found in any of 10 photos (closest: slot 2, distance 89 > 80)
+
+  [4515672065] DP1056 — Kawaii Art Print No.1056 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1056 art not found in any of 10 photos (closest: slot 5, distance 94 > 80)
+
+  [4515672204] DP1036 — Kawaii Art Print No.1036 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1036 art not found in any of 10 photos (closest: slot 10, distance 104 > 80)
+
+  [4515672331] DP1054 — Kawaii Art Print No.1054 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1054 art not found in any of 10 photos (closest: slot 8, distance 111 > 80)
+
+  [4515672435] DP1053 — Kawaii Art Print No.1053 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1053 art not found in any of 10 photos (closest: slot 7, distance 85 > 80)
+
+  [4515672499] DP1052 — Kawaii Art Print No.1052 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1052 art not found in any of 10 photos (closest: slot 6, distance 89 > 80)
+
+  [4515672895] DP1048 — Kawaii Art Print No.1048 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1048 art not found in any of 10 photos (closest: slot 7, distance 108 > 80)
+
+  [4515673828] DP1058 — Cottagecore Botanical Art Print | Nature Wall Decor | M…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1058 art not found in any of 10 photos (closest: slot 7, distance 91 > 80)
+
+  [4515675145] DP1041 — Kawaii Art Print No.1041 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1041 art not found in any of 10 photos (closest: slot 8, distance 83 > 80)
+
+  [4515675373] DP1039 — Kawaii Art Print No.1039 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1039 art not found in any of 10 photos (closest: slot 10, distance 96 > 80)
+
+  [4515675481] DP1038 — Kawaii Art Print No.1038 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1038 art not found in any of 10 photos (closest: slot 7, distance 97 > 80)
+
+  [4515675583] DP1037 — Kawaii Art Print No.1037 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1037 art not found in any of 10 photos (closest: slot 7, distance 97 > 80)
+
+  [4515675813] DP1035 — Kawaii Art Print No.1035 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1035 art not found in any of 10 photos (closest: slot 10, distance 104 > 80)
+
+  [4515675887] DP1034 — Kawaii Art Print No.1034 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1034 art not found in any of 10 photos (closest: slot 8, distance 84 > 80)
+
+  [4515678198] DP1032 — Kawaii Art Print No.1032 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1032 art not found in any of 10 photos (closest: slot 1, distance 98 > 80)
+
+  [4515678344] DP1031 — Kawaii Art Print No.1031 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1031 art not found in any of 10 photos (closest: slot 8, distance 100 > 80)
+
+  [4515682013] DP1030 — Kawaii Art Print No.1030 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ✗ [art_in_photos] DP1030 art not found in any of 10 photos (closest: slot 5, distance 98 > 80)
+
+——————————————————————————————————————————————————————————————————————
+⚠ WARN (66 listings)
+——————————————————————————————————————————————————————————————————————
+
+  [4509179201] DP1026 — Digital Planner 2026 Undated, GoodNotes iPad, Instant D…
+  Type: planner | Photos: 11 | Files: 2 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4509184962] DP1028 — Digital Budget Planner 2026 Undated, GoodNotes, Instant…
+  Type: planner | Photos: 11 | Files: 2 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4509184968] DP1029 — Digital Fitness Planner 2026 Undated, GoodNotes, Instan…
+  Type: planner | Photos: 11 | Files: 2 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4509193231] DP1058 — Sage Lavender Botanical Print, Dusty Rose Wall Art, Ins…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+    ℹ [art_in_photos] Art verified in photos (best: DP1058 slot 4, distance 10)
+
+  [4509193237] DP1059 — Pampas Grass Printable Wall Art, Boho, Instant Download
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+    ℹ [art_in_photos] Art verified in photos (best: DP1059 slot 10, distance 3)
+
+  [4509198434] DP1060 — Boho Wildflower Printable Wall Art, Instant Download, S…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1060 slot 6, distance 1)
+
+  [4509198446] DP1061 — Eucalyptus Branch Printable Wall Art, Instant Download,…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['printable']
+    ℹ [art_in_photos] Art verified in photos (best: DP1061 slot 8, distance 1)
+
+  [4509213345] DP1014 — Good Things Take Time Printable Art, Instant Download, …
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509213533] DP1015 — She Believed She Could, Empowerment Quote Wall Art, Ins…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+
+  [4509214051] DP1019 — Mountain Meadow Printable Wall Art, Instant Download, L…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509214237] DP1020 — Poppy Field Printable Wall Art, Instant Download, Impre…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509214477] DP1021, DP1062 — Funny Dog Printable Wall Art, Instant Download, Golden …
+  Type: gallery_set | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509214803] DP1023 — Astronaut Space Printable Wall Art, Instant Download, G…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509215145] DP1025 — Day of the Dead Skull Print, Colorful Maximalist Wall A…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+
+  [4509218152] DP1007 — Mediterranean Window Printable Art, Instant Download, A…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509219594] DP1022 — Full Moon Ocean Printable Wall Art, Instant Download, M…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509219904] DP1024 — Muscle Car Printable Wall Art, Instant Download, Chevel…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4509258700] DP1013, DP1063 — Watercolor Botanical Print, Soft Pastel Flower Art, Ins…
+  Type: gallery_set | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4509259354] DP1017 — Minimalist Botanical Line Art Print, Boho Decor, Instan…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+
+  [4509593623] DP1033 — Paris Skyline Printable Wall Art, Instant Download, Min…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1033 slot 7, distance 62)
+
+  [4509600086] DP1035, DP1064 — Tropical Leaves Print, Bold Monstera Palm Wall Art
+  Type: gallery_set | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4512254015] STICKER_COTTON_CANDY — Kawaii Sticker Pack PNG, GoodNotes, Cotton Candy, Insta…
+  Type: sticker_pack | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4512254027] STICKER_CORAL_PEACH — Kawaii Sticker Pack PNG, GoodNotes, Coral Peach, Instan…
+  Type: sticker_pack | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4512254035] STICKER_BUNDLE_ALL4 — Kawaii Sticker Bundle All 4 Themes, GoodNotes, Instant …
+  Type: sticker_bundle | Photos: 9 | Files: 4 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4512255508] STICKER_FREE — FREE Kawaii Sticker Sheet PNG, GoodNotes, Instant Downl…
+  Type: sticker_pack | Photos: 9 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4512255514] STICKER_LAVENDER — Kawaii Sticker Pack PNG, GoodNotes, Lavender Dreams, In…
+  Type: sticker_pack | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4512255536] STICKER_MIDNIGHT_BLUE — Kawaii Sticker Pack PNG, GoodNotes, Midnight Blue, Inst…
+  Type: sticker_pack | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4512747600] DP1038 — Autumn Fox Printable Wall Art, Instant Download, Woodla…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1038 slot 8, distance 1)
+
+  [4512750191] DP1039 — Hummingbird Watercolor Print, Botanical Bird Art, Flora…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+    ℹ [art_in_photos] Art verified in photos (best: DP1039 slot 8, distance 1)
+
+  [4512753302] DP1040 — Baby Bear Nursery Print, Woodland Animal Art, Instant D…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+    ℹ [art_in_photos] Art verified in photos (best: DP1040 slot 8, distance 0)
+
+  [4512755568] DP1041 — Mountain Lake Printable Wall Art, Instant Download, Lan…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1041 slot 8, distance 1)
+
+  [4512756952] DP1042 — Wildflower Meadow Printable Wall Art, Instant Download,…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1042 slot 8, distance 0)
+
+  [4512758123] DP1044 — Ocean Wave Printable Wall Art, Instant Download, Coasta…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1044 slot 8, distance 1)
+
+  [4512758458] DP1043 — Cat Reading Printable Wall Art, Instant Download, Booki…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1043 slot 8, distance 0)
+
+  [4512760671] DP1046 — Snowy Owl Printable Wall Art, Instant Download, Wildlif…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1046 slot 8, distance 1)
+
+  [4512760918] DP1045 — Lavender Fields Printable Wall Art, Instant Download, P…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1045 slot 8, distance 0)
+
+  [4512763302] DP1047, DP1066 — Rooster Kitchen Printable Wall Art, Instant Download, F…
+  Type: gallery_set | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4512768771] DP1049 — Sunflower Watercolor Print, Botanical Wall Art, Instant…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+    ℹ [art_in_photos] Art verified in photos (best: DP1049 slot 8, distance 0)
+
+  [4512768858] DP1067 — Cherry Blossom Watercolor Print, Spring Wall Art, Insta…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+    ℹ [art_in_photos] Art verified in photos (best: DP1067 slot 2, distance 1)
+
+  [4512780614] DP1055 — Pelican Watercolor Print, Coastal Art, Instant Download
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download', 'printable']
+    ℹ [art_in_photos] Art verified in photos (best: DP1055 slot 8, distance 1)
+
+  [4512780869] DP1056 — Fox Watercolor Printable Wall Art, Instant Download, Wo…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1056 slot 8, distance 0)
+
+  [4512783077] DP1057, DP1068 — Paris Café Printable Wall Art, Instant Download, French
+  Type: gallery_set | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+
+  [4513713514] DP1071 — Japandi Tree Print, Black White Wall Art, Instant Downl…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1071 slot 6, distance 3)
+
+  [4513713712] DP1072 — Moon Phases Print, Black White Wall Art, Instant Downlo…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ℹ [art_in_photos] Art verified in photos (best: DP1072 slot 6, distance 6)
+
+  [4513713805] DP1073 — Minimalist Botanical Print, Black White Wall Art, Insta…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4513713922] DP1074 — Bear Nursery Wall Art, Printable Instant Download, Wood…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4513713936] DP1075 — Owl Nursery Wall Art, Printable Instant Download, Woodl…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4513713945] DP1076 — Vintage Botanical Print, Black White Wall Art, Instant …
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4513713962] DP1077 — Watercolor Fox Nursery Print, Printable Instant Downloa…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4513713984] DP1078 — Hummingbird Nursery Print, Printable Wall Art, Instant …
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4513714013] DP1079 — Paris Skyline Print, Black White Wall Art, Instant Down…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4513714191] DP1080 — Fox Nursery Wall Art, Printable Instant Download, Woodl…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [ai_disclosure] No AI disclosure found in description (required by Etsy June 2025 policy)
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4515437432] DP1086 — Commercial License, Mom Life SVG Bundle 20 Designs, Ins…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515437442] DP1087 — Commercial License, Western SVG Bundle 12 Designs, Inst…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515437452] COMMERCIAL_STICKER_LAVENDER — Commercial License, Kawaii Sticker Pack Lavender D, Ins…
+  Type: commercial_license | Photos: 3 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515437456] COMMERCIAL_STICKER_COTTON — Commercial License, Kawaii Sticker Pack Cotton Can, Ins…
+  Type: commercial_license | Photos: 3 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515437464] COMMERCIAL_STICKER_MIDNIGHT — Commercial License, Kawaii Sticker Pack Midnight B, Ins…
+  Type: commercial_license | Photos: 3 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515439743] DP1088 — Commercial License, Floral Botanical SVG Bundle, Instan…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515439751] DP1089 — Commercial License, Christian Faith SVG Bundle, Instant…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515439755] DP1090 — Commercial License, Graduation 2026 SVG Bundle, Instant…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515439763] DP1091 — Commercial License, Good Vibes SVG Bundle, Instant Down…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515439799] COMMERCIAL_STICKER_CORAL — Commercial License, Kawaii Sticker Pack Coral Peac, Ins…
+  Type: commercial_license | Photos: 3 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515439809] COMMERCIAL_STICKER_BUNDLE — Commercial License, Kawaii Sticker Pack Bundle All, Ins…
+  Type: commercial_license | Photos: 3 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['instant download']
+
+  [4515674250] DP1092 — Boho Botanical Floral Wall Art Print | Multiple Sizes
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4515676915] DP1093 — Watercolor Floral Art Print | Boho Wall Decor | Multipl…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['cricut']
+
+  [4515682147] DP1026 — Kawaii Art Print No.1026 | Kawaii Wall Decor | Multiple…
+  Type: planner | Photos: 10 | Files: 1 | Tags: 13
+    ⚠ [description_keywords] Description missing expected keyword(s): ['goodnotes', 'fillable']
+
+——————————————————————————————————————————————————————————————————————
+✓ PASS (29 listings)
+——————————————————————————————————————————————————————————————————————
+
+  [4509213667] DP1016 — White Roses Printable Wall Art, Instant Download, Roman…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+
+  [4509218860] DP1018 — Japandi Tree Printable Wall Art, Instant Download, Zen
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+
+  [4512188970] BUNDLE_PLANNER_ALL4 — Kawaii Planner Bundle 2026, All 4 Planners, Instant Dow…
+  Type: bundle | Photos: 8 | Files: 5 | Tags: 13
+
+  [4512301880] DP1003, DP1002, DP1001, DP1000, DP1065 — Boho Botanical Set of 4, Printable Art, Instant Downloa…
+  Type: gallery_set | Photos: 10 | Files: 1 | Tags: 13
+
+  [4512770031] DP1050 — Autumn Maple Printable Wall Art, Instant Download, Fall
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1050 slot 8, distance 0)
+
+  [4512772452] DP1051 — Winter Birch Printable Wall Art, Instant Download
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1051 slot 9, distance 1)
+
+  [4512772539] DP1052 — Sea Turtle Printable Wall Art, Instant Download, Ocean
+  Type: wall_art | Photos: 11 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1052 slot 8, distance 0)
+
+  [4512774863] DP1053 — Lighthouse Printable Wall Art, Instant Download, Coasta…
+  Type: wall_art | Photos: 11 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1053 slot 8, distance 1)
+
+  [4512776173] DP1054 — Coral Reef Printable Wall Art, Instant Download, Ocean
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1054 slot 8, distance 0)
+
+  [4512784817] DP1052, DP1053, DP1054, DP1055, DP1069 — Coastal Art Set of 4, Printable Wall Art, Instant Downl…
+  Type: gallery_set | Photos: 10 | Files: 1 | Tags: 13
+
+  [4512784922] DP1048, DP1049, DP1050, DP1051, DP1070 — Four Seasons Set of 4, Printable Wall Art, Instant Down…
+  Type: gallery_set | Photos: 10 | Files: 1 | Tags: 13
+
+  [4513713044] BUNDLE_GALLERY_COASTAL — Coastal Gallery Wall Set of 5, Printable Art, Instant D…
+  Type: gallery_bundle | Photos: 10 | Files: 5 | Tags: 13
+
+  [4513713106] BUNDLE_GALLERY_BOTANICAL — Botanical Gallery Wall Set of 5, Printable Prints, Inst…
+  Type: gallery_bundle | Photos: 10 | Files: 5 | Tags: 13
+
+  [4513713142] BUNDLE_GALLERY_WOODLAND — Woodland Animal Gallery Wall Set of 5, Printable, Insta…
+  Type: gallery_bundle | Photos: 10 | Files: 5 | Tags: 13
+
+  [4514130045] DP1081 — Floral SVG Bundle Cricut, Botanical Cut Files, Instant …
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+
+  [4514134583] DP1082 — Christian SVG Bundle, Faith Cut Files Cricut, Instant D…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+
+  [4514136783] DP1083 — Graduation SVG Bundle 2026, Senior Cut Files Cricut, In…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+
+  [4514392281] DP1084 — Mom Life SVG Bundle, 20 Designs Cricut Silhouette, Inst…
+  Type: svg_bundle | Photos: 10 | Files: 1 | Tags: 13
+
+  [4514536935] DP1085 — Good Vibes SVG Bundle, 20 Designs Cricut, Instant Downl…
+  Type: svg_bundle | Photos: 16 | Files: 1 | Tags: 13
+
+  [4514777212] SUBLIMATION_MOM_LIFE — Mom Life Sublimation Tumbler Wrap Bundle PNG 20oz Insta…
+  Type: sublimation | Photos: 10 | Files: 1 | Tags: 13
+
+  [4515672496] DP1033 — Kawaii Art Print No.1033 | Kawaii Wall Decor | Multiple…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1033 slot 3, distance 55)
+
+  [4515672588] DP1099 — Pastel Celestial Art Print | Moon Stars Decor | Multipl…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1099 slot 1, distance 0)
+
+  [4515672972] DP1097 — Minimalist Typography Art Print | Quote Wall Decor | Mu…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1097 slot 1, distance 2)
+
+  [4515673064] DP1096 — Tropical Botanical Art Print | Jungle Wall Decor | Mult…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1096 slot 1, distance 1)
+
+  [4515674042] DP1100 — Minimalist Line Art Print | Modern Wall Decor | Multipl…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1100 slot 1, distance 0)
+
+  [4515674144] DP1095 — Boho Botanical Floral Wall Art Print | Multiple Sizes
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1095 slot 1, distance 0)
+
+  [4515674594] DP1094 — Botanical Herbs Art Print | Kitchen Wall Decor | Multip…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1094 slot 1, distance 0)
+
+  [4515676185] DP1098 — Kawaii Stationery Art Print | Cute Desk Decor | Multipl…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1098 slot 1, distance 1)
+
+  [4515676301] DP1069 — Floral Wreath Art Print | Botanical Wall Decor | Multip…
+  Type: wall_art | Photos: 10 | Files: 1 | Tags: 13
+    ℹ [art_in_photos] Art verified in photos (best: DP1069 slot 1, distance 77)
+
+======================================================================

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Tassel Was Worth Hassle SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <path d="M 400,52 L 540,119 L 400,186 L 260,119 Z" fill="black"/>
+  <path d="M 325,119 L 475,119 L 498,231 L 302,231 Z" fill="black"/>
+  <line x1="540" y1="119" x2="540" y2="315" stroke="black" stroke-width="4"/>
+  <circle cx="540" cy="315" r="7" fill="black"/>
+  <line x1="525.0" y1="322" x2="523.0" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="528.8" y1="322" x2="526.8" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="532.5" y1="322" x2="530.5" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="536.2" y1="322" x2="534.2" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="540.0" y1="322" x2="538.0" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="543.8" y1="322" x2="541.8" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="547.5" y1="322" x2="545.5" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="551.2" y1="322" x2="549.2" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="555.0" y1="322" x2="553.0" y2="343" stroke="black" stroke-width="2.2"/>
+  <line x1="170" y1="365" x2="630" y2="365" stroke="black" stroke-width="2.8"/>
+  <line x1="170" y1="372" x2="630" y2="372" stroke="black" stroke-width="1.2"/>
+  <polygon points="161,368.5 168,365 175,368.5 168,372" fill="black"/>
+  <polygon points="639,368.5 646,365 653,368.5 646,372" fill="black"/>
+  <text x="400" y="418" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="black" letter-spacing="5">THE TASSEL WAS</text>
+  <text x="400" y="494" text-anchor="middle" font-family="Georgia,serif" font-size="66" font-weight="bold" fill="black" letter-spacing="2">WORTH THE</text>
+  <text x="400" y="570" text-anchor="middle" font-family="Georgia,serif" font-size="66" font-weight="bold" fill="black" letter-spacing="2">HASSLE</text>
+  <text x="400" y="628" text-anchor="middle" font-family="Georgia,serif" font-size="18" fill="black" letter-spacing="8">CLASS OF 2026</text>
+</svg>

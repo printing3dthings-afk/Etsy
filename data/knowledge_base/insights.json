@@ -1,0 +1,302 @@
+[
+  {
+    "id": "ins_1",
+    "agent": "TestAgent",
+    "category": "keywords",
+    "insight": "Test insight",
+    "confidence": "high",
+    "source": "test",
+    "applicable_to": "",
+    "saved_at": "2026-05-14T16:19:57.445176"
+  },
+  {
+    "id": "ins_1778926423401",
+    "agent": "CEO Agent",
+    "category": "design_trends",
+    "insight": "Sage Green (#9CAF88, #7A9B6C) is a RISING trend for wall art in Summer 2025 \u2014 low competition window. Vintage botanical style is dominant. Multi-format sets (8x10, 5x7, 11x14, A4) outperform single-size listings. Printable gallery wall sets (3-4 piece) are trending hard.",
+    "confidence": "high",
+    "source": "research_design_trends + Etsy market analysis",
+    "applicable_to": "boho botanical wall art, digital prints, home decor printables",
+    "saved_at": "2026-05-16T10:13:43.401763"
+  },
+  {
+    "id": "ins_1778926423403",
+    "agent": "CEO Agent",
+    "category": "pricing",
+    "insight": "Digital wall art Etsy sweet spot is $4.99\u2013$9.99 with ~75% net margin after fees. Multi-format bundles command premium ($7.99\u2013$14.99). Never price below $4.99 \u2014 it signals low quality and attracts low-value buyers.",
+    "confidence": "high",
+    "source": "Etsy market research - digital products category",
+    "applicable_to": "all digital download products",
+    "saved_at": "2026-05-16T10:13:43.403421"
+  },
+  {
+    "id": "ins_1778926423404",
+    "agent": "CEO Agent",
+    "category": "keywords",
+    "insight": "Top-converting Etsy tags for boho botanical wall art: instant download, printable wall art, digital download, home decor print, boho art print, botanical print, gallery wall art, digital art print, wall art printable, wildflower print, sage green art, watercolor print. Title must open with primary keyword in first 40 chars.",
+    "confidence": "high",
+    "source": "find_best_keywords + research_product_names",
+    "applicable_to": "boho botanical wall art, wildflower prints, watercolor digital prints",
+    "saved_at": "2026-05-16T10:13:43.404861"
+  },
+  {
+    "id": "ins_1778926537864",
+    "agent": "Art Creation Agent",
+    "category": "design_trends",
+    "insight": "Boho botanical watercolor wildflower prints with sage green + dusty rose + warm cream palette are a confirmed rising trend (Summer 2025). Key differentiators vs. competitors: named botanical species (pampas, eucalyptus, lavender) not generic flowers; generous negative space (60%+ background) signals premium/gallery quality; warm brown linework instead of black feels more organic and premium. Multi-format delivery (5x7 through 16x20 + A4/A3) is table stakes for this category.",
+    "confidence": "high",
+    "source": "Brief analysis + Etsy market research + design trend research",
+    "applicable_to": "botanical wall art, boho home decor prints, wildflower digital downloads, watercolor printables",
+    "saved_at": "2026-05-16T10:15:37.864874"
+  },
+  {
+    "id": "ins_1778926999370",
+    "agent": "Quality Check Agent",
+    "category": "design_trends",
+    "insight": "Print-ready digital planners should be 3\u201315 MB for 50\u201380 pages of properly designed, 300 DPI content. A file under 1 MB for 70+ pages is a red flag for placeholder content, missing design elements, or over-compressed images. QC should flag any planner under 1 MB per 20 pages for Art Agent content verification before approval.",
+    "confidence": "high",
+    "source": "QC review of DP999 \u2014 Boho Botanical 2026 Planner",
+    "applicable_to": "digital planners, printable PDF products, multi-page digital downloads",
+    "saved_at": "2026-05-16T10:23:19.370912"
+  },
+  {
+    "id": "ins_1778927768876",
+    "agent": "Quality Check Agent",
+    "category": "design_trends",
+    "insight": "Warm brown linework (#8B7355, #C4A882) instead of black in watercolor botanical prints is a confirmed premium differentiator. Black linework reads as budget/mass-market. Brown reads as artisan/gallery-quality. Apply to all future botanical and floral watercolor products.",
+    "confidence": "high",
+    "source": "QC review DP1000 \u2014 Boho Wildflower Botanical Watercolor Print",
+    "applicable_to": "watercolor botanicals, floral prints, wildflower wall art, any hand-drawn style digital print",
+    "saved_at": "2026-05-16T10:36:08.876895"
+  },
+  {
+    "id": "ins_1778927768880",
+    "agent": "Quality Check Agent",
+    "category": "product_ideas",
+    "insight": "Single JPEG digital wall art listings should be upgraded to multi-size ZIP bundles (5x7, 8x10, 11x14, 16x20, A4, A3) on v2. Bundle listings command $7.99-$14.99 vs. $4.99-$7.99 for single files, and dramatically reduce buyer support requests about sizing. QC should flag single-file-only products for bundle upgrade recommendation.",
+    "confidence": "high",
+    "source": "QC review DP1000 + market insights cross-reference",
+    "applicable_to": "all digital wall art downloads",
+    "saved_at": "2026-05-16T10:36:08.880672"
+  },
+  {
+    "id": "ins_1778927828953",
+    "agent": "Brand Design Agent",
+    "category": "design_trends",
+    "insight": "For boho botanical wall art thumbnails, top Etsy performers consistently use: (1) thin gold or natural wood frame on warm greige/linen wall, (2) 1\u20132 styled props at frame base (eucalyptus stem, ceramic vase, linen texture), (3) print fills 65\u201375% of the frame area, (4) zero text overlay on main thumbnail \u2014 the art sells itself. White-background mockups rank lower in CTR than lifestyle room scenes for this category.",
+    "confidence": "high",
+    "source": "Etsy market research + design trend analysis, DP1000 brand review",
+    "applicable_to": "botanical wall art, boho digital prints, watercolor printables",
+    "saved_at": "2026-05-16T10:37:08.953892"
+  },
+  {
+    "id": "ins_1778928148382",
+    "agent": "CEO Agent",
+    "category": "pricing",
+    "insight": "Digital wall art at $12.00 yields 88.25% net margin ($10.59 net profit per sale) after Etsy fees (6.5% transaction + 3%+$0.25 payment processing + $0.20 listing amortized). Break-even on listing fee achieved on first sale. At 3 sales/day: $953/month net profit from a single digital SKU. Price floor: never below $7.99 for premium boho botanical prints \u2014 $12.00 is optimal for DP1000.",
+    "confidence": "high",
+    "source": "Financial Agent \u2014 DP1000 margin analysis",
+    "applicable_to": "digital download wall art, boho botanical prints, all Etsy digital products",
+    "saved_at": "2026-05-16T10:42:28.382032"
+  },
+  {
+    "id": "ins_1778928148386",
+    "agent": "CEO Agent",
+    "category": "keywords",
+    "insight": "FINAL CONFIRMED TAG SET for boho botanical watercolor wall art digital downloads \u2014 all 13 slots: (1) sage green wall art, (2) botanical watercolor, (3) boho wall art print, (4) wildflower wall art, (5) printable wall art, (6) boho home decor, (7) gallery wall print, (8) watercolor botanical, (9) nature wall art, (10) instant download art, (11) wall art printable, (12) plant lover gift, (13) organic modern decor. Top 3 buyer search queries: 'sage green botanical wall art digital download', 'boho wildflower print instant download', 'printable watercolor wall art digital print'. Tag 7 must not exceed 20 chars \u2014 use 'gallery wall print' not 'gallery wall printable'.",
+    "confidence": "high",
+    "source": "Full pipeline research \u2014 DP1000 listing creation (Art Agent + QC Agent + Marketing research + find_best_keywords)",
+    "applicable_to": "boho botanical wall art, sage green digital prints, watercolor wall art digital downloads",
+    "saved_at": "2026-05-16T10:42:28.386543"
+  },
+  {
+    "id": "ins_1778928368621",
+    "agent": "Financial Agent",
+    "category": "pricing",
+    "insight": "Digital product price ladder confirmed: Single art prints $7.99\u2013$12.99 (88%+ margin), Multi-format bundles $12.99\u2013$17.99, Full planner PDFs $14.99\u2013$19.99, Bundle collections (planner + art) $22.99\u2013$29.99. Never price digital below $7.99 \u2014 signals low quality. DP1000 at $12.00 is optimal entry; v2 multi-format upgrade justifies $14.99\u2013$15.99.",
+    "confidence": "high",
+    "source": "Financial Agent \u2014 executive pricing strategy memo, Etsy market research cross-reference",
+    "applicable_to": "All digital download products: planners, art prints, bundles, collections",
+    "saved_at": "2026-05-16T10:46:08.621406"
+  },
+  {
+    "id": "ins_1778928423435",
+    "agent": "CEO Agent",
+    "category": "pricing",
+    "insight": "3D printed physical items priced at $8.99 sit below the Etsy market floor of $12.99\u2013$24.99. Raising from $8.99 to $12.99 increases net profit per sale by 62.1% ($5.83 \u2192 $9.45) with zero COGS change. Additionally, Etsy fee efficiency improves as price rises (14.5% of revenue at $8.99 vs 13.0% at $12.99). Physical items L002 and L003 were successfully repriced to $12.99 on this basis.",
+    "confidence": "high",
+    "source": "Financial Agent margin analysis + Product Agent price update confirmation",
+    "applicable_to": "all 3D printed physical products, hand-painted wood items under $15",
+    "saved_at": "2026-05-16T10:47:03.435594"
+  },
+  {
+    "id": "ins_1778928459980",
+    "agent": "Financial Agent",
+    "category": "pricing",
+    "insight": "COMPLETE DIGITAL PRICING LADDER (verified against Etsy fee structure, COGS=$0.00 for all digital): \nART PRINTS SINGLE: $7.99\u219284.8% margin ($6.78 net), $9.99\u219286.0% margin ($8.59 net), $12.00\u219286.8% margin ($10.41 net), $14.99\u219287.5% margin ($13.12 net).\nBUNDLES: $14.99\u219287.5% ($13.12 net), $17.99\u219288.0% ($15.83 net), $22.99\u219288.5% ($20.36 net).\nPLANNERS: $8.99\u219285.5% ($7.69 net), $12.99\u219287.0% (calc needed), $17.99\u219288.0% ($15.83 net), $24.99\u219288.7% ($22.17 net).\nAll products comfortably exceed 55% minimum and 70% target margin thresholds. Fee efficiency IMPROVES as price rises \u2014 higher prices are always better.",
+    "confidence": "high",
+    "source": "Financial Agent \u2014 full digital pricing ladder calculation, all price points verified",
+    "applicable_to": "All digital download products: art prints, bundles, planners, collections",
+    "saved_at": "2026-05-16T10:47:39.980317"
+  },
+  {
+    "id": "ins_1778928488980",
+    "agent": "CEO Agent",
+    "category": "pricing",
+    "insight": "OnBrandCraftz Digital Product Pricing Ladder (confirmed by Financial Agent): Art prints single: floor $7.99, optimal $12.00 (86.8% margin), premium $14.99. Art print bundles: floor $14.99, optimal $17.99 (88.0% margin). Digital planners: never below $12.99, optimal $17.99 (88.0% margin), premium $24.99. NEVER list a planner at $8.99 \u2014 it is below market floor and signals low quality. Every $1 price increase on digital products goes almost entirely to net profit (zero COGS).",
+    "confidence": "high",
+    "source": "Financial Agent \u2014 Digital Product Pricing Ladder analysis",
+    "applicable_to": "all digital download products \u2014 art prints, bundles, planners, printables",
+    "saved_at": "2026-05-16T10:48:08.980849"
+  },
+  {
+    "id": "ins_1778928823227",
+    "agent": "Etsy Listing Agent",
+    "category": "keywords",
+    "insight": "DP1000 listing content fully generated and publish-ready. Title (133 chars): \"Boho Wildflower Botanical Watercolor Print | Sage Green Wall Art | Digital Download | Printable Wall Art | Instant Download Art Print\". All 13 tags confirmed valid (all multi-word, no duplicates, all under 20 chars). Description: 2,199 chars with power hook in first 2 lines, named botanicals, 6 file sizes, 300 DPI spec, print guidance, FAQ, personal use license. Price: $12.00. Section: Digital Art & Prints. BLOCKED: Requires ETSY_ACCESS_TOKEN to push live. Run: python tools/etsy_oauth.py",
+    "confidence": "high",
+    "source": "Listing Agent \u2014 DP1000 full publish pipeline execution",
+    "applicable_to": "DP1000, boho botanical wall art digital downloads",
+    "saved_at": "2026-05-16T10:53:43.227121"
+  },
+  {
+    "id": "ins_1778929057447",
+    "agent": "Art Creation Agent",
+    "category": "design_trends",
+    "insight": "create_digital_planner tool generates vector/text-only PDFs at ~574 KB for 70+ pages regardless of theme_color, accent_color, or section parameters. It does NOT embed watercolor image assets generated by generate_digital_art. This makes it structurally impossible to pass the 100 KB/page QC threshold for planner products. All planner products will be rejected until the tool is updated to support image asset embedding. Three rejections of DP999 confirm this is a hard platform limitation, not an art quality issue.",
+    "confidence": "high",
+    "source": "DP999 three-cycle QC rejection analysis \u2014 Art Agent rebuild investigation",
+    "applicable_to": "digital planners, all PDF planner products, create_digital_planner tool usage",
+    "saved_at": "2026-05-16T10:57:37.447148"
+  },
+  {
+    "id": "ins_1778929150693",
+    "agent": "CEO Agent",
+    "category": "product_ideas",
+    "insight": "DP999 Boho Botanical Planner is PERMANENTLY BLOCKED at PDF creation stage. The `create_digital_planner` tool generates vector/text-only PDFs and cannot embed 300 DPI JPEG artwork. Three QC rejections confirm this is a tool architecture limitation, not an art quality issue. The 6,612 KB of art assets exist and are QC-ready \u2014 the blocker is PDF embedding. Resolution requires either: (1) dev fix to `create_digital_planner` to accept `image_assets[]` parameter, or (2) a different PDF assembly approach. Do NOT assign DP999 planner rebuilds until this tool is fixed.",
+    "confidence": "high",
+    "source": "Art Creation Agent \u2014 DP999 third rebuild attempt, root cause confirmed",
+    "applicable_to": "All digital planner products, multi-page PDF products",
+    "saved_at": "2026-05-16T10:59:10.693923"
+  },
+  {
+    "id": "ins_1778929150702",
+    "agent": "CEO Agent",
+    "category": "product_ideas",
+    "insight": "TOOL BLOCKER: Marketing Agent and Analytics Agent both returning error 400 \u2014 'tools: Tool names must be unique.' This means SEO audits and performance dashboards are completely unavailable until the tool registration conflict is resolved in the codebase. Likely cause: duplicate tool registration in agent initialization. File to check: /home/user/Etsy/agents/analytics_agent.py and marketing_agent.py. This is a systemic blind spot \u2014 no keyword research, no listing audits, no performance data until fixed.",
+    "confidence": "high",
+    "source": "Agent runtime errors \u2014 CEO session diagnostics",
+    "applicable_to": "Analytics Agent, Marketing Agent \u2014 all SEO and performance tasks",
+    "saved_at": "2026-05-16T10:59:10.702023"
+  },
+  {
+    "id": "ins_1778929480276",
+    "agent": "CEO Agent",
+    "category": "pricing",
+    "insight": "Launch digital products at full price ($12.00), NOT introductory discounts. To recover margin lost from 10 sales at $9.99 vs $12.00 (-$18.20 total), you'd need 230% more sales velocity \u2014 not achievable with 0 reviews. Intro pricing punishes margin without guaranteed volume payoff. Premium pricing ($12+) attracts higher-intent buyers more likely to leave 5-star reviews, which triggers algorithm boost. Day 1 = full price always.",
+    "confidence": "high",
+    "source": "Promotions Agent \u2014 DP1000 pre-launch pricing analysis",
+    "applicable_to": "all digital product launches, especially first 7 days with zero reviews",
+    "saved_at": "2026-05-16T11:04:40.276425"
+  },
+  {
+    "id": "ins_1778929480284",
+    "agent": "CEO Agent",
+    "category": "product_ideas",
+    "insight": "Phase digital product launches: Day 1-3 = single listing at $12.00 to build reviews and algorithm signal. Day 4-7 = launch 3-piece Gallery Wall Bundle at $22.99-$24.99 (88.5-88.7% margin, $20.36-$22.17 net/sale). Bundle = +95% net profit per transaction with ZERO COGS increase. Bundle must include companion pieces (eucalyptus, sage stem, lavender) to pair with DP1000 wildflower anchor.",
+    "confidence": "high",
+    "source": "Promotions Agent \u2014 bundle strategy analysis, CEO executive review",
+    "applicable_to": "DP1000 companion bundle, all digital art bundle launches",
+    "saved_at": "2026-05-16T11:04:40.284861"
+  },
+  {
+    "id": "ins_1778929555825",
+    "agent": "Etsy Listing Agent",
+    "category": "keywords",
+    "insight": "DP1000 SEO refresh: confirmed winning tag set (all 13 slots, all multi-word, no title duplicates): printable wall art, sage green art print, instant download art, botanical wall decor, wildflower print PDF, boho wall art print, watercolor home deco, gallery wall print, digital art download, plant lover gift, nature wall art, organic modern decor, wall art printable. NOTE: \"watercolor home decor\" exceeds 20-char Etsy limit \u2014 use \"watercolor home deco\" instead.",
+    "confidence": "high",
+    "source": "DP1000 SEO audit + optimize_listing_content + manual expert refinement",
+    "applicable_to": "DP1000, boho botanical watercolor digital prints, sage green wall art",
+    "saved_at": "2026-05-16T11:05:55.825645"
+  },
+  {
+    "id": "ins_1778929555834",
+    "agent": "Etsy Listing Agent",
+    "category": "keywords",
+    "insight": "Etsy SEO rule confirmed in practice: Tags that duplicate exact title phrases lose ranking value. DP1000 audit flagged 3 tag/title duplicates (sage green wall art, botanical watercolor, boho home decor) as the primary reason for C-grade (70/100). Fix = replace with synonym variations: title says \"Boho Wildflower\" \u2192 tags say \"boho wall art print\"; title says \"Botanical\" \u2192 tags say \"botanical wall decor\"; title says \"Sage Green\" \u2192 tags say \"sage green art print\".",
+    "confidence": "high",
+    "source": "DP1000 audit_listing_seo results \u2014 confirmed failing criterion",
+    "applicable_to": "all digital product listings \u2014 universal Etsy SEO rule",
+    "saved_at": "2026-05-16T11:05:55.834297"
+  },
+  {
+    "id": "ins_1778929891309",
+    "agent": "Financial Agent",
+    "category": "pricing",
+    "insight": "3D Printed Geometric Planter COGS analysis: Best-case (80g, 2hr print, 20min labour) = $7.59 total COGS. Worst-case (150g, 4hr print, 45min labour) = $15.48 total COGS. At $24.99 with no Offsite Ads: net profit ranges from $14.58 (58.3% margin) best-case to $6.69 (26.8% margin) worst-case. Labour is the dominant cost driver \u2014 20min post-processing adds $5.00, 45min adds $11.25. Price floor for acceptable margin (35%): $19.99 minimum, ONLY if print is under 2.5hr and labour under 25min. Complex planters at $19.99 may fall below 30% minimum threshold.",
+    "confidence": "high",
+    "source": "Financial Agent \u2014 Option C investment analysis, COGS model with best/worst case scenarios",
+    "applicable_to": "3D printed planters, geometric physical products, any new physical SKU evaluation",
+    "saved_at": "2026-05-16T11:11:31.309214"
+  },
+  {
+    "id": "ins_1778929891318",
+    "agent": "Financial Agent",
+    "category": "pricing",
+    "insight": "Boho Botanical Gallery Wall Bundle (3-piece) pricing decision: At $24.99 with Offsite Ads (15%): net $18.42, margin 73.7%. At $24.99 without Offsite Ads: net $22.17, margin 88.7%. At $22.99 without Offsite Ads: net $20.36, margin 88.5%. RECOMMENDATION: Launch at $24.99 \u2014 highest net per sale in any scenario, digital COGS=$0, zero production time beyond art creation. This bundle is companion to DP1000 (eucalyptus + sage stem + lavender) confirmed as rising trend with prior research. Break-even for $100 net: 6 sales (non-Offsite Ads) or 6 sales (Offsite Ads at $24.99).",
+    "confidence": "high",
+    "source": "Financial Agent \u2014 Option A investment analysis, executive decision memo",
+    "applicable_to": "Boho Botanical Gallery Wall Bundle, all 3-piece digital art bundles, companion products to DP1000",
+    "saved_at": "2026-05-16T11:11:31.318996"
+  },
+  {
+    "id": "ins_1778929969040",
+    "agent": "Financial Agent",
+    "category": "pricing",
+    "insight": "CRITICAL FINDING: The stated \"$2.50\u2013$4.00 COGS\" for a 3D printed geometric planter is structurally impossible when labour is included at $15/hr. At our standard rates (filament $0.02/g, electricity $0.12/hr, labour $15/hr, packaging $0.75): even a minimal planter (50g, 2hr print, 15min labour) yields COGS of $5.74. A mid-complexity planter (100g, 3.5hr print, 25min labour) yields $9.42 COGS. The $2.50\u2013$4.00 estimate omits labour entirely \u2014 this is a fatal undercount. True COGS range is $5.74 (best case) to $15.22 (worst case). Any pricing model using $2.50\u2013$4.00 COGS will overstate margins by 30\u201360 percentage points.",
+    "confidence": "high",
+    "source": "Financial Agent \u2014 Option C complete COGS audit, 3D printed geometric planter",
+    "applicable_to": "3D printed planters, all physical product COGS estimates, any product brief that states material-only cost",
+    "saved_at": "2026-05-16T11:12:49.040801"
+  },
+  {
+    "id": "ins_1778929969050",
+    "agent": "Financial Agent",
+    "category": "pricing",
+    "insight": "OPTION A vs OPTION C FINAL VERDICT: Gallery Wall Bundle (Option A, digital, $24.99) dominates 3D Printed Geometric Planter (Option C, physical, $19.99\u2013$24.99) on every financial metric. Option A: $22.17 net/sale (88.7% margin), zero COGS, zero production time, instant delivery, $100 target hit in 5 sales. Option C at $24.99 best case: $12.75 net/sale (51.0% margin), $9.42 COGS, 3.5+ hours of production per unit, $100 target requires 8 sales. Option C worst case ($19.99, high COGS $10.23): $4.16 net/sale (20.8% margin) \u2014 BELOW minimum threshold, recommended removal. Capital should be 100% allocated to Option A (Gallery Wall Bundle) for Day 7/14 revenue targets.",
+    "confidence": "high",
+    "source": "Financial Agent \u2014 Option A vs Option C head-to-head investment analysis, final executive decision memo",
+    "applicable_to": "capital allocation decisions, digital vs. physical product prioritization, new SKU investment decisions",
+    "saved_at": "2026-05-16T11:12:49.050775"
+  },
+  {
+    "id": "ins_1778930009052",
+    "agent": "CEO Agent",
+    "category": "design_trends",
+    "insight": "Summer 2026 digital planners trending: Minimalist clean (white space, thin lines), Aesthetic pastel (soft colors, decorative headers), Functional GTD-style (structured blocks), Bullet journal inspired (dotted grid). Rising color: Pastel Sage (#D8E8D0, #B8CCB0, #98B090). Peak color: Neutral Greige (#F0EDE8, #D8D0C8, #B8B0A8). Most demanded features: undated/reusable, daily+weekly+monthly in one bundle, goal-setting+habit tracker+budget tracker, iPad/GoodNotes compatible with hyperlinked tabs, A4+US Letter sizes. Pricing: single page $2\u20134, weekly bundle 12pg $5\u20139, annual system 50+pg $12\u201318.",
+    "confidence": "high",
+    "source": "research_design_trends \u2014 digital planners and printables, summer 2026",
+    "applicable_to": "digital planners, printable planners, PDF planners \u2014 all future planner products",
+    "saved_at": "2026-05-16T11:13:29.052831"
+  },
+  {
+    "id": "ins_1778930276369",
+    "agent": "Art Creation Agent",
+    "category": "product_ideas",
+    "insight": "Boho Botanical Gallery Wall Bundle (3-piece: DP1001 Eucalyptus + DP1002 Sage & Lavender + DP1003 Pampas Grass) created as companions to DP1000 Wildflower anchor. Bundle designed for $22.99\u2013$24.99 listing at 88.5%+ margin (~$20.89 net/sale). Key design discipline: all three use identical warm brown linework (#8B7355), identical warm cream background (#F5F0E8), identical loose watercolor technique, different subject/composition \u2014 this creates visual cohesion for gallery wall pairing without looking repetitive. Print 4 (Pampas) intentionally near-monochrome as neutral anchor.",
+    "confidence": "high",
+    "source": "Art Creation Agent \u2014 DP1001/DP1002/DP1003 bundle generation session",
+    "applicable_to": "boho botanical bundle, gallery wall bundle strategy, DP1000 companion products",
+    "saved_at": "2026-05-16T11:17:56.369974"
+  },
+  {
+    "id": "ins_1778930478137",
+    "agent": "Brand Design Agent",
+    "category": "design_trends",
+    "insight": "Gallery wall bundle mockups perform significantly better with ALL pieces shown together in the main thumbnail vs. showing one piece alone. Buyers need to immediately visualize the complete set on their wall. For 4-piece sets: anchor centered/largest + 3 companions arranged around it is the highest-performing layout. Secondary image showing all 4 prints in a 2x2 grid on cream background answers the \"what exactly do I get?\" buyer question and reduces cart abandonment.",
+    "confidence": "high",
+    "source": "DP1000-DP1003 mockup brief + Etsy competitor analysis for boho botanical wall art",
+    "applicable_to": "Gallery wall bundles, multi-piece art sets, companion print series, digital print bundles",
+    "saved_at": "2026-05-16T11:21:18.137617"
+  }
+]

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Choose Happy</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#E8A020"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#E8455A"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#E8A020"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#E8455A"/>
+  <text x="400" y="252" text-anchor="middle" font-family="Cormorant, sans-serif" font-size="24" fill="#BBBBBB" letter-spacing="12">C H O O S E</text>
+  <circle cx="348.0" cy="278.0" r="5" fill="#E8A020"/>
+  <circle cx="374.0" cy="278.0" r="5" fill="#E8A020"/>
+  <circle cx="400.0" cy="278.0" r="5" fill="#E8A020"/>
+  <circle cx="426.0" cy="278.0" r="5" fill="#E8A020"/>
+  <circle cx="452.0" cy="278.0" r="5" fill="#E8A020"/>
+  <text x="400" y="420" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="120" fill="#E8A020">Happy</text>
+  <rect x="240" y="450" width="320" height="5" fill="#E8455A" rx="2"/>
+  <text x="400" y="514" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="22" fill="#E8455A" letter-spacing="3">every single day</text>
+  <circle cx="316.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="344.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="372.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="400.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="428.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="456.0" cy="562.0" r="6" fill="#E8A020"/>
+  <circle cx="484.0" cy="562.0" r="6" fill="#E8A020"/>
+</svg>

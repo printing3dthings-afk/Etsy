@@ -1,0 +1,112 @@
+[
+  {
+    "sales": 4,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 157,
+    "alerts": 78,
+    "photo_warnings": 77,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-04T12:35:07.822853+00:00"
+  },
+  {
+    "sales": 4,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 157,
+    "alerts": 78,
+    "photo_warnings": 77,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-04T12:52:01.627928+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 13,
+    "alerts": 11,
+    "photo_warnings": 10,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:03:56.292147+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 13,
+    "alerts": 11,
+    "photo_warnings": 10,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:04:07.109635+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 17,
+    "alerts": 50,
+    "photo_warnings": 13,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:47:53.981573+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 17,
+    "alerts": 15,
+    "photo_warnings": 13,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:49:42.905470+00:00"
+  },
+  {
+    "sales": 5,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 17,
+    "alerts": 15,
+    "photo_warnings": 13,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-09T19:51:43.003398+00:00"
+  },
+  {
+    "sales": 6,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 163,
+    "alerts": 101,
+    "photo_warnings": 40,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-17T14:08:45.807383+00:00"
+  },
+  {
+    "sales": 6,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 161,
+    "alerts": 97,
+    "photo_warnings": 42,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-18T01:15:28.976277+00:00"
+  },
+  {
+    "sales": 6,
+    "rung": 1,
+    "reviews": 3,
+    "review_avg": 5,
+    "active_listings": 161,
+    "alerts": 104,
+    "photo_warnings": 42,
+    "unanswered_reviews": 3,
+    "checked_at": "2026-06-18T01:17:50.170212+00:00"
+  }
+]

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>You Are a Rainbow</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,66.0 83.5,76.5 94.0,80.0 83.5,83.5 80.0,94.0 76.5,83.5 66.0,80.0 76.5,76.5" fill="#D93030"/>
+  <polygon points="720.0,66.0 723.5,76.5 734.0,80.0 723.5,83.5 720.0,94.0 716.5,83.5 706.0,80.0 716.5,76.5" fill="#E87B2A"/>
+  <polygon points="80.0,706.0 83.5,716.5 94.0,720.0 83.5,723.5 80.0,734.0 76.5,723.5 66.0,720.0 76.5,716.5" fill="#2B8A3E"/>
+  <polygon points="720.0,706.0 723.5,716.5 734.0,720.0 723.5,723.5 720.0,734.0 716.5,723.5 706.0,720.0 716.5,716.5" fill="#1E6FCC"/>
+  <text x="400" y="234" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#D93030">you</text>
+  <text x="400" y="330" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#2B8A3E">are</text>
+  <text x="400" y="426" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#1E6FCC">a</text>
+  <text x="400" y="524" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="88" fill="#7B35B0">rainbow</text>
+  <circle cx="322.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="348.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="374.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="400.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="426.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="452.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <circle cx="478.0" cy="570.0" r="6" fill="#E87B2A"/>
+  <text x="400" y="624" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="18" fill="#BBBBBB" letter-spacing="3">brilliant · bold · colorful</text>
+</svg>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>I Can Do All Things SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <defs>
+        <style>
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+      @font-face { font-family: 'CinzelDecReg'; src: url('/usr/local/share/fonts/CinzelDecorative-Regular.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+    <path id="topArc" d="M 140,400 A 260,260 0 0,1 660,400"/>
+    <path id="botArc" d="M 140,400 A 260,260 0 0,0 660,400"/>
+  </defs>
+  <polygon points="768.0,400.0 751.5,418.4 766.0,438.5 747.7,455.1 760.0,476.5 740.0,491.1 750.0,513.7 728.6,526.1 736.2,549.7 713.6,559.8 718.7,584.0 695.2,591.7 697.7,616.3 673.6,621.5 673.5,646.2 648.9,648.9 646.2,673.5 621.5,673.6 616.3,697.7 591.7,695.2 584.0,718.7 559.8,713.6 549.7,736.2 526.1,728.6 513.7,750.0 491.1,740.0 476.5,760.0 455.1,747.7 438.5,766.0 418.4,751.5 400.0,768.0 381.6,751.5 361.5,766.0 344.9,747.7 323.5,760.0 308.9,740.0 286.3,750.0 273.9,728.6 250.3,736.2 240.2,713.6 216.0,718.7 208.3,695.2 183.7,697.7 178.5,673.6 153.8,673.5 151.1,648.9 126.5,646.2 126.4,621.5 102.3,616.3 104.8,591.7 81.3,584.0 86.4,559.8 63.8,549.7 71.4,526.1 50.0,513.7 60.0,491.1 40.0,476.5 52.3,455.1 34.0,438.5 48.5,418.4 32.0,400.0 48.5,381.6 34.0,361.5 52.3,344.9 40.0,323.5 60.0,308.9 50.0,286.3 71.4,273.9 63.8,250.3 86.4,240.2 81.3,216.0 104.8,208.3 102.3,183.7 126.4,178.5 126.5,153.8 151.1,151.1 153.8,126.5 178.5,126.4 183.7,102.3 208.3,104.8 216.0,81.3 240.2,86.4 250.3,63.8 273.9,71.4 286.3,50.0 308.9,60.0 323.5,40.0 344.9,52.3 361.5,34.0 381.6,48.5 400.0,32.0 418.4,48.5 438.5,34.0 455.1,52.3 476.5,40.0 491.1,60.0 513.7,50.0 526.1,71.4 549.7,63.8 559.8,86.4 584.0,81.3 591.7,104.8 616.3,102.3 621.5,126.4 646.2,126.5 648.9,151.1 673.5,153.8 673.6,178.5 697.7,183.7 695.2,208.3 718.7,216.0 713.6,240.2 736.2,250.3 728.6,273.9 750.0,286.3 740.0,308.9 760.0,323.5 747.7,344.9 766.0,361.5 751.5,381.6" fill="black"/>
+  <circle cx="400" cy="400" r="340" fill="white"/>
+  <circle cx="400" cy="400" r="338" fill="none" stroke="black" stroke-width="5"/>
+  <circle cx="400" cy="400" r="315" fill="none" stroke="black" stroke-width="2"/>
+  <path d="M 700.000,390.000 L 703.182,396.818 L 710.000,400.000 L 703.182,403.182 L 700.000,410.000 L 696.818,403.182 L 690.000,400.000 L 696.818,396.818 Z" fill="black"/>
+  <path d="M 400.000,690.000 L 403.182,696.818 L 410.000,700.000 L 403.182,703.182 L 400.000,710.000 L 396.818,703.182 L 390.000,700.000 L 396.818,696.818 Z" fill="black"/>
+  <path d="M 100.000,390.000 L 103.182,396.818 L 110.000,400.000 L 103.182,403.182 L 100.000,410.000 L 96.818,403.182 L 90.000,400.000 L 96.818,396.818 Z" fill="black"/>
+  <path d="M 400.000,90.000 L 403.182,96.818 L 410.000,100.000 L 403.182,103.182 L 400.000,110.000 L 396.818,103.182 L 390.000,100.000 L 396.818,96.818 Z" fill="black"/>
+  <text font-family="Cinzel, serif" font-size="22" fill="black" letter-spacing="4">
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle">I CAN DO ALL THINGS</textPath>
+  </text>
+  <text font-family="CormorantItalic, serif" font-size="18" fill="black" letter-spacing="2">
+    <textPath href="#botArc" startOffset="50%" text-anchor="middle">PHILIPPIANS 4:13</textPath>
+  </text>
+  <text x="400" y="355" text-anchor="middle" font-family="Cormorant, serif" font-size="22" fill="black" letter-spacing="4">THROUGH CHRIST</text>
+  <text x="400" y="412" text-anchor="middle" font-family="CinzelDec, serif" font-size="52" fill="black" letter-spacing="2">WHO</text>
+  <text x="400" y="462" text-anchor="middle" font-family="Cormorant, serif" font-size="26" fill="black" letter-spacing="4">STRENGTHENS ME</text>
+</svg>

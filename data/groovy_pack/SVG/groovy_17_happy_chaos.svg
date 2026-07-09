@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Happy Chaos</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#E84B8A"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#F07A1A"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#E84B8A"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#F07A1A"/>
+  <text x="400" y="310" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="112" fill="#E84B8A">Happy</text>
+  <rect x="250" y="340" width="300" height="5" fill="#F07A1A" rx="2"/>
+  <text x="400" y="440" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="100" fill="#F07A1A" letter-spacing="8">CHAOS</text>
+  <circle cx="288.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="316.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="344.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="372.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="400.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="428.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="456.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="484.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <circle cx="512.0" cy="488.0" r="6" fill="#E84B8A"/>
+  <text x="400" y="548" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="21" fill="#AAAAAA" letter-spacing="3">it's my superpower</text>
+</svg>

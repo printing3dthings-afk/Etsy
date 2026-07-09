@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Keep Growing</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#2B6040"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#C4634F"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#2B6040"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#C4634F"/>
+  <text x="400" y="284" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="110" fill="#2B6040" letter-spacing="8">KEEP</text>
+  <rect x="198" y="314" width="115" height="4" fill="#C4634F" rx="2"/>
+  <polygon points="400,309 407,316 400,323 393,316" fill="#2B6040"/>
+  <rect x="423" y="314" width="115" height="4" fill="#C4634F" rx="2"/>
+  <text x="400" y="440" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="110" fill="#C4634F">Growing</text>
+  <circle cx="316.0" cy="478.0" r="6" fill="#2B6040"/>
+  <circle cx="344.0" cy="478.0" r="6" fill="#2B6040"/>
+  <circle cx="372.0" cy="478.0" r="6" fill="#2B6040"/>
+  <circle cx="400.0" cy="478.0" r="6" fill="#2B6040"/>
+  <circle cx="428.0" cy="478.0" r="6" fill="#2B6040"/>
+  <circle cx="456.0" cy="478.0" r="6" fill="#2B6040"/>
+  <circle cx="484.0" cy="478.0" r="6" fill="#2B6040"/>
+  <text x="400" y="538" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="18" fill="#AAAAAA" letter-spacing="2">bloom where you're planted</text>
+</svg>

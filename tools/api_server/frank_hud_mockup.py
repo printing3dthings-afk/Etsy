@@ -1,0 +1,5653 @@
+"""
+FRANK Command Center — static clickable HTML/CSS/JS mockup (Build Order step 0.5).
+
+No backend wiring. This is purely a visual sign-off artifact so Scott can react to the
+look of the full landscape HUD (left nav + every panel from the reference screenshots,
+rebranded FRANK) before any real engineering goes in underneath it. Served at /frank,
+completely separate from the live production dashboard at / so there is zero risk to
+the running Hub while this is reviewed.
+
+The whole layout is built as a fixed 1440x900 "stage" that JS scales (and letterboxes)
+to fit whatever viewport opens it — phone or desktop — so the HUD always renders at its
+real proportions instead of the browser's mobile viewport squishing the columns.
+
+Real wiring (live data, approval gate, relay, voice) is Step 1+ in the approved plan —
+every nav tab/panel here is a placeholder shell with the real future data source noted
+in a code comment, not invented numbers presented as fact. LLM Status only lists
+providers we actually have wired (Anthropic, OpenAI, Etsy) — no fake Gemini/Groq/Ollama
+tiles, per the "no fake tiles anywhere" rule in the plan.
+
+Step 2 (in progress): wiring real data into this shell, panel by panel. The page is a
+plain string template (not f-string/`.format()`, since the JS below is full of literal
+`{}`) rendered by `render_frank_hud()` which substitutes business-identity placeholders
+(%%AGENT_NAME%%/%%AGENT_SHORT%%/%%OWNER%%) at startup. Auth uses session cookies — the
+APP_SECRET_TOKEN is never injected into the page source.
+"""
+
+import json
+
+import business_config
+
+_FRANK_HUD_MOCKUP = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- maximum-scale=1/user-scalable=no removed 2026-07-08 (accessibility review, WCAG 1.4.4/1.4.10):
+     blocking pinch/browser zoom locks out low-vision users entirely. fitStage() below no longer
+     fights a deliberate zoom either — see the isMobileMode()/devicePixelRatio guard there. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="%%AGENT_SHORT%%">
+<meta name="theme-color" content="#070d16">
+<link rel="manifest" href="/frank-manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/static/icon-192.png">
+<title>%%AGENT_SHORT%% — Command Center</title>
+<script type="importmap">
+{"imports": {
+  "onnxruntime-web": "/static/vendor/onnxruntime-web/ort.wasm.bundle.min.mjs",
+  "three": "/static/vendor/three/build/three.module.js"
+}}
+</script>
+<style>
+:root{
+  --bg:#070d16;--panel:#0f1f30;--panel2:#13283d;--border:#1c3349;
+  --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#7690a7;
+  --green:#4caf82;--red:#e05555;--amber:#e0a83a;
+}
+/* ── Color themes — full bg + panel + accent swap ── */
+html.theme-light{
+  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--border:#b8c5d0;
+  --cyan:#0a6878;--cyan2:#084f5e;--gold:#7a5c10;--gold2:#c4a035;
+  --text:#1a2332;--muted:#3a5263;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
+}
+html.theme-purple{
+  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--border:#2a1945;
+  --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
+  --text:#ede8f5;--muted:#8679af;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-charcoal{
+  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--border:#3a3222;
+  --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
+  --text:#f0e8d0;--muted:#96896c;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
+}
+html.theme-sakura{
+  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--border:#3d1f30;
+  --cyan:#f4a7b9;--cyan2:#ffd0db;--gold:#c4607a;--gold2:#e58aa5;
+  --text:#f5e8ee;--muted:#a4758a;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-matcha{
+  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--border:#263a29;
+  --cyan:#8bc34a;--cyan2:#bce88e;--gold:#d4a96a;--gold2:#e6c48a;
+  --text:#e9f2e6;--muted:#7c9172;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-ocean{
+  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--border:#1d3d38;
+  --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
+  --text:#e6f2f0;--muted:#6f948c;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+html.theme-kawaii{
+  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--border:#2d2255;
+  --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
+  --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+/* overflow:auto (not hidden) — at 105-145% browser zoom on a desktop-width window,
+   the fixed 1440x900 stage's scale() can exceed the shrunk viewport before the
+   880px mobile breakpoint kicks in; overflow:hidden clipped that content with no
+   way to reach it. auto only shows scrollbars when something actually overflows,
+   so normal (non-zoomed) rendering is unchanged (2026-07-08 accessibility review,
+   WCAG 1.4.10 Reflow). */
+html,body{height:100%;width:100%;overflow:auto;background:var(--bg)}
+body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
+
+#stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+#stage{
+  position:relative;width:1440px;height:900px;flex-shrink:0;transform-origin:center center;
+  background:radial-gradient(ellipse at 50% -10%, #0e2a44 0%, var(--bg) 55%);
+  display:grid;grid-template-columns:226px 1fr;grid-template-rows:68px 1fr 54px;
+}
+
+/* ── corner brackets (sci-fi HUD accent) ── */
+.brk{position:relative}
+.brk::before,.brk::after{content:'';position:absolute;width:13px;height:13px;pointer-events:none;opacity:.55}
+.brk::before{top:-1px;left:-1px;border-top:2px solid var(--cyan);border-left:2px solid var(--cyan);border-top-left-radius:6px}
+.brk::after{bottom:-1px;right:-1px;border-bottom:2px solid var(--cyan);border-right:2px solid var(--cyan);border-bottom-right-radius:6px}
+
+/* ── Header row ── */
+.hdr-logo{grid-column:1;grid-row:1;display:flex;align-items:center;gap:10px;padding:0 16px;
+  border-bottom:1px solid var(--border);border-right:1px solid var(--border);background:rgba(8,16,26,.7)}
+.hdr-logo .hex{width:30px;height:30px;border:2px solid var(--cyan);border-radius:8px;display:flex;
+  align-items:center;justify-content:center;color:var(--cyan2);font-size:15px;box-shadow:0 0 10px rgba(58,214,255,.5)}
+.hdr-logo .lbl .l1{font-weight:800;letter-spacing:2px;color:var(--cyan2);font-size:15px;line-height:1.1;
+  text-shadow:0 0 10px rgba(58,214,255,.55)}
+.hdr-logo .lbl .l2{font-size:8.5px;letter-spacing:2px;color:var(--muted)}
+
+.hdr-bar{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:1px solid var(--border);background:rgba(8,16,26,.5)}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--green);
+  border:1px solid rgba(76,175,130,.4);border-radius:20px;padding:4px 10px;background:rgba(76,175,130,.08);
+  letter-spacing:.5px;white-space:nowrap}
+.status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;flex-shrink:0}
+.status-pill.degraded{color:var(--amber);border-color:rgba(224,168,58,.4);background:rgba(224,168,58,.08)}
+.status-pill.degraded .dot{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.status-pill.error{color:var(--red);border-color:rgba(224,85,85,.4);background:rgba(224,85,85,.08)}
+.status-pill.error .dot{background:var(--red);box-shadow:0 0 8px var(--red)}
+.hdr-bar .clockwrap{text-align:center}
+.hdr-bar .clockwrap .d{font-size:10px;color:var(--muted);letter-spacing:.5px}
+.hdr-bar .clockwrap .t{font-size:17px;color:var(--cyan2);font-weight:700;letter-spacing:1px}
+.hdr-bar .right{display:flex;align-items:center;gap:10px}
+.search{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:8px;
+  padding:6px 10px;color:var(--text);font-size:11px}
+.hamburger-fixed{
+  position:absolute;top:14px;left:14px;z-index:500;
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(15,31,48,.85);color:var(--cyan2);font-size:15px;
+  display:none;align-items:center;justify-content:center;cursor:pointer;
+}
+.hamburger-fixed:hover{border-color:var(--cyan)}
+#orb-desktop-btn{color:var(--cyan2);border-color:rgba(58,214,255,.35);background:rgba(58,214,255,.06)}
+#orb-desktop-btn:hover{border-color:var(--cyan);background:rgba(58,214,255,.14)}
+.icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
+  background:var(--panel);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;color:var(--muted);font-size:13px;flex-shrink:0}
+.icon-btn:hover{border-color:var(--cyan);color:var(--cyan2)}
+.icon-btn:focus-visible,.operator:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.act-btn:focus-visible,.qc-btn:focus-visible,.hub-toggle-btn:focus-visible,.psheet-btn:focus-visible,
+.hub-chip-btn:focus-visible,.lc-chip:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.badge{position:absolute;top:-5px;right:-5px;background:var(--cyan);color:#06141f;
+  font-size:9px;font-weight:700;border-radius:8px;min-width:15px;height:15px;
+  display:flex;align-items:center;justify-content:center;padding:0 3px}
+.operator{display:flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:20px;
+  padding:3px 10px 3px 3px;background:var(--panel)}
+.operator .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#8a6d2b);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0a1420;flex-shrink:0}
+.operator .ol1{font-size:11px;font-weight:600;line-height:1.1}
+.operator .ol2{font-size:8.5px;color:var(--muted);letter-spacing:.5px}
+
+/* ── Sidebar ── */
+.sidebar{grid-column:1;grid-row:2;border-right:1px solid var(--border);background:rgba(8,16,26,.55);
+  display:flex;flex-direction:column;padding:14px 10px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.nav-section{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin:12px 10px 6px;text-transform:uppercase}
+.nav-section:first-child{margin-top:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;
+  cursor:pointer;color:var(--muted);font-size:12.5px;margin-bottom:2px;position:relative}
+.nav-item .ic{width:16px;text-align:center;font-size:13px}
+.nav-item:hover{background:var(--panel);color:var(--text)}
+.nav-item.active{background:linear-gradient(90deg,rgba(58,214,255,.18),transparent);
+  color:var(--cyan2);border-left:2px solid var(--cyan)}
+.nav-item .nbadge{margin-left:auto;background:var(--panel2);color:var(--cyan2);
+  font-size:9.5px;font-weight:700;border-radius:9px;padding:1px 7px;border:1px solid var(--border)}
+.nav-item:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
+/* Real heading elements (2026-07-08 accessibility review) reuse the exact same visual
+   rules as before — this reset stops browser default h1/h2 margin+size from touching
+   layout. The tag changed, the look didn't. */
+h1.hdr-title-h1{margin:0;font:inherit}
+h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;color:var(--muted);
+  text-transform:uppercase;font-weight:400}
+
+.voice-widget{margin-top:auto;border:1px solid var(--border);border-radius:12px;padding:14px 10px;
+  background:var(--panel);text-align:center}
+.voice-widget .vw-title{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+
+/* ── Main content — 3-column CSS grid (left 290px | chat 1fr | right 310px) ── */
+.main{grid-column:2;grid-row:2;display:grid;grid-template-columns:290px 1fr 310px;gap:12px;padding:12px;overflow:hidden}
+.col-left,.col-right{display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden}
+.col-center{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.col-aicore{flex:0 0 auto}
+.col-sysmon{flex:1;min-height:0}
+.col-timeline{flex:0 0 auto;min-height:0}
+.col-chat{flex:1;min-height:0;display:flex;flex-direction:column}
+.col-shop{flex:0 0 auto}
+.col-meminsights{flex:0 0 auto}
+.col-agents{flex:1;min-height:0}
+.col-feed{flex:1;min-height:0}
+
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;
+  display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.panel-title{font-size:10.5px;letter-spacing:1.5px;color:var(--cyan2);text-transform:uppercase;
+  margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.panel-title .src{font-size:8.5px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+.panel-title .lnk{font-size:9px;color:var(--cyan);text-transform:none;letter-spacing:0;cursor:pointer}
+.panel-body{overflow-y:auto;min-height:0;flex:1}
+
+
+.core-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;
+  border-bottom:1px solid var(--border);font-size:11.5px}
+.core-row:last-child{border-bottom:none}
+.core-row .lab{display:flex;align-items:center;gap:7px;color:var(--text)}
+.core-row .lab .dotc{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.core-row .v{color:var(--green);font-weight:600;font-size:10.5px}
+.core-row .v.warn{color:var(--amber)}
+.core-row .v.err{color:var(--red)}
+.core-row .lab .dotc.warn{background:var(--amber)}
+.core-row .lab .dotc.err{background:var(--red)}
+.core-row .sub{font-size:9.5px;color:var(--muted);display:block}
+
+.orb-hero-stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%}
+canvas#orb{cursor:pointer}
+canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:pointer;display:none;
+  /* UnrealBloomPass's additive alpha blending doesn't stay transparent all the way to
+     the render target's edges (measured: fully opaque, alpha 255, at the canvas corner
+     even after a correct renderer.setClearColor(0,0) — a known rough edge with that
+     pass upstream). Rather than fight Three.js internals further, fade the CANVAS
+     ELEMENT itself via a CSS mask so the sphere+glow floats on the page's own
+     background with no visible rectangle, regardless of the WebGL layer's own alpha. */
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 40%,rgba(0,0,0,.5) 50%,transparent 64%);
+  mask-image:radial-gradient(circle at 50% 50%,#000 40%,rgba(0,0,0,.5) 50%,transparent 64%);
+}
+.orb-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
+  pointer-events:none;width:100%}
+.orb-overlay .o1{font-size:30px;font-weight:800;letter-spacing:6px;color:#eafcff;
+  text-shadow:0 0 18px rgba(122,232,255,.85),0 0 40px rgba(58,214,255,.5)}
+.orb-overlay .o2{font-size:11px;letter-spacing:5px;color:var(--cyan2);margin-top:2px}
+.orb-overlay .o3{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:8px}
+.orb-state{margin-top:8px;font-size:10.5px;color:var(--muted);letter-spacing:1px}
+.orb-hint{position:absolute;bottom:8px;font-size:9.5px;color:var(--muted);opacity:.6;letter-spacing:.5px}
+
+#orb-view{
+  position:absolute;inset:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at 50% 40%, rgba(58,214,255,.10), transparent 60%);
+}
+#orb-view canvas#orb,#orb-view canvas#orb-gl{width:min(85vw,620px);height:min(85vw,620px)}
+#orb-view .orb-overlay .o1{font-size:36px}
+#orb-view .orb-hint{position:static;margin-top:14px;opacity:.5}
+#orb-view .orb-state{margin-top:10px}
+
+body.cc-open #orb-view{display:none}
+body:not(.cc-open) .hdr-logo,
+body:not(.cc-open) .hdr-bar,
+body:not(.cc-open) .sidebar,
+body:not(.cc-open) .screen,
+body:not(.cc-open) .bottombar{display:none}
+body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-index:600}
+
+.feed-item{padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text);
+  display:flex;justify-content:space-between;gap:6px}
+.feed-item .ftxt{flex:1}
+.feed-item .t{color:var(--muted);font-size:9px;margin-top:2px}
+.feed-tag{font-size:8px;font-weight:700;letter-spacing:.5px;border-radius:5px;padding:1px 5px;flex-shrink:0;height:fit-content}
+.feed-tag.info{background:rgba(58,214,255,.15);color:var(--cyan2)}
+.feed-tag.warn{background:rgba(224,168,58,.15);color:var(--amber)}
+.feed-tag.tip{background:rgba(76,175,130,.15);color:var(--green)}
+
+.agents-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1}
+.agent-tile{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+  padding:9px 10px;font-size:10.5px;display:flex;flex-direction:column;gap:5px}
+.agent-tile .top{display:flex;align-items:center;gap:6px}
+.agent-tile .ic{width:20px;height:20px;border-radius:6px;background:rgba(58,214,255,.15);
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--cyan2);flex-shrink:0}
+.agent-tile.idle .ic{background:rgba(93,120,145,.15);color:var(--muted)}
+.agent-tile .name{font-weight:600;color:var(--text);font-size:10.5px;line-height:1.2}
+.agent-tile .stat{color:var(--green);font-size:9.5px;display:flex;align-items:center;gap:4px}
+.agent-tile .stat .d{width:5px;height:5px;border-radius:50%;background:var(--green)}
+.agent-tile.idle .stat{color:var(--muted)}
+.agent-tile.idle .stat .d{background:var(--muted)}
+
+.inbox-msg-bar{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.inbox-unread-badge{font-size:18px;font-weight:700;color:var(--cyan2);min-width:28px}
+.inbox-unread-badge.urgent{color:var(--red)}
+.inbox-msg-meta{font-size:11px;color:var(--muted);line-height:1.5}
+.inbox-review{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.inbox-review:last-child{border-bottom:none}
+.inbox-review-stars{color:var(--gold);letter-spacing:1px;font-size:13px}
+.inbox-review-text{color:var(--muted);margin-top:2px;line-height:1.4}
+
+.tl-item{display:flex;gap:9px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.tl-item:last-child{border-bottom:none}
+.tl-time{color:var(--cyan2);font-size:9.5px;width:48px;flex-shrink:0;line-height:1.3}
+.tl-dotcol{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.tl-dotcol .d{width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-top:3px}
+.tl-txt .ttl{color:var(--text)}
+.tl-txt .sub{color:var(--muted);font-size:9.5px}
+
+.qc-btn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--panel2);
+  border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;margin-bottom:7px;
+  font-size:11px;cursor:pointer}
+.qc-btn:hover{border-color:var(--cyan)}
+.qc-btn .qic{width:18px;height:18px;border-radius:50%;background:rgba(58,214,255,.18);color:var(--cyan2);
+  display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+
+#toast-stack{position:fixed;top:16px;right:16px;z-index:9000;display:flex;flex-direction:column;
+  gap:8px;max-width:340px;pointer-events:none}
+.toast{background:var(--panel2);border:1px solid var(--border);border-radius:11px;padding:11px 14px;
+  font-size:12.5px;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:auto;
+  border-left:3px solid var(--cyan);animation:toast-in .18s ease-out}
+.toast.ok{border-left-color:var(--green)}
+.toast.err{border-left-color:var(--red)}
+.toast.info{border-left-color:var(--cyan)}
+.toast.out{animation:toast-out .18s ease-in forwards}
+@keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
+
+.alert-dropdown{position:absolute;top:38px;right:0;width:280px;max-height:320px;overflow-y:auto;
+  background:var(--panel2);border:1px solid var(--border);border-radius:11px;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:600;padding:8px;cursor:default;text-align:left}
+.alert-dropdown-title{font-size:10.5px;letter-spacing:1.2px;color:var(--cyan2);text-transform:uppercase;
+  padding:4px 6px 8px}
+.alert-row{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:8px;
+  background:var(--panel);border-left:3px solid var(--cyan);margin-bottom:6px;font-size:11.5px;
+  color:var(--text);font-weight:400;text-transform:none;letter-spacing:normal}
+.alert-row.critical{border-left-color:var(--red)}
+.alert-row.warning{border-left-color:var(--amber)}
+.alert-row .at{font-size:9px;color:var(--muted);margin-top:2px}
+
+#welcome-overlay{position:fixed;inset:0;z-index:9500;background:rgba(5,9,16,.72);
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.welcome-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;
+  padding:26px 28px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.welcome-title{font-size:19px;font-weight:700;color:var(--gold);margin-bottom:12px}
+.welcome-body p{font-size:13px;color:var(--text);line-height:1.5;margin:0 0 10px}
+.welcome-body ul{margin:0 0 12px;padding-left:18px;font-size:13px;color:var(--text);line-height:1.6}
+.welcome-note{color:var(--muted)!important;font-size:12px!important}
+.welcome-dismiss{width:100%;background:var(--gold);color:#0D1B2A;border:none;border-radius:10px;
+  padding:11px 0;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
+
+.dep-pill-row{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;justify-content:flex-start}
+.dep-pill{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px}
+.dep-pill .dep-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--green);
+  box-shadow:0 0 6px var(--green)}
+.dep-pill.open .dep-dot{background:var(--red);box-shadow:0 0 6px var(--red)}
+.dep-pill.half_open .dep-dot{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dep-pill .dep-name{font-size:11px;color:var(--text);flex:1}
+.dep-pill .dep-state{font-size:9.5px;color:var(--green);letter-spacing:.4px;text-transform:uppercase}
+.dep-pill.open .dep-state{color:var(--red)}
+.dep-pill.half_open .dep-state{color:var(--amber)}
+.dep-pill .dep-fail{font-size:9px;color:var(--muted)}
+
+
+.ss-status{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:12px;display:inline-block;margin-bottom:8px}
+.ss-status.on_track{background:rgba(42,170,100,.18);color:var(--green)}
+.ss-status.building{background:rgba(196,160,53,.18);color:var(--gold)}
+.ss-status.at_risk{background:rgba(200,60,60,.18);color:var(--red)}
+.ss-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.ss-row:last-child{border-bottom:none}
+.ss-label{color:var(--muted)}
+.ss-val{font-weight:600;color:var(--text)}
+.ss-bar-wrap{height:4px;background:var(--panel2);border-radius:2px;flex:1;margin:0 8px;min-width:40px}
+.ss-bar{height:4px;border-radius:2px;background:var(--green);transition:width .4s}
+.ss-bar.warn{background:var(--amber)}
+.ss-bar.bad{background:var(--red)}
+
+.shop-spark-row{display:flex;gap:8px;flex:1;min-height:0;overflow-y:auto;flex-wrap:wrap}
+.shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+  padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-height:0;overflow:hidden}
+.shop-spark-card .ssc-lab{font-size:9px;color:var(--muted);letter-spacing:.4px}
+.shop-spark-card .ssc-valrow{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.shop-spark-card .ssc-val{font-size:13px;font-weight:700;color:var(--cyan2)}
+.shop-spark-card .ssc-delta{font-size:8.5px;flex-shrink:0}
+.shop-spark-card .ssc-spark{flex:1;min-height:0}
+
+.shop-chip-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;flex-shrink:0}
+.shop-chip{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 7px;
+  display:flex;flex-direction:column;gap:3px;justify-content:center}
+.shop-chip .nm{font-size:9px;color:var(--muted);letter-spacing:.3px}
+.shop-chip .v{font-size:12.5px;font-weight:700;color:var(--text)}
+
+.recent-sale-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
+.recent-sale-row:last-child{border-bottom:none}
+.recent-sale-amt{color:var(--green);font-weight:600}
+.recent-sale-date{color:var(--muted);font-size:10px}
+
+/* Studio tab placeholder */
+.studio-grid{display:flex;gap:14px;height:100%}
+video{width:100%;border-radius:10px;background:#000;display:block}
+.studio-list-item{padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:11px}
+
+
+/* Bottom bar */
+.bottombar{grid-column:1/3;grid-row:3;border-top:1px solid var(--border);background:rgba(8,16,26,.6);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:10.5px;color:var(--muted)}
+.bb-left{display:flex;align-items:center;gap:16px}
+.bb-left .it{display:flex;align-items:center;gap:5px}
+.bb-center{display:flex;align-items:center;gap:14px;flex:1;justify-content:center}
+.dots-line{flex:1;max-width:200px;height:1px;background:repeating-linear-gradient(90deg,var(--cyan) 0 4px,transparent 4px 9px);opacity:.5}
+.talk-pill{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel);
+  border:1px solid rgba(58,214,255,.4);border-radius:20px;padding:6px 22px;cursor:pointer;
+  box-shadow:0 0 16px rgba(58,214,255,.15)}
+.talk-pill .row1{display:flex;align-items:center;gap:10px}
+.talk-pill .label{color:var(--cyan2);font-weight:700;letter-spacing:1.5px;font-size:11px}
+.talk-pill .sub{font-size:9px;color:var(--muted);letter-spacing:.5px}
+.mini-wave{display:flex;align-items:center;gap:2px;height:13px}
+.mini-wave span{width:2px;background:var(--cyan);border-radius:1px;animation:wave 1s ease-in-out infinite}
+.brief-btn{background:var(--panel);border:1px solid var(--border);color:var(--cyan2);
+  border-radius:8px;padding:6px 14px;font-size:10.5px;cursor:pointer;white-space:nowrap}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes wave{0%,100%{height:4px}50%{height:16px}}
+
+.screen{display:none;grid-column:2;grid-row:2;overflow:hidden;padding:12px}
+.screen.active{display:block}
+
+/* ── Live Chat screen — ported from the live Hub's #chat-wrap at / (main.py), same
+   /ws/chat backend, same CHAT_SESSION scheme, restyled to the HUD's cyan/gold theme. ── */
+#chat-msgs{flex:1;overflow-y:auto;min-height:0;padding:2px 2px 10px;display:flex;flex-direction:column;gap:10px}
+.lc-bubble{max-width:78%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;word-break:break-word}
+.lc-bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
+.lc-bubble.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--border);border-bottom-left-radius:4px;white-space:pre-wrap;color:var(--text)}
+.lc-bubble.typing{color:var(--muted);font-style:italic}
+.lc-chips{display:flex;gap:8px;flex-wrap:wrap;padding:8px 2px;flex-shrink:0;border-top:1px solid var(--border)}
+.lc-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
+.lc-chip:active{border-color:var(--gold);color:var(--gold)}
+.lc-input-row{display:flex;gap:8px;padding:10px 2px 0;border-top:1px solid var(--border);flex-shrink:0}
+#chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:22px;padding:10px 16px;color:var(--text);font-size:14px;outline:none}
+#chat-input:focus{border-color:var(--gold)}
+#chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Hub screens (Listings/Products/Brand Kit/Files/Connections/Security) — ported
+   verbatim-in-behavior from the live Hub at / (main.py), restyled to the HUD's
+   cyan/gold theme. Classes are namespaced "hub-" since the HUD already has its own
+   unrelated .badge (notification dot) that would collide with the live Hub's .badge
+   (listing state pill). ── */
+.hub-scroll{margin-top:10px;overflow-y:auto;max-height:760px}
+.hub-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px}
+.hub-section-title:first-child{margin-top:0}
+.hub-card{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.hub-empty{text-align:center;color:var(--muted);padding:40px 0;font-size:13px}
+.hub-spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:hubspin .7s linear infinite;margin:40px auto}
+@keyframes hubspin{to{transform:rotate(360deg)}}
+
+.hub-toggle-row{display:flex;gap:8px;margin-bottom:12px}
+.hub-toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.hub-toggle-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
+.hub-chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.hub-chip-btn{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.hub-chip-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
+
+.hub-listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.hub-listing-item:last-child{border-bottom:none}
+.hub-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:var(--border);flex-shrink:0}
+.hub-thumb-ph{width:52px;height:52px;border-radius:8px;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.hub-listing-info{flex:1;min-width:0}
+.hub-listing-title{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-listing-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.hub-listing-price{font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
+.hub-lstate{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:6px}
+.hub-lstate.draft{background:#0f1f30;color:var(--muted);border:1px solid var(--border)}
+.hub-lstate.active{background:#143323;color:var(--green);border:1px solid #1f4d36}
+
+.hub-listing-detail{padding:2px 14px 12px;margin:-2px 0 10px;background:var(--panel);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;font-size:12px}
+.hub-listing-detail .hub-drow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.hub-listing-detail .hub-drow:last-child{border-bottom:none}
+.hub-listing-detail .hub-drow span{color:var(--muted)}
+.hub-listing-detail .hub-drow b{font-weight:600;text-align:right}
+
+.hub-act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+
+.hub-swatch{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-right:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
+.hub-prod-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+
+.hub-cred-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.hub-cred-row:last-child{border-bottom:none}
+.hub-cred-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+.hub-posture-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.hub-posture-row:last-child{border-bottom:none}
+
+/* ── Action Center — ported from the live Hub's Action Center at / (main.py); the
+   approve/reject queue is the human-in-the-loop safety gate for Etsy writes and local
+   file/exec actions. Namespaced "act-" — new concept, no existing HUD equivalent. ── */
+.section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
+.act-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.act-card.high{border-left-color:var(--red)}
+.act-card.medium{border-left-color:var(--gold)}
+.act-card.low{border-left-color:#4a6b8a}
+.act-card.approval{border-left-color:var(--green);background:#13241c}
+.act-sev{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px}
+.act-sev.high{background:#2d1a1a;color:#e07070}
+.act-sev.medium{background:#2d2a1a;color:var(--gold2)}
+.act-sev.low{background:#1a2330;color:#7ba0c2}
+.act-sev.approval{background:#13241c;color:#5fcf9e;border:1px solid #2d5a44}
+.act-title{font-size:14px;font-weight:600;margin:7px 0 4px;line-height:1.35;color:var(--text)}
+.act-detail{font-size:12px;color:var(--muted);line-height:1.45}
+.act-sug{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.act-sug b{color:var(--gold2);font-weight:600}
+.act-btns{display:flex;gap:8px;margin-top:9px}
+.act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+.act-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.act-btn.approve{background:var(--green);color:#06140d;border-color:var(--green)}
+.act-btn.reject{color:#e08585;border-color:#5a2d2d}
+.metric{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.metric .value{font-size:24px;font-weight:700;color:var(--text)}
+.metric .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+
+/* ══════════ MOBILE LAYOUT — fluid stage, stacked inline sidebar nav, stacked rows ══════════
+   Single breakpoint, kept in sync with MOBILE_BREAKPOINT in JS. Desktop (>880px) is
+   completely untouched — everything below is additive and gated behind this query. ── */
+@media (max-width:880px){
+  html,body{overflow-y:auto}
+  #stage-wrap{position:static;display:block;height:auto;min-height:100dvh}
+  #stage{
+    position:static;width:100vw;min-height:100dvh;height:auto;transform:none !important;
+    grid-template-columns:92px 1fr;grid-template-rows:auto auto auto;
+  }
+
+  .hdr-logo{padding:0 8px;gap:6px}
+  .hdr-logo .lbl{display:none}
+  .hamburger-fixed{
+    display:flex;
+    position:fixed;
+    top:calc(10px + env(safe-area-inset-top));
+    left:calc(10px + env(safe-area-inset-left));
+  }
+  #orb-desktop-btn{display:none}
+
+  .hdr-bar{padding:0 10px;gap:8px}
+  .hdr-bar .search,.hdr-bar .clockwrap{display:none}
+
+  .sidebar{
+    position:static;width:100%;max-width:none;z-index:auto;
+    grid-column:1/-1;grid-row:auto;
+    transform:none;transition:none;box-shadow:none;
+    padding:10px;
+    padding-top:calc(10px + env(safe-area-inset-top));
+  }
+
+  .main{grid-column:1/-1;display:flex;flex-direction:column;grid-template-columns:none;overflow:visible !important;height:auto !important;padding:10px}
+  .screen{grid-column:1/-1;height:auto;overflow:visible;padding:10px}
+  .panel{overflow:visible !important}
+  .panel-body{overflow:visible !important;max-height:none !important;flex:none !important}
+
+  .col-left,.col-center,.col-right{overflow:visible;gap:10px}
+  .col-center{order:-1}
+  .col-left{order:0}
+  .col-right{order:1}
+  .col-left .panel,.col-right .panel{overflow:visible}
+  .col-left .panel-body,.col-right .panel-body,.dep-pill-row,.shop-spark-row{
+    overflow:visible;max-height:none;flex:none
+  }
+  .col-aicore,.col-sysmon,.col-timeline,.col-chat,.col-shop,.col-meminsights,.col-agents,.col-feed{
+    flex:none !important;width:100% !important
+  }
+
+  #chat-msgs{min-height:280px;max-height:60vh;flex:none}
+  .orb-hero-stage{min-height:220px}
+
+  .agents-grid{grid-template-columns:repeat(2,1fr)}
+
+  #tasks-list,#actions-content,#calendar-content,#memory-content,#conversations-content,
+  #kb-content,#tools-list,#workflows-content,.hub-scroll,#studio-videos-list{
+    max-height:none !important;overflow:visible !important;
+  }
+
+  .nav-item{padding:14px;font-size:14px}
+  .icon-btn{width:40px;height:40px}
+  .qc-btn{padding:12px 10px}
+  #chat-send{width:44px;height:44px}
+  .talk-pill{padding:10px 24px}
+
+  .hdr-logo,.hdr-bar{padding-top:env(safe-area-inset-top)}
+  .bottombar{
+    flex-wrap:wrap;height:auto;padding:10px;gap:8px;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+  }
+
+  #toast-stack{
+    top:auto;right:10px;left:10px;bottom:calc(78px + env(safe-area-inset-bottom));
+    max-width:none;
+  }
+
+  .act-btn{font-size:11px;padding:7px 4px}
+  .studio-grid>div:last-child{flex:1 1 100%;min-width:0}
+}
+
+@media (max-width:380px){
+  .agents-grid{grid-template-columns:1fr}
+}
+#persist-warning{position:fixed;top:0;left:0;right:0;z-index:99999;display:none;
+  background:#7a1a00;color:#ffd9c2;font-size:13px;font-weight:600;line-height:1.4;
+  padding:9px 16px;padding-top:calc(9px + env(safe-area-inset-top));text-align:center;border-bottom:2px solid #ff5a1f;
+  box-shadow:0 2px 12px rgba(0,0,0,.5);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+#persist-warning b{color:#fff}
+#persist-warning.show{display:flex;align-items:flex-start;gap:10px}
+#persist-warning .pw-txt{flex:1}
+#persist-warning-x{flex:none;background:rgba(255,255,255,.15);border:none;color:#fff;
+  font-size:15px;line-height:1;width:28px;height:28px;border-radius:50%;cursor:pointer;
+  display:grid;place-items:center;margin-top:-2px}
+#persist-warning-x:active{background:rgba(255,255,255,.3)}
+
+/* ══ Phone Mode — dedicated 4-tab bottom shell (mobile only; desktop untouched) ══
+   Everything is gated behind body.is-mobile and styled through the existing theme
+   custom properties (--panel/--border/--cyan2/--red/--muted…) so the user's chosen
+   color theme (light/purple/charcoal/sakura/matcha/ocean/kawaii) recolors it too. */
+#phone-tabbar{display:none}
+body.is-mobile #phone-tabbar{
+  display:flex;position:fixed;left:0;right:0;bottom:0;z-index:700;
+  background:var(--panel);border-top:1px solid var(--border);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+body.is-mobile #phone-tabbar .ptab{
+  flex:1;background:none;border:none;cursor:pointer;color:var(--muted);font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:600;padding:6px 2px;position:relative;
+}
+body.is-mobile #phone-tabbar .ptab .pti{font-size:19px;line-height:1}
+body.is-mobile #phone-tabbar .ptab.on{color:var(--cyan2)}
+body.is-mobile #phone-tabbar .ptab:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:8px}
+body.is-mobile #phone-tabbar .ptab .pcnt{
+  position:absolute;top:-1px;right:calc(50% - 20px);background:var(--red);color:#fff;
+  font-size:9.5px;font-weight:800;min-width:15px;height:15px;border-radius:8px;
+  display:none;align-items:center;justify-content:center;padding:0 4px;
+}
+/* the floating hamburger + desktop bottom bar are replaced by the tab bar on phone */
+body.is-mobile .hamburger-fixed{display:none !important}
+body.is-mobile .bottombar{display:none}
+/* leave room so the fixed tab bar never covers content — must exceed the bar height
+   (58px + safe-area). The last control (e.g. Studio's Generate Video button) has to be
+   able to scroll fully above the bar to be tappable. */
+body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}
+body.is-mobile #orb-view{padding-bottom:66px}
+/* the 19-item sidebar is hidden by default on phone and revealed on demand via "More" */
+body.is-mobile .sidebar{display:none}
+body.is-mobile.phone-more-open .sidebar{
+  display:block;position:fixed;left:0;right:0;top:0;bottom:58px;z-index:690;
+  overflow-y:auto;background:var(--bg);padding:14px;
+  padding-top:calc(14px + env(safe-area-inset-top));
+}
+
+/* ══ Phone Mode v2 — dedicated native panels (own classes → immune to the desktop
+   @media !important overrides that broke v1's reuse; real internal scroll). ══ */
+#phone-body{display:none}
+body.is-mobile.phone-panel #phone-body{
+  display:block;position:fixed;left:0;right:0;top:0;bottom:58px;z-index:680;
+  background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:14px 13px calc(20px + env(safe-area-inset-bottom));
+  padding-top:calc(14px + env(safe-area-inset-top));
+}
+/* when a native panel is up, hide the desktop content + header behind it */
+body.is-mobile.phone-panel .main,
+body.is-mobile.phone-panel .hdr-logo,
+body.is-mobile.phone-panel .hdr-bar{display:none !important}
+.pp{display:none}
+.pp.on{display:block}
+.pp-h{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:2px 2px 12px}
+.pcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px}
+.pcard .pt{font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px;line-height:1.35}
+.pcard .pm{font-size:12px;color:var(--muted);word-break:break-word}
+.pp-acts{display:flex;gap:8px;margin-top:11px}
+.pp-btn{flex:1;border:1px solid transparent;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.pp-btn.ok{background:var(--cyan);color:#04121b}
+.pp-btn.no{background:transparent;color:var(--muted);border-color:var(--border)}
+.pp-empty{text-align:center;color:var(--muted);font-size:13px;padding:34px 10px;line-height:1.5}
+.ptiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+.ptile{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center}
+.ptile .n{font-size:20px;font-weight:800;color:var(--text)}
+.ptile .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.palert{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:11px;margin-bottom:8px;font-size:12.5px;color:var(--text);line-height:1.4}
+.palert .pdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none;background:var(--muted)}
+.palert.warn .pdot{background:var(--amber)}
+.palert.crit .pdot{background:var(--red)}
+.palert.good .pdot{background:var(--green)}
+.pmore-grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 2px 7px}
+.pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px}
+.pmore-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.pmore-item .pmi{width:24px;text-align:center;font-size:16px}
+.pmore-item .pmc{margin-left:auto;color:var(--muted)}
+/* tappable needs-attention cards */
+.palert.tappable{cursor:pointer}
+.palert.tappable:active{background:var(--panel2)}
+.palert .pchev{margin-left:auto;color:var(--muted);flex:none;align-self:center}
+/* phone action sheet */
+#phone-sheet-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55)}
+#phone-sheet{display:none;position:fixed;left:0;right:0;bottom:0;z-index:901;
+  background:var(--panel);border-top:1px solid var(--border);border-radius:18px 18px 0 0;
+  padding:18px 16px calc(16px + env(safe-area-inset-bottom));flex-direction:column;gap:9px}
+body.phone-sheet-open #phone-sheet-backdrop{display:block}
+body.phone-sheet-open #phone-sheet{display:flex}
+#phone-sheet-title{font-weight:700;font-size:14.5px;color:var(--text);line-height:1.4}
+#phone-sheet-sub{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.4}
+.psheet-btn{border:1px solid var(--border);border-radius:12px;padding:15px 13px;font-size:14px;
+  font-weight:700;cursor:pointer;font-family:inherit;background:var(--panel2);color:var(--text)}
+.psheet-btn.primary{background:var(--cyan);border-color:transparent;color:#04121b}
+.psheet-btn.cancel{background:transparent;color:var(--muted)}
+
+/* ══ Phone Mode v3 — fit the desktop screens to the phone width (no sideways scroll) ══
+   The 19 desktop screens use inline `grid-template-columns:1fr 1fr` blocks that never
+   collapse on a phone (Phone|Timezone, Username|Password, Revenue|Orders, button pairs),
+   pushing content off-screen. Collapse them to one column + hard overflow guard. All
+   mobile-gated; desktop untouched. Compact phone panels use CLASS grids, so unaffected. */
+body.is-mobile{overflow-x:hidden}
+body.is-mobile #stage-wrap,body.is-mobile #stage,body.is-mobile .main,
+body.is-mobile .screen,body.is-mobile .panel{max-width:100vw;overflow-x:hidden}
+/* an !important stylesheet rule beats a non-important inline style → 2-/3-col → 1-col */
+body.is-mobile .screen [style*="1fr 1fr"],
+body.is-mobile .main [style*="1fr 1fr"]{grid-template-columns:1fr !important}
+body.is-mobile .screen input,body.is-mobile .screen textarea,
+body.is-mobile .screen select,body.is-mobile .screen button,
+body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-sizing:border-box}
+
+/* ── Respect prefers-reduced-motion — none of the continuous decorative
+   animations (status pulse, mini-wave, spinner) served any functional purpose
+   that requires motion; stop them for users who've asked the OS not to
+   animate (2026-07-08 accessibility review). The orb's own idle rotation is
+   gated in JS (see applyReducedMotion()) since it's a canvas render loop, not
+   CSS. Voice-reactive motion while %%AGENT_SHORT%% is actually speaking stays
+   on regardless — that's functional feedback, not decoration. ──*/
+@media (prefers-reduced-motion: reduce){
+  .status-pill .dot{animation:none}
+  .mini-wave span{animation:none;height:10px}
+  .hub-spinner{animation:none}
+}
+</style>
+</head>
+<body>
+<div id="persist-warning"><span class="pw-txt">⚠️ <b>DATA IS NOT BEING SAVED.</b> Every change resets when the server restarts. Attach a Railway Volume mounted at <b>/data</b> to make data persist.</span><button id="persist-warning-x" aria-label="Dismiss" onclick="dismissPersistWarning()">✕</button></div>
+<div id="stage-wrap"><div id="stage">
+
+  <button id="hamburger-btn" class="hamburger-fixed" aria-label="Toggle control center">☰</button>
+
+  <div id="orb-view">
+    <div class="orb-hero-stage">
+      <canvas id="orb" width="640" height="640"></canvas>
+      <canvas id="orb-gl" width="640" height="640"></canvas>
+      <div class="orb-overlay">
+        <div class="o1">%%AGENT_SHORT%%</div>
+        <div class="o2">COMMAND CENTER</div>
+        <div class="o3" id="orb-build-ver">Build —</div>
+      </div>
+    </div>
+    <div class="orb-state" id="orb-state">IDLE — slow ambient rotation</div>
+    <div class="orb-hint">click the orb (or the talk pill) to start talking to %%AGENT_SHORT%%</div>
+  </div>
+
+  <div class="hdr-logo brk">
+    <div class="hex" aria-hidden="true">⬡</div>
+    <div class="lbl"><h1 class="l1 hdr-title-h1">%%AGENT_SHORT%%</h1><div class="l2">COMMAND CENTER</div></div>
+  </div>
+
+  <div class="hdr-bar">
+    <div class="status-pill" id="system-status-pill"><span class="dot"></span>SYSTEM STATUS &nbsp;● <span id="system-status-label">OPTIMAL</span></div>
+    <div class="clockwrap"><div class="d" id="dt">--</div><div class="t" id="clk">--:--</div></div>
+    <div class="right">
+      <input class="search" id="global-search" aria-label="Search listings, orders, tools, knowledge base" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
+      <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" aria-label="Switch to %%AGENT_SHORT%% Orb" role="button" tabindex="0" style="font-size:16px">⬡</div>
+      <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none" aria-live="polite" aria-atomic="true">0</span>
+        <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
+          <div class="alert-dropdown-title">Alerts</div>
+          <div id="alert-dropdown-list"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
+        </div>
+      </div>
+      <div class="icon-btn" onclick="showScreen('settings')" aria-label="Settings" role="button" tabindex="0">⚙</div>
+      <div class="operator" id="operator-chip" title="Click to log out" onclick="doLogout()" style="cursor:pointer" role="button" tabindex="0" aria-label="Log out"><div class="av" id="op-av">…</div><div><div class="ol1" id="op-name">…</div><div class="ol2" id="op-role">…</div></div></div>
+    </div>
+  </div>
+
+  <div class="sidebar" role="navigation" aria-label="Primary">
+    <h2 class="nav-section nav-section-h2" id="nav-heading-frank">%%AGENT_SHORT%%</h2>
+    <div class="nav-item active" data-screen="cmd" role="button" tabindex="0" aria-current="page"><span class="ic" aria-hidden="true">⌂</span>Command Center</div>
+    <div class="nav-item" data-screen="core" role="button" tabindex="0"><span class="ic" aria-hidden="true">◎</span>AI Core</div>
+    <div class="nav-item" data-screen="agents" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Agents</div>
+    <div class="nav-item" data-screen="tasks" role="button" tabindex="0"><span class="ic" aria-hidden="true">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="actions" role="button" tabindex="0"><span class="ic" aria-hidden="true">✓</span>Action Center<span class="nbadge" id="badge-actions" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="calendar" role="button" tabindex="0"><span class="ic" aria-hidden="true">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
+
+    <h2 class="nav-section nav-section-h2">Knowledge</h2>
+    <div class="nav-item" data-screen="memory" role="button" tabindex="0"><span class="ic" aria-hidden="true">✦</span>Memory<span class="nbadge" id="badge-memory" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="conversations" role="button" tabindex="0"><span class="ic" aria-hidden="true">💬</span>Conversations<span class="nbadge" id="badge-conversations" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="kb" role="button" tabindex="0"><span class="ic" aria-hidden="true">📚</span>Knowledge Base<span class="nbadge" id="badge-kb" style="display:none">—</span></div>
+
+    <h2 class="nav-section nav-section-h2">Tools</h2>
+    <div class="nav-item" data-screen="tools" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="workflows" role="button" tabindex="0"><span class="ic" aria-hidden="true">⇄</span>Workflows</div>
+    <div class="nav-item" data-screen="studio" role="button" tabindex="0"><span class="ic" aria-hidden="true">▶</span>Studio</div>
+
+    <h2 class="nav-section nav-section-h2">Shop</h2>
+    <div class="nav-item" data-screen="listings" role="button" tabindex="0"><span class="ic" aria-hidden="true">🏷</span>Listings</div>
+    <div class="nav-item" data-screen="products" role="button" tabindex="0"><span class="ic" aria-hidden="true">📦</span>Products</div>
+    <div class="nav-item" data-screen="brandkit" role="button" tabindex="0"><span class="ic" aria-hidden="true">🎨</span>Brand Kit</div>
+    <div class="nav-item" data-screen="files" role="button" tabindex="0"><span class="ic" aria-hidden="true">🗂</span>Files</div>
+    <div class="nav-item" data-screen="connections" role="button" tabindex="0"><span class="ic" aria-hidden="true">🔌</span>Connections</div>
+    <div class="nav-item" data-screen="security" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛡</span>Security</div>
+
+    <h2 class="nav-section nav-section-h2">Settings</h2>
+    <div class="nav-item" data-screen="settings" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Settings</div>
+
+    <div class="voice-widget" style="text-align:left">
+      <div class="vw-title">QUICK COMMANDS</div>
+      <button class="qc-btn" onclick="showScreen('tasks');document.getElementById('hud-todo-input').focus()"><span class="qic">+</span>Start New Task</button>
+      <button class="qc-btn" onclick="showScreen('calendar')"><span class="qic">▦</span>Open Calendar</button>
+      <button class="qc-btn" onclick="runWorkflow('shop_health_check', this, false)"><span class="qic">✓</span>Run Health Check</button>
+      <button class="qc-btn" onclick="showScreen('workflows')"><span class="qic">⇄</span>Run Workflow</button>
+    </div>
+  </div>
+  <div id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+  <div id="welcome-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="welcome-overlay-title">
+    <div class="welcome-card">
+      <div class="welcome-title" id="welcome-overlay-title">Welcome to %%AGENT_SHORT%%</div>
+      <div class="welcome-body">
+        <p>%%AGENT_SHORT%% is organized into four groups in the sidebar:</p>
+        <ul>
+          <li><b>%%AGENT_SHORT%%</b> — chat, AI core, agents, tasks, and the Action Center</li>
+          <li><b>Knowledge</b> — memory, past conversations, and the knowledge base</li>
+          <li><b>Tools</b> — tools &amp; skills, workflows, and the video studio</li>
+          <li><b>Shop</b> — listings, products, brand kit, files, connections, security</li>
+        </ul>
+        <p class="welcome-note">Nothing that changes your shop, files, or social accounts ever runs without your one-tap approval in the Action Center.</p>
+      </div>
+      <button class="welcome-dismiss" id="welcome-dismiss-btn" onclick="dismissWelcomeOverlay()">Got it</button>
+    </div>
+  </div>
+
+  <!-- ══════════ COMMAND CENTER (home) ══════════ -->
+  <div class="screen active" id="screen-cmd">
+    <div class="main" role="main">
+
+      <!-- LEFT: system state -->
+      <div class="col-left">
+        <div class="panel brk col-aicore">
+          <div class="panel-title">AI Core Overview <span class="src">/health</span></div>
+          <div class="panel-body">
+            <div class="core-row"><span class="lab"><span class="dotc"></span>AI Core</span><span class="v" id="ac-core">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>Memory</span><span class="v" id="ac-memory">—</span></div>
+            <div class="core-row" id="ac-voice-row"><span class="lab" id="ac-voice-lab"><span class="dotc" id="ac-voice-dot"></span>Voice</span><span class="v" id="ac-voice">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>Agents</span><span class="v" id="ac-agents">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>LLMs</span><span class="v" id="ac-llms">—</span></div>
+            <div class="core-row"><span class="lab"><span class="dotc"></span>System</span><span class="v" id="ac-system">—</span></div>
+          </div>
+        </div>
+
+        <div class="panel brk col-sysmon">
+          <div class="panel-title">Dependency Health <span class="lnk" id="recheck-creds-btn" onclick="recheckCredentials()" role="button" tabindex="0">Recheck now</span></div>
+          <div class="dep-pill-row" id="dep-pill-row"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+        </div>
+
+        <div class="panel brk col-timeline">
+          <div class="panel-title">Mission Timeline <span class="src">/api/todos</span></div>
+          <div class="panel-body" id="timeline-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+          <div class="panel-title" style="margin-top:6px;margin-bottom:0"><span class="lnk" style="margin-left:auto;cursor:pointer" onclick="showScreen('tasks')" role="button" tabindex="0">View Full Schedule ›</span></div>
+        </div>
+      </div>
+
+      <!-- CENTER: primary interaction -->
+      <div class="col-center">
+        <div class="panel brk col-chat">
+          <div class="panel-title">Ask %%AGENT_SHORT%% <span class="src">/ws/chat — live, always-on chat</span></div>
+          <div id="chat-msgs" aria-live="polite"></div>
+          <div class="lc-chips">
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">What should I focus on?</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">How are sales?</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">What's my next listing?</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">Pricing advice</span>
+            <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">SEO tips</span>
+          </div>
+          <div class="lc-input-row">
+            <input id="chat-input" type="text" placeholder="Ask %%AGENT_NAME%%…" autocomplete="off" aria-label="Message">
+            <button id="chat-send" onclick="sendMsg()" aria-label="Send message">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: business data + activity -->
+      <div class="col-right">
+        <div class="panel brk col-shop">
+          <div class="panel-title" style="cursor:pointer;user-select:none" onclick="toggleShopExpand()" id="shop-perf-title" role="button" tabindex="0">
+            Shop Performance
+            <span style="font-size:10px;opacity:.5;margin-left:4px" id="shop-expand-arrow">▼ expand</span>
+            <span class="src">/api/analytics + /api/metrics</span>
+          </div>
+          <div class="shop-spark-row" id="shop-spark-row">
+            <div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div><div class="ssc-val" id="shop-rev-30d">—</div></div>
+            <div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div><div class="ssc-val" id="shop-ord-30d">—</div></div>
+          </div>
+          <div class="shop-chip-row" id="shop-chip-row">
+            <div class="shop-chip"><div class="nm">Listings</div><div class="v" id="shop-listings">—</div></div>
+            <div class="shop-chip"><div class="nm">Total Sales</div><div class="v" id="shop-total-sales">—</div></div>
+            <div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v" id="shop-alltime-rev">—</div></div>
+          </div>
+          <div id="shop-expanded" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+              <div class="shop-chip"><div class="nm">Revenue · 7d</div><div class="v" id="shop-rev-7d">—</div></div>
+              <div class="shop-chip"><div class="nm">Orders · 7d</div><div class="v" id="shop-ord-7d">—</div></div>
+              <div class="shop-chip"><div class="nm">Revenue · Today</div><div class="v" id="shop-rev-today">—</div></div>
+              <div class="shop-chip"><div class="nm">Orders · Today</div><div class="v" id="shop-ord-today">—</div></div>
+              <div class="shop-chip"><div class="nm">Avg Order Value</div><div class="v" id="shop-aov">—</div></div>
+              <div class="shop-chip"><div class="nm">Active Listings</div><div class="v" id="shop-active">—</div></div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Recent Sales</div>
+            <div id="shop-recent-sales" style="font-size:11px">—</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-meminsights">
+          <div class="panel-title">Star Seller Status <span class="src">/api/star-seller</span></div>
+          <div id="star-seller-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-agents">
+          <div class="panel-title">Inbox &amp; Reviews <span class="src">/api/inbox</span></div>
+          <div id="inbox-body">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-feed">
+          <div class="panel-title">Live Intelligence Feed <span class="src">/api/queue</span></div>
+          <div class="panel-body" id="feed-list"><div style="color:var(--muted);font-size:11px">Loading…</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════ AI CORE — real data: /health + /api/credentials/status ══════════ -->
+  <div class="screen" id="screen-core">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">AI Core <span class="src">/health + /api/credentials/status</span></div>
+      <div class="panel-body" id="core-detail">
+        <div class="core-row"><span class="lab"><span class="dotc"></span>Loading…</span><span class="v">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ AGENTS — real data: /api/agents/status (live-status registry) ══════════ -->
+  <div class="screen" id="screen-agents">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Agents <span class="src">/api/agents/status — every tile below is a real loop or honestly marked not_built</span></div>
+      <div class="agents-grid" id="agents-grid-full" style="margin-top:14px">
+        <div class="agent-tile idle"><div class="top"><div class="ic">⋯</div><div class="name">Loading…</div></div><div class="stat"><span class="d"></span>—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ TASKS — real data: /api/todos ══════════ -->
+  <div class="screen" id="screen-tasks">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Tasks <span class="src">/api/todos</span></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <input id="hud-todo-input" type="text" placeholder="Add a to-do…" onkeydown="if(event.key==='Enter')addHudTodo()"
+          aria-label="New to-do"
+          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text)">
+        <input id="hud-todo-due" type="date" aria-label="Due date" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text)">
+        <button onclick="addHudTodo()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
+      </div>
+      <div id="tasks-list" style="margin-top:10px;overflow-y:auto;max-height:700px">
+        <div style="color:var(--muted);font-size:12px">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ ACTION CENTER — real data: /api/queue + /api/actions — approve/reject gate ══════════ -->
+  <div class="screen" id="screen-actions">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Action Center <span class="src">/api/queue + /api/actions — approve/reject staged changes</span></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <button id="batch-tag-btn" onclick="batchStageTags(this)" style="flex:1;background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:center">⚡ Stage All Tag Fixes</button>
+      </div>
+      <div id="actions-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ CALENDAR — real data: /api/cadence + /api/todos — due dates, ops cadence, seasonal/tax calendar ══════════ -->
+  <div class="screen" id="screen-calendar">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Calendar <span class="src">/api/cadence + /api/todos — due dates, ops cadence, seasonal keywords</span></div>
+      <div id="calendar-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+  <div class="screen" id="screen-memory">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Memory <span class="src">/api/memory — chat history + logged learnings + knowledge base, rolled up</span></div>
+      <div id="memory-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+  <div class="screen" id="screen-conversations">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Conversations <span class="src">/api/conversations — persisted chat_messages history</span></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <input id="conv-search-input" type="text" placeholder="Search all conversations…" aria-label="Search all conversations" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
+        <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
+      </div>
+      <div id="conversations-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+  <div class="screen" id="screen-kb">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Knowledge Base <span class="src">/api/kb — real markdown docs in data/knowledge_base/</span></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <input id="kb-search-input" type="text" placeholder="Search all docs…" aria-label="Search all knowledge base docs" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
+        <button onclick="searchKb()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
+      </div>
+      <div id="kb-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ TOOLS & SKILLS — real data: /api/tools/list (live AGENT_TOOLS) ══════════ -->
+  <div class="screen" id="screen-tools">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Tools &amp; Skills <span class="src">/api/tools/list — live AGENT_TOOLS registry</span></div>
+      <div id="tools-list" style="margin-top:10px;overflow-y:auto;max-height:760px">
+        <div style="color:var(--muted);font-size:12px">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ WORKFLOWS — real data: /api/workflows (live _EXEC_COMMANDS registry) ══════════ -->
+  <div class="screen" id="screen-workflows">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Workflows <span class="src">/api/workflows — runnable backend scripts, gated by the same approval queue as Action Center</span></div>
+      <div id="workflows-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ LISTINGS — real data: /api/listings, /api/shop-sections, /api/listings/{id}/files ══════════ -->
+  <div class="screen" id="screen-listings">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Listings <span class="src">/api/listings — live Etsy listings via list_listings/get_listing</span></div>
+      <div class="hub-toggle-row" style="margin-top:10px">
+        <button class="hub-toggle-btn active" onclick="loadListings('active',this)">Active</button>
+        <button class="hub-toggle-btn" onclick="loadListings('draft',this)">Drafts</button>
+      </div>
+      <div id="listings-content" class="hub-scroll"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ PRODUCTS — fully static: DP1026-1029 + theme catalog, from CLAUDE.md ══════════ -->
+  <div class="screen" id="screen-products">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Products <span class="src">Static — DP1026–1029 product catalog from CLAUDE.md</span></div>
+      <div id="products-content" class="hub-scroll"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ BRAND KIT — fully static: color palettes, listing standards, pricing tiers ══════════ -->
+  <div class="screen" id="screen-brandkit">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Brand Kit <span class="src">Static — palettes, listing standards, pricing tiers from CLAUDE.md</span></div>
+      <div id="brandkit-content" class="hub-scroll"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ FILES — real data: /api/files (data/digital_products/ + backups) ══════════ -->
+  <div class="screen" id="screen-files">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Files <span class="src">/api/files — live volume listing, data/digital_products/ + backups</span></div>
+      <div id="files-content" class="hub-scroll"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ CONNECTIONS — real data: /api/credentials/status + static Platform Roadmap ══════════ -->
+  <div class="screen" id="screen-connections">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Connections <span class="src">/api/credentials/status — live token status + Platform Connections Roadmap</span></div>
+      <div id="connections-content" class="hub-scroll"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SECURITY — fully static: security posture checklist ══════════ -->
+  <div class="screen" id="screen-security">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Security <span class="src">Static — security posture checklist + re-auth instructions</span></div>
+      <div id="security-content" class="hub-scroll"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SETTINGS — voice prefs (localStorage) + connections summary + about ══════════ -->
+  <div class="screen" id="screen-settings">
+    <div class="panel brk" style="height:100%;overflow-y:auto">
+      <div class="panel-title">Settings <span class="src">Voice prefs + theme (localStorage) + /api/account + /api/credentials/status + /api/etsy-tokens</span></div>
+
+      <div class="hub-section-title">Voice</div>
+      <div class="hub-card">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer">
+          <input type="checkbox" class="premium-voice-cb"> Premium voice (OpenAI Whisper + TTS)
+        </label>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+          When off (default), %%AGENT_SHORT%% uses local offline voice engines — Whisper.wasm for speech-to-text and Piper
+          for text-to-speech — which are free, private, and work without an internet connection. Turning this on
+          routes voice through OpenAI's paid Whisper transcription and TTS endpoints instead: it sounds more
+          natural but costs API credits per use and requires internet. This toggle is shared with the one next to
+          "Talk to %%AGENT_SHORT%%" in the bottom bar — changing either updates both.
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Appearance</div>
+      <div class="hub-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">Color theme</div>
+        <div id="theme-swatch-row" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px">
+          Saved to this device only — every screen repaints instantly, no reload needed.
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Branding</div>
+      <div class="hub-card">
+        <label for="setting-agent-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Agent name</label>
+        <input type="text" id="setting-agent-name" class="search" style="width:100%" maxlength="40" placeholder="%%AGENT_SHORT%%">
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">
+          Renames the agent everywhere — the dashboard, the app name, and how the
+          agent refers to itself. Applies on your next page load.
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn" onclick="saveBranding()">Save name</button>
+          <div id="branding-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Orb / Brand Mark</div>
+      <div class="hub-card">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+          <canvas id="brand-mark-preview" width="64" height="64" style="border-radius:10px;background:var(--panel2);border:1px solid var(--border)"></canvas>
+          <div style="flex:1;min-width:200px">
+            <label for="brand-mark-file" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Custom orb image</label>
+            <input type="file" id="brand-mark-file" accept="image/png,image/jpeg,image/webp" style="width:100%;color:var(--text);font-size:12px">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">
+          Upload a logo (transparent PNG works best) and the orb rebuilds itself from its shape —
+          same glow, rotation, and audio-reactive pulse the default orb already has, just a
+          different form. Applies on your next page load.
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="act-btn" onclick="uploadBrandMark()">Upload</button>
+          <button class="act-btn" onclick="resetBrandMark()">Reset to default orb</button>
+          <div id="brand-mark-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">AI Engines</div>
+      <div class="hub-card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label for="setting-video-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video generation</label>
+            <select id="setting-video-engine" class="search" style="width:100%">
+              <option value="sora">OpenAI Sora (retires Sep 24)</option>
+              <option value="veo">Google Veo 3.1</option>
+            </select>
+          </div>
+          <div>
+            <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image generation</label>
+            <select id="setting-image-engine" class="search" style="width:100%">
+              <option value="openai">OpenAI gpt-image-1 (retires Oct 23)</option>
+              <option value="gpt-image-2">OpenAI gpt-image-2 (no transparent bg)</option>
+              <option value="gemini">Google Nano Banana</option>
+              <option value="ideogram">Ideogram 3.0 (text)</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">
+          Switch generation providers without touching Railway. Veo &amp; Nano Banana
+          need GEMINI_API_KEY set; Ideogram needs IDEOGRAM_API_KEY.
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn" onclick="saveEngines()">Save engines</button>
+          <div id="engines-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">My Account</div>
+      <div class="hub-card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label for="account-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Name</label>
+            <input type="text" id="account-name" class="search" style="width:100%" placeholder="%%OWNER%%">
+          </div>
+          <div>
+            <label for="account-email" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Email</label>
+            <input type="email" id="account-email" class="search" style="width:100%" placeholder="you@example.com">
+          </div>
+          <div>
+            <label for="account-phone" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Phone</label>
+            <input type="text" id="account-phone" class="search" style="width:100%" placeholder="(555) 555-5555">
+          </div>
+          <div>
+            <label for="account-timezone" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Timezone</label>
+            <input type="text" id="account-timezone" class="search" style="width:100%" placeholder="America/New_York">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn" onclick="saveAccountSettings()">Save</button>
+          <div id="account-save-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Password</div>
+      <div class="hub-card">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label for="pw-current" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Current password</label>
+            <input type="password" id="pw-current" class="search" style="width:100%" autocomplete="current-password">
+          </div>
+          <div></div>
+          <div>
+            <label for="pw-new" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">New password</label>
+            <input type="password" id="pw-new" class="search" style="width:100%" autocomplete="new-password">
+          </div>
+          <div>
+            <label for="pw-confirm" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Confirm new password</label>
+            <input type="password" id="pw-confirm" class="search" style="width:100%" autocomplete="new-password">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">At least 8 characters. Changing your password signs you out everywhere — you'll need to log back in.</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn" onclick="changeMyPassword()">Change password</button>
+          <div id="pw-change-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Connections</div>
+      <div class="hub-card" id="settings-connections-summary"><div class="hub-spinner"></div></div>
+      <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+        <button class="act-btn" onclick="showScreen('connections')">View full Connections ›</button>
+        <button class="act-btn" onclick="showScreen('security')">View Security ›</button>
+      </div>
+
+      <div class="hub-section-title" id="user-mgmt-section" style="margin-top:18px;display:none">User Management</div>
+      <div class="hub-card" id="user-mgmt-card" style="display:none">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Admins have full API access identical to the owner login. Only the owner can manage users.</div>
+        <div id="user-list" style="margin-bottom:14px"><div class="hub-spinner"></div></div>
+        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:6px">
+          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Add Admin</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div>
+              <label for="new-user-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Username</label>
+              <input type="text" id="new-user-name" class="search" style="width:100%" placeholder="jane">
+            </div>
+            <div>
+              <label for="new-user-pw" style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Password</label>
+              <input type="password" id="new-user-pw" class="search" style="width:100%" placeholder="••••••••">
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="act-btn" onclick="addUser()">Add Admin</button>
+            <div id="user-add-status" style="font-size:11px;color:var(--muted)"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">About</div>
+      <div class="hub-card">
+        <div style="font-size:13px;font-weight:600">%%AGENT_SHORT%% HUD</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="settings-build-ver">Build —</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-studio">
+    <div class="panel brk" style="height:100%;overflow-y:auto">
+      <div class="panel-title">Studio — Media &amp; Content Tools <span class="src">/api/studio/* — video generation, Etsy/social actions, SVG converter, lifestyle photos</span><span id="studio-build-ver" style="float:right;font-size:10px;opacity:0.4;font-weight:normal"></span></div>
+      <div class="studio-grid" style="flex-wrap:wrap">
+        <div style="flex:1;min-width:320px">
+          <video id="studio-player" controls style="aspect-ratio:16/9"></video>
+          <div id="studio-player-caption" style="margin-top:10px;color:var(--muted);font-size:11px">Select a generated video from the list to preview it here.</div>
+        </div>
+        <div style="flex:0 0 300px">
+          <div class="panel-title" style="margin-top:0">Generated Videos</div>
+          <div id="studio-videos-list" class="hub-scroll" style="max-height:420px"><div class="hub-empty">Loading…</div></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Generate a New Video</div>
+      <div class="hub-card">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Upload images below, or leave images empty and enter an existing Etsy listing ID to pull its photos automatically.</div>
+        <input type="file" id="studio-file-input" accept="image/*" multiple aria-label="Source images for video" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
+        <div id="studio-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" aria-label="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <select id="studio-style" aria-label="Video style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            <option value="showcase">Showcase</option>
+            <option value="new-drop">New Drop</option>
+            <option value="feature">Feature</option>
+            <option value="minimal">Minimal</option>
+            <option value="ai-scene">✨ AI Scene (Sora)</option>
+          </select>
+        </div>
+        <div id="studio-ai-fields" style="display:none;margin-bottom:8px">
+          <textarea id="studio-scene-prompt" rows="3"
+            placeholder="Scene description — auto-filled from title, edit before generating"
+            aria-label="Scene description"
+            style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
+          <select id="studio-aspect-ratio" aria-label="Video aspect ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
+            <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+          <input id="studio-title" type="text" placeholder="Title (optional)" aria-label="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
+        </div>
+        <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
+        <div id="studio-generate-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+      </div>
+
+      <div class="hub-section-title" id="studio-actions-title" style="display:none">Actions — <span id="studio-actions-filename"></span></div>
+      <div class="hub-card" id="studio-actions-card" style="display:none">
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after approving in the Action Center.</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+        </div>
+        <button class="act-btn" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
+        <div id="studio-stage-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Instagram</div>
+        <textarea id="studio-ig-caption" placeholder="Caption" aria-label="Instagram caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+        <button class="act-btn" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
+        <div id="studio-ig-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Facebook</div>
+        <textarea id="studio-fb-caption" placeholder="Description" aria-label="Facebook description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+        <button class="act-btn" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
+        <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">SVG Converter — Reference Photo to Vector</div>
+      <div class="hub-card">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Drop a reference photo below to trace it into an SVG — a photo you took, a screenshot, something you found on Pinterest.</div>
+
+        <div id="svgc-dropzone" onclick="document.getElementById('svgc-file-input').click()"
+          role="button" tabindex="0" aria-label="Upload reference photo"
+          style="border:2px dashed var(--border);border-radius:10px;padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:12px;transition:border-color .15s,background .15s">
+          <div style="font-size:22px;margin-bottom:6px" aria-hidden="true">📥</div>
+          Drop a reference photo here, or click to browse
+        </div>
+        <input type="file" id="svgc-file-input" accept="image/*" style="display:none" aria-label="Reference photo file">
+
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <select id="svgc-target" aria-label="What's this SVG for?" style="flex:1;min-width:160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            <option value="3dprint">3D-Print Sign (SS-series)</option>
+            <option value="wallart">Wall Art</option>
+            <option value="sticker">Sticker Pack Source Art</option>
+            <option value="planner">Planner Cover Art</option>
+            <option value="none">Just give me an SVG</option>
+          </select>
+          <select id="svgc-mode" aria-label="Conversion mode" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            <option value="silhouette">Silhouette (single shape, cleanest)</option>
+            <option value="bw">Black &amp; White (line art)</option>
+            <option value="color">Full Color</option>
+          </select>
+        </div>
+        <div id="svgc-hint" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+        <div id="svgc-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+
+        <div id="svgc-result" style="display:none">
+          <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center">
+            <img id="svgc-preview" style="max-width:100%;max-height:280px;background:#fff;border-radius:6px" alt="Converted SVG preview">
+          </div>
+          <div id="svgc-quality" style="font-size:12px;margin-bottom:10px"></div>
+          <a id="svgc-download" class="act-btn" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download SVG</a>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Lifestyle Photo Generator</div>
+      <div class="hub-card">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Upload the REAL product file(s) — the actual thing being sold, never a stand-in — and generate a photorealistic lifestyle photo. Self-verified against your file; if a render doesn't actually match it, it retries automatically instead of handing you something wrong.</div>
+
+        <input type="file" id="lsg-file-input" accept="image/*,.pdf,.svg" multiple aria-label="Real product file(s)" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
+        <div id="lsg-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+
+        <select id="lsg-category" aria-label="Product category" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <option value="sign_flat">3D-Print Sign (flat face)</option>
+          <option value="tumbler_wrap">Tumbler / Koozie Wrap</option>
+          <option value="framed_print">Framed Wall Art</option>
+          <option value="flat_paper">Flat Printed Paper / Card</option>
+          <option value="ipad_lifestyle">iPad / Digital Planner Screen</option>
+          <option value="sticker_sheet_flat">Sticker Sheet (overhead flat lay)</option>
+          <option value="3d_print_lamp">3D-Print Lamp (lit)</option>
+          <option value="3d_print_vase">3D-Print Vase</option>
+          <option value="3d_print_holder">3D-Print Holder</option>
+          <option value="3d_print_planter">3D-Print Planter</option>
+        </select>
+
+        <textarea id="lsg-scene-prompt" rows="3"
+          placeholder="Scene description — auto-filled below, edit before generating"
+          aria-label="Scene description"
+          style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
+
+        <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">Each attempt calls the real image-generation API — real cost per click — up to 2 tries if the first doesn't verify against your source file.</div>
+
+        <button class="act-btn primary" style="width:100%" onclick="lsgGenerate()" id="lsg-generate-btn">Generate Lifestyle Photo</button>
+        <div id="lsg-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+        <div id="lsg-result" style="display:none;margin-top:10px">
+          <div id="lsg-preview-wrap" style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center">
+            <img id="lsg-preview" style="max-width:100%;max-height:320px;border-radius:6px" alt="Generated lifestyle photo">
+          </div>
+          <div id="lsg-outcome" style="font-size:12px;margin-bottom:10px"></div>
+          <a id="lsg-download" class="act-btn" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download Photo</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottombar">
+    <div class="bb-left">
+      <div class="it">📍 Local</div>
+      <div class="it">⛅ —</div>
+      <div class="it" id="bb-relay">🌐 Relay: —</div>
+    </div>
+    <div class="bb-center">
+      <span class="dots-line"></span>
+      <div class="talk-pill" id="talk-pill">
+        <div class="row1">
+          <div class="mini-wave"><span></span><span></span><span></span><span></span></div>
+          <span class="label">TALK TO %%AGENT_SHORT%%</span>
+          <div class="mini-wave"><span></span><span></span><span></span><span></span></div>
+        </div>
+        <div class="sub" id="talk-sub">tap to speak</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="premium-voice-toggle" class="premium-voice-cb"> Premium voice</label>
+      <span class="dots-line"></span>
+    </div>
+    <div class="brief-wrap" style="position:relative">
+      <button class="brief-btn" onclick="event.stopPropagation();toggleBriefingPanel()">Executive Briefing</button>
+      <div id="brief-panel" class="alert-dropdown" style="display:none;bottom:42px;top:auto" onclick="event.stopPropagation()">
+        <div class="alert-dropdown-title">Executive Briefing</div>
+        <div id="brief-panel-body"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Phone Mode v2 — native panels (mobile only). Own classes so the desktop
+       @media !important rules never touch them; scrolls internally. ══ -->
+  <div id="phone-body">
+    <section class="pp" id="pp-appr"><div class="pp-h">Waiting on you</div><div id="pp-appr-body"></div></section>
+    <section class="pp" id="pp-today"><div class="pp-h">Today</div><div id="pp-today-body"></div></section>
+    <section class="pp" id="pp-more"><div class="pp-h">All screens</div><div id="pp-more-body"></div></section>
+  </div>
+
+  <!-- ══ Phone action sheet — tap a Needs-attention card → fix-it / view-on-Etsy ══ -->
+  <div id="phone-sheet-backdrop" onclick="phoneSheetClose()"></div>
+  <div id="phone-sheet" role="dialog" aria-modal="true">
+    <div id="phone-sheet-title"></div>
+    <div id="phone-sheet-sub"></div>
+    <button class="psheet-btn primary" id="phone-sheet-fix" onclick="phoneSheetFix()">🤖 Let Frank fix it</button>
+    <button class="psheet-btn" id="phone-sheet-view" onclick="phoneSheetView()">🏷 View listing on Etsy</button>
+    <button class="psheet-btn cancel" onclick="phoneSheetClose()">Cancel</button>
+  </div>
+
+  <!-- ══ Phone Mode bottom tab bar — mobile only (hidden on desktop via CSS) ══ -->
+  <nav id="phone-tabbar" aria-label="Phone navigation">
+    <button class="ptab on" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
+    <button class="ptab" data-ptab="appr" onclick="phoneTab('appr')" aria-label="Approvals"><span class="pti" aria-hidden="true">✓</span>Approvals<span class="pcnt" id="ptab-badge">0</span></button>
+    <button class="ptab" data-ptab="today" onclick="phoneTab('today')" aria-label="Today"><span class="pti" aria-hidden="true">▤</span>Today<span class="pcnt" id="ptab-today-badge">0</span></button>
+    <button class="ptab" data-ptab="more" onclick="phoneTab('more')" aria-label="More screens"><span class="pti" aria-hidden="true">⋯</span>More</button>
+  </nav>
+
+</div></div>
+
+<script>
+// Users who've asked their OS not to animate — gates the orb's idle rotation
+// (CSS keyframe animations are gated directly via @media in <style> above). Voice-
+// reactive motion while actually speaking stays on; that's functional feedback,
+// not decoration (2026-07-08 accessibility review).
+const _reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── Auto-scale the fixed 1440x900 stage to fit any viewport, desktop only — below
+// MOBILE_BREAKPOINT the stage goes fluid via CSS instead (see isMobileMode()). ──
+const STAGE_W = 1440, STAGE_H = 900;
+const MOBILE_BREAKPOINT = 880;
+const stage = document.getElementById('stage');
+const mobileMQ = window.matchMedia('(max-width:' + MOBILE_BREAKPOINT + 'px)');
+function isMobileMode(){ return mobileMQ.matches; }
+// devicePixelRatio changes when the user zooms (in or out); a plain window resize
+// (dragging the window edge, rotating a device) leaves it unchanged. Re-fitting on
+// every resize is correct — re-fitting on a ZOOM just cancels the zoom the user
+// asked for, which is what used to happen here (2026-07-08 accessibility review,
+// WCAG 1.4.4/1.4.10: browser zoom was silently neutralized). Skip the re-fit when
+// the ratio changed so a real zoom actually enlarges the content instead.
+let _lastDPR = window.devicePixelRatio;
+function fitStage(){
+  if (isMobileMode()){ stage.style.transform = 'none'; return; }
+  const dprChanged = window.devicePixelRatio !== _lastDPR;
+  _lastDPR = window.devicePixelRatio;
+  if (dprChanged) return;
+  const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
+  stage.style.transform = 'scale(' + scale + ')';
+}
+function closeControlCenter(){ document.body.classList.remove('cc-open'); }
+function toggleControlCenter(){ document.body.classList.toggle('cc-open'); }
+let _prevMobile = null;
+function syncMobileClass(){
+  const mobile = isMobileMode();
+  document.body.classList.toggle('is-mobile', mobile);
+  if (!mobile && (_prevMobile === null || _prevMobile === true)) {
+    // First load on desktop, or transitioning mobile→desktop: open dashboard
+    document.body.classList.add('cc-open');
+  }
+  _prevMobile = mobile;
+  fitStage();
+}
+window.addEventListener('resize', syncMobileClass);
+mobileMQ.addEventListener('change', syncMobileClass);
+syncMobileClass();
+document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
+
+// ── Phone Mode v2: 4-tab shell with dedicated NATIVE panels (mobile only).
+// Ask = the orb. Approvals/Today/More render their own compact, phone-sized
+// panels wired to the SAME live data + action fns (approveAction, openRejectModal,
+// /api/metrics, /api/alerts, showScreen) — not the desktop screens (which were too
+// big). Styled via theme vars so the color selector recolors them. ──
+function phoneTab(which){
+  document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab===which));
+  document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
+  if (which === 'ask'){
+    document.body.classList.remove('phone-panel');
+    closeControlCenter();                                  // orb + chat
+  } else {
+    document.body.classList.add('phone-panel');
+    if (which === 'appr'){ document.getElementById('pp-appr').classList.add('on'); renderPhoneApprovals(); }
+    else if (which === 'today'){ document.getElementById('pp-today').classList.add('on'); renderPhoneToday(); }
+    else if (which === 'more'){ document.getElementById('pp-more').classList.add('on'); renderPhoneMore(); }
+  }
+  const pb = document.getElementById('phone-body'); if (pb) pb.scrollTop = 0;
+}
+// Approvals — only the pending items, compact; reuses approveAction/openRejectModal.
+async function renderPhoneApprovals(){
+  const el = document.getElementById('pp-appr-body');
+  el.innerHTML = '<div class="pp-empty">Loading…</div>';
+  try {
+    const r = await authGet('/api/queue?status=pending', 15000);
+    const d = await r.json().catch(()=>({}));
+    if (d && d.actions) _pendingActions = d.actions;
+  } catch(e) {}
+  const list = _pendingActions || [];
+  if (!list.length){ el.innerHTML = '<div class="pp-empty">✅ All clear — nothing needs your approval.</div>'; return; }
+  el.innerHTML = list.map(a=>{
+    const p = a.payload || {};
+    let meta = String(a.type||'').replace(/_/g,' ');
+    if (a.type==='publish_listing' && (p.preview||{}).price!=null) meta += ` · $${escHtml(String(p.preview.price))} · ${(p.preview.tags||[]).length} tags`;
+    else if (a.type==='update_tags') meta += ` · ${escHtml((p.tags||[]).join(', ')).slice(0,90)}`;
+    else if (a.type==='update_title') meta += ` · "${escHtml(p.title||'')}"`;
+    return `<div class="pcard"><div class="pt">${escHtml(a.summary||a.type)}</div><div class="pm">${escHtml(meta)}</div>
+      <div class="pp-acts"><button class="pp-btn ok" onclick="phoneApprove(${a.id})">Approve</button>
+      <button class="pp-btn no" onclick="openRejectModal(${a.id})">Reject</button></div>
+      <div id="reject-modal-${a.id}" style="display:none"></div></div>`;
+  }).join('');
+}
+async function phoneApprove(id){ await approveAction(id); renderPhoneApprovals(); }
+// Today — compact tiles + alerts from the same endpoints the dashboard uses.
+async function renderPhoneToday(){
+  const el = document.getElementById('pp-today-body');
+  el.innerHTML = '<div class="pp-empty">Loading…</div>';
+  let m = {}, alerts = [];
+  try { const r = await authGet('/api/metrics', 15000); m = await r.json().catch(()=>({})); } catch(e) {}
+  try { const r = await authGet('/api/alerts', 15000); const d = await r.json().catch(()=>({}));
+        alerts = d.alerts || d.items || (Array.isArray(d) ? d : []) || []; } catch(e) {}
+  let acts = [];
+  try { const r = await authGet('/api/actions', 15000); const d = await r.json().catch(()=>({}));
+        acts = (d.actions||[]).filter(x=>x.severity==='high'||x.severity==='medium'); } catch(e) {}
+  // Real /api/metrics shape: orders is an OBJECT ({last_7_days, revenue_7d, ...}),
+  // shop.total_sales is the all-time count. (Rendering m.orders directly printed
+  // "[object Object]" — caught by Scott on-device.)
+  const mo = m.orders || {}, ms = m.shop || {};
+  const show = v => (v==null||v==='') ? '—' : v;
+  const orders7 = show(mo.last_7_days);
+  const rev7 = (mo.revenue_7d != null) ? '$' + Number(mo.revenue_7d).toFixed(2) : '—';
+  const totalSales = show(ms.total_sales);
+  let html = `<div class="ptiles">
+    <div class="ptile"><div class="n">${escHtml(String(orders7))}</div><div class="l">Orders · 7d</div></div>
+    <div class="ptile"><div class="n">${escHtml(String(rev7))}</div><div class="l">Rev · 7d</div></div>
+    <div class="ptile"><div class="n">${escHtml(String(totalSales))}</div><div class="l">Total sales</div></div>
+  </div>`;
+  const sevOf = s => { s=String(s||'').toLowerCase();
+    return (s.includes('crit')||s.includes('high')||s.includes('err')) ? 'crit'
+         : (s.includes('warn')||s.includes('med')) ? 'warn' : 'good'; };
+  // Needs attention = Frank's ranked recommendations (with a suggested fix each) + alerts.
+  // Recommendations carry listing_id/url → tappable card → action sheet (fix it / view on Etsy).
+  const needs = [];
+  acts.forEach(x => needs.push({sev: x.severity==='high'?'crit':'warn', title: x.title, sub: x.suggestion,
+    listing_id: x.listing_id, url: x.url}));
+  alerts.forEach(x => { const t = x.title||x.message||x.text||x.msg||(typeof x==='string'?x:'')||'Alert';
+    needs.push({sev: sevOf(x.severity||x.level||x.sev), title: String(t), sub: ''}); });
+  _phoneNeeds = needs.slice(0,20);
+  if (needs.length){
+    html += '<div class="pmore-grp">Needs attention</div>';
+    html += _phoneNeeds.map((x,i) => {
+      const tap = (x.listing_id || x.url)
+        ? ` tappable" role="button" tabindex="0" onclick="phoneNeedsSheet(${i})` : '';
+      return `<div class="palert ${x.sev}${tap}"><span class="pdot"></span><div>${escHtml(x.title)}` +
+        (x.sub ? `<div style="color:var(--muted);margin-top:2px">${escHtml(x.sub)}</div>` : '') +
+        `</div>` + ((x.listing_id || x.url) ? '<span class="pchev">›</span>' : '') + `</div>`;
+    }).join('');
+  } else {
+    html += '<div class="pp-empty" style="padding:22px 10px">Nothing needs attention right now — you\\'re all caught up.</div>';
+  }
+  el.innerHTML = html;
+}
+// Action sheet for a tapped Needs-attention card: Frank fixes it, or open on Etsy.
+let _phoneNeeds = [];
+let _phoneSheetItem = null;
+function phoneNeedsSheet(i){
+  const it = _phoneNeeds[i];
+  if (!it || (!it.listing_id && !it.url)) return;
+  _phoneSheetItem = it;
+  document.getElementById('phone-sheet-title').textContent = it.title || 'Listing issue';
+  document.getElementById('phone-sheet-sub').textContent = it.sub || '';
+  document.body.classList.add('phone-sheet-open');
+}
+function phoneSheetClose(){
+  document.body.classList.remove('phone-sheet-open');
+  _phoneSheetItem = null;
+}
+function phoneSheetView(){
+  const it = _phoneSheetItem; if (!it) return;
+  const url = it.url || (it.listing_id ? 'https://www.etsy.com/listing/' + it.listing_id : null);
+  phoneSheetClose();
+  if (url) window.open(url, '_blank');
+}
+function phoneSheetFix(){
+  const it = _phoneSheetItem; if (!it) return;
+  const ref = it.listing_id ? ('Etsy listing ' + it.listing_id) : 'this listing';
+  const prompt = 'Diagnose and fix ' + ref + ' — issue flagged: "' + (it.title || '') + '". '
+    + 'Investigate the root cause, then stage your recommended fix for my approval. '
+    + 'Do not change the live listing without my approval.';
+  phoneSheetClose();
+  phoneOpenScreen('cmd');  // the screen that contains the chat panel, so the reply is visible
+  const inp = document.getElementById('chat-input');
+  if (inp) inp.value = prompt;
+  if (typeof sendMsg === 'function') sendMsg();
+  showToast('Sent — %%AGENT_SHORT%% is on it. His reply will appear in the chat below.', 'info', 5000);
+}
+// More — a scrollable launcher for the other screens (fixes v1's unscrollable overlay).
+const _PHONE_MORE = [
+  ['Shop', [['listings','🏷','Listings'],['products','📦','Products'],['studio','▶','Studio'],['brandkit','🎨','Brand kit']]],
+  ['Work', [['tasks','☑','Tasks'],['calendar','▦','Calendar'],['workflows','⇄','Workflows'],['conversations','💬','Conversations'],['kb','📚','Knowledge base'],['memory','✦','Memory']]],
+  ['Agents & tools', [['agents','⚙','Agents'],['tools','🛠','Tools'],['core','◎','Core']]],
+  ['System', [['connections','🔌','Connections'],['security','🛡','Security'],['files','🗂','Files'],['settings','⚙','Settings']]],
+];
+function renderPhoneMore(){
+  const el = document.getElementById('pp-more-body');
+  el.innerHTML = _PHONE_MORE.map(([g, items]) =>
+    `<div class="pmore-grp">${g}</div>` + items.map(([s, ic, lbl]) =>
+      `<div class="pmore-item" role="button" tabindex="0" onclick="phoneOpenScreen('${s}')"><span class="pmi">${ic}</span>${lbl}<span class="pmc">›</span></div>`
+    ).join('')).join('');
+}
+// Opening a screen from More exits the phone panel and shows that (desktop) screen.
+function phoneOpenScreen(name){
+  document.body.classList.remove('phone-panel');
+  document.body.classList.add('cc-open');
+  document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
+  showScreen(name);
+}
+// Picking any screen from the "More" overlay closes it and returns to that screen.
+document.querySelectorAll('.sidebar .nav-item').forEach(it=>it.addEventListener('click',()=>{
+  document.body.classList.remove('phone-more-open');
+}));
+// Keep the Approvals tab badge in sync from the moment the phone loads.
+if (isMobileMode() && typeof loadActions === 'function') { try { loadActions(); } catch(e){} }
+
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/frank-sw.js', { scope: '/frank' }).catch(()=>{}); }
+
+// ── Real data wiring (Step 2) — session-cookie auth. The browser sends the
+// httpOnly session cookie automatically on every same-origin fetch(); no token
+// injection into page source. fetchWithTimeout strips any Authorization header
+// that call sites may supply and enables credentials:'same-origin' so the
+// cookie is included. TOKEN is an empty placeholder kept for call-site compat. ──
+const BASE = location.origin;
+const WS_BASE = BASE.replace(/^http/, 'ws');
+const TOKEN = '';  // placeholder — auth uses session cookie, never the real secret
+function fetchWithTimeout(url, opts, ms=12000){
+  const c = new AbortController();
+  const t = setTimeout(()=>c.abort(), ms);
+  const {headers:h, ...rest} = opts || {};
+  const filtered = {};
+  if (h) Object.entries(h).forEach(([k,v])=>{ if(k.toLowerCase()!=='authorization') filtered[k]=v; });
+  return fetch(url,{...rest, headers:filtered, credentials:'same-origin', signal:c.signal}).finally(()=>clearTimeout(t));
+}
+function authGet(path, ms=15000){
+  return fetchWithTimeout(BASE+path, {}, ms);
+}
+function escHtml(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function showToast(message, type='info', ms=4500){
+  const stack = document.getElementById('toast-stack');
+  if (!stack) return;
+  const t = document.createElement('div');
+  t.className = 'toast ' + (type||'info');
+  t.textContent = message;
+  stack.appendChild(t);
+  if (ms) setTimeout(()=>{
+    t.classList.add('out');
+    setTimeout(()=>t.remove(), 200);
+  }, ms);
+}
+
+// ── Voice: OpenAI TTS (speech-out) + Whisper (speech-in) — wired to the orb's
+// setSpeaking() and the mic/talk-pill click targets further down this file. ──
+let _ttsAudio = null;
+// Free fallback for when OpenAI TTS is unavailable (e.g. quota exhausted) — uses the
+// browser's own speechSynthesis, no API key, no cost. Works on iOS Safari/PWA (unlike
+// SpeechRecognition/listening, which is why only speaking gets a fallback, not the mic).
+function _speakWithBrowserFallback(text){
+  if(!('speechSynthesis' in window)){ setSpeaking(false); return; }
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.onstart = () => setSpeaking(true, true);
+    u.onend = () => setSpeaking(false, true);
+    u.onerror = () => setSpeaking(false, true);
+    window.speechSynthesis.speak(u);
+  } catch(err){ setSpeaking(false); }
+}
+// ── Local offline TTS (Piper-web, fully self-hosted — no CDN). This is the default
+// speech-out path; OpenAI TTS only runs when the Premium voice toggle is on. ──
+let _piperSessionPromise = null;
+const _PIPER_VOICE_ID = 'en_US-amy-medium';
+function _loadPiperSession(){
+  if(_piperSessionPromise) return _piperSessionPromise;
+  const talkSubEl = document.getElementById('talk-sub');
+  _piperSessionPromise = import('/static/vendor/piper-tts-web/piper-tts-web.js').then(mod => {
+    return mod.TtsSession.create({
+      voiceId: _PIPER_VOICE_ID,
+      wasmPaths: {
+        onnxWasm: {
+          mjs: '/static/vendor/onnxruntime-web/ort-wasm-simd-threaded.mjs',
+          wasm: '/static/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm'
+        },
+        piperWasm: '/static/vendor/piper-wasm/piper_phonemize.wasm',
+        piperData: '/static/vendor/piper-wasm/piper_phonemize.data'
+      },
+      progress: (p) => {
+        if(!talkSubEl || !_voiceRecording) return;
+        talkSubEl.textContent = 'Setting up offline voice…';
+      }
+    });
+  });
+  _piperSessionPromise.catch(() => { _piperSessionPromise = null; });
+  return _piperSessionPromise;
+}
+async function _speakLocalPiper(text){
+  const session = await _loadPiperSession();
+  return await session.predict(text);
+}
+// ── Real audio-reactive amplitude for the orb (both TTS paths above produce a blob
+// played through this function). A fresh AnalyserNode is wired per Audio element since
+// createMediaElementSource() can only ever be called once per element. Mirrors the
+// existing mic-input AnalyserNode pattern used for silence detection further down —
+// same technique, different source. Wrapped defensively: any failure here (no
+// AudioContext, called twice, autoplay-blocked) leaves _ttsAnalyser null and
+// currentVoiceAmp() falls back to the old synthetic pulse — it never breaks playback
+// itself, since audio.play() below doesn't depend on this succeeding. ──
+let _ttsAudioCtx = null, _ttsAnalyser = null, _ttsAnalyserBuf = null;
+function _setupTtsAnalyser(audioEl){
+  _ttsAnalyser = null;
+  try{
+    if(!_ttsAudioCtx) _ttsAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(_ttsAudioCtx.state === 'suspended') _ttsAudioCtx.resume().catch(()=>{});
+    const source = _ttsAudioCtx.createMediaElementSource(audioEl);
+    const analyser = _ttsAudioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    // Route through the analyser AND on to speakers — createMediaElementSource silently
+    // reroutes ALL of this element's audio into the Web Audio graph, so skipping the
+    // destination connection here would make Frank's voice go silent.
+    source.connect(analyser);
+    analyser.connect(_ttsAudioCtx.destination);
+    _ttsAnalyser = analyser;
+    _ttsAnalyserBuf = new Uint8Array(analyser.fftSize);
+  }catch(e){
+    _ttsAnalyser = null;
+  }
+}
+function _playTtsBlob(blob, fallbackText){
+  if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio = null; }
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  _ttsAudio = audio;
+  _setupTtsAnalyser(audio);
+  audio.onplay = () => setSpeaking(true);
+  audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+  audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
+  audio.play().catch(()=>{ _speakWithBrowserFallback(fallbackText); });
+}
+function speakText(text){
+  if(!text) return;
+  if(_isPremiumVoice()){
+    fetchWithTimeout(BASE+'/api/voice/speak', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({text})
+    }, 20000).then(r=>{
+      if(!r.ok) throw new Error('speak failed: '+r.status);
+      return r.blob();
+    }).then(blob=>_playTtsBlob(blob, text)).catch(()=>{ _speakWithBrowserFallback(text); });
+    return;
+  }
+  _speakLocalPiper(text).then(blob=>_playTtsBlob(blob, text)).catch(()=>{ _speakWithBrowserFallback(text); });
+}
+
+let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false, _voiceStream = null;
+// ── Auto-stop-on-silence state. We watch the mic's volume envelope with a Web Audio
+// AnalyserNode and stop the RECORDER (never the stream — see beb230b) once the user has
+// spoken and then gone quiet for SILENCE_MS, so they don't have to tap a second time. ──
+let _audioCtx = null, _analyser = null, _analyserSource = null, _analyserStream = null;
+let _silenceRAF = null, _speechSeen = false, _silenceStart = 0, _recStart = 0;
+const _SPEAK_RMS = 0.025;     // above this = talking
+const _SILENCE_RMS = 0.015;   // below this (after speech) = quiet
+const _SILENCE_MS = 1500;     // quiet this long after speech -> auto-stop
+const _MAX_REC_MS = 30000;    // hard cap so a noisy room can't record forever
+// Free fallback for when OpenAI transcription is unavailable (e.g. quota exhausted).
+// SpeechRecognition needs LIVE mic audio — it can't transcribe a finished recording —
+// so it runs in parallel with the MediaRecorder for the same capture session, and its
+// transcript is only used if the Whisper call afterward fails or returns nothing.
+// Not available on iOS Safari/PWA (no webkitSpeechRecognition there) — degrades to the
+// existing "could not transcribe" message on those devices, same as before this change.
+let _speechRecognizer = null, _speechRecognitionText = '';
+function _startSpeechRecognitionFallback(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  _speechRecognitionText = '';
+  if(!SR){ _speechRecognizer = null; return; }
+  try {
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.lang = 'en-US';
+    rec.onresult = (e) => {
+      for(let i = e.resultIndex; i < e.results.length; i++){
+        if(e.results[i].isFinal) _speechRecognitionText += e.results[i][0].transcript + ' ';
+      }
+    };
+    rec.onerror = () => {};
+    rec.start();
+    _speechRecognizer = rec;
+  } catch(err){ _speechRecognizer = null; }
+}
+function _stopSpeechRecognitionFallback(){
+  if(_speechRecognizer){
+    try { _speechRecognizer.stop(); } catch(err){}
+    _speechRecognizer = null;
+  }
+}
+// iOS Safari (and other WebKit) PWAs in standalone mode have a known bug: once a
+// getUserMedia() stream's tracks are all stopped, a SECOND getUserMedia() call in the
+// same page session can hang forever (the promise never resolves or rejects). Re-acquiring
+// the mic fresh on every recording — and fully releasing it in onstop — was tripping that
+// bug, which is why the talk button worked once then went dead until a full app relaunch.
+// Fix: acquire the mic stream once and keep it alive for the whole page session; only a
+// new MediaRecorder (cheap, single-use by design) is created per recording cycle.
+// ── Silence monitor: stops the recorder hands-free once the user finishes talking. ──
+async function _startSilenceMonitor(){
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC || !_voiceStream) return;            // no Web Audio -> manual tap-to-stop only
+    if(!_audioCtx) _audioCtx = new AC();
+    if(_audioCtx.state === 'suspended') await _audioCtx.resume();
+    // (Re)bind the analyser source if the stream was (re)acquired since last time.
+    if(!_analyser || _analyserStream !== _voiceStream){
+      _analyserSource = _audioCtx.createMediaStreamSource(_voiceStream);
+      _analyser = _audioCtx.createAnalyser();
+      _analyser.fftSize = 512;
+      _analyserSource.connect(_analyser);
+      _analyserStream = _voiceStream;
+    }
+    const buf = new Uint8Array(_analyser.fftSize);
+    _speechSeen = false; _silenceStart = 0; _recStart = Date.now();
+    const tick = () => {
+      if(!_voiceRecording){ _silenceRAF = null; return; }
+      _analyser.getByteTimeDomainData(buf);
+      let sum = 0;
+      for(let i=0;i<buf.length;i++){ const v = (buf[i]-128)/128; sum += v*v; }
+      const rms = Math.sqrt(sum / buf.length);
+      const now = Date.now();
+      if(rms > _SPEAK_RMS){ _speechSeen = true; _silenceStart = 0; }
+      else if(_speechSeen && rms < _SILENCE_RMS){
+        if(!_silenceStart) _silenceStart = now;
+        else if(now - _silenceStart >= _SILENCE_MS){ _stopRecorderAuto(); return; }
+      }
+      if(now - _recStart >= _MAX_REC_MS){ _stopRecorderAuto(); return; }  // hard cap
+      _silenceRAF = requestAnimationFrame(tick);
+    };
+    _silenceRAF = requestAnimationFrame(tick);
+  } catch(err){ /* analyser unavailable -> manual tap-to-stop still works */ }
+}
+function _stopSilenceMonitor(){
+  if(_silenceRAF){ cancelAnimationFrame(_silenceRAF); _silenceRAF = null; }
+  _speechSeen = false; _silenceStart = 0; _recStart = 0;
+  // NOTE: deliberately do NOT close _audioCtx or stop _voiceStream tracks here —
+  // the context/analyser are reused across recordings and the mic stream must stay
+  // alive for the page session (see _getVoiceStream / commit beb230b).
+}
+function _stopRecorderAuto(){
+  if(_silenceRAF){ cancelAnimationFrame(_silenceRAF); _silenceRAF = null; }
+  if(_voiceRecorder && _voiceRecorder.state !== 'inactive') _voiceRecorder.stop();
+}
+async function _getVoiceStream(){
+  if(_voiceStream && _voiceStream.getTracks().every(t => t.readyState === 'live')) return _voiceStream;
+  const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('mic timeout')), 8000));
+  _voiceStream = await Promise.race([navigator.mediaDevices.getUserMedia({audio:true}), timeout]);
+  return _voiceStream;
+}
+async function toggleVoiceCapture(){
+  if(_voiceRecording){
+    if(_voiceRecorder && _voiceRecorder.state !== 'inactive') _voiceRecorder.stop();
+    return;
+  }
+  if(_ttsAudio){ _ttsAudio.pause(); setSpeaking(false); }
+  let stream;
+  try {
+    stream = await _getVoiceStream();
+  } catch(err){
+    addBubble('⚠️ Microphone access denied or unavailable', 'bot');
+    return;
+  }
+  _voiceChunks = [];
+  try {
+    _voiceRecorder = new MediaRecorder(stream);
+  } catch(err){
+    addBubble('⚠️ Microphone unavailable — try again', 'bot');
+    return;
+  }
+  _voiceRecorder.ondataavailable = e => { if(e.data.size > 0) _voiceChunks.push(e.data); };
+  _voiceRecorder.onstop = () => {
+    // Do NOT stop the stream's tracks here — keep the mic stream alive across
+    // recordings (see _getVoiceStream above) so the next tap doesn't have to
+    // re-acquire it.
+    _voiceRecording = false;
+    _stopSilenceMonitor();
+    _setVoiceCaptureUI(false);
+    _stopSpeechRecognitionFallback();
+    transcribeAndSend(new Blob(_voiceChunks, {type:'audio/webm'}));
+  };
+  try {
+    _voiceRecorder.start();
+  } catch(err){
+    addBubble('⚠️ Could not start recording — try again', 'bot');
+    return;
+  }
+  _startSpeechRecognitionFallback();
+  _voiceRecording = true;
+  _setVoiceCaptureUI(true);
+  _startSilenceMonitor();
+}
+function _setVoiceCaptureUI(on){
+  const pill = document.getElementById('talk-pill');
+  if(pill) pill.classList.toggle('live', on);
+  const talkSubEl = document.getElementById('talk-sub');
+  if(talkSubEl) talkSubEl.textContent = on ? 'Listening…' : 'tap to speak';
+}
+function _useSpeechRecognitionFallbackText(){
+  const talkSubEl = document.getElementById('talk-sub');
+  if(talkSubEl) talkSubEl.textContent = 'tap to speak';
+  const text = _speechRecognitionText.trim();
+  if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
+  else { addBubble('⚠️ Could not transcribe audio', 'bot'); }
+}
+// ── Local offline STT (Transformers.js + whisper-tiny.en, fully self-hosted — no
+// CDN). This is the default speech-in path; OpenAI Whisper only runs when the
+// Premium voice toggle is on. ──
+let _whisperPipelinePromise = null;
+function _loadWhisperPipeline(){
+  if(_whisperPipelinePromise) return _whisperPipelinePromise;
+  const talkSubEl = document.getElementById('talk-sub');
+  _whisperPipelinePromise = import('/static/vendor/transformers/transformers.min.js').then(mod => {
+    mod.env.backends.onnx.wasm.wasmPaths = {
+      mjs: '/static/vendor/onnxruntime-web/ort-wasm-simd-threaded.mjs',
+      wasm: '/static/vendor/onnxruntime-web/ort-wasm-simd-threaded.wasm'
+    };
+    mod.env.backends.onnx.wasm.proxy = false;
+    return mod.pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en', {
+      progress_callback: (p) => {
+        if(!talkSubEl) return;
+        if(p.status === 'progress' && p.total){
+          talkSubEl.textContent = 'Setting up offline voice (' + Math.round((p.loaded/p.total)*100) + '%)…';
+        }
+      }
+    });
+  });
+  _whisperPipelinePromise.catch(() => { _whisperPipelinePromise = null; });
+  return _whisperPipelinePromise;
+}
+async function _decodeTo16kMono(blob){
+  const arrayBuf = await blob.arrayBuffer();
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const tmpCtx = new AC();
+  const decoded = await tmpCtx.decodeAudioData(arrayBuf);
+  tmpCtx.close();
+  const offlineCtx = new OfflineAudioContext(1, Math.ceil(decoded.duration * 16000), 16000);
+  const src = offlineCtx.createBufferSource();
+  src.buffer = decoded;
+  src.connect(offlineCtx.destination);
+  src.start();
+  const rendered = await offlineCtx.startRendering();
+  return rendered.getChannelData(0);
+}
+async function _transcribeLocalWhisper(blob){
+  const pipe = await _loadWhisperPipeline();
+  const audioData = await _decodeTo16kMono(blob);
+  const result = await pipe(audioData);
+  return ((result && result.text) || '').trim();
+}
+function transcribeAndSend(blob){
+  const talkSubEl = document.getElementById('talk-sub');
+  if(_isPremiumVoice()){
+    if(talkSubEl) talkSubEl.textContent = 'Transcribing…';
+    fetchWithTimeout(BASE+'/api/voice/transcribe', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'audio/webm'},
+      body: blob
+    }, 30000).then(r=>{
+      if(!r.ok) throw new Error('transcribe failed: '+r.status);
+      return r.json();
+    }).then(d=>{
+      if(talkSubEl) talkSubEl.textContent = 'tap to speak';
+      const text = (d.text||'').trim();
+      if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
+      else { _useSpeechRecognitionFallbackText(); }
+    }).catch(()=>{
+      _useSpeechRecognitionFallbackText();
+    });
+    return;
+  }
+  if(talkSubEl) talkSubEl.textContent = 'Transcribing…';
+  _transcribeLocalWhisper(blob).then(text=>{
+    if(talkSubEl) talkSubEl.textContent = 'tap to speak';
+    if(text){ document.getElementById('chat-input').value = text; sendMsg(); }
+    else { _useSpeechRecognitionFallbackText(); }
+  }).catch(()=>{
+    _useSpeechRecognitionFallbackText();
+  });
+}
+
+// ── Nav switching — also called directly by in-panel links like
+// "View All ›" / "Manage Providers ›", not just the sidebar. ──
+// Screen-scoped polling (2026-07-08 performance pass): loadAll() used to fire every
+// load*/render* function in the app every 30s regardless of which of the 18 screens was
+// actually open. _SCREEN_LOADERS maps each screen to the loaders that populate ONLY that
+// screen's content; _GLOBAL_LOADERS covers chrome that lives outside any .screen div
+// (header status pill, bottombar relay pill, alert bell) plus two dual-purpose loaders
+// that must keep running everywhere: loadQueue() also sets sidebar nav badges, and
+// loadShopPerf() also feeds the Executive Briefing panel's cache (reachable from any
+// screen), so scoping either to a single screen would make chrome outside that screen
+// go stale.
+const _SCREEN_LOADERS = {
+  cmd: [loadCredentialsAndHealth, loadStarSeller, loadInbox, loadMissionTimeline],
+  core: [loadCredentialsAndHealth],
+  agents: [],  // covered by the global loadAgents() call below
+  tasks: [loadTasks],
+  actions: [loadActions],
+  calendar: [loadCalendar],
+  memory: [loadMemory],
+  conversations: [loadConversations],
+  kb: [loadKb],
+  tools: [loadTools],
+  workflows: [loadWorkflows],
+  listings: [() => loadListings(_lastListingState)],
+  products: [renderProducts],
+  brandkit: [renderBrandKit],
+  files: [loadFiles],
+  connections: [loadConnections],
+  security: [renderSecurityPosture],
+  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings],
+  studio: [loadStudioVideos],
+};
+const _GLOBAL_LOADERS = [
+  () => Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill),
+  loadRelayStatus, loadAlerts, checkPersistence, loadQueue, loadShopPerf,
+];
+let _activeScreen = 'cmd';
+
+function showScreen(name){
+  document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
+  const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
+  if(navItem){ navItem.classList.add('active'); navItem.setAttribute('aria-current','page'); }
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  _activeScreen = name;
+  (_SCREEN_LOADERS[name] || []).forEach(fn => fn());
+}
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>showScreen(item.dataset.screen));
+});
+// ── Keyboard activation for every custom role="button" control (sidebar nav,
+// icon buttons, quick-reply chips, phone "needs attention" rows, the More list,
+// the operator/logout chip, etc.) — Enter/Space triggers .click(), matching
+// native <button> behavior. One handler closes the keyboard-activation gap
+// across all of them at once (2026-07-08 accessibility review: several already
+// had role="button" tabindex="0" but nothing bound Enter/Space to actually
+// activate them). ──
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const t = e.target;
+  if (t && t.getAttribute && t.getAttribute('role') === 'button') {
+    e.preventDefault();
+    t.click();
+  }
+});
+
+// ── Live Chat — ported verbatim (same protocol/session scheme) from the live Hub's
+// chat-wrap at / (main.py). Same /ws/chat endpoint, same CHAT_SESSION localStorage key,
+// so a conversation continues seamlessly whether %%OWNER%% is on / or /frank. ──
+let ws = null, wsReady = false, pendingMsg = null;
+let _wsHeartbeat = null, _wsReconnectTimer = null, _wsRetries = 0, _wsManualClose = false;
+let _historyApplied = false;
+const CHAT_SESSION = (function(){
+  let s = null;
+  try { s = localStorage.getItem('chatSession'); } catch(e) {}
+  if (!s) {
+    s = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : 'sess-' + Date.now() + '-' + Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2,'0')).join('');
+    try { localStorage.setItem('chatSession', s); } catch(e) {}
+  }
+  return s;
+})();
+// ── First-run welcome overlay — shows once unless dismissed, degrades to
+// showing every time if localStorage is unavailable (same failure mode as
+// the chatSession pattern above). ──
+function dismissWelcomeOverlay() {
+  const el = document.getElementById('welcome-overlay');
+  if (el) el.style.display = 'none';
+  try { localStorage.setItem('frankWelcomeSeen', '1'); } catch(e) {}
+}
+(function(){
+  let seen = false;
+  try { seen = !!localStorage.getItem('frankWelcomeSeen'); } catch(e) {}
+  if (!seen) {
+    const el = document.getElementById('welcome-overlay');
+    if (el) {
+      el.style.display = 'flex';
+      const btn = document.getElementById('welcome-dismiss-btn');
+      if (btn) btn.focus();
+    }
+  }
+})();
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  const el = document.getElementById('welcome-overlay');
+  if (el && el.style.display !== 'none') dismissWelcomeOverlay();
+});
+// ── Premium voice toggle — OpenAI Whisper/TTS stay dormant until this is on.
+// Default OFF (absent key reads as off). Local offline WASM engines are the
+// default voice path; this only opts back into the paid OpenAI endpoints. ──
+function _isPremiumVoice() {
+  try { return localStorage.getItem('frankPremiumVoice') === '1'; } catch(e) { return false; }
+}
+function _setPremiumVoice(on) {
+  try { localStorage.setItem('frankPremiumVoice', on ? '1' : '0'); } catch(e) {}
+  document.querySelectorAll('.premium-voice-cb').forEach(cb => { cb.checked = on; });
+}
+(function(){
+  document.querySelectorAll('.premium-voice-cb').forEach(cb => {
+    cb.checked = _isPremiumVoice();
+    cb.addEventListener('change', () => _setPremiumVoice(cb.checked));
+  });
+})();
+// ── Color theme — per-device display preference, so localStorage (not the
+// backend) is the right persistence layer. Default 'cyan' matches the
+// original :root values, applied via no class on <html>. ──
+const _UI_THEMES = [
+  {name:'default', label:'Deep Space',    bg:'#070d16', accent:'#3ad6ff'},
+  {name:'light',   label:'Day Mode',      bg:'#edf1f5', accent:'#1a8a9a'},
+  {name:'purple',  label:'Dark Purple',   bg:'#0c0714', accent:'#9b5de5'},
+  {name:'charcoal',label:'Warm Charcoal', bg:'#13100a', accent:'#e8b84a'},
+  {name:'sakura',  label:'Sakura',        bg:'#140a10', accent:'#f4a7b9'},
+  {name:'matcha',  label:'Matcha',        bg:'#0b120c', accent:'#8bc34a'},
+  {name:'ocean',   label:'Ocean Teal',    bg:'#07120f', accent:'#3ad6c8'},
+  {name:'kawaii',  label:'Midnight Kawaii',bg:'#0d0a1a', accent:'#00e5ff'},
+];
+function _getTheme() {
+  try { return localStorage.getItem('frankTheme') || 'default'; } catch(e) { return 'default'; }
+}
+function _setTheme(name) {
+  try { localStorage.setItem('frankTheme', name); } catch(e) {}
+  _UI_THEMES.forEach(t => document.documentElement.classList.remove('theme-'+t.name));
+  if (name !== 'default') document.documentElement.classList.add('theme-'+name);
+  _renderThemeSwatches();
+}
+function _renderThemeSwatches() {
+  const row = document.getElementById('theme-swatch-row');
+  if (!row) return;
+  const active = _getTheme();
+  row.innerHTML = _UI_THEMES.map(t =>
+    '<button class="act-btn" style="display:flex;align-items:center;gap:7px;'+
+    (t.name === active ? 'border-color:var(--cyan);color:var(--cyan2)' : '')+
+    '" onclick="_setTheme(\\''+t.name+'\\')">'+
+    '<span style="width:20px;height:14px;border-radius:4px;flex-shrink:0;display:inline-block;overflow:hidden;border:1px solid rgba(255,255,255,.15)">'+
+      '<span style="display:block;width:50%;height:100%;background:'+t.bg+';float:left"></span>'+
+      '<span style="display:block;width:50%;height:100%;background:'+t.accent+';float:left"></span>'+
+    '</span>'+
+    t.label+(t.name === active ? ' ✓' : '')+'</button>'
+  ).join('');
+}
+(function(){
+  _setTheme(_getTheme());
+})();
+// ── My Account — durable across devices, so this is backed by /api/account
+// (a real DB row) rather than localStorage, unlike the theme preference above. ──
+async function loadAccountSettings(){
+  const nameEl = document.getElementById('account-name');
+  if(!nameEl) return;
+  try{
+    const r = await authGet('/api/account');
+    const d = await r.json();
+    nameEl.value = d.name || '';
+    document.getElementById('account-email').value = d.email || '';
+    document.getElementById('account-phone').value = d.phone || '';
+    document.getElementById('account-timezone').value = d.timezone || '';
+  }catch(e){
+    const statusEl = document.getElementById('account-save-status');
+    if(statusEl) statusEl.textContent = 'Could not load saved account info';
+  }
+}
+async function saveAccountSettings(){
+  const statusEl = document.getElementById('account-save-status');
+  const payload = {
+    name: document.getElementById('account-name').value,
+    email: document.getElementById('account-email').value,
+    phone: document.getElementById('account-phone').value,
+    timezone: document.getElementById('account-timezone').value,
+  };
+  if(statusEl) statusEl.textContent = 'Saving…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/account', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }, 15000);
+    await r.json();
+    if(statusEl) statusEl.textContent = 'Saved ✓';
+    showToast('Account info saved', 'ok');
+  }catch(e){
+    if(statusEl) statusEl.textContent = 'Save failed: '+e.message;
+  }
+}
+async function changeMyPassword(){
+  const statusEl = document.getElementById('pw-change-status');
+  const cur = document.getElementById('pw-current').value;
+  const pw1 = document.getElementById('pw-new').value;
+  const pw2 = document.getElementById('pw-confirm').value;
+  if(!cur){ if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent='Enter your current password';} return; }
+  if(pw1.length < 8){ if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent='New password must be at least 8 characters';} return; }
+  if(pw1 !== pw2){ if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent='New passwords do not match';} return; }
+  if(statusEl){statusEl.style.color='var(--muted)';statusEl.textContent='Changing…';}
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/me/change-password', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({current_password: cur, new_password: pw1})
+    }, 15000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok){ if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent = d.detail || 'Change failed';} return; }
+    document.getElementById('pw-current').value = '';
+    document.getElementById('pw-new').value = '';
+    document.getElementById('pw-confirm').value = '';
+    showToast('Password changed — signing you out…', 'ok');
+    setTimeout(()=>{ window.location.href = '/login'; }, 1200);
+  }catch(e){
+    if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent = 'Network error';}
+  }
+}
+// ── Runtime settings — agent name + AI engines (backed by /api/settings, DB) ──
+async function loadRuntimeSettings(){
+  const nameEl = document.getElementById('setting-agent-name');
+  if(!nameEl) return;
+  try{
+    const r = await authGet('/api/settings');
+    const d = await r.json();
+    nameEl.value = d.agent_name || '';
+    const ve = document.getElementById('setting-video-engine');
+    const ie = document.getElementById('setting-image-engine');
+    if(ve && d.video_engine) ve.value = d.video_engine;
+    if(ie && d.image_engine) ie.value = d.image_engine;
+    window._brandMarkDataUrl = d.brand_mark_data_url || null;
+    renderBrandMarkPreview();
+    if(window._brandMarkDataUrl && typeof applyBrandMarkToOrb === 'function') applyBrandMarkToOrb(window._brandMarkDataUrl);
+  }catch(e){/* leave placeholders */}
+}
+function renderBrandMarkPreview(){
+  const cv = document.getElementById('brand-mark-preview');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if(!window._brandMarkDataUrl){
+    ctx.fillStyle = 'rgba(58,214,255,0.25)';
+    ctx.font = '28px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('⬡', cv.width/2, cv.height/2+2);
+    return;
+  }
+  const img = new Image();
+  img.onload = () => {
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const s = Math.min(cv.width/img.width, cv.height/img.height);
+    const w = img.width*s, h = img.height*s;
+    ctx.drawImage(img, (cv.width-w)/2, (cv.height-h)/2, w, h);
+  };
+  img.src = window._brandMarkDataUrl;
+}
+async function uploadBrandMark(){
+  const fileEl = document.getElementById('brand-mark-file');
+  const statusEl = document.getElementById('brand-mark-status');
+  const f = fileEl && fileEl.files && fileEl.files[0];
+  if(!f){ if(statusEl) statusEl.textContent = 'Choose an image first'; return; }
+  if(statusEl) statusEl.textContent = 'Uploading…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/settings/brand-mark', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body: f
+    }, 30000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail || ('HTTP '+r.status));
+    window._brandMarkDataUrl = d.data_url;
+    renderBrandMarkPreview();
+    if(typeof applyBrandMarkToOrb === 'function') applyBrandMarkToOrb(d.data_url);
+    if(statusEl) statusEl.textContent = 'Uploaded ✓';
+    showToast('Orb updated with your image', 'ok');
+  }catch(e){
+    if(statusEl) statusEl.textContent = 'Upload failed: '+e.message;
+  }
+}
+async function resetBrandMark(){
+  const ok = await _postSettings({brand_mark_data_url:null}, 'brand-mark-status', 'Orb reset to default');
+  if(!ok) return;
+  window._brandMarkDataUrl = null;
+  renderBrandMarkPreview();
+  if(typeof resetOrbToDefault === 'function') resetOrbToDefault();
+}
+async function _postSettings(payload, statusId, okMsg){
+  const statusEl = document.getElementById(statusId);
+  if(statusEl) statusEl.textContent = 'Saving…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/settings', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }, 15000);
+    if(!r.ok){ const e = await r.json().catch(()=>({})); throw new Error(e.detail||('HTTP '+r.status)); }
+    await r.json();
+    if(statusEl) statusEl.textContent = 'Saved ✓';
+    showToast(okMsg, 'ok');
+    return true;
+  }catch(e){
+    if(statusEl) statusEl.textContent = 'Save failed: '+e.message;
+    return false;
+  }
+}
+function saveBranding(){
+  const name = (document.getElementById('setting-agent-name').value||'').trim();
+  if(!name){ document.getElementById('branding-status').textContent = 'Enter a name first'; return; }
+  _postSettings({agent_name:name}, 'branding-status', 'Agent name saved — reload to see it everywhere');
+}
+function saveEngines(){
+  _postSettings({
+    video_engine: document.getElementById('setting-video-engine').value,
+    image_engine: document.getElementById('setting-image-engine').value,
+  }, 'engines-status', 'AI engines updated');
+}
+// ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
+// Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
+// No write-queueing here by design — todos/approvals need a live connection. ──
+function cacheSet(key, data) {
+  try { localStorage.setItem('hudCache:'+key, JSON.stringify({data, ts: Date.now()})); } catch(e) {}
+}
+function cacheGet(key) {
+  try {
+    const raw = localStorage.getItem('hudCache:'+key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !('data' in parsed) || !parsed.ts) return null;
+    return parsed;
+  } catch(e) { return null; }
+}
+function _offlineNote(ts) {
+  return '<div style="color:var(--gold);font-size:10.5px;padding:4px 0">⚠ offline — showing data from '+_timeAgo(new Date(ts).toISOString())+'</div>';
+}
+// ── Global topbar search — client-side lookup over data already loaded into the
+// page (no new endpoint). First match wins, in listings → tasks → tools → KB
+// order, and jumps straight to it. ──
+function runGlobalSearch(raw) {
+  const q = (raw || '').trim().toLowerCase();
+  if (!q) return;
+  const listing = (_listings || []).find(l => (l.title || '').toLowerCase().includes(q));
+  if (listing) {
+    showScreen('listings');
+    toggleListingDetail(listing.listing_id);
+    return;
+  }
+  const tasksCache = cacheGet('tasks');
+  const task = ((tasksCache && tasksCache.data && tasksCache.data.todos) || [])
+    .find(t => (t.text || '').toLowerCase().includes(q));
+  if (task) {
+    showScreen('tasks');
+    return;
+  }
+  const toolsCache = cacheGet('tools');
+  const tool = ((toolsCache && toolsCache.data && toolsCache.data.tools) || [])
+    .find(t => (t.name || '').toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q));
+  if (tool) {
+    showScreen('tools');
+    return;
+  }
+  const doc = (_kbDocs || []).find(d => (d.filename || '').toLowerCase().includes(q));
+  if (doc) {
+    showScreen('kb');
+    openKbDoc(doc.filename);
+    return;
+  }
+  showToast('No matches for "' + raw + '"', 'info');
+}
+function _clearStreaming(fallback) {
+  const s = document.getElementById('bot-streaming');
+  if (!s) return;
+  s.id = '';
+  s.classList.remove('typing');
+  if (!s.textContent.trim() && fallback) s.textContent = fallback;
+}
+function _stopHeartbeat() { if (_wsHeartbeat) { clearInterval(_wsHeartbeat); _wsHeartbeat = null; } }
+async function initWS() {
+  if (_wsReconnectTimer) { clearTimeout(_wsReconnectTimer); _wsReconnectTimer = null; }
+  _wsManualClose = false;
+  let ticket;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/ws-ticket', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 10000);
+    if (!r.ok) throw new Error('ticket request failed: '+r.status);
+    ticket = (await r.json()).ticket;
+  } catch(e) {
+    addBubble('⚠️ Could not start chat session — reload to retry', 'bot');
+    return;
+  }
+  ws = new WebSocket(WS_BASE + '/ws/chat?ticket=' + encodeURIComponent(ticket) + '&session=' + encodeURIComponent(CHAT_SESSION));
+  ws.onopen = () => {
+    wsReady = true; _wsRetries = 0;
+    _stopHeartbeat();
+    _wsHeartbeat = setInterval(() => { if (ws && ws.readyState === 1) ws.send(JSON.stringify({type:'ping'})); }, 25000);
+    if (pendingMsg) { ws.send(JSON.stringify({message:pendingMsg, session:CHAT_SESSION})); pendingMsg=null; }
+  };
+  ws.onmessage = e => {
+    const d = JSON.parse(e.data);
+    if (d.type === 'pong') return;
+    if (d.type === 'history') {
+      if (!_historyApplied && Array.isArray(d.messages)) {
+        const c = document.getElementById('chat-msgs'); c.innerHTML = '';
+        d.messages.forEach(m => addBubble(m.content, m.role === 'user' ? 'user' : 'bot'));
+        _historyApplied = true; scrollMsgs();
+      }
+      return;
+    }
+    const bot = document.getElementById('bot-streaming');
+    if (d.type === 'tool' && bot) {
+      bot.classList.add('typing');
+      if (!bot.dataset.real) bot.textContent = '⚙ ' + d.content;
+      scrollMsgs();
+    } else if (d.type === 'chunk' && bot) {
+      if (!bot.dataset.real) { bot.textContent = ''; bot.dataset.real = '1'; bot.classList.remove('typing'); }
+      bot.textContent += d.content; scrollMsgs();
+    } else if (d.type === 'done') {
+      const finalText = bot ? bot.textContent.trim() : '';
+      _clearStreaming(); scrollMsgs();
+      if (finalText) speakText(finalText);
+    }
+    else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
+  };
+  ws.onerror = () => { _clearStreaming(); };
+  ws.onclose = e => {
+    wsReady = false; ws = null; _stopHeartbeat();
+    _clearStreaming();
+    if (e.code === 4001) { addBubble('Auth failed — reload to reconnect', 'bot'); return; }
+    if (!_wsManualClose) {
+      _wsRetries = Math.min(_wsRetries + 1, 5);
+      if (_wsRetries >= 5) {
+        showToast('Connection lost. Refresh the page.', 'error', 0);
+      } else {
+        showToast('Reconnecting… (' + _wsRetries + '/5)', 'warn');
+      }
+      const delay = Math.min(1000 * Math.pow(2, _wsRetries - 1), 15000);
+      _wsReconnectTimer = setTimeout(() => { if (!ws) initWS(); }, delay);
+    }
+  };
+}
+function addBubble(text, who) {
+  const el = document.createElement('div');
+  el.className = 'lc-bubble ' + who;
+  el.textContent = text;
+  document.getElementById('chat-msgs').appendChild(el);
+  scrollMsgs();
+  return el;
+}
+function scrollMsgs() { const m=document.getElementById('chat-msgs'); m.scrollTop=m.scrollHeight; }
+function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  addBubble(text, 'user');
+  const bot = addBubble('', 'bot typing');
+  bot.id = 'bot-streaming';
+  bot.textContent = '';
+  if (wsReady) { ws.send(JSON.stringify({message:text, session:CHAT_SESSION})); }
+  else { pendingMsg = text; if(!ws) initWS(); }
+}
+function sendChip(el) { document.getElementById('chat-input').value = el.textContent; sendMsg(); }
+document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+initWS();
+
+// ── Agents — real data from /api/agents/status (live-status registry).
+// Every tile is a real loop or honestly marked not_built/offline; never invented. ──
+function renderAgentTile(a){
+  const ok = a.status === 'ok';
+  const err = a.status === 'error';
+  const cls = 'agent-tile' + (ok ? '' : ' idle');
+  const dotStyle = err ? ' style="background:var(--red)"' : '';
+  const statStyle = err ? ' style="color:var(--red)"' : '';
+  const icon = a.built ? '⚙' : '⋯';
+  return '<div class="'+cls+'"><div class="top"><div class="ic">'+icon+'</div><div class="name">'+escHtml(a.label)+'</div></div>'+
+    '<div class="stat"'+statStyle+'><span class="d"'+dotStyle+'></span>'+escHtml(a.detail||a.status)+'</div></div>';
+}
+async function loadAgents(){
+  const cmdGrid = document.getElementById('cmd-agents-grid');
+  const fullGrid = document.getElementById('agents-grid-full');
+  try{
+    const r = await authGet('/api/agents/status');
+    const d = await r.json();
+    cacheSet('agents', d);
+    const tiles = d.agents.map(renderAgentTile).join('');
+    if(cmdGrid) cmdGrid.innerHTML = tiles;
+    if(fullGrid) fullGrid.innerHTML = tiles;
+    const acAgents = document.getElementById('ac-agents');
+    if(acAgents) acAgents.textContent = d.running_count + '/' + d.total_count + ' running';
+  }catch(e){
+    const cached = cacheGet('agents');
+    if(cached){
+      const tiles = _offlineNote(cached.ts) + cached.data.agents.map(renderAgentTile).join('');
+      if(cmdGrid) cmdGrid.innerHTML = tiles;
+      if(fullGrid) fullGrid.innerHTML = tiles;
+    } else {
+      const msg = '<div style="color:var(--red);font-size:11px;padding:8px">Agents offline: '+escHtml(e.message)+'</div>';
+      if(cmdGrid) cmdGrid.innerHTML = msg;
+      if(fullGrid) fullGrid.innerHTML = msg;
+    }
+  }
+}
+
+// ── Bottom-bar Relay indicator — real data from /api/relay/status ──
+async function loadRelayStatus(){
+  const el = document.getElementById('bb-relay');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/relay/status');
+    const d = await r.json();
+    if(d.killed){
+      el.textContent = '🌐 Relay: Killed';
+      el.style.color = 'var(--red)';
+    } else if(d.connected){
+      el.textContent = '🌐 Relay: Connected';
+      el.style.color = 'var(--green)';
+    } else {
+      el.textContent = '🌐 Relay: Offline';
+      el.style.color = 'var(--muted)';
+    }
+  }catch(e){
+    el.textContent = '🌐 Relay: —';
+    el.style.color = 'var(--muted)';
+  }
+}
+
+// ── LLM Status + AI Core — real data from /api/credentials/status + /health ──
+async function loadCredentialsAndHealth(){
+  let cred = null, health = null, mem = null;
+  try{ const r = await authGet('/api/credentials/status'); cred = await r.json(); }catch(e){}
+  try{ const r = await fetchWithTimeout(BASE+'/health', {}, 10000); health = await r.json(); }catch(e){}
+  try{ const r = await authGet('/api/memory'); mem = await r.json(); }catch(e){}
+
+  const coreRows = [];
+  if(cred){
+    const providers = [
+      {nm:'Claude', ok: !!(cred.anthropic && cred.anthropic.api_key)},
+      {nm:'OpenAI', ok: !!(cred.openai && cred.openai.api_key)},
+      {nm:'Etsy API', ok: !!cred.etsy_live}
+    ];
+    const connectedCount = providers.filter(p=>p.ok).length;
+    const acLlms = document.getElementById('ac-llms');
+    if(acLlms) acLlms.textContent = connectedCount+'/'+providers.length+' connected';
+
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+(cred.etsy_live?'':' err')+'"></span>Etsy</span><span class="v'+(cred.etsy_live?'':' err')+'">'+(cred.etsy_live?('Live — '+escHtml(cred.shop_name||'onbrandcraftz')):escHtml(cred.etsy_live_error||'offline'))+'</span></div>');
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.anthropic&&cred.anthropic.api_key)?'':' err')+'"></span>Anthropic</span><span class="v'+((cred.anthropic&&cred.anthropic.api_key)?'':' err')+'">'+((cred.anthropic&&cred.anthropic.api_key)?'Key configured':'Missing key')+'</span></div>');
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+((cred.openai&&cred.openai.api_key)?'':' err')+'"></span>OpenAI</span><span class="v'+((cred.openai&&cred.openai.api_key)?'':' err')+'">'+((cred.openai&&cred.openai.api_key)?'Key configured':'Missing key')+'</span></div>');
+  }
+  const acCore = document.getElementById('ac-core');
+  const acSystem = document.getElementById('ac-system');
+  const voiceEl = document.getElementById('ac-voice');
+  const voiceDot = document.getElementById('ac-voice-dot');
+  if(health){
+    if(acCore){ acCore.textContent = 'Online · build '+escHtml(health.build||'?'); acCore.className='v'; }
+    if(health.build){
+      const orbVer = document.getElementById('orb-build-ver');
+      if(orbVer) orbVer.textContent = 'Build '+health.build;
+      const setVer = document.getElementById('settings-build-ver');
+      if(setVer) setVer.textContent = 'Build '+health.build;
+    }
+    if(acSystem){
+      acSystem.textContent = health.persistent ? 'Persistent storage' : 'Ephemeral (volume not attached)';
+      acSystem.className = 'v'+(health.persistent?'':' warn');
+    }
+    // Voice (mic capture + /api/voice/transcribe + /api/voice/speak) is a stateless
+    // feature of this same server — it has no dependency on the local relay, so it's
+    // "Online" whenever the server itself answers /health (mislabeled as relay-bound
+    // "not built yet" before 2026-06-23, see ops_runbook.md).
+    if(voiceEl){
+      voiceEl.textContent = 'Online';
+      voiceEl.className = 'v';
+      if(voiceDot) voiceDot.className = 'dotc';
+    }
+    coreRows.unshift('<div class="core-row"><span class="lab"><span class="dotc"></span>Build</span><span class="v">'+escHtml(health.build||'?')+'</span></div>');
+    coreRows.push('<div class="core-row"><span class="lab"><span class="dotc'+(health.persistent?'':' warn')+'"></span>Storage</span><span class="v'+(health.persistent?'':' warn')+'">'+(health.persistent?'Persistent volume attached':'Ephemeral — resets on redeploy')+'</span></div>');
+  } else {
+    if(acCore){ acCore.textContent = 'Offline'; acCore.className='v err'; }
+    if(voiceEl){
+      voiceEl.textContent = 'Offline';
+      voiceEl.className = 'v err';
+      if(voiceDot) voiceDot.className = 'dotc err';
+    }
+  }
+
+  const acMemory = document.getElementById('ac-memory');
+  if(acMemory){
+    if(mem){
+      acMemory.textContent = mem.total_sessions + ' sessions · ' + mem.learnings_count + ' learnings';
+      acMemory.className = 'v';
+    } else {
+      acMemory.textContent = 'Unavailable';
+      acMemory.className = 'v warn';
+    }
+  }
+
+  const coreDetail = document.getElementById('core-detail');
+  if(coreDetail){
+    coreDetail.innerHTML = coreRows.length ? coreRows.join('') :
+      '<div class="core-row"><span class="lab"><span class="dotc err"></span>Unavailable</span><span class="v err">Could not load</span></div>';
+  }
+}
+
+// ── Shop Performance — real data from /api/analytics + /api/metrics ──
+var _miniSparkCounter = 0; // monotonic counter for stable, unique SVG gradient IDs
+function _miniSpark(values, color){
+  var h = 16;
+  values = (values||[]).filter(function(v){ return v!=null && !isNaN(v); });
+  if(values.length < 2) return '<div style="height:'+h+'px;display:flex;align-items:center;font-size:8.5px;color:var(--muted)">📈 Accumulating daily data…</div>';
+  var W=140,H=h,mn=Math.min.apply(null,values),mx=Math.max.apply(null,values),range=mx-mn||1,pad=2;
+  var pts=values.map(function(v,i){return [pad+(i/(values.length-1))*(W-pad*2), H-pad-((v-mn)/range)*(H-pad*2)];});
+  var poly=pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+  var area='M'+pts[0][0].toFixed(1)+','+H+' '+pts.map(function(p){return 'L'+p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+' L'+pts[pts.length-1][0].toFixed(1)+','+H+' Z';
+  var gid='fsg'+(++_miniSparkCounter);
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px;display:block;overflow:visible">'+
+    '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="'+color+'" stop-opacity="0.3"/>'+
+    '<stop offset="100%" stop-color="'+color+'" stop-opacity="0"/>'+
+    '</linearGradient></defs>'+
+    '<path d="'+area+'" fill="url(#'+gid+')"/>'+
+    '<polyline points="'+poly+'" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>'+
+    '<circle cx="'+pts[pts.length-1][0].toFixed(1)+'" cy="'+pts[pts.length-1][1].toFixed(1)+'" r="2.5" fill="'+color+'"/>'+
+    '</svg>';
+}
+function _miniDelta(val, isMoney){
+  if(val==null || val===0) return '<span style="color:var(--muted)">— stable</span>';
+  var pos=val>0, c=pos?'var(--green)':'var(--red)', a=pos?'↑':'↓';
+  var n=isMoney?('$'+Math.abs(val).toFixed(2)):String(Math.round(Math.abs(val)));
+  return '<span style="color:'+c+'">'+a+' '+n+'</span>';
+}
+function _renderShopPerf(a, m, sparkEl, chipEl, offlineNote){
+  const tr = a.trends||{}, lt = a.latest||{}, del = a.delta||{};
+  if(sparkEl){
+    sparkEl.innerHTML = (offlineNote||'') +
+      '<div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div>'+
+        '<div class="ssc-valrow"><div class="ssc-val" id="shop-rev-30d">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
+        '<div class="ssc-delta">'+_miniDelta(del.revenue_30d,true)+'</div></div>'+
+        '<div class="ssc-spark">'+_miniSpark(tr.revenue_30d,'var(--gold)')+'</div></div>'+
+      '<div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div>'+
+        '<div class="ssc-valrow"><div class="ssc-val" id="shop-ord-30d">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
+        '<div class="ssc-delta">'+_miniDelta(del.orders_30d,false)+'</div></div>'+
+        '<div class="ssc-spark">'+_miniSpark(tr.orders_30d,'var(--cyan2)')+'</div></div>';
+  }
+  const allTimeRev = (m.orders && m.orders.all_time_revenue!=null) ? m.orders.all_time_revenue : null;
+  if(chipEl){
+    chipEl.innerHTML =
+      '<div class="shop-chip"><div class="nm">Listings</div><div class="v" id="shop-listings">'+(lt.active_listings!=null?lt.active_listings:'—')+'</div></div>'+
+      '<div class="shop-chip"><div class="nm">Total Sales</div><div class="v" id="shop-total-sales">'+(lt.total_sales!=null?lt.total_sales:'—')+'</div></div>'+
+      '<div class="shop-chip"><div class="nm">All-Time Revenue</div><div class="v" id="shop-alltime-rev">'+(allTimeRev!=null?'$'+allTimeRev.toFixed(2):'—')+'</div></div>';
+  }
+  // Populate expanded panel IDs
+  const setEl = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  const o = m.orders || {};
+  setEl('shop-rev-7d', '$' + (o.revenue_7d||0).toFixed(2));
+  setEl('shop-ord-7d', (o.last_7_days||0) + ' orders');
+  setEl('shop-rev-today', '$' + (o.today_revenue||0).toFixed(2));
+  setEl('shop-ord-today', (o.today_count||0) + ' orders');
+  const aov = (o.last_30_days||0) > 0 ? ('$'+((o.revenue_30d||0)/(o.last_30_days||1)).toFixed(2)) : '—';
+  setEl('shop-aov', aov);
+  setEl('shop-active', (m.shop||{}).active_listing_count||'—');
+  const salesEl = document.getElementById('shop-recent-sales');
+  if(salesEl && o.recent_sales && o.recent_sales.length){
+    salesEl.innerHTML = o.recent_sales.map(s=>{
+      const dt = s.ts ? new Date(s.ts*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      return '<div class="recent-sale-row"><span>'+escHtml(s.title)+'</span><span><span class="recent-sale-amt">$'+s.amount.toFixed(2)+'</span> <span class="recent-sale-date">'+dt+'</span></span></div>';
+    }).join('');
+  } else if(salesEl){
+    salesEl.textContent = 'No recent sales';
+  }
+}
+async function loadShopPerf(){
+  const sparkEl = document.getElementById('shop-spark-row');
+  const chipEl = document.getElementById('shop-chip-row');
+  try{
+    const [ar, mr] = await Promise.all([
+      authGet('/api/analytics?days=30'),
+      authGet('/api/metrics'),
+    ]);
+    const a = await ar.json();
+    const m = await mr.json();
+    cacheSet('shopPerf', {a, m});
+    _renderShopPerf(a, m, sparkEl, chipEl, null);
+  }catch(e){
+    const cached = cacheGet('shopPerf');
+    if(cached){
+      _renderShopPerf(cached.data.a, cached.data.m, sparkEl, chipEl, _offlineNote(cached.ts));
+    } else if(sparkEl){
+      sparkEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:4px">Shop data offline</div>';
+    }
+  }
+}
+
+let _shopExpanded = false;
+function toggleShopExpand(){
+  _shopExpanded = !_shopExpanded;
+  const exp = document.getElementById('shop-expanded');
+  const arrow = document.getElementById('shop-expand-arrow');
+  if(exp) exp.style.display = _shopExpanded ? 'block' : 'none';
+  if(arrow) arrow.textContent = _shopExpanded ? '▲ collapse' : '▼ expand';
+}
+
+async function loadStarSeller(){
+  const el = document.getElementById('star-seller-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/star-seller');
+    const d = await r.json();
+    const statusLabel = d.status==='on_track' ? 'ON TRACK' : d.status==='at_risk' ? 'AT RISK' : 'BUILDING';
+    const statusClass = d.status||'building';
+    const ordPct = Math.min(100, ((d.orders_90d||0)/5)*100);
+    const revPct = Math.min(100, ((d.revenue_90d||0)/300)*100);
+    const ratPct = d.avg_rating ? Math.min(100, ((d.avg_rating-1)/4)*100) : 0;
+    const ordOk = (d.orders_90d||0)>=5;
+    const revOk = (d.revenue_90d||0)>=300;
+    const msgOk = (d.unread_messages||0)===0;
+    el.innerHTML =
+      '<div class="ss-status '+statusClass+'">'+statusLabel+'</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">Orders (90d)</span>'+
+        '<div class="ss-bar-wrap"><div class="ss-bar '+(ordOk?'':'warn')+'" style="width:'+ordPct+'%"></div></div>'+
+        '<span class="ss-val">'+( d.orders_90d||0)+'<span style="color:var(--muted);font-weight:400">/5</span></span>'+
+      '</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">Revenue (90d)</span>'+
+        '<div class="ss-bar-wrap"><div class="ss-bar '+(revOk?'':'warn')+'" style="width:'+revPct+'%"></div></div>'+
+        '<span class="ss-val">$'+(d.revenue_90d||0).toFixed(0)+'<span style="color:var(--muted);font-weight:400">/$300</span></span>'+
+      '</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">Avg Rating</span>'+
+        '<div class="ss-bar-wrap"><div class="ss-bar" style="width:'+ratPct+'%"></div></div>'+
+        '<span class="ss-val">'+(d.avg_rating||'—')+' ★</span>'+
+      '</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">On-time Delivery</span>'+
+        '<span class="ss-val" style="color:var(--green)">100% ✓</span>'+
+      '</div>'+
+      '<div class="ss-row">'+
+        '<span class="ss-label">Unread Messages</span>'+
+        '<span class="ss-val"'+(msgOk?'':' style="color:var(--red)"')+'>'+( d.unread_messages||0)+' '+(msgOk?'✓':'⚠')+'</span>'+
+      '</div>';
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+  }
+}
+
+async function loadInbox(){
+  const el = document.getElementById('inbox-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/inbox');
+    const d = await r.json();
+    const unread = d.unread_count||0;
+    const oldestH = d.oldest_unread_hours;
+    const urgent = oldestH!=null && oldestH>20;
+    let html = '<div class="inbox-msg-bar">';
+    html += '<div class="inbox-unread-badge '+(urgent?'urgent':'')+'">'+unread+'</div>';
+    html += '<div class="inbox-msg-meta">';
+    if(unread===0){
+      html += '<strong style="color:var(--green)">Inbox clear ✓</strong><br>No unread messages';
+    } else {
+      html += '<strong>'+unread+' unread message'+(unread>1?'s':'')+'</strong>';
+      if(oldestH!=null) html += '<br><span '+(urgent?'style="color:var(--red)"':'')+'>Oldest: '+oldestH.toFixed(0)+'h ago'+(urgent?' ⚠ Star Seller risk':'')+'</span>';
+    }
+    html += '</div></div>';
+    const reviews = d.recent_reviews||[];
+    if(reviews.length){
+      html += '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Recent Reviews</div>';
+      reviews.forEach(rev=>{
+        const stars = '★'.repeat(rev.rating)+'☆'.repeat(5-rev.rating);
+        html += '<div class="inbox-review"><div class="inbox-review-stars">'+stars+'</div>';
+        if(rev.text) html += '<div class="inbox-review-text">'+escHtml(rev.text.slice(0,100))+(rev.text.length>100?'…':'')+'</div>';
+        html += '</div>';
+      });
+    } else {
+      html += '<div style="color:var(--muted);font-size:11px;margin-top:8px">No reviews yet</div>';
+    }
+    el.innerHTML = html;
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+  }
+}
+
+function _timeAgo(iso){
+  if(!iso) return '';
+  const ms = Date.now() - new Date(iso).getTime();
+  if(!(ms >= 0)) return '';
+  const m = Math.floor(ms/60000);
+  if(m < 1) return 'just now';
+  if(m < 60) return m+'m ago';
+  const h = Math.floor(m/60);
+  if(h < 24) return h+'h ago';
+  return Math.floor(h/24)+'d ago';
+}
+
+// ── Dependency Health — real data from /api/system/dependencies (circuit breakers) ──
+const _DEP_LABELS = {etsy_api:'Etsy API', anthropic_api:'Anthropic API', relay:'Local Relay'};
+function _renderDependencyHealth(d, el, offlineNote){
+  if(!el) return;
+  const deps = d.dependencies||[];
+  const depHtml = deps.map(dep=>{
+    const stateClass = dep.state === 'open' ? 'open' : (dep.state === 'half_open' ? 'half_open' : '');
+    const stateLabel = dep.state === 'closed' ? 'HEALTHY' : dep.state === 'half_open' ? 'TESTING' : 'DOWN';
+    const failText = dep.consecutive_failures ? ' &middot; '+dep.consecutive_failures+' failures' : '';
+    return '<div class="dep-pill '+stateClass+'"><span class="dep-dot"></span>'+
+      '<span class="dep-name">'+escHtml(_DEP_LABELS[dep.name]||dep.name)+'</span>'+
+      '<span class="dep-state">'+stateLabel+'</span>'+
+      '<span class="dep-fail">'+failText+'</span></div>';
+  }).join('');
+  // Capabilities — optional features that need a key/connection. Green "READY" or
+  // amber "NEEDS SETUP · <hint>" so setup gaps are visible, not discovered by trial.
+  const caps = d.capabilities||[];
+  const capHtml = caps.map(cap=>{
+    const ok = !!cap.available;
+    const cls = ok ? '' : 'half_open';  // amber = needs setup (not a hard outage)
+    const stateLabel = ok ? 'READY' : 'NEEDS SETUP';
+    const hint = (!ok && cap.hint) ? ' &middot; '+escHtml(cap.hint) : '';
+    return '<div class="dep-pill '+cls+'"><span class="dep-dot"></span>'+
+      '<span class="dep-name">'+escHtml(cap.label||cap.key)+'</span>'+
+      '<span class="dep-state">'+stateLabel+'</span>'+
+      '<span class="dep-fail">'+hint+'</span></div>';
+  }).join('');
+  const capHeader = caps.length ? '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 4px">Capabilities</div>' : '';
+  el.innerHTML = (offlineNote||'') + depHtml + capHeader + capHtml;
+}
+async function recheckCredentials(){
+  // Forces an immediate Etsy + Anthropic credential check instead of waiting up to
+  // 5 minutes for the next background health-loop tick -- lets Scott confirm a
+  // credential rotation actually worked right away (2026-07-08 correction pass).
+  const btn = document.getElementById('recheck-creds-btn');
+  const original = btn ? btn.textContent : '';
+  if(btn){ btn.textContent = 'Checking…'; btn.style.pointerEvents = 'none'; }
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/system/recheck-credentials', {
+      method:'POST',
+      headers:{Authorization:'Bearer '+TOKEN},
+    }, 20000);
+    const d = await r.json();
+    showToast(d.all_ok ? 'Credentials OK ✓' : ('Still failing: '+d.detail), d.all_ok ? 'ok' : 'error', 6000);
+    await loadDependencyHealth();
+  }catch(e){
+    showToast('Recheck failed: '+e.message, 'error');
+  }finally{
+    if(btn){ btn.textContent = original || 'Recheck now'; btn.style.pointerEvents = ''; }
+  }
+}
+async function loadDependencyHealth(){
+  const el = document.getElementById('dep-pill-row');
+  try{
+    const r = await authGet('/api/system/dependencies');
+    const d = await r.json();
+    cacheSet('depHealth', d);
+    _renderDependencyHealth(d, el, null);
+  }catch(e){
+    const cached = cacheGet('depHealth');
+    if(cached){
+      _renderDependencyHealth(cached.data, el, _offlineNote(cached.ts));
+    } else if(el){
+      el.innerHTML = '<div style="color:var(--red);font-size:11px">Dependency health offline</div>';
+    }
+  }
+}
+
+// ── Header status pill — derived from already-fetched agents/dependency data,
+// no extra network call. Mirrors the dep-pill open/half_open/closed semantics. ──
+function updateSystemStatusPill(){
+  const el = document.getElementById('system-status-pill');
+  const labelEl = document.getElementById('system-status-label');
+  if(!el || !labelEl) return;
+  const agentsCached = cacheGet('agents');
+  const depsCached = cacheGet('depHealth');
+  const agentsData = agentsCached ? agentsCached.data : null;
+  const depsData = depsCached ? depsCached.data : null;
+  if(!agentsData && !depsData){
+    el.className = 'status-pill';
+    labelEl.textContent = 'UNKNOWN';
+    return;
+  }
+  let state = 'optimal';
+  if(depsData && depsData.dependencies.some(d => d.state === 'open')) state = 'error';
+  if(agentsData && agentsData.agents.some(a => a.built && a.status === 'error')) state = 'error';
+  if(state !== 'error'){
+    if(depsData && depsData.dependencies.some(d => d.state === 'half_open')) state = 'degraded';
+    if(agentsData && agentsData.running_count < agentsData.total_count) state = 'degraded';
+  }
+  el.className = 'status-pill' + (state === 'optimal' ? '' : ' '+state);
+  labelEl.textContent = state.toUpperCase();
+}
+
+// ── Alert bell — real data from /api/alerts (deps + token age + agent heartbeats) ──
+function toggleAlertDropdown(){
+  const dd = document.getElementById('alert-dropdown');
+  if(!dd) return;
+  const opening = (dd.style.display === 'none' || !dd.style.display);
+  dd.style.display = opening ? 'block' : 'none';
+  const btn = document.getElementById('bell-btn');
+  if(btn) btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+}
+function _renderAlerts(d, badgeEl, listEl, offlineNote){
+  const alerts = (d && d.alerts) || [];
+  if(badgeEl){
+    if(alerts.length > 0){
+      badgeEl.textContent = alerts.length > 99 ? '99+' : alerts.length;
+      badgeEl.style.display = '';
+    } else {
+      badgeEl.style.display = 'none';
+    }
+  }
+  if(!listEl) return;
+  if(alerts.length === 0){
+    listEl.innerHTML = (offlineNote||'') + '<div style="color:var(--muted);font-size:11px;padding:8px">No active alerts</div>';
+    return;
+  }
+  listEl.innerHTML = (offlineNote||'') + alerts.map(a=>{
+    const sev = a.severity || '';
+    // Severity was conveyed by the left-border color alone (WCAG 1.4.1 — not color
+    // alone); prefix a text label so it reads without relying on color perception.
+    const sevLabel = sev === 'critical' ? 'Critical: ' : sev === 'warning' ? 'Warning: ' : '';
+    return '<div class="alert-row '+escHtml(sev)+'">'+
+      '<div>'+(sevLabel ? '<strong>'+sevLabel+'</strong>' : '')+escHtml(a.title||'')+'</div>'+
+      (a.detail ? '<div class="at">'+escHtml(a.detail)+'</div>' : '') +
+      '</div>';
+  }).join('');
+}
+async function loadAlerts(){
+  const badgeEl = document.getElementById('bell-badge');
+  const listEl = document.getElementById('alert-dropdown-list');
+  try{
+    const r = await authGet('/api/alerts');
+    const d = await r.json();
+    cacheSet('alerts', d);
+    _renderAlerts(d, badgeEl, listEl, null);
+  }catch(e){
+    const cached = cacheGet('alerts');
+    if(cached){
+      _renderAlerts(cached.data, badgeEl, listEl, _offlineNote(cached.ts));
+    } else if(listEl){
+      listEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:8px">Alerts offline</div>';
+    }
+  }
+}
+document.addEventListener('click', function(e){
+  const dd = document.getElementById('alert-dropdown');
+  const bellBtn = document.getElementById('bell-btn');
+  if(!dd || dd.style.display === 'none' || !dd.style.display) return;
+  if(bellBtn && !bellBtn.contains(e.target)){
+    dd.style.display = 'none';
+  }
+});
+
+// ── Executive Briefing — bottom-bar button, pure read of data already loaded by
+// loadAll()'s 30s cycle (shop performance, open actions, alerts). No new fetch,
+// no new endpoint — just rolls up what's already cached client-side. ──
+function toggleBriefingPanel(){
+  const panel = document.getElementById('brief-panel');
+  if(!panel) return;
+  const opening = (panel.style.display === 'none' || !panel.style.display);
+  panel.style.display = opening ? 'block' : 'none';
+  if(opening) renderExecutiveBriefing();
+}
+function renderExecutiveBriefing(){
+  const body = document.getElementById('brief-panel-body');
+  if(!body) return;
+  const rows = [];
+
+  const sp = cacheGet('shopPerf');
+  if(sp && sp.data && sp.data.a){
+    const lt = sp.data.a.latest || {}, del = sp.data.a.delta || {};
+    if(lt.revenue_30d != null){
+      const sign = (del.revenue_30d != null && del.revenue_30d < 0) ? '' : '+';
+      rows.push('<div>Revenue (30d): $'+lt.revenue_30d.toFixed(2)+
+        (del.revenue_30d != null ? ' ('+sign+del.revenue_30d.toFixed(1)+'%)' : '')+'</div>');
+    } else {
+      rows.push('<div style="color:var(--muted)">Shop performance: no data yet</div>');
+    }
+  } else {
+    rows.push('<div style="color:var(--muted)">Shop performance: not yet loaded — try again in a few seconds</div>');
+  }
+
+  const pending = _pendingActions || [];
+  const s = _actionsSummary || {high:0,medium:0,low:0};
+  rows.push('<div>'+pending.length+' pending action'+(pending.length===1?'':'s')+
+    ' ('+s.high+' high / '+s.medium+' medium / '+s.low+' low)</div>');
+
+  const al = cacheGet('alerts');
+  if(al && al.data){
+    const alerts = al.data.alerts || [];
+    if(alerts.length === 0){
+      rows.push('<div style="color:var(--muted)">No active alerts</div>');
+    } else {
+      rows.push(alerts.map(a=>{
+        const sev = a.severity || '';
+        const sevLabel = sev === 'critical' ? 'Critical: ' : sev === 'warning' ? 'Warning: ' : '';
+        return '<div class="alert-row '+escHtml(sev)+'">'+(sevLabel ? '<strong>'+sevLabel+'</strong>' : '')+escHtml(a.title||'')+'</div>';
+      }).join(''));
+    }
+  } else {
+    rows.push('<div style="color:var(--muted)">Alerts: not yet loaded — try again in a few seconds</div>');
+  }
+
+  body.innerHTML = rows.join('');
+}
+document.addEventListener('click', function(e){
+  const panel = document.getElementById('brief-panel');
+  const briefWrap = document.querySelector('.brief-wrap');
+  if(!panel || panel.style.display === 'none' || !panel.style.display) return;
+  if(briefWrap && !briefWrap.contains(e.target)){
+    panel.style.display = 'none';
+  }
+});
+
+// ── Escape-key dismissal for the alert dropdown, Executive Briefing panel, and
+// phone action sheet — none of these had a keyboard way to close other than
+// re-finding the trigger button (2026-07-08 accessibility review). ──
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  const dd = document.getElementById('alert-dropdown');
+  if(dd && dd.style.display !== 'none' && dd.style.display){
+    dd.style.display = 'none';
+    const btn = document.getElementById('bell-btn');
+    if(btn){ btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
+  }
+  const panel = document.getElementById('brief-panel');
+  if(panel && panel.style.display !== 'none' && panel.style.display){
+    panel.style.display = 'none';
+    const briefBtn = document.querySelector('.brief-btn');
+    if(briefBtn) briefBtn.focus();
+  }
+  if(document.body.classList.contains('phone-sheet-open')){
+    phoneSheetClose();
+  }
+});
+
+// ── Live Intelligence Feed — real data from /api/queue (pending staged actions) ──
+function _renderQueue(d, list, offlineNote){
+  if(list){
+    const items = d.actions.slice(0, 6);
+    list.innerHTML = (offlineNote||'') + (items.length ? items.map(a=>
+      '<div class="feed-item"><div class="ftxt">'+escHtml(a.summary)+'<div class="t">'+_timeAgo(a.created_at)+'</div></div>'+
+      '<span class="feed-tag tip">PENDING</span></div>'
+    ).join('') : '<div style="color:var(--muted);font-size:12px">No pending actions — queue is clear.</div>');
+  }
+}
+async function loadQueue(){
+  const list = document.getElementById('feed-list');
+  try{
+    const r = await authGet('/api/queue?status=pending');
+    const d = await r.json();
+    cacheSet('queue', d);
+    _renderQueue(d, list, null);
+    // Keep the Action Center nav badge fresh on the 30s loop without re-rendering
+    // the Action Center screen itself (loadActions() is intentionally NOT in loadAll()).
+    setActionBadge(_actionsSummary, (d.actions||[]).length);
+  }catch(e){
+    const cached = cacheGet('queue');
+    if(cached){
+      _renderQueue(cached.data, list, _offlineNote(cached.ts));
+      setActionBadge(_actionsSummary, (cached.data.actions||[]).length);
+    } else if(list){
+      list.innerHTML = '<div style="color:var(--red);font-size:12px">Feed offline: '+escHtml(e.message)+'</div>';
+    }
+  }
+}
+
+// ── Mission Timeline — real data from /api/todos (open tasks only, compact view) ──
+function _renderMissionTimeline(d, list, offlineNote){
+  if(list){
+    const open = d.todos.filter(t=>!t.done)
+      .sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))
+      .slice(0, 6);
+    list.innerHTML = (offlineNote||'') + (open.length ? open.map(t=>{
+      const day = t.created_at ? new Date(t.created_at).toLocaleDateString(undefined,{weekday:'short'}).toUpperCase() : '—';
+      return '<div class="tl-item"><div class="tl-time">'+day+'</div><div class="tl-dotcol"><span class="d"></span></div>'+
+        '<div class="tl-txt"><div class="ttl">'+escHtml(t.text)+'</div>'+
+        '<div class="sub">added by '+escHtml(t.added_by||'scott')+'</div></div></div>';
+    }).join('') : '<div style="color:var(--muted);font-size:12px">All caught up — no open tasks.</div>');
+  }
+}
+// Shared in-flight promise so loadMissionTimeline and loadTasks share one /api/todos fetch
+let _todosFetchPromise = null;
+function _sharedTodosFetch(){
+  if(!_todosFetchPromise){
+    _todosFetchPromise = authGet('/api/todos').then(function(r){ return r.json(); })
+      .finally(function(){ _todosFetchPromise = null; });
+  }
+  return _todosFetchPromise;
+}
+
+async function loadMissionTimeline(){
+  const list = document.getElementById('timeline-list');
+  try{
+    const d = await _sharedTodosFetch();
+    cacheSet('missionTimeline', d);
+    _renderMissionTimeline(d, list, null);
+  }catch(e){
+    const cached = cacheGet('missionTimeline');
+    if(cached){
+      _renderMissionTimeline(cached.data, list, _offlineNote(cached.ts));
+    } else if(list){
+      list.innerHTML = '<div style="color:var(--red);font-size:12px">Timeline offline: '+escHtml(e.message)+'</div>';
+    }
+  }
+}
+
+// ── Tasks — real data from /api/todos ──
+function _renderTasks(d, list, offlineNote){
+  if(list){
+    list.innerHTML = (offlineNote||'') + (d.todos.length ? d.todos.map(t=>{
+      const done = !!t.done;
+      const overdue = !done && t.due_date && t.due_date < new Date().toISOString().slice(0,10);
+      const dueTxt = t.due_date ? ' · due '+escHtml(t.due_date)+(overdue?' ⚠':'') : '';
+      return '<div class="tl-item">'+
+        '<div class="tl-dotcol"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleHudTodo('+t.id+',this.checked)" style="width:13px;height:13px;margin-top:2px;accent-color:var(--gold)"></div>'+
+        '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':(overdue?' style="color:var(--red)"':''))+'>'+escHtml(t.text)+'</div>'+
+        '<div class="sub">added by '+escHtml(t.added_by||'scott')+dueTxt+'</div></div>'+
+        '<button onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>';
+    }).join('') : '<div style="color:var(--muted);font-size:12px">No tasks yet.</div>');
+  }
+}
+async function loadTasks(){
+  const list = document.getElementById('tasks-list');
+  try{
+    const d = await _sharedTodosFetch();
+    cacheSet('tasks', d);
+    _renderTasks(d, list, null);
+    const badge = document.getElementById('badge-tasks');
+    if(badge){ badge.textContent = d.open_count; badge.style.display = d.open_count>0 ? '' : 'none'; }
+  }catch(e){
+    const cached = cacheGet('tasks');
+    if(cached){
+      _renderTasks(cached.data, list, _offlineNote(cached.ts));
+      const badge = document.getElementById('badge-tasks');
+      if(badge){ badge.textContent = cached.data.open_count; badge.style.display = cached.data.open_count>0 ? '' : 'none'; }
+    } else if(list){
+      list.innerHTML = '<div style="color:var(--red);font-size:12px">Tasks offline: '+escHtml(e.message)+'</div>';
+    }
+  }
+}
+async function addHudTodo(){
+  const inp = document.getElementById('hud-todo-input');
+  const dueInp = document.getElementById('hud-todo-due');
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  const due = dueInp.value;
+  dueInp.value = '';
+  try {
+    await fetchWithTimeout(BASE+'/api/todos', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({text, added_by:'scott', due_date: due || null}),
+    }, 15000);
+  } catch(e) {}
+  loadTasks();
+}
+async function toggleHudTodo(id, done){
+  try {
+    await fetchWithTimeout(BASE+'/api/todos/'+id+'/toggle', {
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
+      body: JSON.stringify({done}),
+    }, 15000);
+  } catch(e) {}
+  loadTasks();
+}
+async function deleteHudTodo(id){
+  try {
+    await fetchWithTimeout(BASE+'/api/todos/'+id, {method:'DELETE',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+  } catch(e) {}
+  loadTasks();
+}
+
+// ── Tools & Skills — real data from /api/tools/list (live AGENT_TOOLS registry) ──
+function _renderTools(d, list, offlineNote){
+  if(list){
+    list.innerHTML = (offlineNote||'') + d.tools.map(t=>
+      '<div style="padding:10px 0;border-bottom:1px solid var(--border)">'+
+        '<div style="font-weight:600;font-size:12px;color:var(--text)">'+escHtml(t.name)+'</div>'+
+        '<div style="font-size:10.5px;color:var(--muted);margin-top:3px">'+escHtml(t.description)+'</div></div>'
+    ).join('');
+  }
+}
+async function loadTools(){
+  const list = document.getElementById('tools-list');
+  try{
+    const r = await authGet('/api/tools/list');
+    const d = await r.json();
+    cacheSet('tools', d);
+    _renderTools(d, list, null);
+    const badge = document.getElementById('badge-tools');
+    if(badge){ badge.textContent = d.count; badge.style.display = ''; }
+  }catch(e){
+    const cached = cacheGet('tools');
+    if(cached){
+      _renderTools(cached.data, list, _offlineNote(cached.ts));
+      const badge = document.getElementById('badge-tools');
+      if(badge){ badge.textContent = cached.data.count; badge.style.display = ''; }
+    } else if(list){
+      list.innerHTML = '<div style="color:var(--red);font-size:12px">Tools offline: '+escHtml(e.message)+'</div>';
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Action Center — ported from the live Hub's Action Center at / (main.py).
+// The approve/reject queue is the human-in-the-loop safety gate for every Etsy
+// write and local file/exec action — the confirm() in approveAction() below IS
+// that gate and must never be removed. Same /api/queue + /api/actions endpoints,
+// zero backend changes.
+// ══════════════════════════════════════════════════════════════════════════
+let _actions = [];
+let _pendingActions = [];
+let _actionsSummary = {high:0,medium:0,low:0};
+let _actionFilter = null; // 'high' | 'medium' | 'low' | null (= all)
+function setActionBadge(summary, pending) {
+  const b = document.getElementById('badge-actions');
+  if (!b) return;
+  const n = ((summary && summary.high) || 0) + (pending || 0);  // urgent + awaiting approval
+  if (n > 0) { b.textContent = n > 99 ? '99+' : n; b.style.display = ''; }
+  else { b.style.display = 'none'; }
+  // Phone Approvals tab badge = ONLY items actually awaiting approval (the `pending`
+  // count) — NOT the high-severity recommendations (those live under Today → Needs
+  // attention). This keeps the badge honest: it always matches what the Approvals panel
+  // shows, so a "7" never leads to an empty "All clear" panel.
+  const pb = document.getElementById('ptab-badge');
+  const pc = pending || 0;
+  if (pb) { if (pc > 0) { pb.textContent = pc > 99 ? '99+' : pc; pb.style.display = 'flex'; } else { pb.style.display = 'none'; } }
+  // The urgent-recommendations count lives on the TODAY tab now (that's where the
+  // "Needs attention" items are shown) — not on Approvals.
+  const tb = document.getElementById('ptab-today-badge');
+  const hc = (summary && summary.high) || 0;
+  if (tb) { if (hc > 0) { tb.textContent = hc > 99 ? '99+' : hc; tb.style.display = 'flex'; } else { tb.style.display = 'none'; } }
+}
+function simpleLineDiff(before, after) {
+  const b = String(before == null ? '' : before).split('\\n');
+  const a = String(after == null ? '' : after).split('\\n');
+  const max = Math.max(b.length, a.length);
+  let html = '';
+  for (let i = 0; i < max; i++) {
+    const bl = b[i], al = a[i];
+    if (bl === al) {
+      if (bl !== undefined) html += `<div style="color:var(--muted)">&nbsp;&nbsp;${escHtml(bl)}</div>`;
+    } else {
+      if (bl !== undefined) html += `<div style="color:var(--red)">-&nbsp;${escHtml(bl)}</div>`;
+      if (al !== undefined) html += `<div style="color:var(--green)">+&nbsp;${escHtml(al)}</div>`;
+    }
+  }
+  return html;
+}
+const _ACT_TYPE_GLYPH = {
+  update_title: '📝', update_tags: '🏷️', publish_listing: '🏷️', deactivate_listing: '⛔',
+  listing_photo: '🖼️', local_write_file: '📁', local_delete: '🗑️', local_exec: '⚙️', run_script: '⚙️'
+};
+function _actAgeStr(a) {
+  const t = a.staged_at || a.created_at || a.decided_at;
+  if (!t) return '';
+  const ms = Date.now() - new Date(t).getTime();
+  if (!isFinite(ms) || ms < 0) return '';
+  const mins = Math.round(ms / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.round(hrs / 24) + 'd ago';
+}
+function _actionPreviewHtml(a) {
+  const p = a.payload || {};
+  if (a.type === 'update_title') return 'New title: ' + escHtml(p.title || '');
+  if (a.type === 'update_tags') return 'New tags: ' + escHtml((p.tags || []).join(', '));
+  if (a.type === 'listing_photo') {
+    const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&inline=1';
+    return `<img src="${url}" loading="lazy" alt="Staged photo for listing ${escHtml(String(p.listing_id||''))}" style="max-width:260px;max-height:260px;border-radius:8px;display:block">` +
+      `<div style="margin-top:6px">Listing ${escHtml(String(p.listing_id||''))} · rank ${p.rank||''} · ${escHtml(p.sku||'')}</div>`;
+  }
+  if (a.type === 'publish_listing') {
+    const pv = p.preview || {};
+    return `<div style="display:flex;gap:10px;align-items:flex-start">` +
+      (pv.thumbnail_url
+        ? `<img src="${escHtml(pv.thumbnail_url)}" loading="lazy" alt="${escHtml(pv.title||'Listing preview')}" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+        : '') +
+      `<div><div>Publish draft listing ${escHtml(String(p.listing_id || ''))}</div>` +
+      (pv.title ? `<div style="font-weight:600;margin-top:4px">${escHtml(pv.title)}</div>` : '') +
+      (pv.price != null ? `<div>$${escHtml(String(pv.price))} · ${(pv.tags || []).length} tags · ${pv.photo_count || 0} photos</div>` : '') +
+      (pv.error ? `<div style="color:var(--gold)">⚠️ Preview unavailable: ${escHtml(pv.error)}</div>` : '') +
+      `</div></div>`;
+  }
+  if (a.type === 'local_write_file') {
+    const diffHtml = simpleLineDiff(p.before, p.after);
+    return `<div style="margin-bottom:6px"><strong>File:</strong> ${escHtml(p.path || '')}</div>` +
+      (p.before_existed === false ? `<div style="color:var(--gold);margin-bottom:6px">⚠️ File does not currently exist — this will create it.</div>` : '') +
+      `<div style="max-height:260px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:var(--muted)">No changes</span>'}</div>`;
+  }
+  if (a.type === 'local_delete') {
+    return `<div style="color:var(--red)">⚠️ This will permanently delete:</div><div style="font-family:monospace;margin-top:4px">${escHtml(p.path || '')}</div>`;
+  }
+  if (a.type === 'local_exec') {
+    return `<div><strong>Run:</strong> <span style="font-family:monospace">${escHtml(p.command || '')}${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>`;
+  }
+  if (a.type === 'run_script') {
+    return `<div><strong>Run:</strong> <span style="font-family:monospace">python tools/${escHtml(p.command || '')}.py${p.extra_args ? ' ' + escHtml(p.extra_args) : ''}</span></div>` +
+      `<div class="sub" style="margin-top:4px">Script output isn't previewable before approval — it will run for real on approve.</div>`;
+  }
+  return '';
+}
+function renderApproval(a) {
+  const p = a.payload || {};
+  let thumb;
+  if (a.type === 'listing_photo') {
+    const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&inline=1';
+    thumb = `<img class="hub-thumb" src="${url}" loading="lazy" alt="Staged listing photo">`;
+  } else if (a.type === 'publish_listing' && (p.preview || {}).thumbnail_url) {
+    thumb = `<img class="hub-thumb" src="${escHtml(p.preview.thumbnail_url)}" loading="lazy" alt="${escHtml(p.preview.title||'Listing preview')}">`;
+  } else {
+    thumb = `<div class="hub-thumb-ph">${_ACT_TYPE_GLYPH[a.type] || '❓'}</div>`;
+  }
+  let meta = a.type.replace(/_/g, ' ');
+  const age = _actAgeStr(a);
+  if (age) meta += ' · ' + age;
+  if (a.type === 'listing_photo') meta += ` · ${escHtml(p.sku || '')} · rank ${p.rank || ''}`;
+  else if (a.type === 'publish_listing' && (p.preview || {}).price != null) {
+    meta += ` · $${escHtml(String(p.preview.price))} · ${(p.preview.tags || []).length} tags · ${p.preview.photo_count || 0} photos`;
+  } else if (a.type === 'update_title') meta += ` · "${escHtml(p.title || '')}"`;
+  else if (a.type === 'update_tags') meta += ` · ${escHtml((p.tags || []).join(', '))}`;
+  return `<div class="hub-listing-item" style="cursor:pointer" onclick="toggleActionDetail(${a.id})" role="button" tabindex="0">
+    ${thumb}
+    <div class="hub-listing-info">
+      <div class="hub-listing-title">${escHtml(a.summary || a.type)}</div>
+      <div class="hub-listing-meta">${escHtml(meta)}</div>
+    </div>
+    <div class="act-btns" style="flex-shrink:0" onclick="event.stopPropagation()">
+      <button class="act-btn approve" onclick="approveAction(${a.id})">Approve</button>
+      ${a.type === 'publish_listing' ? `<button class="act-btn" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix</button>` : ''}
+      <button class="act-btn reject" onclick="openRejectModal(${a.id})">Reject</button>
+    </div>
+  </div>
+  <div id="act-detail-${a.id}" class="hub-listing-detail" style="display:none"></div>
+  <div id="reject-modal-${a.id}" style="display:none"></div>`;
+}
+function toggleActionDetail(id) {
+  const panel = document.getElementById('act-detail-'+id);
+  if (!panel) return;
+  if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+  const a = (_pendingActions || []).find(x => x.id === id);
+  if (a) panel.innerHTML = _actionPreviewHtml(a);
+  panel.style.display = 'block';
+}
+const _APPROVE_CONFIRM_MSGS = {
+  local_write_file: 'Approve and write this file on your computer now?',
+  local_delete: 'Approve and PERMANENTLY DELETE this file on your computer now?',
+  local_exec: 'Approve and run this command on your computer now?',
+  run_script: 'Approve and run this workflow script now?'
+};
+async function approveAction(id) {
+  const act = (_pendingActions || []).find(x => x.id === id);
+  const msg = (act && _APPROVE_CONFIRM_MSGS[act.type]) || 'Approve and apply this change to your live Etsy listing now?';
+  if (!confirm(msg)) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/approve', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 50000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    loadActions();
+  } catch(e) { showToast('Could not apply: ' + (e.message||e), 'err', 6000); }
+}
+function openRejectModal(id) {
+  const panel = document.getElementById('reject-modal-'+id);
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  document.querySelectorAll('[id^="reject-modal-"]').forEach(el => el.style.display = 'none');
+  if (isOpen) return;
+  panel.innerHTML = `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
+    <div class="hub-listing-meta" style="margin-bottom:6px">Why is this being rejected? A reason lets the right agent fix and re-stage it automatically.</div>
+    <textarea id="reject-reason-${id}" rows="2" placeholder="e.g. shade is too dark, brighten it"
+      aria-label="Reason for rejecting"
+      style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-size:13px;font-family:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="act-btn reject" onclick="submitRejectReason(${id})">Submit &amp; Fix</button>
+      <button class="act-btn" onclick="document.getElementById('reject-modal-${id}').style.display='none'">Cancel</button>
+    </div>
+  </div>`;
+  panel.style.display = 'block';
+}
+async function submitRejectReason(id) {
+  const ta = document.getElementById('reject-reason-'+id);
+  const reason = (ta && ta.value || '').trim();
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/reject', {
+      method: 'POST',
+      headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({reason})
+    }, 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (d.fix_started) {
+      const panel = document.getElementById('reject-modal-'+id);
+      if (panel) panel.innerHTML = '<div class="hub-listing-meta" style="padding:8px 0">🤖 Fixing — check back in a minute, the corrected version will appear as a new pending item.</div>';
+    }
+    loadActions();
+  } catch(e) { showToast('Could not reject: ' + (e.message||e), 'err', 6000); }
+}
+async function fixDraftStage(listingId, actionId, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Fixing…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/autofix/draft/'+listingId,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}},120000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const n = d.staged_count||0;
+    btn.textContent = n > 0 ? n+' fix'+(n>1?'es':'')+' staged ✅' : '⚠️ No auto-fixes';
+    if (n > 0) { btn.style.background='var(--green)'; btn.style.color='#06140d'; }
+    const errNote = (d.errors&&d.errors.length) ? ' Errors: '+d.errors.join(', ') : '';
+    showToast('Staged '+n+' fix'+(n!==1?'es':'')+'. Approve the new fixes in Action Center, then come back to approve Publish.'+errNote, 'ok');
+    loadActions();
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    showToast('Could not fix draft: '+(e.message||e), 'err', 6000);
+  }
+}
+async function loadActions() {
+  const el = document.getElementById('actions-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const [ar, qr] = await Promise.all([
+      authGet('/api/actions', 25000),
+      authGet('/api/queue?status=pending', 15000).catch(()=>null)
+    ]);
+    if (!ar.ok) { const e = await ar.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+ar.status); }
+    const d = await ar.json();
+    let pending = [];
+    if (qr && qr.ok) { const qd = await qr.json().catch(()=>({})); pending = qd.actions || []; }
+    _actions = d.actions || [];
+    _pendingActions = pending;
+    _actionsSummary = d.summary || {high:0,medium:0,low:0};
+    setActionBadge(_actionsSummary, pending.length);
+    renderActionsContent();
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function setActionFilter(sev) {
+  _actionFilter = (_actionFilter === sev) ? null : sev; // tap again to clear
+  renderActionsContent();
+}
+const _SEV_COLORS = {high:'var(--red)', medium:'var(--gold)', low:'#7ba0c2'};
+function renderActionsContent() {
+  const el = document.getElementById('actions-content');
+  if (!el) return;
+  const pending = _pendingActions || [];
+  const s = _actionsSummary || {high:0,medium:0,low:0};
+  let html = '';
+  if (pending.length) {
+    html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
+    html += pending.map(renderApproval).join('');
+  }
+  if (!_actions.length && !pending.length) { el.innerHTML = html || '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
+  const sevBtn = sev => {
+    const active = _actionFilter === sev;
+    const c = _SEV_COLORS[sev];
+    const style = active
+      ? `flex:1;text-align:center;padding:10px 6px;cursor:pointer;border-color:${c};background:${c}26`
+      : 'flex:1;text-align:center;padding:10px 6px;cursor:pointer';
+    return `<div class="metric" style="${style}" onclick="setActionFilter('${sev}')" role="button" tabindex="0"><div class="value" style="color:${c};font-size:20px">${s[sev]||0}</div><div class="sub">${sev}${active?' ✓':''}</div></div>`;
+  };
+  html += `<div class="section-title">Flagged by scan${_actionFilter?` — showing ${_actionFilter} only`:''}</div><div style="display:flex;gap:8px;margin-bottom:14px">`+
+    sevBtn('high')+sevBtn('medium')+sevBtn('low')+
+    `</div>`;
+  const filtered = _actionFilter ? _actions.filter(a => a.severity === _actionFilter) : _actions;
+  if (!filtered.length) {
+    html += `<div class="empty">No ${escHtml(_actionFilter)} severity items.</div>`;
+  } else {
+    html += filtered.map(a => {
+      const i = _actions.indexOf(a);
+      return `
+      <div class="act-card ${escHtml(a.severity)}">
+        <span class="act-sev ${escHtml(a.severity)}">${escHtml(a.severity)}</span>
+        <div class="act-title">${escHtml(a.title)}</div>
+        <div class="act-detail">${escHtml(a.detail)}</div>
+        <div class="act-sug"><b>💡 Fix:</b> ${escHtml(a.suggestion)}</div>
+        <div class="act-btns">
+          <button class="act-btn primary" onclick="askActionFix(${i})">Ask CEO</button>
+          ${a.url ? `<a class="act-btn" href="${escHtml(a.url)}" target="_blank">Open on Etsy</a>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+  el.innerHTML = html;
+}
+function askActionFix(i) {
+  const a = _actions[i];
+  if (!a) return;
+  showScreen('cmd');
+  const q = 'How should I fix this? ' + a.title + ' — ' + a.detail;
+  const inp = document.getElementById('chat-input');
+  inp.value = q;
+  sendMsg();
+}
+async function batchStageTags(btn) {
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = '⏳ Generating…';
+  showToast('Scanning active listings for tag fixes — this may take up to 2 minutes…', 'info');
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/batch/stage-tags', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 180000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const errNote = d.errors && d.errors.length ? ` ${d.errors.length} listing(s) had tag-length issues and were skipped.` : '';
+    showToast(d.message + errNote, 'ok');
+    loadActions();
+  } catch(e) {
+    showToast('Error: ' + (e.name==='AbortError'?'Request timed out — the batch is still running server-side; check the Action Center in a moment':(e.message||e)), 'err', 6000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+// ── Calendar — real data from /api/cadence + /api/todos: due-dated tasks,
+// recurring weekly/monthly/quarterly ops cadence, and the seasonal keyword +
+// tax deadline calendar. List-based (not a grid) — same .act-card pattern as
+// the Action Center, since data volume (~15-20 dated items/year) doesn't
+// justify a calendar-grid widget. ──
+const _CAL_URGENCY_SEV = {OVERDUE:'high', 'THIS WEEK':'high', SOON:'medium', UPCOMING:'low'};
+async function loadCalendar() {
+  const el = document.getElementById('calendar-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const [cr, tr] = await Promise.all([
+      authGet('/api/cadence', 20000),
+      authGet('/api/todos', 15000).catch(()=>null)
+    ]);
+    if (!cr.ok) { const e = await cr.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+cr.status); }
+    const d = await cr.json();
+    renderCalendarContent(d);
+    const badge = document.getElementById('badge-calendar');
+    if (badge) {
+      const urgent = (d.seasonal||[]).concat(d.tax_deadlines||[]).filter(e=>e.urgency==='OVERDUE'||e.urgency==='THIS WEEK').length
+        + (d.due_todos||[]).length;
+      badge.textContent = urgent;
+      badge.style.display = urgent>0 ? '' : 'none';
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadCalendar()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function _calCard(sev, title, detail) {
+  return `<div class="act-card ${sev}"><span class="act-sev ${sev}">${escHtml(sev)}</span><div class="act-title">${escHtml(title)}</div><div class="act-detail">${escHtml(detail)}</div></div>`;
+}
+function renderCalendarContent(d) {
+  const el = document.getElementById('calendar-content');
+  if (!el) return;
+  let html = '';
+
+  const due = d.due_todos || [];
+  html += `<div class="section-title">📌 Upcoming Due Dates (${due.length})</div>`;
+  html += due.length ? due.map(t => {
+    const overdue = t.due_date < new Date().toISOString().slice(0,10);
+    return _calCard(overdue?'high':'low', t.text, 'Due ' + t.due_date);
+  }).join('') : '<div class="empty">No to-dos with a due date.</div>';
+
+  html += `<div class="section-title">🔁 This Week's Cadence</div>`;
+  const cl = d.checklists || {weekly:[],monthly:[],quarterly:[]};
+  html += `<div class="act-card low" style="cursor:default">
+    <div class="act-title">Weekly (Friday)</div>
+    <ul style="margin:6px 0 10px 18px;padding:0;font-size:11.5px;color:var(--muted)">${cl.weekly.map(i=>`<li>${escHtml(i)}</li>`).join('')}</ul>
+    <div class="act-title">Monthly (1st)</div>
+    <ul style="margin:6px 0 10px 18px;padding:0;font-size:11.5px;color:var(--muted)">${cl.monthly.map(i=>`<li>${escHtml(i)}</li>`).join('')}</ul>
+    <div class="act-title">Quarterly</div>
+    <ul style="margin:6px 0 0 18px;padding:0;font-size:11.5px;color:var(--muted)">${cl.quarterly.map(i=>`<li>${escHtml(i)}</li>`).join('')}</ul>
+  </div>`;
+
+  const seasonal = d.seasonal || [];
+  const tax = d.tax_deadlines || [];
+  html += `<div class="section-title">🗓 Seasonal &amp; Tax Calendar</div>`;
+  if (!seasonal.length && !tax.length) {
+    html += '<div class="empty">Nothing upcoming.</div>';
+  } else {
+    html += seasonal.map(e => _calCard(
+      _CAL_URGENCY_SEV[e.urgency]||'low',
+      `${e.season} — update by ${e.update_by}`,
+      `Peak ${e.peak} · ${e.urgency} · listings: ${e.listings_to_update.join(', ')}`
+    )).join('');
+    html += tax.map(t => _calCard(
+      _CAL_URGENCY_SEV[t.urgency]||'low',
+      t.event,
+      `${t.date} · ${t.urgency}`
+    )).join('');
+  }
+
+  el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Memory — real data: /api/memory — a single read-only rollup, not a third
+// document/session browser (Conversations owns session drill-down, Knowledge
+// Base owns the doc browser/search). Shows aggregate counts plus the one
+// thing with no UI anywhere else in the app: the CEO learnings log itself.
+// Also feeds the Command Center's "Memory Insights" preview widget from the
+// same payload — no second request needed.
+// ══════════════════════════════════════════════════════════════════════════
+async function loadMemory() {
+  const el = document.getElementById('memory-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/memory', 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderMemory(d);
+    const badge = document.getElementById('badge-memory');
+    if (badge) {
+      badge.textContent = d.learnings_count > 999 ? '999+' : d.learnings_count;
+      badge.style.display = d.learnings_count > 0 ? '' : 'none';
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadMemory()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderMemory(d) {
+  const el = document.getElementById('memory-content');
+  if (!el) return;
+  let html = '<div style="display:flex;gap:8px;margin-bottom:14px">' +
+    `<div class="metric" style="flex:1;text-align:center"><div class="value">${d.total_sessions}</div><div class="sub">Sessions</div></div>` +
+    `<div class="metric" style="flex:1;text-align:center"><div class="value">${d.total_messages}</div><div class="sub">Messages</div></div>` +
+    `<div class="metric" style="flex:1;text-align:center"><div class="value">${d.kb_doc_count}</div><div class="sub">KB Docs</div></div>` +
+    `<div class="metric" style="flex:1;text-align:center"><div class="value">${d.learnings_count}</div><div class="sub">Learnings logged</div></div>` +
+    '</div>';
+  const oldest = _timeAgo(d.oldest_at), newest = _timeAgo(d.newest_at);
+  html += `<div class="sub" style="margin-bottom:14px">` +
+    (d.total_sessions ? `History spans ${escHtml(oldest||'—')} to ${escHtml(newest||'just now')} — ` : '') +
+    `<a href="#" onclick="showScreen('conversations');return false" style="color:var(--cyan2)">view full history ›</a></div>`;
+  html += '<div class="section-title">🧠 What %%AGENT_SHORT%% has logged</div>';
+  if (!d.learnings.length) {
+    html += '<div class="empty">No durable insights logged yet — %%AGENT_SHORT%% appends a line here whenever a conversation surfaces a pattern worth remembering.</div>';
+  } else {
+    html += d.learnings.map(l => `<div class="tl-item">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt">
+        <div class="ttl">${escHtml(l.note)}</div>
+        <div class="sub">${escHtml(l.date)}</div>
+      </div>
+    </div>`).join('');
+  }
+  html += '<div class="section-title">📚 Knowledge Base</div>';
+  html += `<div class="empty" style="padding:14px 0"><a href="#" onclick="showScreen('kb');return false" style="color:var(--cyan2)">${d.kb_doc_count} doc${d.kb_doc_count===1?'':'s'} in the knowledge base ›</a></div>`;
+  el.innerHTML = html;
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// Workflows — real data: /api/workflows, live off the same _EXEC_COMMANDS
+// registry the execute_command chat tool already runs against. Most run
+// directly and show output inline; the one mutating command
+// (backup_digital_products) stages through the same action_queue Action
+// Center uses, via the run_script staged-action type. Static inventory —
+// loaded once at init, not on the 30s loadAll() poll.
+// ══════════════════════════════════════════════════════════════════════════
+async function loadWorkflows() {
+  const el = document.getElementById('workflows-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/workflows', 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderWorkflows(d.workflows || []);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadWorkflows()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderWorkflows(workflows) {
+  const el = document.getElementById('workflows-content');
+  if (!el) return;
+  if (!workflows.length) {
+    el.innerHTML = '<div class="empty">No workflows registered.</div>';
+    return;
+  }
+  el.innerHTML = workflows.map(w => {
+    const badge = w.requires_approval
+      ? '<span class="act-sev medium">needs approval</span>'
+      : (w.long_running ? '<span class="act-sev low">background</span>' : '<span class="act-sev approval">instant</span>');
+    return `<div class="act-card low">
+      ${badge}
+      <div class="act-title">${escHtml(w.name)}</div>
+      <div class="act-detail">${escHtml(w.description)}</div>
+      <div class="act-btns">
+        <button class="act-btn primary" onclick="runWorkflow('${escHtml(w.id)}', this, ${w.requires_approval ? 'true' : 'false'})">▶ Run</button>
+      </div>
+      <div id="wf-result-${escHtml(w.id)}" style="margin-top:9px"></div>
+    </div>`;
+  }).join('');
+}
+
+async function runWorkflow(id, btn, requiresApproval) {
+  if (!requiresApproval && !confirm('Run this workflow now?')) return;
+  const resultEl = document.getElementById('wf-result-' + id);
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Running…';
+  if (resultEl) resultEl.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/workflows/'+id+'/run', {method:'POST',headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},body:'{}'}, 150000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (d.staged) {
+      if (resultEl) resultEl.innerHTML = `<div class="sub">Queued — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Action Center ›</a></div>`;
+      showToast('Queued for Action Center approval.', 'info');
+      loadActions();
+    } else if (d.started) {
+      if (resultEl) resultEl.innerHTML = `<div class="sub">Started (PID ${escHtml(String(d.pid||''))}), running in background.</div>`;
+      showToast('Started, running in background.', 'info');
+    } else {
+      const ok = d.success !== false;
+      if (resultEl) resultEl.innerHTML = `<div class="sub" style="color:${ok?'var(--green)':'var(--red)'}">${ok?'✅ Completed':'❌ Failed'} (exit ${escHtml(String(d.returncode))})</div>` +
+        (d.output ? `<pre style="margin-top:6px;max-height:220px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap">${escHtml(d.output)}</pre>` : '');
+      showToast(ok ? 'Workflow completed.' : 'Workflow failed.', ok ? 'ok' : 'err', ok ? 4500 : 6000);
+    }
+  } catch(e) {
+    const msg = e.name==='AbortError'?'Request timed out':e.message||'Failed to run';
+    if (resultEl) resultEl.innerHTML = `<div class="empty">${escHtml(msg)}</div>`;
+    showToast(msg, 'err', 6000);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// Conversations — real data: /api/conversations — read-only browser + search
+// for the persisted chat_messages history. Session = a long-lived per-device
+// thread (one per browser localStorage), not a short discrete conversation —
+// expect very few sessions, each potentially holding many messages. Two views
+// inside one panel: session list (default) and a session detail/reader (drill-in).
+// No writes, no approval gate — this screen is purely a reporting surface.
+// ══════════════════════════════════════════════════════════════════════════
+let _convSessions = [];
+
+function _convTimeAgo(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  const mins = Math.round((Date.now() - d.getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  const days = Math.round(hrs / 24);
+  if (days < 30) return days + 'd ago';
+  return d.toLocaleDateString();
+}
+
+function _convShortId(sessionId) {
+  const s = sessionId || '';
+  return s.length > 12 ? s.slice(0, 8) + '…' + s.slice(-4) : s;
+}
+
+async function loadConversations() {
+  const el = document.getElementById('conversations-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/conversations', 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    _convSessions = d.sessions || [];
+    renderConversationList();
+    const badge = document.getElementById('badge-conversations');
+    if (badge) {
+      const total = _convSessions.reduce((sum, s) => sum + (s.message_count || 0), 0);
+      badge.textContent = total > 999 ? '999+' : total;
+      badge.style.display = total > 0 ? '' : 'none';
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderConversationList() {
+  const el = document.getElementById('conversations-content');
+  if (!el) return;
+  if (!_convSessions.length) {
+    el.innerHTML = '<div class="empty">No conversations yet — chat history will appear here once %%AGENT_SHORT%% has been used.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="section-title">💬 Sessions (${_convSessions.length})</div>` +
+    _convSessions.map(s => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(s.session_id)}')" role="button" tabindex="0">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt">
+        <div class="ttl">${escHtml(_convShortId(s.session_id))} <span style="color:var(--muted);font-weight:400">— ${s.message_count} msg${s.message_count===1?'':'s'}</span></div>
+        <div class="sub">${escHtml(s.last_role === 'user' ? '%%OWNER%%' : '%%AGENT_SHORT%%')}: ${escHtml(s.last_snippet || '')} · ${_convTimeAgo(s.last_at)}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function openConversation(sessionId) {
+  const el = document.getElementById('conversations-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/conversations/' + encodeURIComponent(sessionId), 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderConversationDetail(sessionId, d);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openConversation('${escHtml(sessionId)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
+  }
+}
+
+function renderConversationDetail(sessionId, d) {
+  const el = document.getElementById('conversations-content');
+  if (!el) return;
+  const msgs = d.messages || [];
+  let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
+    <span style="font-size:12px;color:var(--muted)">${escHtml(_convShortId(sessionId))} · ${msgs.length} message${msgs.length===1?'':'s'}${d.truncated ? ' (showing first 500)' : ''}</span>
+  </div>`;
+  html += '<div style="display:flex;flex-direction:column;gap:10px">' +
+    msgs.map(m => `<div class="lc-bubble ${m.role === 'user' ? 'user' : 'bot'}">${escHtml(m.content)}</div>`).join('') +
+    '</div>';
+  el.innerHTML = html;
+}
+
+function backToConversationList() {
+  renderConversationList();
+}
+
+async function searchConversations() {
+  const q = (document.getElementById('conv-search-input').value || '').trim();
+  if (!q) { loadConversations(); return; }
+  const el = document.getElementById('conversations-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/conversations?q=' + encodeURIComponent(q), 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderConversationSearch(q, d.results || []);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderConversationSearch(q, results) {
+  const el = document.getElementById('conversations-content');
+  if (!el) return;
+  let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
+    <span style="font-size:12px;color:var(--muted)">${results.length} match${results.length===1?'':'es'} for "${escHtml(q)}"</span>
+  </div>`;
+  html += results.length ? results.map(r => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(r.session_id)}')" role="button" tabindex="0">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt">
+        <div class="ttl">${escHtml(r.role === 'user' ? '%%OWNER%%' : '%%AGENT_SHORT%%')} <span style="color:var(--muted);font-weight:400">in ${escHtml(_convShortId(r.session_id))}</span></div>
+        <div class="sub">${escHtml(r.content.length > 160 ? r.content.slice(0,160)+'…' : r.content)} · ${_convTimeAgo(r.created_at)}</div>
+      </div>
+    </div>`).join('') : '<div class="empty">No messages match that search.</div>';
+  el.innerHTML = html;
+}
+
+document.getElementById('conv-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchConversations(); });
+
+// ══════════════════════════════════════════════════════════════════════════
+// Knowledge Base — real data: /api/kb — read-only browser + search for the
+// real markdown docs in data/knowledge_base/. Docs render as raw escaped text
+// in a monospace pre-wrap block (no markdown-to-HTML conversion) because these
+// docs are dense with markdown tables that a partial header-only renderer would
+// leave looking broken — pre-wrap monospace preserves table alignment exactly
+// as authored. Three view-states inside one panel: doc list (default), doc
+// reader (drill-in), search results. No writes, no approval gate.
+// ══════════════════════════════════════════════════════════════════════════
+let _kbDocs = [];
+
+function _kbPre(text) {
+  return `<div style="white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.5;color:var(--text)">${escHtml(text)}</div>`;
+}
+
+async function loadKb() {
+  const el = document.getElementById('kb-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/kb', 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    _kbDocs = d.docs || [];
+    renderKbList();
+    const badge = document.getElementById('badge-kb');
+    if (badge) {
+      badge.textContent = _kbDocs.length > 999 ? '999+' : _kbDocs.length;
+      badge.style.display = _kbDocs.length > 0 ? '' : 'none';
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderKbList() {
+  const el = document.getElementById('kb-content');
+  if (!el) return;
+  if (!_kbDocs.length) {
+    el.innerHTML = '<div class="empty">No knowledge base docs found in data/knowledge_base/.</div>';
+    return;
+  }
+  el.innerHTML = `<div class="section-title">📚 Docs (${_kbDocs.length})</div>` +
+    _kbDocs.map(d => `<div class="tl-item" style="cursor:pointer" onclick="openKbDoc('${escHtml(d.filename)}')" role="button" tabindex="0">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt">
+        <div class="ttl">${escHtml(d.title)}</div>
+        <div class="sub">${escHtml(d.filename)} · ${escHtml(d.size_human)} · ${d.word_count.toLocaleString()} words</div>
+      </div>
+    </div>`).join('');
+}
+
+async function openKbDoc(filename) {
+  const el = document.getElementById('kb-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/kb/' + encodeURIComponent(filename), 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderKbDoc(filename, d);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openKbDoc('${escHtml(filename)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
+  }
+}
+
+function renderKbDoc(filename, d) {
+  const el = document.getElementById('kb-content');
+  if (!el) return;
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
+    <span style="font-size:12px;color:var(--muted)">${escHtml(d.title)} · ${escHtml(filename)}</span>
+  </div>` + _kbPre(d.content);
+}
+
+function backToKbList() {
+  renderKbList();
+}
+
+async function searchKb() {
+  const q = (document.getElementById('kb-search-input').value || '').trim();
+  if (!q) { loadKb(); return; }
+  const el = document.getElementById('kb-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/kb?q=' + encodeURIComponent(q), 15000);
+    if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    renderKbSearch(q, d.results || []);
+  } catch(e) {
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+
+function renderKbSearch(q, results) {
+  const el = document.getElementById('kb-content');
+  if (!el) return;
+  let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
+    <span style="font-size:12px;color:var(--muted)">${results.length} doc${results.length===1?'':'s'} match "${escHtml(q)}"</span>
+  </div>`;
+  html += results.length ? results.map(r => `<div class="tl-item" style="cursor:default">
+      <div class="tl-dotcol"><span class="d"></span></div>
+      <div class="tl-txt" style="width:100%">
+        <div class="ttl" style="cursor:pointer" onclick="openKbDoc('${escHtml(r.filename)}')" role="button" tabindex="0">${escHtml(r.title)} <span style="color:var(--muted);font-weight:400">— ${r.match_count} match${r.match_count===1?'':'es'}</span></div>
+        ${r.matches.map(m => `<div class="sub" style="margin-top:6px">line ${m.line_no}</div>` + _kbPre(m.context)).join('')}
+      </div>
+    </div>`).join('') : '<div class="empty">No docs match that search.</div>';
+  el.innerHTML = html;
+}
+
+document.getElementById('kb-search-input').addEventListener('keydown', e => { if (e.key === 'Enter') searchKb(); });
+
+// ══════════════════════════════════════════════════════════════════════════
+// Hub screens — ported from the live Hub at / (main.py): Listings, Products,
+// Brand Kit, Files, Connections, Security. Same API calls, same write
+// semantics (toggleListingState still confirm-gated), restyled to hub- CSS.
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── Listings — real data: /api/listings, /api/shop-sections, /api/listings/{id}/files ──
+let _lastListingState = 'active';
+let _listings = [];
+let _listingState = 'active';
+let _sectionFilter = null; // null = all categories
+let _sectionsMap = null;   // {shop_section_id: title}, fetched once and cached client-side
+let _openDetailId = null;
+async function _ensureSectionsLoaded() {
+  if (_sectionsMap) return;
+  try {
+    const d = await (await authGet('/api/shop-sections', 15000)).json();
+    _sectionsMap = {};
+    (d.sections||[]).forEach(s => { _sectionsMap[s.shop_section_id] = s.title; });
+  } catch(e) { _sectionsMap = {}; }
+}
+function _sectionLabel(id) {
+  if (!id) return 'Uncategorized';
+  return (_sectionsMap && _sectionsMap[id]) || ('Section '+id);
+}
+async function loadListings(state, btn) {
+  if (btn) { document.querySelectorAll('#screen-listings .hub-toggle-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  _lastListingState = state; _listingState = state; _sectionFilter = null; _openDetailId = null;
+  const el = document.getElementById('listings-content');
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    await _ensureSectionsLoaded();
+    const r = await authGet('/api/listings?state='+state, 20000);
+    if (!r.ok) { const err = await r.json().catch(()=>({})); throw new Error(err.detail||'HTTP '+r.status); }
+    const d = await r.json();
+    _listings = d.listings || [];
+    renderListings();
+  } catch(e) {
+    el.innerHTML = `<div class="hub-empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastListingState)" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+  }
+}
+function setSectionFilter(key) {
+  _sectionFilter = key;
+  _openDetailId = null;
+  renderListings();
+}
+function renderListings() {
+  const el = document.getElementById('listings-content');
+  if (!_listings.length) { el.innerHTML = '<div class="hub-empty">No '+_listingState+' listings</div>'; return; }
+  const seen = {}; const cats = [];
+  _listings.forEach(l => {
+    const key = String(l.shop_section_id || 'none');
+    if (!seen[key]) { seen[key] = true; cats.push({key: key, label: _sectionLabel(l.shop_section_id)}); }
+  });
+  cats.sort((a,b) => a.label.localeCompare(b.label));
+  let html = '';
+  if (cats.length > 1) {
+    html += '<div class="hub-chip-row">';
+    html += `<button class="hub-chip-btn${_sectionFilter===null?' active':''}" onclick="setSectionFilter(null)">All (${_listings.length})</button>`;
+    cats.forEach(c => {
+      const n = _listings.filter(l => String(l.shop_section_id||'none')===c.key).length;
+      html += `<button class="hub-chip-btn${_sectionFilter===c.key?' active':''}" onclick="setSectionFilter('${c.key}')">${escHtml(c.label)} (${n})</button>`;
+    });
+    html += '</div>';
+  }
+  const filtered = _sectionFilter===null ? _listings : _listings.filter(l => String(l.shop_section_id||'none')===_sectionFilter);
+  if (!filtered.length) { html += '<div class="hub-empty">No listings in this category</div>'; el.innerHTML = html; return; }
+  html += filtered.map(l => `
+    <div class="hub-listing-item" style="cursor:pointer" onclick="toggleListingDetail(${l.listing_id})" role="button" tabindex="0">
+      ${l.thumbnail_url ? `<img class="hub-thumb" src="${escHtml(l.thumbnail_url)}" loading="lazy" alt="${escHtml(l.title||'Listing photo')}">` : `<div class="hub-thumb-ph" aria-hidden="true">🏷️</div>`}
+      <div class="hub-listing-info">
+        <div class="hub-listing-title">${escHtml(l.title)}</div>
+        <div class="hub-listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="hub-state-${l.listing_id}" class="hub-lstate ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
+      </div>
+      <div class="hub-listing-price">$${(+l.price||0).toFixed(2)}</div>
+    </div>
+    <div id="hub-detail-${l.listing_id}" class="hub-listing-detail" style="display:none"></div>`).join('');
+  el.innerHTML = html;
+}
+async function toggleListingDetail(listingId) {
+  const panel = document.getElementById('hub-detail-'+listingId);
+  if (!panel) return;
+  if (_openDetailId !== null && _openDetailId !== listingId) {
+    const prev = document.getElementById('hub-detail-'+_openDetailId);
+    if (prev) prev.style.display = 'none';
+  }
+  if (_openDetailId === listingId) { panel.style.display = 'none'; _openDetailId = null; return; }
+  const l = _listings.find(x => x.listing_id === listingId);
+  if (!l) return;
+  panel.style.display = 'block';
+  _openDetailId = listingId;
+  panel.innerHTML =
+    `<div class="hub-drow"><span>Listing ID</span><b>${listingId}</b></div>`+
+    `<div class="hub-drow"><span>Category</span><b>${escHtml(_sectionLabel(l.shop_section_id))}</b></div>`+
+    `<div class="hub-drow"><span>Views</span><b>${l.views}</b></div>`+
+    `<div class="hub-drow"><span>Favorites</span><b>${l.num_favorers}</b></div>`+
+    (l.sales!=null ? `<div class="hub-drow"><span>Sold</span><b>${l.sales}</b></div>` : '')+
+    (l.conversion_pct!=null ? `<div class="hub-drow"><span>Conversion</span><b>${l.conversion_pct}%</b></div>` : '')+
+    `<div class="hub-drow"><span>Price</span><b>$${(+l.price||0).toFixed(2)}</b></div>`+
+    `<div id="hub-files-${listingId}"><div class="hub-drow"><span>Digital files</span><b>loading…</b></div></div>`+
+    `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
+    ((l.state==='active'||l.state==='inactive') ? `<button id="hub-state-btn-${listingId}" class="hub-act-btn" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
+    `<a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a>`+
+    `</div>`;
+  try {
+    const r = await authGet('/api/listings/'+listingId+'/files', 15000);
+    const slot = document.getElementById('hub-files-'+listingId);
+    if (!slot) return;
+    if (!r.ok) { slot.innerHTML = '<div class="hub-drow"><span>Digital files</span><b>unavailable</b></div>'; return; }
+    const d = await r.json();
+    const files = d.files || [];
+    if (!files.length) { slot.innerHTML = '<div class="hub-drow"><span>Digital files</span><b>none attached</b></div>'; return; }
+    slot.innerHTML = files.map(f => `<div class="hub-drow"><span>📄 ${escHtml(f.filename||'file')}</span><b>${escHtml(f.size_human||'')}</b></div>`).join('');
+  } catch(e) {
+    const slot = document.getElementById('hub-files-'+listingId);
+    if (slot) slot.innerHTML = '<div class="hub-drow"><span>Digital files</span><b>failed to load</b></div>';
+  }
+}
+async function toggleListingState(listingId, btn) {
+  const l = _listings.find(x => x.listing_id === listingId);
+  if (!l) return;
+  const newState = l.state === 'active' ? 'inactive' : 'active';
+  if (!confirm((newState==='inactive'?'Deactivate':'Activate')+' this listing on Etsy now?')) return;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Working…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/listings/'+listingId+'/state?new_state='+newState, {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 25000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    l.state = d.state || newState;
+    btn.textContent = l.state==='active' ? '⏸️ Deactivate' : '▶️ Activate';
+    btn.disabled = false;
+    const badge = document.getElementById('hub-state-'+listingId);
+    if (badge) { badge.textContent = l.state; badge.className = 'hub-lstate ' + (l.state==='active'?'active':'draft'); }
+  } catch(e) {
+    btn.disabled = false; btn.textContent = orig;
+    showToast('Could not change listing state: ' + (e.message||e), 'err', 6000);
+  }
+}
+
+// ── Products / Brand Kit — fully static, from CLAUDE.md product catalog ──
+const _THEMES = [
+  {id:'DP1026',name:'Lavender Dreams',primary:'#8666AA',accent:'#C4A8D4',neutral:'#FAF7FF',text:'#2C1A3A'},
+  {id:'DP1027',name:'Cotton Candy',   primary:'#DE97C6',accent:'#97C6DE',neutral:'#FFF6FC',text:'#2C1A2A'},
+  {id:'DP1028',name:'Midnight Blue',  primary:'#1B2568',accent:'#7BA7C2',neutral:'#F0F5FF',text:'#0D1525'},
+  {id:'DP1029',name:'Coral Peach',    primary:'#FD6C49',accent:'#F5B878',neutral:'#FFF8F4',text:'#3A1A0D'}
+];
+const _PRODUCTS_STATIC = [
+  {id:'DP1026',name:'Ultimate Life Planner',      price:'$14.99',pages:104},
+  {id:'DP1027',name:'Student & School Planner',   price:'$9.99', pages:90},
+  {id:'DP1028',name:'Budget & Finance Planner',   price:'$12.99',pages:102},
+  {id:'DP1029',name:'Fitness & Wellness Planner', price:'$12.99',pages:91}
+];
+async function renderProducts() {
+  const el = document.getElementById('products-content');
+  if (!el) return;
+  el.innerHTML = '<div class="hub-section-title">Loading…</div>';
+  try {
+    const d = await authGet('/api/products').then(r => r.json());
+    let html = '<div class="hub-section-title">Core Products</div>';
+    (d.products || []).forEach((p, i) => {
+      const t = _THEMES[i] || {};
+      const files = (p.pdf_exists ? '✅ PDF' : '❌ PDF') + '  ' + (p.zip_exists ? '✅ ZIP' : '❌ ZIP');
+      html += '<div class="hub-prod-card" style="border-left-color:'+(t.primary||'var(--gold)')+'">'+
+        '<div class="hub-prod-name">'+escHtml(p.title || p.id)+'</div>'+
+        '<div class="hub-prod-meta">'+escHtml(p.id)+(p.listing_id ? ' · Etsy #'+escHtml(String(p.listing_id)) : '')+'</div>'+
+        '<div class="hub-prod-files" style="font-size:11px;opacity:0.8;margin-top:3px">'+files+'</div>'+
+      '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="hub-prod-card">⚠ ' + escHtml(e.message) + '</div>';
+  }
+}
+function renderBrandKit() {
+  const el = document.getElementById('brandkit-content');
+  if (!el) return;
+  let html = '<div class="hub-section-title">Product Color Palettes</div>';
+  _THEMES.forEach(t => {
+    html += '<div class="hub-card" style="margin-bottom:10px">';
+    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">'+escHtml(t.id)+' — '+escHtml(t.name)+'</div>';
+    html += '<div style="display:flex;gap:12px;flex-wrap:wrap">';
+    [{label:'Primary',hex:t.primary},{label:'Accent',hex:t.accent},{label:'Neutral',hex:t.neutral},{label:'Text',hex:t.text}].forEach(c => {
+      html += '<div style="display:flex;align-items:center;gap:5px">'+
+        '<span class="hub-swatch" style="background:'+escHtml(c.hex)+'"></span>'+
+        '<div style="font-size:11px"><div style="color:var(--muted)">'+escHtml(c.label)+'</div>'+
+        '<div style="font-family:monospace;font-size:10px;color:var(--text)">'+escHtml(c.hex)+'</div></div>'+
+        '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div class="hub-section-title">Listing Standards</div><div class="hub-card">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  [['Title','≤70 chars · keyword first 40 · commas not pipes'],
+   ['Tags','13 tags · each ≤20 chars · multi-word buyer phrases'],
+   ['Photos','10 slots · 2400×2400px · lifestyle hero first'],
+   ['Price','.99 / .97 / .49 endings — never round numbers'],
+   ['AI disclosure','Required in description · who_made: i_did'],
+   ['File limit','20 MB per file (PDF + ZIP · Etsy hard limit)']
+  ].forEach(r => {
+    html += '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:7px 0;padding-right:10px;color:var(--gold);font-weight:700;white-space:nowrap">'+escHtml(r[0])+'</td>'+
+      '<td style="padding:7px 0;color:var(--muted);line-height:1.4">'+escHtml(r[1])+'</td></tr>';
+  });
+  html += '</table></div>';
+  html += '<div class="hub-section-title">Pricing Tiers</div><div class="hub-card">';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  [['DP1026 Life Planner','$14.99','104 pages + sticker pack'],
+   ['DP1027 Student','$9.99','90 pages · student budget'],
+   ['DP1028 Budget','$12.99','102 pages · finance niche'],
+   ['DP1029 Fitness','$12.99','91 pages · wellness niche'],
+   ['SVG 5-pack','$9.99','5 designs · instant DL'],
+   ['SVG 10+ pack','$14.99','10+ designs · instant DL']
+  ].forEach(r => {
+    html += '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:7px 0;padding-right:8px;font-weight:600">'+escHtml(r[0])+'</td>'+
+      '<td style="padding:7px 0;padding-right:8px;color:var(--gold);font-weight:700;white-space:nowrap">'+escHtml(r[1])+'</td>'+
+      '<td style="padding:7px 0;color:var(--muted)">'+escHtml(r[2])+'</td></tr>';
+  });
+  html += '</table></div>';
+  el.innerHTML = html;
+}
+
+// ── Files — real data: /api/files (data/digital_products/ + backups) ──
+function _hubFileUrl(f, inline){
+  return BASE+'/api/files/download?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
+    (inline?'&inline=1':'');
+}
+function _hubZipEntryUrl(f, entryName){
+  return BASE+'/api/files/zip-entry?root='+encodeURIComponent(f.root)+'&path='+encodeURIComponent(f.path)+
+    '&entry='+encodeURIComponent(entryName);
+}
+function _hubFileIcon(name){
+  const n=(name||'').toLowerCase();
+  if(n.match(/\.(png|jpe?g|gif|webp|svg)$/)) return '🖼️';
+  if(n.endsWith('.pdf')) return '📕';
+  if(n.endsWith('.zip')) return '🗂️';
+  if(n.match(/\.(txt|md)$/)) return '📃';
+  return '📄';
+}
+function toggleZip(id, btn){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const open=el.style.display==='none';
+  el.style.display=open?'':'none';
+  if(btn) btn.textContent=open?'▾':'▸';
+}
+function openFile(url){ window.open(url,'_blank'); }
+async function loadFiles() {
+  const el = document.getElementById('files-content');
+  if (!el) return;
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/files', 20000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const groups = d.groups||[];
+    if (!groups.length || groups.every(g=>!g.files.length)) {
+      el.innerHTML = '<div class="hub-empty" style="line-height:1.6">'+
+        escHtml(d.empty_reason||'No files yet.')+'</div>';
+      return;
+    }
+    let html = '<div class="hub-card" style="margin-bottom:12px">'+
+      '<div style="font-size:12px;color:var(--muted);line-height:1.6">The actual product files living on the server '+
+      '(data/digital_products/ and data/backups/). Tap a file to open it. Tap a ZIP to expand it and open any '+
+      'file inside directly — no unzipping needed.</div></div>';
+    let zipIdx=0;
+    groups.forEach(g => {
+      if (!g.files.length) return;
+      html += '<div class="hub-section-title">'+escHtml(g.label)+' ('+g.files.length+')</div><div class="hub-card">';
+      g.files.forEach(f => {
+        const when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+        if (f.is_zip) {
+          const zid='hub-zip-'+(zipIdx++);
+          const entries=f.entries||[];
+          html += '<div class="hub-listing-item" onclick="toggleZip(\\''+zid+'\\',this.querySelector(\\'.hub-zip-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
+            '<div class="hub-thumb-ph">🗂️</div>'+
+            '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
+            '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+' · '+entries.length+' files inside</div></div>'+
+            '<div class="hub-zip-caret" style="color:var(--gold);font-size:16px">▸</div>'+
+          '</div>';
+          html += '<div id="'+zid+'" style="display:none;margin:0 0 6px 14px;border-left:2px solid var(--border);padding-left:8px">';
+          if(!entries.length){
+            html += '<div class="hub-listing-meta" style="padding:8px 0">Could not read this ZIP\\'s contents.</div>';
+          }
+          entries.forEach(en => {
+            const eurl=_hubZipEntryUrl(f,en.name);
+            html += '<div class="hub-listing-item" onclick="openFile(\\''+eurl+'\\')" style="cursor:pointer;padding:7px 4px" role="button" tabindex="0">'+
+              '<div class="hub-thumb-ph" style="font-size:16px">'+_hubFileIcon(en.name)+'</div>'+
+              '<div class="hub-listing-info"><div class="hub-listing-title" style="font-size:13px">'+escHtml(en.name)+'</div>'+
+              '<div class="hub-listing-meta">'+escHtml(en.size_human)+(en.inline?' · tap to open':' · tap to download')+'</div></div>'+
+              '<div style="color:var(--gold);font-size:15px">'+(en.inline?'↗':'⬇')+'</div>'+
+            '</div>';
+          });
+          html += '</div>';
+        } else {
+          const url=_hubFileUrl(f, f.inline?1:0);
+          html += '<div class="hub-listing-item" onclick="openFile(\\''+url+'\\')" style="cursor:pointer" role="button" tabindex="0">'+
+            '<div class="hub-thumb-ph">'+_hubFileIcon(f.path)+'</div>'+
+            '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
+            '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+(f.inline?' · tap to open':' · tap to download')+'</div></div>'+
+            '<div style="color:var(--gold);font-size:18px">'+(f.inline?'↗':'⬇')+'</div>'+
+          '</div>';
+        }
+      });
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load files')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+
+// ── Studio — real data: /api/studio/* (image-to-video generation, attach-to-Etsy
+// staging, Instagram/Facebook posting). Posting always fires only on a direct button
+// click — there is no automatic or scheduled trigger anywhere in this code. ──
+let _studioSelectedVideo = '';
+let _studioUploadedPaths = [];
+
+function _studioVideoUrl(name, inline){
+  return BASE+'/api/files/download?root=videos&path='+encodeURIComponent(name)+
+    (inline?'&inline=1':'');
+}
+
+function studioPreviewVideo(name){
+  _studioSelectedVideo = name;
+  const player = document.getElementById('studio-player');
+  if (player) { player.src = _studioVideoUrl(name, 1); player.load(); }
+  const cap = document.getElementById('studio-player-caption');
+  if (cap) cap.textContent = name;
+  const title = document.getElementById('studio-actions-title');
+  const card = document.getElementById('studio-actions-card');
+  const fn = document.getElementById('studio-actions-filename');
+  if (title) title.style.display = '';
+  if (card) card.style.display = '';
+  if (fn) fn.textContent = name;
+  ['studio-stage-status','studio-ig-status','studio-fb-status'].forEach(function(id){
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  document.querySelectorAll('#studio-videos-list .studio-list-item').forEach(function(row){
+    row.style.borderColor = (row.getAttribute('data-path')===name) ? 'var(--gold)' : '';
+  });
+}
+
+document.addEventListener('click', function(e){
+  const row = e.target.closest && e.target.closest('#studio-videos-list .studio-list-item');
+  if (row) studioPreviewVideo(row.getAttribute('data-path'));
+});
+
+async function loadStudioVideos() {
+  const el = document.getElementById('studio-videos-list');
+  if (!el) return;
+  fetch('/health').then(r=>r.json()).then(d=>{
+    const v = document.getElementById('studio-build-ver');
+    if (v && d.build) v.textContent = d.build;
+  }).catch(()=>{});
+  try {
+    const r = await authGet('/api/studio/videos', 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const videos = d.videos||[];
+    if (!videos.length) {
+      el.innerHTML = '<div class="hub-empty">No videos generated yet.</div>';
+      return;
+    }
+    el.innerHTML = videos.map(v => {
+      const when = new Date(v.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const selected = v.path === _studioSelectedVideo;
+      return '<div class="studio-list-item" data-path="'+escHtml(v.path)+'" '+
+        'style="cursor:pointer'+(selected?';border-color:var(--gold)':'')+'">'+
+        '<div style="font-weight:600">'+escHtml(v.path)+'</div>'+
+        '<div style="color:var(--muted);margin-top:3px">'+escHtml(v.size_human)+' · '+escHtml(when)+'</div></div>';
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load videos')+'</div>';
+  }
+}
+
+document.addEventListener('change', function(e){
+  if (e.target && e.target.id === 'studio-file-input') studioUploadImages(e.target.files);
+  if (e.target && e.target.id === 'studio-style') {
+    const isAI = e.target.value === 'ai-scene';
+    const aiFields = document.getElementById('studio-ai-fields');
+    if (aiFields) aiFields.style.display = isAI ? 'block' : 'none';
+    if (isAI) {
+      const sp = document.getElementById('studio-scene-prompt');
+      if (sp && !sp.value) {
+        const t = (document.getElementById('studio-title').value||'').trim();
+        const p = (document.getElementById('studio-price').value||'').trim();
+        sp.value = 'Cinematic product video of "' + (t||'product') + '"' +
+          (p ? ' priced at '+p : '') +
+          '. The product sits on a cozy desk with soft natural window light, subtle camera movement, warm ambient atmosphere. Professional product photography style.';
+      }
+    }
+  }
+});
+
+async function studioUploadImages(fileList) {
+  const status = document.getElementById('studio-upload-status');
+  const files = Array.from(fileList||[]);
+  if (!files.length) return;
+  _studioUploadedPaths = [];
+  for (let i=0; i<files.length; i++) {
+    const f = files[i];
+    if (status) status.textContent = 'Uploading '+(i+1)+'/'+files.length+'…';
+    try {
+      const r = await fetchWithTimeout(
+        BASE+'/api/studio/upload-image?filename='+encodeURIComponent(f.name),
+        {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:f},
+        30000
+      );
+      const d = await r.json().catch(()=>({}));
+      if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+      _studioUploadedPaths.push(d.path);
+    } catch(e) {
+      if (status) status.textContent = 'Upload failed on "'+f.name+'": '+(e.message||e);
+      return;
+    }
+  }
+  if (status) status.textContent = _studioUploadedPaths.length+' image(s) ready to generate.';
+}
+
+// ── SVG Converter — Studio tool. Traces a dropped/picked reference photo into an
+// SVG via /api/studio/convert-svg (vtracer under the hood). The "What's this for?"
+// target selector picks a sensible default trace mode and shows one honest line of
+// guidance per product line — most of our product lines are pure raster and don't
+// need a vector file at all, so this never pretends otherwise. For the 3D-Print
+// Sign target specifically, the real clean-vector quality gate
+// (etsy_api.check_svg_quality — the same thresholds that gate real ZIP uploads)
+// runs on every conversion and its actual pass/fail shows up immediately, not a
+// guess. ──
+const SVGC_TARGETS = {
+  '3dprint': {mode:'silhouette', hint:'3D-print signs need clean vectors (≤20 colors, ≤200 paths) for multi-color AMS printing — the quality check below is the real gate, not an estimate. If it fails, try a higher-contrast source photo or Silhouette mode.'},
+  'wallart': {mode:'color', hint:'Wall art doesn’t need a vector file — this SVG is just useful as illustrated source art. For the actual print-ready deliverable, run finished art through the existing upscale/print-size pipeline.'},
+  'sticker': {mode:'color', hint:'The sticker pipeline works on raster PNGs, not SVGs — this is a clean-line starting point for a new design, not a drop-in replacement for that pipeline.'},
+  'planner': {mode:'color', hint:'The planner pipeline is pure PDF/raster — this SVG would need to be rendered to a raster image first if you want to use it as cover art.'},
+  'none': {mode:'color', hint:''},
+};
+
+function svgcUpdateHint(){
+  const targetEl = document.getElementById('svgc-target');
+  const modeEl = document.getElementById('svgc-mode');
+  const hintEl = document.getElementById('svgc-hint');
+  if (!targetEl || !modeEl || !hintEl) return;
+  const cfg = SVGC_TARGETS[targetEl.value] || SVGC_TARGETS.none;
+  modeEl.value = cfg.mode;
+  hintEl.textContent = cfg.hint;
+}
+
+document.addEventListener('change', function(e){
+  if (e.target && e.target.id === 'svgc-file-input' && e.target.files[0]) svgcConvert(e.target.files[0]);
+  if (e.target && e.target.id === 'svgc-target') svgcUpdateHint();
+});
+
+(function(){
+  const zone = document.getElementById('svgc-dropzone');
+  if (!zone) return;
+  ['dragover','dragenter'].forEach(function(evt){ zone.addEventListener(evt, function(e){
+    e.preventDefault(); e.stopPropagation();
+    zone.style.borderColor = 'var(--cyan)'; zone.style.background = 'rgba(58,214,255,.06)';
+  }); });
+  ['dragleave','dragend'].forEach(function(evt){ zone.addEventListener(evt, function(e){
+    e.preventDefault(); e.stopPropagation();
+    zone.style.borderColor = 'var(--border)'; zone.style.background = '';
+  }); });
+  zone.addEventListener('drop', function(e){
+    e.preventDefault(); e.stopPropagation();
+    zone.style.borderColor = 'var(--border)'; zone.style.background = '';
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) svgcConvert(f);
+  });
+  svgcUpdateHint();
+})();
+
+async function svgcConvert(file){
+  if (!file) return;
+  const status = document.getElementById('svgc-status');
+  const resultEl = document.getElementById('svgc-result');
+  const modeEl = document.getElementById('svgc-mode');
+  const mode = modeEl ? modeEl.value : 'color';
+  if (resultEl) resultEl.style.display = 'none';
+  if (status) status.textContent = 'Converting "'+file.name+'"…';
+  try {
+    const r = await fetchWithTimeout(
+      BASE+'/api/studio/convert-svg?mode='+encodeURIComponent(mode),
+      {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:file},
+      45000
+    );
+    const d = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const dlUrl = BASE+'/api/files/download?root=svg_conversions&path='+encodeURIComponent(d.path)+'&token='+encodeURIComponent(TOKEN);
+    const previewEl = document.getElementById('svgc-preview');
+    const downloadEl = document.getElementById('svgc-download');
+    if (previewEl) previewEl.src = dlUrl+'&inline=1';
+    if (downloadEl) { downloadEl.href = dlUrl; downloadEl.setAttribute('download', d.path); }
+    const q = d.quality || {};
+    const qEl = document.getElementById('svgc-quality');
+    if (qEl) {
+      if (q.passes_gate) {
+        qEl.innerHTML = '<span style="color:var(--green)">✓ '+q.unique_fills+' colors, '+q.path_count+' paths, '+Math.round(q.size_kb)+'KB — passes the 3D-print clean-vector gate</span>';
+      } else {
+        const firstProblem = (q.problems && q.problems[0]) ? escHtml(q.problems[0]) : '';
+        qEl.innerHTML = '<span style="color:var(--red)">✗ '+q.unique_fills+' colors, '+q.path_count+' paths, '+Math.round(q.size_kb)+'KB — too complex for a color-separated 3D print.</span>'+(firstProblem?'<div style="color:var(--muted);margin-top:4px">'+firstProblem+'</div>':'');
+      }
+    }
+    if (resultEl) resultEl.style.display = 'block';
+    if (status) status.textContent = '';
+  } catch(e) {
+    if (status) status.textContent = 'Conversion failed: '+(e.message||e);
+  }
+}
+
+// ── Lifestyle Photo Generator — Studio tool. Wraps THE STANDARD LIFESTYLE METHOD
+// (tools/listing_photo_pipeline.py::generate_verified_photo, documented in CLAUDE.md):
+// upload the REAL product file(s), generate a photorealistic scene, self-verify the
+// render against the source, retry on mismatch. Category defaults mirror the
+// PHYSICS keys in that module so the "what's this for" choice picks the right
+// surface-realism template server-side. Real per-click API cost, so unlike the SVG
+// converter this is deliberately capped at 2 attempts, not the pipeline's own 3. ──
+const LSG_SCENE_DEFAULTS = {
+  'sign_flat': 'displayed on a cozy living room wall above a console table, warm natural window light, a small potted plant and a stack of books as props',
+  'tumbler_wrap': 'held on a rustic wooden outdoor table next to a folded picnic blanket, bright natural daylight',
+  'framed_print': 'hung on a warm cream gallery wall above a boucle sofa, soft morning light from the left',
+  'flat_paper': 'lying flat on a cream linen surface next to a cup of coffee and a small potted succulent',
+  'ipad_lifestyle': 'on a cozy wooden desk at a 30-degree angle, a latte and a small succulent nearby, soft window light from the left',
+  'sticker_sheet_flat': 'on a clean cream desk surface with washi tape and a pen nearby, bright even overhead light',
+  '3d_print_lamp': 'on a nightstand in a softly lit bedroom in the evening, warm ambient light',
+  '3d_print_vase': 'on a wooden console table with a few dried flower stems, soft daylight',
+  '3d_print_holder': 'on a tidy desk beside a laptop and a cup of pens, bright clean daylight',
+  '3d_print_planter': 'on a sunny windowsill, bright natural light',
+};
+
+let _lsgUploadedPaths = [];
+
+function lsgFillDefaultPrompt(){
+  const catEl = document.getElementById('lsg-category');
+  const promptEl = document.getElementById('lsg-scene-prompt');
+  if (!catEl || !promptEl) return;
+  // Only auto-fill if the box is empty or still holds a PREVIOUS auto-fill --
+  // never overwrite something the user actually typed themselves.
+  if (!promptEl.value || promptEl.dataset.auto === '1') {
+    promptEl.value = LSG_SCENE_DEFAULTS[catEl.value] || '';
+    promptEl.dataset.auto = '1';
+  }
+}
+
+document.addEventListener('change', function(e){
+  if (e.target && e.target.id === 'lsg-file-input' && e.target.files.length) lsgUploadFiles(e.target.files);
+  if (e.target && e.target.id === 'lsg-category') lsgFillDefaultPrompt();
+});
+document.addEventListener('input', function(e){
+  if (e.target && e.target.id === 'lsg-scene-prompt') e.target.dataset.auto = '0';
+});
+
+async function lsgUploadFiles(fileList){
+  const status = document.getElementById('lsg-upload-status');
+  const files = Array.from(fileList||[]);
+  if (!files.length) return;
+  _lsgUploadedPaths = [];
+  for (let i=0; i<files.length; i++){
+    const f = files[i];
+    if (status) status.textContent = 'Uploading '+(i+1)+'/'+files.length+'…';
+    try {
+      const r = await fetchWithTimeout(
+        BASE+'/api/studio/upload-image?filename='+encodeURIComponent(f.name),
+        {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:f},
+        30000
+      );
+      const d = await r.json().catch(function(){ return {}; });
+      if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+      _lsgUploadedPaths.push(d.path);
+    } catch(e) {
+      if (status) status.textContent = 'Upload failed on "'+f.name+'": '+(e.message||e);
+      return;
+    }
+  }
+  if (status) status.textContent = _lsgUploadedPaths.length+' file(s) ready to generate.';
+}
+
+async function lsgGenerate(){
+  const status = document.getElementById('lsg-status');
+  const resultEl = document.getElementById('lsg-result');
+  const previewWrap = document.getElementById('lsg-preview-wrap');
+  const downloadEl = document.getElementById('lsg-download');
+  const outcomeEl = document.getElementById('lsg-outcome');
+  if (!_lsgUploadedPaths.length) {
+    if (status) status.textContent = 'Upload at least one real product file first.';
+    return;
+  }
+  const category = document.getElementById('lsg-category').value;
+  const scenePrompt = (document.getElementById('lsg-scene-prompt').value || '').trim();
+  if (!scenePrompt) {
+    if (status) status.textContent = 'Scene description is required.';
+    return;
+  }
+  if (resultEl) resultEl.style.display = 'none';
+  const btn = document.getElementById('lsg-generate-btn');
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = 'Generating — this can take up to a couple of minutes (real image generation + verification against your file)…';
+  try {
+    const r = await fetchWithTimeout(
+      BASE+'/api/studio/generate-lifestyle-photo',
+      {method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+       body: JSON.stringify({design_paths:_lsgUploadedPaths, category:category, scene_prompt:scenePrompt})},
+      290000
+    );
+    const d = await r.json().catch(function(){ return {}; });
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (d.ok && d.path) {
+      const dlUrl = BASE+'/api/files/download?root=lifestyle_photos&path='+encodeURIComponent(d.path)+'&token='+encodeURIComponent(TOKEN);
+      const previewEl = document.getElementById('lsg-preview');
+      if (previewEl) previewEl.src = dlUrl+'&inline=1';
+      if (downloadEl) { downloadEl.href = dlUrl; downloadEl.setAttribute('download', d.path); downloadEl.style.display = 'block'; }
+      if (previewWrap) previewWrap.style.display = 'block';
+      if (outcomeEl) outcomeEl.innerHTML = '<span style="color:var(--green)">✓ Passed verification (attempt '+d.attempts+') — matches your real product file.</span>';
+    } else {
+      if (previewWrap) previewWrap.style.display = 'none';
+      if (downloadEl) downloadEl.style.display = 'none';
+      const firstIssue = (d.issues && d.issues[0]) ? escHtml(d.issues[0]) : '';
+      if (outcomeEl) outcomeEl.innerHTML = '<span style="color:var(--red)">✗ Failed verification after '+(d.attempts||0)+' attempt(s) — the render did not reliably match your source file.</span>'+(firstIssue?'<div style="color:var(--muted);margin-top:4px">'+firstIssue+'</div>':'');
+    }
+    if (resultEl) resultEl.style.display = 'block';
+    if (status) status.textContent = '';
+  } catch(e) {
+    if (status) status.textContent = 'Generation failed: '+(e.message||e);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function studioGenerate() {
+  const btn = document.getElementById('studio-generate-btn');
+  const status = document.getElementById('studio-generate-status');
+  const listingId = (document.getElementById('studio-listing-id').value||'').trim();
+  const style = document.getElementById('studio-style').value;
+  const title = document.getElementById('studio-title').value||'';
+  const price = document.getElementById('studio-price').value||'';
+  const digital = document.getElementById('studio-digital').checked;
+
+  if (!listingId && !_studioUploadedPaths.length) {
+    if (status) status.textContent = 'Upload images or enter a listing ID first.';
+    return;
+  }
+  const body = {style:style, title:title, price:price, digital:digital};
+  if (listingId) body.listing_id = parseInt(listingId, 10);
+  else body.image_paths = _studioUploadedPaths;
+  if (style === 'ai-scene') {
+    body.scene_prompt = (document.getElementById('studio-scene-prompt').value||'').trim();
+    body.aspect_ratio = document.getElementById('studio-aspect-ratio').value || '9:16';
+  }
+  const reqTimeout = style === 'ai-scene' ? 310000 : 185000;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Generating…';
+  if (status) status.innerHTML = '<div class="hub-spinner" style="margin:10px auto"></div>';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/studio/generate', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'}, body:JSON.stringify(body)
+    }, reqTimeout);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (status) status.textContent = 'Generated '+d.path+' ('+d.size_human+').';
+    _studioUploadedPaths = [];
+    const fi = document.getElementById('studio-file-input');
+    if (fi) fi.value = '';
+    const us = document.getElementById('studio-upload-status');
+    if (us) us.textContent = '';
+    await loadStudioVideos();
+    studioPreviewVideo(d.path);
+  } catch(e) {
+    if (status) status.textContent = e.name==='AbortError' ? 'Generation timed out.' : (e.message||'Generation failed');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Video';
+  }
+}
+
+async function studioStageToEtsy() {
+  if (!_studioSelectedVideo) return;
+  const btn = document.getElementById('studio-stage-btn');
+  const status = document.getElementById('studio-stage-status');
+  const listingId = (document.getElementById('studio-attach-listing-id').value||'').trim();
+  const rank = (document.getElementById('studio-attach-rank').value||'').trim();
+  if (!listingId) { if (status) status.textContent = 'Enter a listing ID first.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Staging…';
+  if (status) status.textContent = '';
+  try {
+    const videoResp = await fetchWithTimeout(_studioVideoUrl(_studioSelectedVideo, 0), {}, 30000);
+    if (!videoResp.ok) throw new Error('Could not read video file (HTTP '+videoResp.status+')');
+    const blob = await videoResp.blob();
+    let url = BASE+'/api/queue/stage-video?listing_id='+encodeURIComponent(listingId)+
+      '&summary='+encodeURIComponent('Studio video for listing '+listingId);
+    if (rank) url += '&rank='+encodeURIComponent(rank);
+    const r = await fetchWithTimeout(url, {method:'POST', headers:{Authorization:'Bearer '+TOKEN}, body:blob}, 60000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (status) status.innerHTML = `Staged — <a href="#" onclick="showScreen('actions');return false" style="color:var(--cyan2)">review in Action Center ›</a>`;
+  } catch(e) {
+    if (status) status.textContent = e.message||'Staging failed';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Stage for Approval';
+  }
+}
+
+async function studioPostInstagram() {
+  if (!_studioSelectedVideo) return;
+  const btn = document.getElementById('studio-ig-btn');
+  const status = document.getElementById('studio-ig-status');
+  const caption = document.getElementById('studio-ig-caption').value||'';
+  if (!confirm('Post this video to Instagram now? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Posting…';
+  if (status) status.textContent = '';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/studio/post-instagram', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify({video:_studioSelectedVideo, caption:caption, is_reel:true})
+    }, 120000);
+    const d = await r.json().catch(()=>({}));
+    if (d.error) { if (status) status.textContent = d.error+': '+(d.detail||''); return; }
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (status) status.textContent = 'Posted to Instagram.';
+  } catch(e) {
+    if (status) status.textContent = e.message||'Instagram post failed';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Post to Instagram (Reel)';
+  }
+}
+
+async function studioPostFacebook() {
+  if (!_studioSelectedVideo) return;
+  const btn = document.getElementById('studio-fb-btn');
+  const status = document.getElementById('studio-fb-status');
+  const caption = document.getElementById('studio-fb-caption').value||'';
+  if (!confirm('Post this video to Facebook now? This cannot be undone.')) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Posting…';
+  if (status) status.textContent = '';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/studio/post-facebook', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify({video:_studioSelectedVideo, caption:caption})
+    }, 120000);
+    const d = await r.json().catch(()=>({}));
+    if (d.error) { if (status) status.textContent = d.error+': '+(d.detail||''); return; }
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    if (status) status.textContent = 'Posted to Facebook.';
+  } catch(e) {
+    if (status) status.textContent = e.message||'Facebook post failed';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Post to Facebook';
+  }
+}
+
+// ── Connections — real data: /api/credentials/status + static Platform Roadmap ──
+const _PLATFORM_ROADMAP = [
+  {name:'Etsy',      icon:'🛍️', status:'live',    note:'onbrandcraftz · authorized'},
+  {name:'Pinterest', icon:'📌', status:'roadmap',note:'API v5 — ready to integrate', steps:[
+    'Create a Pinterest Developer app at developers.pinterest.com',
+    'Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env',
+    'Run: python tools/pinterest_oauth.py — authorizes and saves tokens to .env automatically',
+    'Claim the Etsy shop under Pinterest "Claimed accounts" to enable Rich Pins',
+    'Done — the Social Media Agent can post via tools/pinterest_api.py'
+  ]},
+  {name:'Instagram', icon:'📷', status:'roadmap',note:'Meta Graph API (app review needed)', steps:[
+    'Create a Meta Business app at developers.facebook.com',
+    'Add the "Instagram Graph API" product to the app',
+    'Connect the Instagram Professional account via a Facebook Page',
+    'Add INSTAGRAM_APP_ID / INSTAGRAM_APP_SECRET to .env',
+    'Generate a long-lived access token (scopes: instagram_basic, instagram_content_publish, instagram_manage_insights, pages_show_list, pages_read_engagement)',
+    'Add INSTAGRAM_USER_ID / INSTAGRAM_ACCESS_TOKEN to .env',
+    'Submit the app for Meta App Review before posting publicly — tools/instagram_api.py is already built and waiting on this'
+  ]},
+  {name:'Facebook',  icon:'📘', status:'roadmap',note:'Same Meta app as Instagram', steps:[
+    'No separate app needed — reuse the Meta app created for Instagram',
+    'Add the Facebook Page and Pages API permission to that same app',
+    'Generate a Page Access Token with the pages_manage_posts scope',
+    'Add FACEBOOK_PAGE_ID / FACEBOOK_ACCESS_TOKEN to .env once issued'
+  ]},
+  {name:'TikTok',    icon:'🎵', status:'roadmap',note:'TikTok for Business API', steps:[
+    'App credentials are already configured (TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET)',
+    'Run: python tools/tiktok_oauth.py — log in as @onbrandcraftz and approve',
+    'Tokens save to .env automatically (access token 24h, refresh token 365 days)',
+    'Re-run tools/tiktok_oauth.py whenever the access token expires',
+    'Done — post via tools/tiktok_poster.py'
+  ]},
+  {name:'OneDrive',  icon:'☁️', status:'roadmap',note:'Microsoft Graph — source file storage', steps:[
+    'Not yet built — no OneDrive code exists in the repo today',
+    'Register an app in the Azure Portal (Microsoft Entra ID → App registrations)',
+    'Grant the Microsoft Graph "Files.ReadWrite" delegated permission',
+    'Add ONEDRIVE_CLIENT_ID / ONEDRIVE_CLIENT_SECRET to .env',
+    'Build tools/onedrive_oauth.py to get access/refresh tokens (does not exist yet)',
+    'Use the Graph API /me/drive/root:/path:/content endpoint to sync source files for backup'
+  ]}
+];
+function toggleCredSteps(key) {
+  const panel = document.getElementById('hub-cred-steps-'+key);
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+async function loadConnections() {
+  const el = document.getElementById('connections-content');
+  if (!el) return;
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/credentials/status', 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    let html = '<div class="hub-card" style="margin-bottom:12px">';
+    if (d.etsy_live) {
+      html += '<div style="color:var(--green);font-size:15px;font-weight:700">✅ Etsy Live</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+escHtml(d.shop_name||'onbrandcraftz')+' · token valid</div>';
+    } else {
+      html += '<div style="color:var(--red);font-size:15px;font-weight:700">⚠️ Etsy Ping Failed</div>'+
+        '<div style="font-size:12px;color:var(--muted);margin-top:4px">'+escHtml(d.etsy_live_error||'Unknown error')+' — run python tools/etsy_oauth.py</div>';
+    }
+    html += '</div><div class="hub-section-title">API Credentials</div><div class="hub-card">';
+    const et=d.etsy||{}, an=d.anthropic||{}, oa=d.openai||{}, sm=d.smtp||{}, pi=d.pinterest||{};
+    [
+      {label:'Etsy API Key',         ok:et.api_key,         note:'ETSY_API_KEY / ETSY_CLIENT_ID'},
+      {label:'Etsy Access Token',    ok:et.access_token,    note:'Expires every 1 hour — auto-refreshed'},
+      {label:'Etsy Refresh Token',   ok:et.refresh_token,   note:'90-day window — re-auth via etsy_oauth.py'},
+      {label:'Anthropic (Claude)',   ok:an.api_key,         note:'%%AGENT_NAME%% (CEO) · Conversion Doctor · tag gen'},
+      {label:'OpenAI (DALL-E)',      ok:oa.api_key,         note:'gpt-image-1 listing photo generation'},
+      {label:'SMTP Email',           ok:sm.user,            note:'Post-purchase digital delivery'},
+      {label:'Pinterest',            ok:pi.api_key,         note:'API v5 · roadmap'}
+    ].forEach(c => {
+      const col = c.ok ? 'var(--green)' : 'var(--red)';
+      html += '<div class="hub-cred-row">'+
+        '<div class="hub-cred-dot" style="background:'+col+'"></div>'+
+        '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+escHtml(c.label)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+escHtml(c.note)+'</div></div>'+
+        '<div style="font-size:12px;font-weight:700;color:'+col+'">'+escHtml(c.ok?'Set ✓':'Not set')+'</div>'+
+      '</div>';
+    });
+    html += '</div><div style="font-size:11px;color:var(--muted);text-align:center;padding:10px 0">All tokens stored in .env — never committed to git</div>';
+    html += '<div class="hub-section-title">Platform Connections</div><div class="hub-card">';
+    _PLATFORM_ROADMAP.forEach(p => {
+      const live = p.status==='live';
+      const key = p.name.toLowerCase();
+      html += '<div class="hub-cred-row">'+
+        '<div style="display:flex;align-items:center;gap:10px;width:100%">'+
+        '<div style="font-size:20px;flex-shrink:0;width:28px">'+p.icon+'</div>'+
+        '<div style="flex:1"><div style="font-size:13px;font-weight:600">'+escHtml(p.name)+'</div>'+
+        '<div style="font-size:11px;color:var(--muted)">'+escHtml(p.note)+'</div></div>'+
+        (live
+          ? '<div style="font-size:11px;font-weight:700;color:var(--green)">✅ Live</div>'
+          : '<div style="font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap" onclick="toggleCredSteps(\\''+key+'\\')" role="button" tabindex="0">🗺️ Roadmap ›</div>')+
+        '</div>'+
+        (live ? '' :
+          '<div id="hub-cred-steps-'+key+'" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'+
+            '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px">Steps to complete</div>'+
+            '<ol style="margin:0;padding-left:18px;font-size:12px;line-height:1.6">'+
+              (p.steps||[]).map(s=>'<li style="margin-bottom:4px">'+escHtml(s)+'</li>').join('')+
+            '</ol>'+
+          '</div>')+
+        '</div>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadConnections()" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+
+// ── Settings → Connections summary card — same data as the Connections screen, condensed ──
+async function loadSettingsConnectionsSummary() {
+  const el = document.getElementById('settings-connections-summary');
+  if (!el) return;
+  try {
+    const [cr, tr] = await Promise.all([
+      authGet('/api/credentials/status', 15000),
+      authGet('/api/etsy-tokens', 15000)
+    ]);
+    const cred = await cr.json().catch(()=>({}));
+    const tok = await tr.json().catch(()=>({}));
+    let ageText = 'unknown';
+    if (tok.updated_at) {
+      const days = Math.floor((Date.now() - new Date(tok.updated_at).getTime()) / 86400000);
+      ageText = days + ' day'+(days===1?'':'s')+' old'+(days>=75?' — re-auth before day 90':'');
+    }
+    const ageColor = (tok.updated_at && Math.floor((Date.now() - new Date(tok.updated_at).getTime()) / 86400000) >= 75) ? 'var(--red)' : 'var(--muted)';
+    el.innerHTML = (cred.etsy_live
+      ? '<div style="color:var(--green);font-size:14px;font-weight:700">✅ Etsy Live</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+escHtml(cred.shop_name||'onbrandcraftz')+'</div>'
+      : '<div style="color:var(--red);font-size:14px;font-weight:700">⚠️ Etsy Ping Failed</div><div style="font-size:11px;color:var(--muted);margin-top:4px">'+escHtml(cred.etsy_live_error||'Unknown error')+'</div>')
+      + '<div style="font-size:11px;color:'+ageColor+';margin-top:8px">Refresh token: '+escHtml(ageText)+'</div>';
+  } catch(e) {
+    el.innerHTML = '<div style="color:var(--red);font-size:11px">Connections summary offline</div>';
+  }
+}
+
+// ── Security — fully static: security posture checklist ──
+function renderSecurityPosture() {
+  const el = document.getElementById('security-content');
+  if (!el) return;
+  let html = '<div class="hub-section-title">Security Posture</div><div class="hub-card">';
+  [
+    {ok:true, label:'.env not committed to git',           note:'Credentials stay local, never in version control'},
+    {ok:true, label:'APP_SECRET_TOKEN set',                note:'Every dashboard request requires Bearer auth'},
+    {ok:true, label:'Quality gate is code',                note:'Title ≤70 · tags ≤13 · validated at stage AND approve'},
+    {ok:true, label:'Staged action queue',                 note:'Every Etsy change requires %%OWNER%% one-tap approval'},
+    {ok:null, label:'Etsy MFA enabled?',                   note:'Verify in Etsy → Account Settings → Security'},
+    {ok:null, label:'Outlook 2FA active?',                 note:'Verify at account.microsoft.com → Security'},
+    {ok:null, label:'Pinterest not integrated yet',        note:'No API exposure until keys are added'},
+    {ok:false,label:'No per-IP rate limiting',             note:'Add nginx or Cloudflare for production hardening'},
+    {ok:false,label:'Token rotation reminder needed',      note:'Etsy refresh tokens expire 90 days — set a calendar alert'}
+  ].forEach(c => {
+    const icon = c.ok===true?'✅':c.ok===false?'⚠️':'❓';
+    const col  = c.ok===true?'var(--green)':c.ok===false?'var(--red)':'var(--muted)';
+    html += '<div class="hub-posture-row">'+
+      '<div style="font-size:16px;flex-shrink:0;width:24px">'+icon+'</div>'+
+      '<div style="flex:1"><div style="font-size:13px;font-weight:600;color:'+col+'">'+escHtml(c.label)+'</div>'+
+      '<div style="font-size:11px;color:var(--muted)">'+escHtml(c.note)+'</div></div>'+
+    '</div>';
+  });
+  html += '</div>';
+  html += '<div class="hub-card" style="background:var(--panel);margin-top:4px">'+
+    '<div style="font-size:12px;color:var(--muted);line-height:1.7">'+
+    '<b style="color:var(--gold)">Re-authorize Etsy:</b> If any API call returns 401, run<br>'+
+    '<code style="font-size:11px;background:var(--bg);padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px">python tools/etsy_oauth.py</code>'+
+    '</div></div>';
+  el.innerHTML = html;
+}
+
+function loadAll(){
+  // Backgrounded tab: the setInterval timer below keeps firing (cheap — it's just a JS
+  // timer), but every tick becomes a no-op until the tab is visible again, at which
+  // point the visibilitychange listener triggers one immediate catch-up refresh
+  // (2026-07-08 performance pass).
+  if (document.hidden) return;
+  _GLOBAL_LOADERS.forEach(fn => fn());
+  (_SCREEN_LOADERS[_activeScreen] || []).forEach(fn => fn());
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) loadAll();
+});
+
+// Storage-durability guard: /health reports whether the DB is on a durable volume.
+// If not, every change resets on restart — surface a loud, un-dismissible banner so
+// data loss can never happen silently (see main.py db.is_persistent()).
+let _persistWarnDismissed = false;
+function dismissPersistWarning(){
+  _persistWarnDismissed = true;
+  const el = document.getElementById('persist-warning');
+  if(el) el.classList.remove('show');
+}
+async function checkPersistence(){
+  try{
+    const r = await fetch('/health', {cache:'no-store'});
+    if(!r.ok) return;
+    const j = await r.json();
+    const el = document.getElementById('persist-warning');
+    // Respect a manual dismiss — don't re-show it this session (it's ephemeral storage,
+    // so it returns on a fresh reload until the /data volume is attached).
+    if(el) el.classList.toggle('show', !_persistWarnDismissed && j && j.persistent === false);
+  }catch(e){ /* health unreachable — don't block the HUD */ }
+}
+// _activeScreen defaults to 'cmd' (the screen marked active in the HTML), so this
+// initial loadAll() fires the same globals + cmd-screen loaders as before. The five
+// screens formerly eager-loaded here unconditionally (actions/calendar/memory/
+// conversations/kb/workflows) now load on first navigation via showScreen()'s own
+// dispatch instead — they show "Loading…" on first visit rather than being silently
+// pre-fetched in the background (2026-07-08 performance pass).
+loadAll();
+setInterval(loadAll, 30000);
+
+// ── Operator chip — load current user from /api/me ──
+let _myRole = 'admin';
+async function loadOperatorChip(){
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/me',{headers:{Authorization:'Bearer '+TOKEN}},5000);
+    if(!r.ok) return;
+    const d = await r.json();
+    const uname = d.username || '?';
+    const role  = (d.role || 'admin').toUpperCase();
+    _myRole = d.role || 'admin';
+    document.getElementById('op-av').textContent   = uname[0].toUpperCase();
+    document.getElementById('op-name').textContent = uname;
+    document.getElementById('op-role').textContent = role;
+    if(_myRole === 'owner'){
+      document.getElementById('user-mgmt-section').style.display = '';
+      document.getElementById('user-mgmt-card').style.display    = '';
+      loadUsers();
+    }
+  } catch(e){ /* silent */ }
+}
+loadOperatorChip();
+
+async function doLogout(){
+  if(!confirm('Log out of %%AGENT_SHORT%%?')) return;
+  await fetch(BASE+'/logout',{method:'POST'}).catch(()=>{});
+  location.href='/login';
+}
+
+// ── User management (owner only) ──
+async function loadUsers(){
+  const el = document.getElementById('user-list');
+  if(!el) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/admin/users',{headers:{Authorization:'Bearer '+TOKEN}},5000);
+    if(!r.ok){ el.innerHTML='<div style="color:var(--muted);font-size:11px">Failed to load users</div>'; return; }
+    const d = await r.json();
+    if(!d.users||!d.users.length){ el.innerHTML='<div style="color:var(--muted);font-size:11px">No users yet.</div>'; return; }
+    el.innerHTML = d.users.map(u=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <span style="font-size:12px;font-weight:600">${u.username}</span>
+          <span style="font-size:10px;color:var(--muted);margin-left:6px">${u.role.toUpperCase()}</span>
+          <div style="font-size:10px;color:var(--muted)">${u.created_at||''}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${u.role!=='owner'?`<button class="act-btn" style="font-size:10px;padding:3px 7px" onclick="resetUserPw('${u.username}')">Reset PW</button>
+          <button class="act-btn" style="font-size:10px;padding:3px 7px;background:rgba(220,60,60,.18);border-color:rgba(220,60,60,.4)" onclick="deleteUser('${u.username}')">Remove</button>`:''}
+        </div>
+      </div>`).join('');
+  } catch(e){ el.innerHTML='<div style="color:var(--muted);font-size:11px">Error loading users</div>'; }
+}
+
+async function addUser(){
+  const uname = (document.getElementById('new-user-name').value||'').trim();
+  const pw    = (document.getElementById('new-user-pw').value||'').trim();
+  const st    = document.getElementById('user-add-status');
+  if(!uname||!pw){ st.textContent='Username and password are required.'; return; }
+  st.textContent='Adding…';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/admin/users',{
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({username:uname,password:pw,role:'admin'})
+    },8000);
+    const d = await r.json();
+    if(!r.ok){ st.textContent=d.detail||'Error'; return; }
+    st.textContent=`✓ ${uname} added`;
+    document.getElementById('new-user-name').value='';
+    document.getElementById('new-user-pw').value='';
+    loadUsers();
+    // Blocking alert is deliberate here, not an oversight — this code is shown
+    // exactly once and never stored in plaintext anywhere, so it needs to be
+    // impossible to accidentally dismiss without reading (same reasoning as a
+    // password manager's one-time backup-code screen).
+    if (d.recovery_code) {
+      alert(`Save ${uname}'s account recovery code now — it will never be shown again:\n\n${d.recovery_code}\n\nThis is what "Forgot password?" on the sign-in screen will ask for if ${uname} ever loses their password. Write it down or save it in a password manager.`);
+    }
+  } catch(e){ st.textContent='Network error'; }
+}
+
+async function deleteUser(uname){
+  if(!confirm(`Remove user "${uname}"?`)) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/admin/users/'+uname,{
+      method:'DELETE', headers:{Authorization:'Bearer '+TOKEN}
+    },5000);
+    const d = await r.json();
+    if(!r.ok){ showToast(d.detail||'Error removing user'); return; }
+    showToast(`${uname} removed`);
+    loadUsers();
+  } catch(e){ showToast('Network error'); }
+}
+
+async function resetUserPw(uname){
+  const pw = prompt(`New password for "${uname}":`);
+  if(!pw||!pw.trim()) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/admin/users/'+uname+'/reset-password',{
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body:JSON.stringify({password:pw.trim()})
+    },8000);
+    const d = await r.json();
+    if(!r.ok){ showToast(d.detail||'Error'); return; }
+    showToast(`Password reset for ${uname}`);
+  } catch(e){ showToast('Network error'); }
+}
+
+// ── Clock ──
+function tick(){
+  const d = new Date();
+  document.getElementById('clk').textContent = d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dt').textContent = d.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+tick(); setInterval(tick, 1000);
+
+
+// ── Orb: idle rotating wireframe particle cloud, audio-reactive on click. Default
+// shape is a sphere; uploading a Settings > Brand Mark image swaps the particle
+// generator to sample that image's silhouette instead — the rotation/projection/
+// glow/audio-reactive rendering in frame() below is shared by both and untouched. ──
+const canvas = document.getElementById('orb');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height, CX = W/2, CY = H/2, R = 230;
+let orbMode = 'sphere';
+// Image mode (a custom brand-mark logo) is a real extruded slab, not a single point
+// cloud: front face + back face (each {x0,y0,z0}) connected by mesh edges, plus a
+// sparse set of "strut" edges only along the true outer silhouette so it reads as a
+// solid object with thickness rather than every internal line growing a pointless
+// vertical bar. See applyBrandMarkToOrb below for how these are built.
+let imgFront = [], imgBack = [], imgFrontEdges = [], imgBackEdges = [], imgStruts = [];
+
+// Default ("sphere") mode is now a real Three.js/WebGL noise-displaced icosphere on a
+// separate #orb-gl canvas layered over this one — see initOrbGL()/orbGL* below. A
+// <canvas> can only ever have one context type, so the 2D #orb canvas (this one) and
+// the WebGL #orb-gl canvas both stay in the DOM permanently; only one is shown+running
+// at a time, toggled by setOrbCanvasMode(). Image mode keeps using this 2D canvas
+// exactly as before — applyBrandMarkToOrb is untouched.
+const orbGlCanvas = document.getElementById('orb-gl');
+function setOrbCanvasMode(mode){
+  orbMode = mode;
+  if(mode === 'image'){
+    if(orbGlCanvas) orbGlCanvas.style.display = 'none';
+    canvas.style.display = '';
+    orbGLPaused = true;
+  } else {
+    canvas.style.display = 'none';
+    // The CSS default for #orb-gl is display:none (so it never flashes visible before
+    // JS decides the mode); 'block' is needed here, not '' — an empty inline style
+    // would just fall back to that CSS default and stay hidden.
+    if(orbGlCanvas){ orbGlCanvas.style.display = 'block'; initOrbGL(); orbGLPaused = false; }
+  }
+}
+function resetOrbToDefault(){
+  imgFront = []; imgBack = []; imgFrontEdges = []; imgBackEdges = []; imgStruts = [];
+  setOrbCanvasMode('sphere');
+}
+
+// ── WebGL voice-reactive noise-sphere (default "sphere" mode) — Three.js, vendored
+// under /static/vendor/three/ (no CDN — CSP is script-src 'self' only). A wireframe
+// icosphere whose vertices are displaced along their normals by a 3D simplex noise
+// field in the vertex shader (GPU-side, so it stays smooth even at high triangle
+// counts), with UnrealBloomPass for real glow instead of Canvas2D's shadowBlur
+// approximation. uAmp is driven by REAL TTS playback amplitude via an AnalyserNode
+// tapped off the premium-voice <audio> element (see currentVoiceAmp()/_setupTtsAnalyser
+// below) — the old orb-state label claimed "reacting to live TTS amplitude" while
+// actually running a fake dual-sine pulse; this makes that claim true. ──
+let orbGLPaused = true, orbGLReady = false, orbGLLoading = false;
+let glMesh = null, glComposer = null, glRenderer = null, glClock = null, glUniforms = null;
+
+const _ORB_NOISE_GLSL = `
+vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
+vec4 mod289(vec4 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
+vec4 permute(vec4 x){ return mod289(((x*34.0)+1.0)*x); }
+vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
+float snoise(vec3 v){
+  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+  vec3 i  = floor(v + dot(v, C.yyy));
+  vec3 x0 = v - i + dot(i, C.xxx);
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min(g.xyz, l.zxy);
+  vec3 i2 = max(g.xyz, l.zxy);
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy;
+  vec3 x3 = x0 - D.yyy;
+  i = mod289(i);
+  vec4 p = permute(permute(permute(
+             i.z + vec4(0.0, i1.z, i2.z, 1.0))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0))
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+  float n_ = 0.142857142857;
+  vec3 ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_);
+  vec4 x = x_ * ns.x + ns.yyyy;
+  vec4 y = y_ * ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4(x.xy, y.xy);
+  vec4 b1 = vec4(x.zw, y.zw);
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+  vec3 p0 = vec3(a0.xy, h.x);
+  vec3 p1 = vec3(a0.zw, h.y);
+  vec3 p2 = vec3(a1.xy, h.z);
+  vec3 p3 = vec3(a1.zw, h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+}
+`;
+
+const _ORB_VERT = _ORB_NOISE_GLSL + `
+uniform float uTime;
+uniform float uAmp;
+uniform float uFreq;
+void main(){
+  // Two noise octaves, not one: a LOW-frequency layer makes a handful of big, graceful
+  // lobes (the "waviness" of the whole silhouette), a higher-frequency layer riding on
+  // top adds the finer surface crinkle -- a single mid-frequency octave (the original
+  // approach) couldn't do both at once, so the ball read as gently fuzzy rather than
+  // genuinely wavy/lumpy like the reference.
+  float nBig = snoise(position * (uFreq * 0.42) + vec3(0.0, 0.0, uTime * 0.7));
+  float nFine = snoise(position * (uFreq * 2.2) + vec3(0.0, 0.0, uTime * 1.4));
+  float disp = 0.20 + nBig * (0.42 + uAmp * 0.32) + nFine * (0.08 + uAmp * 0.10);
+  vec3 newPos = position + normal * disp;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
+}
+`;
+
+const _ORB_FRAG = `
+uniform vec3 uColor;
+uniform float uOpacity;
+void main(){
+  gl_FragColor = vec4(uColor, uOpacity);
+}
+`;
+
+async function initOrbGL(){
+  if(orbGLReady || orbGLLoading) return;
+  orbGLLoading = true;
+  try{
+    const THREE = await import('/static/vendor/three/build/three.module.js');
+    const { EffectComposer } = await import('/static/vendor/three/examples/jsm/postprocessing/EffectComposer.js');
+    const { RenderPass } = await import('/static/vendor/three/examples/jsm/postprocessing/RenderPass.js');
+    const { UnrealBloomPass } = await import('/static/vendor/three/examples/jsm/postprocessing/UnrealBloomPass.js');
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+    camera.position.z = 3.4;
+
+    glRenderer = new THREE.WebGLRenderer({canvas: orbGlCanvas, alpha:true, antialias:true});
+    // The `alpha:true` context option only lets the drawing buffer SUPPORT an alpha
+    // channel — it does not default the clear to transparent. Without this, the
+    // renderer's ambient clear alpha stays at its default of 1 (opaque), RenderPass
+    // inherits that for its offscreen scene render, and the result is a solid black
+    // square baked into every frame — exactly the "box cut off" Scott flagged from his
+    // real device. This one call is the actual fix.
+    glRenderer.setClearColor(0x000000, 0);
+    glRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    glRenderer.setSize(640, 640, false);
+
+    const geo = new THREE.IcosahedronGeometry(1.15, 16);
+    glUniforms = {
+      uTime: {value: 0},
+      uAmp: {value: 0},
+      uFreq: {value: 1.6},
+      uColor: {value: new THREE.Color('rgb(58,214,255)')},
+      uOpacity: {value: 0.85},
+    };
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: _ORB_VERT,
+      fragmentShader: _ORB_FRAG,
+      uniforms: glUniforms,
+      wireframe: true,
+      transparent: true,
+    });
+    glMesh = new THREE.Mesh(geo, mat);
+    scene.add(glMesh);
+
+    const composer = new EffectComposer(glRenderer);
+    composer.addPass(new RenderPass(scene, camera));
+    // radius pulled back from 0.85 -- at that width the blur's residual haze reached all
+    // the way to the render target's corners, which is what the CSS mask above is
+    // fading out; a tighter radius keeps the glow's own natural falloff more contained
+    // so there's less haze for the mask to have to hide, especially at speaking-state
+    // brightness.
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(640,640), 0.9, 0.45, 0.12));
+    glComposer = composer;
+    glClock = new THREE.Clock();
+
+    orbGLReady = true;
+    orbGLLoading = false;
+    requestAnimationFrame(orbGLFrame);
+  }catch(e){
+    orbGLLoading = false;
+    console.error('[orb-gl] WebGL noise-sphere failed to initialize — orb will stay blank in sphere mode until this is fixed', e);
+  }
+}
+
+function orbGLFrame(){
+  requestAnimationFrame(orbGLFrame);
+  // Skip the full Three.js render (bloom post-processing included) when the orb isn't
+  // actually on screen: the tab is backgrounded, or the dashboard's Control Center is
+  // open (#orb-view and the 18-screen dashboard are mutually exclusive via 'cc-open' on
+  // body). Previously this ran unconditionally forever (2026-07-08 performance pass).
+  if(orbGLPaused || !orbGLReady || document.hidden || document.body.classList.contains('cc-open')) return;
+  const dt = glClock.getDelta();
+  const amp = currentVoiceAmp();
+  glUniforms.uTime.value += dt * (0.12 + amp*0.5);
+  glUniforms.uAmp.value = amp;
+  glUniforms.uColor.value.setRGB((58+(122-58)*amp)/255, (214+(232-214)*amp)/255, 1.0);
+  glUniforms.uOpacity.value = 0.65 + amp*0.3;
+  glMesh.rotation.y += (_reducedMotion ? 0 : 0.0022) + amp*0.01;
+  glMesh.rotation.x += (_reducedMotion ? 0 : 0.0006) + amp*0.003;
+  glComposer.render();
+}
+
+resetOrbToDefault();
+
+// Flood-fill the NOT-ink region starting from the grid border (4-connectivity). A kept
+// ("ink") cell adjacent to a flood-reached cell touches the image's true background —
+// i.e. it's on the real outer silhouette, not an inner hole (like inside an "S" loop,
+// or the gap between the S and J). Used to decide which cells get a front-to-back
+// "strut" edge — only the true outer edge should look like it has physical thickness;
+// interior ink stays two flat parallel layers, not a forest of vertical bars.
+function classifyOuterSilhouette(keep, GRID){
+  const reached = new Array(GRID*GRID).fill(false);
+  const stack = [];
+  for(let gx=0; gx<GRID; gx++){
+    if(!keep[gx]) { reached[gx]=true; stack.push([0,gx]); }
+    const lastRow = (GRID-1)*GRID+gx;
+    if(!keep[lastRow]) { reached[lastRow]=true; stack.push([GRID-1,gx]); }
+  }
+  for(let gy=0; gy<GRID; gy++){
+    if(!keep[gy*GRID]) { reached[gy*GRID]=true; stack.push([gy,0]); }
+    const lastCol = gy*GRID+(GRID-1);
+    if(!keep[lastCol]) { reached[lastCol]=true; stack.push([gy,GRID-1]); }
+  }
+  while(stack.length){
+    const [gy,gx] = stack.pop();
+    const nbrs = [[gy-1,gx],[gy+1,gx],[gy,gx-1],[gy,gx+1]];
+    for(const [ny,nx] of nbrs){
+      if(ny<0||ny>=GRID||nx<0||nx>=GRID) continue;
+      const idx = ny*GRID+nx;
+      if(reached[idx] || keep[idx]) continue;
+      reached[idx] = true;
+      stack.push([ny,nx]);
+    }
+  }
+  const outer = new Array(GRID*GRID).fill(false);
+  for(let gy=0; gy<GRID; gy++){
+    for(let gx=0; gx<GRID; gx++){
+      if(!keep[gy*GRID+gx]) continue;
+      const nbrs = [[gy-1,gx],[gy+1,gx],[gy,gx-1],[gy,gx+1]];
+      for(const [ny,nx] of nbrs){
+        const outOfBounds = ny<0||ny>=GRID||nx<0||nx>=GRID;
+        if(outOfBounds || reached[ny*GRID+nx]){ outer[gy*GRID+gx] = true; break; }
+      }
+    }
+  }
+  return outer;
+}
+
+function rgbToHue(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  const sat = max===0 ? 0 : d/max;
+  let h = 0;
+  if(d!==0){
+    if(max===r) h = ((g-b)/d) % 6;
+    else if(max===g) h = (b-r)/d + 2;
+    else h = (r-g)/d + 4;
+    h *= 60; if(h<0) h += 360;
+  }
+  return {hue:h, sat};
+}
+// "Layered Design" made literal: a color-based depth offset added on top of the
+// front/back split below, so differently-colored parts of the logo (e.g. a gold "S"
+// vs a teal "J") visibly separate from each other as the slab rotates, not just from
+// front to back as one flat pair of planes. Bucketed by hue so this works generically
+// for any future upload, not hardcoded to this specific logo's colors. Low-saturation
+// (near-black/near-white) pixels — typically body text — get no offset, sitting at
+// the base depth of whichever face they're on.
+function colorZOffset(data, gx, gy, GRID, magnitude){
+  const idx = (gy*GRID+gx)*4;
+  const {hue,sat} = rgbToHue(data[idx],data[idx+1],data[idx+2]);
+  if(sat < 0.25) return 0;
+  if(hue < 90) return +magnitude;
+  if(hue < 180) return -magnitude;
+  if(hue < 270) return -magnitude*0.4;
+  return +magnitude*0.4;
+}
+
+function applyBrandMarkToOrb(dataUrl){
+  const img = new Image();
+  img.onload = () => {
+    const GRID = 240;
+    const T_SLAB = R * 0.7;       // extrusion thickness — "noticeably deeper" per Scott
+    const COLOR_MAG = R * 0.25;   // secondary per-color depth offset within each face
+    const MAX_PER_FACE = 2600;    // tuned against measured frame time, see comment below
+    const off = document.createElement('canvas');
+    off.width = GRID; off.height = GRID;
+    const octx = off.getContext('2d', {willReadFrequently:true});
+    const s = Math.min(GRID/img.width, GRID/img.height);
+    const dw = img.width*s, dh = img.height*s;
+    octx.drawImage(img, (GRID-dw)/2, (GRID-dh)/2, dw, dh);
+    const data = octx.getImageData(0,0,GRID,GRID).data;
+    // Detect real transparency from an INSET region only, skipping the outer few px.
+    // A non-square image centered in this square grid leaves a razor-thin transparent
+    // letterbox margin at the edges even when the source has no real alpha channel —
+    // scanning the full grid falsely flags that margin as "has alpha", which then makes
+    // the alpha-threshold path treat the whole opaque background as part of the mark
+    // (reproduced live on a 312x320 flat JPEG logo — it rendered as a solid dot-filled
+    // rectangle instead of the logo's actual silhouette until this inset was added).
+    let hasAlpha = false;
+    const inset = Math.max(2, Math.round(GRID*0.06));
+    for(let gy=inset; gy<GRID-inset && !hasAlpha; gy++){
+      for(let gx=inset; gx<GRID-inset; gx++){
+        if(data[(gy*GRID+gx)*4+3] < 250){ hasAlpha = true; break; }
+      }
+    }
+    const keep = new Array(GRID*GRID).fill(false);
+    for(let gy=inset; gy<GRID-inset; gy++){
+      for(let gx=inset; gx<GRID-inset; gx++){
+        const idx = (gy*GRID+gx)*4;
+        // Unpainted canvas pixels default to rgba(0,0,0,0) — fully transparent, but
+        // reading as "black" (luminance 0) if alpha is ignored. Gate both branches on
+        // alpha>40 so the sub-pixel letterbox margin (see the hasAlpha comment above)
+        // can't masquerade as dark ink in the luminance path either.
+        keep[gy*GRID+gx] = data[idx+3] > 40 && (hasAlpha || (data[idx]+data[idx+1]+data[idx+2])/3 < 235);
+      }
+    }
+    // Cells within `inset` of the grid border are left false (never "ink"), same margin
+    // as the hasAlpha check above. Reproduced live: a resize/JPEG edge artifact along the
+    // image's literal last pixel row read as faint "ink" and, once misread as part of a
+    // real boundary, rendered as a long stray line far from the real logo. Real logo art
+    // virtually always has padding well inside this margin, so excluding it costs nothing
+    // for a normal upload but closes off this whole class of edge noise.
+    let keptCount = 0;
+    for(let i=0;i<keep.length;i++) if(keep[i]) keptCount++;
+    if(keptCount < 8) return;  // too sparse to read as a shape — keep whatever orb is active
+
+    // Dense whole-shape dot grid (samples the FILLED mask, not just its outline) with
+    // real front/back extrusion + a per-color depth offset — "more dots and more 3D...
+    // I want a dot grid" plus the "Layered Design" color-separation idea, combined per
+    // Scott's direction. Full density (every filled cell, both faces) measured ~26fps in
+    // a worst-case headless/no-GPU render — too heavy to run continuously on a real
+    // phone. A diagonal-checkerboard half-thin (keep cells where gx+gy is even) measured
+    // a smooth 60fps while still landing ~20% denser than the previous outline-only
+    // version — the density/smoothness trade a senior-design pass should actually make,
+    // not just "more particles at any cost." Only fall back to further integer-stride
+    // thinning on top of that for a logo dense enough to still exceed budget.
+    const useCheckerboard = keptCount > MAX_PER_FACE;
+    const halvedCount = useCheckerboard ? Math.ceil(keptCount/2) : keptCount;
+    const stride = Math.max(1, Math.ceil(Math.sqrt(halvedCount/MAX_PER_FACE)));
+    const outer = classifyOuterSilhouette(keep, GRID);
+
+    const idxF = new Array(GRID*GRID).fill(-1), idxB = new Array(GRID*GRID).fill(-1);
+    const front = [], back = [], struts = [];
+    for(let gy=0; gy<GRID; gy++){
+      for(let gx=0; gx<GRID; gx++){
+        if(useCheckerboard && (gx+gy)%2!==0) continue;
+        if(!keep[gy*GRID+gx] || gx%stride!==0 || gy%stride!==0) continue;
+        const nx = (gx/(GRID-1))*2-1, ny = (gy/(GRID-1))*2-1;   // -1..1
+        const cz = colorZOffset(data, gx, gy, GRID, COLOR_MAG);
+        idxF[gy*GRID+gx] = front.length; front.push({x0:nx*R, y0:ny*R, z0:+T_SLAB/2+cz});
+        idxB[gy*GRID+gx] = back.length;  back.push({x0:nx*R, y0:ny*R, z0:-T_SLAB/2+cz});
+        if(outer[gy*GRID+gx]) struts.push([idxF[gy*GRID+gx], idxB[gy*GRID+gx]]);
+      }
+    }
+    // When the checkerboard thin is active, same-parity neighbors along a row/col are 2
+    // grid-steps apart (the cell in between is the opposite, filtered-out parity) — the
+    // adjacency search radius has to account for that or it finds nothing and every dot
+    // renders disconnected. Same flat-array bounds-check fix as before on the x-search
+    // (a stray-edge bug already found and fixed once at this resolution — see the
+    // 2026-07-08 v119 ops_runbook entry).
+    const searchStride = stride * (useCheckerboard ? 2 : 1);
+    function buildFaceEdges(idxLookup){
+      const eg = [];
+      for(let gy=0; gy<GRID; gy++){
+        for(let gx=0; gx<GRID; gx++){
+          const here = idxLookup[gy*GRID+gx];
+          if(here < 0) continue;
+          for(let dx=1; dx<=searchStride && gx+dx<GRID; dx++){ const r = idxLookup[gy*GRID+(gx+dx)]; if(r>=0){ eg.push([here,r]); break; } }
+          for(let dy=1; dy<=searchStride; dy++){ const b = idxLookup[(gy+dy)*GRID+gx]; if(b>=0){ eg.push([here,b]); break; } }
+        }
+      }
+      return eg;
+    }
+    imgFront = front; imgBack = back;
+    imgFrontEdges = buildFaceEdges(idxF); imgBackEdges = buildFaceEdges(idxB);
+    imgStruts = struts;
+    setOrbCanvasMode('image');
+  };
+  img.src = dataUrl;
+}
+
+let rot = 0, speaking = false, speakT = 0;
+const orbState = document.getElementById('orb-state');
+const talkSub = document.getElementById('talk-sub');
+
+// Shared amplitude source for BOTH orb render paths (2D image-mode wobble and the
+// WebGL sphere's uAmp) — real RMS amplitude read off the actual TTS audio via
+// _setupTtsAnalyser() below when available, falling back to the old synthetic
+// dual-sine pulse only when there's no audio graph to analyze (the plain
+// speechSynthesis fallback voice has no MediaElementSource to tap). speakT keeps
+// advancing whenever speaking regardless of which branch supplies the amplitude, so
+// the existing wobble/flow terms that key off speakT stay animated either way.
+function currentVoiceAmp(){
+  if(!speaking) return 0;
+  speakT += 0.18;
+  if(_ttsAnalyser && _ttsAnalyserBuf){
+    _ttsAnalyser.getByteTimeDomainData(_ttsAnalyserBuf);
+    let sumSq = 0;
+    for(let i=0;i<_ttsAnalyserBuf.length;i++){ const v = (_ttsAnalyserBuf[i]-128)/128; sumSq += v*v; }
+    const rms = Math.sqrt(sumSq/_ttsAnalyserBuf.length);
+    // Typical speech RMS sits well under 1.0 — scale up so normal speech reads as a
+    // healthy, visible pulse rather than a barely-there flicker.
+    return Math.min(1, rms*3.2);
+  }
+  return (Math.sin(speakT*3.1)*0.5+0.5) * (Math.sin(speakT*1.7)*0.3+0.7);
+}
+
+function frame(){
+  // Default ("sphere") mode renders entirely on the WebGL #orb-gl canvas now (see
+  // orbGLFrame below) — this 2D canvas is hidden in that mode, so skip all 2D work
+  // rather than waste CPU drawing something nobody sees.
+  if(orbMode === 'sphere' || document.hidden || document.body.classList.contains('cc-open')){ requestAnimationFrame(frame); return; }
+  ctx.clearRect(0,0,W,H);
+  rot += speaking ? 0.028 : (_reducedMotion ? 0 : 0.010);
+  const amp = currentVoiceAmp();
+  const glow = speaking ? 0.55 + amp*0.45 : 0.3;
+  ctx.shadowBlur = 18 + amp*36;
+  ctx.shadowColor = speaking ? 'rgba(122,232,255,'+glow+')' : 'rgba(58,214,255,0.3)';
+
+  // Batch every line/dot into a single path each (one stroke()/fill() call for the
+  // whole frame) instead of a per-edge/per-dot beginPath+stroke pattern — with
+  // thousands of particles at the sampling resolution used below, one beginPath+
+  // stroke() PER segment would tank the frame rate; one path for all segments is the
+  // standard canvas2D fix and keeps this smooth even at a few thousand points.
+  function project(x0, y0, z0, wobMag){
+    const wob = speaking ? amp*wobMag*Math.sin((x0+y0)*0.02 + speakT*2) : 0;
+    const rx = x0*(1+wob), rz = z0*(1+wob);
+    const x = rx*Math.cos(rot) - rz*Math.sin(rot);
+    const z = rx*Math.sin(rot) + rz*Math.cos(rot);
+    const y = y0*(1+wob);
+    const scale = 683 / (683 - z);
+    return {x: CX + x*scale*0.92, y: CY + y*scale*0.92, z, scale};
+  }
+
+  // A real extruded slab (front face + back face + edge struts), not a single flat
+  // point cloud — see applyBrandMarkToOrb for how imgFront/imgBack/imgStruts are
+  // built. shadowBlur is the dominant per-frame cost at this particle count (measured
+  // live: disabling it nearly doubled FPS), so it's only paid for the front layer —
+  // the back layer is already heavily dimmed/receded so it shouldn't glow as bright
+  // as the foreground anyway, which makes this a visual correctness fix as much as a
+  // performance one.
+  const frontPts = imgFront.map(p => project(p.x0, p.y0, p.z0, 0.16));
+  const backPts = imgBack.map(p => project(p.x0, p.y0, p.z0, 0.16));
+  const frontShadow = ctx.shadowBlur, frontShadowColor = ctx.shadowColor;
+
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.22)' : 'rgba(58,214,255,0.10)';
+  ctx.lineWidth = 0.4;
+  ctx.beginPath();
+  imgBackEdges.forEach(([ai,bi])=>{ const a=backPts[ai], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+  ctx.stroke();
+
+  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.30)' : 'rgba(58,214,255,0.14)';
+  ctx.lineWidth = 0.45;
+  ctx.beginPath();
+  imgStruts.forEach(([fi,bi])=>{ const a=frontPts[fi], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+  ctx.stroke();
+
+  ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.5)' : 'rgba(58,214,255,0.22)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  imgFrontEdges.forEach(([ai,bi])=>{ const a=frontPts[ai], b=frontPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
+  ctx.stroke();
+
+  // Back dots must read as clearly BEHIND the front, not equally prominent, or an
+  // off-angle/edge-on view of the rotation looks like two unrelated overlapping
+  // copies instead of one solid object with a near side and a far side.
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = speaking ? 'rgba(122,232,255,0.28)' : 'rgba(58,214,255,0.16)';
+  ctx.beginPath();
+  backPts.forEach(p=>{ const sz=p.scale>1?1.0:0.65; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+  ctx.fill();
+
+  ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
+  ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
+  ctx.beginPath();
+  frontPts.forEach(p=>{ const sz=p.scale>1?1.4:0.9; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
+  ctx.fill();
+
+  const grad = ctx.createRadialGradient(CX,CY,8,CX,CY,55+amp*30);
+  grad.addColorStop(0, speaking ? 'rgba(180,240,255,'+ (0.7+amp*0.25) +')' : 'rgba(58,214,255,0.4)');
+  grad.addColorStop(1, 'rgba(58,214,255,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();ctx.arc(CX,CY,55+amp*30,0,Math.PI*2);ctx.fill();
+
+  ctx.shadowBlur = 0;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function setSpeaking(on, viaFallback){
+  speaking = on;
+  if(orbState) orbState.textContent = on
+    ? (viaFallback ? 'SPEAKING — free voice (OpenAI quota down)' : 'SPEAKING — reacting to live TTS amplitude')
+    : 'IDLE — slow ambient rotation';
+  if(talkSub) talkSub.textContent = on
+    ? (viaFallback ? '%%AGENT_SHORT%% is speaking… (free voice)' : '%%AGENT_SHORT%% is speaking…')
+    : 'tap to speak';
+}
+canvas.addEventListener('click', toggleVoiceCapture);
+if(orbGlCanvas) orbGlCanvas.addEventListener('click', toggleVoiceCapture);
+const talkPillEl = document.getElementById('talk-pill');
+if(talkPillEl) talkPillEl.addEventListener('click', toggleVoiceCapture);
+
+</script>
+</body>
+</html>"""
+
+
+_frank_html_cache: str | None = None  # cached rendered HTML
+
+
+def render_frank_hud() -> str:
+    """Render the Frank HUD template with business-identity substitutions.
+    Auth uses session cookies — APP_SECRET_TOKEN is never injected into the HTML.
+    Business-identity placeholders ("Fucking Frank"/"Frank"/"Scott") are substituted
+    here — longest literal first so "Fucking Frank" isn't mangled by the "Frank" pass.
+    The result is cached so repeated requests don't redo the 3× str.replace() on
+    the ~400 KB HTML string on every hit."""
+    global _frank_html_cache
+    if _frank_html_cache is not None:
+        return _frank_html_cache
+    html = _FRANK_HUD_MOCKUP
+    html = html.replace("%%AGENT_NAME%%", business_config.AGENT_NAME)
+    html = html.replace("%%AGENT_SHORT%%", business_config.AGENT_NAME_SHORT)
+    html = html.replace("%%OWNER%%", business_config.OWNER_NAME)
+    _frank_html_cache = html
+    return html

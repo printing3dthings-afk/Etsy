@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Wild and Free</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#F07A1A"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#1B9E8A"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#F07A1A"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#1B9E8A"/>
+  <text x="400" y="290" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="110" fill="#F07A1A" letter-spacing="6">WILD</text>
+  <text x="400" y="390" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="90" fill="#E8455A">&amp;</text>
+  <text x="400" y="498" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="110" fill="#1B9E8A" letter-spacing="6">FREE</text>
+  <circle cx="348.0" cy="556.0" r="6" fill="#E8455A"/>
+  <circle cx="374.0" cy="556.0" r="6" fill="#E8455A"/>
+  <circle cx="400.0" cy="556.0" r="6" fill="#E8455A"/>
+  <circle cx="426.0" cy="556.0" r="6" fill="#E8455A"/>
+  <circle cx="452.0" cy="556.0" r="6" fill="#E8455A"/>
+  <text x="400" y="610" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="20" fill="#AAAAAA" letter-spacing="3">untameable soul</text>
+</svg>

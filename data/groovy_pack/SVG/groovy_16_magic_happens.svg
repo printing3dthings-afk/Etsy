@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Magic Happens Here</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,62.0 84.5,75.5 98.0,80.0 84.5,84.5 80.0,98.0 75.5,84.5 62.0,80.0 75.5,75.5" fill="#7B35B0"/>
+  <polygon points="720.0,62.0 724.5,75.5 738.0,80.0 724.5,84.5 720.0,98.0 715.5,84.5 702.0,80.0 715.5,75.5" fill="#E8A020"/>
+  <polygon points="80.0,702.0 84.5,715.5 98.0,720.0 84.5,724.5 80.0,738.0 75.5,724.5 62.0,720.0 75.5,715.5" fill="#7B35B0"/>
+  <polygon points="720.0,702.0 724.5,715.5 738.0,720.0 724.5,724.5 720.0,738.0 715.5,724.5 702.0,720.0 715.5,715.5" fill="#E8A020"/>
+  <polygon points="400.0,174.0 405.4,190.6 422.0,196.0 405.4,201.4 400.0,218.0 394.6,201.4 378.0,196.0 394.6,190.6" fill="#E8A020"/>
+  <text x="400" y="338" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="112" fill="#7B35B0">Magic</text>
+  <rect x="260" y="368" width="280" height="5" fill="#E8A020" rx="2"/>
+  <text x="400" y="460" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="66" fill="#E8A020" letter-spacing="4">HAPPENS HERE</text>
+  <circle cx="316.0" cy="506.0" r="6" fill="#7B35B0"/>
+  <circle cx="344.0" cy="506.0" r="6" fill="#7B35B0"/>
+  <circle cx="372.0" cy="506.0" r="6" fill="#7B35B0"/>
+  <circle cx="400.0" cy="506.0" r="6" fill="#7B35B0"/>
+  <circle cx="428.0" cy="506.0" r="6" fill="#7B35B0"/>
+  <circle cx="456.0" cy="506.0" r="6" fill="#7B35B0"/>
+  <circle cx="484.0" cy="506.0" r="6" fill="#7B35B0"/>
+  <text x="400" y="562" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="48" fill="#7B35B0">believe it</text>
+</svg>

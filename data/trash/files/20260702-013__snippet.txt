@@ -1,0 +1,8 @@
+@app.get("/", response_class=HTMLResponse)
+def web_ui(request: Request):
+    if not _check_session(request):
+        return RedirectResponse(f"/login?next={request.url.path}", status_code=307)
+    return HTMLResponse(
+        content=_WEB_UI,
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+    )

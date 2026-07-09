@@ -1,0 +1,30 @@
+# Exclude everything except the API server and its single dependency.
+# Without this, Docker copies 1GB+ (data/, mobile_app/node_modules, .git)
+# which causes Railway builds to time out or take 10+ minutes.
+
+# Big directories — never needed by the API server
+data/
+mobile_app/
+.git/
+
+# Python cruft
+__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+*.egg-info/
+
+# Secrets (Railway injects these via env vars — never bake them in the image)
+.env
+*.env
+
+# Dev / CI noise
+.github/
+.pytest_cache/
+*.md
+
+# Local DB (never ship into the image)
+**/hub_data/
+*.db
+*.db-wal
+*.db-shm

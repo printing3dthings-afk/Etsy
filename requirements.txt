@@ -1,3 +1,30 @@
 anthropic>=0.40.0
 python-dotenv>=1.0.0
 flask>=3.0.0
+Pillow>=10.0.0
+reportlab>=4.0.0
+openai>=1.0.0
+# fastapi/uvicorn pinned to the versions the working image has run on — the rest of
+# the manifest floats, but these two are load-bearing for the ASGI + WebSocket chat
+# path, so they don't move without an explicit, tested bump.
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+apscheduler>=3.10.0
+vtracer>=0.6.0
+python-multipart>=0.0.9
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+PyNaCl>=1.5.0
+playwright>=1.45.0
+PyPDF2>=3.0.0
+moviepy>=2.0.0
+imageio-ffmpeg>=0.5.1
+# Google GenAI SDK — Veo 3.1 video (AI_VIDEO_ENGINE=veo) + Nano Banana / Gemini image
+# (IMAGE_ENGINE=gemini) + Gemini native video understanding. Lazily imported, so its
+# presence never affects startup; ships in the image so those features work once
+# GEMINI_API_KEY is set. (Previously only in tools/api_server/requirements.txt.)
+google-genai>=1.0.0
+# yt-dlp — fetches videos from URLs (YouTube, TikTok, direct .mp4, ~1000 sites) for the
+# watch_video tool (tools/video_understanding.py). Lazily imported; pure-python wheel.
+yt-dlp>=2025.1.1

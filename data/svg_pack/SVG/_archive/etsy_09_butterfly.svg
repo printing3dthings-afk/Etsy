@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="800" height="800" viewBox="0 0 800 800">
+  <title>Botanical Butterfly</title>
+  <rect width="800" height="800" fill="white"/>
+  <ellipse cx="400" cy="400" rx="12" ry="72" fill="#1a1a1a"/>
+  <ellipse cx="400" cy="350" rx="11" ry="5" fill="none" stroke="white" stroke-width="1.5"/>
+  <ellipse cx="400" cy="366" rx="11" ry="5" fill="none" stroke="white" stroke-width="1.5"/>
+  <ellipse cx="400" cy="382" rx="11" ry="5" fill="none" stroke="white" stroke-width="1.5"/>
+  <ellipse cx="400" cy="398" rx="11" ry="5" fill="none" stroke="white" stroke-width="1.5"/>
+  <ellipse cx="400" cy="414" rx="11" ry="5" fill="none" stroke="white" stroke-width="1.5"/>
+  <ellipse cx="400" cy="430" rx="11" ry="5" fill="none" stroke="white" stroke-width="1.5"/>
+  <ellipse cx="400" cy="446" rx="11" ry="5" fill="none" stroke="white" stroke-width="1.5"/>
+  <ellipse cx="400" cy="462" rx="11" ry="5" fill="none" stroke="white" stroke-width="1.5"/>
+  <circle cx="400.00" cy="322.00" r="14.00" fill="#1a1a1a"/>
+  <circle cx="400.00" cy="322.00" r="8.00" fill="white"/>
+  <path d="M 400,310 C 380,270 360,245 365,230" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="365.00" cy="230.00" r="5.00" fill="#1a1a1a"/>
+  <path d="M 400,310 C 420,270 440,245 435,230" fill="none" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="435.00" cy="230.00" r="5.00" fill="#1a1a1a"/>
+  <path d="M 400,350 C 320,240 180,200 120,280 C 90,340 140,420 400,410 Z" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <path d="M 400,410 C 310,440 190,420 170,500 C 160,570 260,600 340,600 C 380,600 400,570 400,540 Z" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="260" y1="310" x2="185" y2="337" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="260" y1="310" x2="206" y2="352" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="260" y1="310" x2="229" y2="356" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="260" y1="310" x2="248" y2="352" stroke="#1a1a1a" stroke-width="1.5"/>
+  <ellipse cx="290.80" cy="270.00" rx="8.10" ry="5.04" transform="rotate(0.0,290.80,270.00)" fill="#1a1a1a"/>
+  <ellipse cx="283.34" cy="280.27" rx="8.10" ry="5.04" transform="rotate(72.0,283.34,280.27)" fill="#1a1a1a"/>
+  <ellipse cx="271.26" cy="276.35" rx="8.10" ry="5.04" transform="rotate(144.0,271.26,276.35)" fill="#1a1a1a"/>
+  <ellipse cx="271.26" cy="263.65" rx="8.10" ry="5.04" transform="rotate(216.0,271.26,263.65)" fill="#1a1a1a"/>
+  <ellipse cx="283.34" cy="259.73" rx="8.10" ry="5.04" transform="rotate(288.0,283.34,259.73)" fill="#1a1a1a"/>
+  <circle cx="280.00" cy="270.00" r="7.00" fill="#1a1a1a"/>
+  <ellipse cx="199.00" cy="300.00" rx="6.75" ry="4.20" transform="rotate(0.0,199.00,300.00)" fill="#1a1a1a"/>
+  <ellipse cx="192.78" cy="308.56" rx="6.75" ry="4.20" transform="rotate(72.0,192.78,308.56)" fill="#1a1a1a"/>
+  <ellipse cx="182.72" cy="305.29" rx="6.75" ry="4.20" transform="rotate(144.0,182.72,305.29)" fill="#1a1a1a"/>
+  <ellipse cx="182.72" cy="294.71" rx="6.75" ry="4.20" transform="rotate(216.0,182.72,294.71)" fill="#1a1a1a"/>
+  <ellipse cx="192.78" cy="291.44" rx="6.75" ry="4.20" transform="rotate(288.0,192.78,291.44)" fill="#1a1a1a"/>
+  <circle cx="190.00" cy="300.00" r="5.00" fill="#1a1a1a"/>
+  <ellipse cx="228.40" cy="350.00" rx="6.30" ry="3.92" transform="rotate(0.0,228.40,350.00)" fill="#1a1a1a"/>
+  <ellipse cx="222.60" cy="357.99" rx="6.30" ry="3.92" transform="rotate(72.0,222.60,357.99)" fill="#1a1a1a"/>
+  <ellipse cx="213.20" cy="354.94" rx="6.30" ry="3.92" transform="rotate(144.0,213.20,354.94)" fill="#1a1a1a"/>
+  <ellipse cx="213.20" cy="345.06" rx="6.30" ry="3.92" transform="rotate(216.0,213.20,345.06)" fill="#1a1a1a"/>
+  <ellipse cx="222.60" cy="342.01" rx="6.30" ry="3.92" transform="rotate(288.0,222.60,342.01)" fill="#1a1a1a"/>
+  <circle cx="220.00" cy="350.00" r="5.00" fill="#1a1a1a"/>
+  <path d="M 319.00,298.27 Q 318.44,311.29 330.00,317.32 Q 330.56,304.29 319.00,298.27 Z" fill="#1a1a1a"/>
+  <path d="M 245.68,323.12 Q 235.34,331.06 238.16,343.79 Q 248.50,335.85 245.68,323.12 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 270.00,517.00 285.60,517.00 294.00,510.00 C 285.60,503.00 270.00,503.00 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 265.89,515.66 278.51,524.83 289.42,524.11 C 286.74,513.51 274.11,504.34 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 263.34,512.16 268.16,527.00 277.42,532.83 C 281.48,522.67 276.66,507.84 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 263.34,507.84 258.52,522.67 262.58,532.83 C 271.84,527.00 276.66,512.16 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 265.89,504.34 253.26,513.51 250.58,524.11 C 261.49,524.83 274.11,515.66 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 270.00,503.00 254.40,503.00 246.00,510.00 C 254.40,517.00 270.00,517.00 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 274.11,504.34 261.49,495.17 250.58,495.89 C 253.26,506.49 265.89,515.66 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 276.66,507.84 271.84,493.00 262.58,487.17 C 258.52,497.33 263.34,512.16 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 276.66,512.16 281.48,497.33 277.42,487.17 C 268.16,493.00 263.34,507.84 270.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 270.00,510.00 C 274.11,515.66 286.74,506.49 289.42,495.89 C 278.51,495.17 265.89,504.34 270.00,510.00 Z" fill="#1a1a1a"/>
+  <circle cx="270.00" cy="510.00" r="10.00" fill="#1a1a1a"/>
+  <path d="M 229.38,478.31 Q 227.13,489.66 236.16,496.91 Q 238.41,485.56 229.38,478.31 Z" fill="#1a1a1a"/>
+  <path d="M 320.90,548.44 Q 310.75,554.01 311.00,565.59 Q 321.15,560.01 320.90,548.44 Z" fill="#1a1a1a"/>
+  <circle cx="170.00" cy="320.00" r="6.00" fill="#1a1a1a"/>
+  <circle cx="170.00" cy="320.00" r="10.00" fill="none"/>
+  <circle cx="150.00" cy="370.00" r="6.00" fill="#1a1a1a"/>
+  <circle cx="150.00" cy="370.00" r="10.00" fill="none"/>
+  <path d="M 400,350 C 480,240 620,200 680,280 C 710,340 660,420 400,410 Z" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <path d="M 400,410 C 490,440 610,420 630,500 C 640,570 540,600 460,600 C 420,600 400,570 400,540 Z" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+  <line x1="540" y1="310" x2="465" y2="283" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="540" y1="310" x2="486" y2="268" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="540" y1="310" x2="509" y2="264" stroke="#1a1a1a" stroke-width="1.5"/>
+  <line x1="540" y1="310" x2="528" y2="268" stroke="#1a1a1a" stroke-width="1.5"/>
+  <ellipse cx="530.80" cy="270.00" rx="8.10" ry="5.04" transform="rotate(0.0,530.80,270.00)" fill="#1a1a1a"/>
+  <ellipse cx="523.34" cy="280.27" rx="8.10" ry="5.04" transform="rotate(72.0,523.34,280.27)" fill="#1a1a1a"/>
+  <ellipse cx="511.26" cy="276.35" rx="8.10" ry="5.04" transform="rotate(144.0,511.26,276.35)" fill="#1a1a1a"/>
+  <ellipse cx="511.26" cy="263.65" rx="8.10" ry="5.04" transform="rotate(216.0,511.26,263.65)" fill="#1a1a1a"/>
+  <ellipse cx="523.34" cy="259.73" rx="8.10" ry="5.04" transform="rotate(288.0,523.34,259.73)" fill="#1a1a1a"/>
+  <circle cx="520.00" cy="270.00" r="7.00" fill="#1a1a1a"/>
+  <ellipse cx="619.00" cy="300.00" rx="6.75" ry="4.20" transform="rotate(0.0,619.00,300.00)" fill="#1a1a1a"/>
+  <ellipse cx="612.78" cy="308.56" rx="6.75" ry="4.20" transform="rotate(72.0,612.78,308.56)" fill="#1a1a1a"/>
+  <ellipse cx="602.72" cy="305.29" rx="6.75" ry="4.20" transform="rotate(144.0,602.72,305.29)" fill="#1a1a1a"/>
+  <ellipse cx="602.72" cy="294.71" rx="6.75" ry="4.20" transform="rotate(216.0,602.72,294.71)" fill="#1a1a1a"/>
+  <ellipse cx="612.78" cy="291.44" rx="6.75" ry="4.20" transform="rotate(288.0,612.78,291.44)" fill="#1a1a1a"/>
+  <circle cx="610.00" cy="300.00" r="5.00" fill="#1a1a1a"/>
+  <ellipse cx="588.40" cy="350.00" rx="6.30" ry="3.92" transform="rotate(0.0,588.40,350.00)" fill="#1a1a1a"/>
+  <ellipse cx="582.60" cy="357.99" rx="6.30" ry="3.92" transform="rotate(72.0,582.60,357.99)" fill="#1a1a1a"/>
+  <ellipse cx="573.20" cy="354.94" rx="6.30" ry="3.92" transform="rotate(144.0,573.20,354.94)" fill="#1a1a1a"/>
+  <ellipse cx="573.20" cy="345.06" rx="6.30" ry="3.92" transform="rotate(216.0,573.20,345.06)" fill="#1a1a1a"/>
+  <ellipse cx="582.60" cy="342.01" rx="6.30" ry="3.92" transform="rotate(288.0,582.60,342.01)" fill="#1a1a1a"/>
+  <circle cx="580.00" cy="350.00" r="5.00" fill="#1a1a1a"/>
+  <path d="M 481.00,298.27 Q 469.44,304.29 470.00,317.32 Q 481.56,311.29 481.00,298.27 Z" fill="#1a1a1a"/>
+  <path d="M 554.32,323.12 Q 551.50,335.85 561.84,343.79 Q 564.66,331.06 554.32,323.12 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 530.00,517.00 545.60,517.00 554.00,510.00 C 545.60,503.00 530.00,503.00 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 525.89,515.66 538.51,524.83 549.42,524.11 C 546.74,513.51 534.11,504.34 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 523.34,512.16 528.16,527.00 537.42,532.83 C 541.48,522.67 536.66,507.84 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 523.34,507.84 518.52,522.67 522.58,532.83 C 531.84,527.00 536.66,512.16 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 525.89,504.34 513.26,513.51 510.58,524.11 C 521.49,524.83 534.11,515.66 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 530.00,503.00 514.40,503.00 506.00,510.00 C 514.40,517.00 530.00,517.00 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 534.11,504.34 521.49,495.17 510.58,495.89 C 513.26,506.49 525.89,515.66 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 536.66,507.84 531.84,493.00 522.58,487.17 C 518.52,497.33 523.34,512.16 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 536.66,512.16 541.48,497.33 537.42,487.17 C 528.16,493.00 523.34,507.84 530.00,510.00 Z" fill="#1a1a1a"/>
+  <path d="M 530.00,510.00 C 534.11,515.66 546.74,506.49 549.42,495.89 C 538.51,495.17 525.89,504.34 530.00,510.00 Z" fill="#1a1a1a"/>
+  <circle cx="530.00" cy="510.00" r="10.00" fill="#1a1a1a"/>
+  <path d="M 570.62,478.31 Q 561.59,485.56 563.84,496.91 Q 572.87,489.66 570.62,478.31 Z" fill="#1a1a1a"/>
+  <path d="M 479.10,548.44 Q 478.85,560.01 489.00,565.59 Q 489.25,554.01 479.10,548.44 Z" fill="#1a1a1a"/>
+  <circle cx="630.00" cy="320.00" r="6.00" fill="#1a1a1a"/>
+  <circle cx="630.00" cy="320.00" r="10.00" fill="none"/>
+  <circle cx="650.00" cy="370.00" r="6.00" fill="#1a1a1a"/>
+  <circle cx="650.00" cy="370.00" r="10.00" fill="none"/>
+</svg>

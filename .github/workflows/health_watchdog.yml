@@ -1,0 +1,76 @@
+name: Frank Health Watchdog
+
+# External uptime check for the live Frank deployment. This is intentionally
+# separate from listing_integrity_daily.yml (different cadence, and /health is
+# unauthenticated — no Etsy OAuth setup needed). If the whole Railway
+# container is down, nothing inside it can alert Scott, so this has to live
+# outside the app itself.
+#
+# Note: GitHub Actions cron has known drift — a */5 schedule often actually
+# fires every 7-15 minutes during busy platform periods. That's fine for an
+# outage alert, not meant to be a precision SLA tool.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check /health endpoint
+        id: health
+        env:
+          RAILWAY_APP_URL: ${{ secrets.RAILWAY_APP_URL }}
+        run: |
+          if [ -z "$RAILWAY_APP_URL" ]; then
+            echo "ERROR: RAILWAY_APP_URL secret is not set — cannot reach the live deployment." >&2
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "details=RAILWAY_APP_URL secret is not configured (Settings -> Secrets and variables -> Actions)." >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          set +e
+          response=$(curl -sS -m 15 -w "\n%{http_code}" "${RAILWAY_APP_URL%/}/health")
+          curl_exit=$?
+          set -e
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          echo "HTTP $http_code"
+          echo "$body"
+          if [ $curl_exit -ne 0 ]; then
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            echo "details=curl failed with exit code $curl_exit (timeout or connection error) hitting ${RAILWAY_APP_URL%/}/health" >> "$GITHUB_OUTPUT"
+          elif [ "$http_code" != "200" ] || ! echo "$body" | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'; then
+            echo "status=fail" >> "$GITHUB_OUTPUT"
+            {
+              echo "details<<EOF"
+              echo "HTTP $http_code"
+              echo "$body"
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "status=ok" >> "$GITHUB_OUTPUT"
+            echo "details=HTTP 200, status ok" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Report result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/ci_report_health_issue.py "${{ steps.health.outputs.status }}" "${{ steps.health.outputs.details }}"
+
+      - name: Fail the job if the health check failed
+        if: steps.health.outputs.status == 'fail'
+        run: exit 1

@@ -1,0 +1,336 @@
+{
+  "generated": "2026-05-26",
+  "description": "Gap analysis for all 4 live digital planners against CLAUDE.md excellence standards and competitor benchmarks.",
+  "competitor_benchmark": {
+    "covers_our_current": 1,
+    "covers_mid_tier": "5–10",
+    "covers_top_sellers": "100–240",
+    "stickers_our_current": "~60 (3 sheets worth of content across 5 sheets)",
+    "stickers_mid_tier": "200–500",
+    "stickers_top_sellers": "3,500+",
+    "pages_our_current": "88–104",
+    "pages_mid_tier": "150–300",
+    "pages_top_sellers": "500–700+",
+    "daily_pages_our_current": false,
+    "dated_and_undated_our_current": true,
+    "welcome_page_our_current": false,
+    "tutorial_video_link_our_current": false,
+    "landscape_orientation_our_current": false
+  },
+  "shared_gaps": {
+    "description": "These gaps apply to ALL 4 planners equally.",
+    "critical": [
+      {
+        "gap": "No Welcome / Setup page",
+        "standard": "Page 1 of every planner must be a Welcome page with: branded title + cover thumbnail, download instructions (3 steps), import instructions for GoodNotes/Notability, tutorial video link, customer support email",
+        "impact": "Top sellers with welcome pages see 30–40% fewer support messages. Currently buyers drop into the planner with zero onboarding.",
+        "effort": "LOW — 1 page per planner, same layout reused across all 4",
+        "priority": 1
+      },
+      {
+        "gap": "No Dashboard / Home page",
+        "standard": "Page 2 must be a central tappable hub linking to every section. Must have a BACK TO HOME footer link on every subsequent page.",
+        "impact": "Navigation dead end for buyers — they can only scroll forward. Dashboard is the #1 cited feature in top-seller reviews.",
+        "effort": "MEDIUM — unique layout per planner (section buttons vary), but HOME footer is a copy/paste across all pages",
+        "priority": 2
+      },
+      {
+        "gap": "No Planner Index page",
+        "standard": "Page 3: text-based list of every section with clickable page numbers. Used for GoodNotes table of contents mode.",
+        "impact": "Minor UX, but competitors include it. Easy to add.",
+        "effort": "LOW — 1 page per planner",
+        "priority": 3
+      },
+      {
+        "gap": "Only 1 cover design per planner",
+        "standard": "Minimum 5 covers at launch, target 10. Required set: Primary (current), Seasonal Spring, Seasonal Fall, Dark Mode, Minimalist, Custom Name (fillable field).",
+        "impact": "Covers are the #1 volume differentiator vs. top sellers. Adding covers increases listing photo options, perceived value, and justifies higher price.",
+        "effort": "HIGH — requires DALL-E image generation for each new cover. BLOCKED until OpenAI restored.",
+        "priority": 4
+      },
+      {
+        "gap": "No daily pages",
+        "standard": "Daily Spreads × 365 are the most-requested missing feature. Layout: date header, top 3 priorities, hour-by-hour schedule (6am–10pm), notes, gratitude box, water tracker.",
+        "impact": "Dramatically increases page count (doubles+), justifies higher price, brings planners up to mid-tier competitor level.",
+        "effort": "HIGH — 365 unique dated pages per planner. Major PDF rebuild.",
+        "priority": 5
+      },
+      {
+        "gap": "Only 1 weekly layout option",
+        "standard": "Include 2 weekly layout variations: Option A (horizontal time-blocked Mon–Sun), Option B (vertical 7-column layout). Let buyers choose via hyperlink from a 'Choose Your Layout' page.",
+        "impact": "Buyers cite single-layout planners as a reason to look elsewhere. Two options is a major conversion differentiator.",
+        "effort": "MEDIUM — duplicate weekly section with alternate layout, add chooser page",
+        "priority": 6
+      },
+      {
+        "gap": "Sticker pack missing GoodNotes sticker book (.goodnotes) format",
+        "standard": "Must deliver: PNG sheets (have ✅), individual pre-cropped PNGs (missing), GoodNotes .goodnotes package (missing). ZIP structure: goodnotes_sticker_book/, png_sheets/, individual_stickers/",
+        "impact": "35%+ of Etsy digital sticker buyers specifically request the .goodnotes format. Individual PNGs are requested by PDF Expert/Acrobat users.",
+        "effort": "MEDIUM — requires exporting individual stickers and creating .goodnotes bundle",
+        "priority": 7
+      },
+      {
+        "gap": "No tutorial video link on Welcome page",
+        "standard": "Welcome page must include a link to a YouTube tutorial showing how to set up and use the planner.",
+        "impact": "Buyers who watch the tutorial convert at significantly higher rates and leave better reviews.",
+        "effort": "LOW — placeholder text until video is created: 'Watch setup tutorial → [link coming soon]'. Update once video is recorded.",
+        "priority": 8
+      },
+      {
+        "gap": "No external calendar integration",
+        "standard": "Monthly pages should include 'Add to Calendar' buttons linking to webcal:// (Apple Calendar) or Google Calendar URLs for the month.",
+        "impact": "Premium feature — adds perceived value. Minor implementation.",
+        "effort": "LOW — add a hyperlinked button on each monthly page",
+        "priority": 9
+      },
+      {
+        "gap": "Sticker pack count below target",
+        "standard": "Target: 5 sheets × 40 stickers = 200+ stickers. Current: 5 sheets exist but likely ~30–40 stickers per sheet. Need to verify all 14 functional sticker categories are covered.",
+        "impact": "Sticker count is prominently featured in listings ('200+ stickers'). If actual count is lower, it's a trust issue.",
+        "effort": "MEDIUM-HIGH — requires visual audit of all sticker sheets, then supplementing categories. BLOCKED for new generation until OpenAI restored.",
+        "priority": 10
+      },
+      {
+        "gap": "No landscape orientation",
+        "standard": "Top sellers offer Portrait + Landscape + A4. Landscape edition would be priced at $2–4 premium over standard.",
+        "impact": "Significant work — full layout recreation. Long-term Phase 3 item.",
+        "effort": "VERY HIGH — complete layout rebuild in landscape format",
+        "priority": 11
+      }
+    ]
+  },
+  "per_product_gaps": {
+    "DP1026": {
+      "title": "Ultimate Digital Life Planner (Lavender Dreams)",
+      "files_confirmed": ["DP1026.pdf", "DP1026U.pdf", "DP1026_sticker_pack.zip"],
+      "sticker_sheets_confirmed": 5,
+      "niche_specific_gaps": [
+        {
+          "gap": "No Pomodoro focus timer sheet",
+          "detail": "25-min work / 5-min break timer boxes. High-demand productivity feature.",
+          "priority": "B"
+        },
+        {
+          "gap": "No Brain Dump page",
+          "detail": "Free-write page for clearing mental clutter before planning. Common in top life planners.",
+          "priority": "B"
+        },
+        {
+          "gap": "No Vision Board page",
+          "detail": "Image/goal collage page. Strong emotional hook for the life planner audience.",
+          "priority": "B"
+        },
+        {
+          "gap": "No Year in Pixels mood tracker",
+          "detail": "12-month grid, one colored box per day, color-code by mood/theme. Viral on Instagram/Pinterest — major share driver.",
+          "priority": "A"
+        },
+        {
+          "gap": "No landscape edition",
+          "detail": "DP1026 Landscape Edition noted as Phase 3 product.",
+          "priority": "C"
+        }
+      ],
+      "cover_themes_to_add": ["Cherry Blossom", "Mocha Latte", "Rose Gold Luxe", "Dark Academia"],
+      "price_current": 14.99,
+      "price_target_after_upgrades": 16.99
+    },
+    "DP1027": {
+      "title": "Student & School Planner (Cotton Candy)",
+      "files_confirmed": ["DP1027.pdf", "DP1027U.pdf", "DP1027_sticker_pack.zip"],
+      "sticker_sheets_confirmed": 5,
+      "niche_specific_gaps": [
+        {
+          "gap": "No ADHD-friendly features",
+          "detail": "Time-blocking with visual chunking, Pomodoro focus sheet, Brain Dump page before each week, Priority matrix (Urgent/Important 2x2), '3 Wins Today' box on every daily page. ADHD planner niche is the fastest-growing on Etsy.",
+          "priority": "A"
+        },
+        {
+          "gap": "No class schedule template",
+          "detail": "Semester class schedule grid (time slots x days of week, subject + room + professor fields).",
+          "priority": "A"
+        },
+        {
+          "gap": "No exam countdown tracker",
+          "detail": "Visual countdown to exam dates with study plan fields. High search volume for students.",
+          "priority": "B"
+        },
+        {
+          "gap": "No reading log",
+          "detail": "Book title, author, due date, pages read, notes. Popular with English/lit students.",
+          "priority": "C"
+        },
+        {
+          "gap": "Should spin off DP1030 ADHD Edition",
+          "detail": "The ADHD feature set is large enough to be a separate product (DP1030) at a dedicated price point. The student planner should get a subset; the full ADHD suite goes in DP1030.",
+          "priority": "A"
+        }
+      ],
+      "cover_themes_to_add": ["Dark Academia", "Tropical Hibiscus", "Matcha Serenity", "Ocean Breeze"],
+      "price_current": 9.99,
+      "price_target_after_upgrades": 11.99
+    },
+    "DP1028": {
+      "title": "Budget & Finance Planner (Midnight Blue)",
+      "files_confirmed": ["DP1028.pdf", "DP1028U.pdf", "DP1028_sticker_pack.zip"],
+      "sticker_sheets_confirmed": 5,
+      "niche_specific_gaps": [
+        {
+          "gap": "No Debt Payoff Tracker",
+          "detail": "Visual progress bar with snowball/avalanche method support. The Dave Ramsey and debt payoff community specifically searches for this. Should show individual debts, minimum payments, extra payment, and payoff date.",
+          "priority": "A"
+        },
+        {
+          "gap": "No Savings Goal Tracker",
+          "detail": "Visual thermometer fill-in per savings goal. Multiple goals on one page. Hugely shareable on social media.",
+          "priority": "A"
+        },
+        {
+          "gap": "No Bill Payment Checklist",
+          "detail": "Monthly recurring bills checklist (bill name, due date, amount, paid checkbox). Reduces missed payments.",
+          "priority": "B"
+        },
+        {
+          "gap": "No Annual Net Worth snapshot page",
+          "detail": "Assets vs. liabilities, net worth calculation, year-over-year comparison. Appeals to the financial independence community.",
+          "priority": "B"
+        },
+        {
+          "gap": "Should add Zero-Based Budget Edition as DP1028 variant",
+          "detail": "Envelope method pages and zero-based budget sheets as a future separate product.",
+          "priority": "C"
+        }
+      ],
+      "cover_themes_to_add": ["Mocha Latte", "Rose Gold Luxe", "Ocean Breeze", "Celestial Night"],
+      "price_current": 12.99,
+      "price_target_after_upgrades": 14.99
+    },
+    "DP1029": {
+      "title": "Fitness & Wellness Planner (Coral Peach)",
+      "files_confirmed": ["DP1029.pdf", "DP1029U.pdf", "DP1029_sticker_pack.zip"],
+      "sticker_sheets_confirmed": 5,
+      "niche_specific_gaps": [
+        {
+          "gap": "No Progress Photos log page",
+          "detail": "Before/after date headers with measurement fields (weight, chest, waist, hips, arms, legs). Space for photo reminder note. The #1 requested feature in fitness planner reviews.",
+          "priority": "A"
+        },
+        {
+          "gap": "No 30-day water intake tracker",
+          "detail": "Monthly tracker with 8-glass daily grid to color in. Simple but highly shareable and frequently cited in reviews.",
+          "priority": "A"
+        },
+        {
+          "gap": "No sleep quality log",
+          "detail": "Bedtime/wake time, hours slept, sleep quality rating, notes. Pairs naturally with the wellness angle.",
+          "priority": "B"
+        },
+        {
+          "gap": "No supplement / medication tracker",
+          "detail": "Daily checkboxes per supplement. Appeals to the wellness community and those on medication routines.",
+          "priority": "B"
+        },
+        {
+          "gap": "No Non-Scale Victory celebration page",
+          "detail": "Journal page for recording wins that aren't weight-related (ran first mile, slept 8 hrs, said no to junk food). Emotionally resonant — drives positive reviews.",
+          "priority": "B"
+        },
+        {
+          "gap": "No 30-Day Challenge Edition",
+          "detail": "DP1029 variant with 30 consecutive daily layouts. Separate future product.",
+          "priority": "C"
+        }
+      ],
+      "cover_themes_to_add": ["Sage Garden", "Tropical Hibiscus", "Matcha Serenity", "Sunflower Studio"],
+      "price_current": 12.99,
+      "price_target_after_upgrades": 14.99
+    }
+  },
+  "upgrade_roadmap": {
+    "phase_1_no_openai_required": {
+      "description": "All of these can be done right now without image generation.",
+      "items": [
+        {
+          "order": 1,
+          "task": "Add Welcome page to all 4 planners",
+          "effort_hrs": 4,
+          "impact": "HIGH — 30-40% reduction in support messages",
+          "openai_required": false
+        },
+        {
+          "order": 2,
+          "task": "Add Dashboard/Home page to all 4 planners",
+          "effort_hrs": 6,
+          "impact": "HIGH — navigation foundation, expected by all buyers",
+          "openai_required": false
+        },
+        {
+          "order": 3,
+          "task": "Add Planner Index page to all 4 planners",
+          "effort_hrs": 2,
+          "impact": "MEDIUM — GoodNotes table of contents support",
+          "openai_required": false
+        },
+        {
+          "order": 4,
+          "task": "Add DP1028 Debt Payoff Tracker + Savings Goal Tracker pages",
+          "effort_hrs": 3,
+          "impact": "HIGH — unlocks Dave Ramsey / debt payoff community searches",
+          "openai_required": false
+        },
+        {
+          "order": 5,
+          "task": "Add DP1029 Progress Photos log + 30-day water intake tracker",
+          "effort_hrs": 3,
+          "impact": "HIGH — #1 requested feature in fitness planner category",
+          "openai_required": false
+        },
+        {
+          "order": 6,
+          "task": "Add DP1027 class schedule template + ADHD features (priority matrix, brain dump)",
+          "effort_hrs": 4,
+          "impact": "HIGH — ADHD planner niche is fastest-growing on Etsy",
+          "openai_required": false
+        },
+        {
+          "order": 7,
+          "task": "Add DP1026 Year in Pixels mood tracker + Brain Dump page",
+          "effort_hrs": 2,
+          "impact": "HIGH — Year in Pixels is viral on Pinterest, drives organic traffic",
+          "openai_required": false
+        },
+        {
+          "order": 8,
+          "task": "Add second weekly layout option to all 4 planners + 'Choose Your Layout' page",
+          "effort_hrs": 8,
+          "impact": "MEDIUM — removes a common objection from buyers",
+          "openai_required": false
+        },
+        {
+          "order": 9,
+          "task": "Update all listing descriptions to mention new pages and higher page counts",
+          "effort_hrs": 2,
+          "impact": "MEDIUM — accurate listings reduce refund requests",
+          "openai_required": false
+        },
+        {
+          "order": 10,
+          "task": "Update all listing prices after upgrades (+$2 per planner)",
+          "effort_hrs": 0.5,
+          "impact": "MEDIUM — justified by added content",
+          "openai_required": false
+        }
+      ]
+    },
+    "phase_2_openai_required": {
+      "description": "These require DALL-E / gpt-image-1 — blocked until OpenAI billing restored.",
+      "items": [
+        "Add 5 cover designs to each planner (Cherry Blossom, Dark Mode, Minimalist, Mocha Latte, Rose Gold Luxe per product)",
+        "Generate sticker pack expansions to reach 200+ verified stickers per pack",
+        "Generate new listing photos reflecting updated page counts and new sections",
+        "Build DP1030 ADHD Planner (Matcha Serenity theme) from scratch",
+        "Build DP1031 Undated Evergreen Planner (Sage Garden theme)"
+      ]
+    }
+  }
+}

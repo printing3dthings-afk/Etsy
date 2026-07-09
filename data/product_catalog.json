@@ -1,0 +1,2285 @@
+[
+  {
+    "product_id": "DP1026",
+    "name": "Ultimate Digital Life Planner (Lavender Dreams)",
+    "etsy_listing_id": "4509179201",
+    "price": 14.99,
+    "category": "digital_planner",
+    "status": "active",
+    "files": [
+      "data/digital_products/product_files/DP1026.pdf",
+      "data/digital_products/product_files/DP1026U.pdf",
+      "data/digital_products/product_files/DP1026_sticker_pack.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "note": "Re-uploaded 2026-06-18: fixed dashboard/index navigation bug, added missing bonus undated PDF (previously only dated PDF was delivered despite title/description promising undated version)."
+  },
+  {
+    "product_id": "DP1027",
+    "name": "Student & School Planner 2026 (Cotton Candy)",
+    "etsy_listing_id": "4509184958",
+    "price": 9.99,
+    "category": "digital_planner",
+    "status": "active",
+    "files": [
+      "data/digital_products/product_files/DP1027.pdf",
+      "data/digital_products/product_files/DP1027U.pdf",
+      "data/digital_products/product_files/DP1027_sticker_pack.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "note": "Re-uploaded 2026-06-18: fixed dashboard/index navigation bug, added missing bonus undated PDF (previously only dated PDF was delivered despite title/description promising undated version)."
+  },
+  {
+    "product_id": "DP1028",
+    "name": "Budget & Finance Planner 2026 (Midnight Blue)",
+    "etsy_listing_id": "4509184962",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "active",
+    "files": [
+      "data/digital_products/product_files/DP1028.pdf",
+      "data/digital_products/product_files/DP1028U.pdf",
+      "data/digital_products/product_files/DP1028_sticker_pack.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "note": "Re-uploaded 2026-06-18: fixed dashboard/index navigation bug, added missing bonus undated PDF (previously only dated PDF was delivered despite title/description promising undated version)."
+  },
+  {
+    "product_id": "DP1029",
+    "name": "Fitness & Wellness Planner 2026 (Coral Peach)",
+    "etsy_listing_id": "4509184968",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "active",
+    "files": [
+      "data/digital_products/product_files/DP1029.pdf",
+      "data/digital_products/product_files/DP1029U.pdf",
+      "data/digital_products/product_files/DP1029_sticker_pack.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "note": "Re-uploaded 2026-06-18: fixed dashboard/index navigation bug, added missing bonus undated PDF (previously only dated PDF was delivered despite title/description promising undated version)."
+  },
+  {
+    "product_id": "DP1030",
+    "name": "ADHD Digital Planner (Matcha Serenity)",
+    "etsy_listing_id": "",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "ready_for_review",
+    "files": [
+      "data/digital_products/product_files/DP1030.pdf",
+      "data/digital_products/product_files/DP1030U.pdf",
+      "data/digital_products/product_files/DP1030_sticker_pack.zip",
+      "data/digital_products/product_files/DP1030_cover_ai.png",
+      "data/digital_products/product_files/DP1030_listing_images/01_hero.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/02_whats_included.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/03_monthly_spread.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/04_weekly_spread.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/05_sticker_showcase.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/06_goodnotes_howto.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/07_app_compatibility.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/08_cover_closeup.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/09_tracker.jpg",
+      "data/digital_products/product_files/DP1030_listing_images/10_specialty.jpg"
+    ],
+    "last_updated": "2026-06-20",
+    "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
+  },
+  {
+    "product_id": "DP1031",
+    "name": "Undated Life Planner \u2014 Evergreen (Sage Garden)",
+    "etsy_listing_id": "",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "ready_for_review",
+    "files": [
+      "data/digital_products/product_files/DP1031.pdf",
+      "data/digital_products/product_files/DP1031U.pdf",
+      "data/digital_products/product_files/DP1031_sticker_pack.zip",
+      "data/digital_products/product_files/DP1031_cover_ai.png",
+      "data/digital_products/product_files/DP1031_listing_images/01_hero.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/02_whats_included.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/03_monthly_spread.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/04_weekly_spread.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/05_sticker_showcase.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/06_goodnotes_howto.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/07_app_compatibility.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/08_cover_closeup.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/09_tracker.jpg",
+      "data/digital_products/product_files/DP1031_listing_images/10_specialty.jpg"
+    ],
+    "last_updated": "2026-06-20",
+    "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
+  },
+  {
+    "product_id": "DP1032",
+    "name": "Dark Mode Planner Bundle (Midnight Kawaii)",
+    "etsy_listing_id": "",
+    "price": 14.99,
+    "category": "digital_planner",
+    "status": "ready_for_review",
+    "files": [
+      "data/digital_products/product_files/DP1032.pdf",
+      "data/digital_products/product_files/DP1032U.pdf",
+      "data/digital_products/product_files/DP1032_sticker_pack.zip",
+      "data/digital_products/product_files/DP1032_cover_ai.png",
+      "data/digital_products/product_files/DP1032_listing_images/01_hero.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/02_whats_included.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/03_monthly_spread.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/04_weekly_spread.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/05_sticker_showcase.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/06_goodnotes_howto.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/07_app_compatibility.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/08_cover_closeup.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/09_tracker.jpg",
+      "data/digital_products/product_files/DP1032_listing_images/10_specialty.jpg"
+    ],
+    "last_updated": "2026-06-20",
+    "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
+  },
+  {
+    "product_id": "DP1033",
+    "name": "Teacher Planner 2026-2027 (Sunflower Studio)",
+    "etsy_listing_id": "",
+    "price": 14.99,
+    "category": "digital_planner",
+    "status": "ready_for_review",
+    "files": [
+      "data/digital_products/product_files/DP1033.pdf",
+      "data/digital_products/product_files/DP1033U.pdf",
+      "data/digital_products/product_files/DP1033_sticker_pack.zip",
+      "data/digital_products/product_files/DP1033_cover_ai.png",
+      "data/digital_products/product_files/DP1033_listing_images/01_hero.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/02_whats_included.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/03_monthly_spread.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/04_weekly_spread.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/05_sticker_showcase.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/06_goodnotes_howto.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/07_app_compatibility.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/08_cover_closeup.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/09_tracker.jpg",
+      "data/digital_products/product_files/DP1033_listing_images/10_specialty.jpg"
+    ],
+    "last_updated": "2026-06-20",
+    "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
+  },
+  {
+    "product_id": "BUNDLE_PLANNERS",
+    "name": "All 4 Planners Bundle",
+    "etsy_listing_id": "4512188970",
+    "price": 39.99,
+    "category": "digital_planner_bundle",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SVG_FLORAL",
+    "name": "Floral Botanical SVG Bundle",
+    "etsy_listing_id": "4514130045",
+    "price": 7.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [
+      "data/svg_pack/FlowerBotanical_Bundle.zip"
+    ],
+    "last_updated": "2026-06-17"
+  },
+  {
+    "product_id": "SVG_CHRISTIAN",
+    "name": "Christian Faith SVG Bundle",
+    "etsy_listing_id": "4514134583",
+    "price": 7.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [
+      "data/faith_pack/ChristianFaith_SVG_Bundle.zip"
+    ],
+    "last_updated": "2026-06-17"
+  },
+  {
+    "product_id": "SVG_GRAD",
+    "name": "Graduation 2026 SVG Bundle",
+    "etsy_listing_id": "4514136783",
+    "price": 7.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [
+      "data/grad_pack/Graduation2026_SVG_Bundle.zip"
+    ],
+    "last_updated": "2026-06-17"
+  },
+  {
+    "product_id": "SVG_MOM_LIFE",
+    "name": "Mom Life SVG Bundle \u2014 20 Designs",
+    "etsy_listing_id": "4514392281",
+    "price": 9.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [
+      "data/mom_life_pack/OnBrandCraftz_MomLife_SVG_Bundle_20_Designs.zip"
+    ],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "SVG_GOOD_VIBES",
+    "name": "Good Vibes SVG Bundle",
+    "etsy_listing_id": "4514536935",
+    "price": 7.99,
+    "category": "svg_bundle",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17"
+  },
+  {
+    "product_id": "SVG_WESTERN",
+    "name": "Western SVG Bundle \u2014 12 Designs",
+    "etsy_listing_id": "",
+    "price": 9.99,
+    "category": "svg_bundle",
+    "status": "retired",
+    "files": [],
+    "last_updated": "2026-06-20",
+    "note": "Personal-use listing was never built (no local SVG/ZIP/photo assets exist). Retired rather than built: the live commercial license listing (LICENSE_SVG_WESTERN, 4515437442) already delivers the full design file set directly, and its description was corrected 2026-06-20 to say so \u2014 no separate personal-use listing is needed."
+  },
+  {
+    "product_id": "SUBLIM_MOM_LIFE",
+    "name": "Mom Life Tumbler Wrap Sublimation",
+    "etsy_listing_id": "4514777212",
+    "price": 9.99,
+    "category": "sublimation",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17"
+  },
+  {
+    "product_id": "STICKER_DP1026",
+    "name": "Kawaii Sticker Pack \u2014 Lavender Dreams",
+    "etsy_listing_id": "4512254015",
+    "price": 2.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_DP1027",
+    "name": "Kawaii Sticker Pack \u2014 Cotton Candy",
+    "etsy_listing_id": "4512254027",
+    "price": 2.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_DP1028",
+    "name": "Kawaii Sticker Pack \u2014 Midnight Blue",
+    "etsy_listing_id": "4512255514",
+    "price": 2.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_DP1029",
+    "name": "Kawaii Sticker Pack \u2014 Coral Peach",
+    "etsy_listing_id": "4512255536",
+    "price": 2.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_BUNDLE",
+    "name": "Kawaii Sticker Pack Bundle \u2014 All 4 Themes",
+    "etsy_listing_id": "4512254035",
+    "price": 7.99,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "STICKER_FREE",
+    "name": "Free Kawaii Sticker Pack Sampler",
+    "etsy_listing_id": "4512255508",
+    "price": 0.2,
+    "category": "sticker_pack",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17"
+  },
+  {
+    "product_id": "LICENSE_SVG_FLORAL",
+    "name": "Commercial License | Floral Botanical SVG Bundle | Instant Download",
+    "etsy_listing_id": "4515439743",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "active",
+    "source_product_id": "SVG_FLORAL",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_CHRISTIAN",
+    "name": "Commercial License | Christian Faith SVG Bundle | Instant Download",
+    "etsy_listing_id": "4515439751",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "active",
+    "source_product_id": "SVG_CHRISTIAN",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_GRAD",
+    "name": "Commercial License | Graduation 2026 SVG Bundle | Instant Download",
+    "etsy_listing_id": "4515439755",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "active",
+    "source_product_id": "SVG_GRAD",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_MOM_LIFE",
+    "name": "Commercial License | Mom Life SVG Bundle 20 Designs | Instant Download",
+    "etsy_listing_id": "4515437432",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "active",
+    "source_product_id": "SVG_MOM_LIFE",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_GOOD_VIBES",
+    "name": "Commercial License | Good Vibes SVG Bundle | Instant Download",
+    "etsy_listing_id": "4515439763",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "active",
+    "source_product_id": "SVG_GOOD_VIBES",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_SVG_WESTERN",
+    "name": "Commercial License | Western SVG Bundle 12 Designs | Instant Download",
+    "etsy_listing_id": "4515437442",
+    "price": 24.99,
+    "category": "svg_bundle_license",
+    "status": "active",
+    "source_product_id": "SVG_WESTERN",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_DP1026",
+    "name": "Commercial License | Kawaii Sticker Pack Lavender D | Instant Download",
+    "etsy_listing_id": "4515437452",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "active",
+    "source_product_id": "STICKER_DP1026",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_DP1027",
+    "name": "Commercial License | Kawaii Sticker Pack Cotton Can | Instant Download",
+    "etsy_listing_id": "4515437456",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "active",
+    "source_product_id": "STICKER_DP1027",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_DP1028",
+    "name": "Commercial License | Kawaii Sticker Pack Midnight B | Instant Download",
+    "etsy_listing_id": "4515437464",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "active",
+    "source_product_id": "STICKER_DP1028",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_DP1029",
+    "name": "Commercial License | Kawaii Sticker Pack Coral Peac | Instant Download",
+    "etsy_listing_id": "4515439799",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "active",
+    "source_product_id": "STICKER_DP1029",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "LICENSE_STICKER_BUNDLE",
+    "name": "Commercial License | Kawaii Sticker Pack Bundle All | Instant Download",
+    "etsy_listing_id": "4515439809",
+    "price": 12.99,
+    "category": "sticker_pack_license",
+    "status": "active",
+    "source_product_id": "STICKER_BUNDLE",
+    "last_updated": "2026-06-02"
+  },
+  {
+    "product_id": "DP1008",
+    "name": "Mediterranean Lemon Window, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4519185019",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "data/digital_products/print_zips/DP1008_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-09"
+  },
+  {
+    "product_id": "DP1009",
+    "name": "Amalfi Coast Village Print, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4519185199",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "data/digital_products/print_zips/DP1009_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-09"
+  },
+  {
+    "product_id": "DP1010",
+    "name": "Mediterranean Terrace Print, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4519185236",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "data/digital_products/print_zips/DP1010_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-09"
+  },
+  {
+    "product_id": "BUNDLE_MED",
+    "name": "Mediterranean Series \u2014 Set of 3",
+    "etsy_listing_id": "4519185376",
+    "price": 14.97,
+    "category": "wall_art_bundle",
+    "status": "active",
+    "files": [
+      "data/digital_products/print_zips/DP1008_print_sizes.zip",
+      "data/digital_products/print_zips/DP1009_print_sizes.zip",
+      "data/digital_products/print_zips/DP1010_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-09"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_PRINTABLE",
+    "name": "Kawaii Coloring Pages Printable, Adult Coloring Book, Instant Download",
+    "etsy_listing_id": "4522868228",
+    "price": 1.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_01.zip",
+      "coloring_set_02.zip",
+      "coloring_set_03.zip",
+      "coloring_set_04.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_FUN_ADVENTURE_COLORING_PAGES",
+    "name": "Fun Adventure Coloring Pages, Kids Coloring Book, Instant Download",
+    "etsy_listing_id": "4522863662",
+    "price": 1.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_fun_basic_set_01.zip",
+      "coloring_fun_basic_set_02.zip",
+      "coloring_fun_basic_set_03.zip",
+      "coloring_fun_basic_set_04.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_SUNFLOWER_STUDIO_DIGITAL_PAPER_PACK",
+    "name": "Sunflower Studio Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519456348",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "sunflower_studio_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_SAGE_GARDEN_DIGITAL_PAPER_PACK",
+    "name": "Sage Garden Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519457131",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "sage_garden_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_OCEAN_BREEZE_DIGITAL_PAPER_PACK",
+    "name": "Ocean Breeze Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519457007",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "ocean_breeze_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_MOCHA_LATTE_DIGITAL_PAPER_PACK",
+    "name": "Mocha Latte Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519455964",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "mocha_latte_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_MIDNIGHT_BLUE_DIGITAL_PAPER_PACK",
+    "name": "Midnight Blue Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519455834",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "midnight_blue_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_MERMAIDCORE_DIGITAL_PAPER_PACK",
+    "name": "Mermaidcore Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519455652",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "mermaidcore_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_MATCHA_SERENITY_DIGITAL_PAPER_PACK",
+    "name": "Matcha Serenity Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519456441",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "matcha_serenity_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_LAVENDER_DREAMS_DIGITAL_PAPER_PACK",
+    "name": "Lavender Dreams Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519455342",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "lavender_dreams_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_COTTON_CANDY_DIGITAL_PAPER_PACK",
+    "name": "Cotton Candy Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519456175",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "cotton_candy_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_CORAL_PEACH_DIGITAL_PAPER_PACK",
+    "name": "Coral Peach Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519456025",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "coral_peach_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_CHERRY_BLOSSOM_DIGITAL_PAPER_PACK",
+    "name": "Cherry Blossom Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519455899",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "cherry_blossom_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "PAPER_CELESTIAL_NIGHT_DIGITAL_PAPER_PACK",
+    "name": "Celestial Night Digital Paper Pack, Scrapbook, Instant Download",
+    "etsy_listing_id": "4519454834",
+    "price": 4.99,
+    "category": "paper_pack",
+    "status": "active",
+    "files": [
+      "celestial_night_paper_pack.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_11",
+    "name": "Kawaii Coloring Pages Set 11, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519454376",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_11.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_10",
+    "name": "Kawaii Coloring Pages Set 10, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519455175",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_10.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_09",
+    "name": "Kawaii Coloring Pages Set 09, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519455049",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_09.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_08",
+    "name": "Kawaii Coloring Pages Set 08, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519454887",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_08.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_07",
+    "name": "Kawaii Coloring Pages Set 07, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519454743",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_07.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_06",
+    "name": "Kawaii Coloring Pages Set 06, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519453732",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_06.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_05",
+    "name": "Kawaii Coloring Pages Set 05, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519454497",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_05.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_04",
+    "name": "Kawaii Coloring Pages Set 04, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519454361",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_04.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_03",
+    "name": "Kawaii Coloring Pages Set 03, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519453332",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_03.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_02",
+    "name": "Kawaii Coloring Pages Set 02, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519453196",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_02.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "COLOR_KAWAII_COLORING_PAGES_SET_01",
+    "name": "Kawaii Coloring Pages Set 01, 5 Printable, Instant Download",
+    "etsy_listing_id": "4519453983",
+    "price": 4.99,
+    "category": "coloring_pages",
+    "status": "active",
+    "files": [
+      "coloring_set_01.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_ORANGE_FLOWER_PRINT",
+    "name": "Orange Flower Print, Botanical Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4519288171",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1063_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_FUNNY_DOG_PRINTABLE_WALL_ART",
+    "name": "Funny Dog Printable Wall Art, Instant Download, Golden Retriever",
+    "etsy_listing_id": "4509214477",
+    "price": 1.0,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1021_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_KAWAII_ART_PRINT_NO_1026",
+    "name": "Kawaii Art Print No.1026, Printable, Instant Download",
+    "etsy_listing_id": "4515682147",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "WA1026_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_MOON_PHASES_PRINT",
+    "name": "Moon Phases Print, Celestial Wall Art, Lunar Cycle Astrono, Printable",
+    "etsy_listing_id": "4515682013",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1030_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_ABSTRACT_BRUSHSTROKE_PRINTABLE_ART",
+    "name": "Abstract Brushstroke Printable Art, Instant Download, Modern",
+    "etsy_listing_id": "4515678344",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1031_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_VINTAGE_BOTANICAL_PRINTABLE_WALL_ART",
+    "name": "Vintage Botanical Printable Wall Art, Instant Download, Herb",
+    "etsy_listing_id": "4515678198",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1032_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "MISC_BOTANICAL_HERBS_ART_PRINT",
+    "name": "Botanical Herbs Art Print, Kitchen Wall Decor, Multiple Sizes",
+    "etsy_listing_id": "4515674594",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1094_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_BOHO_BOTANICAL_FLORAL_WALL_ART",
+    "name": "Boho Botanical Floral Wall Art Print | Multiple Sizes",
+    "etsy_listing_id": "4515674250",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1092_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_BOHO_BOTANICAL_FLORAL_WALL_ART_2",
+    "name": "Boho Botanical Floral Wall Art Print, Multiple Sizes, Printable",
+    "etsy_listing_id": "4515674144",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1095_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_MINIMALIST_LINE_ART_PRINT",
+    "name": "Minimalist Line Art Print, Modern Wall Decor, Multiple Sizes",
+    "etsy_listing_id": "4515674042",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1100_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_COTTAGECORE_BOTANICAL_ART_PRINT",
+    "name": "Cottagecore Botanical Art Print, Nature Wall Decor, Multiple Sizes",
+    "etsy_listing_id": "4515673828",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "inactive",
+    "files": [
+      "DP1058_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "MISC_WATERCOLOR_FLORAL_ART_PRINT",
+    "name": "Watercolor Floral Art Print | Boho Wall Decor | Multiple Sizes",
+    "etsy_listing_id": "4515676915",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1093_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_TROPICAL_BOTANICAL_ART_PRINT",
+    "name": "Tropical Botanical Art Print, Jungle Wall Decor, Multiple Sizes",
+    "etsy_listing_id": "4515673064",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1096_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_MINIMALIST_TYPOGRAPHY_ART_PRINT",
+    "name": "Minimalist Typography Art Print, Quote Wall Decor, Multiple Sizes",
+    "etsy_listing_id": "4515672972",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1097_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_FLORAL_WREATH_ART_PRINT",
+    "name": "Floral Wreath Art Print, Botanical Wall Decor, Multiple Sizes",
+    "etsy_listing_id": "4515676301",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1069_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_KAWAII_STATIONERY_ART_PRINT",
+    "name": "Kawaii Stationery Art Print, Cute Desk Decor, Multiple Sizes",
+    "etsy_listing_id": "4515676185",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1098_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_PASTEL_CELESTIAL_ART_PRINT",
+    "name": "Pastel Celestial Art Print, Moon Stars Decor, Multiple Sizes",
+    "etsy_listing_id": "4515672588",
+    "price": 19.98,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1099_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_PARIS_SKYLINE_PRINTABLE_WALL_ART",
+    "name": "Paris Skyline Printable Wall Art, Instant Download, Minimali",
+    "etsy_listing_id": "4515672496",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1033_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_GRAND_CANYON_PRINTABLE_WALL_ART",
+    "name": "Grand Canyon Printable Wall Art, Instant Download, Vintage",
+    "etsy_listing_id": "4515675887",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1034_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_TROPICAL_LEAVES_PRINT",
+    "name": "Tropical Leaves Print, Bold Monstera Palm Wall Art, Printable",
+    "etsy_listing_id": "4515675813",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1035_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_ABSTRACT_WOMAN_PORTRAIT_PRINT",
+    "name": "Abstract Woman Portrait Print, Feminist Line Art Wall Decor, Printable",
+    "etsy_listing_id": "4515672204",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1036_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_ITALIAN_KITCHEN_PRINTABLE_WALL_ART",
+    "name": "Italian Kitchen Printable Wall Art, Instant Download, Food",
+    "etsy_listing_id": "4515675583",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1037_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_AUTUMN_FOX_PRINTABLE_WALL_ART",
+    "name": "Autumn Fox Printable Wall Art, Instant Download, Woodland",
+    "etsy_listing_id": "4515675481",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1038_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_HUMMINGBIRD_WATERCOLOR_PRINT",
+    "name": "Hummingbird Watercolor Print, Botanical Bird Art, Floral W, Printable",
+    "etsy_listing_id": "4515675373",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1039_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_BABY_BEAR_NURSERY_PRINT",
+    "name": "Baby Bear Nursery Print, Woodland Nursery Art, Printable",
+    "etsy_listing_id": "4515671764",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1040_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_MOUNTAIN_LAKE_PRINTABLE_WALL_ART",
+    "name": "Mountain Lake Printable Wall Art, Instant Download, Landscap",
+    "etsy_listing_id": "4515675145",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1041_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_WILDFLOWER_MEADOW_PRINTABLE_WALL_ART",
+    "name": "Wildflower Meadow Printable Wall Art, Instant Download, Bota",
+    "etsy_listing_id": "4515671558",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1042_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_CAT_READING_PRINTABLE_WALL_ART",
+    "name": "Cat Reading Printable Wall Art, Instant Download, Bookish",
+    "etsy_listing_id": "4515671458",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1043_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_OCEAN_WAVE_PRINTABLE_WALL_ART",
+    "name": "Ocean Wave Printable Wall Art, Instant Download, Coastal",
+    "etsy_listing_id": "4515671336",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1044_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_LAVENDER_FIELDS_WATERCOLOR_PRINT",
+    "name": "Lavender Fields Watercolor Print, Provence Wall Art, Printable",
+    "etsy_listing_id": "4515671216",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1045_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_SNOWY_OWL_PRINTABLE_WALL_ART",
+    "name": "Snowy Owl Printable Wall Art, Instant Download, Wildlife",
+    "etsy_listing_id": "4515670946",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1046_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_FARMHOUSE_ROOSTER_ART_PRINT",
+    "name": "Farmhouse Rooster Art Print, Kitchen Wall Decor, Country F, Printable",
+    "etsy_listing_id": "4515669596",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1047_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_SPRING_CHERRY_BLOSSOM",
+    "name": "Spring Cherry Blossom Watercolor Print, Printable, Instant Download",
+    "etsy_listing_id": "4515672895",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "draft",
+    "files": [
+      "DP1048_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_SUMMER_SUNFLOWER",
+    "name": "Summer Sunflower Watercolor Print, Printable, Instant Download",
+    "etsy_listing_id": "4515669370",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "draft",
+    "files": [
+      "DP1049_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_AUTUMN_FOREST_PATH",
+    "name": "Autumn Forest Path Watercolor Print, Printable, Instant Download",
+    "etsy_listing_id": "4515669246",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "draft",
+    "files": [
+      "DP1050_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_WINTER_BIRCH_HOLLY",
+    "name": "Winter Birch & Holly Watercolor Print, Printable, Instant Download",
+    "etsy_listing_id": "4515669140",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "draft",
+    "files": [
+      "DP1051_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_COASTAL_ART_SET_OF_4",
+    "name": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4515668698",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1055_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_FOX_WATERCOLOR_PRINTABLE_WALL_ART",
+    "name": "Fox Watercolor Printable Wall Art, Instant Download, Woodlan",
+    "etsy_listing_id": "4515672065",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [
+      "DP1056_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  },
+  {
+    "product_id": "WA_PARIS_CAF_PRINTABLE_WALL_ART",
+    "name": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
+    "etsy_listing_id": "4515671951",
+    "price": 19.98,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1057_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_WOODLAND_ANIMAL_GALLERY_WALL_SET",
+    "name": "Woodland Animal Gallery Wall Set of 5, Printable, Instant Download",
+    "etsy_listing_id": "4513713142",
+    "price": 24.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1038_print_sizes.zip",
+      "DP1040_print_sizes.zip",
+      "DP1046_print_sizes.zip",
+      "DP1056_print_sizes.zip",
+      "DP1039_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_BOTANICAL_GALLERY_WALL_SET_OF",
+    "name": "Botanical Gallery Wall Set of 5, Printable Prints, Instant Download",
+    "etsy_listing_id": "4513713106",
+    "price": 24.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1032_print_sizes.zip",
+      "DP1042_print_sizes.zip",
+      "DP1045_print_sizes.zip",
+      "DP1001_print_sizes.zip",
+      "DP1003_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_COASTAL_GALLERY_WALL_SET_OF",
+    "name": "Coastal Gallery Wall Set of 5, Printable Art, Instant Download",
+    "etsy_listing_id": "4513713044",
+    "price": 24.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1022_print_sizes.zip",
+      "DP1044_print_sizes.zip",
+      "DP1039_print_sizes.zip",
+      "DP1045_print_sizes.zip",
+      "DP1031_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_HUMMINGBIRD_NURSERY_PRINT",
+    "name": "Hummingbird Nursery Print, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4513713984",
+    "price": 9.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1078_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_WATERCOLOR_FOX_NURSERY_PRINT",
+    "name": "Watercolor Fox Nursery Print, Printable Instant Download",
+    "etsy_listing_id": "4513713962",
+    "price": 9.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1077_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_OWL_NURSERY_WALL_ART",
+    "name": "Owl Nursery Wall Art, Printable Instant Download, Woodland",
+    "etsy_listing_id": "4513713936",
+    "price": 9.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1075_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_BEAR_NURSERY_WALL_ART",
+    "name": "Bear Nursery Wall Art, Printable Instant Download, Woodland",
+    "etsy_listing_id": "4513713922",
+    "price": 9.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1074_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_FOX_NURSERY_WALL_ART",
+    "name": "Fox Nursery Wall Art, Printable Instant Download, Woodland",
+    "etsy_listing_id": "4513714191",
+    "price": 9.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1080_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_PARIS_SKYLINE_PRINT",
+    "name": "Paris Skyline Print, Black White Wall Art, Instant Download, Printable",
+    "etsy_listing_id": "4513714013",
+    "price": 4.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1079_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_VINTAGE_BOTANICAL_PRINT",
+    "name": "Vintage Botanical Print, Black White Wall Art, Instant Download",
+    "etsy_listing_id": "4513713945",
+    "price": 4.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1076_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_MOON_PHASES_PRINT_2",
+    "name": "Moon Phases Print, Black White Wall Art, Instant Download, Printable",
+    "etsy_listing_id": "4513713712",
+    "price": 4.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1072_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_JAPANDI_TREE_PRINT",
+    "name": "Japandi Tree Print, Black White Wall Art, Instant Download, Printable",
+    "etsy_listing_id": "4513713514",
+    "price": 4.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1071_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_MINIMALIST_BOTANICAL_PRINT",
+    "name": "Minimalist Botanical Print, Black White Wall Art, Instant Download",
+    "etsy_listing_id": "4513713805",
+    "price": 4.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1073_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_SLIM_CAN_KOOZIE",
+    "name": "Slim Can Koozie, 3D Printed Insulated Can Holder, Custom Color Gift",
+    "etsy_listing_id": "4506555435",
+    "price": 16.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_COASTAL_ART_SET_OF_4_2",
+    "name": "Coastal Art Set of 4, Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4512784817",
+    "price": 17.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1069_pelican_print_sizes.zip",
+      "DP1069_coralreef_print_sizes.zip",
+      "DP1069_lighthouse_print_sizes.zip",
+      "DP1069_seaturtle_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_PARIS_CAF_PRINTABLE_WALL_ART_2",
+    "name": "Paris Caf\u00e9 Printable Wall Art, Instant Download, French",
+    "etsy_listing_id": "4512783077",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1068_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_FOX_WATERCOLOR_PRINTABLE_WALL_ART_2",
+    "name": "Fox Watercolor Printable Wall Art, Instant Download, Woodland",
+    "etsy_listing_id": "4512780869",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1056_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_PELICAN_WATERCOLOR_PRINT",
+    "name": "Pelican Watercolor Print, Coastal Art, Instant Download, Printable",
+    "etsy_listing_id": "4512780614",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1055_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_CORAL_REEF_PRINTABLE_WALL_ART",
+    "name": "Coral Reef Printable Wall Art, Instant Download, Ocean",
+    "etsy_listing_id": "4512776173",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1054_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_LIGHTHOUSE_PRINTABLE_WALL_ART",
+    "name": "Lighthouse Printable Wall Art, Instant Download, Coastal",
+    "etsy_listing_id": "4512774863",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1053_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_SEA_TURTLE_PRINTABLE_WALL_ART",
+    "name": "Sea Turtle Printable Wall Art, Instant Download, Ocean",
+    "etsy_listing_id": "4512772539",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1052_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_WINTER_BIRCH_PRINTABLE_WALL_ART",
+    "name": "Winter Birch Printable Wall Art, Instant Download",
+    "etsy_listing_id": "4512772452",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1051_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_AUTUMN_MAPLE_PRINTABLE_WALL_ART",
+    "name": "Autumn Maple Printable Wall Art, Instant Download, Fall",
+    "etsy_listing_id": "4512770031",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1050_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_SUNFLOWER_WATERCOLOR_PRINT",
+    "name": "Sunflower Watercolor Print, Botanical Wall Art, Instant Download",
+    "etsy_listing_id": "4512768771",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1049_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_CHERRY_BLOSSOM_WATERCOLOR_PRINT",
+    "name": "Cherry Blossom Watercolor Print, Spring Wall Art, Instant Download",
+    "etsy_listing_id": "4512768858",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1067_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_ROOSTER_KITCHEN_PRINTABLE_WALL_ART",
+    "name": "Rooster Kitchen Printable Wall Art, Instant Download, Farm",
+    "etsy_listing_id": "4512763302",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1066_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_SNOWY_OWL_PRINTABLE_WALL_ART_2",
+    "name": "Snowy Owl Printable Wall Art, Instant Download, Wildlife",
+    "etsy_listing_id": "4512760671",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1046_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_LAVENDER_FIELDS_PRINTABLE_WALL_ART",
+    "name": "Lavender Fields Printable Wall Art, Instant Download, Provence",
+    "etsy_listing_id": "4512760918",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1045_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_OCEAN_WAVE_PRINTABLE_WALL_ART_2",
+    "name": "Ocean Wave Printable Wall Art, Instant Download, Coastal",
+    "etsy_listing_id": "4512758123",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1044_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_CAT_READING_PRINTABLE_WALL_ART_2",
+    "name": "Cat Reading Printable Wall Art, Instant Download, Bookish",
+    "etsy_listing_id": "4512758458",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1043_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_WILDFLOWER_MEADOW_PRINTABLE_WALL_ART_2",
+    "name": "Wildflower Meadow Printable Wall Art, Instant Download, Botanical",
+    "etsy_listing_id": "4512756952",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1042_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_MOUNTAIN_LAKE_PRINTABLE_WALL_ART_2",
+    "name": "Mountain Lake Printable Wall Art, Instant Download, Landscape",
+    "etsy_listing_id": "4512755568",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1041_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_BABY_BEAR_NURSERY_PRINT_2",
+    "name": "Baby Bear Nursery Print, Woodland Animal Art, Instant Download",
+    "etsy_listing_id": "4512753302",
+    "price": 7.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1040_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_HUMMINGBIRD_WATERCOLOR_PRINT",
+    "name": "Hummingbird Watercolor Print, Botanical Bird Art, Floral Wall Decor",
+    "etsy_listing_id": "4512750191",
+    "price": 6.99,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1039_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_AUTUMN_FOX_PRINTABLE_WALL_ART_2",
+    "name": "Autumn Fox Printable Wall Art, Instant Download, Woodland",
+    "etsy_listing_id": "4512747600",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1038_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_ITALIAN_KITCHEN_PRINTABLE_WALL_ART_2",
+    "name": "Italian Kitchen Printable Wall Art, Instant Download, Food",
+    "etsy_listing_id": "4509597559",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1037_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_ABSTRACT_WOMAN_PORTRAIT_PRINT",
+    "name": "Abstract Woman Portrait Print, Feminist Line Art, Instant Download",
+    "etsy_listing_id": "4509596017",
+    "price": 5.99,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1036_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_TROPICAL_LEAVES_PRINT_2",
+    "name": "Tropical Leaves Print, Bold Monstera Palm Wall Art, Printable",
+    "etsy_listing_id": "4509600086",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1064_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_GRAND_CANYON_PRINTABLE_WALL_ART_2",
+    "name": "Grand Canyon Printable Wall Art, Instant Download, Vintage",
+    "etsy_listing_id": "4509593697",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1034_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_PARIS_SKYLINE_PRINTABLE_WALL_ART_2",
+    "name": "Paris Skyline Printable Wall Art, Instant Download, Minimalist",
+    "etsy_listing_id": "4509593623",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1033_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_VINTAGE_BOTANICAL_PRINTABLE_WALL_ART_2",
+    "name": "Vintage Botanical Printable Wall Art, Instant Download, Herbarium",
+    "etsy_listing_id": "4509593487",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1032_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_ABSTRACT_BRUSHSTROKE_PRINTABLE_ART_2",
+    "name": "Abstract Brushstroke Printable Art, Instant Download, Modern",
+    "etsy_listing_id": "4509598784",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1031_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_MOON_PHASES_PRINT_3",
+    "name": "Moon Phases Print, Celestial Wall Art, Lunar Cycle, Instant Download",
+    "etsy_listing_id": "4509598660",
+    "price": 7.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1030_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_MINIMALIST_BOTANICAL_LINE_ART_PRINT",
+    "name": "Minimalist Botanical Line Art Print, Boho Decor, Instant Download",
+    "etsy_listing_id": "4509259354",
+    "price": 5.99,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1017_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "MISC_WATERCOLOR_BOTANICAL_PRINT",
+    "name": "Watercolor Botanical Print, Soft Pastel Flower Art, Instant Download",
+    "etsy_listing_id": "4509258700",
+    "price": 6.99,
+    "category": "uncategorized",
+    "status": "active",
+    "files": [
+      "DP1013_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_CHECKERBOARD_FLORAL_PRINTABLE_WALL_ART",
+    "name": "Checkerboard Floral Printable Wall Art, Instant Download, Bold",
+    "etsy_listing_id": "4509258172",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1012_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_DAY_OF_THE_DEAD_SKULL",
+    "name": "Day of the Dead Skull Print, Colorful Maximalist Wall Art, Printable",
+    "etsy_listing_id": "4509215145",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1025_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_MUSCLE_CAR_PRINTABLE_WALL_ART",
+    "name": "Muscle Car Printable Wall Art, Instant Download, Chevelle",
+    "etsy_listing_id": "4509219904",
+    "price": 7.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1024_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_ASTRONAUT_SPACE_PRINTABLE_WALL_ART",
+    "name": "Astronaut Space Printable Wall Art, Instant Download, Galaxy",
+    "etsy_listing_id": "4509214803",
+    "price": 7.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1023_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_FULL_MOON_OCEAN_PRINTABLE_WALL",
+    "name": "Full Moon Ocean Printable Wall Art, Instant Download, Moody",
+    "etsy_listing_id": "4509219594",
+    "price": 7.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1022_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_POPPY_FIELD_PRINTABLE_WALL_ART",
+    "name": "Poppy Field Printable Wall Art, Instant Download, Impressionist",
+    "etsy_listing_id": "4509214237",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1020_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_MOUNTAIN_MEADOW_PRINTABLE_WALL_ART",
+    "name": "Mountain Meadow Printable Wall Art, Instant Download, Landscape",
+    "etsy_listing_id": "4509214051",
+    "price": 7.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1019_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_JAPANDI_TREE_PRINTABLE_WALL_ART",
+    "name": "Japandi Tree Printable Wall Art, Instant Download, Zen",
+    "etsy_listing_id": "4509218860",
+    "price": 6.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1018_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_WHITE_ROSES_PRINTABLE_WALL_ART",
+    "name": "White Roses Printable Wall Art, Instant Download, Romantic",
+    "etsy_listing_id": "4509213667",
+    "price": 7.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1016_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_SHE_BELIEVED_SHE_COULD",
+    "name": "She Believed She Could, Empowerment Quote Wall Art, Instant Download",
+    "etsy_listing_id": "4509213533",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1015_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_GOOD_THINGS_TAKE_TIME_PRINTABLE",
+    "name": "Good Things Take Time Printable Art, Instant Download, Quote",
+    "etsy_listing_id": "4509213345",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1014_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_MEDITERRANEAN_WINDOW_PRINTABLE_ART",
+    "name": "Mediterranean Window Printable Art, Instant Download, Amalfi",
+    "etsy_listing_id": "4509218152",
+    "price": 7.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1007_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_PAMPAS_GRASS_PRINTABLE_WALL_ART",
+    "name": "Pampas Grass Printable Wall Art, Boho, Instant Download",
+    "etsy_listing_id": "4509193237",
+    "price": 4.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1059_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_SAGE_LAVENDER_BOTANICAL_PRINT",
+    "name": "Sage Lavender Botanical Print, Dusty Rose Wall Art, Instant Download",
+    "etsy_listing_id": "4509193231",
+    "price": 4.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1058_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_BOHO_WILDFLOWER_PRINTABLE_WALL_ART",
+    "name": "Boho Wildflower Printable Wall Art, Instant Download, Sage",
+    "etsy_listing_id": "4509198434",
+    "price": 5.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1060_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_EUCALYPTUS_BRANCH_PRINTABLE_WALL_ART",
+    "name": "Eucalyptus Branch Printable Wall Art, Instant Download, Botanical",
+    "etsy_listing_id": "4509198446",
+    "price": 4.99,
+    "category": "wall_art",
+    "status": "active",
+    "files": [
+      "DP1061_print_sizes.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_MINIMALIST_PEN_HOLDER",
+    "name": "Minimalist Pen Holder, 3D Printed Desk Organizer, Modern Office Gift",
+    "etsy_listing_id": "4507783049",
+    "price": 9.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_STANDARD_CAN_KOOZIE",
+    "name": "Standard Can Koozie, 3D Printed Beer Can Holder, Custom Color Gift",
+    "etsy_listing_id": "4506562262",
+    "price": 16.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_RIBBED_PLANTER_POT",
+    "name": "Ribbed Planter Pot, 3D Printed Modern Indoor Plant Pot, Boho Decor",
+    "etsy_listing_id": "4506559866",
+    "price": 15.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_RIBBED_TEA_LIGHT_HOLDER",
+    "name": "Ribbed Tea Light Holder, 3D Printed Boho Candle Holder, Set of 2",
+    "etsy_listing_id": "4506557906",
+    "price": 15.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_PUFFER_JACKET_CAN_KOOZIE",
+    "name": "Puffer Jacket Can Koozie, 3D Printed Beer Can Holder, Slim Can Gift",
+    "etsy_listing_id": "4497769840",
+    "price": 16.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_GEOMETRIC_GLOW_LAMP",
+    "name": "Geometric Glow Lamp, 3D Printed Table Lamp, Modern Home Decor Gift",
+    "etsy_listing_id": "4497392795",
+    "price": 29.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_TEXTURED_TEA_LIGHT_HOLDERS",
+    "name": "Textured Tea Light Holders, 3D Printed Candle Holder Set of 3, Gift",
+    "etsy_listing_id": "4492610660",
+    "price": 15.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_SCULPTURAL_MESH_LAMP",
+    "name": "Sculptural Mesh Lamp, 3D Printed Geometric Table Lamp, Home Decor",
+    "etsy_listing_id": "4490472707",
+    "price": 34.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_COFFEE_BAR_SIGN",
+    "name": "Coffee Bar Sign, 3D Printed Cat Kitchen Decor, Housewarming Gift",
+    "etsy_listing_id": "4488666558",
+    "price": 8.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_RIBBED_VASE_FOR_DRIED_FLOWERS",
+    "name": "Ribbed Vase for Dried Flowers, 3D Printed Boho Decor, Matte Black",
+    "etsy_listing_id": "4488532602",
+    "price": 8.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "P3D_CRYSTAL_GLOW_LAMP",
+    "name": "Crystal Glow Lamp, 3D Printed Faceted RGB Table Lamp, Unique Gift",
+    "etsy_listing_id": "4488477854",
+    "price": 32.99,
+    "category": "3d_print_physical",
+    "status": "active",
+    "files": [],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "SS_AMERICA_250_SVG",
+    "name": "America 250 SVG, 10 Patriotic 3D Print Signs, Instant Download",
+    "etsy_listing_id": "4520524435",
+    "price": 14.99,
+    "category": "svg_3dprint_pack",
+    "status": "draft",
+    "files": [
+      "SS1001_america250_3dprint_pack_vol1.zip",
+      "SS1001_america250_3dprint_pack_vol2.zip"
+    ],
+    "last_updated": "2026-06-17",
+    "source": "etsy_sync"
+  },
+  {
+    "product_id": "WA_PICK_ANY_3_PRINTS",
+    "name": "Pick Any 3 Prints, Printable Wall Art Bundle, Instant Download",
+    "etsy_listing_id": "4513637740",
+    "price": 14.97,
+    "category": "wall_art",
+    "status": "inactive",
+    "files": [],
+    "last_updated": "2026-06-18",
+    "source": "etsy_sync",
+    "deactivated_reason": "listing cleanup 2026-06-18: duplicate of cheaper twin / zero-file delivery"
+  }
+]

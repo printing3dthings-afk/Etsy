@@ -1,0 +1,4 @@
+    def get_conversation(self, conversation_id: int) -> dict:
+        """Get a single conversation with all messages."""
+        self._require_oauth()
+        return self._request("GET", f"shops/{self.shop_id}/conversations/{conversation_id}")

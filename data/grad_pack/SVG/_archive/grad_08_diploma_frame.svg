@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Diploma Certificate Frame SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <rect x="28" y="28" width="744" height="744" rx="12" fill="none" stroke="black" stroke-width="5"/>
+  <rect x="45" y="45" width="710" height="710" rx="10" fill="none" stroke="black" stroke-width="2"/>
+  <rect x="60" y="60" width="680" height="680" rx="8"  fill="none" stroke="black" stroke-width="1"/>
+  <path d="M 88.0,88.0 C 88.0,95.8 116.0,90.8 116.0,88.0 C 116.0,85.2 88.0,80.2 88.0,88.0 Z" fill="black"/>
+  <path d="M 88.0,88.0 C 82.5,93.5 105.8,109.8 107.8,107.8 C 109.8,105.8 93.5,82.5 88.0,88.0 Z" fill="black"/>
+  <path d="M 88.0,88.0 C 80.2,88.0 85.2,116.0 88.0,116.0 C 90.8,116.0 95.8,88.0 88.0,88.0 Z" fill="black"/>
+  <path d="M 88.0,88.0 C 82.5,82.5 66.2,105.8 68.2,107.8 C 70.2,109.8 93.5,93.5 88.0,88.0 Z" fill="black"/>
+  <path d="M 88.0,88.0 C 88.0,80.2 60.0,85.2 60.0,88.0 C 60.0,90.8 88.0,95.8 88.0,88.0 Z" fill="black"/>
+  <path d="M 88.0,88.0 C 93.5,82.5 70.2,66.2 68.2,68.2 C 66.2,70.2 82.5,93.5 88.0,88.0 Z" fill="black"/>
+  <path d="M 88.0,88.0 C 95.8,88.0 90.8,60.0 88.0,60.0 C 85.2,60.0 80.2,88.0 88.0,88.0 Z" fill="black"/>
+  <path d="M 88.0,88.0 C 93.5,93.5 109.8,70.2 107.8,68.2 C 105.8,66.2 82.5,82.5 88.0,88.0 Z" fill="black"/>
+  <circle cx="88" cy="88" r="7" fill="white"/>
+  <path d="M 712.0,88.0 C 712.0,95.8 740.0,90.8 740.0,88.0 C 740.0,85.2 712.0,80.2 712.0,88.0 Z" fill="black"/>
+  <path d="M 712.0,88.0 C 706.5,93.5 729.8,109.8 731.8,107.8 C 733.8,105.8 717.5,82.5 712.0,88.0 Z" fill="black"/>
+  <path d="M 712.0,88.0 C 704.2,88.0 709.2,116.0 712.0,116.0 C 714.8,116.0 719.8,88.0 712.0,88.0 Z" fill="black"/>
+  <path d="M 712.0,88.0 C 706.5,82.5 690.2,105.8 692.2,107.8 C 694.2,109.8 717.5,93.5 712.0,88.0 Z" fill="black"/>
+  <path d="M 712.0,88.0 C 712.0,80.2 684.0,85.2 684.0,88.0 C 684.0,90.8 712.0,95.8 712.0,88.0 Z" fill="black"/>
+  <path d="M 712.0,88.0 C 717.5,82.5 694.2,66.2 692.2,68.2 C 690.2,70.2 706.5,93.5 712.0,88.0 Z" fill="black"/>
+  <path d="M 712.0,88.0 C 719.8,88.0 714.8,60.0 712.0,60.0 C 709.2,60.0 704.2,88.0 712.0,88.0 Z" fill="black"/>
+  <path d="M 712.0,88.0 C 717.5,93.5 733.8,70.2 731.8,68.2 C 729.8,66.2 706.5,82.5 712.0,88.0 Z" fill="black"/>
+  <circle cx="712" cy="88" r="7" fill="white"/>
+  <path d="M 88.0,712.0 C 88.0,719.8 116.0,714.8 116.0,712.0 C 116.0,709.2 88.0,704.2 88.0,712.0 Z" fill="black"/>
+  <path d="M 88.0,712.0 C 82.5,717.5 105.8,733.8 107.8,731.8 C 109.8,729.8 93.5,706.5 88.0,712.0 Z" fill="black"/>
+  <path d="M 88.0,712.0 C 80.2,712.0 85.2,740.0 88.0,740.0 C 90.8,740.0 95.8,712.0 88.0,712.0 Z" fill="black"/>
+  <path d="M 88.0,712.0 C 82.5,706.5 66.2,729.8 68.2,731.8 C 70.2,733.8 93.5,717.5 88.0,712.0 Z" fill="black"/>
+  <path d="M 88.0,712.0 C 88.0,704.2 60.0,709.2 60.0,712.0 C 60.0,714.8 88.0,719.8 88.0,712.0 Z" fill="black"/>
+  <path d="M 88.0,712.0 C 93.5,706.5 70.2,690.2 68.2,692.2 C 66.2,694.2 82.5,717.5 88.0,712.0 Z" fill="black"/>
+  <path d="M 88.0,712.0 C 95.8,712.0 90.8,684.0 88.0,684.0 C 85.2,684.0 80.2,712.0 88.0,712.0 Z" fill="black"/>
+  <path d="M 88.0,712.0 C 93.5,717.5 109.8,694.2 107.8,692.2 C 105.8,690.2 82.5,706.5 88.0,712.0 Z" fill="black"/>
+  <circle cx="88" cy="712" r="7" fill="white"/>
+  <path d="M 712.0,712.0 C 712.0,719.8 740.0,714.8 740.0,712.0 C 740.0,709.2 712.0,704.2 712.0,712.0 Z" fill="black"/>
+  <path d="M 712.0,712.0 C 706.5,717.5 729.8,733.8 731.8,731.8 C 733.8,729.8 717.5,706.5 712.0,712.0 Z" fill="black"/>
+  <path d="M 712.0,712.0 C 704.2,712.0 709.2,740.0 712.0,740.0 C 714.8,740.0 719.8,712.0 712.0,712.0 Z" fill="black"/>
+  <path d="M 712.0,712.0 C 706.5,706.5 690.2,729.8 692.2,731.8 C 694.2,733.8 717.5,717.5 712.0,712.0 Z" fill="black"/>
+  <path d="M 712.0,712.0 C 712.0,704.2 684.0,709.2 684.0,712.0 C 684.0,714.8 712.0,719.8 712.0,712.0 Z" fill="black"/>
+  <path d="M 712.0,712.0 C 717.5,706.5 694.2,690.2 692.2,692.2 C 690.2,694.2 706.5,717.5 712.0,712.0 Z" fill="black"/>
+  <path d="M 712.0,712.0 C 719.8,712.0 714.8,684.0 712.0,684.0 C 709.2,684.0 704.2,712.0 712.0,712.0 Z" fill="black"/>
+  <path d="M 712.0,712.0 C 717.5,717.5 733.8,694.2 731.8,692.2 C 729.8,690.2 706.5,706.5 712.0,712.0 Z" fill="black"/>
+  <circle cx="712" cy="712" r="7" fill="white"/>
+  <path d="M 452.0,104.3 Q 444.5,104.3 452.0,125.0 Q 459.5,104.3 452.0,104.3 Z" fill="black"/>
+  <path d="M 446.9,130.8 Q 440.4,127.0 436.5,148.7 Q 453.4,134.5 446.9,130.8 Z" fill="black"/>
+  <path d="M 429.2,151.2 Q 425.5,144.7 411.3,161.5 Q 433.0,157.6 429.2,151.2 Z" fill="black"/>
+  <path d="M 403.7,160.0 Q 403.7,152.5 383.0,160.0 Q 403.7,167.5 403.7,160.0 Z" fill="black"/>
+  <path d="M 377.2,154.9 Q 381.0,148.4 359.3,144.5 Q 373.5,161.4 377.2,154.9 Z" fill="black"/>
+  <path d="M 356.8,137.2 Q 363.3,133.5 346.5,119.3 Q 350.4,141.0 356.8,137.2 Z" fill="black"/>
+  <path d="M 348.0,111.7 Q 355.5,111.7 348.0,91.0 Q 340.5,111.7 348.0,111.7 Z" fill="black"/>
+  <path d="M 353.1,85.2 Q 359.6,89.0 363.5,67.3 Q 346.6,81.5 353.1,85.2 Z" fill="black"/>
+  <path d="M 370.8,64.8 Q 374.5,71.3 388.7,54.5 Q 367.0,58.4 370.8,64.8 Z" fill="black"/>
+  <path d="M 396.3,56.0 Q 396.3,63.5 417.0,56.0 Q 396.3,48.5 396.3,56.0 Z" fill="black"/>
+  <path d="M 422.8,61.1 Q 419.0,67.6 440.7,71.5 Q 426.5,54.6 422.8,61.1 Z" fill="black"/>
+  <path d="M 443.2,78.8 Q 436.7,82.5 453.5,96.7 Q 449.6,75.0 443.2,78.8 Z" fill="black"/>
+  <circle cx="400" cy="108" r="13" fill="black"/>
+  <circle cx="400" cy="108" r="6"  fill="white"/>
+  <path d="M 431.7,675.5 L 458.0,680.0 L 431.7,684.5 Z M 431.3,686.7 L 454.5,699.8 L 428.3,695.0 Z M 427.1,697.0 L 444.4,717.3 L 421.4,703.8 Z M 419.7,705.2 L 429.0,730.2 L 412.0,709.7 Z M 409.9,710.4 L 410.1,737.1 L 401.1,712.0 Z M 398.9,712.0 L 389.9,737.1 L 390.1,710.4 Z M 388.0,709.7 L 371.0,730.2 L 380.3,705.2 Z M 378.6,703.8 L 355.6,717.3 L 372.9,697.0 Z M 371.7,695.0 L 345.5,699.8 L 368.7,686.7 Z M 368.3,684.5 L 342.0,680.0 L 368.3,675.5 Z M 368.7,673.3 L 345.5,660.2 L 371.7,665.0 Z M 372.9,663.0 L 355.6,642.7 L 378.6,656.2 Z M 380.3,654.8 L 371.0,629.8 L 388.0,650.3 Z M 390.1,649.6 L 389.9,622.9 L 398.9,648.0 Z M 401.1,648.0 L 410.1,622.9 L 409.9,649.6 Z M 412.0,650.3 L 429.0,629.8 L 419.7,654.8 Z M 421.4,656.2 L 444.4,642.7 L 427.1,663.0 Z M 428.3,665.0 L 454.5,660.2 L 431.3,673.3 Z" fill="black"/>
+  <circle cx="400" cy="680" r="30" fill="black"/>
+  <circle cx="400" cy="680" r="20" fill="white"/>
+  <text x="400" y="685" text-anchor="middle" font-family="Georgia,serif" font-size="14" font-weight="bold" fill="black" letter-spacing="3">2026</text>
+  <text x="400" y="195" text-anchor="middle" font-family="Georgia,serif" font-size="20" fill="black" letter-spacing="10">CERTIFICATE OF</text>
+  <line x1="130" y1="212" x2="670" y2="212" stroke="black" stroke-width="2.8"/>
+  <line x1="130" y1="219" x2="670" y2="219" stroke="black" stroke-width="1.2"/>
+  <polygon points="121,215.5 128,212 135,215.5 128,219" fill="black"/>
+  <polygon points="679,215.5 686,212 693,215.5 686,219" fill="black"/>
+  <text x="400" y="310" text-anchor="middle" font-family="Georgia,serif" font-size="72" font-weight="bold" fill="black" letter-spacing="3">GRADUATION</text>
+  <line x1="130" y1="330" x2="670" y2="330" stroke="black" stroke-width="2.8"/>
+  <line x1="130" y1="337" x2="670" y2="337" stroke="black" stroke-width="1.2"/>
+  <polygon points="121,333.5 128,330 135,333.5 128,337" fill="black"/>
+  <polygon points="679,333.5 686,330 693,333.5 686,337" fill="black"/>
+  <text x="400" y="395" text-anchor="middle" font-family="Georgia,serif" font-size="18" fill="black" letter-spacing="10">PRESENTED TO</text>
+  <text x="400" y="453" text-anchor="middle" font-family="Georgia,serif" font-size="28" font-weight="bold" fill="black" letter-spacing="3">OUTSTANDING GRADUATE</text>
+  <text x="400" y="503" text-anchor="middle" font-family="Georgia,serif" font-size="24" fill="black" letter-spacing="8">CLASS OF 2026</text>
+  <line x1="140" y1="608" x2="300" y2="608" stroke="black" stroke-width="1.5"/>
+  <text x="220" y="626" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="black" letter-spacing="4">SIGNATURE</text>
+  <line x1="500" y1="608" x2="660" y2="608" stroke="black" stroke-width="1.5"/>
+  <text x="580" y="626" text-anchor="middle" font-family="Georgia,serif" font-size="12" fill="black" letter-spacing="4">SIGNATURE</text>
+</svg>

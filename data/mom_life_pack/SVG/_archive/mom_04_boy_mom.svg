@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Boy Mom SVG</title>
+  <rect width="800" height="800" fill="none"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+      @font-face { font-family: 'Cinzel'; src: url('/usr/local/share/fonts/Cinzel-Regular.ttf'); }
+      @font-face { font-family: 'CinzelDec'; src: url('/usr/local/share/fonts/CinzelDecorative-Bold.ttf'); }
+    </style>
+  </defs>
+
+  <circle cx="400" cy="400" r="320" fill="none" stroke="black" stroke-width="2.5"/>
+<circle cx="400" cy="400" r="302" fill="none" stroke="black" stroke-width="1"/>
+  <polygon points="405.0,115.0 401.4,116.4 400.0,120.0 398.6,116.4 395.0,115.0 398.6,113.6 400.0,110.0 401.4,113.6" fill="black"/>
+<polygon points="547.5,153.2 543.9,154.6 542.5,158.2 541.1,154.6 537.5,153.2 541.1,151.8 542.5,148.2 543.9,151.8" fill="black"/>
+<polygon points="651.8,257.5 648.2,258.9 646.8,262.5 645.4,258.9 641.8,257.5 645.4,256.1 646.8,252.5 648.2,256.1" fill="black"/>
+<polygon points="690.0,400.0 686.4,401.4 685.0,405.0 683.6,401.4 680.0,400.0 683.6,398.6 685.0,395.0 686.4,398.6" fill="black"/>
+<polygon points="651.8,542.5 648.2,543.9 646.8,547.5 645.4,543.9 641.8,542.5 645.4,541.1 646.8,537.5 648.2,541.1" fill="black"/>
+<polygon points="547.5,646.8 543.9,648.2 542.5,651.8 541.1,648.2 537.5,646.8 541.1,645.4 542.5,641.8 543.9,645.4" fill="black"/>
+<polygon points="405.0,685.0 401.4,686.4 400.0,690.0 398.6,686.4 395.0,685.0 398.6,683.6 400.0,680.0 401.4,683.6" fill="black"/>
+<polygon points="262.5,646.8 258.9,648.2 257.5,651.8 256.1,648.2 252.5,646.8 256.1,645.4 257.5,641.8 258.9,645.4" fill="black"/>
+<polygon points="158.2,542.5 154.6,543.9 153.2,547.5 151.8,543.9 148.2,542.5 151.8,541.1 153.2,537.5 154.6,541.1" fill="black"/>
+<polygon points="120.0,400.0 116.4,401.4 115.0,405.0 113.6,401.4 110.0,400.0 113.6,398.6 115.0,395.0 116.4,398.6" fill="black"/>
+<polygon points="158.2,257.5 154.6,258.9 153.2,262.5 151.8,258.9 148.2,257.5 151.8,256.1 153.2,252.5 154.6,256.1" fill="black"/>
+<polygon points="262.5,153.2 258.9,154.6 257.5,158.2 256.1,154.6 252.5,153.2 256.1,151.8 257.5,148.2 258.9,151.8" fill="black"/>
+  <text x="400" y="256" text-anchor="middle" font-family="Cormorant, serif" font-size="20" fill="black" letter-spacing="6">PROUD TO BE A</text>
+  <line x1="280.0" y1="274" x2="390" y2="274" stroke="black" stroke-width="1"/><polygon points="400,268 406,274 400,280 394,274" fill="black"/><line x1="410" y1="274" x2="520.0" y2="274" stroke="black" stroke-width="1"/>
+  <text x="400" y="354" text-anchor="middle" font-family="BebasNeue, sans-serif" font-size="82" fill="black" letter-spacing="4">BOY MOM</text>
+  <line x1="280.0" y1="373" x2="390" y2="373" stroke="black" stroke-width="1"/><polygon points="400,367 406,373 400,379 394,373" fill="black"/><line x1="410" y1="373" x2="520.0" y2="373" stroke="black" stroke-width="1"/>
+  <text x="400" y="424" text-anchor="middle" font-family="GreatVibes, cursive" font-size="58" fill="black">loud &amp; wild</text>
+  <text x="400" y="468" text-anchor="middle" font-family="Cormorant, serif" font-size="20" fill="black" letter-spacing="4">AND I WOULDN'T CHANGE</text>
+  <text x="400" y="498" text-anchor="middle" font-family="Cormorant, serif" font-size="20" fill="black" letter-spacing="4">A SINGLE THING</text>
+
+</svg>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <title>Bloom</title>
+  <rect width="800" height="800" fill="#FFFFFF"/>
+  <defs>
+    <style>
+      @font-face { font-family: 'BebasNeue'; src: url('/usr/local/share/fonts/BebasNeue-Regular.ttf'); }
+      @font-face { font-family: 'GreatVibes'; src: url('/usr/local/share/fonts/GreatVibes-Regular.ttf'); }
+      @font-face { font-family: 'Cormorant'; src: url('/usr/local/share/fonts/CormorantGaramond-Bold.ttf'); }
+      @font-face { font-family: 'CormorantItalic'; src: url('/usr/local/share/fonts/CormorantGaramond-BoldItalic.ttf'); }
+    </style>
+  </defs>
+  <polygon points="80.0,64.0 84.0,76.0 96.0,80.0 84.0,84.0 80.0,96.0 76.0,84.0 64.0,80.0 76.0,76.0" fill="#E84B8A"/>
+  <polygon points="720.0,64.0 724.0,76.0 736.0,80.0 724.0,84.0 720.0,96.0 716.0,84.0 704.0,80.0 716.0,76.0" fill="#E8A020"/>
+  <polygon points="80.0,704.0 84.0,716.0 96.0,720.0 84.0,724.0 80.0,736.0 76.0,724.0 64.0,720.0 76.0,716.0" fill="#E84B8A"/>
+  <polygon points="720.0,704.0 724.0,716.0 736.0,720.0 724.0,724.0 720.0,736.0 716.0,724.0 704.0,720.0 716.0,716.0" fill="#E8A020"/>
+  <circle cx="272.0" cy="190.0" r="7" fill="#E8A020"/>
+  <circle cx="304.0" cy="190.0" r="7" fill="#E8A020"/>
+  <circle cx="336.0" cy="190.0" r="7" fill="#E8A020"/>
+  <circle cx="368.0" cy="190.0" r="7" fill="#E8A020"/>
+  <circle cx="400.0" cy="190.0" r="7" fill="#E8A020"/>
+  <circle cx="432.0" cy="190.0" r="7" fill="#E8A020"/>
+  <circle cx="464.0" cy="190.0" r="7" fill="#E8A020"/>
+  <circle cx="496.0" cy="190.0" r="7" fill="#E8A020"/>
+  <circle cx="528.0" cy="190.0" r="7" fill="#E8A020"/>
+  <text x="400" y="430" text-anchor="middle" font-family="GreatVibes, sans-serif" font-size="150" fill="#E84B8A">Bloom</text>
+  <circle cx="272.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <circle cx="304.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <circle cx="336.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <circle cx="368.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <circle cx="400.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <circle cx="432.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <circle cx="464.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <circle cx="496.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <circle cx="528.0" cy="480.0" r="7" fill="#E84B8A"/>
+  <text x="400" y="556" text-anchor="middle" font-family="CormorantItalic, sans-serif" font-size="22" fill="#AAAAAA" letter-spacing="3">be brave · grow wild</text>
+</svg>

@@ -1,0 +1,117 @@
+name: Build Desktop App
+
+# Produces the real, installable Frank desktop app for Windows (.exe) and macOS
+# (.dmg). Runs on GitHub-hosted windows-latest/macos-latest runners specifically
+# because PyInstaller does not cross-compile -- a Windows .exe must be built on
+# Windows, a macOS .app on macOS, and no sandbox/CI runner running Linux can produce
+# either (see tools/desktop/backend.spec's docstring for the full reasoning).
+#
+# Manual trigger only for now (workflow_dispatch) -- this is a slow, heavy build
+# (bundles the full backend + ~34MB of vendor JS assets per platform) and isn't
+# something that needs to run on every push the way ci-smoke.yml does. Add a
+# `release:` or tag-triggered `push:` block later if/when this should auto-publish.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build backend executable
+        run: python tools/desktop/build_backend.py
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Electron dependencies
+        working-directory: desktop
+        run: npm install
+
+      - name: Build Windows installer
+        working-directory: desktop
+        run: npm run build:win
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: frank-windows-installer
+          path: dist/desktop-app/*.exe
+          if-no-files-found: error
+
+  build-macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build backend executable
+        run: python tools/desktop/build_backend.py
+
+      - name: Build .icns from the committed icon.png
+        # iconutil is macOS-only, which is exactly why this step can't run anywhere
+        # else -- see tools/desktop/generate_icon.py's docstring. Standard 10-size
+        # .iconset layout Apple's tooling expects.
+        run: |
+          ICONSET=desktop/build/icon.iconset
+          mkdir -p "$ICONSET"
+          SRC=desktop/build/icon.png
+          sips -z 16 16     "$SRC" --out "$ICONSET/icon_16x16.png"
+          sips -z 32 32     "$SRC" --out "$ICONSET/icon_16x16@2x.png"
+          sips -z 32 32     "$SRC" --out "$ICONSET/icon_32x32.png"
+          sips -z 64 64     "$SRC" --out "$ICONSET/icon_32x32@2x.png"
+          sips -z 128 128   "$SRC" --out "$ICONSET/icon_128x128.png"
+          sips -z 256 256   "$SRC" --out "$ICONSET/icon_128x128@2x.png"
+          sips -z 256 256   "$SRC" --out "$ICONSET/icon_256x256.png"
+          sips -z 512 512   "$SRC" --out "$ICONSET/icon_256x256@2x.png"
+          sips -z 512 512   "$SRC" --out "$ICONSET/icon_512x512.png"
+          cp "$SRC" "$ICONSET/icon_512x512@2x.png"
+          iconutil -c icns "$ICONSET" -o desktop/build/icon.icns
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Electron dependencies
+        working-directory: desktop
+        run: npm install
+
+      - name: Build macOS disk image
+        working-directory: desktop
+        run: npm run build:mac
+
+      - name: Upload macOS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: frank-macos-installer
+          path: dist/desktop-app/*.dmg
+          if-no-files-found: error
+
+# Known limitation, not fixed here: the macOS .dmg is unsigned/unnotarized (no Apple
+# Developer certificate, $99/yr, configured). Gatekeeper will show "unidentified
+# developer" on first launch -- right-click -> Open bypasses it. Fine for personal use,
+# worth revisiting if this is ever distributed more broadly.

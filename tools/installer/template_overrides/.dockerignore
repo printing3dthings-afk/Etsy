@@ -1,0 +1,31 @@
+# Same as the root .dockerignore, except this template's data/ is already
+# small (only data/knowledge_base/, stripped of all business-IP content by
+# package_template.py) and *.md must ship — main.py reads CLAUDE.md and
+# data/knowledge_base/*.md at runtime for the CEO agent's doctrine/KB
+# grounding (_ops_runbook_block(), _ceo_learnings_block(), read_knowledge_base_doc).
+# Excluding them here would silently empty that context — no error surfaced,
+# since those reads are wrapped in broad exception handling.
+
+mobile_app/
+.git/
+
+# Python cruft
+__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+*.egg-info/
+
+# Secrets (Railway injects these via env vars — never bake them in the image)
+.env
+*.env
+
+# Dev / CI noise
+.github/
+.pytest_cache/
+
+# Local DB (never ship into the image)
+**/hub_data/
+*.db
+*.db-wal
+*.db-shm
