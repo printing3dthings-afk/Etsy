@@ -1,0 +1,48 @@
+{
+  "name": "frank-desktop",
+  "version": "1.0.0",
+  "description": "Frank (OnBrandCraftz Etsy automation hub) as a native desktop app -- Electron shell around the bundled Python/FastAPI backend.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.onbrandcraftz.frank",
+    "productName": "Frank",
+    "directories": {
+      "output": "../dist/desktop-app"
+    },
+    "files": [
+      "main.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist/desktop-backend/frank-backend",
+        "to": "backend"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns",
+      "category": "public.app-category.business"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

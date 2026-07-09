@@ -4135,3 +4135,116 @@ live Playwright + curl verification of the seeded todos (both lists reachable vi
 pollution (`ops_runbook.md`'s auto-generated health-loop entries -- written by the background
 health loop hitting the same known-broken live credential during local testing, not a real
 change). `_BUILD_ID` bumped to `b4d0e2c-v131`.
+
+---
+
+## 2026-07-09 — Downloadable desktop app (Windows + Mac) + business tracker workbook (v132)
+
+**Context:** Scott asked for Frank as a fully installed desktop application (own icon,
+own window, Start Menu/Applications entry, chosen over a simpler browser-tab launcher
+after confirming the tradeoff with him) for both Windows and Mac, plus an Excel
+workbook to track products, inventory, and consumables. Nothing like the desktop app
+existed before this: `start_frank_local.sh`/`Start Frank Local.bat` require a
+pre-installed Python and a manually-created `.env`; `tools/installer/` is a white-label
+packager for *other* businesses' own deployments, not a personal desktop app.
+
+**Architecture: Electron shell spawns a PyInstaller-bundled Python backend as a child
+process, then loads it into a native window.**
+
+1. **`tools/desktop/backend.spec` + `build_backend.py`** — PyInstaller bundles
+   `tools/api_server/main.py` and its full dependency tree into a standalone
+   executable (onedir mode, not onefile — chosen specifically because main.py's
+   `sys.path.insert(0, ROOT / "tools")` sibling-import pattern needs `tools/` to exist
+   as real files on disk next to the executable, which onedir gives for free by
+   copying the whole tree via `datas`). Built and fully verified in this sandbox
+   (Linux binary): `/health`, `/frank`, static vendor assets, first-run owner-account
+   setup, and the correction-plan todos seeded in the last session's work all confirmed
+   working from a completely standalone binary run outside the source tree.
+   - **Real bug found and fixed during this**: `ROOT = Path(sys.executable).resolve().parent`
+     was wrong for PyInstaller 6.x onedir builds — the executable sits in
+     `dist/frank-backend/`, but modern PyInstaller collects bundled `datas` one level
+     deeper, in `dist/frank-backend/_internal/`. First build attempt correctly started
+     the server but 404'd on every static asset. Fixed by using `sys._MEIPASS`
+     (PyInstaller's own documented "where the bundle actually is" attribute) instead of
+     deriving from `sys.executable`.
+   - `tools/api_server/main.py` gained a minimal, backward-compatible frozen-detection
+     branch for `ROOT` (falls through to the exact original `Path(__file__).parent.parent.parent`
+     when not frozen — verified byte-identical behavior via the full test suite) and
+     `_STATIC_DIR` was changed from a `Path(__file__).parent`-relative expression to a
+     `ROOT`-relative one (behaviorally identical in the non-frozen case, since main.py
+     lives at `tools/api_server/main.py` either way — also verified via full test suite).
+
+2. **`tools/desktop/generate_icon.py`** — generates the app icon from the same
+   cyan/blue palette already used by the orb's voice-reactive glow in
+   `frank_hud_mockup.py` (no new external brand asset needed, and nothing touches
+   `data/brand/`, which is gitignored/machine-local). Produces `desktop/build/icon.png`
+   (1024px master) and `desktop/build/icon.ico` (Windows, built directly with Pillow --
+   `.icns` for Mac is generated in the CI job itself via `iconutil`, a macOS-only tool
+   that can't run here).
+
+3. **`desktop/main.js` + `package.json`** — Electron main process. First launch
+   auto-generates `<userData>/.env` (a random `APP_SECRET_TOKEN` + a `DB_PATH` inside
+   the same OS-appropriate app-data directory, never inside the installed app bundle
+   itself so data survives updates/reinstalls) -- Anthropic/Etsy keys are deliberately
+   not required for this step since the backend already degrades gracefully without
+   them; Scott adds those afterward via the app's own Settings screen or the new "Edit
+   API Keys..." menu item, which just opens the `.env` file in the OS's default editor.
+   Every launch re-reads that file and passes its contents as real process environment
+   variables to the spawned backend (not relying on the backend finding a `.env` itself
+   via its own ROOT-relative lookup, since ROOT resolves to `sys._MEIPASS` when frozen,
+   not the app-data directory). Polls `/health` before loading the window; kills the
+   child process on quit; restarts once on an unexpected crash.
+   - **Verified as much as this sandbox allows**: `node --check main.js` (syntax), and
+     a standalone Node script replicating main.js's env-file + spawn + health-poll logic
+     ran against the real built Linux backend binary from a fresh temp app-data
+     directory end-to-end successfully (`.env` auto-generated, backend spawned with the
+     right env vars, `/health` returned 200, `DB_PATH` correctly redirected outside the
+     source tree). **Could not verify Electron itself** -- `npm install` for the
+     `electron` package failed with a 403: this sandbox's egress policy allowlists
+     `registry.npmjs.org`/`pypi.org`/etc. but not `github.com` (where Electron's
+     postinstall script downloads a prebuilt binary from). Per this environment's own
+     proxy guidance, an org-policy 403 is reported, not routed around. The actual
+     Electron packaging + full app launch only gets proven for real by the CI workflow
+     below, which runs on GitHub-hosted runners with normal internet access.
+
+4. **`.github/workflows/build-desktop.yml`** — matrix build on `windows-latest` +
+   `macos-latest` (manual `workflow_dispatch` trigger, not on every push -- this is a
+   slow, heavy build unlike `ci-smoke.yml`). Each OS builds its own PyInstaller backend
+   natively (required -- PyInstaller does not cross-compile) and runs
+   `electron-builder` for its own installer format (`nsis` .exe / `dmg`), uploaded as
+   workflow artifacts. This is what actually produces the installable binaries, since
+   neither can be built in this Linux sandbox.
+
+**Known limitations flagged, not silently hidden:**
+- The macOS build is unsigned/unnotarized (no $99/yr Apple Developer certificate
+  configured) -- Gatekeeper will show "unidentified developer" on first launch;
+  right-click → Open bypasses it. Acceptable for personal use, revisit if ever
+  distributed more broadly.
+- `data/staged_photos/`, `data/digital_products/`, etc. are NOT relocated to the
+  app-data directory in this pass -- only `DB_PATH` (the state audited in the
+  correction-plan session) is redirected. Those directories are regeneratable working
+  files per their own existing code comments, lower urgency than the database.
+
+**Business tracker workbook** (`tools/generate_business_tracker.py`, delivered directly
+to Scott via file, not committed -- it's his working file): 8 sheets (Dashboard,
+Products, Physical Inventory, Consumables & Reorder, Suppliers, COGS & Pricing,
+Equipment & Assets, Expense & Tax Tracker), pre-filled with the known product catalog
+(DP1026-1029 confirmed live, DP1030-1034 flagged as existing-but-undocumented per
+CLAUDE.md), the Bambu Lab P1S's documented filament/nozzle/build-plate types, and
+CLAUDE.md's own Etsy fee structure (6.5% transaction + $0.20 listing + 3%+$0.25
+processing) as a live formula rather than a hardcoded number. Round-trip verified via
+openpyxl (all 8 sheets, formulas, and conditional formatting survive save/reload) --
+LibreOffice headless formula-evaluation was attempted as a second check but failed on
+even a trivial file, confirmed to be an environment-wide sandbox limitation, not a
+defect in the generated workbook.
+
+**Verified:** `python -m compileall tools tests` clean; all 5 test suites green (145
+tests total across smoke/quality-gates/resilience/staged-actions/http-routes -- zero
+regressions from the ROOT/`_STATIC_DIR` frozen-detection changes); the real PyInstaller
+backend binary tested standalone from multiple fresh temp directories outside the
+source tree; `.github/workflows/build-desktop.yml` YAML syntax validated; `git status`
+confirmed no unintended changes. `.gitignore` updated: `/build/` (anchored to repo
+root only, so `desktop/build/`'s committed icon assets are unaffected) added alongside
+the existing unanchored `dist/` entry, since `tools/desktop/build_backend.py`'s
+PyInstaller workpath is ~92MB of build artifacts that should never be committed.
+`_BUILD_ID` bumped to `b4d0e2c-v132`.

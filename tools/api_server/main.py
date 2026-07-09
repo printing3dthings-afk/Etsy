@@ -40,7 +40,19 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Redirect
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import GZipMiddleware
 
-ROOT = Path(__file__).parent.parent.parent
+if getattr(sys, "frozen", False):
+    # PyInstaller desktop-app bundle (tools/desktop/backend.spec, 2026-07-08): the
+    # frozen entry script's own __file__ no longer sits 3 directories under the repo
+    # root (tools/api_server/main.py) the way it does when run from source. sys._MEIPASS
+    # is PyInstaller's own documented attribute for "where the bundled data actually
+    # is" -- NOT Path(sys.executable).parent, which in onedir mode (PyInstaller 6.x)
+    # is one level too shallow: the executable sits in dist/frank-backend/, but the
+    # bundled tools/ tree this spec collects via `datas` lands in
+    # dist/frank-backend/_internal/tools/ (verified empirically -- a static-asset
+    # 404 was the first sign sys.executable's parent was wrong).
+    ROOT = Path(sys._MEIPASS).resolve()  # noqa: SLF001 -- documented PyInstaller API
+else:
+    ROOT = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(ROOT / "tools"))
 
 # Load .env before importing shop tools
@@ -436,7 +448,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v131"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v132"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -514,7 +526,7 @@ async def _security_headers(request: Request, call_next):
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Serve PWA icons (pre-generated files committed to the repo — no runtime PIL).
-_STATIC_DIR = Path(__file__).parent / "static"
+_STATIC_DIR = ROOT / "tools" / "api_server" / "static"
 
 # privacy.html is a plain static file with no templating layer, but its OAuth-app
 # privacy-policy URL (registered with Pinterest/Etsy as /static/privacy.html — the path
