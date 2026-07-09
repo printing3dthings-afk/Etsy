@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """
-Scheduled art poster — generates and publishes one new wall art listing to Etsy
-every other day, cycling through 20 art categories in order.
+Scheduled art poster — generates one new wall art listing (as a draft with
+photos + digital file already uploaded) every other day, cycling through 20
+art categories in order, and STAGES it in the Action Center for Scott's
+one-tap approval. It does NOT publish to Etsy on its own — CLAUDE.md's
+Autonomy Boundaries requires a human review before any listing goes live and
+treats autonomous social/marketplace posting as a Hard Stop, so the final
+"make it active" step was changed (2026-07-09) from a direct
+`state: active` PATCH to `db.enqueue_action("publish_listing", ...)`, same
+approval queue every other Etsy publish in this system already goes through.
 
 State file: data/art_schedule.json
   - queue_position  : index of the next category to post
@@ -11,12 +18,15 @@ State file: data/art_schedule.json
 
 Usage:
   python tools/post_scheduled_art.py            # run if due today
-  python tools/post_scheduled_art.py --force    # post now regardless of schedule
-  python tools/post_scheduled_art.py --preview  # generate images only, no Etsy post
+  python tools/post_scheduled_art.py --force    # generate + stage now regardless of schedule
+  python tools/post_scheduled_art.py --preview  # generate images only, no Etsy draft/staging
   python tools/post_scheduled_art.py --status   # show queue and next post date
   python tools/post_scheduled_art.py --list     # show full category rotation
 
-Add to crontab (runs at 10am every other day):
+Runs automatically every other day via _calendar_tasks_loop-adjacent scheduling
+in tools/api_server/main.py (see _run_scheduled_art_check) — the crontab line
+below is kept for reference/manual use but is no longer how this actually runs
+in production:
   0 10 */2 * * cd /home/user/Etsy && python tools/post_scheduled_art.py >> logs/art_schedule.log 2>&1
 """
 
@@ -46,6 +56,7 @@ for k, v in _env.items():
 
 from PIL import Image, ImageFilter, ImageEnhance
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
+from tools.api_server import db as _db
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 SCHEDULE_PATH  = '/home/user/Etsy/data/art_schedule.json'
@@ -535,16 +546,20 @@ def post_art(preview_only=False):
     # Upload art file as digital download
     upload_file_raw(client, lid, art_path)
 
-    # Activate
+    # Stage for approval — NOT a direct activation. The listing sits as a
+    # draft on Etsy (invisible to buyers) with photos + digital file already
+    # attached; Scott approves or rejects the publish in the Action Center,
+    # same as every other listing publish in this system. See the module
+    # docstring for why this changed from a direct PATCH state=active call.
     try:
-        result = client._request('PATCH', f'/listings/{lid}', json={"state": "active"})
-        state = result.get('state', 'unknown')
-        if state == 'active':
-            print(f"  ✓ LIVE: https://www.etsy.com/listing/{lid}/")
-        else:
-            print(f"  State: {state} — may need manual activation")
+        _db.enqueue_action(
+            "publish_listing",
+            f"Scheduled art ready to publish: {title[:60]}",
+            {"listing_id": lid},
+        )
+        print(f"  ✓ Staged for approval — draft listing_id={lid}, review in the Action Center")
     except Exception as e:
-        print(f"  Activation error: {e}")
+        print(f"  Staging error: {e} — listing {lid} remains a draft on Etsy, stage it manually")
 
     # ── Advance the schedule ──────────────────────────────────────────────────
     schedule['last_posted_date'] = today_str
