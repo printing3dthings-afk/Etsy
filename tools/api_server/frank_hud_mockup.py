@@ -52,44 +52,76 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 }}
 </script>
 <style>
+/* ── Self-hosted display/body fonts (Studio Warm direction, 2026-07-09 visual
+   upgrade). Latin-subset static WOFF2s, ~68KB total for all 4 files — served from
+   /static/vendor/fonts/ with the existing vendor cache headers, not inlined, so
+   this costs nothing on repeat visits. Fraunces is a headline/display face only
+   (brand wordmark, panel/card titles) — deliberately NOT used for numbers, since
+   its default figures are proportional oldstyle and won't line up in columns.
+   Manrope carries everything else, including all numeric displays, which get
+   font-variant-numeric:tabular-nums explicitly below. ──*/
+@font-face{font-family:'Fraunces';font-weight:600;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Fraunces-600.woff2') format('woff2')}
+@font-face{font-family:'Manrope';font-weight:400;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Manrope-400.woff2') format('woff2')}
+@font-face{font-family:'Manrope';font-weight:600;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Manrope-600.woff2') format('woff2')}
+@font-face{font-family:'Manrope';font-weight:700;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Manrope-700.woff2') format('woff2')}
+
 :root{
-  --bg:#070d16;--panel:#0f1f30;--panel2:#13283d;--border:#1c3349;
-  --cyan:#3ad6ff;--cyan2:#8fefff;--gold:#C9A84C;--gold2:#e8c96a;--text:#e8edf2;--muted:#7690a7;
-  --green:#4caf82;--red:#e05555;--amber:#e0a83a;
+  /* Studio Warm — dark warm-plum surfaces, coral + gold accents (pulls the coral
+     from the existing Sakura theme's palette and the gold already used site-wide
+     for primary CTAs). --cyan/--cyan2 keep their legacy names for the ~300 existing
+     usages across this file but now hold coral/blush values, not cyan — they were
+     always "the accent hue," never literally required to be cyan. --panel3 is a new
+     4th elevation level (toasts/dropdowns/overlays sit on this, one step lighter
+     than --panel2) — dark-mode surfaces need at least 4 steps to read as depth
+     without relying on box-shadow, which barely shows on dark backgrounds. */
+  --bg:#1a1420;--panel:#231c2b;--panel2:#2c2334;--panel3:#362c40;--border:#3a2f43;
+  --cyan:#f2a0b5;--cyan2:#f7c3d0;--gold:#D9A441;--gold2:#eec27a;--text:#f5eef2;--muted:#a8899c;
+  --green:#5cc48a;--red:#e2685f;--amber:#e8b868;
+
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
 }
-/* ── Color themes — full bg + panel + accent swap ── */
+/* ── Color themes — full bg + panel + accent swap. Fonts/radius above are
+   structural (declared once on :root) and apply under every theme unchanged;
+   only surface/accent colors vary per theme, including each theme's own
+   --panel3 elevation step. ── */
 html.theme-light{
-  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--border:#b8c5d0;
+  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--panel3:#ffffff;--border:#b8c5d0;
   --cyan:#0a6878;--cyan2:#084f5e;--gold:#7a5c10;--gold2:#c4a035;
   --text:#1a2332;--muted:#3a5263;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
 }
 html.theme-purple{
-  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--border:#2a1945;
+  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--panel3:#291a3e;--border:#2a1945;
   --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
   --text:#ede8f5;--muted:#8679af;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-charcoal{
-  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--border:#3a3222;
+  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--panel3:#332c22;--border:#3a3222;
   --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
   --text:#f0e8d0;--muted:#96896c;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
 }
 html.theme-sakura{
-  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--border:#3d1f30;
+  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--panel3:#35192b;--border:#3d1f30;
   --cyan:#f4a7b9;--cyan2:#ffd0db;--gold:#c4607a;--gold2:#e58aa5;
   --text:#f5e8ee;--muted:#a4758a;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-matcha{
-  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--border:#263a29;
+  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--panel3:#223424;--border:#263a29;
   --cyan:#8bc34a;--cyan2:#bce88e;--gold:#d4a96a;--gold2:#e6c48a;
   --text:#e9f2e6;--muted:#7c9172;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-ocean{
-  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--border:#1d3d38;
+  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--panel3:#1a3934;--border:#1d3d38;
   --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
   --text:#e6f2f0;--muted:#6f948c;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-kawaii{
-  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--border:#2d2255;
+  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--panel3:#281c47;--border:#2d2255;
   --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
   --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
@@ -101,12 +133,12 @@ html.theme-kawaii{
    so normal (non-zoomed) rendering is unchanged (2026-07-08 accessibility review,
    WCAG 1.4.10 Reflow). */
 html,body{height:100%;width:100%;overflow:auto;background:var(--bg)}
-body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px}
+body{color:var(--text);font-family:var(--font-body);font-size:13px}
 
 #stage-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
 #stage{
   position:relative;width:1440px;height:900px;flex-shrink:0;transform-origin:center center;
-  background:radial-gradient(ellipse at 50% -10%, #0e2a44 0%, var(--bg) 55%);
+  background:radial-gradient(ellipse at 50% -10%, #3d2a42 0%, var(--bg) 55%);
   display:grid;grid-template-columns:226px 1fr;grid-template-rows:68px 1fr 54px;
 }
 
@@ -119,16 +151,16 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 /* ── Header row ── */
 .hdr-logo{grid-column:1;grid-row:1;display:flex;align-items:center;gap:10px;padding:0 16px;
   border-bottom:1px solid var(--border);border-right:1px solid var(--border);background:rgba(8,16,26,.7)}
-.hdr-logo .hex{width:30px;height:30px;border:2px solid var(--cyan);border-radius:8px;display:flex;
-  align-items:center;justify-content:center;color:var(--cyan2);font-size:15px;box-shadow:0 0 10px rgba(58,214,255,.5)}
-.hdr-logo .lbl .l1{font-weight:800;letter-spacing:2px;color:var(--cyan2);font-size:15px;line-height:1.1;
-  text-shadow:0 0 10px rgba(58,214,255,.55)}
+.hdr-logo .hex{width:30px;height:30px;border:2px solid var(--cyan);border-radius:var(--r-sm);display:flex;
+  align-items:center;justify-content:center;color:var(--cyan2);font-size:15px;box-shadow:0 0 10px rgba(242,160,181,.5)}
+.hdr-logo .lbl .l1{font-family:var(--font-display);font-weight:600;letter-spacing:1px;color:var(--cyan2);font-size:16px;line-height:1.1;
+  text-shadow:0 0 10px rgba(242,160,181,.55)}
 .hdr-logo .lbl .l2{font-size:8.5px;letter-spacing:2px;color:var(--muted)}
 
 .hdr-bar{grid-column:2;grid-row:1;display:flex;align-items:center;justify-content:space-between;
   padding:0 20px;border-bottom:1px solid var(--border);background:rgba(8,16,26,.5)}
 .status-pill{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--green);
-  border:1px solid rgba(76,175,130,.4);border-radius:20px;padding:4px 10px;background:rgba(76,175,130,.08);
+  border:1px solid rgba(76,175,130,.4);border-radius:var(--r-pill);padding:4px 10px;background:rgba(76,175,130,.08);
   letter-spacing:.5px;white-space:nowrap}
 .status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);
   box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;flex-shrink:0}
@@ -138,20 +170,20 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .status-pill.error .dot{background:var(--red);box-shadow:0 0 8px var(--red)}
 .hdr-bar .clockwrap{text-align:center}
 .hdr-bar .clockwrap .d{font-size:10px;color:var(--muted);letter-spacing:.5px}
-.hdr-bar .clockwrap .t{font-size:17px;color:var(--cyan2);font-weight:700;letter-spacing:1px}
+.hdr-bar .clockwrap .t{font-size:17px;color:var(--cyan2);font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums}
 .hdr-bar .right{display:flex;align-items:center;gap:10px}
-.search{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:8px;
+.search{width:230px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);
   padding:6px 10px;color:var(--text);font-size:11px}
 .hamburger-fixed{
   position:absolute;top:14px;left:14px;z-index:500;
-  width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+  width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border);
   background:rgba(15,31,48,.85);color:var(--cyan2);font-size:15px;
   display:none;align-items:center;justify-content:center;cursor:pointer;
 }
 .hamburger-fixed:hover{border-color:var(--cyan)}
-#orb-desktop-btn{color:var(--cyan2);border-color:rgba(58,214,255,.35);background:rgba(58,214,255,.06)}
-#orb-desktop-btn:hover{border-color:var(--cyan);background:rgba(58,214,255,.14)}
-.icon-btn{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
+#orb-desktop-btn{color:var(--cyan2);border-color:rgba(242,160,181,.35);background:rgba(242,160,181,.06)}
+#orb-desktop-btn:hover{border-color:var(--cyan);background:rgba(242,160,181,.14)}
+.icon-btn{width:30px;height:30px;border-radius:var(--r-sm);border:1px solid var(--border);
   background:var(--panel);display:flex;align-items:center;justify-content:center;
   cursor:pointer;position:relative;color:var(--muted);font-size:13px;flex-shrink:0}
 .icon-btn:hover{border-color:var(--cyan);color:var(--cyan2)}
@@ -159,9 +191,9 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
 .act-btn:focus-visible,.qc-btn:focus-visible,.hub-toggle-btn:focus-visible,.psheet-btn:focus-visible,
 .hub-chip-btn:focus-visible,.lc-chip:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .badge{position:absolute;top:-5px;right:-5px;background:var(--cyan);color:#06141f;
-  font-size:9px;font-weight:700;border-radius:8px;min-width:15px;height:15px;
+  font-size:9px;font-weight:700;border-radius:var(--r-sm);min-width:15px;height:15px;
   display:flex;align-items:center;justify-content:center;padding:0 3px}
-.operator{display:flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:20px;
+.operator{display:flex;align-items:center;gap:7px;border:1px solid var(--border);border-radius:var(--r-pill);
   padding:3px 10px 3px 3px;background:var(--panel)}
 .operator .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#8a6d2b);
   display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0a1420;flex-shrink:0}
@@ -174,14 +206,14 @@ body{color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',s
   scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .nav-section{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin:12px 10px 6px;text-transform:uppercase}
 .nav-section:first-child{margin-top:2px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r-sm);
   cursor:pointer;color:var(--muted);font-size:12.5px;margin-bottom:2px;position:relative}
 .nav-item .ic{width:16px;text-align:center;font-size:13px}
 .nav-item:hover{background:var(--panel);color:var(--text)}
-.nav-item.active{background:linear-gradient(90deg,rgba(58,214,255,.18),transparent);
+.nav-item.active{background:linear-gradient(90deg,rgba(242,160,181,.18),transparent);
   color:var(--cyan2);border-left:2px solid var(--cyan)}
 .nav-item .nbadge{margin-left:auto;background:var(--panel2);color:var(--cyan2);
-  font-size:9.5px;font-weight:700;border-radius:9px;padding:1px 7px;border:1px solid var(--border)}
+  font-size:9.5px;font-weight:700;border-radius:var(--r-sm);padding:1px 7px;border:1px solid var(--border)}
 .nav-item:focus-visible{outline:2px solid var(--cyan);outline-offset:-2px}
 /* Real heading elements (2026-07-08 accessibility review) reuse the exact same visual
    rules as before — this reset stops browser default h1/h2 margin+size from touching
@@ -190,7 +222,7 @@ h1.hdr-title-h1{margin:0;font:inherit}
 h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;color:var(--muted);
   text-transform:uppercase;font-weight:400}
 
-.voice-widget{margin-top:auto;border:1px solid var(--border);border-radius:12px;padding:14px 10px;
+.voice-widget{margin-top:auto;border:1px solid var(--border);border-radius:var(--r-md);padding:14px 10px;
   background:var(--panel);text-align:center}
 .voice-widget .vw-title{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
 
@@ -207,7 +239,7 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 .col-agents{flex:1;min-height:0}
 .col-feed{flex:1;min-height:0}
 
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 14px;
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;
   display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .panel-title{font-size:10.5px;letter-spacing:1.5px;color:var(--cyan2);text-transform:uppercase;
   margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
@@ -242,8 +274,8 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
 }
 .orb-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
   pointer-events:none;width:100%}
-.orb-overlay .o1{font-size:30px;font-weight:800;letter-spacing:6px;color:#eafcff;
-  text-shadow:0 0 18px rgba(122,232,255,.85),0 0 40px rgba(58,214,255,.5)}
+.orb-overlay .o1{font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:6px;color:#fce9ee;
+  text-shadow:0 0 18px rgba(247,195,208,.85),0 0 40px rgba(242,160,181,.5)}
 .orb-overlay .o2{font-size:11px;letter-spacing:5px;color:var(--cyan2);margin-top:2px}
 .orb-overlay .o3{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:8px}
 .orb-state{margin-top:8px;font-size:10.5px;color:var(--muted);letter-spacing:1px}
@@ -252,7 +284,7 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
 #orb-view{
   position:absolute;inset:0;z-index:50;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse at 50% 40%, rgba(58,214,255,.10), transparent 60%);
+  background:radial-gradient(ellipse at 50% 40%, rgba(242,160,181,.10), transparent 60%);
 }
 #orb-view canvas#orb,#orb-view canvas#orb-gl{width:min(85vw,620px);height:min(85vw,620px)}
 #orb-view .orb-overlay .o1{font-size:36px}
@@ -272,15 +304,15 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .feed-item .ftxt{flex:1}
 .feed-item .t{color:var(--muted);font-size:9px;margin-top:2px}
 .feed-tag{font-size:8px;font-weight:700;letter-spacing:.5px;border-radius:5px;padding:1px 5px;flex-shrink:0;height:fit-content}
-.feed-tag.info{background:rgba(58,214,255,.15);color:var(--cyan2)}
+.feed-tag.info{background:rgba(242,160,181,.15);color:var(--cyan2)}
 .feed-tag.warn{background:rgba(224,168,58,.15);color:var(--amber)}
 .feed-tag.tip{background:rgba(76,175,130,.15);color:var(--green)}
 
 .agents-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1}
-.agent-tile{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+.agent-tile{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);
   padding:9px 10px;font-size:10.5px;display:flex;flex-direction:column;gap:5px}
 .agent-tile .top{display:flex;align-items:center;gap:6px}
-.agent-tile .ic{width:20px;height:20px;border-radius:6px;background:rgba(58,214,255,.15);
+.agent-tile .ic{width:20px;height:20px;border-radius:6px;background:rgba(242,160,181,.15);
   display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--cyan2);flex-shrink:0}
 .agent-tile.idle .ic{background:rgba(93,120,145,.15);color:var(--muted)}
 .agent-tile .name{font-weight:600;color:var(--text);font-size:10.5px;line-height:1.2}
@@ -307,16 +339,16 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .tl-txt .sub{color:var(--muted);font-size:9.5px}
 
 .qc-btn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:var(--panel2);
-  border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 10px;margin-bottom:7px;
+  border:1px solid var(--border);color:var(--text);border-radius:var(--r-sm);padding:8px 10px;margin-bottom:7px;
   font-size:11px;cursor:pointer}
 .qc-btn:hover{border-color:var(--cyan)}
-.qc-btn .qic{width:18px;height:18px;border-radius:50%;background:rgba(58,214,255,.18);color:var(--cyan2);
+.qc-btn .qic{width:18px;height:18px;border-radius:50%;background:rgba(242,160,181,.18);color:var(--cyan2);
   display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 
 #toast-stack{position:fixed;top:16px;right:16px;z-index:9000;display:flex;flex-direction:column;
   gap:8px;max-width:340px;pointer-events:none}
-.toast{background:var(--panel2);border:1px solid var(--border);border-radius:11px;padding:11px 14px;
-  font-size:12.5px;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.35);pointer-events:auto;
+.toast{background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 14px;
+  font-size:12.5px;color:var(--text);box-shadow:0 10px 28px rgba(0,0,0,.4);pointer-events:auto;
   border-left:3px solid var(--cyan);animation:toast-in .18s ease-out}
 .toast.ok{border-left-color:var(--green)}
 .toast.err{border-left-color:var(--red)}
@@ -326,11 +358,11 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 @keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
 
 .alert-dropdown{position:absolute;top:38px;right:0;width:280px;max-height:320px;overflow-y:auto;
-  background:var(--panel2);border:1px solid var(--border);border-radius:11px;
-  box-shadow:0 8px 24px rgba(0,0,0,.35);z-index:600;padding:8px;cursor:default;text-align:left}
+  background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:0 10px 28px rgba(0,0,0,.4);z-index:600;padding:8px;cursor:default;text-align:left}
 .alert-dropdown-title{font-size:10.5px;letter-spacing:1.2px;color:var(--cyan2);text-transform:uppercase;
   padding:4px 6px 8px}
-.alert-row{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:8px;
+.alert-row{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:var(--r-sm);
   background:var(--panel);border-left:3px solid var(--cyan);margin-bottom:6px;font-size:11.5px;
   color:var(--text);font-weight:400;text-transform:none;letter-spacing:normal}
 .alert-row.critical{border-left-color:var(--red)}
@@ -339,18 +371,18 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 
 #welcome-overlay{position:fixed;inset:0;z-index:9500;background:rgba(5,9,16,.72);
   display:flex;align-items:center;justify-content:center;padding:20px}
-.welcome-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;
+.welcome-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);
   padding:26px 28px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .welcome-title{font-size:19px;font-weight:700;color:var(--gold);margin-bottom:12px}
 .welcome-body p{font-size:13px;color:var(--text);line-height:1.5;margin:0 0 10px}
 .welcome-body ul{margin:0 0 12px;padding-left:18px;font-size:13px;color:var(--text);line-height:1.6}
 .welcome-note{color:var(--muted)!important;font-size:12px!important}
-.welcome-dismiss{width:100%;background:var(--gold);color:#0D1B2A;border:none;border-radius:10px;
+.welcome-dismiss{width:100%;background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-md);
   padding:11px 0;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
 
 .dep-pill-row{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;justify-content:flex-start}
 .dep-pill{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);
-  border-radius:8px;padding:7px 10px}
+  border-radius:var(--r-sm);padding:7px 10px}
 .dep-pill .dep-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--green);
   box-shadow:0 0 6px var(--green)}
 .dep-pill.open .dep-dot{background:var(--red);box-shadow:0 0 6px var(--red)}
@@ -362,21 +394,21 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .dep-pill .dep-fail{font-size:9px;color:var(--muted)}
 
 
-.ss-status{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:12px;display:inline-block;margin-bottom:8px}
+.ss-status{font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:var(--r-md);display:inline-block;margin-bottom:8px}
 .ss-status.on_track{background:rgba(42,170,100,.18);color:var(--green)}
 .ss-status.building{background:rgba(196,160,53,.18);color:var(--gold)}
 .ss-status.at_risk{background:rgba(200,60,60,.18);color:var(--red)}
 .ss-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px}
 .ss-row:last-child{border-bottom:none}
 .ss-label{color:var(--muted)}
-.ss-val{font-weight:600;color:var(--text)}
+.ss-val{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 .ss-bar-wrap{height:4px;background:var(--panel2);border-radius:2px;flex:1;margin:0 8px;min-width:40px}
 .ss-bar{height:4px;border-radius:2px;background:var(--green);transition:width .4s}
 .ss-bar.warn{background:var(--amber)}
 .ss-bar.bad{background:var(--red)}
 
 .shop-spark-row{display:flex;gap:8px;flex:1;min-height:0;overflow-y:auto;flex-wrap:wrap}
-.shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+.shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);
   padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-height:0;overflow:hidden}
 .shop-spark-card .ssc-lab{font-size:9px;color:var(--muted);letter-spacing:.4px}
 .shop-spark-card .ssc-valrow{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
@@ -385,7 +417,7 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .shop-spark-card .ssc-spark{flex:1;min-height:0}
 
 .shop-chip-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px;flex-shrink:0}
-.shop-chip{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:5px 7px;
+.shop-chip{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 7px;
   display:flex;flex-direction:column;gap:3px;justify-content:center}
 .shop-chip .nm{font-size:9px;color:var(--muted);letter-spacing:.3px}
 .shop-chip .v{font-size:12.5px;font-weight:700;color:var(--text)}
@@ -397,8 +429,8 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 
 /* Studio tab placeholder */
 .studio-grid{display:flex;gap:14px;height:100%}
-video{width:100%;border-radius:10px;background:#000;display:block}
-.studio-list-item{padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:11px}
+video{width:100%;border-radius:var(--r-md);background:#000;display:block}
+.studio-list-item{padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:6px;font-size:11px}
 
 
 /* Bottom bar */
@@ -409,15 +441,15 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 .bb-center{display:flex;align-items:center;gap:14px;flex:1;justify-content:center}
 .dots-line{flex:1;max-width:200px;height:1px;background:repeating-linear-gradient(90deg,var(--cyan) 0 4px,transparent 4px 9px);opacity:.5}
 .talk-pill{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--panel);
-  border:1px solid rgba(58,214,255,.4);border-radius:20px;padding:6px 22px;cursor:pointer;
-  box-shadow:0 0 16px rgba(58,214,255,.15)}
+  border:1px solid rgba(242,160,181,.4);border-radius:var(--r-pill);padding:6px 22px;cursor:pointer;
+  box-shadow:0 0 16px rgba(242,160,181,.15)}
 .talk-pill .row1{display:flex;align-items:center;gap:10px}
 .talk-pill .label{color:var(--cyan2);font-weight:700;letter-spacing:1.5px;font-size:11px}
 .talk-pill .sub{font-size:9px;color:var(--muted);letter-spacing:.5px}
 .mini-wave{display:flex;align-items:center;gap:2px;height:13px}
 .mini-wave span{width:2px;background:var(--cyan);border-radius:1px;animation:wave 1s ease-in-out infinite}
 .brief-btn{background:var(--panel);border:1px solid var(--border);color:var(--cyan2);
-  border-radius:8px;padding:6px 14px;font-size:10.5px;cursor:pointer;white-space:nowrap}
+  border-radius:var(--r-sm);padding:6px 14px;font-size:10.5px;cursor:pointer;white-space:nowrap}
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes wave{0%,100%{height:4px}50%{height:16px}}
@@ -428,15 +460,15 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 /* ── Live Chat screen — ported from the live Hub's #chat-wrap at / (main.py), same
    /ws/chat backend, same CHAT_SESSION scheme, restyled to the HUD's cyan/gold theme. ── */
 #chat-msgs{flex:1;overflow-y:auto;min-height:0;padding:2px 2px 10px;display:flex;flex-direction:column;gap:10px}
-.lc-bubble{max-width:78%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;word-break:break-word}
+.lc-bubble{max-width:78%;padding:10px 14px;border-radius:var(--r-lg);font-size:13px;line-height:1.5;word-break:break-word}
 .lc-bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
 .lc-bubble.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--border);border-bottom-left-radius:4px;white-space:pre-wrap;color:var(--text)}
 .lc-bubble.typing{color:var(--muted);font-style:italic}
 .lc-chips{display:flex;gap:8px;flex-wrap:wrap;padding:8px 2px;flex-shrink:0;border-top:1px solid var(--border)}
-.lc-chip{padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
+.lc-chip{padding:7px 14px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
 .lc-chip:active{border-color:var(--gold);color:var(--gold)}
 .lc-input-row{display:flex;gap:8px;padding:10px 2px 0;border-top:1px solid var(--border);flex-shrink:0}
-#chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:22px;padding:10px 16px;color:var(--text);font-size:14px;outline:none}
+#chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-pill);padding:10px 16px;color:var(--text);font-size:14px;outline:none}
 #chat-input:focus{border-color:var(--gold)}
 #chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -449,27 +481,27 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 .hub-scroll{margin-top:10px;overflow-y:auto;max-height:760px}
 .hub-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px}
 .hub-section-title:first-child{margin-top:0}
-.hub-card{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.hub-card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:12px}
 .hub-empty{text-align:center;color:var(--muted);padding:40px 0;font-size:13px}
 .hub-spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:hubspin .7s linear infinite;margin:40px auto}
 @keyframes hubspin{to{transform:rotate(360deg)}}
 
 .hub-toggle-row{display:flex;gap:8px;margin-bottom:12px}
-.hub-toggle-btn{flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.hub-toggle-btn{flex:1;padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .hub-toggle-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
 .hub-chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
-.hub-chip-btn{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.hub-chip-btn{padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 .hub-chip-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
 
 .hub-listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
 .hub-listing-item:last-child{border-bottom:none}
-.hub-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;background:var(--border);flex-shrink:0}
-.hub-thumb-ph{width:52px;height:52px;border-radius:8px;background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+.hub-thumb{width:52px;height:52px;border-radius:var(--r-sm);object-fit:cover;background:var(--border);flex-shrink:0}
+.hub-thumb-ph{width:52px;height:52px;border-radius:var(--r-sm);background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
 .hub-listing-info{flex:1;min-width:0}
-.hub-listing-title{font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-listing-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hub-listing-meta{font-size:11px;color:var(--muted);margin-top:2px}
 .hub-listing-price{font-size:14px;font-weight:700;color:var(--gold);flex-shrink:0}
-.hub-lstate{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:6px}
+.hub-lstate{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:var(--r-pill);margin-left:6px}
 .hub-lstate.draft{background:#0f1f30;color:var(--muted);border:1px solid var(--border)}
 .hub-lstate.active{background:#143323;color:var(--green);border:1px solid #1f4d36}
 
@@ -479,10 +511,10 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 .hub-listing-detail .hub-drow span{color:var(--muted)}
 .hub-listing-detail .hub-drow b{font-weight:600;text-align:right}
 
-.hub-act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+.hub-act-btn{flex:1;text-align:center;padding:7px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
 
 .hub-swatch{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-right:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
-.hub-prod-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.hub-prod-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:var(--r-md);padding:13px 14px;margin-bottom:10px}
 
 .hub-cred-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
 .hub-cred-row:last-child{border-bottom:none}
@@ -495,27 +527,44 @@ video{width:100%;border-radius:10px;background:#000;display:block}
    approve/reject queue is the human-in-the-loop safety gate for Etsy writes and local
    file/exec actions. Namespaced "act-" — new concept, no existing HUD equivalent. ── */
 .section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
-.act-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:10px;padding:13px 14px;margin-bottom:10px}
+.act-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:var(--r-md);padding:13px 14px;margin-bottom:10px}
 .act-card.high{border-left-color:var(--red)}
 .act-card.medium{border-left-color:var(--gold)}
 .act-card.low{border-left-color:#4a6b8a}
 .act-card.approval{border-left-color:var(--green);background:#13241c}
-.act-sev{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px}
+.act-sev{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:var(--r-md)}
 .act-sev.high{background:#2d1a1a;color:#e07070}
 .act-sev.medium{background:#2d2a1a;color:var(--gold2)}
 .act-sev.low{background:#1a2330;color:#7ba0c2}
 .act-sev.approval{background:#13241c;color:#5fcf9e;border:1px solid #2d5a44}
-.act-title{font-size:14px;font-weight:600;margin:7px 0 4px;line-height:1.35;color:var(--text)}
+.act-title{font-family:var(--font-display);font-size:15px;font-weight:600;margin:7px 0 4px;line-height:1.35;color:var(--text)}
 .act-detail{font-size:12px;color:var(--muted);line-height:1.45}
 .act-sug{font-size:12px;color:var(--text);margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
 .act-sug b{color:var(--gold2);font-weight:600}
 .act-btns{display:flex;gap:8px;margin-top:9px}
-.act-btn{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
-.act-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+/* ── Button hierarchy (2026-07-09 visual upgrade): .act-btn/.hub-act-btn's bare
+   form is now explicitly the TERTIARY/ghost tier (Cancel, secondary nav links).
+   .primary = the one filled CTA per panel (Save/Add/Upload/Download/Post — the
+   action that commits something). .secondary = soft-filled, one step up from
+   ghost, for supporting-but-real actions (toggle state, view details, retry).
+   .danger = destructive actions, red-tinted, secondary weight (never filled —
+   destructive + primary-filled together reads as "encouraged," which delete
+   actions should never be). .approve/.reject predate this pass and already
+   nail the semantic-color pattern for the one place it was already correct
+   (the staged-action review flow) — left as-is. ──*/
+.act-btn,.hub-act-btn{transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .1s ease}
+.act-btn:active,.hub-act-btn:active{transform:scale(.97)}
+.act-btn{flex:1;text-align:center;padding:7px;border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--muted);text-decoration:none}
+.act-btn.primary,.hub-act-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.act-btn.primary:hover,.hub-act-btn.primary:hover{background:var(--gold2);border-color:var(--gold2)}
+.act-btn.secondary,.hub-act-btn.secondary{background:var(--panel2);border-color:var(--cyan);color:var(--cyan2)}
+.act-btn.secondary:hover,.hub-act-btn.secondary:hover{background:var(--panel3)}
+.act-btn.danger,.hub-act-btn.danger{background:none;border-color:#5a2d3a;color:#e0808f}
+.act-btn.danger:hover,.hub-act-btn.danger:hover{background:rgba(224,104,95,.12)}
 .act-btn.approve{background:var(--green);color:#06140d;border-color:var(--green)}
 .act-btn.reject{color:#e08585;border-color:#5a2d2d}
-.metric{background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:14px}
-.metric .value{font-size:24px;font-weight:700;color:var(--text)}
+.metric{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px}
+.metric .value{font-size:24px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .metric .sub{font-size:11px;color:var(--muted);margin-top:2px}
 .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
 
@@ -605,7 +654,7 @@ video{width:100%;border-radius:10px;background:#000;display:block}
 #persist-warning{position:fixed;top:0;left:0;right:0;z-index:99999;display:none;
   background:#7a1a00;color:#ffd9c2;font-size:13px;font-weight:600;line-height:1.4;
   padding:9px 16px;padding-top:calc(9px + env(safe-area-inset-top));text-align:center;border-bottom:2px solid #ff5a1f;
-  box-shadow:0 2px 12px rgba(0,0,0,.5);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+  box-shadow:0 2px 12px rgba(0,0,0,.5);font-family:var(--font-body)}
 #persist-warning b{color:#fff}
 #persist-warning.show{display:flex;align-items:flex-start;gap:10px}
 #persist-warning .pw-txt{flex:1}
@@ -631,10 +680,10 @@ body.is-mobile #phone-tabbar .ptab{
 }
 body.is-mobile #phone-tabbar .ptab .pti{font-size:19px;line-height:1}
 body.is-mobile #phone-tabbar .ptab.on{color:var(--cyan2)}
-body.is-mobile #phone-tabbar .ptab:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:8px}
+body.is-mobile #phone-tabbar .ptab:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:var(--r-sm)}
 body.is-mobile #phone-tabbar .ptab .pcnt{
   position:absolute;top:-1px;right:calc(50% - 20px);background:var(--red);color:#fff;
-  font-size:9.5px;font-weight:800;min-width:15px;height:15px;border-radius:8px;
+  font-size:9.5px;font-weight:800;min-width:15px;height:15px;border-radius:var(--r-sm);
   display:none;align-items:center;justify-content:center;padding:0 4px;
 }
 /* the floating hamburger + desktop bottom bar are replaced by the tab bar on phone */
@@ -669,25 +718,25 @@ body.is-mobile.phone-panel .hdr-bar{display:none !important}
 .pp{display:none}
 .pp.on{display:block}
 .pp-h{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:2px 2px 12px}
-.pcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:13px;margin-bottom:10px}
+.pcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px;margin-bottom:10px}
 .pcard .pt{font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px;line-height:1.35}
 .pcard .pm{font-size:12px;color:var(--muted);word-break:break-word}
 .pp-acts{display:flex;gap:8px;margin-top:11px}
-.pp-btn{flex:1;border:1px solid transparent;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
+.pp-btn{flex:1;border:1px solid transparent;border-radius:var(--r-md);padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
 .pp-btn.ok{background:var(--cyan);color:#04121b}
 .pp-btn.no{background:transparent;color:var(--muted);border-color:var(--border)}
 .pp-empty{text-align:center;color:var(--muted);font-size:13px;padding:34px 10px;line-height:1.5}
 .ptiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
-.ptile{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center}
+.ptile{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 8px;text-align:center}
 .ptile .n{font-size:20px;font-weight:800;color:var(--text)}
 .ptile .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
-.palert{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:11px;margin-bottom:8px;font-size:12.5px;color:var(--text);line-height:1.4}
+.palert{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:11px;margin-bottom:8px;font-size:12.5px;color:var(--text);line-height:1.4}
 .palert .pdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none;background:var(--muted)}
 .palert.warn .pdot{background:var(--amber)}
 .palert.crit .pdot{background:var(--red)}
 .palert.good .pdot{background:var(--green)}
 .pmore-grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 2px 7px}
-.pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px}
+.pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px}
 .pmore-item:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .pmore-item .pmi{width:24px;text-align:center;font-size:16px}
 .pmore-item .pmc{margin-left:auto;color:var(--muted)}
@@ -704,7 +753,7 @@ body.phone-sheet-open #phone-sheet-backdrop{display:block}
 body.phone-sheet-open #phone-sheet{display:flex}
 #phone-sheet-title{font-weight:700;font-size:14.5px;color:var(--text);line-height:1.4}
 #phone-sheet-sub{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.4}
-.psheet-btn{border:1px solid var(--border);border-radius:12px;padding:15px 13px;font-size:14px;
+.psheet-btn{border:1px solid var(--border);border-radius:var(--r-md);padding:15px 13px;font-size:14px;
   font-weight:700;cursor:pointer;font-family:inherit;background:var(--panel2);color:var(--text)}
 .psheet-btn.primary{background:var(--cyan);border-color:transparent;color:#04121b}
 .psheet-btn.cancel{background:transparent;color:var(--muted)}
@@ -968,9 +1017,9 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div style="display:flex;gap:8px;margin:14px 0">
         <input id="hud-todo-input" type="text" placeholder="Add a to-do…" onkeydown="if(event.key==='Enter')addHudTodo()"
           aria-label="New to-do"
-          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text)">
-        <input id="hud-todo-due" type="date" aria-label="Due date" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text)">
-        <button onclick="addHudTodo()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
+          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:13px;color:var(--text)">
+        <input id="hud-todo-due" type="date" aria-label="Due date" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 10px;font-size:13px;color:var(--text)">
+        <button onclick="addHudTodo()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
       </div>
       <div id="tasks-list" style="margin-top:10px;overflow-y:auto;max-height:700px">
         <div style="color:var(--muted);font-size:12px">Loading…</div>
@@ -983,7 +1032,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Action Center <span class="src">/api/queue + /api/actions — approve/reject staged changes</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
-        <button id="batch-tag-btn" onclick="batchStageTags(this)" style="flex:1;background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:center">⚡ Stage All Tag Fixes</button>
+        <button id="batch-tag-btn" onclick="batchStageTags(this)" style="flex:1;background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:center">⚡ Stage All Tag Fixes</button>
       </div>
       <div id="actions-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
     </div>
@@ -1006,8 +1055,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Conversations <span class="src">/api/conversations — persisted chat_messages history</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
-        <input id="conv-search-input" type="text" placeholder="Search all conversations…" aria-label="Search all conversations" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
-        <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
+        <input id="conv-search-input" type="text" placeholder="Search all conversations…" aria-label="Search all conversations" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:10px 14px;font-size:13px">
+        <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
       </div>
       <div id="conversations-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
     </div>
@@ -1016,8 +1065,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Knowledge Base <span class="src">/api/kb — real markdown docs in data/knowledge_base/</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
-        <input id="kb-search-input" type="text" placeholder="Search all docs…" aria-label="Search all knowledge base docs" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 14px;font-size:13px">
-        <button onclick="searchKb()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
+        <input id="kb-search-input" type="text" placeholder="Search all docs…" aria-label="Search all knowledge base docs" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:10px 14px;font-size:13px">
+        <button onclick="searchKb()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
       </div>
       <div id="kb-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
     </div>
@@ -1130,7 +1179,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           agent refers to itself. Applies on your next page load.
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
-          <button class="act-btn" onclick="saveBranding()">Save name</button>
+          <button class="act-btn primary" onclick="saveBranding()">Save name</button>
           <div id="branding-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
@@ -1138,7 +1187,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-section-title" style="margin-top:18px">Orb / Brand Mark</div>
       <div class="hub-card">
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-          <canvas id="brand-mark-preview" width="64" height="64" style="border-radius:10px;background:var(--panel2);border:1px solid var(--border)"></canvas>
+          <canvas id="brand-mark-preview" width="64" height="64" style="border-radius:var(--r-md);background:var(--panel2);border:1px solid var(--border)"></canvas>
           <div style="flex:1;min-width:200px">
             <label for="brand-mark-file" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Custom orb image</label>
             <input type="file" id="brand-mark-file" accept="image/png,image/jpeg,image/webp" style="width:100%;color:var(--text);font-size:12px">
@@ -1150,8 +1199,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           different form. Applies on your next page load.
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
-          <button class="act-btn" onclick="uploadBrandMark()">Upload</button>
-          <button class="act-btn" onclick="resetBrandMark()">Reset to default orb</button>
+          <button class="act-btn primary" onclick="uploadBrandMark()">Upload</button>
+          <button class="act-btn secondary" onclick="resetBrandMark()">Reset to default orb</button>
           <div id="brand-mark-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
@@ -1181,7 +1230,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           need GEMINI_API_KEY set; Ideogram needs IDEOGRAM_API_KEY.
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
-          <button class="act-btn" onclick="saveEngines()">Save engines</button>
+          <button class="act-btn primary" onclick="saveEngines()">Save engines</button>
           <div id="engines-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
@@ -1207,7 +1256,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
-          <button class="act-btn" onclick="saveAccountSettings()">Save</button>
+          <button class="act-btn primary" onclick="saveAccountSettings()">Save</button>
           <div id="account-save-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
@@ -1231,7 +1280,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:8px">At least 8 characters. Changing your password signs you out everywhere — you'll need to log back in.</div>
         <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
-          <button class="act-btn" onclick="changeMyPassword()">Change password</button>
+          <button class="act-btn primary" onclick="changeMyPassword()">Change password</button>
           <div id="pw-change-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
@@ -1239,8 +1288,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-section-title" style="margin-top:18px">Connections</div>
       <div class="hub-card" id="settings-connections-summary"><div class="hub-spinner"></div></div>
       <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
-        <button class="act-btn" onclick="showScreen('connections')">View full Connections ›</button>
-        <button class="act-btn" onclick="showScreen('security')">View Security ›</button>
+        <button class="act-btn secondary" onclick="showScreen('connections')">View full Connections ›</button>
+        <button class="act-btn secondary" onclick="showScreen('security')">View Security ›</button>
       </div>
 
       <div class="hub-section-title" id="user-mgmt-section" style="margin-top:18px;display:none">User Management</div>
@@ -1260,7 +1309,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:10px">
-            <button class="act-btn" onclick="addUser()">Add Admin</button>
+            <button class="act-btn primary" onclick="addUser()">Add Admin</button>
             <div id="user-add-status" style="font-size:11px;color:var(--muted)"></div>
           </div>
         </div>
@@ -1294,8 +1343,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <input type="file" id="studio-file-input" accept="image/*" multiple aria-label="Source images for video" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
         <div id="studio-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" aria-label="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
-          <select id="studio-style" aria-label="Video style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" aria-label="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <select id="studio-style" aria-label="Video style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
             <option value="showcase">Showcase</option>
             <option value="new-drop">New Drop</option>
             <option value="feature">Feature</option>
@@ -1307,15 +1356,15 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <textarea id="studio-scene-prompt" rows="3"
             placeholder="Scene description — auto-filled from title, edit before generating"
             aria-label="Scene description"
-            style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
-          <select id="studio-aspect-ratio" aria-label="Video aspect ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+            style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
+          <select id="studio-aspect-ratio" aria-label="Video aspect ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
             <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
             <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
           </select>
         </div>
         <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-          <input id="studio-title" type="text" placeholder="Title (optional)" aria-label="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
-          <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-title" type="text" placeholder="Title (optional)" aria-label="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
         </div>
         <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
@@ -1327,20 +1376,20 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after approving in the Action Center.</div>
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
-          <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
         </div>
-        <button class="act-btn" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
+        <button class="act-btn primary" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
         <div id="studio-stage-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
 
         <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Instagram</div>
-        <textarea id="studio-ig-caption" placeholder="Caption" aria-label="Instagram caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
-        <button class="act-btn" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
+        <textarea id="studio-ig-caption" placeholder="Caption" aria-label="Instagram caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+        <button class="act-btn primary" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
         <div id="studio-ig-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
 
         <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Facebook</div>
-        <textarea id="studio-fb-caption" placeholder="Description" aria-label="Facebook description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
-        <button class="act-btn" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
+        <textarea id="studio-fb-caption" placeholder="Description" aria-label="Facebook description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+        <button class="act-btn primary" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
         <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
 
@@ -1350,21 +1399,21 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
         <div id="svgc-dropzone" onclick="document.getElementById('svgc-file-input').click()"
           role="button" tabindex="0" aria-label="Upload reference photo"
-          style="border:2px dashed var(--border);border-radius:10px;padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:12px;transition:border-color .15s,background .15s">
+          style="border:2px dashed var(--border);border-radius:var(--r-md);padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:12px;transition:border-color .15s,background .15s">
           <div style="font-size:22px;margin-bottom:6px" aria-hidden="true">📥</div>
           Drop a reference photo here, or click to browse
         </div>
         <input type="file" id="svgc-file-input" accept="image/*" style="display:none" aria-label="Reference photo file">
 
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <select id="svgc-target" aria-label="What's this SVG for?" style="flex:1;min-width:160px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <select id="svgc-target" aria-label="What's this SVG for?" style="flex:1;min-width:160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
             <option value="3dprint">3D-Print Sign (SS-series)</option>
             <option value="wallart">Wall Art</option>
             <option value="sticker">Sticker Pack Source Art</option>
             <option value="planner">Planner Cover Art</option>
             <option value="none">Just give me an SVG</option>
           </select>
-          <select id="svgc-mode" aria-label="Conversion mode" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+          <select id="svgc-mode" aria-label="Conversion mode" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
             <option value="silhouette">Silhouette (single shape, cleanest)</option>
             <option value="bw">Black &amp; White (line art)</option>
             <option value="color">Full Color</option>
@@ -1374,11 +1423,11 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div id="svgc-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
 
         <div id="svgc-result" style="display:none">
-          <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center">
+          <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:10px;text-align:center">
             <img id="svgc-preview" style="max-width:100%;max-height:280px;background:#fff;border-radius:6px" alt="Converted SVG preview">
           </div>
           <div id="svgc-quality" style="font-size:12px;margin-bottom:10px"></div>
-          <a id="svgc-download" class="act-btn" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download SVG</a>
+          <a id="svgc-download" class="act-btn primary" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download SVG</a>
         </div>
       </div>
 
@@ -1389,7 +1438,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <input type="file" id="lsg-file-input" accept="image/*,.pdf,.svg" multiple aria-label="Real product file(s)" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
         <div id="lsg-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
 
-        <select id="lsg-category" aria-label="Product category" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px">
+        <select id="lsg-category" aria-label="Product category" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
           <option value="sign_flat">3D-Print Sign (flat face)</option>
           <option value="tumbler_wrap">Tumbler / Koozie Wrap</option>
           <option value="framed_print">Framed Wall Art</option>
@@ -1405,7 +1454,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <textarea id="lsg-scene-prompt" rows="3"
           placeholder="Scene description — auto-filled below, edit before generating"
           aria-label="Scene description"
-          style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
+          style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
 
         <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">Each attempt calls the real image-generation API — real cost per click — up to 2 tries if the first doesn't verify against your source file.</div>
 
@@ -1413,11 +1462,11 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div id="lsg-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
 
         <div id="lsg-result" style="display:none;margin-top:10px">
-          <div id="lsg-preview-wrap" style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center">
+          <div id="lsg-preview-wrap" style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:10px;text-align:center">
             <img id="lsg-preview" style="max-width:100%;max-height:320px;border-radius:6px" alt="Generated lifestyle photo">
           </div>
           <div id="lsg-outcome" style="font-size:12px;margin-bottom:10px"></div>
-          <a id="lsg-download" class="act-btn" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download Photo</a>
+          <a id="lsg-download" class="act-btn primary" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download Photo</a>
         </div>
       </div>
     </div>
@@ -2181,7 +2230,7 @@ function _setPremiumVoice(on) {
 // backend) is the right persistence layer. Default 'cyan' matches the
 // original :root values, applied via no class on <html>. ──
 const _UI_THEMES = [
-  {name:'default', label:'Deep Space',    bg:'#070d16', accent:'#3ad6ff'},
+  {name:'default', label:'Studio Warm',   bg:'#1a1420', accent:'#f2a0b5'},
   {name:'light',   label:'Day Mode',      bg:'#edf1f5', accent:'#1a8a9a'},
   {name:'purple',  label:'Dark Purple',   bg:'#0c0714', accent:'#9b5de5'},
   {name:'charcoal',label:'Warm Charcoal', bg:'#13100a', accent:'#e8b84a'},
@@ -2305,7 +2354,7 @@ function renderBrandMarkPreview(){
   const ctx = cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
   if(!window._brandMarkDataUrl){
-    ctx.fillStyle = 'rgba(58,214,255,0.25)';
+    ctx.fillStyle = 'rgba(242,160,181,0.25)';
     ctx.font = '28px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText('⬡', cv.width/2, cv.height/2+2);
     return;
@@ -3328,14 +3377,14 @@ function _actionPreviewHtml(a) {
   if (a.type === 'update_tags') return 'New tags: ' + escHtml((p.tags || []).join(', '));
   if (a.type === 'listing_photo') {
     const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&inline=1';
-    return `<img src="${url}" loading="lazy" alt="Staged photo for listing ${escHtml(String(p.listing_id||''))}" style="max-width:260px;max-height:260px;border-radius:8px;display:block">` +
+    return `<img src="${url}" loading="lazy" alt="Staged photo for listing ${escHtml(String(p.listing_id||''))}" style="max-width:260px;max-height:260px;border-radius:var(--r-sm);display:block">` +
       `<div style="margin-top:6px">Listing ${escHtml(String(p.listing_id||''))} · rank ${p.rank||''} · ${escHtml(p.sku||'')}</div>`;
   }
   if (a.type === 'publish_listing') {
     const pv = p.preview || {};
     return `<div style="display:flex;gap:10px;align-items:flex-start">` +
       (pv.thumbnail_url
-        ? `<img src="${escHtml(pv.thumbnail_url)}" loading="lazy" alt="${escHtml(pv.title||'Listing preview')}" style="width:70px;height:70px;border-radius:8px;object-fit:cover;flex-shrink:0">`
+        ? `<img src="${escHtml(pv.thumbnail_url)}" loading="lazy" alt="${escHtml(pv.title||'Listing preview')}" style="width:70px;height:70px;border-radius:var(--r-sm);object-fit:cover;flex-shrink:0">`
         : '') +
       `<div><div>Publish draft listing ${escHtml(String(p.listing_id || ''))}</div>` +
       (pv.title ? `<div style="font-weight:600;margin-top:4px">${escHtml(pv.title)}</div>` : '') +
@@ -3347,7 +3396,7 @@ function _actionPreviewHtml(a) {
     const diffHtml = simpleLineDiff(p.before, p.after);
     return `<div style="margin-bottom:6px"><strong>File:</strong> ${escHtml(p.path || '')}</div>` +
       (p.before_existed === false ? `<div style="color:var(--gold);margin-bottom:6px">⚠️ File does not currently exist — this will create it.</div>` : '') +
-      `<div style="max-height:260px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:var(--muted)">No changes</span>'}</div>`;
+      `<div style="max-height:260px;overflow:auto;background:var(--bg);border-radius:var(--r-sm);padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:var(--muted)">No changes</span>'}</div>`;
   }
   if (a.type === 'local_delete') {
     return `<div style="color:var(--red)">⚠️ This will permanently delete:</div><div style="font-family:monospace;margin-top:4px">${escHtml(p.path || '')}</div>`;
@@ -3388,7 +3437,7 @@ function renderApproval(a) {
     </div>
     <div class="act-btns" style="flex-shrink:0" onclick="event.stopPropagation()">
       <button class="act-btn approve" onclick="approveAction(${a.id})">Approve</button>
-      ${a.type === 'publish_listing' ? `<button class="act-btn" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix</button>` : ''}
+      ${a.type === 'publish_listing' ? `<button class="act-btn secondary" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix</button>` : ''}
       <button class="act-btn reject" onclick="openRejectModal(${a.id})">Reject</button>
     </div>
   </div>
@@ -3430,7 +3479,7 @@ function openRejectModal(id) {
     <div class="hub-listing-meta" style="margin-bottom:6px">Why is this being rejected? A reason lets the right agent fix and re-stage it automatically.</div>
     <textarea id="reject-reason-${id}" rows="2" placeholder="e.g. shade is too dark, brighten it"
       aria-label="Reason for rejecting"
-      style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px;font-size:13px;font-family:inherit"></textarea>
+      style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:8px;font-size:13px;font-family:inherit"></textarea>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="act-btn reject" onclick="submitRejectReason(${id})">Submit &amp; Fix</button>
       <button class="act-btn" onclick="document.getElementById('reject-modal-${id}').style.display='none'">Cancel</button>
@@ -3493,7 +3542,7 @@ async function loadActions() {
     setActionBadge(_actionsSummary, pending.length);
     renderActionsContent();
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadActions()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 function setActionFilter(sev) {
@@ -3537,7 +3586,7 @@ function renderActionsContent() {
         <div class="act-sug"><b>💡 Fix:</b> ${escHtml(a.suggestion)}</div>
         <div class="act-btns">
           <button class="act-btn primary" onclick="askActionFix(${i})">Ask CEO</button>
-          ${a.url ? `<a class="act-btn" href="${escHtml(a.url)}" target="_blank">Open on Etsy</a>` : ''}
+          ${a.url ? `<a class="act-btn secondary" href="${escHtml(a.url)}" target="_blank">Open on Etsy</a>` : ''}
         </div>
       </div>`;
     }).join('');
@@ -3598,7 +3647,7 @@ async function loadCalendar() {
       badge.style.display = urgent>0 ? '' : 'none';
     }
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadCalendar()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadCalendar()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 function _calCard(sev, title, detail) {
@@ -3670,7 +3719,7 @@ async function loadMemory() {
       badge.style.display = d.learnings_count > 0 ? '' : 'none';
     }
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadMemory()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadMemory()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -3722,7 +3771,7 @@ async function loadWorkflows() {
     const d = await r.json();
     renderWorkflows(d.workflows || []);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadWorkflows()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadWorkflows()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -3770,7 +3819,7 @@ async function runWorkflow(id, btn, requiresApproval) {
     } else {
       const ok = d.success !== false;
       if (resultEl) resultEl.innerHTML = `<div class="sub" style="color:${ok?'var(--green)':'var(--red)'}">${ok?'✅ Completed':'❌ Failed'} (exit ${escHtml(String(d.returncode))})</div>` +
-        (d.output ? `<pre style="margin-top:6px;max-height:220px;overflow:auto;background:var(--bg);border-radius:8px;padding:8px;font-size:12px;white-space:pre-wrap">${escHtml(d.output)}</pre>` : '');
+        (d.output ? `<pre style="margin-top:6px;max-height:220px;overflow:auto;background:var(--bg);border-radius:var(--r-sm);padding:8px;font-size:12px;white-space:pre-wrap">${escHtml(d.output)}</pre>` : '');
       showToast(ok ? 'Workflow completed.' : 'Workflow failed.', ok ? 'ok' : 'err', ok ? 4500 : 6000);
     }
   } catch(e) {
@@ -3828,7 +3877,7 @@ async function loadConversations() {
       badge.style.display = total > 0 ? '' : 'none';
     }
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -3858,7 +3907,7 @@ async function openConversation(sessionId) {
     const d = await r.json();
     renderConversationDetail(sessionId, d);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openConversation('${escHtml(sessionId)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openConversation('${escHtml(sessionId)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
   }
 }
 
@@ -3867,7 +3916,7 @@ function renderConversationDetail(sessionId, d) {
   if (!el) return;
   const msgs = d.messages || [];
   let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-    <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
+    <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
     <span style="font-size:12px;color:var(--muted)">${escHtml(_convShortId(sessionId))} · ${msgs.length} message${msgs.length===1?'':'s'}${d.truncated ? ' (showing first 500)' : ''}</span>
   </div>`;
   html += '<div style="display:flex;flex-direction:column;gap:10px">' +
@@ -3891,7 +3940,7 @@ async function searchConversations() {
     const d = await r.json();
     renderConversationSearch(q, d.results || []);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchConversations()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -3899,7 +3948,7 @@ function renderConversationSearch(q, results) {
   const el = document.getElementById('conversations-content');
   if (!el) return;
   let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-    <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
+    <button onclick="backToConversationList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
     <span style="font-size:12px;color:var(--muted)">${results.length} match${results.length===1?'':'es'} for "${escHtml(q)}"</span>
   </div>`;
   html += results.length ? results.map(r => `<div class="tl-item" style="cursor:pointer" onclick="openConversation('${escHtml(r.session_id)}')" role="button" tabindex="0">
@@ -3944,7 +3993,7 @@ async function loadKb() {
       badge.style.display = _kbDocs.length > 0 ? '' : 'none';
     }
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -3974,7 +4023,7 @@ async function openKbDoc(filename) {
     const d = await r.json();
     renderKbDoc(filename, d);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openKbDoc('${escHtml(filename)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="openKbDoc('${escHtml(filename)}')" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div><div style="text-align:center;margin-top:8px"><button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:8px 20px;font-size:13px;cursor:pointer">Back to list</button></div>`;
   }
 }
 
@@ -3982,7 +4031,7 @@ function renderKbDoc(filename, d) {
   const el = document.getElementById('kb-content');
   if (!el) return;
   el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-    <button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
+    <button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:6px 14px;font-size:12px;cursor:pointer">‹ Back</button>
     <span style="font-size:12px;color:var(--muted)">${escHtml(d.title)} · ${escHtml(filename)}</span>
   </div>` + _kbPre(d.content);
 }
@@ -4002,7 +4051,7 @@ async function searchKb() {
     const d = await r.json();
     renderKbSearch(q, d.results || []);
   } catch(e) {
-    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load')}</div><div style="text-align:center;margin-top:8px"><button onclick="searchKb()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 
@@ -4010,7 +4059,7 @@ function renderKbSearch(q, results) {
   const el = document.getElementById('kb-content');
   if (!el) return;
   let html = `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-    <button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
+    <button onclick="backToKbList()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--r-sm);padding:6px 14px;font-size:12px;cursor:pointer">‹ Back to list</button>
     <span style="font-size:12px;color:var(--muted)">${results.length} doc${results.length===1?'':'s'} match "${escHtml(q)}"</span>
   </div>`;
   html += results.length ? results.map(r => `<div class="tl-item" style="cursor:default">
@@ -4063,7 +4112,7 @@ async function loadListings(state, btn) {
     _listings = d.listings || [];
     renderListings();
   } catch(e) {
-    el.innerHTML = `<div class="hub-empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastListingState)" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
+    el.innerHTML = `<div class="hub-empty">${escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load listings')}</div><div style="text-align:center;margin-top:8px"><button onclick="loadListings(_lastListingState)" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>`;
   }
 }
 function setSectionFilter(key) {
@@ -4126,7 +4175,7 @@ async function toggleListingDetail(listingId) {
     `<div class="hub-drow"><span>Price</span><b>$${(+l.price||0).toFixed(2)}</b></div>`+
     `<div id="hub-files-${listingId}"><div class="hub-drow"><span>Digital files</span><b>loading…</b></div></div>`+
     `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
-    ((l.state==='active'||l.state==='inactive') ? `<button id="hub-state-btn-${listingId}" class="hub-act-btn" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
+    ((l.state==='active'||l.state==='inactive') ? `<button id="hub-state-btn-${listingId}" class="hub-act-btn secondary" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
     `<a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a>`+
     `</div>`;
   try {
@@ -4336,7 +4385,7 @@ async function loadFiles() {
     el.innerHTML = html;
   } catch(e) {
     el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load files')+'</div>'+
-      '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
   }
 }
 
@@ -4487,7 +4536,7 @@ document.addEventListener('change', function(e){
   if (!zone) return;
   ['dragover','dragenter'].forEach(function(evt){ zone.addEventListener(evt, function(e){
     e.preventDefault(); e.stopPropagation();
-    zone.style.borderColor = 'var(--cyan)'; zone.style.background = 'rgba(58,214,255,.06)';
+    zone.style.borderColor = 'var(--cyan)'; zone.style.background = 'rgba(242,160,181,.06)';
   }); });
   ['dragleave','dragend'].forEach(function(evt){ zone.addEventListener(evt, function(e){
     e.preventDefault(); e.stopPropagation();
@@ -4895,7 +4944,7 @@ async function loadConnections() {
     el.innerHTML = html;
   } catch(e) {
     el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed')+'</div>'+
-      '<div style="text-align:center;margin-top:8px"><button onclick="loadConnections()" style="background:var(--gold);color:#06141f;border:none;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadConnections()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
   }
 }
 
@@ -5045,8 +5094,8 @@ async function loadUsers(){
           <div style="font-size:10px;color:var(--muted)">${u.created_at||''}</div>
         </div>
         <div style="display:flex;gap:6px">
-          ${u.role!=='owner'?`<button class="act-btn" style="font-size:10px;padding:3px 7px" onclick="resetUserPw('${u.username}')">Reset PW</button>
-          <button class="act-btn" style="font-size:10px;padding:3px 7px;background:rgba(220,60,60,.18);border-color:rgba(220,60,60,.4)" onclick="deleteUser('${u.username}')">Remove</button>`:''}
+          ${u.role!=='owner'?`<button class="act-btn secondary" style="font-size:10px;padding:3px 7px" onclick="resetUserPw('${u.username}')">Reset PW</button>
+          <button class="act-btn danger" style="font-size:10px;padding:3px 7px" onclick="deleteUser('${u.username}')">Remove</button>`:''}
         </div>
       </div>`).join('');
   } catch(e){ el.innerHTML='<div style="color:var(--muted);font-size:11px">Error loading users</div>'; }
@@ -5272,7 +5321,7 @@ async function initOrbGL(){
       uTime: {value: 0},
       uAmp: {value: 0},
       uFreq: {value: 1.6},
-      uColor: {value: new THREE.Color('rgb(58,214,255)')},
+      uColor: {value: new THREE.Color('rgb(242,160,181)')},
       uOpacity: {value: 0.85},
     };
     const mat = new THREE.ShaderMaterial({
@@ -5539,7 +5588,7 @@ function frame(){
   const amp = currentVoiceAmp();
   const glow = speaking ? 0.55 + amp*0.45 : 0.3;
   ctx.shadowBlur = 18 + amp*36;
-  ctx.shadowColor = speaking ? 'rgba(122,232,255,'+glow+')' : 'rgba(58,214,255,0.3)';
+  ctx.shadowColor = speaking ? 'rgba(247,195,208,'+glow+')' : 'rgba(242,160,181,0.3)';
 
   // Batch every line/dot into a single path each (one stroke()/fill() call for the
   // whole frame) instead of a per-edge/per-dot beginPath+stroke pattern — with
@@ -5568,20 +5617,20 @@ function frame(){
   const frontShadow = ctx.shadowBlur, frontShadowColor = ctx.shadowColor;
 
   ctx.shadowBlur = 0;
-  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.22)' : 'rgba(58,214,255,0.10)';
+  ctx.strokeStyle = speaking ? 'rgba(247,195,208,0.22)' : 'rgba(242,160,181,0.10)';
   ctx.lineWidth = 0.4;
   ctx.beginPath();
   imgBackEdges.forEach(([ai,bi])=>{ const a=backPts[ai], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
   ctx.stroke();
 
-  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.30)' : 'rgba(58,214,255,0.14)';
+  ctx.strokeStyle = speaking ? 'rgba(247,195,208,0.30)' : 'rgba(242,160,181,0.14)';
   ctx.lineWidth = 0.45;
   ctx.beginPath();
   imgStruts.forEach(([fi,bi])=>{ const a=frontPts[fi], b=backPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
   ctx.stroke();
 
   ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
-  ctx.strokeStyle = speaking ? 'rgba(122,232,255,0.5)' : 'rgba(58,214,255,0.22)';
+  ctx.strokeStyle = speaking ? 'rgba(247,195,208,0.5)' : 'rgba(242,160,181,0.22)';
   ctx.lineWidth = 0.5;
   ctx.beginPath();
   imgFrontEdges.forEach(([ai,bi])=>{ const a=frontPts[ai], b=frontPts[bi]; if(a&&b){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);} });
@@ -5591,20 +5640,20 @@ function frame(){
   // off-angle/edge-on view of the rotation looks like two unrelated overlapping
   // copies instead of one solid object with a near side and a far side.
   ctx.shadowBlur = 0;
-  ctx.fillStyle = speaking ? 'rgba(122,232,255,0.28)' : 'rgba(58,214,255,0.16)';
+  ctx.fillStyle = speaking ? 'rgba(247,195,208,0.28)' : 'rgba(242,160,181,0.16)';
   ctx.beginPath();
   backPts.forEach(p=>{ const sz=p.scale>1?1.0:0.65; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
   ctx.fill();
 
   ctx.shadowBlur = frontShadow; ctx.shadowColor = frontShadowColor;
-  ctx.fillStyle = speaking ? 'rgba(122,232,255,0.9)' : 'rgba(58,214,255,0.65)';
+  ctx.fillStyle = speaking ? 'rgba(247,195,208,0.9)' : 'rgba(242,160,181,0.65)';
   ctx.beginPath();
   frontPts.forEach(p=>{ const sz=p.scale>1?1.4:0.9; ctx.moveTo(p.x+sz,p.y); ctx.arc(p.x,p.y,sz,0,Math.PI*2); });
   ctx.fill();
 
   const grad = ctx.createRadialGradient(CX,CY,8,CX,CY,55+amp*30);
-  grad.addColorStop(0, speaking ? 'rgba(180,240,255,'+ (0.7+amp*0.25) +')' : 'rgba(58,214,255,0.4)');
-  grad.addColorStop(1, 'rgba(58,214,255,0)');
+  grad.addColorStop(0, speaking ? 'rgba(255,214,224,'+ (0.7+amp*0.25) +')' : 'rgba(242,160,181,0.4)');
+  grad.addColorStop(1, 'rgba(242,160,181,0)');
   ctx.fillStyle = grad;
   ctx.beginPath();ctx.arc(CX,CY,55+amp*30,0,Math.PI*2);ctx.fill();
 
