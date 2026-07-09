@@ -4853,16 +4853,16 @@ a clean venv/container, not just against what's already installed -- "already sa
 is not the same check as "resolves from scratch."
 
 **2. Etsy API 403 "API key not found or not active, or incorrect shared secret" --
-root cause was a truncated ETSY_CLIENT_SECRET, not a stale/wrong credential.** Checked via
-Railway's GraphQL variables API: `ETSY_CLIENT_SECRET` was only 10 characters -- Etsy shared
-secrets are much longer (comparable to the 24-char Client ID). Likely a partial copy from
-Etsy's Developer Console (the secret sits behind a reveal icon and is easy to only
-partially select). Scott corrected it directly in Railway; `/api/system/recheck-credentials`
-confirmed `etsy_live: true`, shop_name "OnBrandCraftz" resolved correctly immediately after.
-**Lesson:** when a credential-shaped 403 persists after what looks like a correct rotation,
-check the actual configured value's length/shape before assuming it's still the wrong
-value entirely -- a partial-paste truncation produces the identical error message as a
-fully wrong secret.
+resolved, exact root cause unconfirmed.** Checked via Railway's GraphQL variables API:
+`ETSY_CLIENT_SECRET` was only 10 characters, which looked suspiciously short next to the
+24-char Client ID, so a partial-copy truncation was flagged as the likely cause. Scott then
+shared a screenshot of Etsy's Developer Console showing the same 10-character secret in
+full (not visually truncated) -- so that theory was wrong, this app's secret is genuinely
+just short. Whatever Scott changed in Railway around the same time resolved it regardless:
+`/api/system/recheck-credentials` confirmed `etsy_live: true`, shop_name "OnBrandCraftz"
+resolving correctly right after. Net: fixed, but the precise "what was different before"
+is not established -- if this 403 recurs, don't assume secret length is diagnostic; compare
+the full configured value directly against Etsy's Developer Console instead.
 
 Also set `GEMINI_API_KEY` this session (via Railway's GraphQL `variableUpsert` mutation,
 project 323e677f-2c1a-4a21-845d-79aae274a225 / service "Etsy" / env "production") --
