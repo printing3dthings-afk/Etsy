@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import re
 import sys
 import zipfile
 from pathlib import Path
@@ -38,9 +39,12 @@ PRINT_ZIP_DIR = BASE_DIR / "data" / "digital_products" / "print_zips"
 DP_BASE = BASE_DIR / "data" / "digital_products"
 
 # Expected planner page counts (from CLAUDE.md catalog). Tolerance applied below.
+# DP1030-1034 corrected 2026-07-09 against actual pypdf page counts — the old
+# figures (98/105/108/102) were guesses that drifted 5-36 pages from the real
+# files and were silently passing/failing on luck rather than ground truth.
 PLANNER_PAGES = {
     "DP1026": 143, "DP1027": 131, "DP1028": 144, "DP1029": 133,
-    "DP1030": 98, "DP1031": 105, "DP1032": 108, "DP1033": 102,
+    "DP1030": 130, "DP1031": 141, "DP1032": 140, "DP1033": 107, "DP1034": 142,
 }
 PAGE_TOLERANCE = 8  # generated count may differ slightly from the catalog figure
 
@@ -55,6 +59,15 @@ def _rows():
         out.append({"severity": sev, "file": f, "check": check, "detail": detail})
 
     return out, add
+
+
+def dp_code_from_stem(stem: str) -> str:
+    """Extract the leading DP#### product code from a filename stem, tolerant of
+    the undated 'U' suffix and version suffixes like '_v2'/'_v2_final' (e.g.
+    DP1034_v2_final, DP1034U_v2_final -> 'DP1034'). Falls back to the raw stem
+    with a trailing 'U' stripped if it doesn't look like a DP code at all."""
+    m = re.match(r"^(DP\d+)", stem)
+    return m.group(1) if m else stem.rstrip("U")
 
 
 def gate(path: Path, rows_add, **kw) -> dict | None:
@@ -73,7 +86,7 @@ def check_planner_pdf(path: Path, rows_add):
     facts = gate(path, rows_add, expected_ext=".pdf")
     if not facts:
         return
-    code = path.stem.rstrip("U")
+    code = dp_code_from_stem(path.stem)
     expected = PLANNER_PAGES.get(code)
     pages = facts.get("pdf_pages", 0)
     if expected:
@@ -117,10 +130,21 @@ def check_sticker_zip(path: Path, rows_add):
                      "no png_sheets/*.png to verify (legacy JPG pack — white-box risk)")
 
         if indiv:
-            label = "PASS" if len(indiv) >= 200 else "WARN"
-            rows_add(label, path.name, "sticker_count",
-                     f"{len(indiv)} individual stickers" +
-                     ("" if len(indiv) >= 200 else " (<200 target)"))
+            # Below 50 is not "a smaller pack" — it's the background-removal blob
+            # defect (found 2026-07-09 on DP1030-1034: 9 sheets x 1 sticker each,
+            # because the sheet background was never stripped so every sheet fused
+            # into a single connected component). A real, working pack never comes
+            # in this low, so this is a hard FAIL, not a soft undercount warning.
+            if len(indiv) < 50:
+                label = "FAIL"
+                detail = f"{len(indiv)} individual stickers (<50 — looks like the background-removal blob defect, not a real pack)"
+            elif len(indiv) < 200:
+                label = "WARN"
+                detail = f"{len(indiv)} individual stickers (<200 target)"
+            else:
+                label = "PASS"
+                detail = f"{len(indiv)} individual stickers"
+            rows_add(label, path.name, "sticker_count", detail)
 
 
 def check_print_zip(path: Path, rows_add):

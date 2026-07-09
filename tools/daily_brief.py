@@ -44,6 +44,14 @@ def _get_etsy_signals() -> dict:
         "draft_listings": 0,
         "recent_orders": 0,
         "etsy_error": None,
+        # False by default — only flips True on a successful messages call below.
+        # Found in the 2026-07-09 weakness audit: this used to be implicit (unread
+        # stayed 0 on a 403 the same as it would on "genuinely zero unread messages"),
+        # which meant the Star Seller risk warning silently never fired and looked
+        # covered when it wasn't. Etsy's OAuth app scopes (tools/etsy_oauth.py) don't
+        # include messaging_r, so this call 403s in production every time — the brief
+        # needs to say so explicitly instead of reporting a false "0 unread".
+        "messages_check_available": False,
     }
     try:
         from tools.etsy_api import EtsyAPIClient
@@ -56,11 +64,13 @@ def _get_etsy_signals() -> dict:
             unread = [c for c in convos if not c.get("last_read_timestamp") or
                       c.get("last_read_timestamp", 0) < c.get("last_message_timestamp", 0)]
             result["unread_messages"] = len(unread)
+            result["messages_check_available"] = True
             if unread:
                 oldest_ts = min(c.get("create_timestamp", now_ts) for c in unread)
                 result["oldest_unread_hours"] = int((now_ts - oldest_ts) / 3600)
         except Exception as exc:
-            # 404/403 = messaging_r scope not granted — expected, skip silently
+            # 404/403 = messaging_r scope not granted — expected, not a real error;
+            # messages_check_available stays False so the brief says so plainly.
             msg = str(exc)
             if "404" not in msg and "403" not in msg:
                 result["etsy_error"] = f"messages: {exc}"
@@ -165,14 +175,19 @@ def _generate_brief(signals: dict, kb_context: str) -> str:
 
     unread = signals["unread_messages"]
     oldest_h = signals["oldest_unread_hours"]
-    star_seller_flag = ""
-    if unread > 0 and oldest_h >= 20:
-        star_seller_flag = f" ⚠️ OLDEST {oldest_h}h — REPLY NOW (Star Seller at risk)"
-    elif unread > 0 and oldest_h >= 12:
-        star_seller_flag = f" ⚠️ {oldest_h}h old — reply today"
+    if not signals.get("messages_check_available"):
+        messages_line = ("⚠️ Message check unavailable — Etsy's API has no messaging "
+                          "endpoint for this app's current scope. Check Etsy messages manually.")
+    else:
+        star_seller_flag = ""
+        if unread > 0 and oldest_h >= 20:
+            star_seller_flag = f" ⚠️ OLDEST {oldest_h}h — REPLY NOW (Star Seller at risk)"
+        elif unread > 0 and oldest_h >= 12:
+            star_seller_flag = f" ⚠️ {oldest_h}h old — reply today"
+        messages_line = f"Unread messages: {unread}{star_seller_flag}"
 
     signals_text = (
-        f"Unread messages: {unread}{star_seller_flag}\n"
+        f"{messages_line}\n"
         f"Active listings: {signals['active_listings']}\n"
         f"Draft listings: {signals['draft_listings']}\n"
         f"Orders last 7 days: {signals['recent_orders']}\n"
@@ -223,11 +238,16 @@ def _format_brief_no_ai(signals: dict) -> str:
     now = datetime.datetime.utcnow()
     unread = signals["unread_messages"]
     oldest_h = signals["oldest_unread_hours"]
-    flag = f" ⚠️ {oldest_h}h old — reply now" if (unread and oldest_h >= 12) else ""
+    if not signals.get("messages_check_available"):
+        messages_line = ("MESSAGES: check unavailable — Etsy's API has no messaging "
+                          "endpoint for this app's current scope; check Etsy manually")
+    else:
+        flag = f" ⚠️ {oldest_h}h old — reply now" if (unread and oldest_h >= 12) else ""
+        messages_line = f"MESSAGES: {unread} unread{flag}"
     lines = [
         f"📊 {_BUSINESS_NAME} Daily Brief — {now.strftime('%A %B %-d, %Y — %H:%M UTC')}",
         "",
-        f"MESSAGES: {unread} unread{flag}",
+        messages_line,
         f"LISTINGS: {signals['active_listings']} active | {signals['draft_listings']} drafts",
         f"ORDERS (7d): {signals['recent_orders']}",
     ]

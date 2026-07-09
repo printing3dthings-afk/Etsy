@@ -11932,3 +11932,198 @@ body {
 
 <!-- /TRASH 20260708-035 -->
 
+<!-- TRASH id=20260709-001 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1030_sticker_pack.zip" reason="Regenerating DP1030 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
+## 20260709-001 · 2026-07-09 · file · `data/digital_products/product_files/DP1030_sticker_pack.zip`
+**Reason:** Regenerating DP1030 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
+**Payload:** `data/trash/files/20260709-001__DP1030_sticker_pack.zip`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260709-001 -->
+
+<!-- TRASH id=20260709-002 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1031_sticker_pack.zip" reason="Regenerating DP1031 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
+## 20260709-002 · 2026-07-09 · file · `data/digital_products/product_files/DP1031_sticker_pack.zip`
+**Reason:** Regenerating DP1031 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
+**Payload:** `data/trash/files/20260709-002__DP1031_sticker_pack.zip`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260709-002 -->
+
+<!-- TRASH id=20260709-003 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1032_sticker_pack.zip" reason="Regenerating DP1032 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
+## 20260709-003 · 2026-07-09 · file · `data/digital_products/product_files/DP1032_sticker_pack.zip`
+**Reason:** Regenerating DP1032 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
+**Payload:** `data/trash/files/20260709-003__DP1032_sticker_pack.zip`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260709-003 -->
+
+<!-- TRASH id=20260709-004 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1033_sticker_pack.zip" reason="Regenerating DP1033 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
+## 20260709-004 · 2026-07-09 · file · `data/digital_products/product_files/DP1033_sticker_pack.zip`
+**Reason:** Regenerating DP1033 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
+**Payload:** `data/trash/files/20260709-004__DP1033_sticker_pack.zip`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260709-004 -->
+
+<!-- TRASH id=20260709-005 date=2026-07-09 kind=file source="data/digital_products/product_files/DP1034_sticker_pack.zip" reason="Regenerating DP1034 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix" -->
+## 20260709-005 · 2026-07-09 · file · `data/digital_products/product_files/DP1034_sticker_pack.zip`
+**Reason:** Regenerating DP1034 sticker pack — broken build (1 sticker/sheet) predates the 2026-07-03 background-removal fix  
+**Payload:** `data/trash/files/20260709-005__DP1034_sticker_pack.zip`
+
+```
+(binary file — see payload copy)
+```
+
+<!-- /TRASH 20260709-005 -->
+
+<!-- TRASH id=20260709-006 date=2026-07-09 kind=file source="tools/api_server/requirements.txt" reason="Confirmed unused (2026-07-09 weakness-audit fix) — Dockerfile only installs from root requirements.txt; this stale duplicate had drifted versions (python-dotenv==1.0.1 vs root loose >=1.0.0, anthropic>=0.28.0 vs root >=0.40.0) and could mislead someone editing dependencies into thinking it matters." -->
+## 20260709-006 · 2026-07-09 · file · `tools/api_server/requirements.txt`
+**Reason:** Confirmed unused (2026-07-09 weakness-audit fix) — Dockerfile only installs from root requirements.txt; this stale duplicate had drifted versions (python-dotenv==1.0.1 vs root loose >=1.0.0, anthropic>=0.28.0 vs root >=0.40.0) and could mislead someone editing dependencies into thinking it matters.  
+**Payload:** `data/trash/files/20260709-006__requirements.txt`
+
+```
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+python-dotenv==1.0.1
+anthropic>=0.28.0
+openai>=1.0.0
+# Optional — only used when AI_VIDEO_ENGINE=veo (Google Veo 3.1 video migration
+# target for the Sora shutdown). Lazily imported in tools/ai_video.py, so its
+# presence never affects startup; ships now so activating Veo is just setting
+# GEMINI_API_KEY. Remove if the deploy image size matters and Veo is unused.
+google-genai>=1.0.0
+```
+
+<!-- /TRASH 20260709-006 -->
+
+<!-- TRASH id=20260709-007 date=2026-07-09 kind=file source="tools/customer_service_tools.py" reason="Confirmed fully orphaned (2026-07-09 weakness-audit fix) — its only consumer, customer_service_agent.py, was already deliberately trashed 2026-07-08 (data/trash/files/20260708-011__customer_service_agent.py); never imported/referenced anywhere in live code since. Archiving rather than leaving dead code in tools/." -->
+## 20260709-007 · 2026-07-09 · file · `tools/customer_service_tools.py`
+**Reason:** Confirmed fully orphaned (2026-07-09 weakness-audit fix) — its only consumer, customer_service_agent.py, was already deliberately trashed 2026-07-08 (data/trash/files/20260708-011__customer_service_agent.py); never imported/referenced anywhere in live code since. Archiving rather than leaving dead code in tools/.  
+**Payload:** `data/trash/files/20260709-007__customer_service_tools.py`
+
+```
+"""Tool definitions and implementations for the Customer Service Agent."""
+
+import json
+from datetime import date, datetime, timedelta
+from tools.data_store import DataStore
+
+TOOL_DEFINITIONS = [
+    {
+        "name": "get_messages",
+        "description": "Retrieve customer messages, optionally filtered by status.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "description": "Filter messages by status",
+                    "enum": ["all", "unread", "replied"],
+                }
+            },
+            "required": ["status"],
+        },
+    },
+    {
+        "name": "get_message_details",
+        "description": "Get the full details of a specific customer message.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "message_id": {"type": "string", "description": "The message ID, e.g. M201"}
+            },
+            "required": ["message_id"],
+        },
+    },
+    {
+        "name": "draft_reply",
+        "description": "Draft and send a reply to a customer message. Marks the message as replied.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "message_id": {"type": "string", "description": "The message ID to reply to"},
+                "reply_text": {"type": "string", "description": "The reply message to send"},
+            },
+            "required": ["message_id", "reply_text"],
+        },
+    },
+    {
+        "name": "get_reviews",
+        "description": "Retrieve customer reviews, optionally filtered by responded status.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "type": "string",
+                    "description": "Filter reviews",
+                    "enum": ["all", "unresponded", "responded"],
+                }
+            },
+            "required": ["filter"],
+        },
+    },
+    {
+        "name": "respond_to_review",
+        "description": "Post a public response to a customer review. Professional and grateful tone.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "review_id": {"type": "string", "description": "The review ID, e.g. R301"},
+                "response_text": {"type": "string", "description": "The public response text"},
+            },
+            "required": ["review_id", "response_text"],
+        },
+    },
+    {
+        "name": "get_customer_satisfaction",
+        "description": "Get an overview of customer satisfaction: ratings distribution and response rates.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
+    {
+        "name": "get_response_template",
+        "description": "Returns a pre-written response template for common Etsy customer service scenarios. Templates include [PLACEHOLDERS] for buyer name, order ID, etc.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "scenario": {
+                    "type": "string",
+                    "description": "The CS scenario to get a template for.",
+                    "enum": [
+                        "order_delay",
+                        "custom_request",
+                        "wrong_item",
+                        "refund_request",
+                        "five_star_thank_you",
+                        "negative_review_response",
+                        "where_is_my_order",
+                        "custom_order_inquiry",
+                    ],
+                }
+            },
+            "required": ["scenario"],
+        },
+    },
+    {
+        "name": "analyze_review_sentiment",
+        "description": "Analyzes all reviews and returns a sentiment breakdown including praise themes, complaint patterns, NPS estimate, and trending direction.",
+     
+… (truncated in ledger; full copy in payload)
+```
+
+<!-- /TRASH 20260709-007 -->
+

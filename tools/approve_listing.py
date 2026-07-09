@@ -61,7 +61,7 @@ from etsy_api import EtsyAPIClient, EtsyAPIError
 
 sys.path.insert(0, str(BASE_DIR))
 from tools import qc_sweep as _qc_sweep
-from tools.qc_sweep import check_planner_pdf, check_sticker_zip, check_other_zip, PLANNER_PAGES
+from tools.qc_sweep import check_planner_pdf, check_sticker_zip, check_other_zip, PLANNER_PAGES, dp_code_from_stem
 
 if PIL_OK:
     _qc_sweep.Image = Image  # qc_sweep lazy-imports PIL inside main(); we call its checks directly
@@ -196,7 +196,7 @@ def check_product_files(dp_codes: list[str]) -> list[dict]:
                 path = BASE_DIR / rel_path
             if path.name.endswith("_sticker_pack.zip"):
                 check_sticker_zip(path, add)
-            elif path.suffix.lower() == ".pdf" and path.stem.rstrip("U") in planner_codes:
+            elif path.suffix.lower() == ".pdf" and dp_code_from_stem(path.stem) in planner_codes:
                 check_planner_pdf(path, add)
             elif path.suffix.lower() == ".zip":
                 check_other_zip(path, add)
@@ -274,7 +274,16 @@ def show_listing(listing: dict) -> list[dict]:
         else:
             print("\n✓ File gate: PASSED")
     else:
-        print("\nFILE QUALITY GATE: skipped — no DP code mapped to this listing in dp_listing_map.json")
+        # Fail closed, not open: an unmapped listing means the file gate never ran,
+        # not that the files are fine. (Found 2026-07-09: this used to just print a
+        # skip message and let publish proceed unchecked.)
+        print("\n✗ FILE QUALITY GATE: no DP code mapped to this listing in "
+              "dp_listing_map.json — files were never checked. Add a mapping or "
+              "publish with --force to proceed anyway.")
+        file_rows = [{
+            "severity": "FAIL", "file": "(unmapped)", "check": "dp_code_lookup",
+            "detail": "no DP code mapped to this listing_id in dp_listing_map.json — file gate never ran",
+        }]
     print("=" * 70)
     return file_rows
 
@@ -331,7 +340,15 @@ def lock_in(client: EtsyAPIClient, listing_id: str, notes: str = "") -> dict:
     registry = load_json(REGISTRY_PATH)
     art_verified, art_min, art_dp = verify_art(photo_hashes, dp_codes, registry)
 
-    file_rows = check_product_files(dp_codes) if dp_codes else []
+    if dp_codes:
+        file_rows = check_product_files(dp_codes)
+    else:
+        # Fail closed — see show_listing()'s identical fix (2026-07-09) for why an
+        # unmapped listing must not read as "file gate passed."
+        file_rows = [{
+            "severity": "FAIL", "file": "(unmapped)", "check": "dp_code_lookup",
+            "detail": "no DP code mapped to this listing_id in dp_listing_map.json — file gate never ran",
+        }]
     file_gate_failures = [f"{r['file']}: {r['check']} — {r['detail']}"
                            for r in file_rows if r["severity"] == "FAIL"]
     file_gate_passed = not file_gate_failures

@@ -115,8 +115,14 @@ def _build_calendar(year: int) -> list[dict]:
                 "new beginnings journal",
             ],
             "listings_to_update": ["DP1026", "DP1031"],
+            # Was ("habit tracker pdf", "spring planner") -- fixed 2026-07-09 (weakness
+            # audit): habit tracker pdf is one of DP1026's permanent core tags per
+            # CLAUDE.md's tag table, and CLAUDE.md's Seasonal Keyword Calendar actually
+            # lists "habit tracker" as a keyword this season should ADD, not remove.
+            # Swapping "planner bundle" instead achieves the same goal (make room for
+            # the seasonal keyword) without sacrificing a permanent tag.
             "tag_slots_to_replace": [
-                ("habit tracker pdf", "spring planner"),
+                ("planner bundle", "spring planner"),
             ],
             "description_note": "Add 'fresh start' and 'spring goals' language to description.",
         },

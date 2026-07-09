@@ -164,6 +164,22 @@
     "note": "Built 2026-06-20: dated+undated PDF, AI cover, 9-sheet sticker pack, 10 listing photos all generated. NOT published \u2014 awaiting Scott review of photos/title/description/price per Autonomy Boundaries."
   },
   {
+    "product_id": "DP1034",
+    "name": "Planner (DP1034) \u2014 theme/name not yet assigned",
+    "etsy_listing_id": "",
+    "price": 12.99,
+    "category": "digital_planner",
+    "status": "draft",
+    "files": [
+      "data/digital_products/product_files/DP1034_v2_final.pdf",
+      "data/digital_products/product_files/DP1034U_v2_final.pdf",
+      "data/digital_products/product_files/DP1034_sticker_pack.zip",
+      "data/digital_products/product_files/DP1034_cover_ai.png"
+    ],
+    "last_updated": "2026-07-09",
+    "note": "Added 2026-07-09: catalog entry was missing entirely (found during weakness audit). PDF/sticker pack/cover exist on disk but no listing_images/, no dp1034_listing.json (title/description/tags not yet authored) \u2014 earlier in the pipeline than DP1030-1033. DP code was also previously double-booked with a published wall-art listing (now renamed WA1034 in dp_listing_map.json) \u2014 see that entry note."
+  },
+  {
     "product_id": "BUNDLE_PLANNERS",
     "name": "All 4 Planners Bundle",
     "etsy_listing_id": "4512188970",
