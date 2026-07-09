@@ -34,8 +34,10 @@ from pathlib import Path
 
 ENV_PATH = Path(__file__).parent.parent / ".env"
 
-CLIENT_KEY    = os.getenv("TIKTOK_CLIENT_KEY", "awwqfpmeze4ksjm4")
-CLIENT_SECRET = os.getenv("TIKTOK_CLIENT_SECRET", "Fgq1xaYUbAUEElf2pfokELTbqnk3ylIB")
+# No hardcoded fallback values here (2026-07-09 security fix) — see tiktok_poster.py's
+# module-level comment for why. Rotate both at TikTok's developer console first.
+CLIENT_KEY    = os.getenv("TIKTOK_CLIENT_KEY", "")
+CLIENT_SECRET = os.getenv("TIKTOK_CLIENT_SECRET", "")
 REDIRECT_URI  = "http://localhost:3005/callback"
 SCOPES        = "video.publish,video.upload,user.info.basic"
 

@@ -30,8 +30,12 @@ from pathlib import Path
 ENV_PATH      = Path(__file__).parent.parent / ".env"
 CALENDAR_PATH = Path(__file__).parent.parent / "data" / "tiktok_content_calendar.json"
 
-CLIENT_KEY    = os.getenv("TIKTOK_CLIENT_KEY",    "awwqfpmeze4ksjm4")
-CLIENT_SECRET = os.getenv("TIKTOK_CLIENT_SECRET", "Fgq1xaYUbAUEElf2pfokELTbqnk3ylIB")
+# No hardcoded fallback values here (2026-07-09 security fix) — this file previously
+# shipped the real TikTok app Client Key/Secret as os.getenv() default values, meaning
+# they were committed in plaintext to git history regardless of what's in .env. Rotate
+# both at TikTok's developer console before re-authorizing (tools/tiktok_oauth.py).
+CLIENT_KEY    = os.getenv("TIKTOK_CLIENT_KEY",    "")
+CLIENT_SECRET = os.getenv("TIKTOK_CLIENT_SECRET", "")
 ACCESS_TOKEN  = os.getenv("TIKTOK_ACCESS_TOKEN",  "")
 REFRESH_TOKEN = os.getenv("TIKTOK_REFRESH_TOKEN", "")
 OPEN_ID       = os.getenv("TIKTOK_OPEN_ID",       "")

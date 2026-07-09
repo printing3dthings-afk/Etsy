@@ -448,7 +448,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d0e2c-v134"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d0e2c-v135"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2664,6 +2664,52 @@ import video_understanding as _video_understanding
 AGENT_TOOLS.extend(_video_understanding.TOOL_DEFINITIONS)
 _VIDEO_TOOL_NAMES = {t["name"] for t in _video_understanding.TOOL_DEFINITIONS}
 
+# Etsy Ads — let Frank discuss ad performance/ROAS/strategy in chat. Existed as a fully
+# working module with its own TOOL_DEFINITIONS but was never registered here (2026-07-09
+# tool audit). Etsy has no public Ads API for third-party apps, so every number here comes
+# from tools/etsy_ads_tools.py's local DataStore log (log_ad_spend), never a live Etsy call
+# — set_daily_budget/toggle_listing_ad only update that local tracking state too (each says
+# so in its own response), so none of these need the Action Center approval gate. Fixed this
+# module's own `from tools.X import Y` imports (same class of bug as task #189 — it was never
+# actually importable from here before) while wiring it in.
+import etsy_ads_tools as _etsy_ads_tools
+AGENT_TOOLS.extend(_etsy_ads_tools.TOOL_DEFINITIONS)
+_ETSY_ADS_TOOL_NAMES = {t["name"] for t in _etsy_ads_tools.TOOL_DEFINITIONS}
+
+# TikTok — stage a video post for approval. tools/tiktok_poster.py is a real, working
+# posting client, previously only reachable via manual CLI (command_center.py), never
+# Frank's chat agent (2026-07-09 tool audit). "Post to social media accounts" is a Hard
+# Stop in CLAUDE.md's Autonomy Boundaries, so — unlike the Etsy Ads tools above — this
+# does NOT call tiktok_poster.post_video() directly. It only ever stages a post_tiktok
+# action (see _SOCIAL_STAGED_ACTION_TYPES) for approval in the Action Center, same
+# pattern as post_scheduled_art.py's fix in the previous session. Appended here as a
+# single dict (not via .extend(), since this is main.py's own tool, not an external
+# module) rather than in the main AGENT_TOOLS literal above, to keep this whole
+# TikTok-wiring change in one place for review.
+AGENT_TOOLS.append({
+    "name": "stage_tiktok_post",
+    "description": (
+        "Stage a TikTok video post for approval in the Action Center — does NOT post "
+        "directly. The video must already exist in the staged_videos folder. Rejecting "
+        "the staged action never calls TikTok's API; only an explicit approval does."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "video_path": {
+                "type": "string",
+                "description": "Filename of the .mp4 within the staged_videos folder (max 50MB, TikTok's own limit).",
+            },
+            "caption": {
+                "type": "string",
+                "description": "Caption text, including any hashtags (max 2200 chars, TikTok's own limit).",
+            },
+        },
+        "required": ["video_path", "caption"],
+    },
+})
+_SOCIAL_TOOL_NAMES = {"stage_tiktok_post"}
+
 # Prompt-cache constants — built once at import time, reused every chat turn.
 # _CEO_SYSTEM (~2 100 tokens) + AGENT_TOOLS (~2 000 tokens) are completely static
 # between turns; marking them ephemeral saves ~90% on those tokens after the first
@@ -2752,6 +2798,13 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
         # Video understanding (watch_video) — same JSON-string → dict reconciliation.
         if name in _VIDEO_TOOL_NAMES:
             return json.loads(_video_understanding.execute_tool(name, tool_input or {}))
+        # Etsy Ads — same JSON-string → dict reconciliation. DataStore() is a singleton
+        # (tools/data_store.py), safe to instantiate fresh on every call.
+        if name in _ETSY_ADS_TOOL_NAMES:
+            from data_store import DataStore
+            return json.loads(_etsy_ads_tools.execute_tool(name, tool_input or {}, DataStore()))
+        if name == "stage_tiktok_post":
+            return _stage_tiktok_post(tool_input or {})
         if name == "get_metrics":
             return _metrics_sync()
         if name == "list_listings":
@@ -5655,10 +5708,17 @@ _SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
 _PHOTO_STAGED_ACTION_TYPES = ("listing_photo",)
 _VIDEO_STAGED_ACTION_TYPES = ("listing_video",)
 _REGISTER_COMMAND_STAGED_ACTION_TYPES = ("register_command",)
+# First non-Etsy publish-type action (2026-07-09 tool audit) — tools/tiktok_poster.py
+# was a real, working posting client only reachable via manual CLI (command_center.py),
+# never Frank's chat agent. CLAUDE.md's Autonomy Boundaries lists "Post to social media
+# accounts" as a Hard Stop, so this goes through the exact same stage→approve→execute
+# path as every Etsy write instead of posting directly.
+_SOCIAL_STAGED_ACTION_TYPES = ("post_tiktok",)
 _STAGED_ACTION_TYPES = (
     _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
     + _SCRIPT_STAGED_ACTION_TYPES + _PHOTO_STAGED_ACTION_TYPES
     + _VIDEO_STAGED_ACTION_TYPES + _REGISTER_COMMAND_STAGED_ACTION_TYPES
+    + _SOCIAL_STAGED_ACTION_TYPES
 )
 
 
@@ -5793,6 +5853,28 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
             return False, f"path escapes the staged_videos root: {path}"
         if not target.is_file():
             return False, f"staged video file not found: {path}"
+        return True, "ok"
+    if t in _SOCIAL_STAGED_ACTION_TYPES:
+        path = (p.get("video_path") or "").strip()
+        if not path:
+            return False, "missing video_path"
+        try:
+            target = _resolve_in_root("staged_videos", path)
+        except HTTPException:
+            return False, f"path escapes the staged_videos root: {path}"
+        if not target.is_file():
+            return False, f"staged video file not found: {path}"
+        if target.suffix.lower() != ".mp4":
+            return False, "TikTok requires an .mp4 file"
+        if target.stat().st_size > 50 * 1024 * 1024:
+            return False, "video exceeds TikTok's 50MB upload limit"
+        caption = (p.get("caption") or "").strip()
+        if not caption:
+            return False, "missing caption"
+        if len(caption) > 2200:
+            return False, f"caption is {len(caption)} chars — TikTok's limit is 2200"
+        if at_approval and not os.getenv("TIKTOK_ACCESS_TOKEN", "").strip():
+            return False, "TIKTOK_ACCESS_TOKEN not set — run tools/tiktok_oauth.py to (re)authorize"
         return True, "ok"
     # Local types — the real security boundary is the relay's own realpath check
     # at execution time (it's the only thing with Scott's actual filesystem to
@@ -5999,6 +6081,48 @@ def _execute_script_staged_action(a: dict) -> dict:
     return result
 
 
+def _stage_tiktok_post(tool_input: dict) -> dict:
+    """Chat-tool handler for stage_tiktok_post — validates and enqueues, never posts.
+    The video must already be sitting in the staged_videos folder (same folder Etsy
+    listing videos get staged from) by the time this is called."""
+    video_path = (tool_input.get("video_path") or "").strip()
+    caption = (tool_input.get("caption") or "").strip()
+    if not video_path:
+        return {"error": "missing video_path"}
+    if not caption:
+        return {"error": "missing caption"}
+    payload = {"video_path": video_path, "caption": caption}
+    candidate = {"type": "post_tiktok", "payload": payload}
+    ok, msg = _validate_staged_action(candidate)
+    if not ok:
+        return {"error": msg}
+    summary = f"TikTok post: {caption[:60]}"
+    action_id = db.enqueue_action("post_tiktok", summary, payload)
+    with _cache_lock:
+        _cache.pop("actions", None)
+    return {"action_id": action_id, "video_path": video_path, "caption": caption, "staged": True}
+
+
+def _execute_tiktok_staged_action(a: dict) -> dict:
+    """Apply an approved post_tiktok action — the ONLY place tiktok_poster.post_video()
+    is ever called from this server. Everything upstream (staging, validation) only
+    ever prepares the video/caption; nothing posts until Scott approves here. Logged
+    to activity_log regardless of outcome, same as the local/script executors."""
+    p = a.get("payload", {}) or {}
+    video_path = _resolve_in_root("staged_videos", p["video_path"])
+    caption = p["caption"]
+    token = os.getenv("TIKTOK_ACCESS_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("TIKTOK_ACCESS_TOKEN not set — run tools/tiktok_oauth.py to (re)authorize")
+    import tiktok_poster as _tiktok_poster
+    result = _tiktok_poster.post_video(str(video_path), caption, token)
+    outcome = "error" if result.get("error") else "ok"
+    db.log_activity("frank", "post_tiktok", a.get("summary", ""), p, outcome=outcome)
+    if result.get("error"):
+        raise RuntimeError(result["error"])
+    return result
+
+
 @app.get("/api/queue")
 async def get_queue(status: str = "pending", _token: str = Depends(_auth_session_or_bearer)):
     """List staged actions. status=pending (default) or 'all'."""
@@ -6022,6 +6146,7 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
     is_local = a["type"] in _LOCAL_STAGED_ACTION_TYPES
     is_script = a["type"] in _SCRIPT_STAGED_ACTION_TYPES
     is_register_command = a["type"] in _REGISTER_COMMAND_STAGED_ACTION_TYPES
+    is_social = a["type"] in _SOCIAL_STAGED_ACTION_TYPES
     if is_local:
         state = await asyncio.to_thread(db.get_relay_state)
         if state.get("killed"):
@@ -6041,6 +6166,10 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
         elif is_register_command:
             result = await asyncio.wait_for(
                 asyncio.to_thread(_execute_register_command_staged_action, a), timeout=15.0
+            )
+        elif is_social:
+            result = await asyncio.wait_for(
+                asyncio.to_thread(_execute_tiktok_staged_action, a), timeout=120.0
             )
         else:
             result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
