@@ -4832,3 +4832,39 @@ despite calling paid OpenAI APIs — swapped to `_rate_limited_auth`.
 
 All 5 test suites pass (139 tests total). Full weakness-audit report + fix details
 in the corresponding chat session.
+
+
+## 2026-07-09 — Deploy blocked by Pillow/moviepy conflict; Etsy 403 resolved (truncated secret)
+Two separate incidents resolved same-day, logged together since they overlapped in time.
+
+**1. v136 deploy silently stuck on v135 for ~30 minutes.** Root cause: the same-day
+`requirements.txt` exact-pinning pass pinned `Pillow==12.3.0` from whatever was already
+installed in the dev container. `pip install -r requirements.txt` passed locally because
+pip saw the exact pinned versions already present and skipped a full dependency resolve
+-- it never caught that `moviepy==2.2.1` requires `pillow<12.0,>=9.2.0`. A genuinely fresh
+install (GitHub Actions CI, Railway's Docker build) fails immediately with
+`ResolutionImpossible`. CI Smoke's failure was the tell -- Railway's Docker build was
+failing the identical way, so it just kept serving the last successful image (v135) with
+no visible error anywhere except the CI run and (presumably) Railway's build logs.
+**Fix:** `Pillow==11.3.0` (latest satisfying both moviepy and reportlab). Verified in a
+genuinely fresh virtualenv (not one with packages pre-installed) before pushing again.
+**Lesson:** when exact-pinning a requirements.txt from `pip freeze`, verify the pin set in
+a clean venv/container, not just against what's already installed -- "already satisfied"
+is not the same check as "resolves from scratch."
+
+**2. Etsy API 403 "API key not found or not active, or incorrect shared secret" --
+resolved, exact root cause unconfirmed.** Checked via Railway's GraphQL variables API:
+`ETSY_CLIENT_SECRET` was only 10 characters, which looked suspiciously short next to the
+24-char Client ID, so a partial-copy truncation was flagged as the likely cause. Scott then
+shared a screenshot of Etsy's Developer Console showing the same 10-character secret in
+full (not visually truncated) -- so that theory was wrong, this app's secret is genuinely
+just short. Whatever Scott changed in Railway around the same time resolved it regardless:
+`/api/system/recheck-credentials` confirmed `etsy_live: true`, shop_name "OnBrandCraftz"
+resolving correctly right after. Net: fixed, but the precise "what was different before"
+is not established -- if this 403 recurs, don't assume secret length is diagnostic; compare
+the full configured value directly against Etsy's Developer Console instead.
+
+Also set `GEMINI_API_KEY` this session (via Railway's GraphQL `variableUpsert` mutation,
+project 323e677f-2c1a-4a21-845d-79aae274a225 / service "Etsy" / env "production") --
+`video_understanding` and `image_engine_gemini` (Nano Banana) capabilities now report
+`available: true`.

@@ -1,9 +1,18 @@
 # Exclude everything except the API server and its single dependency.
-# Without this, Docker copies 1GB+ (data/, mobile_app/node_modules, .git)
+# Without this, Docker copies 4GB+ (data/, mobile_app/node_modules, .git)
 # which causes Railway builds to time out or take 10+ minutes.
 
-# Big directories — never needed by the API server
-data/
+# data/ is excluded child-by-child (the `data/*` glob form, not a single bare
+# `data/` rule) so the negation below can re-include data/knowledge_base/ —
+# Docker can't un-exclude a path whose parent was excluded via a bare `data/`
+# rule. Found 2026-07-09: ops_runbook.md/ceo_learnings.md and every other
+# knowledge_base reference doc never existed inside the container at all (on
+# top of being ephemeral before a Volume existed) — this exclusion swallowed
+# them outright. knowledge_base/ is ~700KB, negligible next to the ~4GB it's
+# carved out of (digital_products/, backups/, and the many per-product dirs).
+data/*
+!data/knowledge_base
+!data/registered_commands.json
 mobile_app/
 .git/
 
@@ -22,6 +31,7 @@ __pycache__/
 .github/
 .pytest_cache/
 *.md
+!data/knowledge_base/*.md
 
 # Local DB (never ship into the image)
 **/hub_data/

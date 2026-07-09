@@ -311,8 +311,14 @@ _EXEC_COMMANDS: dict[str, dict] = {
 # chat tool (Phase 2 M3) — _EXEC_COMMANDS above is a static in-memory dict that
 # would forget any approved registration on restart, so approved entries are also
 # written here and reloaded on every startup. Git-tracked plain JSON, same
-# "nothing we delete should be unrecoverable" spirit as data/trash/.
-_REGISTERED_COMMANDS_FILE = ROOT / "data" / "registered_commands.json"
+# "nothing we delete should be unrecoverable" spirit as data/trash/. Prefers the
+# /data Volume so registrations survive a redeploy too, not just a restart —
+# same resolver hub.db itself uses (db.resolve_persistent_path).
+_REGISTERED_COMMANDS_FILE = db.resolve_persistent_path(
+    "registered_commands.json",
+    fallback=ROOT / "data" / "registered_commands.json",
+    seed_from=ROOT / "data" / "registered_commands.json",
+)
 
 
 def _load_registered_commands() -> None:
@@ -1389,8 +1395,18 @@ async def _stage_local_action(name: str, tool_input: dict) -> dict:
 
 
 # ── Ops runbook (loaded fresh on every request — no redeploy needed to update) ──
-
-_OPS_RUNBOOK_PATH = ROOT / "data" / "knowledge_base" / "ops_runbook.md"
+#
+# Found 2026-07-09: this used to be a plain ROOT-relative path, which is a
+# SECOND persistence gap distinct from hub.db — attaching a Railway Volume at
+# /data doesn't touch it. Now prefers /data/knowledge_base, seeded once from
+# the repo copy baked into the image (see .dockerignore's data/knowledge_base
+# negation — these .md files used to be excluded from the image entirely, so
+# there wasn't even a baked-in copy to seed from until that was fixed too).
+_OPS_RUNBOOK_PATH = db.resolve_persistent_path(
+    "knowledge_base/ops_runbook.md",
+    fallback=ROOT / "data" / "knowledge_base" / "ops_runbook.md",
+    seed_from=ROOT / "data" / "knowledge_base" / "ops_runbook.md",
+)
 
 
 _kb_cache: dict[str, tuple[float, str]] = {}
@@ -1617,8 +1633,14 @@ def _promote_recurring_failures(path: Path, *, min_occurrences: int = 3) -> bool
 
 
 # ── CEO learnings (Frank's compounding memory — see ceo_learnings.md) ──────────
+# Same /data-preferring resolver as _OPS_RUNBOOK_PATH above — this file gets
+# appended to at runtime (log_learning tool) just like the runbook does.
 
-_CEO_LEARNINGS_PATH = ROOT / "data" / "knowledge_base" / "ceo_learnings.md"
+_CEO_LEARNINGS_PATH = db.resolve_persistent_path(
+    "knowledge_base/ceo_learnings.md",
+    fallback=ROOT / "data" / "knowledge_base" / "ceo_learnings.md",
+    seed_from=ROOT / "data" / "knowledge_base" / "ceo_learnings.md",
+)
 
 
 def _ceo_learnings_block() -> str:
