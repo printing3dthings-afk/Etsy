@@ -4342,3 +4342,21 @@ obvious, and switched to an alternate theme (Ocean Teal) to confirm the 7 untouc
 themes still render correctly with the new structural tokens layered on top (fonts/
 radius/elevation are global on `:root`, only colors are per-theme). All 5 test suites
 green post-change (128 tests + smoke). `_BUILD_ID` bumped v132 -> v133.
+
+## 2026-07-09 — Studio Warm visual upgrade never reached production (branch never merged)
+Scott sent a phone screenshot of the live Railway deployment right after I'd reported
+the "Studio Warm" visual upgrade (previous entry) as shipped -- it still showed the old
+cyan/teal theme. Root cause: the commit only existed on the feature branch
+`claude/etsy-automation-agents-WFAPU`; Railway's GitHub integration deploys on push to
+the repo's actual default branch (`claude/etsy-agent-hub-9nnCM`, confirmed via the
+same pattern as the 2026-07-08 "PR #3" entry above), which never received it. I had
+verified the change locally and reported it complete without confirming it reached
+the URL Scott actually uses -- that gap is now closed by policy: infra/UI changes
+aren't "done" until checked against the live deploy, not just pushed to a branch.
+
+**Fix:** opened and merged PR #4 (`claude/etsy-automation-agents-WFAPU` ->
+`claude/etsy-agent-hub-9nnCM`), clean merge, no conflicts. Confirmed live within
+~2 minutes via `curl https://etsy-production-b2f1.up.railway.app/health` showing
+`"build":"b4d0e2c-v133"` (previously v132) and `/static/vendor/fonts/Fraunces-600.woff2`
+returning 200 (that file didn't exist before this change, so its presence is direct
+proof the new build is serving, not just the health string).
