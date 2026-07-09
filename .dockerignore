@@ -3,16 +3,37 @@
 # which causes Railway builds to time out or take 10+ minutes.
 
 # data/ is excluded child-by-child (the `data/*` glob form, not a single bare
-# `data/` rule) so the negation below can re-include data/knowledge_base/ —
+# `data/` rule) so the negations below can re-include specific small files —
 # Docker can't un-exclude a path whose parent was excluded via a bare `data/`
 # rule. Found 2026-07-09: ops_runbook.md/ceo_learnings.md and every other
 # knowledge_base reference doc never existed inside the container at all (on
 # top of being ephemeral before a Volume existed) — this exclusion swallowed
 # them outright. knowledge_base/ is ~700KB, negligible next to the ~4GB it's
 # carved out of (digital_products/, backups/, and the many per-product dirs).
+#
+# Found 2026-07-09 (same day, second incident): the listing quality-gate JSON
+# configs below were ALSO swallowed by this same blanket rule -- confirmed the
+# hard way when tools/listing_compliance_sweep.py, triggered for the first
+# time as a server-side workflow, returned FAIL for all 140/140 live listings
+# (manifest.get(listing_id) was always None -> every listing looked
+# "unmapped" -> fail-closed fired for the whole shop). The bad run's 140
+# staged deactivate_listing actions were rejected and its 140 bogus todos
+# deleted before Scott ever saw them, and nothing was actually deactivated
+# (that needs a second, separate approval this code never got to). Same root
+# cause almost certainly explains why `_quality_audit_loop` (main.py) and
+# `_calendar_tasks_loop`'s seasonal-keyword checks, both of which read these
+# same files, may have been running against empty config since whenever this
+# `data/*` rule was first introduced -- not just introduced this session.
+# All five files together are <135KB, negligible.
 data/*
 !data/knowledge_base
 !data/registered_commands.json
+!data/listing_manifest.json
+!data/listing_rules.json
+!data/listing_approvals.json
+!data/product_art_registry.json
+!data/dp_listing_map.json
+!data/product_catalog.json
 mobile_app/
 .git/
 

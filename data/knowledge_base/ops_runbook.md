@@ -4937,3 +4937,35 @@ that calls `db.enqueue_action`/`db.add_todo` and is meant to affect the live pro
 be triggered to run ON the server (via `_EXEC_COMMANDS`/`run_script`), never executed
 directly from a local/dev environment, even when it also makes real live API calls that
 make its other output look "live."
+
+**Second incident, same session, more serious: `data/listing_manifest.json` and 5 sibling
+JSON configs were never in the Docker image at all.** After fixing the above and
+triggering `listing_compliance_sweep` server-side for real, it returned **FAIL for all
+140/140 active listings** -- immediately recognized as implausible (the dev-sandbox dry
+run minutes earlier had shown 81 PASS / 24 WARN / 35 FAIL against the same live shop) and
+investigated before trusting the result. Root cause: `.dockerignore`'s `data/*` blanket
+exclusion (same rule fixed for `knowledge_base/` above) also swallowed
+`listing_manifest.json`, `listing_rules.json`, `listing_approvals.json`,
+`product_art_registry.json`, `dp_listing_map.json`, and `product_catalog.json` -- so
+`manifest.get(listing_id)` returned `None` for every single listing, which
+`listing_compliance_sweep.py`'s fail-closed-on-unmapped logic (correctly, by design)
+turned into a FAIL for the entire shop. The bad run staged ~140 `deactivate_listing`
+actions and ~140 linked todos in the live Action Center. **Caught before Scott ever saw
+them**: all ~140 pending actions were rejected via `/api/queue/{id}/reject` and all ~140
+bogus todos deleted within minutes of the bad run finishing, confirmed back to a clean 0
+pending / 10 normal todos. **Nothing was ever actually deactivated** -- `deactivate_listing`
+requires a second, separate approval per listing that this incident never reached.
+Fixed by adding the 6 files above to `.dockerignore`'s allowlist (all <135KB combined,
+negligible next to the ~4GB the blanket rule protects against). **This same root cause
+almost certainly means `_quality_audit_loop` (main.py) and the seasonal-keyword checks in
+`_calendar_tasks_loop`, both of which read these same files, have been running against an
+empty/missing manifest in production for some unknown period before this session** -- not
+a new regression, a pre-existing gap this work happened to surface. Re-ran the sweep a
+third time after the fix deployed; results below are from that clean run.
+**Lesson:** when a script that reads `data/*.json` config runs successfully against a real
+live account in a local/dev environment, that does NOT prove the same files exist in the
+deployed container -- `.dockerignore` and the dev environment are two independently-defined
+file sets that silently drift apart. Any FAIL-rate that looks implausible (100% failure,
+0% failure, or a sudden shift from a very recent successful run under the same code) is
+worth a second's pause to check "does the data even exist here" before trusting it enough
+to stage real actions.
