@@ -4248,3 +4248,36 @@ root only, so `desktop/build/`'s committed icon assets are unaffected) added alo
 the existing unanchored `dist/` entry, since `tools/desktop/build_backend.py`'s
 PyInstaller workpath is ~92MB of build artifacts that should never be committed.
 `_BUILD_ID` bumped to `b4d0e2c-v132`.
+
+---
+
+### 2026-07-09 — Merged desktop-app branch onto the repo's actual default branch
+**Symptom:** `.github/workflows/build-desktop.yml` uses `workflow_dispatch`, which
+GitHub only allows triggering via the API if the workflow file exists on the
+repository's *default* branch. That default branch is `claude/etsy-agent-hub-9nnCM`
+(confirmed via `git remote show origin`'s "HEAD branch" and via the existing CI
+workflow's `html_url`), not `main` and not the feature branch
+(`claude/etsy-automation-agents-WFAPU`) the desktop-app work landed on. PR #3 (feature
+-> default branch) already existed but `mcp__github__merge_pull_request` failed with
+"405 Pull Request has merge conflicts."
+**Root cause:** The default branch had exactly one commit the feature branch didn't
+(`6bd51a8`, a Railway bot auto-fix from June 12 touching `railway.toml` and
+`web/app.py`). `web/app.py` was deleted on the feature branch earlier this session as
+confirmed-dead code (archived via `tools/trash.py`, entry `20260708-031` -- it was a
+parallel, never-imported agent framework, superseded by `tools/api_server/main.py`
+since 2026-06-22). Modify-vs-delete on `web/app.py` plus an add/add conflict on
+`railway.toml` (feature branch's Dockerfile-based config vs. the bot's stale
+`startCommand = "python web/app.py"`) blocked the automatic merge.
+**Fix:** Resolved locally via `git merge origin/claude/etsy-agent-hub-9nnCM`: kept
+`web/app.py` deleted (confirmed still dead -- the live `Dockerfile` already `CMD`s
+`python tools/api_server/main.py`, not `web/app.py`); kept `railway.toml` as the
+feature branch's Dockerfile+healthcheck version (the bot's `startCommand` pointed at
+the now-deleted file and would have broken deploys); reverted an unwanted side-effect
+where git's rename-detection auto-merged the bot's env-var diff into the **archived**
+copy of `web/app.py` in `data/trash/files/20260708-031__app.py` -- restored that file
+to its original byte-exact archived state, since the whole point of the trash vault is
+an unaltered historical snapshot at time of deletion, not a living file. All 5 test
+suites re-verified green post-merge (128 tests), pushed, then PR #3 merged cleanly.
+Immediately triggered `build-desktop.yml` via `workflow_dispatch` against the now-
+current default branch (run id `28985218992`) to prove the Windows/Mac matrix actually
+produces installer artifacts now that it's reachable.
