@@ -4969,3 +4969,39 @@ file sets that silently drift apart. Any FAIL-rate that looks implausible (100% 
 0% failure, or a sudden shift from a very recent successful run under the same code) is
 worth a second's pause to check "does the data even exist here" before trusting it enough
 to stage real actions.
+
+### 2026-07-09 — Deactivated-listings "Ask Frank to Fix" flow + Settings API Costs card
+
+**Deactivated tab + Ask Frank to Fix (Listings screen):** Added a third state tab
+(`loadListings('inactive', ...)` -- the backend `/api/listings?state=inactive` already
+existed, just had no UI tab). The listing detail popup for an inactive listing now has a
+"🔧 Ask Frank to Fix" button opening an inline panel (same visual pattern as the existing
+reject-with-reason panel) with an optional instructions textarea. Submitting calls new
+`POST /api/listings/{id}/request-fix`, which: (1) runs a single-listing quality-gate check
+via `listing_integrity_check.audit_listing()` if the listing is manifest-mapped, to
+diagnose what's actually wrong; (2) reuses the existing `_autofix_title_core`/
+`_autofix_tags_core` helpers (same ones `autofix_draft` already uses) to stage a corrected
+title/tags when the issue is title/tag-class; (3) always stages a `publish_listing`
+(reactivation) action too, but if the diagnosis found something outside title/tags (e.g.
+photo count -- not auto-fixable by a text rewrite), the republish action's own summary is
+prefixed with an explicit "NOT fully fixed" warning and a todo is added, so Scott can't
+blindly approve a reactivation of a still-broken listing. Nothing is claimed fixed that
+wasn't actually fixed (CLAUDE.md's CARDINAL CHECK, applied to Frank's own dashboard).
+
+**Settings -> API Costs card:** New `GET /api/system/costs` + `POST
+/api/system/costs/budget-caps`. Railway is live today -- `_railway_cost_snapshot()` calls
+Railway's GraphQL `estimatedUsage` query (confirmed via manual introspection: there is no
+direct dollar-cost field in their schema, only raw resource metrics in GB/GB-hours) and
+converts to an estimated $ using Railway's published usage-based rate card, with a link to
+the real Railway billing dashboard as the authoritative source. Anthropic, OpenAI, and
+Gemini are honestly reported as `available: false` with the exact setup step needed --
+Anthropic and OpenAI both require separate Admin-scoped API keys (not the regular keys
+already in `.env`), and Gemini needs Google Cloud Billing access (a service account +
+Billing Account ID, a bigger lift than a single key). None of the three live-pull code
+paths were written since there's no way to test them without real credentials -- writing
+untested speculative code for an unverifiable path was avoided on purpose. Budget caps
+(saved via `db.set_setting`) are checked against whatever live cost data exists in
+`GET /api/alerts`, firing a warning at 80% and critical at 100% -- silently skipped for
+services with no live number yet, so a cap on Anthropic/OpenAI/Gemini won't fire a
+meaningless alert until those are wired up in a follow-up session. Anthropic Admin key /
+OpenAI Admin key / Gemini Cloud Billing setup added to Scott's todo list as the next step.

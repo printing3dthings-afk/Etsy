@@ -390,6 +390,66 @@ def test_queue_approve_already_executed_action_returns_409():
         server._dispatch_to_relay = original_dispatch
 
 
+# ── API Costs (Settings -> API Costs card, 2026-07-09) ──────────────────────────
+def test_api_costs_reports_all_four_services_honestly():
+    # No RAILWAY_PROJECT_ID in this test env, so Railway itself should come back
+    # unavailable too -- proves the endpoint never fabricates a number for a
+    # service it can't actually reach, matching the CARDINAL CHECK ethos applied
+    # to Frank's own dashboard, not just customer-facing listings.
+    c, _ = _login(_TEST_USER, _TEST_PASS)
+    resp = c.get("/api/system/costs")
+    check(resp.status_code == 200, f"expected 200, got {resp.status_code}")
+    body = resp.json()
+    services = body.get("services", {})
+    for svc in ("railway", "anthropic", "openai", "gemini"):
+        check(svc in services, f"expected '{svc}' in services, got {list(services.keys())}")
+        check("available" in services[svc], f"{svc} entry should report availability, got {services[svc]}")
+        if not services[svc]["available"]:
+            check(bool(services[svc].get("reason")), f"{svc} unavailable but has no reason: {services[svc]}")
+    check("budget_caps" in body, f"expected budget_caps in response, got {body}")
+
+
+def test_api_costs_requires_auth():
+    c = TestClient(server.app, base_url="https://testserver")
+    resp = c.get("/api/system/costs")
+    check(resp.status_code == 401, f"unauthenticated /api/system/costs should 401, got {resp.status_code}")
+
+
+def test_budget_caps_save_and_reflect_in_costs():
+    c, _ = _login(_TEST_USER, _TEST_PASS)
+    resp = c.post("/api/system/costs/budget-caps", json={"railway": 25, "anthropic": None})
+    check(resp.status_code == 200, f"expected 200, got {resp.status_code}: {resp.text}")
+    saved = resp.json().get("saved", {})
+    check(saved.get("railway") == 25.0, f"expected railway cap 25.0, got {saved}")
+    check(saved.get("anthropic") is None, f"expected anthropic cap cleared, got {saved}")
+
+    costs = c.get("/api/system/costs").json()
+    check(costs["budget_caps"].get("railway") == 25.0,
+          f"saved cap should be reflected on next GET, got {costs['budget_caps']}")
+
+
+def test_budget_caps_rejects_non_numeric_value():
+    c, _ = _login(_TEST_USER, _TEST_PASS)
+    resp = c.post("/api/system/costs/budget-caps", json={"railway": "not-a-number"})
+    check(resp.status_code == 400, f"non-numeric cap should 400, got {resp.status_code}")
+
+
+def test_budget_caps_rejects_unknown_service_silently_ignored():
+    # Unknown keys are dropped, not errored -- matches the tolerant body-parsing
+    # style already used elsewhere (e.g. post_todo's added_by fallback).
+    c, _ = _login(_TEST_USER, _TEST_PASS)
+    resp = c.post("/api/system/costs/budget-caps", json={"not_a_real_service": 5})
+    check(resp.status_code == 200, f"expected 200, got {resp.status_code}")
+    check(resp.json().get("saved") == {}, f"unknown service should not be saved, got {resp.json()}")
+
+
+# ── Ask Frank to Fix (Deactivated listings tab, 2026-07-09) ─────────────────────
+def test_request_listing_fix_requires_auth():
+    c = TestClient(server.app, base_url="https://testserver")
+    resp = c.post("/api/listings/123456789/request-fix", json={"instructions": ""})
+    check(resp.status_code == 401, f"unauthenticated request-fix should 401, got {resp.status_code}")
+
+
 # ── health endpoint (unauthenticated by design -- external watchdog hits this) ──
 def test_health_endpoint_is_unauthenticated_and_reports_persistence():
     c = TestClient(server.app, base_url="https://testserver")

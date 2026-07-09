@@ -1097,6 +1097,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-toggle-row" style="margin-top:10px">
         <button class="hub-toggle-btn active" onclick="loadListings('active',this)">Active</button>
         <button class="hub-toggle-btn" onclick="loadListings('draft',this)">Drafts</button>
+        <button class="hub-toggle-btn" onclick="loadListings('inactive',this)">Deactivated</button>
       </div>
       <div id="listings-content" class="hub-scroll"><div class="hub-spinner"></div></div>
     </div>
@@ -1232,6 +1233,15 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
           <button class="act-btn primary" onclick="saveEngines()">Save engines</button>
           <div id="engines-status" style="font-size:11px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">API Costs <span class="src">/api/system/costs — live where available, budget caps stored per service</span></div>
+      <div class="hub-card">
+        <div id="api-costs-list"><div class="hub-spinner"></div></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+          <button class="act-btn primary" onclick="saveBudgetCaps()">Save budget caps</button>
+          <div id="api-costs-status" style="font-size:11px;color:var(--muted)"></div>
         </div>
       </div>
 
@@ -2131,7 +2141,7 @@ const _SCREEN_LOADERS = {
   files: [loadFiles],
   connections: [loadConnections],
   security: [renderSecurityPosture],
-  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings],
+  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadApiCosts],
   studio: [loadStudioVideos],
 };
 const _GLOBAL_LOADERS = [
@@ -2425,6 +2435,69 @@ function saveEngines(){
     video_engine: document.getElementById('setting-video-engine').value,
     image_engine: document.getElementById('setting-image-engine').value,
   }, 'engines-status', 'AI engines updated');
+}
+// ── API Costs — /api/system/costs (live where available) + per-service budget caps ──
+let _apiCostsData = null;
+async function loadApiCosts(){
+  const el = document.getElementById('api-costs-list');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/system/costs');
+    const d = await r.json();
+    _apiCostsData = d;
+    renderApiCosts(d);
+  }catch(e){
+    el.innerHTML = '<div class="hub-empty">Could not load cost data: '+escHtml(e.message||e)+'</div>';
+  }
+}
+function renderApiCosts(d){
+  const el = document.getElementById('api-costs-list');
+  if(!el) return;
+  const order = ['railway','anthropic','openai','gemini'];
+  el.innerHTML = order.map(svc => {
+    const info = (d.services||{})[svc] || {label: svc, available: false, reason: 'unknown'};
+    const cap = (d.budget_caps||{})[svc];
+    const spendLine = info.available
+      ? `<b style="color:var(--gold)">$${(+info.estimated_cost_usd||0).toFixed(2)}</b> est. this cycle`
+      : `<span style="color:var(--muted)">Not connected — ${escHtml(info.reason||'not configured')}</span>`;
+    const dashLink = info.dashboard_url
+      ? ` · <a href="${escHtml(info.dashboard_url)}" target="_blank" style="color:var(--cyan2);text-decoration:none">dashboard ↗</a>`
+      : '';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${escHtml(info.label||svc)}</div>
+        <div style="font-size:11px;margin-top:2px">${spendLine}${dashLink}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:11px;color:var(--muted)">Cap $</span>
+        <input type="number" min="0" step="1" id="budget-cap-${svc}" class="search" style="width:70px;padding:6px" value="${cap!=null?cap:''}" placeholder="none">
+      </div>
+    </div>`;
+  }).join('');
+}
+async function saveBudgetCaps(){
+  const order = ['railway','anthropic','openai','gemini'];
+  const body = {};
+  order.forEach(svc => {
+    const inp = document.getElementById('budget-cap-'+svc);
+    body[svc] = inp && inp.value !== '' ? inp.value : null;
+  });
+  const statusEl = document.getElementById('api-costs-status');
+  statusEl.textContent = 'Saving…';
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/system/costs/budget-caps', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    }, 15000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    statusEl.textContent = 'Budget caps saved ✓';
+    statusEl.style.color = 'var(--green)';
+    loadAlerts();
+  }catch(e){
+    statusEl.textContent = 'Could not save: '+(e.message||e);
+    statusEl.style.color = 'var(--red)';
+  }
 }
 // ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
 // Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
@@ -4176,8 +4249,10 @@ async function toggleListingDetail(listingId) {
     `<div id="hub-files-${listingId}"><div class="hub-drow"><span>Digital files</span><b>loading…</b></div></div>`+
     `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
     ((l.state==='active'||l.state==='inactive') ? `<button id="hub-state-btn-${listingId}" class="hub-act-btn secondary" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
+    (l.state==='inactive' ? `<button class="hub-act-btn secondary" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();openFixListingModal(${listingId})">🔧 Ask %%AGENT_SHORT%% to Fix</button>` : '')+
     `<a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a>`+
-    `</div>`;
+    `</div>`+
+    (l.state==='inactive' ? `<div id="fix-modal-${listingId}" style="display:none"></div>` : '');
   try {
     const r = await authGet('/api/listings/'+listingId+'/files', 15000);
     const slot = document.getElementById('hub-files-'+listingId);
@@ -4212,6 +4287,58 @@ async function toggleListingState(listingId, btn) {
   } catch(e) {
     btn.disabled = false; btn.textContent = orig;
     showToast('Could not change listing state: ' + (e.message||e), 'err', 6000);
+  }
+}
+function openFixListingModal(listingId) {
+  const panel = document.getElementById('fix-modal-'+listingId);
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  document.querySelectorAll('[id^="fix-modal-"]').forEach(el => el.style.display = 'none');
+  if (isOpen) return;
+  panel.innerHTML = `<div style="padding:10px 0;border-top:1px solid var(--border);margin-top:8px">
+    <div class="hub-listing-meta" style="margin-bottom:6px">
+      %%AGENT_SHORT%% will check what's wrong and fix the title/tags automatically if that's the issue.
+      For missing photos or attached-file problems, he'll leave you a todo instead of guessing —
+      either way, nothing goes live until you approve it in the Action Center.
+    </div>
+    <textarea id="fix-instructions-${listingId}" rows="2" placeholder="Optional — anything specific you want %%AGENT_SHORT%% to focus on"
+      aria-label="Instructions for %%AGENT_SHORT%%"
+      style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:8px;font-size:13px;font-family:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="hub-act-btn primary" onclick="event.stopPropagation();submitFixListing(${listingId})">Send to %%AGENT_SHORT%%</button>
+      <button class="hub-act-btn secondary" onclick="event.stopPropagation();document.getElementById('fix-modal-${listingId}').style.display='none'">Cancel</button>
+    </div>
+    <div id="fix-result-${listingId}" style="margin-top:8px;font-size:12px"></div>
+  </div>`;
+  panel.style.display = 'block';
+}
+async function submitFixListing(listingId) {
+  const ta = document.getElementById('fix-instructions-'+listingId);
+  const instructions = (ta && ta.value || '').trim();
+  const resultEl = document.getElementById('fix-result-'+listingId);
+  resultEl.textContent = '⏳ %%AGENT_SHORT%% is working on it…';
+  resultEl.style.color = 'var(--muted)';
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/listings/'+listingId+'/request-fix', {
+      method: 'POST',
+      headers: {Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({instructions})
+    }, 60000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    let msg = `✓ Staged ${d.staged_count} item(s) in the Action Center for your approval (fixes + a republish).`;
+    if (d.unfixable_issues && d.unfixable_issues.length) {
+      msg += ` ⚠️ Also found something that isn't auto-fixable: ${escHtml(d.unfixable_issues.join('; '))} — added to your todo list. Don't approve the republish until that's handled.`;
+    }
+    if (d.errors && d.errors.length) {
+      msg += ` (${escHtml(d.errors.join('; '))})`;
+    }
+    resultEl.innerHTML = msg;
+    resultEl.style.color = 'var(--green)';
+    loadActions();
+  } catch(e) {
+    resultEl.textContent = 'Could not reach %%AGENT_SHORT%%: ' + (e.message||e);
+    resultEl.style.color = 'var(--red)';
   }
 }
 

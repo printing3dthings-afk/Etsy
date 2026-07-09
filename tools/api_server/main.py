@@ -471,7 +471,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v139"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v140"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5790,6 +5790,107 @@ async def autofix_draft(listing_id: int, _token: str = Depends(_rate_limited_aut
     }
 
 
+# Checks that _autofix_title_core/_autofix_tags_core can actually resolve by
+# regenerating the field. Anything else (photo count, missing files, quantity-claim
+# mismatch, etc.) needs a human, not a title/tag rewrite -- surfaced as a todo
+# instead of a false "fixed" claim (CLAUDE.md's CARDINAL CHECK: never lie to the
+# customer, which extends to never lying to Scott about what got fixed).
+_TITLE_TAG_FIXABLE_CHECKS = {"title_length", "tag_count", "tag_length"}
+
+
+@app.post("/api/listings/{listing_id}/request-fix")
+async def request_listing_fix(listing_id: int, body: dict | None = None, _token: str = Depends(_rate_limited_auth)):
+    """'Ask Frank to Fix' — triggered from the Deactivated tab's listing detail
+    popup. Diagnoses the listing with the same single-listing quality-gate engine
+    listing_compliance_sweep.py runs shop-wide (if it's manifest-mapped), folds
+    that together with anything Scott typed in the popup, and reuses the existing
+    autofix_draft() building blocks to stage a corrected title/tags. Always also
+    stages a publish_listing (reactivation) action so approving the fix(es) is
+    immediately followed by a one-tap republish -- but if the diagnosis found an
+    issue outside title/tags (e.g. photo count), that gets called out in the
+    republish action's own summary so Scott doesn't blindly reactivate something
+    still broken, plus a todo is added either way."""
+    instructions = ((body or {}).get("instructions") or "").strip()
+    listing = await _fetch_listing_for_autofix(listing_id)
+
+    diagnosis = ""
+    unfixable_issues: list[dict] = []
+    try:
+        import listing_integrity_check as lic
+
+        manifest = await asyncio.to_thread(lic._load_json, lic.MANIFEST_PATH)
+        entry = manifest.get(str(listing_id))
+        if entry:
+            rules = await asyncio.to_thread(lic._load_json, lic.RULES_PATH)
+            approvals = await asyncio.to_thread(lic._load_json, lic.APPROVALS_PATH)
+            api = EtsyAPIClient()
+            result = await asyncio.wait_for(
+                asyncio.to_thread(lic.audit_listing, api, str(listing_id), entry, rules, approvals, {}, False),
+                timeout=20.0,
+            )
+            issues = result.get("issues", [])
+            fixable_details = [i["detail"] for i in issues if i["check"] in _TITLE_TAG_FIXABLE_CHECKS]
+            unfixable_issues = [i for i in issues if i["check"] not in _TITLE_TAG_FIXABLE_CHECKS and i["severity"] == "FAIL"]
+            if fixable_details:
+                diagnosis = "Quality-gate found: " + "; ".join(fixable_details)
+    except Exception as exc:
+        print(f"[request-fix] diagnosis lookup failed for {listing_id}: {exc}", flush=True)
+
+    reason = " ".join(p for p in (diagnosis, instructions) if p).strip()
+    if not reason:
+        reason = "This listing was deactivated. Review the title and tags for anything that could be wrong and improve them."
+
+    staged: list[dict] = []
+    errors: list[str] = []
+
+    tag_result = await _autofix_tags_core(listing_id, listing=listing, reason=reason)
+    if "error" in tag_result:
+        errors.append(f"tags: {tag_result['error']}")
+    else:
+        staged.append({"type": "update_tags", "action_id": tag_result["action_id"]})
+
+    title_result = await _autofix_title_core(listing_id, listing=listing, reason=reason)
+    if "error" in title_result:
+        errors.append(f"title: {title_result['error']}")
+    else:
+        staged.append({
+            "type": "update_title",
+            "action_id": title_result["action_id"],
+            "title": title_result["title"],
+        })
+
+    title_short = (listing.get("title") or f"Listing {listing_id}")[:50]
+    republish_summary = f"Republish listing {listing_id} after Frank's fix ({title_short})"
+    if unfixable_issues:
+        unresolved = "; ".join(i["detail"] for i in unfixable_issues)
+        republish_summary += f" — ⚠️ NOT fully fixed, still needs: {unresolved}"
+    republish_id = await asyncio.to_thread(
+        db.enqueue_action,
+        "publish_listing",
+        republish_summary,
+        {"listing_id": listing_id, "_state_at_staging": listing.get("state")},
+    )
+    staged.append({"type": "publish_listing", "action_id": republish_id})
+
+    todo_id = None
+    if unfixable_issues:
+        detail_text = "; ".join(f"{i['check']}: {i['detail']}" for i in unfixable_issues)
+        todo_id = await asyncio.to_thread(
+            db.add_todo,
+            f"Listing {listing_id} needs manual fix before republishing (not auto-fixable): {detail_text}",
+            "frank",
+        )
+
+    return {
+        "staged": staged,
+        "staged_count": len(staged),
+        "errors": errors,
+        "unfixable_issues": [i["detail"] for i in unfixable_issues],
+        "todo_id": todo_id,
+        "listing_id": listing_id,
+    }
+
+
 @app.post("/api/snapshot")
 async def post_snapshot(_token: str = Depends(_auth_session_or_bearer)):
     """Force-capture a snapshot now (useful for testing / on-demand recording)."""
@@ -7441,9 +7542,185 @@ async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
                 "detail": h.get("detail") or "",
             })
 
+    # API cost budget caps (Settings -> API Costs). Only checked for services
+    # with a live cost figure available (Railway today) -- a cap saved for a
+    # service Frank can't yet pull real spend for (Anthropic/OpenAI/Gemini,
+    # pending their Admin keys) has nothing to compare against, so it's silently
+    # skipped here rather than firing a false/meaningless alert.
+    try:
+        costs = await asyncio.to_thread(_all_service_costs)
+        for svc, info in costs["services"].items():
+            if not info.get("available"):
+                continue
+            cap = costs["budget_caps"].get(svc)
+            if cap is None:
+                continue
+            spend = info.get("estimated_cost_usd")
+            if spend is None:
+                continue
+            pct = (spend / cap * 100) if cap > 0 else 0
+            if pct >= 100:
+                alerts.append({
+                    "severity": "critical",
+                    "source": "budget_cap",
+                    "title": f"{info['label']} spend is over its ${cap:.2f}/mo cap",
+                    "detail": f"Estimated ${spend:.2f} this cycle ({pct:.0f}% of cap).",
+                })
+            elif pct >= 80:
+                alerts.append({
+                    "severity": "warning",
+                    "source": "budget_cap",
+                    "title": f"{info['label']} spend is nearing its ${cap:.2f}/mo cap",
+                    "detail": f"Estimated ${spend:.2f} this cycle ({pct:.0f}% of cap).",
+                })
+    except Exception as exc:
+        print(f"[alerts] budget-cap check failed: {exc}", flush=True)
+
     severity_order = {"critical": 0, "warning": 1, "info": 2}
     alerts.sort(key=lambda a: severity_order.get(a["severity"], 3))
     return {"alerts": alerts, "count": len(alerts)}
+
+
+# ── API cost tracking (Settings -> API Costs) ────────────────────────────────
+
+_RAILWAY_GRAPHQL_URL = "https://backboard.railway.app/graphql/v2"
+
+
+def _railway_graphql(query: str, variables: dict) -> dict:
+    """Thin synchronous POST helper for Railway's GraphQL API -- a completely
+    different provider/auth scheme (a personal account token) from etsy_api.py's
+    OAuth client, so it gets its own tiny helper rather than being forced into
+    that one. Raises on any non-2xx or a GraphQL 'errors' array so callers get a
+    single clear failure path instead of silently returning partial data."""
+    import requests
+    token = os.getenv("RAILWAY_API_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("RAILWAY_API_TOKEN not configured")
+    resp = requests.post(
+        _RAILWAY_GRAPHQL_URL,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        json={"query": query, "variables": variables},
+        timeout=15,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    if data.get("errors"):
+        raise RuntimeError("; ".join(e.get("message", "unknown") for e in data["errors"]))
+    return data["data"]
+
+
+def _railway_cost_snapshot() -> dict:
+    """Best-effort Railway cost/usage snapshot for the current billing cycle.
+    Railway's estimatedUsage query returns raw resource metrics (GB-hours,
+    network GB) per project, not a single dollar figure -- confirmed by hand
+    2026-07-09 (there is no estimatedCost/invoice-style field in their schema).
+    Converts using Railway's published usage-based-plan rate card so Scott sees
+    an actual number, but this is an ESTIMATE -- the linked Railway dashboard is
+    always the authoritative source since these published rates can drift."""
+    project_id = os.getenv("RAILWAY_PROJECT_ID", "").strip()
+    if not project_id:
+        return {"available": False, "reason": "RAILWAY_PROJECT_ID not present in this environment"}
+    query = """
+    query($p: String!) {
+      estimatedUsage(projectId: $p, measurements: [MEMORY_USAGE_GB, DISK_USAGE_GB, NETWORK_TX_GB, NETWORK_RX_GB, CPU_USAGE_2]) {
+        estimatedValue
+        measurement
+      }
+    }
+    """
+    try:
+        data = _railway_graphql(query, {"p": project_id})
+    except Exception as exc:
+        return {"available": False, "reason": str(exc)[:200]}
+
+    # Railway's published usage-based-plan rates (Pro tier list price, per
+    # railway.app/pricing as of 2026-07). Verify against the dashboard if this
+    # ever looks off -- Railway can change these without notice.
+    _HOURS_PER_MONTH = 730
+    rate_per_unit = {
+        "MEMORY_USAGE_GB": 10.0 / _HOURS_PER_MONTH,   # $10/GB-month -> $/GB-hour
+        "CPU_USAGE_2": 20.0 / _HOURS_PER_MONTH,        # $20/vCPU-month -> $/vCPU-hour
+        "DISK_USAGE_GB": 0.25 / _HOURS_PER_MONTH,      # $0.25/GB-month volume storage
+        "NETWORK_TX_GB": 0.05,                         # $0.05/GB egress
+        "NETWORK_RX_GB": 0.0,                          # ingress is free
+    }
+    by_measurement = {u["measurement"]: u["estimatedValue"] for u in data.get("estimatedUsage", [])}
+    estimated_cost = sum(by_measurement.get(k, 0) * rate for k, rate in rate_per_unit.items())
+    return {
+        "available": True,
+        "estimated_cost_usd": round(estimated_cost, 2),
+        "raw_usage": by_measurement,
+        "note": (
+            "Estimated from raw resource usage x Railway's published usage-based rate "
+            "card -- Railway's API has no direct dollar-cost field. Verify against the "
+            "Railway dashboard for the authoritative number."
+        ),
+        "dashboard_url": "https://railway.app/dashboard",
+    }
+
+
+def _all_service_costs() -> dict:
+    """Synchronous core shared by GET /api/system/costs and the alerts budget-cap
+    check above (so both read the exact same numbers in the same request cycle)."""
+    services = {"railway": {"label": "Railway (hosting)", **_railway_cost_snapshot()}}
+
+    # Anthropic/OpenAI need Admin-scoped API keys (separate from the regular
+    # ANTHROPIC_API_KEY/OPENAI_API_KEY already in use) to pull real spend; Gemini
+    # needs Google Cloud Billing access (a service account + Billing Account ID,
+    # not just a key). None of the three are wired up yet -- reported honestly
+    # as unavailable with the exact setup step, never guessed at or faked.
+    services["anthropic"] = {
+        "label": "Anthropic (Claude)",
+        "available": False,
+        "reason": "Needs an Admin API key (console.anthropic.com → Settings → Admin keys) -- not yet wired up.",
+    }
+    services["openai"] = {
+        "label": "OpenAI (images/voice)",
+        "available": False,
+        "reason": "Needs an Organization Admin key with usage scope (platform.openai.com → Settings → Organization → Admin keys) -- not yet wired up.",
+    }
+    services["gemini"] = {
+        "label": "Gemini (Google)",
+        "available": False,
+        "reason": "Needs Google Cloud Billing access (service account with billing.viewer role + Billing Account ID) -- bigger setup than a single API key, not yet wired up.",
+    }
+
+    budget_caps = {}
+    for svc in services:
+        raw = db.get_setting(f"budget_cap_{svc}")
+        budget_caps[svc] = float(raw) if raw else None
+
+    return {"services": services, "budget_caps": budget_caps}
+
+
+@app.get("/api/system/costs")
+async def get_system_costs(_token: str = Depends(_auth_session_or_bearer)):
+    """Live per-service API cost snapshot for the Settings 'API Costs' card."""
+    return await asyncio.to_thread(_all_service_costs)
+
+
+@app.post("/api/system/costs/budget-caps")
+async def set_budget_caps(body: dict, _token: str = Depends(_auth_session_or_bearer)):
+    """Save per-service monthly $ budget caps -- checked by GET /api/alerts so
+    crossing 80%/100% shows up in the alert bell for services with live cost data."""
+    allowed = {"railway", "anthropic", "openai", "gemini"}
+    saved = {}
+    for svc, val in (body or {}).items():
+        if svc not in allowed:
+            continue
+        if val in (None, ""):
+            await asyncio.to_thread(db.set_setting, f"budget_cap_{svc}", None)
+            saved[svc] = None
+            continue
+        try:
+            f = float(val)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail=f"budget cap for {svc} must be a number")
+        if f < 0:
+            raise HTTPException(status_code=400, detail=f"budget cap for {svc} must be >= 0")
+        await asyncio.to_thread(db.set_setting, f"budget_cap_{svc}", str(f))
+        saved[svc] = f
+    return {"saved": saved}
 
 
 @app.get("/api/tools/list")
