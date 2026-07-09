@@ -305,6 +305,22 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "long_running": False,
         "requires_approval": True,
     },
+    "listing_compliance_sweep": {
+        "script": "tools/listing_compliance_sweep.py",
+        "description": (
+            "Full-shop compliance sweep -- audits EVERY active Etsy listing (not just "
+            "manifest-mapped ones; unmapped listings fail closed). Stages a "
+            f"deactivate_listing action for each FAIL and a todo for {business_config.OWNER_NAME}'s "
+            "review; WARNs get a todo only. Must run in-process here (not from a dev "
+            "sandbox) so its db.enqueue_action/add_todo calls land in the real "
+            "persistent DB -- requires_approval=True since it queues real takedown "
+            "candidates, even though nothing is deactivated until a second, separate "
+            "approval on each staged action."
+        ),
+        "timeout": 400,  # measured ~211s for 140 listings against the real API; buffer for growth
+        "long_running": False,
+        "requires_approval": True,
+    },
 }
 
 # Sidecar persistence for commands registered at runtime via the register_command
@@ -455,7 +471,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v137"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v138"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""

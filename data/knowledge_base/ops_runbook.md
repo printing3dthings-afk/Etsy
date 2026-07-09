@@ -4920,3 +4920,20 @@ verification (CLAUDE.md's CARDINAL CHECK) remain uncovered by any automated chec
 was deliberately not run in this sweep (too slow for a first full-shop pass; ~131 listings
 x ~10 photos each). Should be run as its own follow-up pass, not assumed covered by this
 FAST-mode sweep.
+
+**Self-correction, same session:** the sweep above was first run from the dev sandbox
+(`python tools/listing_compliance_sweep.py` in the Claude Code container), which has no
+`/data` volume mounted -- so its `db.enqueue_action`/`db.add_todo` calls landed in an
+ephemeral local SQLite file, never the live production DB. The audit *results* were real
+(genuine live Etsy API calls, correctly reflected in the 81/24/35 counts and the saved
+report), but the 35 staged takedowns and 24 WARN todos never actually reached Scott's
+Action Center -- confirmed via `/api/queue` showing 0 pending right after a clean deploy.
+Fixed by registering `listing_compliance_sweep` in `_EXEC_COMMANDS` (`requires_approval:
+True`, same pattern as `backup_digital_products`/`backup_hub_db`) so it can be triggered
+via `POST /api/workflows/listing_compliance_sweep/run` and actually execute in-process on
+the live Railway container -- where its own `db.resolve_persistent_path()`/
+`_resolve_db_path()` calls correctly see the real `/data` volume. **Lesson:** any script
+that calls `db.enqueue_action`/`db.add_todo` and is meant to affect the live product must
+be triggered to run ON the server (via `_EXEC_COMMANDS`/`run_script`), never executed
+directly from a local/dev environment, even when it also makes real live API calls that
+make its other output look "live."
