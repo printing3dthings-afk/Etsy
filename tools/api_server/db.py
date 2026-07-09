@@ -45,6 +45,30 @@ def _resolve_db_path() -> str:
 
 DB_PATH = _resolve_db_path()
 
+
+def resolve_persistent_path(relative: str, fallback: Path, seed_from: Path | None = None) -> Path:
+    """Resolve `relative` under the persistent /data volume if one is mounted
+    and writable, else fall back to `fallback` (ephemeral, wiped on redeploy).
+    Mirrors _resolve_db_path()'s own /data detection so every subsystem agrees
+    on what counts as durable — added 2026-07-09 for the knowledge-base files
+    (ops_runbook.md, ceo_learnings.md, registered_commands.json), which were a
+    second, separate persistence gap from hub.db: they live at a repo-relative
+    path, not under /data, so attaching a Volume alone didn't fix them.
+
+    If `seed_from` is given and the resolved /data path doesn't exist yet,
+    copies its current content over once (e.g. the image's baked-in
+    ops_runbook.md history) so switching to persistent storage doesn't look
+    like the history vanished."""
+    vol = Path("/data")
+    if vol.is_dir() and os.access(vol, os.W_OK):
+        p = vol / relative
+        p.parent.mkdir(parents=True, exist_ok=True)
+        if seed_from is not None and not p.exists() and seed_from.exists():
+            p.write_text(seed_from.read_text())
+        return p
+    return fallback
+
+
 _init_lock = threading.Lock()
 _initialized = False
 

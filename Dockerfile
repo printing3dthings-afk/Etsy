@@ -4,6 +4,7 @@ WORKDIR /app
 COPY . .
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
 # Install from the canonical manifest (single source of truth) so the image can't
 # drift out of sync with the app's real dependencies — the old hand-picked list had
@@ -22,12 +23,16 @@ RUN playwright install --with-deps chromium
 ENV IMAGEIO_FFMPEG_EXE=/usr/bin/ffmpeg
 # Run as a non-root user (2026-07-08 security review — the image previously had no
 # USER directive and ran as root by default). a+rwX on /app keeps this safe for a
-# single-tenant private deployment even if a Railway Volume mount at /data ends up
-# owned by a different uid at runtime than appuser's.
+# single-tenant private deployment. A Railway Volume mount at /data is attached at
+# runtime (after this build step runs), so it can't be chowned here — entrypoint.sh
+# does that at container start instead, while still root, before dropping to
+# appuser (2026-07-09: a fresh volume attach was is_dir()=true but W_OK=false
+# under appuser without this).
 RUN useradd --create-home --shell /bin/bash appuser \
     && chown -R appuser:appuser /app \
     && chmod -R a+rwX /app \
-    && chmod -R a+rX /ms-playwright
-USER appuser
+    && chmod -R a+rX /ms-playwright \
+    && chmod +x /app/entrypoint.sh
 EXPOSE 8000
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "tools/api_server/main.py"]
