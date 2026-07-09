@@ -5005,3 +5005,29 @@ untested speculative code for an unverifiable path was avoided on purpose. Budge
 services with no live number yet, so a cap on Anthropic/OpenAI/Gemini won't fire a
 meaningless alert until those are wired up in a follow-up session. Anthropic Admin key /
 OpenAI Admin key / Gemini Cloud Billing setup added to Scott's todo list as the next step.
+
+### 2026-07-09 — "Top Up" links + fix for Railway cost card showing unavailable in prod
+
+Scott asked whether Frank could add money to the AI/hosting APIs directly. Researched all
+four providers (Anthropic Console, OpenAI Platform, Railway, Google Cloud Billing) before
+building anything: none of them expose a public API for a third-party app to charge a card
+and add funds -- that's a deliberate security/PCI boundary, web-dashboard-only on all four.
+So no "charge" endpoint was built (would have been fake). Instead, every service in
+`GET /api/system/costs` now carries a real `dashboard_url` (billing/top-up page) and the
+Settings API Costs card renders it as a "Top Up ↗" link -- one tap from a budget-cap alert
+to the place Scott can actually act. Anthropic and OpenAI both support a one-time "Auto
+Recharge" setup on their own dashboards (min $5 on OpenAI, no API trigger either) -- flagged
+in the UI via a `has_auto_recharge` field so only those two show the "set once, never runs
+dry" note; Railway/Google are postpaid (billed to card on file automatically), so no
+equivalent claim is made for them.
+
+Also found and fixed a real gap while verifying the previous entry's deploy: the live
+container had `RAILWAY_PROJECT_ID` (Railway auto-injects this) but NOT `RAILWAY_API_TOKEN`
+(a personal API token that has to be set by hand -- it is NOT one of Railway's auto-injected
+vars), so `_railway_cost_snapshot()` was silently falling through to "not configured" in
+production even though the code was otherwise correct and had already been proven working
+from local shell calls. Set via the same `variableUpsert` GraphQL mutation used to attach
+the persistence Volume earlier. Lesson: when a new env-var read is added, explicitly check
+whether Railway auto-injects it (`RAILWAY_PROJECT_ID`/`SERVICE_ID`/`ENVIRONMENT_ID` do;
+personal API tokens and anything from `.env` do not) rather than assuming local success
+means production has the same env.

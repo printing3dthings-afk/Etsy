@@ -2460,13 +2460,17 @@ function renderApiCosts(d){
     const spendLine = info.available
       ? `<b style="color:var(--gold)">$${(+info.estimated_cost_usd||0).toFixed(2)}</b> est. this cycle`
       : `<span style="color:var(--muted)">Not connected — ${escHtml(info.reason||'not configured')}</span>`;
-    const dashLink = info.dashboard_url
-      ? ` · <a href="${escHtml(info.dashboard_url)}" target="_blank" style="color:var(--cyan2);text-decoration:none">dashboard ↗</a>`
+    const topUpLink = info.dashboard_url
+      ? ` · <a href="${escHtml(info.dashboard_url)}" target="_blank" style="color:var(--cyan2);text-decoration:none;font-weight:600">Top Up ↗</a>`
+      : '';
+    const autoRechargeNote = info.has_auto_recharge
+      ? `<div style="font-size:10px;margin-top:3px;color:var(--muted)">Set Auto Recharge once here and this account never runs dry.</div>`
       : '';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">${escHtml(info.label||svc)}</div>
-        <div style="font-size:11px;margin-top:2px">${spendLine}${dashLink}</div>
+        <div style="font-size:11px;margin-top:2px">${spendLine}${topUpLink}</div>
+        ${autoRechargeNote}
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         <span style="font-size:11px;color:var(--muted)">Cap $</span>

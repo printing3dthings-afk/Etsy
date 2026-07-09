@@ -471,7 +471,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v140"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v141"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7617,9 +7617,13 @@ def _railway_cost_snapshot() -> dict:
     Converts using Railway's published usage-based-plan rate card so Scott sees
     an actual number, but this is an ESTIMATE -- the linked Railway dashboard is
     always the authoritative source since these published rates can drift."""
+    # dashboard_url is included on every branch (not just the success path) so the
+    # Settings "Top Up" link still works even when the live cost figure isn't --
+    # Scott can always get to the billing page, whether or not Frank can read it.
+    dashboard_url = "https://railway.app/account/billing"
     project_id = os.getenv("RAILWAY_PROJECT_ID", "").strip()
     if not project_id:
-        return {"available": False, "reason": "RAILWAY_PROJECT_ID not present in this environment"}
+        return {"available": False, "reason": "RAILWAY_PROJECT_ID not present in this environment", "dashboard_url": dashboard_url}
     query = """
     query($p: String!) {
       estimatedUsage(projectId: $p, measurements: [MEMORY_USAGE_GB, DISK_USAGE_GB, NETWORK_TX_GB, NETWORK_RX_GB, CPU_USAGE_2]) {
@@ -7631,7 +7635,7 @@ def _railway_cost_snapshot() -> dict:
     try:
         data = _railway_graphql(query, {"p": project_id})
     except Exception as exc:
-        return {"available": False, "reason": str(exc)[:200]}
+        return {"available": False, "reason": str(exc)[:200], "dashboard_url": dashboard_url}
 
     # Railway's published usage-based-plan rates (Pro tier list price, per
     # railway.app/pricing as of 2026-07). Verify against the dashboard if this
@@ -7655,14 +7659,22 @@ def _railway_cost_snapshot() -> dict:
             "card -- Railway's API has no direct dollar-cost field. Verify against the "
             "Railway dashboard for the authoritative number."
         ),
-        "dashboard_url": "https://railway.app/dashboard",
+        "dashboard_url": dashboard_url,
     }
 
 
+# No provider (Railway, Anthropic, OpenAI, Google Cloud Billing) exposes a public
+# API for a third-party app to charge a card / add funds -- confirmed by hand
+# 2026-07-09, this is a deliberate security/PCI boundary none of them cross for
+# external apps. So there is no "add money" endpoint here -- these dashboard_url
+# values are the real, current billing/top-up page for each provider, surfaced
+# as a one-tap link from Settings -> API Costs. Anthropic and OpenAI additionally
+# support a one-time "Auto Recharge" setup (configured on their own dashboard,
+# not triggerable by Frank) -- see has_auto_recharge below.
 def _all_service_costs() -> dict:
     """Synchronous core shared by GET /api/system/costs and the alerts budget-cap
     check above (so both read the exact same numbers in the same request cycle)."""
-    services = {"railway": {"label": "Railway (hosting)", **_railway_cost_snapshot()}}
+    services = {"railway": {"label": "Railway (hosting)", "has_auto_recharge": False, **_railway_cost_snapshot()}}
 
     # Anthropic/OpenAI need Admin-scoped API keys (separate from the regular
     # ANTHROPIC_API_KEY/OPENAI_API_KEY already in use) to pull real spend; Gemini
@@ -7673,16 +7685,22 @@ def _all_service_costs() -> dict:
         "label": "Anthropic (Claude)",
         "available": False,
         "reason": "Needs an Admin API key (console.anthropic.com → Settings → Admin keys) -- not yet wired up.",
+        "dashboard_url": "https://console.anthropic.com/settings/billing",
+        "has_auto_recharge": True,
     }
     services["openai"] = {
         "label": "OpenAI (images/voice)",
         "available": False,
         "reason": "Needs an Organization Admin key with usage scope (platform.openai.com → Settings → Organization → Admin keys) -- not yet wired up.",
+        "dashboard_url": "https://platform.openai.com/settings/organization/billing/overview",
+        "has_auto_recharge": True,
     }
     services["gemini"] = {
         "label": "Gemini (Google)",
         "available": False,
         "reason": "Needs Google Cloud Billing access (service account with billing.viewer role + Billing Account ID) -- bigger setup than a single API key, not yet wired up.",
+        "dashboard_url": "https://console.cloud.google.com/billing",
+        "has_auto_recharge": False,
     }
 
     budget_caps = {}

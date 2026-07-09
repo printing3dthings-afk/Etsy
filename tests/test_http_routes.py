@@ -406,6 +406,10 @@ def test_api_costs_reports_all_four_services_honestly():
         check("available" in services[svc], f"{svc} entry should report availability, got {services[svc]}")
         if not services[svc]["available"]:
             check(bool(services[svc].get("reason")), f"{svc} unavailable but has no reason: {services[svc]}")
+        # Every service must carry a real top-up/billing deep link -- the "Top Up"
+        # button in Settings needs somewhere to send Scott even when Frank can't
+        # read the live cost figure for that service yet.
+        check(bool(services[svc].get("dashboard_url")), f"{svc} missing dashboard_url: {services[svc]}")
     check("budget_caps" in body, f"expected budget_caps in response, got {body}")
 
 
