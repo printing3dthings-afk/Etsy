@@ -1,0 +1,10 @@
+Fraunces (by Un-Type / Alice Lee, Wei Huang, Kevin Chiu) and Manrope (by Mikhail Sharanda)
+are both licensed under the SIL Open Font License 1.1.
+
+Source: https://github.com/google/fonts (ofl/fraunces, ofl/manrope)
+Full license text: https://scripts.sil.org/OFL
+
+These files are static-weight, Latin-subset instances derived from the original variable
+font sources for smaller download size — subsetting and weight-instancing are permitted
+under the OFL. No font name was changed in a way that would require renaming under the
+OFL's Reserved Font Name clause.
