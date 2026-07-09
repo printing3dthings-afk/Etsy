@@ -189,6 +189,28 @@ def test_toggle_nonexistent_todo_returns_404():
     check(resp.status_code == 404, f"toggling a nonexistent todo should 404, got {resp.status_code}")
 
 
+def test_toggle_todo_marks_done_then_undone():
+    # 2026-07-09: the compliance-sweep work relies on todos as its review-queue
+    # UI (WARN/FAIL findings become todos Scott checks off), so the toggle route
+    # itself -- previously only covered by the 404 case above -- needs a
+    # positive-path test proving it actually flips `done` both ways.
+    c, _ = _login(_TEST_USER, _TEST_PASS)
+    add_resp = c.post("/api/todos", json={"text": "toggle test marker todo", "added_by": "frank"})
+    todo_id = add_resp.json()["id"]
+
+    done_resp = c.post(f"/api/todos/{todo_id}/toggle", json={"done": True})
+    check(done_resp.status_code == 200, f"toggle to done should 200, got {done_resp.status_code}")
+    listed = c.get("/api/todos").json()["todos"]
+    row = next((t for t in listed if t["id"] == todo_id), None)
+    check(row is not None and bool(row["done"]) is True, f"todo should be done=True after toggle, got {row}")
+
+    undone_resp = c.post(f"/api/todos/{todo_id}/toggle", json={"done": False})
+    check(undone_resp.status_code == 200, f"toggle to not-done should 200, got {undone_resp.status_code}")
+    listed = c.get("/api/todos").json()["todos"]
+    row = next((t for t in listed if t["id"] == todo_id), None)
+    check(row is not None and bool(row["done"]) is False, f"todo should be done=False after second toggle, got {row}")
+
+
 # ── staged-action queue (the actual Etsy/TikTok/local write path) ──────────────
 # Found in the 2026-07-09 weakness audit: ~90 HTTP routes exist but only ~7 were
 # ever exercised via real HTTP (login/session/todos above). The single highest-risk
@@ -269,6 +291,79 @@ def test_queue_approve_nonexistent_action_returns_404():
     c, _ = _login(_TEST_USER, _TEST_PASS)
     resp = c.post("/api/queue/999999999/approve")
     check(resp.status_code == 404, f"approving a nonexistent action should 404, got {resp.status_code}")
+
+
+class _FakeEtsyClient:
+    """Stand-in for EtsyAPIClient used by both _validate_staged_action's
+    at_approval re-fetch and _execute_staged_action's actual mutation call --
+    no real Etsy credentials or network access needed. Records every
+    update_listing() call so the test can assert exactly one deactivation
+    happened with the right listing_id/state."""
+    calls: list = []
+    live_state = "active"
+
+    def __init__(self, *a, **kw):
+        pass
+
+    def get_listing(self, listing_id):
+        return {"listing_id": listing_id, "state": _FakeEtsyClient.live_state}
+
+    def update_listing(self, listing_id, fields):
+        _FakeEtsyClient.calls.append((listing_id, dict(fields)))
+        return {"listing_id": listing_id, "state": fields.get("state"), "title": "Fake Listing"}
+
+
+def test_queue_approve_executes_deactivate_listing_action():
+    # 2026-07-09: the listing-compliance-sweep work (tools/listing_compliance_sweep.py)
+    # stages `deactivate_listing` for every FAIL finding -- this is the one Etsy-write
+    # staged-action type that previously had zero HTTP-level coverage (only
+    # local_write_file was exercised above). Proves the full path: stage -> approve ->
+    # _execute_staged_action -> EtsyAPIClient().update_listing(lid, {"state": "inactive"}).
+    original_client = server.EtsyAPIClient
+    _FakeEtsyClient.calls = []
+    _FakeEtsyClient.live_state = "active"
+    server.EtsyAPIClient = _FakeEtsyClient
+    try:
+        action_id = server.db.enqueue_action(
+            "deactivate_listing",
+            "HTTP integration test — compliance FAIL takedown",
+            {"listing_id": 4520524435, "_state_at_staging": "active"},
+        )
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.post(f"/api/queue/{action_id}/approve")
+        check(resp.status_code == 200, f"approve should 200, got {resp.status_code}: {resp.text}")
+        check(resp.json().get("status") == "executed",
+              f"approve response should report executed, got {resp.json()}")
+        check(_FakeEtsyClient.calls == [(4520524435, {"state": "inactive"})],
+              f"exactly one update_listing(lid, state=inactive) call expected, got {_FakeEtsyClient.calls}")
+        stored = server.db.get_action(action_id)
+        check(stored["status"] == "executed", f"DB row should be 'executed', got {stored['status']}")
+    finally:
+        server.EtsyAPIClient = original_client
+
+
+def test_queue_approve_deactivate_listing_blocked_if_state_changed_since_staging():
+    # The freshness re-check in _validate_staged_action(at_approval=True) is the
+    # safety net for "Scott already handled this manually between staging and
+    # approval" -- prove a live state mismatch actually blocks the deactivation
+    # rather than silently applying a stale decision.
+    original_client = server.EtsyAPIClient
+    _FakeEtsyClient.calls = []
+    _FakeEtsyClient.live_state = "inactive"  # changed since staging
+    server.EtsyAPIClient = _FakeEtsyClient
+    try:
+        action_id = server.db.enqueue_action(
+            "deactivate_listing",
+            "HTTP integration test — stale takedown, listing already inactive",
+            {"listing_id": 4520524436, "_state_at_staging": "active"},
+        )
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.post(f"/api/queue/{action_id}/approve")
+        check(resp.status_code in (400, 409, 422),
+              f"approving a stale takedown should be refused, got {resp.status_code}: {resp.text}")
+        check(_FakeEtsyClient.calls == [], f"a blocked approval must never call update_listing, got {_FakeEtsyClient.calls}")
+    finally:
+        server.EtsyAPIClient = original_client
 
 
 def test_queue_approve_already_executed_action_returns_409():

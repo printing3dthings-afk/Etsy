@@ -51,3 +51,6 @@ jobs:
 
       - name: HTTP route tests (login/session/logout + todos API, real requests)
         run: python tests/test_http_routes.py
+
+      - name: Listing integrity tests (audit_listing fast-mode checks, fixture-based)
+        run: python tests/test_listing_integrity.py
