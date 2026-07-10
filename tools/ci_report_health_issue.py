@@ -16,6 +16,7 @@ import json
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
@@ -45,9 +46,16 @@ def gh_request(method: str, url: str, token: str, body: dict | None = None) -> d
 
 
 def find_open_issue(repo: str, token: str) -> dict | None:
+    # MARKER_TITLE contains an em dash and is wrapped in quotes for an exact-phrase
+    # search -- both are non-ASCII/reserved characters that must be percent-encoded.
+    # A raw f-string here previously put those bytes straight into the request
+    # line, which trips Python 3.11's http.client control-character validator
+    # (the em dash's UTF-8 bytes land in the \x7f-\x9f "control char" range) and
+    # crashed *every* invocation of this script, ok or fail (see ops_runbook.md).
+    query = f'repo:{repo} type:issue state:open label:{LABEL} in:title "{MARKER_TITLE}"'
     results = gh_request(
         "GET",
-        f"https://api.github.com/search/issues?q=repo:{repo}+type:issue+state:open+label:{LABEL}+in:title+\"{MARKER_TITLE}\"",
+        f"https://api.github.com/search/issues?{urllib.parse.urlencode({'q': query})}",
         token,
     )
     items = results.get("items", [])

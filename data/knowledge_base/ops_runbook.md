@@ -5843,3 +5843,46 @@ keep in mind, not as something this fix was meant to solve.
 `playwright_smoke.py` against a real booted server + real browser). Both
 new test additions independently proven to fail on the original bugs and
 pass after the fix, same bar as the Phase 1 reliability pass above.
+
+### 2026-07-10 — GitHub Actions "Frank Health Watchdog" failing on every single
+run (every 5 minutes) since it shipped, plus the same bug in the daily
+listing-integrity issue reporter
+**Symptom:** Scott asked to fix "the problem with GitHub." GitHub Actions showed
+`Frank Health Watchdog` red on essentially every scheduled run going back to
+2026-07-09 20:06 — every 5 minutes, without exception.
+**Root cause (two independent bugs, both in code this session added):**
+1. `tools/ci_report_health_issue.py`'s `find_open_issue()` (added in commit
+   979846b, "Keep Frank always running") built the GitHub search-issues URL by
+   f-string-interpolating `MARKER_TITLE` — `"Frank Health Watchdog — outage
+   detected"` — raw into the query string, unescaped. The em dash's UTF-8 bytes
+   (0xE2 0x80 0x94) include 0x80 and 0x94, both inside the `\x7f-\x9f` range
+   Python 3.11's `http.client._validate_path()` treats as a control character,
+   so `urlopen()` raised `http.client.InvalidURL` before any network call was
+   even attempted — crashing the "Report result" step on *every* invocation,
+   `ok` or `fail`, regardless of whether the live site was actually healthy.
+   The exact same bug (same em-dash-in-title pattern) existed in the sibling
+   script `tools/ci_report_issue.py` (used by `listing_integrity_daily.yml`),
+   added earlier (commit 5745951).
+2. Compounding but separate: the `RAILWAY_APP_URL` repo secret was never set,
+   so even before reaching the buggy reporting step, the health check itself
+   unconditionally reported `status=fail` — it never actually reached the live
+   site once. **This one needs Scott: Settings → Secrets and variables →
+   Actions → add `RAILWAY_APP_URL`** (the live Railway URL, e.g.
+   `https://etsy-production-b2f1.up.railway.app`).
+**Fix:** Both `find_open_issue()` functions now build the search query with
+`urllib.parse.urlencode({"q": query})` instead of raw interpolation. Added
+`tests/test_ci_report_issue_url.py` — proven to fail with the identical
+`InvalidURL` traceback against the pre-fix code, passes after. Wired into
+`ci-smoke.yml`.
+**Separate finding, not fixed (needs Scott's decision, not a code change):**
+this repo's GitHub **default branch is `claude/etsy-agent-hub-9nnCM`**, a
+long-stale integration branch — confirmed via the repo API
+(`default_branch` field), not `main`. All `schedule`-triggered workflows
+(this watchdog, and the daily listing-integrity check) always run against
+whatever the default branch points to, so even with this fix pushed to the
+active working branch, the cron jobs will keep executing the *old, broken*
+script until either (a) the default branch is repointed to a branch that
+has this fix, or (b) this fix is merged onto whatever branch stays default.
+This also means the health watchdog has been checking a stale build for a
+long time regardless of the URL bug. Flagging for Scott to decide — this
+tool has no repo-settings API access to change the default branch itself.
