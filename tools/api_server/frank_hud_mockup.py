@@ -268,9 +268,16 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
      even after a correct renderer.setClearColor(0,0) — a known rough edge with that
      pass upstream). Rather than fight Three.js internals further, fade the CANVAS
      ELEMENT itself via a CSS mask so the sphere+glow floats on the page's own
-     background with no visible rectangle, regardless of the WebGL layer's own alpha. */
-  -webkit-mask-image:radial-gradient(circle at 50% 50%,#000 40%,rgba(0,0,0,.5) 50%,transparent 64%);
-  mask-image:radial-gradient(circle at 50% 50%,#000 40%,rgba(0,0,0,.5) 50%,transparent 64%);
+     background with no visible rectangle, regardless of the WebGL layer's own alpha.
+     `circle closest-side` (not the old sizeless default, which resolves to
+     farthest-corner -- the square's DIAGONAL) means 100% here is half the canvas's
+     flat side, not the diagonal; without that keyword the opaque region only reached
+     ~45% of the way to an edge, chopping a large chunk of the sphere's own silhouette
+     and bloom falloff (Scott: "orb seems to be cut off from looking natural", 2026-07-09).
+     Pushed the stops out near the edges so only the four corner triangles beyond the
+     inscribed circle fade -- exactly where the bleed artifact actually lives. */
+  -webkit-mask-image:radial-gradient(circle closest-side at 50% 50%,#000 82%,rgba(0,0,0,.6) 92%,transparent 100%);
+  mask-image:radial-gradient(circle closest-side at 50% 50%,#000 82%,rgba(0,0,0,.6) 92%,transparent 100%);
 }
 .orb-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
   pointer-events:none;width:100%}
@@ -472,6 +479,15 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 #chat-input:focus{border-color:var(--gold)}
 #chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Phone "Ask" tab (#orb-view) has no chat transcript, just the orb -- so Scott can
+   still type to %%AGENT_SHORT%% even when voice isn't practical (loud room, no mic
+   permission, etc). Same #chat-input/#chat-send visual treatment, own IDs since a
+   duplicate #chat-input would break every getElementById('chat-input') call above. */
+.orb-input-row{display:flex;gap:8px;width:min(85vw,420px);margin-top:14px}
+#orb-chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-pill);padding:10px 16px;color:var(--text);font-size:14px;outline:none}
+#orb-chat-input:focus{border-color:var(--gold)}
+#orb-chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#orb-chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Hub screens (Listings/Products/Brand Kit/Files/Connections/Security) — ported
    verbatim-in-behavior from the live Hub at / (main.py), restyled to the HUD's
@@ -805,6 +821,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
     <div class="orb-state" id="orb-state">IDLE — slow ambient rotation</div>
     <div class="orb-hint">click the orb (or the talk pill) to start talking to %%AGENT_SHORT%%</div>
+    <div class="orb-input-row">
+      <input id="orb-chat-input" type="text" placeholder="Or type to %%AGENT_NAME%%…" autocomplete="off" aria-label="Type a message">
+      <button id="orb-chat-send" onclick="sendMsg('orb-chat-input')" aria-label="Send message">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
   </div>
 
   <div class="hdr-logo brk">
@@ -1780,19 +1802,45 @@ function showToast(message, type='info', ms=4500){
 // ── Voice: OpenAI TTS (speech-out) + Whisper (speech-in) — wired to the orb's
 // setSpeaking() and the mic/talk-pill click targets further down this file. ──
 let _ttsAudio = null;
+let _audioUnlocked = false;
+// iOS Safari (and most mobile browsers) only allow audio.play()/AudioContext.resume()
+// to succeed when called synchronously within a real user gesture -- but Frank's TTS
+// reply plays much later, after a mic tap -> recording -> STT -> WebSocket -> LLM
+// streaming round trip, well outside that window. The fix is the standard mobile
+// "unlock" trick: do a real (silent) play+immediate-pause from INSIDE the actual tap
+// (see toggleVoiceCapture() below, called before its first await) once per page load --
+// once unlocked, later programmatic audio.play() calls succeed for the rest of the
+// session, even from async code far removed from any gesture.
+function _primeAudioPlayback(){
+  if(_audioUnlocked) return;
+  _audioUnlocked = true;
+  try{
+    if(!_ttsAudioCtx) _ttsAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(_ttsAudioCtx.state === 'suspended') _ttsAudioCtx.resume().catch(()=>{});
+  }catch(e){}
+  try{
+    const unlockEl = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+    unlockEl.play().then(()=>unlockEl.pause()).catch(()=>{});
+  }catch(e){}
+}
 // Free fallback for when OpenAI TTS is unavailable (e.g. quota exhausted) — uses the
 // browser's own speechSynthesis, no API key, no cost. Works on iOS Safari/PWA (unlike
 // SpeechRecognition/listening, which is why only speaking gets a fallback, not the mic).
 function _speakWithBrowserFallback(text){
-  if(!('speechSynthesis' in window)){ setSpeaking(false); return; }
+  // This is the LAST resort after both the primary TTS engine (OpenAI or local
+  // Piper) and audio playback itself have already failed silently upstream — so
+  // every failure branch here is the true end of the line for this reply. Toast
+  // once instead of leaving the reply spoken-but-silent with zero explanation
+  // (the mobile "no sound at all" symptom this was added to fix).
+  if(!('speechSynthesis' in window)){ setSpeaking(false); showToast("Couldn't play voice reply — see the text above", 'err'); return; }
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.onstart = () => setSpeaking(true, true);
     u.onend = () => setSpeaking(false, true);
-    u.onerror = () => setSpeaking(false, true);
+    u.onerror = () => { setSpeaking(false, true); showToast("Couldn't play voice reply — see the text above", 'err'); };
     window.speechSynthesis.speak(u);
-  } catch(err){ setSpeaking(false); }
+  } catch(err){ setSpeaking(false); showToast("Couldn't play voice reply — see the text above", 'err'); }
 }
 // ── Local offline TTS (Piper-web, fully self-hosted — no CDN). This is the default
 // speech-out path; OpenAI TTS only runs when the Premium voice toggle is on. ──
@@ -1986,6 +2034,9 @@ async function toggleVoiceCapture(){
     if(_voiceRecorder && _voiceRecorder.state !== 'inactive') _voiceRecorder.stop();
     return;
   }
+  // Must run synchronously here, before the first await below, so it's still inside
+  // the real tap gesture -- see _primeAudioPlayback()'s comment for why.
+  _primeAudioPlayback();
   if(_ttsAudio){ _ttsAudio.pause(); setSpeaking(false); }
   let stream;
   try {
@@ -2634,8 +2685,8 @@ function addBubble(text, who) {
   return el;
 }
 function scrollMsgs() { const m=document.getElementById('chat-msgs'); m.scrollTop=m.scrollHeight; }
-function sendMsg() {
-  const inp = document.getElementById('chat-input');
+function sendMsg(sourceId) {
+  const inp = document.getElementById(sourceId || 'chat-input');
   const text = inp.value.trim();
   if (!text) return;
   inp.value = '';
@@ -2648,6 +2699,7 @@ function sendMsg() {
 }
 function sendChip(el) { document.getElementById('chat-input').value = el.textContent; sendMsg(); }
 document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
+document.getElementById('orb-chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg('orb-chat-input'); });
 initWS();
 
 // ── Agents — real data from /api/agents/status (live-status registry).
@@ -5409,7 +5461,10 @@ void main(){
   // genuinely wavy/lumpy like the reference.
   float nBig = snoise(position * (uFreq * 0.42) + vec3(0.0, 0.0, uTime * 0.7));
   float nFine = snoise(position * (uFreq * 2.2) + vec3(0.0, 0.0, uTime * 1.4));
-  float disp = 0.20 + nBig * (0.42 + uAmp * 0.32) + nFine * (0.08 + uAmp * 0.10);
+  // uAmp's contribution bumped up (0.32->0.60, 0.10->0.24) so idle vs. actively-speaking
+  // is a clear, distinct ripple rather than a subtle shift on top of the already-large
+  // baseline waviness (Scott: wants "active ripples reactive to what he is saying").
+  float disp = 0.20 + nBig * (0.42 + uAmp * 0.60) + nFine * (0.08 + uAmp * 0.24);
   vec3 newPos = position + normal * disp;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
 }
