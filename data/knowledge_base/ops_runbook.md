@@ -5557,3 +5557,38 @@ line — the strongest evidence available short of an authenticated
 `/api/system/dependencies` check (not possible from this sandbox since test
 login is disabled in production). Next real confirmation is Scott seeing the
 relay pill go green on the Today tab / dependency panel.
+
+## 2026-07-10 (v149) — Removed the "API Costs" card from Settings
+
+Scott: "Take the section of the settings back out that have to do with the
+API limits. It's not reading correctly anyways so remove that whole
+section." Confirmed there's no separate rate-limit widget in the dashboard
+(the 30-calls/hour AI-generation limit is a server-side 429 guardrail only,
+never surfaced to the UI) — the section matching his complaint is the "API
+Costs" card (per-service $ spend estimate + call count + budget cap input
+for Railway/Anthropic/OpenAI/Gemini). Its Anthropic number is legitimately
+incomplete by its own backend note: it only counts usage Frank has logged
+itself since the 2026-07-10 (v145) usage-logging change, so it understates
+real spend and reads low/$0.00 regardless of actual billing — a real "not
+reading correctly" bug, not user error.
+
+**Removed (`tools/api_server/frank_hud_mockup.py`):** the "API Costs"
+section title + card HTML (between "AI Engines" and "My Account"), the
+`loadApiCosts()`/`renderApiCosts()`/`saveBudgetCaps()` JS functions and the
+`_apiCostsData` variable, and the `loadApiCosts` entry in the Settings
+screen's init-loader array.
+
+**Left in place (`tools/api_server/main.py`):** `GET /api/system/costs`,
+`POST /api/system/costs/budget-caps`, `_all_service_costs()`,
+`_anthropic_cost_snapshot()` — `_all_service_costs()` also feeds the Alerts
+budget-cap-crossing check (`GET /api/alerts`), so removing it would have
+broken that unrelated feature. Only the Settings display/edit UI is gone;
+any budget caps already saved stay in effect for alerts, just no longer
+editable from this card.
+
+**Verified:** `py_compile`, `node --check` on the real rendered JS,
+`test_http_routes.py`/`smoke_test.py` green, and a live Playwright pass —
+confirmed via `innerHTML` (not `innerText`, which returned misleading empty
+results for this tall scrollable-container screen, a browser quirk not a
+bug) that "API Costs" is gone while "AI Engines" and "My Account" both
+render correctly with nothing shifted or broken.

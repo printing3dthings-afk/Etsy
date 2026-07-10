@@ -1363,15 +1363,6 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
       </div>
 
-      <div class="hub-section-title" style="margin-top:18px">API Costs <span class="src">/api/system/costs — live where available, budget caps stored per service</span></div>
-      <div class="hub-card">
-        <div id="api-costs-list"><div class="hub-spinner"></div></div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
-          <button class="act-btn primary" onclick="saveBudgetCaps()">Save budget caps</button>
-          <div id="api-costs-status" style="font-size:11px;color:var(--muted)"></div>
-        </div>
-      </div>
-
       <div class="hub-section-title" style="margin-top:18px">My Account</div>
       <div class="hub-card">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -2384,7 +2375,7 @@ const _SCREEN_LOADERS = {
   files: [loadFiles],
   connections: [loadConnections],
   security: [renderSecurityPosture],
-  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadApiCosts],
+  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings],
   studio: [loadStudioVideos],
 };
 const _GLOBAL_LOADERS = [
@@ -2678,79 +2669,6 @@ function saveEngines(){
     video_engine: document.getElementById('setting-video-engine').value,
     image_engine: document.getElementById('setting-image-engine').value,
   }, 'engines-status', 'AI engines updated');
-}
-// ── API Costs — /api/system/costs (live where available) + per-service budget caps ──
-let _apiCostsData = null;
-async function loadApiCosts(){
-  const el = document.getElementById('api-costs-list');
-  if(!el) return;
-  try{
-    const r = await authGet('/api/system/costs');
-    const d = await r.json();
-    _apiCostsData = d;
-    renderApiCosts(d);
-  }catch(e){
-    el.innerHTML = '<div class="hub-empty">Could not load cost data: '+escHtml(e.message||e)+'</div>';
-  }
-}
-function renderApiCosts(d){
-  const el = document.getElementById('api-costs-list');
-  if(!el) return;
-  const order = ['railway','anthropic','openai','gemini'];
-  el.innerHTML = order.map(svc => {
-    const info = (d.services||{})[svc] || {label: svc, available: false, reason: 'unknown'};
-    const cap = (d.budget_caps||{})[svc];
-    const spendLine = info.available
-      ? `<b style="color:var(--gold)">$${(+info.estimated_cost_usd||0).toFixed(2)}</b> est. this cycle`
-      : `<span style="color:var(--muted)">Not connected — ${escHtml(info.reason||'not configured')}</span>`;
-    const topUpLink = info.dashboard_url
-      ? ` · <a href="${escHtml(info.dashboard_url)}" target="_blank" style="color:var(--cyan2);text-decoration:none;font-weight:600">Top Up ↗</a>`
-      : '';
-    const autoRechargeNote = info.has_auto_recharge
-      ? `<div style="font-size:10px;margin-top:3px;color:var(--muted)">Set Auto Recharge once here and this account never runs dry.</div>`
-      : '';
-    // Anthropic-only: real logged-usage breakdown (own data, not official billing —
-    // see the "note" field's caveat, rendered as a title tooltip below).
-    const usageNote = (info.call_count != null)
-      ? `<div style="font-size:10px;margin-top:3px;color:var(--muted)" title="${escHtml(info.note||'')}">${info.call_count} call${info.call_count===1?'':'s'} logged this month${info.by_model ? ' · ' + Object.entries(info.by_model).map(([m,s])=>`${escHtml(m)}: ${s.calls}`).join(', ') : ''}</div>`
-      : '';
-    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600">${escHtml(info.label||svc)}</div>
-        <div style="font-size:11px;margin-top:2px">${spendLine}${topUpLink}</div>
-        ${autoRechargeNote}
-        ${usageNote}
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <span style="font-size:11px;color:var(--muted)">Cap $</span>
-        <input type="number" min="0" step="1" id="budget-cap-${svc}" class="search" style="width:70px;padding:6px" value="${cap!=null?cap:''}" placeholder="none">
-      </div>
-    </div>`;
-  }).join('');
-}
-async function saveBudgetCaps(){
-  const order = ['railway','anthropic','openai','gemini'];
-  const body = {};
-  order.forEach(svc => {
-    const inp = document.getElementById('budget-cap-'+svc);
-    body[svc] = inp && inp.value !== '' ? inp.value : null;
-  });
-  const statusEl = document.getElementById('api-costs-status');
-  statusEl.textContent = 'Saving…';
-  try{
-    const r = await fetchWithTimeout(BASE+'/api/system/costs/budget-caps', {
-      method:'POST', headers:{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    }, 15000);
-    const d = await r.json().catch(()=>({}));
-    if(!r.ok) throw new Error(d.detail||'HTTP '+r.status);
-    statusEl.textContent = 'Budget caps saved ✓';
-    statusEl.style.color = 'var(--green)';
-    loadAlerts();
-  }catch(e){
-    statusEl.textContent = 'Could not save: '+(e.message||e);
-    statusEl.style.color = 'var(--red)';
-  }
 }
 // ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
 // Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
