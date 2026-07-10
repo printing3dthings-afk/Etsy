@@ -1,0 +1,15 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "tools/relay/Dockerfile"
+
+[deploy]
+# frank-relay (tools/relay/frank_relay.py) is a pure outbound WebSocket client --
+# it never opens an HTTP listener, so the platform's default HTTP healthcheck can
+# never pass for it. Deliberately NOT setting healthcheckPath here (unlike the
+# main app's railway.toml) -- with none set, Railway marks the deployment active
+# as soon as the container starts instead of polling a /health path that will
+# never exist. See ops_runbook.md 2026-07-10 for the deploy history that led to
+# this dedicated config file (the shared root railway.toml's healthcheckPath was
+# being wrongly inherited by this service and failing every deploy).
+restartPolicyType = "always"
+restartPolicyMaxRetries = 10
