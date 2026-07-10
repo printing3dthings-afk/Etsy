@@ -1023,6 +1023,32 @@ def list_activity(limit: int = 200, action_type: str | None = None) -> list:
         conn.close()
 
 
+def anthropic_usage_since(since_iso: str, limit: int = 20000) -> list:
+    """Every logged Anthropic call (activity_log action_type='anthropic_usage',
+    see main.py's _log_anthropic_usage) at/after `since_iso` (ISO-8601 UTC).
+    Used by /api/system/costs to sum real token usage into an estimated $ figure
+    from Frank's own data. `limit` is a sane upper bound, not real pagination --
+    this table only grows one row per Anthropic call, never per-request traffic."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT payload_json FROM activity_log WHERE action_type='anthropic_usage' AND ts>=? "
+            "ORDER BY id DESC LIMIT ?",
+            (since_iso, limit),
+        ).fetchall()
+        out = []
+        for r in rows:
+            if r["payload_json"]:
+                try:
+                    out.append(json.loads(r["payload_json"]))
+                except Exception:
+                    pass
+        return out
+    finally:
+        conn.close()
+
+
 # ── Relay state (singleton row, same pattern as etsy_tokens — the kill switch
 # must survive a server restart without silently un-killing) ─────────────────
 

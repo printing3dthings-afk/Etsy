@@ -454,6 +454,43 @@ def test_request_listing_fix_requires_auth():
     check(resp.status_code == 401, f"unauthenticated request-fix should 401, got {resp.status_code}")
 
 
+# ── Anthropic usage logging (2026-07-10 — "what used the Anthropic money") ──────
+class _FakeUsage:
+    def __init__(self, input_tokens, output_tokens, cache_creation=0, cache_read=0):
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+        self.cache_creation_input_tokens = cache_creation
+        self.cache_read_input_tokens = cache_read
+
+def test_log_anthropic_usage_then_summed_by_cost_snapshot():
+    # _log_anthropic_usage is the wrapper _anthropic_create()/the chat stream path
+    # both call on every real call -- this proves a logged call is actually
+    # readable back out and priced, without needing a live Anthropic key.
+    before = server._anthropic_cost_snapshot()
+    # Large token counts (not a realistic single call) so the cost survives the
+    # top-level estimate's 2-decimal rounding -- a real ~$0.003 call would round
+    # to $0.00 at that precision and make this assertion flaky, even though the
+    # by_model breakdown (4-decimal) would still show it correctly.
+    server._log_anthropic_usage("test_caller", "claude-haiku-4-5-20251001", _FakeUsage(2_000_000, 1_000_000))
+    after = server._anthropic_cost_snapshot()
+    check(after["available"], f"cost snapshot should be available after logging a call, got {after}")
+    check(after["call_count"] == before.get("call_count", 0) + 1,
+          f"expected call_count to increase by 1, before={before}, after={after}")
+    check(after["estimated_cost_usd"] > before.get("estimated_cost_usd", 0),
+          f"expected estimated cost to increase, before={before}, after={after}")
+    model_stats = after.get("by_model", {}).get("claude-haiku-4-5-20251001")
+    check(model_stats is not None, f"expected claude-haiku-4-5-20251001 in by_model, got {after.get('by_model')}")
+    check(model_stats["input_tokens"] >= 2_000_000, f"expected logged input tokens tracked, got {model_stats}")
+
+def test_log_anthropic_usage_never_raises_on_none_usage():
+    # A caught-but-swallowed edge case could pass usage=None -- must not crash the
+    # real Anthropic call it wraps.
+    try:
+        server._log_anthropic_usage("test_caller_none", "claude-sonnet-5", None)
+    except Exception as exc:
+        check(False, f"_log_anthropic_usage(usage=None) should never raise, got {exc}")
+
+
 # ── health endpoint (unauthenticated by design -- external watchdog hits this) ──
 def test_health_endpoint_is_unauthenticated_and_reports_persistence():
     c = TestClient(server.app, base_url="https://testserver")

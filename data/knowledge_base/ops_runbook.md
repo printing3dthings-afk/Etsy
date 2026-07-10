@@ -5130,3 +5130,108 @@ Daily listing_integrity_check found 106 FAIL / 24 WARN out of 172 listings audit
     ✗ [photo_count] Only 5 photos (want ≥8)
 
   [4509600086] DP1035, DP1064 — Tropical Leaves Print, Bold Monster
+
+### 2026-07-10 — Anthropic usage logging + efficiency fixes, phone "talk to Frank" popup, orb float
+
+Scott asked two separate things this session: (1) what used up the Anthropic
+spend and how to be more efficient, and (2) redesign the phone Ask tab's orb
+into a full-screen popup (top-right hamburger trigger) instead of permanent
+tab content, plus make the orb visually "float" like the reference GIFs.
+
+**Anthropic cost findings (3-agent code audit, no guessing):** confirmed
+nothing in this codebase ever logged token usage anywhere (db.py has no
+tokens table, activity_log only logs Etsy/social mutation outcomes, no
+`response.usage` was ever printed) -- this is why "what used the money"
+couldn't be answered from Frank's own data; console.anthropic.com's own
+Usage page is the only authoritative source for anything before today.
+Ruled out the photo pipeline entirely: `goal_loop.py`'s only caller
+(`generate_verified_photo`) is 100% OpenAI/Gemini, zero Anthropic calls --
+publishing a full 10-photo listing costs a flat ~2 Haiku calls (title+tags).
+The daily audit + full-shop compliance sweep are pure rule-based, $0 Anthropic
+spend even across 130+ listings. The one clear "silent" cost source found:
+`_warm_suggestions` (main.py) refreshed the CEO dashboard's Sonnet-generated
+suggestions cache every ~4h, unconditionally, forever, whether or not Scott
+ever opened the dashboard that day (~6 guaranteed Sonnet calls/day). Prompt
+caching existed on the CEO chat's main system prompt (already ~90% discount
+per earlier work) but NOT on 3 other hot paths with large fixed prompts
+(`_SUGGESTIONS_SYSTEM`, `_CONVERSION_DOCTOR_SYSTEM`, `_BATCH_TAG_PROMPT`), nor
+on the chat path's ops_runbook+ceo_learnings block (~3,500 tok resent raw on
+every single turn).
+
+**Fixes shipped:**
+1. `_log_anthropic_usage()` wraps `_anthropic_create()` (all ~7 non-streaming
+   call sites, caller auto-captured via `inspect.stack()`) and the CEO chat's
+   streaming path -- every real Anthropic call now logs model + token counts
+   (input/output/cache_creation/cache_read) to `activity_log` (new
+   `action_type='anthropic_usage'`). `db.anthropic_usage_since()` reads it back.
+2. `_anthropic_cost_snapshot()` sums this month's logged calls x Anthropic's
+   published per-model rate card into an estimated $ figure -- Settings ->
+   API Costs' Anthropic row is no longer permanently "unavailable, needs an
+   Admin key"; it now shows real (if approximate, and only from today
+   forward) spend without needing that key at all.
+3. Added `cache_control: {"type":"ephemeral"}` to the 3 previously-uncached
+   fixed prompts above, plus the chat path's ops_runbook+ceo_learnings block
+   (worthwhile there specifically because within one active conversation that
+   content realistically doesn't change turn-to-turn, unlike the
+   once-every-~4h suggestions loop, left uncached on purpose).
+4. `_warm_suggestions` now skips its refresh entirely if `GET /api/suggestions`
+   (which IS "the dashboard was viewed", now recorded to `dashboard_last_viewed`
+   via `db.set_setting`) hasn't fired within the last TTL window -- eliminates
+   guaranteed background spend on days nobody looks, while always still
+   priming once on boot so a fresh deploy never shows the cold-cache spinner.
+5. `_generate_tags_for_listings` and `_diagnose_listing_core` (Conversion
+   Doctor) downgraded from `MODEL_PRIMARY` (Sonnet) to `MODEL_CHEAP` (Haiku)
+   -- both are closer to extraction/formatting than frontier reasoning.
+
+**Phone "talk to Frank" popup:** Scott's screenshot showed the new
+`#orb-chat-input` row (shipped the prior session) getting clipped behind the
+fixed bottom tab bar. Rather than patch that in place, redesigned per his
+request + clarifying answers: `#orb-view` (the orb + voice + text input) is
+no longer permanent Ask-tab content -- it's a `body.frank-popup-open`-gated
+full-screen overlay (`position:fixed;inset:0;z-index:750`, above the
+`#phone-tabbar`'s 700), opened via a new top-right hamburger button
+(`#frank-popup-btn`, icon toggles ☰⇄✕) or the still-present Ask tab (both
+call the same `openFrankPopup()`). Default phone landing changed from the
+static idle orb to the Today tab. Two real bugs caught live via Playwright
+before shipping, not assumed away:
+- `if (isMobileMode()) phoneTab('today')` fired too early in the script --
+  `renderPhoneToday()` touches a module-scope `let _phoneNeeds` declared
+  further down the file, hitting the temporal dead zone ("Cannot access
+  '_phoneNeeds' before initialization"). Fixed by deferring via
+  `setTimeout(..., 0)` so it only runs after the whole script has evaluated.
+- The popup's `#orb-view` background is a translucent radial-gradient
+  (correct for its original desktop-only use, always sitting over the fixed
+  1440x900 stage) -- on phone this let the tab bar visibly bleed through
+  underneath despite the popup's higher z-index (z-index alone doesn't hide
+  a transparent element's own background). Fixed with an explicit
+  `background:var(--bg)` plus `display:none` on `#phone-tabbar` while the
+  popup is open, so "full-screen overlay" (Scott's explicit choice between
+  that and a bottom sheet) actually reads as full-screen.
+
+**Orb "floating" polish:** added two stacked CSS `drop-shadow()` filters
+(tight bright core + wide soft diffusion) on `canvas#orb-gl` -- unlike a
+page-level background gradient, `drop-shadow` follows the canvas's own alpha
+silhouette frame-to-frame, which is what makes the sphere read as a glowing
+object floating in dark space (reference GIFs) rather than a shape sitting on
+a colored page background.
+
+**Verified:** `node --check` against the real Python-string-evaluated JS
+(same method as prior session -- raw source has literal `\'` escapes that
+only resolve after Python's own processing), all 5 non-network-dependent test
+suites green (`test_http_routes.py` 29/29 incl. 2 new Anthropic-usage-logging
+tests, `smoke_test.py`, `test_quality_gates.py` 37/37, `test_resilience.py`
+26/26, `test_listing_integrity.py` 8/8), and a live Playwright pass at a
+390x844 mobile viewport confirming: default landing is Today, tapping the
+hamburger opens a fully opaque full-screen popup with the orb + input intact,
+tapping again (now showing ✕) closes it and returns to the previously active
+tab. `test_staged_actions.py` hit a real hang mid-verification -- root-caused
+via `faulthandler`+SIGABRT to a live (slow) Etsy API call inside
+`EtsyAPIClient.get_listing()`, triggered by a test whose docstring assumes no
+real credentials in the test env (false in this sandbox, which has real Etsy
+tokens loaded). Confirmed NOT a regression: this exact suite passed 51/51
+cleanly earlier in this same session with the identical Anthropic/popup code
+already in place, and none of this session's edits touched `etsy_api.py` or
+`_validate_staged_action`'s Etsy-calling path (`git diff` confirmed empty on
+`etsy_api.py`). Pre-existing test fragility, not fixed here -- flagged for a
+future pass (the test should stub/clear Etsy credentials rather than assume
+their absence).

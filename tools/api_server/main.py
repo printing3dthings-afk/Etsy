@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
+import inspect
 import io
 import json
 import mimetypes
@@ -94,6 +95,35 @@ _anthropic_breaker = CircuitBreaker("anthropic_api", db_module=db)
 _MODEL_FALLBACK = "claude-sonnet-4-6"
 
 
+def _log_anthropic_usage(caller: str, model: str, usage) -> None:
+    """Records every Anthropic call's token usage to activity_log -- confirmed
+    2026-07-10 that nothing in this codebase logged this before now, which is
+    why "what used the Anthropic money" couldn't be answered from Frank's own
+    data (see ops_runbook.md). `usage` is the SDK's Usage object (input_tokens/
+    output_tokens/cache_creation_input_tokens/cache_read_input_tokens); getattr
+    defaults everything to 0 rather than raising, since usage can be None (e.g.
+    a caught-but-swallowed edge case) and not every response carries every
+    cache field. Logging failures are non-fatal -- must never break the actual
+    Anthropic call this wraps."""
+    try:
+        db.log_activity(
+            actor="system",
+            action_type="anthropic_usage",
+            detail=f"{caller} · {model}",
+            payload={
+                "caller": caller,
+                "model": model,
+                "input_tokens": getattr(usage, "input_tokens", 0) or 0,
+                "output_tokens": getattr(usage, "output_tokens", 0) or 0,
+                "cache_creation_input_tokens": getattr(usage, "cache_creation_input_tokens", 0) or 0,
+                "cache_read_input_tokens": getattr(usage, "cache_read_input_tokens", 0) or 0,
+            },
+            outcome="ok",
+        )
+    except Exception as exc:
+        print(f"[anthropic-usage] logging failed (non-fatal): {exc}", flush=True)
+
+
 def _anthropic_create(client: "anthropic.Anthropic", **kwargs):
     """Routes an Anthropic messages.create() call through the shared circuit
     breaker so a real outage shows up in /api/system/dependencies instead of
@@ -124,10 +154,12 @@ def _anthropic_create(client: "anthropic.Anthropic", **kwargs):
             kwargs["model"] = _MODEL_FALLBACK
             result = client.messages.create(**kwargs)
             _anthropic_breaker.record_success()
+            _log_anthropic_usage(inspect.stack()[1].function, _MODEL_FALLBACK, getattr(result, "usage", None))
             return result
         raise
     else:
         _anthropic_breaker.record_success()
+        _log_anthropic_usage(inspect.stack()[1].function, kwargs.get("model", "?"), getattr(result, "usage", None))
         return result
 
 
@@ -471,7 +503,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v142"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v143"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3620,18 +3652,27 @@ def _generate_tags_for_listings(listings: list[dict], reason: str = "") -> list[
                 f'ID:{l["listing_id"]} TITLE:"{(l.get("title") or "")[:80]}" '
                 f'PRICE:${round(l.get("price", 0), 2)} TAGS:[{ct}]'
             )
-        prompt = _BATCH_TAG_PROMPT + "\n\nListings:\n" + "\n".join(rows)
+        dynamic_block = "\n\nListings:\n" + "\n".join(rows)
         if reason:
-            prompt += (
+            dynamic_block += (
                 "\n\nREVIEWER REJECTED THE PREVIOUS TAG SET WITH THIS FEEDBACK — "
                 f"fix this specifically:\n{reason}"
             )
 
         msg = _anthropic_create(
             client,
-            model=business_config.MODEL_PRIMARY,
+            model=business_config.MODEL_CHEAP,
             max_tokens=8000,
-            messages=[{"role": "user", "content": prompt}],
+            # _BATCH_TAG_PROMPT is a fixed template repeated on every batch (up to 40
+            # listings/call) -- split it into its own cached block, same pattern as the
+            # CEO chat path, so only the per-batch listing rows are ever sent uncached.
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": _BATCH_TAG_PROMPT, "cache_control": {"type": "ephemeral"}},
+                    {"type": "text", "text": dynamic_block},
+                ],
+            }],
         )
 
         raw = msg.content[0].text.strip()
@@ -4571,7 +4612,24 @@ async def _warm_suggestions() -> None:
         return
     await asyncio.sleep(5)  # let the app finish booting first
 
-    async def _iteration():
+    async def _iteration(first_run: bool):
+        # Skip the actual (paid) refresh if nobody's viewed the dashboard since the
+        # last one -- this used to fire every ~4h unconditionally, forever, purely to
+        # keep a cache warm nobody might be reading (~6 guaranteed Sonnet calls/day
+        # regardless of usage; see ops_runbook.md 2026-07-10). Always run on the very
+        # first boot iteration so a fresh deploy still avoids the cold-cache spinner —
+        # only later refreshes are conditional on GET /api/suggestions having fired
+        # (see dashboard_last_viewed, set there) within the last TTL window.
+        if not first_run:
+            last_viewed = db.get_setting("dashboard_last_viewed")
+            age = None
+            if last_viewed:
+                try:
+                    age = (datetime.now(timezone.utc) - datetime.fromisoformat(last_viewed)).total_seconds()
+                except ValueError:
+                    age = None
+            if age is None or age > _SUGGESTIONS_TTL:
+                return {"skipped": True}
         res = await _compute_suggestions()
         if res.get("error") == "parse_failed":
             # Not cached (see _compute_suggestions) — a TransientToolError so the
@@ -4580,10 +4638,14 @@ async def _warm_suggestions() -> None:
             raise TransientToolError("suggestions parse failed")
         return res
 
+    first_run = True
     while True:
         delay = await _run_loop_iteration(
-            "suggestion_warmer", "Suggestion Warmer", _iteration,
-            on_success_detail="CEO diagnostic cache primed",
+            "suggestion_warmer", "Suggestion Warmer", lambda: _iteration(first_run),
+            on_success_detail=lambda res: (
+                "Skipped -- dashboard hasn't been viewed recently" if res.get("skipped")
+                else "CEO diagnostic cache primed"
+            ),
             # HTTPExceptions from _compute_suggestions wrap the real cause in .detail
             # (e.g. "Could not gather shop data: <Etsy error>"). Passing them through
             # _friendly_error_message produces the generic "Something went wrong" fallback
@@ -4597,6 +4659,7 @@ async def _warm_suggestions() -> None:
             base_interval=_SUGGESTIONS_TTL - 120,  # refresh just before expiry
             max_interval=120,
         )
+        first_run = False
         await asyncio.sleep(delay)
 
 
@@ -5378,7 +5441,14 @@ async def _compute_suggestions_inner() -> dict:
                     ai_client,
                     model=business_config.MODEL_PRIMARY,
                     max_tokens=4000,  # 8 detailed suggestions overrun 2400 and truncate
-                    system=_SUGGESTIONS_SYSTEM + _ops_runbook_block(),
+                    # _SUGGESTIONS_SYSTEM is a fixed template -- cache it like the CEO chat
+                    # path already does (main.py's _run_agent_turn). _ops_runbook_block()
+                    # stays uncached: it changes too often across a session (many appends)
+                    # for a 5-min ephemeral cache to realistically hit.
+                    system=[
+                        {"type": "text", "text": _SUGGESTIONS_SYSTEM, "cache_control": {"type": "ephemeral"}},
+                        {"type": "text", "text": _ops_runbook_block()},
+                    ],
                     messages=[{"role": "user", "content": user_payload}],
                 )
             ),
@@ -5421,6 +5491,10 @@ async def get_suggestions(_token: str = Depends(_auth_session_or_bearer)):
     right after a deploy), we do NOT block the request for a full minute — that's
     what made the dashboard spinner look stuck. Instead we make sure a synthesis is
     running and return 202 'warming' immediately; the frontend polls until ready."""
+    # This route firing IS "the dashboard was viewed" -- _warm_suggestions reads this
+    # timestamp to skip its own refresh when nobody's actually looking, instead of
+    # spending an Anthropic call every ~4h forever regardless of usage.
+    await asyncio.to_thread(db.set_setting, "dashboard_last_viewed", datetime.now(timezone.utc).isoformat())
     cached = _cache_get("suggestions", ttl=_SUGGESTIONS_TTL)
     if cached is not None:
         return cached
@@ -5552,9 +5626,11 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
             asyncio.to_thread(
                 lambda: _anthropic_create(
                     ai_client,
-                    model=business_config.MODEL_PRIMARY,
+                    model=business_config.MODEL_CHEAP,
                     max_tokens=2000,
-                    system=_CONVERSION_DOCTOR_SYSTEM,
+                    system=[
+                        {"type": "text", "text": _CONVERSION_DOCTOR_SYSTEM, "cache_control": {"type": "ephemeral"}},
+                    ],
                     messages=[{"role": "user", "content": user_payload}],
                 )
             ),
@@ -7663,6 +7739,83 @@ def _railway_cost_snapshot() -> dict:
     }
 
 
+# Published Anthropic per-model rate card, $ per million tokens (verify against
+# console.anthropic.com/settings/billing if this ever looks off -- these can
+# change without notice, same caveat as the Railway estimate above). Cache reads
+# are priced at 10% of the base input rate, cache writes at 125%, per Anthropic's
+# documented prompt-caching discount structure.
+_ANTHROPIC_RATES = {
+    "claude-sonnet-5":                 {"input": 3.00,  "output": 15.00},
+    "claude-sonnet-4-6":                {"input": 3.00,  "output": 15.00},
+    "claude-haiku-4-5-20251001":        {"input": 0.80,  "output": 4.00},
+    "claude-opus-4-8":                  {"input": 15.00, "output": 75.00},
+}
+_ANTHROPIC_DEFAULT_RATE = {"input": 3.00, "output": 15.00}
+
+
+def _anthropic_cost_snapshot() -> dict:
+    """Best-effort Anthropic spend estimate from Frank's OWN logged calls
+    (_log_anthropic_usage -> activity_log action_type='anthropic_usage') for the
+    current calendar month (UTC) -- NOT the Anthropic Console's real billing,
+    which needs an Admin API key that isn't wired up yet. This is real usage
+    Frank has actually seen since usage logging shipped (2026-07-10); anything
+    spent before that date is invisible here (see console.anthropic.com's Usage
+    page for the authoritative historical number)."""
+    try:
+        month_start = datetime.now(timezone.utc).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        ).isoformat()
+        rows = db.anthropic_usage_since(month_start)
+    except Exception as exc:
+        return {"available": False, "reason": str(exc)[:200]}
+
+    if not rows:
+        return {
+            "available": True,
+            "estimated_cost_usd": 0.0,
+            "call_count": 0,
+            "note": (
+                "No Anthropic calls logged yet this month -- usage logging just shipped "
+                "(2026-07-10), so this fills in going forward, not retroactively. Check "
+                "console.anthropic.com's Usage page for spend from before that date."
+            ),
+        }
+
+    by_model: dict = {}
+    total_cost = 0.0
+    for row in rows:
+        model = row.get("model") or "?"
+        rate = _ANTHROPIC_RATES.get(model, _ANTHROPIC_DEFAULT_RATE)
+        input_tok = row.get("input_tokens", 0) or 0
+        output_tok = row.get("output_tokens", 0) or 0
+        cache_write_tok = row.get("cache_creation_input_tokens", 0) or 0
+        cache_read_tok = row.get("cache_read_input_tokens", 0) or 0
+        cost = (
+            input_tok * rate["input"] / 1_000_000
+            + output_tok * rate["output"] / 1_000_000
+            + cache_write_tok * (rate["input"] * 1.25) / 1_000_000
+            + cache_read_tok * (rate["input"] * 0.10) / 1_000_000
+        )
+        total_cost += cost
+        m = by_model.setdefault(model, {"calls": 0, "input_tokens": 0, "output_tokens": 0, "cost_usd": 0.0})
+        m["calls"] += 1
+        m["input_tokens"] += input_tok
+        m["output_tokens"] += output_tok
+        m["cost_usd"] = round(m["cost_usd"] + cost, 4)
+
+    return {
+        "available": True,
+        "estimated_cost_usd": round(total_cost, 2),
+        "call_count": len(rows),
+        "by_model": by_model,
+        "note": (
+            "Estimated from Frank's own logged Anthropic calls this month x Anthropic's "
+            "published per-model rate card -- not official billing. Verify against "
+            "console.anthropic.com/settings/billing for the authoritative number."
+        ),
+    }
+
+
 # No provider (Railway, Anthropic, OpenAI, Google Cloud Billing) exposes a public
 # API for a third-party app to charge a card / add funds -- confirmed by hand
 # 2026-07-09, this is a deliberate security/PCI boundary none of them cross for
@@ -7683,10 +7836,9 @@ def _all_service_costs() -> dict:
     # as unavailable with the exact setup step, never guessed at or faked.
     services["anthropic"] = {
         "label": "Anthropic (Claude)",
-        "available": False,
-        "reason": "Needs an Admin API key (console.anthropic.com → Settings → Admin keys) -- not yet wired up.",
         "dashboard_url": "https://console.anthropic.com/settings/billing",
         "has_auto_recharge": True,
+        **_anthropic_cost_snapshot(),
     }
     services["openai"] = {
         "label": "OpenAI (images/voice)",
@@ -8410,7 +8562,15 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     max_tokens=1500,
                     system=[
                         _system_block(),
-                        {"type": "text", "text": _ops_runbook_block() + _ceo_learnings_block()},
+                        # Was uncached (~3,500 tok resent on every turn) -- within one
+                        # active conversation these files realistically don't change
+                        # turn-to-turn, so caching here has a real hit rate, unlike the
+                        # once-every-~4h suggestions loop (left uncached on purpose).
+                        {
+                            "type": "text",
+                            "text": _ops_runbook_block() + _ceo_learnings_block(),
+                            "cache_control": {"type": "ephemeral"},
+                        },
                     ],
                     tools=_tools_with_cache(),
                     messages=history,
@@ -8425,6 +8585,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                 loop.call_soon_threadsafe(queue.put_nowait, ("error", exc))
             else:
                 _anthropic_breaker.record_success()
+                _log_anthropic_usage("chat_stream", business_config.MODEL_PRIMARY, getattr(final_msg, "usage", None))
                 loop.call_soon_threadsafe(queue.put_nowait, ("done", final_msg))
 
         producer = asyncio.create_task(asyncio.to_thread(_produce))

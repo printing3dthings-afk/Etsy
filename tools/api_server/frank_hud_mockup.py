@@ -294,6 +294,12 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   background:radial-gradient(ellipse at 50% 40%, rgba(242,160,181,.10), transparent 60%);
 }
 #orb-view canvas#orb,#orb-view canvas#orb-gl{width:min(85vw,620px);height:min(85vw,620px)}
+/* Two stacked drop-shadows (tight bright core + wide soft diffusion) hugging the
+   canvas's own alpha silhouette -- unlike a page-level background gradient, this
+   halo follows the actual rendered sphere shape frame to frame, which is what
+   makes it read as a glowing object floating in dark space (reference GIFs)
+   rather than a flat sphere sitting on a colored page background. */
+#orb-view canvas#orb-gl{filter:drop-shadow(0 0 46px rgba(96,220,255,.5)) drop-shadow(0 0 120px rgba(96,220,255,.22))}
 #orb-view .orb-overlay .o1{font-size:36px}
 #orb-view .orb-hint{position:static;margin-top:14px;opacity:.5}
 #orb-view .orb-state{margin-top:10px}
@@ -709,7 +715,37 @@ body.is-mobile .bottombar{display:none}
    (58px + safe-area). The last control (e.g. Studio's Generate Video button) has to be
    able to scroll fully above the bar to be tappable. */
 body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}
-body.is-mobile #orb-view{padding-bottom:66px}
+/* "Talk to Frank" popup (mobile only) — #orb-view is no longer permanent Ask-tab
+   content, it's a dedicated full-screen popup toggled by body.frank-popup-open,
+   opened via the top-right hamburger (or the Ask tab, which calls the same
+   trigger — see toggleFrankPopup()/phoneTab() in the script). Deliberately
+   decoupled from the desktop body.cc-open control-center toggle so phone popup
+   state never fights desktop control-center state. */
+body.is-mobile #orb-view{display:none}
+body.is-mobile.frank-popup-open #orb-view{
+  display:flex !important;position:fixed;inset:0;z-index:750;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  padding-top:env(safe-area-inset-top);
+  /* #orb-view's own background (further up this file) is a translucent radial
+     gradient designed for the desktop view, where it always sits over the fixed
+     1440x900 stage -- on phone it let the tab bar visibly bleed through underneath
+     (z-index alone doesn't hide a transparent element's background). Solid here so
+     "full-screen overlay" (Scott's choice) actually reads as full-screen. */
+  background:var(--bg);
+}
+/* Belt-and-suspenders: hide the tab bar outright while the popup is open, not just
+   visually covered -- keeps it out of the tab order too. */
+body.is-mobile.frank-popup-open #phone-tabbar{display:none}
+.frank-popup-fixed{display:none}
+body.is-mobile .frank-popup-fixed{
+  display:flex;position:fixed;z-index:760;
+  top:calc(10px + env(safe-area-inset-top));
+  right:calc(10px + env(safe-area-inset-right));
+  width:34px;height:34px;border-radius:var(--r-sm);border:1px solid var(--border);
+  background:rgba(15,31,48,.85);color:var(--cyan2);font-size:15px;
+  align-items:center;justify-content:center;cursor:pointer;
+}
+body.is-mobile .frank-popup-fixed:hover{border-color:var(--cyan)}
 /* the 19-item sidebar is hidden by default on phone and revealed on demand via "More" */
 body.is-mobile .sidebar{display:none}
 body.is-mobile.phone-more-open .sidebar{
@@ -808,6 +844,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 <div id="stage-wrap"><div id="stage">
 
   <button id="hamburger-btn" class="hamburger-fixed" aria-label="Toggle control center">☰</button>
+  <button id="frank-popup-btn" class="frank-popup-fixed" aria-label="Talk to %%AGENT_SHORT%%" onclick="toggleFrankPopup()">☰</button>
 
   <div id="orb-view">
     <div class="orb-hero-stage">
@@ -1552,9 +1589,9 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <!-- ══ Phone Mode bottom tab bar — mobile only (hidden on desktop via CSS) ══ -->
   <nav id="phone-tabbar" aria-label="Phone navigation">
-    <button class="ptab on" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
+    <button class="ptab" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
     <button class="ptab" data-ptab="appr" onclick="phoneTab('appr')" aria-label="Approvals"><span class="pti" aria-hidden="true">✓</span>Approvals<span class="pcnt" id="ptab-badge">0</span></button>
-    <button class="ptab" data-ptab="today" onclick="phoneTab('today')" aria-label="Today"><span class="pti" aria-hidden="true">▤</span>Today<span class="pcnt" id="ptab-today-badge">0</span></button>
+    <button class="ptab on" data-ptab="today" onclick="phoneTab('today')" aria-label="Today"><span class="pti" aria-hidden="true">▤</span>Today<span class="pcnt" id="ptab-today-badge">0</span></button>
     <button class="ptab" data-ptab="more" onclick="phoneTab('more')" aria-label="More screens"><span class="pti" aria-hidden="true">⋯</span>More</button>
   </nav>
 
@@ -1606,25 +1643,53 @@ window.addEventListener('resize', syncMobileClass);
 mobileMQ.addEventListener('change', syncMobileClass);
 syncMobileClass();
 document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
+// Default phone landing is Today (a real content tab), not a static idle orb --
+// "talk to Frank" is now a popup (see phoneTab()/openFrankPopup() below), not
+// permanent tab content, so there's no reason to land there by default anymore.
+// Deferred via setTimeout(0): phoneTab('today') -> renderPhoneToday() touches
+// module-scope `let` state (e.g. _phoneNeeds) declared further down this script
+// -- calling it THIS early hits the temporal dead zone (real bug caught live via
+// Playwright, "Cannot access '_phoneNeeds' before initialization"). Deferring to
+// a fresh macrotask runs it only after the whole script has finished evaluating.
+if (isMobileMode()) setTimeout(() => phoneTab('today'), 0);
 
 // ── Phone Mode v2: 4-tab shell with dedicated NATIVE panels (mobile only).
-// Ask = the orb. Approvals/Today/More render their own compact, phone-sized
-// panels wired to the SAME live data + action fns (approveAction, openRejectModal,
-// /api/metrics, /api/alerts, showScreen) — not the desktop screens (which were too
-// big). Styled via theme vars so the color selector recolors them. ──
+// Approvals/Today/More render their own compact, phone-sized panels wired to the
+// SAME live data + action fns (approveAction, openRejectModal, /api/metrics,
+// /api/alerts, showScreen) — not the desktop screens (which were too big).
+// Styled via theme vars so the color selector recolors them. ──
 function phoneTab(which){
+  if (which === 'ask'){ openFrankPopup(); return; }
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab===which));
   document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
-  if (which === 'ask'){
-    document.body.classList.remove('phone-panel');
-    closeControlCenter();                                  // orb + chat
-  } else {
-    document.body.classList.add('phone-panel');
-    if (which === 'appr'){ document.getElementById('pp-appr').classList.add('on'); renderPhoneApprovals(); }
-    else if (which === 'today'){ document.getElementById('pp-today').classList.add('on'); renderPhoneToday(); }
-    else if (which === 'more'){ document.getElementById('pp-more').classList.add('on'); renderPhoneMore(); }
-  }
+  document.body.classList.add('phone-panel');
+  if (which === 'appr'){ document.getElementById('pp-appr').classList.add('on'); renderPhoneApprovals(); }
+  else if (which === 'today'){ document.getElementById('pp-today').classList.add('on'); renderPhoneToday(); }
+  else if (which === 'more'){ document.getElementById('pp-more').classList.add('on'); renderPhoneMore(); }
   const pb = document.getElementById('phone-body'); if (pb) pb.scrollTop = 0;
+}
+// "Talk to Frank" full-screen popup (mobile only) — opened via the top-right
+// hamburger (#frank-popup-btn) or the Ask tab (both call openFrankPopup()).
+// Remembers whichever native panel was active underneath so closing returns
+// there instead of always landing back on a fixed tab.
+let _frankPopupPrevTab = 'today';
+function openFrankPopup(){
+  const activeBtn = document.querySelector('#phone-tabbar .ptab.on');
+  if (activeBtn && activeBtn.dataset.ptab !== 'ask') _frankPopupPrevTab = activeBtn.dataset.ptab;
+  document.body.classList.add('frank-popup-open');
+  document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab==='ask'));
+  const btn = document.getElementById('frank-popup-btn');
+  if (btn){ btn.textContent = '✕'; btn.setAttribute('aria-label','Close'); }
+}
+function closeFrankPopup(){
+  document.body.classList.remove('frank-popup-open');
+  const btn = document.getElementById('frank-popup-btn');
+  if (btn){ btn.textContent = '☰'; btn.setAttribute('aria-label','Talk to %%AGENT_SHORT%%'); }
+  phoneTab(_frankPopupPrevTab);
+}
+function toggleFrankPopup(){
+  if (document.body.classList.contains('frank-popup-open')) closeFrankPopup();
+  else openFrankPopup();
 }
 // Approvals — only the pending items, compact; reuses approveAction/openRejectModal.
 async function renderPhoneApprovals(){
@@ -2517,11 +2582,17 @@ function renderApiCosts(d){
     const autoRechargeNote = info.has_auto_recharge
       ? `<div style="font-size:10px;margin-top:3px;color:var(--muted)">Set Auto Recharge once here and this account never runs dry.</div>`
       : '';
+    // Anthropic-only: real logged-usage breakdown (own data, not official billing —
+    // see the "note" field's caveat, rendered as a title tooltip below).
+    const usageNote = (info.call_count != null)
+      ? `<div style="font-size:10px;margin-top:3px;color:var(--muted)" title="${escHtml(info.note||'')}">${info.call_count} call${info.call_count===1?'':'s'} logged this month${info.by_model ? ' · ' + Object.entries(info.by_model).map(([m,s])=>`${escHtml(m)}: ${s.calls}`).join(', ') : ''}</div>`
+      : '';
     return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600">${escHtml(info.label||svc)}</div>
         <div style="font-size:11px;margin-top:2px">${spendLine}${topUpLink}</div>
         ${autoRechargeNote}
+        ${usageNote}
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         <span style="font-size:11px;color:var(--muted)">Cap $</span>
