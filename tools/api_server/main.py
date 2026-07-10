@@ -503,7 +503,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v146"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v147"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -565,9 +565,22 @@ async def _security_headers(request: Request, call_next):
     # 'wasm-unsafe-eval' is required for the offline voice engines (Transformers.js/Whisper,
     # Piper-web TTS) — WebAssembly.compile()/instantiate() is blocked by CSP without it, even
     # though plain script loading and fetch() already worked under script-src 'self'.
+    # media-src added 2026-07-10 -- this CSP had no media-src directive at all, so it fell
+    # back to default-src 'self', which does NOT cover blob:/data: URLs (they have their own
+    # opaque origin, not matched by 'self'). Every TTS playback path in the app (both the
+    # local Piper engine and premium OpenAI voice) plays audio via
+    # URL.createObjectURL(blob) -> new Audio(url) -- a blob: URL -- and the one-time silent
+    # unlock element in _primeAudioPlayback() uses a data: URL. Both were being silently
+    # blocked (audio.onerror fires with MEDIA_ERR_SRC_NOT_SUPPORTED, code 4, swallowed by the
+    # existing .catch() handlers) -- confirmed live via Playwright: "Refused to load media
+    # from 'blob:...' because it violates ... default-src 'self'". This is the actual root
+    # cause of Frank's TTS reply being completely silent on every browser/device, not the
+    # iOS-standalone-PWA Web Audio bug fixed earlier the same day (that fix was real but
+    # wasn't the reason Scott heard nothing -- this was).
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; "
         "style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; "
+        "media-src 'self' blob: data:; "
         "connect-src 'self' wss: https:; frame-ancestors 'none'; object-src 'none'"
     )
     return response

@@ -5413,3 +5413,52 @@ offered that as a follow-up if the preload isn't enough.
 
 **Verified:** `node --check`, `test_http_routes.py` (29/29), `smoke_test.py`
 green, before/after throttled-network timing above.
+
+## 2026-07-10 (v147) — FOUND THE REAL ROOT CAUSE of silent TTS: CSP media-src gap
+
+Scott confirmed after v144/v145 shipped: "This is it hearing me but no sound
+comes out. Still not working." My earlier fix this same day (skip Web Audio
+routing in standalone-PWA mode) targeted a real but SEPARATE WebKit bug and
+did not fix the actual problem. Diagnosed properly this time with a live
+Playwright reproduction instead of guessing again.
+
+**Confirmed root cause:** the security-hardening CSP added back on 2026-07-08
+(S1-S5 pass) has no `media-src` directive. Per CSP spec, that falls back to
+`default-src 'self'` — and `'self'` does NOT cover `blob:` or `data:` URLs
+(they have their own opaque origin). Every single TTS playback path in the
+app — both the local Piper engine and premium OpenAI voice — plays audio via
+`URL.createObjectURL(blob)` → `new Audio(url)`, a `blob:` URL. Reproduced
+directly: `audio.play()` on a `blob:` URL fires `onerror` with
+`MEDIA_ERR_SRC_NOT_SUPPORTED` (code 4), and the browser console shows
+"Refused to load media from 'blob:...' because it violates ... default-src
+'self'." The existing `.catch()`/`.onerror` handlers around TTS playback
+swallow this silently by design (fallback logic), which is exactly why it
+looked like nothing was wrong except "no sound" — no error toast, no crash,
+just silence. This also silently broke `_primeAudioPlayback()`'s one-time
+`data:` URI audio-unlock trick the same way.
+
+**Fix (`tools/api_server/main.py`):** added `media-src 'self' blob: data:;`
+to the CSP header. Verified before/after with Playwright: before the fix, a
+raw `blob:` URL `<audio>` element's `play()` call fires `onerror` (code 4)
+immediately; after the fix, the same call fires `oncanplay`, `play()`
+resolves, and `readyState` reaches `4` (HAVE_ENOUGH_DATA) — full proof the
+CSP was the blocker and is now cleared.
+
+**Secondary finding, not yet fixed:** the local Piper TTS engine
+(`_loadPiperSession()`/`TtsSession.create()`) is NOT actually fully
+self-hosted despite its code comment — it fetches the real voice model
+weights from `https://huggingface.co/diffusionstudio/piper-voices/...` at
+runtime (only the WASM runtime + phonemizer are vendored locally). In this
+sandbox that fetch fails after ~26s (`net::ERR_FAILED`, likely the sandbox's
+outbound proxy, not necessarily representative of Scott's real network).
+The failure does correctly *reject* (not hang), so `speakText()`'s
+`.catch()` should still fall back to the browser's native `speechSynthesis`
+— but if Scott's own network is slow/blocked to Hugging Face too, that's a
+~26s silent wait before any fallback sound, which is a bad experience even
+though it isn't per se broken. Flagged to Scott: enabling "Premium voice"
+(OpenAI TTS) in Settings sidesteps this entire local-model dependency chain
+if the CSP fix alone doesn't fully resolve things. Not fixing this pass —
+vendoring the actual Piper model file locally is a larger, separate change.
+
+**Verified:** `py_compile`, `test_http_routes.py` (29/29), `smoke_test.py`
+green, plus the before/after blob: URL Playwright proof above.
