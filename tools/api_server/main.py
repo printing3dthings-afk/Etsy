@@ -503,7 +503,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v147"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v148"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3703,6 +3703,17 @@ def _generate_tags_for_listings(listings: list[dict], reason: str = "") -> list[
 # step 2). Served at a separate path so the live dashboard above is never at risk
 # while this is built out panel by panel. See frank_hud_mockup.py for details.
 from frank_hud_mockup import render_frank_hud  # noqa: E402
+
+
+# There was never a route for the bare domain root -- FastAPI's default 404
+# fired a raw {"detail":"Not Found"} JSON blob for anyone who just typed the
+# domain (Scott's screenshot, 2026-07-10). /frank already redirects an
+# unauthenticated visitor on to /login?next=/frank, so this one route fixes
+# both the bare-URL 404 and the "logged in with no explicit next" case (POST
+# /login defaults next="/", which used to 404 the same way).
+@app.get("/")
+def root_redirect():
+    return RedirectResponse("/frank", status_code=307)
 
 
 @app.get("/frank", response_class=HTMLResponse)

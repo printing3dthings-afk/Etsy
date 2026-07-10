@@ -5462,3 +5462,22 @@ vendoring the actual Piper model file locally is a larger, separate change.
 
 **Verified:** `py_compile`, `test_http_routes.py` (29/29), `smoke_test.py`
 green, plus the before/after blob: URL Playwright proof above.
+
+## 2026-07-10 (v148) — Fixed bare-domain 404
+
+Scott's screenshot: navigating to the plain domain
+(`https://etsy-production-b2f1.up.railway.app`) returned a raw
+`{"detail":"Not Found"}` JSON blob. Confirmed: `GET /` had no registered
+route at all — FastAPI's default 404 fired for anyone who just typed the
+domain instead of `/frank` or `/login` directly. This also silently affected
+`POST /login`'s success redirect, which defaults `next="/"` when no explicit
+`next` was supplied — so completing login without an explicit `?next=` would
+have hit the same 404 immediately after signing in.
+
+**Fix (`tools/api_server/main.py`):** added `GET /` → `RedirectResponse("/frank", status_code=307)`.
+`/frank` already redirects unauthenticated visitors on to `/login?next=/frank`
+(existing code, unchanged), so this single route fixes both the bare-URL 404
+and the post-login default-next case without touching any `next`-param
+defaulting logic.
+
+**Verified:** `py_compile`, `test_http_routes.py` (29/29), `smoke_test.py` green.
