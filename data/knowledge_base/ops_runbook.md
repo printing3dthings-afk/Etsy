@@ -5300,3 +5300,66 @@ phone viewport confirming: hamburger opens only the small quick-chat popup
 (orb popup stays closed), the Ask tab still opens the full orb screen with
 build-version/status/hint text hidden and the Frank name still visible, and
 `document.body.style.overflow` is `hidden` while the orb popup is open.
+
+## 2026-07-10 (v145) — Orb screen: dropped duplicate bottom chat field, restored 4-tab nav, allowed pinch-zoom
+
+Scott's screenshot showed two chat inputs visible at once on the phone Ask
+screen: the hamburger's quick-chat popup pinned near the top ("Type to
+Frank…") and the orb screen's own input row at the bottom ("Or type to
+Frank…") — two independently-toggled popups that happened to render
+simultaneously. He asked for the bottom one gone.
+
+Root cause of a second, related gap found while fixing it: the 4-tab bar
+(Ask/Approvals/Today/More) was force-hidden (`display:none`) the entire
+time the orb popup was open, and nothing ever called `closeFrankPopup()` to
+bring it back — once on the orb screen there was no way to navigate off it
+except the hamburger, which only opens the small text popup. Scott
+confirmed (AskUserQuestion) he wanted the tab bar back, not a close button.
+
+**Fix (`tools/api_server/frank_hud_mockup.py`):**
+- `body.is-mobile.frank-popup-open .orb-input-row{display:none}` — hides
+  only the orb screen's own bottom input on phone; desktop is untouched
+  (it has no quick-chat-popup, so `.orb-input-row` stays its only text
+  entry point there).
+- `#phone-tabbar` no longer force-hidden while the popup is open — it's
+  now `display:flex;z-index:761`, stacked above `#orb-view` (750) so it's
+  visible and tappable. `#orb-view`'s bottom padding bumped 24px → 84px so
+  centered orb content clears the now-visible bar.
+- `phoneTab(which)` (JS): switching to a non-Ask tab while the orb popup is
+  open now clears `frank-popup-open` + resets the `overflow:hidden`
+  inline styles first (same cleanup `closeFrankPopup()` already did) —
+  otherwise tapping "Today" from the bar would switch the panel underneath
+  while the orb stayed painted on top of it.
+- Pinch-zoom: `touch-action:none` → `touch-action:pinch-zoom` on
+  `#orb-view`'s phone-popup rule — this value specifically allows the
+  pinch gesture while still blocking browser-handled panning, matching
+  Scott's "zoom yes, scroll no" request exactly (confirmed via
+  AskUserQuestion he meant standard OS pinch-zoom, not a custom 3D camera
+  control).
+
+**Verified:** `node --check` on the real rendered JS, `test_http_routes.py`
+(29/29), `smoke_test.py` all green. Live Playwright pass at 390x844:
+`.orb-input-row` computed `display:none` on the Ask screen, `#phone-tabbar`
+visible at `z-index:761` above the orb, tapping "Today" from the bar while
+the popup is open correctly clears `frank-popup-open` and shows the Today
+panel, `#orb-view` computed `touch-action` is `pinch-zoom`, and the
+hamburger's quick-chat popup still opens independently as before.
+
+**Open item, not yet fixed:** in the same message Scott also reported the
+orb "takes a while to load" (wants instant) and that "nothing seems to be
+connected anymore." Investigated but not yet resolved this pass — likely
+candidates found by reading the code: (1) `initOrbGL()` dynamically
+imports `/static/vendor/three/build/three.module.js` (1.3MB uncompressed)
+unconditionally on every page load rather than lazily when the Ask tab is
+first opened — real first-load cost on a mobile network even though it's
+cache-headers-eligible after that; (2) if Scott has a custom brand-mark
+logo set (Settings → Branding), `applyBrandMarkToOrb()` runs a synchronous
+240×240-grid particle/edge computation on the main thread on every load,
+uncached — plausible source of both "slow" and, if the checkerboard-stride
+edge-adjacency math misfires again (a bug class already fixed once at this
+resolution per the 2026-07-08 v119 entry), the "disconnected" dots Scott
+described (that code's own comments literally warn "every dot renders
+disconnected" when the adjacency search radius is wrong). Neither theory
+confirmed against his actual live account yet — next step is asking Scott
+directly whether a custom brand-mark is set, since that determines which
+of these it actually is.

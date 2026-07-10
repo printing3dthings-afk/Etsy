@@ -725,7 +725,10 @@ body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-
 body.is-mobile #orb-view{display:none}
 body.is-mobile.frank-popup-open #orb-view{
   display:flex !important;position:fixed;inset:0;z-index:750;
-  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+  /* Bumped from 24px (Scott, 2026-07-10): the tab bar is visible again over the
+     bottom of this screen -- needs the same ~80px clearance other phone panels use
+     (see .main,.screen rule above) so centered orb content doesn't sit under it. */
+  padding-bottom:calc(84px + env(safe-area-inset-bottom));
   padding-top:env(safe-area-inset-top);
   /* #orb-view's own background (further up this file) is a translucent radial
      gradient designed for the desktop view, where it always sits over the fixed
@@ -736,8 +739,10 @@ body.is-mobile.frank-popup-open #orb-view{
   /* "Lock in position" (Scott, 2026-07-10): the orb's own idle animation should
      keep running, but the screen itself must not scroll or rubber-band -- iOS
      Safari/PWA can still pan a position:fixed element's underlying page via touch
-     even though the element itself never "scrolls" in the CSS sense. */
-  overflow:hidden;overscroll-behavior:none;touch-action:none;
+     even though the element itself never "scrolls" in the CSS sense. touch-action
+     is pinch-zoom (not none, Scott 2026-07-10 follow-up) so the pinch gesture still
+     works -- pinch-zoom explicitly enables zooming while still blocking panning. */
+  overflow:hidden;overscroll-behavior:none;touch-action:pinch-zoom;
 }
 /* Declutter (Scott, 2026-07-10): keep just the orb + "Frank / COMMAND CENTER" on
    the phone popup -- the build version and the "IDLE…"/hint technical text go.
@@ -745,9 +750,15 @@ body.is-mobile.frank-popup-open #orb-view{
 body.is-mobile.frank-popup-open #orb-build-ver,
 body.is-mobile.frank-popup-open .orb-state,
 body.is-mobile.frank-popup-open .orb-hint{display:none}
-/* Belt-and-suspenders: hide the tab bar outright while the popup is open, not just
-   visually covered -- keeps it out of the tab order too. */
-body.is-mobile.frank-popup-open #phone-tabbar{display:none}
+/* Second chat field removed (Scott, 2026-07-10): the orb screen's own input row
+   duplicated the hamburger's quick-chat popup -- on phone, the hamburger popup is
+   the only text entry point. Desktop keeps .orb-input-row (no quick-chat-popup there). */
+body.is-mobile.frank-popup-open .orb-input-row{display:none}
+/* Tab bar stays visible and reachable while the orb popup is open (Scott, 2026-07-10)
+   -- previously force-hidden here, which left no way off the orb screen except the
+   hamburger's small text popup. Stacked above #orb-view (z-index 750) so it's both
+   visible and tappable; phoneTab() below closes the popup when a non-ask tab is tapped. */
+body.is-mobile.frank-popup-open #phone-tabbar{display:flex;z-index:761}
 .frank-popup-fixed{display:none}
 body.is-mobile .frank-popup-fixed{
   display:flex;position:fixed;z-index:760;
@@ -1703,6 +1714,14 @@ if (isMobileMode()) setTimeout(() => phoneTab('today'), 0);
 // Styled via theme vars so the color selector recolors them. ──
 function phoneTab(which){
   if (which === 'ask'){ openFrankPopup(); return; }
+  // Leaving the orb popup for a native panel (Scott, 2026-07-10: tab bar is now
+  // reachable while the popup is open) -- same cleanup closeFrankPopup() does,
+  // minus its recursive phoneTab() call since we're already switching tabs here.
+  if (document.body.classList.contains('frank-popup-open')){
+    document.body.classList.remove('frank-popup-open');
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+  }
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab===which));
   document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
   document.body.classList.add('phone-panel');
