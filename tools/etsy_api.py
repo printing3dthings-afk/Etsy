@@ -551,11 +551,19 @@ class EtsyAPIClient:
                 return json.loads(raw) if raw.strip() else {}
 
             if resp.status_code in retryable_http:
-                # Honour the server's retry-after header when present
+                # Honour the server's retry-after header when present, but cap it --
+                # 2026-07-10 fix: an uncapped sleep here let a single in-flight call
+                # block its request thread for however long Etsy asked to wait (seen
+                # live: a daily-quota 429 with no small Retry-After still let this
+                # loop's own 2s/4s backoff run three full attempts before giving up,
+                # and any future Retry-After response could be far larger). Backing
+                # off *beyond* a few seconds is the circuit breaker's job (its own
+                # cooldown_seconds), not a single HTTP call's -- see
+                # resilience.CircuitBreaker for the actual multi-request backoff.
                 retry_after = resp.headers.get("retry-after") or resp.headers.get("Retry-After")
                 if retry_after:
                     try:
-                        time.sleep(float(retry_after) * (0.75 + random.random() * 0.5))
+                        time.sleep(min(float(retry_after), 5.0) * (0.75 + random.random() * 0.5))
                     except ValueError:
                         pass
                 last_exc = EtsyAPIError(resp.status_code, _error_message(resp))

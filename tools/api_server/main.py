@@ -503,7 +503,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v150"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v151"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1349,6 +1349,46 @@ def _cache_get(key: str, ttl: int = 60):
 def _cache_set(key: str, data) -> None:
     with _cache_lock:
         _cache[key] = {"data": data, "ts": time.time()}
+
+
+async def _fetch_with_degrade(cache_key: str | None, coro, *, timeout: float):
+    """Await an Etsy-touching `coro` with a hard timeout, and degrade
+    gracefully instead of ever bubbling a raw 500 or a bare-504 to the
+    client: on a timeout, an `EtsyAPIError` (including the circuit
+    breaker's fast "open" rejection), or any other exception, this serves
+    the last cached value under `cache_key` even if it's past its normal
+    TTL (tagged `stale: true`) when one exists in the in-process cache,
+    otherwise raises a clean structured 503 with a retry hint.
+
+    Added 2026-07-10: `/api/listings` was confirmed live to let
+    `EtsyAPIError` (a fast circuit-breaker-open rejection) propagate
+    completely unhandled into a raw 500 -- the only exception any of these
+    routes used to catch was `asyncio.TimeoutError`. Separately, a
+    concurrency bug in `resilience.CircuitBreaker.allow_request()` (fixed
+    the same day) let several endpoints race through as duplicate
+    half-open "probes" at once, each hanging on a real, slow, still-
+    rate-limited Etsy call until its own internal timeout fired --
+    `/api/metrics`, `/api/star-seller`, and `/api/credentials/status` were
+    each confirmed live returning a bare "Etsy timeout" 504 with no
+    fallback. See ops_runbook.md for the live traceback that diagnosed
+    this. Does not touch a route's own on-success caching -- callers still
+    call `_cache_set` themselves after a genuine live fetch."""
+    try:
+        return await asyncio.wait_for(coro, timeout=timeout)
+    except Exception as exc:
+        stale = _cache_get(cache_key, ttl=float("inf")) if cache_key else None
+        if stale is not None:
+            if isinstance(stale, dict):
+                stale = {**stale, "stale": True, "stale_reason": str(exc)[:200]}
+            return stale
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "etsy_unavailable",
+                "detail": str(exc)[:200],
+                "retry_after_seconds": 60,
+            },
+        ) from exc
 
 
 # ── Local Relay connection registry (Frank's hands/ears on Scott's machine) ─────
@@ -4137,20 +4177,19 @@ async def get_metrics(_token: str = Depends(_auth_session_or_bearer)):
     cached = _cache_get("metrics", ttl=60)
     if cached is not None:
         return cached
-    try:
-        orders_r, reviews_r, shop_r = await asyncio.wait_for(
-            asyncio.gather(
-                asyncio.to_thread(lambda: EtsyAPIClient().get_orders(limit=100)),
-                asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=50)),
-                asyncio.to_thread(lambda: EtsyAPIClient().get_shop()),
-                return_exceptions=True,
-            ),
-            timeout=10.0,
+
+    async def _fetch():
+        orders_r, reviews_r, shop_r = await asyncio.gather(
+            asyncio.to_thread(lambda: EtsyAPIClient().get_orders(limit=100)),
+            asyncio.to_thread(lambda: EtsyAPIClient().get_reviews(limit=50)),
+            asyncio.to_thread(lambda: EtsyAPIClient().get_shop()),
+            return_exceptions=True,
         )
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
-    out = _build_metrics(orders_r, reviews_r, shop_r)
-    _cache_set("metrics", out)
+        return _build_metrics(orders_r, reviews_r, shop_r)
+
+    out = await _fetch_with_degrade("metrics", _fetch(), timeout=10.0)
+    if not (isinstance(out, dict) and out.get("stale")):
+        _cache_set("metrics", out)
     return out
 
 
@@ -4265,11 +4304,9 @@ async def get_star_seller(_token: str = Depends(_auth_session_or_bearer)):
 
         return out
 
-    try:
-        result = await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=15.0)
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy API timeout")
-    _cache_set("star_seller", result)
+    result = await _fetch_with_degrade("star_seller", asyncio.to_thread(_fetch), timeout=15.0)
+    if not (isinstance(result, dict) and result.get("stale")):
+        _cache_set("star_seller", result)
     return result
 
 
@@ -4285,10 +4322,7 @@ async def get_listings(state: str = "active", _token: str = Depends(_auth_sessio
             _enrich_sales(data.get("listings", []))
         return data
 
-    try:
-        return await asyncio.wait_for(asyncio.to_thread(_fetch), timeout=20.0)
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    return await _fetch_with_degrade(f"listings_{state}", asyncio.to_thread(_fetch), timeout=20.0)
 
 
 def _shop_sections_sync() -> list[dict]:
@@ -4300,7 +4334,14 @@ def _shop_sections_sync() -> list[dict]:
         sections = EtsyAPIClient().get_shop_sections()
     except Exception as exc:  # never let a sections lookup break the listings view
         print(f"[sections] fetch failed: {exc}", flush=True)
-        sections = []
+        # 2026-07-10 fix: this used to fall through to `sections = []` and then
+        # cache THAT for the full 1h TTL below -- one transient Etsy failure
+        # silently blanked the Listings filter chips for up to an hour even
+        # after Etsy recovered. Serve the last known-good sections instead
+        # (and, critically, don't re-cache the failure) so the very next call
+        # retries live rather than being stuck on a cached empty list.
+        stale = _cache_get("shop_sections", ttl=float("inf"))
+        return stale if stale is not None else []
     result = [
         {"shop_section_id": s.get("shop_section_id"), "title": s.get("title", "")}
         for s in sections
@@ -4312,10 +4353,7 @@ def _shop_sections_sync() -> list[dict]:
 @app.get("/api/shop-sections")
 async def shop_sections(_token: str = Depends(_auth_session_or_bearer)):
     """Shop sections (Etsy's listing categories) for the Listings filter chips."""
-    try:
-        sections = await asyncio.wait_for(asyncio.to_thread(_shop_sections_sync), timeout=15.0)
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
+    sections = await _fetch_with_degrade("shop_sections", asyncio.to_thread(_shop_sections_sync), timeout=15.0)
     return {"sections": sections}
 
 
@@ -7162,10 +7200,9 @@ async def credentials_status(_token: str = Depends(_auth_session_or_bearer)):
             status["etsy_live_error"] = str(exc)[:120]
         return status
 
-    try:
-        data = await asyncio.wait_for(asyncio.to_thread(_check), timeout=12.0)
-    except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Etsy ping timed out")
+    data = await _fetch_with_degrade("credentials_status", asyncio.to_thread(_check), timeout=12.0)
+    if not (isinstance(data, dict) and data.get("stale")):
+        _cache_set("credentials_status", data)
     return data
 
 

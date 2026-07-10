@@ -30,6 +30,7 @@ Exit code 0 = all pass, non-zero = a regression (prints which).
 import os
 import sys
 import tempfile
+import time
 import traceback
 from pathlib import Path
 
@@ -510,6 +511,67 @@ def test_root_redirects_to_frank():
     check(resp.status_code == 307, f"GET / should redirect (307), got {resp.status_code}")
     check(resp.headers.get("location") == "/frank",
           f"GET / should redirect to /frank, got {resp.headers.get('location')!r}")
+
+
+# ── graceful degradation on Etsy failures (2026-07-10 incident: /api/listings and
+# four sibling routes let EtsyAPIError -- including the circuit breaker's fast
+# "open" rejection -- propagate as an unhandled 500/504 instead of a clean
+# response; see _fetch_with_degrade in main.py and ops_runbook.md) ──
+def test_listings_returns_clean_503_when_etsy_unavailable_and_no_cache():
+    import etsy_api as etsy_api_module
+
+    server._cache.pop("listings_active", None)  # no stale fallback should mask this case
+
+    def _boom(self, state="active", limit=100):
+        raise etsy_api_module.EtsyAPIError(
+            0, "circuit breaker open for etsy_api -- skipping call until cooldown elapses"
+        )
+
+    original = etsy_api_module.EtsyAPIClient.get_shop_listings_all
+    etsy_api_module.EtsyAPIClient.get_shop_listings_all = _boom
+    try:
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.get("/api/listings?state=active")
+    finally:
+        etsy_api_module.EtsyAPIClient.get_shop_listings_all = original
+
+    check(resp.status_code == 503,
+          f"a real Etsy failure with no cache available should return a clean 503, "
+          f"not an unhandled 500 -- got {resp.status_code}: {resp.text[:200]}")
+    body = resp.json()
+    check(body.get("detail", {}).get("error") == "etsy_unavailable",
+          f"503 body should be a structured etsy_unavailable error, got: {body}")
+
+
+def test_listings_serves_stale_cache_when_etsy_unavailable():
+    import etsy_api as etsy_api_module
+
+    # Seed a cache entry older than _listings_sync's own 30s TTL, so it doesn't
+    # short-circuit before ever calling (the now-broken) live API -- this proves
+    # the OUTER fallback-to-stale-cache path, not just a normal cache hit.
+    server._cache["listings_active"] = {
+        "data": {"listings": [{"listing_id": 1, "title": "cached listing"}], "count": 1, "state": "active"},
+        "ts": time.time() - 60,
+    }
+
+    def _boom(self, state="active", limit=100):
+        raise etsy_api_module.EtsyAPIError(429, "daily rate limit exhausted")
+
+    original = etsy_api_module.EtsyAPIClient.get_shop_listings_all
+    etsy_api_module.EtsyAPIClient.get_shop_listings_all = _boom
+    try:
+        c, _ = _login(_TEST_USER, _TEST_PASS)
+        resp = c.get("/api/listings?state=active")
+    finally:
+        etsy_api_module.EtsyAPIClient.get_shop_listings_all = original
+        server._cache.pop("listings_active", None)
+
+    check(resp.status_code == 200,
+          f"a live failure with a cached value available should still 200 (degraded), got {resp.status_code}")
+    body = resp.json()
+    check(body.get("stale") is True, f"the served fallback should be flagged stale, got: {body}")
+    check(body.get("count") == 1 and body.get("listings", [{}])[0].get("title") == "cached listing",
+          f"the served fallback should be the actual cached data, got: {body}")
 
 
 # ── runner ────────────────────────────────────────────────────────────────────

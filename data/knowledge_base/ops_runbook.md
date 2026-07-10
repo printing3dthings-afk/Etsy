@@ -5740,3 +5740,106 @@ both directions. **Not yet verified:** the new CI steps running in a real
 GitHub Actions environment (only tested in this sandbox so far), and the
 `checkSuites: true` hard gate actually blocking/allowing a real deploy as
 intended — both confirmed on the push that ships this entry.
+
+## 2026-07-10 (v151) — Live outage: Etsy daily quota exhaustion + a circuit-breaker
+## race turned into 500s/504s across most of the dashboard
+
+Scott sent a screenshot: Listings showed a raw "HTTP 500 / Retry" card, the
+header read "SYSTEM STATUS: ERROR", and he said he couldn't do anything in
+Frank. Root-caused live via the production deployment's actual logs
+(`deploymentLogs` for `bfbc2fd4...`, build v150), not guessed at.
+
+**Root cause chain:**
+1. Etsy's daily API quota was genuinely exhausted right then:
+   `[analytics] top_listings enrichment failed (non-blocking): Etsy API
+   429: daily rate limit exhausted (x-remaining-today=0)` — almost
+   certainly from this same day's unusually heavy live-testing volume
+   (full-catalog integrity checks, weakness audits, repeated verification
+   calls stacked on the normal background loops). Not a code bug by
+   itself, and Etsy's quota is a rolling window so it clears on its own,
+   just not predictably.
+2. Every Etsy call returning 429 tripped the shared `etsy_api`
+   `CircuitBreaker` (persisted via `db.circuit_breaker_state`, confirmed:
+   it was already reporting "open" on this deployment's very first call
+   right after container boot).
+3. **Real bug #1 — half-open race in `CircuitBreaker.allow_request()`**
+   (`tools/api_server/resilience.py`): a plain read-then-write with no
+   locking, and once state was `half_open` it returned `True`
+   unconditionally for *every* caller, not just the one that performed the
+   open→half_open transition. On a page load, several endpoints hit Etsy
+   near-simultaneously; when the 60s cooldown elapsed, all of them raced
+   through as duplicate "probes" instead of exactly one, each retrying a
+   real, still-rate-limited Etsy call for real — confirmed live:
+   `/api/star-seller` hit its own 15s internal timeout and returned a bare
+   504, the exact fingerprint of this race.
+4. **Real bug #2 — no graceful degradation on 5 Etsy-touching routes**
+   (`/api/listings`, `/api/metrics`, `/api/star-seller`,
+   `/api/shop-sections`, `/api/credentials/status`): each only caught
+   `asyncio.TimeoutError`; everything else — specifically `EtsyAPIError`,
+   including the breaker's fast "open" rejection — propagated as an
+   unhandled exception straight into a raw 500. Confirmed via the live
+   traceback: `GET /api/listings?state=active` → `main.py:get_listings` →
+   `_listings_sync` → `EtsyAPIClient().get_shop_listings_all()` →
+   `etsy_api.py:_request` raised `EtsyAPIError`, uncaught — exactly Scott's
+   screenshot. `/api/shop-sections` was a related but separate bug: on a
+   live failure it fell back to `sections = []` and then **cached that
+   empty result for the full 1h TTL**, silently blanking the Listings
+   filter chips for up to an hour even after Etsy recovered.
+5. `/api/system/dependencies` / the "SYSTEM STATUS: ERROR" banner were
+   correctly reporting reality (same persisted breaker state) — not a bug,
+   left untouched.
+
+**Fixes shipped:**
+- `tools/api_server/resilience.py`: added a `threading.Lock` around the
+  check-and-transition in `allow_request()` so exactly one caller wins the
+  open→half_open transition and becomes the probe; every other caller
+  observing `open` or `half_open` in that window is now rejected until the
+  probe resolves via `record_success()`/`record_failure()`. Added a bounded
+  safety net (3x `cooldown_seconds` measured from the original `opened_at`)
+  so a probe whose caller crashed mid-call can't wedge the breaker open
+  forever. Benefits both the `etsy_api` and `anthropic_api` breakers (same
+  shared class).
+- `tools/api_server/main.py`: added `_fetch_with_degrade()`, a small shared
+  helper wrapping an Etsy-touching call with a timeout — on any failure
+  (timeout, `EtsyAPIError`, breaker-open) it serves the last cached value
+  for that route regardless of its normal TTL (tagged `stale: true`,
+  `stale_reason`) when one exists, otherwise returns a clean structured
+  `503 {"error": "etsy_unavailable", "detail": ..., "retry_after_seconds":
+  60}` instead of ever bubbling a raw 500/504. Applied to `/api/listings`,
+  `/api/metrics`, `/api/star-seller`, `/api/shop-sections`,
+  `/api/credentials/status`. Also fixed `_shop_sections_sync()`'s
+  cache-the-empty-failure bug — it now serves stale sections on failure and
+  no longer overwrites the cache with an empty result.
+- `tools/etsy_api.py`: capped the `Retry-After` header honoring in
+  `_request_impl`'s 429/503 retry branch at 5 seconds (was unbounded) — a
+  single in-flight HTTP call should never block its thread for however
+  long Etsy asks; backing off further is the circuit breaker's job.
+- `tests/test_resilience.py`: three new tests proving the half-open fix —
+  sequential (first caller wins, second/third rejected), a 20-thread
+  concurrency test (exactly one winner), and the stuck-half-open safety
+  net. **Verified against the pre-fix code**: the concurrency test showed
+  all 20 threads winning the race (the exact bug), confirmed fixed and
+  re-passing after restoring the fix.
+- `tests/test_http_routes.py`: two new tests hitting `/api/listings`
+  through a real HTTP request with `EtsyAPIClient.get_shop_listings_all`
+  monkeypatched to raise — one with no cache (expects a clean 503, not a
+  500), one with a seeded stale cache entry (expects a 200 with
+  `stale: true` and the actual cached data). **Verified against the
+  pre-fix route**: reproduced the identical unhandled-exception traceback
+  from the live incident, confirmed fixed and re-passing after restoring.
+
+**Not fixed by this pass (operational, not code):** Etsy's daily quota
+being exhausted itself — these fixes stop Frank from crashing/hanging
+while it's exhausted (screens now show cached data marked stale, or a
+clean message, instead of error cards), but live Etsy data stays degraded
+until Etsy's rolling window frees up on its own. Flagging today's heavy
+live-testing volume as the likely proximate cause for future sessions to
+keep in mind, not as something this fix was meant to solve.
+
+**Verified:** full local suite green (`py_compile`, `compileall`,
+`smoke_test.py`, `test_security_headers.py`, `test_quality_gates.py`,
+`test_resilience.py` — 29 tests, `test_http_routes.py` — 32 tests,
+`test_listing_integrity.py`, `railway_config_lint.py`,
+`playwright_smoke.py` against a real booted server + real browser). Both
+new test additions independently proven to fail on the original bugs and
+pass after the fix, same bar as the Phase 1 reliability pass above.

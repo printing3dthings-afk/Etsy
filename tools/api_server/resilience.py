@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import logging
 import random
+import threading
 import time
 from datetime import datetime, timezone
 from typing import Callable, TypeVar
@@ -139,6 +140,20 @@ class CircuitBreaker:
     States: closed (normal) -> open (after `failure_threshold` consecutive
     failures, rejects calls for `cooldown_seconds`) -> half_open (one probe
     call allowed) -> closed (probe succeeded) or open again (probe failed).
+
+    2026-07-10 fix: `allow_request()` used to be a plain read-then-write with
+    no locking, and its half_open branch returned True unconditionally for
+    *every* caller, not just the one that performed the open->half_open
+    transition. In production this let a burst of concurrent requests (e.g.
+    every Etsy-touching endpoint on one page load) all race through as
+    "probes" the instant the cooldown elapsed, each independently retrying a
+    real, slow, still-rate-limited Etsy call -- turning one Etsy outage into
+    a pile-up of hanging requests and 504s across several screens at once
+    (see ops_runbook.md 2026-07-10 for the live incident this fixes). The
+    fix below serializes the check-and-transition under a lock so exactly
+    one caller wins the transition and becomes the probe; every other
+    caller that observes `open` or `half_open` in that window is rejected
+    until the probe resolves via record_success()/record_failure().
     """
 
     def __init__(
@@ -157,6 +172,12 @@ class CircuitBreaker:
         if db_module is None:
             from . import db as db_module  # type: ignore
         self._db = db_module
+        # Serializes the open->half_open transition within this process. A
+        # CircuitBreaker instance per dep_name is a process-wide singleton
+        # (see main.py's set_circuit_breaker_hook / _anthropic_breaker), so
+        # this lock is sufficient to make "exactly one probe" hold even
+        # though the persisted state itself has no cross-process locking.
+        self._lock = threading.Lock()
 
     def _load(self) -> dict:
         row = self._db.get_circuit_breaker_state(self.dep_name)
@@ -169,33 +190,56 @@ class CircuitBreaker:
 
     def allow_request(self) -> bool:
         """Check (and advance) breaker state before making a call. Returns
-        True if the call should proceed (closed, or half-open probe)."""
-        row = self._load()
-        if row["state"] == "closed":
-            return True
-        if row["state"] == "open":
+        True if the call should proceed (closed, or the single half-open
+        probe)."""
+        with self._lock:
+            row = self._load()
+            if row["state"] == "closed":
+                return True
+
+            if row["state"] == "open":
+                opened_at = row.get("opened_at")
+                if not opened_at:
+                    return True
+                elapsed = (datetime.now(timezone.utc) - datetime.fromisoformat(opened_at)).total_seconds()
+                if elapsed >= self.cooldown_seconds:
+                    # This caller wins the transition and becomes the one
+                    # probe -- the lock means no other thread in this process
+                    # can observe "open, cooldown elapsed" at the same instant.
+                    self._save("half_open", row["consecutive_failures"], opened_at)
+                    return True
+                return False
+
+            # half_open: reject everyone -- the probe that won the transition
+            # above is the only caller allowed through, and it resolves this
+            # back to closed/open via record_success()/record_failure().
+            # Safety net: if that probe never resolves (e.g. its process
+            # crashed mid-call), a stuck half_open would otherwise wedge the
+            # breaker open forever, since nothing else can transition out of
+            # it. Reusing 3x the normal cooldown (measured from the original
+            # opened_at, which this state still carries) as a stale-probe
+            # timeout lets a fresh probe through without a second persisted
+            # timestamp field.
             opened_at = row.get("opened_at")
-            if not opened_at:
-                return True
-            elapsed = (datetime.now(timezone.utc) - datetime.fromisoformat(opened_at)).total_seconds()
-            if elapsed >= self.cooldown_seconds:
-                self._save("half_open", row["consecutive_failures"], row.get("opened_at"))
-                return True
+            if opened_at:
+                elapsed = (datetime.now(timezone.utc) - datetime.fromisoformat(opened_at)).total_seconds()
+                if elapsed >= self.cooldown_seconds * 3:
+                    self._save("half_open", row["consecutive_failures"], datetime.now(timezone.utc).isoformat())
+                    return True
             return False
-        # half_open: allow exactly one probe through; caller's success/failure
-        # report will resolve it back to closed or open.
-        return True
 
     def record_success(self) -> None:
-        self._save("closed", 0, None)
+        with self._lock:
+            self._save("closed", 0, None)
 
     def record_failure(self) -> None:
-        row = self._load()
-        failures = row.get("consecutive_failures", 0) + 1
-        if row["state"] == "half_open" or failures >= self.failure_threshold:
-            self._save("open", failures, datetime.now(timezone.utc).isoformat())
-        else:
-            self._save("closed", failures, None)
+        with self._lock:
+            row = self._load()
+            failures = row.get("consecutive_failures", 0) + 1
+            if row["state"] == "half_open" or failures >= self.failure_threshold:
+                self._save("open", failures, datetime.now(timezone.utc).isoformat())
+            else:
+                self._save("closed", failures, None)
 
     def call(self, fn: Callable[[], T]) -> T:
         if not self.allow_request():
