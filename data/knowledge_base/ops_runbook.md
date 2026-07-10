@@ -5481,3 +5481,79 @@ and the post-login default-next case without touching any `next`-param
 defaulting logic.
 
 **Verified:** `py_compile`, `test_http_routes.py` (29/29), `smoke_test.py` green.
+
+## 2026-07-10 — Relay actually deployed and verified connected (first time, not handed to Scott)
+
+Scott pushed back on the relay being treated as purely his problem: "You
+should be able to fix the relay problem. You have in the past." Checked the
+history honestly — every prior relay entry (2026-06-25 x3, 2026-07-03,
+2026-07-10 earlier today) only ever shipped repo code (Dockerfile,
+`/ws/relay` endpoint, upload route) and handed the actual Railway
+provisioning step to Scott as manual dashboard instructions, never confirmed
+done. That was the real gap, and this entry closes it: the relay was
+provisioned, deployed, and its live connection verified end-to-end via the
+Railway API, using the `RAILWAY_API_TOKEN` already in `.env` (same one used
+all session for deployment checks on the main service).
+
+**What was created:** a second Railway service, `frank-relay`
+(id `4a555898-5615-47f8-bed7-03f9ba2e44ec`), in the same project
+(`323e677f-2c1a-4a21-845d-79aae274a225`) and environment (`production`,
+`c9d557ec-5ff7-4228-b413-5e1274ccd517`) as the main app, running
+`tools/relay/frank_relay.py` continuously. **This is a second always-on
+billed Railway service now — real ongoing cost, not free.**
+
+**Took 4 deploy attempts to get right — two distinct real bugs hit:**
+
+1. **Attempt 1-2 (`serviceCreate`/`serviceConnect`/`serviceInstanceUpdate`
+   with `rootDirectory:"tools/relay"`, `dockerfilePath:"Dockerfile"`):**
+   FAILED. `tools/relay/Dockerfile`'s `COPY` commands use repo-root-relative
+   paths (`COPY tools/relay/frank_relay.py tools/relay/frank_relay.py`), but
+   `rootDirectory` changes the build context to already be inside
+   `tools/relay/`, so Railway looked for a nonexistent nested
+   `tools/relay/tools/relay/frank_relay.py` — `failed to compute cache key:
+   ... "/tools/relay/frank_relay.py": not found`. Fixed by clearing
+   `rootDirectory` to `""` and using a repo-root-relative
+   `dockerfilePath:"tools/relay/Dockerfile"` instead — matches what the
+   Dockerfile was actually written for.
+2. **Attempt 2's rebuild succeeded** (clean `COPY` steps, image pushed) but
+   then got stuck retrying an HTTP healthcheck against `/health` for 5
+   minutes before failing — root cause (confirmed by Railway's own automated
+   deployment diagnosis feature): the repo-root `railway.toml` sets
+   `deploy.healthcheckPath = "/health"` for the *main app*, and since
+   `frank-relay`'s build context is now the repo root (needed for the
+   Dockerfile-path fix above), Railway read that same file and wrongly
+   applied its healthcheck to `frank-relay` too. But `frank_relay.py` is a
+   pure outbound WebSocket client — it never opens an HTTP listener, so that
+   healthcheck could never pass. **First fix attempt** — overriding
+   `healthcheckPath:""` via `serviceInstanceUpdate` — did NOT work; the
+   toml's value took precedence over that API-level override on every
+   subsequent deploy (attempt 3 hit the identical failure). **Real fix**:
+   added a dedicated `railway.relay.toml` at repo root (`build.dockerfilePath
+   = "tools/relay/Dockerfile"`, `deploy.restartPolicyType = "always"`,
+   deliberately no `healthcheckPath`), committed it (`3be781e`), then set
+   `railwayConfigFile:"railway.relay.toml"` on the service instance so
+   Railway reads this file instead of the shared one.
+3. **Attempt 4** (with the dedicated config file): **SUCCESS.**
+   `deploymentLogs` for deployment `820367e4-17a6-4a7b-99d0-2224e1bcd73d`
+   show:
+   ```
+   Starting Container
+   [relay] connected to wss://etsy-production-b2f1.up.railway.app/ws/relay
+   ```
+   — the relay is genuinely connected, confirmed from its own runtime output,
+   not just a green deployment status.
+
+**Known minor follow-up, not blocking:** the same log also shows
+`[relay] could not create allowed folder /data/workspace: [Errno 13]
+Permission denied: '/data'` — expected, since this pass deliberately did not
+attach a Railway Volume to `frank-relay` (scoped out of the original plan;
+the service connects and functions fine without one, it just has no
+persistent local workspace directory of its own). Attach a Volume later if
+Scott wants Frank to have durable cloud-side file storage independent of any
+device.
+
+**Verified:** live `deploymentLogs` showing the actual `[relay] connected`
+line — the strongest evidence available short of an authenticated
+`/api/system/dependencies` check (not possible from this sandbox since test
+login is disabled in production). Next real confirmation is Scott seeing the
+relay pill go green on the Today tab / dependency panel.
