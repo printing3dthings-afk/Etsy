@@ -51,6 +51,20 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
   "three": "/static/vendor/three/build/three.module.js"
 }}
 </script>
+<!-- Orb load speed (Scott, 2026-07-10): the default sphere's WebGL setup only
+     starts fetching three.module.js (1.3MB) once the giant inline script below has
+     been fully downloaded, parsed, and run down to resetOrbToDefault() -- on a real
+     mobile connection that serializes ~2s of avoidable wait after tapping the Ask
+     tab, even though the same file gets a 7-day Cache-Control (see _CachedStaticFiles
+     in main.py) so this cost only applies to a cold cache. modulepreload starts the
+     fetch in the background as soon as the HTML head parses, in parallel with
+     everything else on the page, so most/all of it is already done by the time the
+     user actually opens the orb screen. Three.js is loaded for every visit, not just
+     phone (desktop shows the same default sphere), so this isn't scoped to mobile. -->
+<link rel="modulepreload" href="/static/vendor/three/build/three.module.js">
+<link rel="modulepreload" href="/static/vendor/three/examples/jsm/postprocessing/EffectComposer.js">
+<link rel="modulepreload" href="/static/vendor/three/examples/jsm/postprocessing/RenderPass.js">
+<link rel="modulepreload" href="/static/vendor/three/examples/jsm/postprocessing/UnrealBloomPass.js">
 <style>
 /* ── Self-hosted display/body fonts (Studio Warm direction, 2026-07-09 visual
    upgrade). Latin-subset static WOFF2s, ~68KB total for all 4 files — served from
