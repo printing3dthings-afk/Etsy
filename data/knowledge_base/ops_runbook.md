@@ -5235,3 +5235,68 @@ already in place, and none of this session's edits touched `etsy_api.py` or
 `etsy_api.py`). Pre-existing test fragility, not fixed here -- flagged for a
 future pass (the test should stub/clear Etsy credentials rather than assume
 their absence).
+
+### 2026-07-10 — Voice still silent (iOS standalone-PWA root cause), hamburger corrected to text-only popup, orb declutter + scroll lock
+
+Scott tried voice again after the prior session's audio-unlock fix — still no
+sound, no animation. He also corrected the prior session's read of his
+hamburger request: he wanted the **text input field** to pop up, not the
+whole orb screen, plus asked for the orb screen to stop scrolling (keep the
+animation) and look less cluttered. Critical new fact from a clarifying
+question: **he opens Frank as an installed Home Screen app (standalone PWA),
+not a Safari tab.**
+
+**Voice root cause (new):** `_setupTtsAnalyser()` in `frank_hud_mockup.py`
+routes the TTS `<audio>` element through the Web Audio graph via
+`createMediaElementSource()` so the orb can react to real amplitude. This is
+a long-standing WebKit bug: in an installed standalone PWA (unlike a regular
+Safari tab), that routing reliably produces **silent audio** even though
+`audio.play()`/`onplay` fire completely normally — exactly the "no crash, no
+error, just nothing" symptom reported both times. Separately,
+`_primeAudioPlayback()`'s unlock dance was gated behind a one-time
+`_audioUnlocked` flag, meaning `_ttsAudioCtx.resume()` was only ever
+attempted once per page load — but a standalone PWA is far more likely to
+get backgrounded/screen-locked (silently re-suspending the AudioContext)
+than a Safari tab someone keeps in the foreground.
+
+**Fix:** detect standalone mode
+(`navigator.standalone || matchMedia('(display-mode: standalone)').matches`)
+and skip the Web Audio routing entirely in that mode — the `<audio>` element
+just plays on its own default output, guaranteeing sound at the cost of the
+orb's amplitude-driven ripple in PWA mode specifically (`currentVoiceAmp()`
+already falls back to a synthetic pulse when `_ttsAnalyser` is null, so the
+orb still animates). Also changed `_primeAudioPlayback()` to always call
+`_ttsAudioCtx.resume()` on every tap regardless of the one-time flag
+(idempotent on an already-running context, but re-unlocks one iOS silently
+re-suspended after backgrounding). **Could not be verified locally** — no
+real iOS device in this sandbox; shipped as the best-evidenced fix for a
+well-documented WebKit bug, told to Scott as our best diagnosis, not a
+guaranteed fix.
+
+**Hamburger corrected:** the top-right hamburger no longer opens the full
+orb+voice screen (that was a misread of "make the input field pop up" from
+the prior session). It now opens a small, separate `#quick-chat-popup`
+(input + send button only, no orb, no transcript), wired through the
+already-generalized `sendMsg(sourceId)`. The Ask tab keeps opening the full
+orb screen exactly as before (`openFrankPopup()`, unchanged) — the two are
+now fully decoupled, each with their own icon-toggle state on
+`#frank-popup-btn`.
+
+**Orb screen locked + decluttered:** `#orb-view` (phone popup only, via
+`body.is-mobile.frank-popup-open`) gets `overflow:hidden` +
+`overscroll-behavior:none` + `touch-action:none`, and `openFrankPopup()`/
+`closeFrankPopup()` additionally toggle `overflow:hidden` on
+`html`/`body` directly — belt-and-suspenders against iOS Safari/PWA's
+tendency to still rubber-band-scroll the underlying page behind a
+`position:fixed` element via touch, which is what "the orb moves" looked
+like. The idle WebGL animation itself is untouched, only scrolling is
+removed. Decluttered by hiding `#orb-build-ver` (build version) and
+`.orb-state`/`.orb-hint` (the "IDLE…"/hint lines) in phone popup mode only
+(desktop untouched) — kept "Frank / COMMAND CENTER" per Scott's choice.
+
+**Verified:** `node --check` against the real rendered JS, `test_http_routes.py`
+(29/29) and `smoke_test.py` green, and a live Playwright pass at a 390x844
+phone viewport confirming: hamburger opens only the small quick-chat popup
+(orb popup stays closed), the Ask tab still opens the full orb screen with
+build-version/status/hint text hidden and the Frank name still visible, and
+`document.body.style.overflow` is `hidden` while the orb popup is open.

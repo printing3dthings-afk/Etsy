@@ -717,10 +717,11 @@ body.is-mobile .bottombar{display:none}
 body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}
 /* "Talk to Frank" popup (mobile only) — #orb-view is no longer permanent Ask-tab
    content, it's a dedicated full-screen popup toggled by body.frank-popup-open,
-   opened via the top-right hamburger (or the Ask tab, which calls the same
-   trigger — see toggleFrankPopup()/phoneTab() in the script). Deliberately
-   decoupled from the desktop body.cc-open control-center toggle so phone popup
-   state never fights desktop control-center state. */
+   opened by the Ask tab only (see phoneTab()/openFrankPopup() in the script —
+   the top-right hamburger opens a separate, much smaller text-only popup below,
+   2026-07-10 correction). Deliberately decoupled from the desktop body.cc-open
+   control-center toggle so phone popup state never fights desktop control-center
+   state. */
 body.is-mobile #orb-view{display:none}
 body.is-mobile.frank-popup-open #orb-view{
   display:flex !important;position:fixed;inset:0;z-index:750;
@@ -732,7 +733,18 @@ body.is-mobile.frank-popup-open #orb-view{
      (z-index alone doesn't hide a transparent element's background). Solid here so
      "full-screen overlay" (Scott's choice) actually reads as full-screen. */
   background:var(--bg);
+  /* "Lock in position" (Scott, 2026-07-10): the orb's own idle animation should
+     keep running, but the screen itself must not scroll or rubber-band -- iOS
+     Safari/PWA can still pan a position:fixed element's underlying page via touch
+     even though the element itself never "scrolls" in the CSS sense. */
+  overflow:hidden;overscroll-behavior:none;touch-action:none;
 }
+/* Declutter (Scott, 2026-07-10): keep just the orb + "Frank / COMMAND CENTER" on
+   the phone popup -- the build version and the "IDLE…"/hint technical text go.
+   Desktop is untouched (no body.is-mobile scoping there). */
+body.is-mobile.frank-popup-open #orb-build-ver,
+body.is-mobile.frank-popup-open .orb-state,
+body.is-mobile.frank-popup-open .orb-hint{display:none}
 /* Belt-and-suspenders: hide the tab bar outright while the popup is open, not just
    visually covered -- keeps it out of the tab order too. */
 body.is-mobile.frank-popup-open #phone-tabbar{display:none}
@@ -746,6 +758,27 @@ body.is-mobile .frank-popup-fixed{
   align-items:center;justify-content:center;cursor:pointer;
 }
 body.is-mobile .frank-popup-fixed:hover{border-color:var(--cyan)}
+/* Quick-text popup (mobile only) — the hamburger's actual job: just an input +
+   send button, no orb, floating below the hamburger. Hidden by default, shown
+   via .open (toggled by toggleQuickChatPopup() in the script). */
+#quick-chat-popup{display:none}
+body.is-mobile #quick-chat-popup.open{
+  display:block;position:fixed;z-index:770;
+  top:calc(50px + env(safe-area-inset-top));
+  right:calc(10px + env(safe-area-inset-right));
+  left:calc(10px + env(safe-area-inset-left));
+  max-width:420px;margin-left:auto;
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);
+  padding:10px;box-shadow:0 8px 30px rgba(0,0,0,.4);
+}
+#quick-chat-popup .qcp-row{display:flex;gap:8px}
+#quick-chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-pill);
+  padding:10px 16px;color:var(--text);font-size:14px;outline:none}
+#quick-chat-input:focus{border-color:var(--gold)}
+#quick-chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#quick-chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#quick-chat-status{font-size:11px;color:var(--muted);margin-top:8px}
 /* the 19-item sidebar is hidden by default on phone and revealed on demand via "More" */
 body.is-mobile .sidebar{display:none}
 body.is-mobile.phone-more-open .sidebar{
@@ -844,7 +877,17 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 <div id="stage-wrap"><div id="stage">
 
   <button id="hamburger-btn" class="hamburger-fixed" aria-label="Toggle control center">☰</button>
-  <button id="frank-popup-btn" class="frank-popup-fixed" aria-label="Talk to %%AGENT_SHORT%%" onclick="toggleFrankPopup()">☰</button>
+  <button id="frank-popup-btn" class="frank-popup-fixed" aria-label="Talk to %%AGENT_SHORT%%" onclick="toggleQuickChatPopup()">☰</button>
+
+  <div id="quick-chat-popup">
+    <div class="qcp-row">
+      <input id="quick-chat-input" type="text" placeholder="Type to %%AGENT_NAME%%…" autocomplete="off" aria-label="Type a message">
+      <button id="quick-chat-send" onclick="sendQuickChat()" aria-label="Send message">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+    <div id="quick-chat-status" style="display:none"></div>
+  </div>
 
   <div id="orb-view">
     <div class="orb-hero-stage">
@@ -1668,28 +1711,58 @@ function phoneTab(which){
   else if (which === 'more'){ document.getElementById('pp-more').classList.add('on'); renderPhoneMore(); }
   const pb = document.getElementById('phone-body'); if (pb) pb.scrollTop = 0;
 }
-// "Talk to Frank" full-screen popup (mobile only) — opened via the top-right
-// hamburger (#frank-popup-btn) or the Ask tab (both call openFrankPopup()).
-// Remembers whichever native panel was active underneath so closing returns
-// there instead of always landing back on a fixed tab.
+// "Talk to Frank" full-screen orb+voice popup (mobile only) — opened ONLY by the
+// Ask tab now (2026-07-10: the top-right hamburger was reassigned to the much
+// smaller quick-text popup below, per Scott's correction — he wanted the input
+// FIELD to pop up, not the whole orb screen). Remembers whichever native panel
+// was active underneath so closing returns there instead of always landing back
+// on a fixed tab.
 let _frankPopupPrevTab = 'today';
 function openFrankPopup(){
   const activeBtn = document.querySelector('#phone-tabbar .ptab.on');
   if (activeBtn && activeBtn.dataset.ptab !== 'ask') _frankPopupPrevTab = activeBtn.dataset.ptab;
   document.body.classList.add('frank-popup-open');
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab==='ask'));
-  const btn = document.getElementById('frank-popup-btn');
-  if (btn){ btn.textContent = '✕'; btn.setAttribute('aria-label','Close'); }
+  // Belt-and-suspenders alongside #orb-view's own overflow:hidden -- iOS Safari/PWA
+  // can still rubber-band-scroll the underlying page behind a position:fixed
+  // element via touch, which is what "the orb moves" looked like (Scott, 2026-07-10).
+  document.documentElement.style.overflow = 'hidden';
+  document.body.style.overflow = 'hidden';
 }
 function closeFrankPopup(){
   document.body.classList.remove('frank-popup-open');
-  const btn = document.getElementById('frank-popup-btn');
-  if (btn){ btn.textContent = '☰'; btn.setAttribute('aria-label','Talk to %%AGENT_SHORT%%'); }
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
   phoneTab(_frankPopupPrevTab);
 }
-function toggleFrankPopup(){
-  if (document.body.classList.contains('frank-popup-open')) closeFrankPopup();
-  else openFrankPopup();
+// Quick-text popup (mobile only) — the top-right hamburger's actual job now: a
+// small popup with just an input + send button, no orb, no transcript. Reuses
+// the generalized sendMsg(sourceId) (same WS pipeline as #chat-input/#orb-chat-input).
+function openQuickChatPopup(){
+  document.getElementById('quick-chat-popup').classList.add('open');
+  const btn = document.getElementById('frank-popup-btn');
+  if (btn){ btn.textContent = '✕'; btn.setAttribute('aria-label','Close'); }
+  const inp = document.getElementById('quick-chat-input');
+  if (inp) inp.focus();
+}
+function closeQuickChatPopup(){
+  document.getElementById('quick-chat-popup').classList.remove('open');
+  const btn = document.getElementById('frank-popup-btn');
+  if (btn){ btn.textContent = '☰'; btn.setAttribute('aria-label','Talk to %%AGENT_SHORT%%'); }
+}
+function toggleQuickChatPopup(){
+  if (document.getElementById('quick-chat-popup').classList.contains('open')) closeQuickChatPopup();
+  else openQuickChatPopup();
+}
+function sendQuickChat(){
+  const inp = document.getElementById('quick-chat-input');
+  if (!inp || !inp.value.trim()) return;
+  sendMsg('quick-chat-input');
+  const status = document.getElementById('quick-chat-status');
+  if (status){
+    status.textContent = "Sent — Frank's replying… check the Ask tab for the full reply.";
+    status.style.display = 'block';
+  }
 }
 // Approvals — only the pending items, compact; reuses approveAction/openRejectModal.
 async function renderPhoneApprovals(){
@@ -1868,6 +1941,13 @@ function showToast(message, type='info', ms=4500){
 // setSpeaking() and the mic/talk-pill click targets further down this file. ──
 let _ttsAudio = null;
 let _audioUnlocked = false;
+// Installed home-screen web app (iOS "Add to Home Screen"), not a Safari tab --
+// this matters because of a long-standing WebKit bug (see _setupTtsAnalyser below):
+// routing an <audio> element through the Web Audio graph reliably produces silent
+// playback in standalone PWAs even though play()/onplay fire normally, while the
+// exact same code works fine in a regular Safari tab.
+const _isStandalonePWA = window.navigator.standalone === true ||
+  (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 // iOS Safari (and most mobile browsers) only allow audio.play()/AudioContext.resume()
 // to succeed when called synchronously within a real user gesture -- but Frank's TTS
 // reply plays much later, after a mic tap -> recording -> STT -> WebSocket -> LLM
@@ -1877,12 +1957,17 @@ let _audioUnlocked = false;
 // once unlocked, later programmatic audio.play() calls succeed for the rest of the
 // session, even from async code far removed from any gesture.
 function _primeAudioPlayback(){
-  if(_audioUnlocked) return;
-  _audioUnlocked = true;
   try{
     if(!_ttsAudioCtx) _ttsAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    // Always attempted, even after the first unlock (below) -- unlike a Safari tab, a
+    // standalone PWA can get backgrounded/screen-locked and iOS silently re-suspends
+    // the AudioContext when that happens. Resuming an already-running context is a
+    // harmless no-op, so this costs nothing on the common case and fixes the
+    // re-suspend case, which the one-time-only gate below can't.
     if(_ttsAudioCtx.state === 'suspended') _ttsAudioCtx.resume().catch(()=>{});
   }catch(e){}
+  if(_audioUnlocked) return;
+  _audioUnlocked = true;
   try{
     const unlockEl = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
     unlockEl.play().then(()=>unlockEl.pause()).catch(()=>{});
@@ -1949,6 +2034,15 @@ async function _speakLocalPiper(text){
 let _ttsAudioCtx = null, _ttsAnalyser = null, _ttsAnalyserBuf = null;
 function _setupTtsAnalyser(audioEl){
   _ttsAnalyser = null;
+  // Known WebKit bug (still present in current iOS): createMediaElementSource
+  // reliably produces SILENT audio in an installed standalone PWA (added to Home
+  // Screen), even though audio.play()/onplay fire normally -- the exact "no error,
+  // just no sound" symptom reported 2026-07-10. It's fine in a regular Safari tab.
+  // Skip the Web Audio routing entirely in that mode and just let the <audio>
+  // element play on its own output -- currentVoiceAmp() already falls back to a
+  // synthetic pulse when _ttsAnalyser is null, so the orb still animates, it just
+  // isn't driven by real amplitude in this mode. Guaranteed audible sound wins.
+  if(_isStandalonePWA) return;
   try{
     if(!_ttsAudioCtx) _ttsAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
     if(_ttsAudioCtx.state === 'suspended') _ttsAudioCtx.resume().catch(()=>{});
@@ -2771,6 +2865,7 @@ function sendMsg(sourceId) {
 function sendChip(el) { document.getElementById('chat-input').value = el.textContent; sendMsg(); }
 document.getElementById('chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg(); });
 document.getElementById('orb-chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendMsg('orb-chat-input'); });
+document.getElementById('quick-chat-input').addEventListener('keydown', e => { if(e.key==='Enter') sendQuickChat(); });
 initWS();
 
 // ── Agents — real data from /api/agents/status (live-status registry).
