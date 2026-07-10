@@ -500,6 +500,18 @@ def test_health_endpoint_is_unauthenticated_and_reports_persistence():
     check("persistent" in body, f"/health should report persistence status, got: {body}")
 
 
+# ── bare-domain root (2026-07-10 incident: GET / had no route at all, so anyone
+# navigating to the plain domain instead of /frank or /login got a raw
+# {"detail":"Not Found"} JSON blob -- fixed by redirecting to /frank, which itself
+# redirects an unauthenticated visitor on to /login) ──
+def test_root_redirects_to_frank():
+    c = TestClient(server.app, base_url="https://testserver")
+    resp = c.get("/", follow_redirects=False)
+    check(resp.status_code == 307, f"GET / should redirect (307), got {resp.status_code}")
+    check(resp.headers.get("location") == "/frank",
+          f"GET / should redirect to /frank, got {resp.headers.get('location')!r}")
+
+
 # ── runner ────────────────────────────────────────────────────────────────────
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]

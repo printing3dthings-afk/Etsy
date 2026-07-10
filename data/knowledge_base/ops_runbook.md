@@ -5592,3 +5592,151 @@ confirmed via `innerHTML` (not `innerText`, which returned misleading empty
 results for this tall scrollable-container screen, a browser quirk not a
 bug) that "API Costs" is gone while "AI Engines" and "My Account" both
 render correctly with nothing shifted or broken.
+
+## 2026-07-10 (v150) — Reliability fortress Phase 1: hard CI gate, real-browser
+## regression tests, Railway config lint, one-command rollback, git tags
+
+Scott, after the voice-silence/relay/404 incidents earlier the same day: "I
+need you to focus on fixing everything that is wrong. We cannot have down
+time. Put infrastructure in place to prevent this in the future. We need
+our pipelines and workflow to be a fortress." This is Phase 1 of a 3-phase
+plan he approved (staging gate + proactive alerting are Phase 2/3, not yet
+built — see "Not done yet" below). Phase 1 answers one question: **why did
+CI stay green through all three incidents, and why did a green CI not even
+matter?**
+
+**Root cause, confirmed by research, not assumed:** across 98 sampled CI
+runs including the exact commits that shipped all three bugs, `ci-smoke.yml`
+never went red, because nothing in the suite checked HTTP response headers,
+validated Railway deploy-config files, or drove a real browser — every
+check either parsed syntax or exercised the FastAPI app in-process via
+`TestClient`, which never touches a real CSP header enforcement, a real
+Dockerfile COPY path, or a real `<audio>` element. Separately, Railway was
+never actually confirmed to be gated on CI passing at all — `checkSuites`
+was `false` on both services, so even a red run would not have blocked the
+deploy.
+
+**What shipped this pass:**
+
+1. **`tests/test_security_headers.py`** (new) — regression test for the
+   CSP `media-src` gap that broke all voice audio (see the 2026-07-10 (v147)
+   entry above). Asserts the CSP header is present on both authenticated and
+   unauthenticated routes and that `media-src` covers `blob:` and `data:`.
+   Verified it fails with the exact original symptom when the CSP fix is
+   temporarily reverted, and passes clean against current code.
+
+2. **`test_http_routes.py`: added `test_root_redirects_to_frank()`** —
+   regression test for the bare-domain 404 (v148 entry above): asserts
+   `GET /` returns 307 to `/frank`. Verified fails when the route is
+   temporarily removed.
+
+3. **`tools/railway_config_lint.py`** (new) — static (CI-safe) + optional
+   `--live` (needs `RAILWAY_API_TOKEN`) linter for the two Railway
+   deploy-config bug classes hit provisioning `frank-relay` this same day:
+   (a) a Dockerfile `COPY` path that doesn't resolve given the configured
+   `rootDirectory`, (b) a `healthcheckPath` set on a config used by a
+   service whose Dockerfile shows no evidence of binding an HTTP server
+   (`EXPOSE` / a web-framework dependency). Verified it flags no false
+   positives against the current (correct) `railway.toml`/`railway.relay.toml`,
+   and correctly fails when either bug class is simulated. `--live` mode
+   cross-checks against Railway's actual service config via GraphQL.
+   **Note for future sessions:** Railway's edge blocks `urllib.request`'s
+   default User-Agent with a bare `403 error code: 1010` (Cloudflare bot
+   detection, confirmed unrelated to auth/proxy) — always set
+   `"User-Agent": "curl/8.5.0"` on requests to
+   `backboard.railway.app/graphql/v2`, or every live Railway API call from
+   this project will silently look like an auth failure and isn't.
+
+4. **`tools/playwright_smoke.py`** (new) — the single check most directly
+   aimed at this project's confirmed recurring failure pattern ("passes
+   every local/syntax check, breaks only in a real browser or real
+   container runtime" — also true of the 2026-07-03 `from tools.X import Y`
+   import bug that worked locally and broke only in Railway's container
+   `sys.path`). Boots the real app as a real subprocess/HTTP server (not
+   in-process `TestClient`), drives real headless Chromium via Playwright,
+   and asserts: no unexpected console errors, a `blob:` URL `<audio>`
+   element actually reaches `oncanplay` (the literal proof used to diagnose
+   the CSP bug live, now a permanent test), and the Settings screen renders.
+   Verified it fails with the exact original browser error
+   (`MEDIA_ERR_SRC_NOT_SUPPORTED`) when the CSP fix is reverted.
+
+5. **`ci-smoke.yml` updated** to install Playwright's Chromium
+   (`playwright install --with-deps chromium`) and run all three new checks,
+   plus the existing suite. **This is the first push since this change —
+   it has only been verified in this sandbox** (which has a pre-existing
+   Chromium at `/opt/pw-browsers/chromium`); the real GitHub Actions
+   `ubuntu-latest` runner has never run the Playwright install step before.
+   Watch the Actions run on this push to confirm it actually works there.
+
+6. **Railway `checkSuites` (a.k.a. "Wait for CI to pass") enabled via the
+   GraphQL API for BOTH services** (`deploymentTriggers` query to find the
+   trigger ID, `deploymentTriggerUpdate(checkSuites: true)` to flip it) —
+   confirmed `false` on both services beforehand. **This turns CI from a
+   soft early-warning into a hard deploy gate for the first time ever on
+   this project.** Practical effect: a push will sit un-deployed until the
+   `CI Smoke` GitHub Check Suite reports success. **Known risk to watch:**
+   `tests/test_staged_actions.py` makes a real `EtsyAPIClient.get_listing()`
+   call; in this sandbox (which has real Etsy credentials in `.env`) that
+   call can hang, but in real CI (no real Etsy credentials — `ci-smoke.yml`
+   only sets a dummy `APP_SECRET_TOKEN` by design) the equivalent call fails
+   fast instead, consistent with this test passing in all 98 sampled prior
+   runs. If it ever hangs in real CI, the job-level `timeout-minutes: 15`
+   is the backstop, but that means a 15-minute stall before any future
+   deploy — worth hardening (mock the Etsy client in tests) if it's ever
+   observed.
+
+7. **`tools/rollback.py`** (new) — one-command Railway rollback, replacing
+   the "manual dashboard Redeploy click" procedure documented in the
+   2026-07-09 entry above (that entry is now superseded by this one, kept
+   for history). `python tools/rollback.py --list [--service main|relay]`
+   to inspect; `python tools/rollback.py --service main|relay
+   [--deployment-id <id>] [--yes]` to roll back (defaults to the most
+   recent prior deployment, asks for confirmation unless `--yes`). Two real
+   bugs found and fixed via live testing against `frank-relay` before
+   trusting it: (a) Railway marks every superseded deployment `REMOVED`,
+   not just failed ones, so the initial "only accept `SUCCESS`" filter
+   never found a rollback candidate — fixed to accept `SUCCESS` or
+   `REMOVED`, excluding only `FAILED`/`CRASHED`; (b)
+   `deploymentRollback(id)` does not reactivate that ID — it builds a
+   **new** deployment (new ID) from that snapshot, so polling the original
+   target ID for `SUCCESS` hangs forever (it stays `REMOVED`) — fixed to
+   poll the service's deployment list for a new ID to appear, then poll
+   that. **Verified fully end-to-end against production**, both
+   directions: rolled `frank-relay` back one deployment (new deployment
+   `a33b745f...` reached `SUCCESS`, confirmed via `deploymentLogs` showing
+   `[relay] connected to wss://...`), then rolled forward again (new
+   deployment `fed00567-9024-4dd0-a521-3c0acba78680` reached `SUCCESS`,
+   relay reconnected again). **Production frank-relay is currently on
+   `fed00567-9024-4dd0-a521-3c0acba78680`** — functionally equivalent to
+   its state before this test.
+
+8. **Git tags for every production ship, starting now.** Zero tags existed
+   before this pass. Tagged the current pre-this-ship state as
+   `deploy-v149` (retroactive checkpoint) and this ship as `deploy-v150`.
+   Going forward: `git tag deploy-v<N>` + `git push --tags` alongside every
+   `_BUILD_ID` bump, so `tools/rollback.py` and any human always have a
+   named, durable checkpoint list instead of hunting by deployment ID or
+   commit hash.
+
+**Not done yet (Phase 2/3 of the approved plan, separate future work):**
+a staging Railway environment + `staging` git branch +
+`tools/promote_to_production.py` (push to staging, run the full suite
+including `playwright_smoke.py` against the live staging URL, only then
+merge to production) is Phase 2 — not started. Upgrading the external
+watchdog (`health_watchdog.yml`) from process-liveness to a real functional
+check plus a direct SMTP email alert to Scott is Phase 3 — not started.
+Today's work only hardens what already ships to production directly; it
+does not yet add a pre-production environment or proactive external
+alerting.
+
+**Verified:** full local suite green (`py_compile`, `compileall`,
+`smoke_test.py`, `test_security_headers.py`, `test_quality_gates.py`,
+`test_resilience.py`, `test_http_routes.py`, `test_listing_integrity.py`,
+`playwright_smoke.py`, `railway_config_lint.py`); each of the three new
+checks independently proven to fail on the exact original bug when it was
+temporarily reintroduced, then confirmed passing again once restored;
+`rollback.py` proven end-to-end against real production infrastructure in
+both directions. **Not yet verified:** the new CI steps running in a real
+GitHub Actions environment (only tested in this sandbox so far), and the
+`checkSuites: true` hard gate actually blocking/allowing a real deploy as
+intended — both confirmed on the push that ships this entry.
