@@ -66,6 +66,9 @@ jobs:
       - name: CI issue-reporter URL tests (health watchdog crash regression — 2026-07-10)
         run: python tests/test_ci_report_issue_url.py
 
+      - name: Quality-audit rotation tests (Etsy volume reduction — 2026-07-10)
+        run: python tests/test_quality_audit_rotation.py
+
       - name: Quality-gate tests (pre_publish_gate + validate_digital_file + SVG)
         run: python tests/test_quality_gates.py
 

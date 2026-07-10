@@ -606,6 +606,11 @@ def main():
                         help="Download hero photos and verify perceptual hashes")
     parser.add_argument("--id", metavar="LISTING_ID",
                         help="Audit a single listing ID only")
+    parser.add_argument("--ids", metavar="ID1,ID2,...",
+                        help="Audit a specific comma-separated set of listing IDs "
+                             "(used by main.py's _quality_audit_loop to rotate a "
+                             "subset of the catalog per day instead of auditing "
+                             "everything every run — see ops_runbook.md 2026-07-10)")
     parser.add_argument("--type", metavar="TYPE",
                         help="Audit only listings of a given type (e.g. wall_art)")
     parser.add_argument("--save", action="store_true",
@@ -641,6 +646,12 @@ def main():
         if not to_audit:
             print(f"Listing ID {args.id} not in manifest.")
             sys.exit(1)
+    if args.ids:
+        wanted = [i.strip() for i in args.ids.split(",") if i.strip()]
+        to_audit = {i: manifest[i] for i in wanted if i in manifest}
+        missing = [i for i in wanted if i not in manifest]
+        if missing:
+            print(f"WARNING: {len(missing)} requested ID(s) not in manifest, skipping: {missing}")
     if args.type:
         to_audit = {k: v for k, v in manifest.items() if v.get("type") == args.type}
 

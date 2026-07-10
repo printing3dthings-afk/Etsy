@@ -5886,3 +5886,69 @@ has this fix, or (b) this fix is merged onto whatever branch stays default.
 This also means the health watchdog has been checking a stale build for a
 long time regardless of the URL bug. Flagging for Scott to decide — this
 tool has no repo-settings API access to change the default branch itself.
+
+**Resolution (same day):** Scott switched the GitHub default branch to
+`claude/etsy-automation-agents-WFAPU` via Settings → General → Default
+branch (the "Edit" pencil next to the branch name only offers rename on
+GitHub's mobile web UI — the actual switcher, confirmed via GitHub's own
+docs, is a separate icon labeled "Switch to another branch"; requesting
+desktop site didn't change this, it's a genuinely different control, not a
+mobile-vs-desktop rendering difference). Verified via the repo API:
+`default_branch` now reads `claude/etsy-automation-agents-WFAPU`, and an
+unauthenticated `get_file_contents` on `tools/ci_report_health_issue.py`
+(no `ref` — same as what a scheduled workflow resolves) now returns the
+fixed version. Both root causes of "the problem with GitHub" are closed.
+
+### 2026-07-10 (v152) — Reduced daily Etsy API call volume ~70-75%
+
+**Ask:** Scott wanted to lower Etsy API usage (motivated by the earlier
+quota-exhaustion outage this same day) and asked what current volume was.
+
+**Investigation (code-derived estimate — no historical measurement existed
+before this fix; see below):** ~800-860 Etsy calls/day from automated
+sources, 93% of it from 2 of 7 in-process background loops in `main.py`:
+`_quality_audit_loop` (~516/day — full 172-listing catalog audit, 3 Etsy
+calls/listing, every 24h) and `_health_check_loop` (288/day — a `get_shop()`
+liveness heartbeat every 5 min). Also found `.github/workflows/
+listing_integrity_daily.yml` was a fully redundant duplicate of the same
+audit (currently delivering 0 calls only because its OAuth-refresh step has
+failed both times it's run — would double audit volume to ~1,033/day if its
+missing `GH_PAT_SECRETS` secret were ever fixed without addressing this).
+
+**Fix (confirmed with Scott):**
+- `_health_check_loop`: 5 min → 1 hour (288 → 24 calls/day). Pure
+  liveness heartbeat, no user-facing data.
+- `_quality_audit_loop`: now audits a rotating ~1/3 of the catalog per run
+  instead of all 172 listings every time (516 → ~172 calls/day), prioritized
+  by oldest/missing `last_verified` timestamp so every listing is still
+  covered at least once every 3 days and a never-audited listing always
+  goes first. New `_select_quality_audit_ids()` in `main.py`; new `--ids`
+  flag on `tools/listing_integrity_check.py` to accept the subset.
+- Disabled `listing_integrity_daily.yml`'s `schedule:` trigger (kept
+  `workflow_dispatch` for on-demand manual runs) — redundant with the
+  in-app loop above.
+- Added persisted rate-limit visibility: `etsy_api.py`'s
+  `_record_rate_limit()` now calls an optional hook (same duck-typed,
+  None-default pattern as `set_circuit_breaker_hook`, so standalone
+  scripts using `EtsyAPIClient` outside the FastAPI server are unaffected)
+  wired to a new `db.record_rate_limit_sample()` — every response carrying
+  `x-remaining-today` gets appended to a new `etsy_rate_limit_log` table,
+  pruned to 30 days on the existing daily snapshot loop. This is the only
+  way future "what are we at" gets a real measured answer instead of a
+  code estimate.
+
+**Net effect:** ~800-860 calls/day → ~206-241 calls/day (~70-75%
+reduction). Everything else (`_warm_suggestions`, `_snapshot_loop`,
+`_daily_brief_loop`, `_calendar_tasks_loop`) left alone — combined
+negligible (~10-45/day) relative to the two loops above.
+
+**Verified:** full local suite green (`py_compile`, `compileall`,
+`smoke_test.py`, `test_security_headers.py`, `railway_config_lint.py`,
+`test_ci_report_issue_url.py`, `test_quality_gates.py` — 37 tests,
+`test_resilience.py` — 29 tests, `test_staged_actions.py` — 51 tests,
+`test_http_routes.py` — 32 tests, `test_listing_integrity.py`). New
+`tests/test_quality_audit_rotation.py` (13 tests covering subset sizing,
+never-verified-first prioritization, and full 172-listing coverage within
+3 simulated rotations) proven to fail against a deliberately-reintroduced
+bug (dropped the `last_verified` sort) — reproduced the exact failure mode
+(over half the catalog permanently unaudited) before restoring the fix.

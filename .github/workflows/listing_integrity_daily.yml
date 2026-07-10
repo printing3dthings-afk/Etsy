@@ -1,9 +1,15 @@
 name: Daily Listing Integrity Check
 
+# 2026-07-10: schedule trigger disabled as part of an Etsy-API-volume
+# reduction pass (see ops_runbook.md). This workflow was fully redundant
+# with tools/api_server/main.py's in-app `_quality_audit_loop`, which runs
+# the same listing_integrity_check.py script on its own daily timer inside
+# the live server -- both existing at once would have doubled audit-related
+# Etsy call volume for zero added benefit the moment this workflow's broken
+# GH_PAT_SECRETS dependency got fixed (it had delivered zero successful runs
+# since creation). Kept as workflow_dispatch for an on-demand manual run;
+# re-enable the schedule only if the in-app loop is ever removed instead.
 on:
-  schedule:
-    # 13:00 UTC ≈ 9am US Eastern. Adjust if Scott wants a different time.
-    - cron: '0 13 * * *'
   workflow_dispatch: {}
 
 permissions:

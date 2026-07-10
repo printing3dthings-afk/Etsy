@@ -503,7 +503,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v151"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v152"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4659,6 +4659,12 @@ async def _snapshot_loop() -> None:
                 print(f"[trash] pruned {n} expired entr{'y' if n == 1 else 'ies'}", flush=True)
         except Exception as exc:
             print(f"[trash] prune error: {exc}", flush=True)
+        try:
+            n = await asyncio.to_thread(db.prune_rate_limit_log)
+            if n:
+                print(f"[rate-limit-log] pruned {n} sample(s) older than 30 days", flush=True)
+        except Exception as exc:
+            print(f"[rate-limit-log] prune error: {exc}", flush=True)
         await asyncio.sleep(delay)
 
 
@@ -4806,11 +4812,26 @@ _QUALITY_AUDIT_SUMMARY_RE = _re.compile(
     r"PASS:\s*(\d+).*?WARN:\s*(\d+).*?FAIL:\s*(\d+)", _re.DOTALL
 )
 
+_QUALITY_AUDIT_ROTATION_FRACTION = 3  # audit ~1/N of the catalog per run
+
+
+def _select_quality_audit_ids(manifest: dict) -> list[str]:
+    """Pick a rotating ~1/3 subset of the catalog to audit this run, prioritizing
+    listings with the oldest (or missing) `last_verified` timestamp so every
+    listing is covered at least once every _QUALITY_AUDIT_ROTATION_FRACTION runs,
+    and a never-audited listing always goes first. 2026-07-10: replaces auditing
+    the full catalog every run (~516 Etsy calls/day for 172 listings) as part of
+    a daily-Etsy-volume reduction pass Scott requested — see ops_runbook.md."""
+    ids = sorted(manifest.keys(), key=lambda lid: manifest[lid].get("last_verified") or "")
+    subset_size = -(-len(ids) // _QUALITY_AUDIT_ROTATION_FRACTION)  # ceil division
+    return ids[:subset_size]
+
 
 async def _quality_audit_iteration() -> dict:
     """One run of the daily quality audit: rotate oversized KB files, run the
-    read-only listing integrity check, record the trend, and escalate a FAIL
-    finding to ops_runbook.md. Raises on a genuine run failure (subprocess
+    read-only listing integrity check against a rotating ~1/3 subset of the
+    catalog (see _select_quality_audit_ids), record the trend, and escalate a
+    FAIL finding to ops_runbook.md. Raises on a genuine run failure (subprocess
     error, unparseable output) so `_run_loop_iteration` backs off and retries
     sooner than the normal 24h cadence; returns a result dict on a clean run
     even if the audit itself found failing listings (that's a content-level
@@ -4838,9 +4859,22 @@ async def _quality_audit_iteration() -> dict:
         return {"skipped": True, "passed": 0, "warned": 0, "failed": 0,
                 "reason": "listing_manifest.json not found — run build_manifest.py first"}
 
+    def _load_manifest_and_select_ids() -> list[str]:
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+        return _select_quality_audit_ids(manifest)
+
+    audit_ids = await asyncio.to_thread(_load_manifest_and_select_ids)
+    if not audit_ids:
+        print("[quality-audit] skipping — listing_manifest.json is empty", flush=True)
+        return {"skipped": True, "passed": 0, "warned": 0, "failed": 0,
+                "reason": "listing_manifest.json has no listings"}
+    print(f"[quality-audit] auditing rotating subset: {len(audit_ids)} listing(s)", flush=True)
+
     result = await asyncio.to_thread(
         subprocess.run,
-        [sys.executable, str(ROOT / "tools" / "listing_integrity_check.py")],
+        [sys.executable, str(ROOT / "tools" / "listing_integrity_check.py"),
+         "--ids", ",".join(audit_ids)],
         capture_output=True,
         text=True,
         timeout=600,
@@ -4937,19 +4971,24 @@ async def _health_check_iteration() -> dict:
 
 
 async def _health_check_loop() -> None:
-    """Every 5 minutes: confirm Etsy + Anthropic credentials are actually live (the
+    """Every hour: confirm Etsy + Anthropic credentials are actually live (the
     same checks /api/ping exposes manually, run here on a timer so a regression
     surfaces in ops_runbook.md without anyone needing to remember to hit that URL),
     and reap any long_running background processes (coloring page generation, etc.)
     started via _run_exec_command so a finished/crashed child never sits untracked
-    forever in _LONG_RUNNING_PROCS."""
+    forever in _LONG_RUNNING_PROCS.
+
+    2026-07-10: slowed from every 5 min (288 Etsy calls/day) to every hour (24/day)
+    as part of a daily-Etsy-volume reduction pass (see ops_runbook.md) — this is a
+    pure liveness heartbeat with no user-facing data, so an outage now surfaces
+    within an hour instead of 5 minutes, a tradeoff Scott confirmed."""
     await asyncio.sleep(60)  # let the app finish booting first
     while True:
         delay = await _run_loop_iteration(
             "health_check", "Health Check", _health_check_iteration,
             on_success_status=lambda r: "ok" if r["all_ok"] else "error",
             on_success_detail=lambda r: r["detail"],
-            base_interval=300,
+            base_interval=3600,
         )
         await asyncio.sleep(delay)
 
@@ -5325,6 +5364,7 @@ async def _startup() -> None:
     except Exception as exc:
         print(f"[sessions] startup purge failed: {exc}", flush=True)
     etsy_api.set_circuit_breaker_hook(CircuitBreaker("etsy_api", db_module=db))
+    etsy_api.set_rate_limit_sample_hook(db.record_rate_limit_sample)
     # Seed every loop's row immediately so the Agents registry always reports
     # all 5 from boot, rather than waiting on each loop's own startup delay
     # (some sleep minutes before their first real run).
@@ -7604,7 +7644,7 @@ async def get_system_dependencies(_token: str = Depends(_auth_session_or_bearer)
 @app.post("/api/system/recheck-credentials")
 async def recheck_credentials(_token: str = Depends(_auth_session_or_bearer)):
     """Force an immediate Etsy + Anthropic credential check instead of waiting up to
-    5 minutes for the next _health_check_loop tick -- lets Scott confirm a credential
+    an hour for the next _health_check_loop tick -- lets Scott confirm a credential
     rotation actually worked right away (2026-07-08 correction pass). Reuses
     _health_check_iteration() exactly, so this is the same real Etsy API call
     (get_shop()) the background loop already makes, not a separate probe -- the

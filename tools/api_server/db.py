@@ -132,6 +132,15 @@ CREATE TABLE IF NOT EXISTS quality_audits (
   failed      INTEGER,
   summary     TEXT     -- short text: which listings failed and why
 );
+CREATE TABLE IF NOT EXISTS etsy_rate_limit_log (
+  id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts                    TEXT NOT NULL,
+  remaining_today       INTEGER,
+  remaining_this_second INTEGER,
+  limit_per_day         INTEGER,
+  limit_per_second      INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_rate_limit_ts ON etsy_rate_limit_log(ts);
 CREATE TABLE IF NOT EXISTS etsy_tokens (
   id                    INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row
   access_token          TEXT NOT NULL,
@@ -683,6 +692,67 @@ def get_quality_audit_history(limit: int = 30) -> list:
             "SELECT * FROM quality_audits ORDER BY id DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows][::-1]
+    finally:
+        conn.close()
+
+
+# ── Etsy rate-limit history (2026-07-10: before this, `EtsyAPIClient`
+# captured Etsy's x-remaining-today/x-remaining-this-second headers into an
+# in-memory dict only — lost on every restart, never logged anywhere, so
+# "what's our real daily Etsy call volume" had no measured answer, only
+# code-derived estimates. Wired via etsy_api.py's set_rate_limit_sample_hook
+# so etsy_api.py itself never imports this module directly (same duck-typed
+# hook pattern as set_circuit_breaker_hook — keeps standalone scripts that
+# use EtsyAPIClient outside the FastAPI server working unchanged). ─────────
+
+
+def record_rate_limit_sample(
+    remaining_today: int | None,
+    remaining_this_second: int | None,
+    limit_per_day: int | None,
+    limit_per_second: int | None,
+) -> None:
+    """Append one rate-limit snapshot. Called on every Etsy response that
+    carries an x-remaining-today header (i.e. most calls) — cheap at the
+    current (much-reduced) call volume; pruned to 30 days by
+    prune_rate_limit_log(), piggybacked on the daily snapshot loop."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            "INSERT INTO etsy_rate_limit_log "
+            "(ts, remaining_today, remaining_this_second, limit_per_day, limit_per_second) "
+            "VALUES (?,?,?,?,?)",
+            (ts, remaining_today, remaining_this_second, limit_per_day, limit_per_second),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_rate_limit_history(limit: int = 500) -> list:
+    """Most recent `limit` rate-limit samples, oldest-first."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM etsy_rate_limit_log ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows][::-1]
+    finally:
+        conn.close()
+
+
+def prune_rate_limit_log(days: int = 30) -> int:
+    """Delete rate-limit samples older than `days`. Returns rows deleted."""
+    init_db()
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute("DELETE FROM etsy_rate_limit_log WHERE ts < ?", (cutoff,))
+        conn.commit()
+        return cur.rowcount
     finally:
         conn.close()
 

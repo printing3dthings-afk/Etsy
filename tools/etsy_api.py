@@ -100,6 +100,24 @@ def set_circuit_breaker_hook(hook) -> None:
     _circuit_breaker_hook = hook
 
 
+# Optional rate-limit sample recorder, set once at server boot via
+# set_rate_limit_sample_hook() (wired to db.record_rate_limit_sample). Same
+# duck-typed/None-default pattern as the circuit-breaker hook above, for the
+# same reason: standalone scripts using EtsyAPIClient outside the FastAPI
+# server never call the setter, so this stays a no-op for them (2026-07-10 --
+# added so "what's our real daily Etsy call volume" has a measured answer
+# instead of only a code-derived estimate).
+_rate_limit_sample_hook = None
+
+
+def set_rate_limit_sample_hook(hook) -> None:
+    """Call `hook(remaining_today, remaining_this_second, limit_per_day,
+    limit_per_second)` every time a response carries rate-limit headers.
+    Pass None to disable."""
+    global _rate_limit_sample_hook
+    _rate_limit_sample_hook = hook
+
+
 # Etsy status codes that indicate the dependency itself is unhealthy (rate limit /
 # server-side) -- mirrors resilience.py's _RETRYABLE_ETSY_STATUSES. A clean 4xx (400,
 # 404, etc.) means Etsy responded correctly and our request was wrong, so it must not
@@ -446,6 +464,11 @@ class EtsyAPIClient:
             rl["remaining_this_second"] = sec
         if day is not None:
             rl["remaining_today"] = day
+        if day is not None and _rate_limit_sample_hook is not None:
+            try:
+                _rate_limit_sample_hook(day, sec, rl["limit_per_day"], rl["limit_per_second"])
+            except Exception:
+                pass  # visibility logging must never break a live Etsy call
 
     def _throttle_if_needed(self) -> None:
         """Pre-emptively pace requests based on the last seen rate-limit headers.
