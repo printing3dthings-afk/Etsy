@@ -86,6 +86,9 @@ CREATE TABLE IF NOT EXISTS metric_snapshots (
   total_reviews   INTEGER,
   raw_json        TEXT
 );
+-- NOTE: currently write-only (populated by record_metric_snapshot; the reader
+-- get_listing_history was removed 2026-07-11 as dead code). Kept because the
+-- write path is cheap and a per-listing history reader may return.
 CREATE TABLE IF NOT EXISTS listing_snapshots (
   snapshot_date TEXT NOT NULL,
   listing_id    INTEGER NOT NULL,
@@ -136,6 +139,9 @@ CREATE TABLE IF NOT EXISTS quality_audits (
                            -- run implicitly covered the full catalog
   summary       TEXT      -- short text: which listings failed and why
 );
+-- NOTE: currently write-only (populated by the rate-limit sample hook + pruned
+-- daily; the reader get_rate_limit_history was removed 2026-07-11 as dead code).
+-- Kept because sampling is the only measured record of Etsy quota consumption.
 CREATE TABLE IF NOT EXISTS etsy_rate_limit_log (
   id                    INTEGER PRIMARY KEY AUTOINCREMENT,
   ts                    TEXT NOT NULL,
@@ -335,19 +341,6 @@ def get_metric_history(days: int = 30) -> list:
         rows = conn.execute(
             "SELECT * FROM metric_snapshots ORDER BY snapshot_date DESC LIMIT ?",
             (days,),
-        ).fetchall()
-        return [dict(r) for r in rows][::-1]
-    finally:
-        conn.close()
-
-
-def get_listing_history(listing_id: int, days: int = 30) -> list:
-    init_db()
-    conn = _connect()
-    try:
-        rows = conn.execute(
-            "SELECT * FROM listing_snapshots WHERE listing_id=? ORDER BY snapshot_date DESC LIMIT ?",
-            (listing_id, days),
         ).fetchall()
         return [dict(r) for r in rows][::-1]
     finally:
@@ -746,19 +739,6 @@ def record_rate_limit_sample(
             (ts, remaining_today, remaining_this_second, limit_per_day, limit_per_second),
         )
         conn.commit()
-    finally:
-        conn.close()
-
-
-def get_rate_limit_history(limit: int = 500) -> list:
-    """Most recent `limit` rate-limit samples, oldest-first."""
-    init_db()
-    conn = _connect()
-    try:
-        rows = conn.execute(
-            "SELECT * FROM etsy_rate_limit_log ORDER BY id DESC LIMIT ?", (limit,)
-        ).fetchall()
-        return [dict(r) for r in rows][::-1]
     finally:
         conn.close()
 
@@ -1306,18 +1286,6 @@ def list_agent_heartbeats() -> list:
     try:
         rows = conn.execute("SELECT * FROM agent_heartbeats ORDER BY name").fetchall()
         return [dict(r) for r in rows]
-    finally:
-        conn.close()
-
-
-def delete_agent_heartbeat(name: str) -> None:
-    """Remove a loop's row entirely -- for a retired loop that will never run again,
-    so it doesn't sit on the Agents HUD forever frozen at its last status."""
-    init_db()
-    conn = _connect()
-    try:
-        conn.execute("DELETE FROM agent_heartbeats WHERE name = ?", (name,))
-        conn.commit()
     finally:
         conn.close()
 

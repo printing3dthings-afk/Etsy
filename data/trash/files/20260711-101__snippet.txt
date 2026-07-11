@@ -1,0 +1,25 @@
+def configure_canva(summary):
+    if not _confirm("\nSet up Canva now? (automates listing graphics)"):
+        summary["skipped"].append("Canva")
+        return
+    print("Note: Canva's API cannot create a Brand Template — you must build at least")
+    print("one manually in the Canva UI (with named placeholder fields) before the")
+    print("generate_listing_graphic tool can be used.")
+    client_id = _prompt_secret("Canva Integration Client ID")
+    client_secret = _prompt_secret("Canva Integration Client Secret")
+    if not client_id or not client_secret:
+        print("Missing Client ID/Secret — skipping Canva.")
+        summary["skipped"].append("Canva")
+        return
+    _update_env("CANVA_CLIENT_ID", client_id)
+    _update_env("CANVA_CLIENT_SECRET", client_secret)
+
+    if _confirm("Run the Canva OAuth flow now?"):
+        _run([sys.executable, os.path.join(REPO_ROOT, "tools", "canva_oauth.py")])
+        callback_url = _prompt("Paste the full callback URL here (after clicking Allow)")
+        if callback_url:
+            _run([sys.executable, os.path.join(REPO_ROOT, "tools", "canva_oauth.py"),
+                  "--exchange", callback_url])
+    else:
+        print("Skipped OAuth — run `python tools/canva_oauth.py` later to authorize.")
+    summary["configured"].append("Canva")

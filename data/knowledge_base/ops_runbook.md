@@ -6006,3 +6006,58 @@ fixes above (fetch-error marker, manifest skip, `--type` narrowing, prune
 gating, `audited_count` default) was proven by temporarily reverting it,
 confirming the corresponding new test failed with the exact original
 symptom, then restoring and reconfirming green.
+
+### 2026-07-11 (v154) — Dead-code declutter of Frank (99 files removed)
+
+**Ask:** Scott felt Frank had accumulated too much and asked to find what we
+don't need. Chose dead-code-only, zero-behavior-change removal; all four live
+capability areas (planners/stickers, wall art, 3D-print SVG, social) kept.
+
+**Method:** 3 Explore agents inventoried the whole surface (server
+routes/loops/DB, the 45 agent tools, every `tools/` script). Every candidate was
+then independently grep-verified unreferenced by live code — `import X`,
+`from tools.X import`, and path-strings in `.github/`, `command_center.py`,
+`town_app/`, `installer/`, and `SCHEDULED_TASKS`. All removals routed through
+`tools/trash.py` (recoverable 30 days), ledger IDs `20260711-001`..`-104`.
+
+**Removed (99 whole files + 4 code snippets):**
+- **23 orphan `*_tools.py`** — the superseded "specialized multi-agent" layer
+  (`financial_tools`, `marketing_tools`, `sales_tools`, `analytics_tools`,
+  `product_tools`, `returns_tools`, `supply_chain_tools`, `competitor_intel_tools`,
+  `web_research_tools`, `digital_delivery_tools`, …). Never wired into
+  `AGENT_TOOLS`; only ever loaded by already-trashed `*_agent.py` files. Ids 001–023.
+- **3 non-capability scripts** (`kdp_publisher`, `printify_publisher`,
+  `filament_tracker`) + `data/kdp/` companion data. Ids 024–026, 061–065.
+- **6 duplicate/dev-artifact scripts** (`etsy_oauth_manual`,
+  `lifestyle_composite_upload`, `svg_text_to_paths`, `commercial_license_photos`,
+  `commercial_license_tool`, `record_pinterest_demo`). Ids 027–032.
+- **23 completed one-off migrations + never-wired monitors** (ids 033–056, less
+  `gen_room_library` which was restored — see below).
+- **`tools/_archive/`** wholesale — 34 `.py` + README, self-labeled graveyard,
+  nothing imports it. Ids 066–100.
+- **Canva cluster** (`canva_api/oauth/tools`) + `email_leadmagnet` (ids 057–060),
+  with the referencing lines edited out of `installer/setup_wizard.py`
+  (`configure_canva`, snippet id 101) and `command_center.py` (menu entry).
+- **3 dead DB functions** in `db.py` (`get_listing_history`,
+  `get_rate_limit_history`, `delete_agent_heartbeat`) via `archive_snippet`
+  (ids 102–104); their tables/write-paths kept and annotated write-only.
+
+**Kept despite being grep-unreferenced (operator utilities for live capabilities,
+documented in the KB — removing them would leave inaccurate "run this" docs):**
+`process_sticker_sheets.py` (sticker-pack regeneration) and `gen_room_library.py`
+(lifestyle-photo room library — restored from trash id `20260711-047` after the
+doc check caught it). Also kept: everything referenced by `command_center.py`'s
+menu, `run_wall_art_workflow.py` (`etsy_listing_tools`), `build_planners.py`
+(`art_creation_tools`), `pinterest_batch_poster.py` (`social_media_tools`), and
+`town_app` (`competitor_intel.py`).
+
+**Explicitly NOT touched:** `data/trash/` (the recovery vault itself), all
+wired-but-low-usage live features (Studio media-gen, Voice, Etsy Ads suite,
+TikTok/IG/FB posting), and the write-only tables' write paths.
+
+**Verified:** grep sweep shows zero dangling references; `compileall` clean;
+`smoke_test.py` imports `main`'s full tree and still registers 45 agent tools;
+full local suite green (`test_security_headers`, `test_ci_report_issue_url`,
+`test_quality_audit_rotation`, `test_quality_gates`, `test_resilience`,
+`test_staged_actions`, `test_http_routes`, `test_listing_integrity`,
+`railway_config_lint`); the two edited operator entrypoints still parse.

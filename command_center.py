@@ -209,12 +209,6 @@ COMMANDS = [
                 "cmd": "python3 tools/tiktok_poster.py",
                 "desc": "Posts the next scheduled video from data/tiktok_content_calendar.json to @onbrandcraftz.",
             },
-            {
-                "id": "email_templates",
-                "label": "Show Email Lead Magnet Templates",
-                "cmd": "python3 tools/email_leadmagnet.py --templates",
-                "desc": "Prints the welcome email sequence and lead magnet strategy for the email list.",
-            },
         ]
     },
     # ── CUSTOMER & ORDERS ────────────────────────────────────────────────────

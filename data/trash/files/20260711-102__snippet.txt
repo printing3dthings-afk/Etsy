@@ -1,0 +1,11 @@
+def get_listing_history(listing_id: int, days: int = 30) -> list:
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM listing_snapshots WHERE listing_id=? ORDER BY snapshot_date DESC LIMIT ?",
+            (listing_id, days),
+        ).fetchall()
+        return [dict(r) for r in rows][::-1]
+    finally:
+        conn.close()

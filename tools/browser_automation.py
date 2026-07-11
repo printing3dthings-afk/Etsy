@@ -1,17 +1,17 @@
 """
 Browser Automation Tools — Playwright-driven rendering for JS-heavy pages.
 
-Fills the gap left by tools/web_research_tools.py's plain `requests` fetcher:
-some keyword-research SaaS dashboards (eRank, Sale Samurai, Marmalead) and
-modern search result pages render content client-side and need a real
-browser to see the final DOM.
+Fills the gap left by a plain `requests`-based fetch: some keyword-research
+SaaS dashboards (eRank, Sale Samurai, Marmalead) and modern search result
+pages render content client-side and need a real browser to see the final
+DOM.
 
 HONEST LIMITATION (verified by direct testing, June 2026): this sandbox's
 outbound IP is blocked by Etsy at the network/edge level — etsy.com returns
 HTTP 403 on every page (including the bare homepage) regardless of browser
 realism, while Google/Bing/generic sites render normally. This is the same
-"anti_scrape" condition tools/web_research_tools.py already documents for
-its requests-based Etsy fetch. A real browser does not get around an IP
+"anti_scrape" condition a plain requests-based Etsy fetch hits. A real
+browser does not get around an IP
 block, so `check_etsy_search_rank` below detects and reports this condition
 honestly instead of pretending to return real ranking data.
 
@@ -102,7 +102,7 @@ TOOL_DEFINITIONS: list[dict] = [
             "search results page in a browser. HONEST LIMITATION: this sandbox's outbound IP is "
             "blocked by Etsy at the network/edge level (verified — even the bare homepage returns "
             "HTTP 403), so this will almost certainly return a 'blocked' status rather than real "
-            "rank data. Use tools/competitor_intel_tools.py's search_market (official Etsy Open API) "
+            "rank data. Use the `search_etsy` tool (official Etsy Open API) "
             "for reliable competitor/listing data instead — it cannot show personalized search rank "
             "but is not IP-blocked."
         ),
@@ -285,7 +285,7 @@ def _check_etsy_search_rank(data: dict) -> str:
                     "checking would need to run from a residential/non-datacenter IP (e.g. "
                     "Scott's own machine), or use a third-party rank-tracking service."
                 ),
-                "alternative": "Use competitor_intel_tools.search_market (official Etsy Open API) for listing/price/competitor data — no rank position, but not IP-blocked.",
+                "alternative": "Use the search_etsy tool (official Etsy Open API) for listing/price/competitor data — no rank position, but not IP-blocked.",
             }, indent=2)
 
         # If somehow not blocked, do a best-effort rank scan

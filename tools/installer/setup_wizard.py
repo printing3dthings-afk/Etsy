@@ -8,8 +8,8 @@ Usage:
 
 Stdlib only (secrets, getpass, subprocess, urllib) — no new dependencies,
 consistent with the rest of tools/. Reuses the same manual `.env`
-read-and-rewrite pattern already used identically in tools/etsy_oauth.py,
-tools/canva_oauth.py, and tools/pinterest_oauth.py.
+read-and-rewrite pattern already used identically in tools/etsy_oauth.py
+and tools/pinterest_oauth.py.
 
 This script never touches Scott's live .env unless someone explicitly runs
 it against his checkout — it only operates on whatever .env lives next to
@@ -62,10 +62,10 @@ def _subprocess_env() -> dict:
     """Merge the current .env's values into a copy of os.environ.
 
     pinterest_oauth.py reads PINTEREST_APP_ID/SECRET via plain os.getenv()
-    and never loads .env into os.environ itself (unlike etsy_oauth.py and
-    canva_oauth.py, which both do this at import time) — so a freshly
-    spawned subprocess won't see values this wizard just wrote to .env
-    unless we merge them in explicitly here.
+    and never loads .env into os.environ itself (unlike etsy_oauth.py,
+    which does this at import time) — so a freshly spawned subprocess
+    won't see values this wizard just wrote to .env unless we merge them
+    in explicitly here.
     """
     merged = os.environ.copy()
     merged.update(_read_env())
@@ -238,33 +238,6 @@ def configure_pinterest(summary):
     summary["configured"].append("Pinterest")
 
 
-def configure_canva(summary):
-    if not _confirm("\nSet up Canva now? (automates listing graphics)"):
-        summary["skipped"].append("Canva")
-        return
-    print("Note: Canva's API cannot create a Brand Template — you must build at least")
-    print("one manually in the Canva UI (with named placeholder fields) before the")
-    print("generate_listing_graphic tool can be used.")
-    client_id = _prompt_secret("Canva Integration Client ID")
-    client_secret = _prompt_secret("Canva Integration Client Secret")
-    if not client_id or not client_secret:
-        print("Missing Client ID/Secret — skipping Canva.")
-        summary["skipped"].append("Canva")
-        return
-    _update_env("CANVA_CLIENT_ID", client_id)
-    _update_env("CANVA_CLIENT_SECRET", client_secret)
-
-    if _confirm("Run the Canva OAuth flow now?"):
-        _run([sys.executable, os.path.join(REPO_ROOT, "tools", "canva_oauth.py")])
-        callback_url = _prompt("Paste the full callback URL here (after clicking Allow)")
-        if callback_url:
-            _run([sys.executable, os.path.join(REPO_ROOT, "tools", "canva_oauth.py"),
-                  "--exchange", callback_url])
-    else:
-        print("Skipped OAuth — run `python tools/canva_oauth.py` later to authorize.")
-    summary["configured"].append("Canva")
-
-
 def configure_meta(summary):
     if not _confirm("\nSet up Instagram / Facebook now? (photo/video posting)"):
         summary["skipped"].append("Instagram/Facebook")
@@ -333,7 +306,6 @@ def main():
     configure_openai(summary)
     configure_email(summary)
     configure_pinterest(summary)
-    configure_canva(summary)
     configure_meta(summary)
 
     print_summary(summary)

@@ -1,0 +1,11 @@
+def get_rate_limit_history(limit: int = 500) -> list:
+    """Most recent `limit` rate-limit samples, oldest-first."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM etsy_rate_limit_log ORDER BY id DESC LIMIT ?", (limit,)
+        ).fetchall()
+        return [dict(r) for r in rows][::-1]
+    finally:
+        conn.close()
