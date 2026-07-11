@@ -125,12 +125,16 @@ CREATE TABLE IF NOT EXISTS chat_summaries (
   updated_at  TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS quality_audits (
-  id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  ts          TEXT NOT NULL,
-  passed      INTEGER,
-  warned      INTEGER,
-  failed      INTEGER,
-  summary     TEXT     -- short text: which listings failed and why
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts            TEXT NOT NULL,
+  passed        INTEGER,
+  warned        INTEGER,
+  failed        INTEGER,
+  audited_count INTEGER,  -- total listings in this run's audited set (added
+                           -- alongside the 2026-07-10 rotation change); NULL for
+                           -- historical rows recorded before rotation, when every
+                           -- run implicitly covered the full catalog
+  summary       TEXT      -- short text: which listings failed and why
 );
 CREATE TABLE IF NOT EXISTS etsy_rate_limit_log (
   id                    INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -257,6 +261,10 @@ def init_db() -> None:
                 pass  # column already exists
             try:
                 conn.execute("ALTER TABLE hub_users ADD COLUMN recovery_code_hash TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE quality_audits ADD COLUMN audited_count INTEGER")
             except sqlite3.OperationalError:
                 pass  # column already exists
             conn.commit()
@@ -666,16 +674,27 @@ def search_chat_messages(query: str, limit: int = 50) -> list:
 # ── Quality audit history (automated daily listing_integrity_check runs) ─────
 
 
-def record_quality_audit(passed: int, warned: int, failed: int, summary: str = "") -> int:
+def record_quality_audit(passed: int, warned: int, failed: int, summary: str = "",
+                          audited_count: int | None = None) -> int:
     """Log one automated quality-audit run. Append-only — gives Frank and Scott
-    a trend line instead of only the latest snapshot. Returns the new row id."""
+    a trend line instead of only the latest snapshot. `audited_count` records
+    how many listings were in THIS run's audited set — before the 2026-07-10
+    rotation change every run implicitly covered the full catalog; now some
+    runs cover only a rotating subset, and without this column a trend/
+    percentage comparison across that boundary silently treats the two as
+    equivalent. Defaults to passed+warned+failed (always consistent with the
+    audit's own per-listing status counts) when the caller doesn't pass it
+    explicitly. Returns the new row id."""
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
+    if audited_count is None:
+        audited_count = passed + warned + failed
     conn = _connect()
     try:
         cur = conn.execute(
-            "INSERT INTO quality_audits (ts, passed, warned, failed, summary) VALUES (?,?,?,?,?)",
-            (ts, passed, warned, failed, summary),
+            "INSERT INTO quality_audits (ts, passed, warned, failed, audited_count, summary) "
+            "VALUES (?,?,?,?,?,?)",
+            (ts, passed, warned, failed, audited_count, summary),
         )
         conn.commit()
         return cur.lastrowid

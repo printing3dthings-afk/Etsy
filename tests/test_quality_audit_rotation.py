@@ -33,7 +33,15 @@ os.environ.setdefault("APP_SECRET_TOKEN", "rotation-test-not-a-real-secret")
 sys.path.insert(0, str(ROOT / "tools" / "api_server"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-from main import _select_quality_audit_ids, _QUALITY_AUDIT_ROTATION_FRACTION  # noqa: E402
+import asyncio  # noqa: E402
+import db  # noqa: E402
+from main import (  # noqa: E402
+    _select_quality_audit_ids,
+    _QUALITY_AUDIT_ROTATION_FRACTION,
+    _parse_quality_audit_summary,
+    _quality_audit_skip_result,
+    _maybe_prune_after_snapshot,
+)
 
 _passed = 0
 _failed = 0
@@ -105,6 +113,68 @@ def test_small_manifest_never_returns_empty_subset():
         check(f"manifest of {n} listing(s) yields a non-empty subset", len(ids) >= 1)
 
 
+def test_parse_quality_audit_summary_extracts_fetch_errors():
+    out = "...  ✓ PASS: 10   ⚠ WARN: 2   ✗ FAIL: 3   (FETCH_ERR: 3)\n..."
+    passed, warned, failed, fetch_errors = _parse_quality_audit_summary(out)
+    check("parses PASS/WARN/FAIL/FETCH_ERR", (passed, warned, failed, fetch_errors) == (10, 2, 3, 3),
+          f"-- got {(passed, warned, failed, fetch_errors)}")
+
+
+def test_parse_quality_audit_summary_defaults_fetch_errors_to_zero_when_absent():
+    passed, warned, failed, fetch_errors = _parse_quality_audit_summary(
+        "  ✓ PASS: 5   ⚠ WARN: 1   ✗ FAIL: 0")
+    check("fetch_errors defaults to 0 for older-format output without FETCH_ERR",
+          fetch_errors == 0, f"-- got {fetch_errors}")
+    check("passed/warned/failed still parse from old-format output",
+          (passed, warned, failed) == (5, 1, 0), f"-- got {(passed, warned, failed)}")
+
+
+def test_parse_quality_audit_summary_raises_on_unparseable_output():
+    try:
+        _parse_quality_audit_summary("the script crashed with a traceback, no summary line here")
+        check("raises RuntimeError when no summary line is found", False)
+    except RuntimeError:
+        check("raises RuntimeError when no summary line is found", True)
+
+
+def test_quality_audit_skip_result_shape():
+    r = _quality_audit_skip_result("some reason")
+    check("skip result has the expected shape",
+          r == {"skipped": True, "passed": 0, "warned": 0, "failed": 0, "reason": "some reason"},
+          f"-- got {r}")
+
+
+def test_prune_runs_only_when_delay_equals_base_interval():
+    calls = []
+    import trash as _trash
+    orig_trash_prune, orig_db_prune = _trash.prune, db.prune_rate_limit_log
+    _trash.prune = lambda: calls.append("trash") or 0
+    db.prune_rate_limit_log = lambda: calls.append("db") or 0
+    try:
+        asyncio.run(_maybe_prune_after_snapshot(86_400, 86_400))
+        check("prune runs on success (delay == base_interval)", calls == ["trash", "db"],
+              f"-- got {calls}")
+        calls.clear()
+        asyncio.run(_maybe_prune_after_snapshot(37.5, 86_400))
+        check("prune is skipped on a backoff-retry delay", calls == [], f"-- got {calls}")
+    finally:
+        _trash.prune, db.prune_rate_limit_log = orig_trash_prune, orig_db_prune
+
+
+def test_record_quality_audit_defaults_audited_count():
+    db.record_quality_audit(10, 2, 3, "some summary")
+    history = db.get_quality_audit_history(limit=1)
+    check("audited_count defaults to passed+warned+failed",
+          history[-1]["audited_count"] == 15, f"-- got {history[-1]}")
+
+
+def test_record_quality_audit_accepts_explicit_audited_count():
+    db.record_quality_audit(5, 1, 0, "", audited_count=58)
+    history = db.get_quality_audit_history(limit=1)
+    check("audited_count uses the explicit value when passed",
+          history[-1]["audited_count"] == 58, f"-- got {history[-1]}")
+
+
 def main() -> int:
     print("Running quality-audit rotation tests...\n")
     for fn in (
@@ -113,6 +183,13 @@ def main() -> int:
         test_never_verified_listings_come_first,
         test_full_rotation_covers_every_listing_within_fraction_runs,
         test_small_manifest_never_returns_empty_subset,
+        test_parse_quality_audit_summary_extracts_fetch_errors,
+        test_parse_quality_audit_summary_defaults_fetch_errors_to_zero_when_absent,
+        test_parse_quality_audit_summary_raises_on_unparseable_output,
+        test_quality_audit_skip_result_shape,
+        test_prune_runs_only_when_delay_equals_base_interval,
+        test_record_quality_audit_defaults_audited_count,
+        test_record_quality_audit_accepts_explicit_audited_count,
     ):
         try:
             fn()

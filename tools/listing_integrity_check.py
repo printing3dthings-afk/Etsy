@@ -446,18 +446,32 @@ def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
         "photo_count": 0,
         "file_count": 0,
         "tag_count": 0,
+        "fetch_error": False,
     }
 
     # -- Fetch listing --
     try:
         listing = api._request("GET", f"listings/{listing_id}")
     except Exception as e:
+        # Could not even reach Etsy for this listing (network error, breaker-open,
+        # 429, etc.) — NOT a content-quality failure, it's "we don't know." status
+        # stays "FAIL" so render_report()'s grouping/summary format and the CLI's
+        # exit-code semantics (main() below) are unchanged. fetch_error is the
+        # signal callers use to tell "couldn't check it" apart from "checked it
+        # and it's broken" — see main()'s manifest write-back and
+        # api_server/main.py's _quality_audit_iteration(), both of which branch
+        # on it. Before this field existed, a fetch failure silently masqueraded
+        # as a real content FAIL: stamping last_verified on a never-actually-checked
+        # listing (starving it from the audit rotation), and escalating a false
+        # "N listing(s) failing" ops_runbook.md entry into the CEO agent's context
+        # (58/58 false FAILs during the 2026-07-10 Etsy quota-exhaustion incident).
         result["issues"].append({
             "severity": "FAIL",
             "check": "listing_fetch",
             "detail": f"Could not fetch listing: {e}"
         })
         result["status"] = "FAIL"
+        result["fetch_error"] = True
         return result
 
     # State check
@@ -568,9 +582,19 @@ def render_report(results: list[dict], elapsed: float) -> str:
     fail_count = sum(1 for r in results if r["status"] == "FAIL")
     warn_count = sum(1 for r in results if r["status"] == "WARN")
     pass_count = sum(1 for r in results if r["status"] == "PASS")
+    fetch_error_count = sum(1 for r in results if r.get("fetch_error"))
 
     lines.append(f"\nSUMMARY: {len(results)} listings audited in {elapsed:.0f}s")
-    lines.append(f"  ✓ PASS: {pass_count}   ⚠ WARN: {warn_count}   ✗ FAIL: {fail_count}")
+    lines.append(
+        f"  ✓ PASS: {pass_count}   ⚠ WARN: {warn_count}   ✗ FAIL: {fail_count}"
+        f"   (FETCH_ERR: {fetch_error_count})"
+    )
+    if fetch_error_count:
+        lines.append(
+            f"  NOTE: {fetch_error_count} of the {fail_count} FAIL(s) above could not even be "
+            f"fetched from Etsy (network/breaker/429) — not a content-quality problem. "
+            f"See [listing_fetch] issues below."
+        )
 
     # Group by status
     for status_filter in ("FAIL", "WARN", "PASS"):
@@ -594,6 +618,51 @@ def render_report(results: list[dict], elapsed: float) -> str:
 
     lines.append("\n" + "=" * 70)
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Manifest selection / write-back helpers (extracted for unit testing)
+# ---------------------------------------------------------------------------
+
+def _select_manifest_entries(manifest: dict, id_: str | None, ids: str | None,
+                              type_: str | None) -> tuple[dict, list[str]]:
+    """Filter manifest entries by --id or --ids (selection), then --type
+    (narrowing) — --type must narrow whichever selection is already active
+    (or the full manifest if neither --id nor --ids was given), never replace
+    it. Returns (to_audit, missing_ids) where missing_ids lists any --ids
+    entries not found in the manifest (caller prints the warning). Before this
+    was extracted, --type rebuilt from the full manifest unconditionally,
+    silently discarding an --id/--ids selection (e.g. --ids A1,C1 --type
+    wall_art would audit every wall_art listing, not just A1)."""
+    to_audit: dict = dict(manifest)
+    missing: list[str] = []
+    if id_:
+        to_audit = {id_: manifest[id_]} if id_ in manifest else {}
+    if ids:
+        wanted = [i.strip() for i in ids.split(",") if i.strip()]
+        to_audit = {i: manifest[i] for i in wanted if i in manifest}
+        missing = [i for i in wanted if i not in manifest]
+    if type_:
+        to_audit = {k: v for k, v in to_audit.items() if v.get("type") == type_}
+    return to_audit, missing
+
+
+def _apply_manifest_updates(manifest: dict, results: list[dict]) -> dict:
+    """Stamp last_verified/last_status onto `manifest` from a completed audit
+    run. Mutates and returns `manifest`. Skips stamping last_verified for
+    fetch-error results (see audit_listing()) — those listings were never
+    actually checked, so marking them "freshly verified" would let
+    _select_quality_audit_ids() in api_server/main.py rotate them to the back
+    of the queue and starve them of real coverage across a multi-day Etsy
+    outage. last_status is still recorded either way so a human skimming the
+    manifest can see the most recent outcome."""
+    now = datetime.now(timezone.utc).isoformat()
+    for r in results:
+        if r["listing_id"] in manifest:
+            if not r.get("fetch_error"):
+                manifest[r["listing_id"]]["last_verified"] = now
+            manifest[r["listing_id"]]["last_status"] = r["status"]
+    return manifest
 
 
 # ---------------------------------------------------------------------------
@@ -640,20 +709,12 @@ def main():
     api = EtsyAPIClient()
 
     # Filter manifest entries
-    to_audit: dict = manifest
-    if args.id:
-        to_audit = {args.id: manifest[args.id]} if args.id in manifest else {}
-        if not to_audit:
-            print(f"Listing ID {args.id} not in manifest.")
-            sys.exit(1)
-    if args.ids:
-        wanted = [i.strip() for i in args.ids.split(",") if i.strip()]
-        to_audit = {i: manifest[i] for i in wanted if i in manifest}
-        missing = [i for i in wanted if i not in manifest]
-        if missing:
-            print(f"WARNING: {len(missing)} requested ID(s) not in manifest, skipping: {missing}")
-    if args.type:
-        to_audit = {k: v for k, v in manifest.items() if v.get("type") == args.type}
+    if args.id and args.id not in manifest:
+        print(f"Listing ID {args.id} not in manifest.")
+        sys.exit(1)
+    to_audit, missing = _select_manifest_entries(manifest, args.id, args.ids, args.type)
+    if missing:
+        print(f"WARNING: {len(missing)} requested ID(s) not in manifest, skipping: {missing}")
 
     print(f"Auditing {len(to_audit)} listings ({'full' if args.full else 'fast'} mode)…")
     if args.full:
@@ -698,10 +759,7 @@ def main():
         print(f"\nReport saved → {report_path}")
 
     # Update manifest with verification timestamps
-    for r in results:
-        if r["listing_id"] in manifest:
-            manifest[r["listing_id"]]["last_verified"] = datetime.now(timezone.utc).isoformat()
-            manifest[r["listing_id"]]["last_status"] = r["status"]
+    manifest = _apply_manifest_updates(manifest, results)
     with open(MANIFEST_PATH, "w") as f:
         json.dump(manifest, f, indent=2, sort_keys=True)
 

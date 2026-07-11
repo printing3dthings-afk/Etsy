@@ -148,6 +148,90 @@ def test_audit_listing_handles_fetch_failure_as_fail_not_crash():
     check(r["status"] == "FAIL", f"a fetch failure must surface as FAIL, not raise, got {r['status']}")
     check(any(i["check"] == "listing_fetch" for i in r["issues"]),
           f"expected a listing_fetch issue, got {r['issues']}")
+    check(r.get("fetch_error") is True,
+          f"a fetch failure must set fetch_error=True (to be distinguished from a real "
+          f"content FAIL by the manifest write-back and _quality_audit_iteration), "
+          f"got {r.get('fetch_error')!r}")
+
+
+def test_audit_listing_content_fail_does_not_set_fetch_error():
+    bad = dict(_GOOD_LISTING, title="X" * 71)
+    api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
+    r = lic.audit_listing(api, "9990008", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False)
+    check(r["status"] == "FAIL", f"expected FAIL for a 71-char title, got {r['status']}")
+    check(r.get("fetch_error") is False,
+          f"a real content FAIL (listing was fetched fine) must NOT set fetch_error, "
+          f"got {r.get('fetch_error')!r}")
+
+
+def test_manifest_write_back_skips_last_verified_for_fetch_errors():
+    manifest = {"L1": {"last_verified": "2020-01-01T00:00:00Z"},
+                "L2": {"last_verified": "2020-01-01T00:00:00Z"}}
+    results = [
+        {"listing_id": "L1", "status": "FAIL", "fetch_error": True},
+        {"listing_id": "L2", "status": "PASS", "fetch_error": False},
+    ]
+    lic._apply_manifest_updates(manifest, results)
+    check(manifest["L1"]["last_verified"] == "2020-01-01T00:00:00Z",
+          "fetch-error result must NOT stamp last_verified -- the listing was never "
+          f"actually checked, got {manifest['L1']['last_verified']!r}")
+    check(manifest["L2"]["last_verified"] != "2020-01-01T00:00:00Z",
+          "a real (non-fetch-error) result must stamp last_verified")
+    check(manifest["L1"]["last_status"] == "FAIL" and manifest["L2"]["last_status"] == "PASS",
+          f"last_status is recorded regardless of fetch_error, got "
+          f"{manifest['L1']['last_status']!r}/{manifest['L2']['last_status']!r}")
+
+
+def test_render_report_flags_fetch_errors_separately_from_real_fails():
+    results = [
+        lic.audit_listing(_FakeEtsyClient(dict(_GOOD_LISTING, title="X" * 71), _GOOD_FILES, _GOOD_IMAGES),
+                          "1", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False),
+    ]
+
+    class _BrokenClient:
+        shop_id = "12345"
+
+        def _request(self, *a, **kw):
+            raise RuntimeError("simulated network failure")
+
+    results.append(lic.audit_listing(_BrokenClient(), "2", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False))
+    report = lic.render_report(results, elapsed=1.23)
+    check("FAIL: 2" in report, f"expected both results counted as FAIL, got: {report.splitlines()[4]}")
+    check("FETCH_ERR: 1" in report,
+          f"expected exactly 1 fetch-error flagged separately, got: {report.splitlines()[4]}")
+
+
+_TYPED_MANIFEST = {
+    "A1": {"type": "wall_art"}, "A2": {"type": "wall_art"},
+    "C1": {"type": "coloring_pages"}, "C2": {"type": "coloring_pages"},
+}
+
+
+def test_type_filter_narrows_ids_selection_instead_of_replacing_it():
+    to_audit, missing = lic._select_manifest_entries(_TYPED_MANIFEST, None, "A1,C1", "wall_art")
+    check(set(to_audit) == {"A1"}, f"expected only A1 (wall_art within the --ids set), got {to_audit}")
+    check(missing == [], f"expected no missing ids, got {missing}")
+
+
+def test_type_filter_narrows_single_id_selection():
+    to_audit, missing = lic._select_manifest_entries(_TYPED_MANIFEST, "C1", None, "wall_art")
+    check(to_audit == {}, f"C1 is coloring_pages, not wall_art -- expected empty, got {to_audit}")
+
+
+def test_type_filter_alone_still_narrows_full_manifest():
+    to_audit, missing = lic._select_manifest_entries(_TYPED_MANIFEST, None, None, "wall_art")
+    check(set(to_audit) == {"A1", "A2"}, f"expected both wall_art listings, got {to_audit}")
+
+
+def test_no_filters_returns_full_manifest():
+    to_audit, missing = lic._select_manifest_entries(_TYPED_MANIFEST, None, None, None)
+    check(set(to_audit) == set(_TYPED_MANIFEST), f"expected the full manifest, got {to_audit}")
+
+
+def test_ids_filter_reports_missing_ids():
+    to_audit, missing = lic._select_manifest_entries(_TYPED_MANIFEST, None, "A1,ZZZ", None)
+    check(set(to_audit) == {"A1"}, f"expected only A1, got {to_audit}")
+    check(missing == ["ZZZ"], f"expected ZZZ reported missing, got {missing}")
 
 
 def test_render_report_runs_without_crashing_on_mixed_results():

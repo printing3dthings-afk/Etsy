@@ -503,7 +503,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v152"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v153"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4637,6 +4637,36 @@ async def _take_snapshot() -> str:
     return d
 
 
+_SNAPSHOT_BASE_INTERVAL = 86_400
+
+
+async def _maybe_prune_after_snapshot(delay: float, base_interval: float) -> None:
+    """Run the daily trash + rate-limit-log prune only when the snapshot
+    iteration that just completed succeeded (delay == base_interval).
+    _run_loop_iteration() returns exactly `base_interval` on success or a
+    shorter jittered backoff delay (capped below base_interval) on failure —
+    so this equality is an exact success test, not a heuristic. Before this
+    gate existed, a failing/backing-off snapshot loop (e.g. Etsy down) would
+    still run both prune passes on every retry, far more than the intended
+    once/day. Tolerant of its own errors either way — a prune failure must
+    never affect the snapshot loop's own success/backoff timing."""
+    if delay != base_interval:
+        return
+    try:
+        import trash as _trash
+        n = await asyncio.to_thread(_trash.prune)
+        if n:
+            print(f"[trash] pruned {n} expired entr{'y' if n == 1 else 'ies'}", flush=True)
+    except Exception as exc:
+        print(f"[trash] prune error: {exc}", flush=True)
+    try:
+        n = await asyncio.to_thread(db.prune_rate_limit_log)
+        if n:
+            print(f"[rate-limit-log] pruned {n} sample(s) older than 30 days", flush=True)
+    except Exception as exc:
+        print(f"[rate-limit-log] prune error: {exc}", flush=True)
+
+
 async def _snapshot_loop() -> None:
     """Snapshot at startup, then once every 24h (sooner on a backoff retry
     after a failure). Upsert-by-day means repeated runs on the same calendar
@@ -4645,26 +4675,12 @@ async def _snapshot_loop() -> None:
         delay = await _run_loop_iteration(
             "snapshot", "Snapshot", _take_snapshot,
             on_success_detail="Daily metric snapshot recorded",
-            base_interval=86_400,
+            base_interval=_SNAPSHOT_BASE_INTERVAL,
         )
-        # Daily recycle-bin prune (tools/trash.py): drop deletions older than 30 days.
-        # Piggybacks on this already-daily loop so expiry is time-based and durable on
-        # the live server — no separate cron needed (and no harness-cron 7-day expiry).
-        # Tolerant of its own errors -- a prune failure must never affect the
-        # snapshot's own success/backoff timing above.
-        try:
-            import trash as _trash
-            n = await asyncio.to_thread(_trash.prune)
-            if n:
-                print(f"[trash] pruned {n} expired entr{'y' if n == 1 else 'ies'}", flush=True)
-        except Exception as exc:
-            print(f"[trash] prune error: {exc}", flush=True)
-        try:
-            n = await asyncio.to_thread(db.prune_rate_limit_log)
-            if n:
-                print(f"[rate-limit-log] pruned {n} sample(s) older than 30 days", flush=True)
-        except Exception as exc:
-            print(f"[rate-limit-log] prune error: {exc}", flush=True)
+        # Daily recycle-bin + rate-limit-log prune piggyback on this already-daily
+        # loop so expiry is time-based and durable on the live server — no separate
+        # cron needed. Gated to success-only, see _maybe_prune_after_snapshot().
+        await _maybe_prune_after_snapshot(delay, _SNAPSHOT_BASE_INTERVAL)
         await asyncio.sleep(delay)
 
 
@@ -4808,9 +4824,34 @@ async def _token_sync_loop() -> None:
         await asyncio.sleep(delay)
 
 
+# Trailing FETCH_ERR group is optional so this still matches
+# listing_integrity_check.py's older summary-line format (before the
+# fetch-error/content-FAIL distinction was added); group(4) is None if absent.
 _QUALITY_AUDIT_SUMMARY_RE = _re.compile(
-    r"PASS:\s*(\d+).*?WARN:\s*(\d+).*?FAIL:\s*(\d+)", _re.DOTALL
+    r"PASS:\s*(\d+).*?WARN:\s*(\d+).*?FAIL:\s*(\d+)(?:.*?FETCH_ERR:\s*(\d+))?", _re.DOTALL
 )
+
+
+def _parse_quality_audit_summary(out: str) -> tuple[int, int, int, int]:
+    """Parse listing_integrity_check.py's stdout summary line into
+    (passed, warned, failed, fetch_errors). fetch_errors is 0 if the
+    FETCH_ERR token is absent (older script output). Raises RuntimeError if no
+    summary line is found at all (the script crashed or its output format
+    changed)."""
+    m = _QUALITY_AUDIT_SUMMARY_RE.search(out)
+    if not m:
+        raise RuntimeError(f"could not parse summary line; script output: {out[:300]!r}")
+    passed, warned, failed = (int(g) for g in m.groups()[:3])
+    fetch_errors = int(m.group(4)) if m.group(4) else 0
+    return passed, warned, failed, fetch_errors
+
+
+def _quality_audit_skip_result(reason: str) -> dict:
+    """Shared shape for _quality_audit_iteration()'s early-exit skip paths
+    (manifest missing / manifest empty) — was a duplicated dict literal at two
+    call sites a few lines apart."""
+    return {"skipped": True, "passed": 0, "warned": 0, "failed": 0, "reason": reason}
+
 
 _QUALITY_AUDIT_ROTATION_FRACTION = 3  # audit ~1/N of the catalog per run
 
@@ -4856,8 +4897,7 @@ async def _quality_audit_iteration() -> dict:
     manifest_path = ROOT / "data" / "listing_manifest.json"
     if not await asyncio.to_thread(manifest_path.exists):
         print("[quality-audit] skipping — listing_manifest.json not found (run build_manifest.py)", flush=True)
-        return {"skipped": True, "passed": 0, "warned": 0, "failed": 0,
-                "reason": "listing_manifest.json not found — run build_manifest.py first"}
+        return _quality_audit_skip_result("listing_manifest.json not found — run build_manifest.py first")
 
     def _load_manifest_and_select_ids() -> list[str]:
         with open(manifest_path) as f:
@@ -4867,8 +4907,7 @@ async def _quality_audit_iteration() -> dict:
     audit_ids = await asyncio.to_thread(_load_manifest_and_select_ids)
     if not audit_ids:
         print("[quality-audit] skipping — listing_manifest.json is empty", flush=True)
-        return {"skipped": True, "passed": 0, "warned": 0, "failed": 0,
-                "reason": "listing_manifest.json has no listings"}
+        return _quality_audit_skip_result("listing_manifest.json has no listings")
     print(f"[quality-audit] auditing rotating subset: {len(audit_ids)} listing(s)", flush=True)
 
     result = await asyncio.to_thread(
@@ -4881,26 +4920,41 @@ async def _quality_audit_iteration() -> dict:
         cwd=str(ROOT),
     )
     out = (result.stdout or "") + "\n" + (result.stderr or "")
-    m = _QUALITY_AUDIT_SUMMARY_RE.search(out)
-    if not m:
-        raise RuntimeError(f"could not parse summary line; script output: {out[:300]!r}")
-    passed, warned, failed = (int(g) for g in m.groups())
+    passed, warned, failed, fetch_errors = _parse_quality_audit_summary(out)
+    # Fetch errors (Etsy unreachable for a listing — network/breaker/429) are
+    # counted in `failed` by listing_integrity_check.py so a human running the
+    # CLI directly still sees a non-zero exit code, but they are NOT a content
+    # problem with the listing. real_failed isolates the signal that should
+    # actually escalate. Before this distinction existed, an Etsy outage during
+    # the audit produced a false "N listing(s) failing" alarm into the CEO
+    # agent's ops_runbook.md context (58/58 false FAILs, 2026-07-10 incident).
+    real_failed = failed - fetch_errors
     blocks = out.split("—" * 70)
     header_idx = next((i for i, b in enumerate(blocks) if "✗ FAIL (" in b), None)
     fail_block = blocks[header_idx + 1] if header_idx is not None and header_idx + 1 < len(blocks) else ""
     summary = fail_block.strip()[:1500]
     try:
-        db.record_quality_audit(passed, warned, failed, summary)
+        db.record_quality_audit(passed, warned, failed, summary, audited_count=len(audit_ids))
     except Exception as exc:
         print(f"[quality-audit] db record failed: {exc}", flush=True)
-    print(f"[quality-audit] PASS:{passed} WARN:{warned} FAIL:{failed}", flush=True)
-    if failed > 0:
+    print(f"[quality-audit] PASS:{passed} WARN:{warned} FAIL:{failed} (FETCH_ERR:{fetch_errors})", flush=True)
+    if real_failed > 0:
         _append_ops_runbook_entry(
-            f"Automated quality audit — {failed} listing(s) failing",
-            f"Daily listing_integrity_check found {failed} FAIL / {warned} WARN out of "
-            f"{passed + warned + failed} listings audited. Details:\n{summary or '(see logs)'}",
+            f"Automated quality audit — {real_failed} listing(s) failing",
+            f"Daily listing_integrity_check found {real_failed} FAIL (content problem) / {warned} WARN "
+            f"out of {passed + warned + failed} listings audited"
+            + (f". {fetch_errors} additional listing(s) could not be reached on Etsy this run "
+               f"(transient, not a content failure)" if fetch_errors else "")
+            + f". Details:\n{summary or '(see logs)'}",
         )
-    return {"passed": passed, "warned": warned, "failed": failed}
+    elif fetch_errors > 0:
+        # 100% of the "failures" were Etsy fetch errors, not real content
+        # problems — do NOT escalate the alarming "N listing(s) failing" entry
+        # into the CEO agent's context. Just log it.
+        print(f"[quality-audit] {fetch_errors} listing(s) could not be fetched from Etsy this "
+              f"run (transient — no content failures found, not escalating)", flush=True)
+    return {"passed": passed, "warned": warned, "failed": failed,
+            "fetch_errors": fetch_errors, "real_failed": real_failed}
 
 
 async def _quality_audit_loop() -> None:
@@ -4916,8 +4970,14 @@ async def _quality_audit_loop() -> None:
     while True:
         delay = await _run_loop_iteration(
             "quality_audit", "Quality Audit", _quality_audit_iteration,
-            on_success_status=lambda r: "warning" if r.get("skipped") else ("error" if r["failed"] > 0 else "ok"),
-            on_success_detail=lambda r: r.get("reason", f"PASS:{r['passed']} WARN:{r['warned']} FAIL:{r['failed']}"),
+            on_success_status=lambda r: "warning" if r.get("skipped") else (
+                "error" if r.get("real_failed", r["failed"]) > 0 else "ok"
+            ),
+            on_success_detail=lambda r: r.get("reason", (
+                f"PASS:{r['passed']} WARN:{r['warned']} FAIL:{r['failed']}"
+                + (f" ({r['fetch_errors']} fetch error(s), not content failures)"
+                   if r.get('fetch_errors') else "")
+            )),
             base_interval=86_400,
         )
         await asyncio.sleep(delay)

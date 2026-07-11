@@ -5952,3 +5952,57 @@ never-verified-first prioritization, and full 172-listing coverage within
 3 simulated rotations) proven to fail against a deliberately-reintroduced
 bug (dropped the `last_verified` sort) — reproduced the exact failure mode
 (over half the catalog permanently unaudited) before restoring the fix.
+
+### 2026-07-11 (v153) — Fixed Etsy-outage/content-FAIL conflation in the quality audit
+
+**Ask:** `/code-review` on the v152 commit (above) surfaced 8 findings; Scott
+said "Fix" — all 7 CONFIRMED/PLAUSIBLE ones addressed here.
+
+**Root cause (2 findings, same conflation):** `audit_listing()` in
+`listing_integrity_check.py` recorded a failed Etsy fetch (network error,
+breaker-open, 429) as an ordinary content `"FAIL"` — indistinguishable from
+a real "title too long" problem. This directly caused the 58/58 false-FAIL
+alarm seen during the 2026-07-10 quota-exhaustion incident (see that day's
+earlier entries) and silently starved audit-rotation coverage: a
+never-actually-checked listing got `last_verified` stamped anyway, pushing
+it to the back of `_select_quality_audit_ids()`'s queue.
+
+**Fix:** Added a `result["fetch_error"]` boolean marker (status stays
+`"FAIL"` — CLI exit-code behavior for a human running it manually is
+unchanged). `render_report()` now reports a separate `(FETCH_ERR: N)` count.
+New `_apply_manifest_updates()` in `listing_integrity_check.py` skips
+stamping `last_verified` for fetch-error results (still stamps
+`last_status`). New `_parse_quality_audit_summary()` in `main.py` extracts
+`fetch_errors` from the subprocess summary line (regex extended with an
+optional trailing group — old-format output still parses); `real_failed =
+failed - fetch_errors` is what now drives the `ops_runbook.md` escalation in
+`_quality_audit_iteration()` — a run where 100% of "failures" are fetch
+errors just logs, it doesn't alarm Frank.
+
+**Other 5 findings fixed in the same pass:**
+- `--type` on `listing_integrity_check.py` silently discarded an active
+  `--id`/`--ids` selection instead of narrowing it. New
+  `_select_manifest_entries()` helper applies `--type` as a narrowing filter
+  over whatever selection is already active.
+- De-duplicated the skip-result dict literal in `_quality_audit_iteration()`
+  into `_quality_audit_skip_result()`.
+- `_snapshot_loop`'s daily `trash.prune()` + `db.prune_rate_limit_log()`
+  calls ran on every iteration including backoff retries (could fire far
+  more than once/day during an outage). New `_maybe_prune_after_snapshot()`
+  gates on `delay == base_interval` (an exact success test, since
+  `_run_loop_iteration` always returns `base_interval` on success and a
+  strictly-smaller jittered backoff delay on failure).
+- Added `audited_count` column to `quality_audits` (defaults to
+  `passed+warned+failed` when not passed explicitly) so future trend
+  queries can tell a full-catalog run apart from a rotated-subset run.
+
+**Verified:** full local suite green (`py_compile`, `compileall`,
+`smoke_test.py`, `test_security_headers.py`, `railway_config_lint.py`,
+`test_ci_report_issue_url.py`, `test_quality_audit_rotation.py` — 22 tests,
+`test_quality_gates.py` — 37 tests, `test_resilience.py` — 29 tests,
+`test_staged_actions.py` — 51 tests, `test_http_routes.py` — 32 tests,
+`test_listing_integrity.py` — 16 tests). Every one of the 5 substantive
+fixes above (fetch-error marker, manifest skip, `--type` narrowing, prune
+gating, `audited_count` default) was proven by temporarily reverting it,
+confirming the corresponding new test failed with the exact original
+symptom, then restoring and reconfirming green.
