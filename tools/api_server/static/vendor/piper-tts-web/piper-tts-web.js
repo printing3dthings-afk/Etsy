@@ -9,7 +9,15 @@ var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read fr
 var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var _createPiperPhonemize, _modelConfig, _ort, _ortSession, _progressCallback, _wasmPaths, _logger;
-const HF_BASE = "https://huggingface.co/diffusionstudio/piper-voices/resolve/main";
+// Repointed from HuggingFace to the locally-bundled voice model (2026-07-11): the
+// voice .onnx/.json are now served same-origin from /static/vendor/piper-voices/,
+// so Frank's offline speech no longer depends on a ~60MB runtime fetch from
+// huggingface.co that stalled/failed on Scott's phone PWA ("still no voice"). The
+// readBlob/writeBlob OPFS-cache guards below only match the old HF URL, so with a
+// local base they simply no-op and getBlob() fetches straight from our server
+// (already HTTP-cached by _CachedStaticFiles). To add more voices, drop their
+// files under the same en/en_US/.../<voice>.onnx(.json) layout PATH_MAP expects.
+const HF_BASE = "/static/vendor/piper-voices";
 const ONNX_BASE = "https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.18.0/";
 const WASM_BASE = "https://cdn.jsdelivr.net/npm/@diffusionstudio/piper-wasm@1.0.0/build/piper_phonemize";
 const PATH_MAP = {

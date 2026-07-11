@@ -288,10 +288,12 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
      flat side, not the diagonal; without that keyword the opaque region only reached
      ~45% of the way to an edge, chopping a large chunk of the sphere's own silhouette
      and bloom falloff (Scott: "orb seems to be cut off from looking natural", 2026-07-09).
-     Pushed the stops out near the edges so only the four corner triangles beyond the
-     inscribed circle fade -- exactly where the bleed artifact actually lives. */
-  -webkit-mask-image:radial-gradient(circle closest-side at 50% 50%,#000 82%,rgba(0,0,0,.6) 92%,transparent 100%);
-  mask-image:radial-gradient(circle closest-side at 50% 50%,#000 82%,rgba(0,0,0,.6) 92%,transparent 100%);
+     The camera pull-back (initOrbGL, z=6.5) now seats the whole displaced silhouette
+     inside ~86% of the half-side even at speaking-state peaks, so this mask only needs
+     to fade the corner bleed beyond that -- fade start pushed 82%->88% so it no longer
+     trims the orb's own wavy edge, only the UnrealBloomPass corner haze. */
+  -webkit-mask-image:radial-gradient(circle closest-side at 50% 50%,#000 88%,rgba(0,0,0,.45) 95%,transparent 100%);
+  mask-image:radial-gradient(circle closest-side at 50% 50%,#000 88%,rgba(0,0,0,.45) 95%,transparent 100%);
 }
 .orb-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
   pointer-events:none;width:100%}
@@ -307,7 +309,10 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:radial-gradient(ellipse at 50% 40%, rgba(242,160,181,.10), transparent 60%);
 }
-#orb-view canvas#orb,#orb-view canvas#orb-gl{width:min(85vw,620px);height:min(85vw,620px)}
+/* Bumped 85vw->92vw to partly compensate for the camera pull-back (z=6.5) that now
+   frames the full silhouette with margin: a slightly larger canvas keeps the on-screen
+   orb from feeling small while still showing the whole uncut wavy edge. */
+#orb-view canvas#orb,#orb-view canvas#orb-gl{width:min(92vw,660px);height:min(92vw,660px)}
 /* Two stacked drop-shadows (tight bright core + wide soft diffusion) hugging the
    canvas's own alpha silhouette -- unlike a page-level background gradient, this
    halo follows the actual rendered sphere shape frame to frame, which is what
@@ -1702,15 +1707,19 @@ window.addEventListener('resize', syncMobileClass);
 mobileMQ.addEventListener('change', syncMobileClass);
 syncMobileClass();
 document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
-// Default phone landing is Today (a real content tab), not a static idle orb --
-// "talk to Frank" is now a popup (see phoneTab()/openFrankPopup() below), not
-// permanent tab content, so there's no reason to land there by default anymore.
-// Deferred via setTimeout(0): phoneTab('today') -> renderPhoneToday() touches
-// module-scope `let` state (e.g. _phoneNeeds) declared further down this script
-// -- calling it THIS early hits the temporal dead zone (real bug caught live via
-// Playwright, "Cannot access '_phoneNeeds' before initialization"). Deferring to
-// a fresh macrotask runs it only after the whole script has finished evaluating.
-if (isMobileMode()) setTimeout(() => phoneTab('today'), 0);
+// Default phone landing is the orb (the "Ask Frank" full-screen popup) -- Scott
+// wants it to be the first thing he sees when the app opens. phoneTab('ask') ->
+// openFrankPopup() shows #orb-view with the tab bar still reachable, so he can tap
+// Today/Approvals/More to leave. The orb's WebGL render loop is already unpaused by
+// resetOrbToDefault() at load, so it animates immediately.
+// Deferred via setTimeout(0): the phone panels' renderers touch module-scope `let`
+// state (e.g. _phoneNeeds) declared further down this script, so touching them THIS
+// early hits the temporal dead zone (real bug caught live via Playwright, "Cannot
+// access '_phoneNeeds' before initialization"). Deferring to a fresh macrotask runs
+// only after the whole script has finished evaluating -- openFrankPopup() itself is
+// TDZ-safe (reads DOM + _frankPopupPrevTab, both ready by then), but we keep the
+// defer so the tab bar / underlying panel state is fully wired first.
+if (isMobileMode()) setTimeout(() => phoneTab('ask'), 0);
 
 // ── Phone Mode v2: 4-tab shell with dedicated NATIVE panels (mobile only).
 // Approvals/Today/More render their own compact, phone-sized panels wired to the
@@ -1997,6 +2006,17 @@ function _primeAudioPlayback(){
     unlockEl.play().then(()=>unlockEl.pause()).catch(()=>{});
   }catch(e){}
 }
+// Unlock audio on the FIRST user gesture ANYWHERE — not only the orb/mic tap
+// (toggleVoiceCapture) it used to be limited to. On a phone PWA, Frank's reply is
+// often reached by TYPING, which never went through that tap, so audio.play() stayed
+// gesture-locked and the reply was silent ("still no voice"). These capture-phase
+// listeners fire on any tap/key; _primeAudioPlayback() self-guards the one-time
+// unlock and, on every later gesture, also re-resumes the AudioContext that iOS
+// silently suspends when a standalone PWA is backgrounded/screen-locked. Passive +
+// non-once so the re-resume keeps working for the whole session.
+['pointerdown','touchend','click','keydown'].forEach(function(ev){
+  window.addEventListener(ev, _primeAudioPlayback, {passive:true, capture:true});
+});
 // Free fallback for when OpenAI TTS is unavailable (e.g. quota exhausted) — uses the
 // browser's own speechSynthesis, no API key, no cost. Works on iOS Safari/PWA (unlike
 // SpeechRecognition/listening, which is why only speaking gets a fallback, not the mic).
@@ -2773,6 +2793,11 @@ async function initWS() {
       _clearStreaming(); scrollMsgs();
       if (finalText) speakText(finalText);
     }
+    // Backend sends {type:'speak'} when the agent explicitly calls the local_speak
+    // tool (main.py). Without this branch that audio was silently dropped -- the
+    // handler only knew pong/history/tool/chunk/done/error -- so an agent-initiated
+    // spoken line never played. Route it through the same TTS path as a normal reply.
+    else if (d.type === 'speak') { if (d.text) speakText(d.text); }
     else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
   };
   ws.onerror = () => { _clearStreaming(); };
@@ -5606,7 +5631,16 @@ async function initOrbGL(){
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-    camera.position.z = 3.4;
+    // z was 3.4, which framed the UNDISPLACED radius-1.15 sphere nicely but ignored
+    // that the vertex shader pushes peaks out to ~1.7 (idle) and ~2.15 (speaking).
+    // At z=3.4 the frustum half-height is only 3.4*tan(21deg)=1.305 world units, so
+    // those peaks projected to NDC>1 -- i.e. OFF the canvas entirely -- and got hard-
+    // clipped by the render target before the CSS mask ever applied. That is the real
+    // "outer texture cut off" bug, and why re-tuning the mask 3x (v122/v141/v143) never
+    // fixed it. Pulling the camera back to 6.5 (half-height ~2.49) seats the full wavy
+    // silhouette + speaking ripples inside the frame with margin, so the whole crumpled
+    // edge is visible and floats, matching Scott's reference GIFs.
+    camera.position.z = 6.5;
 
     glRenderer = new THREE.WebGLRenderer({canvas: orbGlCanvas, alpha:true, antialias:true});
     // The `alpha:true` context option only lets the drawing buffer SUPPORT an alpha

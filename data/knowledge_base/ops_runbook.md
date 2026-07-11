@@ -6061,3 +6061,50 @@ full local suite green (`test_security_headers`, `test_ci_report_issue_url`,
 `test_quality_audit_rotation`, `test_quality_gates`, `test_resilience`,
 `test_staged_actions`, `test_http_routes`, `test_listing_integrity`,
 `railway_config_lint`); the two edited operator entrypoints still parse.
+
+### 2026-07-11 (v155) — Orb: uncut it, give it voice, load it first
+
+**Ask:** Scott (on his phone PWA): orb still no voice, outer texture still cut
+off, and it should be the first thing seen when the app opens. He sent two
+reference GIFs (Three.js audio-visualizer noise-spheres) and said he likes the
+current orb — just stop clipping it. All in `frank_hud_mockup.py` unless noted.
+
+**Fix 1 — the "cut off" (real root cause found).** At `camera.position.z=3.4`
+the frustum half-height is only 1.305 world units, but the vertex shader pushes
+peaks to ~1.7 idle / ~2.15 speaking — so the wavy silhouette projected to NDC>1
+and was hard-clipped by the render target *before* the CSS mask even applied.
+That is why re-tuning the mask 3× (v122/v141/v143) never fixed it — the framing
+was the bug, not the mask. Pulled the camera back to `z=6.5` (half-height ~2.49)
+so the whole crumpled edge sits inside the frame with margin; loosened the CSS
+mask fade 82%→88% so it only hides UnrealBloomPass corner haze, not the orb;
+bumped the canvas 85vw→92vw so the pulled-back orb still fills the screen.
+Verified with a headless mobile-viewport Playwright screenshot: full wavy
+silhouette, no box, no clip. (Also noted: the orb is actually cyan, not the pink
+init value — the render loop overwrites uColor each frame; matches the refs.)
+
+**Fix 2 — no voice (TTS).** Root cause: the default offline Piper path localizes
+its WASM but the voice **model** was still fetched at runtime from huggingface.co
+(~60MB), which stalled/failed on the phone. Bundled `en_US-amy-medium.onnx`
+(+`.json`) under `static/vendor/piper-voices/en/en_US/amy/medium/` and repointed
+`piper-tts-web.js`'s `HF_BASE` to `/static/vendor/piper-voices` — now same-origin,
+HTTP-cached, zero external fetch (Playwright confirmed 200/200 and no
+huggingface.co request). Also: mobile audio-unlock (`_primeAudioPlayback`) was
+only wired to the orb/mic tap, so a reply reached by TYPING never unlocked audio
+— added capture-phase `pointerdown/touchend/click/keydown` listeners that unlock
+on the first gesture anywhere and re-resume the AudioContext after PWA
+backgrounding. And added the missing WS `speak` handler so agent-initiated
+`local_speak` audio isn't silently dropped.
+
+**Fix 3 — orb first.** Mobile landing route changed from `phoneTab('today')` to
+`phoneTab('ask')` (opens the full-screen orb popup with the tab bar still
+reachable). The orb's WebGL loop is already unpaused by `resetOrbToDefault()` at
+load, so it animates immediately. Playwright confirmed `frank-popup-open` +
+`#orb-view` visible at load on a 390px viewport.
+
+**Verified:** `py_compile` + `smoke_test` (45 tools) green; official
+`playwright_smoke.py` green (no console errors, blob audio OK); a custom
+mobile-viewport Playwright pass confirmed all three fixes; full local suite
+green. Definitive voice/visual sign-off is Scott on his actual phone (PWA
+autoplay + GPU bloom can't be fully proven headless). Note: bundling the 60MB
+model enlarges the repo/image — the tradeoff Scott chose (offline voice over
+premium OpenAI TTS).
