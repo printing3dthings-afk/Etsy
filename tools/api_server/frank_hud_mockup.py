@@ -259,6 +259,28 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
   margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .panel-title .src{font-size:8.5px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
 .panel-title .lnk{font-size:9px;color:var(--cyan);text-transform:none;letter-spacing:0;cursor:pointer}
+/* ── First-time-user simplification (2026-07-11): keep engineering/infra surfaces
+   out of the everyday view. Nothing here is DELETED — it is CSS-hidden and fully
+   reversible. A developer reveals it all with localStorage.frankDevMode='1', which
+   adds .show-plumbing + .show-advanced to <body> (see the init by the welcome gate).
+   IMPORTANT: .col-feed (Live Intelligence Feed) is only visually hidden, never
+   removed from the DOM, because loadQueue() renders it AND drives the Approvals
+   badge via setActionBadge(); removing it would break the approval count. Nav/mobile
+   rows tagged data-tier="advanced" collapse under the Advanced disclosure. ── */
+body:not(.show-plumbing) .panel-title .src{display:none}
+body:not(.show-plumbing) #persist-warning{display:none !important}
+body:not(.show-plumbing) #bb-relay,
+body:not(.show-plumbing) .brief-wrap,
+body:not(.show-plumbing) .col-aicore,
+body:not(.show-plumbing) .col-sysmon,
+body:not(.show-plumbing) .col-timeline,
+body:not(.show-plumbing) .col-feed,
+body:not(.show-plumbing) #orb-build-ver,
+body:not(.show-plumbing) #settings-build-ver,
+body:not(.show-plumbing) #studio-build-ver,
+body:not(.show-plumbing) #system-status-pill{display:none}
+body:not(.show-advanced) .nav-item[data-tier="advanced"],
+body:not(.show-advanced) .more-row[data-tier="advanced"]{display:none}
 .panel-body{overflow-y:auto;min-height:0;flex:1}
 
 
@@ -907,7 +929,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 <div id="stage-wrap"><div id="stage">
 
   <button id="hamburger-btn" class="hamburger-fixed" aria-label="Toggle control center">☰</button>
-  <button id="frank-popup-btn" class="frank-popup-fixed" aria-label="Talk to %%AGENT_SHORT%%" onclick="toggleQuickChatPopup()">☰</button>
+  <button id="frank-popup-btn" class="frank-popup-fixed" aria-label="Quick message to %%AGENT_SHORT%%" onclick="toggleQuickChatPopup()">💬</button>
 
   <div id="quick-chat-popup">
     <div class="qcp-row">
@@ -925,7 +947,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <canvas id="orb-gl" width="640" height="640"></canvas>
       <div class="orb-overlay">
         <div class="o1">%%AGENT_SHORT%%</div>
-        <div class="o2">COMMAND CENTER</div>
+        <div class="o2">SHOP ASSISTANT</div>
         <div class="o3" id="orb-build-ver">Build —</div>
       </div>
     </div>
@@ -941,7 +963,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <div class="hdr-logo brk">
     <div class="hex" aria-hidden="true">⬡</div>
-    <div class="lbl"><h1 class="l1 hdr-title-h1">%%AGENT_SHORT%%</h1><div class="l2">COMMAND CENTER</div></div>
+    <div class="lbl"><h1 class="l1 hdr-title-h1">%%AGENT_SHORT%%</h1><div class="l2">SHOP ASSISTANT</div></div>
   </div>
 
   <div class="hdr-bar">
@@ -963,33 +985,29 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <div class="sidebar" role="navigation" aria-label="Primary">
     <h2 class="nav-section nav-section-h2" id="nav-heading-frank">%%AGENT_SHORT%%</h2>
-    <div class="nav-item active" data-screen="cmd" role="button" tabindex="0" aria-current="page"><span class="ic" aria-hidden="true">⌂</span>Command Center</div>
-    <div class="nav-item" data-screen="core" role="button" tabindex="0"><span class="ic" aria-hidden="true">◎</span>AI Core</div>
-    <div class="nav-item" data-screen="agents" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Agents</div>
-    <div class="nav-item" data-screen="tasks" role="button" tabindex="0"><span class="ic" aria-hidden="true">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="actions" role="button" tabindex="0"><span class="ic" aria-hidden="true">✓</span>Action Center<span class="nbadge" id="badge-actions" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="calendar" role="button" tabindex="0"><span class="ic" aria-hidden="true">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
-
-    <h2 class="nav-section nav-section-h2">Knowledge</h2>
-    <div class="nav-item" data-screen="memory" role="button" tabindex="0"><span class="ic" aria-hidden="true">✦</span>Memory<span class="nbadge" id="badge-memory" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="conversations" role="button" tabindex="0"><span class="ic" aria-hidden="true">💬</span>Conversations<span class="nbadge" id="badge-conversations" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="kb" role="button" tabindex="0"><span class="ic" aria-hidden="true">📚</span>Knowledge Base<span class="nbadge" id="badge-kb" style="display:none">—</span></div>
-
-    <h2 class="nav-section nav-section-h2">Tools</h2>
-    <div class="nav-item" data-screen="tools" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
-    <div class="nav-item" data-screen="workflows" role="button" tabindex="0"><span class="ic" aria-hidden="true">⇄</span>Workflows</div>
-    <div class="nav-item" data-screen="studio" role="button" tabindex="0"><span class="ic" aria-hidden="true">▶</span>Studio</div>
+    <div class="nav-item active" data-screen="cmd" role="button" tabindex="0" aria-current="page"><span class="ic" aria-hidden="true">⌂</span>Home</div>
+    <div class="nav-item" data-screen="actions" role="button" tabindex="0"><span class="ic" aria-hidden="true">✓</span>Approvals<span class="nbadge" id="badge-actions" style="display:none">—</span></div>
+    <div class="nav-item" data-screen="create" role="button" tabindex="0"><span class="ic" aria-hidden="true">✚</span>Create</div>
+    <div class="nav-item" data-screen="listings" role="button" tabindex="0"><span class="ic" aria-hidden="true">🏷</span>Your listings</div>
+    <div class="nav-item" data-screen="knowledge" role="button" tabindex="0"><span class="ic" aria-hidden="true">✦</span>Knowledge</div>
 
     <h2 class="nav-section nav-section-h2">Shop</h2>
-    <div class="nav-item" data-screen="listings" role="button" tabindex="0"><span class="ic" aria-hidden="true">🏷</span>Listings</div>
     <div class="nav-item" data-screen="products" role="button" tabindex="0"><span class="ic" aria-hidden="true">📦</span>Products</div>
     <div class="nav-item" data-screen="brandkit" role="button" tabindex="0"><span class="ic" aria-hidden="true">🎨</span>Brand Kit</div>
     <div class="nav-item" data-screen="files" role="button" tabindex="0"><span class="ic" aria-hidden="true">🗂</span>Files</div>
     <div class="nav-item" data-screen="connections" role="button" tabindex="0"><span class="ic" aria-hidden="true">🔌</span>Connections</div>
-    <div class="nav-item" data-screen="security" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛡</span>Security</div>
 
-    <h2 class="nav-section nav-section-h2">Settings</h2>
-    <div class="nav-item" data-screen="settings" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Settings</div>
+    <h2 class="nav-section nav-section-h2 nav-advanced-toggle" id="nav-advanced-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="nav-advanced-items">Advanced <span id="nav-advanced-caret" aria-hidden="true">▸</span></h2>
+    <div id="nav-advanced-items">
+    <div class="nav-item" data-tier="advanced" data-screen="settings" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Settings</div>
+    <div class="nav-item" data-tier="advanced" data-screen="tasks" role="button" tabindex="0"><span class="ic" aria-hidden="true">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
+    <div class="nav-item" data-tier="advanced" data-screen="calendar" role="button" tabindex="0"><span class="ic" aria-hidden="true">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
+    <div class="nav-item" data-tier="advanced" data-screen="tools" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
+    <div class="nav-item" data-tier="advanced" data-screen="workflows" role="button" tabindex="0"><span class="ic" aria-hidden="true">⇄</span>Workflows</div>
+    <div class="nav-item" data-tier="advanced" data-screen="security" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛡</span>Security</div>
+    <div class="nav-item" data-tier="advanced" data-screen="core" role="button" tabindex="0"><span class="ic" aria-hidden="true">◎</span>AI Core</div>
+    <div class="nav-item" data-tier="advanced" data-screen="agents" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Agents</div>
+    </div>
 
     <div class="voice-widget" style="text-align:left">
       <div class="vw-title">QUICK COMMANDS</div>
@@ -1004,14 +1022,14 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="welcome-card">
       <div class="welcome-title" id="welcome-overlay-title">Welcome to %%AGENT_SHORT%%</div>
       <div class="welcome-body">
-        <p>%%AGENT_SHORT%% is organized into four groups in the sidebar:</p>
+        <p>%%AGENT_SHORT%% helps you run your shop. There are just four things to know:</p>
         <ul>
-          <li><b>%%AGENT_SHORT%%</b> — chat, AI core, agents, tasks, and the Action Center</li>
-          <li><b>Knowledge</b> — memory, past conversations, and the knowledge base</li>
-          <li><b>Tools</b> — tools &amp; skills, workflows, and the video studio</li>
-          <li><b>Shop</b> — listings, products, brand kit, files, connections, security</li>
+          <li><b>Talk to %%AGENT_SHORT%%</b> — tap the orb (or type) to ask anything or give an instruction.</li>
+          <li><b>Approvals</b> — %%AGENT_SHORT%% never changes your shop, files, or posts without your one-tap OK here.</li>
+          <li><b>Today</b> — your sales, orders, and views at a glance.</li>
+          <li><b>Create</b> — make listing photos, videos, and files, then publish.</li>
         </ul>
-        <p class="welcome-note">Nothing that changes your shop, files, or social accounts ever runs without your one-tap approval in the Action Center.</p>
+        <p class="welcome-note">Everything else lives under “Advanced” — you can ignore it until you need it.</p>
       </div>
       <button class="welcome-dismiss" id="welcome-dismiss-btn" onclick="dismissWelcomeOverlay()">Got it</button>
     </div>
@@ -1162,7 +1180,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <!-- ══════════ ACTION CENTER — real data: /api/queue + /api/actions — approve/reject gate ══════════ -->
   <div class="screen" id="screen-actions">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Action Center <span class="src">/api/queue + /api/actions — approve/reject staged changes</span></div>
+      <div class="panel-title">Approvals <span class="src">/api/queue + /api/actions — approve/reject staged changes</span></div>
       <div style="display:flex;gap:8px;margin:14px 0">
         <button id="batch-tag-btn" onclick="batchStageTags(this)" style="flex:1;background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:center">⚡ Stage All Tag Fixes</button>
       </div>
@@ -1177,30 +1195,30 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div id="calendar-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
     </div>
   </div>
-  <div class="screen" id="screen-memory">
-    <div class="panel brk" style="height:100%">
-      <div class="panel-title">Memory <span class="src">/api/memory — chat history + logged learnings + knowledge base, rolled up</span></div>
-      <div id="memory-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
+  <!-- Merged "Knowledge" screen — everything Frank remembers, in one place.
+       Keeps the original content IDs (#memory-content, #conversations-content,
+       #kb-content) + search inputs so loadMemory/loadConversations/loadKb and
+       searchConversations()/searchKb() work unchanged. -->
+  <div class="screen" id="screen-knowledge">
+    <div class="panel brk" style="margin-bottom:14px">
+      <div class="panel-title">What Frank remembers</div>
+      <div id="memory-content" style="margin-top:10px;overflow-y:auto;max-height:320px"><div class="hub-spinner"></div></div>
     </div>
-  </div>
-  <div class="screen" id="screen-conversations">
-    <div class="panel brk" style="height:100%">
-      <div class="panel-title">Conversations <span class="src">/api/conversations — persisted chat_messages history</span></div>
+    <div class="panel brk" style="margin-bottom:14px">
+      <div class="panel-title">Past conversations</div>
       <div style="display:flex;gap:8px;margin:14px 0">
         <input id="conv-search-input" type="text" placeholder="Search all conversations…" aria-label="Search all conversations" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:10px 14px;font-size:13px">
         <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
       </div>
-      <div id="conversations-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
+      <div id="conversations-content" style="overflow-y:auto;max-height:340px"><div class="hub-spinner"></div></div>
     </div>
-  </div>
-  <div class="screen" id="screen-kb">
-    <div class="panel brk" style="height:100%">
-      <div class="panel-title">Knowledge Base <span class="src">/api/kb — real markdown docs in data/knowledge_base/</span></div>
+    <div class="panel brk">
+      <div class="panel-title">Knowledge base</div>
       <div style="display:flex;gap:8px;margin:14px 0">
         <input id="kb-search-input" type="text" placeholder="Search all docs…" aria-label="Search all knowledge base docs" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:10px 14px;font-size:13px">
         <button onclick="searchKb()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
       </div>
-      <div id="kb-content" style="overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
+      <div id="kb-content" style="overflow-y:auto;max-height:340px"><div class="hub-spinner"></div></div>
     </div>
   </div>
 
@@ -1338,35 +1356,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
       </div>
 
-      <div class="hub-section-title" style="margin-top:18px">AI Engines</div>
-      <div class="hub-card">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div>
-            <label for="setting-video-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video generation</label>
-            <select id="setting-video-engine" class="search" style="width:100%">
-              <option value="sora">OpenAI Sora (retires Sep 24)</option>
-              <option value="veo">Google Veo 3.1</option>
-            </select>
-          </div>
-          <div>
-            <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image generation</label>
-            <select id="setting-image-engine" class="search" style="width:100%">
-              <option value="openai">OpenAI gpt-image-1 (retires Oct 23)</option>
-              <option value="gpt-image-2">OpenAI gpt-image-2 (no transparent bg)</option>
-              <option value="gemini">Google Nano Banana</option>
-              <option value="ideogram">Ideogram 3.0 (text)</option>
-            </select>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:8px">
-          Switch generation providers without touching Railway. Veo &amp; Nano Banana
-          need GEMINI_API_KEY set; Ideogram needs IDEOGRAM_API_KEY.
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
-          <button class="act-btn primary" onclick="saveEngines()">Save engines</button>
-          <div id="engines-status" style="font-size:11px;color:var(--muted)"></div>
-        </div>
-      </div>
+      <!-- Model/engine picker removed 2026-07-11: the generation engine is now chosen
+           automatically by the backend (env/db defaults) so a shop owner never has to
+           think about models or provider keys. loadRuntimeSettings() already
+           null-guards the removed selects; saveEngines() is retained but unused. -->
 
       <div class="hub-section-title" style="margin-top:18px">My Account</div>
       <div class="hub-card">
@@ -1425,28 +1418,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <button class="act-btn secondary" onclick="showScreen('security')">View Security ›</button>
       </div>
 
-      <div class="hub-section-title" id="user-mgmt-section" style="margin-top:18px;display:none">User Management</div>
-      <div class="hub-card" id="user-mgmt-card" style="display:none">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Admins have full API access identical to the owner login. Only the owner can manage users.</div>
-        <div id="user-list" style="margin-bottom:14px"><div class="hub-spinner"></div></div>
-        <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:6px">
-          <div style="font-size:12px;font-weight:600;margin-bottom:8px">Add Admin</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-            <div>
-              <label for="new-user-name" style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Username</label>
-              <input type="text" id="new-user-name" class="search" style="width:100%" placeholder="jane">
-            </div>
-            <div>
-              <label for="new-user-pw" style="font-size:11px;color:var(--muted);display:block;margin-bottom:3px">Password</label>
-              <input type="password" id="new-user-pw" class="search" style="width:100%" placeholder="••••••••">
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <button class="act-btn primary" onclick="addUser()">Add Admin</button>
-            <div id="user-add-status" style="font-size:11px;color:var(--muted)"></div>
-          </div>
-        </div>
-      </div>
+      <!-- Multi-admin section removed 2026-07-11: this is a solo shop, so adding
+           extra admins (with full owner-level API access) was dead weight. The
+           owner-reveal block in loadOperatorChip() was updated to stop referencing
+           the removed elements. -->
 
       <div class="hub-section-title" style="margin-top:18px">About</div>
       <div class="hub-card">
@@ -1456,21 +1431,37 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
 
-  <div class="screen" id="screen-studio">
+  <!-- ══════════ CREATE — the one place to make what goes on a listing. This is the
+       former "Studio" screen, reframed for a first-timer: a plain-language chooser up
+       top scrolls to each tool; every original ID/handler is unchanged so
+       studioGenerate/svgcConvert/lsgGenerate/studioStageToEtsy/studioPostInstagram/
+       Facebook keep working. AI engine is auto-picked by the backend — no model knobs. ══════════ -->
+  <div class="screen" id="screen-create">
     <div class="panel brk" style="height:100%;overflow-y:auto">
-      <div class="panel-title">Studio — Media &amp; Content Tools <span class="src">/api/studio/* — video generation, Etsy/social actions, SVG converter, lifestyle photos</span><span id="studio-build-ver" style="float:right;font-size:10px;opacity:0.4;font-weight:normal"></span></div>
+      <div class="panel-title">Create</div>
+      <div style="font-size:12px;color:var(--muted);margin:6px 0 14px">What would you like to make? Frank builds it, you review it, then you approve it before anything goes live.</div>
+      <div id="create-chooser" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-photos')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🖼️</div><div style="font-weight:600;margin-top:6px">Listing photos</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Photorealistic mockups from your real file</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-svg')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">✂️</div><div style="font-weight:600;margin-top:6px">SVG file</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Trace a photo into a cut/print vector</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-video')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🎬</div><div style="font-weight:600;margin-top:6px">Product video</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">A short clip from your product photos</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-social')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">📣</div><div style="font-weight:600;margin-top:6px">Social post</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Share a video to Instagram / Facebook</div></div>
+      </div>
       <div class="studio-grid" style="flex-wrap:wrap">
         <div style="flex:1;min-width:320px">
           <video id="studio-player" controls style="aspect-ratio:16/9"></video>
-          <div id="studio-player-caption" style="margin-top:10px;color:var(--muted);font-size:11px">Select a generated video from the list to preview it here.</div>
+          <div id="studio-player-caption" style="margin-top:10px;color:var(--muted);font-size:11px">Select a video from the list to preview it here.</div>
         </div>
         <div style="flex:0 0 300px">
-          <div class="panel-title" style="margin-top:0">Generated Videos</div>
+          <div class="panel-title" style="margin-top:0">Your videos</div>
           <div id="studio-videos-list" class="hub-scroll" style="max-height:420px"><div class="hub-empty">Loading…</div></div>
         </div>
       </div>
 
-      <div class="hub-section-title" style="margin-top:18px">Generate a New Video</div>
+      <div class="hub-section-title" id="create-video" style="margin-top:18px">Product video</div>
       <div class="hub-card">
         <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Upload images below, or leave images empty and enter an existing Etsy listing ID to pull its photos automatically.</div>
         <input type="file" id="studio-file-input" accept="image/*" multiple aria-label="Source images for video" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
@@ -1482,7 +1473,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             <option value="new-drop">New Drop</option>
             <option value="feature">Feature</option>
             <option value="minimal">Minimal</option>
-            <option value="ai-scene">✨ AI Scene (Sora)</option>
+            <option value="ai-scene">✨ AI Scene (cinematic)</option>
           </select>
         </div>
         <div id="studio-ai-fields" style="display:none;margin-bottom:8px">
@@ -1504,10 +1495,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div id="studio-generate-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
 
+      <div class="hub-section-title" id="create-social" style="margin-top:18px">Post to social</div>
+      <div class="hub-card" style="margin-bottom:6px"><div style="font-size:11px;color:var(--muted)">Make or pick a video above first — then Instagram / Facebook options appear right below.</div></div>
       <div class="hub-section-title" id="studio-actions-title" style="display:none">Actions — <span id="studio-actions-filename"></span></div>
       <div class="hub-card" id="studio-actions-card" style="display:none">
         <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after approving in the Action Center.</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after you approve it in Approvals.</div>
         <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
           <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
           <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
@@ -1526,7 +1519,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
 
-      <div class="hub-section-title" style="margin-top:18px">SVG Converter — Reference Photo to Vector</div>
+      <div class="hub-section-title" id="create-svg" style="margin-top:18px">SVG file — trace a photo to vector</div>
       <div class="hub-card">
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Drop a reference photo below to trace it into an SVG — a photo you took, a screenshot, something you found on Pinterest.</div>
 
@@ -1564,7 +1557,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
       </div>
 
-      <div class="hub-section-title" style="margin-top:18px">Lifestyle Photo Generator</div>
+      <div class="hub-section-title" id="create-photos" style="margin-top:18px">Listing photo — from your real product file</div>
       <div class="hub-card">
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Upload the REAL product file(s) — the actual thing being sold, never a stand-in — and generate a photorealistic lifestyle photo. Self-verified against your file; if a render doesn't actually match it, it retries automatically instead of handing you something wrong.</div>
 
@@ -1656,6 +1649,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <button class="ptab" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
     <button class="ptab" data-ptab="appr" onclick="phoneTab('appr')" aria-label="Approvals"><span class="pti" aria-hidden="true">✓</span>Approvals<span class="pcnt" id="ptab-badge">0</span></button>
     <button class="ptab on" data-ptab="today" onclick="phoneTab('today')" aria-label="Today"><span class="pti" aria-hidden="true">▤</span>Today<span class="pcnt" id="ptab-today-badge">0</span></button>
+    <button class="ptab" data-ptab="create" onclick="phoneTab('create')" aria-label="Create"><span class="pti" aria-hidden="true">✚</span>Create</button>
     <button class="ptab" data-ptab="more" onclick="phoneTab('more')" aria-label="More screens"><span class="pti" aria-hidden="true">⋯</span>More</button>
   </nav>
 
@@ -1739,6 +1733,7 @@ function phoneTab(which){
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab===which));
   document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
   document.body.classList.add('phone-panel');
+  if (which === 'create'){ phoneOpenScreen('create'); return; }
   if (which === 'appr'){ document.getElementById('pp-appr').classList.add('on'); renderPhoneApprovals(); }
   else if (which === 'today'){ document.getElementById('pp-today').classList.add('on'); renderPhoneToday(); }
   else if (which === 'more'){ document.getElementById('pp-more').classList.add('on'); renderPhoneMore(); }
@@ -1906,10 +1901,9 @@ function phoneSheetFix(){
 }
 // More — a scrollable launcher for the other screens (fixes v1's unscrollable overlay).
 const _PHONE_MORE = [
-  ['Shop', [['listings','🏷','Listings'],['products','📦','Products'],['studio','▶','Studio'],['brandkit','🎨','Brand kit']]],
-  ['Work', [['tasks','☑','Tasks'],['calendar','▦','Calendar'],['workflows','⇄','Workflows'],['conversations','💬','Conversations'],['kb','📚','Knowledge base'],['memory','✦','Memory']]],
-  ['Agents & tools', [['agents','⚙','Agents'],['tools','🛠','Tools'],['core','◎','Core']]],
-  ['System', [['connections','🔌','Connections'],['security','🛡','Security'],['files','🗂','Files'],['settings','⚙','Settings']]],
+  ['Shop', [['listings','🏷','Your listings'],['products','📦','Products'],['brandkit','🎨','Brand kit'],['connections','🔌','Connections']]],
+  ['Knowledge', [['knowledge','✦','Knowledge']]],
+  ['Advanced', [['settings','⚙','Settings'],['tasks','☑','Tasks'],['calendar','▦','Calendar'],['files','🗂','Files'],['workflows','⇄','Workflows'],['tools','🛠','Tools'],['core','◎','AI Core'],['agents','⚙','Agents'],['security','🛡','Security']]],
 ];
 function renderPhoneMore(){
   const el = document.getElementById('pp-more-body');
@@ -2387,6 +2381,7 @@ const _SCREEN_LOADERS = {
   memory: [loadMemory],
   conversations: [loadConversations],
   kb: [loadKb],
+  knowledge: [loadMemory, loadConversations, loadKb],  // merged "Knowledge" screen
   tools: [loadTools],
   workflows: [loadWorkflows],
   listings: [() => loadListings(_lastListingState)],
@@ -2397,6 +2392,7 @@ const _SCREEN_LOADERS = {
   security: [renderSecurityPosture],
   settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings],
   studio: [loadStudioVideos],
+  create: [loadStudioVideos],  // guided Create flow (reuses studio backends)
 };
 const _GLOBAL_LOADERS = [
   () => Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill),
@@ -2404,6 +2400,9 @@ const _GLOBAL_LOADERS = [
 ];
 let _activeScreen = 'cmd';
 
+// Create-screen chooser: smooth-scroll to the picked tool section (all four tools
+// live stacked on the Create screen; the chooser is just friendly wayfinding).
+function createGoto(id){ const el = document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }
 function showScreen(name){
   document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
   const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
@@ -2417,6 +2416,19 @@ function showScreen(name){
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click',()=>showScreen(item.dataset.screen));
 });
+// Advanced disclosure: reveals the tucked-away power/engineering screens on demand
+// (they're CSS-hidden via body:not(.show-advanced) until then). Same class-toggle
+// pattern as toggleControlCenter — nothing is deleted, just shown/hidden.
+(function(){
+  const t = document.getElementById('nav-advanced-toggle');
+  if(!t) return;
+  t.addEventListener('click', () => {
+    const on = document.body.classList.toggle('show-advanced');
+    t.setAttribute('aria-expanded', on ? 'true' : 'false');
+    const caret = document.getElementById('nav-advanced-caret');
+    if(caret) caret.textContent = on ? '▾' : '▸';
+  });
+})();
 // ── Keyboard activation for every custom role="button" control (sidebar nav,
 // icon buttons, quick-reply chips, phone "needs attention" rows, the More list,
 // the operator/logout chip, etc.) — Enter/Space triggers .click(), matching
@@ -2448,6 +2460,14 @@ const CHAT_SESSION = (function(){
     try { localStorage.setItem('chatSession', s); } catch(e) {}
   }
   return s;
+})();
+// ── Developer reveal: opt back into every engineering/infra surface the
+// first-time-user simplification hides (see the .show-plumbing/.show-advanced CSS
+// near the top). Set localStorage.frankDevMode='1' in the console to see AI Core,
+// Agents, Relay/circuit-breaker readouts, API labels, build IDs, the raw activity
+// feeds, and every Advanced nav item. Nothing was deleted — this just un-hides it. ──
+(function(){
+  try { if (localStorage.getItem('frankDevMode') === '1') document.body.classList.add('show-plumbing','show-advanced'); } catch(e) {}
 })();
 // ── First-run welcome overlay — shows once unless dismissed, degrades to
 // showing every time if localStorage is unavailable (same failure mode as
@@ -5387,11 +5407,7 @@ async function loadOperatorChip(){
     document.getElementById('op-av').textContent   = uname[0].toUpperCase();
     document.getElementById('op-name').textContent = uname;
     document.getElementById('op-role').textContent = role;
-    if(_myRole === 'owner'){
-      document.getElementById('user-mgmt-section').style.display = '';
-      document.getElementById('user-mgmt-card').style.display    = '';
-      loadUsers();
-    }
+    // User Management UI was removed (solo shop) — nothing owner-specific to reveal here now.
   } catch(e){ /* silent */ }
 }
 loadOperatorChip();

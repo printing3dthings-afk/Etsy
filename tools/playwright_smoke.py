@@ -171,14 +171,42 @@ async def _run_browser_checks() -> None:
                   f"check (see tools/api_server/main.py's Content-Security-Policy header, the "
                   f"media-src directive must include blob: and data:): {blob_result}")
 
-            # ── Settings screen renders its expected sections ──
-            await page.click('.nav-item[data-screen="settings"]')
+            # ── Settings screen renders its expected sections. Settings now lives
+            # under the "Advanced" disclosure (hidden by default), so navigate via
+            # showScreen() rather than clicking the hidden nav item. ──
+            await page.evaluate("showScreen('settings')")
             await page.wait_for_timeout(1200)
             settings_html = await page.evaluate(
                 "document.getElementById('screen-settings') ? "
                 "document.getElementById('screen-settings').innerHTML : ''")
-            check("AI Engines" in settings_html, "Settings screen missing 'AI Engines' section")
+            check("setting-video-engine" not in settings_html and "setting-image-engine" not in settings_html,
+                  "engine/model picker should be REMOVED from Settings (auto-picked by backend now)")
+            check("new-user-name" not in settings_html,
+                  "multi-admin 'Add Admin' form should be REMOVED (solo shop)")
             check("My Account" in settings_html, "Settings screen missing 'My Account' section")
+
+            # ── First-time-user simplification (2026-07-11) regression guards ──
+            simp = await page.evaluate("""() => {
+                const hidden = el => !el || el.offsetParent === null;
+                return {
+                    createNav: !!document.querySelector('.nav-item[data-screen="create"]'),
+                    createScreen: !!document.getElementById('screen-create'),
+                    knowledgeScreen: !!document.getElementById('screen-knowledge'),
+                    feedHidden: hidden(document.querySelector('.col-feed')),
+                    aicoreHidden: hidden(document.querySelector('.col-aicore')),
+                    relayHidden: hidden(document.getElementById('bb-relay')),
+                    advancedItemsHiddenByDefault: hidden(document.querySelector('.nav-item[data-tier="advanced"]')),
+                    homeLabeled: !![...document.querySelectorAll('.nav-item')].find(n => n.dataset.screen === 'cmd' && n.textContent.includes('Home')),
+                };
+            }""")
+            check(simp.get("createNav") and simp.get("createScreen"),
+                  f"Create must be reachable (nav + screen): {simp}")
+            check(simp.get("knowledgeScreen"), f"merged Knowledge screen missing: {simp}")
+            check(simp.get("feedHidden") and simp.get("aicoreHidden") and simp.get("relayHidden"),
+                  f"engineering plumbing must be hidden in the everyday view: {simp}")
+            check(simp.get("advancedItemsHiddenByDefault"),
+                  f"Advanced nav items must be collapsed by default: {simp}")
+            check(simp.get("homeLabeled"), f"'Home' nav label expected (was Command Center): {simp}")
 
         finally:
             await browser.close()

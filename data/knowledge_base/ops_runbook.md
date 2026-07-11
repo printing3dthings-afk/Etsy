@@ -6108,3 +6108,50 @@ green. Definitive voice/visual sign-off is Scott on his actual phone (PWA
 autoplay + GPU bloom can't be fully proven headless). Note: bundling the 60MB
 model enlarges the repo/image — the tradeoff Scott chose (offline voice over
 premium OpenAI TTS).
+
+### 2026-07-11 (v156) — Frank first-time-user simplification
+
+**Ask:** Scott wanted an honest usability review + simplification so a fresh
+person can use Frank with zero explanation. Audit (3 explore passes) confirmed
+the 4 core jobs (Talk / Approve / Today's numbers / Create-fix-publish listings)
+were buried under 19 screens, ~8-panel home, infra readouts, and mil/corp jargon.
+Per-item decisions collected via AskUserQuestion.
+
+**Mechanism (reversible, no deletion):** CSS tiering. `body:not(.show-plumbing)`
+hides infra (AI Core/Dependency-Health/Mission-Timeline/Live-Feed panels via
+their `.col-*` classes, the Relay pill, `.src` API labels, build IDs, the
+`#persist-warning` Railway banner, the header `#system-status-pill`).
+`body:not(.show-advanced) .nav-item[data-tier="advanced"]` collapses power
+screens under an "Advanced ▸" disclosure. `localStorage.frankDevMode='1'` reveals
+everything (nothing was deleted). **The Live-Feed panel is hidden but kept in the
+DOM** because `loadQueue()` renders it AND drives the Approvals badge.
+
+**Changes:**
+- Desktop sidebar: 5 groups/17 items → Everyday (Home, Approvals, Create, Your
+  listings, Knowledge) + Shop (Products, Brand Kit, Files, Connections) +
+  Advanced ▸ (Settings, Tasks, Calendar, Tools, Workflows, AI Core, Agents,
+  Security). Command Center→Home, Action Center→Approvals, "COMMAND CENTER"
+  subtitle→"SHOP ASSISTANT".
+- Merged Memory+Conversations+KB → one **Knowledge** screen (kept the inner
+  content IDs so `loadMemory/loadConversations/loadKb`/search fns are unchanged).
+- **Create** screen = the former Studio, reframed: a plain 4-choice chooser
+  (Listing photos / SVG / Product video / Social) that scrolls to each tool. All
+  studio handler IDs preserved. Removed the AI-engine/model picker (engine now
+  auto-picked by the backend from env/db — `loadRuntimeSettings` already
+  null-guarded the selects) and the "Sora" label. Removed the multi-admin
+  "Add Admin" section (solo shop; also removed its owner-reveal in
+  `loadOperatorChip`).
+- Rewrote the welcome overlay (was describing a desktop sidebar that no longer
+  exists / didn't match the phone) into a device-agnostic 4-core-jobs intro.
+- Mobile: added a **Create** tab (→ `phoneOpenScreen('create')`), fixed the
+  duplicate `☰` (quick-chat button is now `💬`), simplified `_PHONE_MORE`
+  (Shop / Knowledge / Advanced), pointed it at the merged `knowledge` screen.
+
+**Verified:** full local suite green; `smoke_test` (45 tools); `playwright_smoke`
+extended with regression guards (Create reachable in the everyday view, Knowledge
+screen present, plumbing panels hidden/`offsetParent===null`, Advanced collapsed
+by default, Home relabeled, engine picker + add-admin gone) — all pass, no console
+errors, and the orb/voice blob-audio CSP check still passes (didn't regress the
+v155 orb work). Everything reversible via `frankDevMode`. Left as follow-ups: a
+multi-step guided first-run (single accurate modal shipped instead) and tiering
+the "Run Workflow/Health Check" quick-commands.
