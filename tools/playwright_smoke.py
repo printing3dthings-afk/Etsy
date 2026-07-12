@@ -197,6 +197,8 @@ async def _run_browser_checks() -> None:
                     relayHidden: hidden(document.getElementById('bb-relay')),
                     advancedItemsHiddenByDefault: hidden(document.querySelector('.nav-item[data-tier="advanced"]')),
                     homeLabeled: !![...document.querySelectorAll('.nav-item')].find(n => n.dataset.screen === 'cmd' && n.textContent.includes('Home')),
+                    imageEngineSelect: (()=>{ const s=document.getElementById('setting-image-engine'); return !!s && [...s.options].some(o=>o.value==='gemini'); })(),
+                    videoEngineSelect: (()=>{ const s=document.getElementById('setting-video-engine'); return !!s && [...s.options].some(o=>o.value==='veo'); })(),
                 };
             }""")
             check(simp.get("createNav") and simp.get("createScreen"),
@@ -207,6 +209,8 @@ async def _run_browser_checks() -> None:
             check(simp.get("advancedItemsHiddenByDefault"),
                   f"Advanced nav items must be collapsed by default: {simp}")
             check(simp.get("homeLabeled"), f"'Home' nav label expected (was Command Center): {simp}")
+            check(simp.get("imageEngineSelect"), f"Create screen must have an image-engine dropdown incl. Gemini: {simp}")
+            check(simp.get("videoEngineSelect"), f"Create screen must have a video-engine dropdown incl. Veo: {simp}")
 
         finally:
             await browser.close()

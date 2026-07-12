@@ -6155,3 +6155,37 @@ errors, and the orb/voice blob-audio CSP check still passes (didn't regress the
 v155 orb work). Everything reversible via `frankDevMode`. Left as follow-ups: a
 multi-step guided first-run (single accurate modal shipped instead) and tiering
 the "Run Workflow/Health Check" quick-commands.
+
+### 2026-07-11 (v157) — AI generation engine picker back, on the Create screen
+
+**Ask:** Scott wanted the AI-generation engine choice back — specifically Gemini
+("Nano Banana") plus the other approved generators — as a dropdown on the Create
+("Studio") screen. (The v156 simplification had removed the engine picker from
+Settings and left generation to auto-pick a backend default.)
+
+**What shipped:** two `<select>`s on `#screen-create` (`frank_hud_mockup.py`) —
+an **Image engine** dropdown on the Listing-photo card (`openai` gpt-image-1 /
+`gpt-image-2` / `gemini` Nano Banana / `ideogram`) and a **Video engine** dropdown
+on the Product-video card (`sora` / `veo`), both `onchange="saveEngines()"`. No
+new backend: the engine plumbing already existed end-to-end — `/api/settings`
+GET/POST stores + validates `image_engine`/`video_engine` against
+`_IMAGE_ENGINES`/`_VIDEO_ENGINES` (main.py ~L7425-7472), generation reads the
+setting, and `tools/image_gen.py`/`ai_video.py` implement all six engines. Added
+`loadCreateEngines()` (Create loader) to populate the selects from the saved
+value, and guarded `saveEngines()` for when the selects are absent. Kept the
+picker OUT of Settings (that removal stands) — this is purely the point-of-use
+relocation Scott asked for, with plain labels (no API-key/retirement jargon).
+
+**Honesty guardrail honored:** confirmed every listed engine is actually
+implemented and reachable before exposing it (image_gen.py dispatch raises a
+clear error only for unknown engines / ideogram-edit / gpt-image-2-transparent;
+gemini/ideogram/veo raise an explicit "X_API_KEY not set" that the Create
+handlers surface via `status.textContent = 'Generation failed: …'` — never
+silent). A static note tells the user Gemini/Ideogram/Veo need their key in .env.
+
+**Verified:** full local suite + `smoke_test` (45 tools) + `playwright_smoke`
+(extended to assert the image-engine dropdown incl. Gemini and video-engine
+dropdown incl. Veo render on the Create screen; no console errors; orb/voice CSP
+audio check still green). Bumped `_BUILD_ID` → v157. Note: to actually USE Gemini,
+`GEMINI_API_KEY` must be set in `.env` (likewise `IDEOGRAM_API_KEY` for Ideogram);
+the option is exposed and errors clearly until the key is present.

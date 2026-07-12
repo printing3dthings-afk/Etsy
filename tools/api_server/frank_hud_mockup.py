@@ -1491,6 +1491,11 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
         </div>
+        <label for="setting-video-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video engine</label>
+        <select id="setting-video-engine" aria-label="Video engine" onchange="saveEngines()" style="width:100%;margin-bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <option value="sora">Sora (default)</option>
+          <option value="veo">Veo (needs Google/Gemini key)</option>
+        </select>
         <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
         <div id="studio-generate-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
       </div>
@@ -1583,6 +1588,15 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:8px"></textarea>
 
         <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">Each attempt calls the real image-generation API — real cost per click — up to 2 tries if the first doesn't verify against your source file.</div>
+
+        <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image engine</label>
+        <select id="setting-image-engine" aria-label="Image engine" onchange="saveEngines()" style="width:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <option value="openai">OpenAI gpt-image-1 (default · only one with transparent background)</option>
+          <option value="gpt-image-2">OpenAI gpt-image-2 (sharper text)</option>
+          <option value="gemini">Gemini — Nano Banana (best product consistency across photos)</option>
+          <option value="ideogram">Ideogram (best in-image text · generate-only)</option>
+        </select>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:10px">Gemini &amp; Ideogram need their API key set in .env — Frank tells you if a key is missing when you generate. <span id="engines-status"></span></div>
 
         <button class="act-btn primary" style="width:100%" onclick="lsgGenerate()" id="lsg-generate-btn">Generate Lifestyle Photo</button>
         <div id="lsg-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
@@ -2392,7 +2406,7 @@ const _SCREEN_LOADERS = {
   security: [renderSecurityPosture],
   settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings],
   studio: [loadStudioVideos],
-  create: [loadStudioVideos],  // guided Create flow (reuses studio backends)
+  create: [loadStudioVideos, loadCreateEngines],  // guided Create flow (reuses studio backends)
 };
 const _GLOBAL_LOADERS = [
   () => Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill),
@@ -2705,10 +2719,24 @@ function saveBranding(){
   _postSettings({agent_name:name}, 'branding-status', 'Agent name saved — reload to see it everywhere');
 }
 function saveEngines(){
-  _postSettings({
-    video_engine: document.getElementById('setting-video-engine').value,
-    image_engine: document.getElementById('setting-image-engine').value,
-  }, 'engines-status', 'AI engines updated');
+  const ve = document.getElementById('setting-video-engine');
+  const ie = document.getElementById('setting-image-engine');
+  if(!ve || !ie) return;  // both selects live on the Create screen; guard if absent
+  _postSettings({ video_engine: ve.value, image_engine: ie.value }, 'engines-status', 'Engine updated');
+}
+// Populate the Create-screen engine dropdowns with the currently-saved engines.
+// (loadRuntimeSettings early-returns off the Settings screen, so Create needs its
+// own tiny loader — see _SCREEN_LOADERS.create.)
+async function loadCreateEngines(){
+  const ie = document.getElementById('setting-image-engine');
+  const ve = document.getElementById('setting-video-engine');
+  if(!ie && !ve) return;
+  try{
+    const r = await authGet('/api/settings');
+    const d = await r.json();
+    if(ie && d.image_engine) ie.value = d.image_engine;
+    if(ve && d.video_engine) ve.value = d.video_engine;
+  }catch(e){/* leave defaults */}
 }
 // ── Offline dashboard cache — stale-but-useful data when wifi drops mid-session.
 // Caches raw JSON (not rendered HTML) so it stays valid across template/CSS changes.
