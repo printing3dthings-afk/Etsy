@@ -1,0 +1,14 @@
+# Optional dependencies for AI sticker cut-outs (tools/process_sticker_sheets.py --cutout ai).
+# NOT installed into the Railway server image — this is an operator-run offline tool.
+# Install only when you want BiRefNet matting instead of the built-in flood-fill:
+#   pip install -r requirements-sticker.txt
+# BiRefNet (the model rembg loads via new_session("birefnet-general")) is MIT —
+# product-safe. Do NOT switch to BRIA RMBG-2.0: its weights are not freely commercial.
+#
+# HEADS UP (verified 2026-07-11): rembg pulls Pillow >= 12, which conflicts with the
+# main app's moviepy pin (pillow<12). Install this in a SEPARATE virtualenv from the
+# server deps, or only where you're running the sticker tool, to avoid breaking
+# moviepy-based video generation. The BiRefNet model (~1GB) downloads from GitHub on
+# the first `--cutout ai` run; if that host is blocked, use `--cutout flood`.
+rembg
+onnxruntime

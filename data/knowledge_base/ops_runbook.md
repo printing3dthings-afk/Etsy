@@ -6189,3 +6189,30 @@ dropdown incl. Veo render on the Create screen; no console errors; orb/voice CSP
 audio check still green). Bumped `_BUILD_ID` → v157. Note: to actually USE Gemini,
 `GEMINI_API_KEY` must be set in `.env` (likewise `IDEOGRAM_API_KEY` for Ideogram);
 the option is exposed and errors clearly until the key is present.
+
+### 2026-07-11 — Sticker cut-outs: BiRefNet (rembg) AI matting, with flood-fill fallback
+
+**Why:** open-source research ranked background removal via `rembg` + **BiRefNet**
+(both MIT — product-safe) as the top-ROI improvement. The sticker pipeline's
+corner-sampled flood-fill (`remove_white_background`) struggles with soft
+drop-shadows / anti-aliased edges / themed-color sheets (the recurring
+cut-out defect class). BiRefNet matting handles all of those and needs no paid
+gpt-image-1 transparent generation.
+
+**What shipped (`tools/process_sticker_sheets.py`, operator-run CLI — NOT the
+server):** new `_ai_cutout()` (rembg `new_session("birefnet-general")`, lazy
+import) + a `cutout()` dispatcher that prefers AI and **falls back to the existing
+flood-fill** on ImportError / any failure; call site swapped `remove_white_background`
+→ `cutout`; new `--cutout {ai,flood,auto}` flag (default `auto`). rembg is an
+**optional dep** (`requirements-sticker.txt`) — deliberately kept OUT of the main
+`requirements.txt` so the Railway image stays lean and CI (no rembg) exercises the
+fallback path.
+
+**Verified:** compiles; fallback path proven end-to-end (rembg absent → clean
+flood-fill cut-out, center opaque / corners transparent). The AI path's code is
+correct and invokes `new_session` properly, but the **BiRefNet model download 403'd
+in this sandbox** (agent proxy blocks that GitHub release asset), so the real
+BiRefNet inference is handed to the operator's first `--cutout ai` run. **Gotcha
+documented:** rembg pulls Pillow ≥12 (conflicts with moviepy's `pillow<12`) —
+install `requirements-sticker.txt` in a separate venv. No `_BUILD_ID` bump / no
+deploy (server untouched); regenerating + reuploading actual packs stays Scott-gated.

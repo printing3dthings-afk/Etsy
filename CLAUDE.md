@@ -271,6 +271,8 @@ The shop has grown beyond DP1029. Products DP1030–DP1034 exist on disk (`data/
 
 **Note on sticker ZIPs:** DP1026–DP1034 sticker packs all exist on disk and are all live/complete now. DP1030–1034's packs were regenerated 2026-07-09 — they were previously broken (built 2026-06-30, before the background-removal fix below, or on themed-color backgrounds the fix didn't yet handle) and shipped as 9 sheets × 1 sticker each. `tools/process_sticker_sheets.py`'s background detection was generalized to trust any uniform corner color (not just light backgrounds) and re-run; all five now have 9 real sheets and 240–470+ individual stickers each. See `tools/qc_sweep.py`'s `check_sticker_zip()` — an individual-sticker count under 50 is now a hard FAIL (this exact defect class), not just a warning.
 
+**Cut-out engine (2026-07-11):** `tools/process_sticker_sheets.py` now prefers **BiRefNet AI matting via `rembg`** (both MIT — product-safe; do NOT use BRIA RMBG-2.0, non-commercial) over the corner-sampled flood-fill for cleaner transparent edges on soft-shadow / anti-aliased / themed-color sheets. It's an **optional dependency** (`pip install -r requirements-sticker.txt`, lazy-imported) and NOT in the Railway server image; the tool falls back to the original `remove_white_background` flood-fill automatically when rembg isn't installed or a cut-out fails, so behavior is unchanged without the install. Pick explicitly with `--cutout {ai,flood,auto}` (default `auto`). Regenerating + reuploading actual packs stays **Scott-gated**.
+
 ---
 
 ## Color Design System & Theme Catalog
