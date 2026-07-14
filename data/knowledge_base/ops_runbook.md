@@ -6335,3 +6335,36 @@ also burn Gemini credits on a wiring test):**
 No `_BUILD_ID` bump (library fix). Ask Scott to retry Gemini generation once
 his OpenAI billing is separately resolved OR immediately (since Gemini no
 longer needs OpenAI at all now) — either should work.
+
+### 2026-07-14 (v158) — Products page showed false "missing file" for every product
+
+**Ask:** Scott asked what the Products screen is for, after a photo showed
+every product's PDF/ZIP marked ❌.
+
+**Root cause:** `/api/products` checked `data/digital_products/product_files/
+{id}.pdf` — but `data/*` is excluded from the Docker build (`.dockerignore`),
+so this path never exists in the deployed Railway container. The "Files"
+browsing feature already knows about this exact problem and falls back to a
+persistent volume (`/data/files`, populated by `tools/sync_files_to_hub.py`) —
+`/api/products`'s check was never given that same fallback, so it reported
+every product as missing, always, regardless of true status. Confirmed
+`data/dp_listing_map.json` (titles/listing IDs, which displayed correctly) IS
+git-tracked and present in the image — only the binary PDFs/ZIPs are excluded,
+explaining the split symptom (titles fine, file-status always false).
+
+**Fix:** added `_product_file_exists(rel)` (near `_FILE_ROOTS`) checking both
+the local `data/` tree AND the persistent volume, matching
+`sync_files_to_hub.py`'s own upload-path convention (`product_files/<name>`).
+`get_products()` now calls this instead of a bare local-only `.exists()`.
+
+**Verified:** reproduced the original bug (file in neither location → False,
+matching the reported ❌) using temp dirs standing in for both roots; confirmed
+all 4 real scenarios — products-root-only, volume-root-only (the case that was
+silently broken before), neither, and no-volume-configured (local dev) — every
+one correct, no crashes. `smoke_test` + `playwright_smoke` green.
+
+**Follow-up (Scott, on his own machine — his real product files don't exist in
+this sandbox):** run `python tools/sync_files_to_hub.py` (add `--dry-run`
+first to preview) to actually get his real PDFs/ZIPs onto the persistent
+volume so the ✅ marks become true, not just accurate-when-false. Needs
+`RAILWAY_APP_URL` + `APP_SECRET_TOKEN` in his local `.env`.

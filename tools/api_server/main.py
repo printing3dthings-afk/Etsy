@@ -503,7 +503,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v157"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8256703-v158"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7106,14 +7106,14 @@ async def get_products(_token: str = Depends(_auth_session_or_bearer)):
         if k.startswith("DP") and k[2:].isdigit() and 1026 <= int(k[2:]) <= 1035
     ):
         e = listing_map[dp_id]
-        pdf = _P(f"data/digital_products/product_files/{dp_id}.pdf")
-        zip_ = _P(f"data/digital_products/product_files/{dp_id}_sticker_pack.zip")
+        pdf_rel = f"product_files/{dp_id}.pdf"
+        zip_rel = f"product_files/{dp_id}_sticker_pack.zip"
         products.append({
             "id": dp_id,
             "title": e.get("planner_title") or e.get("title", ""),
             "listing_id": e.get("planner_listing_id") or e.get("listing_id"),
-            "pdf_exists": pdf.exists(),
-            "zip_exists": zip_.exists(),
+            "pdf_exists": _product_file_exists(pdf_rel),
+            "zip_exists": _product_file_exists(zip_rel),
             "status": e.get("status", "active"),
         })
     return {"products": products}
@@ -8359,6 +8359,21 @@ if _vol_override:
     _FILE_ROOTS["volume"] = Path(_vol_override)
 elif Path("/data").is_dir():
     _FILE_ROOTS["volume"] = Path("/data") / "files"
+
+
+def _product_file_exists(rel: str) -> bool:
+    """Check a product file under BOTH the local data/ tree (works when running
+    on Scott's own machine) and the persistent /data volume (where
+    tools/sync_files_to_hub.py uploads real product files so they survive
+    redeploys). Checking only the former always reported "missing" on the
+    deployed Railway dashboard even for properly-synced files, since data/ is
+    dockerignored (2026-07-14: every product on the Products screen showed a
+    false FAIL for this reason). `rel` matches sync_files_to_hub.py's own
+    upload-path convention, e.g. "product_files/DP1026.pdf"."""
+    if (_FILE_ROOTS["products"] / rel).exists():
+        return True
+    vol = _FILE_ROOTS.get("volume")
+    return bool(vol and (vol / rel).exists())
 
 # Staged listing photos awaiting Scott's approve/reject in the Action Center —
 # durable under the Railway volume when mounted (survives redeploys, same reason
