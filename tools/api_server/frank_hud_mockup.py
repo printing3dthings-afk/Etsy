@@ -1261,10 +1261,33 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
 
-  <!-- ══════════ BRAND KIT — fully static: color palettes, listing standards, pricing tiers ══════════ -->
+  <!-- ══════════ BRAND KIT — fully static: shop identity, 16 color themes, listing standards for
+       all 3 product lines, pricing, sticker system, typography, brand mark, photography style —
+       everything that makes OnBrandCraftz look and sound like OnBrandCraftz, from CLAUDE.md ══════════ -->
   <div class="screen" id="screen-brandkit">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Brand Kit <span class="src">Static — palettes, listing standards, pricing tiers from CLAUDE.md</span></div>
+      <div class="panel-title">Brand Kit <span class="src">Static — expanded brand system from CLAUDE.md: identity, 16 color themes, listing standards, pricing, sticker system, typography, brand mark, photography style</span></div>
+      <div style="font-size:12px;color:var(--muted);margin:6px 0 14px">Everything that makes OnBrandCraftz look and sound like OnBrandCraftz. Jump to a section:</div>
+      <div id="brandkit-chooser" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:14px">
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-identity')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">🏷️</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Shop Identity</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-themes')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">🎨</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Color Themes</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-color-rules')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">📐</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Color Rules</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-stickers')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">✨</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Stickers</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-listing-standards')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">📋</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Listing Rules</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-pricing')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">💲</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Pricing</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-typography')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">🔤</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Typography</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-brandmark')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">⬡</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Brand Mark</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('bk-photography')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 6px;cursor:pointer;text-align:center">
+          <div style="font-size:20px" aria-hidden="true">📷</div><div style="font-weight:600;margin-top:4px;font-size:11.5px">Photography</div></div>
+      </div>
       <div id="brandkit-content" class="hub-scroll"></div>
     </div>
   </div>
@@ -1338,7 +1361,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-section-title" style="margin-top:18px">Orb / Brand Mark</div>
       <div class="hub-card">
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-          <canvas id="brand-mark-preview" width="64" height="64" style="border-radius:var(--r-md);background:var(--panel2);border:1px solid var(--border)"></canvas>
+          <canvas id="brand-mark-preview" class="brand-mark-canvas" width="64" height="64" style="border-radius:var(--r-md);background:var(--panel2);border:1px solid var(--border)"></canvas>
           <div style="flex:1;min-width:200px">
             <label for="brand-mark-file" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Custom orb image</label>
             <input type="file" id="brand-mark-file" accept="image/png,image/jpeg,image/webp" style="width:100%;color:var(--text);font-size:12px">
@@ -2647,8 +2670,12 @@ async function loadRuntimeSettings(){
   }catch(e){/* leave placeholders */}
 }
 function renderBrandMarkPreview(){
-  const cv = document.getElementById('brand-mark-preview');
-  if(!cv) return;
+  // Draws into every brand-mark preview canvas on the page (Settings' #brand-mark-preview
+  // AND Brand Kit's #brandkit-mark-preview) -- both share the .brand-mark-canvas class so
+  // this single function keeps both in sync without either screen knowing about the other.
+  document.querySelectorAll('.brand-mark-canvas').forEach(_drawBrandMarkInto);
+}
+function _drawBrandMarkInto(cv){
   const ctx = cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
   if(!window._brandMarkDataUrl){
@@ -4595,6 +4622,157 @@ const _THEMES = [
   {id:'DP1028',name:'Midnight Blue',  primary:'#1B2568',accent:'#7BA7C2',neutral:'#F0F5FF',text:'#0D1525'},
   {id:'DP1029',name:'Coral Peach',    primary:'#FD6C49',accent:'#F5B878',neutral:'#FFF8F4',text:'#3A1A0D'}
 ];
+// Brand Kit's full theme catalog (4 live + 12 planned) -- kept SEPARATE from _THEMES above.
+// renderProducts() indexes _THEMES by array position for border-color coding; adding the 12
+// planned themes into that array would silently shift that indexing the moment /api/products
+// returns more than 4 products. Swatch roles vary per theme (some have "Deep accent", one has
+// "Pop accent" + "Text on dark") so `swatches` is a free-form [{label,hex}] list, not a fixed
+// 4-slot shape. Live themes (DP1026-1029) only have hex roles documented in CLAUDE.md -- no
+// tagline/aesthetic/motifs/buyer/trend copy exists for them, so those fields are left null
+// rather than inventing marketing copy; the detail panel simply omits null fields.
+const _BRANDKIT_THEMES = [
+  {id:'DP1026', name:'Lavender Dreams', live:true, tagline:null,
+    swatches:[{label:'Primary',hex:'#8666AA'},{label:'Accent',hex:'#C4A8D4'},{label:'Neutral',hex:'#FAF7FF'},{label:'Text',hex:'#2C1A3A'}],
+    aesthetic:null, motifs:null, buyer:null, bestProduct:'DP1026 Ultimate Digital Life Planner', trend:null},
+  {id:'DP1027', name:'Cotton Candy', live:true, tagline:null,
+    swatches:[{label:'Primary',hex:'#DE97C6'},{label:'Accent',hex:'#97C6DE'},{label:'Neutral',hex:'#FFF6FC'},{label:'Text',hex:'#2C1A2A'}],
+    aesthetic:null, motifs:null, buyer:null, bestProduct:'DP1027 Student & School Planner', trend:null},
+  {id:'DP1028', name:'Midnight Blue', live:true, tagline:null,
+    swatches:[{label:'Primary',hex:'#1B2568'},{label:'Accent',hex:'#7BA7C2'},{label:'Neutral',hex:'#F0F5FF'},{label:'Text',hex:'#0D1525'}],
+    aesthetic:null, motifs:null, buyer:null, bestProduct:'DP1028 Budget & Finance Planner', trend:null},
+  {id:'DP1029', name:'Coral Peach', live:true, tagline:null,
+    swatches:[{label:'Primary',hex:'#FD6C49'},{label:'Accent',hex:'#F5B878'},{label:'Neutral',hex:'#FFF8F4'},{label:'Text',hex:'#3A1A0D'}],
+    aesthetic:null, motifs:null, buyer:null, bestProduct:'DP1029 Fitness & Wellness Planner', trend:null},
+  {id:null, name:'Cherry Blossom', live:false, tagline:'Soft as spring, organized as ever',
+    swatches:[{label:'Primary',hex:'#F4A7B9'},{label:'Accent',hex:'#F9D0DB'},{label:'Deep accent',hex:'#C4607A'},{label:'Neutral',hex:'#FFF5F7'},{label:'Text',hex:'#3D1A24'}],
+    aesthetic:'Japanese sakura, soft spring, feminine, delicate',
+    motifs:'Cherry blossom branches, tiny petals falling, bunnies in flower fields, spring birds',
+    buyer:'Women 18–30, spring new-year-fresh-start buyers, Japan-aesthetic lovers',
+    bestProduct:'DP1026 Life Planner cover variant, standalone spring sticker pack',
+    trend:'Seasonal spring, evergreen kawaii aesthetic'},
+  {id:null, name:'Sage Garden', live:false, tagline:'Grounded. Calm. Growing.',
+    swatches:[{label:'Primary',hex:'#8BA888'},{label:'Accent',hex:'#C8DDB5'},{label:'Deep accent',hex:'#556B50'},{label:'Neutral',hex:'#F6F8F2'},{label:'Text',hex:'#2C3828'}],
+    aesthetic:'Cottagecore, botanical, garden, calm nature',
+    motifs:'Tiny mushrooms, herb sprigs, watering cans, garden snails, flower pots, bees',
+    buyer:'Cottagecore/nature lovers, wellness community, gardeners, women 25–40',
+    bestProduct:'DP1029 Fitness/Wellness cover variant, DP1031 Undated Evergreen planner',
+    trend:'Pantone spring palette, Deep Botanical macro trend, cottagecore Etsy niche'},
+  {id:null, name:'Celestial Night', live:false, tagline:'Plan by the stars',
+    swatches:[{label:'Primary',hex:'#1E1B4B'},{label:'Accent',hex:'#C9A84C'},{label:'Mid tone',hex:'#6B5FA5'},{label:'Neutral',hex:'#F0EEF8'},{label:'Text on dark',hex:'#F9F6FF'}],
+    aesthetic:'Celestial, astrology, moon phases, stars, mystical kawaii',
+    motifs:'Crescent moons, stars, constellations, sleeping moon faces, tiny planets, comets, crystal balls',
+    buyer:'Astrology community, witchy aesthetic, Gen Z, spiritual wellness buyers',
+    bestProduct:'DP1032 Dark Mode Planner (celestial variant), standalone celestial sticker pack',
+    trend:'Dark mode trend, Y3K aesthetic, celestial Etsy niche (consistently top 5 planner aesthetic)'},
+  {id:null, name:'Mocha Latte', live:false, tagline:'Sophisticated. Warm. Ready for anything.',
+    swatches:[{label:'Primary',hex:'#8B5E3C'},{label:'Accent',hex:'#D4A96A'},{label:'Mid tone',hex:'#C8A882'},{label:'Neutral',hex:'#FDF8F0'},{label:'Text',hex:'#2C1A0E'}],
+    aesthetic:'Café aesthetic, warm brown luxury, sophisticated minimalist',
+    motifs:'Coffee cups with cream swirls, croissants, tiny café scenes, autumn leaves, cozy mugs',
+    buyer:'Coffee lovers, women 25–40, VSCO/aesthetic crowd, mature planner buyers',
+    bestProduct:'DP1026 Life Planner, DP1028 Budget Planner (premium feel)',
+    trend:'2026 Warm Earth Revival macro trend — brown is having a major moment in design'},
+  {id:null, name:'Mermaidcore', live:false, tagline:'Deep-sea dreams, surface-level organized',
+    swatches:[{label:'Primary',hex:'#4ABFBF'},{label:'Accent',hex:'#B8A9D9'},{label:'Shimmer',hex:'#A8E6CF'},{label:'Neutral',hex:'#F0FAFF'},{label:'Text',hex:'#1A3A4A'}],
+    aesthetic:'Mermaid, ocean, iridescent, fantasy kawaii',
+    motifs:'Mermaid tails, shells, bubbles, starfish, pearls, seahorses, coral',
+    buyer:'Fantasy/ocean lovers, Gen Z, creative dreamers, summer buyers',
+    bestProduct:'DP1031 Undated Evergreen (fresh + timeless), summer seasonal release',
+    trend:'Mermaidcore is one of the top 3 macro design trends for 2026 (Envato research)'},
+  {id:null, name:'Dark Academia', live:false, tagline:'Knowledge is power. Plan accordingly.',
+    swatches:[{label:'Primary',hex:'#3B2A1A'},{label:'Accent',hex:'#9B7D3A'},{label:'Mid tone',hex:'#7A5C3F'},{label:'Neutral',hex:'#F5EDD6'},{label:'Text',hex:'#1C1208'}],
+    aesthetic:'Dark academia, vintage library, Victorian stationery, moody intellectual',
+    motifs:'Tiny books, quill pens, ink bottles, hourglasses, candles, dried flowers, keys',
+    buyer:'Students (especially college), book lovers, aesthetic Tumblr/Pinterest crowd, dark aesthetic buyers',
+    bestProduct:'DP1027 Student Planner cover variant, DP1033 Teacher Planner',
+    trend:'Top-performing Etsy aesthetic with dedicated buyer communities'},
+  {id:null, name:'Tropical Hibiscus', live:false, tagline:'Bright energy. Big plans.',
+    swatches:[{label:'Primary',hex:'#FF6B9D'},{label:'Accent',hex:'#FFD166'},{label:'Mid tone',hex:'#06D6A0'},{label:'Neutral',hex:'#FFFAF0'},{label:'Text',hex:'#3D0029'}],
+    aesthetic:'Tropical, maximalist, Gen Z, bold & colorful (rejects minimalism)',
+    motifs:'Tropical flowers, pineapples, flamingos, parrots, watermelon slices, suns',
+    buyer:'Gen Z buyers, bold personality types, summer seasonal, "Play Haus" aesthetic crowd',
+    bestProduct:'DP1027 Student Planner, DP1029 Fitness Planner (high-energy niche match)',
+    trend:'"Play Haus" 2026 trend (Gen Z\\'s colorful rejection of minimalism), Spring Vivid Brights'},
+  {id:null, name:'Rose Gold Luxe', live:false, tagline:'You deserve gold. And a good plan.',
+    swatches:[{label:'Primary',hex:'#B76E79'},{label:'Accent',hex:'#D4AF7A'},{label:'Mid tone',hex:'#F2C4CE'},{label:'Neutral',hex:'#FDF8F8'},{label:'Text',hex:'#4A2030'}],
+    aesthetic:'Luxury, aspirational, rose gold glam, feminine premium',
+    motifs:'Tiny diamonds, hearts with crowns, champagne flutes, makeup brushes, perfume bottles, stars',
+    buyer:'Women 25–40, aspirational buyers, bridal/wedding planners, hustle culture crowd',
+    bestProduct:'DP1026 Ultimate Life Planner (premium tier), DP1028 Budget Planner (financial goals)',
+    trend:'Rose gold is perennially strong for premium digital products, Clubroom Contrast luxury aesthetic'},
+  {id:null, name:'Ocean Breeze', live:false, tagline:'Clear mind. Calm days. Clear goals.',
+    swatches:[{label:'Primary',hex:'#3B8E8A'},{label:'Accent',hex:'#7EC8C8'},{label:'Mid tone',hex:'#A8D8D8'},{label:'Neutral',hex:'#F0FAFA'},{label:'Text',hex:'#0D3535'}],
+    aesthetic:'Coastal, clean, fresh, calming, modern minimalist',
+    motifs:'Waves, seashells, sailboats, jellyfish, sea glass, beach umbrellas, lighthouses',
+    buyer:'Wellness-focused buyers, adults 30–45, productivity minimalists, coastal aesthetic',
+    bestProduct:'DP1029 Wellness Planner, DP1028 Budget Planner (calm & focused)',
+    trend:"WGSN's Transformative Teal is the #1 key color for 2026 — this is on-trend at the highest level"},
+  {id:null, name:'Midnight Kawaii', live:false, tagline:'Cute goes dark.',
+    swatches:[{label:'Primary',hex:'#1A1A2E'},{label:'Accent',hex:'#E040FB'},{label:'Pop accent',hex:'#00E5FF'},{label:'Mid tone',hex:'#2D2B55'},{label:'Text',hex:'#F0E6FF'}],
+    aesthetic:'Dark kawaii, Y3K, futuristic, neon-on-dark',
+    motifs:'Glowing stars, neon-outlined cats, holographic elements, pixel art kawaii, spaceship chibi',
+    buyer:'Dark aesthetic Gen Z, gamers, night-owl planners, tech-forward buyers',
+    bestProduct:'DP1032 Dark Mode Planner (primary), great for ADHD planner (less visual overwhelm on dark bg)',
+    trend:'Dark mode is standard in competitors; "Mood Mode" / Y3K neon accents are 2026-specific'},
+  {id:null, name:'Sunflower Studio', live:false, tagline:'Growth season. Every day.',
+    swatches:[{label:'Primary',hex:'#F4C430'},{label:'Accent',hex:'#4A7C59'},{label:'Mid tone',hex:'#F8E08E'},{label:'Neutral',hex:'#FFFDF0'},{label:'Text',hex:'#2A1A00'}],
+    aesthetic:'Bright botanical, positive, cheerful, nature + sunshine',
+    motifs:'Sunflowers, bees, garden tools, butterflies, ladybugs, seeds sprouting',
+    buyer:'Positive-mindset community, spring/summer buyers, gardening niche, teachers',
+    bestProduct:'DP1033 Teacher Planner, DP1026 Life Planner (positivity focus)',
+    trend:'Yellow is scientifically proven for optimism and serotonin, Deep Botanical trend'},
+  {id:null, name:'Matcha Serenity', live:false, tagline:'Slow down. Sip. Succeed.',
+    swatches:[{label:'Primary',hex:'#6B8F5E'},{label:'Accent',hex:'#B8CC8E'},{label:'Mid tone',hex:'#E8F0D8'},{label:'Neutral',hex:'#F7F9F3'},{label:'Text',hex:'#1E2D18'}],
+    aesthetic:'Japanese minimalist, matcha café, slow living, mindfulness',
+    motifs:'Matcha cups, bamboo, koi fish, zen stones, lotus flowers, tiny bento boxes',
+    buyer:'Mindfulness/slow living community, Japan aesthetic lovers, wellness buyers, women 22–35',
+    bestProduct:'DP1029 Wellness Planner, DP1030 ADHD Planner (calming tones reduce overwhelm)',
+    trend:'Sage green / botanical tones are 2026 Deep Botanical macro trend, mindfulness is evergreen'},
+];
+const _BRANDKIT_LISTING_TYPES = [
+  {key:'planners', label:'Digital Planners', icon:'📓',
+    title:'≤70 chars (hard limit — mobile ranking penalty above) · lead keyword in first 20–30 chars · include year (2026) or "Undated" + app name (GoodNotes) in first 40 chars · comma separators, not pipes',
+    tags:'13 tags · each ≤20 chars · no duplicate of title phrases · multi-word buyer-intent phrases',
+    description:['Hook',"What's Included",'Compatible Apps','How To Use Stickers','How To Use The Planner','Sections Included','Technical Details','FAQ','Copyright'],
+    photos:'10 slots · 2400×2400px square · subject centered in 70% of frame · 5% neutral padding · lifestyle hero photo first',
+    category:'Craft Supplies & Tools > Patterns & How To > Digital Files (taxonomy_id 2078)'},
+  {key:'wallart', label:'Wall Art', icon:'🖼️',
+    title:'≤70 chars (55–70 char target) · formula "[Primary phrase] Printable Wall Art, Instant Download, [Style/room]" · must include "printable" AND "instant download" · comma separators, not pipes',
+    tags:'13 tags · each ≤20 chars · zero duplicate of title phrases · must cover 6 intent categories: style, room, art medium, occasion, recipient, format',
+    description:['First-sentence hook (primary keyword + states instant/digital download)',"What's Included",'Specs','FAQ'],
+    photos:'10 slots · minimum 2 different room types shown · 2400×2400px · gallery wall grouping + size reference w/ furniture required',
+    category:'Not pinned to one taxonomy_id in CLAUDE.md for wall art specifically — gap to confirm with Scott before next wall-art launch'},
+  {key:'svg', label:'SS-Series SVG 3D-Print Packs', icon:'✂️',
+    title:'≤70 chars (60–70 char target) · formula "[Design Theme] SVG, 3D Print [Type], Instant Download" · "SVG" must appear in first 30 chars · must end with "Instant Download" · comma separators, not pipes',
+    tags:'13 tags exactly · each ≤20 chars · zero duplicate of title phrases · must cover design/theme, print method, slicer, use case, format, audience',
+    description:['Hook','⚠ Disclaimer (digital download only — no physical item)','Pack Overview',"What's Included",'Compatible Printers & Slicers','How To Print (Bambu Studio)','Size & Scaling','Display Ideas','Technical Details','FAQ','About This Design (AI disclosure)','Copyright'],
+    photos:'10 slots · 1–6 lifestyle (must carry "DIGITAL FILE — SVG DOWNLOAD" badge), 7 how-to (Color Painting Fill tool — never "Split by Color", that menu does not exist), 8 detail close-up, 9 specs/ZIP contents, 10 lineup of all designs',
+    category:'Craft Supplies & Tools > Patterns & How To > Digital Files (taxonomy_id 2078)'},
+];
+const _BRANDKIT_PRICING = {
+  endingRule:'.99 / .97 / .49 endings only — never round numbers. Applies to every price on every table below.',
+  planners: [
+    ['DP1026 Ultimate Life Planner','$14.99','104 pages + kawaii cover + 5-sheet sticker pack — premium'],
+    ['DP1027 Student & School Planner','$9.99','Student budget — lower price point for volume'],
+    ['DP1028 Budget & Finance Planner','$12.99','Niche audience, high value perception'],
+    ['DP1029 Fitness & Wellness Planner','$12.99','Niche audience, wellness = premium feel'],
+  ],
+  wallArt: [
+    ['Single print','$4.99–$7.99','Impulse tier'],
+    ['Set of 3 matching','$12.99–$19.99','Most purchased bundle unit'],
+    ['Gallery wall set of 5–7','$19.99–$39.99','Highest revenue per transaction'],
+    ['Pick Any 3 bundle','$14.97','Highest favorites-to-views ratio'],
+    ['Complete collection','$24.99','Algorithm anchor — generates catalog-wide signal'],
+  ],
+  svgPacks: [
+    ['5-design pack','$9.99','5 designs · instant download'],
+    ['10+-design pack','$14.99','10 or more designs · instant download'],
+  ],
+  stickerPacks: [
+    ['Standalone pack','$4.99–$6.99','1 theme, 5 sheets, 200+ stickers'],
+    ['Bundle (all 4 themes)','$12.99–$14.99','Implies a 55–65% discount vs. buying individually'],
+    ['Mega bundle','$17.99–$19.99','All themes + bonus seasonal pack'],
+  ],
+};
 const _PRODUCTS_STATIC = [
   {id:'DP1026',name:'Ultimate Life Planner',      price:'$14.99',pages:104},
   {id:'DP1027',name:'Student & School Planner',   price:'$9.99', pages:90},
@@ -4622,53 +4800,231 @@ async function renderProducts() {
     el.innerHTML = '<div class="hub-prod-card">⚠ ' + escHtml(e.message) + '</div>';
   }
 }
-function renderBrandKit() {
-  const el = document.getElementById('brandkit-content');
-  if (!el) return;
-  let html = '<div class="hub-section-title">Product Color Palettes</div>';
-  _THEMES.forEach(t => {
-    html += '<div class="hub-card" style="margin-bottom:10px">';
-    html += '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px">'+escHtml(t.id)+' — '+escHtml(t.name)+'</div>';
-    html += '<div style="display:flex;gap:12px;flex-wrap:wrap">';
-    [{label:'Primary',hex:t.primary},{label:'Accent',hex:t.accent},{label:'Neutral',hex:t.neutral},{label:'Text',hex:t.text}].forEach(c => {
+const _STYLE_ANCHOR_TEXT = "Photography style: bright airy editorial Etsy lifestyle photography. "+
+  "Warm cream and natural linen tones throughout. Soft diffused window light "+
+  "from the left, warm white balance, gentle shadows to the right. "+
+  "Camera at eye level, 50mm lens equivalent, slight depth of field on background. "+
+  "No hands, no people, no text overlays, no studio equipment visible.";
+
+function _bkTable(rows, cellStyles){
+  let t = '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  rows.forEach(r => {
+    t += '<tr style="border-bottom:1px solid var(--border)">';
+    r.forEach((cell,i) => { t += '<td style="'+(cellStyles[i]||'padding:7px 0')+'">'+escHtml(cell)+'</td>'; });
+    t += '</tr>';
+  });
+  return t + '</table>';
+}
+
+function _bkSectionIdentity(){
+  let html = '<div id="bk-identity">';
+  html += '<div class="hub-section-title">Shop Identity</div>';
+  html += '<div class="hub-card">'+
+    '<div style="font-size:15px;font-weight:700">OnBrandCraftz</div>'+
+    '<div style="font-size:11.5px;color:var(--muted);margin-top:2px">Owner: Scott &middot; Etsy shop ID: onbrandcraftz</div>'+
+    '<div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5">'+
+    '<b style="color:var(--text)">Niche:</b> Digital planners, kawaii sticker packs, printable digital products, 3D printed physical products.<br>'+
+    '<b style="color:var(--text)">Brand aesthetic:</b> Kawaii illustrated, pastel colors, cute and fun but polished.</div>'+
+    '</div>';
+  html += '<div class="hub-card" style="border-left:3px solid var(--gold)">'+
+    '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Mission</div>'+
+    '<div style="font-size:13px;font-style:italic;margin-top:4px">"Providing the best and most accurate transaction for our customers so we can grow responsibly."</div>'+
+    '</div>';
+  html += '<div class="hub-card" style="border-left:3px solid var(--red)">'+
+    '<div style="font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:.5px;font-weight:700">Top rule — never lie to the customer</div>'+
+    '<div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.6">'+
+    'Every listing photo, description claim, page count, sticker count, and compatibility statement must be verified against '+
+    'the real product file before a listing goes live. This overrides every other consideration on this page.</div>'+
+    '</div>';
+  return html + '</div>';
+}
+
+function _bkSectionThemes(){
+  let html = '<div id="bk-themes">';
+  html += '<div class="hub-section-title">Color Themes (4 live &middot; 12 planned)</div>';
+  html += '<div class="hub-card" style="border-left:3px solid var(--amber);font-size:11px;color:var(--muted);line-height:1.6">'+
+    '&#9888; <b style="color:var(--text)">Known data conflict, flagged not resolved here:</b> the Product Roadmap table in '+
+    'CLAUDE.md lists slightly different planned hex colors for DP1030 to DP1033 than the Theme Catalog entries shown below '+
+    '(Sage Garden, Matcha Serenity, Midnight Kawaii, Sunflower Studio). This page shows the richer Theme Catalog values. '+
+    'Reconciling CLAUDE.md itself is a separate follow-up for Scott.</div>';
+  _BRANDKIT_THEMES.forEach((t,i) => {
+    const detailId = 'bk-theme-detail-'+i;
+    html += '<div class="hub-card" style="margin-bottom:10px;cursor:pointer" onclick="toggleZip(\\''+detailId+'\\', this.querySelector(\\'.bk-caret\\'))" role="button" tabindex="0">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+    html += '<div><div style="font-size:12.5px;font-weight:700">'+(t.id ? escHtml(t.id)+' — ' : '')+escHtml(t.name)+
+      ' <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px;'+
+      (t.live ? 'background:rgba(92,196,138,.18);color:var(--green)' : 'background:rgba(232,184,104,.18);color:var(--amber)')+
+      '">'+(t.live ? 'LIVE' : 'PLANNED')+'</span></div>';
+    if(t.tagline) html += '<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:2px">"'+escHtml(t.tagline)+'"</div>';
+    html += '</div><span class="bk-caret" style="font-size:13px;color:var(--muted);flex-shrink:0">&#9656;</span></div>';
+    html += '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">';
+    t.swatches.forEach(c => {
       html += '<div style="display:flex;align-items:center;gap:5px">'+
         '<span class="hub-swatch" style="background:'+escHtml(c.hex)+'"></span>'+
         '<div style="font-size:11px"><div style="color:var(--muted)">'+escHtml(c.label)+'</div>'+
-        '<div style="font-family:monospace;font-size:10px;color:var(--text)">'+escHtml(c.hex)+'</div></div>'+
+        '<div class="bk-hexcopy" style="font-family:monospace;font-size:10px;color:var(--text);cursor:pointer" '+
+        'title="Click to copy" onclick="copyHex(\\''+c.hex+'\\', this); event.stopPropagation()">'+escHtml(c.hex)+'</div></div>'+
         '</div>';
     });
+    html += '</div>';
+    html += '<div id="'+detailId+'" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.6">';
+    if(t.aesthetic) html += '<div><b style="color:var(--text)">Aesthetic:</b> '+escHtml(t.aesthetic)+'</div>';
+    if(t.motifs) html += '<div style="margin-top:4px"><b style="color:var(--text)">Kawaii motifs:</b> '+escHtml(t.motifs)+'</div>';
+    if(t.buyer) html += '<div style="margin-top:4px"><b style="color:var(--text)">Target buyer:</b> '+escHtml(t.buyer)+'</div>';
+    if(t.bestProduct) html += '<div style="margin-top:4px"><b style="color:var(--text)">Best product:</b> '+escHtml(t.bestProduct)+'</div>';
+    if(t.trend) html += '<div style="margin-top:4px"><b style="color:var(--text)">Trend alignment:</b> '+escHtml(t.trend)+'</div>';
+    if(!t.aesthetic && !t.motifs && !t.buyer && !t.trend) html += 'No additional detail documented in CLAUDE.md beyond the palette and product mapping above.';
     html += '</div></div>';
   });
-  html += '<div class="hub-section-title">Listing Standards</div><div class="hub-card">';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-  [['Title','≤70 chars · keyword first 40 · commas not pipes'],
-   ['Tags','13 tags · each ≤20 chars · multi-word buyer phrases'],
-   ['Photos','10 slots · 2400×2400px · lifestyle hero first'],
-   ['Price','.99 / .97 / .49 endings — never round numbers'],
-   ['AI disclosure','Required in description · who_made: i_did'],
-   ['File limit','20 MB per file (PDF + ZIP · Etsy hard limit)']
-  ].forEach(r => {
-    html += '<tr style="border-bottom:1px solid var(--border)">'+
-      '<td style="padding:7px 0;padding-right:10px;color:var(--gold);font-weight:700;white-space:nowrap">'+escHtml(r[0])+'</td>'+
-      '<td style="padding:7px 0;color:var(--muted);line-height:1.4">'+escHtml(r[1])+'</td></tr>';
+  return html + '</div>';
+}
+
+function _bkSectionColorRules(){
+  let html = '<div id="bk-color-rules">';
+  html += '<div class="hub-section-title">Color Design Rules — apply to every product built</div><div class="hub-card">';
+  html += '<ol style="margin:0;padding-left:20px;font-size:12px;color:var(--muted);line-height:2">'+
+    '<li><b style="color:var(--text)">Maximum 4 colors</b> per product — Primary + Accent + Mid-tone + Neutral, plus black for text.</li>'+
+    '<li><b style="color:var(--text)">60-30-10 rule</b> — 60% neutral/background, 30% primary color, 10% accent pops.</li>'+
+    '<li><b style="color:var(--text)">Minimum contrast ratio 4.5:1</b> for text on background (WCAG AA accessibility standard).</li>'+
+    '<li><b style="color:var(--text)">Never pure black</b> (#000000) — use a deep tinted black matching the palette.</li>'+
+    '<li><b style="color:var(--text)">Never pure white</b> (#FFFFFF) — use a cream or tinted neutral instead.</li>'+
+    '<li><b style="color:var(--text)">Dark mode backgrounds</b> use #1A1A2E to #2D2D2D — never pure black.</li>'+
+    '<li><b style="color:var(--text)">Tab color coding</b> — assign one hue from the palette to each section, vary by saturation.</li>'+
+    '<li><b style="color:var(--text)">Weekend vs weekday</b> — weekend calendar cells are 15% lighter than weekday cells.</li>'+
+    '<li><b style="color:var(--text)">Cover design rule</b> — the kawaii illustration accent color must match the primary hex exactly.</li>'+
+    '<li><b style="color:var(--text)">Consistency across all 10 listing photos</b> — props, backgrounds, and accent items must match the product color theme.</li>'+
+    '</ol></div>';
+  return html + '</div>';
+}
+
+function _bkSectionStickers(){
+  let html = '<div id="bk-stickers">';
+  html += '<div class="hub-section-title">Sticker &amp; Illustration Standards</div>';
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:8px">5-Sheet System — minimum 200+ stickers per pack</div>';
+  html += _bkTable([
+    ['Sheet 1','Functional Planning','50+','Headers, checklists, flags, action arrows, date dots, labels'],
+    ['Sheet 2','Widget Trackers','40+','Mood tracker, water intake, sleep tracker, habit tracker, weekly summary widgets'],
+    ['Sheet 3','Planner & Stationery','40+','Notebooks, pens, washi tape, paper clips, sticky notes, scissors, ruler'],
+    ['Sheet 4','Cozy Lifestyle','40+','Mugs, candles, books, plants, fairy lights, sleeping cat, cozy blanket'],
+    ['Sheet 5','Seasonal & Holiday','40+','Cherry blossoms, sunflowers, pumpkins, snowflakes, 12 major holiday icons'],
+  ], ['padding:6px 6px 6px 0;font-weight:700;color:var(--gold);white-space:nowrap','padding:6px','padding:6px;color:var(--muted)','padding:6px 0;color:var(--muted)']);
+  html += '</div>';
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:6px">14 Functional Sticker Categories</div>'+
+    '<div style="font-size:11.5px;color:var(--muted);line-height:1.9">'+
+    'Headers &amp; Banners &middot; Checklists &amp; To-Do Boxes &middot; Action Flags &amp; Arrows &middot; Time &amp; Appointment Icons &middot; '+
+    'Mood Trackers &middot; Habit &amp; Water Trackers &middot; Date Dots &amp; Numbers &middot; Labels &amp; Category Dots &middot; '+
+    'Monthly Tab Dividers &middot; Widget Stickers &middot; Sticky Notes &amp; Page Flags &middot; Motivational Banners &middot; '+
+    'Seasonal Markers &middot; Washi Tape Strips</div></div>';
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Kawaii Illustration Rules</div>'+
+    '<div style="font-size:11.5px;color:var(--muted);line-height:1.7">'+
+    '<b style="color:var(--text)">Proportions:</b> head-to-body ratio 1.5:1 to 2:1, oversized eyes at 40 to 50% of face height, small mouth, blush cheeks, stubby rounded limbs.<br>'+
+    '<b style="color:var(--text)">Color:</b> exactly 5 colors from the product palette (primary, accent, mid-tone, neutral, text), plus one pop accent reserved for alerts only '+
+    '(warm red #E84040 or amber #FFB347) — never change the base palette.<br>'+
+    '<b style="color:var(--text)">Sizing at 300 DPI:</b> decorative icons 200&times;200px, header/banner stickers 800&times;200px, widget stickers 400 to 600px square, washi tape strips 2400&times;120px / 2400&times;80px.</div></div>';
+  return html + '</div>';
+}
+
+function _bkSectionListingStandards(){
+  let html = '<div id="bk-listing-standards">';
+  html += '<div class="hub-section-title">Listing Standards by Product Type</div>';
+  _BRANDKIT_LISTING_TYPES.forEach(lt => {
+    const detailId = 'bk-listing-detail-'+lt.key;
+    html += '<div class="hub-card" style="margin-bottom:10px;cursor:pointer" onclick="toggleZip(\\''+detailId+'\\', this.querySelector(\\'.bk-caret\\'))" role="button" tabindex="0">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center">'+
+      '<div style="font-size:12.5px;font-weight:700">'+escHtml(lt.icon)+' '+escHtml(lt.label)+'</div>'+
+      '<span class="bk-caret" style="font-size:13px;color:var(--muted)">&#9656;</span></div>';
+    html += '<div id="'+detailId+'" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--muted);line-height:1.7">';
+    html += '<div><b style="color:var(--text)">Title:</b> '+escHtml(lt.title)+'</div>';
+    html += '<div style="margin-top:6px"><b style="color:var(--text)">Tags:</b> '+escHtml(lt.tags)+'</div>';
+    html += '<div style="margin-top:6px"><b style="color:var(--text)">Description sections, in order:</b> '+escHtml(lt.description.join(' &rarr; '))+'</div>';
+    html += '<div style="margin-top:6px"><b style="color:var(--text)">Photos:</b> '+escHtml(lt.photos)+'</div>';
+    html += '<div style="margin-top:6px"><b style="color:var(--text)">Category:</b> '+escHtml(lt.category)+'</div>';
+    html += '</div></div>';
   });
-  html += '</table></div>';
-  html += '<div class="hub-section-title">Pricing Tiers</div><div class="hub-card">';
-  html += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-  [['DP1026 Life Planner','$14.99','104 pages + sticker pack'],
-   ['DP1027 Student','$9.99','90 pages · student budget'],
-   ['DP1028 Budget','$12.99','102 pages · finance niche'],
-   ['DP1029 Fitness','$12.99','91 pages · wellness niche'],
-   ['SVG 5-pack','$9.99','5 designs · instant DL'],
-   ['SVG 10+ pack','$14.99','10+ designs · instant DL']
-  ].forEach(r => {
-    html += '<tr style="border-bottom:1px solid var(--border)">'+
-      '<td style="padding:7px 0;padding-right:8px;font-weight:600">'+escHtml(r[0])+'</td>'+
-      '<td style="padding:7px 0;padding-right:8px;color:var(--gold);font-weight:700;white-space:nowrap">'+escHtml(r[1])+'</td>'+
-      '<td style="padding:7px 0;color:var(--muted)">'+escHtml(r[2])+'</td></tr>';
-  });
-  html += '</table></div>';
-  el.innerHTML = html;
+  return html + '</div>';
+}
+
+function _bkSectionPricing(){
+  let html = '<div id="bk-pricing">';
+  html += '<div class="hub-section-title">Pricing Reference</div>';
+  html += '<div class="hub-card" style="font-size:11.5px;color:var(--muted)">'+escHtml(_BRANDKIT_PRICING.endingRule)+'</div>';
+  const cells = ['padding:7px 8px 7px 0;font-weight:600','padding:7px 8px;color:var(--gold);font-weight:700;white-space:nowrap','padding:7px 0;color:var(--muted)'];
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Digital Planners</div>'+_bkTable(_BRANDKIT_PRICING.planners, cells)+'</div>';
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Wall Art</div>'+_bkTable(_BRANDKIT_PRICING.wallArt, cells)+'</div>';
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:6px">SVG 3D-Print Packs</div>'+_bkTable(_BRANDKIT_PRICING.svgPacks, cells)+'</div>';
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Standalone Sticker Packs</div>'+_bkTable(_BRANDKIT_PRICING.stickerPacks, cells)+'</div>';
+  return html + '</div>';
+}
+
+function _bkSectionTypography(){
+  let html = '<div id="bk-typography">';
+  html += '<div class="hub-section-title">Typography &amp; Readability</div><div class="hub-card">';
+  html += '<div style="font-size:11.5px;color:var(--muted);line-height:1.8">'+
+    '&middot; Minimum font size for fillable fields: 11pt (touch-friendly)<br>'+
+    '&middot; Section header labels: 14 to 16pt bold<br>'+
+    '&middot; Tab labels: 9 to 11pt, legible at actual iPad screen scale<br>'+
+    '&middot; Minimum line height in weekly/daily boxes: 0.5 inches, for handwriting space</div>';
+  html += '<div style="font-size:11px;color:var(--amber);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">'+
+    'No specific brand typeface is mandated anywhere in CLAUDE.md — only the numeric legibility rules above. '+
+    'Shown honestly rather than inventing a font choice that has not actually been decided.</div>';
+  html += '</div>';
+  return html + '</div>';
+}
+
+function _bkSectionBrandMark(){
+  let html = '<div id="bk-brandmark">';
+  html += '<div class="hub-section-title">Brand Mark</div><div class="hub-card">';
+  html += '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'+
+    '<canvas id="brandkit-mark-preview" class="brand-mark-canvas" width="64" height="64" style="border-radius:var(--r-md);background:var(--panel2);border:1px solid var(--border)"></canvas>'+
+    '<div style="flex:1;min-width:200px;font-size:11.5px;color:var(--muted);line-height:1.5">'+
+    'The orb logo doubles as the shop brand mark. Upload or reset the image used to shape it from Settings.'+
+    '</div>'+
+    '<button class="act-btn secondary" onclick="showScreen(\\'settings\\')">Manage in Settings &rarr;</button>'+
+    '</div></div>';
+  return html + '</div>';
+}
+
+function copyStyleAnchor(btn){ copyHex(_STYLE_ANCHOR_TEXT, btn); }
+
+function _bkSectionPhotography(){
+  let html = '<div id="bk-photography">';
+  html += '<div class="hub-section-title">Photography Style</div>';
+  html += '<div class="hub-card">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+    '<div style="font-size:12px;font-weight:700">Style Anchor — paste identically into every prompt in a batch</div>'+
+    '<button class="act-btn secondary" style="font-size:11px" onclick="copyStyleAnchor(this)">Copy</button></div>'+
+    '<pre style="white-space:pre-wrap;font-size:11px;color:var(--muted);font-family:monospace;margin:0;line-height:1.6">'+escHtml(_STYLE_ANCHOR_TEXT)+'</pre>'+
+    '</div>';
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Material Vocabulary</div>'+
+    _bkTable([
+      ['Linen','natural linen texture, visible weave pattern, slightly rumpled, warm off-white'],
+      ['Rattan','natural rattan weave, warm honey-brown tones, slightly matte finish'],
+      ['Ceramic','matte ceramic surface, subtle micro-texture, slightly imperfect handmade quality'],
+      ['Wood (oak)','natural light oak, visible wood grain, matte satin finish, warm golden undertone'],
+      ['Boucle','boucle fabric texture, looped cream-white pile, soft sculptural surface'],
+      ['Terracotta','terracotta clay surface, slightly dusty matte texture, warm burnt orange tone'],
+    ], ['padding:6px 8px 6px 0;font-weight:600;white-space:nowrap','padding:6px 0;color:var(--muted)'])+'</div>';
+  html += '<div class="hub-card"><div style="font-size:12px;font-weight:700;margin-bottom:6px">Lighting Vocabulary</div>'+
+    _bkTable([
+      ['Morning lifestyle','soft diffused window light from the left, warm white balance, gentle shadow to the right'],
+      ['Cozy evening','warm amber lamp glow from upper right, soft ceiling ambient light, no harsh shadows'],
+      ['Clean product','bright even natural daylight, diffused overhead, cool-neutral white balance, no shadows on product'],
+      ['Golden hour','golden hour backlighting, warm orange-yellow light from upper right, long soft shadows forward'],
+    ], ['padding:6px 8px 6px 0;font-weight:600;white-space:nowrap','padding:6px 0;color:var(--muted)'])+'</div>';
+  return html + '</div>';
+}
+
+function renderBrandKit() {
+  const el = document.getElementById('brandkit-content');
+  if (!el) return;
+  el.innerHTML = _bkSectionIdentity() + _bkSectionThemes() + _bkSectionColorRules() +
+    _bkSectionStickers() + _bkSectionListingStandards() + _bkSectionPricing() +
+    _bkSectionTypography() + _bkSectionBrandMark() + _bkSectionPhotography();
+  if(window._brandMarkDataUrl === undefined){
+    loadRuntimeSettings();
+  } else {
+    renderBrandMarkPreview();
+  }
 }
 
 // ── Files — real data: /api/files (data/digital_products/ + backups) ──
@@ -4694,6 +5050,34 @@ function toggleZip(id, btn){
   const open=el.style.display==='none';
   el.style.display=open?'':'none';
   if(btn) btn.textContent=open?'▾':'▸';
+}
+// Brand Kit: click-to-copy for hex codes (also reused as-is for the STYLE_ANCHOR text
+// block in the Photography section -- it only needs a string and an element to flash
+// "Copied!", nothing hex-specific despite the name). No copy-to-clipboard pattern
+// existed anywhere in this file before this.
+function copyHex(text, el){
+  const value = String(text||'').trim();
+  const finish = (ok) => {
+    if(el){
+      if(el.getAttribute('data-orig-text') === null) el.setAttribute('data-orig-text', el.textContent);
+      el.textContent = ok ? 'Copied!' : 'Copy failed';
+      clearTimeout(el._bkCopyTimer);
+      el._bkCopyTimer = setTimeout(() => { el.textContent = el.getAttribute('data-orig-text'); }, 1200);
+    }
+    showToast(ok ? ('Copied ' + value) : 'Could not copy — select it manually', ok ? 'ok' : 'err', 2200);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(value).then(() => finish(true)).catch(() => finish(false));
+  } else {
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = value; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      finish(ok);
+    } catch(e){ finish(false); }
+  }
 }
 function openFile(url){ window.open(url,'_blank'); }
 async function loadFiles() {

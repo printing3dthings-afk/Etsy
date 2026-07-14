@@ -185,6 +185,65 @@ async def _run_browser_checks() -> None:
                   "multi-admin 'Add Admin' form should be REMOVED (solo shop)")
             check("My Account" in settings_html, "Settings screen missing 'My Account' section")
 
+            # ── Brand Kit redesign regression guards (2026-07-14): jump-nav, all 16 theme
+            # cards + 3 listing-standard cards render and expand, hex-copy calls the
+            # clipboard API, and the brand-mark preview canvas ids never collide. ──
+            await page.evaluate("showScreen('brandkit')")
+            await page.wait_for_timeout(800)
+            bk = await page.evaluate("""() => {
+                const chooser = document.querySelectorAll('#brandkit-chooser .create-choice');
+                const content = document.getElementById('brandkit-content');
+                return {
+                    chooserCount: chooser.length,
+                    anchorsPresent: ['bk-identity','bk-themes','bk-color-rules','bk-stickers',
+                        'bk-listing-standards','bk-pricing','bk-typography','bk-brandmark','bk-photography']
+                        .every(id => !!document.getElementById(id)),
+                    themeCardCount: content.querySelectorAll('[id^="bk-theme-detail-"]').length,
+                    listingCardCount: content.querySelectorAll('[id^="bk-listing-detail-"]').length,
+                    markCanvasIds: [...document.querySelectorAll('.brand-mark-canvas')].map(c => c.id).sort(),
+                };
+            }""")
+            check(bk.get("chooserCount") == 9, f"Brand Kit jump-nav should have 9 targets: {bk}")
+            check(bk.get("anchorsPresent"), f"Brand Kit missing one or more of the 9 section anchors: {bk}")
+            check(bk.get("themeCardCount") == 16, f"Brand Kit should render 16 theme cards (4 live + 12 planned): {bk}")
+            check(bk.get("listingCardCount") == 3, f"Brand Kit should render 3 listing-standard cards: {bk}")
+            check(bk.get("markCanvasIds") == ["brand-mark-preview", "brandkit-mark-preview"],
+                  f"brand-mark canvas ids must be distinct, no collision: {bk}")
+
+            # Click the first theme card's header -> its detail panel should go from
+            # display:none to visible (toggleZip reuse).
+            expand = await page.evaluate("""() => {
+                const detail = document.querySelector('#brandkit-content [id^="bk-theme-detail-"]');
+                if (!detail) return {ok: false};
+                const before = getComputedStyle(detail).display;
+                detail.parentElement.click();
+                const after = getComputedStyle(detail).display;
+                return {ok: before === 'none' && after !== 'none'};
+            }""")
+            check(expand.get("ok"), f"clicking a theme card should expand its detail panel: {expand}")
+
+            # Click a hex swatch -> copyHex() fires; stub navigator.clipboard.writeText to
+            # capture the value (real clipboard access is unreliable/permission-gated in
+            # headless CI).
+            copy_result = await page.evaluate("""() => new Promise(resolve => {
+                let captured = null;
+                navigator.clipboard.writeText = (text) => { captured = text; return Promise.resolve(); };
+                const chip = document.querySelector('.bk-hexcopy');
+                if (!chip) { resolve({ok: false, reason: 'no .bk-hexcopy element found'}); return; }
+                chip.click();
+                setTimeout(() => resolve({ok: !!captured && /^#[0-9A-Fa-f]{6}$/.test(captured), captured}), 150);
+            })""")
+            check(copy_result.get("ok"), f"clicking a hex chip should call clipboard.writeText with a hex value: {copy_result}")
+
+            listing_text = await page.evaluate(
+                "document.getElementById('bk-listing-standards').innerText")
+            check(all(s in listing_text for s in ["Digital Planners", "Wall Art", "SVG"]),
+                  "Brand Kit must render all 3 product-type listing-standards blocks")
+
+            pricing_text = await page.evaluate("document.getElementById('bk-pricing').innerText")
+            check(all(s in pricing_text for s in ["$14.99", "$4.99", "$9.99", "$17.99"]),
+                  f"Brand Kit pricing section should render all 4 pricing tables: {pricing_text[:200]}")
+
             # ── First-time-user simplification (2026-07-11) regression guards ──
             simp = await page.evaluate("""() => {
                 const hidden = el => !el || el.offsetParent === null;

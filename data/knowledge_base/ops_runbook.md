@@ -6368,3 +6368,40 @@ this sandbox):** run `python tools/sync_files_to_hub.py` (add `--dry-run`
 first to preview) to actually get his real PDFs/ZIPs onto the persistent
 volume so the ✅ marks become true, not just accurate-when-false. Needs
 `RAILWAY_APP_URL` + `APP_SECRET_TOKEN` in his local `.env`.
+
+---
+
+### 2026-07-14 — Brand Kit screen redesign (comprehensive + interactive)
+**Ask:** Scott's screenshot showed the Brand Kit screen with only 4 color
+swatch cards and a sparse table — asked for it to be more useful, cover
+everything the shop sells, and be interactive.
+
+**Change:** `renderBrandKit()` in `tools/api_server/frank_hud_mockup.py` went
+from one static function (4 themes + 2 small tables) to 9 jump-nav sections:
+Shop Identity, Color Themes (all 16 — the 4 live + 12 planned from CLAUDE.md's
+Theme Catalog), Color Design Rules, Sticker & Illustration Standards, Listing
+Standards by product type (planners / wall art / SVG packs), Pricing
+Reference, Typography, Brand Mark, Photography Style. Added 3 interactions:
+click-to-copy hex chips (`copyHex()`, new — no clipboard code existed in this
+file before), click-to-expand theme/listing cards (reused the existing
+`toggleZip()` as-is), and a read-only Brand Mark preview on Brand Kit linking
+to the existing Settings uploader (`renderBrandMarkPreview()` generalized to
+draw into every `.brand-mark-canvas` element instead of one hardcoded id, so
+Settings' and Brand Kit's canvases both redraw together with no id collision).
+
+**Data care taken:** the pre-existing `_THEMES` array (used by `renderProducts()`
+for border-color coding by array index) was left untouched; the 16-theme
+catalog lives in a new, separate `_BRANDKIT_THEMES` constant so this change
+cannot shift that unrelated indexing. Flagged (not resolved) a known CLAUDE.md
+hex mismatch between the Product Roadmap's Phase-2 colors and the Theme
+Catalog's corresponding entries — shown to Scott as a callout on the page,
+reconciling CLAUDE.md itself is a separate follow-up.
+
+**Verified:** extracted the real JS from the built HTML string (via `ast.literal_eval`
+on the source, not a live import) and ran it under Node — confirmed 16 theme
+cards / 3 listing cards / all 9 section anchors render, hex chips call
+`clipboard.writeText` with a real hex value, `toggleZip` open/close works
+unchanged, balanced HTML tags. Added matching assertions to
+`tools/playwright_smoke.py` (real headless-browser check). `py_compile` +
+`smoke_test` + `playwright_smoke` all green. No `main.py` changes, so
+`_BUILD_ID` was not bumped.
