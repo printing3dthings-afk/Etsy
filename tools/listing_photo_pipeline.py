@@ -708,7 +708,20 @@ def generate_verified_photo(
     max_attempts: int = MAX_ATTEMPTS,
     client=None,
 ) -> PhotoResult:
-    client = client or _client()
+    # Resolved up front (was computed later, after the OpenAI client was already
+    # built unconditionally) so extraction/verification/generation can all branch
+    # on it, and so a Gemini-only run never needs to build an OpenAI client at all.
+    _img_engine = os.getenv("IMAGE_ENGINE", "openai").lower().strip()
+    import image_gen
+    # 2026-07-14: this used to be unconditional (`client = client or _client()`),
+    # so even engine="gemini" runs still hard-required a funded OpenAI account --
+    # extract_text()/verify_render() below were hardcoded to OpenAI's GPT vision
+    # models regardless of engine. Now those have Gemini equivalents
+    # (image_gen.gemini_extract_text/gemini_verify_render), so a fully
+    # Gemini-selected run never touches OpenAI, and an OpenAI billing/quota outage
+    # no longer blocks it.
+    if _img_engine != "gemini":
+        client = client or _client()
     design_paths = [Path(p) for p in design_paths]
     for p in design_paths:
         if not p.exists():
@@ -719,7 +732,7 @@ def generate_verified_photo(
     for i, dp in enumerate(design_paths, 1):
         palette = extract_palette(dp)
         palette_lines.append(f"Design {i} palette (exact): {', '.join(palette)}")
-        text = extract_text(client, dp)
+        text = image_gen.gemini_extract_text(dp) if _img_engine == "gemini" else extract_text(client, dp)
         text_lines.append(f"Design {i} contains exactly this text:\n{text}")
         fact_lines.append(f"FACT (measured): for design {i}, {canvas_facts(dp)}. "
                           "The product face is this FULL canvas — same outer shape, "
@@ -757,14 +770,13 @@ def generate_verified_photo(
     # Image engine is swappable (gpt-image-1 deprecates 2026-10-23). Default stays
     # OpenAI; set IMAGE_ENGINE=gemini to drive this same self-verifying loop with
     # Nano Banana (gemini-2.5-flash-image), which is stronger at keeping the exact
-    # product across scenes. The verify + retry loop below is engine-agnostic.
-    _img_engine = os.getenv("IMAGE_ENGINE", "openai").lower().strip()
+    # product across scenes. _img_engine resolved above; extraction/generation/
+    # verification all branch on it, so the whole loop is genuinely engine-agnostic.
 
     def _generate(correction: str) -> "Image.Image":
         prompt = base_prompt + correction
         print(f"  generating (engine={_img_engine})...")
         if _img_engine == "gemini":
-            import image_gen
             raw = image_gen._gemini_edit_bytes(prompt, list(design_paths))
             return Image.open(io.BytesIO(raw)).convert("RGB")
         images = [(f"design_{i}.png", _prep(dp), "image/png")
@@ -783,6 +795,9 @@ def generate_verified_photo(
 
     def _verify(render: "Image.Image") -> dict:
         print("    verifying against source design(s)...")
+        if _img_engine == "gemini":
+            return image_gen.gemini_verify_render(design_paths, render, PHYSICS[physics],
+                                                   "\n".join(fact_lines))
         return verify_render(client, design_paths, render, PHYSICS[physics],
                              "\n".join(fact_lines))
 

@@ -6287,3 +6287,51 @@ confirmed the fix resolves it via `os.environ`, and confirmed the local-dev
 `.env`-file fallback still works when a key is only in `.env`. `py_compile` +
 `smoke_test` + `playwright_smoke` green. No `_BUILD_ID` bump (library fix, not
 a server change) — picked up on the next deploy.
+
+### 2026-07-14 — Gemini engine still hard-required OpenAI (extraction + verification)
+
+**Symptom:** with the `.env` bug above fixed, Scott retried "Generate Lifestyle
+Photo" with **Gemini** selected and got a NEW error: `Error code: 429 - You
+exceeded your current quota, please check your plan and billing details` — an
+OpenAI error, despite Gemini being selected.
+
+**Root cause:** `generate_verified_photo()` (`tools/listing_photo_pipeline.py`)
+runs 3 steps regardless of the chosen image engine: (1) `extract_text()` — reads
+every text string off the source design via a GPT vision call, (2) generate the
+actual photo (the ONLY step that was already engine-aware — this one correctly
+switched to Gemini), (3) `verify_render()` — the self-verification QA gate,
+also a GPT vision call. Steps 1 and 3 were hardcoded to OpenAI's
+`client.chat.completions.create`, unconditionally, so picking Gemini only ever
+swapped step 2 — an OpenAI account issue (this exhausted-quota case) still
+blocked generation entirely, defeating the point of offering an alternate
+engine. This is an account-level OpenAI billing/quota issue (Scott is checking
+platform.openai.com directly), separate from this code fix.
+
+**Fix:** added `gemini_extract_text()` and `gemini_verify_render()` to
+`tools/image_gen.py` — same task, **same prompt text** as the OpenAI versions
+(verification strictness must not change based on which provider is looking),
+built on `google-genai`'s vision model (`gemini-2.5-flash` — a plain text/vision
+model, NOT `_GEMINI_IMAGE_MODEL`, which is tuned for image output) via the same
+client/key plumbing as the existing Gemini image-generation path, `resp.text`
+response shape already proven in `tools/video_understanding.py`. Wired
+`generate_verified_photo()` to branch all three steps (extract/generate/verify)
+on `_img_engine` (resolved once, up front) instead of only the middle one, and
+made the OpenAI client construction **lazy** — `_client()` is now only called
+when the engine is NOT Gemini, so a fully Gemini-selected run never touches
+OpenAI's API at all, and an OpenAI billing/quota outage can no longer block it.
+
+**Verified (mocked, no real API spend — OpenAI is quota-exhausted, no reason to
+also burn Gemini credits on a wiring test):**
+1. Gemini-engine run: `_client()` monkey-patched to raise if called at all —
+   ran end-to-end successfully with `OPENAI_API_KEY` unset, proving OpenAI is
+   never touched; all 3 steps (extract/generate/verify) confirmed routed
+   through the Gemini functions exactly once each.
+2. Default OpenAI-engine run (regression check): confirmed `_client()` IS
+   still built, all 3 steps still route through the original OpenAI functions,
+   and the new Gemini functions are never called — proves the existing/default
+   path is unchanged.
+3. `py_compile` + `smoke_test` + `playwright_smoke` green.
+
+No `_BUILD_ID` bump (library fix). Ask Scott to retry Gemini generation once
+his OpenAI billing is separately resolved OR immediately (since Gemini no
+longer needs OpenAI at all now) — either should work.

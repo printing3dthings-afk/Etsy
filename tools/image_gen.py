@@ -24,8 +24,10 @@ Usage:
 from __future__ import annotations
 
 import base64
+import io
 import json
 import os
+import re
 import time
 import urllib.request
 import urllib.error
@@ -189,6 +191,103 @@ def _gemini_edit_bytes(prompt: str, image_paths: list, model: str | None = None)
     resp = client.models.generate_content(
         model=model or _GEMINI_IMAGE_MODEL, contents=contents)
     return _gemini_bytes_from_resp(resp)
+
+
+# ── Gemini text/vision helpers — text extraction + render verification for
+# tools/listing_photo_pipeline.py's generate_verified_photo(). Added 2026-07-14:
+# that pipeline's extract_text()/verify_render() were hardcoded to OpenAI's GPT
+# vision models regardless of which engine generated the image, so picking
+# engine="gemini" still hard-required a funded OpenAI account for those two
+# steps — an OpenAI billing/quota outage blocked Gemini-engine generation too.
+# These give the pipeline a fully Gemini-only path. _GEMINI_TEXT_MODEL is a
+# plain text/vision model (NOT _GEMINI_IMAGE_MODEL, which is tuned for image
+# OUTPUT) — same client/key plumbing as generate_image()'s gemini path, and the
+# same `resp.text` response shape already proven in tools/video_understanding.py.
+_GEMINI_TEXT_MODEL = os.getenv("GEMINI_TEXT_MODEL", "gemini-2.5-flash")
+
+
+def gemini_extract_text(design_path) -> str:
+    """Gemini equivalent of listing_photo_pipeline.extract_text() — every piece of
+    text on a design, read by a vision model once. Same task, same output shape
+    (a plain string), different provider."""
+    from google import genai
+    from google.genai import types
+    p = Path(design_path)
+    mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+    client = genai.Client(api_key=_gemini_key())
+    resp = client.models.generate_content(
+        model=_GEMINI_TEXT_MODEL,
+        contents=[
+            "List every piece of text visible in this design, exactly as written, "
+            "character for character, one item per line. Output only the text "
+            "items, nothing else.",
+            types.Part.from_bytes(data=p.read_bytes(), mime_type=mime),
+        ],
+    )
+    return (resp.text or "").strip()
+
+
+def gemini_verify_render(design_paths: list, render, physics_desc: str = "",
+                         facts: str = "") -> dict:
+    """Gemini equivalent of listing_photo_pipeline.verify_render(). Uses the exact
+    same prompt text as the OpenAI version — verification strictness must not
+    change just because a different provider is doing the looking — built on
+    Gemini's vision model instead of GPT-4o. `render` is an in-memory PIL Image
+    (not a file on disk), downsized the same way _b64() downsizes source images
+    (768px thumbnail, JPEG q88) for comparable detail/cost to the OpenAI path.
+    Returns the same {"pass": bool, "issues": [...]} shape."""
+    from google import genai
+    from google.genai import types
+
+    prompt = (
+        "You are a product-photo QA inspector. The FIRST image(s) are the "
+        "real product design file(s) a customer downloads. The LAST image is a "
+        "marketing lifestyle photo that must show the design faithfully.\n\n"
+        f"The physical product is: {physics_desc}\n"
+        "Appearance traits described there (e.g. fine matte surface grain, panel "
+        "thickness, side edges, metallic lid) are INTENDED and are NOT defects.\n\n"
+        "FAIL only on MATERIAL fidelity errors:\n"
+        "1. TEXT: any word/number that is wrong, garbled, missing, or invented "
+        "(character-level check on dates and small print)\n"
+        "2. COLORS: a region changed to a different hue category (e.g. cream became "
+        "navy, green became blue). Lighting tint, white balance, mild exposure or "
+        "saturation shifts from scene lighting are NORMAL and pass.\n"
+        "3. ELEMENTS: missing, added, or redesigned design elements (borders, stars, "
+        "icons, edge details)\n"
+        f"4. SHAPE — use these measured ground-truth facts, do not judge by eye:\n"
+        f"{facts}\n"
+        "Fail SHAPE only if the photo's product face clearly contradicts those "
+        "facts (e.g. facts say square canvas but the panel is cut into a circle "
+        "or the background color region is absent).\n"
+        "5. SURFACE: individual letters/shapes sticking UP out of the face as 3D "
+        "embossing. The panel itself having thickness, a drop shadow, or the "
+        "described surface grain is NORMAL and passes.\n\n"
+        "Perspective, viewing angle, scale, lighting, shadows, and scene context "
+        "are NEVER issues.\n"
+        "IMPORTANT: only report an issue if you can see it CLEARLY and are confident. "
+        "If you are uncertain whether something is an issue, do NOT report it — "
+        "uncertain observations are not defects.\n"
+        'Respond with ONLY JSON: {"pass": true/false, "issues": ["specific issue", ...]}'
+    )
+    contents: list = [prompt]
+    for dp in design_paths:
+        p = Path(dp)
+        mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
+        contents.append(types.Part.from_bytes(data=p.read_bytes(), mime_type=mime))
+    render_copy = render.copy()
+    render_copy.thumbnail((768, 768))
+    buf = io.BytesIO()
+    render_copy.convert("RGB").save(buf, "JPEG", quality=88)
+    contents.append(types.Part.from_bytes(data=buf.getvalue(), mime_type="image/jpeg"))
+
+    client = genai.Client(api_key=_gemini_key())
+    resp = client.models.generate_content(model=_GEMINI_TEXT_MODEL, contents=contents)
+    raw = (resp.text or "").strip()
+    raw = re.sub(r"^```(json)?|```$", "", raw, flags=re.M).strip()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        return {"pass": False, "issues": [f"verifier returned unparseable: {raw[:200]}"]}
 
 
 def _ideogram_key() -> str:
