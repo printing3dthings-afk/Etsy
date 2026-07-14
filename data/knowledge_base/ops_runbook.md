@@ -6216,3 +6216,43 @@ BiRefNet inference is handed to the operator's first `--cutout ai` run. **Gotcha
 documented:** rembg pulls Pillow ≥12 (conflicts with moviepy's `pillow<12`) —
 install `requirements-sticker.txt` in a separate venv. No `_BUILD_ID` bump / no
 deploy (server untouched); regenerating + reuploading actual packs stays Scott-gated.
+
+### 2026-07-14 — GEMINI_API_KEY set live (Railway API, variable + explicit redeploy)
+
+**What:** the Gemini ("Nano Banana") option on the Create-screen engine dropdown
+(shipped v157) needed a real key to work. Scott supplied one from Google AI
+Studio, verified via a screenshot of the "API key details" panel before use
+(note: this key does NOT start with the older `AIzaSy...` format I initially
+expected — Google AI Studio also issues keys in a newer `AQ....` format; treat
+that older-format assumption as outdated).
+
+**How:** Scott separately provided a Railway personal API token, which was
+validated read-only first (`{ me }` auth check + `{ project(id) }` access
+check — confirmed access to this project, `calm-light`) before anything was
+written. Then, with explicit per-step confirmation from Scott:
+1. `GEMINI_API_KEY` set on the live main service via Railway's GraphQL
+   `variableUpsert` (`backboard.railway.app/graphql/v2`, same endpoint/
+   `PROJECT_ID`/`ENVIRONMENT_ID`/service-ID pattern already established in
+   `tools/rollback.py`) — succeeded.
+2. Confirmed (twice, ~45s apart) that setting a variable does **not**
+   auto-trigger a Railway redeploy for this service — the running container
+   keeps its old environment until explicitly restarted.
+3. Explicitly redeployed the current build via `deploymentRollback` pointed at
+   the *current* (not an older) deployment ID — the same mutation
+   `tools/rollback.py` uses for rollbacks, here repurposed as a same-build
+   restart so the new variable takes effect. Succeeded; `/health` confirmed the
+   service came back up immediately after.
+
+**Caught along the way:** a real near-miss — the first redeploy attempt used a
+**fabricated/garbled deployment ID** (built via careless Python string slicing
+instead of a real ID from a query) and was correctly blocked before it could
+run against a nonexistent target. Always re-query for the real, full
+deployment ID before any Railway mutation that references one.
+
+**Not yet verified:** a live end-to-end Gemini generation call through the
+Create screen — `/api/credentials/status` (which reports `gemini_ok =
+bool(os.getenv("GEMINI_API_KEY"))`) requires a real login session, so this
+needs Scott to confirm from his own logged-in phone/desktop.
+
+Both credentials (`GEMINI_API_KEY`, `RAILWAY_API_TOKEN`) are in local `.env`
+only — gitignored, never printed in full, never committed.
