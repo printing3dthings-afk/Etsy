@@ -541,13 +541,27 @@ def generate_planner_listing_photos(
     return results
 
 
+# Absolute, anchored to this file's own location (mirrors tools/image_gen.py's
+# _BASE_DIR/_ENV_PATH pattern) — NOT a bare relative "*.env*" open. .env is
+# gitignored and does not exist at all in the deployed Railway container, so a
+# relative open() only ever worked by coincidence of the process's cwd; it broke
+# outright the first time this ran live (FileNotFoundError: [Errno 2] ... '.env'
+# — the Create-screen "Generate Lifestyle Photo" crash, 2026-07-14).
+_BASE_DIR = Path(__file__).resolve().parent.parent
+_ENV_PATH = _BASE_DIR / ".env"
+
+
 def load_env() -> dict:
-    env = {}
-    with open(".env") as f:
-        for line in f:
-            m = re.match(r"^\s*([A-Z_]+)\s*=\s*(.+?)\s*$", line)
-            if m:
-                env[m.group(1)] = m.group(2)
+    """Real credentials, preferring already-set process env vars (how the
+    deployed server actually gets them) over parsing .env (a local-dev-only
+    convenience file that isn't present in production)."""
+    env = dict(os.environ)
+    if _ENV_PATH.exists():
+        with open(_ENV_PATH) as f:
+            for line in f:
+                m = re.match(r"^\s*([A-Z_]+)\s*=\s*(.+?)\s*$", line)
+                if m:
+                    env.setdefault(m.group(1), m.group(2))
     return env
 
 

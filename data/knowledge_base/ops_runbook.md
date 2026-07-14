@@ -6256,3 +6256,34 @@ needs Scott to confirm from his own logged-in phone/desktop.
 
 Both credentials (`GEMINI_API_KEY`, `RAILWAY_API_TOKEN`) are in local `.env`
 only — gitignored, never printed in full, never committed.
+
+### 2026-07-14 — "Generate Lifestyle Photo" crashed on every engine (not just Gemini)
+
+**Symptom:** Scott tried the Create screen's Gemini image option and got
+`Generation failed: generation failed: [Errno 2] No such file or directory:
+'.env'`.
+
+**Real root cause (traced, not assumed):** `generate_verified_photo()` in
+`tools/listing_photo_pipeline.py` always builds an OpenAI client first —
+needed for `extract_text()`/`verify_render()` regardless of which image engine
+is selected, not just for openai-engine image generation. That client comes
+from `_client()` → `load_env()["OPENAI_API_KEY"]`, and `load_env()`
+unconditionally did `open(".env")` — a bare relative path, never checking
+`os.environ` first. `.env` is gitignored and does not exist in the deployed
+Railway container at all. **This means the button was almost certainly broken
+for every engine**, from the first real attempt in production — the Gemini
+work just happened to be what finally exercised this code path and surfaced it.
+
+**Fix:** rewrote `load_env()` to check `os.environ` first (matching the
+already-correct pattern in `tools/image_gen.py`'s `_api_key()`/`_gemini_key()`/
+`_ideogram_key()`), falling back to parsing `.env` only if present, via an
+absolute path anchored to the file's own location (`_BASE_DIR =
+Path(__file__).resolve().parent.parent`) instead of a bare relative string —
+matches `image_gen.py`'s proven `_BASE_DIR`/`_ENV_PATH` pattern exactly.
+
+**Verified:** reproduced the exact original `FileNotFoundError` first (real env
+var set, cwd without a reachable `.env` — mirrors the deployed container),
+confirmed the fix resolves it via `os.environ`, and confirmed the local-dev
+`.env`-file fallback still works when a key is only in `.env`. `py_compile` +
+`smoke_test` + `playwright_smoke` green. No `_BUILD_ID` bump (library fix, not
+a server change) — picked up on the next deploy.
