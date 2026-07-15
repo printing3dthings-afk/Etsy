@@ -26,6 +26,7 @@ import re as _re
 import secrets
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import uuid
@@ -39,6 +40,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
+from starlette.background import BackgroundTask
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 
@@ -514,7 +516,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d677052-v161"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "88d504a-v162"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8611,6 +8613,51 @@ def _zip_entries(zip_path: Path) -> list[dict]:
         return []
     out.sort(key=lambda e: e["name"])
     return out
+
+
+# Ephemeral/regenerable runtime output -- already gitignored for the same reason
+# (see .gitignore's "Generated social media videos" block) -- excluded from the
+# full-backup ZIP so it stays a durable-content snapshot, not a dump of whatever
+# transient files happen to be sitting in this container right now.
+_FULL_BACKUP_EXCLUDE_DIR_NAMES = {
+    "staged_photos", "staged_videos", "videos", "studio_uploads",
+    "image_proofs", "_rejects", "svg_conversions", "lifestyle_photos",
+    "browser_screenshots", "__pycache__",
+}
+
+
+@app.get("/api/backup/download-all")
+async def download_full_backup(_token: str = Depends(_auth_session_or_bearer)):
+    """Build and stream a ZIP of everything durable under data/ -- code lives
+    in git already, this is the direct answer to "give me a hard copy of
+    everything on my computer" for the content that isn't obviously "in git"
+    to a non-technical reader. No AI call, no Etsy call -- plain auth, not
+    rate-limited (see _rate_limited_auth, reserved for AI-spend/Etsy-mutating
+    calls, neither of which this does)."""
+    def _build() -> str:
+        tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+        tmp.close()
+        with zipfile.ZipFile(tmp.name, "w", zipfile.ZIP_DEFLATED) as zf:
+            for path in sorted((ROOT / "data").rglob("*")):
+                if path.is_dir():
+                    continue
+                rel = path.relative_to(ROOT)
+                if any(part in _FULL_BACKUP_EXCLUDE_DIR_NAMES for part in rel.parts):
+                    continue
+                zf.write(path, arcname=str(rel))
+        return tmp.name
+
+    try:
+        zip_path = await asyncio.to_thread(_build)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Could not build backup: {exc}")
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return FileResponse(
+        zip_path,
+        filename=f"frank_full_backup_{stamp}.zip",
+        media_type="application/zip",
+        background=BackgroundTask(lambda: Path(zip_path).unlink(missing_ok=True)),
+    )
 
 
 @app.get("/api/files")
