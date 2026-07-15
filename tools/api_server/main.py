@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "45e02a0-v164"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "852717b-v165"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7574,32 +7574,28 @@ async def core_redeploy(request: Request, _token: str = Depends(_auth_session_or
     present on this deployment 2026-07-15), so no extra credential setup is
     needed. Causes a brief real outage while the new instance starts —
     gated to the owner (or bearer/automation) same as other infra-sensitive
-    routes; the frontend also confirms before calling this."""
+    routes; the frontend also confirms before calling this.
+
+    Reuses _railway_graphql() (defined below, used by _railway_cost_snapshot)
+    rather than a hand-rolled urllib call -- the first version of this
+    endpoint used raw urllib.request directly and 403'd every time: Railway's
+    API sits behind Cloudflare, which blocks the default python-urllib
+    User-Agent (already documented in ops_runbook.md from an earlier
+    incident). _railway_graphql uses `requests`, whose default User-Agent
+    already passes fine -- confirmed live 2026-07-15 fixing this exact bug."""
     _require_owner_or_automation(request)
-    rw_token = os.getenv("RAILWAY_API_TOKEN", "").strip()
     env_id = os.getenv("RAILWAY_ENVIRONMENT_ID", "").strip()
     svc_id = os.getenv("RAILWAY_SERVICE_ID", "").strip()
-    if not (rw_token and env_id and svc_id):
+    if not (os.getenv("RAILWAY_API_TOKEN", "").strip() and env_id and svc_id):
         raise HTTPException(status_code=501, detail="Railway API token/environment/service id not configured on this deployment")
 
-    def _trigger():
-        req = urllib.request.Request(
-            "https://backboard.railway.app/graphql/v2",
-            data=json.dumps({
-                "query": "mutation($e:String!,$s:String!){ serviceInstanceRedeploy(environmentId:$e, serviceId:$s) }",
-                "variables": {"e": env_id, "s": svc_id},
-            }).encode(),
-            headers={"Authorization": f"Bearer {rw_token}", "Content-Type": "application/json"},
-        )
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            return json.loads(resp.read())
-
+    mutation = "mutation($e:String!,$s:String!){ serviceInstanceRedeploy(environmentId:$e, serviceId:$s) }"
     try:
-        result = await asyncio.to_thread(_trigger)
+        result = await asyncio.to_thread(_railway_graphql, mutation, {"e": env_id, "s": svc_id})
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Railway API call failed: {exc}")
-    if result.get("errors"):
-        raise HTTPException(status_code=502, detail=f"Railway rejected the redeploy: {result['errors']}")
+    if not result.get("serviceInstanceRedeploy"):
+        raise HTTPException(status_code=502, detail=f"Railway did not confirm the redeploy: {result}")
     await asyncio.to_thread(db.log_activity, "scott", "redeploy", "Triggered via AI Core screen", None, outcome="ok")
     return {"ok": True}
 
