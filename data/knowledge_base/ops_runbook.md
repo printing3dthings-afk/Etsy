@@ -7082,3 +7082,50 @@ chips render + counts are correct, filtering works, missing files are
 named). Full existing suite + smoke test + Playwright smoke still green.
 
 Build bumped to `fd92abc-v176`.
+
+---
+
+### 2026-07-15 (final pass, follow-up 3) — Floating "back to top" button
+
+Scott asked for a floating back-to-top button on any page that scrolls
+past a threshold — directly motivated by the new 176-product Products
+list (previous entry) and other long lists (Listings, Approvals queue).
+
+Confirmed there are exactly two real scroll sources in this app worth
+tracking: plain `window`/document scroll (mobile screens opened via
+"More", which render full-page document-flow content per the
+`body.is-mobile` CSS overrides — `.main{overflow:visible !important;
+height:auto !important}`), and `#phone-body`'s own internal scroll
+(native phone panels — Today/Approvals/More). Desktop's fixed 1440x900
+stage never triggers either (`.screen{overflow:hidden}`, each panel
+scrolls internally via its own `max-height`), so the button naturally
+never appears there without any extra `is-mobile` gating needed — it's
+purely a function of whether either real scroll source crosses the
+400px threshold.
+
+**Added:** `#back-to-top-btn` (`frank_hud_mockup.py`) — fixed
+bottom-right, positioned just above the phone tab bar (`bottom:
+calc(74px + env(safe-area-inset-bottom))`, tab bar itself is 58px +
+safe-area), gold circular button, `display:none` by default with a
+`.show` class toggled by `_updateBackToTopVisibility()`. Listens on
+`window`'s scroll event and `#phone-body`'s own scroll event separately
+(element-level scroll events don't bubble to `document`, so this is two
+direct listeners, not one delegated one). `backToTop()` smooth-scrolls
+both `window` and `#phone-body` to 0 (harmless no-op for whichever
+wasn't the active one). Also monkey-patches `showScreen()` (a plain
+`function` declaration, safely reassignable) to re-check visibility
+after every screen switch, so a stale "still showing" button doesn't
+linger when navigating from a long scrolled page to a short one via the
+sidebar/More menu — note this doesn't cover `phoneTab()`-based tab
+switches (Ask/Approvals/Today/Create/More), which don't route through
+`showScreen()`; a minor, accepted gap since those panels reset scroll
+themselves on tab switch already.
+
+New Playwright coverage (reusing the mobile 390x844 viewport already set
+up for the tour checks): confirms the button starts hidden, injects a
+2000px spacer into `#phone-body` and scrolls past the threshold to
+confirm it shows, then confirms clicking it both scrolls back to top and
+hides the button again. Full existing suite + smoke test + Playwright
+smoke still green.
+
+Build bumped to `64226b1-v177`.

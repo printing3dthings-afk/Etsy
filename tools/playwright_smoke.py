@@ -477,6 +477,43 @@ async def _run_browser_checks() -> None:
             await page.click(".tour-controls .tour-skip")
             await page.wait_for_timeout(300)
 
+            # ── Floating "back to top" (2026-07-15) — still on the 390x844 mobile
+            # viewport from the tour checks above. Force real scrollable height into
+            # #phone-body (native panels have no guaranteed content length otherwise)
+            # rather than relying on whatever's actually loaded. ──
+            initial_state = await page.evaluate("""() => {
+                const btn = document.getElementById('back-to-top-btn');
+                return {present: !!btn, showingBeforeScroll: btn ? btn.classList.contains('show') : null};
+            }""")
+            check(initial_state.get("present"), f"#back-to-top-btn should exist in the DOM: {initial_state}")
+            check(not initial_state.get("showingBeforeScroll"),
+                  f"button should be hidden before any scroll: {initial_state}")
+
+            await page.evaluate("""() => {
+                const pb = document.getElementById('phone-body');
+                const spacer = document.createElement('div');
+                spacer.id = 'pw-scroll-spacer';
+                spacer.style.height = '2000px';
+                pb.appendChild(spacer);
+                pb.scrollTop = 600;
+            }""")
+            await page.wait_for_timeout(300)
+            after_scroll = await page.evaluate("""() => ({
+                showing: document.getElementById('back-to-top-btn').classList.contains('show'),
+                scrollTop: document.getElementById('phone-body').scrollTop,
+            })""")
+            check(after_scroll.get("scrollTop", 0) > 400, f"test setup should have actually scrolled #phone-body: {after_scroll}")
+            check(after_scroll.get("showing"), f"button should show once scrolled past the threshold: {after_scroll}")
+
+            await page.click("#back-to-top-btn")
+            await page.wait_for_timeout(500)
+            after_click = await page.evaluate("""() => ({
+                scrollTop: document.getElementById('phone-body').scrollTop,
+                showing: document.getElementById('back-to-top-btn').classList.contains('show'),
+            })""")
+            check(after_click.get("scrollTop", 999) < 50, f"clicking should scroll #phone-body back to top: {after_click}")
+            check(not after_click.get("showing"), f"button should hide again once back at top: {after_click}")
+
         finally:
             await browser.close()
 

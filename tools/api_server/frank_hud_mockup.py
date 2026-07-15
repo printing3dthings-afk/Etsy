@@ -775,6 +775,21 @@ body.is-mobile .bottombar{display:none}
    (58px + safe-area). The last control (e.g. Studio's Generate Video button) has to be
    able to scroll fully above the bar to be tappable. */
 body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-area-inset-bottom)) !important}
+/* Floating "back to top" — 2026-07-15: any page/panel long enough to scroll (the
+   176-product Products list, a long Listings/Approvals queue, etc.) gets this once
+   scrolled past a threshold. Sits just above the phone tab bar (58px + safe-area,
+   see above) so it never overlaps it. Naturally never appears on desktop without any
+   extra gating: the fixed 1440x900 stage there uses per-panel internal scrolling
+   (.screen{overflow:hidden}), so neither window nor #phone-body ever actually scrolls
+   there — see backToTop.js logic below for the two scroll sources this tracks. */
+#back-to-top-btn{display:none;position:fixed;z-index:750;
+  right:calc(14px + env(safe-area-inset-right));
+  bottom:calc(74px + env(safe-area-inset-bottom));
+  width:42px;height:42px;border-radius:50%;align-items:center;justify-content:center;
+  background:var(--gold);color:#0D1B2A;border:none;font-size:18px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+#back-to-top-btn.show{display:flex}
+#back-to-top-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 /* "Talk to Frank" popup (mobile only) — #orb-view is no longer permanent Ask-tab
    content, it's a dedicated full-screen popup toggled by body.frank-popup-open,
    opened by the Ask tab only (see phoneTab()/openFrankPopup() in the script —
@@ -1749,6 +1764,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <button class="ptab" data-ptab="create" onclick="phoneTab('create')" aria-label="Create"><span class="pti" aria-hidden="true">✚</span>Create</button>
     <button class="ptab" data-ptab="more" onclick="phoneTab('more')" aria-label="More screens"><span class="pti" aria-hidden="true">⋯</span>More</button>
   </nav>
+
+  <button id="back-to-top-btn" onclick="backToTop()" aria-label="Back to top" title="Back to top">⬆</button>
 
 </div></div>
 
@@ -2783,6 +2800,40 @@ document.addEventListener('keydown', function(e){
   try { seen = !!localStorage.getItem('frankWelcomeSeen'); } catch(e) {}
   if (!seen) startTour();
 })();
+
+// ── Floating "back to top" (2026-07-15) — tracks the two real scroll sources in
+// this app: plain window/document scroll (mobile screens opened via More, which
+// render full-page document-flow content per the is-mobile CSS overrides), and
+// #phone-body's own internal scroll (native phone panels — Today/Approvals/More).
+// Desktop's fixed 1440x900 stage never triggers either (each panel scrolls
+// internally, .screen{overflow:hidden}), so the button naturally never appears
+// there — no separate is-mobile gate needed. ──
+const _BACK_TO_TOP_THRESHOLD = 400;
+function _isPastBackToTopThreshold(){
+  if (window.scrollY > _BACK_TO_TOP_THRESHOLD) return true;
+  const pb = document.getElementById('phone-body');
+  return !!(pb && pb.scrollTop > _BACK_TO_TOP_THRESHOLD);
+}
+function _updateBackToTopVisibility(){
+  const btn = document.getElementById('back-to-top-btn');
+  if (btn) btn.classList.toggle('show', _isPastBackToTopThreshold());
+}
+function backToTop(){
+  window.scrollTo({top: 0, behavior: 'smooth'});
+  const pb = document.getElementById('phone-body');
+  if (pb) pb.scrollTo({top: 0, behavior: 'smooth'});
+}
+window.addEventListener('scroll', _updateBackToTopVisibility, {passive: true});
+(function(){
+  const pb = document.getElementById('phone-body');
+  if (pb) pb.addEventListener('scroll', _updateBackToTopVisibility, {passive: true});
+})();
+// Switching screens/tabs can leave a prior scroll position behind (e.g. a
+// showScreen() call doesn't reset window.scrollY) -- re-check after any nav so
+// the button doesn't linger visible-but-stale on a freshly-opened short page.
+const _origShowScreen = showScreen;
+showScreen = function(name){ _origShowScreen(name); _updateBackToTopVisibility(); };
+
 // ── Premium voice toggle — OpenAI Whisper/TTS stay dormant until this is on.
 // Default OFF (absent key reads as off). Local offline WASM engines are the
 // default voice path; this only opts back into the paid OpenAI endpoints. ──
