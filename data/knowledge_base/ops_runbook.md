@@ -6679,3 +6679,31 @@ answer. Fixed same-day: an "✏️ edit" link now reopens the modal pre-filled
 with the current answer for any question, answered or not.
 
 Build bumped through v168-v169.
+
+---
+
+### 2026-07-15 (later still) — PWA stale-cache root cause + fix
+Scott reported the Fix button (shipped earlier the same day) wasn't showing
+on the Deactivated tab. Confirmed live via `/health` this was NOT a server
+issue — the deployed build was already current. Root cause: Frank's
+installed PWA has its own service worker (`/frank-sw.js`) whose cache
+invalidation is correctly keyed to `_BUILD_ID`, but nothing ever triggered
+an update *check* — the registration was a bare `.register()` call with no
+`updatefound`/`controllerchange` listeners and no periodic
+`registration.update()`. A browser only checks for a new SW script on a
+fresh navigation, so an already-open/backgrounded PWA could sit on a stale
+cached shell indefinitely with zero signal anything changed. Likely also
+explains an earlier "edit button" UI mismatch that never matched the
+current source — same root cause, not a separate bug.
+
+**Immediate unblock for Scott (no code involved):** force-close and reopen
+the app once to pick up the current build.
+
+**Actual fix:** added an `updatefound` listener that shows a persistent
+"tap to refresh" toast once a real update (not the first-ever install)
+finishes installing, plus a `visibilitychange`-triggered
+`registration.update()` so resuming the app from background actively
+re-checks. Deliberately tap-to-refresh, not silent auto-reload, so an
+unprompted reload can't drop in-progress input (e.g. mid-typing an answer).
+
+Build bumped to `736e544-v170`.
