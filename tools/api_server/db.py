@@ -369,10 +369,46 @@ def get_metric_history(days: int = 30) -> list:
 
 # ── Action queue (staged changes awaiting Scott's approval) ──────────────────────
 
+# Ranking Recovery cooldown (2026-07-15) -- CLAUDE.md's Ranking Recovery
+# Playbook warns that editing a listing again inside its ~2-3 week recovery
+# window resets the clock. Nothing tracked "when was this listing last
+# edited" anywhere before this. Content-mutating types only -- state toggles
+# (deactivate/publish/toggle_listing_state) aren't the kind of "edit" that
+# triggers Etsy's re-index recovery window.
+_RANKING_RECOVERY_TYPES = frozenset({"update_tags", "update_title", "update_description"})
+_RANKING_RECOVERY_COOLDOWN_DAYS = 21
+
+
+def _listing_last_edited_key(listing_id) -> str:
+    return f"listing_last_edited:{listing_id}"
+
+
+def note_listing_edited(listing_id) -> None:
+    """Record that `listing_id` was just edited -- called by
+    _execute_staged_action() right after a content-mutating action succeeds.
+    Read back by enqueue_action() below to warn against compounding edits."""
+    set_setting(_listing_last_edited_key(listing_id), datetime.now(timezone.utc).isoformat())
+
 
 def enqueue_action(action_type: str, summary: str, payload: dict) -> int:
     """Stage a proposed change. Returns the new queue id. Status starts 'pending'."""
     init_db()
+    if action_type in _RANKING_RECOVERY_TYPES:
+        listing_id = (payload or {}).get("listing_id")
+        if listing_id is not None:
+            last_edited_str = get_setting(_listing_last_edited_key(listing_id))
+            if last_edited_str:
+                try:
+                    last_edited = datetime.fromisoformat(last_edited_str)
+                    days_since = (datetime.now(timezone.utc) - last_edited).days
+                    if days_since < _RANKING_RECOVERY_COOLDOWN_DAYS:
+                        summary = (
+                            f"⚠️ edited {days_since}d ago — this resets its ranking "
+                            f"recovery window (CLAUDE.md: don't compound edits within "
+                            f"~2-3 weeks). {summary}"
+                        )
+                except ValueError:
+                    pass  # malformed timestamp -- don't block staging over it
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:

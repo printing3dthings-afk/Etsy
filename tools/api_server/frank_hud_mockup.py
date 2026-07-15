@@ -423,17 +423,6 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .alert-row.warning{border-left-color:var(--amber)}
 .alert-row .at{font-size:9px;color:var(--muted);margin-top:2px}
 
-#welcome-overlay{position:fixed;inset:0;z-index:9500;background:rgba(5,9,16,.72);
-  display:flex;align-items:center;justify-content:center;padding:20px}
-.welcome-card{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);
-  padding:26px 28px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.welcome-title{font-size:19px;font-weight:700;color:var(--gold);margin-bottom:12px}
-.welcome-body p{font-size:13px;color:var(--text);line-height:1.5;margin:0 0 10px}
-.welcome-body ul{margin:0 0 12px;padding-left:18px;font-size:13px;color:var(--text);line-height:1.6}
-.welcome-note{color:var(--muted)!important;font-size:12px!important}
-.welcome-dismiss{width:100%;background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-md);
-  padding:11px 0;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
-
 /* ── First-login spotlight tour — a scrim (#tour-click-catcher) blocks clicks
    outside the tour, #tour-spot is a zero-content box whose huge box-shadow both
    dims everything else on screen AND punches a "cutout" ring around the real
@@ -1049,27 +1038,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
   <div id="toast-stack" aria-live="polite" aria-atomic="false"></div>
-  <div id="welcome-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="welcome-overlay-title">
-    <div class="welcome-card">
-      <div class="welcome-title" id="welcome-overlay-title">Welcome to %%AGENT_SHORT%%</div>
-      <div class="welcome-body">
-        <p>%%AGENT_SHORT%% helps you run your shop. There are just four things to know:</p>
-        <ul>
-          <li><b>Talk to %%AGENT_SHORT%%</b> — tap the orb (or type) to ask anything or give an instruction.</li>
-          <li><b>Approvals</b> — %%AGENT_SHORT%% never changes your shop, files, or posts without your one-tap OK here.</li>
-          <li><b>Today</b> — your sales, orders, and views at a glance.</li>
-          <li><b>Create</b> — make listing photos, videos, and files, then publish.</li>
-        </ul>
-        <p class="welcome-note">Everything else lives under “Advanced” — you can ignore it until you need it.</p>
-      </div>
-      <button class="welcome-dismiss" id="welcome-dismiss-btn" onclick="dismissWelcomeOverlay()">Got it</button>
-    </div>
-  </div>
 
-  <!-- First-login spotlight tour (desktop) — see startTour()/renderTourStep() below.
-       Hidden on mobile in favor of the single welcome-overlay card above (mobile's
-       tab-bar layout has no sidebar to spotlight). Replayable anytime via the '?'
-       icon in the header. -->
+  <!-- First-login spotlight tour — see startTour()/renderTourStep() below. Desktop
+       spotlights the sidebar (TOUR_STEPS); mobile spotlights #phone-tabbar's 5 tabs
+       (MOBILE_TOUR_STEPS) since it has no sidebar. Replayable anytime via the '?'
+       icon in the header (desktop) or More → Replay Tutorial (mobile,
+       renderPhoneMore()) — both just call startTour(). -->
   <div id="tour-root">
     <div id="tour-click-catcher" onclick="tourSkip()"></div>
     <div id="tour-spot"></div>
@@ -1172,6 +1146,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div class="panel brk col-meminsights">
           <div class="panel-title">Star Seller Status <span class="src">/api/star-seller</span></div>
           <div id="star-seller-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
+        <div class="panel brk col-meminsights">
+          <div class="panel-title">Ads &amp; ROAS <span class="src">/api/ads-status</span></div>
+          <div id="ads-status-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
           </div>
         </div>
@@ -2027,7 +2008,9 @@ function renderPhoneMore(){
   el.innerHTML = _PHONE_MORE.map(([g, items]) =>
     `<div class="pmore-grp">${g}</div>` + items.map(([s, ic, lbl]) =>
       `<div class="pmore-item" role="button" tabindex="0" onclick="phoneOpenScreen('${s}')"><span class="pmi">${ic}</span>${lbl}<span class="pmc">›</span></div>`
-    ).join('')).join('');
+    ).join('')).join('')
+    + `<div class="pmore-grp">Help</div>`
+    + `<div class="pmore-item" role="button" tabindex="0" onclick="startTour()"><span class="pmi">?</span>Replay Tutorial<span class="pmc">›</span></div>`;
 }
 // Opening a screen from More exits the phone panel and shows that (desktop) screen.
 function phoneOpenScreen(name){
@@ -2524,7 +2507,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadStarSeller, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadStarSeller, loadAdsStatus, loadInbox, loadMissionTimeline],
   core: [loadCredentialsAndHealth, loadCoreErrors],
   agents: [],  // covered by the global loadAgents() call below
   tasks: [loadTasks],
@@ -2621,29 +2604,18 @@ const CHAT_SESSION = (function(){
 (function(){
   try { if (localStorage.getItem('frankDevMode') === '1') document.body.classList.add('show-plumbing','show-advanced'); } catch(e) {}
 })();
-// ── First-run welcome overlay — the plain single-card version. Still used as
-// the mobile fallback (mobile's tab-bar layout has no sidebar to spotlight, so
-// the full tour below is desktop-only) and as the Escape-key target while it's
-// showing. Degrades to showing every time if localStorage is unavailable (same
-// failure mode as the chatSession pattern above). ──
-function dismissWelcomeOverlay() {
-  const el = document.getElementById('welcome-overlay');
-  if (el) el.style.display = 'none';
-  try { localStorage.setItem('frankWelcomeSeen', '1'); } catch(e) {}
-}
-document.addEventListener('keydown', function(e){
-  if (e.key !== 'Escape') return;
-  const el = document.getElementById('welcome-overlay');
-  if (el && el.style.display !== 'none') dismissWelcomeOverlay();
-});
-
-// ── First-login spotlight tour (desktop) — walks a new user through the real
-// sidebar/header, one nav item at a time, with a dimmed cutout ring around each
-// target (see #tour-spot's box-shadow trick in the CSS above) and a floating
-// tooltip explaining what lives there. target:null steps (intro/outro) reuse the
-// same #tour-spot element sized to 0x0 at the viewport center, so the shadow just
-// dims uniformly — no separate markup branch needed. Replayable anytime via the
-// '?' icon in the header (startTour()). ──
+// ── First-login spotlight tour — walks a new user through the real nav, one
+// item at a time, with a dimmed cutout ring around each target (see #tour-spot's
+// box-shadow trick in the CSS above) and a floating tooltip explaining what
+// lives there. target:null steps (intro/outro) reuse the same #tour-spot
+// element sized to 0x0 at the viewport center, so the shadow just dims
+// uniformly — no separate markup branch needed. Desktop spotlights the
+// sidebar (TOUR_STEPS, via showScreen()); mobile spotlights #phone-tabbar's
+// 5 tabs instead (MOBILE_TOUR_STEPS, via phoneTab()) since it has no sidebar
+// — same #tour-root/#tour-spot/#tour-tooltip engine, just different step data
+// and a different "go to this step's destination" call. Replayable anytime
+// via the '?' icon in the header (desktop) or "Replay Tutorial" under More
+// (mobile) — both just call startTour(). ──
 const TOUR_STEPS = [
   { target: null, screen: null,
     title: 'Welcome to %%AGENT_SHORT%%',
@@ -2682,12 +2654,40 @@ const TOUR_STEPS = [
     title: "You're all set",
     body: '<p>That\\'s everything. Replay this tour anytime from the <b>?</b> icon in the top bar.</p>' },
 ];
+// Mobile analog — same 5 destinations #phone-tabbar always shows (visible even
+// during the full-screen Ask popup), spotlighted via step.ptab + phoneTab()
+// instead of step.screen + showScreen().
+const MOBILE_TOUR_STEPS = [
+  { target: null, ptab: null,
+    title: 'Welcome to %%AGENT_SHORT%%',
+    body: '<p>%%AGENT_SHORT%% helps you run your shop. This quick tour shows where everything lives — about 20 seconds.</p><p class="tour-note">Tap Next to start, or Skip to jump right in.</p>' },
+  { target: '.ptab[data-ptab="ask"]', ptab: null,
+    title: 'Ask',
+    body: '<p>Tap here anytime to talk to %%AGENT_SHORT%% — ask a question or give an instruction in plain English.</p>' },
+  { target: '.ptab[data-ptab="appr"]', ptab: 'appr',
+    title: 'Approvals',
+    body: '<p>%%AGENT_SHORT%% never changes your shop, files, or posts without your one-tap OK. Anything waiting on you shows up here.</p>' },
+  { target: '.ptab[data-ptab="today"]', ptab: 'today',
+    title: 'Today',
+    body: '<p>Your sales, orders, and views at a glance.</p>' },
+  { target: '.ptab[data-ptab="create"]', ptab: 'create',
+    title: 'Create',
+    body: '<p>Generate listing photos, videos, and product files here, then publish straight to Etsy.</p>' },
+  { target: '.ptab[data-ptab="more"]', ptab: 'more',
+    title: 'More',
+    body: '<p>Everything else — Your listings, Products, Brand Kit, Knowledge, and the engineering-level screens — lives under here. Safe to ignore until you need it.</p>' },
+  { target: null, ptab: null,
+    title: "You're all set",
+    body: '<p>That\\'s everything. Replay this tour anytime from <b>More → Replay Tutorial</b>.</p>' },
+];
 let _tourIndex = 0;
+let _activeTourSteps = TOUR_STEPS;
 function _tourTargetEl(step){ return step.target ? document.querySelector(step.target) : null; }
 function renderTourStep(){
-  const step = TOUR_STEPS[_tourIndex];
+  const step = _activeTourSteps[_tourIndex];
   if (!step) return;
-  if (step.screen) showScreen(step.screen);
+  if (step.ptab) phoneTab(step.ptab);
+  else if (step.screen) showScreen(step.screen);
   const spot = document.getElementById('tour-spot');
   const tip = document.getElementById('tour-tooltip');
   const el = _tourTargetEl(step);
@@ -2709,9 +2709,9 @@ function renderTourStep(){
   document.getElementById('tour-step-title').innerHTML = step.title;
   document.getElementById('tour-step-body').innerHTML = step.body;
   const dots = document.getElementById('tour-dots');
-  dots.innerHTML = TOUR_STEPS.map((_, i) => '<span class="dot' + (i === _tourIndex ? ' active' : '') + '"></span>').join('');
+  dots.innerHTML = _activeTourSteps.map((_, i) => '<span class="dot' + (i === _tourIndex ? ' active' : '') + '"></span>').join('');
   document.getElementById('tour-back-btn').disabled = (_tourIndex === 0);
-  document.getElementById('tour-next-btn').textContent = (_tourIndex === TOUR_STEPS.length - 1) ? 'Done' : 'Next';
+  document.getElementById('tour-next-btn').textContent = (_tourIndex === _activeTourSteps.length - 1) ? 'Done' : 'Next';
   // Position the tooltip relative to the (possibly re-measured) target rect —
   // prefer right, then left, then below, then above, clamped inside the viewport.
   const tipMargin = 16, viewMargin = 12, tipW = 320;
@@ -2749,7 +2749,7 @@ function endTour(markSeen){
   if (markSeen) { try { localStorage.setItem('frankWelcomeSeen', '1'); } catch(e) {} }
 }
 function tourNext(){
-  if (_tourIndex >= TOUR_STEPS.length - 1) { endTour(true); return; }
+  if (_tourIndex >= _activeTourSteps.length - 1) { endTour(true); return; }
   _tourIndex++;
   renderTourStep();
 }
@@ -2760,17 +2760,8 @@ function tourBack(){
 }
 function tourSkip(){ endTour(true); }
 function startTour(){
-  // Mobile has no sidebar to spotlight — fall back to the plain welcome card.
-  if (isMobileMode()) {
-    const el = document.getElementById('welcome-overlay');
-    if (el) {
-      el.style.display = 'flex';
-      const btn = document.getElementById('welcome-dismiss-btn');
-      if (btn) btn.focus();
-    }
-    return;
-  }
-  document.body.classList.add('cc-open');
+  _activeTourSteps = isMobileMode() ? MOBILE_TOUR_STEPS : TOUR_STEPS;
+  if (!isMobileMode()) document.body.classList.add('cc-open');
   _tourIndex = 0;
   const root = document.getElementById('tour-root');
   if (root) root.style.display = 'block';
@@ -3513,6 +3504,42 @@ async function loadStarSeller(){
         '<span class="ss-label">Unread Messages</span>'+
         '<span class="ss-val"'+(msgOk?'':' style="color:var(--red)"')+'>'+( d.unread_messages||0)+' '+(msgOk?'✓':'⚠')+'</span>'+
       '</div>';
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+  }
+}
+
+// 2026-07-15: Ads/ROAS state used to be indistinguishable from any other
+// generic todo — this is its first dedicated read, same visual pattern as
+// the Star Seller card above (.ss-status/.ss-row/.ss-bar reused, not
+// duplicated). Etsy's public API has no ads-performance endpoint, so this
+// only ever reflects what Scott has manually logged via _log_ad_spend.
+const _ADS_STATUS_LABEL = {
+  ok: 'ON TRACK', kill_signal: 'KILL SIGNAL', low_roas: 'LOW ROAS',
+  scale_eligible: 'SCALE ELIGIBLE', stale_log: 'LOG IS STALE',
+};
+const _ADS_STATUS_CLASS = {
+  ok: 'on_track', kill_signal: 'at_risk', low_roas: 'at_risk',
+  scale_eligible: 'building', stale_log: 'building',
+};
+async function loadAdsStatus(){
+  const el = document.getElementById('ads-status-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/ads-status');
+    const d = await r.json();
+    if (!d.used) {
+      el.innerHTML = '<div class="ss-row"><span class="ss-label">Etsy Ads has never been used — a $3-5/day test budget is a growth lever available anytime (CLAUDE.md\\'s Ads Strategy).</span></div>';
+      return;
+    }
+    const label = _ADS_STATUS_LABEL[d.status] || d.status;
+    const cls = _ADS_STATUS_CLASS[d.status] || 'building';
+    el.innerHTML =
+      '<div class="ss-status '+cls+'">'+escHtml(label)+'</div>'+
+      '<div class="ss-row"><span class="ss-label">Spend (7d)</span><span class="ss-val">$'+d.week_spend.toFixed(2)+'</span></div>'+
+      '<div class="ss-row"><span class="ss-label">Revenue (7d)</span><span class="ss-val">$'+d.week_revenue.toFixed(2)+'</span></div>'+
+      '<div class="ss-row"><span class="ss-label">ROAS (this month)</span><span class="ss-val">'+(d.have_monthly_verdict ? d.month_roas+'x' : 'building — '+d.month_roas+'x so far')+'</span></div>'+
+      '<div class="ss-row"><span class="ss-label">Last logged</span><span class="ss-val"'+(d.days_since_log>=7?' style="color:var(--red)"':'')+'>'+d.days_since_log+'d ago</span></div>';
   }catch(e){
     if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
   }
@@ -4298,17 +4325,34 @@ function setActionFilter(sev) {
   renderActionsContent();
 }
 const _SEV_COLORS = {high:'var(--red)', medium:'var(--gold)', low:'#7ba0c2'};
+// Same thresholds as CLAUDE.md's Autonomy Boundaries section ("any bulk edit
+// touching more than 10 listings" needs confirming scope) -- surfaced here so
+// Scott sees WHY a big batch deserves a closer look, not just that there's a
+// big queue. 2026-07-15: previously nothing in this screen explained the
+// safety rails at all.
+const _APPROVAL_BATCH_LIMIT = 10;
+const _APPROVAL_BATCH_TYPES = ['update_tags','update_title','update_description','publish_listing','deactivate_listing','toggle_listing_state'];
 function renderActionsContent() {
   const el = document.getElementById('actions-content');
   if (!el) return;
   const pending = _pendingActions || [];
   const s = _actionsSummary || {high:0,medium:0,low:0};
-  let html = '';
+  let html = `<div class="hub-listing-meta" style="margin-bottom:10px;padding:8px 10px;background:var(--panel2);border-radius:var(--r-sm)">
+    %%AGENT_SHORT%% stages every listing-changing action here — nothing goes live without your tap. Extra care applies to big batches: CLAUDE.md's own safety rail flags more than ${_APPROVAL_BATCH_LIMIT} listing edits or more than 5 price changes in one sitting.
+  </div>`;
+  const typeCounts = {};
+  pending.forEach(a => { typeCounts[a.type] = (typeCounts[a.type]||0) + 1; });
+  const overLimit = _APPROVAL_BATCH_TYPES.filter(t => (typeCounts[t]||0) > _APPROVAL_BATCH_LIMIT);
+  if (overLimit.length) {
+    html += `<div class="hub-listing-meta" style="margin-bottom:10px;padding:8px 10px;background:rgba(200,60,60,.12);border-left:3px solid var(--red);border-radius:var(--r-sm)">
+      ⚠️ ${overLimit.map(t => `${typeCounts[t]} pending ${t.replace(/_/g,' ')}`).join(', ')} — bigger than the ${_APPROVAL_BATCH_LIMIT}-item safety rail. Worth a closer look before approving all at once.
+    </div>`;
+  }
   if (pending.length) {
     html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
     html += pending.map(renderApproval).join('');
   }
-  if (!_actions.length && !pending.length) { el.innerHTML = html || '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
+  if (!_actions.length && !pending.length) { el.innerHTML = html + '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
   const sevBtn = sev => {
     const active = _actionFilter === sev;
     const c = _SEV_COLORS[sev];
@@ -4895,11 +4939,11 @@ function renderListings() {
       <div class="hub-listing-info">
         <div class="hub-listing-title">${escHtml(l.title)}</div>
         <div class="hub-listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="hub-state-${l.listing_id}" class="hub-lstate ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
-        ${l.state==='inactive' ? `<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="event.stopPropagation();openFixListingModal(${l.listing_id})">🔧 Ask %%AGENT_SHORT%% to Fix</button>` : ''}
+        ${(l.state==='inactive'||l.manifest_status==='FAIL') ? `<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="event.stopPropagation();openFixListingModal(${l.listing_id})">🔧 Ask %%AGENT_SHORT%% to Fix</button>` : ''}
       </div>
       <div class="hub-listing-price">$${(+l.price||0).toFixed(2)}</div>
     </div>
-    ${l.state==='inactive' ? `<div id="fix-modal-${l.listing_id}" style="display:none;padding:0 4px"></div>` : ''}
+    ${(l.state==='inactive'||l.manifest_status==='FAIL') ? `<div id="fix-modal-${l.listing_id}" style="display:none;padding:0 4px"></div>` : ''}
     <div id="hub-detail-${l.listing_id}" class="hub-listing-detail" style="display:none"></div>`).join('');
   el.innerHTML = html;
 }

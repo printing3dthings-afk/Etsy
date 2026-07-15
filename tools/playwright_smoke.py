@@ -330,6 +330,111 @@ async def _run_browser_checks() -> None:
             check(simp.get("imageEngineSelect"), f"Create screen must have an image-engine dropdown incl. Gemini: {simp}")
             check(simp.get("videoEngineSelect"), f"Create screen must have a video-engine dropdown incl. Veo: {simp}")
 
+            # ── Frank-usability tier (2026-07-15) ──
+
+            # Home cards must render without throwing, even with no live Etsy
+            # data locally (both /api/star-seller and /api/ads-status degrade
+            # gracefully -- this just proves the new loadAdsStatus() wiring
+            # doesn't crash the Home screen).
+            await page.evaluate("showScreen('cmd')")
+            await page.wait_for_timeout(1000)
+            home_cards = await page.evaluate("""() => ({
+                adsCardPresent: !!document.getElementById('ads-status-body'),
+                adsCardHasContent: (document.getElementById('ads-status-body')||{}).innerHTML.trim().length > 0,
+            })""")
+            check(home_cards.get("adsCardPresent"), f"Ads/ROAS card must be present on Home: {home_cards}")
+            check(home_cards.get("adsCardHasContent"), f"Ads/ROAS card must render some content, not stay blank: {home_cards}")
+
+            # Approvals batch-threshold banner -- stub _pendingActions with 11
+            # same-type items (over the 10-item safety rail) and confirm the
+            # computed warning banner appears; then confirm it's absent with a
+            # normal small queue.
+            await page.evaluate("showScreen('actions')")
+            await page.wait_for_timeout(500)
+            over_limit = await page.evaluate("""() => {
+                _pendingActions = Array.from({length: 11}, (_, i) => ({id: i, type: 'update_tags', payload: {}}));
+                _actions = [];
+                renderActionsContent();
+                const el = document.getElementById('actions-content');
+                return { hasWarning: el.innerHTML.includes('bigger than the 10-item safety rail') };
+            }""")
+            check(over_limit.get("hasWarning"), f"Approvals should warn when >10 same-type actions are pending: {over_limit}")
+            under_limit = await page.evaluate("""() => {
+                _pendingActions = [{id: 1, type: 'update_tags', payload: {}}];
+                renderActionsContent();
+                const el = document.getElementById('actions-content');
+                return { hasWarning: el.innerHTML.includes('bigger than the 10-item safety rail') };
+            }""")
+            check(not under_limit.get("hasWarning"), f"a small queue should not trigger the batch warning: {under_limit}")
+
+            # Fix button on the Listings tab -- must appear for a listing that's
+            # still `active` but flagged manifest_status='FAIL' (2026-07-15
+            # fix; previously only state==='inactive' listings got this
+            # button, so an active-but-broken listing had no way to get fixed).
+            await page.evaluate("showScreen('listings')")
+            await page.wait_for_timeout(500)
+            fix_button_check = await page.evaluate("""() => {
+                _listings = [
+                    {listing_id: 90001, title: 'Broken Active Listing', price: 9.99, state: 'active',
+                     views: 0, num_favorers: 0, tags: [], manifest_status: 'FAIL'},
+                    {listing_id: 90002, title: 'Healthy Active Listing', price: 9.99, state: 'active',
+                     views: 0, num_favorers: 0, tags: [], manifest_status: 'PASS'},
+                ];
+                _sectionFilter = null;
+                _listingState = 'active';
+                renderListings();
+                const el = document.getElementById('listings-content');
+                return el ? el.innerHTML : null;
+            }""")
+            listings_html = fix_button_check or ""
+            check("90001" in listings_html and "Ask" in listings_html and "Fix" in listings_html,
+                  "an active listing with manifest_status='FAIL' should get the Fix button")
+
+            # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
+            # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
+            # sidebar. setViewportSize (not a new context) so this reuses the
+            # already-authenticated session. ──
+            await page.set_viewport_size({"width": 390, "height": 844})
+            await page.wait_for_timeout(500)
+            await page.evaluate("startTour()")
+            await page.wait_for_timeout(400)
+            mobile_step1 = await page.evaluate("""() => ({
+                visible: getComputedStyle(document.getElementById('tour-root')).display !== 'none',
+                title: document.getElementById('tour-step-title').textContent,
+                dotCount: document.querySelectorAll('#tour-dots .dot').length,
+            })""")
+            check(mobile_step1.get("visible"), f"mobile tour should start when startTour() is called on a narrow viewport: {mobile_step1}")
+            check("Welcome" in mobile_step1.get("title", ""), f"mobile tour step 1 should be the welcome intro: {mobile_step1}")
+            check(mobile_step1.get("dotCount") == 7, f"mobile tour should have 7 steps: {mobile_step1}")
+
+            await page.click("#tour-next-btn")
+            await page.wait_for_timeout(400)
+            mobile_step2 = await page.evaluate("""() => {
+                const el = document.querySelector('.ptab[data-ptab=\"ask\"]');
+                const rect = el ? el.getBoundingClientRect() : null;
+                const spot = document.getElementById('tour-spot').getBoundingClientRect();
+                return {
+                    title: document.getElementById('tour-step-title').textContent,
+                    targetsAsk: !!rect,
+                    spotNearTarget: !!rect && Math.abs(spot.top - rect.top) < 40,
+                };
+            }"""
+            )
+            check(mobile_step2.get("targetsAsk"), f"mobile tour step 2 should target the Ask tab: {mobile_step2}")
+            check(mobile_step2.get("spotNearTarget"), f"spotlight should be positioned over the Ask tab: {mobile_step2}")
+
+            await page.click("#tour-next-btn")
+            await page.wait_for_timeout(500)
+            mobile_step3 = await page.evaluate("""() => ({
+                title: document.getElementById('tour-step-title').textContent,
+                apprTabOn: document.querySelector('.ptab[data-ptab=\"appr\"]').classList.contains('on'),
+            })""")
+            check(mobile_step3.get("title") == "Approvals", f"mobile tour step 3 should be Approvals: {mobile_step3}")
+            check(mobile_step3.get("apprTabOn"), f"mobile tour should switch to the Approvals tab via phoneTab(): {mobile_step3}")
+
+            await page.click(".tour-controls .tour-skip")
+            await page.wait_for_timeout(300)
+
         finally:
             await browser.close()
 

@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "4974b27-v172"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "1614e42-v173"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4128,6 +4128,21 @@ def _listings_sync(state: str = "active") -> dict:
         return cached
 
     raw = EtsyAPIClient().get_shop_listings_all(state=state)
+
+    # Cheap local read (no extra Etsy calls) so the Fix button in the Listings
+    # tab can flag a listing that's still `active` on Etsy but has a real
+    # content problem the last compliance sweep caught (e.g. zero files
+    # attached) -- 2026-07-15: the button used to only appear for
+    # state=='inactive' listings, so an active-but-broken listing had no way
+    # to get fixed at all. Missing/unreadable manifest just means no listing
+    # gets flagged this way -- never a hard failure of the listings view.
+    manifest: dict = {}
+    try:
+        import listing_integrity_check as lic
+        manifest = lic._load_json(lic.MANIFEST_PATH) or {}
+    except Exception as exc:
+        print(f"[listings] manifest_status merge skipped: {exc}", flush=True)
+
     listings = []
     for l in raw:
         images = l.get("images", [])
@@ -4138,9 +4153,11 @@ def _listings_sync(state: str = "active") -> dict:
                 or images[0].get("url_fullxfull")
                 or images[0].get("url_75x75", "")
             )
+        listing_id = l.get("listing_id")
+        manifest_status = manifest.get(str(listing_id), {}).get("last_status")
         listings.append(
             {
-                "listing_id": l.get("listing_id"),
+                "listing_id": listing_id,
                 "title": l.get("title", ""),
                 "price": _price_float(l.get("price")),
                 "state": l.get("state", state),
@@ -4151,6 +4168,7 @@ def _listings_sync(state: str = "active") -> dict:
                 "url": f"https://www.etsy.com/listing/{l.get('listing_id')}",
                 "created_timestamp": l.get("creation_timestamp", 0),
                 "shop_section_id": l.get("shop_section_id"),
+                "manifest_status": manifest_status,
             }
         )
     result = {"listings": listings, "count": len(listings), "state": state}
@@ -4280,6 +4298,63 @@ async def get_inbox(_token: str = Depends(_auth_session_or_bearer)):
     return result
 
 
+def _compute_star_seller_status() -> dict:
+    """Star Seller progress metrics against CLAUDE.md's own thresholds (5
+    orders / $300 revenue / 0 unread messages over trailing 90 days).
+    Factored out of get_star_seller() (2026-07-15) so both the live endpoint
+    (Home screen display) and _check_star_seller_status() (the new proactive
+    alert below) share one implementation instead of drifting apart."""
+    client = EtsyAPIClient()
+    now = int(time.time())
+    ninety_days_ago = now - (90 * 86_400)
+
+    orders_r = reviews_r = msgs_r = None
+    try:
+        orders_r = client.get_orders(limit=100)
+    except Exception as exc:
+        orders_r = exc
+    try:
+        reviews_r = client.get_reviews(limit=50)
+    except Exception as exc:
+        reviews_r = exc
+    try:
+        msgs_r = client.get_messages(limit=25)
+    except Exception as exc:
+        msgs_r = exc
+
+    out: dict = {"orders_90d": 0, "revenue_90d": 0.0, "avg_rating": 0.0,
+                 "review_count": 0, "unread_messages": 0, "on_time_pct": 100}
+
+    if not isinstance(orders_r, Exception):
+        orders = orders_r.get("results", [])
+        o90 = [o for o in orders if o.get("create_timestamp", 0) > ninety_days_ago]
+
+        out["orders_90d"] = len(o90)
+        out["revenue_90d"] = _order_revenue(o90)
+
+    if not isinstance(reviews_r, Exception):
+        reviews = reviews_r.get("results", [])
+        ratings = [r["rating"] for r in reviews if r.get("rating")]
+        out["avg_rating"] = round(sum(ratings) / len(ratings), 2) if ratings else 0.0
+        out["review_count"] = len(ratings)
+
+    if not isinstance(msgs_r, Exception):
+        convs = msgs_r.get("results", [])
+        out["unread_messages"] = sum(1 for c in convs if c.get("unread_count", 0) > 0 or c.get("unread", False))
+
+    orders_ok = out["orders_90d"] >= 5
+    revenue_ok = out["revenue_90d"] >= 300.0
+    msgs_ok = out["unread_messages"] == 0
+    if orders_ok and revenue_ok and msgs_ok:
+        out["status"] = "on_track"
+    elif not orders_ok or not revenue_ok:
+        out["status"] = "building"
+    else:
+        out["status"] = "at_risk"
+
+    return out
+
+
 @app.get("/api/star-seller")
 async def get_star_seller(_token: str = Depends(_auth_session_or_bearer)):
     """Star Seller progress metrics. Cached 120s."""
@@ -4287,61 +4362,43 @@ async def get_star_seller(_token: str = Depends(_auth_session_or_bearer)):
     if cached is not None:
         return cached
 
-    def _fetch():
-        client = EtsyAPIClient()
-        now = int(time.time())
-        ninety_days_ago = now - (90 * 86_400)
-
-        orders_r = reviews_r = msgs_r = None
-        try:
-            orders_r = client.get_orders(limit=100)
-        except Exception as exc:
-            orders_r = exc
-        try:
-            reviews_r = client.get_reviews(limit=50)
-        except Exception as exc:
-            reviews_r = exc
-        try:
-            msgs_r = client.get_messages(limit=25)
-        except Exception as exc:
-            msgs_r = exc
-
-        out: dict = {"orders_90d": 0, "revenue_90d": 0.0, "avg_rating": 0.0,
-                     "review_count": 0, "unread_messages": 0, "on_time_pct": 100}
-
-        if not isinstance(orders_r, Exception):
-            orders = orders_r.get("results", [])
-            o90 = [o for o in orders if o.get("create_timestamp", 0) > ninety_days_ago]
-
-            out["orders_90d"] = len(o90)
-            out["revenue_90d"] = _order_revenue(o90)
-
-        if not isinstance(reviews_r, Exception):
-            reviews = reviews_r.get("results", [])
-            ratings = [r["rating"] for r in reviews if r.get("rating")]
-            out["avg_rating"] = round(sum(ratings) / len(ratings), 2) if ratings else 0.0
-            out["review_count"] = len(ratings)
-
-        if not isinstance(msgs_r, Exception):
-            convs = msgs_r.get("results", [])
-            out["unread_messages"] = sum(1 for c in convs if c.get("unread_count", 0) > 0 or c.get("unread", False))
-
-        orders_ok = out["orders_90d"] >= 5
-        revenue_ok = out["revenue_90d"] >= 300.0
-        msgs_ok = out["unread_messages"] == 0
-        if orders_ok and revenue_ok and msgs_ok:
-            out["status"] = "on_track"
-        elif not orders_ok or not revenue_ok:
-            out["status"] = "building"
-        else:
-            out["status"] = "at_risk"
-
-        return out
-
-    result = await _fetch_with_degrade("star_seller", asyncio.to_thread(_fetch), timeout=15.0)
+    result = await _fetch_with_degrade(
+        "star_seller", asyncio.to_thread(_compute_star_seller_status), timeout=15.0
+    )
     if not (isinstance(result, dict) and result.get("stale")):
         _cache_set("star_seller", result)
     return result
+
+
+_STAR_SELLER_NUDGE_COOLDOWN_DAYS = 7
+
+
+def _check_star_seller_status() -> str:
+    """Proactive alert — 2026-07-15. get_star_seller()'s status computation
+    already existed and is already displayed on the Home screen, but nothing
+    proactively told Scott when it crossed into 'at_risk'; he'd only find out
+    by opening Frank and looking. Read-only, same weekly-cooldown pattern
+    _check_ads_thresholds() already uses so this nudges at most once a week,
+    not every day the condition holds."""
+    out = _compute_star_seller_status()
+    if out.get("status") != "at_risk":
+        return f"status={out.get('status')} — nothing to flag"
+
+    today = date.today()
+    last_nudge_str = db.get_setting("star_seller_at_risk_nudge_date")
+    last_nudge = date.fromisoformat(last_nudge_str) if last_nudge_str else None
+    if last_nudge and (today - last_nudge).days < _STAR_SELLER_NUDGE_COOLDOWN_DAYS:
+        return "at_risk but nudged recently — skipping"
+
+    db.add_todo(
+        f"Star Seller status is at risk — {out['orders_90d']} orders / "
+        f"${out['revenue_90d']:.2f} revenue over the trailing 90 days "
+        f"(need 5 / $300), {out['unread_messages']} unread message(s). "
+        f"Check Home for the full breakdown.",
+        added_by="frank", category="question",
+    )
+    db.set_setting("star_seller_at_risk_nudge_date", today.isoformat())
+    return "at_risk — todo added"
 
 
 @app.get("/api/listings")
@@ -5378,6 +5435,79 @@ def _check_ads_thresholds() -> str:
     return "checked: " + (", ".join(notes) if notes else "no thresholds crossed")
 
 
+def _compute_ads_status() -> dict:
+    """Structured Ads/ROAS snapshot for the Home screen card — 2026-07-15.
+    _check_ads_thresholds() and tools/etsy_ads_tools.py already compute this
+    correctly (matching CLAUDE.md's thresholds exactly) but only ever surface
+    it as todos indistinguishable from any other todo — there was no
+    dedicated "what's ads doing right now" UI read. Reuses the exact same
+    week/month spend+revenue+ROAS windowing as _check_ads_thresholds() so the
+    card and the proactive todo never disagree about what "this week" means;
+    kept as a separate function since that one's job is flagging todos and
+    this one's job is a point-in-time read for display."""
+    from data_store import DataStore  # tools/ is on sys.path (line 56), not the repo root
+
+    store = DataStore()
+    ads_data = store.get("etsy_ads", default={})
+    spend_log = ads_data.get("spend_log", [])
+    if not spend_log:
+        return {"used": False}
+
+    today = date.today()
+
+    def _safe_date(s):
+        try:
+            return date.fromisoformat(s)
+        except (ValueError, TypeError):
+            return date(2000, 1, 1)
+
+    latest_entry_date = max((_safe_date(e.get("date", "")) for e in spend_log), default=date(2000, 1, 1))
+    days_since_log = (today - latest_entry_date).days
+
+    week_cutoff = today - timedelta(days=7)
+    week_entries = [e for e in spend_log if _safe_date(e.get("date", "")) >= week_cutoff]
+    week_spend = sum(e.get("spend_usd", 0) for e in week_entries)
+    week_revenue = sum(e.get("revenue_from_ads", 0) for e in week_entries)
+
+    month_cutoff = today.replace(day=1)
+    month_entries = [e for e in spend_log if _safe_date(e.get("date", "")) >= month_cutoff]
+    month_spend = sum(e.get("spend_usd", 0) for e in month_entries)
+    month_revenue = sum(e.get("revenue_from_ads", 0) for e in month_entries)
+    month_roas = round(month_revenue / month_spend, 2) if month_spend > 0 else 0.0
+    have_monthly_verdict = len(month_entries) >= _ADS_MIN_DAYS_FOR_MONTHLY_VERDICT
+
+    if week_spend >= _ADS_KILL_SPEND_USD and week_revenue == 0:
+        status = "kill_signal"
+    elif have_monthly_verdict and month_roas < _ADS_KILL_ROAS:
+        status = "low_roas"
+    elif have_monthly_verdict and month_roas > _ADS_SCALE_ROAS:
+        status = "scale_eligible"
+    elif days_since_log >= _ADS_STALE_LOG_DAYS:
+        status = "stale_log"
+    else:
+        status = "ok"
+
+    return {
+        "used": True, "status": status,
+        "week_spend": round(week_spend, 2), "week_revenue": round(week_revenue, 2),
+        "month_spend": round(month_spend, 2), "month_revenue": round(month_revenue, 2),
+        "month_roas": month_roas, "have_monthly_verdict": have_monthly_verdict,
+        "days_since_log": days_since_log,
+    }
+
+
+@app.get("/api/ads-status")
+async def get_ads_status(_token: str = Depends(_auth_session_or_bearer)):
+    """Ads/ROAS snapshot for the Home screen card. Cached 120s (same TTL as
+    Star Seller — this is manually-logged data, it doesn't change fast)."""
+    cached = _cache_get("ads_status", ttl=120)
+    if cached is not None:
+        return cached
+    result = await asyncio.to_thread(_compute_ads_status)
+    _cache_set("ads_status", result)
+    return result
+
+
 def _run_scheduled_art_check() -> str:
     """Runs post_scheduled_art.py with no flags every day — the script's own
     main() already self-gates on data/art_schedule.json's next_post_date, so
@@ -5415,6 +5545,7 @@ async def _calendar_tasks_loop() -> None:
     last_ads_check: date | None = None
     last_art_check: date | None = None
     last_art_authenticity: date | None = None
+    last_star_seller_check: date | None = None
     while True:
         await asyncio.sleep(3600)
         now = datetime.now(timezone.utc)
@@ -5455,6 +5586,13 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"ads-check:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] ads threshold check error: {exc}", flush=True)
+        if today != last_star_seller_check:
+            try:
+                detail = await asyncio.to_thread(_check_star_seller_status)
+                last_star_seller_check = today
+                ran.append(f"star-seller:{detail}")
+            except Exception as exc:
+                print(f"[calendar-tasks] star seller check error: {exc}", flush=True)
         if today != last_art_check:
             try:
                 detail = await asyncio.to_thread(_run_scheduled_art_check)
@@ -5467,7 +5605,8 @@ async def _calendar_tasks_loop() -> None:
             "; ".join(ran) if ran else (
                 f"no scheduled task due today (last: weekly={last_weekly}, "
                 f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
-                f"art={last_art_check}, art_authenticity={last_art_authenticity})"
+                f"art={last_art_check}, art_authenticity={last_art_authenticity}, "
+                f"star_seller={last_star_seller_check})"
             ),
         )
 
@@ -5542,6 +5681,7 @@ async def run_calendar_tasks_now(request: Request):
         ("seasonal_keywords", _run_seasonal_keyword_check),
         ("ads_threshold", _check_ads_thresholds),
         ("scheduled_art", _run_scheduled_art_check),
+        ("star_seller", _check_star_seller_status),
     ]:
         try:
             results[name] = await asyncio.to_thread(fn)
@@ -6666,6 +6806,12 @@ def _execute_staged_action(a: dict) -> dict:
     with _cache_lock:
         for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
             _cache.pop(k, None)
+    if t in ("update_tags", "update_title", "update_description"):
+        # Ranking Recovery cooldown tracker (2026-07-15) — record at EXECUTION
+        # time (not staging time), since that's when the content actually
+        # changed on Etsy. Read back by db.enqueue_action() to warn against
+        # compounding edits inside the ~2-3 week recovery window.
+        db.note_listing_edited(lid)
     return {
         "listing_id": lid,
         "etsy": {

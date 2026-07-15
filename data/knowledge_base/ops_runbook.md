@@ -6842,3 +6842,72 @@ get their first real shop-wide run automatically; a manual trigger is also
 available once quota clears.
 
 Build bumped to `4974b27-v172`.
+
+---
+
+### 2026-07-15 (final pass) — Frank usability tier + growth-engine tier
+
+Scott said "do both" to the two remaining menus offered after the trust/risk
+pass. Ran three research agents to scope all six items; one hit a session
+limit mid-run, so its three findings (mobile tour feasibility, the broken-
+listing Fix button gap, Approvals context) came from direct grep/read
+verification instead. That direct verification **overturned one research
+finding**: an earlier pass claimed Star Seller tracking was mostly
+unbuilt (only response-time tracked) — actually `GET /api/star-seller`
+already computed orders/revenue/rating/status correctly and displays on
+the Home screen; the real gap was much narrower (no proactive alert).
+Also confirmed via live WebSearch against Etsy's API v3 docs that the
+"holiday-mode re-index trick" isn't a documented shop-update field — Scott
+chose to skip automating it and keep it manual rather than risk a wrong
+live call.
+
+**Frank usability tier:**
+- **Mobile spotlight tour.** The desktop-only tour shipped earlier today
+  now also runs on mobile — `MOBILE_TOUR_STEPS` spotlights `#phone-tabbar`'s
+  5 tabs via `phoneTab()` instead of the sidebar via `showScreen()`, same
+  `#tour-root`/`#tour-spot` engine (`_activeTourSteps` picks which array).
+  Replayable via **More → Replay Tutorial** on mobile. Removed the now-fully-
+  dead single-card `#welcome-overlay` (both platforms use the real tour now,
+  nothing referenced it anymore).
+- **Fix button for active-but-broken listings.** Was gated on
+  `state==='inactive'` only, so a listing like `WA_PICK_ANY_3_PRINTS`
+  (still active, zero files) had no way to get fixed. `_listings_sync()`
+  now merges `listing_manifest.json`'s `last_status` into each listing as
+  `manifest_status` (cheap, local, zero extra Etsy calls); the button shows
+  for `state==='inactive' || manifest_status==='FAIL'`.
+- **Approvals batch-threshold banner.** Nothing explained why a big batch
+  needs extra care. `renderActionsContent()` now shows a persistent
+  explainer plus a computed warning when pending same-type mutating
+  actions exceed CLAUDE.md's own 10-item safety rail — pure client-side,
+  reads `_pendingActions` that was already loaded.
+
+**Growth engine tier:**
+- **Star Seller proactive alert.** Factored `get_star_seller()`'s `_fetch`
+  closure into standalone `_compute_star_seller_status()` so the endpoint
+  and a new `_check_star_seller_status()` daily calendar task share one
+  implementation. Fires a todo (7-day cooldown, same pattern as the ads
+  never-used nudge) when status crosses into `at_risk`.
+- **Ads/ROAS status card.** `_check_ads_thresholds()` was already correct
+  and at its ceiling (no live Ads API exists) — the only real gap was zero
+  UI surface. Added `_compute_ads_status()` / `GET /api/ads-status`
+  (reuses the exact week/month spend+revenue+ROAS windowing
+  `_check_ads_thresholds()` already does, so the card and the todo never
+  disagree) and a Home-screen card (`loadAdsStatus()`, same `.ss-*` CSS as
+  the Star Seller card), including the "never used" empty state.
+- **Ranking Recovery cooldown tracker.** Nothing tracked "when was this
+  listing last edited" anywhere. `db.enqueue_action()` now checks a new
+  `listing_last_edited:{id}` setting for `update_tags`/`update_title`/
+  `update_description` (deliberately NOT `publish_listing` — activating a
+  draft isn't the kind of edit that resets an already-active listing's
+  ranking recovery window) and prepends a warning to the staged summary if
+  edited within 21 days. `_execute_staged_action()` writes the timestamp
+  at execution time via the new `db.note_listing_edited()`. Vacation-mode
+  automation was explicitly not built (see above).
+
+New coverage: `tests/test_db_ranking_recovery.py` (8 fixture tests, temp
+SQLite DB, no live Etsy) plus 6 new real-browser Playwright checks (Ads
+card renders, Approvals banner appears/disappears correctly, Fix button
+appears for a manifest-FAIL active listing, mobile tour opens/spotlights/
+switches tabs). Full existing suite + smoke test still green.
+
+Build bumped to `1614e42-v173`.
