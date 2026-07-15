@@ -337,6 +337,17 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "long_running": False,
         "requires_approval": True,
     },
+    "check_digital_file_exposure": {
+        "script": "tools/check_digital_file_exposure.py",
+        "description": (
+            "Read-only audit: flags any active Etsy listing with zero digital files "
+            "attached, and any not-yet-published product whose listed source files are "
+            "missing on disk. The check that would have caught the 2026-07-15 discovery "
+            "that DP1030-1034's files existed nowhere durable, before it became a surprise."
+        ),
+        "timeout": 120,
+        "long_running": False,
+    },
     "listing_compliance_sweep": {
         "script": "tools/listing_compliance_sweep.py",
         "description": (
@@ -5116,6 +5127,12 @@ _WEEKLY_MONITOR_SCRIPTS = [
     # stated trigger ("run after any batch of new listings") well enough on a
     # weekly cadence without needing a dedicated "batch just published" hook.
     "audit_fix_wall_art_tags.py",
+    # Added 2026-07-15 after discovering DP1030-1034's source files existed
+    # nowhere durable (not on disk, never published to Etsy) — this catches
+    # both halves of that failure class (a live listing losing its attached
+    # file, or a draft product's local files going missing) on a weekly
+    # cadence instead of by accident. Purely read-only, see its own docstring.
+    "check_digital_file_exposure.py",
 ]
 
 # Fixed 2026-07-09 (weakness audit): this set used to be built to match CLAUDE.md's
@@ -5169,7 +5186,8 @@ def _run_weekly_monitors() -> str:
     digest = "\n\n".join(lines)
     db.add_todo(
         "Weekly monitor digest ready — see this week's ops_runbook entry for "
-        "weekly_report / listing_performance / listing_drop / review / order_notifier output.",
+        "weekly_report / listing_performance / listing_drop / review / order_notifier / "
+        "digital_file_exposure output.",
         added_by="frank",
     )
     _append_ops_runbook_entry("Weekly monitor digest", digest[:4000])

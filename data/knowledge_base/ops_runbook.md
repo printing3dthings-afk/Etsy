@@ -6405,3 +6405,62 @@ unchanged, balanced HTML tags. Added matching assertions to
 `tools/playwright_smoke.py` (real headless-browser check). `py_compile` +
 `smoke_test` + `playwright_smoke` all green. No `main.py` changes, so
 `_BUILD_ID` was not bumped.
+
+---
+
+### 2026-07-15 — Digital product source files audit: much safer than the initial alarm, but DP1030-1034 are a confirmed total loss
+**Symptom:** a separate Cowork session ("OnBrandCraftz-Site") discovered there
+are no durable local copies of OnBrandCraftz's digital product source files.
+Confirmed independently here: `data/digital_products/product_files/` is
+empty, git history has never once contained a product PDF/ZIP/3MF, and
+`data/backups/` (where `backup_digital_products.py` runs would land) doesn't
+exist in this sandbox at all.
+**Root cause:** files were generated inside one-off ephemeral session
+sandboxes across many past Claude Code sessions and never landed anywhere
+durable by default — the only durability path was (a) getting uploaded to a
+live Etsy listing, or (b) `backup_digital_products.py` being run *and* Scott
+saving the resulting ZIP somewhere outside the repo, both manual/best-effort.
+Production's Railway volume was itself missing until sometime after
+2026-06-18 (now shows `persistent: true, files_volume: true`, build v158 —
+protects future writes only, not what's already gone). Etsy's Open API v3 has
+no seller-facing "redownload a previously-uploaded file" endpoint (already
+hit this wall recovering DP1026-1029's sticker ZIPs on 2026-06-20), so a file
+gone locally and never published has no programmatic way back.
+**Audit method:** enumerated all 176 `product_catalog.json` entries, cross-
+referenced against `dp_listing_map.json`, then live-verified via `GET
+/api/listings/{id}/files` on 26 listings spanning every ambiguous case.
+**Findings — much better than feared:**
+- **145 active listings: confirmed safe.** Etsy is holding the real files
+  (spot-verified: DP1026 planner, a sticker pack, a wall-art print — names/
+  sizes match exactly). No action needed unless a listing is deleted.
+- **24 of 25 non-active-but-listed entries: also fine, not actually at risk.**
+  19 of 20 listings deactivated in the 2026-06-18 "duplicate/zero-file-
+  delivery" cleanup still carry a real file each — the "zero-file" label in
+  their `deactivated_reason` was stale/inaccurate. Several carry DP-codes
+  (1030-1046, 1055, 1056, 1058) that collide with the missing *planner*
+  codes below — those are a different (wall-art) product line, not the same
+  files. The 4 listings (DP1048-1051) previously flagged as having the wrong
+  file attached now each correctly carry their own file — that bug is
+  already fixed (the separate shared "Four Seasons Set of 4" listing,
+  4512784922, does still carry DP1070's file misattached, but it's already
+  confirmed off the storefront). SS1001's odd `draft` status is just a stale
+  field — its files are present.
+- **1 genuinely empty listing, flagged for Scott:** `WA_PICK_ANY_3_PRINTS`
+  (4513637740) has zero files attached. Unclear if intentional (custom-order
+  style) — not auto-fixed.
+- **5 confirmed total loss:** `DP1030` (ADHD Digital Planner 2026), `DP1031`
+  (Undated Life Planner Evergreen), `DP1032` (Dark Mode Planner Bundle),
+  `DP1033` (Teacher Planner), `DP1034` — all `ready_for_review`/`draft`,
+  never published, absent from `dp_listing_map.json`, and every one of their
+  listed files (PDF, undated PDF, sticker ZIP, cover art, 10 listing images
+  each) is missing on disk. No copy anywhere. Recovery would mean
+  regenerating from scratch, not restoring a file — Scott's call whether
+  that's worth doing, not defaulted into.
+- `SVG_WESTERN` (retired) was never actually built — not a loss.
+**Fix:** added `tools/check_digital_file_exposure.py` — read-only, flags (1)
+any active Etsy listing with zero files attached, (2) any unpublished
+product whose listed local files are missing on disk. Registered in
+`_EXEC_COMMANDS` and added to `_WEEKLY_MONITOR_SCRIPTS` so this class of gap
+surfaces on the existing Sunday digest instead of by accident. Verified the
+local-file half directly against the real catalog: flags exactly DP1030-1034
+and nothing else.
