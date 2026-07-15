@@ -588,6 +588,45 @@ async def _run_browser_checks() -> None:
                                              "if (orbGLReady || ++n > 40) { clearInterval(iv); resolve(!!orbGLReady); } "
                                              "}, 100); })")
             if orb_ready:
+                # ── Orb luminance-key alpha compositing (2026-07-15) — "get rid of
+                # the circle around Frank" / "the orb is gone" (a real regression
+                # caught live: painting the theme's --bg into the WebGL clear color
+                # crossed UnrealBloomPass's brightness threshold and blew the whole
+                # canvas out to solid white). The fix replaced that with real
+                # per-pixel alpha: canvas#orb-gl renders offscreen against pure
+                # black, and orbGLFrame() copies it onto the visible
+                # canvas#orb-gl-display every other frame with alpha set to each
+                # pixel's own max(r,g,b) -- background pixels (black) become fully
+                # transparent, wireframe/bloom pixels stay opaque. Wait a couple of
+                # frames for that composite to actually run once, then assert the
+                # architecture directly: the offscreen canvas must stay hidden, the
+                # display canvas must be the visible one, and a corner pixel (pure
+                # background) must have near-zero alpha while a center pixel
+                # (through the wireframe) has meaningfully higher alpha -- the
+                # exact signature that would be flat/uniform if this regressed back
+                # to a solid-color circle (either black or white). ──
+                await page.wait_for_timeout(200)
+                composite_state = await page.evaluate("""() => {
+                    const off = document.getElementById('orb-gl');
+                    const disp = document.getElementById('orb-gl-display');
+                    const offVisible = off ? getComputedStyle(off).display !== 'none' : null;
+                    const dispVisible = disp ? getComputedStyle(disp).display !== 'none' : null;
+                    let cornerAlpha = null, centerAlpha = null;
+                    if (disp && orbGlDisplayCtx) {
+                        const w = disp.width, h = disp.height;
+                        cornerAlpha = orbGlDisplayCtx.getImageData(2, 2, 1, 1).data[3];
+                        centerAlpha = orbGlDisplayCtx.getImageData(w >> 1, h >> 1, 1, 1).data[3];
+                    }
+                    return {offVisible, dispVisible, cornerAlpha, centerAlpha};
+                }""")
+                check(composite_state.get("offVisible") is False,
+                      f"the offscreen WebGL canvas (#orb-gl) must stay display:none -- it's a render buffer, not the visible layer: {composite_state}")
+                check(composite_state.get("dispVisible") is True,
+                      f"the 2D display canvas (#orb-gl-display) must be the visible one in sphere mode: {composite_state}")
+                check(composite_state.get("cornerAlpha") is not None and composite_state["cornerAlpha"] < 40,
+                      f"a corner pixel (pure background, no wireframe there) should be near-transparent via the luminance key, "
+                      f"not opaque -- a value near 255 here would mean the solid-circle bug regressed: {composite_state}")
+
                 lost_state = await page.evaluate("""() => {
                     const canvas = document.getElementById('orb-gl');
                     const evt = new Event('webglcontextlost', {cancelable: true});

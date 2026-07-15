@@ -7297,3 +7297,99 @@ headless-browser suite after any change that touches top-level script
 execution order, not just a syntax check).
 
 Build bumped to `092888f-v179`.
+
+### 2026-07-15 (final pass, follow-up 6) — The theme-clear-color orb fix was itself broken; replaced with real per-pixel alpha via a luminance-key composite
+
+Scott, minutes after the `092888f-v179` deploy above: "The orb is gone,"
+with a screenshot showing a solid BLOWN-OUT WHITE circle (not the black
+one from before) on the default dark theme.
+
+**Root cause of the regression:** `092888f-v179`'s fix painted the active
+theme's real `--bg` color into the WebGL renderer's clear color, reasoning
+that an opaque, theme-matched clear color would sidestep the known
+UnrealBloomPass alpha bug entirely. It does sidestep the alpha bug — but
+it walks straight into a DIFFERENT bug in the same bloom pass:
+`UnrealBloomPass`'s brightness threshold here is `0.12` (see the
+`new UnrealBloomPass(new THREE.Vector2(640,640), 0.9, 0.45, 0.12)` call in
+`initOrbGL()` — args are resolution, strength, radius, *threshold*).
+`UnrealBloomPass` extracts and blurs any pixel above that threshold and
+additively composites it back over the WHOLE frame — it doesn't
+distinguish "the wireframe" from "the background," it just looks at raw
+luminance. The default dark theme's `#241c2e` has a luminance of ~0.12 —
+right at the threshold, so real-device float precision (verified
+plausible: this rendered fine in headless Linux Chromium locally but blew
+out on Scott's real device, consistent with a borderline value tipping
+either side of threshold depending on GPU/driver rounding). Worse: the
+light "Day Mode" theme's `#edf1f5` has a luminance of ~0.93 — nowhere
+near borderline, GUARANTEED to blow the whole frame out on every device,
+every time. Feeding an arbitrary theme's real background color into a
+bloom-postprocessed scene's clear color was never going to be safe across
+all 8 themes; the previous entry's local Playwright verification only
+happened to pass because headless Chromium's software rasterizer rounded
+the borderline dark-theme case the lucky way, and no test exercised the
+light theme's clear-color path at all — a real coverage gap, not just bad
+luck.
+
+**Also reconsidered and rejected:** `mix-blend-mode:screen` on the canvas
+element (mathematically exact for a pure-black source: `screen(0,b)=b`,
+so black source pixels vanish into any backdrop `b`). But `screen`'s
+general formula `1-(1-s)(1-b)` is bounded within `[b,1]` — against Day
+Mode's `b≈0.93`, EVERY source color compresses into roughly `[0.93,1.0]`,
+a band too narrow to read as anything but a faint white-on-white ghost.
+No choice of wireframe color fixes this: `screen` can only ever brighten,
+never darken, so a light backdrop mathematically caps how much contrast
+is achievable regardless of the source. Blend-mode approaches are
+fundamentally incompatible with a light theme here, full stop.
+
+**Actual fix — stop relying on the WebGL layer for transparency at all.**
+Real per-pixel alpha, computed in plain JS from each pixel's own
+luminance, independent of both the bloom pass and the backdrop:
+- `canvas#orb-gl` is now a permanently `display:none` OFFSCREEN render
+  target only — WebGL still renders into it every frame, clear color
+  reverted to plain opaque black (`glRenderer.setClearColor(0x000000, 1)`
+  — the color this scene has always been tuned against: camera distance,
+  bloom strength/radius, mask fade all assumed a black backdrop).
+- A new `canvas#orb-gl-display` (plain 2D context) is the layer actually
+  shown, carrying all the positioning/mask/drop-shadow-filter CSS that
+  used to live on `#orb-gl` directly.
+- `orbGLFrame()`, after `glComposer.render()`, does
+  `orbGlDisplayCtx.drawImage(orbGlCanvas, 0, 0)` then walks the pixel
+  buffer setting `alpha = max(r, g, b)` for every pixel before
+  `putImageData()`. Since the offscreen scene always renders against pure
+  black, a pixel's own brightness IS exactly the alpha it should have —
+  black background pixels become fully transparent, bright
+  wireframe/bloom pixels stay opaque, and this is completely independent
+  of the WebGL clear color, the bloom threshold, or the page's backdrop
+  color. Verified visually correct on both the default dark theme and Day
+  Mode (light) via local screenshots — no black circle, no white
+  blowout, no washout, on either.
+- Perf: `getImageData`/`putImageData` on a 640×640 canvas forces a
+  GPU→CPU sync each call — confirmed as a real, non-hypothetical cost via
+  "GPU stall due to ReadPixels" driver warnings observed while testing
+  this fix locally. Throttled to every other `requestAnimationFrame` call
+  (~30fps for the readback specifically; the 3D scene's own animation
+  still updates at 60fps) as a mitigation, since a decorative ambient orb
+  doesn't need the composite itself at 60fps to read as smooth. No real
+  device available to benchmark further — worth a follow-up perf check on
+  an actual older iPhone if Scott ever reports the orb feeling janky.
+- `setOrbBackgroundToTheme()` (the whole function from the previous
+  entry) is deleted, along with its call sites in `initOrbGL()` and
+  `_setTheme()` — the orb no longer needs to know about the active theme
+  at all, which is strictly simpler than the approach it replaces.
+
+**New regression coverage** added to `tools/playwright_smoke.py`
+specifically for this bug class: once the orb reaches `orbGLReady`,
+asserts `#orb-gl` stays hidden, `#orb-gl-display` is the visible layer,
+and a sampled corner pixel (pure background, no wireframe there) has
+near-zero alpha via `getImageData` — a solid-circle regression (black OR
+white) would fail this immediately by reading ~255 there instead.
+
+Verification: `python -m py_compile`, `ast.literal_eval` + `node --check`
+on the extracted JS, full `tests/test_*.py` suite (12 files) +
+`tests/smoke_test.py`, `tools/playwright_smoke.py` (including the new
+orb-compositing assertions), plus manual local screenshots against both
+the default dark theme and the light "Day Mode" theme specifically (the
+theme in Scott's original bug report) to visually confirm no circle, no
+blowout, no washout on either.
+
+Build bumped to `a334fab-v180`.
