@@ -6464,3 +6464,49 @@ product whose listed local files are missing on disk. Registered in
 surfaces on the existing Sunday digest instead of by accident. Verified the
 local-file half directly against the real catalog: flags exactly DP1030-1034
 and nothing else.
+
+---
+
+### 2026-07-15 (later) — added update_description action type; fixed 15 wall art listings missing the Gate 6 preamble
+**Context:** 14-15 wall art listings were known (from an earlier compliance
+pass) to be missing CLAUDE.md's Gate 6 requirement — the description's
+opening line stating "instant download" + "printable". No safe path existed
+to fix this: the Action Queue (stage → Scott approves → execute, the pattern
+every other Etsy-mutating change in this codebase goes through) had no
+`update_description` action type at all. The one prior script that PATCHed a
+listing description directly (`rebuild_sticker_pack.py`) was removed from
+`_EXEC_COMMANDS` on 2026-06-18 specifically for bypassing this gate — so
+building this properly meant adding it to the queue, not writing around it.
+**Fix (Scott approved building it AND auto-approving this specific batch,
+given informed of the tradeoff — every other Etsy-mutating action still
+requires per-item manual approval):**
+- Added `update_description` to `_ETSY_STAGED_ACTION_TYPES`, its validator,
+  and executor in `main.py`, mirroring `update_title`/`update_tags` exactly.
+- `_autofix_description_core()` — deterministic (no AI call): prepends the
+  exact CLAUDE.md-mandated line only when a wall-art listing's description
+  genuinely lacks the instant-download/printable signal. New
+  `POST /api/autofix/description/{id}` route, wired into the reject-with-
+  reason dispatcher and the generic `stage_action` chat tool.
+- Found and fixed a real bug while scoping the actual candidate list:
+  `listing_qc._detect_product_type()` only recognizes "wall_art" when the
+  title literally contains "wall art" or "printable" — titles like "X Art
+  Print" (e.g. `MISC_BOTANICAL_HERBS_ART_PRINT`) fall through to a
+  `digital_planner` default. Added an `assume_wall_art` override so a caller
+  that already knows the true category (from `product_catalog.json`) can
+  bypass the heuristic, rather than fixing the shared heuristic itself
+  (lower blast radius).
+- The POST autofix route shares `main.py`'s 30-calls/hour AI-spend budget
+  with every other AI-generation endpoint (`_rate_limited_auth`) even though
+  this specific fix makes no AI call — hit that limit mid-sweep. Added
+  `GET /api/listings/{id}/gate6-check` (read-only, not rate-limited) to
+  separate "check" from "stage" so scoping the fix across the whole catalog
+  doesn't burn the shared budget; only genuine violators ever hit the
+  rate-limited staging endpoint.
+**Result:** swept all 80 active wall-art listings via the free check
+endpoint — found exactly 15 genuine violators (one more than the originally
+remembered ~14: `WA_TROPICAL_LEAVES_PRINT_2`). Staged all 15, approved all
+15 (per Scott's explicit consent for this batch), and re-verified live
+against Etsy afterward — all 15 now pass the Gate 6 check. Listing IDs:
+4512780614, 4512768771, 4512768858, 4512753302, 4512750191, 4509596017,
+4509600086, 4509598660, 4509259354, 4509258700, 4509215145, 4509213533,
+4509193237, 4509193231, 4509198446.
