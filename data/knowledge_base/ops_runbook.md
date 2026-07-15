@@ -6510,3 +6510,43 @@ against Etsy afterward — all 15 now pass the Gate 6 check. Listing IDs:
 4512780614, 4512768771, 4512768858, 4512753302, 4512750191, 4509596017,
 4509600086, 4509598660, 4509259354, 4509258700, 4509215145, 4509213533,
 4509193237, 4509193231, 4509198446.
+
+---
+
+### 2026-07-15 (later) — backup audit + "Download Full Backup" button + AI Core made actionable
+**Backup audit:** Scott asked whether everything Frank does is backed up. Checked
+directly: code, docs, knowledge base, catalog/manifest JSON, and (surprisingly)
+the real product asset files for every product line EXCEPT digital planners
+(svg_pack/, faith_pack/, mom_life_pack/, grad_pack/, retro_moms_pack/,
+groovy_pack/, sublimation_*/, 3d_print_signs/, commercial_license_photos/,
+design_references/ are all git-committed with real binaries) are safely in
+GitHub. `data/hub_db_backups/hub_db_state.json` (todos/actions/activity
+snapshot) was a week stale (last committed 2026-07-08) — refreshed and
+recommitted. The one real gap remains DP1030-1034 from the earlier entry
+above — unchanged, still no copy anywhere.
+
+**"Download Full Backup" button, and a bug in it caught fast:** Added
+`GET /api/backup/download-all` + a button on the Files screen. First version's
+copy claimed "everything durable under data/" — live-tested and the ZIP was
+322KB, not ~350MB. Root cause: `.dockerignore` excludes all of `data/*` from
+the deployed image except `knowledge_base/` and a short JSON-config allowlist
+(deliberate, documented 2026-07-09, to keep Docker builds from shipping 4GB+
+and timing out) — the deployed container physically never has the real
+product asset directories, so no in-app button can zip them. Corrected the UI
+copy and docstring to say so honestly, and added a direct link to GitHub's
+own repo-zip download instead (repo is public, no auth needed) since that's
+the one place the full ~350MB actually lives. Also added
+`data/hub_db_backups` to `_FILE_ROOTS` so that backup can be pulled back off
+the server at all (it couldn't before).
+
+**AI Core made actionable:** was a static 5-row status card with unused space
+below it. Added: `POST /api/core/refresh-etsy-token` (forces a refresh against
+the existing refresh token — not a full re-auth, which still needs Scott's own
+browser via `tools/etsy_oauth.py`), `GET /api/core/recent-errors` (last N
+non-"ok" `activity_log` rows), and `POST /api/core/redeploy` (real Railway
+`serviceInstanceRedeploy` call using this service's own injected
+RAILWAY_API_TOKEN/RAILWAY_ENVIRONMENT_ID/RAILWAY_SERVICE_ID — confirmed
+present on this deployment). Redeploy is confirm-gated client-side and not
+tested live (would cause a real, pointless outage just to test); the other
+two were verified live and work. Build bumped through v160-v164 across this
+whole pass.
