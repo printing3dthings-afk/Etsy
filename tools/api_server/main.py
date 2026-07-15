@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c891d6c-v167"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "1b244b3-v168"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2571,7 +2571,18 @@ AGENT_TOOLS = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "text": {"type": "string", "description": "The to-do item text, one short line."}
+                "text": {"type": "string", "description": "The to-do item text, one short line."},
+                "category": {
+                    "type": "string",
+                    "enum": ["question", "scott_only", "frank_can_do", "general"],
+                    "description": (
+                        f"How this shows up in the dashboard's category filter. 'question' gets a tap-to-answer "
+                        f"UI — use it when you genuinely need {business_config.OWNER_NAME}'s decision, not just an "
+                        f"FYI. 'scott_only' for something only he can physically do (a login only he has, a "
+                        f"purchase, a manual re-auth). 'frank_can_do' for something you could do yourself but "
+                        f"want on record. Defaults to 'general' (a plain FYI notice) if omitted."
+                    ),
+                },
             },
             "required": ["text"],
         },
@@ -3142,7 +3153,10 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             text = ((tool_input or {}).get("text") or "").strip()
             if not text:
                 return {"error": "text is required"}
-            todo_id = db.add_todo(text, added_by="frank")
+            category = ((tool_input or {}).get("category") or "general").strip().lower()
+            if category not in db.TODO_CATEGORIES:
+                category = "general"
+            todo_id = db.add_todo(text, added_by="frank", category=category)
             return {"added": True, "id": todo_id}
         if name == "complete_todo":
             todo_id = (tool_input or {}).get("todo_id")
@@ -4807,7 +4821,7 @@ async def _token_sync_loop() -> None:
                 f"Etsy OAuth token hasn't rotated in {days_stale} days — the refresh token "
                 f"expires after 90 days of no successful refresh. Run `python tools/etsy_oauth.py` "
                 f"to re-authorize before it expires and Etsy calls start failing with 401.",
-                added_by="frank",
+                added_by="frank", category="scott_only",
             )
             return f"refresh token stale ({days_stale}d, re-authorize soon)"
         return None
@@ -5197,7 +5211,7 @@ def _run_weekly_monitors() -> str:
         "Weekly monitor digest ready — see this week's ops_runbook entry for "
         "weekly_report / listing_performance / listing_drop / review / order_notifier / "
         "digital_file_exposure output.",
-        added_by="frank",
+        added_by="frank", category="general",
     )
     _append_ops_runbook_entry("Weekly monitor digest", digest[:4000])
     return f"ran {len(_WEEKLY_MONITOR_SCRIPTS)} scripts"
@@ -5212,7 +5226,7 @@ def _run_monthly_shop_health() -> str:
         capture_output=True, text=True, timeout=300, cwd=str(ROOT),
     )
     out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
-    db.add_todo("Monthly shop health check ready — see this month's ops_runbook entry.", added_by="frank")
+    db.add_todo("Monthly shop health check ready — see this month's ops_runbook entry.", added_by="frank", category="general")
     _append_ops_runbook_entry("Monthly shop health check", out[:4000])
     return "ran shop_health_check.py"
 
@@ -5230,7 +5244,7 @@ def _run_seasonal_keyword_check() -> str:
     db.add_todo(
         "Seasonal keyword window is open — dry-run recommendation ready for your review "
         "(run `python tools/seasonal_keywords.py --push` yourself once you've checked it).",
-        added_by="frank",
+        added_by="frank", category="scott_only",
     )
     _append_ops_runbook_entry("Seasonal keyword dry-run", out[:4000])
     return "ran seasonal_keywords.py --dry-run"
@@ -5266,7 +5280,7 @@ def _check_ads_thresholds() -> str:
                 "Etsy Ads has never been used — consider a small test budget "
                 "(CLAUDE.md's Etsy Ads Strategy: $3-5/day starting budget, only once a "
                 "listing has some organic proof of life). Low priority, your call.",
-                added_by="frank",
+                added_by="frank", category="question",
             )
             db.set_setting("ads_never_used_nudge_date", today.isoformat())
             return "no ad spend logged yet — quarterly nudge added"
@@ -5289,7 +5303,7 @@ def _check_ads_thresholds() -> str:
             f"Etsy Ads spend hasn't been logged in {days_since_log} days — log this week's "
             f"numbers from Etsy Shop Manager → Marketing → Etsy Ads so this automated "
             f"threshold check has current data to work with.",
-            added_by="frank",
+            added_by="frank", category="scott_only",
         )
         notes.append(f"stale log ({days_since_log}d)")
 
@@ -5301,7 +5315,7 @@ def _check_ads_thresholds() -> str:
         db.add_todo(
             f"Etsy Ads: ${week_spend:.2f} spent this week with $0 revenue — this crosses your "
             f"own kill rule (spend≥$30 / 0 orders). Consider pausing in Shop Manager.",
-            added_by="frank",
+            added_by="frank", category="question",
         )
         notes.append(f"kill-signal (${week_spend:.2f}/$0)")
 
@@ -5315,14 +5329,14 @@ def _check_ads_thresholds() -> str:
             db.add_todo(
                 f"Etsy Ads: this month's ROAS is {month_roas}x, below your 1.5x kill threshold "
                 f"after 30 days of data — consider pausing underperforming ads.",
-                added_by="frank",
+                added_by="frank", category="question",
             )
             notes.append(f"low ROAS ({month_roas}x)")
         elif month_roas > _ADS_SCALE_ROAS:
             db.add_todo(
                 f"Etsy Ads: this month's ROAS is {month_roas}x, above your 4x scale threshold — "
                 f"consider raising budget 20-30% per your own strategy.",
-                added_by="frank",
+                added_by="frank", category="question",
             )
             notes.append(f"scale-eligible ({month_roas}x)")
 
@@ -6272,7 +6286,7 @@ async def request_listing_fix(listing_id: int, body: dict | None = None, _token:
         todo_id = await asyncio.to_thread(
             db.add_todo,
             f"Listing {listing_id} needs manual fix before republishing (not auto-fixable): {detail_text}",
-            "frank",
+            "frank", None, "scott_only",
         )
 
     return {
@@ -8458,7 +8472,10 @@ async def post_todo(payload: dict, _token: str = Depends(_auth_session_or_bearer
     if added_by not in ("scott", "frank"):
         added_by = "scott"
     due_date = (payload or {}).get("due_date") or None
-    todo_id = await asyncio.to_thread(db.add_todo, text, added_by, due_date)
+    category = (payload or {}).get("category", "general").strip().lower()
+    if category not in db.TODO_CATEGORIES:
+        category = "general"
+    todo_id = await asyncio.to_thread(db.add_todo, text, added_by, due_date, category)
     return {"ok": True, "id": todo_id}
 
 
@@ -8468,6 +8485,44 @@ async def toggle_todo(todo_id: int, payload: dict, _token: str = Depends(_auth_s
     ok = await asyncio.to_thread(db.set_todo_done, todo_id, done)
     if not ok:
         raise HTTPException(status_code=404, detail="Todo not found")
+    return {"ok": True}
+
+
+@app.post("/api/todos/{todo_id}/category")
+async def set_todo_category_endpoint(todo_id: int, payload: dict, _token: str = Depends(_auth_session_or_bearer)):
+    category = ((payload or {}).get("category") or "").strip().lower()
+    if category not in db.TODO_CATEGORIES:
+        raise HTTPException(status_code=400, detail=f"category must be one of {sorted(db.TODO_CATEGORIES)}")
+    ok = await asyncio.to_thread(db.set_todo_category, todo_id, category)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return {"ok": True}
+
+
+@app.post("/api/todos/{todo_id}/answer")
+async def answer_todo(todo_id: int, payload: dict, _token: str = Depends(_auth_session_or_bearer)):
+    """Store Scott's answer to a question-category todo and push it into the
+    ops runbook so Frank actually sees it on his next chat turn -- todos are
+    never auto-injected into chat context (list_todos is a tool Frank must
+    proactively call), but _ops_runbook_block() is unconditionally prepended
+    to every turn's system prompt, so that's the real delivery mechanism, not
+    just the DB column (2026-07-15 design note, see the plan this shipped
+    from). Deliberately does not touch `done` -- an answer informs the next
+    step, it doesn't mean the underlying task is resolved."""
+    answer = ((payload or {}).get("answer") or "").strip()
+    if not answer:
+        raise HTTPException(status_code=400, detail="answer is required")
+    todos = await asyncio.to_thread(db.list_todos)
+    row = next((t for t in todos if t["id"] == todo_id), None)
+    if not row:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    ok = await asyncio.to_thread(db.set_todo_answer, todo_id, answer)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    await asyncio.to_thread(
+        _append_ops_runbook_entry, "Scott answered a todo question",
+        f"Q: {row['text']}\nA: {answer}",
+    )
     return {"ok": True}
 
 

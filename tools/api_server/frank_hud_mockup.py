@@ -1175,10 +1175,16 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <div class="screen" id="screen-tasks">
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Tasks <span class="src">/api/todos</span></div>
-      <div style="display:flex;gap:8px;margin:14px 0">
+      <div style="display:flex;gap:8px;margin:14px 0;flex-wrap:wrap">
         <input id="hud-todo-input" type="text" placeholder="Add a to-do…" onkeydown="if(event.key==='Enter')addHudTodo()"
           aria-label="New to-do"
-          style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:13px;color:var(--text)">
+          style="flex:1;min-width:160px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;font-size:13px;color:var(--text)">
+        <select id="hud-todo-category" aria-label="Category" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 8px;font-size:13px;color:var(--text)">
+          <option value="general">General</option>
+          <option value="question">Question</option>
+          <option value="scott_only">Only You</option>
+          <option value="frank_can_do">Frank Can Do</option>
+        </select>
         <input id="hud-todo-due" type="date" aria-label="Due date" style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 10px;font-size:13px;color:var(--text)">
         <button onclick="addHudTodo()" style="background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-sm);padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer">Add</button>
       </div>
@@ -3638,18 +3644,91 @@ async function loadMissionTimeline(){
 }
 
 // ── Tasks — real data from /api/todos ──
+// Category filter chips + tap-to-answer for 'question' todos (2026-07-15).
+// _renderMissionTimeline (above) is a fully separate function/render path for
+// the Home screen's compact preview -- these changes intentionally don't
+// touch it, so that surface stays exactly as simple as it is today.
+let _tasksData = null;
+let _taskCategoryFilter = null; // null = All
+const _TASK_CATEGORY_LABELS = {
+  question: '❓ Questions', scott_only: '🔒 Only You',
+  frank_can_do: '🤖 Frank Can Do', general: '📋 General',
+};
+function setTaskCategoryFilter(key){
+  _taskCategoryFilter = key;
+  const list = document.getElementById('tasks-list');
+  if(_tasksData) _renderTasks(_tasksData, list, null);
+}
 function _renderTasks(d, list, offlineNote){
-  if(list){
-    list.innerHTML = (offlineNote||'') + (d.todos.length ? d.todos.map(t=>{
-      const done = !!t.done;
-      const overdue = !done && t.due_date && t.due_date < new Date().toISOString().slice(0,10);
-      const dueTxt = t.due_date ? ' · due '+escHtml(t.due_date)+(overdue?' ⚠':'') : '';
-      return '<div class="tl-item">'+
-        '<div class="tl-dotcol"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleHudTodo('+t.id+',this.checked)" style="width:13px;height:13px;margin-top:2px;accent-color:var(--gold)"></div>'+
-        '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':(overdue?' style="color:var(--red)"':''))+'>'+escHtml(t.text)+'</div>'+
-        '<div class="sub">added by '+escHtml(t.added_by||'scott')+dueTxt+'</div></div>'+
-        '<button onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>';
-    }).join('') : '<div style="color:var(--muted);font-size:12px">No tasks yet.</div>');
+  if(!list) return;
+  _tasksData = d;
+  const todos = d.todos || [];
+  let html = offlineNote || '';
+  html += '<div class="hub-chip-row">';
+  html += `<button class="hub-chip-btn${_taskCategoryFilter===null?' active':''}" onclick="setTaskCategoryFilter(null)">All (${todos.length})</button>`;
+  Object.keys(_TASK_CATEGORY_LABELS).forEach(key=>{
+    const n = todos.filter(t=>(t.category||'general')===key).length;
+    html += `<button class="hub-chip-btn${_taskCategoryFilter===key?' active':''}" onclick="setTaskCategoryFilter('${key}')">${_TASK_CATEGORY_LABELS[key]} (${n})</button>`;
+  });
+  html += '</div>';
+  const filtered = _taskCategoryFilter===null ? todos : todos.filter(t=>(t.category||'general')===_taskCategoryFilter);
+  if(!filtered.length){
+    html += '<div style="color:var(--muted);font-size:12px">No tasks in this category.</div>';
+    list.innerHTML = html;
+    return;
+  }
+  html += filtered.map(t=>{
+    const done = !!t.done;
+    const overdue = !done && t.due_date && t.due_date < new Date().toISOString().slice(0,10);
+    const dueTxt = t.due_date ? ' · due '+escHtml(t.due_date)+(overdue?' ⚠':'') : '';
+    const catLabel = _TASK_CATEGORY_LABELS[t.category] || '';
+    const isQuestion = t.category === 'question';
+    const answered = !!t.answer;
+    return '<div class="tl-item">'+
+      '<div class="tl-dotcol"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleHudTodo('+t.id+',this.checked)" style="width:13px;height:13px;margin-top:2px;accent-color:var(--gold)"></div>'+
+      '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':(overdue?' style="color:var(--red)"':''))+'>'+escHtml(t.text)+'</div>'+
+      '<div class="sub">added by '+escHtml(t.added_by||'scott')+dueTxt+(catLabel?' · '+catLabel:'')+'</div>'+
+      (answered ? '<div class="sub" style="color:var(--gold);margin-top:4px">Your answer: '+escHtml(t.answer)+'</div>'
+        : (isQuestion ? '<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="openAnswerModal('+t.id+')">💬 Answer</button>' : ''))+
+      '</div>'+
+      '<button onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>'+
+      (isQuestion && !answered ? '<div id="answer-modal-'+t.id+'" style="display:none;padding:0 4px 8px 26px"></div>' : '');
+  }).join('');
+  list.innerHTML = html;
+}
+function openAnswerModal(id) {
+  const panel = document.getElementById('answer-modal-'+id);
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  document.querySelectorAll('[id^="answer-modal-"]').forEach(el => el.style.display = 'none');
+  if (isOpen) return;
+  panel.innerHTML = `<div style="padding:8px 0;border-top:1px solid var(--border);margin-top:6px">
+    <textarea id="answer-text-${id}" rows="2" placeholder="Type your answer…"
+      aria-label="Your answer"
+      style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:8px;font-size:13px;font-family:inherit"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="hub-act-btn primary" onclick="submitTodoAnswer(${id})">Submit</button>
+      <button class="hub-act-btn secondary" onclick="document.getElementById('answer-modal-${id}').style.display='none'">Cancel</button>
+    </div>
+  </div>`;
+  panel.style.display = 'block';
+}
+async function submitTodoAnswer(id) {
+  const ta = document.getElementById('answer-text-'+id);
+  const answer = (ta && ta.value || '').trim();
+  if (!answer) return;
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/todos/'+id+'/answer', {
+      method: 'POST',
+      headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({answer})
+    }, 15000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    showToast('Answer sent to Frank.');
+    loadTasks();
+  } catch(e) {
+    showToast('Could not submit answer: ' + (e.message||e), 'err', 6000);
   }
 }
 async function loadTasks(){
@@ -3674,16 +3753,18 @@ async function loadTasks(){
 async function addHudTodo(){
   const inp = document.getElementById('hud-todo-input');
   const dueInp = document.getElementById('hud-todo-due');
+  const catInp = document.getElementById('hud-todo-category');
   const text = inp.value.trim();
   if (!text) return;
   inp.value = '';
   const due = dueInp.value;
   dueInp.value = '';
+  const category = catInp ? catInp.value : 'general';
   try {
     await fetchWithTimeout(BASE+'/api/todos', {
       method:'POST',
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+TOKEN},
-      body: JSON.stringify({text, added_by:'scott', due_date: due || null}),
+      body: JSON.stringify({text, added_by:'scott', due_date: due || null, category}),
     }, 15000);
   } catch(e) {}
   loadTasks();

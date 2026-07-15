@@ -265,6 +265,26 @@ def init_db() -> None:
                 conn.execute("ALTER TABLE todos ADD COLUMN due_date TEXT")
             except sqlite3.OperationalError:
                 pass  # column already exists
+            # category/answer/answered_at (2026-07-15): explicit classification for the
+            # Tasks screen's category filter + tap-to-answer flow. category is set at
+            # creation time (see add_todo), never inferred from text -- a repo-wide audit
+            # of every add_todo() call site found no reliable text pattern (nothing ends
+            # in a literal "?", most are directive/FYI statements even when they're
+            # functionally a question). SQLite backfills existing rows to the column
+            # DEFAULT automatically, so old rows land on 'general' with no separate
+            # migration needed for that part.
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN category TEXT NOT NULL DEFAULT 'general'")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN answer TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE todos ADD COLUMN answered_at TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
             try:
                 conn.execute("ALTER TABLE hub_users ADD COLUMN recovery_code_hash TEXT")
             except sqlite3.OperationalError:
@@ -831,15 +851,26 @@ def db_info() -> dict:
 # ── Shared to-do list (Scott + Frank, always visible on the dashboard) ───────
 
 
-def add_todo(text: str, added_by: str = "scott", due_date: str | None = None) -> int:
-    """Add one to-do item. added_by is 'scott' or 'frank'. Returns the new id."""
+# Fixed set for the Tasks screen's category filter -- 'question' gets the tap-
+# to-answer UI, the other three are filter-only labels. 'general' is the
+# default/catch-all (most existing todos are FYI notices, not a request of
+# either kind) -- see add_todo()'s category param and the call-site audit in
+# ops_runbook.md's 2026-07-15 entry for why this isn't inferred from text.
+TODO_CATEGORIES = frozenset({"question", "scott_only", "frank_can_do", "general"})
+
+
+def add_todo(text: str, added_by: str = "scott", due_date: str | None = None, category: str = "general") -> int:
+    """Add one to-do item. added_by is 'scott' or 'frank'. category must be one
+    of TODO_CATEGORIES (falls back to 'general' if not). Returns the new id."""
     init_db()
+    if category not in TODO_CATEGORIES:
+        category = "general"
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
         cur = conn.execute(
-            "INSERT INTO todos (text, added_by, done, created_at, due_date) VALUES (?,?,0,?,?)",
-            (text.strip(), added_by, ts, due_date),
+            "INSERT INTO todos (text, added_by, done, created_at, due_date, category) VALUES (?,?,0,?,?,?)",
+            (text.strip(), added_by, ts, due_date, category),
         )
         conn.commit()
         return cur.lastrowid
@@ -875,6 +906,40 @@ def set_todo_done(todo_id: int, done: bool) -> bool:
             "UPDATE todos SET done=?, completed_at=? WHERE id=?",
             (1 if done else 0, ts, todo_id),
         )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def set_todo_answer(todo_id: int, answer: str) -> bool:
+    """Store Scott's answer to a question-category todo. Deliberately does NOT
+    touch `done` -- answering informs the next step, it doesn't mean the
+    underlying task is resolved (Scott's explicit call, 2026-07-15)."""
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        cur = conn.execute(
+            "UPDATE todos SET answer=?, answered_at=? WHERE id=?",
+            (answer.strip(), ts, todo_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+def set_todo_category(todo_id: int, category: str) -> bool:
+    """Used by the one-time retroactive-categorization pass (2026-07-15) and
+    available for any future manual re-tag. category must be one of
+    TODO_CATEGORIES."""
+    init_db()
+    if category not in TODO_CATEGORIES:
+        return False
+    conn = _connect()
+    try:
+        cur = conn.execute("UPDATE todos SET category=? WHERE id=?", (category, todo_id))
         conn.commit()
         return cur.rowcount > 0
     finally:
@@ -958,7 +1023,7 @@ def ensure_default_sandbox_folder() -> None:
 _CORRECTION_PLAN_MARKER = "[Correction plan 2026-07-08]"
 
 _CORRECTION_PLAN_TODOS = [
-    # (text, added_by) -- added_by='frank' = Claude will do this without Scott.
+    # (text, added_by, category) -- added_by='frank' = Claude will do this without Scott.
     # added_by='scott' = genuinely requires Scott's own account/identity/payment access,
     # not something Frank can do via any existing tool or API key.
     (
@@ -968,7 +1033,7 @@ _CORRECTION_PLAN_TODOS = [
         "local .env -> redeploy. This is not hypothetical: it is causing live 403 errors on "
         "listing sync and review checks right now. Frank cannot do this -- it requires your "
         "Etsy Developer Console login.",
-        "scott",
+        "scott", "scott_only",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Attach a Railway Volume at /data (or upgrade to a plan "
@@ -976,45 +1041,45 @@ _CORRECTION_PLAN_TODOS = [
         "reports persistent=false -- every push wipes every login, chat history, setting, "
         "and this very todo list back to empty. Frank cannot purchase or attach this -- it "
         "requires your Railway billing access.",
-        "scott",
+        "scott", "scott_only",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Optional, your call: decide whether to pursue a second "
         "sales channel (Shopify, Gumroad, etc.) so revenue isn't 100% dependent on Etsy's "
         "cascade-penalty risk. Frank can research options and draft a comparison if you want "
         "one -- the platform choice and account setup still need to be yours.",
-        "scott",
+        "scott", "question",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Build a git-committed backup of the live database's "
         "non-secret state (todos, settings, action history, user list minus password "
         "hashes) so a redeploy wipe has a real recovery path even before a Volume exists.",
-        "frank",
+        "frank", "frank_can_do",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Add a code-enforced check that a listing description's "
         "claimed page/sticker counts actually match the real uploaded file's contents, "
         "instead of resting only on the AI's self-report and manual review.",
-        "frank",
+        "frank", "frank_can_do",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Add real HTTP-level tests (not just pure-function tests) "
         "for the highest-risk routes -- login/session handling and the staged-action "
         "approve/reject flow -- since currently zero of the 89+ live routes have request-level "
         "test coverage.",
-        "frank",
+        "frank", "frank_can_do",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Fix 3 places where a failed session-revocation after a "
         "password change is silently swallowed instead of logged, so a real failure is "
         "actually visible instead of invisible.",
-        "frank",
+        "frank", "frank_can_do",
     ),
     (
         f"{_CORRECTION_PLAN_MARKER} Add a one-click 'recheck Etsy credentials now' action so "
         "credential status doesn't wait on the 5-minute health loop -- makes it fast for "
         "Scott to confirm his credential rotation (item above) actually worked.",
-        "frank",
+        "frank", "frank_can_do",
     ),
 ]
 
@@ -1037,8 +1102,8 @@ def seed_correction_plan_todos() -> int:
             return 0
     finally:
         conn.close()
-    for text, added_by in _CORRECTION_PLAN_TODOS:
-        add_todo(text, added_by=added_by)
+    for text, added_by, category in _CORRECTION_PLAN_TODOS:
+        add_todo(text, added_by=added_by, category=category)
     return len(_CORRECTION_PLAN_TODOS)
 
 

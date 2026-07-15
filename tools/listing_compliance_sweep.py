@@ -134,7 +134,7 @@ def run_sweep(dry_run: bool = False) -> list[dict]:
                     f"Compliance FAIL — listing {r['listing_id']} ({title_short}): "
                     f"{fail_details} [staged deactivate_listing, queue #{queue_id} — "
                     f"review in Action Center]",
-                    added_by="frank",
+                    added_by="frank", category="question",
                 )
                 todoed += 1
             elif r["status"] == "WARN":
@@ -144,7 +144,7 @@ def run_sweep(dry_run: bool = False) -> list[dict]:
                 title_short = r["title"][:60] if r["title"] else "(no title)"
                 _db.add_todo(
                     f"Compliance WARN — listing {r['listing_id']} ({title_short}): {warn_details}",
-                    added_by="frank",
+                    added_by="frank", category="frank_can_do",
                 )
                 todoed += 1
 
