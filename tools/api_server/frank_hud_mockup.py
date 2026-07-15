@@ -92,8 +92,14 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
      4th elevation level (toasts/dropdowns/overlays sit on this, one step lighter
      than --panel2) — dark-mode surfaces need at least 4 steps to read as depth
      without relying on box-shadow, which barely shows on dark backgrounds. */
-  --bg:#1a1420;--panel:#231c2b;--panel2:#2c2334;--panel3:#362c40;--border:#3a2f43;
-  --cyan:#f2a0b5;--cyan2:#f7c3d0;--gold:#D9A441;--gold2:#eec27a;--text:#f5eef2;--muted:#a8899c;
+  /* Brightened 2026-07-15 (Scott: "seems a little dark throughout") -- every
+     surface step lifted ~4-6% lighter and --muted brightened for readability,
+     verified against tools/color_contrast_check.py's WCAG math before shipping:
+     text-on-bg 14.36:1 and muted-on-bg 7.12:1, both still comfortably above the
+     4.5:1 AA floor (muted actually IMPROVED from 5.77:1 -- it was brightened more
+     than the background was). */
+  --bg:#241c2e;--panel:#2d2438;--panel2:#372c42;--panel3:#42354e;--border:#493c54;
+  --cyan:#f2a0b5;--cyan2:#f7c3d0;--gold:#e4b155;--gold2:#f2cb8f;--text:#f5eef2;--muted:#bfa3b5;
   --green:#5cc48a;--red:#e2685f;--amber:#e8b868;
 
   --font-display:'Fraunces',Georgia,serif;
@@ -780,8 +786,10 @@ body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-
    scrolled past a threshold. Sits just above the phone tab bar (58px + safe-area,
    see above) so it never overlaps it. Naturally never appears on desktop without any
    extra gating: the fixed 1440x900 stage there uses per-panel internal scrolling
-   (.screen{overflow:hidden}), so neither window nor #phone-body ever actually scrolls
-   there — see backToTop.js logic below for the two scroll sources this tracks. */
+   (.screen{overflow:hidden}), so neither of the two real scroll sources below ever
+   fires there — see the JS logic further down for exactly what those two sources
+   are (document.body, not window -- a same-day live-confirmed fix, see its comment
+   for why). */
 #back-to-top-btn{display:none;position:fixed;z-index:750;
   right:calc(14px + env(safe-area-inset-right));
   bottom:calc(74px + env(safe-area-inset-bottom));
@@ -2801,16 +2809,24 @@ document.addEventListener('keydown', function(e){
   if (!seen) startTour();
 })();
 
-// ── Floating "back to top" (2026-07-15) — tracks the two real scroll sources in
-// this app: plain window/document scroll (mobile screens opened via More, which
-// render full-page document-flow content per the is-mobile CSS overrides), and
-// #phone-body's own internal scroll (native phone panels — Today/Approvals/More).
-// Desktop's fixed 1440x900 stage never triggers either (each panel scrolls
-// internally, .screen{overflow:hidden}), so the button naturally never appears
-// there — no separate is-mobile gate needed. ──
+// ── Floating "back to top" (2026-07-15, fixed 2026-07-15) — tracks the real
+// scroll sources in this app: #phone-body's own internal scroll (native phone
+// panels — Today/Approvals/More), and document.body's scroll for mobile
+// screens opened via More (NOT window/document.documentElement — the base
+// rule `html,body{height:100%;overflow:auto}` (see CSS above) makes <html>
+// exactly viewport-height with NO overflow of its own, so <body> ends up as
+// its own independent scrolling box, decoupled from window.scrollY/
+// window.scrollTo(). Confirmed live: window.scrollY stayed 0 through a whole
+// scroll session while document.body.scrollTop moved correctly — the button
+// never showed and had nothing to scroll even if clicked. This is why the
+// button silently did nothing on a real device despite passing local tests
+// (those only ever scrolled the phone-panel path, never a More-opened
+// screen). Desktop's fixed 1440x900 stage triggers neither (each panel
+// scrolls internally, .screen{overflow:hidden}), so the button naturally
+// never appears there — no separate is-mobile gate needed. ──
 const _BACK_TO_TOP_THRESHOLD = 400;
 function _isPastBackToTopThreshold(){
-  if (window.scrollY > _BACK_TO_TOP_THRESHOLD) return true;
+  if (document.body.scrollTop > _BACK_TO_TOP_THRESHOLD) return true;
   const pb = document.getElementById('phone-body');
   return !!(pb && pb.scrollTop > _BACK_TO_TOP_THRESHOLD);
 }
@@ -2819,17 +2835,17 @@ function _updateBackToTopVisibility(){
   if (btn) btn.classList.toggle('show', _isPastBackToTopThreshold());
 }
 function backToTop(){
-  window.scrollTo({top: 0, behavior: 'smooth'});
+  document.body.scrollTo({top: 0, behavior: 'smooth'});
   const pb = document.getElementById('phone-body');
   if (pb) pb.scrollTo({top: 0, behavior: 'smooth'});
 }
-window.addEventListener('scroll', _updateBackToTopVisibility, {passive: true});
+document.body.addEventListener('scroll', _updateBackToTopVisibility, {passive: true});
 (function(){
   const pb = document.getElementById('phone-body');
   if (pb) pb.addEventListener('scroll', _updateBackToTopVisibility, {passive: true});
 })();
 // Switching screens/tabs can leave a prior scroll position behind (e.g. a
-// showScreen() call doesn't reset window.scrollY) -- re-check after any nav so
+// showScreen() call doesn't reset the scroll) -- re-check after any nav so
 // the button doesn't linger visible-but-stale on a freshly-opened short page.
 const _origShowScreen = showScreen;
 showScreen = function(name){ _origShowScreen(name); _updateBackToTopVisibility(); };
@@ -6669,6 +6685,37 @@ async function initOrbGL(){
     orbGLLoading = false;
     console.error('[orb-gl] WebGL noise-sphere failed to initialize — orb will stay blank in sphere mode until this is fixed', e);
   }
+}
+
+// ── WebGL context loss recovery (2026-07-15) — "the orb freezes after
+// switching tabs and back." Mobile Safari/Chrome aggressively lose a page's
+// WebGL context when the tab/app is backgrounded, to free GPU memory under
+// pressure -- a well-documented platform behavior, not a bug in this specific
+// scene. Before this fix there was NO webglcontextlost/webglcontextrestored
+// handling anywhere: when the context died, glRenderer/glComposer/glMesh
+// still held references to now-invalid GPU resources, so orbGLFrame()'s
+// glComposer.render() call kept "succeeding" (Three.js silently no-ops on a
+// dead context) while drawing nothing new -- the canvas just froze on
+// whatever the last good frame was, forever, since nothing ever told it to
+// rebuild. The canvas DOM element itself survives context loss (only the GL
+// context dies), so these listeners are attached once, here, not inside
+// initOrbGL() (which only runs once normally due to its own orbGLReady/
+// orbGLLoading guard).
+if (orbGlCanvas) {
+  orbGlCanvas.addEventListener('webglcontextlost', function(e){
+    // preventDefault() is required for the browser to even attempt automatic
+    // restoration later -- without it, the context is permanently dead and
+    // no 'webglcontextrestored' event will ever fire.
+    e.preventDefault();
+    orbGLReady = false;
+    orbGLLoading = false;
+    glRenderer = null; glComposer = null; glMesh = null; glClock = null; glUniforms = null;
+    console.warn('[orb-gl] WebGL context lost (tab backgrounded/GPU memory pressure) — will rebuild on restore');
+  });
+  orbGlCanvas.addEventListener('webglcontextrestored', function(){
+    console.info('[orb-gl] WebGL context restored — rebuilding the noise-sphere');
+    initOrbGL();
+  });
 }
 
 function orbGLFrame(){

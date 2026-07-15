@@ -7129,3 +7129,97 @@ hides the button again. Full existing suite + smoke test + Playwright
 smoke still green.
 
 Build bumped to `64226b1-v177`.
+
+---
+
+### 2026-07-15 (final pass, follow-up 4) — Live outage triage: 2 real bugs found and fixed same day
+
+Scott reported three things in one message: colors too dark, "orb freezes
+after you switch off that tab and go back," and "Frank won't load up at
+all now." Live-checked immediately: `/health` returned 200, build
+`64226b1-v177` (confirming the last two shipped commits were already
+live — Scott had redeployed, presumably via the redeploy button built
+earlier this session), full JS re-verified syntactically clean
+(`node --check` on the extracted, exact deployed source — ruled out a
+parse error). Scott then sent a screenshot showing Frank *did* render a
+long, populated Listings screen — contradicting a full outage — but with
+no back-to-top button visible despite being scrolled well past the
+threshold, which became the concrete lead.
+
+**Bug 1 — back-to-top button never worked on a real device (root cause of
+the "no button" report, and the likely root of the "won't load" scare
+too — see below).** Reproduced locally by simulating the exact real-user
+tap sequence (login → tap More → tap "Your listings", not calling
+internal functions directly, which is what let this ship broken in the
+first place — the original Playwright test only ever exercised the
+`#phone-body` native-panel scroll path, never a `showScreen()`-rendered
+screen opened via More). Found: `window.scrollY` stayed `0` through an
+entire scroll session while `document.body.scrollTop` moved correctly.
+Root cause: the base CSS rule `html,body{height:100%;overflow:auto}`
+(line ~149, applies on all screen sizes) makes `<html>` exactly
+viewport-height with nothing of its own to overflow, so `<body>` becomes
+its own independent scrolling box, decoupled from `window.scrollY`/
+`window.scrollTo()`. This is a **pre-existing architectural fact about
+every mobile `cc-open` screen**, not something introduced by the back-to-
+top feature — the feature just happened to be the first thing that
+assumed `window` was the scroller. **Fix:** `_isPastBackToTopThreshold()`/
+`backToTop()`/the scroll listener all switched from `window` to
+`document.body`. New Playwright regression test added specifically for
+this path (More → a real showScreen()-rendered screen → scroll
+`document.body` → confirm the button shows and works) since the original
+test suite had a real coverage gap here.
+
+**Bug 2 — the orb had zero WebGL context-loss handling** (`orbGlCanvas`,
+~line 6493 onward) — grepped for `webglcontextlost`/`webglcontextrestored`
+anywhere in the file: zero matches. Mobile Safari/Chrome aggressively lose
+a backgrounded page's WebGL context to free GPU memory — a well-documented
+platform behavior. Without a `webglcontextlost` listener calling
+`preventDefault()`, the browser won't even attempt automatic restoration;
+without a `webglcontextrestored` listener rebuilding the scene, the old
+`glRenderer`/`glComposer`/`glMesh` kept pointing at dead GPU resources,
+so `orbGLFrame()`'s `glComposer.render()` call kept "succeeding" (Three.js
+silently no-ops on a dead context) while drawing nothing new — the canvas
+just froze on its last good frame, forever, exactly matching "the orb
+freezes after you switch off that tab and go back." Given the orb is
+mobile's *default landing screen* (`phoneTab('ask')` fires on every
+mobile load), a frozen orb there is very plausibly what read as "Frank
+won't load up at all" — the very first thing the user sees looks dead
+even though every other screen (as the Listings screenshot proved) was
+working fine underneath. **Fix:** added both listeners on `orbGlCanvas` —
+loss resets `orbGLReady`/`orbGLLoading` and nulls the dead Three.js
+object references; restore calls `initOrbGL()` again to fully rebuild.
+New Playwright test dispatches the real DOM events (not just calling
+handler functions directly, to prove the listeners are actually wired
+up) and confirms the reset/rebuild transition — soft-skipped if headless
+WebGL genuinely isn't available in a given CI environment, but it *did*
+reach `orbGLReady` and pass in this one.
+
+**Also (the original, non-bug ask): brightened the default "Studio Warm"
+theme** (`:root`, the theme Scott's screenshots show) — every surface
+step (`--bg`/`--panel`/`--panel2`/`--panel3`/`--border`) lifted ~4-6%
+lighter, `--muted` and `--gold` brightened too. Verified with
+`tools/color_contrast_check.py` (built earlier this session) before
+shipping: text-on-bg 14.36:1 and muted-on-bg 7.12:1 (up from 5.77:1 —
+brightened proportionally more than the background), both comfortably
+above the 4.5:1 AA floor; dark-text-on-gold button contrast improved
+7.73:1 → 8.88:1. The 7 other named themes (light/purple/charcoal/sakura/
+matcha/ocean/kawaii) were left untouched — only the one Scott is actually
+using needed the fix.
+
+Two self-caught process notes: (1) a `Grep -A` context render briefly
+looked like it had found single-`/`-instead-of-`//` comment syntax errors
+at two lines — verified against the raw file via `Read` before reacting,
+confirmed it was a Grep display artifact, not real file content. Don't
+trust `-A`/`-B` context rendering for character-level correctness: read
+the raw file when something looks like it could be a real syntax bug.
+(2) Confirmed live via `/health` that pushing to this branch is *not*
+always inert — Scott had already redeployed both of the last two commits
+by the time this conversation started, ahead of any explicit "deploy
+this" instruction. Worth remembering the branch can go live without a
+new prompt turn asking for it.
+
+New coverage: `tests/playwright_smoke.py` +2 real-browser regression
+tests (document.body scroll path, WebGL context-loss transition). Full
+existing suite + smoke test + Playwright smoke still green.
+
+Build bumped to `81f2fbb-v178`.

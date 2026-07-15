@@ -514,6 +514,102 @@ async def _run_browser_checks() -> None:
             check(after_click.get("scrollTop", 999) < 50, f"clicking should scroll #phone-body back to top: {after_click}")
             check(not after_click.get("showing"), f"button should hide again once back at top: {after_click}")
 
+            # ── Regression test for the REAL bug reported live (2026-07-15): the
+            # first version of this feature tracked window.scrollY, but a
+            # More-opened screen (phoneOpenScreen -> showScreen, e.g. Listings/
+            # Products) actually scrolls document.body, not window --
+            # html,body{height:100%;overflow:auto} makes <html> exactly
+            # viewport-height with nothing of its own to overflow, so <body>
+            # ends up as its own independent scrolling box. This exact path
+            # (More -> a real showScreen()-rendered screen) is what the original
+            # test above never exercised, which is why it shipped broken. ──
+            await page.click("[data-ptab='more']")
+            await page.wait_for_timeout(300)
+            await page.evaluate("""() => {
+                _listings = Array.from({length: 40}, (_, i) => ({
+                    listing_id: 5000 + i, title: 'Regression Listing ' + i, price: 5.99,
+                    state: 'active', views: i, num_favorers: 0, tags: [], thumbnail_url: '',
+                }));
+            }""")
+            await page.click("#pp-more-body .pmore-item:has-text('Your listings')")
+            await page.wait_for_timeout(400)
+            await page.evaluate("() => renderListings()")
+            await page.wait_for_timeout(300)
+
+            body_pre_scroll = await page.evaluate("""() => ({
+                showing: document.getElementById('back-to-top-btn').classList.contains('show'),
+                bodyScrollHeight: document.body.scrollHeight,
+            })""")
+            check(not body_pre_scroll.get("showing"), f"button should be hidden before scrolling the More-opened screen: {body_pre_scroll}")
+            check(body_pre_scroll.get("bodyScrollHeight", 0) > 900,
+                  f"test setup should have produced a genuinely tall page: {body_pre_scroll}")
+
+            await page.evaluate("() => { document.body.scrollTop = 700; }")
+            await page.wait_for_timeout(400)
+            body_after_scroll = await page.evaluate("""() => ({
+                showing: document.getElementById('back-to-top-btn').classList.contains('show'),
+                bodyScrollTop: document.body.scrollTop,
+            })""")
+            check(body_after_scroll.get("bodyScrollTop", 0) > 400,
+                  f"document.body should actually be the scrolled element on a More-opened screen: {body_after_scroll}")
+            check(body_after_scroll.get("showing"),
+                  f"button must show when document.body (not window) is scrolled past the threshold: {body_after_scroll}")
+
+            await page.click("#back-to-top-btn")
+            await page.wait_for_timeout(500)
+            body_after_click = await page.evaluate("""() => ({
+                bodyScrollTop: document.body.scrollTop,
+                showing: document.getElementById('back-to-top-btn').classList.contains('show'),
+            })""")
+            check(body_after_click.get("bodyScrollTop", 999) < 50,
+                  f"clicking should scroll document.body back to top: {body_after_click}")
+            check(not body_after_click.get("showing"), f"button should hide again once back at top: {body_after_click}")
+
+            # ── Orb WebGL context-loss recovery (2026-07-15) — "the orb freezes
+            # after switching tabs and back." Mobile browsers aggressively lose a
+            # backgrounded page's WebGL context to free GPU memory; before this
+            # fix there was no webglcontextlost/webglcontextrestored handling
+            # anywhere, so the canvas just froze on its last frame forever.
+            # Dispatches the real DOM events (not just calling handler functions
+            # directly) so this actually proves the listeners are wired up, not
+            # just that the reset logic works in isolation. Soft-checked: headless
+            # Chromium's WebGL support (SwiftShader) can vary by environment, so
+            # this only asserts the loss/restore *transition* when the orb
+            # genuinely reached orbGLReady first, rather than hard-requiring GL
+            # support in every CI environment. ──
+            # Bare identifier references (not window.orbGLReady) -- orbGLReady/
+            # orbGLLoading are top-level `let` bindings in the page's classic
+            # inline script, which do NOT attach to window (unlike `var`/function
+            # declarations); page.evaluate()'s function runs in the same global
+            # scope/realm, so a bare reference correctly resolves through the
+            # scope chain, but `window.x` would silently read undefined.
+            orb_ready = await page.evaluate("() => new Promise(resolve => { "
+                                             "let n = 0; const iv = setInterval(() => { "
+                                             "if (orbGLReady || ++n > 40) { clearInterval(iv); resolve(!!orbGLReady); } "
+                                             "}, 100); })")
+            if orb_ready:
+                lost_state = await page.evaluate("""() => {
+                    const canvas = document.getElementById('orb-gl');
+                    const evt = new Event('webglcontextlost', {cancelable: true});
+                    canvas.dispatchEvent(evt);
+                    return {defaultPrevented: evt.defaultPrevented, orbGLReady: orbGLReady};
+                }""")
+                check(lost_state.get("defaultPrevented"),
+                      f"webglcontextlost handler must call preventDefault() or the browser will never attempt restoration: {lost_state}")
+                check(lost_state.get("orbGLReady") is False,
+                      f"losing context should reset orbGLReady so the frame loop stops trying to draw with dead resources: {lost_state}")
+
+                restored_state = await page.evaluate("""() => {
+                    const canvas = document.getElementById('orb-gl');
+                    canvas.dispatchEvent(new Event('webglcontextrestored'));
+                    return {orbGLLoading: orbGLLoading};
+                }""")
+                check(restored_state.get("orbGLLoading") is True,
+                      f"webglcontextrestored should immediately call initOrbGL() to rebuild (orbGLLoading flips true synchronously "
+                      f"at the top of that function, before any async import): {restored_state}")
+            else:
+                print("  (orb WebGL never reached orbGLReady in this environment -- skipping context-loss transition checks)")
+
         finally:
             await browser.close()
 
