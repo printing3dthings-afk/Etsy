@@ -7025,3 +7025,60 @@ routing logic via `import main as server`, no live Anthropic/Etsy call).
 Full existing suite + smoke test + Playwright smoke still green.
 
 Build bumped to `c7a5b44-v175`.
+
+---
+
+### 2026-07-15 (final pass, follow-up 2) — Products screen rebuilt to cover the full catalog
+
+Scott was confused by the Products screen (More → Products): it showed
+only 5 items, all flagged with both files missing, and "if not all of the
+products are on it it doesn't make sense to me." Investigated and
+confirmed he was right — `GET /api/products` was hardcoded to a narrow
+DP1026-DP1035 ID range filtered from `data/dp_listing_map.json` (a legacy
+scope from when the shop only had a handful of planners), and only 5 of
+those 10 possible slots were even populated. The shop's real catalog
+(`data/product_catalog.json`) has **176 products across 14 categories**
+(90 wall_art, 13 coloring_pages, 13 uncategorized, 12 paper_pack, 12
+3d_print_physical, 9 digital_planner, 6 svg_bundle, 6 sticker_pack, and a
+few smaller categories) — this page never grew with the catalog.
+
+Also diagnosed (but did not touch — it's Scott's manual step, not a code
+bug) why every shown product had both files marked missing:
+`tools/sync_files_to_hub.py`'s own docstring confirms product files have
+to be manually pushed from Scott's machine to the server's persistent
+volume; if that hasn't run recently the server-side check legitimately
+comes up empty even though the real files are safe locally/in the repo.
+Confirmed this against the real catalog in this sandbox: 0/176 show
+all-present here (no volume, no local `data/digital_products/` — expected
+in this environment) — the real number on the live deployed server
+depends entirely on whether/when that sync last ran.
+
+**Rebuilt both sides, same route/auth, no new file-existence convention:**
+- `GET /api/products` (`main.py`) now reads the real 176-product
+  `product_catalog.json` instead of the narrow DP-range filter. Per-file
+  status (not a fixed pdf/zip pair — file counts/types vary by category)
+  via the same existing `_product_file_exists()`, just fed a broader data
+  source. New `_build_products_status(catalog, file_exists_fn)` pure
+  function, pulled out specifically so this logic is unit-testable
+  without needing real files on disk.
+- `renderProducts()` → split into `loadProducts()` (fetch) +
+  `renderProductsContent()` (pure render), `frank_hud_mockup.py`. 176 flat
+  cards would be unusable, so added a category filter reusing the exact
+  `.hub-chip-row`/`.hub-chip-btn` pattern already used on Listings (same
+  CSS, no new styles). Card left-border color changed from the old
+  cosmetic per-index theme coloring (meaningless outside the original 4-5
+  planners) to a real status color: green (all files present), red (some
+  missing, named explicitly — "missing: WA1073_print_sizes.zip" not just
+  a bare X), gray (product lists no files at all, e.g. a draft). Added a
+  summary line ("N/176 have all files present") so the page answers its
+  own question at a glance. Removed the now-fully-dead `_THEMES` array
+  (only consumer was the old per-index coloring) and a stale comment on
+  `_BRANDKIT_THEMES` that referenced it.
+
+New coverage: `tests/test_products_catalog.py` (6 fixture tests covering
+all-present/some-missing/mixed/no-files-listed/prefix-stripping/missing-
+field-defaults, no live Etsy call) + 2 new Playwright checks (category
+chips render + counts are correct, filtering works, missing files are
+named). Full existing suite + smoke test + Playwright smoke still green.
+
+Build bumped to `fd92abc-v176`.

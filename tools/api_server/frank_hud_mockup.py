@@ -2520,7 +2520,7 @@ const _SCREEN_LOADERS = {
   tools: [loadTools],
   workflows: [loadWorkflows],
   listings: [() => loadListings(_lastListingState)],
-  products: [renderProducts],
+  products: [loadProducts],
   brandkit: [renderBrandKit],
   files: [loadFiles],
   connections: [loadConnections],
@@ -5064,21 +5064,13 @@ async function submitFixListing(listingId) {
   }
 }
 
-// ── Products / Brand Kit — fully static, from CLAUDE.md product catalog ──
-const _THEMES = [
-  {id:'DP1026',name:'Lavender Dreams',primary:'#8666AA',accent:'#C4A8D4',neutral:'#FAF7FF',text:'#2C1A3A'},
-  {id:'DP1027',name:'Cotton Candy',   primary:'#DE97C6',accent:'#97C6DE',neutral:'#FFF6FC',text:'#2C1A2A'},
-  {id:'DP1028',name:'Midnight Blue',  primary:'#1B2568',accent:'#7BA7C2',neutral:'#F0F5FF',text:'#0D1525'},
-  {id:'DP1029',name:'Coral Peach',    primary:'#FD6C49',accent:'#F5B878',neutral:'#FFF8F4',text:'#3A1A0D'}
-];
-// Brand Kit's full theme catalog (4 live + 12 planned) -- kept SEPARATE from _THEMES above.
-// renderProducts() indexes _THEMES by array position for border-color coding; adding the 12
-// planned themes into that array would silently shift that indexing the moment /api/products
-// returns more than 4 products. Swatch roles vary per theme (some have "Deep accent", one has
-// "Pop accent" + "Text on dark") so `swatches` is a free-form [{label,hex}] list, not a fixed
-// 4-slot shape. Live themes (DP1026-1029) only have hex roles documented in CLAUDE.md -- no
-// tagline/aesthetic/motifs/buyer/trend copy exists for them, so those fields are left null
-// rather than inventing marketing copy; the detail panel simply omits null fields.
+// Brand Kit's full theme catalog (4 live + 12 planned). Swatch roles vary per
+// theme (some have "Deep accent", one has "Pop accent" + "Text on dark") so
+// `swatches` is a free-form [{label,hex}] list, not a fixed 4-slot shape.
+// Live themes (DP1026-1029) only have hex roles documented in CLAUDE.md -- no
+// tagline/aesthetic/motifs/buyer/trend copy exists for them, so those fields
+// are left null rather than inventing marketing copy; the detail panel simply
+// omits null fields.
 const _BRANDKIT_THEMES = [
   {id:'DP1026', name:'Lavender Dreams', live:true, tagline:null,
     swatches:[{label:'Primary',hex:'#8666AA'},{label:'Accent',hex:'#C4A8D4'},{label:'Neutral',hex:'#FAF7FF'},{label:'Text',hex:'#2C1A3A'}],
@@ -5228,26 +5220,82 @@ const _PRODUCTS_STATIC = [
   {id:'DP1028',name:'Budget & Finance Planner',   price:'$12.99',pages:102},
   {id:'DP1029',name:'Fitness & Wellness Planner', price:'$12.99',pages:91}
 ];
-async function renderProducts() {
+// ── Products — full catalog file-integrity check (2026-07-15 rebuild) ──
+// Previously hardcoded to a ~5-product "Core Products" slice (DP1026-1035)
+// left over from when the shop only had a handful of planners. /api/products
+// now returns the real 176-product catalog across 14 categories, so this
+// screen needs a category filter (same .hub-chip-row/.hub-chip-btn pattern
+// already used on Listings' setSectionFilter) rather than one flat list.
+let _products = [];
+let _productCategoryFilter = null; // null = all categories
+const _CATEGORY_LABELS = {
+  digital_planner: 'Digital Planners', digital_planner_bundle: 'Planner Bundles',
+  wall_art: 'Wall Art', wall_art_bundle: 'Wall Art Bundles',
+  svg_bundle: 'SVG Packs', svg_bundle_license: 'SVG Commercial License',
+  svg_3dprint_pack: '3D Print SVG Packs',
+  sticker_pack: 'Sticker Packs', sticker_pack_license: 'Sticker Commercial License',
+  coloring_pages: 'Coloring Pages', paper_pack: 'Paper Packs',
+  '3d_print_physical': '3D Printed Physical', sublimation: 'Sublimation',
+  uncategorized: 'Uncategorized',
+};
+function _categoryLabel(cat) { return _CATEGORY_LABELS[cat] || String(cat).replace(/_/g, ' '); }
+
+async function loadProducts() {
   const el = document.getElementById('products-content');
   if (!el) return;
-  el.innerHTML = '<div class="hub-section-title">Loading…</div>';
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  _productCategoryFilter = null;
   try {
     const d = await authGet('/api/products').then(r => r.json());
-    let html = '<div class="hub-section-title">Core Products</div>';
-    (d.products || []).forEach((p, i) => {
-      const t = _THEMES[i] || {};
-      const files = (p.pdf_exists ? '✅ PDF' : '❌ PDF') + '  ' + (p.zip_exists ? '✅ ZIP' : '❌ ZIP');
-      html += '<div class="hub-prod-card" style="border-left-color:'+(t.primary||'var(--gold)')+'">'+
-        '<div class="hub-prod-name">'+escHtml(p.title || p.id)+'</div>'+
-        '<div class="hub-prod-meta">'+escHtml(p.id)+(p.listing_id ? ' · Etsy #'+escHtml(String(p.listing_id)) : '')+'</div>'+
-        '<div class="hub-prod-files" style="font-size:11px;opacity:0.8;margin-top:3px">'+files+'</div>'+
-      '</div>';
-    });
-    el.innerHTML = html;
+    _products = d.products || [];
+    renderProductsContent();
   } catch(e) {
-    el.innerHTML = '<div class="hub-prod-card">⚠ ' + escHtml(e.message) + '</div>';
+    el.innerHTML = '<div class="hub-empty">' + escHtml(e.message || 'Failed to load products') + '</div>';
   }
+}
+function setProductCategoryFilter(key) {
+  _productCategoryFilter = key;
+  renderProductsContent();
+}
+function renderProductsContent() {
+  const el = document.getElementById('products-content');
+  if (!el) return;
+  if (!_products.length) { el.innerHTML = '<div class="hub-empty">No products found</div>'; return; }
+
+  const cats = {};
+  _products.forEach(p => { cats[p.category] = (cats[p.category] || 0) + 1; });
+  const catKeys = Object.keys(cats).sort((a, b) => _categoryLabel(a).localeCompare(_categoryLabel(b)));
+
+  const presentCount = _products.filter(p => p.all_files_present === true).length;
+  let html = '<div class="hub-section-title">Products — ' + presentCount + '/' + _products.length + ' have all files present</div>';
+
+  html += '<div class="hub-chip-row">';
+  html += '<button class="hub-chip-btn' + (_productCategoryFilter === null ? ' active' : '') + '" onclick="setProductCategoryFilter(null)">All (' + _products.length + ')</button>';
+  catKeys.forEach(k => {
+    html += '<button class="hub-chip-btn' + (_productCategoryFilter === k ? ' active' : '') + '" onclick="setProductCategoryFilter(\\'' + k + '\\')">' + escHtml(_categoryLabel(k)) + ' (' + cats[k] + ')</button>';
+  });
+  html += '</div>';
+
+  const filtered = _productCategoryFilter === null ? _products : _products.filter(p => p.category === _productCategoryFilter);
+  filtered.forEach(p => {
+    const borderColor = p.all_files_present === true ? 'var(--green)' : p.all_files_present === false ? 'var(--red)' : 'var(--muted)';
+    let filesLine;
+    if (!p.files || !p.files.length) {
+      filesLine = 'no files listed in catalog';
+    } else if (p.all_files_present) {
+      filesLine = '✅ all ' + p.files.length + ' file(s) present';
+    } else {
+      const missing = p.files.filter(f => !f.exists).map(f => f.name);
+      filesLine = '❌ missing: ' + escHtml(missing.join(', '));
+    }
+    html += '<div class="hub-prod-card" style="border-left-color:' + borderColor + '">' +
+      '<div class="hub-prod-name">' + escHtml(p.title || p.id) + '</div>' +
+      '<div class="hub-prod-meta">' + escHtml(p.id) + (p.listing_id ? ' · Etsy #' + escHtml(String(p.listing_id)) : '') +
+        (p.price != null ? ' · $' + escHtml(String(p.price)) : '') + ' · ' + escHtml(p.status || '') + '</div>' +
+      '<div class="hub-prod-files" style="font-size:11px;opacity:0.8;margin-top:3px">' + filesLine + '</div>' +
+    '</div>';
+  });
+  el.innerHTML = html;
 }
 const _STYLE_ANCHOR_TEXT = "Photography style: bright airy editorial Etsy lifestyle photography. "+
   "Warm cream and natural linen tones throughout. Soft diffused window light "+

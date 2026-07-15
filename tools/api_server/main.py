@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "c7a5b44-v175"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "fd92abc-v176"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7465,31 +7465,62 @@ async def studio_list_videos(_token: str = Depends(_auth_session_or_bearer)):
     return {"videos": files}
 
 
+_PRODUCT_FILES_PREFIX = "data/digital_products/"
+
+
+def _build_products_status(catalog: list[dict], file_exists_fn) -> list[dict]:
+    """Pure function (no I/O of its own) so this is directly unit-testable:
+    given the full product catalog and a file-existence checker, compute
+    per-product/per-file status. `file_exists_fn` takes the same `rel`
+    convention _product_file_exists() and sync_files_to_hub.py already use
+    (e.g. "product_files/DP1026.pdf") -- catalog entries store the fuller
+    "data/digital_products/product_files/DP1026.pdf", so the shared prefix
+    is stripped here rather than teaching the checker a second convention."""
+    products = []
+    for p in catalog:
+        files = p.get("files", []) or []
+        file_status = []
+        for f in files:
+            rel = f[len(_PRODUCT_FILES_PREFIX):] if f.startswith(_PRODUCT_FILES_PREFIX) else f
+            file_status.append({"name": Path(f).name, "exists": file_exists_fn(rel)})
+        products.append({
+            "id": p.get("product_id"),
+            "title": p.get("name", ""),
+            "listing_id": p.get("etsy_listing_id"),
+            "category": p.get("category", "uncategorized"),
+            "status": p.get("status", "active"),
+            "price": p.get("price"),
+            "files": file_status,
+            "all_files_present": all(fs["exists"] for fs in file_status) if file_status else None,
+        })
+    return products
+
+
 @app.get("/api/products")
 async def get_products(_token: str = Depends(_auth_session_or_bearer)):
-    """Return catalog of planner products with on-disk file status."""
-    import json as _json
-    from pathlib import Path as _P
+    """Return the full product catalog (data/product_catalog.json — 176
+    products across 14 categories as of 2026-07-15) with on-disk file
+    status for every file each product actually lists.
+
+    Rebuilt 2026-07-15: previously hardcoded to only DP1026-DP1035 (a
+    legacy ~5-product slice from when the shop only had a handful of
+    planners, sourced from data/dp_listing_map.json's narrow DP-numeric-
+    range filter) — it never grew with the catalog, so it looked broken/
+    incomplete once the shop reached 176 products across wall art, SVG
+    packs, sticker packs, coloring pages, paper packs, and physical 3D
+    prints. product_catalog.json is the shop's real source of truth and
+    already carries a `files` list per product, so no new file-tracking
+    convention was needed -- just a broader data source feeding the
+    existing _product_file_exists() checker (see its own docstring for why
+    a file can correctly show missing here even when it's safe on Scott's
+    machine/in the repo: it hasn't been synced to the server's persistent
+    volume via tools/sync_files_to_hub.py yet, an operational step, not a
+    code bug)."""
     try:
-        listing_map = _json.loads(_P("data/dp_listing_map.json").read_text())
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
     except OSError:
-        listing_map = {}
-    products = []
-    for dp_id in sorted(
-        k for k in listing_map
-        if k.startswith("DP") and k[2:].isdigit() and 1026 <= int(k[2:]) <= 1035
-    ):
-        e = listing_map[dp_id]
-        pdf_rel = f"product_files/{dp_id}.pdf"
-        zip_rel = f"product_files/{dp_id}_sticker_pack.zip"
-        products.append({
-            "id": dp_id,
-            "title": e.get("planner_title") or e.get("title", ""),
-            "listing_id": e.get("planner_listing_id") or e.get("listing_id"),
-            "pdf_exists": _product_file_exists(pdf_rel),
-            "zip_exists": _product_file_exists(zip_rel),
-            "status": e.get("status", "active"),
-        })
+        catalog = []
+    products = _build_products_status(catalog, _product_file_exists)
     return {"products": products}
 
 

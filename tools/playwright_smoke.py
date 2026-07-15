@@ -390,6 +390,48 @@ async def _run_browser_checks() -> None:
             check("90001" in listings_html and "Ask" in listings_html and "Fix" in listings_html,
                   "an active listing with manifest_status='FAIL' should get the Fix button")
 
+            # Products screen rebuild (2026-07-15) -- was hardcoded to a ~5-product
+            # "Core Products" slice, now the full catalog with a category filter.
+            # Stub _products directly (bare assignment, not window.X -- see the tour
+            # steps above for why: these are top-level `let` bindings, not globals).
+            await page.evaluate("showScreen('products')")
+            await page.wait_for_timeout(300)
+            products_check = await page.evaluate("""() => {
+                _products = [
+                    {id: 'DP1026', title: 'Life Planner', listing_id: '1', category: 'digital_planner',
+                     status: 'active', price: 14.99, files: [{name: 'DP1026.pdf', exists: true}], all_files_present: true},
+                    {id: 'WA1001', title: 'Wall Art One', listing_id: '2', category: 'wall_art',
+                     status: 'active', price: 5.99, files: [{name: 'WA1001.zip', exists: false}], all_files_present: false},
+                    {id: 'WA1002', title: 'Wall Art Two', listing_id: '3', category: 'wall_art',
+                     status: 'active', price: 5.99, files: [{name: 'WA1002.zip', exists: true}], all_files_present: true},
+                ];
+                _productCategoryFilter = null;
+                renderProductsContent();
+                const el = document.getElementById('products-content');
+                const chips = document.querySelectorAll('#products-content .hub-chip-btn');
+                return {
+                    html: el ? el.innerHTML : null,
+                    chipCount: chips.length,
+                    chipLabels: [...chips].map(c => c.textContent),
+                };
+            }""")
+            check("2/3 have all files present" in (products_check.get("html") or ""),
+                  f"summary line should reflect 2/3 present: {products_check}")
+            check(products_check.get("chipCount") == 3,
+                  f"expected 3 chips (All + digital_planner + wall_art): {products_check}")
+            check(any("Wall Art (2)" in c for c in products_check.get("chipLabels", [])),
+                  f"expected a 'Wall Art (2)' chip: {products_check}")
+
+            filter_check = await page.evaluate("""() => {
+                setProductCategoryFilter('wall_art');
+                const el = document.getElementById('products-content');
+                return el ? el.innerHTML : null;
+            }""")
+            check("WA1001" in filter_check and "WA1002" in filter_check and "DP1026" not in filter_check,
+                  f"filtering to wall_art should show only wall_art products: {filter_check[:300] if filter_check else filter_check}")
+            check("missing: WA1001.zip" in filter_check,
+                  f"a product with a missing file should name it: {filter_check[:300] if filter_check else filter_check}")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the
