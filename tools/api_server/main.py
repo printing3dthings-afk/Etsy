@@ -516,7 +516,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "88d504a-v162"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4b31558-v163"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8628,12 +8628,19 @@ _FULL_BACKUP_EXCLUDE_DIR_NAMES = {
 
 @app.get("/api/backup/download-all")
 async def download_full_backup(_token: str = Depends(_auth_session_or_bearer)):
-    """Build and stream a ZIP of everything durable under data/ -- code lives
-    in git already, this is the direct answer to "give me a hard copy of
-    everything on my computer" for the content that isn't obviously "in git"
-    to a non-technical reader. No AI call, no Etsy call -- plain auth, not
-    rate-limited (see _rate_limited_auth, reserved for AI-spend/Etsy-mutating
-    calls, neither of which this does)."""
+    """Build and stream a ZIP of whatever's under data/ in THIS deployed
+    container -- which, per .dockerignore's `data/*` blanket exclusion (kept
+    deliberately narrow so Docker builds don't ship 4GB+ and time out, see
+    that file's own comment), is only knowledge_base/ plus a handful of
+    listed JSON configs (product_catalog.json, dp_listing_map.json, etc.).
+    The real ~350MB of product assets (svg_pack/, faith_pack/, digital_products/,
+    and friends) is NOT reachable from here at all -- it exists only in the git
+    repo itself. This endpoint is the honest answer to "give me the small stuff
+    as a hard copy"; the Files-screen UI links to GitHub's own repo-zip download
+    for the rest, since that's the one place the full 350MB actually lives.
+    No AI call, no Etsy call -- plain auth, not rate-limited (see
+    _rate_limited_auth, reserved for AI-spend/Etsy-mutating calls, neither of
+    which this does)."""
     def _build() -> str:
         tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
         tmp.close()

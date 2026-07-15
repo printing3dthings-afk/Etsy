@@ -1296,9 +1296,15 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <div class="screen" id="screen-files">
     <div class="panel brk" style="height:100%">
       <div class="panel-title">Files <span class="src">/api/files — live volume listing, data/digital_products/ + backups</span></div>
-      <div class="hub-card" style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div style="font-size:12px;color:var(--muted);line-height:1.5">Everything durable under <code>data/</code> — docs, catalog, product assets, database snapshot — as one ZIP you can save on your own computer.</div>
-        <button onclick="downloadFullBackup()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">⬇ Download Full Backup</button>
+      <div class="hub-card" style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="font-size:12px;color:var(--muted);line-height:1.5">Docs, catalog data, and Frank's database snapshot — as one ZIP you can save on your own computer.</div>
+          <button onclick="downloadFullBackup()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">⬇ Download Backup</button>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          The actual product files (SVG/sublimation/planner assets, ~350MB) don't live on this server — they're kept in the GitHub repo so deploys stay fast.
+          <a href="https://github.com/printing3dthings-afk/Etsy/archive/refs/heads/claude/etsy-automation-agents-WFAPU.zip" target="_blank" style="color:var(--gold)">Download everything from GitHub →</a>
+        </div>
       </div>
       <div id="files-content" class="hub-scroll"><div class="hub-spinner"></div></div>
     </div>
