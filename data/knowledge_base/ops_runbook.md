@@ -6747,3 +6747,98 @@ Next advances through steps and switches screens, Skip closes it and
 persists `frankWelcomeSeen`, and the header `?` icon replays it.
 
 Build bumped to `84bcda9-v171`.
+
+---
+
+### 2026-07-15 (later still) — Trust & risk hardening: broken weekly monitors + 4 new compliance checks
+
+Scott asked a broad "what else do we need to be a smooth successful
+business" question. Ran three parallel research passes (Frank usability,
+Etsy photo/copy pipeline, business-ops automation) against CLAUDE.md's own
+documented standards and found ~24 concrete gaps. Presented the findings
+and asked which to tackle first — Scott picked "trust & risk": fix the one
+confirmed live bug, and close the "CLAUDE.md calls this mandatory but
+nothing checks it" gaps. Frank-usability polish and growth-engine tooling
+(Star Seller tracking, Ads hardening, Ranking Recovery playbook) are
+deferred to a later pass.
+
+**The bug:** `tools/api_server/main.py`'s `_WEEKLY_MONITOR_SCRIPTS` (added
+2026-07-09) still names `listing_performance_monitor.py`,
+`listing_drop_monitor.py`, and `review_monitor.py` — all three were then
+deleted two days later (2026-07-11) by an unrelated declutter pass whose
+"zero references" reasoning was already stale by the time it ran. Since
+then, `_run_weekly_monitors()`'s `subprocess.run` call for each has been
+silently swallowing `FileNotFoundError` into a generic `"ERROR: ..."` line
+in a digest nobody was alerted was degraded — no automated review polling,
+ranking-health scan, or listing-disappearance/price-floor detection for 4+
+days. Restored all three byte-identical from the trash vault
+(`tools/trash.py --restore 20260711-051/052/053`) and added an explicit
+"this IS referenced, grep main.py before deleting" note to
+`_WEEKLY_MONITOR_SCRIPTS` and each restored file's docstring so it doesn't
+repeat.
+
+**Four new checks in `tools/listing_integrity_check.py`** (all wired into
+`audit_listing()`, all pure functions over data already fetched — zero or
+one extra API call):
+- `check_attributes()` — FAILs on `who_made`/`when_made`/`is_supply`
+  mismatches (Etsy's June 2025 Creativity Standards fields), WARNs on a
+  `taxonomy_id` mismatch. Zero extra API calls — all fields already present
+  on the listing GET `audit_listing()` was already making.
+- `check_price_tier()` — FAILs if live price is outside CLAUDE.md's
+  documented tier for that type (or the specific `dp_code_price_overrides`
+  for planners, which are priced per-product not per-type), WARNs on a
+  non-.99/.97/.49 ending. Ported the suffix formula from
+  `tools/listing_qc.py`'s `_price_suffix_ok` rather than reinventing it.
+  SVG-pack pricing uses exact `valid_values` matching (two fixed price
+  points, $9.99/$14.99) instead of a range, matching `listing_qc.py`'s own
+  `price not in (9.99, 14.99)` check — a plain min/max range would have
+  wrongly accepted anything in between.
+- `check_shipping_cost()` — WARN if a physical listing's shipping cost is
+  ≥$6 (Etsy's documented US-domestic search-ranking penalty threshold).
+  One extra API call, only for `fulfillment: "physical"` listings (just
+  `3d_print_physical` today).
+- `check_registry_coverage()` — WARN when a dp_code that's supposed to get
+  the cardinal art-in-photos check has no `source_hash` registered in
+  `data/product_art_registry.json`. `check_art_in_photos()`'s own
+  `checkable` filter silently *skips* unregistered dp_codes rather than
+  failing them (correct for that function), which meant missing registry
+  coverage was previously invisible — a listing with zero registered
+  dp_codes reported the same clean result as one that was actually checked
+  and passed. Cheap (dict lookups only), so it runs in FAST mode too, not
+  just `--full`.
+
+**Hardened `check_ai_disclosure()`** — was `"ai" in desc and "design" in
+desc`, a substring match an ordinary sentence satisfies by accident (e.g.
+"email design details... certain colors") with zero real disclosure
+present. Now requires an actual marker from CLAUDE.md's mandated
+paragraph (the exact phrase "AI image generation tools", or the section's
+own "🤖 ABOUT THIS DESIGN" header). Escalated from WARN to FAIL given
+CLAUDE.md's own stated risk (17,000+ listings removed in 2025 for this
+exact gap). Also extended `AI_DISCLOSURE` coverage in
+`data/listing_rules.json` to the 5 types that were missing it entirely:
+`commercial_license`, `bundle`, `sublimation`, `unknown`,
+`3d_print_physical` (the last because the underlying SVG/3MF a physical
+print is made from is still AI-generated art).
+
+**The cardinal "real product in every photo" check already existed**
+(`check_art_in_photos()`, perceptual-hash matching) — the gap was
+operational, not logical: it only runs in `--full` mode, which every
+routine fast sweep skips because it downloads and hashes every photo.
+Wired a monthly (15th, offset from the 1st-of-month shop health check)
+`listing_integrity_check.py --full` run into `_calendar_tasks_loop()`
+(`_run_art_authenticity_check()`, 30-minute timeout) so it actually
+executes shop-wide instead of never running at all.
+
+Added `price`/`who_made`/`when_made`/`is_supply`/`taxonomy_id` to the test
+fixtures in `tests/test_listing_integrity.py` (previously absent, since
+nothing checked them) and 10 new fixture-based test cases covering all
+four new checks plus the hardened AI-disclosure heuristic — 26 tests total,
+all pure-function, no live Etsy needed.
+
+Did not run any of this against the live catalog yet — Etsy's daily quota
+was still exhausted as of this pass (see the 2026-07-15 earlier entries).
+The monthly art-authenticity job and the enriched fast-mode checks will
+get their first real shop-wide run automatically; a manual trigger is also
+available once quota clears.
+
+Build bumped to `4974b27-v172`.

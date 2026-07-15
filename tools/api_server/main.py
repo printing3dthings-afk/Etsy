@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "84bcda9-v171"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4974b27-v172"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5139,6 +5139,15 @@ async def _daily_brief_loop() -> None:
 # Scott to act on — nothing here bypasses the one-tap-approval pattern the
 # rest of this system uses for anything that actually changes Etsy.
 
+#   Every path in this list is a LIVE reference — if grepping tools/ for a
+#   script's usage before deleting it, grep THIS FILE too, not just other
+#   tools/ scripts. A 2026-07-11 "declutter" pass deleted
+#   listing_performance_monitor.py / listing_drop_monitor.py / review_monitor.py
+#   as "zero references," missing that this exact list had wired all three
+#   in two days earlier (2026-07-09) — the weekly digest silently ran 4/7
+#   scripts for days with the other 3 swallowed into generic "ERROR:" lines
+#   nobody was alerted to. Restored 2026-07-15 from data/trash/ (ids
+#   20260711-051/052/053) — see ops_runbook.md for the full incident.
 _WEEKLY_MONITOR_SCRIPTS = [
     "weekly_report.py",
     "listing_performance_monitor.py",
@@ -5229,6 +5238,32 @@ def _run_monthly_shop_health() -> str:
     db.add_todo("Monthly shop health check ready — see this month's ops_runbook entry.", added_by="frank", category="general")
     _append_ops_runbook_entry("Monthly shop health check", out[:4000])
     return "ran shop_health_check.py"
+
+
+def _run_art_authenticity_check() -> str:
+    """Runs listing_integrity_check.py --full once a month — the cardinal
+    "real product in every photo" check (check_art_in_photos) already existed
+    and is correct, but was never actually executed shop-wide: every routine
+    FAST-mode sweep skips it (it downloads + hashes every photo, too slow for
+    a frequent pass), so the anti-mismatch guarantee silently never ran at
+    all. Read-only against Etsy; the only write is a local
+    listing_manifest.json timestamp/status stamp (see the script's own module
+    docstring) — same safe pattern as the other calendar-gated tasks in this
+    file. Monthly (not weekly) and a long 30-minute timeout, since a
+    full-catalog photo download+hash pass is inherently slow; scheduled for
+    the 15th so it doesn't compete with the 1st-of-month shop health check."""
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "listing_integrity_check.py"), "--full"],
+        capture_output=True, text=True, timeout=1800, cwd=str(ROOT),
+    )
+    out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
+    db.add_todo(
+        "Monthly art-authenticity sweep ready — see this month's ops_runbook entry "
+        "for any listing whose photos don't actually show the real product/file.",
+        added_by="frank", category="question",
+    )
+    _append_ops_runbook_entry("Monthly art-authenticity sweep (--full)", out[:4000])
+    return "ran listing_integrity_check.py --full"
 
 
 def _run_seasonal_keyword_check() -> str:
@@ -5379,6 +5414,7 @@ async def _calendar_tasks_loop() -> None:
     last_seasonal: date | None = None
     last_ads_check: date | None = None
     last_art_check: date | None = None
+    last_art_authenticity: date | None = None
     while True:
         await asyncio.sleep(3600)
         now = datetime.now(timezone.utc)
@@ -5398,6 +5434,13 @@ async def _calendar_tasks_loop() -> None:
                 ran.append("monthly-shop-health")
             except Exception as exc:
                 print(f"[calendar-tasks] monthly shop health error: {exc}", flush=True)
+        if today.day == 15 and today != last_art_authenticity:
+            try:
+                await asyncio.to_thread(_run_art_authenticity_check)
+                last_art_authenticity = today
+                ran.append("art-authenticity")
+            except Exception as exc:
+                print(f"[calendar-tasks] art authenticity check error: {exc}", flush=True)
         if (today.month, today.day) in _SEASONAL_TRIGGER_DATES and today != last_seasonal:
             try:
                 await asyncio.to_thread(_run_seasonal_keyword_check)
@@ -5424,7 +5467,7 @@ async def _calendar_tasks_loop() -> None:
             "; ".join(ran) if ran else (
                 f"no scheduled task due today (last: weekly={last_weekly}, "
                 f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
-                f"art={last_art_check})"
+                f"art={last_art_check}, art_authenticity={last_art_authenticity})"
             ),
         )
 

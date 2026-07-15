@@ -161,6 +161,168 @@ def check_tags(tags: list[str]) -> list[dict]:
     return issues
 
 
+_DEFAULT_TAXONOMY_ID = 2078  # Craft Supplies & Tools > Patterns & How To > Digital Files
+_PRICE_OK_CENTS = {99, 97, 49}  # same set as tools/listing_qc.py's _PRICE_OK_CENTS
+
+
+def check_attributes(listing: dict, rule: dict) -> list[dict]:
+    """Verify the Etsy attribute fields CLAUDE.md's AI-disclosure protocol and
+    SS-Series Category section mandate. Added 2026-07-15 — previously nothing
+    checked these anywhere; they were only ever set (correctly or not) at
+    listing-creation time and never audited afterward.
+
+    who_made/when_made/is_supply are FAIL: these are the exact fields Etsy's
+    June 2025 Creativity Standards update requires ("Designed by a seller"
+    categorization) — getting them wrong is a real policy-compliance gap, not
+    a style nit. taxonomy_id is WARN only: a handful of listings may
+    legitimately sit in a different (but still correct) category, so a
+    mismatch is worth a human look rather than an automatic FAIL.
+    """
+    issues = []
+    who_made = listing.get("who_made")
+    if who_made != "i_did":
+        issues.append({
+            "severity": "FAIL",
+            "check": "who_made",
+            "detail": f"who_made is '{who_made}', expected 'i_did' (CLAUDE.md AI-disclosure protocol)"
+        })
+    when_made = listing.get("when_made")
+    expected_when_made = rule.get("expected_when_made", "made_to_order")
+    if when_made != expected_when_made:
+        issues.append({
+            "severity": "FAIL",
+            "check": "when_made",
+            "detail": f"when_made is '{when_made}', expected '{expected_when_made}'"
+        })
+    is_supply = listing.get("is_supply")
+    if is_supply is not False:
+        issues.append({
+            "severity": "FAIL",
+            "check": "is_supply",
+            "detail": f"is_supply is {is_supply!r}, expected False"
+        })
+    taxonomy_id = listing.get("taxonomy_id")
+    expected_taxonomy_id = rule.get("expected_taxonomy_id", _DEFAULT_TAXONOMY_ID)
+    if expected_taxonomy_id and taxonomy_id != expected_taxonomy_id:
+        issues.append({
+            "severity": "WARN",
+            "check": "taxonomy_id",
+            "detail": f"taxonomy_id is {taxonomy_id}, expected {expected_taxonomy_id} — "
+                       f"verify this listing is in the right Etsy category"
+        })
+    return issues
+
+
+def check_price_tier(price_usd: float, dp_codes: list[str], rule: dict) -> list[dict]:
+    """Verify live price against CLAUDE.md's documented pricing tables.
+    Added 2026-07-15 — this existed only in tools/listing_qc.py, which is
+    never run in batch against the live catalog, so nothing previously
+    confirmed shop-wide that prices actually match the tables.
+
+    dp_code overrides win over the type-level tier (planner prices are
+    per-product, e.g. DP1026=$14.99 vs DP1027=$9.99, not a single range).
+    FAIL on a tier miss (a wrong price is a direct revenue/positioning
+    issue); WARN on a non-.99/.97/.49 ending (CLAUDE.md's stated rule, but
+    a softer signal than being outside the tier entirely).
+    """
+    issues = []
+    overrides = rule.get("dp_code_price_overrides", {})
+    override_price = None
+    for dp in dp_codes:
+        if dp in overrides:
+            override_price = overrides[dp]
+            break
+    if override_price is not None:
+        if abs(price_usd - override_price) > 0.01:
+            issues.append({
+                "severity": "FAIL",
+                "check": "price_tier",
+                "detail": f"Price is ${price_usd:.2f}, expected ${override_price:.2f} for {dp_codes}"
+            })
+    else:
+        tier = rule.get("price_tier")
+        if tier and "valid_values" in tier:
+            # Exact-match tiers (e.g. SS-Series: $9.99 for 5-design packs,
+            # $14.99 for 10+ — a continuous range would wrongly accept $12,
+            # matching listing_qc.py's own `price not in (9.99, 14.99)` check).
+            valid = tier["valid_values"]
+            if not any(abs(price_usd - v) <= 0.01 for v in valid):
+                issues.append({
+                    "severity": "FAIL",
+                    "check": "price_tier",
+                    "detail": f"Price ${price_usd:.2f} doesn't match any documented tier "
+                               f"price {valid} for this listing type"
+                })
+        elif tier and not (tier.get("min", 0) <= price_usd <= tier.get("max", float("inf"))):
+            issues.append({
+                "severity": "FAIL",
+                "check": "price_tier",
+                "detail": f"Price ${price_usd:.2f} is outside the documented "
+                           f"${tier.get('min')}–${tier.get('max')} tier for this listing type"
+            })
+    # Same formula as tools/listing_qc.py's _price_suffix_ok — ported rather
+    # than reinvented, ints avoid the float-subtraction edge cases a naive
+    # (price - int(price)) approach can hit.
+    cents = round(price_usd * 100) % 100
+    if cents not in _PRICE_OK_CENTS:
+        issues.append({
+            "severity": "WARN",
+            "check": "price_suffix",
+            "detail": f"Price ${price_usd:.2f} doesn't end in .99/.97/.49 (CLAUDE.md pricing rule)"
+        })
+    return issues
+
+
+_SHIPPING_COST_WARN_THRESHOLD_USD = 6.0
+
+
+def _fetch_shipping_cost_usd(api: "EtsyAPIClient", shop_id: str, shipping_profile_id) -> float | None:
+    """One extra API call, only made for fulfillment=physical listings (a
+    small subset of the catalog — see check_shipping_cost's caller). Returns
+    the primary (first/cheapest) destination's cost in USD, or None if it
+    can't be determined (missing profile id, no destinations, fetch error)."""
+    if not shipping_profile_id:
+        return None
+    try:
+        profile = api._request("GET", f"shops/{shop_id}/shipping-profiles/{shipping_profile_id}")
+    except Exception:
+        return None
+    destinations = profile.get("shipping_profile_destinations") or []
+    if not destinations:
+        return None
+    cost = destinations[0].get("primary_cost") or {}
+    amount = cost.get("amount")
+    divisor = cost.get("divisor")
+    if amount is None or not divisor:
+        return None
+    return amount / divisor
+
+
+def check_shipping_cost(cost_usd: float | None) -> list[dict]:
+    """WARN (not FAIL — a ranking-visibility factor, not a policy violation)
+    if a physical listing's shipping cost is at/above Etsy's documented
+    $6 US-domestic search-ranking penalty threshold (CLAUDE.md, sourced from
+    Etsy's Seller Handbook). Added 2026-07-15 — previously checked nowhere;
+    only 3d_print_physical listings pay this cost, so it's a small, cheap
+    addition (one extra API call per physical listing, not per listing)."""
+    if cost_usd is None:
+        return [{
+            "severity": "WARN",
+            "check": "shipping_cost",
+            "detail": "Could not determine shipping cost for this physical listing "
+                       "(missing/unfetchable shipping profile) — verify manually"
+        }]
+    if cost_usd >= _SHIPPING_COST_WARN_THRESHOLD_USD:
+        return [{
+            "severity": "WARN",
+            "check": "shipping_cost",
+            "detail": f"Shipping cost is ${cost_usd:.2f} — Etsy's US-domestic search ranking "
+                       f"penalty applies at ${_SHIPPING_COST_WARN_THRESHOLD_USD:.2f}+; "
+                       f"absorb into price or offer free shipping"
+        }]
+    return []
+
+
 def check_files(actual_files: list[dict], expected_patterns: list[str],
                 expected_count: int) -> list[dict]:
     issues = []
@@ -200,16 +362,36 @@ def check_photos(images: list[dict], min_count: int) -> list[dict]:
     return issues
 
 
+# Either the exact required phrase from CLAUDE.md's mandated disclosure
+# paragraph, or the section's own emoji+header, counts as real disclosure.
+_AI_DISCLOSURE_MARKERS = (
+    "ai image generation tools",
+    "about this design",
+)
+
+
 def check_ai_disclosure(description: str) -> list[dict]:
+    """FAIL (not WARN) if the canonical AI-disclosure paragraph isn't present.
+
+    Hardened 2026-07-15: previously this passed on "ai" in desc and "design"
+    in desc, which an ordinary sentence satisfies by accident (e.g. "email
+    design details") with zero real disclosure present. Now requires an
+    actual marker from the mandated paragraph (CLAUDE.md's "AI-Generated
+    Content — Mandatory Disclosure Protocol" section). Escalated to FAIL
+    because Etsy pulled 17,000+ listings for this exact gap in 2025 and a
+    single violation can drag the whole shop's quality score down
+    (CLAUDE.md's Suspension Triggers / Cascade Penalty sections) — this is
+    a real removal risk, not a style nit.
+    """
     desc_lower = description.lower()
-    has_disclosure = (
-        "ai" in desc_lower and "design" in desc_lower
-    ) or "ai image" in desc_lower or "ai tool" in desc_lower or "🤖" in description
+    has_disclosure = any(m in desc_lower for m in _AI_DISCLOSURE_MARKERS) or "🤖" in description
     if not has_disclosure:
         return [{
-            "severity": "WARN",
+            "severity": "FAIL",
             "check": "ai_disclosure",
-            "detail": "No AI disclosure found in description (required by Etsy June 2025 policy)"
+            "detail": "No AI disclosure found in description (required by Etsy June 2025 policy — "
+                       "must include the canonical '🤖 ABOUT THIS DESIGN' paragraph from CLAUDE.md, "
+                       "not just incidental use of the words 'AI'/'design')"
         }]
     return []
 
@@ -291,6 +473,31 @@ def check_art_in_photos(photo_hashes: dict[str, str], dp_codes: list[str],
                  "detail": "; ".join(failures)}]
     return [{"severity": "INFO", "check": "art_in_photos",
              "detail": f"Art verified in photos (best: {best_dp} slot {best_slot}, distance {best_overall})"}]
+
+
+def check_registry_coverage(dp_codes: list[str], registry: dict, rule: dict) -> list[dict]:
+    """WARN for any dp_code that's supposed to get the cardinal art-in-photos
+    check (rule.art_photo_check=True) but has no source_hash registered in
+    data/product_art_registry.json. Added 2026-07-15.
+
+    check_art_in_photos()'s `checkable` filter (see below) silently skips
+    unregistered dp_codes rather than failing them -- correct for that
+    function's own scope (it can only check what it has a hash for), but it
+    means missing registry coverage was previously invisible: a listing with
+    zero registered dp_codes reports the same clean "nothing to check" result
+    as a listing that was checked and passed. Cheap (dict lookups only, no
+    photo download) so it runs in FAST mode too, not just --full, surfacing
+    the coverage gap immediately instead of only during the slow weekly pass.
+    """
+    if not rule.get("art_photo_check") or not registry:
+        return []
+    missing = [dp for dp in dp_codes if not registry.get(dp, {}).get("source_hash")]
+    if missing:
+        return [{"severity": "WARN", "check": "art_registry_coverage",
+                 "detail": f"No source-art hash registered for {missing} — the cardinal "
+                           f"'real product in every photo' check cannot verify these dp_codes "
+                           f"at all (silently skipped, not passed). Run build_art_registry.py."}]
+    return []
 
 
 def check_approval(listing_id: str, title: str, tags: list, file_names: list,
@@ -492,6 +699,23 @@ def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
     result["issues"].extend(check_title(title))
     result["issues"].extend(check_tags(tags))
 
+    # who_made/when_made/is_supply/taxonomy_id — all already present on the
+    # listing dict fetched above, zero extra API calls.
+    result["issues"].extend(check_attributes(listing, rule))
+
+    # Live price vs. CLAUDE.md's documented tiers + .99/.97/.49 suffix rule.
+    price = listing.get("price") or {}
+    price_amount, price_divisor = price.get("amount"), price.get("divisor")
+    if price_amount is not None and price_divisor:
+        price_usd = price_amount / price_divisor
+        result["issues"].extend(check_price_tier(price_usd, result["dp_codes"], rule))
+
+    # Shipping cost — only physical listings pay this, and only they get the
+    # one extra API call it costs to check.
+    if rule.get("fulfillment") == "physical":
+        cost_usd = _fetch_shipping_cost_usd(api, api.shop_id, listing.get("shipping_profile_id"))
+        result["issues"].extend(check_shipping_cost(cost_usd))
+
     # AI disclosure only enforced when the rule requires it
     if "AI_DISCLOSURE" in rule.get("required_description_sections", []):
         result["issues"].extend(check_ai_disclosure(description))
@@ -537,6 +761,11 @@ def audit_listing(api: EtsyAPIClient, listing_id: str, manifest_entry: dict,
 
     result["photo_count"] = len(images)
     result["issues"].extend(check_photos(images, rule.get("min_photos", 3)))
+
+    # Registry-coverage gap check — cheap (no photo download), runs in FAST
+    # mode too so missing art-registry coverage surfaces immediately instead
+    # of only during the slow weekly --full pass.
+    result["issues"].extend(check_registry_coverage(result["dp_codes"], registry, rule))
 
     # -- Photo-dependent checks (full mode downloads & hashes every photo) --
     photo_hashes: dict[str, str] = {}

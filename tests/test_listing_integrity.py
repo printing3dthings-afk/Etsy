@@ -44,6 +44,7 @@ _RULE = {
     "required_description_sections": ["AI_DISCLOSURE"],
     "required_description_keywords": ["instant download"],
     "fulfillment": "digital",
+    "price_tier": {"min": 4.99, "max": 7.99},
 }
 _RULES = {"wall_art": _RULE, "unknown": _RULE}
 
@@ -51,17 +52,22 @@ _RULES = {"wall_art": _RULE, "unknown": _RULE}
 class _FakeEtsyClient:
     """Serves canned _request() responses keyed by (method, path suffix) --
     just enough of EtsyAPIClient's surface for audit_listing() to run.
-    `shop_id` is read directly by audit_listing's files-fetch call."""
+    `shop_id` is read directly by audit_listing's files-fetch call.
+    `shipping_profile` is only used by check_shipping_cost's one extra call
+    for fulfillment=physical listings -- None for every other fixture."""
 
-    def __init__(self, listing: dict, files: list, images: list):
+    def __init__(self, listing: dict, files: list, images: list, shipping_profile: dict | None = None):
         self.shop_id = "12345"
         self._listing = listing
         self._files = files
         self._images = images
+        self._shipping_profile = shipping_profile
 
     def _request(self, method: str, path: str, params=None, body=None):
         if path.startswith("listings/") and path.endswith("/images"):
             return {"results": self._images}
+        if "shipping-profiles/" in path:
+            return self._shipping_profile or {}
         if path.startswith("listings/") and "/files" not in path and "images" not in path:
             return self._listing
         if "/files" in path:
@@ -78,6 +84,11 @@ _GOOD_LISTING = {
         "the seller. All products are reviewed for quality before listing."
     ),
     "tags": [f"tag{i}" for i in range(13)],
+    "who_made": "i_did",
+    "when_made": "made_to_order",
+    "is_supply": False,
+    "taxonomy_id": 2078,
+    "price": {"amount": 799, "divisor": 100, "currency_code": "USD"},
 }
 _GOOD_FILES = [{"filename": "DP1001_print_sizes.zip"}]
 _GOOD_IMAGES = [{"rank": i, "url_fullxfull": f"https://example.test/{i}.jpg"} for i in range(1, 6)]
@@ -126,6 +137,128 @@ def test_audit_listing_fails_digital_listing_claiming_physical_shipping():
     check(r["status"] == "FAIL", f"expected FAIL for a digital listing claiming shipping, got {r['status']}")
     check(any(i["check"] == "fulfillment_mismatch" for i in r["issues"]),
           f"expected a fulfillment_mismatch issue, got {r['issues']}")
+
+
+# ── 2026-07-15 additions: attribute/taxonomy, price-tier, shipping-cost, and
+# the hardened AI-disclosure check, plus registry-coverage. ──
+
+def test_check_ai_disclosure_rejects_the_old_weak_heuristic():
+    # Previously "ai" in desc and "design" in desc was enough to pass -- this
+    # sentence satisfies that by accident with zero real disclosure present.
+    bad = dict(_GOOD_LISTING, description=(
+        "Instant download printable wall art. Email design details available "
+        "on request; certain colors may vary slightly by monitor."
+    ))
+    api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
+    r = lic.audit_listing(api, "9990009", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False)
+    check(r["status"] == "FAIL", f"expected FAIL for a coincidental ai/design match with no real disclosure, got {r['status']}")
+    check(any(i["check"] == "ai_disclosure" and i["severity"] == "FAIL" for i in r["issues"]),
+          f"expected a FAIL-severity ai_disclosure issue, got {r['issues']}")
+
+
+def test_audit_listing_fails_wrong_who_made():
+    bad = dict(_GOOD_LISTING, who_made="collective")
+    api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
+    r = lic.audit_listing(api, "9990010", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False)
+    check(r["status"] == "FAIL", f"expected FAIL for who_made != i_did, got {r['status']}")
+    check(any(i["check"] == "who_made" for i in r["issues"]),
+          f"expected a who_made issue, got {r['issues']}")
+
+
+def test_audit_listing_warns_wrong_taxonomy_id():
+    bad = dict(_GOOD_LISTING, taxonomy_id=1234)
+    api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
+    r = lic.audit_listing(api, "9990011", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False)
+    check(r["status"] == "WARN", f"expected WARN (not FAIL) for a taxonomy_id mismatch alone, got {r['status']}")
+    check(any(i["check"] == "taxonomy_id" and i["severity"] == "WARN" for i in r["issues"]),
+          f"expected a WARN-severity taxonomy_id issue, got {r['issues']}")
+
+
+def test_audit_listing_fails_price_outside_tier():
+    bad = dict(_GOOD_LISTING, price={"amount": 2999, "divisor": 100, "currency_code": "USD"})  # $29.99, tier is $4.99-$7.99
+    api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
+    r = lic.audit_listing(api, "9990012", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False)
+    check(r["status"] == "FAIL", f"expected FAIL for a price outside the documented tier, got {r['status']}")
+    check(any(i["check"] == "price_tier" and i["severity"] == "FAIL" for i in r["issues"]),
+          f"expected a FAIL-severity price_tier issue, got {r['issues']}")
+
+
+def test_audit_listing_warns_bad_price_suffix():
+    bad = dict(_GOOD_LISTING, price={"amount": 750, "divisor": 100, "currency_code": "USD"})  # $7.50 -- in tier, bad suffix
+    api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
+    r = lic.audit_listing(api, "9990013", _GOOD_ENTRY, _RULES, {}, {}, full_mode=False)
+    check(r["status"] == "WARN", f"expected WARN (not FAIL) for an in-tier price with a bad suffix, got {r['status']}")
+    check(any(i["check"] == "price_suffix" for i in r["issues"]),
+          f"expected a price_suffix issue, got {r['issues']}")
+
+
+_PLANNER_ENTRY = dict(_GOOD_ENTRY, dp_codes=["DP1027"], type="planner")
+_PLANNER_RULE = dict(_RULE, price_tier={"min": 9.99, "max": 16.99},
+                     dp_code_price_overrides={"DP1027": 9.99})
+_PLANNER_RULES = {"planner": _PLANNER_RULE, "unknown": _RULE}
+
+
+def test_audit_listing_fails_dp_code_price_override_mismatch():
+    # DP1027's documented price is $9.99 -- $12.99 is within the fallback
+    # range but violates the more specific per-product override.
+    bad = dict(_GOOD_LISTING, price={"amount": 1299, "divisor": 100, "currency_code": "USD"})
+    api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
+    r = lic.audit_listing(api, "9990014", _PLANNER_ENTRY, _PLANNER_RULES, {}, {}, full_mode=False)
+    check(r["status"] == "FAIL", f"expected FAIL for a dp_code price override mismatch, got {r['status']}")
+    check(any(i["check"] == "price_tier" and "DP1027" in i["detail"] for i in r["issues"]),
+          f"expected a price_tier issue mentioning DP1027, got {r['issues']}")
+
+
+_SVG_ENTRY = dict(_GOOD_ENTRY, type="svg_bundle")
+_SVG_RULE = dict(_RULE, price_tier={"valid_values": [9.99, 14.99]})
+_SVG_RULES = {"svg_bundle": _SVG_RULE, "unknown": _RULE}
+
+
+def test_audit_listing_fails_svg_price_between_valid_values():
+    # $12.99 is inside the 9.99-14.99 range but isn't one of the two actual
+    # documented tier prices -- a naive range check would wrongly pass this.
+    bad = dict(_GOOD_LISTING, price={"amount": 1299, "divisor": 100, "currency_code": "USD"})
+    api = _FakeEtsyClient(bad, _GOOD_FILES, _GOOD_IMAGES)
+    r = lic.audit_listing(api, "9990015", _SVG_ENTRY, _SVG_RULES, {}, {}, full_mode=False)
+    check(r["status"] == "FAIL", f"expected FAIL for a price between the two valid SVG tier values, got {r['status']}")
+    check(any(i["check"] == "price_tier" for i in r["issues"]),
+          f"expected a price_tier issue, got {r['issues']}")
+
+
+_PHYSICAL_ENTRY = dict(_GOOD_ENTRY, type="3d_print_physical")
+_PHYSICAL_RULE = dict(_RULE, fulfillment="physical", price_tier=None)
+_PHYSICAL_RULES = {"3d_print_physical": _PHYSICAL_RULE, "unknown": _RULE}
+_PHYSICAL_LISTING = dict(_GOOD_LISTING, shipping_profile_id=555)
+
+
+def test_check_shipping_cost_warns_on_high_shipping():
+    high_shipping_profile = {"shipping_profile_destinations": [
+        {"primary_cost": {"amount": 799, "divisor": 100, "currency_code": "USD"}}
+    ]}
+    api = _FakeEtsyClient(_PHYSICAL_LISTING, _GOOD_FILES, _GOOD_IMAGES, shipping_profile=high_shipping_profile)
+    r = lic.audit_listing(api, "9990016", _PHYSICAL_ENTRY, _PHYSICAL_RULES, {}, {}, full_mode=False)
+    check(any(i["check"] == "shipping_cost" and i["severity"] == "WARN" for i in r["issues"]),
+          f"expected a WARN-severity shipping_cost issue for $7.99 shipping, got {r['issues']}")
+
+
+def test_check_shipping_cost_silent_under_threshold():
+    low_shipping_profile = {"shipping_profile_destinations": [
+        {"primary_cost": {"amount": 399, "divisor": 100, "currency_code": "USD"}}
+    ]}
+    api = _FakeEtsyClient(_PHYSICAL_LISTING, _GOOD_FILES, _GOOD_IMAGES, shipping_profile=low_shipping_profile)
+    r = lic.audit_listing(api, "9990017", _PHYSICAL_ENTRY, _PHYSICAL_RULES, {}, {}, full_mode=False)
+    check(not any(i["check"] == "shipping_cost" for i in r["issues"]),
+          f"expected no shipping_cost issue for $3.99 shipping (under the $6 threshold), got {r['issues']}")
+
+
+def test_check_registry_coverage_warns_on_missing_source_hash():
+    art_rule = dict(_RULE, art_photo_check=True)
+    rules = {"wall_art": art_rule, "unknown": _RULE}
+    api = _FakeEtsyClient(_GOOD_LISTING, _GOOD_FILES, _GOOD_IMAGES)
+    entry = dict(_GOOD_ENTRY, dp_codes=["DP9999"])
+    r = lic.audit_listing(api, "9990018", entry, rules, {}, {"OTHER_DP": {"source_hash": "abc"}}, full_mode=False)
+    check(any(i["check"] == "art_registry_coverage" and i["severity"] == "WARN" for i in r["issues"]),
+          f"expected an art_registry_coverage WARN for an unregistered dp_code, got {r['issues']}")
 
 
 def test_audit_listing_fails_approval_drift_on_title_change():
