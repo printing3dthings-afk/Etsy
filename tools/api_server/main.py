@@ -514,7 +514,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "4e07787-v159"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "pending-v160"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6010,24 +6010,39 @@ def _description_needs_gate6_fix(description: str) -> bool:
     return not (has_download_signal and has_printable)
 
 
-async def _autofix_description_core(listing_id: int, listing: dict | None = None, reason: str = "") -> dict:
+async def _autofix_description_core(
+    listing_id: int, listing: dict | None = None, reason: str = "", assume_wall_art: bool = False,
+) -> dict:
     """Deterministic (no AI call) fix for CLAUDE.md's wall-art Gate 6 rule:
     prepend the exact mandated opening line when a description doesn't already
     signal instant/digital download + printable. Only applies to wall_art-type
-    listings (via listing_qc._detect_product_type) — other product types are
-    skipped rather than force-fit with wall-art copy, since the required
-    preamble is wall-art-specific. Never raises — returns {"error": str} on
-    failure, {"skipped": True, ...} when the listing isn't wall_art or is
-    already compliant, so a caller sweeping many listings can tell "nothing
-    to do here" apart from a real failure."""
+    listings — other product types are skipped rather than force-fit with
+    wall-art copy, since the required preamble is wall-art-specific.
+
+    Product type is detected via listing_qc._detect_product_type(title,
+    description), a title-keyword heuristic ("wall art" or "printable" in the
+    title) that under-detects real wall-art listings whose titles read e.g.
+    "X Art Print" with neither phrase (confirmed 2026-07-15 sweeping the live
+    catalog: MISC_BOTANICAL_HERBS_ART_PRINT and several siblings misdetected
+    as digital_planner). Pass assume_wall_art=True when the caller already
+    knows the true category from a more authoritative source (e.g.
+    product_catalog.json's `category` field) to bypass the heuristic.
+
+    Never raises — returns {"error": str} on failure, {"skipped": True, ...}
+    when the listing isn't wall_art or is already compliant, so a caller
+    sweeping many listings can tell "nothing to do here" apart from a real
+    failure."""
     if listing is None:
         listing = await _fetch_listing_for_autofix(listing_id)
 
     title = listing.get("title", "")
     description = listing.get("description", "") or ""
 
-    import listing_qc
-    product_type = listing_qc._detect_product_type(title, description)
+    if assume_wall_art:
+        product_type = "wall_art"
+    else:
+        import listing_qc
+        product_type = listing_qc._detect_product_type(title, description)
     if product_type != "wall_art":
         return {
             "skipped": True, "listing_id": listing_id,
@@ -6088,8 +6103,31 @@ async def autofix_title(listing_id: int, _token: str = Depends(_rate_limited_aut
     return {"staged": True, **result}
 
 
+@app.get("/api/listings/{listing_id}/gate6-check")
+async def gate6_check(listing_id: int, assume_wall_art: bool = False, _token: str = Depends(_auth_session_or_bearer)):
+    """Read-only: does this listing need the wall-art Gate 6 description fix?
+    No AI call, no staging, no budget spent against _rate_limited_auth's
+    shared 30/hour cap (unlike the POST autofix routes below) — safe to sweep
+    across the whole catalog to scope a fix before staging anything real."""
+    listing = await _fetch_listing_for_autofix(listing_id)
+    title = listing.get("title", "")
+    description = listing.get("description", "") or ""
+    if assume_wall_art:
+        product_type = "wall_art"
+    else:
+        import listing_qc
+        product_type = listing_qc._detect_product_type(title, description)
+    if product_type != "wall_art":
+        return {"listing_id": listing_id, "needs_fix": False, "reason": f"not a wall_art listing (detected: {product_type})"}
+    needs_fix = _description_needs_gate6_fix(description)
+    return {
+        "listing_id": listing_id, "needs_fix": needs_fix,
+        "reason": "missing instant-download/printable signal" if needs_fix else "already compliant",
+    }
+
+
 @app.post("/api/autofix/description/{listing_id}")
-async def autofix_description(listing_id: int, _token: str = Depends(_rate_limited_auth)):
+async def autofix_description(listing_id: int, assume_wall_art: bool = False, _token: str = Depends(_rate_limited_auth)):
     """Deterministically fix a wall-art listing's missing CLAUDE.md Gate 6
     preamble ('instant download'/'printable') by prepending the exact
     mandated line, then stage an update_description action. No AI call — the
@@ -6098,7 +6136,7 @@ async def autofix_description(listing_id: int, _token: str = Depends(_rate_limit
     already-compliant listing instead of an error, so a caller sweeping many
     listings can distinguish "nothing to fix" from a real failure.
     Nothing touches Etsy until Scott taps Approve in the Action Center."""
-    result = await _autofix_description_core(listing_id)
+    result = await _autofix_description_core(listing_id, assume_wall_art=assume_wall_art)
     if "error" in result:
         raise HTTPException(status_code=502, detail=result["error"])
     if result.get("skipped"):
