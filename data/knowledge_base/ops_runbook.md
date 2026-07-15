@@ -6983,3 +6983,45 @@ New coverage: `tests/test_etsy_api_alt_text.py` (3 fixture tests, mocks
 call). Full existing suite + smoke test + Playwright smoke still green.
 
 Build bumped to `23fdd93-v174`.
+
+---
+
+### 2026-07-15 (final pass, follow-up) — Don't persist chat turns that touched buyer data
+
+The prior audit pass flagged (but deliberately didn't build) a policy
+question: the `get_orders` agent tool returns a real buyer name to the
+model for that turn, and if the reply repeated it, the name landed in
+Frank's durable, searchable `chat_messages` table. Scott asked for the
+tradeoff explained in detail, then chose: the model can still see the
+name live (needed to answer naturally), but that exchange should never be
+written to the durable DB. This is his explicit choice among several
+presented — not a bug if you see a chat turn that isn't in Conversations
+later; that's the point.
+
+**Confirmed scope before building:** `get_orders`
+(`tools/api_server/main.py:3111-3127`) is the *only* agent tool that
+returns a real buyer name. `get_reviews` (line 3128-3143) returns no
+buyer identifier at all. There is no `get_messages` agent tool.
+
+**Implementation, both in `main.py`:**
+- `_run_agent_turn()` now tracks `pii_tools_used: set[str]` across a
+  turn's tool round-trips, adding to it whenever a tool in the new
+  `_PII_TOOLS = frozenset({"get_orders"})` constant is called. Return type
+  changed from `-> str` to `-> tuple[str, frozenset[str]]` (single call
+  site, `/ws/chat`, updated to match).
+- New `_should_persist_chat_turn(session_id, pii_tools_used) -> bool`
+  helper (pulled out specifically so this decision is unit-testable
+  without a full websocket integration test) — `/ws/chat`'s persist block
+  now gates on it instead of just `if session_id:`. Only the durable
+  `db.append_chat_message` calls are skipped — the in-memory `history`
+  list used for live context is untouched, so Frank still remembers the
+  exchange for the rest of that session; it just never becomes
+  retrievable later via Conversations. A skip logs one line
+  (`[chat] skipping persist for a turn that touched buyer data via
+  [...]`) for backend traceability.
+
+New coverage: `tests/test_chat_pii_persistence.py` (4 fixture tests, pure
+routing logic via `import main as server`, no live Anthropic/Etsy call).
+Full existing suite + smoke test + Playwright smoke still green.
+
+Build bumped to `c7a5b44-v175`.

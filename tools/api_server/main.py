@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "23fdd93-v174"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c7a5b44-v175"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9240,7 +9240,21 @@ async def relay_ws(websocket: WebSocket):
 # ── WebSocket chat ─────────────────────────────────────────────────────────────
 
 
-async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) -> str:
+_PII_TOOLS = frozenset({"get_orders"})  # tools whose results include a real buyer name
+
+
+def _should_persist_chat_turn(session_id: str, pii_tools_used: frozenset[str]) -> bool:
+    """False when this turn shouldn't be written to the durable, searchable
+    chat_messages table -- either no session to persist to, or a buyer-data
+    tool was used this turn (see _run_agent_turn's docstring). The in-memory
+    `history` list is untouched either way -- Frank still remembers the
+    exchange for the rest of this live connection; only the durable DB write
+    is skipped. Pulled out as its own function so this decision is directly
+    unit-testable without a full websocket integration test."""
+    return bool(session_id) and not pii_tools_used
+
+
+async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) -> tuple[str, frozenset[str]]:
     """One user turn: stream text, run any tools the model requests, repeat until
     the model is done. Tool calls let the CEO agent read live shop data.
 
@@ -9252,10 +9266,16 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
     bounded by a 90s per-chunk stall timeout so a frozen connection can't hang the
     shared loop forever.
 
-    Returns the assistant's full visible text for the turn (so the caller can
-    persist it to chat memory). Raises on a stream/API failure or stall — the caller
-    is responsible for rolling back this turn's additions to `history`."""
+    Returns (assistant_text, pii_tools_used) — the caller persists assistant_text to
+    chat memory, but skips that persistence entirely when pii_tools_used is non-empty
+    (2026-07-15 ADA/security audit: get_orders returns a real buyer name to the model
+    for that turn, which it needs to answer naturally, but nothing should write that
+    name into Frank's durable, searchable chat-history DB — Scott's explicit choice
+    among the options presented, see ops_runbook.md). Raises on a stream/API failure
+    or stall — the caller is responsible for rolling back this turn's additions to
+    `history`."""
     assistant_text_parts: list[str] = []
+    pii_tools_used: set[str] = set()
     loop = asyncio.get_running_loop()
     for _ in range(6):  # safety cap on tool round-trips per turn
         queue: asyncio.Queue = asyncio.Queue()
@@ -9334,7 +9354,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
 
         if final.stop_reason != "tool_use":
             await websocket.send_text(json.dumps({"type": "done"}))
-            return "".join(assistant_text_parts).strip()
+            return "".join(assistant_text_parts).strip(), frozenset(pii_tools_used)
 
         # Execute every requested tool, then feed results back for the next round.
         # IMPORTANT: every tool_use block above is now committed to `history`. The
@@ -9390,6 +9410,8 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     await websocket.send_text(json.dumps({"type": "tool", "content": status_msg}))
                 except Exception:
                     pass  # status update is best-effort; never let it block the tool result
+                if block.name in _PII_TOOLS:
+                    pii_tools_used.add(block.name)
                 try:
                     if block.name in _RELAY_TOOLS:
                         result = await _dispatch_to_relay(block.name, block.input)
@@ -9410,7 +9432,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
 
     # Exhausted the round-trip cap — close out gracefully.
     await websocket.send_text(json.dumps({"type": "done"}))
-    return "".join(assistant_text_parts).strip()
+    return "".join(assistant_text_parts).strip(), frozenset(pii_tools_used)
 
 
 # ── Voice: OpenAI Whisper (speech-in) + OpenAI TTS (speech-out) ────────────────
@@ -9638,19 +9660,23 @@ async def chat_ws(websocket: WebSocket):
             base_len = len(history)
             history.append({"role": "user", "content": user_text})
             try:
-                assistant_text = await _run_agent_turn(websocket, ai_client, history)
+                assistant_text, pii_tools_used = await _run_agent_turn(websocket, ai_client, history)
             except Exception as exc:
                 print(f"[chat] turn failed: {exc}", flush=True)
                 del history[base_len:]  # roll back this turn's additions
                 await websocket.send_text(json.dumps({"type": "error", "content": _friendly_error_message(exc)}))
                 continue
 
-            # Persist only completed exchanges (text-only — see db.append_chat_message).
-            if session_id:
+            # Persist only completed exchanges (text-only — see db.append_chat_message)
+            # that didn't touch buyer data this turn (see _should_persist_chat_turn).
+            if _should_persist_chat_turn(session_id, pii_tools_used):
                 await asyncio.to_thread(db.append_chat_message, session_id, "user", user_text)
                 if assistant_text:
                     await asyncio.to_thread(db.append_chat_message, session_id, "assistant", assistant_text)
                 await asyncio.to_thread(_maybe_compact_chat_history, session_id)
+            elif session_id and pii_tools_used:
+                print(f"[chat] skipping persist for a turn that touched buyer data via {sorted(pii_tools_used)}",
+                      flush=True)
 
     except WebSocketDisconnect:
         pass
