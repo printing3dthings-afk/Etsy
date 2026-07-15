@@ -514,7 +514,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "pending-v160"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d677052-v161"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8511,6 +8511,7 @@ async def get_conversation_detail(session_id: str, _token: str = Depends(_auth_s
 _FILE_ROOTS = {
     "products": ROOT / "data" / "digital_products",
     "backups": ROOT / "data" / "backups",
+    "hub_db_backups": ROOT / "data" / "hub_db_backups",
 }
 
 # On the hosted dashboard (Railway) the repo's data/ dir is ephemeral and gitignored,
