@@ -7223,3 +7223,77 @@ tests (document.body scroll path, WebGL context-loss transition). Full
 existing suite + smoke test + Playwright smoke still green.
 
 Build bumped to `81f2fbb-v178`.
+
+### 2026-07-15 (final pass, follow-up 5) — Orb's black circle fixed at the source; caught and fixed a real TDZ regression before shipping
+
+Scott: "Is there any way to get rid of the circle around Frank. Can the
+orb truly be its own thing and hover over the background. It just looks
+bad when the background changes color" — a screenshot showed a solid
+black disc around the cyan wireframe sphere on his light "Day Mode"
+theme.
+
+**Root cause:** the existing CSS `mask-image` on `canvas#orb-gl` (added
+in an earlier pass) only ever faded the OUTER edge of the canvas's square
+bounding box — it never addressed the opaque black INTERIOR, which is
+what Scott was actually seeing. That interior opacity traces back to a
+known `UnrealBloomPass` limitation: it doesn't preserve real per-pixel
+alpha to the final composite, so even with `glRenderer.setClearColor(0,
+0)` (transparent) and `alpha:true` on the WebGL context, the rendered
+result is effectively opaque black across most of the canvas on a real
+device.
+
+**Considered and rejected:** `mix-blend-mode:screen` on the canvas —
+mathematically background-agnostic for a *black* source pixel (screening
+0 over any backdrop B leaves B unchanged), which looked like a clean
+fix. Worked the math by hand for a light backdrop before shipping it:
+`screen` also washes *bright* source colors toward white against a light
+backdrop, not just black toward transparent — the cyan wireframe itself
+would have gone faint/near-invisible on Scott's actual "Day Mode" theme
+(confirmed via grep that no `prefers-color-scheme` auto-switch exists
+anywhere in the codebase, so that's a deliberate manual pick, not a
+fluke). Reverted before shipping.
+
+**Actual fix — paint the canvas the theme's own background color:**
+added `setOrbBackgroundToTheme()`, which reads the active theme's real
+`--bg` custom property off `document.documentElement` and sets it as the
+WebGL renderer's *opaque* clear color (`glRenderer.setClearColor(hexAsNumber,
+1)`). This sidesteps the alpha bug entirely — never depends on real
+transparency — so the canvas's square bounding box is always painted
+exactly the color of the page behind it, correct for any theme, light or
+dark, by construction. Called once in `initOrbGL()` right after the
+renderer is created, and again from `_setTheme()` on every live theme
+switch (previously the clear color would've stayed frozen at whichever
+theme was active on first load). The pre-existing edge-softening CSS mask
+was left in place — it still does its original job of blending the
+canvas's square-to-circle transition.
+
+**Real regression caught before shipping, not just a design tweak:**
+wiring `setOrbBackgroundToTheme()` into `_setTheme()` immediately broke
+page load — `tools/playwright_smoke.py` caught `pageerror: Cannot access
+'glRenderer' before initialization` plus a cascading `Cannot access
+'_BRANDKIT_THEMES' before initialization` on the Brand Kit screen.
+Root cause: `orbGLPaused`/`glRenderer`/etc. were declared with `let` far
+down the script (near the rest of the orb code), but `_setTheme()` — now
+calling `setOrbBackgroundToTheme()`, which reads `glRenderer` — runs
+once immediately on page load via an IIFE (`_setTheme(_getTheme())`)
+positioned *before* that `let` declaration in source order. `let`
+bindings are in the temporal dead zone from the top of their enclosing
+scope until the declaration line itself executes, so this threw a
+synchronous uncaught exception on every page load, which halted the rest
+of the single inline `<script>` block's top-level execution entirely —
+explaining the second, unrelated-looking `_BRANDKIT_THEMES` error as
+collateral damage, not a separate bug. **Fix:** moved the
+`orbGLPaused`/`orbGLReady`/`orbGLLoading`/`glMesh`/`glComposer`/
+`glRenderer`/`glClock`/`glUniforms` declarations up to directly above
+`_getTheme()`/`_setTheme()`, before the IIFE that first calls
+`_setTheme()`. Re-ran the full Playwright smoke suite after the move:
+clean, no console errors, both the orb and Brand Kit screens render.
+
+Verification: `python -m py_compile`, `ast.literal_eval` + `node --check`
+on the extracted JS, full `tests/test_*.py` suite (12 files, all green),
+`tests/smoke_test.py`, and `tools/playwright_smoke.py` (the actual bug
+above was only caught by this last one — a lesson to always run the real
+headless-browser suite after any change that touches top-level script
+execution order, not just a syntax check).
+
+Build bumped to `092888f-v179`.

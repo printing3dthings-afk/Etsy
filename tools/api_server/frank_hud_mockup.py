@@ -319,7 +319,28 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
      The camera pull-back (initOrbGL, z=6.5) now seats the whole displaced silhouette
      inside ~86% of the half-side even at speaking-state peaks, so this mask only needs
      to fade the corner bleed beyond that -- fade start pushed 82%->88% so it no longer
-     trims the orb's own wavy edge, only the UnrealBloomPass corner haze. */
+     trims the orb's own wavy edge, only the UnrealBloomPass corner haze.
+
+     2026-07-15 (Scott: "the black circle looks bad when the background changes
+     color"): the mask above only ever fixed the OUTER edge of the canvas's square
+     bounding box -- it does nothing about the opaque black interior the same alpha
+     bug produces, which is the actual disc Scott saw (solid black, ~88% of the
+     canvas radius, sitting on top of whatever page/theme background is behind it).
+     Considered mix-blend-mode:screen first (background-color-agnostic in theory --
+     screening black over any color B leaves B unchanged) but rejected it: Scott is
+     on the light "Day Mode" theme (confirmed -- no prefers-color-scheme auto-switch
+     exists, so this was a deliberate pick), and screen/lighten blend modes wash
+     BRIGHT source colors toward white against a light backdrop too, not just black
+     toward transparent -- the wireframe itself would have gone faint/near-invisible
+     on that theme, trading one bad look for another. Fixed at the actual source
+     instead: setOrbBackgroundToTheme() (see the script below) reads the active
+     theme's real --bg custom property and feeds it to the WebGL renderer as an
+     OPAQUE clear color, re-applied on init and on every theme switch. This
+     sidesteps the alpha bug entirely (never relies on real transparency) and is
+     correct for every theme, light or dark, by construction -- the "circle" is
+     always painted the exact color of the page behind it, so there's nothing to
+     see. The mask below still does its original job of softening the canvas's
+     square-to-circle edge transition. */
   -webkit-mask-image:radial-gradient(circle closest-side at 50% 50%,#000 88%,rgba(0,0,0,.45) 95%,transparent 100%);
   mask-image:radial-gradient(circle closest-side at 50% 50%,#000 88%,rgba(0,0,0,.45) 95%,transparent 100%);
 }
@@ -2879,6 +2900,18 @@ const _UI_THEMES = [
   {name:'ocean',   label:'Ocean Teal',    bg:'#07120f', accent:'#3ad6c8'},
   {name:'kawaii',  label:'Midnight Kawaii',bg:'#0d0a1a', accent:'#00e5ff'},
 ];
+// Orb WebGL state, declared here (rather than down by the rest of the orb code,
+// where they lived until 2026-07-15) because _setTheme() below now calls
+// setOrbBackgroundToTheme(), which reads glRenderer -- and the page runs
+// _setTheme(_getTheme()) once immediately on load (see the IIFE a few lines
+// down). `let` bindings are in the temporal dead zone from the top of their
+// enclosing scope until the declaration line actually executes, so leaving
+// these declared in their original spot (much further down the script) threw
+// "Cannot access 'glRenderer' before initialization" on every page load, before
+// the orb's own code ever ran.
+let orbGLPaused = true, orbGLReady = false, orbGLLoading = false;
+let glMesh = null, glComposer = null, glRenderer = null, glClock = null, glUniforms = null;
+
 function _getTheme() {
   try { return localStorage.getItem('frankTheme') || 'default'; } catch(e) { return 'default'; }
 }
@@ -2887,6 +2920,11 @@ function _setTheme(name) {
   _UI_THEMES.forEach(t => document.documentElement.classList.remove('theme-'+t.name));
   if (name !== 'default') document.documentElement.classList.add('theme-'+name);
   _renderThemeSwatches();
+  // 2026-07-15: keep the orb's WebGL clear color in lockstep with the live
+  // theme (see setOrbBackgroundToTheme() for why this exists at all) -- a
+  // function declaration below this point in the same script is still
+  // callable here due to hoisting.
+  setOrbBackgroundToTheme();
 }
 function _renderThemeSwatches() {
   const row = document.getElementById('theme-swatch-row');
@@ -6534,9 +6572,10 @@ function resetOrbToDefault(){
 // approximation. uAmp is driven by REAL TTS playback amplitude via an AnalyserNode
 // tapped off the premium-voice <audio> element (see currentVoiceAmp()/_setupTtsAnalyser
 // below) — the old orb-state label claimed "reacting to live TTS amplitude" while
-// actually running a fake dual-sine pulse; this makes that claim true. ──
-let orbGLPaused = true, orbGLReady = false, orbGLLoading = false;
-let glMesh = null, glComposer = null, glRenderer = null, glClock = null, glUniforms = null;
+// actually running a fake dual-sine pulse; this makes that claim true. (State vars
+// orbGLPaused/orbGLReady/orbGLLoading/glMesh/glComposer/glRenderer/glClock/glUniforms
+// moved up to just above _getTheme()/_setTheme() on 2026-07-15 — see the comment
+// there for why.) ──
 
 const _ORB_NOISE_GLSL = `
 vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
@@ -6639,15 +6678,17 @@ async function initOrbGL(){
     camera.position.z = 6.5;
 
     glRenderer = new THREE.WebGLRenderer({canvas: orbGlCanvas, alpha:true, antialias:true});
-    // The `alpha:true` context option only lets the drawing buffer SUPPORT an alpha
-    // channel — it does not default the clear to transparent. Without this, the
-    // renderer's ambient clear alpha stays at its default of 1 (opaque), RenderPass
-    // inherits that for its offscreen scene render, and the result is a solid black
-    // square baked into every frame — exactly the "box cut off" Scott flagged from his
-    // real device. This one call is the actual fix.
-    glRenderer.setClearColor(0x000000, 0);
+    // `alpha:true` still needed so the context CAN hold a partial-alpha drawing
+    // buffer for antialiasing/edge blending -- but the clear color itself is no
+    // longer relied on to be transparent (see setOrbBackgroundToTheme() below and
+    // its 2026-07-15 comment on the CSS mask above for why: UnrealBloomPass doesn't
+    // preserve real per-pixel alpha to the final composite, so a transparent clear
+    // still rendered as an opaque black disc on a real device regardless of this
+    // setting). setOrbBackgroundToTheme() sets the actual (opaque) clear color
+    // right after this.
     glRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
     glRenderer.setSize(640, 640, false);
+    setOrbBackgroundToTheme();
 
     const geo = new THREE.IcosahedronGeometry(1.15, 16);
     glUniforms = {
@@ -6685,6 +6726,27 @@ async function initOrbGL(){
     orbGLLoading = false;
     console.error('[orb-gl] WebGL noise-sphere failed to initialize — orb will stay blank in sphere mode until this is fixed', e);
   }
+}
+
+// setOrbBackgroundToTheme() (2026-07-15) — "get rid of the circle around Frank."
+// Reads the ACTIVE theme's real --bg custom property off the document root and
+// paints it as the WebGL renderer's opaque clear color, so the canvas's square
+// bounding box (unavoidably opaque due to the UnrealBloomPass alpha bug
+// documented on the canvas#orb-gl CSS rule above) is always exactly the same
+// color as the page behind it -- nothing to see, on any theme, without
+// depending on real alpha transparency at all. Called once right after the
+// renderer is created in initOrbGL(), and again on every theme switch (see
+// _setTheme()) since the clear color otherwise stays frozen at whatever theme
+// was active on first load. Guarded on glRenderer because _setTheme() can fire
+// before the orb's async WebGL init has completed (or after context loss, while
+// a rebuild is still pending) -- in that case there's nothing to paint yet, and
+// the next initOrbGL() call will pick up the (by-then-current) theme itself.
+function setOrbBackgroundToTheme(){
+  if (!glRenderer) return;
+  const hex = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  const numeric = parseInt(hex.replace('#', ''), 16);
+  if (Number.isNaN(numeric)) return;
+  glRenderer.setClearColor(numeric, 1);
 }
 
 // ── WebGL context loss recovery (2026-07-15) — "the orb freezes after
