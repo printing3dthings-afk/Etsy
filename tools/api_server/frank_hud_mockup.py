@@ -434,6 +434,36 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .welcome-dismiss{width:100%;background:var(--gold);color:#0D1B2A;border:none;border-radius:var(--r-md);
   padding:11px 0;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
 
+/* ── First-login spotlight tour — a scrim (#tour-click-catcher) blocks clicks
+   outside the tour, #tour-spot is a zero-content box whose huge box-shadow both
+   dims everything else on screen AND punches a "cutout" ring around the real
+   target element (or, for target:null intro/outro steps, sits at 0x0 in the
+   viewport center so the shadow just dims uniformly — same element, no branching
+   markup). #tour-tooltip is the floating card with copy + controls. All three
+   live inside #tour-root so one display toggle shows/hides the whole tour. ── */
+#tour-root{display:none}
+#tour-click-catcher{position:fixed;inset:0;z-index:9599;background:transparent}
+#tour-spot{position:fixed;z-index:9600;border-radius:10px;pointer-events:none;
+  box-shadow:0 0 0 9999px rgba(5,9,16,.82),0 0 0 2px var(--gold);
+  transition:left .3s ease,top .3s ease,width .3s ease,height .3s ease}
+#tour-tooltip{position:fixed;z-index:9601;background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:18px 20px;width:320px;max-width:calc(100vw - 32px);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);transition:left .3s ease,top .3s ease}
+.tour-step-title{font-size:15px;font-weight:700;color:var(--gold);margin-bottom:8px}
+.tour-step-body{font-size:12.5px;color:var(--text);line-height:1.5;margin-bottom:12px}
+.tour-step-body p{margin:0 0 8px}
+.tour-step-body p:last-child{margin-bottom:0}
+.tour-dots{display:flex;gap:5px;margin-bottom:12px}
+.tour-dots .dot{width:6px;height:6px;border-radius:50%;background:var(--border)}
+.tour-dots .dot.active{background:var(--gold)}
+.tour-controls{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tour-controls .tour-skip{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:6px 4px}
+.tour-controls .tour-btns{display:flex;gap:8px}
+.tour-controls button.tour-nav-btn{background:var(--panel2);color:var(--text);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+.tour-controls button.tour-nav-btn.primary{background:var(--gold);color:#0D1B2A;border-color:var(--gold)}
+.tour-controls button.tour-nav-btn:disabled{opacity:.35;cursor:default}
+
 .dep-pill-row{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;justify-content:flex-start}
 .dep-pill{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--border);
   border-radius:var(--r-sm);padding:7px 10px}
@@ -978,6 +1008,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div id="alert-dropdown-list"><div style="color:var(--muted);font-size:11px;padding:8px">Loading…</div></div>
         </div>
       </div>
+      <div class="icon-btn" onclick="startTour()" title="Replay tutorial" aria-label="Replay tutorial" role="button" tabindex="0">?</div>
       <div class="icon-btn" onclick="showScreen('settings')" aria-label="Settings" role="button" tabindex="0">⚙</div>
       <div class="operator" id="operator-chip" title="Click to log out" onclick="doLogout()" style="cursor:pointer" role="button" tabindex="0" aria-label="Log out"><div class="av" id="op-av">…</div><div><div class="ol1" id="op-name">…</div><div class="ol2" id="op-role">…</div></div></div>
     </div>
@@ -1032,6 +1063,27 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <p class="welcome-note">Everything else lives under “Advanced” — you can ignore it until you need it.</p>
       </div>
       <button class="welcome-dismiss" id="welcome-dismiss-btn" onclick="dismissWelcomeOverlay()">Got it</button>
+    </div>
+  </div>
+
+  <!-- First-login spotlight tour (desktop) — see startTour()/renderTourStep() below.
+       Hidden on mobile in favor of the single welcome-overlay card above (mobile's
+       tab-bar layout has no sidebar to spotlight). Replayable anytime via the '?'
+       icon in the header. -->
+  <div id="tour-root">
+    <div id="tour-click-catcher" onclick="tourSkip()"></div>
+    <div id="tour-spot"></div>
+    <div id="tour-tooltip" role="dialog" aria-modal="true" aria-labelledby="tour-step-title">
+      <div class="tour-dots" id="tour-dots"></div>
+      <div class="tour-step-title" id="tour-step-title"></div>
+      <div class="tour-step-body" id="tour-step-body"></div>
+      <div class="tour-controls">
+        <button class="tour-skip" onclick="tourSkip()">Skip tour</button>
+        <div class="tour-btns">
+          <button class="tour-nav-btn" id="tour-back-btn" onclick="tourBack()">Back</button>
+          <button class="tour-nav-btn primary" id="tour-next-btn" onclick="tourNext()">Next</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2569,31 +2621,177 @@ const CHAT_SESSION = (function(){
 (function(){
   try { if (localStorage.getItem('frankDevMode') === '1') document.body.classList.add('show-plumbing','show-advanced'); } catch(e) {}
 })();
-// ── First-run welcome overlay — shows once unless dismissed, degrades to
-// showing every time if localStorage is unavailable (same failure mode as
-// the chatSession pattern above). ──
+// ── First-run welcome overlay — the plain single-card version. Still used as
+// the mobile fallback (mobile's tab-bar layout has no sidebar to spotlight, so
+// the full tour below is desktop-only) and as the Escape-key target while it's
+// showing. Degrades to showing every time if localStorage is unavailable (same
+// failure mode as the chatSession pattern above). ──
 function dismissWelcomeOverlay() {
   const el = document.getElementById('welcome-overlay');
   if (el) el.style.display = 'none';
   try { localStorage.setItem('frankWelcomeSeen', '1'); } catch(e) {}
 }
-(function(){
-  let seen = false;
-  try { seen = !!localStorage.getItem('frankWelcomeSeen'); } catch(e) {}
-  if (!seen) {
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Escape') return;
+  const el = document.getElementById('welcome-overlay');
+  if (el && el.style.display !== 'none') dismissWelcomeOverlay();
+});
+
+// ── First-login spotlight tour (desktop) — walks a new user through the real
+// sidebar/header, one nav item at a time, with a dimmed cutout ring around each
+// target (see #tour-spot's box-shadow trick in the CSS above) and a floating
+// tooltip explaining what lives there. target:null steps (intro/outro) reuse the
+// same #tour-spot element sized to 0x0 at the viewport center, so the shadow just
+// dims uniformly — no separate markup branch needed. Replayable anytime via the
+// '?' icon in the header (startTour()). ──
+const TOUR_STEPS = [
+  { target: null, screen: null,
+    title: 'Welcome to %%AGENT_SHORT%%',
+    body: '<p>%%AGENT_SHORT%% helps you run your shop. This quick tour shows where everything lives — about 30 seconds.</p><p class="tour-note">Tap Next to start, or Skip to jump right in.</p>' },
+  { target: '#orb-desktop-btn', screen: null,
+    title: 'Talk to %%AGENT_SHORT%%',
+    body: '<p>Click this anytime to open the voice &amp; chat orb — ask a question or give an instruction in plain English.</p>' },
+  { target: '.nav-item[data-screen="actions"]', screen: 'actions',
+    title: 'Approvals',
+    body: '<p>%%AGENT_SHORT%% never changes your shop, files, or posts without your one-tap OK. Anything waiting on you shows up here.</p>' },
+  { target: '.nav-item[data-screen="create"]', screen: 'create',
+    title: 'Create',
+    body: '<p>Generate listing photos, videos, and product files here, then publish straight to Etsy.</p>' },
+  { target: '.nav-item[data-screen="listings"]', screen: 'listings',
+    title: 'Your listings',
+    body: '<p>Every live Etsy listing, with a Fix button wherever %%AGENT_SHORT%% spots something that needs attention.</p>' },
+  { target: '.nav-item[data-screen="knowledge"]', screen: 'knowledge',
+    title: 'Knowledge',
+    body: '<p>%%AGENT_SHORT%%\\'s memory, past conversations, and the shop\\'s knowledge base — what %%AGENT_SHORT%% remembers and has learned.</p>' },
+  { target: '.nav-item[data-screen="products"]', screen: 'products',
+    title: 'Products',
+    body: '<p>Your product catalog and the status of every digital or physical file behind it.</p>' },
+  { target: '.nav-item[data-screen="brandkit"]', screen: 'brandkit',
+    title: 'Brand Kit',
+    body: '<p>Colors, fonts, and brand assets %%AGENT_SHORT%% uses whenever it generates new content for you.</p>' },
+  { target: '.nav-item[data-screen="files"]', screen: 'files',
+    title: 'Files',
+    body: '<p>Browse shop files, and download a full backup any time.</p>' },
+  { target: '.nav-item[data-screen="connections"]', screen: 'connections',
+    title: 'Connections',
+    body: '<p>Etsy, social, and other integrations — connect a new one or check status here.</p>' },
+  { target: '#nav-advanced-toggle', screen: null,
+    title: 'Advanced',
+    body: '<p>The engineering-level screens (Settings, Tasks, AI Core, Agents, and more) live under here. Safe to ignore until you need them.</p>' },
+  { target: null, screen: null,
+    title: "You're all set",
+    body: '<p>That\\'s everything. Replay this tour anytime from the <b>?</b> icon in the top bar.</p>' },
+];
+let _tourIndex = 0;
+function _tourTargetEl(step){ return step.target ? document.querySelector(step.target) : null; }
+function renderTourStep(){
+  const step = TOUR_STEPS[_tourIndex];
+  if (!step) return;
+  if (step.screen) showScreen(step.screen);
+  const spot = document.getElementById('tour-spot');
+  const tip = document.getElementById('tour-tooltip');
+  const el = _tourTargetEl(step);
+  const rect = el ? el.getBoundingClientRect() : null;
+  const pad = 8;
+  if (rect) {
+    if (rect.top < 0 || rect.bottom > window.innerHeight) el.scrollIntoView({block:'center'});
+    const r2 = el.getBoundingClientRect();
+    spot.style.left = (r2.left - pad) + 'px';
+    spot.style.top = (r2.top - pad) + 'px';
+    spot.style.width = (r2.width + pad*2) + 'px';
+    spot.style.height = (r2.height + pad*2) + 'px';
+  } else {
+    spot.style.left = (window.innerWidth/2) + 'px';
+    spot.style.top = (window.innerHeight/2) + 'px';
+    spot.style.width = '0px';
+    spot.style.height = '0px';
+  }
+  document.getElementById('tour-step-title').innerHTML = step.title;
+  document.getElementById('tour-step-body').innerHTML = step.body;
+  const dots = document.getElementById('tour-dots');
+  dots.innerHTML = TOUR_STEPS.map((_, i) => '<span class="dot' + (i === _tourIndex ? ' active' : '') + '"></span>').join('');
+  document.getElementById('tour-back-btn').disabled = (_tourIndex === 0);
+  document.getElementById('tour-next-btn').textContent = (_tourIndex === TOUR_STEPS.length - 1) ? 'Done' : 'Next';
+  // Position the tooltip relative to the (possibly re-measured) target rect —
+  // prefer right, then left, then below, then above, clamped inside the viewport.
+  const tipMargin = 16, viewMargin = 12, tipW = 320;
+  requestAnimationFrame(() => {
+    const tipH = tip.offsetHeight || 160;
+    let left, top;
+    const r3 = el ? el.getBoundingClientRect() : null;
+    if (r3) {
+      if (r3.right + tipMargin + tipW < window.innerWidth) {
+        left = r3.right + tipMargin;
+        top = r3.top + r3.height/2 - tipH/2;
+      } else if (r3.left - tipMargin - tipW > 0) {
+        left = r3.left - tipMargin - tipW;
+        top = r3.top + r3.height/2 - tipH/2;
+      } else if (r3.bottom + tipMargin + tipH < window.innerHeight) {
+        left = r3.left;
+        top = r3.bottom + tipMargin;
+      } else {
+        left = r3.left;
+        top = r3.top - tipMargin - tipH;
+      }
+    } else {
+      left = window.innerWidth/2 - tipW/2;
+      top = window.innerHeight/2 - tipH/2;
+    }
+    left = Math.min(Math.max(left, viewMargin), window.innerWidth - tipW - viewMargin);
+    top = Math.min(Math.max(top, viewMargin), window.innerHeight - tipH - viewMargin);
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  });
+}
+function endTour(markSeen){
+  const root = document.getElementById('tour-root');
+  if (root) root.style.display = 'none';
+  if (markSeen) { try { localStorage.setItem('frankWelcomeSeen', '1'); } catch(e) {} }
+}
+function tourNext(){
+  if (_tourIndex >= TOUR_STEPS.length - 1) { endTour(true); return; }
+  _tourIndex++;
+  renderTourStep();
+}
+function tourBack(){
+  if (_tourIndex <= 0) return;
+  _tourIndex--;
+  renderTourStep();
+}
+function tourSkip(){ endTour(true); }
+function startTour(){
+  // Mobile has no sidebar to spotlight — fall back to the plain welcome card.
+  if (isMobileMode()) {
     const el = document.getElementById('welcome-overlay');
     if (el) {
       el.style.display = 'flex';
       const btn = document.getElementById('welcome-dismiss-btn');
       if (btn) btn.focus();
     }
+    return;
   }
-})();
-document.addEventListener('keydown', function(e){
-  if (e.key !== 'Escape') return;
-  const el = document.getElementById('welcome-overlay');
-  if (el && el.style.display !== 'none') dismissWelcomeOverlay();
+  document.body.classList.add('cc-open');
+  _tourIndex = 0;
+  const root = document.getElementById('tour-root');
+  if (root) root.style.display = 'block';
+  renderTourStep();
+}
+window.addEventListener('resize', () => {
+  const root = document.getElementById('tour-root');
+  if (root && root.style.display === 'block') renderTourStep();
 });
+document.addEventListener('keydown', function(e){
+  const root = document.getElementById('tour-root');
+  if (!root || root.style.display !== 'block') return;
+  if (e.key === 'Escape') tourSkip();
+  else if (e.key === 'ArrowRight') tourNext();
+  else if (e.key === 'ArrowLeft') tourBack();
+});
+(function(){
+  let seen = false;
+  try { seen = !!localStorage.getItem('frankWelcomeSeen'); } catch(e) {}
+  if (!seen) startTour();
+})();
 // ── Premium voice toggle — OpenAI Whisper/TTS stay dormant until this is on.
 // Default OFF (absent key reads as off). Local offline WASM engines are the
 // default voice path; this only opts back into the paid OpenAI endpoints. ──

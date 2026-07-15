@@ -6707,3 +6707,43 @@ re-checks. Deliberately tap-to-refresh, not silent auto-reload, so an
 unprompted reload can't drop in-progress input (e.g. mid-typing an answer).
 
 Build bumped to `736e544-v170`.
+
+---
+
+### 2026-07-15 (later still) — First-login spotlight tour
+Scott asked for a walkthrough that explains where everything is on first
+login. The app already had a `#welcome-overlay` (single static card, 4
+bullets, `frankWelcomeSeen` localStorage flag) but it never pointed at any
+real UI. Replaced it (desktop only — Scott confirmed replace-not-append)
+with a 12-step spotlight tour (`TOUR_STEPS` in `frank_hud_mockup.py`):
+step 1 is the old welcome copy, then Next walks through the orb/chat entry
+point and every primary sidebar nav item (Approvals, Create, Your
+listings, Knowledge, Products, Brand Kit, Files, Connections, Advanced),
+switching `showScreen()` to match and dimming everything except the
+current target via a `box-shadow:0 0 0 9999px` cutout trick (`#tour-spot`)
+— same element handles the two centerless intro/outro cards by sizing to
+0×0 at viewport center, so the shadow just dims uniformly with no branchy
+markup. Same `frankWelcomeSeen` flag gates auto-show and gets set on
+Skip/Done. Replayable anytime via a new `?` icon in the header
+(`startTour()`).
+
+Mobile is untouched — its tab-bar layout has no sidebar to spotlight, so
+`startTour()` falls back to the original single-card overlay there
+(`isMobileMode()` check).
+
+Gotcha hit while shipping: apostrophes inside the new single-quoted JS
+strings (`%%AGENT_SHORT%%'s memory`, `That's everything`) need `\\'` in
+this Python triple-quoted source, not `\'` — Python's own string-literal
+parsing silently eats a single backslash-escape, which would have shipped
+literal unescaped apostrophes and broken the whole inline `<script>` block
+in the browser. `node --check` on the `ast.literal_eval`-extracted JS
+caught it before deploy (established verification pattern; see the
+existing `\\'` usages elsewhere in the file for the same reason).
+
+Also updated `tools/playwright_smoke.py`'s login flow, which used to click
+`#welcome-overlay`'s "Got it" button — that path is now dead on desktop
+viewports, so replaced it with real assertions that the tour auto-shows,
+Next advances through steps and switches screens, Skip closes it and
+persists `frankWelcomeSeen`, and the header `?` icon replays it.
+
+Build bumped to `84bcda9-v171`.

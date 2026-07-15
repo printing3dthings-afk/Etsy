@@ -134,11 +134,70 @@ async def _run_browser_checks() -> None:
             await page.wait_for_timeout(1000)
             await page.goto(f"{BASE_URL}/frank", wait_until="load")
             await page.wait_for_timeout(1500)
-            try:
-                await page.click("#welcome-overlay button:has-text('Got it')", timeout=3000)
-            except Exception:
-                pass
-            await page.wait_for_timeout(500)
+
+            # ── First-login spotlight tour (2026-07-15): on a desktop viewport this
+            # replaces the old single-card welcome-overlay with startTour()'s
+            # multi-step spotlight walkthrough. Exercise it for real instead of just
+            # dismissing it, since this IS the feature under test. ──
+            tour_step1 = await page.evaluate("""() => {
+                const root = document.getElementById('tour-root');
+                return {
+                    visible: !!root && getComputedStyle(root).display !== 'none',
+                    title: document.getElementById('tour-step-title').textContent,
+                    dotCount: document.querySelectorAll('#tour-dots .dot').length,
+                    backDisabled: document.getElementById('tour-back-btn').disabled,
+                };
+            }""")
+            check(tour_step1.get("visible"), f"tour should auto-show on first login (desktop): {tour_step1}")
+            check("Welcome" in tour_step1.get("title", ""), f"tour step 1 should be the welcome intro: {tour_step1}")
+            check(tour_step1.get("dotCount", 0) >= 10, f"tour should have ~12 steps: {tour_step1}")
+            check(tour_step1.get("backDisabled"), f"Back should be disabled on step 1: {tour_step1}")
+
+            await page.click("#tour-next-btn")
+            await page.wait_for_timeout(600)
+            step2 = await page.evaluate("""() => ({
+                title: document.getElementById('tour-step-title').textContent,
+                screen: document.querySelector('.screen.active').id,
+                spotVisible: getComputedStyle(document.getElementById('tour-spot')).boxShadow !== 'none',
+            })""")
+            check(step2.get("title") == "Talk to Frank" or "Talk to" in step2.get("title", ""),
+                  f"tour step 2 should introduce the orb: {step2}")
+            check(step2.get("spotVisible"), f"tour spotlight should be visible on step 2: {step2}")
+
+            # Jump to the Approvals nav-item step and confirm the tour actually
+            # switches screens as it spotlights each nav item.
+            await page.click("#tour-next-btn")
+            await page.wait_for_timeout(600)
+            step3 = await page.evaluate("""() => ({
+                title: document.getElementById('tour-step-title').textContent,
+                activeScreen: document.querySelector('.screen.active').id,
+            })""")
+            check(step3.get("title") == "Approvals", f"tour step 3 should be Approvals: {step3}")
+            check(step3.get("activeScreen") == "screen-actions",
+                  f"tour should navigate to the Approvals screen on that step: {step3}")
+
+            # Skip out entirely -> overlay closes, frankWelcomeSeen persisted so the
+            # tour won't auto-show again next load.
+            await page.click(".tour-controls .tour-skip")
+            await page.wait_for_timeout(300)
+            skip_result = await page.evaluate("""() => ({
+                hidden: getComputedStyle(document.getElementById('tour-root')).display === 'none',
+                seen: localStorage.getItem('frankWelcomeSeen'),
+            })""")
+            check(skip_result.get("hidden"), f"Skip tour should close the overlay: {skip_result}")
+            check(skip_result.get("seen") == "1", f"Skip tour should persist frankWelcomeSeen: {skip_result}")
+
+            # The '?' header icon must replay the tour from step 1 on demand.
+            await page.click("[title='Replay tutorial']")
+            await page.wait_for_timeout(400)
+            replay = await page.evaluate("""() => ({
+                visible: getComputedStyle(document.getElementById('tour-root')).display !== 'none',
+                title: document.getElementById('tour-step-title').textContent,
+            })""")
+            check(replay.get("visible"), f"'?' icon should reopen the tour: {replay}")
+            check("Welcome" in replay.get("title", ""), f"replay should restart at step 1: {replay}")
+            await page.click(".tour-controls .tour-skip")
+            await page.wait_for_timeout(300)
 
             check("Failed to load resource" not in "\n".join(console_errors)
                   or all("favicon" in e or "404" in e for e in console_errors),
