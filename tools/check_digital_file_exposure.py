@@ -7,7 +7,7 @@ so we can grow responsibly."
 
 Read-only audit for the failure class found 2026-07-15: a product's real
 source files (PDF, sticker ZIP, cover art, print-size ZIP, etc.) existing
-nowhere durable — not on disk, not on Etsy. Two checks:
+nowhere durable — not on disk, not on Etsy. Three checks:
 
   1. Every catalog entry with status=active and a real etsy_listing_id:
      confirm its live listing still has at least one file attached via
@@ -18,6 +18,12 @@ nowhere durable — not on disk, not on Etsy. Two checks:
      list actually exists on disk. A missing path here means the product's
      underlying work has no known copy anywhere -- this is what surfaced
      DP1030-1034 as a total loss during the 2026-07-15 audit.
+  3. data/hub_db_backups/hub_db_state.json (Frank's own todos/actions/
+     activity-log snapshot, see backup_hub_db.py) hasn't gone stale. It went
+     a full week stale once already (caught and refreshed 2026-07-15) with
+     nothing to flag it -- there's no automated way to keep it fresh (a
+     human still has to run backup_hub_db.py and commit the output), so this
+     is the early-warning half of that gap, not a fix for the gap itself.
 
 Never mutates anything -- pure read (Etsy GET + local os.path.exists).
 
@@ -26,6 +32,7 @@ Usage:
 """
 
 import os, sys, json, pathlib, time
+from datetime import datetime, timezone
 
 # Repo-relative, not hardcoded -- this script runs both on Scott's machine and
 # (via main.py's _EXEC_COMMANDS registry) inside Frank's Railway container,
@@ -47,6 +54,8 @@ from tools.etsy_api import EtsyAPIClient
 
 CATALOG_PATH = ROOT / 'data' / 'product_catalog.json'
 UNPUBLISHED_STATUSES = {'draft', 'ready_for_review', 'qc_pending'}
+HUB_DB_BACKUP_PATH = ROOT / 'data' / 'hub_db_backups' / 'hub_db_state.json'
+HUB_DB_BACKUP_MAX_AGE_DAYS = 10
 
 
 def _load_catalog() -> list[dict]:
@@ -94,12 +103,37 @@ def check_unpublished_local_files(catalog: list[dict]) -> list[dict]:
     return problems
 
 
+def check_hub_db_backup_staleness() -> dict | None:
+    """Flag data/hub_db_backups/hub_db_state.json if it's missing, unreadable,
+    or older than HUB_DB_BACKUP_MAX_AGE_DAYS. Returns a problem dict, or None
+    if the backup is present and fresh."""
+    if not HUB_DB_BACKUP_PATH.is_file():
+        return {'issue': f'{HUB_DB_BACKUP_PATH.relative_to(ROOT)} does not exist'}
+    try:
+        exported_at = json.loads(HUB_DB_BACKUP_PATH.read_text()).get('exported_at')
+    except Exception as exc:
+        return {'issue': f'could not read/parse hub_db_state.json: {exc}'}
+    if not exported_at:
+        return {'issue': 'hub_db_state.json has no exported_at timestamp'}
+    try:
+        exported = datetime.fromisoformat(exported_at)
+    except ValueError:
+        return {'issue': f'hub_db_state.json has an unparseable exported_at: {exported_at}'}
+    if exported.tzinfo is None:
+        exported = exported.replace(tzinfo=timezone.utc)
+    age_days = (datetime.now(timezone.utc) - exported).days
+    if age_days > HUB_DB_BACKUP_MAX_AGE_DAYS:
+        return {'issue': f'hub_db_state.json is {age_days} days stale (last exported {exported_at})'}
+    return None
+
+
 def main():
     catalog = _load_catalog()
     client = EtsyAPIClient()
 
     live_problems = check_live_listings(catalog, client)
     local_problems = check_unpublished_local_files(catalog)
+    hub_db_problem = check_hub_db_backup_staleness()
 
     print(f"\n{'='*70}\nDIGITAL FILE EXPOSURE CHECK — {len(catalog)} catalog entries\n{'='*70}")
 
@@ -118,7 +152,13 @@ def main():
     if not local_problems:
         print("  ✓ every unpublished product's listed files exist on disk")
 
-    n_problems = len(live_problems) + len(local_problems)
+    print(f"\n[HUB DB BACKUP] ", end="")
+    if hub_db_problem:
+        print(f"✗ {hub_db_problem['issue']}")
+    else:
+        print("✓ hub_db_state.json is present and fresh")
+
+    n_problems = len(live_problems) + len(local_problems) + (1 if hub_db_problem else 0)
     print(f"\n{'='*70}")
     print(f"RESULT: {n_problems} problem(s) found across {len(catalog)} catalog entries")
     print("="*70)

@@ -40,14 +40,20 @@ from __future__ import annotations
 import os
 import json
 import time
-import urllib.request
 import urllib.parse
-import urllib.error
+import requests
 from typing import Any
 
 ENV_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
 
 BASE_URL = "https://graph.facebook.com/v21.0"
+
+# Module-level session -- same fix and same rationale as instagram_api.py's
+# _session (2026-07-15): rewritten from raw urllib.request, which some
+# third-party APIs (Railway confirmed, see ops_runbook.md) reject over its
+# default User-Agent; requests' default isn't affected. Session reuse also
+# avoids a fresh TCP+TLS handshake per call, same as etsy_api.py.
+_session = requests.Session()
 
 # Video processing on Facebook's side is asynchronous for larger files —
 # poll up to 60 attempts * 3s = 3 minutes before giving up.
@@ -120,6 +126,12 @@ class FacebookAPIClient:
         Handles retries on 429 (rate limit) and 503 (transient server error)
         with exponential backoff. On 190/401 (expired token) raises
         FacebookAPIError so the caller can react (e.g. call refresh_token()).
+
+        requests-based (rewritten from raw urllib.request 2026-07-15, mirrors
+        instagram_api.py's identical rewrite the same day) -- requests does
+        not raise on 4xx/5xx like urllib.error.HTTPError did, so status is
+        checked explicitly instead of caught; retry count, backoff, and the
+        429/503-retry behavior are otherwise unchanged.
         """
         self._require_auth()
 
@@ -133,45 +145,41 @@ class FacebookAPIClient:
         headers = {"Content-Type": "application/json"}
         data = json.dumps(body).encode() if body else None
 
+        def _error_message(resp: requests.Response) -> str:
+            body_text = resp.text
+            try:
+                err = resp.json()
+                error_obj = err.get("error", {})
+                if isinstance(error_obj, dict):
+                    return error_obj.get("message", body_text)
+                return str(error_obj) or body_text
+            except Exception:
+                return body_text
+
         retryable_http = {429, 503}
         delays = [3, 6]  # seconds between attempt 1→2 and 2→3
 
         last_exc: Exception | None = None
+        last_resp: requests.Response | None = None
         for attempt in range(3):
             if attempt > 0:
                 time.sleep(delays[attempt - 1])
             try:
-                req = urllib.request.Request(url, data=data, headers=headers, method=method)
-                with urllib.request.urlopen(req, timeout=20) as resp:
-                    raw = resp.read().decode()
-                    return json.loads(raw) if raw.strip() else {}
-            except urllib.error.HTTPError as e:
-                if e.code in retryable_http:
-                    last_exc = e
-                    continue
-                body_text = e.read().decode()
-                try:
-                    err = json.loads(body_text)
-                    error_obj = err.get("error", {})
-                    if isinstance(error_obj, dict):
-                        msg = error_obj.get("message", body_text)
-                    else:
-                        msg = str(error_obj) or body_text
-                except Exception:
-                    msg = body_text
-                raise FacebookAPIError(e.code, msg)
-            except (OSError, urllib.error.URLError) as e:
+                resp = _session.request(method, url, data=data, headers=headers, timeout=20)
+            except requests.exceptions.RequestException as e:
                 last_exc = e
+                continue
 
-        if isinstance(last_exc, urllib.error.HTTPError):
-            body_text = last_exc.read().decode()
-            try:
-                err = json.loads(body_text)
-                error_obj = err.get("error", {})
-                msg = error_obj.get("message", body_text) if isinstance(error_obj, dict) else body_text
-            except Exception:
-                msg = body_text
-            raise FacebookAPIError(last_exc.code, msg)
+            if resp.status_code < 400:
+                raw = resp.text
+                return json.loads(raw) if raw.strip() else {}
+            if resp.status_code in retryable_http:
+                last_resp = resp
+                continue
+            raise FacebookAPIError(resp.status_code, _error_message(resp))
+
+        if last_resp is not None:
+            raise FacebookAPIError(last_resp.status_code, _error_message(last_resp))
         raise FacebookAPIError(0, f"Network error after retries: {last_exc}")
 
     def _wait_for_video(self, video_id: str) -> None:
@@ -320,12 +328,18 @@ class FacebookAPIClient:
             "fb_exchange_token": self.access_token,
         }
         url = f"{BASE_URL}/oauth/access_token?{urllib.parse.urlencode(params)}"
-        try:
-            with urllib.request.urlopen(url, timeout=20) as resp:
-                result = json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            body_text = e.read().decode()
-            raise FacebookAPIError(e.code, body_text)
+        # Deliberately narrower error handling than _request() above: only an
+        # HTTP-status error is turned into FacebookAPIError (matching the
+        # pre-2026-07-15 urllib version, which only caught HTTPError, not
+        # OSError/URLError) -- a network-level failure (DNS, connection
+        # refused, timeout) propagates uncaught here, same as before. Also
+        # deliberately does NOT parse the nested {"error": {...}} object the
+        # way _request()'s _error_message() does -- raises the raw body text,
+        # preserving this function's pre-existing (not "fixed") inconsistency.
+        resp = _session.get(url, timeout=20)
+        if resp.status_code >= 400:
+            raise FacebookAPIError(resp.status_code, resp.text)
+        result = resp.json()
 
         new_token = result.get("access_token", "")
         if not new_token:

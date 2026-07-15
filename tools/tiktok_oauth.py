@@ -27,7 +27,7 @@ import secrets
 import threading
 import time
 import urllib.parse
-import urllib.request
+import requests
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -83,6 +83,11 @@ def _start_callback_server() -> HTTPServer:
 
 
 def _exchange_code(code: str) -> dict:
+    # requests-based (rewritten from raw urllib.request 2026-07-15, same fix
+    # as tiktok_poster.py/instagram_api.py/facebook_api.py the same day). No
+    # session here (unlike those long-lived server files) -- this is a
+    # single-shot CLI script that runs once and exits, so connection reuse
+    # buys nothing.
     payload = urllib.parse.urlencode({
         "client_key":     CLIENT_KEY,
         "client_secret":  CLIENT_SECRET,
@@ -91,13 +96,13 @@ def _exchange_code(code: str) -> dict:
         "redirect_uri":   REDIRECT_URI,
         "code_verifier":  _code_verifier,
     }).encode()
-    req = urllib.request.Request(
+    resp = requests.post(
         TOKEN_URL,
         data=payload,
         headers={"Content-Type": "application/x-www-form-urlencoded"},
+        timeout=30,
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read())
+    return resp.json()
 
 
 def _save_tokens(data: dict) -> None:

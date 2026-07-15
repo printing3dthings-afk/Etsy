@@ -1164,7 +1164,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   <!-- ══════════ AGENTS — real data: /api/agents/status (live-status registry) ══════════ -->
   <div class="screen" id="screen-agents">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Agents <span class="src">/api/agents/status — every tile below is a real loop or honestly marked not_built</span></div>
+      <div class="panel-title">Agents <span class="src">/api/agents/status — every tile below is a real running loop</span></div>
       <div class="agents-grid" id="agents-grid-full" style="margin-top:14px">
         <div class="agent-tile idle"><div class="top"><div class="ic">⋯</div><div class="name">Loading…</div></div><div class="stat"><span class="d"></span>—</div></div>
       </div>
@@ -2942,7 +2942,10 @@ document.getElementById('quick-chat-input').addEventListener('keydown', e => { i
 initWS();
 
 // ── Agents — real data from /api/agents/status (live-status registry).
-// Every tile is a real loop or honestly marked not_built/offline; never invented. ──
+// Every tile is a real running loop; status reflects its actual last heartbeat
+// (started/running/ok/error, or offline for the local relay) — never invented.
+// (Corrected 2026-07-15: this used to also say "or honestly marked not_built",
+// leftover from an earlier state — every tile has hardcoded built:true today.) ──
 function renderAgentTile(a){
   const ok = a.status === 'ok';
   const err = a.status === 'error';

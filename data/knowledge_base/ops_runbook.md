@@ -6550,3 +6550,91 @@ present on this deployment). Redeploy is confirm-gated client-side and not
 tested live (would cause a real, pointless outage just to test); the other
 two were verified live and work. Build bumped through v160-v164 across this
 whole pass.
+
+---
+
+### 2026-07-15 (later still) — live-tested Redeploy, found + fixed the real bug, then swept the whole app for the same pattern
+**Redeploy test:** first live call 403'd. Root cause: its own hand-rolled
+`urllib.request.Request(...)` call to Railway's API had no `User-Agent`
+header — Railway sits behind Cloudflare, which blocks urllib's default UA
+(the exact failure already documented in this file from an earlier,
+unrelated incident — this was the second recurrence). While diagnosing, a
+comparison script accidentally fired two extra real redeploys directly
+against Railway's API outside the planned single test call — disclosed to
+Scott; harmless (same build, persistent storage held), ~4-15s of actual
+downtime each time. Fixed properly by refactoring to reuse `_railway_graphql()`
+(`main.py`, already used by `_railway_cost_snapshot`, already `requests`-based)
+instead of duplicating the raw-urllib call. Re-tested live: `200 {"ok":
+true}`, ~4s of downtime, clean recovery, persistent storage intact.
+
+**Full audit ("make sure every action in Frank is real and delivers what it
+is supposed to"):** three parallel Explore agents mapped every clickable
+action to its backend endpoint, searched for the same raw-urllib-no-UA
+pattern elsewhere, and cross-checked CLAUDE.md's documented intentional
+gaps so real bugs weren't confused with deliberate design boundaries. Found
+the same pattern still live in four files backing real social-posting
+buttons: `tools/instagram_api.py`, `tools/facebook_api.py`,
+`tools/tiktok_poster.py`, `tools/tiktok_oauth.py`. A fourth agent designed
+the exact refactor (full-file reads caught two real traps: TikTok's
+`_api_call()` must stay an explicit POST — urllib was inferring POST for
+*every* call including the "GET-style" status check, and silently "fixing"
+that to a real GET would be a genuine behavior change; the video-bytes PUT
+already fully materializes the file in memory today, so a straight
+`data=video_bytes` port is faithful, not a streaming rewrite).
+
+**Fixed:** all four files rewritten from raw `urllib.request` to `requests`
+(module-level `Session()` in the three long-lived files, matching
+`etsy_api.py`'s 2026-07-08 rewrite and the redeploy fix above; a plain
+one-shot call in `tiktok_oauth.py`, a single-run CLI script where session
+reuse buys nothing). `facebook_api.py`'s `refresh_token()` deliberately kept
+its narrower exception handling and un-parsed error body — not "fixed" to
+match `_request()`'s shape, since that inconsistency predates this pass and
+isn't this pass's job to resolve.
+
+**Honest caveat, checked empirically rather than assumed:** tested
+Facebook's and TikTok's real API hosts directly with both raw urllib and
+`requests` — neither actually blocks urllib's default User-Agent today (both
+returned identical real JSON error responses either way). So this wasn't
+fixing an *active* failure the way the redeploy bug was — none of
+Instagram/Facebook/TikTok are connected in production yet anyway (Meta App
+Review pending, TikTok OAuth not run), so it couldn't have been "confirmed
+live" regardless. The value is closing a latent risk before it ever gets a
+chance to surprise Scott the way redeploy did, and reducing the number of
+distinct HTTP-client implementations in the codebase. Verified via
+`py_compile` + import sanity on all four files + a `grep` confirming zero
+remaining `urllib.request`/`urllib.error` usage (keeping `urllib.parse` where
+it was already just building query strings).
+
+**Two smaller findings, also fixed:**
+- The Agents screen's panel subtitle/comment claimed "every tile below is a
+  real loop or honestly marked not_built" — traced the 7 background loops'
+  shared iteration helper and confirmed they're all genuinely real
+  (`started`→`running`→`ok`/`error` heartbeat transitions, jittered backoff
+  on failure, no stub pattern). `/api/agents/status` hardcodes `built: True`
+  on every tile today, so "not_built" was stale copy from an earlier state,
+  not a current fact. Corrected the copy in `frank_hud_mockup.py` to
+  describe current reality instead of an aspirational claim.
+- `data/hub_db_backups/hub_db_state.json` (the file that went a week stale
+  before being caught and refreshed earlier today) had no way to *notice*
+  it going stale again — it can't join `_WEEKLY_MONITOR_SCRIPTS` (it's
+  `requires_approval: True`, and even a successful run only writes inside
+  the container's ephemeral filesystem; a human still has to pull and
+  commit it — giving the server its own git-push credential is a separate,
+  bigger decision, not done here). Added a staleness check (>10 days) to
+  `tools/check_digital_file_exposure.py` (already runs weekly) instead —
+  verified it correctly reports fresh against the real current file, and
+  correctly flags both a simulated 44-day-stale case and a missing-file
+  case.
+
+**Also checked and left alone, not bugs:** `image_gen.py`'s raw urllib
+OpenAI calls (same shape, but proven by real recent production use — the
+2026-07-14 `.env`-crash and Gemini-routing fixes both required it to be
+actively working); OneDrive connector and OpenAI/Gemini cost tracking
+(genuinely not built, roadmap items); every CLAUDE.md Autonomy Boundary/Hard
+Stop (intentional, enforced in code); `rebuild_sticker_pack`'s absence from
+`_EXEC_COMMANDS` (intentionally removed 2026-06-18 for bypassing the
+approval gate); Toggle Listing State (bypasses the approval queue by design,
+but runs through the same `etsy_api.py` `update_listing()` exercised 15+
+times today without issue).
+
+Build bumped to `30c473a-v166`.
