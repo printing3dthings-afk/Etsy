@@ -29,6 +29,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.request
 import uuid
 import zipfile
 from datetime import date, datetime, timedelta, timezone
@@ -516,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "4b31558-v163"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "45e02a0-v164"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7527,6 +7528,79 @@ async def post_etsy_tokens_endpoint(payload: dict, request: Request, _token: str
     os.environ["ETSY_ACCESS_TOKEN"] = access_token
     os.environ["ETSY_REFRESH_TOKEN"] = refresh_token
     print("[etsy-tokens] adopted rotated token pair posted by CI", flush=True)
+    return {"ok": True}
+
+
+@app.post("/api/core/refresh-etsy-token")
+async def core_refresh_etsy_token(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """Force an Etsy access-token refresh right now, instead of waiting for the
+    next natural 401 or the daily staleness check. Does NOT do a full OAuth
+    re-authorization (that needs Scott's own browser via `python
+    tools/etsy_oauth.py` — a new refresh token can't be minted server-side);
+    this only exercises the existing refresh_token to mint a fresh access
+    token, confirming the refresh token itself is still good. Same
+    owner-or-automation gate as the raw token endpoints above, since success
+    here rotates the live credential."""
+    _require_owner_or_automation(request)
+    ok = await asyncio.to_thread(lambda: EtsyAPIClient().refresh_access_token())
+    if not ok:
+        raise HTTPException(status_code=502, detail=(
+            "Refresh failed -- if the refresh token itself has expired (90 days with no "
+            "successful rotation), run `python tools/etsy_oauth.py` on your own machine to "
+            "fully re-authorize."
+        ))
+    tokens = await asyncio.to_thread(db.get_etsy_tokens)
+    return {"ok": True, "updated_at": (tokens or {}).get("updated_at")}
+
+
+@app.get("/api/core/recent-errors")
+async def core_recent_errors(limit: int = 20, _token: str = Depends(_auth_session_or_bearer)):
+    """Last N activity_log entries whose outcome wasn't a clean "ok" -- the
+    direct answer to "show me what's been failing" without digging through
+    ops_runbook.md by hand. Scans a generous window (limit*10, capped) since
+    errors are typically a small fraction of total activity."""
+    limit = max(1, min(limit, 100))
+    rows = await asyncio.to_thread(db.list_activity, limit * 10)
+    errors = [r for r in rows if str(r.get("outcome", "")).strip().lower() not in ("ok", "")][:limit]
+    return {"count": len(errors), "errors": errors}
+
+
+@app.post("/api/core/redeploy")
+async def core_redeploy(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """Trigger a fresh Railway redeploy of this exact service — the in-app
+    equivalent of clicking Redeploy in the Railway dashboard. Uses this
+    service's own injected RAILWAY_API_TOKEN/RAILWAY_ENVIRONMENT_ID/
+    RAILWAY_SERVICE_ID (standard Railway-provided env vars — confirmed
+    present on this deployment 2026-07-15), so no extra credential setup is
+    needed. Causes a brief real outage while the new instance starts —
+    gated to the owner (or bearer/automation) same as other infra-sensitive
+    routes; the frontend also confirms before calling this."""
+    _require_owner_or_automation(request)
+    rw_token = os.getenv("RAILWAY_API_TOKEN", "").strip()
+    env_id = os.getenv("RAILWAY_ENVIRONMENT_ID", "").strip()
+    svc_id = os.getenv("RAILWAY_SERVICE_ID", "").strip()
+    if not (rw_token and env_id and svc_id):
+        raise HTTPException(status_code=501, detail="Railway API token/environment/service id not configured on this deployment")
+
+    def _trigger():
+        req = urllib.request.Request(
+            "https://backboard.railway.app/graphql/v2",
+            data=json.dumps({
+                "query": "mutation($e:String!,$s:String!){ serviceInstanceRedeploy(environmentId:$e, serviceId:$s) }",
+                "variables": {"e": env_id, "s": svc_id},
+            }).encode(),
+            headers={"Authorization": f"Bearer {rw_token}", "Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return json.loads(resp.read())
+
+    try:
+        result = await asyncio.to_thread(_trigger)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Railway API call failed: {exc}")
+    if result.get("errors"):
+        raise HTTPException(status_code=502, detail=f"Railway rejected the redeploy: {result['errors']}")
+    await asyncio.to_thread(db.log_activity, "scott", "redeploy", "Triggered via AI Core screen", None, outcome="ok")
     return {"ok": True}
 
 

@@ -1142,11 +1142,22 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <!-- ══════════ AI CORE — real data: /health + /api/credentials/status ══════════ -->
   <div class="screen" id="screen-core">
-    <div class="panel brk" style="height:100%">
+    <div class="panel brk" style="height:100%;overflow-y:auto">
       <div class="panel-title">AI Core <span class="src">/health + /api/credentials/status</span></div>
       <div class="panel-body" id="core-detail">
         <div class="core-row"><span class="lab"><span class="dotc"></span>Loading…</span><span class="v">—</span></div>
       </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Actions</div>
+      <div class="hub-card" style="display:flex;flex-direction:column;gap:8px;padding:12px">
+        <button onclick="coreRefreshEtsyToken()" id="core-btn-refresh-token" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:left">🔄 Refresh Etsy Token Now</button>
+        <button onclick="showScreen('files')" style="background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:left">🗂 Backups &amp; Files →</button>
+        <button onclick="coreRedeploy()" id="core-btn-redeploy" style="background:var(--bg);color:var(--red);border:1px solid var(--red);border-radius:var(--r-sm);padding:11px 14px;font-size:13px;font-weight:600;cursor:pointer;text-align:left">⟳ Redeploy Server</button>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;padding:0 2px">Redeploy causes a brief real outage (~30-60s) while the server restarts. Only use it if something's actually stuck.</div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Recent Errors <span class="src">/api/core/recent-errors</span></div>
+      <div id="core-errors" class="hub-card" style="padding:12px"><div class="hub-spinner"></div></div>
     </div>
   </div>
 
@@ -2421,7 +2432,7 @@ function transcribeAndSend(blob){
 // go stale.
 const _SCREEN_LOADERS = {
   cmd: [loadCredentialsAndHealth, loadStarSeller, loadInbox, loadMissionTimeline],
-  core: [loadCredentialsAndHealth],
+  core: [loadCredentialsAndHealth, loadCoreErrors],
   agents: [],  // covered by the global loadAgents() call below
   tasks: [loadTasks],
   actions: [loadActions],
@@ -3064,6 +3075,62 @@ async function loadCredentialsAndHealth(){
   if(coreDetail){
     coreDetail.innerHTML = coreRows.length ? coreRows.join('') :
       '<div class="core-row"><span class="lab"><span class="dotc err"></span>Unavailable</span><span class="v err">Could not load</span></div>';
+  }
+}
+
+// ── AI Core actions — real writes to /api/core/* ──
+async function coreRefreshEtsyToken(){
+  const btn = document.getElementById('core-btn-refresh-token');
+  if(btn){ btn.disabled = true; btn.textContent = '🔄 Refreshing…'; }
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/core/refresh-etsy-token', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 20000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail || 'HTTP '+r.status);
+    showToast('Etsy token refreshed successfully.');
+    loadCredentialsAndHealth();
+  }catch(e){
+    showToast('Refresh failed: '+(e.message||e), 'err');
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = '🔄 Refresh Etsy Token Now'; }
+  }
+}
+async function coreRedeploy(){
+  if(!confirm('Redeploy the live server now? This causes a brief real outage (~30-60s) while it restarts.')) return;
+  const btn = document.getElementById('core-btn-redeploy');
+  if(btn){ btn.disabled = true; btn.textContent = '⟳ Redeploying…'; }
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/core/redeploy', {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 20000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail || 'HTTP '+r.status);
+    showToast('Redeploy triggered — the server will be briefly unreachable while it restarts.');
+  }catch(e){
+    showToast('Redeploy failed: '+(e.message||e), 'err');
+    if(btn){ btn.disabled = false; btn.textContent = '⟳ Redeploy Server'; }
+  }
+}
+async function loadCoreErrors(){
+  const el = document.getElementById('core-errors');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/core/recent-errors?limit=20', 15000);
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const errs = d.errors||[];
+    if(!errs.length){
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted)">✅ No recent errors.</div>';
+      return;
+    }
+    el.innerHTML = errs.map(function(e){
+      const when = new Date(e.ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+      return '<div style="padding:8px 0;border-bottom:1px solid var(--border)">'+
+        '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted)">'+
+          '<span>'+escHtml(e.actor||'')+' · '+escHtml(e.action_type||'')+'</span><span>'+escHtml(when)+'</span></div>'+
+        '<div style="font-size:12px;color:var(--red);margin-top:2px">'+escHtml(String(e.outcome||''))+'</div>'+
+        (e.detail?'<div style="font-size:12px;color:var(--text);margin-top:2px">'+escHtml(String(e.detail))+'</div>':'')+
+      '</div>';
+    }).join('');
+  }catch(e){
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted)">Could not load: '+escHtml(e.message||'')+'</div>';
   }
 }
 
