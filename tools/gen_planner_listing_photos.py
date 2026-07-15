@@ -586,7 +586,32 @@ def make_cover_closeup(pid, cfg, out):
 
 # ── Upload photos to Etsy ──────────────────────────────────────────────────────
 
-def upload_photos(listing_id, out_dir, photo_files, client):
+# Human-readable per-photo alt text (2026-07-15 ADA/WCAG audit fix) --
+# filenames already encode what each slot shows (see photo_files below),
+# so this maps the slug to a real description instead of leaving Etsy
+# photos with zero screen-reader alt text. Baseline, not AI-per-photo
+# captioning -- a reasonable quick fix, not the full solution.
+_PHOTO_ALT_LABELS = {
+    'hero': 'lifestyle hero photo on a desk',
+    'whats_included': "what's included overview",
+    'monthly_spread': 'monthly calendar spread preview',
+    'weekly_spread': 'weekly spread preview',
+    'sticker_showcase': 'kawaii sticker sheet showcase',
+    'goodnotes_howto': 'GoodNotes sticker import how-to steps',
+    'app_compatibility': 'compatible apps infographic',
+    'cover_closeup': 'cover art close-up',
+    'tracker': 'tracker page preview',
+    'specialty': 'specialty feature page preview',
+}
+
+
+def _photo_alt_text(product_name, filename):
+    slug = os.path.splitext(filename)[0].split('_', 1)[-1] if '_' in filename else filename
+    label = _PHOTO_ALT_LABELS.get(slug, slug.replace('_', ' '))
+    return f"{product_name} — {label}"[:500]
+
+
+def upload_photos(listing_id, out_dir, photo_files, client, product_name=''):
     auth_headers = {
         "Authorization": f"Bearer {client.access_token}",
         "x-api-key": f"{client.client_id}:{client.client_secret}",
@@ -619,7 +644,8 @@ def upload_photos(listing_id, out_dir, photo_files, client):
             continue
         for attempt in range(3):
             try:
-                result = client.upload_listing_image(listing_id, path, rank=rank)
+                alt_text = _photo_alt_text(product_name, filename) if product_name else None
+                result = client.upload_listing_image(listing_id, path, rank=rank, alt_text=alt_text)
                 print(f"    Uploaded rank {rank}: {filename} (id={result.get('listing_image_id')})")
                 time.sleep(0.8)
                 break
@@ -670,7 +696,7 @@ def generate_for_planner(pid, client, upload=True):
 
     if upload:
         print(f"\n  Uploading to Etsy listing {cfg['listing_id']}...")
-        upload_photos(cfg['listing_id'], out_dir, photo_files, client)
+        upload_photos(cfg['listing_id'], out_dir, photo_files, client, product_name=cfg['short'])
 
     print(f"\n  ✓ {pid} done")
     return out_dir, photo_files

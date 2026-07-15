@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "1614e42-v173"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "23fdd93-v174"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6774,7 +6774,9 @@ def _execute_staged_action(a: dict) -> dict:
         abs_path = _resolve_in_root("staged_photos", p["path"])
         if not abs_path.is_file():
             raise FileNotFoundError(f"staged photo not found: {p['path']}")
-        img = _retry(lambda: client.upload_listing_image(lid, str(abs_path), rank=p.get("rank", 1)))
+        img = _retry(lambda: client.upload_listing_image(
+            lid, str(abs_path), rank=p.get("rank", 1), alt_text=p.get("alt_text")
+        ))
         with _cache_lock:
             for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
                 _cache.pop(k, None)
@@ -8941,7 +8943,7 @@ _FULL_BACKUP_EXCLUDE_DIR_NAMES = {
 
 
 @app.get("/api/backup/download-all")
-async def download_full_backup(_token: str = Depends(_auth_session_or_bearer)):
+async def download_full_backup(request: Request, _token: str = Depends(_auth_session_or_bearer)):
     """Build and stream a ZIP of whatever's under data/ in THIS deployed
     container -- which, per .dockerignore's `data/*` blanket exclusion (kept
     deliberately narrow so Docker builds don't ship 4GB+ and time out, see
@@ -8952,9 +8954,18 @@ async def download_full_backup(_token: str = Depends(_auth_session_or_bearer)):
     repo itself. This endpoint is the honest answer to "give me the small stuff
     as a hard copy"; the Files-screen UI links to GitHub's own repo-zip download
     for the rest, since that's the one place the full 350MB actually lives.
-    No AI call, no Etsy call -- plain auth, not rate-limited (see
-    _rate_limited_auth, reserved for AI-spend/Etsy-mutating calls, neither of
-    which this does)."""
+    No AI call, no Etsy call -- not rate-limited (see _rate_limited_auth,
+    reserved for AI-spend/Etsy-mutating calls, neither of which this does).
+    2026-07-15 security audit: previously used only the generic session-or-
+    bearer check, unlike every other infra-sensitive route (etsy-tokens,
+    redeploy) which additionally require owner role for a session caller.
+    Matched to the redeploy endpoint's exact tier (_require_owner_or_automation,
+    not the stricter owner-only _require_owner used by etsy-tokens) since
+    this is the same risk class -- an infra/data action, not raw credential
+    exposure -- and a bearer/automation caller is already trusted at that
+    tier everywhere else in this file."""
+    _require_owner_or_automation(request)
+
     def _build() -> str:
         tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
         tmp.close()

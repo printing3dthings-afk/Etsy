@@ -318,7 +318,25 @@ def make_bundle_grid(out):
 
 # ── Upload ────────────────────────────────────────────────────────────────────
 
-def upload_photos(listing_id, files, client):
+# Human-readable per-photo alt text (2026-07-15 ADA/WCAG audit fix) --
+# baseline slug->description mapping, not AI-per-photo captioning.
+_PHOTO_ALT_LABELS = {
+    '01_hero': 'sticker sheets flat-lay hero photo',
+    '02_all_sheets': 'all sticker sheets overview',
+    '03_four_themes': 'four planner themes preview',
+    '03_functional': 'functional planning stickers close-up',
+    '04_howto': 'GoodNotes sticker import how-to steps',
+    '05_whats_included': "what's included summary",
+    '06_illustrated': 'illustrated kawaii stickers close-up',
+}
+
+
+def _photo_alt_text(product_name, label):
+    desc = _PHOTO_ALT_LABELS.get(label, label.replace('_', ' '))
+    return f"{product_name} — {desc}"[:500]
+
+
+def upload_photos(listing_id, files, client, product_name=''):
     shop_id = client.shop_id
     auth_headers = {"Authorization": f"Bearer {client.access_token}",
                     "x-api-key": f"{client.client_id}:{client.client_secret}"}
@@ -344,7 +362,8 @@ def upload_photos(listing_id, files, client):
             continue
         for attempt in range(3):
             try:
-                result = client.upload_listing_image(listing_id, path, rank=rank)
+                alt_text = _photo_alt_text(product_name, label) if product_name else None
+                result = client.upload_listing_image(listing_id, path, rank=rank, alt_text=alt_text)
                 print(f"    Uploaded rank {rank}: {label}")
                 time.sleep(0.8)
                 break
@@ -391,14 +410,15 @@ def process_pack(key, cfg, client):
     photo_files = [
         (f('01_hero.jpg'), '01_hero'),
         (f('02_all_sheets.jpg'), '02_all_sheets'),
-        (f('03_four_themes.jpg') if key=='bundle' else f('03_functional.jpg'), '03'),
+        (f('03_four_themes.jpg') if key=='bundle' else f('03_functional.jpg'),
+         '03_four_themes' if key=='bundle' else '03_functional'),
         (f('04_howto.jpg'), '04_howto'),
         (f('05_whats_included.jpg'), '05_whats_included'),
         (f('06_illustrated.jpg'), '06_illustrated'),
     ]
 
     print(f"\n  Uploading to listing {cfg['listing_id']}...")
-    upload_photos(cfg['listing_id'], photo_files, client)
+    upload_photos(cfg['listing_id'], photo_files, client, product_name=cfg['name'])
     print(f"  ✓ Done")
 
 

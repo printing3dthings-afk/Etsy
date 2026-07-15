@@ -796,8 +796,15 @@ class EtsyAPIClient:
 
     # ── Listing images ────────────────────────────────────────────────────────
 
-    def upload_listing_image(self, listing_id: int | str, image_path: str, rank: int = 1) -> dict:
-        """Upload an image file to a listing. rank=1 is the cover photo."""
+    def upload_listing_image(self, listing_id: int | str, image_path: str, rank: int = 1,
+                             alt_text: str | None = None) -> dict:
+        """Upload an image file to a listing. rank=1 is the cover photo.
+
+        alt_text (2026-07-15 ADA/WCAG audit fix): Etsy API v3 supports an
+        alt_text field on listing images -- previously never sent by this
+        client, so every customer-facing photo had zero screen-reader
+        description. Optional and backward-compatible: omitting it sends
+        the same request shape as before this fix."""
         self._require_oauth()
         import mimetypes
         import email.mime.multipart
@@ -815,6 +822,12 @@ class EtsyAPIClient:
         boundary = "----FormBoundary" + os.urandom(8).hex()
         body_parts = []
         body_parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="rank"\r\n\r\n{rank}'.encode())
+        if alt_text:
+            # Etsy's documented max is 500 chars; truncate rather than 400 on an
+            # oversized value from a long title.
+            body_parts.append(
+                f'--{boundary}\r\nContent-Disposition: form-data; name="alt_text"\r\n\r\n{alt_text[:500]}'.encode()
+            )
         body_parts.append(
             f'--{boundary}\r\nContent-Disposition: form-data; name="image"; filename="{filename}"\r\nContent-Type: {mime_type}\r\n\r\n'.encode()
             + image_data

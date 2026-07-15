@@ -6911,3 +6911,75 @@ appears for a manifest-FAIL active listing, mobile tour opens/spotlights/
 switches tabs). Full existing suite + smoke test still green.
 
 Build bumped to `1614e42-v173`.
+
+---
+
+### 2026-07-15 (final pass) — ADA/WCAG + security audit: report + 4 fixes
+
+Scott asked three pointed questions: is everything customer-facing ADA/
+WCAG compliant, is customer data secure, is his own information secure —
+"extremely detailed." Ran three research passes then personally verified
+the two highest-stakes findings live rather than trusting summaries:
+confirmed via Railway's GraphQL API that `ENABLE_TEST_LOGIN` is unset in
+production (the seeded tester account is genuinely inactive there), and
+confirmed via GitHub's API that `printing3dthings-afk/Etsy` is **public**
+(`"visibility":"public"`) — no secrets committed (`.env` gitignored, clean
+git history verified), but the full source, CLAUDE.md business strategy,
+and this ops runbook are visible to anyone. That's Scott's call to change
+in GitHub's own settings, not something touched here.
+
+Full findings delivered to Scott directly (see the chat reply, not
+duplicated here). Headline: customer-facing accessibility has real gaps
+(PDF planners have zero screen-reader tagging — a bigger lift, flagged not
+built; Etsy photos had no alt text — fixed below; documented contrast
+rules were never enforced — checker added below). Customer data handling
+and Scott's own credential security are both fundamentally solid (PBKDF2-
+260k password hashing, `secrets.token_urlsafe(32)` sessions, username-keyed
+brute-force lockout, HTTPS+HSTS+CSP, no durable buyer-PII store) with two
+small real gaps closed below, one architecture question flagged (buyer
+names reach the Anthropic LLM and can land in the chat-history DB —
+Scott's call, not built).
+
+**Fixed this pass (4 items, all low-risk/no-judgment-call):**
+1. `.gitignore` — added `data/message_drafts/` and `data/reviews_seen.json`
+   (review-response drafts/state that can reference buyer review text;
+   neither was ever actually committed, this is preventative).
+2. **Etsy photo alt text** — `EtsyAPIClient.upload_listing_image()`
+   (`tools/etsy_api.py`) now accepts an optional `alt_text` param, sent as
+   a real multipart form field (Etsy API v3 supports this; nothing in this
+   codebase ever used it before). Wired through `_execute_staged_action()`'s
+   `listing_photo` branch, and populated with real per-photo descriptions
+   (product name + a slug→description map, e.g. "Life Planner — hero
+   lifestyle photo") at the two photo-upload call sites that bypass the
+   staging queue entirely (`gen_planner_listing_photos.py`,
+   `gen_sticker_listing_photos.py` upload straight to a still-draft
+   listing, matching `post_scheduled_art.py`'s draft-then-stage pattern).
+   Baseline fix, not AI-per-photo captioning — flagged as a natural
+   follow-up, not built now.
+3. **`tools/color_contrast_check.py`** — new standalone WCAG 2.x
+   contrast-ratio checker (pure relative-luminance math, verified against
+   the known 21:1 black/white reference). Validates all 12 of CLAUDE.md's
+   documented new-theme-catalog Text/background pairs — all 12 pass 4.5:1
+   AA. Also surfaces a real documentation gap: the 4 *live* shipped
+   product themes (DP1026-1029) have no Text hex documented anywhere, so
+   they can't be verified at all yet. Bonus verification with the same
+   formula: `design_quality_research_2026-06.md`'s "planned neon #E040FB/
+   #00E5FF will fail WCAG 4.5:1 next to text" hunch is now a real number —
+   white text on those two neon accents is 3.34:1 and 1.54:1 (both fail),
+   while near-black text on the same accents is 5.11:1 and 11.09:1 (both
+   pass) — confirms the fix is "dark text only on neon accents," not
+   avoiding the accents entirely.
+4. **`/api/backup/download-all`** (`main.py`) — added
+   `_require_owner_or_automation(request)`, matching the exact tier the
+   redeploy endpoint uses (not the stricter owner-only tier `/api/etsy-
+   tokens` uses, since this is the same infra/data-action risk class, not
+   raw credential exposure). Previously used only the generic session-or-
+   bearer check, unlike every other infra-sensitive route. Verified
+   Scott's real seeded account (`_seed_owner_if_empty()`, env-var-gated)
+   is `role="owner"` before shipping this, so it doesn't lock him out.
+
+New coverage: `tests/test_etsy_api_alt_text.py` (3 fixture tests, mocks
+`urllib.request.urlopen` to inspect the multipart body — no live Etsy
+call). Full existing suite + smoke test + Playwright smoke still green.
+
+Build bumped to `23fdd93-v174`.
