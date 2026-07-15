@@ -1992,7 +1992,42 @@ document.querySelectorAll('.sidebar .nav-item').forEach(it=>it.addEventListener(
 // Keep the Approvals tab badge in sync from the moment the phone loads.
 if (isMobileMode() && typeof loadActions === 'function') { try { loadActions(); } catch(e){} }
 
-if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/frank-sw.js', { scope: '/frank' }).catch(()=>{}); }
+// Update detection (2026-07-15): the service worker's own cache-invalidation
+// logic (obc-frank-shell-${BUILD_ID}, see /frank-sw.js) has always been
+// correct, but nothing ever told the browser to actually CHECK for a new
+// worker script -- a PWA left open/backgrounded across a deploy could sit on
+// a stale cached shell indefinitely with zero signal anything had changed
+// (confirmed live: a shipped Fix button silently didn't appear until the app
+// was force-quit and reopened). Two additions close that gap: an
+// 'updatefound' listener that shows a persistent "tap to refresh" toast once
+// a real update (not the first-ever install) finishes installing, and a
+// visibilitychange-triggered registration.update() so resuming the app from
+// background actively re-checks instead of waiting on the browser's own
+// background interval.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/frank-sw.js', { scope: '/frank' }).then(function(reg){
+    if (!reg) return;
+    reg.addEventListener('updatefound', function(){
+      const installing = reg.installing;
+      if (!installing) return;
+      installing.addEventListener('statechange', function(){
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+          showToast('Update available — tap to refresh', 'info', 0);
+        }
+      });
+    });
+    document.addEventListener('visibilitychange', function(){
+      if (document.visibilityState === 'visible') { reg.update().catch(function(){}); }
+    });
+  }).catch(function(){});
+  // Persistent toasts (ms:0, per above) never auto-dismiss -- clicking one
+  // reloads to pick up the new build. Delegated so it works for a toast
+  // added after this listener is registered (showToast() appends dynamically).
+  document.addEventListener('click', function(e){
+    const t = e.target.closest && e.target.closest('.toast');
+    if (t && t.textContent.indexOf('tap to refresh') !== -1) { location.reload(); }
+  });
+}
 
 // ── Real data wiring (Step 2) — session-cookie auth. The browser sends the
 // httpOnly session cookie automatically on every same-origin fetch(); no token
