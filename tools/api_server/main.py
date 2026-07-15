@@ -514,7 +514,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8256703-v158"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4e07787-v159"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2262,7 +2262,7 @@ AGENT_TOOLS = [
                 "action_type": {
                     "type": "string",
                     "enum": [
-                        "update_tags", "update_title", "publish_listing",
+                        "update_tags", "update_title", "update_description", "publish_listing",
                         "deactivate_listing", "toggle_listing_state",
                     ],
                 },
@@ -2279,6 +2279,10 @@ AGENT_TOOLS = [
                     "type": "array",
                     "items": {"type": "string"},
                     "description": "Full replacement tag list for update_tags. Max 13, each ≤20 chars.",
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Full replacement description text for update_description.",
                 },
                 "new_state": {
                     "type": "string",
@@ -3023,6 +3027,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 payload["title"] = ti["title"]
             if ti.get("tags") is not None:
                 payload["tags"] = ti["tags"]
+            if ti.get("description") is not None:
+                payload["description"] = ti["description"]
             if ti.get("new_state") is not None:
                 payload["new_state"] = ti["new_state"]
             listing_for_baseline = None
@@ -5983,6 +5989,79 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
     return {"action_id": action_id, "title": new_title, "listing_id": listing_id}
 
 
+# CLAUDE.md Gate 6 (wall art): "the first sentence of every wall art listing
+# description must contain the primary keyword naturally and state that this
+# is an instant/digital download." This exact sentence is the documented
+# required-or-close-variant preamble.
+_WALL_ART_GATE6_LINE = (
+    "Instant download printable wall art — digital download delivered "
+    "immediately after purchase, ready to print at home or at any print shop."
+)
+
+
+def _description_needs_gate6_fix(description: str) -> bool:
+    """Mirrors tools/listing_qc.py's _check_wall_art description check (first
+    200 chars must signal instant/digital download), plus CLAUDE.md's Gate 6
+    'printable' requirement anywhere in the description."""
+    text = description or ""
+    first_200 = text[:200].lower()
+    has_download_signal = "instant download" in first_200 or "digital" in first_200
+    has_printable = "printable" in text.lower()
+    return not (has_download_signal and has_printable)
+
+
+async def _autofix_description_core(listing_id: int, listing: dict | None = None, reason: str = "") -> dict:
+    """Deterministic (no AI call) fix for CLAUDE.md's wall-art Gate 6 rule:
+    prepend the exact mandated opening line when a description doesn't already
+    signal instant/digital download + printable. Only applies to wall_art-type
+    listings (via listing_qc._detect_product_type) — other product types are
+    skipped rather than force-fit with wall-art copy, since the required
+    preamble is wall-art-specific. Never raises — returns {"error": str} on
+    failure, {"skipped": True, ...} when the listing isn't wall_art or is
+    already compliant, so a caller sweeping many listings can tell "nothing
+    to do here" apart from a real failure."""
+    if listing is None:
+        listing = await _fetch_listing_for_autofix(listing_id)
+
+    title = listing.get("title", "")
+    description = listing.get("description", "") or ""
+
+    import listing_qc
+    product_type = listing_qc._detect_product_type(title, description)
+    if product_type != "wall_art":
+        return {
+            "skipped": True, "listing_id": listing_id,
+            "reason": f"not a wall_art listing (detected: {product_type})",
+        }
+    if not _description_needs_gate6_fix(description):
+        return {"skipped": True, "listing_id": listing_id, "reason": "already compliant"}
+
+    new_description = _WALL_ART_GATE6_LINE + "\n\n" + description
+
+    try:
+        payload = {
+            "listing_id": listing_id, "description": new_description,
+            "before_description": description,  # display-only, for the Action Center diff view
+            "_state_at_staging": listing.get("state"),
+        }
+        candidate = {"type": "update_description", "payload": payload}
+        ok, msg = _validate_staged_action(candidate)
+        if not ok:
+            return {"error": f"Quality gate: {msg}", "listing_id": listing_id}
+
+        title_short = (title or f"Listing {listing_id}")[:50]
+        prefix = "Reject-fix description" if reason else "Auto description fix (Gate 6: instant download/printable)"
+        summary = f"{prefix}: {title_short}"
+        action_id = db.enqueue_action("update_description", summary, payload)
+    except Exception as exc:
+        return {"error": f"Could not stage description fix: {exc}", "listing_id": listing_id}
+
+    with _cache_lock:
+        _cache.pop("actions", None)
+
+    return {"action_id": action_id, "listing_id": listing_id, "added_line": _WALL_ART_GATE6_LINE}
+
+
 @app.post("/api/autofix/tags/{listing_id}")
 async def autofix_tags(listing_id: int, _token: str = Depends(_rate_limited_auth)):
     """Generate 13 correct tags for one listing and stage an update_tags action.
@@ -6006,6 +6085,24 @@ async def autofix_title(listing_id: int, _token: str = Depends(_rate_limited_aut
     result = await _autofix_title_core(listing_id)
     if "error" in result:
         raise HTTPException(status_code=502, detail=result["error"])
+    return {"staged": True, **result}
+
+
+@app.post("/api/autofix/description/{listing_id}")
+async def autofix_description(listing_id: int, _token: str = Depends(_rate_limited_auth)):
+    """Deterministically fix a wall-art listing's missing CLAUDE.md Gate 6
+    preamble ('instant download'/'printable') by prepending the exact
+    mandated line, then stage an update_description action. No AI call — the
+    fix text is fixed, so this can't drift or hallucinate over existing copy.
+    Returns {"staged": False, "skipped": True, ...} for a non-wall-art or
+    already-compliant listing instead of an error, so a caller sweeping many
+    listings can distinguish "nothing to fix" from a real failure.
+    Nothing touches Etsy until Scott taps Approve in the Action Center."""
+    result = await _autofix_description_core(listing_id)
+    if "error" in result:
+        raise HTTPException(status_code=502, detail=result["error"])
+    if result.get("skipped"):
+        return {"staged": False, **result}
     return {"staged": True, **result}
 
 
@@ -6160,7 +6257,8 @@ async def post_snapshot(_token: str = Depends(_auth_session_or_bearer)):
 # ── Staged actions (agent prepares → Scott approves → server executes) ────────────
 
 _ETSY_STAGED_ACTION_TYPES = (
-    "update_tags", "update_title", "publish_listing", "deactivate_listing", "toggle_listing_state",
+    "update_tags", "update_title", "update_description", "publish_listing",
+    "deactivate_listing", "toggle_listing_state",
 )
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
 _SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
@@ -6264,6 +6362,12 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
             new_state = p.get("new_state")
             if new_state not in ("active", "inactive"):
                 return False, "new_state must be 'active' or 'inactive'"
+        if t == "update_description":
+            description = p.get("description")
+            if not isinstance(description, str) or not description.strip():
+                return False, "description is empty"
+            if len(description) > 100_000:
+                return False, f"description is {len(description)} chars — implausibly long, refusing"
         if at_approval:
             try:
                 current = EtsyAPIClient().get_listing(int(p["listing_id"]))
@@ -6420,6 +6524,8 @@ def _execute_staged_action(a: dict) -> dict:
         res = _retry(lambda: client.update_listing(lid, {"tags": p["tags"]}))
     elif t == "update_title":
         res = _retry(lambda: client.update_listing(lid, {"title": p["title"].strip()}))
+    elif t == "update_description":
+        res = _retry(lambda: client.update_listing(lid, {"description": p["description"]}))
     elif t == "publish_listing":
         res = _retry(lambda: client.update_listing(lid, {"state": "active"}))
     elif t == "deactivate_listing":
@@ -6671,6 +6777,10 @@ async def _dispatch_reject_fix(action: dict, reason: str) -> None:
                 raise RuntimeError(result["error"])
         elif t == "update_tags":
             result = await _autofix_tags_core(listing_id, reason=reason)
+            if "error" in result:
+                raise RuntimeError(result["error"])
+        elif t == "update_description":
+            result = await _autofix_description_core(listing_id, reason=reason)
             if "error" in result:
                 raise RuntimeError(result["error"])
         elif t == "publish_listing":

@@ -1846,6 +1846,7 @@ async function renderPhoneApprovals(){
     if (a.type==='publish_listing' && (p.preview||{}).price!=null) meta += ` · $${escHtml(String(p.preview.price))} · ${(p.preview.tags||[]).length} tags`;
     else if (a.type==='update_tags') meta += ` · ${escHtml((p.tags||[]).join(', ')).slice(0,90)}`;
     else if (a.type==='update_title') meta += ` · "${escHtml(p.title||'')}"`;
+    else if (a.type==='update_description') meta += ` · ${escHtml((p.description||'').slice(0,90))}…`;
     return `<div class="pcard"><div class="pt">${escHtml(a.summary||a.type)}</div><div class="pm">${escHtml(meta)}</div>
       <div class="pp-acts"><button class="pp-btn ok" onclick="phoneApprove(${a.id})">Approve</button>
       <button class="pp-btn no" onclick="openRejectModal(${a.id})">Reject</button></div>
@@ -3702,7 +3703,7 @@ function simpleLineDiff(before, after) {
   return html;
 }
 const _ACT_TYPE_GLYPH = {
-  update_title: '📝', update_tags: '🏷️', publish_listing: '🏷️', deactivate_listing: '⛔',
+  update_title: '📝', update_tags: '🏷️', update_description: '📄', publish_listing: '🏷️', deactivate_listing: '⛔',
   listing_photo: '🖼️', local_write_file: '📁', local_delete: '🗑️', local_exec: '⚙️', run_script: '⚙️'
 };
 function _actAgeStr(a) {
@@ -3721,6 +3722,10 @@ function _actionPreviewHtml(a) {
   const p = a.payload || {};
   if (a.type === 'update_title') return 'New title: ' + escHtml(p.title || '');
   if (a.type === 'update_tags') return 'New tags: ' + escHtml((p.tags || []).join(', '));
+  if (a.type === 'update_description') {
+    const diffHtml = simpleLineDiff(p.before_description, p.description);
+    return `<div style="max-height:320px;overflow:auto;background:var(--bg);border-radius:var(--r-sm);padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:var(--muted)">No changes</span>'}</div>`;
+  }
   if (a.type === 'listing_photo') {
     const url = BASE+'/api/files/download?root=staged_photos&path='+encodeURIComponent(p.path||'')+'&inline=1';
     return `<img src="${url}" loading="lazy" alt="Staged photo for listing ${escHtml(String(p.listing_id||''))}" style="max-width:260px;max-height:260px;border-radius:var(--r-sm);display:block">` +
@@ -3775,6 +3780,7 @@ function renderApproval(a) {
     meta += ` · $${escHtml(String(p.preview.price))} · ${(p.preview.tags || []).length} tags · ${p.preview.photo_count || 0} photos`;
   } else if (a.type === 'update_title') meta += ` · "${escHtml(p.title || '')}"`;
   else if (a.type === 'update_tags') meta += ` · ${escHtml((p.tags || []).join(', '))}`;
+  else if (a.type === 'update_description') meta += ` · ${escHtml((p.description || '').slice(0, 90))}…`;
   return `<div class="hub-listing-item" style="cursor:pointer" onclick="toggleActionDetail(${a.id})" role="button" tabindex="0">
     ${thumb}
     <div class="hub-listing-info">
