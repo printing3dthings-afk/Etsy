@@ -6638,3 +6638,44 @@ but runs through the same `etsy_api.py` `update_listing()` exercised 15+
 times today without issue).
 
 Build bumped to `30c473a-v166`.
+
+---
+
+### 2026-07-15 (later) — todo categories + tap-to-answer questions
+Scott wanted category filter buttons on the Tasks screen and the ability to
+tap a question-type todo and answer it inline. Added `category`
+(question/scott_only/frank_can_do/general), `answer`, `answered_at` columns
+to `todos` (same `ALTER TABLE` migration pattern as `due_date`) — verified
+the migration locally against a DB seeded with real pre-existing
+production-shaped rows before shipping it, not just a fresh one.
+
+Confirmed something that shaped the design: todos are never auto-injected
+into Frank's chat context (`list_todos` is a tool he has to proactively
+call) — but `_ops_runbook_block()` IS unconditionally prepended to every
+chat turn's system prompt. So `POST /api/todos/{id}/answer` pushes the
+answer through `_append_ops_runbook_entry()` (this exact mechanism) rather
+than just storing it in a DB column nobody automatically reads — that's
+what actually gets an answer in front of Frank on his next message.
+Answering deliberately does not auto-complete the todo.
+
+Audited all ~14 `add_todo(...)` call sites in the codebase (correction-plan
+seeder, OAuth/ads/seasonal monitors, compliance sweep, unfixable-listing
+notifier) and tagged each with the category matching its actual content —
+confirmed none reliably self-classify from text alone (nothing ends in a
+literal "?"). Then ran a retroactive pass against the live production
+DB's 23 real todos using the same known-text-signature matching. Caught
+and fixed a real staleness bug in the process: 14 of the live todos were
+"Compliance WARN" notices for the exact 15 wall-art listings fixed earlier
+today (the Gate 6 description pass) — marked them done since the
+underlying issue no longer exists.
+
+**Own mistake, caught and disclosed:** live-testing the new answer endpoint
+left a throwaway test string as the "answer" on a real open question
+(#3, the second-sales-channel decision) — overwrote it with a clear
+correction note rather than leave misleading data live. That also
+surfaced a genuine design gap: the first version only rendered the answer
+modal for unanswered questions, so there was no in-UI way to fix a wrong
+answer. Fixed same-day: an "✏️ edit" link now reopens the modal pre-filled
+with the current answer for any question, answered or not.
+
+Build bumped through v168-v169.
