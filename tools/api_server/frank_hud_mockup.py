@@ -3688,11 +3688,11 @@ function _renderTasks(d, list, offlineNote){
       '<div class="tl-dotcol"><input type="checkbox" '+(done?'checked':'')+' onchange="toggleHudTodo('+t.id+',this.checked)" style="width:13px;height:13px;margin-top:2px;accent-color:var(--gold)"></div>'+
       '<div class="tl-txt"><div class="ttl"'+(done?' style="text-decoration:line-through;color:var(--muted)"':(overdue?' style="color:var(--red)"':''))+'>'+escHtml(t.text)+'</div>'+
       '<div class="sub">added by '+escHtml(t.added_by||'scott')+dueTxt+(catLabel?' · '+catLabel:'')+'</div>'+
-      (answered ? '<div class="sub" style="color:var(--gold);margin-top:4px">Your answer: '+escHtml(t.answer)+'</div>'
+      (answered ? '<div class="sub" style="color:var(--gold);margin-top:4px">Your answer: '+escHtml(t.answer)+' <a href="#" onclick="event.preventDefault();openAnswerModal('+t.id+')" style="color:var(--muted);text-decoration:underline">✏️ edit</a></div>'
         : (isQuestion ? '<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="openAnswerModal('+t.id+')">💬 Answer</button>' : ''))+
       '</div>'+
       '<button onclick="deleteHudTodo('+t.id+')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0">✕</button></div>'+
-      (isQuestion && !answered ? '<div id="answer-modal-'+t.id+'" style="display:none;padding:0 4px 8px 26px"></div>' : '');
+      (isQuestion ? '<div id="answer-modal-'+t.id+'" style="display:none;padding:0 4px 8px 26px"></div>' : '');
   }).join('');
   list.innerHTML = html;
 }
@@ -3702,12 +3702,14 @@ function openAnswerModal(id) {
   const isOpen = panel.style.display !== 'none';
   document.querySelectorAll('[id^="answer-modal-"]').forEach(el => el.style.display = 'none');
   if (isOpen) return;
+  const existing = (_tasksData && _tasksData.todos || []).find(t => t.id === id);
+  const prevAnswer = (existing && existing.answer) || '';
   panel.innerHTML = `<div style="padding:8px 0;border-top:1px solid var(--border);margin-top:6px">
     <textarea id="answer-text-${id}" rows="2" placeholder="Type your answer…"
       aria-label="Your answer"
-      style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:8px;font-size:13px;font-family:inherit"></textarea>
+      style="width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);padding:8px;font-size:13px;font-family:inherit">${escHtml(prevAnswer)}</textarea>
     <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="hub-act-btn primary" onclick="submitTodoAnswer(${id})">Submit</button>
+      <button class="hub-act-btn primary" onclick="submitTodoAnswer(${id})">${prevAnswer ? 'Update' : 'Submit'}</button>
       <button class="hub-act-btn secondary" onclick="document.getElementById('answer-modal-${id}').style.display='none'">Cancel</button>
     </div>
   </div>`;
