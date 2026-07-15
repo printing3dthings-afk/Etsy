@@ -4579,9 +4579,11 @@ function renderListings() {
       <div class="hub-listing-info">
         <div class="hub-listing-title">${escHtml(l.title)}</div>
         <div class="hub-listing-meta">${l.views} views · ${l.num_favorers} ♥${l.sales!=null?' · '+l.sales+' sold':''}<span id="hub-state-${l.listing_id}" class="hub-lstate ${l.state==='active'?'active':'draft'}">${escHtml(l.state)}</span></div>
+        ${l.state==='inactive' ? `<button class="hub-act-btn secondary" style="font-size:11px;padding:4px 10px;margin-top:6px" onclick="event.stopPropagation();openFixListingModal(${l.listing_id})">🔧 Ask %%AGENT_SHORT%% to Fix</button>` : ''}
       </div>
       <div class="hub-listing-price">$${(+l.price||0).toFixed(2)}</div>
     </div>
+    ${l.state==='inactive' ? `<div id="fix-modal-${l.listing_id}" style="display:none;padding:0 4px"></div>` : ''}
     <div id="hub-detail-${l.listing_id}" class="hub-listing-detail" style="display:none"></div>`).join('');
   el.innerHTML = html;
 }
@@ -4608,10 +4610,11 @@ async function toggleListingDetail(listingId) {
     `<div id="hub-files-${listingId}"><div class="hub-drow"><span>Digital files</span><b>loading…</b></div></div>`+
     `<div style="margin-top:8px;display:flex;justify-content:flex-end;align-items:center;gap:10px">`+
     ((l.state==='active'||l.state==='inactive') ? `<button id="hub-state-btn-${listingId}" class="hub-act-btn secondary" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();toggleListingState(${listingId},this)">${l.state==='active'?'⏸️ Deactivate':'▶️ Activate'}</button>` : '')+
-    (l.state==='inactive' ? `<button class="hub-act-btn secondary" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();openFixListingModal(${listingId})">🔧 Ask %%AGENT_SHORT%% to Fix</button>` : '')+
     `<a href="${escHtml(l.url)}" target="_blank" style="color:var(--gold);font-size:12px;text-decoration:none" onclick="event.stopPropagation()">Open on Etsy ↗</a>`+
-    `</div>`+
-    (l.state==='inactive' ? `<div id="fix-modal-${listingId}" style="display:none"></div>` : '');
+    `</div>`;
+  // Fix button/modal for inactive listings now lives on the compact row itself
+  // (renderListings(), one tap, no need to expand this detail panel first) —
+  // see the "🔧 Ask Frank to Fix" button + #fix-modal-${listingId} placeholder there.
   try {
     const r = await authGet('/api/listings/'+listingId+'/files', 15000);
     const slot = document.getElementById('hub-files-'+listingId);
