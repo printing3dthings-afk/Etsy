@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "406528c-v188"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "95e7988-v189"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2424,6 +2424,24 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "generate_listing_photos",
+        "description": (
+            "Generate the full 10-photo Etsy listing set for a planner from its built PDF — "
+            "real rendered pages in device mockups (satisfies the cardinal 'photos must show "
+            "the REAL product' rule; no AI stand-ins). Local render, effectively no API cost. "
+            "Writes into the product's <pid>_listing_images/ folder, openable from Files. "
+            "Requires the planner PDF to already exist. Use when asked to make or regenerate a "
+            "product's listing photos."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
+            },
+            "required": ["pid"],
+        },
+    },
+    {
         "name": "register_command",
         "description": (
             f"Wire up an EXISTING script under tools/ as a new named command {business_config.AGENT_NAME_SHORT} can run. "
@@ -3269,6 +3287,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             }
         if name == "qc_check_product":
             return _qc_check_product(tool_input or {})
+        if name == "generate_listing_photos":
+            return _produce_listing_photos(tool_input or {})
         if name == "get_conversion_targets":
             return asyncio.run(_get_conversion_targets_core())
         if name == "diagnose_listing_conversion":
@@ -7418,6 +7438,50 @@ async def produce_qc_check(body: dict, _token: str = Depends(_rate_limited_auth)
     """One-tap Quality Check for a product's files (PDF page counts, sticker
     transparency + count, ZIP integrity, print-size folders). Local-only, no API cost."""
     return await asyncio.to_thread(_qc_check_product, body or {})
+
+
+def _produce_listing_photos(inp: dict) -> dict:
+    """Generate a planner's full 10-photo listing set from its built PDF — real
+    rendered pages in device mockups (the cardinal 'photos must show the real
+    product' rule). Pure local render; the only possible AI touch is the shared
+    app-compatibility graphic, which is reused if present. Writes into the
+    product's <pid>_listing_images/ folder."""
+    pid = str((inp or {}).get("pid", "")).strip().upper()
+    if not pid:
+        return {"error": "pid is required (e.g. 'DP1030')"}
+    try:
+        import gen_planner_listing_photos as glp
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"photo pipeline unavailable: {exc}"}
+    if pid not in glp.PLANNER_PAGES:
+        return {"error": f"{pid} isn't a configured planner "
+                         f"(have {', '.join(sorted(glp.PLANNER_PAGES))})."}
+    from pathlib import Path as _P
+    if not (_P(glp.ART_DIR) / f"{pid}.pdf").exists():
+        return {"error": f"{pid}.pdf not found in product files — build/sync the planner PDF first."}
+    try:
+        _out_dir, photos = glp.generate_for_planner(pid, None, upload=False)
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"photo generation failed: {exc}"}
+    return {
+        "pid": pid,
+        "count": len(photos),
+        "photos": photos,
+        "folder": f"product_files/{pid}_listing_images",
+        "message": f"Generated {len(photos)} listing photos for {pid} → "
+                   f"{pid}_listing_images/. Open them from the Files screen.",
+    }
+
+
+@app.post("/api/produce/listing-photos")
+async def produce_listing_photos(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Generate a planner's 10-photo listing set from its built PDF (local render,
+    effectively no API cost). Can take ~20-40s for the full set."""
+    try:
+        return await asyncio.wait_for(
+            asyncio.to_thread(_produce_listing_photos, body or {}), timeout=200)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Photo generation timed out — try again.")
 
 
 @app.post("/api/studio/generate")

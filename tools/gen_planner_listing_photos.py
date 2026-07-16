@@ -9,20 +9,45 @@ Usage:
   python tools/gen_planner_listing_photos.py --pid DP1026 # one planner
 """
 import os, sys, shutil, argparse, time, json, urllib.request
-sys.path.insert(0, '/home/user/Etsy')
-with open('/home/user/Etsy/.env') as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
-            os.environ.setdefault(k.strip(), v.strip())
+from pathlib import Path
+
+# Portable + hosted-deploy aware. Was hardcoded to /home/user/Etsy, which crashed
+# on the Railway server (no such path, no .env file there). Resolve the repo root
+# from this file, load .env only if it exists (hosted deploys carry real env vars),
+# and point ART_DIR/DP_BASE at the durable volume when running on the server so
+# Frank's one-tap "generate listing photos" reads the PDF from — and writes the
+# photos back to — the same place the Files screen and sync use.
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+_env_file = _ROOT / ".env"
+if _env_file.exists():
+    with open(_env_file) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 import fitz
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 
-ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
-DP_BASE = '/home/user/Etsy/data/digital_products'  # for the stickers/<pid>/png_sheets fallback
+
+def _resolve_dp_base() -> Path:
+    """Durable volume (<HUB_FILES_DIR> or /data/files) on the hosted deploy, else
+    the repo data dir locally — mirrors main.py + qc_sweep.resolve_dp_base()."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return _ROOT / "data" / "digital_products"
+
+
+_DP_BASE_PATH = _resolve_dp_base()
+ART_DIR = str(_DP_BASE_PATH / "product_files")
+DP_BASE = str(_DP_BASE_PATH)  # for the stickers/<pid>/png_sheets fallback
 APP_COMPAT_SRC = os.path.join(ART_DIR, '07_app_compatibility.jpg')
 CANVAS = 2400
 

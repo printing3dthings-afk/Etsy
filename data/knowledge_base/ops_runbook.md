@@ -8033,3 +8033,31 @@ AI-touching ones (planner build, sticker pack) which stay behind the
 BYOK/subscription cost model. Distribution guidance given to Scott: SaaS +
 subscription is the deliverable path for a truly key-free buyer experience; fully
 local models are a Phase-2 premium option. Build bumped to `406528c-v188`.
+
+---
+
+**2026-07-16 — One-tap pipelines step 2: "Generate listing photos" + a
+portability fix that also un-breaks step 1 on the server.** Wired
+`gen_planner_listing_photos.generate_for_planner()` as a Frank capability the same
+5 ways as QC: `_produce_listing_photos()` helper, `POST /api/produce/listing-photos`,
+`generate_listing_photos` agent tool (+ dispatch), a "📸 Photo set (10)" Create-screen
+tile (`photoSetRun()`), and tests. Renders all 10 photos from the planner's real
+PDF pages — no AI stand-ins — effectively zero API cost. End-to-end verified (10
+photos for DP1030).
+
+**Portability fix (important — silently affected step 1 too):** the deployed
+Railway server keeps product files on the durable **volume** (`/data/files/`, the
+`_FILE_ROOTS["volume"]`), NOT in the repo's gitignored `data/` dir. But `qc_sweep.py`
+used repo-relative paths and `gen_planner_listing_photos.py` hard-coded
+`/home/user/Etsy` (+ read `.env` at import, which crashes on the server). So the QC
+feature shipped in step 1 would have found ZERO files on the real server, and the
+photo pipeline would have crashed on import. Fixed both with a shared
+`resolve_dp_base()` (env `HUB_FILES_DIR` → `/data/files` → repo dir) mirroring
+main.py, and made the photo script derive its root from `__file__` with a guarded
+`.env` load. Verified locally (resolves to repo dir, unchanged) and via a
+`HUB_FILES_DIR` override (resolves + finds files). **Takeaway: any pipeline exposed
+to Frank must resolve data via the volume, not repo-relative/hardcoded paths, or it
+works in the sandbox and silently no-ops in production.**
+
+Verified: py_compile, node --check, produce tests, playwright smoke, real 10-photo
+render. Build bumped to `95e7988-v189`.

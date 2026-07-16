@@ -1606,6 +1606,21 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">📣</div><div style="font-weight:600;margin-top:6px">Social post</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Share a video to Instagram / Facebook</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-qc')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">✅</div><div style="font-weight:600;margin-top:6px">Quality Check</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Verify a product is publish-ready — free, instant</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-photoset')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">📸</div><div style="font-weight:600;margin-top:6px">Photo set (10)</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Build all 10 listing photos from a planner's PDF</div></div>
+      </div>
+
+      <div class="hub-section-title" id="create-photoset" style="margin-top:18px">Listing photo set — 10 photos from a planner's real pages</div>
+      <div class="hub-card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+          Renders the full 10-photo Etsy set straight from the planner's built PDF — real pages in device mockups, no AI stand-ins. Runs on the server (~20–40s); photos land in the product's folder and show up in Files.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="ps-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
+            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <button class="act-btn primary" onclick="photoSetRun()" id="ps-run-btn" style="white-space:nowrap">Generate</button>
+        </div>
+        <div id="ps-result" style="margin-top:12px"></div>
       </div>
 
       <div class="hub-section-title" id="create-qc" style="margin-top:18px">Quality Check — verify a product is publish-ready</div>
@@ -2778,6 +2793,35 @@ async function qcRunCheck(){
     out.innerHTML=html;
   }catch(e){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Check failed')+'</div>';
+  }finally{ if(btn) btn.disabled=false; }
+}
+
+// One-tap listing-photo set — hits POST /api/produce/listing-photos (local render,
+// no AI cost). Renders 10 photos from the planner's real PDF pages into its folder.
+async function photoSetRun(){
+  const pidEl=document.getElementById('ps-pid');
+  const btn=document.getElementById('ps-run-btn');
+  const out=document.getElementById('ps-result');
+  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
+  if(btn) btn.disabled=true;
+  if(out) out.innerHTML='<div class="hub-spinner"></div><div class="hub-listing-meta" style="text-align:center;margin-top:6px">Rendering 10 photos… ~20–40s</div>';
+  try{
+    const r=await fetchWithTimeout(BASE+'/api/produce/listing-photos', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({pid})
+    }, 210000);
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
+    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
+    let html='<div style="font-weight:600;margin-bottom:6px"><span style="color:var(--green)">✓</span> '+
+      escHtml(d.pid)+' — generated '+(d.count||0)+' photo'+((d.count||0)!==1?'s':'')+'</div>';
+    (d.photos||[]).forEach(fn=>{ html+='<div class="hub-listing-meta" style="padding:2px 0">🖼️ '+escHtml(fn)+'</div>'; });
+    html+='<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Open in Files →</button></div>';
+    out.innerHTML=html;
+    showToast('Generated '+(d.count||0)+' listing photos for '+escHtml(d.pid), 'ok');
+  }catch(e){
+    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Generation failed')+'</div>';
   }finally{ if(btn) btn.disabled=false; }
 }
 function showScreen(name){

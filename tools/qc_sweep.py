@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import re
 import sys
 import zipfile
@@ -34,9 +35,28 @@ sys.path.insert(0, str(BASE_DIR))
 
 from tools.etsy_api import validate_digital_file, FileContentError  # noqa: E402
 
-PF_DIR = BASE_DIR / "data" / "digital_products" / "product_files"
-PRINT_ZIP_DIR = BASE_DIR / "data" / "digital_products" / "print_zips"
-DP_BASE = BASE_DIR / "data" / "digital_products"
+
+def resolve_dp_base() -> Path:
+    """Where the digital-product files actually live for THIS environment.
+
+    On a hosted deploy (Railway) the repo's data/ dir is ephemeral/gitignored and
+    the real files sit on the durable volume — sync_files_to_hub.py uploads them
+    under <volume>/files/ with the same layout as data/digital_products/ (so
+    product_files/, print_zips/, stickers/ …). Mirror main.py's resolution so
+    Frank's one-tap Quality Check finds the same files the Files screen shows.
+    Locally (Scott's machine, this sandbox) neither is set → the repo dir, unchanged.
+    """
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return BASE_DIR / "data" / "digital_products"
+
+
+DP_BASE = resolve_dp_base()
+PF_DIR = DP_BASE / "product_files"
+PRINT_ZIP_DIR = DP_BASE / "print_zips"
 
 # Expected planner page counts (from CLAUDE.md catalog). Tolerance applied below.
 # DP1030-1034 corrected 2026-07-09 against actual pypdf page counts — the old

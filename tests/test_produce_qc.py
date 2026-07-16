@@ -97,6 +97,33 @@ def test_http_endpoint():
     check("summary" in data and "verdict" in data, f"endpoint returns summary+verdict, got keys {list(data)}")
 
 
+def test_listing_photos_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("generate_listing_photos" in names,
+          "generate_listing_photos must be in AGENT_TOOLS so the agent can call it")
+
+
+def test_listing_photos_requires_pid():
+    out = server._produce_listing_photos({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_listing_photos_rejects_non_planner():
+    out = server._produce_listing_photos({"pid": "ZZ9999"})
+    check("error" in out and "planner" in out["error"].lower(),
+          f"a non-planner code must be rejected clearly, got {out}")
+
+
+def test_listing_photos_endpoint_contract():
+    # Don't force a full 10-photo render in the test (slow, writes files); just assert
+    # the endpoint is wired and returns a well-formed result or a clear error.
+    c = _logged_in_client()
+    r = c.post("/api/produce/listing-photos", json={"pid": "ZZ9999"})
+    check(r.status_code == 200, f"endpoint should 200 with a JSON error body, got {r.status_code}")
+    data = r.json()
+    check("error" in data, f"non-planner pid should return a JSON error, got {data}")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
