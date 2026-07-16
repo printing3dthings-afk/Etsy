@@ -675,6 +675,73 @@ async def _run_browser_checks() -> None:
                   f"syncMobileClass() must clear a stuck cc-open once mobile is (re)detected -- otherwise the desktop "
                   f"header bar (and its viewport-unsafe #alert-dropdown) leaks onto phone screens permanently: {cc_state}")
 
+            # ── Second cc-open leak, found after the fix above shipped and Scott
+            # reported the dropdown "still not visible" (2026-07-15 follow-up) --
+            # phoneOpenScreen() (wired to every mobile "More" list item and the
+            # "Create" tab) sets cc-open UNCONDITIONALLY, with no isMobileMode()
+            # check, completely independent of syncMobileClass()'s resize-race
+            # path fixed above. Unlike that path, cc-open here is legitimate --
+            # it's what makes the target .screen content visible on mobile too --
+            # so the fix isn't to block it, it's to stop #alert-dropdown from
+            # being positioned relative to the (now-visible) desktop header bar
+            # at all. Assert both halves: cc-open genuinely does get set by this
+            # real navigation path (proving the scenario is real, not
+            # hypothetical), and #alert-dropdown still renders fully inside the
+            # viewport regardless. ──
+            phone_open_state = await page.evaluate("""() => {
+                phoneOpenScreen('settings');
+                return {
+                    isMobile: document.body.classList.contains('is-mobile'),
+                    ccOpen: document.body.classList.contains('cc-open'),
+                };
+            }""")
+            check(phone_open_state.get("isMobile") is True,
+                  f"is-mobile should stay true after phoneOpenScreen(): {phone_open_state}")
+            check(phone_open_state.get("ccOpen") is True,
+                  f"phoneOpenScreen() is expected to set cc-open even on mobile (it's what reveals .screen content) -- "
+                  f"if this is False the test scenario no longer matches the real bug and needs updating: {phone_open_state}")
+
+            await page.evaluate("toggleAlertDropdown && toggleAlertDropdown()")
+            await page.wait_for_timeout(200)
+            dropdown_box = await page.evaluate("""() => {
+                const dd = document.getElementById('alert-dropdown');
+                if (!dd) return null;
+                const r = dd.getBoundingClientRect();
+                return {left: r.left, right: r.right, display: getComputedStyle(dd).display};
+            }""")
+            if dropdown_box and dropdown_box.get("display") != "none":
+                vw = await page.evaluate("window.innerWidth")
+                check(dropdown_box["left"] >= 0,
+                      f"#alert-dropdown must not render past the left edge of the viewport even while cc-open is "
+                      f"legitimately set on mobile (via phoneOpenScreen): {dropdown_box}, viewport width {vw}")
+                check(dropdown_box["right"] <= vw,
+                      f"#alert-dropdown must not render past the right edge of the viewport: {dropdown_box}, viewport width {vw}")
+
+            # ── Chat History screen (2026-07-15) — Scott: "I need a option on the
+            # list to see the chat box from ask Frank to see his responses."
+            # Frank's replies on mobile were only ever spoken (TTS); the working
+            # "Past conversations" browser was buried inside the Knowledge screen
+            # with no path to it from mobile nav at all. Moved to its own
+            # #screen-conversations, reachable via the mobile More list. Confirms
+            # the full path: tap More -> find the "Chat History" item -> tap it ->
+            # land on the right screen with its content container present. ──
+            await page.evaluate("phoneTab('more')")
+            await page.wait_for_timeout(300)
+            chat_history_item = await page.query_selector("#pp-more-body .pmore-item:has-text('Chat History')")
+            check(chat_history_item is not None,
+                  "mobile More list must have a 'Chat History' entry so Frank's replies are reachable as text, not just spoken")
+            if chat_history_item is not None:
+                await chat_history_item.click()
+                await page.wait_for_timeout(500)
+                conv_screen_state = await page.evaluate("""() => ({
+                    active: document.querySelector('.screen.active') ? document.querySelector('.screen.active').id : null,
+                    contentPresent: !!document.getElementById('conversations-content'),
+                })""")
+                check(conv_screen_state.get("active") == "screen-conversations",
+                      f"tapping 'Chat History' should land on #screen-conversations: {conv_screen_state}")
+                check(conv_screen_state.get("contentPresent") is True,
+                      f"the conversations list/transcript container must be present on that screen: {conv_screen_state}")
+
         finally:
             await browser.close()
 

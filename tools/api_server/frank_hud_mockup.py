@@ -432,12 +432,26 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .alert-dropdown{position:absolute;top:38px;right:0;width:280px;max-width:calc(100vw - 24px);max-height:320px;overflow-y:auto;
   background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);
   box-shadow:0 10px 28px rgba(0,0,0,.4);z-index:600;padding:8px;cursor:default;text-align:left}
-/* Defense in depth (2026-07-15): this dropdown is anchored via right:0 to
-   #bell-btn, which assumes there's room to its left -- true on the 1440px
-   desktop stage this was designed for, false if it's ever shown on a narrow
-   viewport (the real trigger was a stuck cc-open state on mobile, fixed at
-   the source in syncMobileClass() above; max-width here just makes sure this
-   popup can never render wider than the viewport again regardless of cause). */
+/* 2026-07-15: max-width above was a defense-in-depth pass after the FIRST
+   cc-open leak (syncMobileClass()'s resize/matchMedia race). Scott reported
+   the dropdown "still not visible" after that shipped -- a SECOND,
+   independent cc-open leak (phoneOpenScreen(), used by every mobile "More"
+   list item and the "Create" tab) was still reachable. That leak is a
+   legitimate part of how mobile views full desktop screens (Settings,
+   Knowledge, etc. via More) though -- cc-open there also drives the actual
+   .screen content becoming visible, so guarding it away entirely on mobile
+   would break that navigation, not just hide the header bar. And even with
+   max-width capping the BOX width, right:0 still anchors it to #bell-btn's
+   own position, which sits wherever it lands in a cramped ~6-icon mobile
+   header row -- capping width alone doesn't stop the box from starting past
+   the left edge of the viewport if that anchor point is itself off-center.
+   Fixed at the actual point of failure instead: on mobile, this dropdown is
+   never positioned relative to the icon that opened it at all -- it's
+   pinned directly to the viewport (below). */
+body.is-mobile #alert-dropdown{
+  position:fixed;top:calc(56px + env(safe-area-inset-top));
+  left:8px;right:8px;width:auto;max-width:none;z-index:750;
+}
 .alert-dropdown-title{font-size:10.5px;letter-spacing:1.2px;color:var(--cyan2);text-transform:uppercase;
   padding:4px 6px 8px}
 .alert-row{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:var(--r-sm);
@@ -1051,6 +1065,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="nav-item" data-screen="create" role="button" tabindex="0"><span class="ic" aria-hidden="true">✚</span>Create</div>
     <div class="nav-item" data-screen="listings" role="button" tabindex="0"><span class="ic" aria-hidden="true">🏷</span>Your listings</div>
     <div class="nav-item" data-screen="knowledge" role="button" tabindex="0"><span class="ic" aria-hidden="true">✦</span>Knowledge</div>
+    <div class="nav-item" data-screen="conversations" role="button" tabindex="0"><span class="ic" aria-hidden="true">💬</span>Chat History</div>
 
     <h2 class="nav-section nav-section-h2">Shop</h2>
     <div class="nav-item" data-screen="products" role="button" tabindex="0"><span class="ic" aria-hidden="true">📦</span>Products</div>
@@ -1287,21 +1302,17 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
   <!-- Merged "Knowledge" screen — everything Frank remembers, in one place.
-       Keeps the original content IDs (#memory-content, #conversations-content,
-       #kb-content) + search inputs so loadMemory/loadConversations/loadKb and
-       searchConversations()/searchKb() work unchanged. -->
+       Keeps the original content IDs (#memory-content, #kb-content) + search
+       inputs so loadMemory/loadKb and searchKb() work unchanged. "Past
+       conversations" moved out to its own #screen-conversations (2026-07-15,
+       Scott: "I need a option on the list to see the chat box from ask Frank
+       to see his responses" -- it was previously reachable only by scrolling
+       past this section on desktop; on mobile there was no path to it at
+       all). #conversations-content etc. now live only in that one screen. -->
   <div class="screen" id="screen-knowledge">
     <div class="panel brk" style="margin-bottom:14px">
       <div class="panel-title">What Frank remembers</div>
       <div id="memory-content" style="margin-top:10px;overflow-y:auto;max-height:320px"><div class="hub-spinner"></div></div>
-    </div>
-    <div class="panel brk" style="margin-bottom:14px">
-      <div class="panel-title">Past conversations</div>
-      <div style="display:flex;gap:8px;margin:14px 0">
-        <input id="conv-search-input" type="text" placeholder="Search all conversations…" aria-label="Search all conversations" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:10px 14px;font-size:13px">
-        <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
-      </div>
-      <div id="conversations-content" style="overflow-y:auto;max-height:340px"><div class="hub-spinner"></div></div>
     </div>
     <div class="panel brk">
       <div class="panel-title">Knowledge base</div>
@@ -1310,6 +1321,22 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <button onclick="searchKb()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
       </div>
       <div id="kb-content" style="overflow-y:auto;max-height:340px"><div class="hub-spinner"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ CHAT HISTORY — Frank's replies as text, not just spoken.
+       Reuses the exact loadConversations/renderConversationList/openConversation/
+       renderConversationDetail/searchConversations functions that used to live
+       inside #screen-knowledge -- same #conversations-content id, same API
+       calls, just its own directly-reachable screen now. ══════════ -->
+  <div class="screen" id="screen-conversations">
+    <div class="panel brk" style="height:100%">
+      <div class="panel-title">Chat History <span class="src">/api/conversations — every past reply, in writing</span></div>
+      <div style="display:flex;gap:8px;margin:14px 0">
+        <input id="conv-search-input" type="text" placeholder="Search all conversations…" aria-label="Search all conversations" style="flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:var(--r-md);padding:10px 14px;font-size:13px">
+        <button onclick="searchConversations()" style="background:var(--panel2);border:1px solid var(--gold);color:var(--gold);border-radius:var(--r-md);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer">Search</button>
+      </div>
+      <div id="conversations-content" style="margin-top:10px;overflow-y:auto;max-height:700px"><div class="hub-spinner"></div></div>
     </div>
   </div>
 
@@ -1825,26 +1852,43 @@ function fitStage(){
   stage.style.transform = 'scale(' + scale + ')';
 }
 function closeControlCenter(){ document.body.classList.remove('cc-open'); }
-function toggleControlCenter(){ document.body.classList.toggle('cc-open'); }
+// openControlCenter() (2026-07-15) — the single place cc-open is ever ADDED.
+// cc-open reveals the full desktop dashboard (.hdr-bar/.sidebar/.screen — see
+// the body:not(.cc-open) / body.cc-open CSS rules above), including the
+// position:absolute #alert-dropdown sized for a 1440px desktop stage. Two
+// SEPARATE call sites were each independently found this session setting
+// cc-open with no mobile check: syncMobileClass()'s resize/matchMedia-race
+// path (fixed first) and phoneOpenScreen() (found after Scott reported the
+// alert dropdown "still not visible" post-fix -- phoneOpenScreen() is wired
+// to every mobile "More" list item AND the "Create" tab, so one tap
+// permanently stuck cc-open on with is-mobile still true). Routing every
+// cc-open-adding call site through this one guarded setter, instead of each
+// one repeating its own isMobileMode() check (or forgetting to), is what
+// actually closes off the bug class -- a third un-audited call site is far
+// less likely to reintroduce this if it can only ever add cc-open by calling
+// something that already refuses to on mobile.
+function openControlCenter(){ if (isMobileMode()) return; document.body.classList.add('cc-open'); }
+function toggleControlCenter(){
+  if (document.body.classList.contains('cc-open')) closeControlCenter();
+  else openControlCenter();
+}
 let _prevMobile = null;
 function syncMobileClass(){
   const mobile = isMobileMode();
   document.body.classList.toggle('is-mobile', mobile);
   if (!mobile && (_prevMobile === null || _prevMobile === true)) {
     // First load on desktop, or transitioning mobile→desktop: open dashboard
-    document.body.classList.add('cc-open');
+    openControlCenter();
   } else if (mobile) {
     // 2026-07-15 (Scott: header bar + alert dropdown showing on mobile,
-    // dropdown clipped off-screen): cc-open is what reveals the full desktop
-    // dashboard (.hdr-bar/.sidebar/.screen — see the body:not(.cc-open) /
-    // body.cc-open CSS rules above). This branch used to be a no-op: if
+    // dropdown clipped off-screen): this branch used to be a no-op -- if
     // cc-open was ever added while briefly misdetected as desktop (mobile
     // Safari's matchMedia/resize events can fire spuriously during
     // address-bar show/hide), nothing ever cleared it again once mobile was
-    // correctly redetected, so the desktop header bar (with its
-    // position:absolute .alert-dropdown, sized for a 1440px stage) stayed
-    // stuck open on a phone-width viewport permanently. Mobile now always
-    // wins: is-mobile and cc-open can never coexist.
+    // correctly redetected. Mobile now always wins: is-mobile and cc-open
+    // can never coexist. (This only ever needed to be a removal, not a call
+    // through openControlCenter() -- removal is always safe regardless of
+    // viewport.)
     document.body.classList.remove('cc-open');
   }
   _prevMobile = mobile;
@@ -1941,7 +1985,12 @@ function sendQuickChat(){
   sendMsg('quick-chat-input');
   const status = document.getElementById('quick-chat-status');
   if (status){
-    status.textContent = "Sent — Frank's replying… check the Ask tab for the full reply.";
+    // Was "check the Ask tab for the full reply" (2026-07-15 correction --
+    // Scott: "I need a option on the list to see the chat box... to see his
+    // responses"): the Ask tab is just the orb, it never had any visible
+    // transcript to check. Frank's replies are spoken via TTS; the actual
+    // text now lives in More → Chat History.
+    status.textContent = "Sent — Frank's replying… check More → Chat History for the full reply.";
     status.style.display = 'block';
   }
 }
@@ -2056,7 +2105,7 @@ function phoneSheetFix(){
 // More — a scrollable launcher for the other screens (fixes v1's unscrollable overlay).
 const _PHONE_MORE = [
   ['Shop', [['listings','🏷','Your listings'],['products','📦','Products'],['brandkit','🎨','Brand kit'],['connections','🔌','Connections']]],
-  ['Knowledge', [['knowledge','✦','Knowledge']]],
+  ['Knowledge', [['knowledge','✦','Knowledge'],['conversations','💬','Chat History']]],
   ['Advanced', [['settings','⚙','Settings'],['tasks','☑','Tasks'],['calendar','▦','Calendar'],['files','🗂','Files'],['workflows','⇄','Workflows'],['tools','🛠','Tools'],['core','◎','AI Core'],['agents','⚙','Agents'],['security','🛡','Security']]],
 ];
 function renderPhoneMore(){
@@ -2572,7 +2621,7 @@ const _SCREEN_LOADERS = {
   memory: [loadMemory],
   conversations: [loadConversations],
   kb: [loadKb],
-  knowledge: [loadMemory, loadConversations, loadKb],  // merged "Knowledge" screen
+  knowledge: [loadMemory, loadKb],  // merged "Knowledge" screen ("Past conversations" moved to its own #screen-conversations, 2026-07-15)
   tools: [loadTools],
   workflows: [loadWorkflows],
   listings: [() => loadListings(_lastListingState)],
@@ -2817,7 +2866,7 @@ function tourBack(){
 function tourSkip(){ endTour(true); }
 function startTour(){
   _activeTourSteps = isMobileMode() ? MOBILE_TOUR_STEPS : TOUR_STEPS;
-  if (!isMobileMode()) document.body.classList.add('cc-open');
+  openControlCenter();
   _tourIndex = 0;
   const root = document.getElementById('tour-root');
   if (root) root.style.display = 'block';

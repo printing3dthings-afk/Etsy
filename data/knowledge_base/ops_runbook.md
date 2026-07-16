@@ -7545,3 +7545,94 @@ succeeded reliably where one giant replacement did not). Infra-level issue,
 not a code bug.
 
 Build bumped to `8e3f868-v182`.
+
+### 2026-07-15 (final pass, follow-up 9) — Second cc-open leak found + fixed; chat history surfaced on mobile
+
+Two more reports from Scott: "Also the alert box is still not visible" (the
+alert dropdown clipping, again, after the follow-up 7 fix was already live),
+and "I need a option on the list to see the chat box from ask Frank to see
+his responses."
+
+**Alert dropdown, part 2 — a second, independent `cc-open` leak.** Follow-up
+7's fix to `syncMobileClass()` was correct but only closed ONE of two paths
+that could set `cc-open` (the class that reveals the full desktop dashboard,
+including the 1440px-stage-sized `.alert-dropdown`) on mobile.
+`phoneOpenScreen(name)` — wired to *every* item in the mobile "More" list and
+to the "Create" tab in the main phone tab bar — sets `cc-open`
+**unconditionally**, with no `isMobileMode()` check at all, unlike
+`startTour()` which was correctly guarded. Confirmed via a live repro: calling
+`phoneOpenScreen('settings')` on a 390px mobile viewport left both
+`is-mobile` AND `cc-open` true simultaneously.
+
+Critically, `cc-open` here is *not* itself the bug — it's legitimately what
+makes the target `.screen` content visible on mobile too (Settings,
+Knowledge, etc. reachable from the More list). Guarding it away on mobile
+the way `startTour()` does would have broken that navigation entirely, not
+just hidden the header bar. Added a centralized `openControlCenter()` setter
+(`if (isMobileMode()) return; ...`) and routed `syncMobileClass()` and
+`startTour()` through it — both of those truly should never set `cc-open` on
+mobile — but left `phoneOpenScreen()`'s direct `.add('cc-open')` alone,
+since it needs to.
+
+The actual, surgical fix for the alert dropdown itself: it was anchored via
+`position:absolute;right:0` to `#bell-btn`, whose own position depends on
+where it lands in a cramped ~6-icon mobile header row — even with the
+`max-width` safety net from follow-up 7, the box's *anchor point* could
+still sit off-center enough that its left edge started past the viewport
+edge. Added `body.is-mobile #alert-dropdown{position:fixed;left:8px;right:8px;
+width:auto;max-width:none;z-index:750}` — on mobile the dropdown is now
+pinned directly to the viewport, never to the icon that opened it, so it's
+correct regardless of where that icon happens to sit. Verified via a
+throwaway Playwright repro: called `phoneOpenScreen('settings')` (the real
+trigger) then opened the dropdown and read its actual `getBoundingClientRect()`
+— fully within `[0, 390]` on a 390px viewport, screenshot confirms every
+alert fully readable.
+
+**Chat history — a real feature, not a bug, but genuinely missing on
+mobile.** Investigated and confirmed: on mobile, Frank's replies (via the orb
+"Ask" tab or the hamburger's quick-chat popup) were only ever spoken via TTS
+— `#orb-view` has no chat-bubble container at all (a pre-existing CSS
+comment says so outright), and the only place a text transcript existed
+(`#chat-msgs` inside `#screen-cmd`) isn't reachable from mobile nav. The
+quick-chat popup's own status message even told users to "check the Ask tab
+for the full reply" — which had nothing to check.
+
+The actual browser for this already existed and worked, just wasn't
+reachable: "Past conversations" was the second of three sections nested
+inside the merged Knowledge screen (`renderConversationList()`/
+`openConversation()`/`renderConversationDetail()`, backed by real
+`GET /api/conversations` + `GET /api/conversations/{id}` endpoints reading
+the persistent `chat_messages` SQLite table). Gave it its own screen instead
+of a scroll-to-section hack: moved the "Past conversations" panel out of
+`#screen-knowledge` into a new `#screen-conversations` ("Chat History"),
+reusing the exact same `#conversations-content` id and functions unchanged
+— `_SCREEN_LOADERS.conversations` already existed as a dead/orphaned entry
+from before the original Knowledge merge, so no loader wiring was needed,
+just the missing screen `<div>`. Added entry points on both platforms: a
+`data-screen="conversations"` sidebar nav-item for desktop, and a
+`['conversations','💬','Chat History']` entry in the mobile More list.
+Updated `sendQuickChat()`'s status copy to point at the real location
+instead of the nonexistent Ask-tab transcript.
+
+**Note on tool infra:** the `AskUserQuestion` clarifying-question tool failed
+repeatedly with the same `AbortError: Tool permission stream closed before
+response received` error seen earlier on `ExitPlanMode` and one `Edit` call.
+Proceeded with the stated "Recommended" default (dedicated Chat History
+screen over a Knowledge-scroll hack) rather than blocking further — flagged
+explicitly in the plan file and to Scott. Same underlying infra issue as
+before, not a code bug; `Bash`/direct file edits kept working normally
+throughout.
+
+**Verification:** `python -m py_compile`, `ast.literal_eval` + `node --check`
+on the extracted JS, full `tests/test_*.py` suite + `tests/smoke_test.py`,
+`tools/playwright_smoke.py` (extended with: a `phoneOpenScreen()` +
+`#alert-dropdown` viewport-bounds check, and a full mobile-More →
+"Chat History" → `#screen-conversations` navigation check). Also manually
+verified via throwaway Playwright scripts: the Knowledge screen no longer
+contains `#conversations-content` (confirmed via
+`document.querySelector('#screen-knowledge #conversations-content')` ===
+null) while the new Chat History screen does; the desktop sidebar's new
+"Chat History" nav-item and the Knowledge nav-item both work independently
+with no console errors.
+
+Build bumped to `fb43ff4-v183`.
