@@ -42,7 +42,22 @@ with open(_ENV_PATH) as _f:
             os.environ.setdefault(_k.strip(), _v.strip())
 
 BASE_DIR = Path(__file__).parent.parent
-PRODUCT_FILES_DIR = BASE_DIR / "data" / "digital_products" / "product_files"
+
+
+def _resolve_dp_base() -> Path:
+    """Durable volume (<HUB_FILES_DIR> or /data/files) on the hosted deploy, else
+    the repo data dir locally — mirrors main.py + qc_sweep.resolve_dp_base(). Lets
+    Frank's one-tap planner builder write the PDFs where they live on the Railway
+    server (a repo-relative dir is ephemeral there and vanishes on redeploy)."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return BASE_DIR / "data" / "digital_products"
+
+
+PRODUCT_FILES_DIR = _resolve_dp_base() / "product_files"
 PRODUCT_FILES_DIR.mkdir(parents=True, exist_ok=True)
 
 SHOP_NAME     = "OnBrandCraftz"

@@ -8096,3 +8096,36 @@ Verified: py_compile, node --check, produce tests, playwright smoke. Build `5491
 Three zero-API pipelines now exposed to Frank (QC, listing photos, print ZIPs).
 Remaining: package/backup (zero API), then the AI-touching planner-build +
 sticker-pack builders (gated on the BYOK/subscription cost-model decision).
+
+---
+
+**2026-07-16 — One-tap pipelines step 4 (option A, the flagship): Build a planner
+from scratch.** This is the first AI-touching builder (cover art = the only paid
+step, ~a cent; everything else local) and the heart of "Frank reproduces what
+Claude does." Architecture: the build is minutes-long, so it runs DETACHED via
+`subprocess.Popen` (reusing the `_LONG_RUNNING_PROCS` background pattern the
+coloring-pages command already uses) rather than a synchronous request that would
+time out.
+
+- New wrapper `tools/build_planner.py <PID>`: chains the two proven CLIs
+  (generate_planner_v2 → planner_hyperlinker) then copies `_v2_final` → delivery
+  names (`<pid>.pdf`, `<pid>U.pdf`). Reuses the CLIs so it stays in lockstep with
+  the manual build; volume-aware.
+- Volume-path fix applied to `generate_planner.py` + `planner_hyperlinker.py`
+  (repo-relative → `resolve_dp_base()`), so the builder reads configs and writes
+  PDFs on the /data volume in production (same trap as steps 1-3).
+- `_produce_build_planner()` spawns the wrapper detached, logs run output to
+  `product_files/<pid>_build.log` on the volume (so a failed detached build is
+  diagnosable), tracks the PID, returns "started". `POST /api/produce/build-planner`,
+  `build_planner` agent tool (+ dispatch), "🗓️ Build planner" Create tile
+  (`buildPlannerRun()`), and tests.
+- End-to-end verified: `build_planner.py DP1030` produced valid 130pp dated +
+  undated delivery PDFs (validate_digital_file clean). Registration + guard tests
+  pass; py_compile, node --check, playwright smoke clean.
+
+**Cost-model note (Scott chose SaaS + subscription):** build_planner is the one
+produce pipeline that spends money. It never fires automatically — only on a
+deliberate call — and the cover cost is priced into the subscription. Sticker-pack
+generation is NOT yet exposed because those generators are per-product bespoke
+scripts (generate_adhd_assets.py etc.), not a generic pipeline — needs a generic
+sticker builder before it can be a one-tap function. Build `8b00364-v192`.

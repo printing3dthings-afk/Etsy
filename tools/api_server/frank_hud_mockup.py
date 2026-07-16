@@ -1619,6 +1619,21 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">📸</div><div style="font-weight:600;margin-top:6px">Photo set (10)</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Build all 10 listing photos from a planner's PDF</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-printzip')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🖨️</div><div style="font-weight:600;margin-top:6px">Print sizes</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Wall-art multi-size print ZIP (300dpi, sRGB)</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-buildplanner')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🗓️</div><div style="font-weight:600;margin-top:6px">Build planner</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Full PDF + cover + nav + stickers (uses AI)</div></div>
+      </div>
+
+      <div class="hub-section-title" id="create-buildplanner" style="margin-top:18px">Build planner — full PDF from scratch</div>
+      <div class="hub-card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+          Builds the whole planner: dated + undated PDFs, an AI kawaii cover, hyperlinked navigation, a TOC, fillable fields, and embedded sticker sheets. Runs in the background (~2–4 min) — the finished files land in your product folder and show in Files. <b>The cover art is the only paid AI step (~a cent);</b> everything else is free. Configured codes: DP1030–DP1034.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="bp-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
+            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <button class="act-btn primary" onclick="buildPlannerRun()" id="bp-run-btn" style="white-space:nowrap">Build planner</button>
+        </div>
+        <div id="bp-result" style="margin-top:12px"></div>
       </div>
 
       <div class="hub-section-title" id="create-printzip" style="margin-top:18px">Print sizes — multi-size ZIP for a wall-art listing</div>
@@ -2886,6 +2901,33 @@ async function printZipRun(){
     showToast('Built print ZIP for '+escHtml(d.pid), 'ok');
   }catch(e){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed')+'</div>';
+  }finally{ if(btn) btn.disabled=false; }
+}
+
+// One-tap full planner build — POST /api/produce/build-planner. Kicks off a
+// background build (base PDFs + AI cover → finalized PDFs); returns immediately.
+async function buildPlannerRun(){
+  const pidEl=document.getElementById('bp-pid');
+  const btn=document.getElementById('bp-run-btn');
+  const out=document.getElementById('bp-result');
+  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
+  if(btn) btn.disabled=true;
+  if(out) out.innerHTML='<div class="hub-spinner"></div>';
+  try{
+    const r=await fetchWithTimeout(BASE+'/api/produce/build-planner', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({pid})
+    }, 30000);
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
+    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
+    out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — build started</div>'+
+      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>'+
+      '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Check Files →</button></div>';
+    showToast('Building '+escHtml(d.pid)+' — check Files in a few minutes', 'ok');
+  }catch(e){
+    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
   }finally{ if(btn) btn.disabled=false; }
 }
 function showScreen(name){

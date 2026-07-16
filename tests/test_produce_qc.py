@@ -148,6 +148,24 @@ def test_print_zip_endpoint_contract():
     check("error" in r.json(), f"missing-source pid should return a JSON error, got {r.json()}")
 
 
+def test_build_planner_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("build_planner" in names,
+          "build_planner must be in AGENT_TOOLS so the agent can build a planner on request")
+
+
+def test_build_planner_requires_pid():
+    out = server._produce_build_planner({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_build_planner_rejects_unconfigured():
+    out = server._produce_build_planner({"pid": "DP9999"})
+    check("error" in out, f"an unconfigured planner code must be rejected, got {out}")
+    # must NOT have spawned a build for a bad code
+    check(not out.get("started"), f"must not start a build for an unconfigured code, got {out}")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "549129c-v191"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "8b00364-v192"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2442,6 +2442,25 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "build_planner",
+        "description": (
+            "Build a full digital planner from scratch — base dated + undated PDFs with an "
+            "AI-generated kawaii cover, then finalized with hyperlinked navigation, a TOC, "
+            "fillable form fields, and embedded sticker sheets. Runs in the BACKGROUND "
+            "(~2-4 min); the finished <pid>.pdf and <pid>U.pdf appear in Files when done. "
+            "The cover art is the only paid AI step (~a cent) — this is the one builder that "
+            "spends money. Use when asked to build or rebuild a planner. Only works for "
+            "configured planner codes (DP1030-DP1034)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
+            },
+            "required": ["pid"],
+        },
+    },
+    {
         "name": "generate_print_zip",
         "description": (
             "Build a wall-art product's multi-size print ZIP from its source JPG — "
@@ -3308,6 +3327,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _produce_listing_photos(tool_input or {})
         if name == "generate_print_zip":
             return _produce_print_zip(tool_input or {})
+        if name == "build_planner":
+            return _produce_build_planner(tool_input or {})
         if name == "get_conversion_targets":
             return asyncio.run(_get_conversion_targets_core())
         if name == "diagnose_listing_conversion":
@@ -7548,6 +7569,59 @@ async def produce_print_zip(body: dict, _token: str = Depends(_rate_limited_auth
             asyncio.to_thread(_produce_print_zip, body or {}), timeout=200)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Print-ZIP build timed out — try again.")
+
+
+def _produce_build_planner(inp: dict) -> dict:
+    """Kick off a full planner build in the BACKGROUND (base dated + undated PDFs +
+    AI cover → finalized PDFs with nav/fillable fields/embedded stickers) via
+    tools/build_planner.py. Long-running (~2-4 min), so it runs detached and the
+    finished PDFs show up in Files. The cover art is the only paid AI step.
+    This is the one produce pipeline that spends money — priced into the SaaS
+    subscription; it is never triggered automatically, only on a deliberate call."""
+    pid = str((inp or {}).get("pid", "")).strip().upper()
+    if not pid:
+        return {"error": "pid is required (e.g. 'DP1030')"}
+    try:
+        import generate_planner_v2 as _gpv2
+        configured = set(getattr(_gpv2, "_ALL_V2_PIDS", []) or [])
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"planner builder unavailable: {exc}"}
+    if configured and pid not in configured:
+        return {"error": f"{pid} isn't a configured planner (have {', '.join(sorted(configured))})."}
+    script = ROOT / "tools" / "build_planner.py"
+    if not script.exists():
+        return {"error": "build_planner.py is missing from this deploy."}
+    # Log to the volume so a failed detached build is diagnosable in Files.
+    from pathlib import Path as _P
+    try:
+        base = _P(os.getenv("HUB_FILES_DIR", "").strip()
+                  or ("/data/files" if _P("/data/files").is_dir()
+                      else str(ROOT / "data" / "digital_products")))
+        logdir = base / "product_files"
+        logdir.mkdir(parents=True, exist_ok=True)
+        _logf = open(logdir / f"{pid}_build.log", "w")  # noqa: SIM115 — handed to Popen
+    except Exception:  # noqa: BLE001
+        _logf = subprocess.DEVNULL
+    proc = subprocess.Popen(
+        [sys.executable, str(script), pid],
+        stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
+    )
+    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_planner:{pid}", datetime.now(timezone.utc))
+    return {
+        "pid": pid,
+        "started": True,
+        "os_pid": proc.pid,
+        "message": f"Building {pid} in the background (~2-4 min). When it finishes, "
+                   f"{pid}.pdf and {pid}U.pdf appear in Files (and {pid}_build.log has "
+                   f"the run output). Uses AI cover art (~a cent).",
+    }
+
+
+@app.post("/api/produce/build-planner")
+async def produce_build_planner(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Kick off a full planner build in the background (base PDFs + AI cover →
+    finalized PDFs). Returns immediately; the PDFs appear in Files when done."""
+    return await asyncio.to_thread(_produce_build_planner, body or {})
 
 
 @app.post("/api/studio/generate")
