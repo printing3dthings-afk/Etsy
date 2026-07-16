@@ -23,6 +23,7 @@ Usage:
 
 import argparse
 import sys
+import os
 import zipfile
 from pathlib import Path
 
@@ -31,8 +32,24 @@ from PIL import Image
 from scipy import ndimage
 
 BASE_DIR = Path(__file__).parent.parent
-ART_DIR = BASE_DIR / "data" / "digital_products" / "product_files"
-STICKER_OUT = BASE_DIR / "data" / "digital_products" / "stickers"
+
+
+def _resolve_dp_base() -> Path:
+    """digital_products base — the durable Railway volume in production, the repo
+    tree locally. Without this the tool reads/writes ephemeral storage on the
+    server and silently finds ZERO sheets (the 'works in sandbox, breaks in prod'
+    trap documented in ops_runbook.md)."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return BASE_DIR / "data" / "digital_products"
+
+
+DP_BASE = _resolve_dp_base()
+ART_DIR = DP_BASE / "product_files"
+STICKER_OUT = DP_BASE / "stickers"
 
 SHEET_PX = 3000          # final sheet resolution (square)
 WHITE_THRESHOLD = 238    # a pixel is "background-white" if all RGB channels >= this

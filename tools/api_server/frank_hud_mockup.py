@@ -1621,6 +1621,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">🖨️</div><div style="font-weight:600;margin-top:6px">Print sizes</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Wall-art multi-size print ZIP (300dpi, sRGB)</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-buildplanner')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🗓️</div><div style="font-weight:600;margin-top:6px">Build planner</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Full PDF + cover + nav + stickers (uses AI)</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-stickerpack')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🌈</div><div style="font-weight:600;margin-top:6px">Sticker pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">9 themed sheets → transparent ZIP (uses AI)</div></div>
       </div>
 
       <div class="hub-section-title" id="create-buildplanner" style="margin-top:18px">Build planner — full PDF from scratch</div>
@@ -1634,6 +1636,19 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <button class="act-btn primary" onclick="buildPlannerRun()" id="bp-run-btn" style="white-space:nowrap">Build planner</button>
         </div>
         <div id="bp-result" style="margin-top:12px"></div>
+      </div>
+
+      <div class="hub-section-title" id="create-stickerpack" style="margin-top:18px">Sticker pack — themed sheets → transparent ZIP</div>
+      <div class="hub-card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+          Builds the whole kawaii sticker pack: 9 themed sheets in the planner's palette, backgrounds stripped to transparent, every sticker cut into its own PNG, packaged into <b>&lt;code&gt;_sticker_pack.zip</b>. Runs in the background (~2–4 min) — the ZIP lands in your product folder and shows in Files. <b>The sheet art is the paid AI step.</b> Reports a real measured sticker count. Configured codes: DP1030–DP1034. <b style="color:var(--warn,#d98a00)">⚠ Eyeball the sheets for garbled text before the count goes on a live listing</b> — the top rule is never lie to the customer, and no file check catches misspelled in-image words.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="sp-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
+            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <button class="act-btn primary" onclick="stickerPackRun()" id="sp-run-btn" style="white-space:nowrap">Build pack</button>
+        </div>
+        <div id="sp-result" style="margin-top:12px"></div>
       </div>
 
       <div class="hub-section-title" id="create-printzip" style="margin-top:18px">Print sizes — multi-size ZIP for a wall-art listing</div>
@@ -2926,6 +2941,33 @@ async function buildPlannerRun(){
       '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>'+
       '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Check Files →</button></div>';
     showToast('Building '+escHtml(d.pid)+' — check Files in a few minutes', 'ok');
+  }catch(e){
+    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
+  }finally{ if(btn) btn.disabled=false; }
+}
+
+// One-tap full sticker-pack build — POST /api/produce/build-sticker-pack. Kicks off
+// a background build (themed sheets → strip → segment → ZIP); returns immediately.
+async function stickerPackRun(){
+  const pidEl=document.getElementById('sp-pid');
+  const btn=document.getElementById('sp-run-btn');
+  const out=document.getElementById('sp-result');
+  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
+  if(btn) btn.disabled=true;
+  if(out) out.innerHTML='<div class="hub-spinner"></div>';
+  try{
+    const r=await fetchWithTimeout(BASE+'/api/produce/build-sticker-pack', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({pid})
+    }, 30000);
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
+    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
+    out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — sticker build started</div>'+
+      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>'+
+      '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Check Files →</button></div>';
+    showToast('Building '+escHtml(d.pid)+' stickers — check Files in a few minutes', 'ok');
   }catch(e){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
   }finally{ if(btn) btn.disabled=false; }

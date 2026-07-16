@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "8b00364-v192"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b4d57f5-v193"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2461,6 +2461,28 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "build_sticker_pack",
+        "description": (
+            "Build a planner's full kawaii sticker pack from scratch — generate the themed "
+            "sheets (matching the planner's color palette), strip their backgrounds to "
+            "transparent, segment every sticker into an individual PNG, and package "
+            "<pid>_sticker_pack.zip (png_sheets/ + individual_stickers/). Runs in the "
+            "BACKGROUND (~2-4 min); the ZIP appears in Files when done. Sheet art is the "
+            "paid AI step. Reports a REAL measured sticker count, but the sheets still need "
+            "a human eyeball for garbled in-image text before the count goes on a live "
+            "listing. Only works for codes with a sticker spec (DP1030-DP1034)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
+                "sheets": {"type": "integer",
+                           "description": "Optional: only build the first N sheets (default: all 9)."},
+            },
+            "required": ["pid"],
+        },
+    },
+    {
         "name": "generate_print_zip",
         "description": (
             "Build a wall-art product's multi-size print ZIP from its source JPG — "
@@ -3329,6 +3351,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _produce_print_zip(tool_input or {})
         if name == "build_planner":
             return _produce_build_planner(tool_input or {})
+        if name == "build_sticker_pack":
+            return _produce_build_sticker_pack(tool_input or {})
         if name == "get_conversion_targets":
             return asyncio.run(_get_conversion_targets_core())
         if name == "diagnose_listing_conversion":
@@ -7622,6 +7646,68 @@ async def produce_build_planner(body: dict, _token: str = Depends(_rate_limited_
     """Kick off a full planner build in the background (base PDFs + AI cover →
     finalized PDFs). Returns immediately; the PDFs appear in Files when done."""
     return await asyncio.to_thread(_produce_build_planner, body or {})
+
+
+def _produce_build_sticker_pack(inp: dict) -> dict:
+    """Kick off a full sticker-pack build in the BACKGROUND via
+    tools/build_sticker_pack.py: generate the 9 themed sheets on a solid
+    background (any engine), strip + segment + package into <PID>_sticker_pack.zip.
+    Long-running (~2-4 min for 9 sheets), so it runs detached; the ZIP + processed
+    sheets show up in Files when done. Sheet art is the only paid AI step.
+
+    Reality check that keeps us honest (top rule — NEVER LIE TO THE CUSTOMER): the
+    build reports a REAL measured sticker count, but AI can still garble in-image
+    text, which no file gate catches. So this returns needs_visual_qc:true — the
+    pack must be eyeballed before its count/claims go on a live listing."""
+    pid = str((inp or {}).get("pid", "")).strip().upper()
+    if not pid:
+        return {"error": "pid is required (e.g. 'DP1030')"}
+    try:
+        import build_sticker_pack as _bsp
+        configured = set(getattr(_bsp, "SPEC_MODULES", {}) or {})
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"sticker-pack builder unavailable: {exc}"}
+    if configured and pid not in configured:
+        return {"error": f"{pid} has no sticker spec (have {', '.join(sorted(configured))})."}
+    script = ROOT / "tools" / "build_sticker_pack.py"
+    if not script.exists():
+        return {"error": "build_sticker_pack.py is missing from this deploy."}
+    sheets = inp.get("sheets")
+    args = [sys.executable, str(script), pid]
+    if isinstance(sheets, int) and sheets > 0:
+        args += ["--sheets", str(sheets)]
+    # Log to the volume so a failed detached build is diagnosable in Files.
+    from pathlib import Path as _P
+    try:
+        base = _P(os.getenv("HUB_FILES_DIR", "").strip()
+                  or ("/data/files" if _P("/data/files").is_dir()
+                      else str(ROOT / "data" / "digital_products")))
+        logdir = base / "product_files"
+        logdir.mkdir(parents=True, exist_ok=True)
+        _logf = open(logdir / f"{pid}_stickers_build.log", "w")  # noqa: SIM115 — handed to Popen
+    except Exception:  # noqa: BLE001
+        _logf = subprocess.DEVNULL
+    proc = subprocess.Popen(
+        args, stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
+    )
+    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_sticker_pack:{pid}", datetime.now(timezone.utc))
+    return {
+        "pid": pid,
+        "started": True,
+        "os_pid": proc.pid,
+        "needs_visual_qc": True,
+        "message": f"Building {pid}'s sticker pack in the background (~2-4 min). When it "
+                   f"finishes, {pid}_sticker_pack.zip appears in Files "
+                   f"({pid}_stickers_build.log has the run output). Uses AI sheet art. "
+                   f"Eyeball the sheets for garbled text before the count goes on a live listing.",
+    }
+
+
+@app.post("/api/produce/build-sticker-pack")
+async def produce_build_sticker_pack(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Kick off a full sticker-pack build in the background (themed sheets → strip →
+    segment → ZIP). Returns immediately; the pack appears in Files when done."""
+    return await asyncio.to_thread(_produce_build_sticker_pack, body or {})
 
 
 @app.post("/api/studio/generate")

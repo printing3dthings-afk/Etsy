@@ -166,6 +166,30 @@ def test_build_planner_rejects_unconfigured():
     check(not out.get("started"), f"must not start a build for an unconfigured code, got {out}")
 
 
+def test_build_sticker_pack_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("build_sticker_pack" in names,
+          "build_sticker_pack must be in AGENT_TOOLS so the agent can build a pack on request")
+
+
+def test_build_sticker_pack_requires_pid():
+    out = server._produce_build_sticker_pack({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_build_sticker_pack_rejects_unspecced():
+    out = server._produce_build_sticker_pack({"pid": "DP9999"})
+    check("error" in out, f"a code with no sticker spec must be rejected, got {out}")
+    check(not out.get("started"), f"must not start a build for an unspecced code, got {out}")
+
+
+def test_build_sticker_pack_agent_dispatch():
+    # Same clean rejection through the agent path (no build spawned).
+    out = server._execute_agent_tool("build_sticker_pack", {"pid": "DP9999"})
+    check(isinstance(out, dict) and "error" in out,
+          f"agent dispatch of build_sticker_pack should reject an unspecced code, got {out}")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

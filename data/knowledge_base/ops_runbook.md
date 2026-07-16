@@ -8125,7 +8125,47 @@ time out.
 
 **Cost-model note (Scott chose SaaS + subscription):** build_planner is the one
 produce pipeline that spends money. It never fires automatically — only on a
-deliberate call — and the cover cost is priced into the subscription. Sticker-pack
-generation is NOT yet exposed because those generators are per-product bespoke
-scripts (generate_adhd_assets.py etc.), not a generic pipeline — needs a generic
-sticker builder before it can be a one-tap function. Build `8b00364-v192`.
+deliberate call — and the cover cost is priced into the subscription. Build `8b00364-v192`.
+
+### 2026-07-16 — One-tap pipelines (step 5): Build a sticker pack (generic builder)
+The sticker-pack builder flagged as "needs generic tooling" in step 4 is now
+built. The 5 bespoke spec modules (generate_adhd_assets.py, _sage_garden_,
+_midnight_kawaii_, _sunflower_studio_, _celestial_) are structurally identical —
+module-level `PID`, `_STYLE`, `SHEETS` — so `tools/build_sticker_pack.py` reads
+any one via a `SPEC_MODULES` registry (DP1030–DP1034) and runs ONE engine-agnostic
+pipeline: generate the 9 sheets on a **solid mid-gray #808080** background (the
+bespoke modules hardcode `background="transparent"`, which only gpt-image-1
+supports — `_solidify()` swaps that clause so it runs on Gemini/any engine), then
+strip + segment + package via the shared `process_sticker_sheets.py`. Mid-gray
+reads as background against BOTH dark outlines and light highlights, so the
+corner-sampled flood-fill eats neither.
+- **Volume-path fix:** `process_sticker_sheets.py` had repo-relative `ART_DIR`/
+  `STICKER_OUT` — same "works in sandbox, silently finds ZERO sheets on the server"
+  trap fixed elsewhere. Added `_resolve_dp_base()` (HUB_FILES_DIR → /data/files →
+  repo). Required for the builder to work in production.
+- **Wiring (same template as build_planner):** `_produce_build_sticker_pack`
+  (background Popen, logs to `product_files/<pid>_stickers_build.log`, tracked in
+  `_LONG_RUNNING_PROCS`, returns `needs_visual_qc:true`), `POST /api/produce/
+  build-sticker-pack`, `build_sticker_pack` agent tool (+ dispatch), "🌈 Sticker
+  pack" Create tile (`stickerPackRun()`) with an in-panel ⚠ garbled-text warning,
+  and 4 tests.
+- **Honesty guard:** the tool reports a REAL measured (segmented) sticker count,
+  but AI still garbles in-image text and NO file gate catches that — so both the
+  tile copy and the API `message` tell the operator to eyeball the sheets before
+  the count/claims go on a live listing (top rule: never lie to the customer).
+- **End-to-end verified IN-SANDBOX with Gemini** (unlike build_planner, which
+  needs OpenAI): a 2-sheet DP1030 run into an isolated temp volume produced clean
+  transparent sheets (69%/64% transparent, gray fully stripped, outlines intact,
+  legible text) and a valid 1.8 MB ZIP with 52 segmented stickers. rembg AI cutout
+  correctly fell back to flood-fill on the sandbox's github-403. Build `b4d57f5-v193`.
+
+
+## 2026-07-16 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
