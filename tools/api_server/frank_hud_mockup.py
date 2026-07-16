@@ -5840,6 +5840,52 @@ function copyHex(text, el){
   }
 }
 function openFile(url){ window.open(url,'_blank'); }
+// Files screen grouping: collapse everything that belongs to one product/listing
+// (all the DP1032_* files — PDFs, sticker pack, listing images, sheets) into a single
+// tappable row, so a 1000+ file volume listing isn't one giant flat scroll. The key
+// is the product code embedded in the path (DP1032, SS1001, WA1030, …).
+let _hubZipSeq = 0, _hubGrpSeq = 0;
+function _productKeyFromPath(path){
+  const m = String(path||'').match(/([A-Za-z]{2,5}\\d{3,4})/);
+  return m ? m[1].toUpperCase() : null;
+}
+function _productGroupIcon(key){
+  if(/^DP/.test(key)) return '📕';   // digital planners
+  if(/^SS/.test(key)) return '✂️';   // SVG cut-file packs
+  if(/^WA/.test(key)) return '🖼️';   // wall art
+  return '📦';
+}
+// Render one file (or an expandable ZIP) as a row — shared by the flat and grouped paths.
+function _renderHubFileHtml(f){
+  const when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  if (f.is_zip) {
+    const zid='hub-zip-'+(_hubZipSeq++);
+    const entries=f.entries||[];
+    let h='<div class="hub-listing-item" onclick="toggleZip(\\''+zid+'\\',this.querySelector(\\'.hub-zip-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
+      '<div class="hub-thumb-ph">🗂️</div>'+
+      '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
+      '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+' · '+entries.length+' files inside</div></div>'+
+      '<div class="hub-zip-caret" style="color:var(--gold);font-size:16px">▸</div></div>';
+    h+='<div id="'+zid+'" style="display:none;margin:0 0 6px 14px;border-left:2px solid var(--border);padding-left:8px">';
+    if(!entries.length) h+='<div class="hub-listing-meta" style="padding:8px 0">Could not read this ZIP\\'s contents.</div>';
+    entries.forEach(en=>{
+      const eurl=_hubZipEntryUrl(f,en.name);
+      h+='<div class="hub-listing-item" onclick="openFile(\\''+eurl+'\\')" style="cursor:pointer;padding:7px 4px" role="button" tabindex="0">'+
+        '<div class="hub-thumb-ph" style="font-size:16px">'+_hubFileIcon(en.name)+'</div>'+
+        '<div class="hub-listing-info"><div class="hub-listing-title" style="font-size:13px">'+escHtml(en.name)+'</div>'+
+        '<div class="hub-listing-meta">'+escHtml(en.size_human)+(en.inline?' · tap to open':' · tap to download')+'</div></div>'+
+        '<div style="color:var(--gold);font-size:15px">'+(en.inline?'↗':'⬇')+'</div></div>';
+    });
+    h+='</div>';
+    return h;
+  }
+  const url=_hubFileUrl(f, f.inline?1:0);
+  return '<div class="hub-listing-item" onclick="openFile(\\''+url+'\\')" style="cursor:pointer" role="button" tabindex="0">'+
+    '<div class="hub-thumb-ph">'+_hubFileIcon(f.path)+'</div>'+
+    '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
+    '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+(f.inline?' · tap to open':' · tap to download')+'</div></div>'+
+    '<div style="color:var(--gold);font-size:18px">'+(f.inline?'↗':'⬇')+'</div></div>';
+}
 function downloadFullBackup(){
   window.open(BASE+'/api/backup/download-all?token='+encodeURIComponent(TOKEN), '_blank');
   showToast('Building your backup ZIP — this can take a minute for a large one.');
@@ -5862,44 +5908,45 @@ async function loadFiles() {
       '<div style="font-size:12px;color:var(--muted);line-height:1.6">The actual product files living on the server '+
       '(data/digital_products/ and data/backups/). Tap a file to open it. Tap a ZIP to expand it and open any '+
       'file inside directly — no unzipping needed.</div></div>';
-    let zipIdx=0;
+    _hubZipSeq = 0; _hubGrpSeq = 0;
     groups.forEach(g => {
       if (!g.files.length) return;
-      html += '<div class="hub-section-title">'+escHtml(g.label)+' ('+g.files.length+')</div><div class="hub-card">';
+      html += '<div class="hub-section-title">'+escHtml(g.label)+' ('+g.files.length+')</div>';
+
+      // Sub-group this group's files by the product/listing code in their path, so
+      // all of one product's files collapse into a single tappable row.
+      const sub={}, order=[];
       g.files.forEach(f => {
-        const when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-        if (f.is_zip) {
-          const zid='hub-zip-'+(zipIdx++);
-          const entries=f.entries||[];
-          html += '<div class="hub-listing-item" onclick="toggleZip(\\''+zid+'\\',this.querySelector(\\'.hub-zip-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
-            '<div class="hub-thumb-ph">🗂️</div>'+
-            '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
-            '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+' · '+entries.length+' files inside</div></div>'+
-            '<div class="hub-zip-caret" style="color:var(--gold);font-size:16px">▸</div>'+
-          '</div>';
-          html += '<div id="'+zid+'" style="display:none;margin:0 0 6px 14px;border-left:2px solid var(--border);padding-left:8px">';
-          if(!entries.length){
-            html += '<div class="hub-listing-meta" style="padding:8px 0">Could not read this ZIP\\'s contents.</div>';
-          }
-          entries.forEach(en => {
-            const eurl=_hubZipEntryUrl(f,en.name);
-            html += '<div class="hub-listing-item" onclick="openFile(\\''+eurl+'\\')" style="cursor:pointer;padding:7px 4px" role="button" tabindex="0">'+
-              '<div class="hub-thumb-ph" style="font-size:16px">'+_hubFileIcon(en.name)+'</div>'+
-              '<div class="hub-listing-info"><div class="hub-listing-title" style="font-size:13px">'+escHtml(en.name)+'</div>'+
-              '<div class="hub-listing-meta">'+escHtml(en.size_human)+(en.inline?' · tap to open':' · tap to download')+'</div></div>'+
-              '<div style="color:var(--gold);font-size:15px">'+(en.inline?'↗':'⬇')+'</div>'+
-            '</div>';
-          });
-          html += '</div>';
-        } else {
-          const url=_hubFileUrl(f, f.inline?1:0);
-          html += '<div class="hub-listing-item" onclick="openFile(\\''+url+'\\')" style="cursor:pointer" role="button" tabindex="0">'+
-            '<div class="hub-thumb-ph">'+_hubFileIcon(f.path)+'</div>'+
-            '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.path)+'</div>'+
-            '<div class="hub-listing-meta">'+escHtml(f.size_human)+' · '+escHtml(when)+(f.inline?' · tap to open':' · tap to download')+'</div></div>'+
-            '<div style="color:var(--gold);font-size:18px">'+(f.inline?'↗':'⬇')+'</div>'+
-          '</div>';
-        }
+        const k = _productKeyFromPath(f.path) || 'Other files';
+        if(!sub[k]){ sub[k]=[]; order.push(k); }
+        sub[k].push(f);
+      });
+      const productKeys = order.filter(k=>k!=='Other files')
+        .sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
+
+      // No product codes here (e.g. the Backups group) → keep it flat, no needless nesting.
+      if (!productKeys.length) {
+        html += '<div class="hub-card">';
+        g.files.forEach(f => { html += _renderHubFileHtml(f); });
+        html += '</div>';
+        return;
+      }
+
+      const finalOrder = productKeys.concat(sub['Other files'] ? ['Other files'] : []);
+      html += '<div class="hub-card">';
+      finalOrder.forEach(key => {
+        const files = sub[key];
+        const gid = 'hub-grp-'+(_hubGrpSeq++);
+        const icon = key==='Other files' ? '📄' : _productGroupIcon(key);
+        html += '<div class="hub-listing-item" onclick="toggleZip(\\''+gid+'\\',this.querySelector(\\'.hub-grp-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
+          '<div class="hub-thumb-ph">'+icon+'</div>'+
+          '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(key)+'</div>'+
+          '<div class="hub-listing-meta">'+files.length+' file'+(files.length!==1?'s':'')+'</div></div>'+
+          '<div class="hub-grp-caret" style="color:var(--gold);font-size:16px">▸</div>'+
+        '</div>';
+        html += '<div id="'+gid+'" style="display:none;margin:0 0 6px 8px;border-left:2px solid var(--border);padding-left:8px">';
+        files.forEach(f => { html += _renderHubFileHtml(f); });
+        html += '</div>';
       });
       html += '</div>';
     });
