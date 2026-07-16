@@ -1684,6 +1684,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <input id="ps-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
             style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <select id="ps-engine" title="Art engine for photo 7 if it must be generated"
+            style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
+            <option value="gemini" selected>Gemini art</option>
+            <option value="openai">gpt-image-1</option>
+            <option value="gpt-image-2">gpt-image-2</option>
+          </select>
           <button class="act-btn primary" onclick="photoSetRun()" id="ps-run-btn" style="white-space:nowrap">Generate</button>
         </div>
         <div id="ps-result" style="margin-top:12px"></div>
@@ -2883,13 +2889,15 @@ async function photoSetRun(){
   const btn=document.getElementById('ps-run-btn');
   const out=document.getElementById('ps-result');
   const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  const engEl=document.getElementById('ps-engine');
+  const engine=(engEl&&engEl.value)||'gemini';
   if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
   if(btn) btn.disabled=true;
   if(out) out.innerHTML='<div class="hub-spinner"></div><div class="hub-listing-meta" style="text-align:center;margin-top:6px">Rendering 10 photos… ~20–40s</div>';
   try{
     const r=await fetchWithTimeout(BASE+'/api/produce/listing-photos', {
       method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid})
+      body: JSON.stringify({pid, engine})
     }, 210000);
     const d=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));

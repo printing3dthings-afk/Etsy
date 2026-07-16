@@ -8197,3 +8197,21 @@ gpt-image-1 shuts down 2026-10-23), fully approved per CLAUDE.md. Stickers alrea
 render on a solid background + get stripped to transparent, so any engine works
 (gpt-image-1's transparent-only limitation doesn't apply). Covers verified on
 Gemini earlier (build_planner DP1030). 6 new engine tests pass. Build `9bad473-v194`.
+
+### 2026-07-16 — Photo set: photo 7 (app-compat) generates on Gemini when missing
+The listing-photo set does ZERO live AI generation — all 10 photos are PIL
+composites of real PDF pages, and photo 7 (app-compatibility infographic) was
+merely a COPY of a shared static asset (07_app_compatibility.jpg). If that shared
+file was absent (fresh volume, new catalog), the set silently dropped to 9 photos.
+Added `make_app_compat(pid,cfg,dest,engine)`: reuse the shared asset if present
+(free), else GENERATE it on the chosen engine (default Gemini) + PIL label band,
+and cache it back to the shared path so the next planner reuses it for free. If
+generation fails it drops photo 7 from the set rather than crashing. Threaded
+`engine` through `generate_for_planner` + `_produce_listing_photos` + the tool
+schema + a Create-tile dropdown.
+- **Baked-text leak (top rule catch):** the first prompt passed the icon colour as
+  `rgb(126,200,16)` and Gemini rendered "rgb(126,200,16)" as garbled text on the
+  icon. Fix: never put numbers/hex in an image prompt — added `_hue_word((r,g,b))`
+  → a plain hue word ("soft green"), and the prompt forbids all text/numbers.
+  Regenerated: clean, no baked text. Lesson logged for all future infographic prompts.
+Verified in-sandbox with Gemini (real generation, visually QC'd twice). Build `760dd69-v195`.

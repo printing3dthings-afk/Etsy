@@ -249,6 +249,26 @@ def fr(size):
     return ImageFont.load_default()
 
 
+def _hue_word(rgb):
+    """Plain-English hue name for an (r,g,b) tuple — used in AI prompts INSTEAD of
+    numeric rgb/hex, because engines leak digits from the prompt as baked-in text.
+    Returns words only."""
+    import colorsys
+    r, g, b = (c / 255.0 for c in rgb[:3])
+    h, s, v = colorsys.rgb_to_hsv(r, g, b)
+    if s < 0.12:
+        return "light grey" if v > 0.5 else "charcoal"
+    deg = h * 360
+    if deg < 20 or deg >= 330: return "soft red"
+    if deg < 45:  return "warm coral"
+    if deg < 70:  return "golden yellow"
+    if deg < 160: return "soft green"
+    if deg < 200: return "teal"
+    if deg < 255: return "soft blue"
+    if deg < 290: return "muted purple"
+    return "soft pink"
+
+
 # ── PDF rendering ──────────────────────────────────────────────────────────────
 
 def render_page(pid, page_num, target_w=1800):
@@ -738,7 +758,72 @@ def upload_photos(listing_id, out_dir, photo_files, client, product_name=''):
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def generate_for_planner(pid, client, upload=True):
+def make_app_compat(pid, cfg, dest, engine=None):
+    """Photo 7 — the app-compatibility infographic. Normally a shared static asset
+    reused across every planner (07_app_compatibility.jpg) so it costs nothing. When
+    that shared file is missing (a fresh volume, a brand-new catalog), GENERATE it
+    with the chosen AI engine (default Gemini — no OpenAI needed) so the set is a
+    full 10 photos instead of silently dropping to 9. Text is NOT baked into the AI
+    image (no engine renders text reliably — CLAUDE.md); the label is PIL-overlaid
+    crisply on top, matching the rest of the photo set."""
+    if os.path.exists(APP_COMPAT_SRC) and os.path.abspath(APP_COMPAT_SRC) != os.path.abspath(dest):
+        shutil.copy2(APP_COMPAT_SRC, dest)
+        print("    07_app_compatibility.jpg (copied from shared asset)")
+        return True
+    if os.path.exists(dest):
+        print("    07_app_compatibility.jpg (already present)")
+        return True
+    # Missing everywhere — generate it on the engine.
+    try:
+        from tools.image_gen import generate_image, SQUARE
+        eng = (engine or os.getenv("IMAGE_ENGINE") or "gemini").lower()
+        # Describe the center-icon colour with a plain hue WORD, never numbers/hex —
+        # engines leak digits from the prompt as baked-in text (Gemini rendered
+        # "rgb(126,200,16)" onto the icon once). No numbers in the prompt = nothing
+        # nonsensical to bake in. Text is added by PIL below, so the prompt forbids
+        # all in-image text.
+        prompt = (
+            f"Flat vector infographic, soft cream background. In the exact center a single "
+            f"blank {_hue_word(cfg['color'])} document icon with a folded corner and a few "
+            "plain horizontal lines (no readable words). Arranged evenly in a circle around it, "
+            "five rounded-square note/PDF app icons in green, red-orange, blue, teal, and "
+            "dark-red. Thin dashed pastel lines connect the center document to each app icon, "
+            "and each app icon has a small green circular checkmark badge. Clean, minimal, "
+            "professional, lots of empty cream background space. Absolutely NO text, NO words, "
+            "NO letters, NO numbers, NO labels anywhere in the image."
+        )
+        tmp = os.path.join(os.path.dirname(dest), f"_{pid}_appcompat_raw.png")
+        generate_image(prompt, tmp, size=SQUARE, quality="high", output_format="png", engine=eng)
+        img = Image.open(tmp).convert('RGB')
+        if img.size != (CANVAS, CANVAS):
+            img = img.resize((CANVAS, CANVAS), Image.LANCZOS)
+        # Crisp PIL label band (never trust baked-in AI text).
+        d = ImageDraw.Draw(img)
+        d.rectangle([0, CANVAS - 190, CANVAS, CANVAS], fill=cfg['color'])
+        d.text((CANVAS // 2, CANVAS - 128), "WORKS WITH YOUR FAVORITE APPS",
+               font=fb(58), fill=(255, 255, 255), anchor='mm')
+        d.text((CANVAS // 2, CANVAS - 58),
+               "GoodNotes · Notability · PDF Expert · Xodo · Acrobat",
+               font=fr(40), fill=(240, 235, 250), anchor='mm')
+        img.save(dest, 'JPEG', quality=93)
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        # Cache as the shared asset so the next planner reuses it for free.
+        try:
+            if os.path.abspath(dest) != os.path.abspath(APP_COMPAT_SRC):
+                shutil.copy2(dest, APP_COMPAT_SRC)
+        except OSError:
+            pass
+        print(f"    07_app_compatibility.jpg (generated with {eng} + PIL label)")
+        return True
+    except Exception as exc:  # noqa: BLE001 — never let a missing photo 7 kill the whole set
+        print(f"    07_app_compatibility.jpg SKIPPED — generation failed: {exc}")
+        return False
+
+
+def generate_for_planner(pid, client, upload=True, engine=None):
     cfg = PLANNER_PAGES[pid]
     out_dir = os.path.join(ART_DIR, f'{pid}_listing_images')
     os.makedirs(out_dir, exist_ok=True)
@@ -753,13 +838,9 @@ def generate_for_planner(pid, client, upload=True):
     make_spread(pid, cfg, cfg['weekly'], 'WEEKLY SPREAD', 4, os.path.join(out_dir, '04_weekly_spread.jpg'))
     make_sticker_showcase(pid, cfg, os.path.join(out_dir, '05_sticker_showcase.jpg'))
     make_howto(pid, cfg, os.path.join(out_dir, '06_goodnotes_howto.jpg'))
-    # Photo 7: app compatibility — copy existing
+    # Photo 7: app compatibility — reuse the shared asset, or generate it on the engine.
     app_dest = os.path.join(out_dir, '07_app_compatibility.jpg')
-    if os.path.exists(APP_COMPAT_SRC) and os.path.abspath(APP_COMPAT_SRC) != os.path.abspath(app_dest):
-        shutil.copy2(APP_COMPAT_SRC, app_dest)
-        print(f"    07_app_compatibility.jpg (copied)")
-    elif os.path.exists(app_dest):
-        print(f"    07_app_compatibility.jpg (already present)")
+    have_app_compat = make_app_compat(pid, cfg, app_dest, engine=engine)
     make_cover_closeup(pid, cfg, os.path.join(out_dir, '08_cover_closeup.jpg'))
     make_spread(pid, cfg, cfg['tracker'], cfg['tracker_label'], 9, os.path.join(out_dir, '09_tracker.jpg'))
     make_spread(pid, cfg, cfg['specialty'], cfg['specialty_label'], 10, os.path.join(out_dir, '10_specialty.jpg'))
@@ -769,6 +850,8 @@ def generate_for_planner(pid, client, upload=True):
         '04_weekly_spread.jpg', '05_sticker_showcase.jpg', '06_goodnotes_howto.jpg',
         '07_app_compatibility.jpg', '08_cover_closeup.jpg', '09_tracker.jpg', '10_specialty.jpg',
     ]
+    if not have_app_compat:
+        photo_files.remove('07_app_compatibility.jpg')  # don't list a photo that wasn't produced
 
     if upload:
         print(f"\n  Uploading to Etsy listing {cfg['listing_id']}...")

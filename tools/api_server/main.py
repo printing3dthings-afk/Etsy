@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "9bad473-v194"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "760dd69-v195"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2430,13 +2430,17 @@ AGENT_TOOLS = [
             "real rendered pages in device mockups (satisfies the cardinal 'photos must show "
             "the REAL product' rule; no AI stand-ins). Local render, effectively no API cost. "
             "Writes into the product's <pid>_listing_images/ folder, openable from Files. "
-            "Requires the planner PDF to already exist. Use when asked to make or regenerate a "
-            "product's listing photos."
+            "Requires the planner PDF to already exist. The only AI touch is photo 7 (the "
+            "app-compatibility graphic) when the shared asset is missing — rendered on the "
+            "chosen engine (default Gemini). Use when asked to make or regenerate a product's "
+            "listing photos."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
+                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram"],
+                           "description": "Art engine for photo 7 if it must be generated. Default 'gemini'."},
             },
             "required": ["pid"],
         },
@@ -7520,6 +7524,9 @@ def _produce_listing_photos(inp: dict) -> dict:
     pid = str((inp or {}).get("pid", "")).strip().upper()
     if not pid:
         return {"error": "pid is required (e.g. 'DP1030')"}
+    engine, eng_err = _resolve_art_engine(inp)
+    if eng_err:
+        return {"error": eng_err}
     try:
         import gen_planner_listing_photos as glp
     except Exception as exc:  # noqa: BLE001
@@ -7531,13 +7538,16 @@ def _produce_listing_photos(inp: dict) -> dict:
     if not (_P(glp.ART_DIR) / f"{pid}.pdf").exists():
         return {"error": f"{pid}.pdf not found in product files — build/sync the planner PDF first."}
     try:
-        _out_dir, photos = glp.generate_for_planner(pid, None, upload=False)
+        # Photos are local composites of real pages; the ONLY AI touch is photo 7
+        # (the app-compat graphic) when the shared asset is absent — passed the engine.
+        _out_dir, photos = glp.generate_for_planner(pid, None, upload=False, engine=engine)
     except Exception as exc:  # noqa: BLE001
         return {"error": f"photo generation failed: {exc}"}
     return {
         "pid": pid,
         "count": len(photos),
         "photos": photos,
+        "engine": engine,
         "folder": f"product_files/{pid}_listing_images",
         "message": f"Generated {len(photos)} listing photos for {pid} → "
                    f"{pid}_listing_images/. Open them from the Files screen.",
