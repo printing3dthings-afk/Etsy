@@ -8061,3 +8061,21 @@ works in the sandbox and silently no-ops in production.**
 
 Verified: py_compile, node --check, produce tests, playwright smoke, real 10-photo
 render. Build bumped to `95e7988-v189`.
+
+---
+
+**2026-07-16 — Made the full chat one tap from the Ask/orb view (Scott: "I need
+this page accessible in frank" → the chat conversation).** On mobile the Ask tab
+opens the orb/voice popup; the actual conversation transcript lives on the Home
+(`cmd`) screen, so reading the chat took an extra step (you only landed on it
+after sending a message). Added a prominent "💬 Open full chat" button in
+`#orb-view` + `openFullChat()` (closes the "Talk to Frank" popup, then
+`phoneOpenScreen('cmd')` on mobile / `showScreen('cmd')` on desktop). Mobile-only
+via `body:not(.is-mobile) .orb-open-chat{display:none}` since desktop Home already
+IS the chat. Verified: node --check on extracted JS, playwright smoke clean.
+Build `4376345-v190`.
+
+(Note: ignore any auto-generated "No shop ID configured / Anthropic key False"
+health-loop escalations that appear in this file while work happens in the dev
+sandbox — that environment has no Etsy/Anthropic creds by design; it is not a
+production incident.)
