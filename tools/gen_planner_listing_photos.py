@@ -110,6 +110,26 @@ PLANNER_PAGES = {
         'sticker_count': 229,  # measured 2026-07-16 rebuild
         'edition_label': '2026-2027 School Year + Undated',  # academic-year dated, not calendar-2026
     },
+    'DP1034': {
+        'cover':    1,
+        'monthly':  6,
+        'weekly':   42,
+        'tracker':  131,  # habit tracker
+        'specialty': 129, # budget tracker
+        'name': 'Ultimate Celestial Life Planner 2026',
+        'short': 'Celestial Planner',
+        'pages': 142,
+        'theme': 'Celestial Night',
+        'color': (30, 27, 75),     # deep indigo #1E1B4B
+        'accent': (201, 168, 76),  # starlight gold #C9A84C
+        'bg': (240, 238, 248),     # moonbeam white #F0EEF8
+        'tracker_label': 'Habit Tracker',
+        'specialty_label': 'Budget Tracker',
+        'emoji': '🌙',
+        'sticker_sheets': [1, 5, 6, 9],
+        'sheet_count': 9,
+        'sticker_count': 242,  # measured 2026-07-16 rebuild
+    },
     'DP1026': {
         'cover':    4,
         'monthly':  11,
@@ -420,6 +440,14 @@ CONTENTS = {
         ("Fully fillable text fields",                        "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
         ("Lesson plans + class roster pages",                  "Weekly lesson planning and student roster tracking"),
+    ],
+    'DP1034': [
+        ("Interactive PDF Planner — 2026 Dated Version",     "142 pages · Celestial Night · US Letter"),
+        ("Bonus Undated Version — works any year forever",    "Same layout, no year dates"),
+        ("Kawaii Sticker Pack ZIP",                            "9 illustrated sheets · 242 stickers · transparent PNG"),
+        ("Fully fillable text fields",                         "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
+        ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
+        ("Zodiac stickers + celestial trackers",              "Moon phases, constellations, star affirmations"),
     ],
 }
 
