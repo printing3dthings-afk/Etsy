@@ -7833,3 +7833,37 @@ Pilot deliverables (`DP1030.pdf`, `DP1030U.pdf`, `DP1030_sticker_pack.zip`,
 10 listing photos) are sitting in `data/digital_products/product_files/`
 for Scott's review, per plan — **not published, and DP1031-1034 not yet
 started**, both explicitly gated on his sign-off on this pilot first.
+
+**Same-day follow-up — PDF Sticker Library pages showed empty placeholder
+boxes (Scott caught it in GoodNotes).** `generate_planner.py`'s
+`_gen_sticker_library()` draws a labeled placeholder grid (box + sticker
+NAME text only, no artwork); the real artwork is composited on top later
+by `planner_hyperlinker.py`'s `_embed_sticker_sheets()`, which reads
+`{pid}_sticker_sheet_1..5.png` from `product_files/` and masks+overlays
+each real sheet onto its matching library page. **Root cause was an
+ordering mistake in the build sequence, not a tooling bug:** the
+hyperlinker was run BEFORE the sticker sheets were generated, so the
+embed step found zero sheet files and silently left the placeholders in
+place. Re-running `planner_hyperlinker.py DP1030` after the sheets
+existed embedded all 5 correctly (verified by rendering pages 125-126 —
+real banners/faces/dials now show, matched to each page's sheet title).
+PDFs grew ~7MB→~12.7MB from the embedded images (still under the 20MB
+Etsy limit); re-synced to the volume, re-sent to Scott.
+
+**Hard ordering rule for DP1031-1034: generate the sticker sheets FIRST,
+then run `planner_hyperlinker.py` LAST.** Correct sequence per product:
+(1) `generate_planner_v2.py <PID>` → base PDF, (2) generate + QC the
+sticker sheets (raw sheets in `product_files/`, then
+`process_sticker_sheets.py`), (3) `planner_hyperlinker.py <PID>` →
+final PDF with real sheets embedded, (4) copy `_v2_final` → delivery
+names. Consider adding a guard to `planner_hyperlinker.py` that WARNS
+(not silently skips) when a Sticker Library page is detected but no
+sheet PNGs are found — would have surfaced this immediately.
+
+**Known, intentionally-left item (flagged to Scott):** the in-PDF
+library shows 5 sheets; the ZIP delivers 9 (sheets 6-9 are the
+ADHD-specific bonus sheets). This matches the shipped DP1026-1029
+pattern (5 sampler pages, larger ZIP) and is not a false claim — the
+library is a preview, the listing/ZIP state the true 9-sheet/219-sticker
+count. Left as-is pending Scott's call on whether to expand the in-PDF
+library to all 9 (would add ~4 pages).
