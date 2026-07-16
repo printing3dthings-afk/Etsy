@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b4d57f5-v193"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "9bad473-v194"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2449,13 +2449,16 @@ AGENT_TOOLS = [
             "fillable form fields, and embedded sticker sheets. Runs in the BACKGROUND "
             "(~2-4 min); the finished <pid>.pdf and <pid>U.pdf appear in Files when done. "
             "The cover art is the only paid AI step (~a cent) — this is the one builder that "
-            "spends money. Use when asked to build or rebuild a planner. Only works for "
-            "configured planner codes (DP1030-DP1034)."
+            "spends money. Defaults to the Gemini art engine (no OpenAI needed). Use when "
+            "asked to build or rebuild a planner. Only works for configured planner codes "
+            "(DP1030-DP1034)."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
                 "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
+                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram"],
+                           "description": "Art engine for the cover. Default 'gemini'."},
             },
             "required": ["pid"],
         },
@@ -2470,7 +2473,9 @@ AGENT_TOOLS = [
             "BACKGROUND (~2-4 min); the ZIP appears in Files when done. Sheet art is the "
             "paid AI step. Reports a REAL measured sticker count, but the sheets still need "
             "a human eyeball for garbled in-image text before the count goes on a live "
-            "listing. Only works for codes with a sticker spec (DP1030-DP1034)."
+            "listing. Defaults to the Gemini art engine (no OpenAI needed — the pack renders "
+            "on a solid background and is stripped to transparent, so any engine works). Only "
+            "works for codes with a sticker spec (DP1030-DP1034)."
         ),
         "input_schema": {
             "type": "object",
@@ -2478,6 +2483,8 @@ AGENT_TOOLS = [
                 "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
                 "sheets": {"type": "integer",
                            "description": "Optional: only build the first N sheets (default: all 9)."},
+                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram"],
+                           "description": "Art engine for the sheets. Default 'gemini'."},
             },
             "required": ["pid"],
         },
@@ -7595,6 +7602,35 @@ async def produce_print_zip(body: dict, _token: str = Depends(_rate_limited_auth
         raise HTTPException(status_code=504, detail="Print-ZIP build timed out — try again.")
 
 
+# Approved image engines (mirrors tools/image_gen.py). Gemini ("Nano Banana") is
+# the default for the produce builders: it needs only GEMINI_API_KEY (no OpenAI
+# dependency — and gpt-image-1 shuts down 2026-10-23), and is a fully approved
+# engine per CLAUDE.md. gpt-image-2 / ideogram remain selectable.
+_APPROVED_ART_ENGINES = ("gemini", "openai", "gpt-image-2", "ideogram")
+_DEFAULT_ART_ENGINE = "gemini"
+
+
+def _resolve_art_engine(inp: dict) -> tuple[str | None, str | None]:
+    """(engine, error). Reads inp['engine'], defaults to Gemini, validates against
+    the approved list. A blank/absent value → the default."""
+    eng = str((inp or {}).get("engine", "")).strip().lower()
+    if not eng:
+        return _DEFAULT_ART_ENGINE, None
+    if eng not in _APPROVED_ART_ENGINES:
+        return None, (f"unknown art engine {eng!r} — "
+                      f"choose one of {', '.join(_APPROVED_ART_ENGINES)}")
+    return eng, None
+
+
+def _subprocess_env_with_engine(engine: str | None) -> dict:
+    """os.environ plus IMAGE_ENGINE, so a spawned builder renders art with the
+    chosen engine instead of the server's default."""
+    env = dict(os.environ)
+    if engine:
+        env["IMAGE_ENGINE"] = engine
+    return env
+
+
 def _produce_build_planner(inp: dict) -> dict:
     """Kick off a full planner build in the BACKGROUND (base dated + undated PDFs +
     AI cover → finalized PDFs with nav/fillable fields/embedded stickers) via
@@ -7605,6 +7641,9 @@ def _produce_build_planner(inp: dict) -> dict:
     pid = str((inp or {}).get("pid", "")).strip().upper()
     if not pid:
         return {"error": "pid is required (e.g. 'DP1030')"}
+    engine, eng_err = _resolve_art_engine(inp)
+    if eng_err:
+        return {"error": eng_err}
     try:
         import generate_planner_v2 as _gpv2
         configured = set(getattr(_gpv2, "_ALL_V2_PIDS", []) or [])
@@ -7629,15 +7668,17 @@ def _produce_build_planner(inp: dict) -> dict:
     proc = subprocess.Popen(
         [sys.executable, str(script), pid],
         stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
+        env=_subprocess_env_with_engine(engine),
     )
     _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_planner:{pid}", datetime.now(timezone.utc))
     return {
         "pid": pid,
         "started": True,
         "os_pid": proc.pid,
-        "message": f"Building {pid} in the background (~2-4 min). When it finishes, "
-                   f"{pid}.pdf and {pid}U.pdf appear in Files (and {pid}_build.log has "
-                   f"the run output). Uses AI cover art (~a cent).",
+        "engine": engine,
+        "message": f"Building {pid} in the background (~2-4 min) with {engine} cover art. "
+                   f"When it finishes, {pid}.pdf and {pid}U.pdf appear in Files "
+                   f"(and {pid}_build.log has the run output).",
     }
 
 
@@ -7662,6 +7703,9 @@ def _produce_build_sticker_pack(inp: dict) -> dict:
     pid = str((inp or {}).get("pid", "")).strip().upper()
     if not pid:
         return {"error": "pid is required (e.g. 'DP1030')"}
+    engine, eng_err = _resolve_art_engine(inp)
+    if eng_err:
+        return {"error": eng_err}
     try:
         import build_sticker_pack as _bsp
         configured = set(getattr(_bsp, "SPEC_MODULES", {}) or {})
@@ -7689,16 +7733,18 @@ def _produce_build_sticker_pack(inp: dict) -> dict:
         _logf = subprocess.DEVNULL
     proc = subprocess.Popen(
         args, stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
+        env=_subprocess_env_with_engine(engine),
     )
     _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_sticker_pack:{pid}", datetime.now(timezone.utc))
     return {
         "pid": pid,
         "started": True,
         "os_pid": proc.pid,
+        "engine": engine,
         "needs_visual_qc": True,
-        "message": f"Building {pid}'s sticker pack in the background (~2-4 min). When it "
-                   f"finishes, {pid}_sticker_pack.zip appears in Files "
-                   f"({pid}_stickers_build.log has the run output). Uses AI sheet art. "
+        "message": f"Building {pid}'s sticker pack in the background (~2-4 min) with {engine} "
+                   f"sheet art. When it finishes, {pid}_sticker_pack.zip appears in Files "
+                   f"({pid}_stickers_build.log has the run output). "
                    f"Eyeball the sheets for garbled text before the count goes on a live listing.",
     }
 

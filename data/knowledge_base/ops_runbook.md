@@ -8169,3 +8169,31 @@ corner-sampled flood-fill eats neither.
 **Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
 
 **Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-16 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+### 2026-07-16 — Art builders default to Gemini (Scott: "use the Gemini thing for the art")
+The two AI-touching produce builders (build_planner cover, build_sticker_pack
+sheets) spawned subprocesses that inherited the server's default IMAGE_ENGINE
+(gpt-image-1/OpenAI). Added an `engine` option to both, defaulting to **gemini**:
+- `_resolve_art_engine(inp)` validates against the approved set (gemini/openai/
+  gpt-image-2/ideogram), blank → gemini. `_subprocess_env_with_engine(engine)`
+  passes `IMAGE_ENGINE` into the Popen env so the spawned builder renders with the
+  chosen engine.
+- Threaded through both agent-tool schemas (new `engine` enum prop), both
+  endpoints, and both Create tiles (a "Gemini art / gpt-image-1 / gpt-image-2"
+  `<select>` defaulting to Gemini). Return payload + message now name the engine.
+Why Gemini as default: needs only GEMINI_API_KEY (no OpenAI dependency, and
+gpt-image-1 shuts down 2026-10-23), fully approved per CLAUDE.md. Stickers already
+render on a solid background + get stripped to transparent, so any engine works
+(gpt-image-1's transparent-only limitation doesn't apply). Covers verified on
+Gemini earlier (build_planner DP1030). 6 new engine tests pass. Build `9bad473-v194`.

@@ -190,6 +190,33 @@ def test_build_sticker_pack_agent_dispatch():
           f"agent dispatch of build_sticker_pack should reject an unspecced code, got {out}")
 
 
+def test_art_engine_defaults_to_gemini():
+    eng, err = server._resolve_art_engine({})
+    check(err is None and eng == "gemini",
+          f"no engine specified must default to gemini, got ({eng!r},{err!r})")
+    eng, err = server._resolve_art_engine({"engine": ""})
+    check(err is None and eng == "gemini", f"blank engine must default to gemini, got ({eng!r},{err!r})")
+
+
+def test_art_engine_accepts_approved():
+    for name in ("gemini", "openai", "gpt-image-2", "ideogram", "GEMINI"):
+        eng, err = server._resolve_art_engine({"engine": name})
+        check(err is None and eng == name.lower(), f"{name} should be accepted, got ({eng!r},{err!r})")
+
+
+def test_art_engine_rejects_unknown():
+    eng, err = server._resolve_art_engine({"engine": "midjourney"})
+    check(eng is None and err and "unknown art engine" in err,
+          f"an unapproved engine must be rejected, got ({eng!r},{err!r})")
+
+
+def test_build_planner_rejects_bad_engine():
+    # A bad engine must be caught BEFORE any build is spawned.
+    out = server._produce_build_planner({"pid": "DP1030", "engine": "stablediffusion"})
+    check("error" in out and not out.get("started"),
+          f"bad engine must error without starting a build, got {out}")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

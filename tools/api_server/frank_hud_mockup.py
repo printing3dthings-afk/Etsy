@@ -1633,6 +1633,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <input id="bp-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
             style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <select id="bp-engine" title="Art engine for the cover"
+            style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
+            <option value="gemini" selected>Gemini art</option>
+            <option value="openai">gpt-image-1</option>
+            <option value="gpt-image-2">gpt-image-2</option>
+          </select>
           <button class="act-btn primary" onclick="buildPlannerRun()" id="bp-run-btn" style="white-space:nowrap">Build planner</button>
         </div>
         <div id="bp-result" style="margin-top:12px"></div>
@@ -1646,6 +1652,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <input id="sp-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
             style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <select id="sp-engine" title="Art engine for the sheets"
+            style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
+            <option value="gemini" selected>Gemini art</option>
+            <option value="openai">gpt-image-1</option>
+            <option value="gpt-image-2">gpt-image-2</option>
+          </select>
           <button class="act-btn primary" onclick="stickerPackRun()" id="sp-run-btn" style="white-space:nowrap">Build pack</button>
         </div>
         <div id="sp-result" style="margin-top:12px"></div>
@@ -2926,13 +2938,15 @@ async function buildPlannerRun(){
   const btn=document.getElementById('bp-run-btn');
   const out=document.getElementById('bp-result');
   const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  const engEl=document.getElementById('bp-engine');
+  const engine=(engEl&&engEl.value)||'gemini';
   if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
   if(btn) btn.disabled=true;
   if(out) out.innerHTML='<div class="hub-spinner"></div>';
   try{
     const r=await fetchWithTimeout(BASE+'/api/produce/build-planner', {
       method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid})
+      body: JSON.stringify({pid, engine})
     }, 30000);
     const d=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
@@ -2953,13 +2967,15 @@ async function stickerPackRun(){
   const btn=document.getElementById('sp-run-btn');
   const out=document.getElementById('sp-result');
   const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  const engEl=document.getElementById('sp-engine');
+  const engine=(engEl&&engEl.value)||'gemini';
   if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
   if(btn) btn.disabled=true;
   if(out) out.innerHTML='<div class="hub-spinner"></div>';
   try{
     const r=await fetchWithTimeout(BASE+'/api/produce/build-sticker-pack', {
       method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid})
+      body: JSON.stringify({pid, engine})
     }, 30000);
     const d=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
