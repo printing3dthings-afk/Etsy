@@ -161,6 +161,17 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
     def blend(rgb, f):
         return tuple(x + (1.0 - x) * f for x in rgb)
 
+    def _lum(rgb):
+        return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+
+    # Ink for text drawn ON a light panel (any `blend(..., high)` fill, which is
+    # always near-white regardless of theme). In light-mode planners DK is already
+    # dark, so this is DK; in a DARK-mode planner (e.g. DP1032) DK is a LIGHT pearl
+    # meant for text on the dark page background — using it on a light panel makes
+    # the text invisible (Scott caught this on the DP1032 dashboard 2026-07-16).
+    # A dark tint of the theme color keeps panel text readable in every theme.
+    PANEL_INK = DK if _lum(DK) < 0.5 else tuple(x * 0.22 for x in T)
+
     TL = blend(T, 0.80)
     AL = blend(A, 0.70)
     ML = MR = 36.0
@@ -182,11 +193,11 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
         bl = blend(bc, 0.85)
         fill(bl); lw(0); c.roundRect(x, y, w, h, 6, fill=1, stroke=0)
         fill(bc); lw(0.5); c.roundRect(x, y, w, h, 6, fill=0, stroke=1)
-        fill(DK); font(fn("bold"), 10)
+        fill(PANEL_INK); font(fn("bold"), 10)
         ty = y + h / 2 + (5 if sublabel else 0)
         c.drawCentredString(x + w / 2, ty, label)
         if sublabel:
-            fill(DK); font(fn("regular"), 7.5)
+            fill(PANEL_INK); font(fn("regular"), 7.5)
             c.drawCentredString(x + w / 2, ty - 13, sublabel)
 
     def divider(y):
@@ -205,7 +216,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
         fill(T); font(fn("bold"), 28)
         c.drawCentredString(PW / 2, y, "Welcome!")
         y -= 24
-        fill(DK); font(fn("semibold"), 13)
+        fill(PANEL_INK); font(fn("semibold"), 13)
         c.drawCentredString(PW / 2, y, cfg["title"])
         y -= 16
         fill(T); font(fn("italic"), 10)
@@ -225,7 +236,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
             "3.  Save the PDF and ZIP file to your device",
         ]
         for s in steps:
-            fill(DK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
+            fill(PANEL_INK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
             y -= 16
         y -= 6
 
@@ -238,7 +249,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
             "3.  Tap any text box to type  ·  Tap a Dashboard button to navigate",
         ]
         for s in gn_steps:
-            fill(DK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
+            fill(PANEL_INK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
             y -= 16
         y -= 6
 
@@ -251,7 +262,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
             "3.  Tap any field to type  ·  Annotate freely with Apple Pencil",
         ]
         for s in nb_steps:
-            fill(DK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
+            fill(PANEL_INK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
             y -= 16
         y -= 6
 
@@ -260,11 +271,11 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
         y -= 18; divider(y); y -= 14
         st_steps = [
             "1.  Unzip the sticker pack ZIP file",
-            "2.  In GoodNotes: Elements → Stickers tab → + → select all 5 PNG sheets",
+            "2.  In GoodNotes: Elements → Stickers tab → + → select all the PNG sheets",
             "3.  Stickers appear in your library — drag onto any page, unlimited times!",
         ]
         for s in st_steps:
-            fill(DK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
+            fill(PANEL_INK); font(fn("regular"), 10); c.drawString(ML + 12, y, s)
             y -= 16
         y -= 6
 
@@ -273,14 +284,14 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
         y -= 18; divider(y); y -= 14
         apps = ["GoodNotes 6  ·  Notability  ·  PDF Expert  ·  Xodo  ·  Adobe Acrobat Reader"]
         for s in apps:
-            fill(DK); font(fn("regular"), 10); c.drawCentredString(PW / 2, y, s)
+            fill(PANEL_INK); font(fn("regular"), 10); c.drawCentredString(PW / 2, y, s)
             y -= 16
         y -= 6
 
         # ── Support block ──
         fill(blend(T, 0.92))
         c.roundRect(ML, y - 38, CW, 44, 6, fill=1, stroke=0)
-        fill(DK); font(fn("bold"), 10)
+        fill(PANEL_INK); font(fn("bold"), 10)
         c.drawCentredString(PW / 2, y - 10, "Questions? We're here to help!")
         font(fn("regular"), 9.5)
         c.drawCentredString(PW / 2, y - 24, f"Email: {SUPPORT_EMAIL}")
@@ -340,7 +351,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
         if bottom_y > MB + 60:
             fill(blend(T, 0.90))
             c.roundRect(ML, MB + 12, CW, 40, 6, fill=1, stroke=0)
-            fill(DK); font(fn("bold"), 9)
+            fill(PANEL_INK); font(fn("bold"), 9)
             c.drawCentredString(PW / 2, MB + 36, "TIP: Every page has a tappable HOME · PREV · NEXT footer, and your PDF app's bookmarks menu lists every section.")
             font(fn("regular"), 8.5)
             c.drawCentredString(PW / 2, MB + 22, f"Support: {SUPPORT_EMAIL}  ·  © {SHOP_NAME}")
@@ -398,7 +409,7 @@ def _make_pages(cfg: dict, page_type: str, specialty: str = "") -> bytes:
         if bottom_note_y > MB + 30:
             fill(blend(T, 0.92))
             c.roundRect(ML, MB + 8, CW, 36, 6, fill=1, stroke=0)
-            fill(DK); font(fn("italic"), 8.5)
+            fill(PANEL_INK); font(fn("italic"), 8.5)
             c.drawCentredString(PW / 2, MB + 25,
                 "Both the 2026 Dated version AND the Undated Evergreen version are included in your download.")
             c.drawCentredString(PW / 2, MB + 12, f"© {SHOP_NAME} — Personal use only — {SUPPORT_EMAIL}")

@@ -318,6 +318,21 @@ def _bl(rgb, f):
     return tuple(min(1.0, x + (1.0 - x) * f) for x in rgb)
 
 
+def _lum(rgb):
+    return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+
+
+def _panel_ink(dk, theme):
+    """Ink for text drawn ON a light cell/panel (fills are always `_bl(..., high)`,
+    i.e. near-white, in every theme). In light planners this is the normal dark
+    text color; in a DARK-mode planner (DP1032) `dk` is a LIGHT pearl meant for
+    text on the dark page background — using it on a light cell makes the text
+    invisible (Scott caught this on DP1032 2026-07-16). A dark tint of the theme
+    keeps cell text readable in every theme. Text drawn directly on the page
+    background keeps using `dk` (which is correct for both modes)."""
+    return dk if _lum(dk) < 0.5 else tuple(x * 0.22 for x in theme)
+
+
 def _new_canvas():
     from reportlab.pdfgen import canvas as pdf_canvas
     buf = io.BytesIO()
@@ -850,7 +865,7 @@ def _gen_goals_page(pcfg: dict) -> bytes:
         c.setFillColorRGB(*BG)
         c.setFont(fn("bold"), 9)
         c.drawString(_ML + 8, gy - 16, label)
-        c.setFillColorRGB(*DK)
+        c.setFillColorRGB(*_panel_ink(DK, T))  # labels sit inside the light goal card
         c.setFont(fn("bold"), 8)
         c.drawString(_ML + 8, gy - 34, "Goal:")
         c.setLineWidth(0.4)

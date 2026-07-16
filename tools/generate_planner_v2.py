@@ -42,6 +42,7 @@ from tools.generate_planner import (
     _DAYS_S,
     _get_fn,
     _bl,
+    _panel_ink,
     _new_canvas,
     _page_bg,
     _ML,
@@ -546,7 +547,7 @@ def _v2_brain_dump_pages(pcfg, count=4):
             c.setStrokeColorRGB(*color)
             c.setLineWidth(1.0)
             c.roundRect(qx + 3, qy + 3, qw - 6, qh - 6, 6, fill=0, stroke=1)
-            c.setFillColorRGB(*DK)
+            c.setFillColorRGB(*_panel_ink(DK, T))  # labels sit inside the light quadrant panel
             c.setFont(fn("bold"), 8.5)
             c.drawString(qx + 12, qy + qh - 18, label)
             c.setFont(fn("italic"), 6.5)
@@ -610,7 +611,7 @@ def _v2_smart_goals_pages(pcfg):
                 c.setFillColorRGB(1, 1, 1)
                 c.setFont(fn("bold"), 9)
                 c.drawCentredString(gx + 16, ry + row_h - 15, letter)
-                c.setFillColorRGB(*DK)
+                c.setFillColorRGB(*_panel_ink(DK, T))  # SMART labels sit on the light goal card
                 c.setFont(fn("bold"), 7.5)
                 c.drawString(gx + 30, ry + row_h - 10, label)
                 c.setFont(fn("italic"), 6)

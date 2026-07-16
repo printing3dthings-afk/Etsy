@@ -7946,3 +7946,36 @@ listing photos, and are synced to the persistent volume + a 452 MB backup ZIP.
 - In-PDF sticker library still shows 5 of 9 sheets (matches DP1026-1030 pattern).
 
 Nothing published — all four are new-listing decisions, Scott-gated.
+
+---
+
+**2026-07-16 — DP1032 dark-mode planner had unreadable text (Scott caught it on
+the Dashboard).** The planner page renderers were written light-first: panels/cells
+are always filled with a near-white tint (`blend`/`_bl(x, high_f)` → toward white),
+and text on them used `DK` (`cfg["dark"]`). For the light planners `DK` is a dark
+ink, so that reads fine. But DP1032 is the only DARK-mode planner: its `bg` is deep
+midnight (lum 0.11) and its `DK` is a LIGHT pearl (lum 0.92) meant for text on the
+dark page — so `DK` text on a light panel was light-on-light = invisible. (The
+Index page worked only because its text sits on the dark page background, where
+light `DK` is correct.)
+
+Fix: added a `PANEL_INK` / `_panel_ink(dk, theme)` helper in all three planner
+renderers (`planner_page_adder.py`, `generate_planner.py`, `generate_planner_v2.py`)
+= `dk if lum(dk) < 0.5 else a dark tint of the theme`. For every LIGHT planner this
+returns `dk` unchanged, so their output is byte-identical (verified: PANEL_INK==DK
+for DP1030/1033/1034) — only DP1032 changes. Applied it to text that sits ON a
+light panel (dashboard section buttons, welcome-page body, tip/support boxes,
+SMART-goals card labels, priority-matrix quadrant labels); text that sits on the
+dark page background keeps using `DK`. Distinguishing the two per-site is the whole
+subtlety — a blind global replace would have flipped the on-background text to
+dark-on-dark.
+
+Verified by rendering a full page-type survey of DP1032 before/after (welcome,
+dashboard, index, yearly, monthly ×, monthly-review, month-at-a-glance, weekly,
+habit, brain-dump+matrix, goals, notes, sticker-library) — all readable now.
+Also fixed a stale welcome-page instruction that said "select all 5 PNG sheets"
+(packs are 9 sheets now) → "select all the PNG sheets" (count-agnostic), which
+affected every rebuilt product's welcome page. DP1032 photos regenerated from the
+fixed PDF; gates 8/8. **Lesson: a dark-mode variant needs its own full page-render
+survey — file/structure gates and light-planner testing will not surface
+light-on-light text.**
