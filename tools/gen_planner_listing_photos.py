@@ -22,6 +22,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 
 ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
+DP_BASE = '/home/user/Etsy/data/digital_products'  # for the stickers/<pid>/png_sheets fallback
 APP_COMPAT_SRC = os.path.join(ART_DIR, '07_app_compatibility.jpg')
 CANVAS = 2400
 
@@ -65,7 +66,8 @@ PLANNER_PAGES = {
         'emoji': '🌿',
         'sticker_sheets': [1, 3, 6, 9],
         'sheet_count': 9,
-        'sticker_count': 183,
+        'sticker_count': 247,  # measured 2026-07-16 rebuild
+        'edition_label': 'Undated — Works Any Year, Forever',  # undated-only, no 2026-dated version
     },
     'DP1032': {
         'cover':    1,
@@ -340,7 +342,11 @@ def make_hero(pid, cfg, out):
     d.text((CANVAS//2, 166), f"GoodNotes · Notability · Instant Download", font=fr(46), fill=(240,235,250), anchor='mm')
     _sc = cfg.get('sticker_count', 200)
     _sc_label = f"{_sc}+ Kawaii Stickers" if _sc >= 200 else f"{_sc} Kawaii Stickers"
-    d.text((CANVAS//2, CANVAS-55), f"✓ 2026 Dated + Undated Version   ✓ {cfg['pages']} Pages   ✓ {_sc_label}",
+    # Edition label is product-specific — an undated-only planner (e.g. DP1031) must
+    # NOT claim a "2026 Dated" version it doesn't ship. Default matches the dated
+    # products (which include both a 2026-dated and an undated PDF).
+    _edition = cfg.get('edition_label', '2026 Dated + Undated Version')
+    d.text((CANVAS//2, CANVAS-55), f"✓ {_edition}   ✓ {cfg['pages']} Pages   ✓ {_sc_label}",
            font=fr(42), fill=cfg['color'], anchor='mm')
 
     bg.save(out, 'JPEG', quality=93)
@@ -393,7 +399,7 @@ CONTENTS = {
     'DP1031': [
         ("Interactive PDF Planner — Undated Evergreen",    "141 pages · Sage Garden · US Letter"),
         ("Works any year, forever",                         "No dates to expire — start any month"),
-        ("Kawaii Sticker Pack ZIP",                          "9 illustrated sheets · 183 stickers · transparent PNG"),
+        ("Kawaii Sticker Pack ZIP",                          "9 illustrated sheets · 247 stickers · transparent PNG"),
         ("Fully fillable text fields",                       "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                             "Jump to any section in one tap"),
         ("Budget tracker + habit tracker",                    "Built-in financial and habit-building tools"),
@@ -485,10 +491,23 @@ def make_sticker_showcase(pid, cfg, out):
     positions = [(120, 250), (1320, 250), (120, 1310), (1320, 1310)]
 
     for i, (sheet_num, (sx, sy)) in enumerate(zip(sheets, positions)):
-        src = os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.jpg')
-        if not os.path.exists(src):
+        # Prefer a flat .jpg sheet, but fall back to the raw .png (the transparent
+        # PNG the pack ships) or the processed png_sheets/ copy — so the showcase
+        # never renders blank cards just because no .jpg was pre-made.
+        src = None
+        for cand in (os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.jpg'),
+                     os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.png'),
+                     os.path.join(DP_BASE, 'stickers', pid, 'png_sheets', f'{pid}_sheet_{sheet_num:02d}.png')):
+            if os.path.exists(cand):
+                src = cand
+                break
+        if not src:
             continue
-        sheet = Image.open(src).convert('RGB').resize((sheet_size, sheet_size), Image.LANCZOS)
+        # Composite over white so a transparent PNG doesn't show as a black square.
+        _raw = Image.open(src).convert('RGBA')
+        _flat = Image.new('RGBA', _raw.size, (255, 255, 255, 255))
+        _flat.alpha_composite(_raw)
+        sheet = _flat.convert('RGB').resize((sheet_size, sheet_size), Image.LANCZOS)
         # White card
         card = Image.new('RGB', (sheet_size+16, sheet_size+16), (255,255,255))
         mask = Image.new('L', (sheet_size+16, sheet_size+16), 0)
