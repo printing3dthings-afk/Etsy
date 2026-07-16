@@ -7636,3 +7636,79 @@ null) while the new Chat History screen does; the desktop sidebar's new
 with no console errors.
 
 Build bumped to `fb43ff4-v183`.
+
+### 2026-07-16 — "Test Voice" button + Premium-voice fail-safe (voice was already working)
+
+Scott: "How do I get Frank to speak out loud?" plus a native-app idea, a
+"by tomorrow" deadline, and a request for a "guarantee."
+
+**Investigated first, built second.** Voice is already fully implemented
+and automatic — every chat reply (typed or spoken) is read aloud via
+Piper, a free, fully offline, locally-vendored TTS engine, no setup
+needed. This file's own history shows a long trail of real voice bugs (CSP
+`media-src` blocking `blob:` audio, the Piper model fetching from
+`huggingface.co` at runtime instead of being vendored, audio-unlock only
+firing on orb taps not typed messages, iOS-standalone-PWA Web Audio
+quirks) — all already found and fixed as of the build live before this
+entry. There was no known open bug to chase blind.
+
+Given that, and given no access to Scott's actual device, asked what he
+actually wanted rather than guessing. He chose: skip the native-app
+idea, add a one-tap way to verify voice himself right now, and make the
+"Premium voice" toggle fail loudly instead of silently if misconfigured
+(confirmed `OPENAI_API_KEY` is unset in this environment — if the sticky
+`localStorage` Premium-voice toggle is ON, every reply 503s and falls
+through with only a generic toast today).
+
+**Shipped:**
+1. **"Test Voice" button** (Settings screen, next to the Premium-voice
+   checkbox) — calls the *real* `speakText()` path via a purely-additive,
+   optional `opts` callback contract threaded through `speakText()` →
+   `_playTtsBlob()` → `_speakWithBrowserFallback()` (every existing
+   unconditional call site — the two automatic speak-on-reply sites —
+   is behaviorally unchanged, since `opts` is always guarded). A pass
+   means "this exact code, this device, right now, produced audible
+   sound" — not a fake green check. Verified via a throwaway Playwright
+   repro that wrapped `window.Audio` before clicking: a real `<audio>`
+   element was created with a genuine `blob:` src and was actively
+   playing (not paused) — this is proof of real playback, not a mocked
+   assertion.
+2. **Premium-voice fail-safe** — three checks sharing one message + one
+   revert action: (a) proactively on toggle-ON via a new
+   `_verifyPremiumVoiceConfigured()`, (b) proactively on every Settings
+   load (reuses the `cred` object `loadSettingsConnectionsSummary()`
+   already fetches — zero extra network cost), (c) reactively via the
+   same `onPremiumNotConfigured` hook wired into both automatic
+   `speakText()` call sites, so even a tab that never opened Settings
+   self-heals after one failed reply instead of failing on every
+   subsequent one too. No new backend endpoint — `GET
+   /api/credentials/status` already returns `openai.api_key: bool`,
+   exactly what's needed.
+
+**New test coverage:** `tests/test_voice_config.py` (backend contract:
+`credentials/status`'s `openai.api_key` shape, `/api/voice/speak`'s 503 +
+`"OPENAI_API_KEY"` detail string when unconfigured — the exact strings/shapes
+the new frontend logic keys off of). `tools/playwright_smoke.py` extended:
+clicks Test Voice and confirms a real terminal state (not stuck on
+"Testing…"); forces the Premium toggle stuck ON via `localStorage` and
+confirms both a fresh Settings load AND a live checkbox check each
+independently trigger the auto-revert + toast.
+
+**Honesty note, stated explicitly to Scott and worth repeating here**: a
+passing Test Voice tap proves the pipeline works on that device *right
+then*. It cannot guarantee every future reply — iOS can silently
+re-suspend the AudioContext after a PWA is backgrounded (already handled
+defensively by `_primeAudioPlayback()`'s per-gesture resume, but not
+provably eliminated by one passing test), and server config could change
+later if Premium voice gets re-enabled. Given this session's own track
+record of real-device-only failures elsewhere (the orb, 3 times), no
+shipped copy claims a guarantee — the button exists so Scott can verify
+instantly himself instead of waiting on a remote fix-and-hope cycle.
+
+**Native app / "not based on a URL"**: explicitly out of scope for this
+pass, per Scott's own choice when asked. A full native app / App Store
+distribution isn't feasible on a same-day timeline regardless; the
+realistic "app-like" path (PWA "Add to Home Screen" polish) wasn't touched
+here and remains a separate, later decision if still wanted.
+
+Build bumped to `b04b607-v184`.

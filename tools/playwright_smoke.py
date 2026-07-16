@@ -244,6 +244,73 @@ async def _run_browser_checks() -> None:
                   "multi-admin 'Add Admin' form should be REMOVED (solo shop)")
             check("My Account" in settings_html, "Settings screen missing 'My Account' section")
 
+            # ── "Test Voice" button + Premium-voice fail-safe (2026-07-16) — Scott:
+            # "How do I get Frank to speak out loud?" / "guarantee it will work."
+            # Voice was already automatic and working; this doesn't (and can't)
+            # guarantee a real device -- it proves the exact real speakText() path
+            # can produce audible output on THIS device/browser right now, and that
+            # a misconfigured Premium-voice toggle fails loudly instead of silently.
+            # This environment has no OPENAI_API_KEY configured and Premium voice
+            # defaults off, so clicking Test Voice here exercises the local Piper
+            # engine end to end (real WASM model load, real <audio> playback). ──
+            check("voice-test-btn" in settings_html and "voice-test-status" in settings_html,
+                  "Settings screen missing the 'Test Voice' button/status line")
+            await page.click("#voice-test-btn")
+            # Piper's WASM/ONNX model load is the slow part on a cold run; give it
+            # real headroom beyond the button's own 12s internal timeout so a slow
+            # CI runner reads as a real failure, not a test-side race.
+            await page.wait_for_timeout(500)
+            voice_test_state = await page.evaluate("""() => new Promise(resolve => {
+                let n = 0;
+                const iv = setInterval(() => {
+                    const statusEl = document.getElementById('voice-test-status');
+                    const text = statusEl ? statusEl.textContent : '';
+                    const settled = text && text !== 'Testing…';
+                    if (settled || ++n > 40) {
+                        clearInterval(iv);
+                        resolve({
+                            text: text,
+                            color: statusEl ? statusEl.style.color : null,
+                            stillInFlight: typeof _voiceTestInFlight !== 'undefined' ? _voiceTestInFlight : null,
+                        });
+                    }
+                }, 500);
+            })""")
+            check(voice_test_state.get("text") not in (None, '', 'Testing…'),
+                  f"Test Voice status never reached a terminal state within the wait window: {voice_test_state}")
+            check(voice_test_state.get("stillInFlight") is False,
+                  f"_voiceTestInFlight should be false once settled -- true here means the promise chain never "
+                  f"resolved (hung), not that it explicitly failed: {voice_test_state}")
+            print(f"  Test Voice result (informational, headless audio hardware varies by CI runner): {voice_test_state.get('text')!r}")
+
+            # Premium-voice fail-safe, path 1: toggle already stuck ON from an
+            # earlier session -- opening Settings (already done above) should
+            # proactively catch it and revert.
+            await page.evaluate("localStorage.setItem('frankPremiumVoice', '1')")
+            await page.evaluate("showScreen('settings')")  # re-render with the forced localStorage state
+            await page.wait_for_timeout(1500)
+            revert_state_1 = await page.evaluate("""() => ({
+                localStorageValue: localStorage.getItem('frankPremiumVoice'),
+                checkboxChecked: document.querySelector('.premium-voice-cb') ?
+                    document.querySelector('.premium-voice-cb').checked : null,
+            })""")
+            check(revert_state_1.get("localStorageValue") == '0',
+                  f"a stuck-ON Premium voice toggle should auto-revert on Settings load (no OpenAI key configured "
+                  f"in this environment): {revert_state_1}")
+            check(revert_state_1.get("checkboxChecked") is False,
+                  f"Premium voice checkbox should reflect the reverted state: {revert_state_1}")
+
+            # Premium-voice fail-safe, path 2: live toggle flip (not just page load).
+            await page.evaluate("localStorage.setItem('frankPremiumVoice', '0')")
+            await page.evaluate("showScreen('settings')")
+            await page.wait_for_timeout(500)
+            await page.locator(".premium-voice-cb").first.check()
+            await page.wait_for_timeout(1500)
+            revert_state_2 = await page.evaluate("localStorage.getItem('frankPremiumVoice')")
+            check(revert_state_2 == '0',
+                  f"checking the Premium voice box live should also auto-revert it (no OpenAI key configured): "
+                  f"localStorage value is {revert_state_2!r}")
+
             # ── Brand Kit redesign regression guards (2026-07-14): jump-nav, all 16 theme
             # cards + 3 listing-standard cards render and expand, hex-copy calls the
             # clipboard API, and the brand-mark preview canvas ids never collide. ──

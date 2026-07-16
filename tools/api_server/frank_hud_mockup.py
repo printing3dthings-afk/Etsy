@@ -1461,6 +1461,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           natural but costs API credits per use and requires internet. This toggle is shared with the one next to
           "Talk to %%AGENT_SHORT%%" in the bottom bar — changing either updates both.
         </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="act-btn secondary" id="voice-test-btn" onclick="testVoicePlayback()">🔊 Test Voice</button>
+          <div id="voice-test-status" style="font-size:11px;color:var(--muted)">Plays a short phrase through %%AGENT_SHORT%%'s real voice engine, right now, on this device.</div>
+        </div>
       </div>
 
       <div class="hub-section-title" style="margin-top:18px">Appearance</div>
@@ -2254,21 +2258,38 @@ function _primeAudioPlayback(){
 // Free fallback for when OpenAI TTS is unavailable (e.g. quota exhausted) — uses the
 // browser's own speechSynthesis, no API key, no cost. Works on iOS Safari/PWA (unlike
 // SpeechRecognition/listening, which is why only speaking gets a fallback, not the mic).
-function _speakWithBrowserFallback(text){
+function _speakWithBrowserFallback(text, opts){
   // This is the LAST resort after both the primary TTS engine (OpenAI or local
   // Piper) and audio playback itself have already failed silently upstream — so
   // every failure branch here is the true end of the line for this reply. Toast
   // once instead of leaving the reply spoken-but-silent with zero explanation
   // (the mobile "no sound at all" symptom this was added to fix).
-  if(!('speechSynthesis' in window)){ setSpeaking(false); showToast("Couldn't play voice reply — see the text above", 'err'); return; }
+  // `opts` (2026-07-16, optional, additive -- see speakText()) lets a caller like
+  // testVoicePlayback() observe the real terminal outcome instead of just "no
+  // error was thrown"; every existing call site that omits it behaves exactly as
+  // before.
+  if(!('speechSynthesis' in window)){
+    setSpeaking(false);
+    showToast("Couldn't play voice reply — see the text above", 'err');
+    if(opts && opts.onFailure) opts.onFailure('no speechSynthesis support in this browser');
+    return;
+  }
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.onstart = () => setSpeaking(true, true);
+    u.onstart = () => { setSpeaking(true, true); if(opts && opts.onFallbackStart) opts.onFallbackStart(); };
     u.onend = () => setSpeaking(false, true);
-    u.onerror = () => { setSpeaking(false, true); showToast("Couldn't play voice reply — see the text above", 'err'); };
+    u.onerror = () => {
+      setSpeaking(false, true);
+      showToast("Couldn't play voice reply — see the text above", 'err');
+      if(opts && opts.onFailure) opts.onFailure('speechSynthesis playback error');
+    };
     window.speechSynthesis.speak(u);
-  } catch(err){ setSpeaking(false); showToast("Couldn't play voice reply — see the text above", 'err'); }
+  } catch(err){
+    setSpeaking(false);
+    showToast("Couldn't play voice reply — see the text above", 'err');
+    if(opts && opts.onFailure) opts.onFailure(err && err.message);
+  }
 }
 // ── Local offline TTS (Piper-web, fully self-hosted — no CDN). This is the default
 // speech-out path; OpenAI TTS only runs when the Premium voice toggle is on. ──
@@ -2338,18 +2359,32 @@ function _setupTtsAnalyser(audioEl){
     _ttsAnalyser = null;
   }
 }
-function _playTtsBlob(blob, fallbackText){
+function _playTtsBlob(blob, fallbackText, opts){
   if(_ttsAudio){ _ttsAudio.pause(); _ttsAudio = null; }
   const url = URL.createObjectURL(blob);
   const audio = new Audio(url);
   _ttsAudio = audio;
   _setupTtsAnalyser(audio);
-  audio.onplay = () => setSpeaking(true);
+  audio.onplay = () => { setSpeaking(true); if(opts && opts.onPlaying) opts.onPlaying(); };
   audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url); };
   audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url); };
-  audio.play().catch(()=>{ _speakWithBrowserFallback(fallbackText); });
+  audio.play().catch((err)=>{
+    if(opts && opts.onBlocked) opts.onBlocked(err);
+    _speakWithBrowserFallback(fallbackText, opts);
+  });
 }
-function speakText(text){
+// speakText(text, opts) — opts (2026-07-16, optional) is a purely-additive
+// callback contract used by testVoicePlayback() (Settings "Test Voice" button)
+// to observe the REAL outcome of this exact code path instead of a separate,
+// fake implementation. Every existing unconditional call site (auto-speak on a
+// finished chat reply, the WS 'speak' push) omits opts and behaves exactly as
+// before. Contract: onPremiumNotConfigured() -- the specific 503 case;
+// onEngineError(engine, err) -- Piper failed to load, or the premium POST
+// itself threw/timed out; onBlocked(err) -- the browser rejected the primary
+// engine's audio.play(); onPlaying()/onFallbackStart() -- terminal SUCCESS
+// (primary engine or browser speechSynthesis audibly started); onFailure(reason)
+// -- terminal failure, the same moment the existing generic toast already fires.
+function speakText(text, opts){
   if(!text) return;
   if(_isPremiumVoice()){
     fetchWithTimeout(BASE+'/api/voice/speak', {
@@ -2357,12 +2392,62 @@ function speakText(text){
       headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
       body: JSON.stringify({text})
     }, 20000).then(r=>{
-      if(!r.ok) throw new Error('speak failed: '+r.status);
+      if(!r.ok){
+        if(r.status === 503 && opts && opts.onPremiumNotConfigured) opts.onPremiumNotConfigured();
+        throw new Error('speak failed: '+r.status);
+      }
       return r.blob();
-    }).then(blob=>_playTtsBlob(blob, text)).catch(()=>{ _speakWithBrowserFallback(text); });
+    }).then(blob=>_playTtsBlob(blob, text, opts)).catch((err)=>{
+      if(opts && opts.onEngineError) opts.onEngineError('premium', err);
+      _speakWithBrowserFallback(text, opts);
+    });
     return;
   }
-  _speakLocalPiper(text).then(blob=>_playTtsBlob(blob, text)).catch(()=>{ _speakWithBrowserFallback(text); });
+  _speakLocalPiper(text).then(blob=>_playTtsBlob(blob, text, opts)).catch((err)=>{
+    if(opts && opts.onEngineError) opts.onEngineError('piper', err);
+    _speakWithBrowserFallback(text, opts);
+  });
+}
+// ── Test Voice (Settings, 2026-07-16) — exercises the EXACT speakText() path a
+// real chat reply uses (same Piper/premium/browser-fallback branching via the
+// opts hooks above), so a pass means "this device/browser can play audio
+// through Frank's real voice pipeline right now" -- not a fake green check
+// that only proves a function didn't throw. It cannot guarantee every FUTURE
+// reply will work too -- iOS can silently re-suspend the AudioContext after
+// the PWA is backgrounded (see _primeAudioPlayback()'s comment above), and
+// server-side config (OPENAI_API_KEY) could change after this test passes if
+// Premium voice gets toggled on later. Do not word this as a guarantee. ──
+let _voiceTestInFlight = false;
+function testVoicePlayback(){
+  const btn = document.getElementById('voice-test-btn');
+  const statusEl = document.getElementById('voice-test-status');
+  if(!btn || !statusEl || _voiceTestInFlight) return;
+  _voiceTestInFlight = true;
+  btn.disabled = true;
+  statusEl.style.color = 'var(--muted)';
+  statusEl.textContent = 'Testing…';
+  const notes = [];
+  let settled = false;
+  const timer = setTimeout(() => finish(false,
+    'No audio started within 12s — check your volume/mute switch, or this browser may be blocking autoplay.'), 12000);
+  function finish(ok, msg){
+    if(settled) return;
+    settled = true;
+    clearTimeout(timer);
+    _voiceTestInFlight = false;
+    btn.disabled = false;
+    statusEl.style.color = ok ? 'var(--green)' : 'var(--red)';
+    statusEl.textContent = msg + (notes.length ? ' (' + notes.join('; ') + ')' : '');
+  }
+  _primeAudioPlayback();  // the button tap itself counts as the unlock gesture
+  speakText("Voice test — if you can hear this, Frank's voice is working.", {
+    onPremiumNotConfigured: () => notes.push('Premium voice is on but no OpenAI key is set up on the server'),
+    onEngineError: (engine, err) => notes.push((engine==='piper' ? 'offline voice engine failed to load' : 'premium voice request failed') + (err && err.message ? ': '+err.message : '')),
+    onBlocked: () => notes.push('browser blocked automatic playback of the primary voice'),
+    onPlaying: () => finish(true, '✓ Played out loud just now'),
+    onFallbackStart: () => finish(true, "✓ Played out loud just now (used your browser's built-in voice, not Frank's normal voice)"),
+    onFailure: (reason) => finish(false, "Couldn't get any audio to play on this device/browser" + (reason ? ' — '+reason : ''))
+  });
 }
 
 let _voiceRecorder = null, _voiceChunks = [], _voiceRecording = false, _voiceStream = null;
@@ -2943,9 +3028,40 @@ function _setPremiumVoice(on) {
 (function(){
   document.querySelectorAll('.premium-voice-cb').forEach(cb => {
     cb.checked = _isPremiumVoice();
-    cb.addEventListener('change', () => _setPremiumVoice(cb.checked));
+    cb.addEventListener('change', () => {
+      _setPremiumVoice(cb.checked);
+      if (cb.checked) _verifyPremiumVoiceConfigured();
+    });
   });
 })();
+// _verifyPremiumVoiceConfigured() (2026-07-16) — Premium voice silently 503s
+// on every reply if OPENAI_API_KEY isn't set server-side (falls through to the
+// browser-speech fallback with just a generic toast, no specific reason). Runs
+// right when the toggle is switched ON, and also from loadSettingsConnectionsSummary()
+// on every Settings-screen open (catches a toggle already stuck ON from an
+// earlier session/device, before it ever gets a chance to fail on a real reply).
+// Shares the same revert-and-explain behavior as the reactive backstop wired
+// into speakText()'s two automatic call sites via _autoSpeakOpts() below.
+async function _verifyPremiumVoiceConfigured(cred){
+  if (!_isPremiumVoice()) return;
+  try{
+    if (!cred) { const r = await authGet('/api/credentials/status', 8000); cred = await r.json(); }
+    if (!(cred && cred.openai && cred.openai.api_key)) {
+      _setPremiumVoice(false);
+      showToast("Premium voice needs an OpenAI API key that isn't set up yet — turned it off, using the free built-in voice instead.", 'err', 7000);
+    }
+  }catch(e){ /* status check itself failed; leave the toggle as-is -- the
+                reactive backstop in speakText()'s opts still protects real
+                playback the next time a reply is actually spoken. */ }
+}
+function _autoSpeakOpts(){
+  return {
+    onPremiumNotConfigured: () => {
+      _setPremiumVoice(false);
+      showToast("Premium voice needs an OpenAI API key that isn't set up yet — turned it off, using the free built-in voice instead.", 'err', 7000);
+    }
+  };
+}
 // ── Color theme — per-device display preference, so localStorage (not the
 // backend) is the right persistence layer. Default 'cyan' matches the
 // original :root values, applied via no class on <html>. ──
@@ -3265,13 +3381,13 @@ async function initWS() {
     } else if (d.type === 'done') {
       const finalText = bot ? bot.textContent.trim() : '';
       _clearStreaming(); scrollMsgs();
-      if (finalText) speakText(finalText);
+      if (finalText) speakText(finalText, _autoSpeakOpts());
     }
     // Backend sends {type:'speak'} when the agent explicitly calls the local_speak
     // tool (main.py). Without this branch that audio was silently dropped -- the
     // handler only knew pong/history/tool/chunk/done/error -- so an agent-initiated
     // spoken line never played. Route it through the same TTS path as a normal reply.
-    else if (d.type === 'speak') { if (d.text) speakText(d.text); }
+    else if (d.type === 'speak') { if (d.text) speakText(d.text, _autoSpeakOpts()); }
     else if (d.type === 'error') { _clearStreaming(); addBubble('⚠️ ' + d.content, 'bot'); }
   };
   ws.onerror = () => { _clearStreaming(); };
@@ -6364,6 +6480,11 @@ async function loadSettingsConnectionsSummary() {
     ]);
     const cred = await cr.json().catch(()=>({}));
     const tok = await tr.json().catch(()=>({}));
+    // Reuses the `cred` this call already fetched (zero extra network cost) --
+    // catches a Premium-voice toggle already stuck ON from an earlier session
+    // the moment Settings is opened, before it ever gets a chance to fail
+    // silently on a real reply. See _verifyPremiumVoiceConfigured() above.
+    _verifyPremiumVoiceConfigured(cred);
     let ageText = 'unknown';
     if (tok.updated_at) {
       const days = Math.floor((Date.now() - new Date(tok.updated_at).getTime()) / 86400000);
