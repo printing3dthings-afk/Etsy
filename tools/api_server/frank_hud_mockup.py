@@ -6382,8 +6382,10 @@ const _PLATFORM_ROADMAP = [
     'Generate a Page Access Token with the pages_manage_posts scope',
     'Add FACEBOOK_PAGE_ID / FACEBOOK_ACCESS_TOKEN to .env once issued'
   ]},
-  {name:'TikTok',    icon:'🎵', status:'roadmap',note:'TikTok for Business API', steps:[
-    'App credentials are already configured (TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET)',
+  {name:'TikTok',    icon:'🎵', status:'roadmap',note:'⚠️ Credentials leaked & removed — need rotating first', steps:[
+    'The old TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET were found leaked in git history and removed — TikTok will not work until these are replaced',
+    'Generate a NEW Client Key + Secret at the TikTok for Developers portal (do not reuse the old ones)',
+    'Add the new TIKTOK_CLIENT_KEY / TIKTOK_CLIENT_SECRET to .env and Railway',
     'Run: python tools/tiktok_oauth.py — log in as @onbrandcraftz and approve',
     'Tokens save to .env automatically (access token 24h, refresh token 365 days)',
     'Re-run tools/tiktok_oauth.py whenever the access token expires',

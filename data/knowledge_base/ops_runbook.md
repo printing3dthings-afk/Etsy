@@ -7712,3 +7712,55 @@ realistic "app-like" path (PWA "Add to Home Screen" polish) wasn't touched
 here and remains a separate, later decision if still wanted.
 
 Build bumped to `b04b607-v184`.
+
+### 2026-07-16 — Full system audit (accessibility + capability inventory + unresolved-gaps sweep); shipped first fix
+
+Scott asked for a full review of "everything Frank has" — disability/
+accessibility support, and everything downloaded/built into him — plus
+suggested improvements. Ran three parallel research passes: an
+accessibility audit of `frank_hud_mockup.py`, a full capability/tool/
+dependency inventory, and a sweep of this file + `CLAUDE.md` for anything
+flagged as a known gap that was never actually closed. Delivered as a
+prioritized report (Artifact) with 4 sections: Business & security risk
+(5), Built-but-not-switched-on (6), Accessibility (7), Cleanup (4).
+
+**Top findings, most severe first** (full detail in the delivered report,
+not repeated here since this file already documents the underlying
+incidents at length):
+1. The live Etsy Client ID/Secret leaked via `CLAUDE.md` on a pushed
+   branch (first flagged 2026-06-26) is still confirmed unrotated.
+2. DP1030-DP1034's source files are confirmed permanently gone (see
+   2026-07-15 entries above) — CLAUDE.md itself is now stale/wrong on
+   this (still says the files "exist on disk").
+3. TikTok Client Key/Secret were also leaked and flagged urgent
+   (2026-07-09) and never rotated.
+4. DP1027's Sheet 6 sticker fix has been code-complete since 2026-07-03
+   but never regenerated + re-uploaded to the live listing (Scott-gated).
+5. The Back-to-School seasonal keyword push (deadline July 4) never ran,
+   blocked on the same expired Etsy credential as #1 — now 12 days
+   overdue.
+
+Scott asked to work through the list in order. Findings #1, #2 (needs a
+rebuild/drop decision), #3, #4, and #5 all either require Scott's own
+account access (Etsy/TikTok developer consoles — genuinely nothing Frank
+can reach with any tool or key it has) or are explicitly Scott-gated
+policy items (touching a live listing / pushing keyword changes) — asked
+for his decision/go-ahead on each rather than assuming, per the Autonomy
+Boundaries in CLAUDE.md.
+
+**Shipped while waiting on those:** fixed the Connections screen's TikTok
+roadmap card (`frank_hud_mockup.py`, `_PLATFORM_ROADMAP`), which
+incorrectly told Scott "App credentials are already configured" for
+TikTok — those are the exact credentials that were leaked and removed in
+finding #3. Now reads "⚠️ Credentials leaked & removed — need rotating
+first" with corrected steps (generate NEW credentials, don't reuse the
+old ones). Small, safe, no external dependency — the one item from the
+top-5 list that didn't need Scott's action or a policy exception.
+
+Verification: `python -m py_compile`, `node --check` on the extracted JS,
+full `tests/test_*.py` suite, `tools/playwright_smoke.py` (one
+informational Test Voice variance this run — reached a terminal failure
+state instead of success, expected headless-audio-hardware variance per
+that test's own design, not a regression; unrelated to this change).
+
+Build bumped to `0e203d2-v185`.
