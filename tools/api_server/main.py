@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "0e203d2-v185"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "f273852-v186"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7342,11 +7342,22 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_rat
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"generation failed: {str(exc)[:200]}")
 
+    # Distinguish a transient image-service error (Gemini/OpenAI 5xx, timeouts —
+    # goal_loop records these as "generation error:" / "verification error:") from a
+    # real product-mismatch rejection, so the UI can tell the user "try again" vs
+    # "the render didn't match your file." Without this, both read as a match failure.
+    _issues = result.issues or []
+    _svc = _issues and all(
+        str(i).startswith(("generation error:", "verification error:")) for i in _issues
+    )
+    failure_kind = None if result.passed else ("service_error" if _svc else "mismatch")
+
     return {
         "ok": result.passed,
         "path": out_name if result.passed else None,
         "attempts": result.attempts,
         "issues": result.issues,
+        "failure_kind": failure_kind,
     }
 
 

@@ -169,11 +169,40 @@ def _gemini_bytes_from_resp(resp) -> bytes:
     raise ImageGenError("Gemini response contained no image data")
 
 
+def _gemini_call_with_retry(fn, retries: int = 4, base_delay: int = 2):
+    """Run a google-genai SDK call with retry/backoff on transient failures.
+
+    The google-genai SDK does NOT retry internally, and its image endpoint returns
+    a transient `500 INTERNAL` (and occasional 503/network drops) often enough that
+    a single unretried call is unreliable — observed 2026-07-16 failing both the
+    dashboard listing-photo tool and batch sticker generation on the first hit.
+    Mirrors the OpenAI `_post()` policy: retry 5xx / 429 / network errors with
+    exponential backoff, fail fast on other 4xx (bad key, invalid request — those
+    won't self-heal)."""
+    last_err: Exception | None = None
+    for attempt in range(retries):
+        try:
+            return fn()
+        except Exception as e:  # noqa: BLE001
+            code = getattr(e, "code", None)
+            if not isinstance(code, int):
+                code = getattr(e, "status_code", None)
+            # Client errors (except 429 rate-limit) won't fix themselves — fail fast.
+            if isinstance(code, int) and 400 <= code < 500 and code != 429:
+                raise
+            last_err = e
+            if attempt < retries - 1:
+                wait = base_delay * (2 ** attempt)  # 2s, 4s, 8s
+                print(f"    gemini retry {attempt + 1}/{retries - 1} in {wait}s: {e}")
+                time.sleep(wait)
+    raise ImageGenError(f"gemini call failed after {retries} attempts: {last_err}")
+
+
 def _gemini_generate_bytes(prompt: str, model: str | None = None) -> bytes:
     from google import genai
     client = genai.Client(api_key=_gemini_key())
-    resp = client.models.generate_content(
-        model=model or _GEMINI_IMAGE_MODEL, contents=[prompt])
+    resp = _gemini_call_with_retry(lambda: client.models.generate_content(
+        model=model or _GEMINI_IMAGE_MODEL, contents=[prompt]))
     return _gemini_bytes_from_resp(resp)
 
 
@@ -188,8 +217,8 @@ def _gemini_edit_bytes(prompt: str, image_paths: list, model: str | None = None)
         p = Path(p)
         mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
         contents.append(types.Part.from_bytes(data=p.read_bytes(), mime_type=mime))
-    resp = client.models.generate_content(
-        model=model or _GEMINI_IMAGE_MODEL, contents=contents)
+    resp = _gemini_call_with_retry(lambda: client.models.generate_content(
+        model=model or _GEMINI_IMAGE_MODEL, contents=contents))
     return _gemini_bytes_from_resp(resp)
 
 
@@ -215,7 +244,7 @@ def gemini_extract_text(design_path) -> str:
     p = Path(design_path)
     mime = "image/png" if p.suffix.lower() == ".png" else "image/jpeg"
     client = genai.Client(api_key=_gemini_key())
-    resp = client.models.generate_content(
+    resp = _gemini_call_with_retry(lambda: client.models.generate_content(
         model=_GEMINI_TEXT_MODEL,
         contents=[
             "List every piece of text visible in this design, exactly as written, "
@@ -223,7 +252,7 @@ def gemini_extract_text(design_path) -> str:
             "items, nothing else.",
             types.Part.from_bytes(data=p.read_bytes(), mime_type=mime),
         ],
-    )
+    ))
     return (resp.text or "").strip()
 
 
@@ -281,7 +310,8 @@ def gemini_verify_render(design_paths: list, render, physics_desc: str = "",
     contents.append(types.Part.from_bytes(data=buf.getvalue(), mime_type="image/jpeg"))
 
     client = genai.Client(api_key=_gemini_key())
-    resp = client.models.generate_content(model=_GEMINI_TEXT_MODEL, contents=contents)
+    resp = _gemini_call_with_retry(
+        lambda: client.models.generate_content(model=_GEMINI_TEXT_MODEL, contents=contents))
     raw = (resp.text or "").strip()
     raw = re.sub(r"^```(json)?|```$", "", raw, flags=re.M).strip()
     try:

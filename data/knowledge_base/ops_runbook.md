@@ -7867,3 +7867,35 @@ pattern (5 sampler pages, larger ZIP) and is not a false claim — the
 library is a preview, the listing/ZIP state the true 9-sheet/219-sticker
 count. Left as-is pending Scott's call on whether to expand the in-PDF
 library to all 9 (would add ~4 pages).
+
+---
+
+**2026-07-16 — Listing-photo tool failed with a misleading "did not match your
+source file" error (Scott hit it live; root cause = no Gemini retry).** The
+Create-screen "Generate Lifestyle Photo" tool reported *"Failed verification
+after 2 attempts — the render did not reliably match your source file"* with
+`generation error: 500 INTERNAL` underneath. Two independent bugs:
+
+1. **No retry on transient Gemini errors (root cause).** `tools/image_gen.py`'s
+   OpenAI path retries via `_post()` (5xx/429/network, backoff), but the Gemini
+   SDK calls (`_gemini_generate_bytes`, `_gemini_edit_bytes`, `gemini_extract_text`,
+   `gemini_verify_render`) called `client.models.generate_content()` directly with
+   NO retry. google-genai does not retry internally, and its image endpoint throws
+   transient `500 INTERNAL` often — so a single hiccup killed the whole generation.
+   (Same error killed this session's DP1031 sticker batch twice, forcing manual
+   re-runs.) Fix: added `_gemini_call_with_retry()` mirroring the OpenAI policy
+   (retry 5xx/429/network with 2s/4s/8s backoff, fail fast on other 4xx), and
+   wrapped all four Gemini SDK call sites in it.
+2. **Misleading failure message.** `goal_loop.run_until_goal` records a generation
+   crash as an `issue` string ("generation error: …"), indistinguishable from a
+   real verification rejection, so the UI blamed the user's file for what was a
+   transient API outage. Fix: `/api/listing-photo/generate` now returns
+   `failure_kind` ("service_error" when all issues are generation/verification
+   *errors*, else "mismatch"); the HUD shows "⚠ The image service had a temporary
+   error — no problem with your file. Please try again" for service_error.
+
+Verified: unit-tested the retry helper (transient-500 retries then succeeds; 400
+fails fast with no retry; 429 retries; persistent-500 → ImageGenError after N);
+`py_compile` + `node --check` on extracted JS; voice (4) + listing-integrity (26)
+tests pass; real end-to-end Gemini generation succeeds through the wrapped path.
+Build bumped to `f273852-v186`.

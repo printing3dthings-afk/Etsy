@@ -6217,7 +6217,15 @@ async function lsgGenerate(){
       if (previewWrap) previewWrap.style.display = 'none';
       if (downloadEl) downloadEl.style.display = 'none';
       const firstIssue = (d.issues && d.issues[0]) ? escHtml(d.issues[0]) : '';
-      if (outcomeEl) outcomeEl.innerHTML = '<span style="color:var(--red)">✗ Failed verification after '+(d.attempts||0)+' attempt(s) — the render did not reliably match your source file.</span>'+(firstIssue?'<div style="color:var(--muted);margin-top:4px">'+firstIssue+'</div>':'');
+      let headline;
+      if (d.failure_kind === 'service_error') {
+        // A transient image-service error (e.g. Gemini 500), NOT a product mismatch —
+        // retrying usually clears it; nothing is wrong with the uploaded file.
+        headline = '⚠ The image service had a temporary error — no problem with your file. Please try again in a moment.';
+      } else {
+        headline = '✗ Failed verification after '+(d.attempts||0)+' attempt(s) — the render did not reliably match your source file.';
+      }
+      if (outcomeEl) outcomeEl.innerHTML = '<span style="color:var(--red)">'+headline+'</span>'+(firstIssue?'<div style="color:var(--muted);margin-top:4px">'+firstIssue+'</div>':'');
     }
     if (resultEl) resultEl.style.display = 'block';
     if (status) status.textContent = '';
