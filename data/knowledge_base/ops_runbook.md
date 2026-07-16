@@ -7899,3 +7899,50 @@ fails fast with no retry; 429 retries; persistent-500 → ImageGenError after N)
 `py_compile` + `node --check` on extracted JS; voice (4) + listing-integrity (26)
 tests pass; real end-to-end Gemini generation succeeds through the wrapped path.
 Build bumped to `f273852-v186`.
+
+---
+
+**2026-07-16 — DP1031-DP1034 rebuilt (completes the 5-product data-loss recovery).**
+Same restore-and-run pipeline as the DP1030 pilot, applied to the remaining four.
+All four pass `qc_sweep.py` 8/8 (0 FAIL/0 WARN), have 3/3 deliverables + 10/10
+listing photos, and are synced to the persistent volume + a 452 MB backup ZIP.
+
+| PID | Theme | Pages | Stickers | Notes |
+|---|---|---|---|---|
+| DP1031 | Sage Garden (Undated Life) | 141 | 247 | undated-only |
+| DP1032 | Midnight Kawaii (Dark Mode) | 140 | 241 | dark/neon |
+| DP1033 | Sunflower Studio (Teacher) | 107 | 229 | 2026-2027 academic yr |
+| DP1034 | Celestial Night (Life) | 142 | 242 | was absent from listing-photo script |
+
+**Reusable techniques proven this batch (for any future planner):**
+- **Dark-mode / dark-palette sticker packs** (DP1032, DP1034): generate raw sheets
+  on a solid mid-gray (#808080) chroma-key background instead of white — the
+  gray contrasts with BOTH dark outlines and near-white highlights, so
+  `process_sticker_sheets.py`'s corner-sampled flood-fill strips it without eating
+  either. Verified clean cutout on dark planets/constellations (no eaten outlines).
+  Light palettes (DP1031, DP1033) still use white.
+- **Text-defect QC is mandatory and unautomatable.** Every product had 1-4 sheets
+  with garbled/duplicate text the file gates can't see: leaked palette hex codes
+  rendered as banner text ("C8DDB5", "FOEEF4"), truncated banners ("FORGET" for
+  "DON'T FORGET"), misspellings ("PRIGRITY", "STILL GROONED"), wrong day headers
+  ("MON TUE THU SUN SUN"), and non-sequential/duplicate numbered date dots.
+  Fix pattern: regenerate the sheet with an explicit exact-phrase list + "no hex
+  codes / no other text" + plain unnumbered dots; for precise sequential content
+  (date dots 1-31, month tabs) build the sheet deterministically with PIL — never
+  trust AI for exact numbers. A 3×3 PIL contact sheet makes QC of 9 sheets one
+  image read instead of nine.
+- **Listing-photo script hardening (all committed):** hero edition label is now
+  per-product (`edition_label`) so an undated-only or academic-year planner never
+  claims "2026 Dated"; the sticker showcase prefers the processed transparent
+  `png_sheets/` over the raw sheet (so a gray chroma background never shows) and
+  composites transparent PNGs over white; DP1034's full cfg + what's-included
+  entry were added (it was entirely missing).
+
+**Open items flagged to Scott (not blockers, need his decision before publish):**
+- **DP1034 price**: catalog $12.99 vs config $16.99 — unresolved.
+- Minor cosmetic: DP1032 sheet-9 has a few constellation rings that kept a gray
+  interior fill (enclosed region, flood-fill correctly leaves it); DP1034 sheet-9
+  has one legible near-variant tag ("ONE STEP A TIME"). Neither is a false claim.
+- In-PDF sticker library still shows 5 of 9 sheets (matches DP1026-1030 pattern).
+
+Nothing published — all four are new-listing decisions, Scott-gated.
