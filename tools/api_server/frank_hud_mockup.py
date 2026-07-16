@@ -62,9 +62,6 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
      user actually opens the orb screen. Three.js is loaded for every visit, not just
      phone (desktop shows the same default sphere), so this isn't scoped to mobile. -->
 <link rel="modulepreload" href="/static/vendor/three/build/three.module.js">
-<link rel="modulepreload" href="/static/vendor/three/examples/jsm/postprocessing/EffectComposer.js">
-<link rel="modulepreload" href="/static/vendor/three/examples/jsm/postprocessing/RenderPass.js">
-<link rel="modulepreload" href="/static/vendor/three/examples/jsm/postprocessing/UnrealBloomPass.js">
 <style>
 /* ── Self-hosted display/body fonts (Studio Warm direction, 2026-07-09 visual
    upgrade). Latin-subset static WOFF2s, ~68KB total for all 4 files — served from
@@ -304,35 +301,35 @@ body:not(.show-advanced) .more-row[data-tier="advanced"]{display:none}
 
 .orb-hero-stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%}
 canvas#orb{cursor:pointer}
-/* canvas#orb-gl (2026-07-15, superseded): the raw WebGL target. It is now a permanently
-   display:none OFFSCREEN render buffer only -- see canvas#orb-gl-display below for the
-   layer that's actually shown. Two earlier attempts at fixing "black/white circle around
-   the orb" both failed and are documented here so they aren't retried:
-   (1) A CSS mask-image alone only ever softened the OUTER edge of the canvas's square
-   bounding box -- it did nothing about the opaque interior (UnrealBloomPass's additive
-   compositing doesn't preserve real per-pixel alpha to the final output, so a
-   renderer.setClearColor(0,0) transparent clear still rendered fully opaque black).
-   (2) Painting the theme's real --bg color into the WebGL clear color (setOrbBackgroundToTheme(),
-   removed) seemed like a clean fix for (1) but broke worse: UnrealBloomPass's bright-pass
-   threshold here is 0.12 (see initOrbGL()'s UnrealBloomPass(...) args) -- ANY clear color
-   whose luminance nears or exceeds that (which includes the default dark theme's #241c2e,
-   borderline at ~0.12, and guarantees it for the light "Day Mode" theme's #edf1f5 at ~0.9)
-   makes the ENTIRE FRAME register as "bright enough to bloom," not just the wireframe, so
-   the whole canvas blows out to solid white (Scott: "the orb is gone," 2026-07-15).
-   Also considered and rejected: mix-blend-mode:screen (mathematically exact for a pure-black
-   source over any backdrop, but a light backdrop like Day Mode leaves almost zero headroom
-   for the wireframe's own brightness -- screen(s,b) is bounded within [b,1], so against
-   b~0.93 the wireframe would read as a faint white-on-white ghost, not a visible glow).
-   The ONLY approach that's exactly correct on every theme, light or dark, without depending
-   on bloom thresholds or blend-mode math: real per-pixel alpha, computed in JS from each
-   pixel's own luminance (source-only, background-independent) and composited normally onto
-   canvas#orb-gl-display every frame -- see orbGLFrame(). That canvas carries all the
-   positioning/mask/filter styling that used to live here. */
-canvas#orb-gl{display:none}
-canvas#orb-gl-display{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:pointer;display:none;
-  /* Softens the very outer corners in case a faint sub-threshold bloom haze reaches them
-     with a near-zero-but-nonzero computed alpha -- everything inside is now real alpha, so
-     this is a light touch, not load-bearing the way it was before the luminance-alpha fix. */
+/* canvas#orb-gl: the directly-visible WebGL sphere layer (2026-07-15, native-alpha
+   rewrite). History of what NOT to retry here, condensed from 3 failed attempts:
+   (1) A CSS mask-image alone only softens the canvas's outer square edge -- it can't
+   fix an opaque interior (UnrealBloomPass's additive compositing doesn't preserve
+   real per-pixel alpha to the final output, so a transparent clear still rendered
+   fully opaque black).
+   (2) Painting the theme's real --bg color into the WebGL clear color crossed
+   UnrealBloomPass's bright-pass threshold (0.12) and blew the whole frame to white
+   on any theme whose background luminance neared or exceeded that -- guaranteed on
+   the light "Day Mode" theme (~0.9), borderline on the dark default theme (~0.12).
+   (3) A JS luminance-key compositing hack (render offscreen, drawImage() it onto a
+   second visible 2D canvas, then fake alpha via getImageData/putImageData) looked
+   correct in local headless-Chromium screenshots but rendered as a torn/half-cut
+   buffer on a real device -- the WebGLRenderer was never created with
+   preserveDrawingBuffer:true, so a drawImage() read outside the render loop is not
+   guaranteed to see a complete frame.
+   ROOT FIX (this rewrite): all three trace back to EffectComposer/UnrealBloomPass's
+   render-to-texture-then-composite pipeline, which does not preserve true per-pixel
+   alpha to the final canvas -- a documented Three.js limitation, not something
+   tunable away. initOrbGL() now does a single native glRenderer.render(glScene,
+   glCamera) pass with a real transparent clear and no offscreen buffer, no readback,
+   no second canvas. Native forward rendering with alpha:true correctly preserves
+   real alpha straight to the canvas element -- it is specifically post-processing
+   render-to-texture compositing that breaks it. Glow comes only from the CSS
+   drop-shadow filter below, which traces this canvas's real alpha silhouette and was
+   never implicated in any of the 3 failures above. Do not reintroduce
+   EffectComposer/UnrealBloomPass for this element without addressing why it was
+   removed here. */
+canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:pointer;display:none;
   -webkit-mask-image:radial-gradient(circle closest-side at 50% 50%,#000 88%,rgba(0,0,0,.45) 95%,transparent 100%);
   mask-image:radial-gradient(circle closest-side at 50% 50%,#000 88%,rgba(0,0,0,.45) 95%,transparent 100%);
 }
@@ -353,16 +350,15 @@ canvas#orb-gl-display{position:absolute;top:50%;left:50%;transform:translate(-50
 /* Bumped 85vw->92vw to partly compensate for the camera pull-back (z=6.5) that now
    frames the full silhouette with margin: a slightly larger canvas keeps the on-screen
    orb from feeling small while still showing the whole uncut wavy edge. */
-#orb-view canvas#orb,#orb-view canvas#orb-gl-display{width:min(92vw,660px);height:min(92vw,660px)}
+#orb-view canvas#orb,#orb-view canvas#orb-gl{width:min(92vw,660px);height:min(92vw,660px)}
 /* Two stacked drop-shadows (tight bright core + wide soft diffusion) hugging the
    canvas's own alpha silhouette -- unlike a page-level background gradient, this
    halo follows the actual rendered sphere shape frame to frame, which is what
    makes it read as a glowing object floating in dark space (reference GIFs)
-   rather than a flat sphere sitting on a colored page background. Now that
-   canvas#orb-gl-display carries real per-pixel alpha (2026-07-15 luminance-key
-   fix, see orbGLFrame()), this drop-shadow traces the actual wireframe silhouette
-   correctly instead of the old canvas's hard-edged bounding box. */
-#orb-view canvas#orb-gl-display{filter:drop-shadow(0 0 46px rgba(96,220,255,.5)) drop-shadow(0 0 120px rgba(96,220,255,.22))}
+   rather than a flat sphere sitting on a colored page background. canvas#orb-gl
+   now carries real native per-pixel alpha (2026-07-15 native-alpha rewrite), so
+   this drop-shadow traces the actual wireframe silhouette directly. */
+#orb-view canvas#orb-gl{filter:drop-shadow(0 0 46px rgba(96,220,255,.5)) drop-shadow(0 0 120px rgba(96,220,255,.22))}
 #orb-view .orb-overlay .o1{font-size:36px}
 #orb-view .orb-hint{position:static;margin-top:14px;opacity:.5}
 #orb-view .orb-state{margin-top:10px}
@@ -1009,7 +1005,6 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="orb-hero-stage">
       <canvas id="orb" width="640" height="640"></canvas>
       <canvas id="orb-gl" width="640" height="640"></canvas>
-      <canvas id="orb-gl-display" width="640" height="640"></canvas>
       <div class="orb-overlay">
         <div class="o1">%%AGENT_SHORT%%</div>
         <div class="o2">SHOP ASSISTANT</div>
@@ -6536,34 +6531,26 @@ let orbMode = 'sphere';
 // vertical bar. See applyBrandMarkToOrb below for how these are built.
 let imgFront = [], imgBack = [], imgFrontEdges = [], imgBackEdges = [], imgStruts = [];
 
-// Default ("sphere") mode is now a real Three.js/WebGL noise-displaced icosphere,
-// rendered OFFSCREEN onto #orb-gl (permanently display:none — see the CSS comment
-// on canvas#orb-gl for why a raw WebGL target can't just be shown directly) and then
-// composited with real per-pixel alpha onto the visible #orb-gl-display 2D canvas
-// every frame (orbGLFrame(), 2026-07-15 luminance-key fix) — see initOrbGL()/orbGL*
-// below. Three canvases live in the DOM permanently (2D #orb for image mode, WebGL
-// #orb-gl as an offscreen buffer, 2D #orb-gl-display as the visible sphere-mode
-// layer); only #orb and #orb-gl-display ever toggle visible, via setOrbCanvasMode().
-// Image mode keeps using the #orb 2D canvas exactly as before — applyBrandMarkToOrb
-// is untouched.
+// Default ("sphere") mode is a real Three.js/WebGL noise-displaced icosphere,
+// rendered directly onto the visible #orb-gl canvas (2026-07-15 native-alpha
+// rewrite — see the long CSS comment on canvas#orb-gl for the full history of
+// what NOT to retry here). Two canvases live in the DOM permanently: 2D #orb
+// for image mode, WebGL #orb-gl for sphere mode; only one is shown at a time,
+// toggled by setOrbCanvasMode(). Image mode keeps using the #orb 2D canvas
+// exactly as before — applyBrandMarkToOrb is untouched.
 const orbGlCanvas = document.getElementById('orb-gl');
-const orbGlDisplayCanvas = document.getElementById('orb-gl-display');
-const orbGlDisplayCtx = orbGlDisplayCanvas ? orbGlDisplayCanvas.getContext('2d', {willReadFrequently: true}) : null;
-// Flips every orbGLFrame() call so the luminance-key composite (see orbGLFrame())
-// only actually runs every other frame -- a perf throttle, not a correctness need.
-let _orbCompositeFrameParity = false;
 function setOrbCanvasMode(mode){
   orbMode = mode;
   if(mode === 'image'){
-    if(orbGlDisplayCanvas) orbGlDisplayCanvas.style.display = 'none';
+    if(orbGlCanvas) orbGlCanvas.style.display = 'none';
     canvas.style.display = '';
     orbGLPaused = true;
   } else {
     canvas.style.display = 'none';
-    // The CSS default for #orb-gl-display is display:none (so it never flashes
-    // visible before JS decides the mode); 'block' is needed here, not '' — an
-    // empty inline style would just fall back to that CSS default and stay hidden.
-    if(orbGlDisplayCanvas){ orbGlDisplayCanvas.style.display = 'block'; initOrbGL(); orbGLPaused = false; }
+    // CSS default for #orb-gl is display:none (so it never flashes visible
+    // before JS decides the mode); 'block' is needed here, not '' — an empty
+    // inline style would just fall back to that CSS default and stay hidden.
+    if(orbGlCanvas){ orbGlCanvas.style.display = 'block'; initOrbGL(); orbGLPaused = false; }
   }
 }
 function resetOrbToDefault(){
@@ -6575,13 +6562,14 @@ function resetOrbToDefault(){
 // under /static/vendor/three/ (no CDN — CSP is script-src 'self' only). A wireframe
 // icosphere whose vertices are displaced along their normals by a 3D simplex noise
 // field in the vertex shader (GPU-side, so it stays smooth even at high triangle
-// counts), with UnrealBloomPass for real glow instead of Canvas2D's shadowBlur
-// approximation. uAmp is driven by REAL TTS playback amplitude via an AnalyserNode
-// tapped off the premium-voice <audio> element (see currentVoiceAmp()/_setupTtsAnalyser
+// counts). uAmp is driven by REAL TTS playback amplitude via an AnalyserNode tapped
+// off the premium-voice <audio> element (see currentVoiceAmp()/_setupTtsAnalyser
 // below) — the old orb-state label claimed "reacting to live TTS amplitude" while
-// actually running a fake dual-sine pulse; this makes that claim true. ──
+// actually running a fake dual-sine pulse; this makes that claim true. Glow comes
+// from the CSS drop-shadow filter on canvas#orb-gl, not internal bloom — see the
+// CSS comment there for why UnrealBloomPass was removed outright (2026-07-15). ──
 let orbGLPaused = true, orbGLReady = false, orbGLLoading = false;
-let glMesh = null, glComposer = null, glRenderer = null, glClock = null, glUniforms = null;
+let glMesh = null, glScene = null, glCamera = null, glRenderer = null, glClock = null, glUniforms = null;
 
 const _ORB_NOISE_GLSL = `
 vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
@@ -6666,12 +6654,9 @@ async function initOrbGL(){
   orbGLLoading = true;
   try{
     const THREE = await import('/static/vendor/three/build/three.module.js');
-    const { EffectComposer } = await import('/static/vendor/three/examples/jsm/postprocessing/EffectComposer.js');
-    const { RenderPass } = await import('/static/vendor/three/examples/jsm/postprocessing/RenderPass.js');
-    const { UnrealBloomPass } = await import('/static/vendor/three/examples/jsm/postprocessing/UnrealBloomPass.js');
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+    glScene = new THREE.Scene();
+    glCamera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
     // z was 3.4, which framed the UNDISPLACED radius-1.15 sphere nicely but ignored
     // that the vertex shader pushes peaks out to ~1.7 (idle) and ~2.15 (speaking).
     // At z=3.4 the frustum half-height is only 3.4*tan(21deg)=1.305 world units, so
@@ -6681,20 +6666,23 @@ async function initOrbGL(){
     // fixed it. Pulling the camera back to 6.5 (half-height ~2.49) seats the full wavy
     // silhouette + speaking ripples inside the frame with margin, so the whole crumpled
     // edge is visible and floats, matching Scott's reference GIFs.
-    camera.position.z = 6.5;
+    glCamera.position.z = 6.5;
 
     glRenderer = new THREE.WebGLRenderer({canvas: orbGlCanvas, alpha:true, antialias:true});
-    // Plain opaque black clear (2026-07-15). Two earlier approaches were tried and
-    // both failed -- see the canvas#orb-gl CSS comment for the full account: a
-    // transparent clear (alpha 0) never actually stayed transparent through
-    // UnrealBloomPass's composite step, and painting the theme's own --bg color in
-    // as an opaque clear crossed the bloom pass's brightness threshold and blew the
-    // whole frame out to white. Black is simply the color this scene has always
-    // rendered against (matches every prior tuning pass: camera distance, bloom
-    // strength/radius, mask fade). Real transparency against the page background is
-    // now handled separately and correctly, per-pixel, by orbGLFrame()'s
-    // luminance-key composite onto canvas#orb-gl-display.
-    glRenderer.setClearColor(0x000000, 1);
+    // Real transparent clear (2026-07-15, native-alpha rewrite). Two earlier
+    // approaches operated downstream of UnrealBloomPass's render-to-texture
+    // composite, which does not preserve true per-pixel alpha to the final
+    // output (full history on the canvas#orb-gl CSS comment below): a
+    // setClearColor(0,0) clear under bloom still came out opaque black, and
+    // painting the theme's own --bg color in as an opaque clear crossed
+    // bloom's brightness threshold and blew the whole frame to white. This
+    // rewrite removes EffectComposer/UnrealBloomPass entirely and renders in a
+    // single native pass (glRenderer.render(glScene, glCamera) in
+    // orbGLFrame()) -- standard, well-trodden behavior that DOES preserve
+    // real alpha straight to the canvas, no intermediate buffer or JS pixel
+    // manipulation needed. Glow now comes only from the CSS drop-shadow
+    // filter on canvas#orb-gl (see #orb-view canvas#orb-gl below).
+    glRenderer.setClearColor(0x000000, 0);
     glRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
     glRenderer.setSize(640, 640, false);
 
@@ -6714,17 +6702,8 @@ async function initOrbGL(){
       transparent: true,
     });
     glMesh = new THREE.Mesh(geo, mat);
-    scene.add(glMesh);
+    glScene.add(glMesh);
 
-    const composer = new EffectComposer(glRenderer);
-    composer.addPass(new RenderPass(scene, camera));
-    // radius pulled back from 0.85 -- at that width the blur's residual haze reached all
-    // the way to the render target's corners, which is what the CSS mask above is
-    // fading out; a tighter radius keeps the glow's own natural falloff more contained
-    // so there's less haze for the mask to have to hide, especially at speaking-state
-    // brightness.
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(640,640), 0.9, 0.45, 0.12));
-    glComposer = composer;
     glClock = new THREE.Clock();
 
     orbGLReady = true;
@@ -6741,9 +6720,9 @@ async function initOrbGL(){
 // WebGL context when the tab/app is backgrounded, to free GPU memory under
 // pressure -- a well-documented platform behavior, not a bug in this specific
 // scene. Before this fix there was NO webglcontextlost/webglcontextrestored
-// handling anywhere: when the context died, glRenderer/glComposer/glMesh
-// still held references to now-invalid GPU resources, so orbGLFrame()'s
-// glComposer.render() call kept "succeeding" (Three.js silently no-ops on a
+// handling anywhere: when the context died, glRenderer/glMesh/glScene still
+// held references to now-invalid GPU resources, so orbGLFrame()'s
+// glRenderer.render(...) call kept "succeeding" (Three.js silently no-ops on a
 // dead context) while drawing nothing new -- the canvas just froze on
 // whatever the last good frame was, forever, since nothing ever told it to
 // rebuild. The canvas DOM element itself survives context loss (only the GL
@@ -6758,7 +6737,7 @@ if (orbGlCanvas) {
     e.preventDefault();
     orbGLReady = false;
     orbGLLoading = false;
-    glRenderer = null; glComposer = null; glMesh = null; glClock = null; glUniforms = null;
+    glRenderer = null; glMesh = null; glScene = null; glCamera = null; glClock = null; glUniforms = null;
     console.warn('[orb-gl] WebGL context lost (tab backgrounded/GPU memory pressure) — will rebuild on restore');
   });
   orbGlCanvas.addEventListener('webglcontextrestored', function(){
@@ -6782,32 +6761,13 @@ function orbGLFrame(){
   glUniforms.uOpacity.value = 0.65 + amp*0.3;
   glMesh.rotation.y += (_reducedMotion ? 0 : 0.0022) + amp*0.01;
   glMesh.rotation.x += (_reducedMotion ? 0 : 0.0006) + amp*0.003;
-  glComposer.render();
-  // Luminance-key composite onto the visible display canvas (2026-07-15) — see the
-  // long comment on canvas#orb-gl in the CSS for why this replaced both the CSS-mask-
-  // only approach and the theme-clear-color approach (the latter blew the whole frame
-  // out to white via the bloom pass's brightness threshold). #orb-gl always renders
-  // against pure black, so each pixel's own max(r,g,b) is exactly the alpha this pixel
-  // SHOULD have had -- background pixels (black) become fully transparent, bright
-  // wireframe/bloom pixels stay opaque, independent of whatever page background sits
-  // behind the canvas. This is real per-pixel alpha, not a blend-mode approximation,
-  // so it's correct on every theme without any washout.
-  // Throttled to every other frame (~30fps for the readback specifically, the 3D
-  // scene itself still updates at 60fps above) -- getImageData/putImageData on a
-  // 640x640 canvas forces a GPU->CPU sync each call, a real cost on mobile GPUs
-  // (observed directly as "GPU stall due to ReadPixels" driver warnings while
-  // testing this fix). A decorative ambient orb doesn't need the readback itself
-  // at 60fps to look smooth.
-  _orbCompositeFrameParity = !_orbCompositeFrameParity;
-  if (orbGlDisplayCtx && _orbCompositeFrameParity) {
-    orbGlDisplayCtx.drawImage(orbGlCanvas, 0, 0);
-    const frame = orbGlDisplayCtx.getImageData(0, 0, 640, 640);
-    const d = frame.data;
-    for (let i = 0; i < d.length; i += 4) {
-      d[i + 3] = Math.max(d[i], d[i + 1], d[i + 2]);
-    }
-    orbGlDisplayCtx.putImageData(frame, 0, 0);
-  }
+  // Single native render pass straight to the visible canvas (2026-07-15,
+  // native-alpha rewrite) -- no offscreen buffer, no readback, no per-pixel JS
+  // manipulation. glRenderer was created with alpha:true and a real transparent
+  // clear (see initOrbGL()), so this correctly preserves per-pixel alpha to
+  // canvas#orb-gl directly; the page background shows through wherever the
+  // scene is empty, with no dependency on bloom thresholds or buffer timing.
+  glRenderer.render(glScene, glCamera);
 }
 
 resetOrbToDefault();

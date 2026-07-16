@@ -7447,3 +7447,101 @@ by using `Bash`/`sed`/heredocs for file changes, which kept working
 normally. Infra-level issue, not a code bug; noting here in case it recurs.
 
 Build bumped to `73476ac-v181`.
+
+### 2026-07-15 (final pass, follow-up 8) — Orb rebuilt on native WebGL alpha; EffectComposer/UnrealBloomPass removed entirely
+
+Scott, two more screenshots after `73476ac-v181`: first "Still super wrong"
+(a solid black-ish/torn shape, not centered), then explicitly "Orb still not
+centered and the ring is still there" — the wireframe rendered as a
+half-sliced crescent instead of a symmetric floating sphere, with a visible
+soft ring/halo separate from the actual content.
+
+This was the **3rd** distinct real-device-only failure for this widget this
+session (see follow-up 5 and follow-up 6 immediately above for the first
+two). Given the same general mechanism — bloom post-processing plus a
+clever canvas trick — had now broken 3 times in a row on the one
+environment that actually matters, and given there is no way to test
+against Scott's real device from here, the fix this time was **architectural**
+rather than another narrow patch. Investigated via a Plan agent + an Explore
+agent (full transcript context preserved in this session); user explicitly
+chose "rebuild it simpler" over "just add `preserveDrawingBuffer:true`" when
+asked.
+
+**Root-cause lead for the torn-buffer symptom (high confidence, not fully
+provable without the device):** this exact codebase already documented, on
+2026-07-08 during an earlier orb incident, that reading a WebGL canvas via
+`drawImage()`/`getImageData()` **without `preserveDrawingBuffer:true` set at
+context creation** can silently read a half-cleared/stale buffer — "don't
+trust `gl.readPixels` outside the render loop unless `preserveDrawingBuffer`
+was set — it can silently read an already-cleared buffer." Follow-up 6's
+`WebGLRenderer` was never created with that flag, and `orbGLFrame()` called
+`orbGlDisplayCtx.drawImage(orbGlCanvas, 0, 0)` every other frame — a strong,
+precedented match for a "half correct, half stale" visual.
+
+**Fix — remove the fragile machinery instead of patching it again.**
+`EffectComposer`/`RenderPass`/`UnrealBloomPass` are deleted entirely from
+`initOrbGL()` (`frank_hud_mockup.py`). The scene now renders in a single
+native pass: `glRenderer.render(glScene, glCamera)` in `orbGLFrame()`,
+straight onto the one visible `canvas#orb-gl`, with a real transparent clear
+(`glRenderer.setClearColor(0x000000, 0)`, `alpha:true` on the context). This
+is standard, well-trodden Three.js behavior that correctly preserves true
+per-pixel alpha to the canvas — it is specifically the render-to-texture
+post-processing pipeline that breaks it, not native forward rendering. Glow
+now comes only from the CSS `filter:drop-shadow(...)` already on
+`canvas#orb-gl`, which was never implicated in any of the 3 failures and
+traces the canvas's real alpha silhouette directly.
+
+Removed as part of this: the offscreen `canvas#orb-gl` / visible
+`canvas#orb-gl-display` two-canvas split, `orbGlDisplayCanvas`/
+`orbGlDisplayCtx`, the `_orbCompositeFrameParity` frame-skip throttle, and
+the whole `drawImage`/`getImageData`/`putImageData` luminance-key loop.
+`setOrbCanvasMode()` reverted to toggling `canvas#orb-gl` directly (matching
+the architecture from before follow-up 6). `scene`/`camera` locals were
+promoted to shared `glScene`/`glCamera` module-scope `let`s (alongside the
+existing `glMesh`/`glRenderer`/`glClock`/`glUniforms`) so `orbGLFrame()` can
+render directly without re-plumbing state through `initOrbGL()`.
+Context-loss handlers updated to null `glScene`/`glCamera` instead of the
+now-gone `glComposer`. Also removed 3 now-dead `<link rel="modulepreload">`
+tags for the deleted postprocessing modules (`EffectComposer.js`,
+`RenderPass.js`, `UnrealBloomPass.js`).
+
+**Side effect fixed along the way:** in follow-up 6's architecture,
+`canvas#orb-gl` was permanently `display:none` (it was the offscreen
+buffer), but the orb's click-to-talk listener (`orbGlCanvas.addEventListener('click',
+toggleVoiceCapture)`) was still attached to that same, now-hidden element —
+meaning tapping the orb to start voice capture likely silently stopped
+working for the ~1 build this was live. Confirmed fixed as a natural
+consequence of reverting `canvas#orb-gl` back to the directly-visible layer
+(verified via a throwaway Playwright script: the canvas now has
+`display:block` and a real non-zero clickable bounding box).
+
+**Verification:** `python -m py_compile`, `ast.literal_eval` + `node --check`
+on the extracted JS, full `tests/test_*.py` suite (12 files) +
+`tests/smoke_test.py`, `tools/playwright_smoke.py` (with its orb assertions
+rewritten to check the new architecture directly — `canvas#orb-gl` visible,
+`#orb-gl-display` absent from the DOM, WebGL context created with
+`alpha:true` — rather than any pixel-readback, since reintroducing a
+WebGL-canvas readback in test code would reintroduce the exact class of
+fragility this rewrite removes). Local visual verification via throwaway
+Playwright screenshots against both the default dark theme and the light
+"Day Mode" theme (the theme in Scott's original bug report): both show a
+full, centered, symmetric wireframe with a clean soft glow — no torn
+rendering, no visible box/circle, no washout.
+
+**Explicit caveat, unchanged from follow-up 6's lesson:** local
+headless-Chromium screenshots have now passed clean on all 3 prior
+attempts, each of which still failed differently on Scott's real device.
+This verification pass is architecturally much stronger this time (an
+entire category of failure-prone machinery was removed, not just the
+specific bug found last time), but it is still not sufficient on its own to
+declare this closed — asked Scott to confirm on his real device.
+
+Also noted for the record: `Edit`/`ExitPlanMode` tool calls intermittently
+failed mid-session with `AbortError: Tool permission stream closed before
+response received` (including one `ExitPlanMode` approval request that
+failed 5 times in a row). Worked around by using `Bash`/`sed`/heredocs for
+file changes, and by breaking large `Edit` calls into smaller ones (which
+succeeded reliably where one giant replacement did not). Infra-level issue,
+not a code bug.
+
+Build bumped to `8e3f868-v182`.
