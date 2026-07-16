@@ -592,6 +592,14 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 #orb-chat-input:focus{border-color:var(--gold)}
 #orb-chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #orb-chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* One-tap route from the Ask/orb view into the full chat transcript (the page Scott
+   wanted directly reachable). Mobile affordance only — on desktop the Home screen
+   already IS the chat, so it's hidden there. Stays visible inside the mobile
+   "Talk to Frank" popup (unlike .orb-input-row, which the popup hides). */
+.orb-open-chat{margin-top:16px;background:linear-gradient(90deg,rgba(242,160,181,.22),rgba(96,220,255,.14));border:1px solid var(--border);color:var(--text);border-radius:var(--r-pill);padding:12px 26px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.3px}
+.orb-open-chat:hover{filter:brightness(1.14)}
+.orb-open-chat:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+body:not(.is-mobile) .orb-open-chat{display:none}
 
 /* ── Hub screens (Listings/Products/Brand Kit/Files/Connections/Security) — ported
    verbatim-in-behavior from the live Hub at / (main.py), restyled to the HUD's
@@ -1033,6 +1041,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
     </div>
+    <button class="orb-open-chat" onclick="openFullChat()" role="button" tabindex="0" aria-label="Open the full chat conversation">💬 Open full chat</button>
   </div>
 
   <div class="hdr-logo brk">
@@ -2158,6 +2167,20 @@ function phoneOpenScreen(name){
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
   showScreen(name);
+}
+// Jump from the Ask/orb view straight into the full chat transcript (the "cmd"
+// screen that holds the conversation). Closes the "Talk to Frank" popup first so
+// it doesn't linger over the chat. Desktop's Home already IS the chat, so there
+// it just makes sure that screen is showing.
+function openFullChat(){
+  document.body.classList.remove('frank-popup-open');
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
+  if (typeof isMobileMode === 'function' && isMobileMode()) {
+    phoneOpenScreen('cmd');
+  } else {
+    showScreen('cmd');
+  }
 }
 // Picking any screen from the "More" overlay closes it and returns to that screen.
 document.querySelectorAll('.sidebar .nav-item').forEach(it=>it.addEventListener('click',()=>{
