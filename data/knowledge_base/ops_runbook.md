@@ -8079,3 +8079,20 @@ Build `4376345-v190`.
 health-loop escalations that appear in this file while work happens in the dev
 sandbox — that environment has no Etsy/Anthropic creds by design; it is not a
 production incident.)
+
+---
+
+**2026-07-16 — One-tap pipelines step 3: Print-size ZIPs (wall art).** Same
+template: volume-path fix on `generate_print_sizes.py` (repo-relative → shared
+`resolve_dp_base()` so it finds source art and writes ZIPs on the /data volume in
+prod), `_produce_print_zip()` helper, `POST /api/produce/print-zip`,
+`generate_print_zip` agent tool (+ dispatch), a "🖨️ Print sizes" Create tile
+(`printZipRun()`), and tests. Builds 4×6/8×12/12×18/16×24 + 8×10/16×20 + A4/A3 +
+square @300dpi sRGB under 20MB with a README, from a raw-art JPG (rejects
+lifestyle composites). Zero API cost. End-to-end verified with a synthesized
+3000×4500 source → valid 11-file ZIP across all 4 size folders, then cleaned up.
+Verified: py_compile, node --check, produce tests, playwright smoke. Build `549129c-v191`.
+
+Three zero-API pipelines now exposed to Frank (QC, listing photos, print ZIPs).
+Remaining: package/backup (zero API), then the AI-touching planner-build +
+sticker-pack builders (gated on the BYOK/subscription cost-model decision).

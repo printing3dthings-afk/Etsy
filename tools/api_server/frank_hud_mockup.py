@@ -1617,6 +1617,21 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">✅</div><div style="font-weight:600;margin-top:6px">Quality Check</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Verify a product is publish-ready — free, instant</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-photoset')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">📸</div><div style="font-weight:600;margin-top:6px">Photo set (10)</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Build all 10 listing photos from a planner's PDF</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-printzip')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🖨️</div><div style="font-weight:600;margin-top:6px">Print sizes</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Wall-art multi-size print ZIP (300dpi, sRGB)</div></div>
+      </div>
+
+      <div class="hub-section-title" id="create-printzip" style="margin-top:18px">Print sizes — multi-size ZIP for a wall-art listing</div>
+      <div class="hub-card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+          Builds every print size a buyer expects — 4×6 / 8×12 / 12×18 / 16×24, 8×10 / 16×20, A4 / A3, and square — all 300 DPI, sRGB, under Etsy's 20 MB limit, with a README. Local resize, no cost. Needs the raw art JPG on file (not a room mockup).
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="pz-pid" type="text" placeholder="Wall-art code, e.g. WA1030" autocapitalize="characters"
+            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <button class="act-btn primary" onclick="printZipRun()" id="pz-run-btn" style="white-space:nowrap">Build ZIP</button>
+        </div>
+        <div id="pz-result" style="margin-top:12px"></div>
       </div>
 
       <div class="hub-section-title" id="create-photoset" style="margin-top:18px">Listing photo set — 10 photos from a planner's real pages</div>
@@ -2845,6 +2860,32 @@ async function photoSetRun(){
     showToast('Generated '+(d.count||0)+' listing photos for '+escHtml(d.pid), 'ok');
   }catch(e){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Generation failed')+'</div>';
+  }finally{ if(btn) btn.disabled=false; }
+}
+
+// One-tap wall-art print-size ZIP — POST /api/produce/print-zip (local resize, no AI cost).
+async function printZipRun(){
+  const pidEl=document.getElementById('pz-pid');
+  const btn=document.getElementById('pz-run-btn');
+  const out=document.getElementById('pz-result');
+  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a wall-art code first (e.g. WA1030).</div>'; return; }
+  if(btn) btn.disabled=true;
+  if(out) out.innerHTML='<div class="hub-spinner"></div><div class="hub-listing-meta" style="text-align:center;margin-top:6px">Building print sizes… ~15–40s</div>';
+  try{
+    const r=await fetchWithTimeout(BASE+'/api/produce/print-zip', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({pid})
+    }, 210000);
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
+    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
+    out.innerHTML='<div style="font-weight:600"><span style="color:var(--green)">✓</span> '+escHtml(d.pid)+
+      ' — '+escHtml(d.zip||'print ZIP')+(d.size_mb!=null?(' ('+d.size_mb+' MB)'):'')+'</div>'+
+      '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Open in Files →</button></div>';
+    showToast('Built print ZIP for '+escHtml(d.pid), 'ok');
+  }catch(e){
+    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed')+'</div>';
   }finally{ if(btn) btn.disabled=false; }
 }
 function showScreen(name){

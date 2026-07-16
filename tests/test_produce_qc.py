@@ -124,6 +124,30 @@ def test_listing_photos_endpoint_contract():
     check("error" in data, f"non-planner pid should return a JSON error, got {data}")
 
 
+def test_print_zip_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("generate_print_zip" in names,
+          "generate_print_zip must be in AGENT_TOOLS so the agent can call it")
+
+
+def test_print_zip_requires_pid():
+    out = server._produce_print_zip({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_print_zip_missing_source():
+    out = server._produce_print_zip({"pid": "WA9999"})
+    check("error" in out and "source" in out["error"].lower(),
+          f"missing source art must be reported clearly, got {out}")
+
+
+def test_print_zip_endpoint_contract():
+    c = _logged_in_client()
+    r = c.post("/api/produce/print-zip", json={"pid": "WA9999"})
+    check(r.status_code == 200, f"endpoint should 200 with a JSON error body, got {r.status_code}")
+    check("error" in r.json(), f"missing-source pid should return a JSON error, got {r.json()}")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

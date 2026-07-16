@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "4376345-v190"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "549129c-v191"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2442,6 +2442,23 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "generate_print_zip",
+        "description": (
+            "Build a wall-art product's multi-size print ZIP from its source JPG — "
+            "4×6/8×12/12×18/16×24, 8×10/16×20, A4/A3, and square, all at 300 DPI in sRGB, "
+            "with a README. Pure local resize, no API cost. Rejects lifestyle-composite "
+            "source files (only raw art). Writes print_zips/<pid>_print_sizes.zip. Use when "
+            "asked to make the printable size set for a wall-art listing."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "pid": {"type": "string", "description": "Wall-art code, e.g. 'WA1030'."},
+            },
+            "required": ["pid"],
+        },
+    },
+    {
         "name": "register_command",
         "description": (
             f"Wire up an EXISTING script under tools/ as a new named command {business_config.AGENT_NAME_SHORT} can run. "
@@ -3289,6 +3306,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _qc_check_product(tool_input or {})
         if name == "generate_listing_photos":
             return _produce_listing_photos(tool_input or {})
+        if name == "generate_print_zip":
+            return _produce_print_zip(tool_input or {})
         if name == "get_conversion_targets":
             return asyncio.run(_get_conversion_targets_core())
         if name == "diagnose_listing_conversion":
@@ -7482,6 +7501,53 @@ async def produce_listing_photos(body: dict, _token: str = Depends(_rate_limited
             asyncio.to_thread(_produce_listing_photos, body or {}), timeout=200)
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Photo generation timed out — try again.")
+
+
+def _produce_print_zip(inp: dict) -> dict:
+    """Build a wall-art product's multi-size print ZIP (4×6/8×12/12×18/16×24,
+    8×10/16×20, A4/A3, square @300dpi, sRGB) from its source JPG. Pure local
+    resize, zero API cost. Rejects lifestyle-composite sources (only raw art)."""
+    pid = str((inp or {}).get("pid", "")).strip().upper()
+    if not pid:
+        return {"error": "pid is required (e.g. 'WA1030')"}
+    try:
+        import generate_print_sizes as gps
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"print-size pipeline unavailable: {exc}"}
+    up = gps.UPSCALED_DIR / f"{pid}.jpg"
+    base = gps.PRODUCT_FILES_DIR / f"{pid}.jpg"
+    src = up if up.exists() else base
+    if not src.exists():
+        return {"error": f"No source art for {pid} — looked for {pid}.jpg in product_files/ and upscaled/."}
+    try:
+        gps.PRINT_ZIPS_DIR.mkdir(parents=True, exist_ok=True)
+        res = gps.process_file(src, pid, force=True)
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"print-ZIP generation failed: {exc}"}
+    if res.get("status") == "error":
+        return {"pid": pid, "error": res.get("error", "unknown error")}
+    size_mb = res.get("size_mb")
+    size_mb = round(size_mb, 1) if isinstance(size_mb, (int, float)) else None
+    return {
+        "pid": pid,
+        "status": res.get("status"),
+        "zip": f"print_zips/{pid}_print_sizes.zip",
+        "size_mb": size_mb,
+        "message": f"Built the multi-size print ZIP for {pid}"
+                   + (f" ({size_mb} MB)" if size_mb is not None else "")
+                   + " — open it from the Files screen.",
+    }
+
+
+@app.post("/api/produce/print-zip")
+async def produce_print_zip(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Build a wall-art product's multi-size print ZIP from its source JPG
+    (local resize, no API cost). Can take ~15-40s for large art."""
+    try:
+        return await asyncio.wait_for(
+            asyncio.to_thread(_produce_print_zip, body or {}), timeout=200)
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Print-ZIP build timed out — try again.")
 
 
 @app.post("/api/studio/generate")

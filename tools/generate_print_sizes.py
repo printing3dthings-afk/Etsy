@@ -25,9 +25,25 @@ from PIL import Image
 # Paths
 # ---------------------------------------------------------------------------
 BASE_DIR = Path(__file__).parent.parent
-PRODUCT_FILES_DIR = BASE_DIR / "data" / "digital_products" / "product_files"
+
+
+def _resolve_dp_base() -> Path:
+    """Durable volume (<HUB_FILES_DIR> or /data/files) on the hosted deploy, else
+    the repo data dir locally — mirrors main.py + qc_sweep.resolve_dp_base() so
+    Frank's one-tap print-ZIP builder reads/writes the same place the Files screen
+    and sync use (repo-relative paths silently no-op on the Railway server)."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return BASE_DIR / "data" / "digital_products"
+
+
+_DP_BASE = _resolve_dp_base()
+PRODUCT_FILES_DIR = _DP_BASE / "product_files"
 UPSCALED_DIR = PRODUCT_FILES_DIR / "upscaled"
-PRINT_ZIPS_DIR = BASE_DIR / "data" / "digital_products" / "print_zips"
+PRINT_ZIPS_DIR = _DP_BASE / "print_zips"
 
 # ---------------------------------------------------------------------------
 # Print-size definitions
