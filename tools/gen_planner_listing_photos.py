@@ -87,7 +87,7 @@ PLANNER_PAGES = {
         'emoji': '🌙',
         'sticker_sheets': [1, 3, 6, 9],
         'sheet_count': 9,
-        'sticker_count': 183,
+        'sticker_count': 241,  # measured 2026-07-16 rebuild
     },
     'DP1033': {
         'cover':    1,
@@ -407,7 +407,7 @@ CONTENTS = {
     'DP1032': [
         ("Interactive PDF Planner — 2026 Dated Version",    "140 pages · Midnight Kawaii · US Letter"),
         ("Bonus Undated Version — works any year forever",   "Same layout, no year dates"),
-        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 183 stickers · transparent PNG"),
+        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 241 stickers · transparent PNG"),
         ("Fully fillable text fields",                        "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
         ("Dark mode design + brain dump page",                 "Neon-on-dark theme, easy on the eyes at night"),
@@ -494,10 +494,13 @@ def make_sticker_showcase(pid, cfg, out):
         # Prefer a flat .jpg sheet, but fall back to the raw .png (the transparent
         # PNG the pack ships) or the processed png_sheets/ copy — so the showcase
         # never renders blank cards just because no .jpg was pre-made.
+        # Prefer the PROCESSED transparent sheet (png_sheets/) over the raw
+        # product_files .png — the raw sheet may carry a chroma-key background
+        # (e.g. the mid-gray used for dark-mode packs) that must not show here.
         src = None
         for cand in (os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.jpg'),
-                     os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.png'),
-                     os.path.join(DP_BASE, 'stickers', pid, 'png_sheets', f'{pid}_sheet_{sheet_num:02d}.png')):
+                     os.path.join(DP_BASE, 'stickers', pid, 'png_sheets', f'{pid}_sheet_{sheet_num:02d}.png'),
+                     os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.png')):
             if os.path.exists(cand):
                 src = cand
                 break
