@@ -107,7 +107,8 @@ PLANNER_PAGES = {
         'emoji': '🌼',
         'sticker_sheets': [1, 3, 6, 9],
         'sheet_count': 9,
-        'sticker_count': 177,
+        'sticker_count': 229,  # measured 2026-07-16 rebuild
+        'edition_label': '2026-2027 School Year + Undated',  # academic-year dated, not calendar-2026
     },
     'DP1026': {
         'cover':    4,
@@ -415,7 +416,7 @@ CONTENTS = {
     'DP1033': [
         ("Interactive PDF Planner — 2026-2027 School Year", "107 pages · Sunflower Studio · US Letter"),
         ("Bonus Undated Version — works any school year",    "Same layout, no year dates"),
-        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 177 stickers · transparent PNG"),
+        ("Kawaii Sticker Pack ZIP",                           "9 illustrated sheets · 229 stickers · transparent PNG"),
         ("Fully fillable text fields",                        "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                              "Jump to any section in one tap"),
         ("Lesson plans + class roster pages",                  "Weekly lesson planning and student roster tracking"),
