@@ -45,7 +45,7 @@ PLANNER_PAGES = {
         'emoji': '🌿',
         'sticker_sheets': [1, 3, 6, 9],
         'sheet_count': 9,
-        'sticker_count': 241,
+        'sticker_count': 219,  # measured count from the 2026-07-16 rebuild (tools/qc_sweep.py)
     },
     'DP1031': {
         'cover':    1,
@@ -385,7 +385,7 @@ CONTENTS = {
     'DP1030': [
         ("Interactive PDF Planner — 2026 Dated Version",  "130 pages · Matcha Serenity · US Letter"),
         ("Bonus Undated Version — works any year forever", "Same layout, no year dates"),
-        ("Kawaii Sticker Pack ZIP",                        "9 illustrated sheets · 241 stickers · transparent PNG"),
+        ("Kawaii Sticker Pack ZIP",                        "9 illustrated sheets · 219 stickers · transparent PNG"),
         ("Fully fillable text fields",                     "Type in GoodNotes, Notability, PDF Expert, Acrobat"),
         ("Hyperlinked side tabs",                           "Jump to any section in one tap"),
         ("Pomodoro focus + habit trackers",                 "ADHD-friendly time-blocking and streak tracking"),

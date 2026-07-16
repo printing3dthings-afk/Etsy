@@ -23,6 +23,11 @@ lxml==6.1.1
 PyNaCl==1.6.2
 playwright==1.60.0
 PyPDF2==3.0.1
+# PyMuPDF (fitz) -- powers tools/planner_hyperlinker.py's real hyperlinked
+# navigation/TOC/fillable AcroForm fields on the digital planner PDFs. Restored
+# 2026-07-16 from the trash vault along with the rest of the planner-generation
+# pipeline (was previously an undeclared dependency of a since-archived script).
+PyMuPDF==1.28.0
 moviepy==2.2.1
 imageio-ffmpeg==0.6.0
 # Google GenAI SDK — Veo 3.1 video (AI_VIDEO_ENGINE=veo) + Nano Banana / Gemini image

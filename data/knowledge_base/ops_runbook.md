@@ -7764,3 +7764,72 @@ state instead of success, expected headless-audio-hardware variance per
 that test's own design, not a regression; unrelated to this change).
 
 Build bumped to `0e203d2-v185`.
+
+---
+
+**2026-07-16 — DP1030 rebuilt as a pilot for the 5-product data-loss
+recovery (audit finding #2).** Scott confirmed no local backup existed
+anywhere for DP1030-DP1034, so this was scoped as a from-scratch rebuild
+using the *existing* production pipeline rather than new tooling —
+almost the entire pipeline had been archived to the recoverable trash
+vault (`data/trash/`) in cleanup passes on 2026-07-02 and 2026-07-11,
+before this exact need came back up:
+`generate_planner.py`, `generate_planner_v2.py`, `planner_page_adder.py`,
+`planner_hyperlinker.py` (PDF assembly + real hyperlinked nav/AcroForm
+fields, needs `PyMuPDF` — added to `requirements.txt`, was previously an
+undeclared dependency), and `generate_adhd_assets.py` (DP1030's sticker
+sheets). All five restored via `tools/trash.py --restore`.
+
+Built `DP1030.pdf` / `DP1030U.pdf` (130 pages each, exact match against
+`qc_sweep.py`'s `PLANNER_PAGES["DP1030"]`, 2,311 real fillable fields,
+hyperlinked nav/TOC) and a fresh sticker pack (9 sheets, 219 individual
+stickers, all `validate_digital_file()`/`qc_sweep.py` gates PASS).
+
+**Real defect caught by manual visual QC, not the automated gates:**
+`generate_adhd_assets.py` calls gpt-image-1 with `background="transparent"`
+— unavailable in this sandbox (`OPENAI_API_KEY` unset, only
+`GEMINI_API_KEY` configured), so sheets were generated raw (opaque
+white bg) via Gemini instead and run through the existing
+`process_sticker_sheets.py` flood-fill remover — a supported fallback
+path per CLAUDE.md, not a new invention. But visually inspecting all 9
+raw sheets before segmentation (none of the file-integrity gates check
+this) found real text-rendering garbage on 3 of them: sheet 6's
+affirmation banners ("DONE IS BETTER PERFECT", "ONE TASK AT IO AIME",
+"REST IS STEPS COUNT" — merged/garbled from the source phrases), sheet
+7 ("WERNING" instead of "WARNING", "Good chough" instead of "Good
+enough"), and sheet 8's date-dot numbers were duplicated/non-sequential
+with garbled month-tab text ("68CC8", missing JUN/JUL/AUG). This is
+gpt-image-1/Gemini's known unreliable-text-rendering failure mode
+(already documented in CLAUDE.md's prompt-engineering section) showing
+up somewhere none of the existing automated checks look. Fixed by
+regenerating sheets 2/6/7 with short-phrase-only prompts (validated:
+≤3-word phrases render reliably, 5+-word phrases don't) and building
+sheet 8 entirely deterministically with PIL (drawn circles + text, zero
+AI text risk) instead of trusting AI-rendered sequential numbers — all
+re-verified visually before the segmentation pass ran. **Takeaway for
+DP1031-1034: budget a manual visual QC pass on every raw sticker sheet
+before segmentation — the content gates (`validate_digital_file`,
+`qc_sweep.py`) check structure (counts, transparency, size) but cannot
+catch wrong/garbled in-image text.**
+
+Also regenerated the missing shared `07_app_compatibility.jpg` asset
+(generic app-icon graphic reused across all planner listings, not
+product-specific) — first AI attempt baked in garbled text
+("Acrodat" instead of "Acrobat") despite an explicit "no text" instruction,
+so it was rebuilt as icon-only pictograms with zero text (labels to be
+added in Canva per the standard workflow, consistent with how every
+other text-bearing infographic in this pipeline is handled).
+
+Generated all 10 listing photos via the existing (already-live, not
+trashed) `tools/gen_planner_listing_photos.py` — renders real pages
+straight from the built PDF via `fitz` into iPad mockups, satisfying the
+cardinal real-product-photo rule with no AI stand-ins. Found and fixed
+two more hardcoded stale sticker-count claims in that script (`241` in
+both the `cfg` dict and a separate per-product `make_whats_included()`
+table) that would have shipped a wrong number on the listing — corrected
+to the real measured count (219).
+
+Pilot deliverables (`DP1030.pdf`, `DP1030U.pdf`, `DP1030_sticker_pack.zip`,
+10 listing photos) are sitting in `data/digital_products/product_files/`
+for Scott's review, per plan — **not published, and DP1031-1034 not yet
+started**, both explicitly gated on his sign-off on this pilot first.
