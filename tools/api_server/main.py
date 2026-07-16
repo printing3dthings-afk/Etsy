@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "fd396c5-v187"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "406528c-v188"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2405,6 +2405,25 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "qc_check_product",
+        "description": (
+            "Run the pre-publish Quality Check on a product's files — the same gates "
+            "used before anything is submitted for review: PDF page counts, sticker-pack "
+            "transparency and individual-sticker count, ZIP integrity, and print-size "
+            "folders. Returns a structured pass/warn/fail with per-file detail. "
+            "Fully local and read-only — no external API call, no cost, changes nothing. "
+            "Use this whenever asked to check, verify, or QC a product (e.g. 'is DP1030 "
+            "ready to publish?')."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "pid": {"type": "string", "description": "Product code to check, e.g. 'DP1030'."},
+            },
+            "required": ["pid"],
+        },
+    },
+    {
         "name": "register_command",
         "description": (
             f"Wire up an EXISTING script under tools/ as a new named command {business_config.AGENT_NAME_SHORT} can run. "
@@ -3248,6 +3267,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "status": "pending",
                 "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
             }
+        if name == "qc_check_product":
+            return _qc_check_product(tool_input or {})
         if name == "get_conversion_targets":
             return asyncio.run(_get_conversion_targets_core())
         if name == "diagnose_listing_conversion":
@@ -7359,6 +7380,44 @@ async def studio_generate_lifestyle_photo(body: dict, _token: str = Depends(_rat
         "issues": result.issues,
         "failure_kind": failure_kind,
     }
+
+
+# ── Produce — one-tap production pipelines (the deterministic work Claude does by
+# hand, exposed as buttons + agent tools). These run local Python only — NO external
+# API calls, so they cost nothing to run and work in a fully closed/offline deploy.
+# First up: Quality Check (the same pre-publish gates in tools/qc_sweep.py). ──
+def _qc_check_product(inp: dict) -> dict:
+    """Run the pre-publish QC gates on one product's files and return a structured
+    pass/warn/fail. Fully local, zero API cost, read-only — safe to call anytime."""
+    pid = str((inp or {}).get("pid", "")).strip()
+    if not pid:
+        return {"error": "pid is required (e.g. 'DP1030')"}
+    try:
+        import qc_sweep
+        rows = qc_sweep.sweep(pid)
+    except Exception as exc:  # noqa: BLE001 — surface any pipeline error as JSON
+        return {"error": f"QC sweep failed: {exc}"}
+    n_fail = sum(1 for r in rows if r["severity"] == "FAIL")
+    n_warn = sum(1 for r in rows if r["severity"] == "WARN")
+    n_pass = sum(1 for r in rows if r["severity"] == "PASS")
+    files = sorted({r["file"] for r in rows})
+    verdict = ("no_files" if not rows else "fail" if n_fail else "warn" if n_warn else "pass")
+    return {
+        "pid": pid,
+        "verdict": verdict,
+        "summary": {"pass": n_pass, "warn": n_warn, "fail": n_fail, "files": len(files)},
+        "rows": rows,
+        "message": (f"No deliverable files found for {pid}." if not rows
+                    else f"{pid}: {n_fail} FAIL · {n_warn} WARN · {n_pass} PASS "
+                         f"across {len(files)} file(s)."),
+    }
+
+
+@app.post("/api/produce/qc-check")
+async def produce_qc_check(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """One-tap Quality Check for a product's files (PDF page counts, sticker
+    transparency + count, ZIP integrity, print-size folders). Local-only, no API cost."""
+    return await asyncio.to_thread(_qc_check_product, body or {})
 
 
 @app.post("/api/studio/generate")

@@ -178,22 +178,23 @@ def check_other_zip(path: Path, rows_add):
     gate(path, rows_add, expected_ext=".zip")
 
 
-def main():
-    ap = argparse.ArgumentParser(description="Pre-publish QC sweep of digital deliverables")
-    ap.add_argument("--json", help="Write machine-readable report to this path")
-    ap.add_argument("--only", help="Only files whose name contains this substring")
-    ap.add_argument("--fail-only", action="store_true", help="Print only WARN/FAIL rows")
-    args = ap.parse_args()
+def sweep(only: str | None = None) -> list[dict]:
+    """Run the full pre-publish QC sweep and return the raw rows
+    (list of {severity, file, check, detail}). `only` filters to files whose
+    name contains that substring (e.g. a product code like "DP1030").
 
+    Importable so the dashboard (Frank's one-tap Quality Check) and the CLI run
+    the exact same checks — no shelling out, no drift between the two.
+    """
     global Image
-    from PIL import Image  # local import so --help works without PIL
+    from PIL import Image  # local import so the module imports without PIL present
 
     rows, add = _rows()
 
     def want(p: Path) -> bool:
-        return (args.only.lower() in p.name.lower()) if args.only else True
+        return (only.lower() in p.name.lower()) if only else True
 
-    # Planner PDFs (DP1026-1033, dated + undated)
+    # Planner PDFs (DP1026-1034, dated + undated)
     planner_codes = tuple(PLANNER_PAGES)
     for pdf in sorted(PF_DIR.glob("*.pdf")):
         if not want(pdf):
@@ -216,6 +217,18 @@ def main():
         for z in sorted((DP_BASE / sub).glob("*.zip")):
             if want(z):
                 check_other_zip(z, add)
+
+    return rows
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Pre-publish QC sweep of digital deliverables")
+    ap.add_argument("--json", help="Write machine-readable report to this path")
+    ap.add_argument("--only", help="Only files whose name contains this substring")
+    ap.add_argument("--fail-only", action="store_true", help="Print only WARN/FAIL rows")
+    args = ap.parse_args()
+
+    rows = sweep(args.only)
 
     # Report
     by_file: dict[str, list[dict]] = {}

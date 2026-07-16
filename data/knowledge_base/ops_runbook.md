@@ -7990,3 +7990,46 @@ light-on-light text.**
 **Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
 
 **Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-16 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+---
+
+**2026-07-16 — Step 1 of "make Frank reproduce what Claude does": one-tap
+production pipelines, starting with Quality Check.** Goal (Scott): Frank should
+run the deterministic production work itself so buyers get a closed, key-free
+experience with no per-call API cost. Reality established: only two things in the
+whole system cost an API call — the chat brain (Claude) and AI art (Gemini/OpenAI);
+*everything else is already local and free* (planner build, sticker cutting, PDF
+assembly, listing-photo compositing, video, QC). So the plan is to expose each
+deterministic pipeline as a one-tap Frank function.
+
+First one shipped — **Quality Check**:
+- Refactored `tools/qc_sweep.py` to expose a reusable `sweep(only=None) -> rows`
+  (CLI and Frank now run the identical checks; no shelling out, no drift).
+- `POST /api/produce/qc-check` + a `_qc_check_product()` helper — local-only,
+  read-only, zero API cost; returns structured verdict/summary/rows.
+- New agent tool **`qc_check_product`** wired into `AGENT_TOOLS` + dispatch, so
+  telling Frank "is DP1030 ready to publish?" actually runs the gates (this is the
+  gap Scott hit — Frank couldn't reproduce what Claude did by hand).
+- New Create-screen tile "✅ Quality Check" (`#create-qc`) + `qcRunCheck()`.
+- Regression test `tests/test_produce_qc.py` (helper + agent dispatch + registration
+  + HTTP endpoint). Verified: py_compile, node --check on extracted JS,
+  produce-qc tests pass, playwright smoke clean.
+
+This is the reusable template (refactor pipeline → local helper → /api/produce/*
+endpoint → agent tool → Create tile → test). Next pipelines to expose the same way:
+generate listing photos (near-zero API), print-size ZIPs, package/backup, then the
+AI-touching ones (planner build, sticker pack) which stay behind the
+BYOK/subscription cost model. Distribution guidance given to Scott: SaaS +
+subscription is the deliverable path for a truly key-free buyer experience; fully
+local models are a Phase-2 premium option. Build bumped to `406528c-v188`.

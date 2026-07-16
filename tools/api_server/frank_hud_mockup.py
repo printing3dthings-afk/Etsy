@@ -1604,6 +1604,21 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">🎬</div><div style="font-weight:600;margin-top:6px">Product video</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">A short clip from your product photos</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-social')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">📣</div><div style="font-weight:600;margin-top:6px">Social post</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Share a video to Instagram / Facebook</div></div>
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-qc')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">✅</div><div style="font-weight:600;margin-top:6px">Quality Check</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Verify a product is publish-ready — free, instant</div></div>
+      </div>
+
+      <div class="hub-section-title" id="create-qc" style="margin-top:18px">Quality Check — verify a product is publish-ready</div>
+      <div class="hub-card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+          Runs the same pre-publish gates Frank checks before anything goes live — PDF page counts, sticker-pack transparency &amp; sticker count, ZIP integrity, and print-size folders. Runs entirely on the server, no AI and no cost.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="qc-pid" type="text" placeholder="Product code, e.g. DP1030" autocapitalize="characters"
+            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <button class="act-btn primary" onclick="qcRunCheck()" id="qc-run-btn" style="white-space:nowrap">Run Check</button>
+        </div>
+        <div id="qc-result" style="margin-top:12px"></div>
       </div>
       <div class="studio-grid" style="flex-wrap:wrap">
         <div style="flex:1;min-width:320px">
@@ -2728,6 +2743,43 @@ let _activeScreen = 'cmd';
 // Create-screen chooser: smooth-scroll to the picked tool section (all four tools
 // live stacked on the Create screen; the chooser is just friendly wayfinding).
 function createGoto(id){ const el = document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }
+
+// One-tap Quality Check — hits POST /api/produce/qc-check (local, no AI cost) and
+// renders the pass/warn/fail rows, the same gates run before publishing anything.
+async function qcRunCheck(){
+  const pidEl=document.getElementById('qc-pid');
+  const btn=document.getElementById('qc-run-btn');
+  const out=document.getElementById('qc-result');
+  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a product code first (e.g. DP1030).</div>'; return; }
+  if(btn) btn.disabled=true;
+  if(out) out.innerHTML='<div class="hub-spinner"></div>';
+  try{
+    const r=await fetchWithTimeout(BASE+'/api/produce/qc-check', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({pid})
+    }, 60000);
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
+    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
+    const s=d.summary||{};
+    const badge = d.verdict==='pass' ? '<span style="color:var(--green)">✓ PUBLISH-READY</span>'
+      : d.verdict==='warn' ? '<span style="color:var(--gold)">! WARNINGS</span>'
+      : d.verdict==='fail' ? '<span style="color:var(--red)">✗ NOT READY</span>'
+      : '<span style="color:var(--muted)">No files found</span>';
+    let html='<div style="font-weight:600;margin-bottom:8px">'+escHtml(d.pid)+' — '+badge+
+      ' <span style="color:var(--muted);font-weight:400;font-size:12px">('+(s.fail||0)+' fail · '+(s.warn||0)+' warn · '+(s.pass||0)+' pass)</span></div>';
+    (d.rows||[]).forEach(row=>{
+      const col = row.severity==='FAIL'?'var(--red)':row.severity==='WARN'?'var(--gold)':'var(--green)';
+      const mark = row.severity==='FAIL'?'✗':row.severity==='WARN'?'!':'✓';
+      html+='<div class="hub-listing-meta" style="padding:3px 0;line-height:1.5"><span style="color:'+col+'">'+mark+'</span> '+
+        '<b>'+escHtml(row.file)+'</b> — '+escHtml(row.check)+': '+escHtml(row.detail||'')+'</div>';
+    });
+    out.innerHTML=html;
+  }catch(e){
+    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Check failed')+'</div>';
+  }finally{ if(btn) btn.disabled=false; }
+}
 function showScreen(name){
   document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
   const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');

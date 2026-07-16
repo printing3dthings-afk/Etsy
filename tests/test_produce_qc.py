@@ -1,0 +1,116 @@
+"""
+Tests for the first one-tap production pipeline exposed to Frank: Quality Check
+(POST /api/produce/qc-check + the qc_check_product agent tool). Verifies the
+deterministic, zero-API path Claude runs by hand is now callable by Frank —
+both when a button hits the endpoint and when the chat agent calls the tool.
+
+Self-contained TestClient-against-the-real-app pattern, same as
+tests/test_voice_config.py. Run: python tests/test_produce_qc.py
+"""
+import os
+import sys
+import tempfile
+import traceback
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+_tmp_db = tempfile.NamedTemporaryFile(prefix="frank_produceqc_test_", suffix=".db", delete=False)
+_tmp_db.close()
+os.environ["DB_PATH"] = _tmp_db.name
+os.environ.setdefault("APP_SECRET_TOKEN", "produce-qc-test-not-a-real-secret")
+os.environ["ENABLE_TEST_LOGIN"] = "true"
+os.environ["TEST_LOGIN_USERNAME"] = "produceqctest"
+os.environ["TEST_LOGIN_PASSWORD"] = "ProduceQcTest!2026Only"
+
+for p in (ROOT / "tools" / "api_server", ROOT / "tools"):
+    sp = str(p)
+    if sp not in sys.path:
+        sys.path.insert(0, sp)
+
+import main as server  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+
+_failures: list[str] = []
+
+
+def check(cond: bool, msg: str) -> None:
+    if not cond:
+        _failures.append(msg)
+
+
+def _logged_in_client() -> TestClient:
+    c = TestClient(server.app, base_url="https://testserver")
+    r = c.post("/login", data={
+        "username": os.environ["TEST_LOGIN_USERNAME"],
+        "password": os.environ["TEST_LOGIN_PASSWORD"],
+        "next": "/frank",
+    }, follow_redirects=False)
+    check(r.status_code in (302, 303), f"login should redirect, got {r.status_code}")
+    return c
+
+
+# A product whose files exist in this repo/deploy; DP1030 was rebuilt + validated.
+# If its files aren't present in this environment the verdict is "no_files", which
+# is still a valid, well-formed response — the tests assert on shape + contract,
+# not on a specific product being present.
+_PID = "DP1030"
+
+
+def test_helper_returns_structured_verdict():
+    out = server._qc_check_product({"pid": _PID})
+    check(isinstance(out, dict), "helper must return a dict")
+    check(out.get("pid") == _PID, f"pid echoed, got {out.get('pid')}")
+    check(out.get("verdict") in ("pass", "warn", "fail", "no_files"),
+          f"verdict must be one of pass/warn/fail/no_files, got {out.get('verdict')}")
+    summ = out.get("summary") or {}
+    for k in ("pass", "warn", "fail", "files"):
+        check(k in summ and isinstance(summ[k], int), f"summary.{k} must be an int, got {summ.get(k)}")
+    check(isinstance(out.get("rows"), list), "rows must be a list")
+
+
+def test_helper_requires_pid():
+    out = server._qc_check_product({})
+    check("error" in out, f"missing pid must return an error, got {out}")
+
+
+def test_agent_tool_dispatch_matches_helper():
+    # The path that fires when the owner tells Frank "check DP1030".
+    out = server._execute_agent_tool("qc_check_product", {"pid": _PID})
+    check(isinstance(out, dict) and out.get("pid") == _PID,
+          f"agent tool dispatch should return the QC result, got {out}")
+    check(out.get("verdict") in ("pass", "warn", "fail", "no_files"),
+          "agent tool must return a valid verdict")
+
+
+def test_tool_is_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("qc_check_product" in names, "qc_check_product must be in AGENT_TOOLS so the agent can call it")
+
+
+def test_http_endpoint():
+    c = _logged_in_client()
+    r = c.post("/api/produce/qc-check", json={"pid": _PID})
+    check(r.status_code == 200, f"endpoint should 200, got {r.status_code}: {r.text[:200]}")
+    data = r.json()
+    check(data.get("pid") == _PID, f"endpoint echoes pid, got {data.get('pid')}")
+    check("summary" in data and "verdict" in data, f"endpoint returns summary+verdict, got keys {list(data)}")
+
+
+def run():
+    for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
+        try:
+            fn()
+        except Exception:  # noqa: BLE001
+            _failures.append(f"{fn.__name__} raised:\n{traceback.format_exc()}")
+    if _failures:
+        print("PRODUCE-QC TESTS FAILED:")
+        for f in _failures:
+            print(" -", f)
+        sys.exit(1)
+    print("PRODUCE-QC TESTS OK — helper, agent-tool dispatch, registration, and "
+          "POST /api/produce/qc-check all verified.")
+
+
+if __name__ == "__main__":
+    run()
