@@ -649,6 +649,35 @@ async def _run_browser_checks() -> None:
             else:
                 print("  (orb WebGL never reached orbGLReady in this environment -- skipping context-loss transition checks)")
 
+            # ── cc-open must never coexist with is-mobile (2026-07-15) — Scott's
+            # header bar (with its position:absolute, 1440px-stage-sized
+            # #alert-dropdown) appeared on his phone alongside the mobile tab bar,
+            # with the alert dropdown clipped off-screen unreadable. Root cause:
+            # syncMobileClass() only ever ADDED cc-open on a mobile->desktop
+            # transition and never had a path to remove it again once mobile was
+            # redetected -- if cc-open was ever set while briefly misdetected as
+            # desktop (mobile Safari's matchMedia/resize events can fire
+            # spuriously, e.g. around address-bar show/hide), it stuck forever,
+            # permanently leaking the full desktop dashboard onto a phone
+            # viewport. Fix: mobile now always wins in syncMobileClass() -- force
+            # cc-open on here (simulating the exact stuck state) and confirm the
+            # real function call self-heals it. ──
+            cc_state = await page.evaluate("""() => {
+                document.body.classList.add('cc-open');
+                const stuck = document.body.classList.contains('cc-open');
+                syncMobileClass();
+                return {
+                    stuckAppliedOk: stuck,
+                    isMobileAfter: document.body.classList.contains('is-mobile'),
+                    ccOpenAfter: document.body.classList.contains('cc-open'),
+                };
+            }""")
+            check(cc_state.get("isMobileAfter") is True,
+                  f"is-mobile should stay true on a mobile viewport: {cc_state}")
+            check(cc_state.get("ccOpenAfter") is False,
+                  f"syncMobileClass() must clear a stuck cc-open once mobile is (re)detected -- otherwise the desktop "
+                  f"header bar (and its viewport-unsafe #alert-dropdown) leaks onto phone screens permanently: {cc_state}")
+
         finally:
             await browser.close()
 

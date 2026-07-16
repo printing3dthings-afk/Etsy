@@ -433,9 +433,15 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 @keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
 
-.alert-dropdown{position:absolute;top:38px;right:0;width:280px;max-height:320px;overflow-y:auto;
+.alert-dropdown{position:absolute;top:38px;right:0;width:280px;max-width:calc(100vw - 24px);max-height:320px;overflow-y:auto;
   background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);
   box-shadow:0 10px 28px rgba(0,0,0,.4);z-index:600;padding:8px;cursor:default;text-align:left}
+/* Defense in depth (2026-07-15): this dropdown is anchored via right:0 to
+   #bell-btn, which assumes there's room to its left -- true on the 1440px
+   desktop stage this was designed for, false if it's ever shown on a narrow
+   viewport (the real trigger was a stuck cc-open state on mobile, fixed at
+   the source in syncMobileClass() above; max-width here just makes sure this
+   popup can never render wider than the viewport again regardless of cause). */
 .alert-dropdown-title{font-size:10.5px;letter-spacing:1.2px;color:var(--cyan2);text-transform:uppercase;
   padding:4px 6px 8px}
 .alert-row{display:flex;flex-direction:column;gap:2px;padding:8px 9px;border-radius:var(--r-sm);
@@ -1832,6 +1838,19 @@ function syncMobileClass(){
   if (!mobile && (_prevMobile === null || _prevMobile === true)) {
     // First load on desktop, or transitioning mobile→desktop: open dashboard
     document.body.classList.add('cc-open');
+  } else if (mobile) {
+    // 2026-07-15 (Scott: header bar + alert dropdown showing on mobile,
+    // dropdown clipped off-screen): cc-open is what reveals the full desktop
+    // dashboard (.hdr-bar/.sidebar/.screen — see the body:not(.cc-open) /
+    // body.cc-open CSS rules above). This branch used to be a no-op: if
+    // cc-open was ever added while briefly misdetected as desktop (mobile
+    // Safari's matchMedia/resize events can fire spuriously during
+    // address-bar show/hide), nothing ever cleared it again once mobile was
+    // correctly redetected, so the desktop header bar (with its
+    // position:absolute .alert-dropdown, sized for a 1440px stage) stayed
+    // stuck open on a phone-width viewport permanently. Mobile now always
+    // wins: is-mobile and cc-open can never coexist.
+    document.body.classList.remove('cc-open');
   }
   _prevMobile = mobile;
   fitStage();

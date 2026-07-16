@@ -7393,3 +7393,57 @@ theme in Scott's original bug report) to visually confirm no circle, no
 blowout, no washout on either.
 
 Build bumped to `a334fab-v180`.
+
+### 2026-07-15 (final pass, follow-up 7) — cc-open stuck on mobile leaked the desktop header bar + a viewport-clipped alert dropdown onto Scott's phone
+
+Scott, screenshot: an alert toast reading "...y Audit' is in an error [state]"
+clipped at the left edge of the screen, unreadable — "I need this to open to
+be able to be seen completely." The screenshot also showed the full desktop
+header bar (hexagon/bell/?/gear/owner-pill/chat icons) AND the mobile phone
+tab bar (Ask/Approvals/Today/Create/More) visible simultaneously, plus
+desktop dashboard content ("DUE DATES (0)", "THIS WEEK'S CADENCE") — none of
+which should render on mobile at all.
+
+**Root cause:** `.hdr-bar`/`.sidebar`/`.screen` (the full desktop dashboard)
+are only shown when `body.cc-open` is set (`body:not(.cc-open) .hdr-bar{display:none}`
+and friends). `syncMobileClass()` (bound to `resize` and the `mobileMQ`
+`matchMedia('(max-width:880px)')` change event) only ever ADDED `cc-open` on
+a mobile→desktop transition — it never had a path to remove it again once
+mobile was redetected. If `cc-open` got set even once while briefly
+misdetected as desktop (mobile Safari's `matchMedia`/`resize` events can fire
+spuriously, e.g. around address-bar show/hide during scroll), it stuck
+forever: every subsequent `resize`/`matchMedia` firing correctly detected
+`is-mobile` again but never cleared the leftover `cc-open`, so the full
+desktop dashboard — including `.alert-dropdown` (`position:absolute;right:0;
+width:280px`, sized and positioned for the 1440px desktop stage it was
+designed for) — stayed permanently visible on top of the phone UI, with the
+dropdown's fixed 280px width overflowing hard left off a ~390px viewport and
+getting clipped by `body.is-mobile{overflow-x:hidden}`.
+
+**Fix:**
+1. `syncMobileClass()` (`frank_hud_mockup.py`) — added an `else if (mobile)`
+   branch that explicitly removes `cc-open` whenever mobile is (re)detected,
+   so the two states can never coexist regardless of what caused `cc-open`
+   to get set. Mobile now always wins.
+2. `.alert-dropdown` — added `max-width:calc(100vw - 24px)` as defense in
+   depth, so even if this state is ever reached by some other path in the
+   future, the dropdown itself can never render wider than the viewport.
+
+**Verification:** a throwaway Playwright script forced the exact stuck state
+(`document.body.classList.add('cc-open')` while `is-mobile` is already true
+on a 390px viewport) and confirmed a real call to `syncMobileClass()` clears
+it — `{isMobile: true, ccOpen: true}` (stuck) → `{isMobile: true, ccOpen: false}`
+(healed). Also confirmed `.alert-dropdown`'s computed `max-width` resolves to
+366px on a 390px viewport. This exact repro was ported into a permanent
+`tools/playwright_smoke.py` regression test. Full `tests/test_*.py` suite +
+`tests/smoke_test.py` + full `tools/playwright_smoke.py` run all green (one
+unrelated back-to-top timing flake on a single run, reproduced clean on
+immediate retry — not a regression from this change).
+
+Note: this session's `Edit`/`ExitPlanMode` tool calls started failing with
+`AbortError: Tool permission stream closed before response received` mid-task
+(affecting both plan-mode approval and a routine file edit) — worked around
+by using `Bash`/`sed`/heredocs for file changes, which kept working
+normally. Infra-level issue, not a code bug; noting here in case it recurs.
+
+Build bumped to `73476ac-v181`.
