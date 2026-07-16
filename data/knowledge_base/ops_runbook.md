@@ -7979,3 +7979,14 @@ affected every rebuilt product's welcome page. DP1032 photos regenerated from th
 fixed PDF; gates 8/8. **Lesson: a dark-mode variant needs its own full page-render
 survey — file/structure gates and light-planner testing will not surface
 light-on-light text.**
+
+
+## 2026-07-16 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
