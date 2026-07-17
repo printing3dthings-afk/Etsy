@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "59dd421-v204"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e317ba5-v205"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2266,7 +2266,7 @@ AGENT_TOOLS = [
                     "type": "string",
                     "enum": [
                         "update_tags", "update_title", "update_description", "publish_listing",
-                        "deactivate_listing", "toggle_listing_state",
+                        "deactivate_listing", "toggle_listing_state", "update_price",
                     ],
                 },
                 "listing_id": {"type": "integer", "description": "The listing to change."},
@@ -2291,6 +2291,15 @@ AGENT_TOOLS = [
                     "type": "string",
                     "enum": ["active", "inactive"],
                     "description": "Target state for toggle_listing_state.",
+                },
+                "price": {
+                    "type": "number",
+                    "description": (
+                        "New price in dollars for update_price. Must end in .99, .97, or .49 "
+                        "(OnBrandCraftz pricing convention) — CLAUDE.md hard-stops price "
+                        f"changes on more than 5 listings in one session; for more than one "
+                        "listing use stage_batch_price_update instead, which enforces that cap."
+                    ),
                 },
             },
             "required": ["action_type", "listing_id", "summary"],
@@ -2378,6 +2387,80 @@ AGENT_TOOLS = [
                 },
             },
             "required": ["listing_id", "new_state", "summary"],
+        },
+    },
+    {
+        "name": "stage_batch_price_update",
+        "description": (
+            "Stage a price change across up to 5 listings at once — e.g. \"raise all "
+            f"wall-art prices $2.\" Each listing is staged as its own independent Action "
+            f"Center entry — {business_config.OWNER_NAME} approves or rejects each one "
+            "individually, never all-or-nothing. Provide either new_price (same absolute "
+            "price for every listing) or price_delta (added to each listing's current "
+            "price — e.g. +2.00 or -1.00), never both. Every resulting price must still "
+            "end in .99, .97, or .49 (OnBrandCraftz pricing convention) — a delta or "
+            "absolute price that breaks this on a given listing is rejected for that "
+            "listing only, the rest still stage. CLAUDE.md hard-caps price changes at 5 "
+            "listings per session; requests for more listing_ids are refused outright — "
+            f"split the batch and ask {business_config.OWNER_NAME} which subset to run "
+            "first instead of guessing scope."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_ids": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "Listing IDs to reprice. Max 5 per call (CLAUDE.md hard cap).",
+                },
+                "new_price": {
+                    "type": "number",
+                    "description": (
+                        "Absolute new price in dollars, applied to every listing. "
+                        "Mutually exclusive with price_delta."
+                    ),
+                },
+                "price_delta": {
+                    "type": "number",
+                    "description": (
+                        "Dollar amount to add to (or, if negative, subtract from) each "
+                        "listing's current live price. Mutually exclusive with new_price."
+                    ),
+                },
+                "summary": {
+                    "type": "string",
+                    "description": "Optional shared context shown on each approval card.",
+                },
+            },
+            "required": ["listing_ids"],
+        },
+    },
+    {
+        "name": "stage_batch_listing_state",
+        "description": (
+            "Stage an activate/deactivate change across up to 10 listings at once — e.g. "
+            "\"republish the 6 expired planners.\" Setting new_state to 'active' on an "
+            "expired listing is how Etsy renews it (restarts the 4-month listing clock, "
+            "charges the $0.20 renewal fee, and republishes it in search — Etsy has no "
+            "separate renew endpoint, this PATCH is the renewal). Each listing is staged "
+            f"as its own independent Action Center entry — {business_config.OWNER_NAME} "
+            "approves or rejects each one individually, never all-or-nothing."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_ids": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "Listing IDs to activate/deactivate/renew. Max 10 per call.",
+                },
+                "new_state": {"type": "string", "enum": ["active", "inactive"]},
+                "summary": {
+                    "type": "string",
+                    "description": "Optional shared context shown on each approval card.",
+                },
+            },
+            "required": ["listing_ids", "new_state"],
         },
     },
     {
@@ -3214,6 +3297,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 payload["description"] = ti["description"]
             if ti.get("new_state") is not None:
                 payload["new_state"] = ti["new_state"]
+            if ti.get("price") is not None:
+                payload["price"] = ti["price"]
             listing_for_baseline = None
             if ti.get("action_type") in _ETSY_STAGED_ACTION_TYPES and ti.get("listing_id"):
                 # Best-effort baseline for the approval-time freshness re-check
@@ -3417,6 +3502,88 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 "status": "pending",
                 "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
             }
+        if name == "stage_batch_price_update":
+            ti = tool_input or {}
+            listing_ids = ti.get("listing_ids") or []
+            if not listing_ids:
+                return {"error": "listing_ids is required"}
+            if len(listing_ids) > 5:
+                return {
+                    "error": (
+                        f"Refused: {len(listing_ids)} listing_ids exceeds the 5-listing cap "
+                        "for a single price-change batch (CLAUDE.md hard stop: no more than "
+                        f"5 listing prices changed in one session). Split this into smaller "
+                        f"batches and ask {business_config.OWNER_NAME} which subset to run first."
+                    )
+                }
+            new_price = ti.get("new_price")
+            price_delta = ti.get("price_delta")
+            if (new_price is None) == (price_delta is None):
+                return {"error": "provide exactly one of new_price or price_delta"}
+            client = EtsyAPIClient()
+            staged, errors = [], []
+            for lid in listing_ids:
+                try:
+                    listing = client.get_listing(int(lid))
+                except Exception as exc:
+                    errors.append({"listing_id": lid, "error": f"could not fetch listing: {exc}"})
+                    continue
+                title_short = (listing.get("title") or f"Listing {lid}")[:50]
+                if price_delta is not None:
+                    current = _price_float(listing.get("price"))
+                    target = round(current + float(price_delta), 2)
+                else:
+                    target = round(float(new_price), 2)
+                payload = {"listing_id": lid, "price": target, "_state_at_staging": listing.get("state")}
+                candidate = {"type": "update_price", "payload": payload}
+                ok, msg = _validate_staged_action(candidate)
+                if not ok:
+                    errors.append({"listing_id": lid, "title": title_short, "error": msg})
+                    continue
+                summary = ti.get("summary") or f"Price change to ${target:.2f}: {title_short}"
+                aid = db.enqueue_action("update_price", summary, payload)
+                staged.append({"listing_id": lid, "action_id": aid, "new_price": target})
+            with _cache_lock:
+                _cache.pop("actions", None)
+            return {"staged": staged, "count": len(staged), "errors": errors}
+        if name == "stage_batch_listing_state":
+            ti = tool_input or {}
+            listing_ids = ti.get("listing_ids") or []
+            new_state = ti.get("new_state")
+            if not listing_ids:
+                return {"error": "listing_ids is required"}
+            if new_state not in ("active", "inactive"):
+                return {"error": "new_state must be 'active' or 'inactive'"}
+            if len(listing_ids) > 10:
+                return {
+                    "error": (
+                        f"Refused: {len(listing_ids)} listing_ids exceeds the 10-listing cap "
+                        f"for a single batch. Split this into smaller batches and ask "
+                        f"{business_config.OWNER_NAME} which subset to run first."
+                    )
+                }
+            client = EtsyAPIClient()
+            staged, errors = [], []
+            for lid in listing_ids:
+                try:
+                    listing = client.get_listing(int(lid))
+                except Exception as exc:
+                    errors.append({"listing_id": lid, "error": f"could not fetch listing: {exc}"})
+                    continue
+                title_short = (listing.get("title") or f"Listing {lid}")[:50]
+                payload = {"listing_id": lid, "new_state": new_state, "_state_at_staging": listing.get("state")}
+                candidate = {"type": "toggle_listing_state", "payload": payload}
+                ok, msg = _validate_staged_action(candidate)
+                if not ok:
+                    errors.append({"listing_id": lid, "title": title_short, "error": msg})
+                    continue
+                verb = "Renew/republish" if new_state == "active" else "Deactivate"
+                summary = ti.get("summary") or f"{verb}: {title_short}"
+                aid = db.enqueue_action("toggle_listing_state", summary, payload)
+                staged.append({"listing_id": lid, "action_id": aid, "new_state": new_state})
+            with _cache_lock:
+                _cache.pop("actions", None)
+            return {"staged": staged, "count": len(staged), "errors": errors}
         if name == "qc_check_product":
             return _qc_check_product(tool_input or {})
         if name == "generate_listing_photos":
@@ -6806,7 +6973,7 @@ async def post_snapshot(_token: str = Depends(_auth_session_or_bearer)):
 
 _ETSY_STAGED_ACTION_TYPES = (
     "update_tags", "update_title", "update_description", "publish_listing",
-    "deactivate_listing", "toggle_listing_state",
+    "deactivate_listing", "toggle_listing_state", "update_price",
 )
 _LOCAL_STAGED_ACTION_TYPES = ("local_write_file", "local_delete", "local_exec")
 _SCRIPT_STAGED_ACTION_TYPES = ("run_script",)
@@ -6911,6 +7078,21 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
             new_state = p.get("new_state")
             if new_state not in ("active", "inactive"):
                 return False, "new_state must be 'active' or 'inactive'"
+        if t == "update_price":
+            price = p.get("price")
+            if not isinstance(price, (int, float)) or isinstance(price, bool):
+                return False, "price must be a number (dollars)"
+            price = float(price)
+            if price < 1.00:
+                return False, f"price ${price:.2f} is implausibly low — refusing"
+            if price > 500.00:
+                return False, f"price ${price:.2f} is implausibly high — refusing"
+            cents = round((price * 100) % 100)
+            if cents not in (99, 97, 49):
+                return False, (
+                    f"price ${price:.2f} doesn't end in .99/.97/.49 — required OnBrandCraftz "
+                    "pricing convention (CLAUDE.md)"
+                )
         if t == "update_description":
             description = p.get("description")
             if not isinstance(description, str) or not description.strip():
@@ -7100,6 +7282,8 @@ def _execute_staged_action(a: dict) -> dict:
         res = _retry(lambda: client.update_listing(lid, {"state": "inactive"}))
     elif t == "toggle_listing_state":
         res = _retry(lambda: client.update_listing(lid, {"state": p["new_state"]}))
+    elif t == "update_price":
+        res = _retry(lambda: client.update_listing(lid, {"price": round(float(p["price"]), 2)}))
     elif t == "listing_photo":
         abs_path = _resolve_in_root("staged_photos", p["path"])
         if not abs_path.is_file():
@@ -7138,7 +7322,7 @@ def _execute_staged_action(a: dict) -> dict:
     with _cache_lock:
         for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
             _cache.pop(k, None)
-    if t in ("update_tags", "update_title", "update_description"):
+    if t in ("update_tags", "update_title", "update_description", "update_price"):
         # Ranking Recovery cooldown tracker (2026-07-15) — record at EXECUTION
         # time (not staging time), since that's when the content actually
         # changed on Etsy. Read back by db.enqueue_action() to warn against

@@ -2226,6 +2226,8 @@ async function renderPhoneApprovals(){
     else if (a.type==='update_tags') meta += ` · ${escHtml((p.tags||[]).join(', ')).slice(0,90)}`;
     else if (a.type==='update_title') meta += ` · "${escHtml(p.title||'')}"`;
     else if (a.type==='update_description') meta += ` · ${escHtml((p.description||'').slice(0,90))}…`;
+    else if (a.type==='update_price') meta += ` · $${escHtml(Number(p.price||0).toFixed(2))}`;
+    else if (a.type==='toggle_listing_state') meta += ` · → ${escHtml(p.new_state||'')}`;
     return `<div class="pcard"><div class="pt">${escHtml(a.summary||a.type)}</div><div class="pm">${escHtml(meta)}</div>
       <div class="pp-acts"><button class="pp-btn ok" onclick="phoneApprove(${a.id})">Approve</button>
       <button class="pp-btn no" onclick="openRejectModal(${a.id})">Reject</button></div>
@@ -4798,7 +4800,8 @@ function simpleLineDiff(before, after) {
 }
 const _ACT_TYPE_GLYPH = {
   update_title: '📝', update_tags: '🏷️', update_description: '📄', publish_listing: '🏷️', deactivate_listing: '⛔',
-  listing_photo: '🖼️', local_write_file: '📁', local_delete: '🗑️', local_exec: '⚙️', run_script: '⚙️'
+  listing_photo: '🖼️', local_write_file: '📁', local_delete: '🗑️', local_exec: '⚙️', run_script: '⚙️',
+  update_price: '💲', toggle_listing_state: '🔄'
 };
 function _actAgeStr(a) {
   const t = a.staged_at || a.created_at || a.decided_at;
@@ -4816,6 +4819,13 @@ function _actionPreviewHtml(a) {
   const p = a.payload || {};
   if (a.type === 'update_title') return 'New title: ' + escHtml(p.title || '');
   if (a.type === 'update_tags') return 'New tags: ' + escHtml((p.tags || []).join(', '));
+  if (a.type === 'update_price') {
+    return `<div>New price: <strong>$${escHtml(Number(p.price||0).toFixed(2))}</strong></div>`;
+  }
+  if (a.type === 'toggle_listing_state') {
+    const label = p.new_state === 'active' ? 'Activate (renews an expired listing)' : 'Deactivate';
+    return `<div>${label} — listing ${escHtml(String(p.listing_id||''))} → <strong>${escHtml(p.new_state||'')}</strong></div>`;
+  }
   if (a.type === 'update_description') {
     const diffHtml = simpleLineDiff(p.before_description, p.description);
     return `<div style="max-height:320px;overflow:auto;background:var(--bg);border-radius:var(--r-sm);padding:8px;font-family:monospace;font-size:12px;white-space:pre-wrap">${diffHtml || '<span style="color:var(--muted)">No changes</span>'}</div>`;
@@ -4875,6 +4885,8 @@ function renderApproval(a) {
   } else if (a.type === 'update_title') meta += ` · "${escHtml(p.title || '')}"`;
   else if (a.type === 'update_tags') meta += ` · ${escHtml((p.tags || []).join(', '))}`;
   else if (a.type === 'update_description') meta += ` · ${escHtml((p.description || '').slice(0, 90))}…`;
+  else if (a.type === 'update_price') meta += ` · $${escHtml(Number(p.price||0).toFixed(2))}`;
+  else if (a.type === 'toggle_listing_state') meta += ` · → ${escHtml(p.new_state || '')}`;
   return `<div class="hub-listing-item" style="cursor:pointer" onclick="toggleActionDetail(${a.id})" role="button" tabindex="0">
     ${thumb}
     <div class="hub-listing-info">
@@ -5002,7 +5014,10 @@ const _SEV_COLORS = {high:'var(--red)', medium:'var(--gold)', low:'#7ba0c2'};
 // big queue. 2026-07-15: previously nothing in this screen explained the
 // safety rails at all.
 const _APPROVAL_BATCH_LIMIT = 10;
-const _APPROVAL_BATCH_TYPES = ['update_tags','update_title','update_description','publish_listing','deactivate_listing','toggle_listing_state'];
+const _APPROVAL_BATCH_TYPES = ['update_tags','update_title','update_description','publish_listing','deactivate_listing','toggle_listing_state','update_price'];
+// Price changes get their own tighter rail -- CLAUDE.md's Hard Stop is "more
+// than 5 listings" for price, not the general 10-item batch limit.
+const _PRICE_BATCH_LIMIT = 5;
 function renderActionsContent() {
   const el = document.getElementById('actions-content');
   if (!el) return;
@@ -5013,10 +5028,16 @@ function renderActionsContent() {
   </div>`;
   const typeCounts = {};
   pending.forEach(a => { typeCounts[a.type] = (typeCounts[a.type]||0) + 1; });
-  const overLimit = _APPROVAL_BATCH_TYPES.filter(t => (typeCounts[t]||0) > _APPROVAL_BATCH_LIMIT);
-  if (overLimit.length) {
+  const overLimit = _APPROVAL_BATCH_TYPES.filter(t => t !== 'update_price' && (typeCounts[t]||0) > _APPROVAL_BATCH_LIMIT);
+  const priceOverLimit = (typeCounts['update_price']||0) > _PRICE_BATCH_LIMIT;
+  if (overLimit.length || priceOverLimit) {
+    const parts = overLimit.map(t => `${typeCounts[t]} pending ${t.replace(/_/g,' ')}`);
+    if (priceOverLimit) parts.push(`${typeCounts['update_price']} pending price changes`);
+    const limitNote = priceOverLimit && !overLimit.length
+      ? `bigger than the ${_PRICE_BATCH_LIMIT}-listing price-change safety rail`
+      : `bigger than the ${_APPROVAL_BATCH_LIMIT}-item safety rail${priceOverLimit ? ` (price changes: ${_PRICE_BATCH_LIMIT})` : ''}`;
     html += `<div class="hub-listing-meta" style="margin-bottom:10px;padding:8px 10px;background:rgba(200,60,60,.12);border-left:3px solid var(--red);border-radius:var(--r-sm)">
-      ⚠️ ${overLimit.map(t => `${typeCounts[t]} pending ${t.replace(/_/g,' ')}`).join(', ')} — bigger than the ${_APPROVAL_BATCH_LIMIT}-item safety rail. Worth a closer look before approving all at once.
+      ⚠️ ${parts.join(', ')} — ${limitNote}. Worth a closer look before approving all at once.
     </div>`;
   }
   if (pending.length) {
