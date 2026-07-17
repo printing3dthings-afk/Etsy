@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "cbd7d9c-v201"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "32c4af1-v202"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5303,7 +5303,82 @@ async def _health_check_iteration() -> dict:
             )
         else:
             _append_ops_runbook_entry("Automated health check failure", context)
-    return {"all_ok": all_ok, "detail": detail[:300]}
+
+    # 2026-07-17 broadening (reliability audit): the check above only ever looked
+    # at Etsy + Anthropic. These three are genuinely informational -- worth
+    # surfacing, but deliberately NOT folded into all_ok/_escalate_failure, since
+    # that would change _run_loop_iteration's retry-backoff behavior for
+    # conditions that aren't "the health check itself failed" (same reasoning
+    # the existing docstring already applies to Etsy/Anthropic outages).
+    openai_ok = bool(os.getenv("OPENAI_API_KEY"))
+    gemini_ok = bool(os.getenv("GEMINI_API_KEY"))
+    if not openai_ok or not gemini_ok:
+        missing = ", ".join(n for n, ok in (("OPENAI_API_KEY", openai_ok), ("GEMINI_API_KEY", gemini_ok)) if not ok)
+        # Heartbeat only (no ops_runbook entry -- this would fire every hourly tick
+        # otherwise, since a missing key doesn't self-resolve). "warn" when at least
+        # one engine key is present deliberately does NOT surface via /api/alerts
+        # (that only checks status=="error") -- Gemini is the default art engine
+        # (gpt-image-1 is being retired 2026-10-23), so having Gemini but not
+        # OpenAI is a reduced-choice state, not a broken one. Both missing does
+        # alert, since that's a genuine "no art generation works at all" outage.
+        await asyncio.to_thread(
+            db.set_agent_heartbeat, "health:art_keys", "Art engine keys",
+            "warn" if (openai_ok or gemini_ok) else "error",
+            f"Missing: {missing}. At least one image-engine key should be set.",
+        )
+    else:
+        await asyncio.to_thread(db.set_agent_heartbeat, "health:art_keys", "Art engine keys", "ok", "")
+
+    volume_detail = "no volume configured (sandbox/local)"
+    if "volume" in _FILE_ROOTS:
+        vol = _FILE_ROOTS["volume"]
+        try:
+            vol.mkdir(parents=True, exist_ok=True)
+            probe = vol / ".health_check_write_probe"
+            probe.write_text(datetime.now(timezone.utc).isoformat())
+            probe.unlink()
+            volume_detail = "ok"
+            await asyncio.to_thread(db.set_agent_heartbeat, "health:volume", "Durable volume", "ok", "")
+        except Exception as exc:  # noqa: BLE001
+            volume_detail = f"error: {str(exc)[:200]}"
+            _append_ops_runbook_entry(
+                "Durable volume not writable",
+                f"5-minute health loop found {vol} mounted but not writable: {exc}. "
+                f"Product files and backups may not be landing durably.",
+            )
+            await asyncio.to_thread(db.set_agent_heartbeat, "health:volume", "Durable volume", "error", volume_detail)
+
+    # hub_db_state.json staleness -- only meaningful now that item 2 gives it a
+    # real weekly cadence (_WEEKLY_MONITOR_SCRIPTS); this is exactly the kind of
+    # check that would have caught it going a week stale BEFORE the fact instead
+    # of after. Deliberately NOT checking backup_digital_products.py the same way
+    # -- that backup is event-triggered (fires per-build, item 1), not time-based,
+    # so "no backup in N days" just means "no build in N days," not a real problem.
+    try:
+        import backup_hub_db
+        if backup_hub_db.OUT_PATH.exists():
+            age_days = (time.time() - backup_hub_db.OUT_PATH.stat().st_mtime) / 86400
+            if age_days > 10:
+                _append_ops_runbook_entry(
+                    "hub_db_state.json backup is stale",
+                    f"5-minute health loop found the hub.db snapshot at {backup_hub_db.OUT_PATH} "
+                    f"is {age_days:.1f} days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).",
+                )
+                await asyncio.to_thread(
+                    db.set_agent_heartbeat, "health:hub_db_backup", "hub_db backup freshness",
+                    "error", f"{age_days:.1f} days old.",
+                )
+            else:
+                await asyncio.to_thread(
+                    db.set_agent_heartbeat, "health:hub_db_backup", "hub_db backup freshness",
+                    "ok", f"{age_days:.1f} days old.",
+                )
+    except Exception:  # noqa: BLE001
+        pass  # never let a staleness check break the health loop itself
+
+    detail = (f"{detail} | OpenAI key: {openai_ok} | Gemini key: {gemini_ok} | "
+              f"Volume: {volume_detail}")
+    return {"all_ok": all_ok, "detail": detail[:400]}
 
 
 async def _health_check_loop() -> None:
