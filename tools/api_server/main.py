@@ -569,7 +569,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "bc733a1-v212"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4573ea7-v213"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5968,6 +5968,120 @@ def _run_seasonal_keyword_check() -> str:
     return "ran seasonal_keywords.py --dry-run"
 
 
+# 2026-07-17 (Wave 4, C3): data/knowledge_base/competitor_research_2026.md was a
+# static one-off snapshot (written May 2026, ~10 weeks stale by this audit) with
+# no refresh mechanism -- Frank's chat agent reads it on demand via
+# read_knowledge_base_doc, so a stale file quietly fed stale market claims into
+# every conversation that touched pricing/positioning. This job regenerates it
+# monthly using two real signals: C1's live Etsy search_listings() data (actual
+# current competitor titles/prices/tags for this shop's own core search terms)
+# plus the Anthropic-hosted web_search tool (already wired into AGENT_TOOLS for
+# chat; called directly here in a single messages.create() so this can run as a
+# standalone background job outside a chat turn) for broader trend/algorithm
+# signal a pure Etsy search can't see. Read-only against Etsy; the only write is
+# this local knowledge-base file.
+_COMPETITOR_RESEARCH_PATH = ROOT / "data" / "knowledge_base" / "competitor_research_2026.md"
+_COMPETITOR_RESEARCH_SEARCH_TERMS = [
+    "printable wall art digital download",
+    "digital planner goodnotes",
+    "kawaii sticker pack goodnotes",
+]
+
+
+def _run_competitor_research_refresh() -> str:
+    """Monthly: pulls real live Etsy comparable-listing data for this shop's core
+    search terms (via EtsyAPIClient.search_listings, the same C1 method
+    get_comparable_listings wraps), hands it plus the existing report to Claude
+    with the hosted web_search tool enabled for current internet-only signal
+    (algorithm changes, trend/pricing research), and overwrites
+    competitor_research_2026.md with the refreshed markdown. Never touches Etsy's
+    write API, never contacts buyers -- a pure internal research-doc refresh."""
+    if not ANTHROPIC_KEY:
+        return "skipped -- ANTHROPIC_API_KEY not configured"
+
+    client = EtsyAPIClient()
+    comparable_blocks = []
+    for term in _COMPETITOR_RESEARCH_SEARCH_TERMS:
+        try:
+            resp = client.search_listings(term, limit=8, sort_on="score")
+            results = resp.get("results") or []
+            lines = [
+                f"- \"{(r.get('title') or '')[:80]}\" — ${_price_float(r.get('price')):.2f} — "
+                f"tags: {', '.join((r.get('tags') or [])[:5])}"
+                for r in results
+            ]
+            comparable_blocks.append(
+                f"### Live Etsy search: \"{term}\"\n" + ("\n".join(lines) if lines else "(no results)")
+            )
+        except Exception as exc:  # noqa: BLE001
+            comparable_blocks.append(f"### Live Etsy search: \"{term}\"\n(search failed, non-fatal: {exc})")
+    comparable_text = "\n\n".join(comparable_blocks)
+
+    try:
+        existing = _COMPETITOR_RESEARCH_PATH.read_text(encoding="utf-8")
+    except Exception:
+        existing = "(no existing report found)"
+
+    user_payload = (
+        f"Today is {date.today().isoformat()}. Refresh this shop's competitive intelligence "
+        f"report for its digital product lines (wall art, digital planners, kawaii sticker "
+        f"packs, 3D-print SVG packs). Use web_search for anything that needs current internet "
+        f"data (Etsy algorithm changes, pricing/trend research, seasonal shifts) and the REAL "
+        f"LIVE ETSY DATA below for actual current competitor listings.\n\n"
+        f"REAL LIVE ETSY DATA (search_listings, today):\n{comparable_text}\n\n"
+        f"EXISTING REPORT (may be stale -- verify, correct, and refresh it; keep the same "
+        f"overall structure/section headers so the rest of the app that reads this file "
+        f"continues to work, but update any numbers/claims that are now wrong or dated):\n"
+        f"{existing[:8000]}\n\n"
+        f"Return the COMPLETE updated markdown report between the exact markers "
+        f"===BEGIN_REPORT=== and ===END_REPORT===, nothing else outside the markers. Update the "
+        f"'Research date' line at the top to reflect today's refresh."
+    )
+
+    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    try:
+        response = _anthropic_create(
+            ai_client,
+            model=business_config.MODEL_PRIMARY,
+            max_tokens=8000,
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 5,
+                "user_location": {"type": "approximate", "country": "US"},
+            }],
+            system=[{"type": "text", "text": (
+                "You are a market research analyst refreshing an internal competitive-"
+                "intelligence document for an Etsy shop (OnBrandCraftz). Be accurate -- cite "
+                "only things you actually found via web_search or the real Etsy data given to "
+                "you, never invent statistics or case studies. Keep the document's existing "
+                "structure and tone."
+            )}],
+            messages=[{"role": "user", "content": user_payload}],
+        )
+    except Exception as exc:  # noqa: BLE001
+        return f"error: Claude call failed: {exc}"
+
+    text = "".join(getattr(b, "text", "") for b in response.content if getattr(b, "type", "") == "text")
+    match = _re.search(r"===BEGIN_REPORT===(.*?)===END_REPORT===", text, _re.DOTALL)
+    if not match:
+        return "error: model did not return a report between the expected markers -- file not updated"
+    new_report = match.group(1).strip() + "\n"
+
+    _COMPETITOR_RESEARCH_PATH.write_text(new_report, encoding="utf-8")
+    db.add_todo(
+        "Monthly competitor research refresh ready — data/knowledge_base/competitor_research_2026.md "
+        "updated with real live Etsy data + web research. See this month's ops_runbook entry.",
+        added_by="frank", category="general",
+    )
+    _append_ops_runbook_entry(
+        "Monthly competitor research refresh",
+        f"Refreshed competitor_research_2026.md ({len(new_report)} chars). "
+        f"Live search terms used: {', '.join(_COMPETITOR_RESEARCH_SEARCH_TERMS)}.",
+    )
+    return f"refreshed competitor_research_2026.md ({len(new_report)} chars)"
+
+
 def _check_ads_thresholds() -> str:
     """Read-only: flags a todo if the manually-logged Etsy Ads spend data
     (tools/etsy_ads_tools.py's spend_log, via tools/data_store.py's DataStore)
@@ -6468,16 +6582,18 @@ def _run_scheduled_art_check() -> str:
 async def _calendar_tasks_loop() -> None:
     """Hourly-tick calendar-gated loop (same shape as _daily_brief_loop) for
     tasks that fire on a specific day/date rather than a fixed interval:
-    weekly monitor digest (Sunday), monthly shop health check (1st), seasonal
-    keyword dry-run (4 documented dates), a daily Etsy Ads threshold check,
-    and a daily scheduled-art check (the script's own every-other-day gating
-    decides whether it actually does anything). Each sub-task tracks its own
-    "last ran" date so a missed hour (deploy, restart) doesn't skip that day
-    entirely — it just fires the next time the loop wakes up and the date
-    still matches."""
+    weekly monitor digest (Sunday), monthly shop health check (1st), monthly
+    competitor research refresh (8th, offset from the 1st/15th so it doesn't
+    compete with those), seasonal keyword dry-run (4 documented dates), a
+    daily Etsy Ads threshold check, and a daily scheduled-art check (the
+    script's own every-other-day gating decides whether it actually does
+    anything). Each sub-task tracks its own "last ran" date so a missed hour
+    (deploy, restart) doesn't skip that day entirely — it just fires the next
+    time the loop wakes up and the date still matches."""
     db.set_agent_heartbeat("calendar_tasks", "Calendar Tasks", "started", "waiting for next scheduled check")
     last_weekly: date | None = None
     last_monthly: date | None = None
+    last_competitor_research: date | None = None
     last_seasonal: date | None = None
     last_ads_check: date | None = None
     last_art_check: date | None = None
@@ -6509,6 +6625,13 @@ async def _calendar_tasks_loop() -> None:
                 ran.append("art-authenticity")
             except Exception as exc:
                 print(f"[calendar-tasks] art authenticity check error: {exc}", flush=True)
+        if today.day == 8 and today != last_competitor_research:
+            try:
+                detail = await asyncio.to_thread(_run_competitor_research_refresh)
+                last_competitor_research = today
+                ran.append(f"competitor-research:{detail}")
+            except Exception as exc:
+                print(f"[calendar-tasks] competitor research refresh error: {exc}", flush=True)
         if (today.month, today.day) in _SEASONAL_TRIGGER_DATES and today != last_seasonal:
             try:
                 await asyncio.to_thread(_run_seasonal_keyword_check)
@@ -6615,6 +6738,7 @@ async def run_calendar_tasks_now(request: Request):
     for name, fn in [
         ("weekly_monitors", _run_weekly_monitors),
         ("monthly_shop_health", _run_monthly_shop_health),
+        ("competitor_research", _run_competitor_research_refresh),
         ("seasonal_keywords", _run_seasonal_keyword_check),
         ("ads_threshold", _check_ads_thresholds),
         ("scheduled_art", _run_scheduled_art_check),

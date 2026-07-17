@@ -12614,3 +12614,188 @@ set, zero-results and search-failure both degrade cleanly without breaking
 the diagnosis, and the system prompt instructs citing real comparable data).
 `py_compile` clean; `tools/check_hardcoded_paths.py` clean (99 files); full
 suite via `tests/run_all.py` (34/34, ~52s); `playwright_smoke.py` clean.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-17 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-17 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-17 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmp89jr4ahm/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp89jr4ahm/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmp8bjht4r0/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 31578). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 31580). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Wave 4 C3: monthly refresh job for competitor_research_2026.md
+**What shipped:** `data/knowledge_base/competitor_research_2026.md` was a
+static one-off snapshot (written May 2026, ~10 weeks stale by the Wave 4
+audit that flagged it) with no refresh mechanism -- Frank's chat agent reads
+it on demand via `read_knowledge_base_doc`, so a stale file quietly fed
+stale market claims into any conversation touching pricing/positioning.
+
+Added `_run_competitor_research_refresh()` (`main.py`), scheduled monthly on
+the 8th in `_calendar_tasks_loop` (offset from the existing 1st-of-month shop
+health check and 15th-of-month art authenticity sweep so they don't compete)
+and also reachable on demand via the existing `/api/calendar-tasks/run`
+manual-trigger endpoint. It combines two real signals: C1's live
+`search_listings()` data for this shop's own core search terms (wall art,
+digital planners, kawaii sticker packs) and the Anthropic-hosted
+`web_search_20250305` tool -- the same hosted tool already wired into
+`AGENT_TOOLS` for chat, called here directly in a single `messages.create()`
+so this can run as a standalone background job outside a chat turn -- for
+broader trend/algorithm signal a pure Etsy search can't see. The model is
+given the existing report and told to preserve its structure while
+correcting/refreshing stale claims, and must return the complete new
+markdown between explicit `===BEGIN_REPORT===`/`===END_REPORT===` markers;
+the file is only overwritten on a clean marker match, never on a malformed
+or missing response, so a bad model output can't corrupt or blank the file.
+
+**Design constraints preserved:** read-only against Etsy (only ever calls
+`search_listings`), never writes to a live listing, never contacts buyers.
+The only write is this local knowledge-base file. Both the Etsy search and
+the Anthropic call are wrapped so a failure in either degrades cleanly
+(a failed search just drops that term's data from the prompt; a failed
+Claude call or malformed response leaves the existing file untouched) rather
+than corrupting the file or crashing the calendar loop.
+
+**Verification:** new `tests/test_competitor_research_refresh.py` (7 tests
+-- calendar-loop day-8 gating + manual-trigger registration, clean skip
+without an Anthropic key, real comparable data reaching the prompt with
+web_search enabled, the file only overwritten on a well-formed
+begin/end-marker response, and non-fatal degradation on both an Etsy search
+failure and a Claude API failure, verified the existing file survives
+untouched in the failure cases). `py_compile` clean; `tools/check_hardcoded_
+paths.py` clean (99 files); full suite via `tests/run_all.py` (35/35, ~56s);
+`playwright_smoke.py` clean.
