@@ -8356,3 +8356,54 @@ previous hard rectangular grid). py_compile, HUD JS node --check, playwright smo
 all pass. Build `590fbdc-v198`.
 **Deferred to Phase 3:** broader micro-interactions beyond nav/tab/create-choice
 (e.g. buttons, list rows, form fields) — not touched here.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-17 — Visual flow Phase 3: button/list-row/form-field feedback (final phase)
+Surveyed the highest-leverage remaining interactive classes by usage count:
+`.hub-listing-item` (59+ uses, actually 4299+ rendered instances on Files alone —
+clickable rows: toggle detail, open file, expand a ZIP group) and no global
+input/select/textarea rule existed at all. `.act-btn` (46 uses) turned out to
+ALREADY have a proper transition + press-scale — not a gap, just needed the
+existing `:active{transform:scale(.97)}` added to the reduced-motion block
+(a small pre-existing accessibility gap, fixed in passing).
+**Shipped:**
+- `.hub-listing-item` gained a background-tint on hover/active (`var(--panel3)`,
+  edge-to-edge, no border-radius — a rounded corner would cut oddly against the
+  row's straight border-bottom divider; matches the native iOS/Android list-row
+  highlight convention instead of the card-lift idiom).
+- New global `input:focus,select:focus,textarea:focus` rule — no shared input
+  class exists (every field is inline-styled ad hoc), so this is a plain
+  low-specificity element selector that only ADDS border-color/box-shadow/
+  transition, properties none of the scattered inline styles declare, layering
+  on top of every field with zero HTML changes.
+- `.act-btn:active` added to the reduced-motion block.
+**Bug caught by verification, not shipped broken:** first attempt used
+`box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 22%,transparent)` for the
+focus glow — computed-style check showed it resolving to fully-transparent
+`oklab(0 0 0/0)`, a real var()-inside-color-mix() interop issue in this app's
+Chromium build, not a typo. Replaced with a plain solid `var(--gold2)` ring
+(every theme's existing lighter/hover accent, already used for exactly this role
+elsewhere) — 100%-supported CSS3, no exotic color functions, verified correct.
+**Also caught two false negatives in my own test methodology** (not app bugs):
+JS-dispatched `el.focus()`/`dispatchEvent('mouseover')` via `page.evaluate()`
+don't reliably trigger real `:focus`/`:hover` CSS matching in this browser
+automation setup — re-verified with Playwright's native `.focus()`/`.hover()`
+locator methods, which correctly confirmed both: focus box-shadow becomes exactly
+`--gold2` (`rgb(242,203,143)`) + border becomes exactly `--gold`
+(`rgb(228,177,85)`); row hover background becomes exactly `--panel3`
+(`rgb(66,53,78)`). Screenshot confirms a clean, edge-to-edge row highlight with
+no visual artifacts. py_compile, HUD JS node --check, playwright smoke all pass.
+Build `6e52854-v199`.
+**This closes the 3-phase visual-flow project** (motion → soft-depth cards →
+remaining interactive feedback) started from Scott's "too many hard lines...
+make it flow more."

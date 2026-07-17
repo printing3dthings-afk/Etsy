@@ -157,6 +157,29 @@ html.theme-kawaii{
   --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+/* Form-field focus glow (2026-07-17 Phase 3: "too many hard lines... make it flow
+   more"). No global input/select/textarea rule existed at all — every field is
+   styled ad hoc via inline style="" (border/radius/padding), so focus previously
+   fell back to either the bare browser default outline or nothing. This is a
+   plain low-specificity element selector: it only ADDS border-color/box-shadow/
+   transition, properties none of the scattered inline styles already declare, so
+   it layers on top of every existing field without fighting inline specificity
+   or needing to touch any of them. Uses --gold2 (every theme's existing lighter/
+   hover accent variant, already used for exactly this "softer highlight" role
+   elsewhere e.g. .act-btn.primary:hover) as a SOLID ring color rather than a
+   translucent color-mix() blend — verified live that color-mix(in srgb, var(--x)
+   %, transparent) resolves to fully-transparent oklab(0 0 0/0) in this app's
+   Chromium build (a real var()-inside-color-mix() interop bug, not a syntax
+   error the browser reports), so a solid --gold2 ring is the correct, bulletproof
+   choice here rather than debugging that further. The 3 pre-existing #chat-input-
+   style ID rules (border-color:var(--gold) only, no glow) still apply too — same
+   accent, this just adds the ring + smoothing everywhere else. */
+input:focus,select:focus,textarea:focus{
+  border-color:var(--gold);
+  box-shadow:0 0 0 2px var(--gold2);
+  transition:border-color .15s ease,box-shadow .15s ease;
+  outline:none;
+}
 /* overflow:auto (not hidden) — at 105-145% browser zoom on a desktop-width window,
    the fixed 1440x900 stage's scale() can exceed the shrunk viewport before the
    880px mobile breakpoint kicks in; overflow:hidden clipped that content with no
@@ -662,8 +685,17 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .hub-chip-btn{padding:6px 12px;border-radius:var(--r-pill);border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 .hub-chip-btn.active{background:var(--gold);color:#06141f;border-color:var(--gold)}
 
-.hub-listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.hub-listing-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);
+  transition:background-color .15s ease}
 .hub-listing-item:last-child{border-bottom:none}
+/* 59 uses, virtually all role="button" + onclick (toggle detail, open file, expand
+   a ZIP group) — but had zero hover/press feedback at all (2026-07-17 Phase 3:
+   "too many hard lines... make it flow more"). Edge-to-edge tint, no radius —
+   these rows are stacked flush against a straight border-bottom divider, so a
+   rounded corner would cut oddly against that line; edge-to-edge is also the
+   native list-row convention (iOS/Android settings rows highlight this way). */
+.hub-listing-item:hover{background:var(--panel3)}
+.hub-listing-item:active{background:var(--panel3)}
 .hub-thumb{width:52px;height:52px;border-radius:var(--r-sm);object-fit:cover;background:var(--border);flex-shrink:0}
 .hub-thumb-ph{width:52px;height:52px;border-radius:var(--r-sm);background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
 .hub-listing-info{flex:1;min-width:0}
@@ -1055,6 +1087,9 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
   .create-choice{transition:none}
   .create-choice:hover,.create-choice:active{transform:none}
+  /* .act-btn's press-scale predates this file's reduced-motion pass (pre-existing
+     gap, fixed in passing here since Phase 3 already touches this selector). */
+  .act-btn:active,.hub-act-btn:active{transform:none}
 }
 </style>
 </head>
