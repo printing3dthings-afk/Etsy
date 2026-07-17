@@ -12075,3 +12075,186 @@ Note: this ships the *pipeline* wiring, not a batch of already-generated
 photos — no real (paid) AI image-generation calls were fired as part of this
 implementation/verification work; that only happens when Scott (or Frank on
 his behalf) actually runs "Generate listing photos" for a real product ID.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmpb4uzg1lp/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpb4uzg1lp/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpdi7gxgpx/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 9607). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 9609). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Frank upgrade Wave 4 (sales & traffic): item B1, stale listing templates fixed + a real scope-changing discovery
+Continued Wave 4. This item started as "reconcile `_PLANNER_TEMPLATES`
+against the live catalog" and ended up surfacing a bigger finding that
+changes how the remaining Phase B items (B2/B3) should be scoped.
+
+**The stale-data fix**: `tools/etsy_listing_tools.py`'s `_PLANNER_TEMPLATES`
+dict and its four `_PLANNER_DESCRIPTION_DP102x` constants were a stale
+earlier draft — pipe-separated titles over the 70-char mobile limit, and
+page/sheet/sticker counts that stopped matching reality once DP1026-1029's
+sticker packs were rebuilt from 5 sheets to 11 (confirmed against CLAUDE.md's
+Product Catalog section: real counts are 143pg/328 stickers, 131pg/320,
+144pg/419, 133pg/377). If this template were ever used to (re)generate a
+listing, the wrong counts would directly violate the Cardinal Rule.
+Reconciled titles/tags/prices against CLAUDE.md's canonical "Pre-Written
+Listing Content" section (already correct, copy-paste ready, used verbatim).
+
+**A subtler bug caught mid-fix**: CLAUDE.md's own "Pre-Written Listing
+Content" section — the text the first draft of this fix copied verbatim —
+still said "5 PNG sticker sheets (200+ stickers)" in the WHAT'S INCLUDED
+bullet, the SECTIONS INCLUDED line, AND the opening hook paragraph. That
+section is itself stale relative to CLAUDE.md's own more-recently-updated
+Product Catalog entries. Caught by writing a test that checked the real
+numbers appear (rather than just checking the code compiles) — the test
+failed on its first run, correctly, twice: once for the WHAT'S INCLUDED/
+SECTIONS lines (fixed via a scripted per-product replacement), and again for
+the opening-hook-paragraph mentions, phrased differently enough
+("(200+ stickers, 5 sheets!)" vs. "200+ kawaii stickers") that the first
+fix's exact-string replacement missed them. Fixed all four opening hooks
+too, and removed unverifiable "Sheet N: [theme]" ordinal claims (no data
+maps which of the real 11 physical sheets holds which theme) while keeping
+the still-true theme descriptions unnumbered.
+
+**Scope-changing discovery**: while checking whether this needed a build-ID
+bump (does the live server actually serve this file's content?), confirmed
+via grep that `tools/etsy_listing_tools.py` is **not imported anywhere** in
+`tools/api_server/main.py` or any other live-reachable module — zero
+references. It has the exact same shape as `tools/social_media_tools.py`
+(module-level `TOOL_DEFINITIONS` + `execute_tool(name, input, store)`,
+`from tools.data_store import DataStore` package-style imports) — both
+appear to be orphaned relics of the same now-archived multi-agent
+orchestrator this session's own history already references ("the dead
+tools/agents/business_pipeline.py orchestrator... got archived"). Frank's
+live chat agent cannot currently reach `get_planner_listing_template`,
+`optimize_listing_content`, or any other tool in this file. The fix still
+stands — wrong data is worse than right data even in unreachable code, and
+a human (or a future revival of this file) could still read it — but this
+means **B3's original plan (make `optimize_listing_content` call an LLM) is
+fixing dead code**, not a live gap. The real, live equivalent gap is
+`_autofix_description_core` (`main.py`) — confirmed elsewhere in this
+session's own history as "Deterministic (no AI call)... only prepends one
+canned Gate-6 sentence, never touches the actual hook/prose" — unlike title/
+tags, which already have real Claude-call-based autofix
+(`_autofix_title_core`/`_generate_tags_for_listings`). B3 will be
+re-targeted at that live function instead of the dead-code one.
+
+**Verified**: new `tests/test_planner_templates_accuracy.py` (7 tests) —
+page counts, sticker counts, sheet counts, and prices for all 4 products
+checked against CLAUDE.md's real current catalog numbers (not just "does it
+compile"), confirms no stale "5 PNG sticker sheets"/"200+ stickers" text
+remains anywhere in any of the four descriptions, confirms no unverifiable
+ordinal Sheet-N claims remain, confirms titles use commas not pipes and
+respect the 70-char limit, and confirms titles match CLAUDE.md's canonical
+text exactly. `py_compile` clean. Full suite via `tests/run_all.py`
+(30/30, ~48s). No build-ID bump — confirmed the live server doesn't import
+this file at all, so this change has zero effect on running behavior;
+nothing to verify via a deploy poll.
