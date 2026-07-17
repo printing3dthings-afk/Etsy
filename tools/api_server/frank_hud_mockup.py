@@ -1168,10 +1168,15 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="nav-item" data-screen="brandkit" role="button" tabindex="0"><span class="ic" aria-hidden="true">🎨</span>Brand Kit</div>
     <div class="nav-item" data-screen="files" role="button" tabindex="0"><span class="ic" aria-hidden="true">🗂</span>Files</div>
     <div class="nav-item" data-screen="connections" role="button" tabindex="0"><span class="ic" aria-hidden="true">🔌</span>Connections</div>
+    <!-- 2026-07-17 (Wave 3 usability): Settings holds only everyday, non-technical
+         preferences (Voice/Appearance/Branding) -- moved out of the Advanced
+         disclosure below, which is for genuinely engineering-level screens. Was
+         already one click away via the header gear icon; this fixes the sidebar
+         browse path to match. -->
+    <div class="nav-item" data-screen="settings" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Settings</div>
 
     <h2 class="nav-section nav-section-h2 nav-advanced-toggle" id="nav-advanced-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="nav-advanced-items">Advanced <span id="nav-advanced-caret" aria-hidden="true">▸</span></h2>
     <div id="nav-advanced-items">
-    <div class="nav-item" data-tier="advanced" data-screen="settings" role="button" tabindex="0"><span class="ic" aria-hidden="true">⚙</span>Settings</div>
     <div class="nav-item" data-tier="advanced" data-screen="tasks" role="button" tabindex="0"><span class="ic" aria-hidden="true">☑</span>Tasks<span class="nbadge" id="badge-tasks" style="display:none">—</span></div>
     <div class="nav-item" data-tier="advanced" data-screen="calendar" role="button" tabindex="0"><span class="ic" aria-hidden="true">▦</span>Calendar<span class="nbadge" id="badge-calendar" style="display:none">—</span></div>
     <div class="nav-item" data-tier="advanced" data-screen="tools" role="button" tabindex="0"><span class="ic" aria-hidden="true">🛠</span>Tools &amp; Skills<span class="nbadge" id="badge-tools" style="display:none">—</span></div>
@@ -3235,7 +3240,7 @@ const TOUR_STEPS = [
     body: '<p>%%AGENT_SHORT%% never changes your shop, files, or posts without your one-tap OK. Anything waiting on you shows up here.</p>' },
   { target: '.nav-item[data-screen="create"]', screen: 'create',
     title: 'Create',
-    body: '<p>Generate listing photos, videos, and product files here, then publish straight to Etsy.</p>' },
+    body: '<p>Generate listing photos, videos, and product files here — everything goes through your one-tap approval before it ever reaches Etsy.</p>' },
   { target: '.nav-item[data-screen="listings"]', screen: 'listings',
     title: 'Your listings',
     body: '<p>Every live Etsy listing, with a Fix button wherever %%AGENT_SHORT%% spots something that needs attention.</p>' },
@@ -3254,9 +3259,12 @@ const TOUR_STEPS = [
   { target: '.nav-item[data-screen="connections"]', screen: 'connections',
     title: 'Connections',
     body: '<p>Etsy, social, and other integrations — connect a new one or check status here.</p>' },
+  { target: '.nav-item[data-screen="settings"]', screen: 'settings',
+    title: 'Settings',
+    body: '<p>Voice, appearance, and branding preferences. Also one tap away anytime from the <b>⚙</b> icon in the top bar.</p>' },
   { target: '#nav-advanced-toggle', screen: null,
     title: 'Advanced',
-    body: '<p>The engineering-level screens (Settings, Tasks, AI Core, Agents, and more) live under here. Safe to ignore until you need them.</p>' },
+    body: '<p>The engineering-level screens (Tasks, Workflows, AI Core, Agents, and more) live under here. Safe to ignore until you need them.</p>' },
   { target: null, screen: null,
     title: "You're all set",
     body: '<p>That\\'s everything. Replay this tour anytime from the <b>?</b> icon in the top bar.</p>' },
@@ -3279,7 +3287,7 @@ const MOBILE_TOUR_STEPS = [
     body: '<p>Your sales, orders, and views at a glance.</p>' },
   { target: '.ptab[data-ptab="create"]', ptab: 'create',
     title: 'Create',
-    body: '<p>Generate listing photos, videos, and product files here, then publish straight to Etsy.</p>' },
+    body: '<p>Generate listing photos, videos, and product files here — everything goes through your one-tap approval before it ever reaches Etsy.</p>' },
   { target: '.ptab[data-ptab="more"]', ptab: 'more',
     title: 'More',
     body: '<p>Everything else — Your listings, Products, Brand Kit, Knowledge, and the engineering-level screens — lives under here. Safe to ignore until you need it.</p>' },
