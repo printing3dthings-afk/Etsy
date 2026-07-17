@@ -570,7 +570,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "24bd31c-v216"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4cf97b1-v217"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5126,6 +5126,25 @@ def _compute_actions() -> dict:
                 "problem (tags or title not matching searches).",
                 "Audit tags/title for buyer search terms; the agent can draft them.",
                 l)
+
+    # 2026-07-18: exclude any listing that already has a fix pending approval --
+    # once Scott taps "Let Frank fix it" (phoneSheetFix() -> /api/conversion-
+    # targets/{id}/fix) and a title/tags/description fix gets staged, the
+    # underlying metric (views/sales) hasn't changed yet, so without this the
+    # SAME card just kept reappearing here immediately after being "fixed",
+    # which read as broken. If the pending action is later rejected, the card
+    # naturally reappears (it's excluded only while genuinely pending); if
+    # approved, the real listing data changes and the rule re-evaluates fresh.
+    try:
+        pending_listing_ids = {
+            str(a["payload"]["listing_id"])
+            for a in db.list_actions("pending", limit=200)
+            if (a.get("payload") or {}).get("listing_id")
+        }
+    except Exception:
+        pending_listing_ids = set()
+    if pending_listing_ids:
+        cards = [c for c in cards if str(c.get("listing_id") or "") not in pending_listing_ids]
 
     cards.sort(key=lambda c: (_SEVERITY_RANK.get(c["severity"], 9), -c.get("impact", 0)))
     summary = {

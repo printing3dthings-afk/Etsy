@@ -806,8 +806,11 @@ body:not(.is-mobile) .orb-open-chat{display:none}
     grid-template-columns:92px 1fr;grid-template-rows:auto auto auto;
   }
 
-  .hdr-logo{padding:0 8px;gap:6px}
-  .hdr-logo .lbl{display:none}
+  /* 2026-07-18: the FRANK/SHOP ASSISTANT logo lockup has no onclick (aria-hidden
+     decoration, not a button) -- on mobile its .lbl text was already hidden below,
+     leaving just the bordered, glowing .hex square floating alone top-left, which
+     read as an unlabeled dead button. Hide the whole lockup instead. */
+  .hdr-logo{display:none}
   .hamburger-fixed{
     display:flex;
     position:fixed;
@@ -6243,6 +6246,13 @@ async function productRegenerateBuild(productId, kind){
     if (!r.ok || d.error) throw new Error(d.error || d.detail || ('HTTP '+r.status));
     productSheetClose();
     showToast(d.message || ('Started regenerating ' + label + ' for ' + productId + '.'), 'ok', 7000);
+    // 2026-07-18: drop it from the current view now that a fix is in flight --
+    // it would otherwise keep sitting there red for the ~2-4 min the job takes,
+    // reading as still broken/unaddressed. loadProducts() (next real navigation
+    // to this screen) re-fetches fresh and will show it again if it's genuinely
+    // still missing once the job finishes.
+    const idx = _products.findIndex(x => x.id === productId);
+    if (idx !== -1) { _products.splice(idx, 1); renderProductsContent(); }
   } catch(e) {
     showToast('Could not start regeneration: ' + (e.message||e), 'err', 6000);
   }

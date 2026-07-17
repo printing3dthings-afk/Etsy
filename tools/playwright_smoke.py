@@ -549,6 +549,34 @@ async def _run_browser_checks() -> None:
                   f"non-planner categories must not offer a regenerate action (no verified build tool for them): {nonplanner_fix_sheet}")
             check("Open in Files" in nonplanner_fix_sheet, f"non-planner fix sheet should still offer Open in Files: {nonplanner_fix_sheet}")
 
+            # Regenerating a missing-files card removes it from the current view
+            # (2026-07-18 -- Scott reported it kept sitting there red for the
+            # ~2-4 min the background job runs, reading as still unaddressed).
+            # Mock the produce endpoint (never actually kick off a paid AI job in
+            # a test) and auto-accept the cost/time confirm() dialog.
+            async def _mock_build_planner(route):
+                await route.fulfill(status=200, content_type="application/json",
+                                     body='{"pid": "DP1026", "started": true, "message": "Building DP1026 in the background."}')
+            await page.route("**/api/produce/build-planner", _mock_build_planner)
+            page.once("dialog", lambda d: d.accept())
+            regen_result = await page.evaluate("""async () => {
+                document.body.classList.remove('product-sheet-open');
+                openProductSheet('DP1026');
+                const before = _products.some(p => p.id === 'DP1026');
+                let errMsg = null;
+                try { await productRegenerateBuild('DP1026', 'planner'); } catch(e) { errMsg = String(e); }
+                await new Promise(r => setTimeout(r, 200));
+                const stack = document.getElementById('toast-stack');
+                return {before, after: _products.some(p => p.id === 'DP1026'),
+                        sheetOpen: document.body.classList.contains('product-sheet-open'),
+                        errMsg, toastText: stack ? stack.textContent : null};
+            }""")
+            await page.unroute("**/api/produce/build-planner")
+            check(regen_result.get("before") is True, f"DP1026 must exist before regenerating: {regen_result}")
+            check(regen_result.get("after") is False,
+                  f"DP1026 must be removed from _products (and the re-rendered list) once regeneration starts: {regen_result}")
+            check(regen_result.get("sheetOpen") is False, f"the fix sheet should close on success: {regen_result}")
+
             # Review modal -- deliberately NOT mocked. This server process runs from
             # the real repo checkout (cwd=ROOT), so /api/products/DP1030/review hits
             # the real data/dp1030_listing.json (real content, real tags) and DP1031
@@ -606,6 +634,17 @@ async def _run_browser_checks() -> None:
             # already-authenticated session. ──
             await page.set_viewport_size({"width": 390, "height": 844})
             await page.wait_for_timeout(500)
+
+            # 2026-07-18: the FRANK/SHOP ASSISTANT logo lockup has no click handler
+            # (aria-hidden decoration) -- on mobile its label text was already
+            # hidden, leaving an unlabeled glowing square that looked like a dead
+            # button. Now hidden entirely on mobile.
+            hdr_logo_state = await page.evaluate("""() => {
+                const el = document.querySelector('.hdr-logo');
+                return el ? getComputedStyle(el).display : 'missing';
+            }""")
+            check(hdr_logo_state == "none", f"the non-functional logo square must not render on mobile, got display: {hdr_logo_state}")
+
             await page.evaluate("startTour()")
             await page.wait_for_timeout(400)
             mobile_step1 = await page.evaluate("""() => ({
