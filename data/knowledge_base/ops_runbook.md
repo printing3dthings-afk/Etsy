@@ -9082,3 +9082,46 @@ try) all pass. Build `359d267-v203`.
 `db.set_setting("etsy_credential_leak_resolved", "true")` and/or
 `db.set_setting("tiktok_credential_leak_resolved", "true")` once he's rotated
 each one — the alert won't clear on its own.
+
+## 2026-07-17 — Frank upgrade Wave 1 (reliability): item 6/8, hardcoded-path CI guardrail
+The exact "hardcoded /home/user/Etsy, works in sandbox, breaks in prod" bug had
+already hit qc_sweep.py, gen_planner_listing_photos.py, generate_print_sizes.py,
+process_sticker_sheets.py, generate_planner.py/planner_hyperlinker.py, and
+backup_digital_products.py (this Wave, item 1) — each discovered only after
+deploy. Building the guardrail found the SAME bug in **5 more** previously
+undiscovered scripts: `add_ai_disclosure.py`, `fetch_market_examples.py`,
+`gen_lifestyle_scene.py`, `gen_sticker_listing_photos.py`, and
+**`post_scheduled_art.py`** — the last one is genuinely serious: it's invoked
+**daily** by the live server (`_run_scheduled_art_check` → subprocess), and its
+top-level `open('/home/user/Etsy/.env')` would raise `FileNotFoundError` before
+any of the script's logic ran (no such path or .env file exists on Railway).
+This daily job has likely been silently crashing on every real invocation since
+it was wired in — a previously-invisible production failure this exact audit
+was meant to catch.
+
+**Fixed all 5** with the same portable-path pattern established throughout
+this session (`Path(__file__).resolve().parent.parent`, guarded `.env` loading,
+`resolve_dp_base()`-style volume resolution for product-file paths). Verified
+`post_scheduled_art.py --status` runs cleanly post-fix (previously would have
+crashed at import).
+
+**Built `tools/check_hardcoded_paths.py`** — the actual guardrail, wired into
+`ci-smoke.yml`. First version used a text/line heuristic and false-positived on
+its own docstring and two legitimate crontab-example docstrings (multi-line
+`"""..."""` content, which a `#`-comment-only heuristic can't see) — rewrote
+using `ast` (parses the real syntax tree, exempts any string that IS a
+module/function/class docstring via the same rule Python itself uses to
+recognize one, flags everything else) rather than patching the heuristic
+further. Also fixed a crash when a `--paths` target lives outside the repo root
+(`Path.relative_to()` raising `ValueError`), caught while testing.
+
+**Verified**: the live repo now passes clean (97 files scanned, 0 violations);
+a deliberately-broken test file with 2 real violations is correctly caught
+(right count, right file named, non-zero exit); a docstring-only crontab
+mention is correctly exempted; an out-of-repo path is handled without crashing.
+Promoted into `tests/test_check_hardcoded_paths.py`, wired into `ci-smoke.yml`
+right after the existing compile-check step. `py_compile` clean on every
+touched file; YAML syntax validated; all related test files plus
+`playwright_smoke.py` (clean on first try) pass. No `main.py`/HUD changes in
+this item — no build-ID bump / deploy needed, CI enforcement takes effect on
+the next push.

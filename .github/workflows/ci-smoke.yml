@@ -20,6 +20,12 @@ name: CI Smoke
 # starts the server" — playwright_smoke.py boots a real local server with a
 # throwaway test-only account (ENABLE_TEST_LOGIN, not a real credential) and
 # drives it with headless Chromium; still zero real API calls or secrets.
+#
+# 2026-07-17: added tools/check_hardcoded_paths.py after finding the SAME
+# "hardcoded /home/user/Etsy, works in sandbox, breaks in prod" bug in 10
+# separate scripts across this codebase's history — a class of bug this
+# workflow had no way to catch before a commit shipped. See
+# data/knowledge_base/ops_runbook.md's 2026-07-17 entries.
 
 on:
   push:
@@ -53,6 +59,12 @@ jobs:
 
       - name: Compile all Python (syntax check)
         run: python -m compileall -q tools tests
+
+      - name: Hardcoded-path guardrail (works-in-sandbox-breaks-in-prod bug class — 2026-07-17)
+        run: python tools/check_hardcoded_paths.py
+
+      - name: Hardcoded-path guardrail's own tests (catches real violations, exempts docstrings)
+        run: python tests/test_check_hardcoded_paths.py
 
       - name: Smoke test (import server + tool registry)
         run: python tests/smoke_test.py

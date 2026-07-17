@@ -27,7 +27,15 @@ Runs automatically every other day via _calendar_tasks_loop-adjacent scheduling
 in tools/api_server/main.py (see _run_scheduled_art_check) — the crontab line
 below is kept for reference/manual use but is no longer how this actually runs
 in production:
-  0 10 */2 * * cd /home/user/Etsy && python tools/post_scheduled_art.py >> logs/art_schedule.log 2>&1
+  0 10 */2 * * cd /path/to/repo && python tools/post_scheduled_art.py >> logs/art_schedule.log 2>&1
+
+Portable + hosted-deploy aware (2026-07-17): every path below used to be
+hardcoded to /home/user/Etsy (a sandbox-only path — no such path or .env file
+exists on the Railway server, where this script actually runs daily via
+_run_scheduled_art_check, so import alone would raise FileNotFoundError before
+any of the script's logic ran). This is the exact "works in sandbox, breaks in
+prod" bug class already fixed in qc_sweep.py/build_sticker_pack.py/etc. — see
+data/knowledge_base/ops_runbook.md for the full pattern.
 """
 
 import os
@@ -39,29 +47,43 @@ import argparse
 import datetime
 import urllib.request
 import urllib.error
+from pathlib import Path
 
-sys.path.insert(0, '/home/user/Etsy')
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
-# Load .env manually — never use load_dotenv
-_env = {}
-with open('/home/user/Etsy/.env') as _f:
-    for _line in _f:
-        _line = _line.strip()
-        if _line and not _line.startswith('#') and '=' in _line:
-            _k, _v = _line.split('=', 1)
-            _env[_k.strip()] = _v.strip()
-
-for k, v in _env.items():
-    os.environ.setdefault(k, v)
+# Load .env — guarded, since hosted deploys (Railway) inject env vars directly
+# and have no .env file at all.
+_env_path = _ROOT / ".env"
+if _env_path.exists():
+    with open(_env_path) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith('#') and '=' in _line:
+                _k, _v = _line.split('=', 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
 
 from PIL import Image, ImageFilter, ImageEnhance
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 from tools.api_server import db as _db
 
+
+def _resolve_dp_base() -> Path:
+    """digital_products base — the durable Railway volume in production, the
+    repo tree locally. Same resolution order used throughout tools/."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return _ROOT / "data" / "digital_products"
+
+
 # ── Paths ─────────────────────────────────────────────────────────────────────
-SCHEDULE_PATH  = '/home/user/Etsy/data/art_schedule.json'
-ART_DIR        = '/home/user/Etsy/data/digital_products/product_files'
-LOG_DIR        = '/home/user/Etsy/logs'
+SCHEDULE_PATH  = str(_ROOT / "data" / "art_schedule.json")
+ART_DIR        = str(_resolve_dp_base() / "product_files")
+LOG_DIR        = str(_ROOT / "logs")
 OPENAI_KEY     = os.environ.get('OPENAI_API_KEY', '')
 
 os.makedirs(LOG_DIR, exist_ok=True)

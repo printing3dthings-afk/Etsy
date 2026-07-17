@@ -4,18 +4,38 @@ Generate and upload listing photos for the 6 standalone sticker pack listings.
 Uses the actual sticker sheet JPGs — no AI generation needed.
 """
 import os, sys, json, time, urllib.request
-sys.path.insert(0, '/home/user/Etsy')
-with open('/home/user/Etsy/.env') as f:
-    for line in f:
-        line = line.strip()
-        if line and not line.startswith('#') and '=' in line:
-            k, v = line.split('=', 1)
-            os.environ.setdefault(k.strip(), v.strip())
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+# Guarded — hosted deploys (Railway) inject env vars directly and have no .env file.
+_env_path = _ROOT / ".env"
+if _env_path.exists():
+    with open(_env_path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                k, v = line.split('=', 1)
+                os.environ.setdefault(k.strip(), v.strip())
 
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from tools.etsy_api import EtsyAPIClient, EtsyAPIError
 
-ART_DIR = '/home/user/Etsy/data/digital_products/product_files'
+
+def _resolve_dp_base() -> Path:
+    """digital_products base — the durable Railway volume in production, the
+    repo tree locally. Same resolution order used throughout tools/."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return _ROOT / "data" / "digital_products"
+
+
+ART_DIR = str(_resolve_dp_base() / "product_files")
 CANVAS = 2400
 
 PACKS = {
