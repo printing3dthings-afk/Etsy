@@ -245,7 +245,7 @@ around side-effecting calls (websocket sends, tool execution) rather than relyin
 
 - **5-minute health loop detected a problem: etsy: error: etsy api 403: api key not  (known cause)** — seen 18 times
 - **automated health check failure (known cause)** — seen 10 times
-- **escalation — 5-minute health loop detected a problem: etsy: error: etsy api 0: no shop id con** — seen 5 times
+- **escalation — 5-minute health loop detected a problem: etsy: error: etsy api 0: no shop id con** — seen 8 times
 
 ## 2026-06-17 — Frank chat continuity + execution hardening (and Etsy-token-on-restart landmine)
 **What changed (CEO chat / Frank):**
@@ -8298,3 +8298,61 @@ py_compile, HUD JS extraction/node --check, playwright smoke all pass.
 refresh across cards ("soft depth" — replacing hairline borders with diffused
 shadows + bigger radii) and broader micro-interactions on buttons/cards beyond
 nav. Build `189faf3-v197`.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-17 — Visual flow Phase 2: soft-depth cards (the "hard lines" fix itself)
+Phase 1 fixed motion (screen-switch animation); this is the actual border/shadow
+visual refresh Scott asked for. Audited the 149 `border:` declarations first: 105
+of them are the literal string `border:1px solid var(--border)`, and 64 of THOSE
+are inline `style="..."` attributes scattered directly in the HTML markup (not
+centralized CSS classes) — meaning most "hard lines" trace back to one repeated
+literal, not 149 independent design decisions.
+**Two surgical, additive-only levers instead of touching 149 spots by hand:**
+1. **Softened the `--border` custom property itself**, once per theme (8 edits:
+   `:root` + 7 named themes) — blended each theme's border hex ~35% toward its
+   `--panel2` so every one of the 149 usages (including all 64 inline ones, since
+   they all reference `var(--border)`) reads as a subtle seam instead of a crisp
+   line, automatically, everywhere, with zero HTML changes.
+2. **Added a `--card-shadow`/`--card-shadow-hover` token pair** (dark-mode default:
+   inset top highlight + soft ambient shadow — the neumorphism dual-shadow
+   technique, since a plain drop-shadow "barely shows on dark backgrounds" per the
+   existing --panel3 comment; light theme gets a real drop shadow, which renders
+   well on white) and wired it onto the 3 existing reusable card classes
+   (`.hub-card` 50 uses, `.panel` 60 uses, `.act-card` 4 uses) plus a NEW
+   `.create-choice{}` class rule (19 uses — the Create + Brand Kit tile grids,
+   previously 100% inline-styled with no base rule at all). The new class only
+   adds properties (box-shadow, transition, transform) that none of the existing
+   inline styles declare, so nothing gets overridden by inline-style specificity —
+   zero HTML edits needed for that either. `.create-choice` (role="button") also
+   gets a hover-lift + press-scale, matching Phase 1's tap-feedback language.
+All four card classes + the reduced-motion block extended to silence the new
+transforms under `prefers-reduced-motion:reduce`.
+**Verified, not assumed:** computed-style checks in a real browser confirmed the
+hover shadow deepens (0.16→0.28 alpha) and the tile lifts (`translateY(-2px)`) on
+`.create-choice` hover; before/after screenshots of the Home sidebar panels and
+Create tile grid show a clear, real softening (borders now barely visible vs. the
+previous hard rectangular grid). py_compile, HUD JS node --check, playwright smoke
+all pass. Build `590fbdc-v198`.
+**Deferred to Phase 3:** broader micro-interactions beyond nav/tab/create-choice
+(e.g. buttons, list rows, form fields) — not touched here.

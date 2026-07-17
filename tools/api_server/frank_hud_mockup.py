@@ -95,50 +95,64 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
      text-on-bg 14.36:1 and muted-on-bg 7.12:1, both still comfortably above the
      4.5:1 AA floor (muted actually IMPROVED from 5.77:1 -- it was brightened more
      than the background was). */
-  --bg:#241c2e;--panel:#2d2438;--panel2:#372c42;--panel3:#42354e;--border:#493c54;
+  --bg:#241c2e;--panel:#2d2438;--panel2:#372c42;--panel3:#42354e;--border:#3d3248;
   --cyan:#f2a0b5;--cyan2:#f7c3d0;--gold:#e4b155;--gold2:#f2cb8f;--text:#f5eef2;--muted:#bfa3b5;
   --green:#5cc48a;--red:#e2685f;--amber:#e8b868;
 
   --font-display:'Fraunces',Georgia,serif;
   --font-body:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --r-sm:8px;--r-md:12px;--r-lg:16px;--r-pill:999px;
+
+  /* Soft-depth card shadows (2026-07-17, Scott: "too many hard lines" — Phase 2).
+     A dual highlight+shadow (the neumorphism technique) reads as a raised surface
+     even on dark backgrounds, where a plain drop-shadow "barely shows" (see the
+     --panel3 comment above) — the inset top highlight is what actually carries
+     it here, the ambient shadow is a secondary cue. Overridden per-theme below
+     only where a theme's surface treatment needs it (light theme gets a real
+     drop shadow since it renders well on white). */
+  --card-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 2px 10px rgba(0,0,0,.16);
+  --card-shadow-hover:0 1px 0 rgba(255,255,255,.05) inset,0 6px 18px rgba(0,0,0,.28);
 }
 /* ── Color themes — full bg + panel + accent swap. Fonts/radius above are
    structural (declared once on :root) and apply under every theme unchanged;
    only surface/accent colors vary per theme, including each theme's own
-   --panel3 elevation step. ── */
+   --panel3 elevation step. Card-shadow tokens likewise only need a per-theme
+   override for the light theme (below); every dark-surfaced theme reuses the
+   :root treatment since they all share the same "shadow barely shows" constraint. ── */
 html.theme-light{
-  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--panel3:#ffffff;--border:#b8c5d0;
+  --bg:#edf1f5;--panel:#ffffff;--panel2:#dde4ec;--panel3:#ffffff;--border:#d0d9e2;
   --cyan:#0a6878;--cyan2:#084f5e;--gold:#7a5c10;--gold2:#c4a035;
   --text:#1a2332;--muted:#3a5263;--green:#2a7a50;--red:#b03030;--amber:#c07a10;
+  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
+  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
 }
 html.theme-purple{
-  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--panel3:#291a3e;--border:#2a1945;
+  --bg:#0c0714;--panel:#160d24;--panel2:#1e1330;--panel3:#291a3e;--border:#221537;
   --cyan:#9b5de5;--cyan2:#c4a0ff;--gold:#f7b731;--gold2:#ffd166;
   --text:#ede8f5;--muted:#8679af;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-charcoal{
-  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--panel3:#332c22;--border:#3a3222;
+  --bg:#13100a;--panel:#1f1b12;--panel2:#28231a;--panel3:#332c22;--border:#2e281d;
   --cyan:#e8b84a;--cyan2:#f5d47a;--gold:#85c17e;--gold2:#aae0a0;
   --text:#f0e8d0;--muted:#96896c;--green:#85c17e;--red:#d0614a;--amber:#e8b84a;
 }
 html.theme-sakura{
-  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--panel3:#35192b;--border:#3d1f30;
+  --bg:#140a10;--panel:#1f0f18;--panel2:#2a1420;--panel3:#35192b;--border:#311826;
   --cyan:#f4a7b9;--cyan2:#ffd0db;--gold:#c4607a;--gold2:#e58aa5;
   --text:#f5e8ee;--muted:#a4758a;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-matcha{
-  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--panel3:#223424;--border:#263a29;
+  --bg:#0b120c;--panel:#121c14;--panel2:#1a281c;--panel3:#223424;--border:#1e2e21;
   --cyan:#8bc34a;--cyan2:#bce88e;--gold:#d4a96a;--gold2:#e6c48a;
   --text:#e9f2e6;--muted:#7c9172;--green:#6bbf59;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-ocean{
-  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--panel3:#1a3934;--border:#1d3d38;
+  --bg:#07120f;--panel:#0d1d1a;--panel2:#132a26;--panel3:#1a3934;--border:#16312c;
   --cyan:#3ad6c8;--cyan2:#7ceee2;--gold:#f5b878;--gold2:#ffd0a0;
   --text:#e6f2f0;--muted:#6f948c;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
 html.theme-kawaii{
-  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--panel3:#281c47;--border:#2d2255;
+  --bg:#0d0a1a;--panel:#161029;--panel2:#1f1638;--panel3:#281c47;--border:#241a42;
   --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
   --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
@@ -259,7 +273,8 @@ h2.nav-section-h2{margin:12px 10px 6px;font-size:9.5px;letter-spacing:1.5px;colo
 .col-feed{flex:1;min-height:0}
 
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 14px;
-  display:flex;flex-direction:column;overflow:hidden;min-height:0}
+  display:flex;flex-direction:column;overflow:hidden;min-height:0;
+  box-shadow:var(--card-shadow);transition:box-shadow .2s ease}
 .panel-title{font-size:10.5px;letter-spacing:1.5px;color:var(--cyan2);text-transform:uppercase;
   margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .panel-title .src{font-size:8.5px;color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
@@ -622,7 +637,20 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .hub-scroll{margin-top:10px;overflow-y:auto;max-height:760px}
 .hub-section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:16px 0 8px}
 .hub-section-title:first-child{margin-top:0}
-.hub-card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:12px}
+.hub-card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:12px;
+  box-shadow:var(--card-shadow);transition:box-shadow .2s ease}
+.hub-card:hover{box-shadow:var(--card-shadow-hover)}
+/* .create-choice has no base rule of its own — every use sets background/border/
+   radius/padding inline (Create screen tile grid), so this ADDS the soft-depth
+   treatment on top without touching ~19 existing inline attributes: box-shadow
+   and transform are properties none of those inline styles declare, so nothing
+   here gets overridden by the higher-specificity inline style. The lift-on-hover
+   (this is the one card class marked role="button") affirms it's tappable —
+   the same "press responds" language as Phase 1's nav tap feedback. */
+.create-choice{box-shadow:var(--card-shadow);
+  transition:box-shadow .2s ease,transform .15s cubic-bezier(.22,1,.36,1)}
+.create-choice:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
+.create-choice:active{transform:translateY(0) scale(.98)}
 .hub-empty{text-align:center;color:var(--muted);padding:40px 0;font-size:13px}
 .hub-spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:hubspin .7s linear infinite;margin:40px auto}
 @keyframes hubspin{to{transform:rotate(360deg)}}
@@ -668,7 +696,9 @@ body:not(.is-mobile) .orb-open-chat{display:none}
    approve/reject queue is the human-in-the-loop safety gate for Etsy writes and local
    file/exec actions. Namespaced "act-" — new concept, no existing HUD equivalent. ── */
 .section-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px}
-.act-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:var(--r-md);padding:13px 14px;margin-bottom:10px}
+.act-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:var(--r-md);padding:13px 14px;margin-bottom:10px;
+  box-shadow:var(--card-shadow);transition:box-shadow .2s ease}
+.act-card:hover{box-shadow:var(--card-shadow-hover)}
 .act-card.high{border-left-color:var(--red)}
 .act-card.medium{border-left-color:var(--gold)}
 .act-card.low{border-left-color:#4a6b8a}
@@ -1023,6 +1053,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .screen.active{animation:none}
   .nav-item,body.is-mobile #phone-tabbar .ptab,body.is-mobile #phone-tabbar .ptab .pti{transition:none}
   .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
+  .create-choice{transition:none}
+  .create-choice:hover,.create-choice:active{transform:none}
 }
 </style>
 </head>
