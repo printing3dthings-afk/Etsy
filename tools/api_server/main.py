@@ -569,7 +569,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d36eb5d-v211"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "bc733a1-v212"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2564,6 +2564,28 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "get_comparable_listings",
+        "description": (
+            "Search real, live Etsy listings by keyword — the shop's only source "
+            "of real external market data (price/title/tag evidence from actual "
+            "competitors), for backing a pricing or title/tag recommendation with "
+            "real comparables instead of a static rule. Uses Etsy's real public "
+            "search API (shops/{id}/listings replaced with the site-wide "
+            "listings/active endpoint) — public API key only, no OAuth or "
+            "scraping involved, no ToS risk. Read-only."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "keywords": {"type": "string", "description": "Search keywords, e.g. 'kawaii digital planner goodnotes'."},
+                "limit": {"type": "integer", "description": "Max results, default 10, capped at 25."},
+                "min_price": {"type": "number", "description": "Optional minimum price filter in dollars."},
+                "max_price": {"type": "number", "description": "Optional maximum price filter in dollars."},
+            },
+            "required": ["keywords"],
+        },
+    },
+    {
         "name": "qc_check_product",
         "description": (
             "Run the pre-publish Quality Check on a product's files — the same gates "
@@ -3703,6 +3725,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             if lid is None:
                 return {"error": "listing_id is required"}
             return asyncio.run(_apply_conversion_fixes_core(int(lid)))
+        if name == "get_comparable_listings":
+            return _get_comparable_listings(tool_input or {})
         if name == "register_command":
             ti = tool_input or {}
             payload = {
@@ -4006,7 +4030,12 @@ Diagnose against Etsy's 2026 conversion standards:
 - HERO PHOTO drives click-through; <10 photos is a red flag; lifestyle thumbnail
   beats flat white background. Photo problems are the #1 conversion killer.
 - PRICE: psychology endings (.99/.97/.49) outperform round numbers. A price far
-  from the product's tier can suppress conversion in either direction.
+  from the product's tier can suppress conversion in either direction. If REAL
+  COMPARABLE LISTINGS data is provided below, use it as your primary price
+  evidence instead of guessing at "the product's tier" — cite the real average/
+  range directly (e.g. "comparable listings average $X, this is priced $Y above/
+  below that") and let it override generic tier assumptions. If comparable data
+  is not available, fall back to the static psychology-ending rule only.
 - TITLE: ≤70 chars, primary keyword in first 40 chars, comma separators not pipes.
 - TAGS: all 13 used, multi-word buyer-intent phrases, no title duplication.
 - DESCRIPTION: first 1-2 sentences must hook + carry the primary keyword (mobile
@@ -6872,7 +6901,27 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
         except Exception:
             photo_count = 0
         sales = _sales_by_listing_sync().get(listing_id, 0)
-        return {"listing": listing, "photo_count": photo_count, "sales": sales}
+        # 2026-07-17 (Wave 4, C2): pull real comparable listings (this
+        # listing's own title as the search query) so the diagnosis can cite
+        # actual market data for pricing instead of only the static .99/.97/
+        # .49-ending rule. Best-effort and non-fatal -- a search hiccup must
+        # never break the diagnosis itself, it just runs without this signal.
+        comparable = None
+        try:
+            comp_resp = client.search_listings(listing.get("title", "") or "", limit=8)
+            comp_results = [r for r in (comp_resp.get("results") or []) if r.get("listing_id") != listing_id]
+            comp_prices = [p for p in (_price_float(r.get("price")) for r in comp_results) if p]
+            if comp_prices:
+                comparable = {
+                    "count": len(comp_results),
+                    "price_min": round(min(comp_prices), 2),
+                    "price_max": round(max(comp_prices), 2),
+                    "price_avg": round(sum(comp_prices) / len(comp_prices), 2),
+                    "sample_titles": [(r.get("title") or "")[:70] for r in comp_results[:5]],
+                }
+        except Exception as exc:  # noqa: BLE001
+            print(f"[conversion_doctor] comparable-listings lookup failed (non-fatal): {exc}", flush=True)
+        return {"listing": listing, "photo_count": photo_count, "sales": sales, "comparable": comparable}
 
     try:
         gathered = await asyncio.wait_for(asyncio.to_thread(_gather), timeout=20.0)
@@ -6891,6 +6940,8 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
     desc = (listing.get("description", "") or "").strip()
     photo_count = gathered["photo_count"]
 
+    comparable = gathered.get("comparable")
+
     stats = {
         "title": title,
         "title_length": len(title),
@@ -6901,6 +6952,7 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
         "favorites": favs,
         "sales": sales,
         "conversion_pct": round(sales / views * 100, 2) if views else 0.0,
+        "comparable_listings": comparable,
     }
 
     user_payload = (
@@ -6910,6 +6962,17 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
         f"PHOTOS: {photo_count} of 10 recommended\n"
         f"TAGS ({len(tags)}/13): {', '.join(tags) if tags else '(none)'}\n"
         f"VIEWS: {views}   FAVORITES: {favs}   UNITS SOLD: {sales}\n\n"
+    )
+    if comparable:
+        user_payload += (
+            f"REAL COMPARABLE LISTINGS (live Etsy search on this listing's own title, "
+            f"{comparable['count']} found): price range ${comparable['price_min']:.2f}"
+            f"-${comparable['price_max']:.2f}, average ${comparable['price_avg']:.2f}. "
+            f"Sample titles: {'; '.join(comparable['sample_titles'])}\n\n"
+        )
+    else:
+        user_payload += "REAL COMPARABLE LISTINGS: not available for this diagnosis.\n\n"
+    user_payload += (
         "FULL DESCRIPTION:\n"
         f"{desc[:6000] if desc else '(empty)'}\n"
     )
@@ -7028,6 +7091,63 @@ async def _apply_conversion_fixes_core(listing_id: int) -> dict:
         "skipped": skipped,
         "errors": errors,
         "message": message,
+    }
+
+
+def _get_comparable_listings(tool_input: dict) -> dict:
+    """2026-07-17 (Wave 4, C1): the shop's first real external market-data
+    source. EtsyAPIClient.search_listings() (tools/etsy_api.py) already
+    existed, already correctly hits the real public `listings/active` v3
+    endpoint (public API key only, no OAuth, no scraping/ToS risk) — it was
+    simply never exposed as an agent tool. tools/fetch_market_examples.py
+    duplicated its own raw-requests version of the same call instead of
+    reusing this one; this wraps the real client method directly, no new
+    HTTP logic. Before this, every pricing/title/tag recommendation in this
+    codebase came from a static rule (the .99/.97/.49 price-ending check,
+    canonical tag sets) with zero live comparable-listing evidence behind
+    it. Never raises — returns {"error": str} on failure."""
+    keywords = str((tool_input or {}).get("keywords", "")).strip()
+    if not keywords:
+        return {"error": "keywords is required"}
+    try:
+        limit = max(1, min(int((tool_input or {}).get("limit") or 10), 25))
+    except (TypeError, ValueError):
+        limit = 10
+    min_price = tool_input.get("min_price")
+    max_price = tool_input.get("max_price")
+    try:
+        min_price = float(min_price) if min_price is not None else None
+        max_price = float(max_price) if max_price is not None else None
+    except (TypeError, ValueError):
+        return {"error": "min_price/max_price must be numbers"}
+
+    try:
+        resp = EtsyAPIClient().search_listings(
+            keywords, limit=limit, min_price=min_price, max_price=max_price,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"comparable-listing search failed: {str(exc)[:200]}"}
+
+    listings = []
+    for r in (resp.get("results") or []):
+        listings.append({
+            "listing_id": r.get("listing_id"),
+            "title": r.get("title", ""),
+            "price": _price_float(r.get("price")),
+            "tags": (r.get("tags") or [])[:13],
+            "url": f"https://www.etsy.com/listing/{r.get('listing_id')}",
+        })
+
+    prices = [l["price"] for l in listings if l["price"]]
+    price_range = (
+        {"min": round(min(prices), 2), "max": round(max(prices), 2), "avg": round(sum(prices) / len(prices), 2)}
+        if prices else None
+    )
+    return {
+        "keywords": keywords,
+        "count": len(listings),
+        "listings": listings,
+        "price_range": price_range,
     }
 
 

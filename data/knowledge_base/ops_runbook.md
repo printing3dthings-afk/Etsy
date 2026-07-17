@@ -12447,3 +12447,170 @@ property worth having independent of this specific test). `py_compile`
 clean; `tools/check_hardcoded_paths.py` clean (99 files). Full suite via
 `tests/run_all.py` (32/32, ~49s); `playwright_smoke.py` clean on first try.
 Build `d36eb5d-v211`.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmp22bvj2kg/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp22bvj2kg/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpssq70vmu/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 24709). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 24711). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Wave 4 C1+C2: real comparable-listing data wired into the Conversion Doctor
+**What shipped:** `EtsyAPIClient.search_listings()` (tools/etsy_api.py) already
+hit the real public Etsy v3 `listings/active` endpoint (public API key only,
+no OAuth, no scraping/ToS risk) but was never exposed as a live capability --
+`tools/fetch_market_examples.py` duplicated its own raw-requests version
+instead of reusing it, and neither was wired into `AGENT_TOOLS`.
+
+C1 added `get_comparable_listings` (`main.py`, `_get_comparable_listings()`)
+as a thin wrapper directly around the existing, already-hardened client
+method -- no new HTTP logic. Validates `keywords` required, caps `limit` at
+25, parses Etsy's Money-object price format via `_price_float`, computes a
+`price_range` (min/max/avg) across results, never raises (degrades to a
+clean `error` on Etsy API failure -- exercised for real in this sandbox,
+which has no Etsy credentials).
+
+C2 wired that same lookup into `_diagnose_listing_core` (the Conversion
+Doctor): its internal `_gather()` now does a best-effort, non-fatal
+`search_listings(listing_title, limit=8)` call, excludes the listing's own
+ID from its own comparable set, and (when at least one valid comparable
+price comes back) computes `{count, price_min, price_max, price_avg,
+sample_titles}`. That data reaches both the returned `stats.comparable_
+listings` field (surfaced to Scott) and the `user_payload` text actually
+sent to Claude, as a new "REAL COMPARABLE LISTINGS" section citing the real
+price range/average/sample titles -- or an explicit "not available" line
+when the search comes back empty or fails. `_CONVERSION_DOCTOR_SYSTEM`'s
+PRICE bullet was extended to instruct the model to use this real data as its
+primary pricing evidence when present ("cite the real average/range
+directly... let it override generic tier assumptions"), falling back to the
+static .99/.97/.49 psychology-ending rule only when comparable data isn't
+available. This closes the last piece of B2's diagnosis-to-autofix loop with
+real external market signal instead of only static rules.
+
+**Design constraints preserved:** everything here is read-only market
+research feeding an LLM prompt -- no Etsy write calls, no bypass of the
+staged-action approval queue (B2's `apply_conversion_fixes` still stages
+every fix through the same `_autofix_*_core` functions). A comparable-
+listings search failure is always non-fatal to the diagnosis itself (logged,
+not raised) -- Scott never loses a diagnosis because market lookup hiccuped.
+
+**Verification:** `tests/test_comparable_listings.py` (9 tests -- tool
+registration, required-field validation, real credential-less degradation in
+this sandbox, Money-object price parsing, price_range computation incl. the
+empty-results edge case, the 25-result cap, min/max passthrough, invalid-
+filter handling, agent-tool dispatch) and new `tests/test_diagnosis_
+comparable_listings.py` (5 tests -- comparable data reaches both stats and
+the LLM payload, the listing's own ID is excluded from its own comparable
+set, zero-results and search-failure both degrade cleanly without breaking
+the diagnosis, and the system prompt instructs citing real comparable data).
+`py_compile` clean; `tools/check_hardcoded_paths.py` clean (99 files); full
+suite via `tests/run_all.py` (34/34, ~52s); `playwright_smoke.py` clean.
