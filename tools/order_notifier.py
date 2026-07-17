@@ -34,12 +34,21 @@ from email.mime.text import MIMEText
 from pathlib import Path
 
 # ── Env loading ───────────────────────────────────────────────────────────────
+# Guarded: Railway has no .env file at all (env vars are injected directly by
+# the platform), only Scott's local checkout does. Without this guard the
+# script crashes with FileNotFoundError before it ever reaches a live Etsy
+# call -- the same bug class diagnosed 2026-06-17 for etsy_autoresponder.py
+# (see its own comment), found here 2026-07-17 while wiring this script in as
+# an agent-callable command: order_notifier.py has run unguarded in the
+# weekly monitor loop this whole time, its FileNotFoundError silently
+# swallowed into that loop's generic per-script "ERROR:" line every week.
 ENV_PATH = Path(__file__).parent.parent / '.env'
 _env: dict[str, str] = {}
-for _line in ENV_PATH.read_text().splitlines():
-    if '=' in _line and not _line.startswith('#'):
-        _k, _, _v = _line.partition('=')
-        _env[_k.strip()] = _v.strip()
+if ENV_PATH.exists():
+    for _line in ENV_PATH.read_text().splitlines():
+        if '=' in _line and not _line.startswith('#'):
+            _k, _, _v = _line.partition('=')
+            _env[_k.strip()] = _v.strip()
 for _k, _v in _env.items():
     os.environ.setdefault(_k, _v)
 

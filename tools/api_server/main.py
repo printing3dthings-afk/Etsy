@@ -367,6 +367,57 @@ _EXEC_COMMANDS: dict[str, dict] = {
         "long_running": False,
         "requires_approval": True,
     },
+    # 2026-07-17 (capabilities audit): order_notifier.py already ran weekly via
+    # _WEEKLY_MONITOR_SCRIPTS but had no on-demand chat path -- Scott couldn't
+    # ask Frank "check for new orders right now" mid-conversation. Uses
+    # shops/{id}/receipts, a real working endpoint (unlike conversations, see
+    # check_buyer_messages below) -- both entries are genuinely functional.
+    "check_new_orders": {
+        "script": "tools/order_notifier.py",
+        "args": ["--dry"],
+        "description": (
+            "Preview new paid orders from the last 48h with their ready-to-send "
+            "personalized buyer messages. Read-only: sends no email, marks nothing "
+            "as notified. Safe to run as often as asked."
+        ),
+        "timeout": 60,
+        "long_running": False,
+    },
+    "send_order_notifications": {
+        "script": "tools/order_notifier.py",
+        "description": (
+            f"Email {business_config.OWNER_NAME} himself a digest of new paid orders "
+            "(with personalized reply text for each) and mark them as notified so the "
+            "weekly automatic run won't repeat them. Only emails the shop owner -- never "
+            "contacts a buyer -- so this does not need approval, same as the existing "
+            "automatic weekly run."
+        ),
+        "timeout": 60,
+        "long_running": False,
+    },
+    # etsy_autoresponder.py's message-fetching pipeline hits shops/{id}/conversations,
+    # which Etsy Open API v3 does NOT expose to third-party apps -- confirmed by a
+    # live probe against this shop's own account (200 on receipts/listings, 404 on
+    # conversations/messages; a real scope denial is 403, not 404) -- see
+    # ops_runbook.md's 2026-06-19 entry. This is why CLAUDE.md's own Star Seller
+    # section says API-driven buyer messaging isn't possible; only the Quick Reply /
+    # Auto-Reply system in Shop Manager works. Registered anyway (draft-only, no
+    # --send/--send-all) so a real ask surfaces this honestly through the script's
+    # own clear "Could not fetch messages" output instead of Frank having no answer
+    # at all -- and it becomes live for free the moment Etsy ships this endpoint.
+    "check_buyer_messages": {
+        "script": "tools/etsy_autoresponder.py",
+        "description": (
+            "Attempt to fetch new Etsy buyer messages and draft replies. KNOWN "
+            "LIMITATION: Etsy's public API has no buyer-messaging endpoint for "
+            "third-party apps (confirmed 2026-06-19) -- this will report 'Could not "
+            f"fetch messages' every time. Tell {business_config.OWNER_NAME} to use Shop "
+            "Manager's Quick Replies or built-in Auto-Reply instead — see CLAUDE.md's "
+            "Customer Service section for the 5 ready-made templates."
+        ),
+        "timeout": 60,
+        "long_running": False,
+    },
 }
 
 # Sidecar persistence for commands registered at runtime via the register_command
@@ -517,7 +568,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e317ba5-v205"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d1af050-v206"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3357,6 +3408,23 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                             f"through {business_config.OWNER_NAME}'s approval. Run the read-only check, then use stage_action."
                         )
                     }
+            if _EXEC_COMMANDS[cmd_name].get("requires_approval"):
+                # Mirrors /api/workflows/{id}/run exactly -- this command mutates
+                # something (writes a file, etc.) so it must stage through the
+                # Action Center like every other mutation, not run immediately
+                # just because it was invoked from chat instead of the Workflows
+                # screen. Caught 2026-07-17 while wiring in etsy_autoresponder --
+                # this branch previously called _run_exec_command() unconditionally,
+                # silently bypassing requires_approval for any chat-triggered call.
+                payload = {"command": cmd_name, "extra_args": extra_args}
+                summary = f"Run {cmd_name.replace('_', ' ')}" + (f" {extra_args}" if extra_args else "")
+                aid = db.enqueue_action("run_script", summary, payload)
+                return {
+                    "staged": True,
+                    "action_id": aid,
+                    "status": "pending",
+                    "note": f"Queued for {business_config.OWNER_NAME}'s approval in the Action Center — not yet applied.",
+                }
             return _run_exec_command(cmd_name, extra_args)
         if name == "local_speak":
             text = (tool_input or {}).get("text", "")

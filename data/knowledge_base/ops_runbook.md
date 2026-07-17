@@ -10176,3 +10176,197 @@ real de-escaped string, not a naive source regex — a naive regex extraction
 false-failed on an already-correct `\'` escape). Full suite via
 `tests/run_all.py` (22/22, ~42s); `playwright_smoke.py` clean on first try.
 Build `e317ba5-v205`.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmp086_d5r0/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp086_d5r0/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpvbdn_7y6/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 13843). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 13845). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Frank upgrade Wave 2 (capabilities): item 3, order_notifier.py + etsy_autoresponder.py agent-callable
+Continued Wave 2. Original audit finding: "order_notifier.py /
+etsy_autoresponder.py aren't agent-callable mid-chat."
+
+**Investigation split the two scripts into genuinely different situations:**
+
+- `order_notifier.py` uses `shops/{id}/receipts` — a real, working endpoint.
+  Already ran weekly via `_WEEKLY_MONITOR_SCRIPTS`, but had no on-demand chat
+  path. Registered two new `_EXEC_COMMANDS` entries: `check_new_orders`
+  (`--dry`, read-only preview, no approval needed) and
+  `send_order_notifications` (real run — emails Scott himself a digest and
+  marks orders notified; never contacts a buyer, so no approval needed,
+  matching its existing unattended weekly-run status).
+
+- `etsy_autoresponder.py` uses `shops/{id}/conversations`, which Etsy's
+  public API v3 does **not** expose to third-party apps at all — confirmed by
+  a live probe already on record (ops_runbook.md, 2026-06-19): 200 on
+  receipts/listings (proves the token/scopes are fine), 404 on
+  conversations/messages, and a real scope denial is 403 not 404 — so this is
+  a genuinely nonexistent route, not a permissions gap. CLAUDE.md's own Star
+  Seller section already documents this as the reason API-driven buyer
+  messaging isn't possible. Given that, building a `send_buyer_reply` staged
+  Etsy mutation on top of a route that cannot succeed would have been wasted,
+  misleading work — skipped. Registered only `check_buyer_messages` (the
+  draft-only default `run()` — fetch, classify, draft, email Scott a digest),
+  with a description that states the limitation honestly up front rather than
+  silently trying and failing. `--send`/`--send-all` (which would message a
+  real buyer) are deliberately never wired to any command. If Etsy ever ships
+  this endpoint, `check_buyer_messages` becomes real for free with no further
+  code changes.
+
+**Two real bugs found and fixed while verifying, both confirmed with an
+actual reproduction, not assumed:**
+
+1. `order_notifier.py` read `.env` with **no existence guard** — the exact
+   crash class already fixed once in `etsy_autoresponder.py` for the same
+   reason (`etsy_autoresponder.py`'s own comment: "Railway has no .env file
+   at all... diagnosed 2026-06-17"), never applied to `order_notifier.py`.
+   Reproduced for real: hid `.env`, ran `python tools/order_notifier.py
+   --dry` as a subprocess, got an unguarded `FileNotFoundError` before the
+   script ever reached Etsy. Since `order_notifier.py` has run in the weekly
+   monitor loop this whole time, it has very likely been silently crashing on
+   Railway every week — the loop's `except Exception` catches it into a
+   generic per-script "ERROR:" line inside a 7-script digest, invisible
+   unless someone reads that one line closely. Fixed with the same
+   `if ENV_PATH.exists():` guard `etsy_autoresponder.py` already uses.
+   Re-verified with `.env` hidden — no crash, fails cleanly later on missing
+   Etsy credentials instead (the expected, unrelated next failure in an
+   environment with none configured).
+
+2. `execute_command`'s chat-tool dispatch never checked `requires_approval`
+   at all — unlike `/api/workflows/{id}/run` (the Workflows-screen HTTP
+   endpoint), which does, staging the command through `run_script` when the
+   flag is set. The chat tool instead called `_run_exec_command()`
+   unconditionally. Harmless while nothing exploitable pushed the agent
+   toward a `requires_approval` command mid-chat, but a real staged-action
+   bypass waiting to happen — e.g. `backup_digital_products` (writes a real
+   file) or `listing_compliance_sweep` (queues real deactivate-listing
+   candidates) could have run immediately from a chat-invoked
+   `execute_command` call instead of landing in the Action Center like every
+   other mutation in this codebase. Fixed by mirroring
+   `/api/workflows/{id}/run`'s exact staging logic in the chat dispatch
+   branch.
+
+**Verified**: new `tests/test_order_notifier_wiring.py` (10 tests) — all
+three new `_EXEC_COMMANDS` entries registered with correct args/approval
+flags, `check_buyer_messages`'s description confirmed to mention the known
+limitation, confirms no command anywhere wires `--send`/`--send-all`, the
+`requires_approval` staging fix exercised end-to-end (a real
+`backup_digital_products` call through `execute_command` now stages instead
+of running, confirmed via a real DB read-back of the queued action's type and
+payload), a regression check that non-approval commands still run directly
+(not staged), and the `.env`-missing crash fix reproduced with a genuine
+subprocess run against a temporarily hidden real `.env` file (restored
+immediately after, verified present again). `py_compile` clean. Full suite
+via `tests/run_all.py` (23/23, ~45s); `playwright_smoke.py` clean on first
+try. Build `d1af050-v206`.
