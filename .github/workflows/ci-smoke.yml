@@ -26,6 +26,14 @@ name: CI Smoke
 # separate scripts across this codebase's history — a class of bug this
 # workflow had no way to catch before a commit shipped. See
 # data/knowledge_base/ops_runbook.md's 2026-07-17 entries.
+#
+# 2026-07-17 (same pass): also found that 10 of the repo's 19 tests/test_*.py
+# files were never individually wired into this workflow at all (several
+# predating this session) — every step here is added by hand, so a new test
+# file that nobody remembers to add a step for just silently never runs in CI.
+# Added a single "Full test suite" step (tests/run_all.py, glob-discovers every
+# tests/test_*.py) as a catch-all so that specific gap can't recur — the
+# individual named steps above stay too, for per-incident CI visibility.
 
 on:
   push:
@@ -95,6 +103,9 @@ jobs:
 
       - name: Listing integrity tests (audit_listing fast-mode checks, fixture-based)
         run: python tests/test_listing_integrity.py
+
+      - name: Full test suite (tests/run_all.py — catches any file not individually named above)
+        run: python tests/run_all.py
 
       - name: Real-browser smoke test (real server + headless Chromium — 2026-07-10)
         run: python tools/playwright_smoke.py

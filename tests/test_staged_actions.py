@@ -18,9 +18,14 @@ server` (same safe import smoke_test.py already relies on — no server start,
 no background loops, no API keys needed) and exercises the pure validation
 branches with tiny in-memory/tmp fixtures. The one branch that talks to Etsy
 (at_approval=True's live-state reconfirmation) is exercised only far enough
-to prove a network/lookup failure is turned into a rejection, not a crash —
-it does not require real credentials since EtsyAPIClient() construction
-itself is expected to raise without them.
+to prove a network/lookup failure is turned into a rejection, not a crash.
+`EtsyAPIClient()` reads credentials straight from os.environ and does NOT
+raise on construction even with none set — the test explicitly clears every
+Etsy credential env var for its own duration (see
+_ETSY_CRED_KEYS/save-restore below) rather than assuming the ambient
+environment has none, which used to cause an intermittent hang whenever this
+sandbox happened to have stale-but-present credentials (2026-07-17 fix — see
+data/knowledge_base/ops_runbook.md).
 
 Run locally:  python tests/test_staged_actions.py
 In CI:        see .github/workflows/ci-smoke.yml
@@ -141,14 +146,36 @@ def test_toggle_listing_state_valid_passes():
 
 
 # ── at_approval=True: live-state reconfirmation ─────────────────────────────
+# 2026-07-17 fix: this used to just ASSUME no Etsy credentials were configured
+# in the test environment, without enforcing it — EtsyAPIClient() reads
+# straight from os.environ at construction (see tools/etsy_api.py) and does NOT
+# raise on missing credentials; it always makes a real network call either way.
+# With no credentials present, Etsy rejects the malformed/empty-auth request
+# fast; with stale-but-present credentials (this exact sandbox, confirmed
+# 2026-07-17 reliability audit), the retry/backoff/circuit-breaker logic in
+# etsy_api.py kicks in and can take much longer to finally fail -- an
+# "intermittent hang" that depended entirely on incidental environment state,
+# not a real bug in the gate being tested. Fixed by explicitly clearing every
+# Etsy credential env var for the duration of this one test (save/restore),
+# so the fast-reject path is guaranteed regardless of what's ambiently
+# configured -- CI, a dev laptop with a real .env, or this sandbox.
+_ETSY_CRED_KEYS = (
+    "ETSY_API_KEY", "ETSY_CLIENT_ID", "ETSY_CLIENT_SECRET",
+    "ETSY_ACCESS_TOKEN", "ETSY_SHOP_ID", "ETSY_SHOP_ID_NUMERIC",
+)
+
+
 def test_update_title_at_approval_without_credentials_rejected_not_crashed():
-    # No Etsy credentials are configured in this test environment, so
-    # EtsyAPIClient().get_listing() must fail -- the gate should turn that
-    # into a clean rejection (never apply a mutation it couldn't reconfirm),
-    # not raise and crash the caller.
-    ok, msg = validate(
-        "update_title", {"listing_id": 123, "title": "A fine title"}, at_approval=True,
-    )
+    import os
+    saved = {k: os.environ.pop(k, None) for k in _ETSY_CRED_KEYS}
+    try:
+        ok, msg = validate(
+            "update_title", {"listing_id": 123, "title": "A fine title"}, at_approval=True,
+        )
+    finally:
+        for k, v in saved.items():
+            if v is not None:
+                os.environ[k] = v
     check(ok is False, "at_approval=True with no reachable Etsy API must reject, not silently pass")
     check(isinstance(msg, str) and msg, "rejection must carry a human-readable reason")
 
