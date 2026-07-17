@@ -11641,3 +11641,179 @@ This completes the full three-wave Frank upgrade program: Wave 1
 (reliability — 8 items), Wave 2 (capabilities — 4 items), Wave 3 (usability —
 3 items), 15 shipped items total, each with its own test coverage, ops
 runbook entry, and confirmed live deploy.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmplh89460u/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmplh89460u/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpruao2c39/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 19045). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 19047). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Frank upgrade Wave 4 (sales & traffic): item D1, defused a real staged-action bypass
+Scott asked for a genuinely new capability pass to maximize sales/traffic —
+explicitly naming listing photos and descriptions, confirmed via a
+clarifying round that all four levers matter (photo quality, listing copy/
+SEO, market intelligence, traffic beyond Etsy) and sales-critical content
+should always use the best available model. Ran four parallel deep research
+audits (photo pipeline, copy/SEO, market intelligence, traffic channels)
+before writing any code — full plan at `/root/.claude/plans/atomic-dancing-
+shamir.md` (Wave 4). This is the first shipped item: a security fix flagged
+"ship regardless of priority order."
+
+**Finding**: `tools/social_media_tools.py` — an entirely separate, never-
+imported-by-main.py module (confirmed zero references anywhere in
+`main.py`) — contains `_post_pin()`, which called
+`pinterest_api.PinterestClient.create_pin()` **directly, with zero staging
+or approval**. This is exactly the Hard Stop CLAUDE.md's Autonomy Boundaries
+section forbids ("Post to social media accounts" always requires explicit
+review). It was harmless only because nothing currently imports this module
+— but it's a live landmine: a future casual wiring pass (the same shape as
+how `etsy_ads_tools.py` was wired into `AGENT_TOOLS` with a one-line
+`.extend()`) could reopen autonomous, unapproved Pinterest posting without
+anyone noticing, right next to the correctly-staged `stage_pinterest_post`
+tool this session already built and tested.
+
+**Fix**: `_post_pin()` now unconditionally refuses and points at the real,
+staged, tested path (`stage_pinterest_post` → Action Center → Scott's
+one-tap approval → `_execute_pinterest_staged_action`, all in `main.py`).
+Defused at the source rather than relying on nobody ever importing the file.
+
+**Also investigated (found not viable, not implemented)**: the plan's D2
+item proposed folding this same file's read-only tools (`get_pin_schedule`,
+`get_content_calendar`, `get_growth_recommendations`) into `AGENT_TOOLS`.
+Reading their actual implementations found the whole module is severely
+stale legacy content from an earlier catalog era — `_get_pinterest_profile`
+hardcodes a shop bio describing "Handcrafted 3D printed lamps, vases & home
+decor shipped from Indiana" (not the current shop's actual identity),
+`_get_growth_recommendations` hardcodes fake example stats
+(`"followers": 2, "total_pins": 4"`) instead of reading live state, and
+`LISTING_BOARD_MAP`/`PIN_DESCRIPTIONS` are keyed by old `L001`-`L010` 3D
+lamp/vase listing IDs and old `DP10xx` wall-art codes that don't reliably
+match the current live catalog. Wiring these in would hand Frank tools that
+confidently state wrong information — directly against this codebase's own
+truthfulness standard, even for internal-facing output. Skipped rather than
+implemented as originally scoped; a real fix would mean rebuilding these
+against live data (`pinterest_api.get_boards()`, the real `product_catalog.
+json`) rather than folding in the existing stale versions — noted as future
+work, not attempted in this pass.
+
+**Verified**: new `tests/test_social_media_tools_post_pin_disabled.py`
+(5 tests) — confirms `_post_pin()` always refuses regardless of input,
+confirms it never reaches `PinterestClient.create_pin()` even when Pinterest
+reports as configured (patches `create_pin`/`get_board_id` to raise if
+called, proving the function returns before touching the API), confirms it
+doesn't crash on a `None` store argument (no longer reads `store.
+find_listing()`), and confirms `execute_tool()`'s dispatcher still routes
+`post_pin` to the now-safe refusal. Full suite via `tests/run_all.py`
+(28/28, ~44s). No build-ID bump for this item — `social_media_tools.py`
+isn't imported by `main.py`, so this change has zero effect on the running
+server; nothing to verify via a live deploy poll.

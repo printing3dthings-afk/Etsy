@@ -604,58 +604,28 @@ def _get_pinterest_boards() -> str:
 
 
 def _post_pin(tool_input: dict, store: DataStore) -> str:
-    if not pinterest_api.is_configured():
-        return json.dumps({
-            "status": "oauth_required",
-            "message": "Pinterest not connected. Run 'python tools/pinterest_oauth.py' first.",
-            "setup_steps": [
-                "1. Go to https://developers.pinterest.com/",
-                "2. Create an app → copy App ID and App Secret",
-                "3. Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env",
-                "4. Run: python tools/pinterest_oauth.py",
-                "5. Re-run this post command",
-            ],
-        }, indent=2)
-
-    listing_id = tool_input["listing_id"]
-    board_name = tool_input["board_name"]
-    image_url = tool_input["image_url"]
-    link = tool_input.get("link", "https://www.etsy.com/shop/onbrandcraftz")
-
-    listing = store.find_listing(listing_id)
-    if not listing:
-        return json.dumps({"error": f"Listing {listing_id} not found"})
-
-    pin_data = PIN_DESCRIPTIONS.get(listing_id, {})
-    title = tool_input.get("custom_title") or pin_data.get("title", listing["title"])
-    description = tool_input.get("custom_description") or pin_data.get("description", listing["title"])
-
-    try:
-        client = pinterest_api.get_client()
-        board_id = client.get_board_id(board_name)
-        if not board_id:
-            boards = client.get_boards()
-            available = [b["name"] for b in boards]
-            return json.dumps({
-                "error": f"Board '{board_name}' not found.",
-                "available_boards": available,
-            }, indent=2)
-
-        result = client.create_pin(
-            board_id=board_id,
-            title=title,
-            description=description,
-            image_url=image_url,
-            link=link,
-        )
-        return json.dumps({
-            "success": True,
-            "pin_id": result.get("id"),
-            "title": title,
-            "board": board_name,
-            "link": link,
-            "pinterest_url": f"https://www.pinterest.com/pin/{result.get('id', '')}",
-        }, indent=2)
-
-    except pinterest_api.PinterestAPIError as e:
-        return json.dumps({"error": str(e), "listing_id": listing_id}, indent=2)
+    """DISABLED 2026-07-17 (Wave 4 audit, security fix). This function used to
+    call pinterest_api.PinterestClient.create_pin() directly with zero
+    staging or approval -- a live Hard-Stop bypass (CLAUDE.md's Autonomy
+    Boundaries: "Post to social media accounts" requires explicit review,
+    never an autonomous call). It was dormant only because this whole module
+    was never imported by main.py's AGENT_TOOLS -- a future wiring pass could
+    easily have reopened this exact hole the same casual way etsy_ads_tools.py
+    was wired in. Defused at the source rather than relying on nobody ever
+    importing this file. The correct, staged, tested path is
+    stage_pinterest_post (tools/api_server/main.py) -> the Action Center ->
+    Scott's one-tap approval -> _execute_pinterest_staged_action. This
+    function now always refuses and points there; it is intentionally never
+    reachable as a live post regardless of what wires this module in later."""
+    return json.dumps({
+        "error": "post_pin is disabled — it bypassed Scott's approval queue.",
+        "use_instead": "stage_pinterest_post",
+        "detail": (
+            "Direct posting from this module was removed 2026-07-17 because it "
+            "called PinterestClient.create_pin() with no staging step, violating "
+            "CLAUDE.md's Autonomy Boundaries Hard Stop on autonomous social "
+            "posting. Use the stage_pinterest_post agent tool instead -- it "
+            "enqueues the pin in the Action Center for Scott's one-tap approval "
+            "before anything actually posts."
+        ),
+    }, indent=2)
