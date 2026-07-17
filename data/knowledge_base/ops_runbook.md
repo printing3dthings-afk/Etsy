@@ -8505,3 +8505,110 @@ Deliberately did NOT build the GitHub Actions workflow originally proposed —
 it wouldn't have solved the actual problem, and the volume attachment already
 closed the higher-severity half of the original gap. `py_compile` clean on
 both touched files.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:DPCRASH
+5-minute health loop reaped a failed background build: build_planner:DPCRASH (pid 21862). Exited 1 after 5s — see build_planner:DPCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:DPHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:DPHUNG (pid 21864). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 22966). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 22968). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-17 — Frank upgrade Wave 1 (reliability): item 3/8, crashed/hung builds now surfaced
+`_health_check_iteration()`'s `_LONG_RUNNING_PROCS` reaping used to only
+`print()` a finished process's exit code to server stdout — no ops_runbook
+entry, no `/api/alerts` surfacing, and (the real gap) no timeout at all for a
+process that never exits, so a genuinely wedged `build_planner`/
+`build_sticker_pack`/`build_product` subprocess would sit tracked forever with
+zero visibility.
+
+**Fix:**
+- Added `_LONG_RUNNING_PROC_TIMEOUT_S` (15 min — these builds normally finish
+  in 2-10 min per their own docstrings). A process still running past that
+  gets killed, not just noted.
+- Reused the EXISTING heartbeat mechanism already wired into `/api/alerts`
+  (`db.set_agent_heartbeat`/`list_agent_heartbeats`, the same table the 5 real
+  background loops use) rather than inventing a new alert channel: a crashed
+  or hung build now writes an `error`-status heartbeat (`build:<cmd_name>`),
+  which `/api/alerts` already surfaces to the HUD with zero new alert-rendering
+  code needed. A clean exit writes an `ok`-status heartbeat instead, so a
+  retry that succeeds self-clears any prior error automatically.
+- Non-zero exits and kills also get an `_append_ops_runbook_entry()` call, so
+  the failure is in this file's own history too, not just the live alert feed.
+
+**Verified with real subprocesses, not mocks** — spawned an actual crashing
+process, an actual clean-exiting process, and an actual still-running process
+with its tracked start time backdated past the timeout ceiling (so the test
+doesn't wait 15 real minutes), then ran `_health_check_iteration()` for real
+and confirmed: the crash produces an error heartbeat, the clean exit produces
+an ok heartbeat, the "hung" process is ACTUALLY killed (`poll() is not None`
+after) and produces an error heartbeat mentioning it was killed, and a
+subsequent clean retry of the same build overwrites the error heartbeat with
+ok. Also confirmed the resulting error heartbeats surface through the exact
+query `/api/alerts` runs. Promoted into a permanent test:
+`tests/test_health_check_reap.py`. `py_compile` clean; `tests/
+test_produce_qc.py` and `playwright_smoke.py` (clean on first try) both pass.
+Build `cbd7d9c-v201`.

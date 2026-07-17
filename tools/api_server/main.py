@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "2fa8077-v200"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "cbd7d9c-v201"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5213,21 +5213,67 @@ async def _quality_audit_loop() -> None:
         await asyncio.sleep(delay)
 
 
+#   A tracked build stuck running past this is treated as hung and killed.
+#   Every build_planner/build_sticker_pack/build_product run finishes in 2-10
+#   min per their own docstrings; 15 min gives real headroom without letting a
+#   wedged process sit untracked forever (2026-07-17 reliability audit finding
+#   -- this used to have no ceiling at all).
+_LONG_RUNNING_PROC_TIMEOUT_S = 15 * 60
+
+
 async def _health_check_iteration() -> dict:
     """One health-check pass: reap finished background processes, ping Etsy +
     confirm the Anthropic key is set, and escalate to ops_runbook.md if either
     dependency is down. Etsy/Anthropic outages are content-level findings (an
     "error" heartbeat status) rather than loop failures, so they don't trigger
-    `_run_loop_iteration`'s own retry backoff -- the check itself ran fine."""
+    `_run_loop_iteration`'s own retry backoff -- the check itself ran fine.
+
+    2026-07-17: crashed/hung tracked builds used to be silently swallowed --
+    reaped with only a server-stdout print(), no ops_runbook entry, no /api/alerts
+    surfacing, and no timeout for a process that never exits at all. Now: a
+    non-zero exit gets an ops_runbook entry + an agent_heartbeat row (which
+    /api/alerts already knows how to surface, same mechanism the 5 real
+    background loops use) so it's visible in the HUD, not just server logs; a
+    clean exit clears any prior error heartbeat for that same build so a retry
+    that succeeds doesn't leave a stale alert behind; and anything still running
+    past _LONG_RUNNING_PROC_TIMEOUT_S gets killed and logged as hung."""
     for pid, (proc, cmd_name, started_at) in list(_LONG_RUNNING_PROCS.items()):
-        if proc.poll() is not None:  # finished (crashed or completed)
-            age_s = (datetime.now(timezone.utc) - started_at).total_seconds()
+        age_s = (datetime.now(timezone.utc) - started_at).total_seconds()
+        finished = proc.poll() is not None
+        hung = not finished and age_s > _LONG_RUNNING_PROC_TIMEOUT_S
+        if not finished and not hung:
+            continue  # still running, within the normal window -- leave it tracked
+
+        heartbeat_name = f"build:{cmd_name}"
+        if hung:
+            proc.kill()
+            print(f"[health-check] killed HUNG {cmd_name} (pid {pid}, ran {age_s:.0f}s > "
+                  f"{_LONG_RUNNING_PROC_TIMEOUT_S}s ceiling)", flush=True)
+            detail = f"Killed after running {age_s:.0f}s, past the {_LONG_RUNNING_PROC_TIMEOUT_S}s ceiling."
+            _append_ops_runbook_entry(
+                f"Background build hung: {cmd_name}",
+                f"5-minute health loop killed a stuck background build: {cmd_name} (pid {pid}). {detail}",
+            )
+            await asyncio.to_thread(db.set_agent_heartbeat, heartbeat_name, cmd_name, "error", detail)
+        else:
             print(
                 f"[health-check] reaped {cmd_name} (pid {pid}, ran {age_s:.0f}s, "
                 f"exit={proc.returncode})",
                 flush=True,
             )
-            del _LONG_RUNNING_PROCS[pid]
+            if proc.returncode != 0:
+                detail = f"Exited {proc.returncode} after {age_s:.0f}s — see {cmd_name}'s own log for detail."
+                _append_ops_runbook_entry(
+                    f"Background build failed: {cmd_name}",
+                    f"5-minute health loop reaped a failed background build: {cmd_name} (pid {pid}). {detail}",
+                )
+                await asyncio.to_thread(db.set_agent_heartbeat, heartbeat_name, cmd_name, "error", detail)
+            else:
+                await asyncio.to_thread(
+                    db.set_agent_heartbeat, heartbeat_name, cmd_name, "ok",
+                    f"Finished cleanly in {age_s:.0f}s.",
+                )
+        del _LONG_RUNNING_PROCS[pid]
 
     etsy_ok = True
     etsy_detail = "ok"
