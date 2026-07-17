@@ -68,6 +68,15 @@ def main() -> int:
         print(f"[build_planner] FAILED: no finalized PDFs were produced for {pid}")
         return 1
 
+    # Automatic durability backup (2026-07-17) — closes the exact failure mode that
+    # lost DP1030-1034's source files the first time (approval-gated, so nobody
+    # remembered to run it). A backup hiccup must never fail an otherwise-good build.
+    try:
+        import backup_digital_products
+        backup_digital_products.run()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[build_planner] ⚠ backup step failed (build itself is still good): {exc}", flush=True)
+
     print(f"[build_planner] DONE {pid}: {', '.join(copied)} (in {pf})", flush=True)
     return 0
 

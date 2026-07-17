@@ -122,6 +122,16 @@ def build(pid: str, max_sheets: int | None = None) -> int:
         # qc_sweep hard-FAILs under 50; surface it now rather than at QC time.
         print(f"[build_sticker_pack] WARNING: only {count} stickers segmented (<50) — "
               f"a sheet may have generated as one connected blob; re-run or inspect.")
+
+    # Automatic durability backup (2026-07-17) — closes the exact failure mode that
+    # lost DP1030-1034's source files the first time (approval-gated, so nobody
+    # remembered to run it). A backup hiccup must never fail an otherwise-good build.
+    try:
+        from tools import backup_digital_products
+        backup_digital_products.run()
+    except Exception as exc:  # noqa: BLE001
+        print(f"[build_sticker_pack] ⚠ backup step failed (build itself is still good): {exc}", flush=True)
+
     return 0
 
 

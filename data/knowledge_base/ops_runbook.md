@@ -8407,3 +8407,57 @@ Build `6e52854-v199`.
 **This closes the 3-phase visual-flow project** (motion → soft-depth cards →
 remaining interactive feedback) started from Scott's "too many hard lines...
 make it flow more."
+
+## 2026-07-17 — Frank upgrade Wave 1 (reliability): item 1/8, automatic digital-products backup
+Scott asked for a no-holds-barred audit of Frank's power/UX/reliability. Three
+research passes ran (capabilities, reliability, manual UX); reliability was
+picked as the first wave, and Scott specifically confirmed backups should
+become **fully automatic**, not just louder reminders — this is the highest-
+leverage item: `backup_digital_products.py` was only reachable via an
+approval-gated `_EXEC_COMMANDS` entry, which is exactly why DP1030-1034's
+source files were lost the first time (nobody remembered to run it — see the
+2026-07-15/16 entries).
+
+**Also caught in passing:** `backup_digital_products.py` had the exact same
+"hardcoded sandbox path" bug already flagged 5x across other tools
+(`qc_sweep.py`, `gen_planner_listing_photos.py`, etc.) — `SOURCE_DIR` was
+hardcoded to `ROOT/data/digital_products`, which is empty when the build
+pipelines run server-side (their files land on the durable volume via
+`resolve_dp_base()`-style resolution instead). Wiring this in unfixed would
+have backed up nothing on the live server. Fixed with the same
+`_resolve_dp_base()` pattern (HUB_FILES_DIR → /data/files → repo-relative
+fallback) used elsewhere; verified byte-identical sandbox behavior when no
+volume is present.
+
+**Design:** extracted the core logic into `run(no_sync: bool = False) -> Path`
+(the old `main()` just does argparse + calls it) so it's safely callable
+programmatically. `run()` is now environment-aware: it always makes the ZIP,
+but only attempts the sync-to-hub HTTP push when NOT already running against
+the volume (a server-side call syncing to itself would be a pointless
+self-referential round-trip finding everything already present — files land
+on the volume directly by construction when these scripts run server-side).
+`BACKUP_DIR` also became volume-aware (a sibling `backups/` dir next to
+wherever SOURCE_DIR resolved), so the safety copy survives redeploys too when
+running server-side, not just in the sandbox.
+
+**Wired into all three one-tap builders** (`build_product.py` step 5/5,
+`build_planner.py`, `build_sticker_pack.py`) — each calls
+`backup_digital_products.run()` right after its own success check, wrapped in
+try/except so a backup hiccup can never fail an otherwise-good build.
+
+**Verified:** standalone `run()` test (real ZIP created, correct file count,
+correct sync-skip messaging) in both a simulated-volume env (HUB_FILES_DIR set)
+and the plain sandbox fallback (byte-identical to the pre-fix hardcoded path);
+import-context check confirming each of the three call sites' exact import
+style (`import backup_digital_products` vs `from tools import
+backup_digital_products`) resolves correctly given each script's own
+sys.path setup; end-to-end test of `build_planner.py`'s actual tail logic
+(copy + backup) against a seeded fake PDF, confirming the ZIP is created with
+correct contents and volume-aware sync-skip fires. `py_compile` clean on all
+4 touched files; `tests/test_produce_qc.py` (covers the build_planner/
+build_sticker_pack/build_product tool wiring) still passes.
+
+Remaining 7 items of Wave 1 (hub_db backup gap re-verification, crashed-build
+visibility, broader health checks, credential-rotation escalation, hardcoded-
+path CI guardrail, test-suite hardening, branch-drift monitor) tracked as
+separate in-progress work, not yet shipped.
