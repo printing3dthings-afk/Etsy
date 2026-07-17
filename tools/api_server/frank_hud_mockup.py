@@ -737,6 +737,9 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 
 .hub-swatch{display:inline-block;width:16px;height:16px;border-radius:4px;vertical-align:middle;margin-right:4px;flex-shrink:0;border:1px solid rgba(255,255,255,.15)}
 .hub-prod-card{background:var(--panel2);border:1px solid var(--border);border-left-width:4px;border-radius:var(--r-md);padding:13px 14px;margin-bottom:10px}
+.hub-prod-card.tappable{cursor:pointer}
+.hub-prod-card.tappable:active{background:var(--panel)}
+.hub-prod-card .pchev{margin-left:auto;color:var(--muted);flex:none;align-self:center}
 
 .hub-cred-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
 .hub-cred-row:last-child{border-bottom:none}
@@ -1076,6 +1079,43 @@ body.phone-sheet-open #phone-sheet{display:flex}
   font-weight:700;cursor:pointer;font-family:inherit;background:var(--panel2);color:var(--text)}
 .psheet-btn.primary{background:var(--cyan);border-color:transparent;color:#04121b}
 .psheet-btn.cancel{background:transparent;color:var(--muted)}
+/* Products-screen fix sheet (2026-07-18) -- copy of the #phone-sheet rules under new
+   ids rather than retrofitting the shipped Needs-Attention sheet (which has its own
+   hardcoded 2-button markup) to take a dynamic button list too. */
+#product-sheet-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.55)}
+#product-sheet{display:none;position:fixed;left:0;right:0;bottom:0;z-index:901;
+  background:var(--panel);border-top:1px solid var(--border);border-radius:18px 18px 0 0;
+  padding:18px 16px calc(16px + env(safe-area-inset-bottom));flex-direction:column;gap:9px}
+body.product-sheet-open #product-sheet-backdrop{display:block}
+body.product-sheet-open #product-sheet{display:flex}
+#product-sheet-title{font-weight:700;font-size:14.5px;color:var(--text);line-height:1.4}
+#product-sheet-sub{font-size:12px;color:var(--muted);margin-bottom:5px;line-height:1.4}
+#product-sheet-buttons{display:flex;flex-direction:column;gap:9px}
+/* Products-screen review modal (2026-07-18) -- a taller, scrollable, centered panel
+   (not a bottom sheet) since it needs to show description text, a tag list, and a
+   photo grid. */
+#product-review-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.6)}
+#product-review-modal{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+  z-index:901;width:min(560px,92vw);max-height:85vh;background:var(--panel);
+  border:1px solid var(--border);border-radius:var(--r-md);flex-direction:column;overflow:hidden}
+body.product-review-open #product-review-backdrop{display:block}
+body.product-review-open #product-review-modal{display:flex}
+.prm-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
+.prm-header-title{font-weight:700;font-size:15px;color:var(--text)}
+.prm-close-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px}
+.prm-body{overflow-y:auto;padding:14px 16px;font-size:13px;color:var(--text);line-height:1.5;flex:1}
+.prm-actions{padding:12px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);
+  display:flex;flex-direction:column;gap:9px;flex:none}
+.prm-tag{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:999px;
+  padding:3px 10px;font-size:11px;color:var(--text);margin:0 5px 5px 0}
+.prm-photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
+.prm-photo-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:var(--r-sm);
+  border:1px solid var(--border);cursor:pointer}
+.prm-block-title{font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--muted);margin:14px 0 6px}
+.prm-block-title:first-child{margin-top:0}
+.prm-blocking{color:var(--red);font-size:12px;margin:3px 0}
 
 /* ══ Phone Mode v3 — fit the desktop screens to the phone width (no sideways scroll) ══
    The 19 desktop screens use inline `grid-template-columns:1fr 1fr` blocks that never
@@ -2057,6 +2097,26 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <button class="psheet-btn primary" id="phone-sheet-fix" onclick="phoneSheetFix()">🤖 Let Frank fix it</button>
     <button class="psheet-btn" id="phone-sheet-view" onclick="phoneSheetView()">🏷 View listing on Etsy</button>
     <button class="psheet-btn cancel" onclick="phoneSheetClose()">Cancel</button>
+  </div>
+
+  <!-- ══ Products-screen fix sheet — tap a red-X card → regenerate / open in Files ══ -->
+  <div id="product-sheet-backdrop" onclick="productSheetClose()"></div>
+  <div id="product-sheet" role="dialog" aria-modal="true">
+    <div id="product-sheet-title"></div>
+    <div id="product-sheet-sub"></div>
+    <div id="product-sheet-buttons"></div>
+    <button class="psheet-btn cancel" onclick="productSheetClose()">Cancel</button>
+  </div>
+
+  <!-- ══ Products-screen review modal — tap a ready-for-review/draft card ══ -->
+  <div id="product-review-backdrop" onclick="productReviewClose()"></div>
+  <div id="product-review-modal" role="dialog" aria-modal="true">
+    <div class="prm-header">
+      <div class="prm-header-title" id="prm-title"></div>
+      <button class="prm-close-btn" onclick="productReviewClose()" aria-label="Close">✕</button>
+    </div>
+    <div class="prm-body" id="prm-body"></div>
+    <div class="prm-actions" id="prm-actions"></div>
   </div>
 
   <!-- ══ Phone Mode bottom tab bar — mobile only (hidden on desktop via CSS) ══ -->
@@ -6119,14 +6179,236 @@ function renderProductsContent() {
       const missing = p.files.filter(f => !f.exists).map(f => f.name);
       filesLine = '❌ missing: ' + escHtml(missing.join(', '));
     }
-    html += '<div class="hub-prod-card" style="border-left-color:' + borderColor + '">' +
+    html += '<div class="hub-prod-card tappable" role="button" tabindex="0" ' +
+      'onclick="openProductSheet(\\'' + p.id + '\\')" style="border-left-color:' + borderColor + '">' +
+      '<div style="display:flex;align-items:flex-start;gap:8px">' +
+      '<div style="flex:1;min-width:0">' +
       '<div class="hub-prod-name">' + escHtml(p.title || p.id) + '</div>' +
       '<div class="hub-prod-meta">' + escHtml(p.id) + (p.listing_id ? ' · Etsy #' + escHtml(String(p.listing_id)) : '') +
         (p.price != null ? ' · $' + escHtml(String(p.price)) : '') + ' · ' + escHtml(p.status || '') + '</div>' +
       '<div class="hub-prod-files" style="font-size:11px;opacity:0.8;margin-top:3px">' + filesLine + '</div>' +
+      '</div><span class="pchev">›</span></div>' +
     '</div>';
   });
   el.innerHTML = html;
+}
+// Tap dispatcher for a Products-screen card (2026-07-18): branches by what's
+// actually wrong so the popup that opens always matches the card's own
+// red-X/green-check state instead of one generic "view" action.
+function openProductSheet(productId) {
+  const p = _products.find(x => x.id === productId);
+  if (!p) return;
+  if (p.all_files_present === false) {
+    openProductFixSheet(p);
+  } else if (p.status === 'ready_for_review' || p.status === 'draft' || p.status === 'listed_draft') {
+    openProductReviewModal(p);
+  } else {
+    openProductInfoSheet(p);
+  }
+}
+function _productGoToScreen(name){
+  if (typeof isMobileMode === 'function' && isMobileMode()) { phoneOpenScreen(name); } else { showScreen(name); }
+}
+
+// ── Fix sheet (missing files) + plain info sheet — share the #product-sheet markup ──
+let _productSheetItem = null;
+function productSheetClose(){
+  document.body.classList.remove('product-sheet-open');
+  _productSheetItem = null;
+}
+function productSheetOpenFiles(productId){
+  productSheetClose();
+  _productGoToScreen('files');
+}
+async function productRegenerateBuild(productId, kind){
+  // kind: 'planner' (dated+undated PDF) or 'stickers' (sticker pack ZIP).
+  // NOT a silent one-tap fix (2026-07-18 design decision) -- this kicks off a real,
+  // paid AI generation job (~2-4 min) that produces NEW cover/sticker art, not a
+  // recovery of the exact bytes already live on Etsy. Say so plainly and require an
+  // explicit confirm before firing.
+  const label = kind === 'planner' ? 'the dated + undated PDF' : 'the sticker pack';
+  const warn = 'Regenerate ' + label + ' for ' + productId + '?\\n\\n' +
+    'This starts a NEW AI generation job (about 2-4 minutes, costs real AI credits) and ' +
+    'produces brand-new cover/sticker art -- NOT a recovery of the exact file that was ' +
+    'originally uploaded to Etsy. If this listing is already live, the regenerated art ' +
+    'may look different from what buyers currently see.\\n\\nContinue?';
+  if (!confirm(warn)) return;
+  const endpoint = kind === 'planner' ? '/api/produce/build-planner' : '/api/produce/build-sticker-pack';
+  try {
+    const r = await fetchWithTimeout(BASE + endpoint, {
+      method: 'POST', headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
+      body: JSON.stringify({pid: productId}),
+    }, 20000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok || d.error) throw new Error(d.error || d.detail || ('HTTP '+r.status));
+    productSheetClose();
+    showToast(d.message || ('Started regenerating ' + label + ' for ' + productId + '.'), 'ok', 7000);
+  } catch(e) {
+    showToast('Could not start regeneration: ' + (e.message||e), 'err', 6000);
+  }
+}
+function openProductFixSheet(p){
+  _productSheetItem = p;
+  document.getElementById('product-sheet-title').textContent = (p.title || p.id) + ' — files missing';
+  const missing = (p.files||[]).filter(f => !f.exists).map(f => f.name);
+  document.getElementById('product-sheet-sub').textContent = missing.length
+    ? 'Missing on this deploy: ' + missing.join(', ')
+    : 'Some files are missing on this deploy.';
+  const isPlanner = p.category === 'digital_planner';
+  const needsPdf = missing.some(n => n.toLowerCase().endsWith('.pdf'));
+  const needsZip = missing.some(n => n.toLowerCase().endsWith('_sticker_pack.zip'));
+  let btns = '';
+  if (isPlanner && needsPdf) {
+    btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'planner\\')">🤖 Regenerate PDF (dated + undated)</button>';
+  }
+  if (isPlanner && needsZip) {
+    btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'stickers\\')">🤖 Regenerate sticker pack</button>';
+  }
+  btns += '<button class="psheet-btn" onclick="productSheetOpenFiles(\\'' + p.id + '\\')">🗂 Open in Files</button>';
+  document.getElementById('product-sheet-buttons').innerHTML = btns;
+  document.body.classList.add('product-sheet-open');
+}
+function openProductInfoSheet(p){
+  _productSheetItem = p;
+  document.getElementById('product-sheet-title').textContent = p.title || p.id;
+  document.getElementById('product-sheet-sub').textContent =
+    p.id + (p.listing_id ? ' · Etsy #' + p.listing_id : '') + ' · ' + (p.status || '');
+  let btns = '';
+  if (p.listing_id) {
+    btns += '<button class="psheet-btn primary" onclick="window.open(\\'https://www.etsy.com/listing/' + p.listing_id + '\\',\\'_blank\\')">🏷 View listing on Etsy</button>';
+  }
+  btns += '<button class="psheet-btn" onclick="productSheetOpenFiles(\\'' + p.id + '\\')">🗂 Open in Files</button>';
+  document.getElementById('product-sheet-buttons').innerHTML = btns;
+  document.body.classList.add('product-sheet-open');
+}
+
+// ── Review modal (ready_for_review / draft / listed_draft) ──────────────────────────
+function productReviewClose(){
+  document.body.classList.remove('product-review-open');
+}
+async function openProductReviewModal(p){
+  document.getElementById('prm-title').textContent = p.title || p.id;
+  document.getElementById('prm-body').innerHTML = '<div class="hub-spinner"></div>';
+  document.getElementById('prm-actions').innerHTML = '';
+  document.body.classList.add('product-review-open');
+  let review;
+  try {
+    const r = await authGet('/api/products/' + p.id + '/review', 20000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    review = await r.json();
+  } catch(e) {
+    document.getElementById('prm-body').innerHTML =
+      '<div class="hub-empty">Could not load: ' + escHtml(e.message||e) + '</div>';
+    return;
+  }
+  _renderProductReview(review);
+}
+function _renderProductReview(review){
+  const body = document.getElementById('prm-body');
+  const actions = document.getElementById('prm-actions');
+  let html = '';
+
+  if (!review.has_content) {
+    html += '<div class="prm-block-title">Listing content</div>';
+    html += '<div>Title, description, and tags haven\\'t been written yet for ' + escHtml(review.product_id) + '.</div>';
+  } else {
+    const c = review.content;
+    html += '<div class="prm-block-title">Title</div><div>' + escHtml(c.title) + '</div>';
+    html += '<div class="prm-block-title">Price</div><div>$' + escHtml(String(c.price)) + '</div>';
+    html += '<div class="prm-block-title">Tags (' + (c.tags||[]).length + ')</div><div>' +
+      (c.tags||[]).map(t => '<span class="prm-tag">' + escHtml(t) + '</span>').join('') + '</div>';
+    html += '<div class="prm-block-title">Description</div><div style="white-space:pre-wrap">' + escHtml(c.description) + '</div>';
+  }
+
+  if (review.photos && review.photos.length) {
+    html += '<div class="prm-block-title">Photos (' + review.photos.length + ')</div>';
+    html += '<div class="prm-photo-grid">' + review.photos.filter(ph => ph.url).map(ph =>
+      '<img src="' + ph.url + '" alt="' + escHtml(ph.name) + '" onclick="window.open(\\'' + ph.url + '\\',\\'_blank\\')">'
+    ).join('') + '</div>';
+  }
+
+  html += '<div class="prm-block-title">Files</div><div>' +
+    review.deliverables.map(d => (d.exists ? '✅ ' : '❌ ') + escHtml(d.name)).join('<br>') + '</div>';
+
+  html += '<div class="prm-block-title">Quality check</div><div>' + escHtml(review.qc.verdict) +
+    (review.qc.message ? ' — ' + escHtml(review.qc.message) : '') + '</div>';
+
+  body.innerHTML = html;
+
+  // Actions
+  let btns = '';
+  if (!review.has_content) {
+    btns += '<button class="psheet-btn primary" onclick="productReviewAskFrankToDraft(\\'' + review.product_id + '\\')">✍️ Ask Frank to draft it</button>';
+  } else if (review.listing_id) {
+    btns += '<div class="hub-listing-meta" style="margin-bottom:2px">Etsy draft #' + escHtml(String(review.listing_id)) + ' — not yet live.</div>';
+    btns += '<button class="psheet-btn primary" onclick="productReviewActivate(\\'' + review.product_id + '\\',\\'' + review.listing_id + '\\')">🚀 Activate on Etsy</button>';
+  } else {
+    const blocking = [];
+    if (review.category !== 'digital_planner') blocking.push('publishing isn\\'t supported yet for category "' + review.category + '"');
+    if (review.qc.verdict === 'fail') blocking.push('QC gate failed: ' + review.qc.message);
+    const missingFiles = review.deliverables.filter(d => !d.exists);
+    if (missingFiles.length) blocking.push('missing deliverable file(s): ' + missingFiles.map(d=>d.name).join(', '));
+    if (blocking.length) {
+      btns += blocking.map(b => '<div class="prm-blocking">⚠️ ' + escHtml(b) + '</div>').join('');
+    } else {
+      btns += '<button class="psheet-btn primary" onclick="productReviewPublish(\\'' + review.product_id + '\\')">🚀 Publish to Etsy</button>';
+    }
+  }
+  actions.innerHTML = btns;
+}
+function productReviewAskFrankToDraft(productId){
+  const prompt = 'Draft the full Etsy listing content (title, description, all 13 tags, price) ' +
+    'for ' + productId + ' following the conventions in CLAUDE.md\\'s Pre-Written Listing Content ' +
+    'and Etsy Listing Format Requirements sections. Show me the draft here in chat for review ' +
+    '-- do not publish anything.';
+  productReviewClose();
+  _productGoToScreen('cmd');
+  const inp = document.getElementById('chat-input');
+  if (inp) inp.value = prompt;
+  if (typeof sendMsg === 'function') sendMsg();
+  showToast('Sent — %%AGENT_SHORT%% is drafting it. His reply will appear in the chat below.', 'info', 5000);
+}
+async function productReviewPublish(productId){
+  const c = (_products.find(x => x.id === productId) || {});
+  if (!confirm('Publish ' + productId + ' to Etsy?\\n\\nThis stages a new Etsy listing for your ' +
+    'approval in the Action Center -- it will be created as a DRAFT (not visible to buyers). ' +
+    'You\\'ll review it once more and activate it separately when ready.\\n\\nContinue?')) return;
+  try {
+    const r = await fetchWithTimeout(BASE + '/api/products/' + productId + '/stage-publish',
+      {method: 'POST', headers: {Authorization: 'Bearer '+TOKEN}}, 30000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+    productReviewClose();
+    showToast('Staged for approval — review it once more in Approvals before it goes live.', 'ok', 7000);
+    if (typeof phoneTab === 'function') phoneTab('appr');
+    if (typeof loadActions === 'function') loadActions();
+  } catch(e) {
+    showToast('Could not stage publish: ' + (e.message||e), 'err', 7000);
+  }
+}
+async function productReviewActivate(productId, listingId){
+  // Reuses the SAME direct-apply endpoint the Listings screen's own Activate/
+  // Deactivate button already calls (POST /api/listings/{id}/state) -- Scott
+  // is clicking this directly after reviewing the draft right here in this
+  // modal, the exact same "Scott clicks this directly, confirm()-gated"
+  // pattern that endpoint's own docstring describes. Not staged through the
+  // Action Center: unlike create_listing (a brand-new listing, the highest-
+  // consequence write in the app), toggling an EXISTING draft's visibility
+  // already has a lower-risk, already-shipped, already-tested direct path.
+  if (!confirm('Activate Etsy listing #' + listingId + ' for ' + productId + ' now? This makes it live and visible to buyers.')) return;
+  try {
+    const r = await fetchWithTimeout(
+      BASE + '/api/listings/' + listingId + '/state?new_state=active',
+      {method: 'POST', headers: {Authorization: 'Bearer '+TOKEN}}, 25000
+    );
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail || ('HTTP ' + r.status));
+    showToast(productId + ' is now live on Etsy.', 'ok', 6000);
+    productReviewClose();
+    if (typeof loadProducts === 'function') loadProducts();
+  } catch(e) {
+    showToast('Could not activate: ' + (e.message||e), 'err', 7000);
+  }
 }
 const _STYLE_ANCHOR_TEXT = "Photography style: bright airy editorial Etsy lifestyle photography. "+
   "Warm cream and natural linen tones throughout. Soft diffused window light "+

@@ -35,6 +35,7 @@ import uuid
 import zipfile
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import quote
 
 import uvicorn
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, WebSocket, WebSocketDisconnect
@@ -569,7 +570,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b769d60-v214"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c024479-v215"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7832,11 +7833,18 @@ _REGISTER_COMMAND_STAGED_ACTION_TYPES = ("register_command",)
 # path as every Etsy write instead of posting directly.
 # post_pinterest added 2026-07-17, same reasoning, same pattern.
 _SOCIAL_STAGED_ACTION_TYPES = ("post_tiktok", "post_pinterest")
+# create_listing (2026-07-18, Products-tappable-cards feature) can't share
+# _ETSY_STAGED_ACTION_TYPES -- every branch there (both validation and
+# _execute_staged_action) assumes an existing listing_id, and this is the
+# one Etsy mutation that doesn't have one yet (it's what CREATES it). Own
+# bucket + own validation branch + own executor, same shape as the social
+# types above.
+_LISTING_CREATE_STAGED_ACTION_TYPES = ("create_listing",)
 _STAGED_ACTION_TYPES = (
     _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
     + _SCRIPT_STAGED_ACTION_TYPES + _PHOTO_STAGED_ACTION_TYPES
     + _VIDEO_STAGED_ACTION_TYPES + _REGISTER_COMMAND_STAGED_ACTION_TYPES
-    + _SOCIAL_STAGED_ACTION_TYPES
+    + _SOCIAL_STAGED_ACTION_TYPES + _LISTING_CREATE_STAGED_ACTION_TYPES
 )
 
 
@@ -8034,6 +8042,38 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         if at_approval and not os.getenv("PINTEREST_ACCESS_TOKEN", "").strip():
             return False, "PINTEREST_ACCESS_TOKEN not set — run tools/pinterest_oauth.py to (re)authorize"
         return True, "ok"
+    if t == "create_listing":
+        product_id = (p.get("product_id") or "").strip()
+        if not product_id:
+            return False, "missing product_id"
+        listing_data = p.get("listing_data")
+        if not isinstance(listing_data, dict):
+            return False, "missing listing_data"
+        gate_failures = EtsyAPIClient.pre_publish_gate(listing_data)
+        if gate_failures:
+            return False, "pre-publish gate failed: " + "; ".join(gate_failures)
+        photo_paths = p.get("photo_paths") or []
+        file_paths = p.get("file_paths") or []
+        if not file_paths:
+            return False, "no deliverable files to attach"
+        for rel in list(photo_paths) + list(file_paths):
+            if _product_file_abs_path(rel) is None:
+                return False, f"file not found on disk: {rel}"
+        if at_approval:
+            # Re-confirm no listing exists yet -- guards against a race between
+            # staging and approval (e.g. the same product staged twice, or
+            # published through some other path in the meantime).
+            entry = _find_catalog_product(product_id)
+            if entry is None:
+                return False, f"product {product_id} no longer exists in the catalog"
+            overrides = _product_catalog_overrides()
+            current = _build_products_status([entry], _product_file_exists, overrides)[0]
+            if current.get("listing_id"):
+                return False, (
+                    f"product {product_id} already has an Etsy listing "
+                    f"({current['listing_id']}) — refusing to create a duplicate"
+                )
+        return True, "ok"
     # Local types — the real security boundary is the relay's own realpath check
     # at execution time (it's the only thing with Scott's actual filesystem to
     # resolve against); this is fast UX feedback at staging time only.
@@ -8181,6 +8221,84 @@ def _execute_staged_action(a: dict) -> dict:
             "title": res.get("title"),
         },
     }
+
+
+def _execute_create_listing_staged_action(a: dict) -> dict:
+    """Apply an approved create_listing action -- the one Etsy mutation this
+    app has never had a wired path for before (Products-tappable-cards
+    feature, 2026-07-18). client.create_listing() already omits `state`, so
+    Etsy creates it as a DRAFT (not visible to buyers) -- this deliberately
+    does NOT activate it; going live is a separate, deliberate step via the
+    already-existing toggle_listing_state action, reusing machinery that's
+    already shipped and tested rather than adding a second way to flip a
+    listing live.
+
+    If listing creation itself fails, this raises and nothing is recorded --
+    no partial state to clean up. If creation succeeds but a photo/file
+    upload fails partway through, the override is still written (a real
+    draft now exists on Etsy and must not be "forgotten" -- a second
+    create_listing attempt would otherwise duplicate it) and the failures
+    are returned in upload_errors rather than swallowed."""
+    p = a.get("payload", {}) or {}
+    product_id = p["product_id"]
+    listing_data = p["listing_data"]
+    client = EtsyAPIClient()
+
+    response = client.create_listing(listing_data)
+    listing_id = response.get("listing_id")
+    if not listing_id:
+        raise RuntimeError(f"Etsy did not return a listing_id: {response}")
+
+    upload_errors: list[dict] = []
+    photo_results: list[dict] = []
+    for rank, rel in enumerate(p.get("photo_paths") or [], start=1):
+        abs_path = _product_file_abs_path(rel)
+        if abs_path is None:
+            upload_errors.append({"file": rel, "error": "file disappeared before upload"})
+            continue
+        try:
+            img = client.upload_listing_image(listing_id, str(abs_path), rank=rank)
+            photo_results.append({"file": rel, "listing_image_id": img.get("listing_image_id")})
+        except Exception as exc:  # noqa: BLE001
+            upload_errors.append({"file": rel, "error": str(exc)[:300]})
+
+    file_results: list[dict] = []
+    for rank, rel in enumerate(p.get("file_paths") or [], start=1):
+        abs_path = _product_file_abs_path(rel)
+        if abs_path is None:
+            upload_errors.append({"file": rel, "error": "file disappeared before upload"})
+            continue
+        try:
+            f = client.upload_listing_file(listing_id, str(abs_path), rank=rank)
+            file_results.append({"file": rel, "listing_file_id": f.get("listing_file_id")})
+        except Exception as exc:  # noqa: BLE001
+            upload_errors.append({"file": rel, "error": str(exc)[:300]})
+
+    _write_product_catalog_override(product_id, {
+        "etsy_listing_id": str(listing_id),
+        "status": "listed_draft",
+        "published_at": datetime.now(timezone.utc).isoformat(),
+    })
+    with _cache_lock:
+        for k in ("listings_active", "listings_draft", "listings_inactive", "actions", "metrics"):
+            _cache.pop(k, None)
+
+    result = {
+        "product_id": product_id,
+        "etsy_listing_id": listing_id,
+        "state": "draft",
+        "photos_uploaded": photo_results,
+        "files_uploaded": file_results,
+        "message": (
+            f"Created Etsy listing {listing_id} for {product_id} as a DRAFT. "
+            "Review it on Etsy, then activate it with the existing "
+            "activate/deactivate action when ready."
+        ),
+    }
+    if upload_errors:
+        result["upload_errors"] = upload_errors
+        result["message"] += f" {len(upload_errors)} photo/file upload(s) failed — see upload_errors."
+    return result
 
 
 def _execute_register_command_staged_action(a: dict) -> dict:
@@ -8417,6 +8535,7 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
     is_script = a["type"] in _SCRIPT_STAGED_ACTION_TYPES
     is_register_command = a["type"] in _REGISTER_COMMAND_STAGED_ACTION_TYPES
     is_social = a["type"] in _SOCIAL_STAGED_ACTION_TYPES
+    is_create_listing = a["type"] in _LISTING_CREATE_STAGED_ACTION_TYPES
     if is_local:
         state = await asyncio.to_thread(db.get_relay_state)
         if state.get("killed"):
@@ -8447,6 +8566,13 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
             )
             result = await asyncio.wait_for(
                 asyncio.to_thread(_social_executor, a), timeout=120.0
+            )
+        elif is_create_listing:
+            # Longer timeout than every other type -- this uploads up to 10
+            # photos + 3 deliverable files sequentially over the network,
+            # not a single PATCH.
+            result = await asyncio.wait_for(
+                asyncio.to_thread(_execute_create_listing_staged_action, a), timeout=180.0
             )
         else:
             result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
@@ -9362,14 +9488,25 @@ async def studio_list_videos(_token: str = Depends(_auth_session_or_bearer)):
 _PRODUCT_FILES_PREFIX = "data/digital_products/"
 
 
-def _build_products_status(catalog: list[dict], file_exists_fn) -> list[dict]:
+def _build_products_status(catalog: list[dict], file_exists_fn, overrides: dict | None = None) -> list[dict]:
     """Pure function (no I/O of its own) so this is directly unit-testable:
     given the full product catalog and a file-existence checker, compute
     per-product/per-file status. `file_exists_fn` takes the same `rel`
     convention _product_file_exists() and sync_files_to_hub.py already use
     (e.g. "product_files/DP1026.pdf") -- catalog entries store the fuller
     "data/digital_products/product_files/DP1026.pdf", so the shared prefix
-    is stripped here rather than teaching the checker a second convention."""
+    is stripped here rather than teaching the checker a second convention.
+
+    `overrides` (2026-07-18, Products-tappable-cards feature): dict keyed by
+    product_id -> {"etsy_listing_id": ..., "status": ...}, sourced from the
+    durable product_catalog_overrides.json sidecar (see
+    _product_catalog_overrides()). data/product_catalog.json itself is
+    git-tracked and never written by this server -- a create_listing staged
+    action's result (a brand-new etsy_listing_id) has to live somewhere that
+    survives a Railway redeploy, so it's layered on top of the base catalog
+    here instead. Optional and defaults to no overrides so every existing
+    caller/test keeps working unchanged."""
+    overrides = overrides or {}
     products = []
     for p in catalog:
         files = p.get("files", []) or []
@@ -9377,12 +9514,13 @@ def _build_products_status(catalog: list[dict], file_exists_fn) -> list[dict]:
         for f in files:
             rel = f[len(_PRODUCT_FILES_PREFIX):] if f.startswith(_PRODUCT_FILES_PREFIX) else f
             file_status.append({"name": Path(f).name, "exists": file_exists_fn(rel)})
+        ov = overrides.get(p.get("product_id"), {})
         products.append({
             "id": p.get("product_id"),
             "title": p.get("name", ""),
-            "listing_id": p.get("etsy_listing_id"),
+            "listing_id": ov.get("etsy_listing_id") or p.get("etsy_listing_id"),
             "category": p.get("category", "uncategorized"),
-            "status": p.get("status", "active"),
+            "status": ov.get("status") or p.get("status", "active"),
             "price": p.get("price"),
             "files": file_status,
             "all_files_present": all(fs["exists"] for fs in file_status) if file_status else None,
@@ -9414,8 +9552,179 @@ async def get_products(_token: str = Depends(_auth_session_or_bearer)):
         catalog = json.loads(Path("data/product_catalog.json").read_text())
     except OSError:
         catalog = []
-    products = _build_products_status(catalog, _product_file_exists)
+    overrides = await asyncio.to_thread(_product_catalog_overrides)
+    products = _build_products_status(catalog, _product_file_exists, overrides)
     return {"products": products}
+
+
+def _find_catalog_product(product_id: str) -> dict | None:
+    try:
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
+    except OSError:
+        catalog = []
+    for entry in catalog:
+        if entry.get("product_id") == product_id:
+            return entry
+    return None
+
+
+# Deliverable files are what a buyer actually downloads (the two dated/undated PDFs
+# and the sticker ZIP) -- distinct from listing photos (path contains
+# "_listing_images/") and from source art like a standalone cover PNG, neither of
+# which gets uploaded as an Etsy digital file.
+_PRODUCT_DELIVERABLE_SUFFIXES = (".pdf", "_sticker_pack.zip")
+
+
+def _gather_product_review(product_id: str) -> dict | None:
+    """Sync core shared by GET /api/products/{id}/review and POST
+    /api/products/{id}/stage-publish -- the latter re-derives the exact same
+    content rather than trusting whatever the client last saw, so staging
+    can never publish something the review endpoint didn't just confirm."""
+    entry = _find_catalog_product(product_id)
+    if entry is None:
+        return None
+
+    overrides = _product_catalog_overrides()
+    catalog_status = _build_products_status([entry], _product_file_exists, overrides)[0]
+
+    listing_json_path = Path("data") / f"{product_id.lower()}_listing.json"
+    content = None
+    try:
+        content = json.loads(listing_json_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    photos: list[dict] = []
+    deliverables: list[dict] = []
+    for f in (entry.get("files") or []):
+        rel = f[len(_PRODUCT_FILES_PREFIX):] if f.startswith(_PRODUCT_FILES_PREFIX) else f
+        name = Path(f).name
+        exists = _product_file_exists(rel)
+        if "_listing_images/" in f:
+            photos.append({"name": name, "rel": rel, "exists": exists,
+                            "url": _product_file_url(rel) if exists else None})
+        elif f.lower().endswith(_PRODUCT_DELIVERABLE_SUFFIXES):
+            deliverables.append({"name": name, "rel": rel, "exists": exists})
+    photos.sort(key=lambda p: p["name"])
+
+    qc = _qc_check_product({"pid": product_id})
+
+    return {
+        "product_id": product_id,
+        "category": entry.get("category", "uncategorized"),
+        "status": catalog_status["status"],
+        "listing_id": catalog_status["listing_id"],
+        "catalog": catalog_status,
+        "has_content": content is not None,
+        "content": ({
+            "title": content.get("title", ""),
+            "description": content.get("description", ""),
+            "tags": content.get("tags", []),
+            "price": content.get("price"),
+            "shop_section_id": content.get("shop_section_id"),
+            "color_theme": content.get("color_theme"),
+            "pages": content.get("pages"),
+        } if content else None),
+        "photos": photos,
+        "deliverables": deliverables,
+        "qc": qc,
+    }
+
+
+@app.get("/api/products/{product_id}/review")
+async def get_product_review(product_id: str, _token: str = Depends(_auth_session_or_bearer)):
+    """Everything the Products-screen review modal needs in one call: the draft
+    listing content (title/description/tags/price) from data/dp<id>_listing.json
+    if it's been authored, the actual rendered listing photos + deliverable files
+    with real on-disk presence, and a QC pass/warn/fail summary -- so Scott can
+    review a not-yet-published planner (or see exactly what's blocking a
+    create_listing stage) without opening a single file by hand."""
+    review = await asyncio.to_thread(_gather_product_review, product_id)
+    if review is None:
+        raise HTTPException(status_code=404, detail=f"unknown product_id: {product_id}")
+    return review
+
+
+_PRODUCT_TAXONOMY_BY_CATEGORY = {
+    # Only category verified end-to-end against a real dpXXXX_listing.json
+    # (data/dp1030_listing.json) -- matches both CLAUDE.md's own taxonomy
+    # table and etsy_listing_tools.py's (unwired) TAXONOMY_BY_TYPE["planner"].
+    # Other categories are out of scope for create_listing until their own
+    # content-source convention is verified the same way.
+    "digital_planner": 2078,
+}
+
+
+@app.post("/api/products/{product_id}/stage-publish")
+async def stage_product_publish(product_id: str, _token: str = Depends(_auth_session_or_bearer)):
+    """The Products-screen review modal's "Publish to Etsy" button. Re-derives
+    the review content fresh (never trusts stale client state), builds the
+    listing_data Etsy needs, and stages a create_listing action -- the actual
+    Etsy write only happens once Scott approves it in the Action Center, same
+    as every other mutation in this app, even ones he triggers directly from
+    a UI button rather than chat."""
+    review = await asyncio.to_thread(_gather_product_review, product_id)
+    if review is None:
+        raise HTTPException(status_code=404, detail=f"unknown product_id: {product_id}")
+
+    if review["listing_id"]:
+        raise HTTPException(status_code=409, detail=f"{product_id} already has an Etsy listing ({review['listing_id']})")
+
+    taxonomy_id = _PRODUCT_TAXONOMY_BY_CATEGORY.get(review["category"])
+    if taxonomy_id is None:
+        raise HTTPException(status_code=400, detail=f"publishing isn't supported yet for category '{review['category']}'")
+
+    if not review["has_content"]:
+        raise HTTPException(status_code=400, detail="no listing content authored yet — draft a title/description/tags first")
+
+    if review["qc"]["verdict"] == "fail":
+        raise HTTPException(status_code=400, detail=f"QC gate failed: {review['qc']['message']}")
+
+    deliverables = [d for d in review["deliverables"] if d["exists"]]
+    if len(deliverables) < len(review["deliverables"]):
+        missing = [d["name"] for d in review["deliverables"] if not d["exists"]]
+        raise HTTPException(status_code=400, detail=f"missing deliverable file(s): {', '.join(missing)}")
+    if not deliverables:
+        raise HTTPException(status_code=400, detail="no deliverable files found for this product")
+
+    photos = [p for p in review["photos"] if p["exists"]]
+
+    # Refuse a duplicate stage -- a second tap on "Publish" while the first
+    # is still pending in Approvals must not create two competing actions.
+    pending = await asyncio.to_thread(db.list_actions, "pending")
+    if any(pa.get("type") == "create_listing" and (pa.get("payload") or {}).get("product_id") == product_id
+           for pa in pending):
+        raise HTTPException(status_code=409, detail=f"a publish for {product_id} is already pending approval")
+
+    content = review["content"]
+    listing_data = {
+        "title": content["title"],
+        "description": content["description"],
+        "tags": content["tags"],
+        "price": content["price"],
+        "taxonomy_id": taxonomy_id,
+        "quantity": 999,
+        "type": "download",
+    }
+    if content.get("shop_section_id"):
+        listing_data["shop_section_id"] = content["shop_section_id"]
+
+    payload = {
+        "product_id": product_id,
+        "listing_data": listing_data,
+        "photo_paths": [p["rel"] for p in photos],
+        "file_paths": [d["rel"] for d in deliverables],
+    }
+    candidate = {"type": "create_listing", "payload": payload}
+    ok, msg = await asyncio.to_thread(_validate_staged_action, candidate)
+    if not ok:
+        raise HTTPException(status_code=422, detail=f"pre-publish gate failed: {msg}")
+
+    summary = f"Publish {product_id} — \"{content['title']}\" — ${content['price']}"
+    action_id = await asyncio.to_thread(db.enqueue_action, "create_listing", summary, payload)
+    with _cache_lock:
+        _cache.pop("actions", None)
+    return {"staged": True, "action_id": action_id, "product_id": product_id, "summary": summary}
 
 
 
@@ -10815,6 +11124,84 @@ def _product_file_exists(rel: str) -> bool:
         return True
     vol = _FILE_ROOTS.get("volume")
     return bool(vol and (vol / rel).exists())
+
+
+def _product_file_abs_path(rel: str) -> Path | None:
+    """Same dual-root check as _product_file_exists(), but returns the real
+    Path so a caller can actually read/upload the file (review-endpoint
+    photos, create_listing's photo/file uploads to Etsy)."""
+    local = _FILE_ROOTS["products"] / rel
+    if local.exists():
+        return local
+    vol = _FILE_ROOTS.get("volume")
+    if vol and (vol / rel).exists():
+        return vol / rel
+    return None
+
+
+def _product_file_url(rel: str) -> str | None:
+    """Browser-loadable URL for a product file via the existing
+    /api/files/download route. That route already accepts session-cookie
+    auth, so a plain <img src=...> tag in the review modal works with no
+    token plumbing -- no new auth path needed."""
+    if (_FILE_ROOTS["products"] / rel).exists():
+        return f"/api/files/download?root=products&path={quote(rel)}&inline=1"
+    vol = _FILE_ROOTS.get("volume")
+    if vol and (vol / rel).exists():
+        return f"/api/files/download?root=volume&path={quote(rel)}&inline=1"
+    return None
+
+
+# Durable overlay for product_catalog.json fields that change at runtime
+# (etsy_listing_id, status) once a create_listing staged action executes.
+# product_catalog.json itself is git-tracked and this server never writes it
+# on a real deploy -- Railway redeploys from a fresh git checkout, so a raw
+# write there would vanish on next deploy and risk a duplicate Etsy listing
+# on a second publish attempt. Mirrors the exact "git checkout isn't
+# durable, use the volume" reasoning _FILE_ROOTS["volume"] already exists
+# for. No volume configured (local/sandbox) -> falls back to patching
+# data/product_catalog.json directly so local testing still works end-to-end.
+_PRODUCT_CATALOG_OVERRIDES_PATH = (
+    (_FILE_ROOTS["volume"] / "product_catalog_overrides.json") if "volume" in _FILE_ROOTS
+    else None
+)
+
+
+def _product_catalog_overrides() -> dict:
+    """dict keyed by product_id -> {"etsy_listing_id": ..., "status": ..., "published_at": ...}."""
+    if _PRODUCT_CATALOG_OVERRIDES_PATH is None:
+        return {}
+    try:
+        return json.loads(_PRODUCT_CATALOG_OVERRIDES_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _write_product_catalog_override(product_id: str, updates: dict) -> None:
+    """Safe read-modify-write (temp file + atomic replace). Falls back to
+    patching data/product_catalog.json's matching entry in place when no
+    durable volume is configured -- local/dev only; a real deploy always has
+    _PRODUCT_CATALOG_OVERRIDES_PATH set, so this branch never runs there."""
+    if _PRODUCT_CATALOG_OVERRIDES_PATH is not None:
+        overrides = _product_catalog_overrides()
+        overrides.setdefault(product_id, {}).update(updates)
+        _PRODUCT_CATALOG_OVERRIDES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _PRODUCT_CATALOG_OVERRIDES_PATH.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(overrides, indent=2))
+        tmp.replace(_PRODUCT_CATALOG_OVERRIDES_PATH)
+        return
+    path = Path("data/product_catalog.json")
+    try:
+        catalog = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return
+    for entry in catalog:
+        if entry.get("product_id") == product_id:
+            entry.update(updates)
+            break
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(catalog, indent=2))
+    tmp.replace(path)
 
 # Staged listing photos awaiting Scott's approve/reject in the Action Center —
 # durable under the Railway volume when mounted (survives redeploys, same reason

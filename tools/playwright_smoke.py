@@ -499,6 +499,98 @@ async def _run_browser_checks() -> None:
             check("missing: WA1001.zip" in filter_check,
                   f"a product with a missing file should name it: {filter_check[:300] if filter_check else filter_check}")
 
+            # ── Products-screen tappable cards (2026-07-18) -- every card now opens
+            # a popup: missing-files -> fix sheet (regenerate for planners, plain
+            # "Open in Files" otherwise), ready_for_review -> review modal (real
+            # content, "not written yet" state, and Publish button gated on QC/
+            # content/deliverables). Stub _products fresh (fixture above already
+            # scrolled past) and call openProductSheet() directly rather than
+            # physically clicking, same as setProductCategoryFilter()/tour-step
+            # calls above -- these are top-level `let` bindings, not globals.
+            tappable_setup = await page.evaluate("""() => {
+                _products = [
+                    {id: 'DP1026', title: 'Life Planner', listing_id: '1', category: 'digital_planner',
+                     status: 'active', price: 14.99,
+                     files: [{name: 'DP1026.pdf', exists: false}, {name: 'DP1026_sticker_pack.zip', exists: false}],
+                     all_files_present: false},
+                    {id: 'WA1001', title: 'Wall Art One', listing_id: '2', category: 'wall_art',
+                     status: 'active', price: 5.99, files: [{name: 'WA1001.zip', exists: false}], all_files_present: false},
+                    {id: 'DP1030', title: 'ADHD Planner', listing_id: null, category: 'digital_planner',
+                     status: 'ready_for_review', price: 12.99, files: [], all_files_present: true},
+                    {id: 'DP1031', title: 'Evergreen Planner', listing_id: null, category: 'digital_planner',
+                     status: 'ready_for_review', price: 12.99, files: [], all_files_present: true},
+                ];
+                _productCategoryFilter = null;
+                renderProductsContent();
+                const card = document.querySelector('#products-content .hub-prod-card.tappable');
+                return {cardTappable: !!card, cardHasChevron: card ? card.innerHTML.includes('pchev') : false};
+            }""")
+            check(tappable_setup.get("cardTappable"), f"product cards must render with the tappable class: {tappable_setup}")
+            check(tappable_setup.get("cardHasChevron"), f"tappable cards should show a chevron affordance: {tappable_setup}")
+
+            planner_fix_sheet = await page.evaluate("""() => {
+                openProductSheet('DP1026');
+                return {
+                    open: document.body.classList.contains('product-sheet-open'),
+                    buttons: document.getElementById('product-sheet-buttons').innerHTML,
+                };
+            }""")
+            check(planner_fix_sheet.get("open"), "tapping a missing-files planner card should open the fix sheet")
+            check("Regenerate PDF" in planner_fix_sheet.get("buttons", "") and "Regenerate sticker pack" in planner_fix_sheet.get("buttons", ""),
+                  f"a planner missing both PDF and ZIP should offer both regenerate buttons: {planner_fix_sheet}")
+            check("Open in Files" in planner_fix_sheet.get("buttons", ""), f"fix sheet must always offer Open in Files: {planner_fix_sheet}")
+
+            nonplanner_fix_sheet = await page.evaluate("""() => {
+                document.body.classList.remove('product-sheet-open');
+                openProductSheet('WA1001');
+                return document.getElementById('product-sheet-buttons').innerHTML;
+            }""")
+            check("Regenerate" not in nonplanner_fix_sheet,
+                  f"non-planner categories must not offer a regenerate action (no verified build tool for them): {nonplanner_fix_sheet}")
+            check("Open in Files" in nonplanner_fix_sheet, f"non-planner fix sheet should still offer Open in Files: {nonplanner_fix_sheet}")
+
+            # Review modal -- deliberately NOT mocked. This server process runs from
+            # the real repo checkout (cwd=ROOT), so /api/products/DP1030/review hits
+            # the real data/dp1030_listing.json (has real content, all 3 deliverables,
+            # QC should pass) and DP1031 has no dpXXXX_listing.json at all (confirmed
+            # by the P1 backend tests) -- exercises the real end-to-end path instead
+            # of asserting against a fixture that could drift from reality.
+            review_with_content = await page.evaluate("""async () => {
+                document.body.classList.remove('product-sheet-open');
+                await openProductReviewModal({id: 'DP1030', title: 'ADHD Planner'});
+                await new Promise(r => setTimeout(r, 300));
+                return {
+                    open: document.body.classList.contains('product-review-open'),
+                    body: document.getElementById('prm-body').innerHTML,
+                    actions: document.getElementById('prm-actions').innerHTML,
+                };
+            }""")
+            check(review_with_content.get("open"), "tapping a ready_for_review card should open the review modal")
+            check("ADHD" in review_with_content.get("body", "") and "Digital Planner" in review_with_content.get("body", ""),
+                  f"review modal must show the real DP1030 title: {review_with_content}")
+            check("Tags (13)" in review_with_content.get("body", ""), f"DP1030 has 13 real tags: {review_with_content}")
+            check("Publish to Etsy" in review_with_content.get("actions", ""),
+                  f"DP1030 (real content, QC pass, all files present) should show Publish to Etsy: {review_with_content}")
+            await page.evaluate("productReviewClose()")
+
+            review_no_content = await page.evaluate("""async () => {
+                await openProductReviewModal({id: 'DP1031', title: 'Evergreen Planner'});
+                await new Promise(r => setTimeout(r, 300));
+                return {
+                    body: document.getElementById('prm-body').innerHTML,
+                    actions: document.getElementById('prm-actions').innerHTML,
+                };
+            }""")
+            check("haven" in review_no_content.get("body", "").lower(),
+                  f"DP1031 has no dpXXXX_listing.json, review modal should say content isn't written yet: {review_no_content}")
+            check("Ask Frank to draft it" in review_no_content.get("actions", ""),
+                  f"missing content should offer the chat hand-off button, not Publish: {review_no_content}")
+            check("Publish to Etsy" not in review_no_content.get("actions", ""),
+                  f"Publish must not appear with no content: {review_no_content}")
+            # Leave the DOM clean for later checks in this same page session (the
+            # modal otherwise intercepts pointer events for unrelated later clicks).
+            await page.evaluate("productReviewClose(); document.body.classList.remove('product-sheet-open')")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the
