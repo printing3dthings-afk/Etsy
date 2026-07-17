@@ -9403,3 +9403,192 @@ gap can't recur, alongside (not replacing) the existing named steps.
 `test_staged_actions.py` at 2.1s (no hang). `py_compile` clean on every
 touched file; YAML validated; `playwright_smoke.py` clean on first try. No
 `main.py`/HUD changes in this item — no build-ID bump / deploy needed.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmp1t8ow8m5/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp1t8ow8m5/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmphuwbzqum/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 20308). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 20310). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-17 — Frank upgrade Wave 1 (reliability): item 8/8, GitHub default-branch drift monitor — WAVE 1 COMPLETE
+The 2026-07-10 incident (GitHub's `default_branch` silently pointed at a
+long-stale integration branch, `claude/etsy-agent-hub-9nnCM`, so every
+schedule-triggered workflow — including the health watchdog itself — ran old,
+broken code for an unknown period before anyone noticed) was fixed reactively
+by Scott manually repointing it. Nothing watched for it happening again.
+
+**Built:**
+- `tools/check_default_branch.py` — queries the live GitHub API for the real
+  `default_branch`, compares against `EXPECTED_DEFAULT_BRANCH` (a plain
+  constant, not auto-derived — "what SHOULD be default" is a human decision,
+  update deliberately when the active branch legitimately changes). Pure
+  comparison logic factored into `check()` so it's testable without a live
+  API call.
+- `tools/ci_report_branch_drift_issue.py` — a sibling of the existing
+  `ci_report_health_issue.py`, reusing the exact same one-persistent-issue-by-
+  marker-title pattern (open on fail, comment+close on recovery) rather than
+  introducing a shared abstraction — matches this codebase's own established
+  convention of one small sibling script per check type.
+- Wired both into `health_watchdog.yml` (piggybacking on its existing cron +
+  `issues: write` permission, per the plan) as two new steps after the
+  existing `/health` check, with its own fail-gate.
+
+**Verified the current expectation is actually correct, not assumed**: used
+the GitHub MCP tool to fetch `tools/check_hardcoded_paths.py` with no `ref`
+specified (so it resolves against whatever the live default_branch currently
+is) — the response resolved to commit `8fa1423...`, which is byte-identical to
+this session's actual local `HEAD` at the time, confirming `default_branch`
+really is `claude/etsy-automation-agents-WFAPU` right now, matching the
+hardcoded `EXPECTED_DEFAULT_BRANCH` constant exactly.
+
+**Verified the shell orchestration** (the bash step that captures the
+script's stdout + exit code into `$GITHUB_OUTPUT`'s `status`/`details`
+outputs, matching the existing `/health` step's proven pattern) against both
+exit-code paths in a local simulation — confirmed correct `status=ok`/
+`status=fail` + multi-line `details` heredoc for each. New
+`tests/test_check_default_branch.py` covers the pure comparison logic:
+matching passes, drifting fails with an actionable detail (names both the
+actual and expected branch, points at the fix location), comparison is
+case-sensitive (a differently-cased drift must not be silently missed), and
+the `EXPECTED_DEFAULT_BRANCH` constant itself is sanity-checked as a
+plausible non-blank branch name.
+
+`py_compile` clean on all 3 new files; YAML validated; full suite via
+`tests/run_all.py` — 20/20 pass in ~39s; `playwright_smoke.py` clean on
+retry (known first-run flake, same pattern seen throughout this session). No
+`main.py`/HUD changes in this item — no build-ID bump / deploy needed.
+
+---
+
+**This closes Wave 1 of the Frank upgrade program** (reliability & data
+safety), all 8 items shipped: automatic digital-products backup, hub_db
+backup re-scoped onto the durable volume, crashed/hung builds surfaced,
+broadened health checks, standing credential-leak alerts, a hardcoded-path CI
+guardrail (which found + fixed 5 more instances of the bug class, including a
+DAILY production job that was likely silently crash-failing), test suite
+hardening (single runner + fixed a real intermittent-hang bug + new OAuth
+regression coverage + closed a 10-of-19-tests-never-ran-in-CI gap), and this
+branch-drift monitor. Waves 2 (power/capabilities: Pinterest wiring, bulk
+price/renewal tools, etc.) and 3 (usability: search fixes, Settings
+recategorization, tour copy accuracy) remain as a prioritized backlog for a
+future planning pass, per Scott's "reliability first" call.
