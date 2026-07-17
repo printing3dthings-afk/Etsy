@@ -12258,3 +12258,192 @@ text exactly. `py_compile` clean. Full suite via `tests/run_all.py`
 (30/30, ~48s). No build-ID bump — confirmed the live server doesn't import
 this file at all, so this change has zero effect on running behavior;
 nothing to verify via a deploy poll.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmpjpp71rjq/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpjpp71rjq/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmp7uhplhpg/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 17543). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 17545). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Frank upgrade Wave 4 (sales & traffic): items B2+B3, real description autofix + closed the diagnosis loop
+Continued Wave 4. B3 was retargeted mid-plan (see the previous B1 entry) from
+dead code in `etsy_listing_tools.py` to the real live gap; B2 depends on B3's
+work, so both shipped together.
+
+**B3 — description autofix now has a real AI path.** `_autofix_description_
+core` (`main.py`) previously had exactly one job: a deterministic (no AI
+call) prepend of CLAUDE.md's wall-art Gate 6 line. Title and tags both
+already call Claude (`_autofix_title_core`, `_generate_tags_for_listings`)
+— description was the one of the three with no real AI-driven fix path at
+all. Added a second path, tried only when Gate 6 doesn't apply (not
+wall_art, or already compliant) AND a `reason` is given: a real Claude call
+rewrites ONLY the opening hook (the first 1-2 sentences, split on the first
+blank line — every description in this codebase already follows that exact
+"hook paragraph, blank line, ━━━ WHAT'S INCLUDED" structure). Deliberately
+narrow blast radius, mirroring Gate 6's own "touch the hook, never the
+body" pattern: the prompt (`_DESCRIPTION_HOOK_FIX_PROMPT`) explicitly
+forbids inventing or implying any claim about page/file/sticker counts not
+already present, and the function refuses outright (returns an `error`,
+never guesses) if it can't cleanly isolate a hook via the blank-line split —
+a genuine Cardinal Rule safeguard, not just a nice-to-have. Gate 6 always
+wins when it applies, regardless of whether a `reason` is also given —
+verified by a test that patches `anthropic.Anthropic` and asserts it's never
+even called for a Gate-6-applicable case.
+
+**Real bug caught and fixed before it shipped**: the function's final
+`return` still said `"added_line": _WALL_ART_GATE6_LINE` after the initial
+edit — leftover from the old single-path version, now wrong for the new
+LLM-hook-rewrite path (which never touches that constant). Caught by
+`py_compile` output review rather than a test (would have silently returned
+misleading Gate-6 metadata on every successful LLM-path fix) — fixed to
+return `"new_hook": new_hook` instead before any test was written against it.
+
+**B2 — closed the diagnosis → autofix loop.** `diagnose_listing_conversion`
+(`_diagnose_listing_core`) already pulled real views/favorites/sales and
+produced a genuine per-listing diagnosis via Claude (`_CONVERSION_DOCTOR_
+SYSTEM`'s structured `fixes: [{area, finding, fix, ...}]` schema) — but was
+read-only and dead-ended; its findings never reached the three autofix
+functions, even though all three already accepted a `reason` string
+(previously fed only by Scott's manual reject text). Added `apply_
+conversion_fixes` (new agent tool) / `_apply_conversion_fixes_core`: runs a
+fresh diagnosis (never a stale cached one — the listing may have changed),
+then for every finding whose `area` is `title`/`tags`/`description`
+(`_CONVERSION_FIX_HANDLERS`), stages the matching fix using `"{finding} →
+{fix}"` as the reason/corrective guidance — turning a one-shot advisory
+report into an actionable, still-fully-staged regeneration. Findings in
+`photos`/`price`/`trust` areas are surfaced in the response (never silently
+dropped) but never auto-staged — no code path regenerates photos from a
+diagnosis finding, and price changes are separately hard-capped at
+5/session by CLAUDE.md regardless of what triggers them. Every fix from
+either area still lands in the Action Center for one-tap approval — this
+connects two already-staging-gated systems, it doesn't bypass staging for
+either.
+
+**Verified**: two new test files. `tests/test_description_hook_autofix.py`
+(9 tests) — Gate 6 path fully unchanged including always winning over a
+reason-driven request (confirmed via a mock asserting `anthropic.Anthropic`
+is never constructed for that case), the new LLM path fires correctly and
+preserves the factual body byte-for-byte, and edge cases (no blank-line
+separator, missing API key, empty description) all refuse cleanly instead
+of guessing. `tests/test_conversion_diagnosis_to_autofix_loop.py`
+(7 tests) — tool registration, the fix-handler map covers exactly the 3
+automatable areas, a 5-finding sample diagnosis correctly applies all 3
+fixable areas while surfacing photos/price as skipped-not-actioned, the
+finding+fix reason-text combination, per-area error isolation (one handler
+raising doesn't block the others), a clean no-op message for an empty
+diagnosis, and agent-tool dispatch (including confirming `_CONVERSION_FIX_
+HANDLERS`'s lambdas correctly late-bind to patched functions in tests, a
+property worth having independent of this specific test). `py_compile`
+clean; `tools/check_hardcoded_paths.py` clean (99 files). Full suite via
+`tests/run_all.py` (32/32, ~49s); `playwright_smoke.py` clean on first try.
+Build `d36eb5d-v211`.

@@ -569,7 +569,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "cd8eb41-v210"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "d36eb5d-v211"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2540,6 +2540,30 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "apply_conversion_fixes",
+        "description": (
+            "Diagnose a listing's conversion problem AND stage a fix for each "
+            "actionable finding, in one call — closes the loop between "
+            "diagnose_listing_conversion (which used to be read-only advice that "
+            "went nowhere) and the title/tags/description autofix tools (each "
+            "already real and reason-aware). For every diagnosis finding in the "
+            "title/tags/description areas, stages the matching fix using that "
+            "finding as corrective guidance — nothing is applied directly, every "
+            f"fix lands in the Action Center for {business_config.OWNER_NAME}'s "
+            "one-tap approval. Findings in the photos/price/trust areas are "
+            "surfaced in the response but never auto-staged — no code path "
+            "regenerates photos or changes price from a diagnosis finding, and "
+            "price changes are separately hard-capped at 5/session regardless."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "listing_id": {"type": "integer", "description": "The listing to diagnose and fix."},
+            },
+            "required": ["listing_id"],
+        },
+    },
+    {
         "name": "qc_check_product",
         "description": (
             "Run the pre-publish Quality Check on a product's files — the same gates "
@@ -3673,6 +3697,12 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             if lid is None:
                 return {"error": "listing_id is required"}
             return asyncio.run(_diagnose_listing_core(int(lid)))
+        if name == "apply_conversion_fixes":
+            ti = tool_input or {}
+            lid = ti.get("listing_id")
+            if lid is None:
+                return {"error": "listing_id is required"}
+            return asyncio.run(_apply_conversion_fixes_core(int(lid)))
         if name == "register_command":
             ti = tool_input or {}
             payload = {
@@ -4072,6 +4102,27 @@ _TITLE_FIX_PROMPT = (
     "DESCRIPTION (first 500 chars): {desc}\n\n"
     "Return ONLY the new title string — no quotes, no explanation, no JSON. "
     "Must be 70 characters or fewer."
+)
+
+
+_DESCRIPTION_HOOK_FIX_PROMPT = (
+    "You are rewriting ONLY the opening hook (the first 1-2 sentences) of an "
+    "Etsy listing description for " + business_config.BUSINESS_NAME + ". Mobile "
+    "buyers see only this much before the fold, so it must hook the reader AND "
+    "carry the primary keyword naturally.\n\n"
+    "HARD RULES (violation = rejection):\n"
+    "1. Rewrite ONLY the hook — the exact text given below as CURRENT HOOK. "
+    "Do not touch, summarize, or reference anything else in the listing.\n"
+    "2. Never invent, add, or imply any claim about page counts, file counts, "
+    "sticker counts, included files, or features that isn't already stated in "
+    "CURRENT HOOK or the feedback below — the #1 shop rule is never claim "
+    "anything untrue about the product.\n"
+    "3. 1-2 sentences, emotion-first, primary keyword in the first sentence.\n"
+    "4. Keep the same core keyword/product identity as the current hook.\n\n"
+    "TITLE: {title}\n"
+    "CURRENT HOOK:\n{hook}\n\n"
+    "REVIEWER/DIAGNOSIS FEEDBACK — fix this specifically:\n{reason}\n\n"
+    "Return ONLY the new hook text — no quotes, no explanation, no JSON, no markdown."
 )
 
 
@@ -6900,6 +6951,86 @@ async def _diagnose_listing_core(listing_id: int) -> dict:
     return result
 
 
+# Diagnosis areas with a real, reason-aware autofix function to stage a fix
+# with. "photos"/"price"/"trust" are real _CONVERSION_DOCTOR_SYSTEM areas but
+# have no automated fix path: no code regenerates photos from a diagnosis
+# finding (that's a deliberate, larger creative decision), and price changes
+# are separately hard-capped at 5/session by CLAUDE.md regardless of source.
+_CONVERSION_FIX_HANDLERS = {
+    "title": lambda lid, reason: _autofix_title_core(lid, reason=reason),
+    "tags": lambda lid, reason: _autofix_tags_core(lid, reason=reason),
+    "description": lambda lid, reason: _autofix_description_core(lid, reason=reason),
+}
+
+
+async def _apply_conversion_fixes_core(listing_id: int) -> dict:
+    """Closes the loop the original capabilities audit flagged: diagnose_
+    listing_conversion (_diagnose_listing_core, above) already pulls real
+    views/favorites/sales and produces a genuine per-listing diagnosis via
+    Claude, but was read-only and dead-ended -- its findings never reached
+    _autofix_title_core/_autofix_tags_core/_autofix_description_core, even
+    though all three already accept a `reason` string (previously fed only
+    by Scott's manual reject text). Runs a fresh diagnosis (never a stale
+    cached one -- the listing may have changed since any earlier diagnosis),
+    then for every finding in a fixable area (_CONVERSION_FIX_HANDLERS),
+    stages the matching fix using "finding → fix" as the reason/corrective
+    guidance. Every fix still lands in the Action Center for one-tap
+    approval -- this connects two already-staging-gated systems, it does
+    not bypass staging for either. Never raises."""
+    diagnosis_result = await _diagnose_listing_core(listing_id)
+    fixes = ((diagnosis_result.get("diagnosis") or {}).get("fixes")) or []
+
+    applied: list[dict] = []
+    skipped: list[dict] = []
+    errors: list[dict] = []
+
+    for fix in fixes:
+        area = str(fix.get("area", "")).strip().lower()
+        finding = str(fix.get("finding", "")).strip()
+        fix_text = str(fix.get("fix", "")).strip()
+        reason_text = f"{finding} → {fix_text}".strip(" →") if (finding or fix_text) else ""
+
+        handler = _CONVERSION_FIX_HANDLERS.get(area)
+        if handler is None:
+            skipped.append({"area": area or "(unspecified)", "reason": "no automated fix exists for this area yet"})
+            continue
+        if not reason_text:
+            skipped.append({"area": area, "reason": "diagnosis gave no actionable finding/fix text"})
+            continue
+
+        try:
+            result = await handler(listing_id, reason_text)
+        except Exception as exc:  # noqa: BLE001
+            errors.append({"area": area, "error": str(exc)[:200]})
+            continue
+
+        if "error" in result:
+            errors.append({"area": area, "error": result["error"]})
+        elif result.get("skipped"):
+            skipped.append({"area": area, "reason": result.get("reason", "already compliant")})
+        else:
+            applied.append({"area": area, "action_id": result.get("action_id"), "finding": finding, "fix": fix_text})
+
+    message_parts = []
+    if applied:
+        message_parts.append(f"staged {len(applied)} fix(es) for {business_config.OWNER_NAME}'s approval")
+    if skipped:
+        message_parts.append(f"{len(skipped)} area(s) had nothing automated to do")
+    if errors:
+        message_parts.append(f"{len(errors)} area(s) failed")
+    message = ("Diagnosed listing " + str(listing_id) + " — " + "; ".join(message_parts) + ".") if message_parts \
+        else f"Diagnosed listing {listing_id} — no fixable findings in this diagnosis."
+
+    return {
+        "listing_id": listing_id,
+        "primary_issue": (diagnosis_result.get("diagnosis") or {}).get("primary_issue"),
+        "applied": applied,
+        "skipped": skipped,
+        "errors": errors,
+        "message": message,
+    }
+
+
 @app.post("/api/diagnose/{listing_id}")
 async def diagnose_listing(listing_id: int, _token: str = Depends(_rate_limited_auth)):
     cache_key = f"diagnose_{listing_id}"
@@ -7070,11 +7201,25 @@ def _description_needs_gate6_fix(description: str) -> bool:
 async def _autofix_description_core(
     listing_id: int, listing: dict | None = None, reason: str = "", assume_wall_art: bool = False,
 ) -> dict:
-    """Deterministic (no AI call) fix for CLAUDE.md's wall-art Gate 6 rule:
-    prepend the exact mandated opening line when a description doesn't already
-    signal instant/digital download + printable. Only applies to wall_art-type
-    listings — other product types are skipped rather than force-fit with
-    wall-art copy, since the required preamble is wall-art-specific.
+    """Two fix paths, tried in order:
+
+    1. Deterministic (no AI call) fix for CLAUDE.md's wall-art Gate 6 rule:
+       prepend the exact mandated opening line when a description doesn't
+       already signal instant/digital download + printable. Only applies to
+       wall_art-type listings. Always wins when it applies, regardless of
+       `reason` — cheap, exact, and already proven; a general LLM rewrite
+       should never override this specific, well-tested case.
+
+    2. 2026-07-17 (Wave 4, B3 retargeted from dead code in etsy_listing_
+       tools.py to the real live gap): when Gate 6 doesn't apply (not
+       wall_art, or already compliant) AND a `reason` is given — either a
+       Scott reject or a conversion-diagnosis finding — do a real Claude
+       call rewriting ONLY the opening hook (first 1-2 sentences), the same
+       narrow-blast-radius pattern Gate 6 itself uses (touch the hook, never
+       the WHAT'S INCLUDED/factual body). Before this, description autofix
+       was the one of the three (title/tags/description) with no real AI
+       path at all — title and tags both already call Claude via
+       _autofix_title_core/_generate_tags_for_listings.
 
     Product type is detected via listing_qc._detect_product_type(title,
     description), a title-keyword heuristic ("wall art" or "printable" in the
@@ -7086,9 +7231,8 @@ async def _autofix_description_core(
     product_catalog.json's `category` field) to bypass the heuristic.
 
     Never raises — returns {"error": str} on failure, {"skipped": True, ...}
-    when the listing isn't wall_art or is already compliant, so a caller
-    sweeping many listings can tell "nothing to do here" apart from a real
-    failure."""
+    when there's nothing actionable, so a caller sweeping many listings can
+    tell "nothing to do here" apart from a real failure."""
     if listing is None:
         listing = await _fetch_listing_for_autofix(listing_id)
 
@@ -7100,20 +7244,80 @@ async def _autofix_description_core(
     else:
         import listing_qc
         product_type = listing_qc._detect_product_type(title, description)
-    if product_type != "wall_art":
+
+    if product_type == "wall_art" and _description_needs_gate6_fix(description):
+        new_description = _WALL_ART_GATE6_LINE + "\n\n" + description
+        try:
+            payload = {
+                "listing_id": listing_id, "description": new_description,
+                "before_description": description,  # display-only, for the Action Center diff view
+                "_state_at_staging": listing.get("state"),
+            }
+            candidate = {"type": "update_description", "payload": payload}
+            ok, msg = _validate_staged_action(candidate)
+            if not ok:
+                return {"error": f"Quality gate: {msg}", "listing_id": listing_id}
+
+            title_short = (title or f"Listing {listing_id}")[:50]
+            prefix = "Reject-fix description" if reason else "Auto description fix (Gate 6: instant download/printable)"
+            summary = f"{prefix}: {title_short}"
+            action_id = db.enqueue_action("update_description", summary, payload)
+        except Exception as exc:
+            return {"error": f"Could not stage description fix: {exc}", "listing_id": listing_id}
+
+        with _cache_lock:
+            _cache.pop("actions", None)
+
+        return {"action_id": action_id, "listing_id": listing_id, "added_line": _WALL_ART_GATE6_LINE}
+
+    if not reason:
         return {
             "skipped": True, "listing_id": listing_id,
-            "reason": f"not a wall_art listing (detected: {product_type})",
+            "reason": "already compliant" if product_type == "wall_art" else f"not a wall_art listing (detected: {product_type})",
         }
-    if not _description_needs_gate6_fix(description):
-        return {"skipped": True, "listing_id": listing_id, "reason": "already compliant"}
 
-    new_description = _WALL_ART_GATE6_LINE + "\n\n" + description
+    if not ANTHROPIC_KEY:
+        return {"error": "ANTHROPIC_API_KEY not configured", "listing_id": listing_id}
+    if not description.strip():
+        return {"error": "listing has no description to rewrite the hook of", "listing_id": listing_id}
+
+    # The hook is everything before the first blank line (matches how every
+    # description in this codebase is structured — one opening paragraph,
+    # then a blank line, then the ━━━ WHAT'S INCLUDED section).
+    hook, _, rest = description.partition("\n\n")
+    if not rest:
+        return {"error": "could not isolate the opening hook from the rest of the description "
+                          "(no blank-line separator found) — refusing rather than rewriting the whole thing",
+                "listing_id": listing_id}
+
+    prompt = _DESCRIPTION_HOOK_FIX_PROMPT.format(title=title, hook=hook.strip(), reason=reason)
+    ai_client = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
+    try:
+        response = await asyncio.wait_for(
+            asyncio.to_thread(
+                lambda: _anthropic_create(
+                    ai_client,
+                    model=business_config.MODEL_CHEAP,
+                    max_tokens=300,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+            ),
+            timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        return {"error": "Description hook generation timed out", "listing_id": listing_id}
+    except Exception as exc:
+        return {"error": f"Description hook generation failed: {exc}", "listing_id": listing_id}
+
+    new_hook = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
+    if not new_hook:
+        return {"error": "generated hook was empty", "listing_id": listing_id}
+    new_description = new_hook + "\n\n" + rest
 
     try:
         payload = {
             "listing_id": listing_id, "description": new_description,
-            "before_description": description,  # display-only, for the Action Center diff view
+            "before_description": description,
             "_state_at_staging": listing.get("state"),
         }
         candidate = {"type": "update_description", "payload": payload}
@@ -7122,7 +7326,7 @@ async def _autofix_description_core(
             return {"error": f"Quality gate: {msg}", "listing_id": listing_id}
 
         title_short = (title or f"Listing {listing_id}")[:50]
-        prefix = "Reject-fix description" if reason else "Auto description fix (Gate 6: instant download/printable)"
+        prefix = "Reject-fix description" if reason else "Conversion-fix description hook"
         summary = f"{prefix}: {title_short}"
         action_id = db.enqueue_action("update_description", summary, payload)
     except Exception as exc:
@@ -7131,7 +7335,7 @@ async def _autofix_description_core(
     with _cache_lock:
         _cache.pop("actions", None)
 
-    return {"action_id": action_id, "listing_id": listing_id, "added_line": _WALL_ART_GATE6_LINE}
+    return {"action_id": action_id, "listing_id": listing_id, "new_hook": new_hook}
 
 
 @app.post("/api/autofix/tags/{listing_id}")
