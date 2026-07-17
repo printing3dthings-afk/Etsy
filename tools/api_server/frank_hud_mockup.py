@@ -6823,12 +6823,12 @@ async function studioPostFacebook() {
 // ── Connections — real data: /api/credentials/status + static Platform Roadmap ──
 const _PLATFORM_ROADMAP = [
   {name:'Etsy',      icon:'🛍️', status:'live',    note:'onbrandcraftz · authorized'},
-  {name:'Pinterest', icon:'📌', status:'roadmap',note:'API v5 — ready to integrate', steps:[
+  {name:'Pinterest', icon:'📌', status:'roadmap',note:'Frank-side wiring done (2026-07-17) — only OAuth remains', steps:[
     'Create a Pinterest Developer app at developers.pinterest.com',
     'Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env',
     'Run: python tools/pinterest_oauth.py — authorizes and saves tokens to .env automatically',
     'Claim the Etsy shop under Pinterest "Claimed accounts" to enable Rich Pins',
-    'Done — the Social Media Agent can post via tools/pinterest_api.py'
+    'Already done: ask Frank to stage a pin (uses the listing\\'s own Etsy photo) — it queues in the Action Center for your one-tap approval, same as every other Etsy/social change'
   ]},
   {name:'Instagram', icon:'📷', status:'roadmap',note:'Meta Graph API (app review needed)', steps:[
     'Create a Meta Business app at developers.facebook.com',
@@ -6977,7 +6977,7 @@ function renderSecurityPosture() {
     {ok:true, label:'Staged action queue',                 note:'Every Etsy change requires %%OWNER%% one-tap approval'},
     {ok:null, label:'Etsy MFA enabled?',                   note:'Verify in Etsy → Account Settings → Security'},
     {ok:null, label:'Outlook 2FA active?',                 note:'Verify at account.microsoft.com → Security'},
-    {ok:null, label:'Pinterest not integrated yet',        note:'No API exposure until keys are added'},
+    {ok:null, label:'Pinterest wired, not authorized yet', note:'Frank can stage a pin already — run python tools/pinterest_oauth.py so approvals can actually post'},
     {ok:false,label:'No per-IP rate limiting',             note:'Add nginx or Cloudflare for production hardening'},
     {ok:false,label:'Token rotation reminder needed',      note:'Etsy refresh tokens expire 90 days — set a calendar alert'}
   ].forEach(c => {

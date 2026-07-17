@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "359d267-v203"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "59dd421-v204"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3018,7 +3018,45 @@ AGENT_TOOLS.append({
         "required": ["video_path", "caption"],
     },
 })
-_SOCIAL_TOOL_NAMES = {"stage_tiktok_post"}
+
+# Pinterest — tools/pinterest_api.py + pinterest_batch_poster.py are a real, working
+# posting client, previously only reachable via manual CLI, never Frank's chat agent
+# (2026-07-17 capabilities audit — same "built but never wired" bug class as TikTok
+# above; only reference in this whole file before this was a credential-status check).
+# Same Hard Stop reasoning as TikTok: stages a post_pinterest action for approval,
+# never calls pinterest_api.PinterestClient.create_pin() directly. The pin image comes
+# from the listing's OWN already-public Etsy photo (EtsyAPIClient().get_listing_images,
+# same rank-1 URL selection tools/pinterest_batch_poster.py already used) — no need for
+# Frank to expose any file publicly, and it only works for a listing already live on
+# Etsy (an unpublished draft has no public image URL to hand Pinterest).
+# list_pinterest_boards is read-only (which boards exist to post into) and callable
+# directly, same "Fully Autonomous" tier as every other read-only Etsy tool.
+AGENT_TOOLS.append({
+    "name": "stage_pinterest_post",
+    "description": (
+        "Stage a Pinterest pin for approval in the Action Center — does NOT post "
+        "directly. Uses the listing's own rank-1 Etsy photo as the pin image (the "
+        "listing must already be live/active on Etsy) and links the pin back to that "
+        "listing. Rejecting the staged action never calls Pinterest's API; only an "
+        "explicit approval does."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "listing_id": {"type": "integer", "description": "The live Etsy listing whose photo becomes the pin image."},
+            "board_name": {"type": "string", "description": "Pinterest board to pin into (created if it doesn't exist yet)."},
+            "title": {"type": "string", "description": "Pin title (max 100 chars, Pinterest's own limit)."},
+            "description": {"type": "string", "description": "Pin description (max 500 chars, Pinterest's own limit)."},
+        },
+        "required": ["listing_id", "board_name", "title", "description"],
+    },
+})
+AGENT_TOOLS.append({
+    "name": "list_pinterest_boards",
+    "description": "Read-only: list every Pinterest board already created on the connected account, with each board's id and pin count. Use this to see valid board_name values before staging a pin.",
+    "input_schema": {"type": "object", "properties": {}},
+})
+_SOCIAL_TOOL_NAMES = {"stage_tiktok_post", "stage_pinterest_post", "list_pinterest_boards"}
 
 # Prompt-cache constants — built once at import time, reused every chat turn.
 # _CEO_SYSTEM (~2 100 tokens) + AGENT_TOOLS (~2 000 tokens) are completely static
@@ -3115,6 +3153,10 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return json.loads(_etsy_ads_tools.execute_tool(name, tool_input or {}, DataStore()))
         if name == "stage_tiktok_post":
             return _stage_tiktok_post(tool_input or {})
+        if name == "stage_pinterest_post":
+            return _stage_pinterest_post(tool_input or {})
+        if name == "list_pinterest_boards":
+            return _list_pinterest_boards()
         if name == "get_metrics":
             return _metrics_sync()
         if name == "list_listings":
@@ -6776,7 +6818,8 @@ _REGISTER_COMMAND_STAGED_ACTION_TYPES = ("register_command",)
 # never Frank's chat agent. CLAUDE.md's Autonomy Boundaries lists "Post to social media
 # accounts" as a Hard Stop, so this goes through the exact same stage→approve→execute
 # path as every Etsy write instead of posting directly.
-_SOCIAL_STAGED_ACTION_TYPES = ("post_tiktok",)
+# post_pinterest added 2026-07-17, same reasoning, same pattern.
+_SOCIAL_STAGED_ACTION_TYPES = ("post_tiktok", "post_pinterest")
 _STAGED_ACTION_TYPES = (
     _ETSY_STAGED_ACTION_TYPES + _LOCAL_STAGED_ACTION_TYPES
     + _SCRIPT_STAGED_ACTION_TYPES + _PHOTO_STAGED_ACTION_TYPES
@@ -6923,7 +6966,7 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         if not target.is_file():
             return False, f"staged video file not found: {path}"
         return True, "ok"
-    if t in _SOCIAL_STAGED_ACTION_TYPES:
+    if t == "post_tiktok":
         path = (p.get("video_path") or "").strip()
         if not path:
             return False, "missing video_path"
@@ -6944,6 +6987,25 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
             return False, f"caption is {len(caption)} chars — TikTok's limit is 2200"
         if at_approval and not os.getenv("TIKTOK_ACCESS_TOKEN", "").strip():
             return False, "TIKTOK_ACCESS_TOKEN not set — run tools/tiktok_oauth.py to (re)authorize"
+        return True, "ok"
+    if t == "post_pinterest":
+        if not p.get("listing_id"):
+            return False, "missing listing_id"
+        board_name = (p.get("board_name") or "").strip()
+        if not board_name:
+            return False, "missing board_name"
+        title = (p.get("title") or "").strip()
+        if not title:
+            return False, "missing title"
+        if len(title) > 100:
+            return False, f"title is {len(title)} chars — Pinterest's limit is 100"
+        description = (p.get("description") or "").strip()
+        if not description:
+            return False, "missing description"
+        if len(description) > 500:
+            return False, f"description is {len(description)} chars — Pinterest's limit is 500"
+        if at_approval and not os.getenv("PINTEREST_ACCESS_TOKEN", "").strip():
+            return False, "PINTEREST_ACCESS_TOKEN not set — run tools/pinterest_oauth.py to (re)authorize"
         return True, "ok"
     # Local types — the real security boundary is the relay's own realpath check
     # at execution time (it's the only thing with Scott's actual filesystem to
@@ -7202,6 +7264,106 @@ def _execute_tiktok_staged_action(a: dict) -> dict:
     return result
 
 
+def _list_pinterest_boards() -> dict:
+    """Read-only — no staging needed, same tier as any other read-only Etsy tool.
+    Lets the agent (or Scott, via chat) see valid board_name values before staging
+    a pin, and confirms Pinterest is actually connected at all."""
+    import pinterest_api as _pinterest_api
+    if not _pinterest_api.is_configured():
+        return {"error": "Pinterest not connected — run tools/pinterest_oauth.py to (re)authorize"}
+    try:
+        boards = _pinterest_api.get_client().get_boards()
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"could not list boards: {exc}"}
+    return {
+        "boards": [
+            {"name": b.get("name"), "id": b.get("id"), "pin_count": b.get("pin_count")}
+            for b in boards
+        ]
+    }
+
+
+def _stage_pinterest_post(tool_input: dict) -> dict:
+    """Chat-tool handler for stage_pinterest_post — validates and enqueues, never
+    posts. The listing must already be live on Etsy by the time this is called
+    (that's what makes its photo have a public URL Pinterest can fetch)."""
+    listing_id = tool_input.get("listing_id")
+    board_name = (tool_input.get("board_name") or "").strip()
+    title = (tool_input.get("title") or "").strip()
+    description = (tool_input.get("description") or "").strip()
+    if not listing_id:
+        return {"error": "missing listing_id"}
+    if not board_name:
+        return {"error": "missing board_name"}
+    if not title:
+        return {"error": "missing title"}
+    if not description:
+        return {"error": "missing description"}
+    payload = {"listing_id": listing_id, "board_name": board_name, "title": title, "description": description}
+    candidate = {"type": "post_pinterest", "payload": payload}
+    ok, msg = _validate_staged_action(candidate)
+    if not ok:
+        return {"error": msg}
+    summary = f"Pinterest pin ({board_name}): {title[:60]}"
+    action_id = db.enqueue_action("post_pinterest", summary, payload)
+    with _cache_lock:
+        _cache.pop("actions", None)
+    return {"action_id": action_id, "listing_id": listing_id, "board_name": board_name, "title": title, "staged": True}
+
+
+def _execute_pinterest_staged_action(a: dict) -> dict:
+    """Apply an approved post_pinterest action — the ONLY place
+    pinterest_api.PinterestClient.create_pin() is ever called from this server.
+    Everything upstream only ever prepares/validates the pin; nothing posts until
+    Scott approves here. Logged to activity_log regardless of outcome, same as the
+    TikTok executor."""
+    p = a.get("payload", {}) or {}
+    listing_id = p["listing_id"]
+    board_name = p["board_name"]
+    title = p["title"]
+    description = p["description"]
+    token = os.getenv("PINTEREST_ACCESS_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("PINTEREST_ACCESS_TOKEN not set — run tools/pinterest_oauth.py to (re)authorize")
+
+    # The pin image is the listing's own rank-1 Etsy photo — already public, no
+    # need for Frank to host anything. Same selection tools/pinterest_batch_poster.py
+    # used, but via the shared hardened EtsyAPIClient (retry/backoff/circuit-breaker)
+    # instead of that script's own raw urllib call.
+    images = EtsyAPIClient().get_listing_images(listing_id)
+    if not images:
+        raise RuntimeError(f"listing {listing_id} has no images to pin")
+    images.sort(key=lambda img: img.get("rank", 99))
+    top = images[0]
+    image_url = top.get("url_fullxfull") or top.get("url_570xN") or top.get("url_75x75")
+    if not image_url:
+        raise RuntimeError(f"listing {listing_id}'s rank-1 image has no usable URL")
+
+    import pinterest_api as _pinterest_api
+    client = _pinterest_api.PinterestClient(access_token=token)
+    board_id = client.get_board_id(board_name)
+    if not board_id:
+        created = client.create_board(board_name)
+        board_id = created.get("id")
+    if not board_id:
+        raise RuntimeError(f"could not find or create Pinterest board '{board_name}'")
+
+    # create_pin() raises PinterestAPIError on failure (unlike tiktok_poster.post_video(),
+    # which returns an {"error": ...} dict) -- wrap so a failure still gets logged to
+    # activity_log before propagating, matching the TikTok executor's "log regardless
+    # of outcome" behavior despite the different underlying client shape.
+    try:
+        result = client.create_pin(
+            board_id, title, description, image_url,
+            link=f"https://www.etsy.com/listing/{listing_id}",
+        )
+    except Exception:
+        db.log_activity("frank", "post_pinterest", a.get("summary", ""), p, outcome="error")
+        raise
+    db.log_activity("frank", "post_pinterest", a.get("summary", ""), p, outcome="ok")
+    return result
+
+
 @app.get("/api/queue")
 async def get_queue(status: str = "pending", _token: str = Depends(_auth_session_or_bearer)):
     """List staged actions. status=pending (default) or 'all'."""
@@ -7247,8 +7409,15 @@ async def approve_action(action_id: int, _token: str = Depends(_auth_session_or_
                 asyncio.to_thread(_execute_register_command_staged_action, a), timeout=15.0
             )
         elif is_social:
+            # Two social types share the _SOCIAL_STAGED_ACTION_TYPES/is_social bucket
+            # (post_tiktok, post_pinterest as of 2026-07-17) but each needs its own
+            # executor -- dispatch by the action's own type rather than assuming TikTok.
+            _social_executor = (
+                _execute_pinterest_staged_action if a["type"] == "post_pinterest"
+                else _execute_tiktok_staged_action
+            )
             result = await asyncio.wait_for(
-                asyncio.to_thread(_execute_tiktok_staged_action, a), timeout=120.0
+                asyncio.to_thread(_social_executor, a), timeout=120.0
             )
         else:
             result = await asyncio.wait_for(asyncio.to_thread(_execute_staged_action, a), timeout=45.0)
