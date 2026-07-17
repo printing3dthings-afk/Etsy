@@ -24,6 +24,7 @@ import os
 import random
 import re as _re
 import secrets
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -568,7 +569,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "cfb53f8-v209"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "cd8eb41-v210"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8400,11 +8401,24 @@ async def produce_qc_check(body: dict, _token: str = Depends(_rate_limited_auth)
 
 
 def _produce_listing_photos(inp: dict) -> dict:
-    """Generate a planner's full 10-photo listing set from its built PDF — real
-    rendered pages in device mockups (the cardinal 'photos must show the real
-    product' rule). Pure local render; the only possible AI touch is the shared
-    app-compatibility graphic, which is reused if present. Writes into the
-    product's <pid>_listing_images/ folder."""
+    """Generate a planner's full 10-photo listing set — real, self-verifying
+    AI-rendered lifestyle photos via tools/listing_photo_pipeline.py (THE
+    STANDARD LIFESTYLE METHOD documented in CLAUDE.md), not a plain local
+    render. Rewritten 2026-07-17 (Wave 4 photo-pipeline audit): the previous
+    version (gen_planner_listing_photos.generate_for_planner()) never called
+    an AI image model at all — a hand-drawn iPad bezel composited onto a flat
+    gradient, no real photography — which is the actual root cause behind
+    "photos look AI-generated / not convincing": there was no photorealistic
+    rendering happening, at all, for the shop's core product line.
+
+    If the product already has a live/draft Etsy listing_id (gen_planner_
+    listing_photos.PLANNER_PAGES[pid]['listing_id']), each passed photo is
+    staged into the Action Center for one-tap approval, exactly like the
+    SS-series photo path already does — closing the "zero automated QA gate
+    on the photos Scott actually looks at" gap the same audit found. Products
+    with no listing_id yet (e.g. DP1030-1034, still pre-publish drafts) have
+    nowhere to stage a photo update TO, so those fall back to the existing
+    Files-screen folder-drop UX unchanged."""
     pid = str((inp or {}).get("pid", "")).strip().upper()
     if not pid:
         return {"error": "pid is required (e.g. 'DP1030')"}
@@ -8422,19 +8436,68 @@ def _produce_listing_photos(inp: dict) -> dict:
     if not (_P(glp.ART_DIR) / f"{pid}.pdf").exists():
         return {"error": f"{pid}.pdf not found in product files — build/sync the planner PDF first."}
     try:
-        # Photos are local composites of real pages; the ONLY AI touch is photo 7
-        # (the app-compat graphic) when the shared asset is absent — passed the engine.
-        _out_dir, photos = glp.generate_for_planner(pid, None, upload=False, engine=engine)
+        out_dir, photos = glp.generate_ai_photos_for_planner(pid, engine=engine)
     except Exception as exc:  # noqa: BLE001
         return {"error": f"photo generation failed: {exc}"}
+
+    passed = [p for p in photos if p["passed"]]
+    failed = [p for p in photos if not p["passed"]]
+    realism_flags = [p for p in photos if p.get("realism_issues")]
+
+    listing_id = glp.PLANNER_PAGES[pid].get("listing_id")
+    staged: list[dict] = []
+    stage_errors: list[dict] = []
+    if listing_id and passed:
+        staged_root = _FILE_ROOTS["staged_photos"] / pid
+        staged_root.mkdir(parents=True, exist_ok=True)
+        for rank, p in enumerate(photos, start=1):
+            if not p["passed"]:
+                continue
+            src = _P(out_dir) / p["filename"]
+            dest = staged_root / p["filename"]
+            try:
+                shutil.copy2(src, dest)
+                summary = f"AI listing photo {rank}/10 ({p['slot']}): {pid}"
+                if p.get("realism_issues"):
+                    summary += " ⚠ realism notes"
+                action_id = asyncio.run(_stage_photo_action(
+                    listing_id=listing_id, rank=rank, sku=pid,
+                    rel_path=f"{pid}/{p['filename']}", summary=summary,
+                    physics=p.get("physics", ""), scene_prompt=p.get("scene_prompt", ""),
+                    design_paths=p.get("design_paths", []),
+                ))
+                staged.append({"slot": p["slot"], "rank": rank, "action_id": action_id})
+            except Exception as exc:  # noqa: BLE001
+                stage_errors.append({"slot": p["slot"], "error": str(exc)[:200]})
+
+    if staged:
+        message = (
+            f"Generated {len(passed)}/10 listing photos for {pid} and staged "
+            f"{len(staged)} for your approval in the Action Center."
+        )
+    else:
+        message = (
+            f"Generated {len(passed)}/10 listing photos for {pid} → "
+            f"{pid}_listing_images/. Open them from the Files screen."
+        )
+        if not listing_id:
+            message += " (No Etsy listing_id yet for this product — nothing to stage against.)"
+    if failed:
+        message += f" {len(failed)} slot(s) failed verification — see 'failed' below."
+    if realism_flags:
+        message += f" {len(realism_flags)} photo(s) have non-blocking realism notes — see 'realism_flags'."
+
     return {
         "pid": pid,
-        "count": len(photos),
+        "count": len(passed),
         "photos": photos,
+        "failed": failed,
+        "realism_flags": realism_flags,
+        "staged": staged,
+        "stage_errors": stage_errors,
         "engine": engine,
         "folder": f"product_files/{pid}_listing_images",
-        "message": f"Generated {len(photos)} listing photos for {pid} → "
-                   f"{pid}_listing_images/. Open them from the Files screen.",
+        "message": message,
     }
 
 

@@ -861,6 +861,118 @@ def generate_for_planner(pid, client, upload=True, engine=None):
     return out_dir, photo_files
 
 
+def _find_sticker_sheet(pid: str, sheet_num: int) -> str | None:
+    """Same 3-way fallback chain make_sticker_showcase() already uses to find
+    a real sticker sheet PNG on disk for a given planner + sheet number."""
+    for cand in (
+        os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.jpg'),
+        os.path.join(DP_BASE, 'stickers', pid, 'png_sheets', f'{pid}_sheet_{sheet_num:02d}.png'),
+        os.path.join(ART_DIR, f'{pid}_sticker_sheet_{sheet_num}.png'),
+    ):
+        if os.path.exists(cand):
+            return cand
+    return None
+
+
+_AI_PHOTO_SLOT_ORDER = [
+    "slot_01_hero", "slot_02_whats_included", "slot_03_monthly",
+    "slot_04_weekly", "slot_05_stickers", "slot_06_how_to",
+    "slot_07_compatibility", "slot_08_cover_beauty",
+    "slot_09_habit_tracker", "slot_10_specialty",
+]
+
+
+def generate_ai_photos_for_planner(pid: str, engine: str | None = None,
+                                    out_dir: str | None = None) -> tuple[str, list[dict]]:
+    """Real, self-verifying AI-generated listing photos for a planner, via
+    tools/listing_photo_pipeline.generate_planner_listing_photos() -- THE
+    STANDARD LIFESTYLE METHOD documented in CLAUDE.md.
+
+    Added 2026-07-17 (Wave 4 photo-pipeline audit) to replace
+    generate_for_planner() above as the path _produce_listing_photos() (main.py)
+    actually calls. That function is pure PIL compositing -- a hand-drawn iPad
+    bezel on a flat gradient, no AI rendering at all -- which is the real
+    reason planner photos read as fake: not AI artifacts leaking through, a
+    total absence of photorealistic rendering. Left in place above for
+    reference/manual fallback, but no longer the default path.
+
+    Renders the needed PDF pages to temp JPGs via the existing render_page(),
+    locates real sticker sheet PNGs on disk (_find_sticker_sheet(), the same
+    fallback chain make_sticker_showcase() already uses), and hands
+    everything to the real pipeline with this product's PLANNER_PAGES config
+    (so a product with no hand-tuned STYLE_ANCHORS/SPECIALTY_PROMPTS entry --
+    e.g. DP1030-1034 -- still gets real, on-theme style guidance instead of a
+    blank anchor).
+
+    Returns (out_dir, [{"slot", "filename", "passed", "issues",
+    "realism_issues"}, ...]) -- one entry per of the 10 slots. A failed slot
+    has filename=None and its issues populated; never silently dropped."""
+    if pid not in PLANNER_PAGES:
+        raise ValueError(f"{pid} isn't a configured planner (have {sorted(PLANNER_PAGES)})")
+    cfg = PLANNER_PAGES[pid]
+    out_dir = out_dir or os.path.join(ART_DIR, f'{pid}_listing_images')
+    os.makedirs(out_dir, exist_ok=True)
+    tmp_dir = os.path.join(out_dir, '_source_renders')
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    prior_engine = os.environ.get("IMAGE_ENGINE")
+    if engine:
+        os.environ["IMAGE_ENGINE"] = engine
+    try:
+        def _render_and_save(page_key: str) -> Path:
+            page_num = cfg[page_key]
+            img = render_page(pid, page_num, target_w=1800)
+            path = os.path.join(tmp_dir, f'{page_key}.jpg')
+            img.convert('RGB').save(path, 'JPEG', quality=92)
+            return Path(path)
+
+        cover_path = _render_and_save('cover')
+        spread_paths = {
+            'monthly': _render_and_save('monthly'),
+            'weekly': _render_and_save('weekly'),
+            'habit': _render_and_save('tracker'),
+            'specialty': _render_and_save('specialty'),
+        }
+        sticker_paths = []
+        for sheet_num in (cfg.get('sticker_sheets') or [])[:3]:
+            found = _find_sticker_sheet(pid, sheet_num)
+            if found:
+                sticker_paths.append(Path(found))
+
+        import listing_photo_pipeline
+        results = listing_photo_pipeline.generate_planner_listing_photos(
+            product_id=pid,
+            pdf_cover_path=cover_path,
+            pdf_spread_paths=spread_paths,
+            sticker_sheet_paths=sticker_paths,
+            output_dir=Path(out_dir),
+            cfg=cfg,
+        )
+    finally:
+        if engine:
+            if prior_engine is None:
+                os.environ.pop("IMAGE_ENGINE", None)
+            else:
+                os.environ["IMAGE_ENGINE"] = prior_engine
+
+    photos = []
+    for slot in _AI_PHOTO_SLOT_ORDER:
+        r = results.get(slot)
+        if r is None:
+            continue
+        photos.append({
+            "slot": slot,
+            "filename": Path(r.out_path).name if (r.passed and r.out_path) else None,
+            "passed": r.passed,
+            "issues": r.issues,
+            "realism_issues": r.realism_issues,
+            "physics": r.physics,
+            "scene_prompt": r.scene_prompt,
+            "design_paths": r.design_paths,
+        })
+    return out_dir, photos
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--pid', help='Single PID to process (default: all 4)')

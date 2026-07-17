@@ -11817,3 +11817,261 @@ find_listing()`), and confirms `execute_tool()`'s dispatcher still routes
 (28/28, ~44s). No build-ID bump for this item — `social_media_tools.py`
 isn't imported by `main.py`, so this change has zero effect on the running
 server; nothing to verify via a live deploy poll.
+
+
+## 2026-07-17 — Scheduled art run
+[SCHEDULED] Due today (2026-07-17) — posting now
+
+============================================================
+Category [1/20]: Watercolor Botanical / Floral
+Subject: Peony Bouquet
+============================================================
+
+[1/7] Generating art...
+  Gen attempt 1 failed: HTTP Error 401: Unauthorized
+  Gen attempt 2 failed: HTTP Error 401: Unauthorized
+  Gen attempt 3 failed: HTTP Error 401: Unauthorized
+  FAILED to generate art. Aborting.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmp3coe8cmd/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp3coe8cmd/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpp6a6m2rg/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 31678). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 31680). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Frank upgrade Wave 4 (sales & traffic): item A1, the actual photo fix
+Continued Wave 4 (sales & traffic maximization). This is the core fix from
+the plan — the item that directly answers Scott's "photos look AI-generated
+/ not convincing" complaint, and it turned out to be the opposite problem.
+
+**Root cause, confirmed by direct code read**: `_produce_listing_photos()`
+(`main.py`, the function behind the "Generate listing photos" button Scott
+actually uses) called `gen_planner_listing_photos.generate_for_planner()` —
+pure PIL compositing. Its own docstring said so plainly: "Pure local render;
+the only possible AI touch is the shared app-compatibility graphic." A
+hand-drawn iPad bezel (`make_ipad()`) pasted onto a flat linear-gradient
+background (`gradient_bg()`), no lighting, no props, no camera vocabulary —
+nothing from CLAUDE.md's elaborate photo-1 prompt was ever actually rendered
+for planners. Meanwhile a real, self-verifying, documented-as-standard
+pipeline (`tools/listing_photo_pipeline.py`'s `generate_planner_listing_
+photos()`) already existed with planner-specific scene templates — it was
+simply never wired into the button Scott uses. Confirmed this is the LIVE
+path: covers DP1030–1034, the exact batch pending review right now.
+
+**What shipped:**
+- **New glue function** `generate_ai_photos_for_planner()` (`tools/
+  gen_planner_listing_photos.py`) — renders cover + monthly/weekly/tracker/
+  specialty pages via the existing `render_page()` to temp JPGs, locates real
+  sticker sheet PNGs via the exact same 3-way fallback chain `make_sticker_
+  showcase()` already proved (`{pid}_sticker_sheet_N.jpg` → processed
+  `stickers/{pid}/png_sheets/{pid}_sheet_NN.png` → raw `.png`), and hands
+  everything to `listing_photo_pipeline.generate_planner_listing_photos()`.
+  The old PIL-mockup `generate_for_planner()` stays in the file for reference/
+  manual fallback but is no longer the default path.
+- **Generalized `generate_planner_listing_photos()`** (`listing_photo_
+  pipeline.py`) to accept an optional `cfg` dict (the same shape as `gen_
+  planner_listing_photos.PLANNER_PAGES[pid]`) so any configured planner gets
+  real, on-theme style guidance — previously `STYLE_ANCHORS`/`accent_map`/
+  `color_theme_map` only had hand-tuned entries for DP1026-1029, meaning
+  DP1030-1034 would have silently gotten a blank style anchor. Added a
+  `_style_anchor_for()` fallback deriving theme name + real hex colors +
+  light/dark desk-surface choice from `cfg`.
+- **Found and fixed a second, separate real bug while wiring this in**: for
+  any product without a hand-written `SPECIALTY_PROMPTS` entry, slot 10's
+  scene template resolves to the literal unformatted string
+  `"{specialty_prompt}"` (only non-slot-10 templates get `.format()`'d) — a
+  broken prompt would have been sent straight to the image model for
+  DP1030-1034. Added 5 new hand-written `SPECIALTY_PROMPTS` entries (one per
+  product, using each one's real `specialty_label`/theme/colors from
+  `PLANNER_PAGES`) rather than leaving a fallback that papers over the bug.
+- **Realism gate (A2)**: `verify_render()`/`gemini_verify_render()`'s prompt
+  explicitly told the vision model perspective/lighting/shadows are "NEVER
+  issues" — accurate for its actual job (fidelity-to-source checking) but it
+  meant nothing anywhere ever checked whether a render looks convincingly
+  real. Added a second, non-blocking `realism_issues` field to the same
+  verify call (one extra JSON key, no extra API call) — flags plastic/waxy
+  surfaces, zero grain, inconsistent shadow direction, or a flat catalog
+  look, without affecting pass/fail (an engine limitation might not be
+  fixable by retrying 3x, and shouldn't silently eat the retry budget).
+  Threaded through `PhotoResult` and surfaced in `_produce_listing_photos()`'s
+  response and the Action Center summary line so a technically-passing photo
+  that "looks a bit AI" isn't invisible before Scott approves it.
+- **Post-processing pass (A3)**: new `_apply_finish_pass()` — gentle
+  `UnsharpMask` (radius 1.2, much softer than `upscale_art.py`'s upscale-
+  recovery tuning since this runs on an already-final-size image), light
+  per-pixel film grain (σ=4, numpy), and a soft radial vignette (max 12%
+  darkening past 55% radius) — every passed photo runs through this before
+  saving. Deliberately subtle: verified programmatically that corners darken
+  relative to center and real per-pixel grain variance exists, not just "the
+  function ran."
+- **Prompt vocabulary (A4)**: added "sharp commercial product photography,
+  subtle natural film grain" to all four hand-tuned `STYLE_ANCHORS` entries
+  and the new `cfg`-driven fallback anchor, matching CLAUDE.md's own
+  documented gpt-image-1 recommendations that weren't actually present in
+  the anchors the code uses.
+- **Staging integration**: `_produce_listing_photos()` rewritten — when the
+  product already has a live/draft `listing_id` (`PLANNER_PAGES[pid]`,
+  DP1026-1029 today), each passed photo is copied into the `staged_photos`
+  root and staged via the existing `_stage_photo_action()` (the exact path
+  SS-series photos already use) for one-tap approval in the Action Center —
+  closing the "zero automated QA gate on the photos Scott actually looks at"
+  half of the original finding. Products with no `listing_id` yet
+  (DP1030-1034, still pre-publish drafts) have nowhere to stage a photo
+  update TO, so they correctly fall back to the existing Files-screen
+  folder-drop UX, with the response explicitly explaining why nothing staged.
+  Failed slots and realism-flagged photos are always surfaced in the
+  response (`failed`/`realism_flags` fields) — never silently dropped.
+- Also fixed a smaller, adjacent bug while in this code: `generate_planner_
+  listing_photos()` unconditionally built an OpenAI client even for a pure-
+  Gemini run (`generate_verified_photo()` one level down had already been
+  fixed for this exact issue on 2026-07-14; the caller one level up still had
+  the same unconditional `_client()` call, still forcing an `OPENAI_API_KEY`
+  requirement even when `IMAGE_ENGINE=gemini` end to end).
+
+**Verified**: new `tests/test_planner_photo_pipeline.py` (17 tests) — style
+anchor fallback for both light and dark themes plus confirms the original
+four hardcoded anchors are preserved with the new vocabulary appended, every
+one of the 9 configured planners now has a real `SPECIALTY_PROMPTS` entry
+(would have caught the second bug found above), the finish pass verified
+programmatically (corner darkening, real grain variance — not just "ran
+without crashing"), `PhotoResult`'s new fields default correctly, sticker-
+sheet path resolution against a real temp directory tree, the full glue
+function exercised against a REAL 120-page PDF built with `fitz` (confirms
+`render_page()` actually produces real image files on disk, not just that
+the code path executes) with `generate_planner_listing_photos()` mocked at
+its boundary (no real paid AI calls fired during testing), engine env var
+save/restore, and `_produce_listing_photos()`'s three real behaviors: stages
+all 10 photos when a listing_id exists (confirmed against DP1026's actual
+real listing_id from `PLANNER_PAGES`), falls back to the folder UX with an
+explanatory message when it doesn't (DP1030), and never silently drops a
+failed or realism-flagged photo. `py_compile` clean on all three touched
+files; `tools/check_hardcoded_paths.py` clean (99 files scanned — the new
+temp-render-file logic reuses `_resolve_dp_base()`, no new hardcoded paths
+introduced). Full suite via `tests/run_all.py` (29/29, ~47s);
+`playwright_smoke.py` clean on first try. Build `cd8eb41-v210`.
+
+Note: this ships the *pipeline* wiring, not a batch of already-generated
+photos — no real (paid) AI image-generation calls were fired as part of this
+implementation/verification work; that only happens when Scott (or Frank on
+his behalf) actually runs "Generate listing photos" for a real product ID.

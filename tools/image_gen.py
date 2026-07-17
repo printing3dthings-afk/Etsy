@@ -295,8 +295,17 @@ def gemini_verify_render(design_paths: list, render, physics_desc: str = "",
         "are NEVER issues.\n"
         "IMPORTANT: only report an issue if you can see it CLEARLY and are confident. "
         "If you are uncertain whether something is an issue, do NOT report it — "
-        "uncertain observations are not defects.\n"
-        'Respond with ONLY JSON: {"pass": true/false, "issues": ["specific issue", ...]}'
+        "uncertain observations are not defects.\n\n"
+        "SEPARATELY (does NOT affect pass/fail — a fidelity-perfect render can "
+        "still get realism notes, and vice versa): does this look like a "
+        "genuine, professional product photograph rather than an obviously "
+        "AI-generated or synthetic image? Note (do not fail on) unnaturally "
+        "plastic/waxy surfaces, a complete absence of any grain or texture, "
+        "shadows inconsistent with the stated light direction, or an "
+        "unnaturally flat/lifeless catalog look with zero atmosphere. Only "
+        "note something you are genuinely confident about.\n"
+        'Respond with ONLY JSON: {"pass": true/false, "issues": ["specific issue", ...], '
+        '"realism_issues": ["specific concern", ...]} (realism_issues: empty list if none).'
     )
     contents: list = [prompt]
     for dp in design_paths:
