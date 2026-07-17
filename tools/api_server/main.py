@@ -568,7 +568,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "d1af050-v206"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e00ec18-v207"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6050,6 +6050,154 @@ async def get_ads_status(_token: str = Depends(_auth_session_or_bearer)):
         return cached
     result = await asyncio.to_thread(_compute_ads_status)
     _cache_set("ads_status", result)
+    return result
+
+
+# ── COGS / profit-per-listing (2026-07-17 capabilities audit item 4) ────────
+# No real per-listing cost data exists anywhere in this codebase (checked:
+# product_catalog.json, makerworld_specs.json, business_config.py -- none
+# carry a cost field). The only cost numbers on record are the manually
+# maintained estimates in data/financial/profit_loss.md's 3D-print COGS
+# table (Low/Typical/High, filament+electricity+wear+packaging). This panel
+# is therefore an ESTIMATE, not real accounting -- it says so explicitly in
+# its own "note" field rather than presenting borrowed numbers as fact.
+_ETSY_TRANSACTION_FEE_RATE = 0.065     # CLAUDE.md "Etsy Fees to Factor In"
+_ETSY_PAYMENT_PROCESSING_RATE = 0.03
+_ETSY_PAYMENT_PROCESSING_FLAT = 0.25
+_ETSY_LISTING_FEE = 0.20
+# data/financial/profit_loss.md "Typical" 3D-print COGS/unit (filament +
+# electricity + printer wear + packaging). Excludes shipping -- CLAUDE.md's
+# pricing guidance treats shipping as absorbed into price, not a separate
+# per-sale line item here.
+_PHYSICAL_COGS_ESTIMATE_USD = 7.50
+_COGS_LOW_MARGIN_THRESHOLD_PCT = 40.0
+
+
+def _classify_product_type_for_cogs(title: str) -> str:
+    """Reuses order_notifier.py's own title-keyword product classifier
+    (lazy-imported, not copied) so this estimate and the order-notification
+    emails never silently drift on what counts as a physical 3d_print item --
+    the exact "two copies of the same lookup logic" bug class already caught
+    once this session (pinterest_batch_poster.py's own duplicated Etsy image
+    lookup vs. the shared EtsyAPIClient). Lazy import so order_notifier's
+    module-level .env load doesn't run at every main.py startup."""
+    import order_notifier
+    return order_notifier._classify(title)
+
+
+def _estimate_listing_economics(price: float, title: str) -> dict:
+    """Per-listing profit estimate: real, documented Etsy fee math (not an
+    estimate) minus an ESTIMATED COGS based on a title-keyword product-type
+    guess (digital ≈ $0 COGS, 3D-print physical ≈ $7.50/unit typical)."""
+    kind = _classify_product_type_for_cogs(title)
+    is_physical = kind == "3d_print"
+    cogs = _PHYSICAL_COGS_ESTIMATE_USD if is_physical else 0.0
+    transaction_fee = price * _ETSY_TRANSACTION_FEE_RATE
+    payment_fee = price * _ETSY_PAYMENT_PROCESSING_RATE + _ETSY_PAYMENT_PROCESSING_FLAT
+    fees = transaction_fee + payment_fee + _ETSY_LISTING_FEE
+    net = price - fees - cogs
+    margin_pct = round((net / price) * 100, 1) if price > 0 else 0.0
+    return {
+        "product_type": kind,
+        "is_physical_estimate": is_physical,
+        "cogs_estimate": round(cogs, 2),
+        "fees_real": round(fees, 2),
+        "net_estimate": round(net, 2),
+        "margin_pct": margin_pct,
+    }
+
+
+def _compute_cogs_status() -> dict:
+    """Shop-wide COGS/profit snapshot across all active listings, mirroring
+    _compute_ads_status()'s shape (used/status/metrics). Real inputs: live
+    price per listing (Etsy) and real recent units sold per listing (last 100
+    paid receipts, via the existing _sales_by_listing_sync() -- true sales,
+    not favorites). Estimated inputs: product type (title-keyword guess) and
+    3D-print COGS (a flat typical estimate, not per-design real cost).
+
+    A missing/invalid Etsy token means this can structurally never succeed,
+    not a transient hiccup -- so it's caught here and reported as an honest
+    "nothing to show" (used: False), the same contract _compute_ads_status()
+    already uses when there's no ads data, rather than bubbling up to
+    _fetch_with_degrade's 503 (that path is for real transient failures on a
+    call that normally succeeds, matching _compute_star_seller_status()'s own
+    per-call try/except-to-zero pattern for the identical situation)."""
+    try:
+        listings = _listings_sync("active").get("listings", [])
+    except Exception as exc:
+        print(f"[cogs-status] listings fetch failed: {exc}", flush=True)
+        return {"used": False}
+    if not listings:
+        return {"used": False}
+    try:
+        sales = _sales_by_listing_sync()
+    except Exception as exc:
+        print(f"[cogs-status] sales fetch failed (non-fatal, treating as zero sales): {exc}", flush=True)
+        sales = {}
+
+    rows = []
+    total_recent_profit = 0.0
+    total_recent_units = 0
+    for l in listings:
+        price = l.get("price") or 0
+        econ = _estimate_listing_economics(price, l.get("title", ""))
+        units = sales.get(l.get("listing_id"), 0)
+        recent_profit = round(econ["net_estimate"] * units, 2)
+        total_recent_profit += recent_profit
+        total_recent_units += units
+        rows.append({
+            "listing_id": l.get("listing_id"),
+            "title": (l.get("title") or "")[:60],
+            "price": price,
+            "recent_units_sold": units,
+            "recent_profit_estimate": recent_profit,
+            **econ,
+        })
+
+    avg_margin = round(sum(r["margin_pct"] for r in rows) / len(rows), 1) if rows else 0.0
+    flagged = sorted(
+        (r for r in rows if r["margin_pct"] < _COGS_LOW_MARGIN_THRESHOLD_PCT),
+        key=lambda r: r["margin_pct"],
+    )[:5]
+    top_profit = sorted(rows, key=lambda r: r["recent_profit_estimate"], reverse=True)[:5]
+
+    return {
+        "used": True,
+        "listing_count": len(rows),
+        "avg_margin_pct": avg_margin,
+        "total_recent_profit_estimate": round(total_recent_profit, 2),
+        "total_recent_units": total_recent_units,
+        "flagged_low_margin": flagged,
+        "top_profit_listings": top_profit,
+        "note": (
+            "Estimate, not real accounting: digital COGS assumed $0, physical "
+            "(3D-print) COGS estimated at a flat $7.50/unit typical "
+            "(data/financial/profit_loss.md), product type guessed from title "
+            "keywords. Etsy fees (6.5% transaction + 3%+$0.25 processing + "
+            "$0.20 listing) are real, documented rates, not estimates. Recent "
+            "units sold are real (last 100 paid receipts)."
+        ),
+    }
+
+
+@app.get("/api/cogs-status")
+async def get_cogs_status(_token: str = Depends(_auth_session_or_bearer)):
+    """COGS/profit-per-listing snapshot for the Home screen card. Cached 120s
+    (same TTL as Ads/ROAS and Star Seller). Unlike Ads/ROAS (local-only data,
+    no Etsy call), this one calls _listings_sync() -> a real Etsy fetch, so
+    it must degrade the same way /api/star-seller and /api/listings already
+    do -- caught live 2026-07-17 via playwright_smoke.py: an uncaught
+    EtsyAPIError (e.g. no OAuth token configured) bubbled into a raw 500,
+    the exact bug class _fetch_with_degrade was built to close on 2026-07-10
+    for the other Etsy-touching status cards."""
+    cached = _cache_get("cogs_status", ttl=120)
+    if cached is not None:
+        return cached
+    result = await _fetch_with_degrade(
+        "cogs_status", asyncio.to_thread(_compute_cogs_status), timeout=20.0
+    )
+    if not (isinstance(result, dict) and result.get("stale")):
+        _cache_set("cogs_status", result)
     return result
 
 

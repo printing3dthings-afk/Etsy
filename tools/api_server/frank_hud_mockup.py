@@ -1309,6 +1309,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           </div>
         </div>
 
+        <div class="panel brk col-meminsights">
+          <div class="panel-title">COGS &amp; Profit (est.) <span class="src">/api/cogs-status</span></div>
+          <div id="cogs-status-body" style="padding:4px 0">
+            <div style="color:var(--muted);font-size:11px">Loading…</div>
+          </div>
+        </div>
+
         <div class="panel brk col-agents">
           <div class="panel-title">Inbox &amp; Reviews <span class="src">/api/inbox</span></div>
           <div id="inbox-body">
@@ -2923,7 +2930,7 @@ function transcribeAndSend(blob){
 // screen), so scoping either to a single screen would make chrome outside that screen
 // go stale.
 const _SCREEN_LOADERS = {
-  cmd: [loadCredentialsAndHealth, loadStarSeller, loadAdsStatus, loadInbox, loadMissionTimeline],
+  cmd: [loadCredentialsAndHealth, loadStarSeller, loadAdsStatus, loadCogsStatus, loadInbox, loadMissionTimeline],
   core: [loadCredentialsAndHealth, loadCoreErrors],
   agents: [],  // covered by the global loadAgents() call below
   tasks: [loadTasks],
@@ -4213,6 +4220,40 @@ async function loadAdsStatus(){
       '<div class="ss-row"><span class="ss-label">Revenue (7d)</span><span class="ss-val">$'+d.week_revenue.toFixed(2)+'</span></div>'+
       '<div class="ss-row"><span class="ss-label">ROAS (this month)</span><span class="ss-val">'+(d.have_monthly_verdict ? d.month_roas+'x' : 'building — '+d.month_roas+'x so far')+'</span></div>'+
       '<div class="ss-row"><span class="ss-label">Last logged</span><span class="ss-val"'+(d.days_since_log>=7?' style="color:var(--red)"':'')+'>'+d.days_since_log+'d ago</span></div>';
+  }catch(e){
+    if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
+  }
+}
+
+// Estimate, not real accounting -- see /api/cogs-status's own "note" field
+// (also surfaced below as a footer line). Digital COGS assumed $0, physical
+// (3D-print) COGS a flat $7.50/unit typical guess, product type guessed from
+// title keywords. Etsy fee math (6.5% + 3%+$0.25 + $0.20) is real, not a guess.
+const _COGS_LOW_MARGIN_LABEL = 40;
+async function loadCogsStatus(){
+  const el = document.getElementById('cogs-status-body');
+  if(!el) return;
+  try{
+    const r = await authGet('/api/cogs-status');
+    const d = await r.json();
+    if (!d.used) {
+      el.innerHTML = '<div class="ss-row"><span class="ss-label">No active listings to estimate yet.</span></div>';
+      return;
+    }
+    const marginCls = d.avg_margin_pct >= 60 ? 'on_track' : (d.avg_margin_pct >= 40 ? 'building' : 'at_risk');
+    let html =
+      '<div class="ss-row"><span class="ss-label">Avg margin (est.)</span><span class="ss-val" style="color:var(--'+(marginCls==='on_track'?'green':marginCls==='at_risk'?'red':'gold')+')">'+d.avg_margin_pct+'%</span></div>'+
+      '<div class="ss-row"><span class="ss-label">Recent profit (est.)</span><span class="ss-val">$'+d.total_recent_profit_estimate.toFixed(2)+'</span></div>'+
+      '<div class="ss-row"><span class="ss-label">Recent units sold</span><span class="ss-val">'+d.total_recent_units+' <span style="color:var(--muted);font-weight:400">(real, last 100 orders)</span></span></div>'+
+      '<div class="ss-row"><span class="ss-label">Active listings</span><span class="ss-val">'+d.listing_count+'</span></div>';
+    if ((d.flagged_low_margin||[]).length) {
+      html += '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px">⚠ Thin margin (est., &lt;'+_COGS_LOW_MARGIN_LABEL+'%)</div>';
+      html += d.flagged_low_margin.map(function(f){
+        return '<div class="ss-row"><span class="ss-label" title="'+escHtml(f.title)+'">'+escHtml(f.title.length>34?f.title.slice(0,34)+'…':f.title)+'</span><span class="ss-val" style="color:var(--red)">'+f.margin_pct+'%</span></div>';
+      }).join('');
+    }
+    html += '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4">'+escHtml(d.note||'')+'</div>';
+    el.innerHTML = html;
   }catch(e){
     if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
   }
