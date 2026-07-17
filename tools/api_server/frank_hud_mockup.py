@@ -2458,7 +2458,7 @@ function renderPhoneMore(){
   const el = document.getElementById('pp-more-body');
   el.innerHTML = _PHONE_MORE.map(([g, items]) =>
     `<div class="pmore-grp">${g}</div>` + items.map(([s, ic, lbl]) =>
-      `<div class="pmore-item" role="button" tabindex="0" onclick="phoneOpenScreen('${s}')"><span class="pmi">${ic}</span>${lbl}<span class="pmc">›</span></div>`
+      `<div class="pmore-item" data-screen="${s}" role="button" tabindex="0" onclick="phoneOpenScreen('${s}')"><span class="pmi">${ic}</span>${lbl}<span class="pmc">›</span></div>`
     ).join('')).join('')
     + `<div class="pmore-grp">Help</div>`
     + `<div class="pmore-item" role="button" tabindex="0" onclick="startTour()"><span class="pmi">?</span>Replay Tutorial<span class="pmc">›</span></div>`;
@@ -3397,6 +3397,9 @@ const MOBILE_TOUR_STEPS = [
   { target: '.ptab[data-ptab="ask"]', ptab: null,
     title: 'Ask',
     body: '<p>Tap here anytime to talk to %%AGENT_SHORT%% — ask a question or give an instruction in plain English.</p>' },
+  { target: '#frank-popup-btn', ptab: null,
+    title: 'Quick chat',
+    body: '<p>This button follows you to every screen — tap it to send %%AGENT_SHORT%% a quick message without leaving what you\\'re doing.</p>' },
   { target: '.ptab[data-ptab="appr"]', ptab: 'appr',
     title: 'Approvals',
     body: '<p>%%AGENT_SHORT%% never changes your shop, files, or posts without your one-tap OK. Anything waiting on you shows up here.</p>' },
@@ -3406,9 +3409,9 @@ const MOBILE_TOUR_STEPS = [
   { target: '.ptab[data-ptab="create"]', ptab: 'create',
     title: 'Create',
     body: '<p>Generate listing photos, videos, and product files here — everything goes through your one-tap approval before it ever reaches Etsy.</p>' },
-  { target: '.ptab[data-ptab="more"]', ptab: 'more',
+  { target: '#pp-more-body', ptab: 'more',
     title: 'More',
-    body: '<p>Everything else — Your listings, Products, Brand Kit, Knowledge, and the engineering-level screens — lives under here. Safe to ignore until you need it.</p>' },
+    body: '<p>Everything else lives here, grouped by what it\\'s for.</p><p><b>Shop</b> — Your listings, Products, Brand Kit, and Connections (your Etsy &amp; API credential status — this is where to check if something\\'s not set up right).</p><p><b>Knowledge</b>, then <b>Advanced</b> — Settings, Tasks, Calendar, and the engineering-level screens, for when you need them.</p>' },
   { target: null, ptab: null,
     title: "You're all set",
     body: '<p>That\\'s everything. Replay this tour anytime from <b>More → Replay Tutorial</b>.</p>' },

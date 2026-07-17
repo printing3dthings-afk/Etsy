@@ -13903,3 +13903,169 @@ Refreshed competitor_research_2026.md (64 chars). Live search terms used: printa
 **Fix:** stub `loadListings` to a no-op immediately before setting the fake `_listings` fixture, mirroring the existing `loadProducts` stub. Confirmed with 4 consecutive clean local runs after the fix (previously ~1-in-5 to reliable failure once the wall-clock timing shifted).
 
 **Lesson:** any `playwright_smoke.py` section that sets a fake `_XXX` fixture and then does real work (clicks, timed waits) is racing this app's real 30s `loadAll()` poll if the corresponding screen is active in `_SCREEN_LOADERS`. Stub the relevant loader function to a no-op at the top of the fixture setup, every time -- this is now the second time this exact class of bug has cost 4 CI cycles to diagnose.
+
+
+## 2026-07-17 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-17 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Durable volume not writable
+5-minute health loop found /tmp/tmp1hcwfu2n/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp1hcwfu2n/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpvrp9rsoh/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 6825). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-17 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 6827). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-18 — Mobile tour: show the real "More" screen + add quick-chat button
+**What changed (Scott, screenshot of the "More" all-screens list):**
+
+Scott asked for the "More" screen (Your listings, Products, Brand kit,
+Connections, Knowledge, Chat History, Settings, Tasks, Calendar) to be
+included in the onboarding tour so people wouldn't have to dig through
+Settings to find things themselves.
+
+Root issue: the mobile tour's existing "More" step already called
+`phoneTab('more')` so the list rendered behind the overlay, but its
+spotlight `target` was `.ptab[data-ptab="more"]` -- the tiny tab button at
+the bottom, not the list. Since the tour dims everything outside the
+spotlighted cutout, the actual screen was dimmed out and unreadable during
+that step; the tour never really showed it, and the copy was generic
+("Everything else... lives under here") without naming any screens.
+
+**Fix:** `MOBILE_TOUR_STEPS` (`tools/api_server/frank_hud_mockup.py`) "More"
+step now targets `#pp-more-body` (the real list) instead of the tab button,
+and the copy explicitly names the Shop group (Your listings, Products,
+Brand Kit, Connections -- called out as "your Etsy & API credential
+status, this is where to check if something's not set up right", directly
+answering Scott's ask), Knowledge, and notes Settings/Tasks/Calendar/etc.
+live under Advanced. Also added `data-screen="${s}"` to `.pmore-item` rows
+in `renderPhoneMore()` so individual rows are addressable by future tour
+steps (previously the screen id only lived inside the `onclick` string).
+
+**Also added:** a new step for the persistent floating quick-chat button
+(`#frank-popup-btn`, 💬, fixed top-right, mobile-only) -- visible in
+Scott's own screenshot but never mentioned anywhere in the tour despite
+being reachable from every screen. Inserted right after the "Ask" step.
+
+Mobile tour is now 8 steps (was 7): Welcome, Ask, Quick chat, Approvals,
+Today, Create, More, Outro. Desktop's `TOUR_STEPS` untouched -- it already
+spotlights every sidebar item individually since desktop has no collapsing
+"More" menu, and the quick-chat button is mobile-only
+(`.frank-popup-fixed{display:none}` unless `body.is-mobile`).
+
+**Tests:** `playwright_smoke.py` updated -- `dotCount` 7→8, new assertions
+for the Quick-chat step (targets `#frank-popup-btn`) and the reworked More
+step (targets `#pp-more-body`, list actually rendered, body copy names
+Connections and Settings). `test_tour_copy_accuracy.py` re-run clean
+(only checks Create step copy, untouched here).

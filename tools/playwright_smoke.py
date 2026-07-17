@@ -661,7 +661,7 @@ async def _run_browser_checks() -> None:
             })""")
             check(mobile_step1.get("visible"), f"mobile tour should start when startTour() is called on a narrow viewport: {mobile_step1}")
             check("Welcome" in mobile_step1.get("title", ""), f"mobile tour step 1 should be the welcome intro: {mobile_step1}")
-            check(mobile_step1.get("dotCount") == 7, f"mobile tour should have 7 steps: {mobile_step1}")
+            check(mobile_step1.get("dotCount") == 8, f"mobile tour should have 8 steps: {mobile_step1}")
 
             await page.click("#tour-next-btn")
             await page.wait_for_timeout(400)
@@ -679,14 +679,57 @@ async def _run_browser_checks() -> None:
             check(mobile_step2.get("targetsAsk"), f"mobile tour step 2 should target the Ask tab: {mobile_step2}")
             check(mobile_step2.get("spotNearTarget"), f"spotlight should be positioned over the Ask tab: {mobile_step2}")
 
+            # 2026-07-18: new step covering the always-on floating quick-chat button
+            # (#frank-popup-btn) -- easy to miss since it's not part of the tab bar.
+            await page.click("#tour-next-btn")
+            await page.wait_for_timeout(400)
+            mobile_step3 = await page.evaluate("""() => {
+                const el = document.getElementById('frank-popup-btn');
+                const rect = el ? el.getBoundingClientRect() : null;
+                const spot = document.getElementById('tour-spot').getBoundingClientRect();
+                return {
+                    title: document.getElementById('tour-step-title').textContent,
+                    targetsQuickChat: !!rect,
+                    spotNearTarget: !!rect && Math.abs(spot.top - rect.top) < 40,
+                };
+            }""")
+            check(mobile_step3.get("title") == "Quick chat", f"mobile tour step 3 should be Quick chat: {mobile_step3}")
+            check(mobile_step3.get("targetsQuickChat"), f"mobile tour step 3 should target #frank-popup-btn: {mobile_step3}")
+            check(mobile_step3.get("spotNearTarget"), f"spotlight should be positioned over the quick-chat button: {mobile_step3}")
+
             await page.click("#tour-next-btn")
             await page.wait_for_timeout(500)
-            mobile_step3 = await page.evaluate("""() => ({
+            mobile_step4 = await page.evaluate("""() => ({
                 title: document.getElementById('tour-step-title').textContent,
                 apprTabOn: document.querySelector('.ptab[data-ptab=\"appr\"]').classList.contains('on'),
             })""")
-            check(mobile_step3.get("title") == "Approvals", f"mobile tour step 3 should be Approvals: {mobile_step3}")
-            check(mobile_step3.get("apprTabOn"), f"mobile tour should switch to the Approvals tab via phoneTab(): {mobile_step3}")
+            check(mobile_step4.get("title") == "Approvals", f"mobile tour step 4 should be Approvals: {mobile_step4}")
+            check(mobile_step4.get("apprTabOn"), f"mobile tour should switch to the Approvals tab via phoneTab(): {mobile_step4}")
+
+            # 2026-07-18: the reworked "More" step now spotlights the real list
+            # content (#pp-more-body), not just the tab button -- confirm the panel
+            # is actually rendered and named in the body copy, matching what Scott
+            # asked for (show people the real screen, not a dimmed-out tab button).
+            for _ in range(3):
+                await page.click("#tour-next-btn")
+                await page.wait_for_timeout(400)
+            mobile_step7 = await page.evaluate("""() => {
+                const el = document.getElementById('pp-more-body');
+                const rect = el ? el.getBoundingClientRect() : null;
+                const spot = document.getElementById('tour-spot').getBoundingClientRect();
+                return {
+                    title: document.getElementById('tour-step-title').textContent,
+                    body: document.getElementById('tour-step-body').textContent,
+                    targetsMoreList: !!rect,
+                    spotOverlapsTarget: !!rect && spot.top <= rect.top + 40 && spot.bottom >= rect.top,
+                    moreListHasRows: document.querySelectorAll('#pp-more-body .pmore-item').length > 0,
+                };
+            }""")
+            check(mobile_step7.get("title") == "More", f"mobile tour step 7 should be More: {mobile_step7}")
+            check(mobile_step7.get("targetsMoreList"), f"More step should target #pp-more-body: {mobile_step7}")
+            check(mobile_step7.get("moreListHasRows"), f"the More list should actually be rendered behind the spotlight: {mobile_step7}")
+            check("Connections" in mobile_step7.get("body", ""), f"More step copy should name Connections (credential status): {mobile_step7}")
+            check("Settings" in mobile_step7.get("body", ""), f"More step copy should mention Settings lives under Advanced: {mobile_step7}")
 
             await page.click(".tour-controls .tour-skip")
             await page.wait_for_timeout(300)
