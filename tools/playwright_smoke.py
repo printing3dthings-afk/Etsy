@@ -551,10 +551,18 @@ async def _run_browser_checks() -> None:
 
             # Review modal -- deliberately NOT mocked. This server process runs from
             # the real repo checkout (cwd=ROOT), so /api/products/DP1030/review hits
-            # the real data/dp1030_listing.json (has real content, all 3 deliverables,
-            # QC should pass) and DP1031 has no dpXXXX_listing.json at all (confirmed
-            # by the P1 backend tests) -- exercises the real end-to-end path instead
-            # of asserting against a fixture that could drift from reality.
+            # the real data/dp1030_listing.json (real content, real tags) and DP1031
+            # has no dpXXXX_listing.json at all (confirmed by the P1 backend tests) --
+            # exercises the real end-to-end path instead of a fixture that could drift
+            # from reality. NOTE: the actual DP1030.pdf/zip binaries live under the
+            # gitignored data/digital_products/ tree (CLAUDE.md: ephemeral, never
+            # committed) -- present on a dev machine that's run the build pipeline,
+            # absent on a clean CI/deploy checkout. So this only asserts on the
+            # content/tags (always present, tracked in git) and accepts EITHER gate
+            # outcome for Publish -- the exact gating logic itself (Publish only
+            # when QC passes AND all deliverables exist) is already covered
+            # deterministically by tests/test_products_review_endpoint.py and
+            # tests/test_create_listing_publish_flow.py with mocked file state.
             review_with_content = await page.evaluate("""async () => {
                 document.body.classList.remove('product-sheet-open');
                 await openProductReviewModal({id: 'DP1030', title: 'ADHD Planner'});
@@ -569,8 +577,9 @@ async def _run_browser_checks() -> None:
             check("ADHD" in review_with_content.get("body", "") and "Digital Planner" in review_with_content.get("body", ""),
                   f"review modal must show the real DP1030 title: {review_with_content}")
             check("Tags (13)" in review_with_content.get("body", ""), f"DP1030 has 13 real tags: {review_with_content}")
-            check("Publish to Etsy" in review_with_content.get("actions", ""),
-                  f"DP1030 (real content, QC pass, all files present) should show Publish to Etsy: {review_with_content}")
+            actions_html = review_with_content.get("actions", "")
+            check("Publish to Etsy" in actions_html or "missing deliverable" in actions_html,
+                  f"actions must render either Publish or the specific reason it's blocked, not neither: {review_with_content}")
             await page.evaluate("productReviewClose()")
 
             review_no_content = await page.evaluate("""async () => {
