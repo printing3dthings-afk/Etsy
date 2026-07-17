@@ -568,7 +568,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "4c68336-v208"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "cfb53f8-v209"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6199,6 +6199,169 @@ async def get_cogs_status(_token: str = Depends(_auth_session_or_bearer)):
     if not (isinstance(result, dict) and result.get("stale")):
         _cache_set("cogs_status", result)
     return result
+
+
+# ── Global search (2026-07-17 Wave 3 usability) ─────────────────────────────
+# The header search box's own placeholder claimed "Search listings, orders,
+# tools, knowledge base" but the client-only implementation (frank_hud_
+# mockup.py's old runGlobalSearch) never actually searched orders, never
+# searched Products at all, only scanned whatever happened to already be
+# cached in the browser from screens Scott had visited that session, and
+# jumped straight to the first match instead of showing a real results list.
+# This endpoint is the real, always-live backing search: every category is
+# fetched fresh (or from the same short-TTL server cache other status cards
+# already use), and each source degrades to an empty list on its own failure
+# rather than taking the whole search down (the same lesson learned fixing
+# /api/cogs-status the same day).
+_SEARCH_RESULTS_PER_CATEGORY = 5
+
+
+def _search_listings(query: str, limit: int = _SEARCH_RESULTS_PER_CATEGORY) -> list[dict]:
+    try:
+        listings = _listings_sync("active").get("listings", [])
+    except Exception as exc:
+        print(f"[search] listings failed: {exc}", flush=True)
+        return []
+    out = []
+    for l in listings:
+        if query in (l.get("title") or "").lower():
+            price = l.get("price") or 0
+            out.append({
+                "category": "listing", "id": l.get("listing_id"),
+                "title": l.get("title", ""), "subtitle": f"${price:.2f} · {l.get('state', '')}",
+            })
+            if len(out) >= limit:
+                break
+    return out
+
+
+def _search_orders(query: str, limit: int = _SEARCH_RESULTS_PER_CATEGORY) -> list[dict]:
+    """Real recent paid orders (last 100 receipts), server-cached 120s -- the
+    same cache/TTL convention as _sales_by_listing_sync(). There is no
+    dedicated Orders screen in the HUD, so a matched order links straight to
+    its Etsy receipt page (the same URL order_notifier.py already uses)."""
+    cached = _cache_get("orders_recent", ttl=120)
+    if cached is None:
+        try:
+            cached = EtsyAPIClient().get_orders(limit=100).get("results", [])
+        except Exception as exc:
+            print(f"[search] orders failed: {exc}", flush=True)
+            cached = []
+        _cache_set("orders_recent", cached)
+    out = []
+    for r in cached:
+        receipt_id = str(r.get("receipt_id", ""))
+        buyer = r.get("name", "") or ""
+        item_titles = " ".join(t.get("title", "") for t in (r.get("transactions") or []))
+        haystack = f"{receipt_id} {buyer} {item_titles}".lower()
+        if query not in haystack:
+            continue
+        total = r.get("grandtotal", {})
+        if isinstance(total, dict):
+            total_str = f"{float(total.get('amount', 0)) / max(total.get('divisor', 100), 1):.2f}"
+        else:
+            total_str = str(total)
+        out.append({
+            "category": "order", "id": receipt_id,
+            "title": f"Order #{receipt_id} — {buyer}".strip(),
+            "subtitle": f"${total_str}",
+            "url": f"https://www.etsy.com/your/orders/{receipt_id}",
+        })
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _search_products(query: str, limit: int = _SEARCH_RESULTS_PER_CATEGORY) -> list[dict]:
+    try:
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"[search] products failed: {exc}", flush=True)
+        return []
+    out = []
+    for p in catalog:
+        title = p.get("title") or p.get("name") or ""
+        pid = str(p.get("product_id", ""))
+        if query in title.lower() or (pid and query in pid.lower()):
+            out.append({
+                "category": "product", "id": pid,
+                "title": title or pid, "subtitle": p.get("category", ""),
+            })
+            if len(out) >= limit:
+                break
+    return out
+
+
+def _search_tools(query: str, limit: int = _SEARCH_RESULTS_PER_CATEGORY) -> list[dict]:
+    out = []
+    for t in AGENT_TOOLS:
+        name = t.get("name", "")
+        desc = t.get("description", "") or ""
+        if query in name.lower() or query in desc.lower():
+            out.append({"category": "tool", "id": name, "title": name, "subtitle": desc[:90]})
+            if len(out) >= limit:
+                break
+    return out
+
+
+def _search_tasks(query: str, limit: int = _SEARCH_RESULTS_PER_CATEGORY) -> list[dict]:
+    try:
+        todos = db.list_todos()
+    except Exception as exc:
+        print(f"[search] tasks failed: {exc}", flush=True)
+        return []
+    out = []
+    for t in todos:
+        text = t.get("text", "") or ""
+        if query in text.lower():
+            out.append({
+                "category": "task", "id": t.get("id"),
+                "title": text[:90], "subtitle": t.get("category", ""),
+            })
+            if len(out) >= limit:
+                break
+    return out
+
+
+def _search_kb(query: str, limit: int = _SEARCH_RESULTS_PER_CATEGORY) -> list[dict]:
+    try:
+        docs = _kb_search(query, limit_per_doc=1)
+    except Exception as exc:
+        print(f"[search] kb failed: {exc}", flush=True)
+        return []
+    return [
+        {
+            "category": "kb", "id": d["filename"], "title": d["title"],
+            "subtitle": f"{d['match_count']} match{'es' if d['match_count'] != 1 else ''}",
+        }
+        for d in docs[:limit]
+    ]
+
+
+@app.get("/api/search")
+async def global_search(q: str = "", _token: str = Depends(_auth_session_or_bearer)):
+    """Unified search across listings, orders, products, tools, tasks, and
+    knowledge base docs -- the header search box's real backing endpoint.
+    Every sub-search degrades to an empty list on its own failure, so one
+    down data source (e.g. no Etsy credentials) never takes the whole search
+    down; the endpoint itself is wrapped too as a final safety net."""
+    query = (q or "").strip().lower()
+    if not query:
+        return {"query": q, "results": [], "count": 0}
+    try:
+        listings, orders, products, tools, tasks, kb = await asyncio.gather(
+            asyncio.to_thread(_search_listings, query),
+            asyncio.to_thread(_search_orders, query),
+            asyncio.to_thread(_search_products, query),
+            asyncio.to_thread(_search_tools, query),
+            asyncio.to_thread(_search_tasks, query),
+            asyncio.to_thread(_search_kb, query),
+        )
+        results = listings + orders + products + tools + tasks + kb
+    except Exception as exc:
+        print(f"[search] unexpected failure: {exc}", flush=True)
+        return {"query": q, "results": [], "count": 0, "error": str(exc)[:200]}
+    return {"query": q, "results": results, "count": len(results)}
 
 
 def _run_scheduled_art_check() -> str:

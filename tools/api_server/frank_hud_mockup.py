@@ -472,6 +472,27 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .alert-dropdown{position:absolute;top:38px;right:0;width:280px;max-width:calc(100vw - 24px);max-height:320px;overflow-y:auto;
   background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);
   box-shadow:0 10px 28px rgba(0,0,0,.4);z-index:600;padding:8px;cursor:default;text-align:left}
+
+/* Global search results dropdown -- same panel/shadow/z-index recipe as
+   .alert-dropdown above, anchored under the search input instead of a
+   right-aligned header icon. 2026-07-17 Wave 3 usability fix: replaces the
+   old jump-to-first-match behavior with a real, grouped results list. */
+.search-wrap{position:relative}
+.search-dropdown{position:absolute;top:38px;left:0;width:340px;max-width:calc(100vw - 24px);max-height:400px;overflow-y:auto;
+  background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);
+  box-shadow:0 10px 28px rgba(0,0,0,.4);z-index:600;padding:8px;cursor:default;text-align:left}
+.search-cat-label{font-size:10px;letter-spacing:1px;color:var(--cyan2);text-transform:uppercase;
+  padding:6px 6px 4px}
+.search-result-row{display:block;width:100%;text-align:left;background:var(--panel);border:none;
+  border-left:3px solid var(--cyan);border-radius:var(--r-sm);padding:8px 9px;margin-bottom:4px;
+  font-size:11.5px;color:var(--text);cursor:pointer;font-family:inherit}
+.search-result-row:hover,.search-result-row:focus{background:var(--panel2);outline:none}
+.search-result-row .srt{font-weight:600}
+.search-result-row .srs{font-size:10px;color:var(--muted);margin-top:2px}
+body.is-mobile .search-dropdown{
+  position:fixed;top:calc(56px + env(safe-area-inset-top));
+  left:8px;right:8px;width:auto;max-width:none;z-index:750;
+}
 /* 2026-07-15: max-width above was a defense-in-depth pass after the FIRST
    cc-open leak (syncMobileClass()'s resize/matchMedia race). Scott reported
    the dropdown "still not visible" after that shipped -- a SECOND,
@@ -1140,7 +1161,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="status-pill" id="system-status-pill"><span class="dot"></span>SYSTEM STATUS &nbsp;● <span id="system-status-label">OPTIMAL</span></div>
     <div class="clockwrap"><div class="d" id="dt">--</div><div class="t" id="clk">--:--</div></div>
     <div class="right">
-      <input class="search" id="global-search" aria-label="Search listings, orders, tools, knowledge base" placeholder="Search listings, orders, tools, knowledge base…" onkeydown="if(event.key==='Enter')runGlobalSearch(this.value)">
+      <div class="search-wrap">
+        <input class="search" id="global-search" aria-label="Search listings, orders, products, tools, tasks, and knowledge base" placeholder="Search listings, orders, products, tools…" autocomplete="off" onkeydown="if(event.key==='Enter'){runGlobalSearch(this.value)}else if(event.key==='Escape'){closeSearchDropdown()}">
+        <div id="search-dropdown" class="search-dropdown" style="display:none" onclick="event.stopPropagation()" role="listbox" aria-label="Search results"></div>
+      </div>
       <div class="icon-btn" id="orb-desktop-btn" onclick="closeControlCenter()" title="Switch to %%AGENT_SHORT%% Orb" aria-label="Switch to %%AGENT_SHORT%% Orb" role="button" tabindex="0" style="font-size:16px">⬡</div>
       <div class="icon-btn" id="bell-btn" onclick="event.stopPropagation();toggleAlertDropdown()" aria-label="Alerts" aria-haspopup="true" aria-expanded="false" role="button" tabindex="0">🔔<span class="badge" id="bell-badge" style="display:none" aria-live="polite" aria-atomic="true">0</span>
         <div id="alert-dropdown" class="alert-dropdown" style="display:none" onclick="event.stopPropagation()">
@@ -3726,37 +3750,77 @@ function _offlineNote(ts) {
 // ── Global topbar search — client-side lookup over data already loaded into the
 // page (no new endpoint). First match wins, in listings → tasks → tools → KB
 // order, and jumps straight to it. ──
-function runGlobalSearch(raw) {
-  const q = (raw || '').trim().toLowerCase();
-  if (!q) return;
-  const listing = (_listings || []).find(l => (l.title || '').toLowerCase().includes(q));
-  if (listing) {
-    showScreen('listings');
-    toggleListingDetail(listing.listing_id);
-    return;
+// Global search — real backend search (/api/search) across listings, orders,
+// products, tools, tasks, and knowledge base docs. Replaces the old
+// client-only version, which never searched orders or Products at all
+// despite its own placeholder claiming otherwise, only scanned whatever
+// happened to already be cached in the browser, and jumped straight to the
+// first match instead of showing a real results list. 2026-07-17 Wave 3
+// usability fix.
+const _SEARCH_CATEGORY_LABEL = {
+  listing: 'Listings', order: 'Orders', product: 'Products',
+  tool: 'Tools', task: 'Tasks', kb: 'Knowledge Base',
+};
+async function runGlobalSearch(raw) {
+  const q = (raw || '').trim();
+  const dd = document.getElementById('search-dropdown');
+  if (!dd) return;
+  if (!q) { closeSearchDropdown(); return; }
+  dd.style.display = 'block';
+  dd.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">Searching…</div>';
+  try {
+    const r = await authGet('/api/search?q=' + encodeURIComponent(q), 15000);
+    const d = await r.json();
+    _renderSearchResults(q, d.results || []);
+  } catch (e) {
+    dd.innerHTML = '<div style="color:var(--red);font-size:11px;padding:8px">Search failed: ' + escHtml(e.message || 'unknown error') + '</div>';
   }
-  const tasksCache = cacheGet('tasks');
-  const task = ((tasksCache && tasksCache.data && tasksCache.data.todos) || [])
-    .find(t => (t.text || '').toLowerCase().includes(q));
-  if (task) {
-    showScreen('tasks');
-    return;
-  }
-  const toolsCache = cacheGet('tools');
-  const tool = ((toolsCache && toolsCache.data && toolsCache.data.tools) || [])
-    .find(t => (t.name || '').toLowerCase().includes(q) || (t.description || '').toLowerCase().includes(q));
-  if (tool) {
-    showScreen('tools');
-    return;
-  }
-  const doc = (_kbDocs || []).find(d => (d.filename || '').toLowerCase().includes(q));
-  if (doc) {
-    showScreen('kb');
-    openKbDoc(doc.filename);
-    return;
-  }
-  showToast('No matches for "' + raw + '"', 'info');
 }
+function _renderSearchResults(q, results) {
+  const dd = document.getElementById('search-dropdown');
+  if (!dd) return;
+  if (!results.length) {
+    dd.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px">No matches for "' + escHtml(q) + '"</div>';
+    return;
+  }
+  const byCategory = {};
+  results.forEach(r => { (byCategory[r.category] = byCategory[r.category] || []).push(r); });
+  let html = '';
+  Object.keys(byCategory).forEach((cat, idx) => {
+    html += '<div class="search-cat-label">' + escHtml(_SEARCH_CATEGORY_LABEL[cat] || cat) + '</div>';
+    byCategory[cat].forEach(r => {
+      const globalIdx = results.indexOf(r);
+      html += '<button type="button" class="search-result-row" role="option" onclick="_navigateSearchResult(' + globalIdx + ')">' +
+        '<div class="srt">' + escHtml(r.title || '') + '</div>' +
+        (r.subtitle ? '<div class="srs">' + escHtml(r.subtitle) + '</div>' : '') +
+        '</button>';
+    });
+  });
+  dd.innerHTML = html;
+  dd._results = results; // stash for _navigateSearchResult, avoids re-escaping ids/urls through onclick attrs
+}
+function _navigateSearchResult(idx) {
+  const dd = document.getElementById('search-dropdown');
+  const r = dd && dd._results && dd._results[idx];
+  if (!r) return;
+  closeSearchDropdown();
+  if (r.category === 'listing') { showScreen('listings'); toggleListingDetail(r.id); }
+  else if (r.category === 'order') { window.open(r.url, '_blank', 'noopener'); }
+  else if (r.category === 'product') { setProductCategoryFilter(r.subtitle || null); showScreen('products'); }
+  else if (r.category === 'tool') { showScreen('tools'); }
+  else if (r.category === 'task') { showScreen('tasks'); }
+  else if (r.category === 'kb') { showScreen('kb'); openKbDoc(r.id); }
+}
+function closeSearchDropdown() {
+  const dd = document.getElementById('search-dropdown');
+  if (dd) dd.style.display = 'none';
+}
+document.addEventListener('click', function(e){
+  const dd = document.getElementById('search-dropdown');
+  const wrap = document.querySelector('.search-wrap');
+  if (!dd || dd.style.display === 'none' || !dd.style.display) return;
+  if (wrap && !wrap.contains(e.target)) closeSearchDropdown();
+});
 function _clearStreaming(fallback) {
   const s = document.getElementById('bot-streaming');
   if (!s) return;
