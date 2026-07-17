@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "6e52854-v199"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2fa8077-v200"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5361,6 +5361,14 @@ _WEEKLY_MONITOR_SCRIPTS = [
     # file, or a draft product's local files going missing) on a weekly
     # cadence instead of by accident. Purely read-only, see its own docstring.
     "check_digital_file_exposure.py",
+    # Added 2026-07-17 (reliability audit): was only reachable via an
+    # approval-gated _EXEC_COMMANDS entry, which is exactly how it went a week
+    # stale. Writes the hub.db state snapshot itself (a local sqlite export,
+    # not an HTTP call) — has to run server-side to see the real live data,
+    # which is exactly what this weekly loop already does. Purely a write to
+    # its own output file (durable-volume-aware as of this same change), never
+    # touches Etsy/buyers.
+    "backup_hub_db.py",
 ]
 
 # Fixed 2026-07-09 (weakness audit): this set used to be built to match CLAUDE.md's

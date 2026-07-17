@@ -8461,3 +8461,47 @@ Remaining 7 items of Wave 1 (hub_db backup gap re-verification, crashed-build
 visibility, broader health checks, credential-rotation escalation, hardcoded-
 path CI guardrail, test-suite hardening, branch-drift monitor) tracked as
 separate in-progress work, not yet shipped.
+
+## 2026-07-17 — Frank upgrade Wave 1 (reliability): item 2/8, hub_db backup — re-verified and re-scoped
+Started from the plan's proposed mechanism (a new scheduled GitHub Action
+mirroring `health_watchdog.yml`, mimicking a git-commit-based backup) — but
+re-verification caught two things that changed the actual fix:
+
+1. **The original catastrophic-loss scenario is already closed.** Confirmed
+   live: `/health` reports `persistent:true, files_volume:true` — the Railway
+   Volume was attached 2026-07-09. `backup_hub_db.py`'s whole premise ("a
+   redeploy wipes the ephemeral database") no longer applies; hub.db itself
+   is durable now. What's left is a lower-urgency defense-in-depth gap: the
+   JSON snapshot (a secondary safety copy, useful against volume-level
+   accidents — corruption, accidental deletion, a bad migration) had gone a
+   week stale per the reliability audit, because it was only reachable via an
+   approval-gated command.
+2. **A GitHub Action would not have worked at all.** `backup_hub_db.py`
+   reads the live DB via a direct local `import db` (sqlite), not an HTTP
+   call — a GitHub Actions runner spins up a fresh checkout with no access to
+   the real production `hub.db`, so it would have exported a near-empty,
+   meaningless snapshot instead of real data. This needs to run FROM the live
+   server process, which already has direct access.
+
+**Actual fix, informed by both findings:**
+- `OUT_PATH` now resolves via `db.resolve_persistent_path()` — the exact
+  same `/data`-detection function already used for `ops_runbook.md`,
+  `ceo_learnings.md`, and `registered_commands.json` — instead of a hardcoded
+  repo-relative path. When the volume is mounted, the snapshot lands there
+  directly and survives redeploys on its own; falls back to the git-committed
+  repo path otherwise (verified both branches live: sandbox mode still writes
+  to `data/hub_db_backups/hub_db_state.json` exactly as before, and a
+  simulated `/data` mount correctly redirects there with a clear "no
+  commit/push needed" message).
+- Added `backup_hub_db.py` to `_WEEKLY_MONITOR_SCRIPTS` (main.py) — the
+  existing, already-proven server-side weekly loop (6 other scripts already
+  run this way) — so it now runs automatically on the same cadence instead of
+  depending on someone remembering an approval-gated command.
+- Updated the script's own docstring and `main()`'s final message to reflect
+  the new reality (git commit/push is now optional, not required, once a
+  volume is attached).
+
+Deliberately did NOT build the GitHub Actions workflow originally proposed —
+it wouldn't have solved the actual problem, and the volume attachment already
+closed the higher-severity half of the original gap. `py_compile` clean on
+both touched files.
