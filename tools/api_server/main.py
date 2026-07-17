@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "32c4af1-v202"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "359d267-v203"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8851,6 +8851,37 @@ async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
             "source": "dependency",
             "title": "Relay disconnected" if not relay_state.get("killed") else "Relay kill switch engaged",
             "detail": detail,
+        })
+
+    # 2026-07-17 (reliability audit): the Etsy Client ID/Secret leak (flagged
+    # 2026-06-26) and the TikTok credential leak (flagged 2026-07-09) were both
+    # still confirmed unrotated as of the most recent full audit -- weeks open,
+    # only ever surfaced as a one-off todo Scott could dismiss/scroll past once.
+    # Neither can be fixed by Frank (rotation happens in Etsy's/TikTok's own
+    # developer consoles, outside anything Frank can reach), so instead of a
+    # dismissible reminder this is a STANDING alert: present every session until
+    # explicitly resolved. Gated by a settings flag (not hardcoded forever) so
+    # clearing it once Scott confirms rotation is a one-line db.set_setting()
+    # call, not a code change -- see tools/api_server/db.py's get_setting/
+    # set_setting. Two independent flags since the two credentials may get
+    # rotated at different times.
+    if not await asyncio.to_thread(db.get_setting, "etsy_credential_leak_resolved"):
+        alerts.append({
+            "severity": "critical",
+            "source": "credential_leak",
+            "title": "Etsy Client ID/Secret leaked — still unrotated",
+            "detail": "Leaked via a pushed branch, flagged 2026-06-26. Rotate at the Etsy "
+                      "Developer Console, update .env, then re-run python tools/etsy_oauth.py. "
+                      "This alert clears once confirmed done.",
+        })
+    if not await asyncio.to_thread(db.get_setting, "tiktok_credential_leak_resolved"):
+        alerts.append({
+            "severity": "critical",
+            "source": "credential_leak",
+            "title": "TikTok Client Key/Secret leaked — still unrotated",
+            "detail": "Leaked and flagged 2026-07-09. Generate NEW credentials at the TikTok "
+                      "developer console (don't reuse the old ones), update .env. This alert "
+                      "clears once confirmed done.",
         })
 
     tokens = await asyncio.to_thread(db.get_etsy_tokens)
