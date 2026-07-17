@@ -809,8 +809,13 @@ body:not(.is-mobile) .orb-open-chat{display:none}
   /* 2026-07-18: the FRANK/SHOP ASSISTANT logo lockup has no onclick (aria-hidden
      decoration, not a button) -- on mobile its .lbl text was already hidden below,
      leaving just the bordered, glowing .hex square floating alone top-left, which
-     read as an unlabeled dead button. Hide the whole lockup instead. */
-  .hdr-logo{display:none}
+     read as an unlabeled dead button. visibility:hidden (not display:none) --
+     removing it from the grid entirely shifted the mobile header row's computed
+     height just enough to break the back-to-top scroll tests on CI's Chromium
+     build (never reproduced locally, but 3/3 failures on GitHub's runner after
+     this landed); visibility:hidden hides it identically while leaving its
+     layout box, and everything below it, byte-for-byte unchanged. */
+  .hdr-logo{visibility:hidden}
   .hamburger-fixed{
     display:flex;
     position:fixed;

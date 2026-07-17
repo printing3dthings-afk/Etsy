@@ -508,6 +508,12 @@ async def _run_browser_checks() -> None:
             # physically clicking, same as setProductCategoryFilter()/tour-step
             # calls above -- these are top-level `let` bindings, not globals.
             tappable_setup = await page.evaluate("""() => {
+                // The real app polls loadAll() every 30s, which calls loadProducts()
+                // whenever the Products screen is active and overwrites _products with
+                // real fetched data -- an intermittent race against this section's
+                // synthetic fixture (2026-07-17: ~1/5 local runs). Neutralize it for
+                // the duration of these tests; nothing here needs the real network call.
+                loadProducts = async function(){};
                 _products = [
                     {id: 'DP1026', title: 'Life Planner', listing_id: '1', category: 'digital_planner',
                      status: 'active', price: 14.99,
@@ -638,12 +644,13 @@ async def _run_browser_checks() -> None:
             # 2026-07-18: the FRANK/SHOP ASSISTANT logo lockup has no click handler
             # (aria-hidden decoration) -- on mobile its label text was already
             # hidden, leaving an unlabeled glowing square that looked like a dead
-            # button. Now hidden entirely on mobile.
+            # button. Hidden via visibility:hidden (not display:none) so the
+            # mobile header grid's row height is untouched -- see the CSS comment.
             hdr_logo_state = await page.evaluate("""() => {
                 const el = document.querySelector('.hdr-logo');
-                return el ? getComputedStyle(el).display : 'missing';
+                return el ? getComputedStyle(el).visibility : 'missing';
             }""")
-            check(hdr_logo_state == "none", f"the non-functional logo square must not render on mobile, got display: {hdr_logo_state}")
+            check(hdr_logo_state == "hidden", f"the non-functional logo square must not be visible on mobile, got visibility: {hdr_logo_state}")
 
             await page.evaluate("startTour()")
             await page.wait_for_timeout(400)
