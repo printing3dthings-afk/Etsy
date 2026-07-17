@@ -569,7 +569,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "4573ea7-v213"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b769d60-v214"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7216,6 +7216,23 @@ async def _apply_conversion_fixes_core(listing_id: int) -> dict:
         "errors": errors,
         "message": message,
     }
+
+
+@app.post("/api/conversion-targets/{listing_id}/fix")
+async def conversion_target_fix(listing_id: int, _token: str = Depends(_auth_session_or_bearer)):
+    """2026-07-18: deterministic REST path for the mobile 'Let Frank fix it'
+    button (phoneSheetFix() in frank_hud_mockup.py). Previously that button
+    only sent a natural-language prompt into chat asking Frank to diagnose
+    AND fix the listing -- the chat agent reliably ran the diagnosis but,
+    per Scott's report, routinely stopped there instead of also calling
+    apply_conversion_fixes/the autofix tools, so nothing ever reached the
+    Action Center. This route calls _apply_conversion_fixes_core directly,
+    guaranteeing the diagnose-then-stage sequence actually runs every time
+    instead of depending on the chat model choosing to chain the right
+    tool calls. Still 100% staging-only -- _apply_conversion_fixes_core
+    never touches the live listing, every fix lands in the Action Center
+    for one-tap approval."""
+    return await _apply_conversion_fixes_core(listing_id)
 
 
 def _get_comparable_listings(tool_input: dict) -> dict:

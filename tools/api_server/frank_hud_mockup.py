@@ -2341,18 +2341,44 @@ function phoneSheetView(){
   phoneSheetClose();
   if (url) window.open(url, '_blank');
 }
-function phoneSheetFix(){
+async function phoneSheetFix(){
   const it = _phoneSheetItem; if (!it) return;
-  const ref = it.listing_id ? ('Etsy listing ' + it.listing_id) : 'this listing';
-  const prompt = 'Diagnose and fix ' + ref + ' — issue flagged: "' + (it.title || '') + '". '
-    + 'Investigate the root cause, then stage your recommended fix for my approval. '
-    + 'Do not change the live listing without my approval.';
-  phoneSheetClose();
-  phoneOpenScreen('cmd');  // the screen that contains the chat panel, so the reply is visible
-  const inp = document.getElementById('chat-input');
-  if (inp) inp.value = prompt;
-  if (typeof sendMsg === 'function') sendMsg();
-  showToast('Sent — %%AGENT_SHORT%% is on it. His reply will appear in the chat below.', 'info', 5000);
+  // 2026-07-18: was routed through chat (a free-text prompt asking Frank to
+  // "diagnose and fix"), which reliably ran the diagnosis but, per Scott's
+  // report, often stopped there instead of also staging a fix — the chat
+  // model would explain the problem and never call apply_conversion_fixes.
+  // Call the deterministic REST route directly instead: it always runs
+  // diagnose-then-stage server-side, no model judgment call involved. Still
+  // staging-only — nothing touches the live listing without approval.
+  if (!it.listing_id) {
+    showToast('No listing attached to this item — open it on Etsy to review manually.', 'warn', 5000);
+    phoneSheetClose();
+    return;
+  }
+  const btn = document.getElementById('phone-sheet-fix');
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Diagnosing & fixing…'; }
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/conversion-targets/'+it.listing_id+'/fix',
+      {method:'POST', headers:{Authorization:'Bearer '+TOKEN}}, 90000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail || ('HTTP '+r.status));
+    phoneSheetClose();
+    const n = (d.applied||[]).length;
+    if (n > 0) {
+      showToast('Staged ' + n + ' fix' + (n>1?'es':'') + ' for listing ' + it.listing_id
+        + ' — review in Approvals.', 'ok', 6000);
+      if (typeof phoneTab === 'function') phoneTab('appr');
+      if (typeof loadActions === 'function') loadActions();
+    } else {
+      showToast('Diagnosed listing ' + it.listing_id + ' — '
+        + (d.primary_issue || 'no automated fix exists for this issue yet') + '.', 'info', 6000);
+    }
+  } catch(e) {
+    showToast('Could not fix: ' + (e.message||e), 'err', 6000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
 }
 // More — a scrollable launcher for the other screens (fixes v1's unscrollable overlay).
 const _PHONE_MORE = [
