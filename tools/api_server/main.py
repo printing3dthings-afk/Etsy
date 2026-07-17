@@ -517,7 +517,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "760dd69-v195"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "50b9256-v196"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -2468,6 +2468,27 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "build_product",
+        "description": (
+            "Build an ENTIRE product from a single planner code, end to end: sticker pack → "
+            "planner PDFs (dated + undated, with the sticker sheets embedded) → all 10 listing "
+            "photos → a final Quality Check. Runs in the BACKGROUND (~6-10 min); each "
+            "deliverable appears in Files as it finishes, and <pid>_product_build.log carries "
+            "the live log + the QC verdict. Defaults to the Gemini art engine. Nothing is "
+            "published (Scott-gated). Use when asked to build/make/produce a whole product or "
+            "'everything' for a planner code. Only configured planner codes (DP1030-DP1034)."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "pid": {"type": "string", "description": "Planner code, e.g. 'DP1030'."},
+                "engine": {"type": "string", "enum": ["gemini", "openai", "gpt-image-2", "ideogram"],
+                           "description": "Art engine for cover + sticker sheets. Default 'gemini'."},
+            },
+            "required": ["pid"],
+        },
+    },
+    {
         "name": "build_sticker_pack",
         "description": (
             "Build a planner's full kawaii sticker pack from scratch — generate the themed "
@@ -3364,6 +3385,8 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
             return _produce_build_planner(tool_input or {})
         if name == "build_sticker_pack":
             return _produce_build_sticker_pack(tool_input or {})
+        if name == "build_product":
+            return _produce_build_product(tool_input or {})
         if name == "get_conversion_targets":
             return asyncio.run(_get_conversion_targets_core())
         if name == "diagnose_listing_conversion":
@@ -7764,6 +7787,72 @@ async def produce_build_sticker_pack(body: dict, _token: str = Depends(_rate_lim
     """Kick off a full sticker-pack build in the background (themed sheets → strip →
     segment → ZIP). Returns immediately; the pack appears in Files when done."""
     return await asyncio.to_thread(_produce_build_sticker_pack, body or {})
+
+
+def _produce_build_product(inp: dict) -> dict:
+    """Kick off a FULL product build in the BACKGROUND via tools/build_product.py:
+    stickers → planner → listing photos → Quality Check, in that one correct order
+    (stickers first so the planner embeds real library pages). ~6-10 min total, so
+    it runs detached; the ZIP, PDFs, and photos land in Files as each step finishes.
+    Publishing stays Scott-gated — this only produces + QCs the files.
+
+    Same honesty guard as the sticker builder (top rule — NEVER LIE): returns
+    needs_visual_qc:true. The chained QC verifies structure, but AI can garble
+    in-image text, so the sheets + photos must be eyeballed before publish."""
+    pid = str((inp or {}).get("pid", "")).strip().upper()
+    if not pid:
+        return {"error": "pid is required (e.g. 'DP1030')"}
+    engine, eng_err = _resolve_art_engine(inp)
+    if eng_err:
+        return {"error": eng_err}
+    # Must be buildable as a planner (the core deliverable). Sticker spec is optional
+    # — build_product logs and continues if a step can't run.
+    try:
+        import generate_planner_v2 as _gpv2
+        configured = set(getattr(_gpv2, "_ALL_V2_PIDS", []) or [])
+    except Exception as exc:  # noqa: BLE001
+        return {"error": f"product builder unavailable: {exc}"}
+    if configured and pid not in configured:
+        return {"error": f"{pid} isn't a configured planner (have {', '.join(sorted(configured))})."}
+    script = ROOT / "tools" / "build_product.py"
+    if not script.exists():
+        return {"error": "build_product.py is missing from this deploy."}
+    from pathlib import Path as _P
+    try:
+        base = _P(os.getenv("HUB_FILES_DIR", "").strip()
+                  or ("/data/files" if _P("/data/files").is_dir()
+                      else str(ROOT / "data" / "digital_products")))
+        logdir = base / "product_files"
+        logdir.mkdir(parents=True, exist_ok=True)
+        _logf = open(logdir / f"{pid}_product_build.log", "w")  # noqa: SIM115 — handed to Popen
+    except Exception:  # noqa: BLE001
+        _logf = subprocess.DEVNULL
+    proc = subprocess.Popen(
+        [sys.executable, str(script), pid],
+        stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
+        env=_subprocess_env_with_engine(engine),
+    )
+    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_product:{pid}", datetime.now(timezone.utc))
+    return {
+        "pid": pid,
+        "started": True,
+        "os_pid": proc.pid,
+        "engine": engine,
+        "needs_visual_qc": True,
+        "steps": ["sticker pack", "planner PDFs", "listing photos", "quality check"],
+        "message": f"Building the FULL {pid} product in the background (~6-10 min) with {engine} "
+                   f"art: sticker pack → planner PDFs → 10 listing photos → Quality Check. "
+                   f"Files land in Files as each step finishes ({pid}_product_build.log has the "
+                   f"live run log + the final QC verdict). Nothing is published. Eyeball the "
+                   f"sheets + photos for garbled text before it goes live.",
+    }
+
+
+@app.post("/api/produce/build-product")
+async def produce_build_product(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Kick off a full product build (stickers → planner → photos → QC) in the
+    background. Returns immediately; deliverables appear in Files as they finish."""
+    return await asyncio.to_thread(_produce_build_product, body or {})
 
 
 @app.post("/api/studio/generate")

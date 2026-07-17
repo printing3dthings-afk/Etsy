@@ -8215,3 +8215,26 @@ schema + a Create-tile dropdown.
   → a plain hue word ("soft green"), and the prompt forbids all text/numbers.
   Regenerated: clean, no baked text. Lesson logged for all future infographic prompts.
 Verified in-sandbox with Gemini (real generation, visually QC'd twice). Build `760dd69-v195`.
+
+### 2026-07-16 — One-tap "Build whole product" (the orchestrator)
+`tools/build_product.py <PID>` chains the four proven builders in the one correct
+order: **sticker pack → planner PDFs → listing photos → Quality Check**. Stickers
+run FIRST so the planner's hyperlinker embeds real library pages (the DP1030
+empty-library ordering bug). A failed step is logged and the chain continues where
+safe (a sticker failure still builds the planner); it exits non-zero only if the
+core planner PDF failed. Art engine comes from IMAGE_ENGINE (default gemini),
+inherited by the two spawned child builders + passed to the photo step.
+- Wiring (same template): `_produce_build_product` (background Popen → logs to
+  `product_files/<pid>_product_build.log`, tracked, returns started + steps +
+  needs_visual_qc), `POST /api/produce/build-product`, `build_product` agent tool
+  (+ dispatch), a full-width "📦 Build whole product" Create tile + panel
+  (`buildProductRun()`, engine dropdown), and 5 tests.
+- **Validated in-sandbox with Gemini** (bounded 150s run into a temp volume):
+  step 1 produced a real 12 MB sticker pack (9 sheets), then step 2 advanced and
+  generated the Gemini cover (DP1030_cover_ai.png) + undated base PDF — proving the
+  stickers-first ordering + engine inheritance + sequencing. Remaining steps are
+  independently proven components. Build `50b9256-v196`.
+
+**The one-tap production suite is now complete:** Quality Check · Print sizes ·
+Photo set · Build planner · Build sticker pack · **Build whole product** (the
+orchestrator). All AI art defaults to Gemini; nothing publishes (Scott-gated).

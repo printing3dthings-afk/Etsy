@@ -217,6 +217,35 @@ def test_build_planner_rejects_bad_engine():
           f"bad engine must error without starting a build, got {out}")
 
 
+def test_build_product_tool_registered():
+    names = {t["name"] for t in server.AGENT_TOOLS}
+    check("build_product" in names,
+          "build_product must be in AGENT_TOOLS so the agent can build a whole product")
+
+
+def test_build_product_requires_pid():
+    out = server._produce_build_product({})
+    check("error" in out, f"missing pid must error, got {out}")
+
+
+def test_build_product_rejects_unconfigured():
+    out = server._produce_build_product({"pid": "DP9999"})
+    check("error" in out and not out.get("started"),
+          f"an unconfigured planner code must be rejected without starting, got {out}")
+
+
+def test_build_product_rejects_bad_engine():
+    out = server._produce_build_product({"pid": "DP1030", "engine": "midjourney"})
+    check("error" in out and not out.get("started"),
+          f"bad engine must error without starting a build, got {out}")
+
+
+def test_build_product_agent_dispatch():
+    out = server._execute_agent_tool("build_product", {"pid": "DP9999"})
+    check(isinstance(out, dict) and "error" in out,
+          f"agent dispatch of build_product should reject an unconfigured code, got {out}")
+
+
 def run():
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

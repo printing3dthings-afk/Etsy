@@ -1605,6 +1605,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="panel-title">Create</div>
       <div style="font-size:12px;color:var(--muted);margin:6px 0 14px">What would you like to make? Frank builds it, you review it, then you approve it before anything goes live.</div>
       <div id="create-chooser" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">
+        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-buildproduct')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center;grid-column:1/-1">
+          <div style="font-size:26px" aria-hidden="true">📦</div><div style="font-weight:700;margin-top:6px">Build whole product</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">One tap: stickers → planner → 10 photos → Quality Check</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-photos')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🖼️</div><div style="font-weight:600;margin-top:6px">Listing photos</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Photorealistic mockups from your real file</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-svg')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
@@ -1623,6 +1625,25 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div style="font-size:26px" aria-hidden="true">🗓️</div><div style="font-weight:600;margin-top:6px">Build planner</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Full PDF + cover + nav + stickers (uses AI)</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-stickerpack')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🌈</div><div style="font-weight:600;margin-top:6px">Sticker pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">9 themed sheets → transparent ZIP (uses AI)</div></div>
+      </div>
+
+      <div class="hub-section-title" id="create-buildproduct" style="margin-top:18px">Build whole product — one tap, end to end</div>
+      <div class="hub-card">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+          The full pipeline in one tap, in the right order: <b>sticker pack → planner PDFs (with the sheets embedded) → all 10 listing photos → Quality Check</b>. Runs in the background (~6–10 min) — each deliverable shows in Files as it finishes, and <b>&lt;code&gt;_product_build.log</b> carries the live log and the final QC verdict. <b>The cover + sticker sheets are the paid AI step.</b> Configured codes: DP1030–DP1034. <b style="color:var(--warn,#d98a00)">⚠ Nothing is published</b> — eyeball the sheets + photos for garbled text, then publishing is your call.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="bx-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
+            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+          <select id="bx-engine" title="Art engine for cover + sticker sheets"
+            style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
+            <option value="gemini" selected>Gemini art</option>
+            <option value="openai">gpt-image-1</option>
+            <option value="gpt-image-2">gpt-image-2</option>
+          </select>
+          <button class="act-btn primary" onclick="buildProductRun()" id="bx-run-btn" style="white-space:nowrap">Build everything</button>
+        </div>
+        <div id="bx-result" style="margin-top:12px"></div>
       </div>
 
       <div class="hub-section-title" id="create-buildplanner" style="margin-top:18px">Build planner — full PDF from scratch</div>
@@ -2992,6 +3013,38 @@ async function stickerPackRun(){
       '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>'+
       '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Check Files →</button></div>';
     showToast('Building '+escHtml(d.pid)+' stickers — check Files in a few minutes', 'ok');
+  }catch(e){
+    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
+  }finally{ if(btn) btn.disabled=false; }
+}
+
+// One-tap FULL product build — POST /api/produce/build-product. Chains
+// stickers → planner → photos → QC in the background; returns immediately.
+async function buildProductRun(){
+  const pidEl=document.getElementById('bx-pid');
+  const btn=document.getElementById('bx-run-btn');
+  const out=document.getElementById('bx-result');
+  const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
+  const engEl=document.getElementById('bx-engine');
+  const engine=(engEl&&engEl.value)||'gemini';
+  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
+  if(btn) btn.disabled=true;
+  if(out) out.innerHTML='<div class="hub-spinner"></div>';
+  try{
+    const r=await fetchWithTimeout(BASE+'/api/produce/build-product', {
+      method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
+      body: JSON.stringify({pid, engine})
+    }, 30000);
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
+    if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
+    let steps='';
+    (d.steps||[]).forEach((s,i)=>{ steps+='<div class="hub-listing-meta" style="padding:1px 0">'+(i+1)+'. '+escHtml(s)+'</div>'; });
+    out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — full build started</div>'+
+      steps+
+      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>'+
+      '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Check Files →</button></div>';
+    showToast('Building all of '+escHtml(d.pid)+' — check Files in a few minutes', 'ok');
   }catch(e){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
   }finally{ if(btn) btn.disabled=false; }
