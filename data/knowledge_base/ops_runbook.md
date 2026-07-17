@@ -245,6 +245,7 @@ around side-effecting calls (websocket sends, tool execution) rather than relyin
 
 - **5-minute health loop detected a problem: etsy: error: etsy api 403: api key not  (known cause)** — seen 18 times
 - **automated health check failure (known cause)** — seen 10 times
+- **escalation — 5-minute health loop detected a problem: etsy: error: etsy api 0: no shop id con** — seen 5 times
 
 ## 2026-06-17 — Frank chat continuity + execution hardening (and Etsy-token-on-restart landmine)
 **What changed (CEO chat / Frank):**
@@ -8238,3 +8239,62 @@ inherited by the two spawned child builders + passed to the photo step.
 **The one-tap production suite is now complete:** Quality Check · Print sizes ·
 Photo set · Build planner · Build sticker pack · **Build whole product** (the
 orchestrator). All AI art defaults to Gemini; nothing publishes (Scott-gated).
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-17 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-17 — Visual flow Phase 1: screen-switch motion + nav tap feedback (Scott: "too many hard lines... make it flow more")
+Researched 2026 app design trends (motion as feedback not decoration, sub-300ms
+spring-feel transitions, glassmorphism now OS-standard, neumorphism/soft-shadow
+handled carefully for contrast) and audited Frank's own CSS: 149 hard `border:`
+declarations, only 8 `transition:` rules total, 0 blur/glass anywhere, and —the
+real headline finding— **screen switching had ZERO animation**: `showScreen()`/
+`phoneOpenScreen()` just toggle `.screen.active{display:block}` on a bare
+`display:none` base, an instant hard cut. That's the single biggest cause of
+"doesn't flow."
+Asked Scott 3 scoping questions before touching anything (AskUserQuestion, all
+recommended options chosen): **soft-depth** direction (fewer/lighter borders +
+shadows, not glassmorphism — lower risk, no contrast rework), **phased** rollout
+(motion first, border/shadow refresh next, micro-interactions last), **mobile-first**
+priority.
+**Phase 1 shipped (CSS-only, zero JS changes):**
+- `.screen.active` now runs a `@keyframes screen-in` fade+rise (opacity 0→1,
+  translateY 8px→0, .26s cubic-bezier, `animation` not `transition` since
+  transitions can't interpolate from `display:none`) — fires on every nav click,
+  both mobile tabs and desktop sidebar (both route through the same `showScreen()`).
+- `.nav-item` (desktop sidebar) gained `transition` on background/color/border +
+  a `:active{transform:scale(.98)}` tap press.
+- Mobile `#phone-tabbar .ptab` gained a color transition + `:active{scale(.92)}`
+  press, and its icon (`.pti`) now pops to 1.14x with a slight spring overshoot
+  (`cubic-bezier(.34,1.56,.64,1)`) when its tab becomes active.
+- All of the above added to the existing `prefers-reduced-motion:reduce` block
+  (turns off cleanly for users who've asked the OS not to animate).
+**Verified programmatically** (computed-style checks, not just screenshots):
+confirmed `animationName:'screen-in'` fires on switch, confirmed it becomes
+`'none'` under emulated `prefers-reduced-motion:reduce`, confirmed the nav-item
+transition is present in normal mode and absent under reduced motion. Visual
+screenshots (desktop + mobile, before/mid/settled) showed no layout regression.
+py_compile, HUD JS extraction/node --check, playwright smoke all pass.
+**Deferred to Phase 2/3 (not done yet):** the actual border/shadow visual
+refresh across cards ("soft depth" — replacing hairline borders with diffused
+shadows + bigger radii) and broader micro-interactions on buttons/cards beyond
+nav. Build `189faf3-v197`.

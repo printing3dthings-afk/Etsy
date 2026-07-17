@@ -224,9 +224,11 @@ body{color:var(--text);font-family:var(--font-body);font-size:13px}
 .nav-section{font-size:9.5px;letter-spacing:1.5px;color:var(--muted);margin:12px 10px 6px;text-transform:uppercase}
 .nav-section:first-child{margin-top:2px}
 .nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--r-sm);
-  cursor:pointer;color:var(--muted);font-size:12.5px;margin-bottom:2px;position:relative}
+  cursor:pointer;color:var(--muted);font-size:12.5px;margin-bottom:2px;position:relative;
+  transition:background .18s ease,color .18s ease,border-color .18s ease,transform .1s ease}
 .nav-item .ic{width:16px;text-align:center;font-size:13px}
 .nav-item:hover{background:var(--panel);color:var(--text)}
+.nav-item:active{transform:scale(.98)}
 .nav-item.active{background:linear-gradient(90deg,rgba(242,160,181,.18),transparent);
   color:var(--cyan2);border-left:2px solid var(--cyan)}
 .nav-item .nbadge{margin-left:auto;background:var(--panel2);color:var(--cyan2);
@@ -566,7 +568,18 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 @keyframes wave{0%,100%{height:4px}50%{height:16px}}
 
 .screen{display:none;grid-column:2;grid-row:2;overflow:hidden;padding:12px}
-.screen.active{display:block}
+/* Screen-switch motion (2026-07-17, Scott: "too many hard lines... make it flow
+   more"). Was a bare display:none->block cut with zero animation anywhere in the
+   switch path (showScreen()/phoneOpenScreen() just toggle .active) -- the single
+   biggest reason navigating Frank felt abrupt rather than fluid. `animation`
+   (not `transition`) is required here: transitions can't interpolate from
+   display:none since there's no starting frame to animate from, but a
+   newly-applied @keyframes animation fires correctly the instant an element
+   goes from none->block. Fires once per screen switch (only when .active is
+   freshly added to a *different* element), not on resize/reflow. Silenced
+   under reduced motion below alongside the other decorative animations. */
+@keyframes screen-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.screen.active{display:block;animation:screen-in .26s cubic-bezier(.22,1,.36,1) both}
 
 /* ── Live Chat screen — ported from the live Hub's #chat-wrap at / (main.py), same
    /ws/chat backend, same CHAT_SESSION scheme, restyled to the HUD's cyan/gold theme. ── */
@@ -805,9 +818,13 @@ body.is-mobile #phone-tabbar .ptab{
   flex:1;background:none;border:none;cursor:pointer;color:var(--muted);font-family:inherit;
   display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:10.5px;font-weight:600;padding:6px 2px;position:relative;
+  transition:color .18s ease,transform .1s ease;
 }
-body.is-mobile #phone-tabbar .ptab .pti{font-size:19px;line-height:1}
+body.is-mobile #phone-tabbar .ptab:active{transform:scale(.92)}
+body.is-mobile #phone-tabbar .ptab .pti{font-size:19px;line-height:1;display:inline-block;
+  transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
 body.is-mobile #phone-tabbar .ptab.on{color:var(--cyan2)}
+body.is-mobile #phone-tabbar .ptab.on .pti{transform:scale(1.14)}
 body.is-mobile #phone-tabbar .ptab:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:var(--r-sm)}
 body.is-mobile #phone-tabbar .ptab .pcnt{
   position:absolute;top:-1px;right:calc(50% - 20px);background:var(--red);color:#fff;
@@ -1003,6 +1020,9 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .status-pill .dot{animation:none}
   .mini-wave span{animation:none;height:10px}
   .hub-spinner{animation:none}
+  .screen.active{animation:none}
+  .nav-item,body.is-mobile #phone-tabbar .ptab,body.is-mobile #phone-tabbar .ptab .pti{transition:none}
+  .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
 }
 </style>
 </head>
