@@ -740,6 +740,12 @@ async def _run_browser_checks() -> None:
             await page.click("[data-ptab='more']")
             await page.wait_for_timeout(300)
             await page.evaluate("""() => {
+                // Same class of race as the Products fixture above: 'listings' also
+                // has a registered 30s loadAll() poll (loadListings), which can
+                // overwrite this fake 40-item fixture with real (much shorter) data
+                // mid-test -- the actual root cause behind repeated CI-only failures
+                // here (2026-07-17/18), not the two other fixes landed alongside it.
+                loadListings = async function(){};
                 _listings = Array.from({length: 40}, (_, i) => ({
                     listing_id: 5000 + i, title: 'Regression Listing ' + i, price: 5.99,
                     state: 'active', views: i, num_favorers: 0, tags: [], thumbnail_url: '',
