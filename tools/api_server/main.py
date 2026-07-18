@@ -570,7 +570,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "2c26acd-v228"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "e64da3f-v229"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1089,6 +1089,75 @@ _SETUP_PAGE = """<!DOCTYPE html>
 </body>
 </html>"""
 
+# Served on /signup — a normal, ALWAYS-available "create an account" screen, distinct
+# from _SETUP_PAGE above (which only ever creates the one-time owner account, gated on
+# hub_users being empty). Added 2026-07-18 per Scott: testers he sends the app to were
+# hitting an existing-login-only wall with no way to create their own account (the
+# owner-only admin panel that could create additional accounts had its UI removed
+# 2026-07-11 when this was still a solo shop — see the "Multi-admin section removed"
+# comment near the Settings screen). New accounts get role="admin" — the same real
+# access level Scott's own account has (his explicit choice: testers should experience
+# the real app, not a restricted view) — never "owner", which stays a one-per-shop role.
+_SIGNUP_PAGE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{hub_title} — Create an account</title>
+<style>
+  *{{box-sizing:border-box}}
+  body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:#0b0f14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}}
+  .box{{width:360px;padding:36px 32px 28px;background:#121821;border:1px solid #1f2a36;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)}}
+  .logo{{display:flex;align-items:center;gap:10px;margin-bottom:6px}}
+  .logo-dot{{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2ec4c4,#1a8f8f);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:700;flex-shrink:0}}
+  .logo-text{{font-size:17px;font-weight:600;color:#e8eef3}}
+  .logo-sub{{font-size:12px;color:#708392;margin-top:1px}}
+  .setup-heading{{font-size:15px;font-weight:700;color:#e8eef3;margin:18px 0 4px}}
+  .setup-hint{{font-size:11px;color:#708392;margin-bottom:18px;line-height:1.5}}
+  label{{display:block;font-size:11px;font-weight:600;color:#708392;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}}
+  input[type=text],input[type=email],input[type=password]{{width:100%;padding:10px 12px;margin-bottom:16px;
+    background:#0b0f14;border:1px solid #2a3744;border-radius:8px;color:#e8eef3;font-size:14px;outline:none;transition:border .15s}}
+  input:focus{{border-color:#2ec4c4}}
+  input:focus-visible{{outline:2px solid #2ec4c4;outline-offset:1px}}
+  button{{width:100%;padding:11px;background:#2ec4c4;border:none;border-radius:8px;
+    color:#06222a;font-weight:700;font-size:14px;cursor:pointer;letter-spacing:.03em;margin-top:4px;transition:background .15s}}
+  button:hover{{background:#38d8d8}}
+  button:focus-visible{{outline:2px solid #38d8d8;outline-offset:2px}}
+  .err{{background:#1c0f0f;border:1px solid #4a1c1c;border-radius:7px;color:#ff8080;font-size:12px;padding:8px 10px;margin-bottom:14px}}
+  .cross-link{{text-align:center;margin-top:16px}}
+  .cross-link a{{color:#2ec4c4;font-size:12px;text-decoration:none}}
+  .cross-link a:hover,.cross-link a:focus-visible{{text-decoration:underline}}
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo">
+      <div class="logo-dot">F</div>
+      <div><div class="logo-text">{hub_title}</div><div class="logo-sub">Operations Hub</div></div>
+    </div>
+    <div class="setup-heading">Create an account</div>
+    <div class="setup-hint">You'll get full access to the same live shop dashboard, chat, and approvals as everyone else on this account.</div>
+    {error_html}
+    <form method="post" action="/signup" autocomplete="on">
+      <input type="hidden" name="next" value="{next_path}">
+      <label for="su-email">Email</label>
+      <input type="email" id="su-email" name="email" placeholder="you@example.com" autofocus autocomplete="email" required>
+      <label for="su-name">Name</label>
+      <input type="text" id="su-name" name="display_name" placeholder="Your name" autocomplete="name" required>
+      <label for="su-user">Username</label>
+      <input type="text" id="su-user" name="username" placeholder="Choose a username" autocomplete="username" required>
+      <label for="su-pass">Password</label>
+      <input type="password" id="su-pass" name="password" placeholder="Choose a strong password" autocomplete="new-password" required>
+      <label for="su-conf">Confirm password</label>
+      <input type="password" id="su-conf" name="confirm_password" placeholder="Repeat your password" autocomplete="new-password" required>
+      <button type="submit">Create account &amp; sign in</button>
+    </form>
+    <div class="cross-link"><a href="/login?next={next_path}">Already have an account? Sign in instead</a></div>
+  </div>
+</body>
+</html>"""
+
 # Shown exactly once, immediately after an account is created (setup or Add Admin).
 # The code itself is never stored — only its pbkdf2 hash — so this is the only chance
 # to see/save it. No email dependency: see _generate_recovery_code().
@@ -1232,9 +1301,15 @@ def login_page(next: str = "/", error: str = "", mode: str = ""):
         error_html = '<div class="err">No account exists yet with that username. Use "Create one instead" below, or ask the owner to set one up.</div>'
     else:
         error_html = '<div class="err">Incorrect username or password. Try again.</div>' if error else ""
+    # Always offer a way to create an account once an owner already exists (2026-07-18:
+    # previously this only showed while hub_users was empty, i.e. only ever once —
+    # afterward every new visitor hit a dead-end "existing login only" screen with no
+    # way in, which is exactly what Scott's testers ran into). Points at /signup, the
+    # always-available self-service flow, not this same /login setup-mode path.
     cross_link = (
         f'<div class="cross-link"><a href="/login?next={safe_next}">First time? Create an account instead</a></div>'
-        if empty else ""
+        if empty else
+        f'<div class="cross-link"><a href="/signup?next={safe_next}">New here? Create an account</a></div>'
     )
     return HTMLResponse(
         _LOGIN_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME,
@@ -1307,6 +1382,85 @@ def login_submit(
         return resp
     _record_login_fail(uname)
     return RedirectResponse(f"/login?error=1&next={safe_next}", status_code=303)
+
+
+@app.get("/signup", response_class=HTMLResponse)
+def signup_page(next: str = "/", error: str = ""):
+    """Self-service account creation (2026-07-18) — always available once an owner
+    account exists, unlike _SETUP_PAGE which is a strict one-time-only flow. If no
+    owner exists yet, redirect to /login instead of creating an admin account with
+    no owner ever having existed — the very first account on a fresh install must
+    still go through the existing owner-setup flow."""
+    safe_next = _safe_next(next)
+    if db.hub_users_empty():
+        return RedirectResponse(f"/login?next={safe_next}", status_code=303)
+    no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
+    error_html = f'<div class="err">{error}</div>' if error else ""
+    return HTMLResponse(
+        _SIGNUP_PAGE.format(error_html=error_html, next_path=safe_next, hub_title=business_config.BUSINESS_NAME),
+        headers=no_cache,
+    )
+
+
+@app.post("/signup")
+def signup_submit(
+    email: str = Form(""),
+    display_name: str = Form(""),
+    username: str = Form(""),
+    password: str = Form(""),
+    confirm_password: str = Form(""),
+    next: str = Form("/"),
+):
+    safe_next = _safe_next(next)
+
+    def _err(msg: str) -> RedirectResponse:
+        return RedirectResponse(f"/signup?error={quote(msg)}&next={safe_next}", status_code=303)
+
+    # Same "no owner yet" guard as the GET route -- a POST could arrive here from a
+    # stale tab even after the table went from non-empty back to empty (e.g. the
+    # owner account was somehow removed), so re-check rather than trusting the form.
+    if db.hub_users_empty():
+        return RedirectResponse(f"/login?next={safe_next}", status_code=303)
+
+    email = email.strip().lower()
+    display_name = display_name.strip()
+    uname = username.strip().lower()
+    pw = password.strip()
+    cpw = confirm_password.strip()
+
+    if not email or "@" not in email or "." not in email.split("@")[-1]:
+        return _err("Enter a valid email address")
+    if not display_name:
+        return _err("Enter your name")
+    if not uname:
+        return _err("Choose a username")
+    if not pw:
+        return _err("Choose a password")
+    if pw != cpw:
+        return _err("Passwords do not match")
+    if len(pw) < _MIN_PASSWORD_LEN:
+        return _err(f"Password must be at least {_MIN_PASSWORD_LEN} characters")
+    if db.get_hub_user(uname):
+        return _err(f"Username '{uname}' is already taken")
+
+    # New self-service accounts get role="admin" -- the same real access level the
+    # owner has (Scott's explicit choice, 2026-07-18: testers should experience the
+    # real app, not a restricted view). "owner" stays a one-per-shop role, created
+    # only via the first-run _SETUP_PAGE flow above.
+    recovery_code = _generate_recovery_code()
+    db.create_hub_user(uname, _hash_password(pw), role="admin",
+                        recovery_code_hash=_hash_password(recovery_code),
+                        email=email, display_name=display_name)
+    print(f"[auth] self-service account created: '{uname}' <{email}>", flush=True)
+    sid = _new_session(uname)
+    no_cache = {"Cache-Control": "no-store, no-cache, must-revalidate"}
+    resp = HTMLResponse(
+        _RECOVERY_CODE_PAGE.format(hub_title=business_config.BUSINESS_NAME,
+                                   recovery_code=recovery_code, username=uname, next_path=safe_next),
+        headers=no_cache,
+    )
+    resp.set_cookie(SESSION_COOKIE, sid, httponly=True, secure=True, samesite="lax")
+    return resp
 
 
 @app.get("/forgot-password", response_class=HTMLResponse)
@@ -4328,16 +4482,25 @@ def frank_hud_mockup(request: Request):
 
 @app.get("/api/me")
 async def get_me(request: Request, _token: str = Depends(_auth_session_or_bearer)):
-    """Return the username and role associated with the current session."""
+    """Return the username/role/email/name associated with the current session.
+    email/display_name added 2026-07-18 alongside self-service signup, so the
+    Settings screen can show "who am I signed in as" -- both are None for any
+    account created before that (first-run owner setup and the old admin-panel
+    path never collected them; nothing backfills old rows)."""
     uname = _get_session_user(request)
     if not uname:
-        return {"username": "", "role": ""}
+        return {"username": "", "role": "", "email": "", "display_name": ""}
     user_row = db.get_hub_user(uname)
     # Fail CLOSED: a session whose user row is gone (deleted/reset) is NOT an owner.
     # (Matches _require_owner, which already 403s that case — this just stops the UI
     # from briefly showing owner-only controls to a stale session.)
     role = user_row["role"] if user_row else ""
-    return {"username": uname, "role": role}
+    return {
+        "username": uname,
+        "role": role,
+        "email": (user_row or {}).get("email") or "",
+        "display_name": (user_row or {}).get("display_name") or "",
+    }
 
 
 def _require_owner(request: Request) -> None:
@@ -10375,6 +10538,42 @@ async def change_my_password(body: _SelfPasswordChange, request: Request, _token
         # of why (2026-07-08 correction pass: previously bare `except Exception: pass`).
         print(f"[auth] delete_sessions_for_user({uname!r}) failed -- sessions may not be "
               f"fully revoked: {exc}", flush=True)
+    return {"ok": True}
+
+
+@app.delete("/api/account")
+async def delete_my_account(request: Request, _token: str = Depends(_auth_session_or_bearer)):
+    """Self-service account deletion (2026-07-18, Scott: a Settings 'delete my
+    account' option for anyone who signed up via /signup). This is the account
+    owner's own right-to-erasure request, not admin_delete_user's owner-deletes-
+    someone-else path -- identity comes from the session, same as
+    change_my_password above, and there's no username parameter to trust from the
+    caller. The owner account can never be removed this way (mirrors the existing
+    invariant in admin_delete_user): with a single owner per shop, self-deleting it
+    would orphan the entire account with no one left who can manage other users or
+    grant access back."""
+    uname = _get_session_user(request)
+    if not uname:
+        raise HTTPException(status_code=401, detail="Log in with your account to delete it")
+    user_row = db.get_hub_user(uname)
+    if not user_row:
+        raise HTTPException(status_code=404, detail="Account not found")
+    if user_row["role"] == "owner":
+        raise HTTPException(status_code=403, detail=(
+            "The owner account can't be deleted this way -- it's the only account "
+            "that can manage everyone else's access. Contact support if you need help."
+        ))
+    db.delete_hub_user(uname)
+    with _sessions_lock:
+        to_remove = [sid for sid, (_, u) in _sessions.items() if u == uname]
+        for sid in to_remove:
+            del _sessions[sid]
+    try:
+        db.delete_sessions_for_user(uname)
+    except Exception as exc:
+        print(f"[auth] delete_sessions_for_user({uname!r}) failed after account deletion -- "
+              f"sessions may not be fully revoked: {exc}", flush=True)
+    print(f"[auth] account self-deleted: '{uname}'", flush=True)
     return {"ok": True}
 
 

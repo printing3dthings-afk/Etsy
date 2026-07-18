@@ -297,6 +297,18 @@ def init_db() -> None:
                 conn.execute("ALTER TABLE hub_users ADD COLUMN recovery_code_hash TEXT")
             except sqlite3.OperationalError:
                 pass  # column already exists
+            # email/display_name (2026-07-18): self-service signup collects both --
+            # previously every hub_users row was created either at first-run setup
+            # (username/password only) or via the owner-only admin panel (also no
+            # email/name), so these are new, nullable columns on an existing table.
+            try:
+                conn.execute("ALTER TABLE hub_users ADD COLUMN email TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE hub_users ADD COLUMN display_name TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
             try:
                 conn.execute("ALTER TABLE quality_audits ADD COLUMN audited_count INTEGER")
             except sqlite3.OperationalError:
@@ -1546,7 +1558,8 @@ def get_hub_user(username: str) -> dict | None:
     conn = _connect()
     try:
         r = conn.execute(
-            "SELECT username, pw_hash, role, created_at, recovery_code_hash FROM hub_users WHERE username = ?",
+            "SELECT username, pw_hash, role, created_at, recovery_code_hash, email, display_name "
+            "FROM hub_users WHERE username = ?",
             (username.lower(),),
         ).fetchone()
         return dict(r) if r else None
@@ -1559,21 +1572,23 @@ def list_hub_users() -> list[dict]:
     conn = _connect()
     try:
         rows = conn.execute(
-            "SELECT username, role, created_at FROM hub_users ORDER BY created_at"
+            "SELECT username, role, created_at, email, display_name FROM hub_users ORDER BY created_at"
         ).fetchall()
         return [dict(r) for r in rows]
     finally:
         conn.close()
 
 
-def create_hub_user(username: str, pw_hash: str, role: str = "admin", recovery_code_hash: str | None = None) -> None:
+def create_hub_user(username: str, pw_hash: str, role: str = "admin", recovery_code_hash: str | None = None,
+                     email: str | None = None, display_name: str | None = None) -> None:
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
         conn.execute(
-            "INSERT INTO hub_users (username, pw_hash, role, created_at, recovery_code_hash) VALUES (?, ?, ?, ?, ?)",
-            (username.lower(), pw_hash, role, ts, recovery_code_hash),
+            "INSERT INTO hub_users (username, pw_hash, role, created_at, recovery_code_hash, email, display_name) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (username.lower(), pw_hash, role, ts, recovery_code_hash, email, display_name),
         )
         conn.commit()
     finally:

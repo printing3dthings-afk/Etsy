@@ -1892,17 +1892,29 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
       </div>
 
+      <!-- 2026-07-18: self-service signup (/signup) reopened the multi-user case the
+           2026-07-11 removal note below assumed away -- Scott is sending Frank to
+           testers now, each getting their own account. This section shows who's
+           currently signed in and offers self-service deletion (GDPR/CCPA-style
+           right to erasure), separate from the "My Account" contact-info card above
+           (name/email/phone/timezone there is the shop's single owner-profile
+           singleton, not per-login-account data). -->
+      <div class="hub-section-title" style="margin-top:18px">Your Account &amp; Access</div>
+      <div class="hub-card">
+        <div id="whoami-summary" style="font-size:13px;color:var(--text)">Loading…</div>
+        <div id="whoami-danger" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Danger zone</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px" id="whoami-delete-hint">Permanently deletes your account and signs you out. This can't be undone.</div>
+          <button class="act-btn danger" id="whoami-delete-btn" onclick="deleteMyAccount()">Delete my account</button>
+        </div>
+      </div>
+
       <div class="hub-section-title" style="margin-top:18px">Connections</div>
       <div class="hub-card" id="settings-connections-summary"><div class="hub-spinner"></div></div>
       <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
         <button class="act-btn secondary" onclick="showScreen('connections')">View full Connections ›</button>
         <button class="act-btn secondary" onclick="showScreen('security')">View Security ›</button>
       </div>
-
-      <!-- Multi-admin section removed 2026-07-11: this is a solo shop, so adding
-           extra admins (with full owner-level API access) was dead weight. The
-           owner-reveal block in loadOperatorChip() was updated to stop referencing
-           the removed elements. -->
 
       <div class="hub-section-title" style="margin-top:18px">About</div>
       <div class="hub-card">
@@ -3376,7 +3388,7 @@ const _SCREEN_LOADERS = {
   files: [loadFiles],
   connections: [loadConnections],
   security: [renderSecurityPosture],
-  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings],
+  settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadWhoAmI],
   studio: [loadStudioVideos],
   create: [loadStudioVideos, loadCreateEngines],  // guided Create flow (reuses studio backends)
 };
@@ -4101,6 +4113,44 @@ async function changeMyPassword(){
     setTimeout(()=>{ window.location.href = '/login'; }, 1200);
   }catch(e){
     if(statusEl){statusEl.style.color='var(--red)';statusEl.textContent = 'Network error';}
+  }
+}
+// ── Signed-in account summary + self-service deletion (2026-07-18) — the
+// "Your Account & Access" card. Owner accounts can't self-delete (mirrors the
+// server-side check in DELETE /api/account, which is the actual enforcement --
+// this is just an honest UI, not the security boundary) since there's exactly
+// one owner per shop and self-removing it would orphan the account. ──
+async function loadWhoAmI(){
+  const summaryEl = document.getElementById('whoami-summary');
+  const btnEl = document.getElementById('whoami-delete-btn');
+  const hintEl = document.getElementById('whoami-delete-hint');
+  if(!summaryEl) return;
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/me', {headers:{Authorization:'Bearer '+TOKEN}}, 8000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok || !d.username){ summaryEl.textContent = 'Not signed in.'; if(btnEl) btnEl.style.display='none'; return; }
+    const who = d.display_name ? `${escHtml(d.display_name)} (${escHtml(d.username)})` : escHtml(d.username);
+    summaryEl.innerHTML = `Signed in as <b>${who}</b>${d.email ? ' · ' + escHtml(d.email) : ''} · role: ${escHtml(d.role || 'admin')}`;
+    if(d.role === 'owner'){
+      if(btnEl){ btnEl.disabled = true; btnEl.style.opacity = '.5'; btnEl.style.cursor = 'default'; }
+      if(hintEl) hintEl.textContent = "The owner account can't be deleted this way — it's the only account that can manage everyone else's access.";
+    }
+  }catch(e){ summaryEl.textContent = 'Could not load account info.'; }
+}
+async function deleteMyAccount(){
+  const btnEl = document.getElementById('whoami-delete-btn');
+  if(btnEl && btnEl.disabled) return;
+  if(!confirm('Permanently delete your account? This signs you out immediately and cannot be undone.')) return;
+  if(btnEl){ btnEl.disabled = true; btnEl.textContent = 'Deleting…'; }
+  try{
+    const r = await fetchWithTimeout(BASE+'/api/account', {method:'DELETE', headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    const d = await r.json().catch(()=>({}));
+    if(!r.ok){ showToast(d.detail || 'Could not delete account', 'err', 6000); if(btnEl){ btnEl.disabled = false; btnEl.textContent = 'Delete my account'; } return; }
+    showToast('Account deleted — signing you out…', 'ok');
+    setTimeout(()=>{ window.location.href = '/login'; }, 1200);
+  }catch(e){
+    showToast('Network error — account not deleted', 'err', 6000);
+    if(btnEl){ btnEl.disabled = false; btnEl.textContent = 'Delete my account'; }
   }
 }
 // ── Runtime settings — agent name + AI engines (backed by /api/settings, DB) ──
