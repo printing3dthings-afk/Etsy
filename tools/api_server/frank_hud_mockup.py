@@ -7997,7 +7997,7 @@ function resetOrbToDefault(){
 // from the CSS drop-shadow filter on canvas#orb-gl, not internal bloom — see the
 // CSS comment there for why UnrealBloomPass was removed outright (2026-07-15). ──
 let orbGLPaused = true, orbGLReady = false, orbGLLoading = false;
-let glMesh = null, glScene = null, glCamera = null, glRenderer = null, glUniforms = null;
+let glMesh = null, glScene = null, glCamera = null, glRenderer = null, glUniforms = null, glStartTime = null;
 
 // 2026-07-18: the noise-displaced icosahedron ("the orb") is replaced by a
 // rotating 3D "OnBrandCraftz" wordmark (Scott's request). Rigid extruded
@@ -8138,6 +8138,23 @@ async function initOrbGL(){
     const fovRad = glCamera.fov * Math.PI / 180;
     glCamera.position.z = (maxDim / 2) / Math.tan(fovRad / 2) * 1.35;
 
+    // Rotation is driven by ABSOLUTE elapsed wall-clock time from this reference point
+    // (see orbGLFrame()), not an accumulated per-tick delta -- 2026-07-18 fix, Scott:
+    // "the words stop rotating when I switch tabs then go back." A delta-accumulation
+    // approach (glClock.getDelta() style, matching the old sphere) was tried first and
+    // only partly fixed it: instrumented Playwright logging on a real tab-switch cycle
+    // showed requestAnimationFrame itself can stall for several real seconds right
+    // around when #orb-view becomes visible again after being display:none (confirmed
+    // no WebGL context loss involved), and whatever ticks DID fire during that stall
+    // window didn't sum their deltas back up to the true elapsed time, so the mesh
+    // still visibly lagged/crept afterward instead of reading as continuously rotating.
+    // Computing rotation directly from (now - glStartTime) has no accumulator to fall
+    // behind in the first place: whenever a frame finally does render -- no matter how
+    // long the gap or how many ticks were skipped -- it snaps to the mathematically
+    // correct current angle immediately, with no catch-up phase and no dependency on
+    // how reliably intermediate ticks fired.
+    glStartTime = performance.now();
+
     orbGLReady = true;
     orbGLLoading = false;
     requestAnimationFrame(orbGLFrame);
@@ -8161,7 +8178,10 @@ async function _rebuildWordmarkForPairing(pairingName){
     const newMesh = new THREE.Group();
     for(const child of group.children){ newMesh.add(new THREE.Mesh(child.geometry, mat)); }
     newMesh.userData.fitSize = group.userData.fitSize;
-    newMesh.rotation.copy(glMesh.rotation);
+    // No need to copy over glMesh.rotation here -- orbGLFrame() recomputes rotation.y
+    // fresh every frame from glStartTime (absolute elapsed time), which is untouched
+    // by a font-pairing swap, so the very next tick lands on the correct angle
+    // regardless of what this new mesh starts at.
     glMesh = newMesh;
     glScene.add(glMesh);
     const size = glMesh.userData.fitSize;
@@ -8195,7 +8215,7 @@ if (orbGlCanvas) {
     e.preventDefault();
     orbGLReady = false;
     orbGLLoading = false;
-    glRenderer = null; glMesh = null; glScene = null; glCamera = null; glUniforms = null;
+    glRenderer = null; glMesh = null; glScene = null; glCamera = null; glUniforms = null; glStartTime = null;
     console.warn('[orb-gl] WebGL context lost (tab backgrounded/GPU memory pressure) — will rebuild on restore');
   });
   orbGlCanvas.addEventListener('webglcontextrestored', function(){
@@ -8214,13 +8234,38 @@ function orbGLFrame(){
   const amp = currentVoiceAmp();
   glUniforms.uColor.value.setRGB((58+(122-58)*amp)/255, (214+(232-214)*amp)/255, 1.0);
   glUniforms.uOpacity.value = 0.65 + amp*0.3;
-  // Rotation: slow, constant, Y-axis only. The sphere also tumbled on X and sped up
-  // with amp ("faster while speaking") -- rigid extruded letterforms tumbling on a
-  // second axis would spend half the cycle unreadable, and Scott asked for "rotate
-  // slowly" with speech reactivity moved to "the words light up with a soft glow"
-  // instead, so amp no longer touches rotation at all, only the color/opacity above
-  // and the glow below.
-  glMesh.rotation.y += (_reducedMotion ? 0 : 0.0022);
+  // Rotation: slow, constant, Y-axis only, computed as a pure function of ABSOLUTE
+  // elapsed wall-clock time since glStartTime -- 2026-07-18 fix, Scott: "the words
+  // stop rotating when I switch tabs then go back." Two things were tried and
+  // rejected before this:
+  //   1. A fixed "+= X per rAF tick" increment (what shipped originally) advances by
+  //      however many ticks happened to fire -- fewer ticks while #orb-view is
+  //      display:none (true every time the mobile Ask tab is switched away from)
+  //      means less visible rotation, reading as "stopped."
+  //   2. A delta-time ACCUMULATOR ("+= dt", dt from a Clock/getDelta()-style call,
+  //      matching the old sphere) only partly fixed it: instrumented Playwright
+  //      logging on a real tab-switch cycle showed requestAnimationFrame itself can
+  //      stall for several real seconds right around when #orb-view becomes visible
+  //      again (confirmed no WebGL context loss involved), and whatever ticks DID
+  //      fire during that stall didn't sum their deltas back up to the true elapsed
+  //      time -- the mesh still visibly lagged/crept for a beat afterward instead of
+  //      reading as continuously rotating, because an accumulator can only ever add
+  //      up what each individual tick reports.
+  // Computing the angle directly from (now - glStartTime) has no accumulator to fall
+  // behind: whenever a frame finally does render -- no matter how long the gap or how
+  // many ticks were skipped -- it snaps to the mathematically correct current angle
+  // immediately, with no catch-up phase and no dependency on how reliably
+  // intermediate ticks fired. mod 2*PI just keeps the value bounded over a long
+  // session; it has no effect on the rendered angle.
+  // The sphere also tumbled on X and sped up with amp ("faster while speaking") --
+  // rigid extruded letterforms tumbling on a second axis would spend half the cycle
+  // unreadable, and Scott asked for "rotate slowly" with speech reactivity moved to
+  // "the words light up with a soft glow" instead, so amp no longer touches rotation
+  // at all, only the color/opacity above and the glow below.
+  if(!_reducedMotion){
+    const elapsedSec = (performance.now() - glStartTime) / 1000;
+    glMesh.rotation.y = (elapsedSec * 0.132) % (Math.PI * 2);
+  }
   // Glow reactivity: modulate the two stacked drop-shadows (static default set in CSS
   // on #orb-view canvas#orb-gl) via inline style each frame, off the same real TTS
   // amplitude driving uColor/uOpacity above. Inline style wins over the CSS rule, so
