@@ -55,13 +55,19 @@ def _real_catalog() -> list[dict]:
 # ── _catalog_file_exists() / _catalog_file_abs_path() path conventions ──
 
 def test_legacy_prefixed_path_still_works():
-    # Any DP1030-1034 file that's genuinely on disk in this checkout.
-    entry = next(e for e in _real_catalog() if e["product_id"] == "DP1030")
-    for f in entry["files"]:
-        if (ROOT / f).exists():
-            check(server._catalog_file_exists(f), f"a legacy data/digital_products/-prefixed path that's on disk should resolve: {f}")
-            return
-    _failures.append("no DP1030 file found on disk in this checkout to test the legacy path convention against")
+    # Self-contained (not dependent on any real product file being present on
+    # disk -- data/digital_products/*.pdf/*.zip are never git-committed, so a
+    # fresh CI checkout has none of them, unlike data/svg_pack/ etc used below).
+    products_root = server._FILE_ROOTS["products"]
+    products_root.mkdir(parents=True, exist_ok=True)
+    tmp_name = "TEST_LEGACY_FIXTURE_9f3c.pdf"
+    tmp_path = products_root / tmp_name
+    tmp_path.write_bytes(b"x")
+    try:
+        f = f"data/digital_products/{tmp_name}"
+        check(server._catalog_file_exists(f), f"a legacy data/digital_products/-prefixed path that's on disk should resolve: {f}")
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
 
 def test_explicit_nonprefixed_path_resolves():
@@ -170,6 +176,14 @@ class _FakeEtsyClient:
 def test_audit_classifies_verified_live_missing_and_skipped():
     import audit_product_files as apf
 
+    # Self-contained "already fine locally" fixture (not dependent on any real
+    # product file being present on disk -- see test_legacy_prefixed_path_still_works).
+    products_root = server._FILE_ROOTS["products"]
+    products_root.mkdir(parents=True, exist_ok=True)
+    healthy_name = "TEST_AUDIT_HEALTHY_FIXTURE_7ac1.pdf"
+    healthy_path = products_root / healthy_name
+    healthy_path.write_bytes(b"x")
+
     catalog = [
         {"product_id": "AUD_LIVE", "name": "Verified Live", "category": "svg_bundle",
          "status": "active", "price": 7.99, "files": [],
@@ -183,7 +197,7 @@ def test_audit_classifies_verified_live_missing_and_skipped():
          "status": "active", "price": 7.99, "files": [], "etsy_listing_id": "333"},
         {"product_id": "AUD_HEALTHY", "name": "Already Fine Locally", "category": "digital_planner",
          "status": "active", "price": 14.99, "etsy_listing_id": "444",
-         "files": next(e["files"] for e in _real_catalog() if e["product_id"] == "DP1030")},
+         "files": [f"data/digital_products/{healthy_name}"]},
         {"product_id": "AUD_DRAFT", "name": "Not Active", "category": "svg_bundle",
          "status": "draft", "price": 7.99, "files": [], "etsy_listing_id": "555"},
     ]
@@ -192,8 +206,11 @@ def test_audit_classifies_verified_live_missing_and_skipped():
         "222": [],
         "333": "ERROR",
     })
-    with patch.object(apf, "_catalog", return_value=catalog):
-        result = apf.audit(client=client)
+    try:
+        with patch.object(apf, "_catalog", return_value=catalog):
+            result = apf.audit(client=client)
+    finally:
+        healthy_path.unlink(missing_ok=True)
 
     verified_ids = {r["product_id"] for r in result["verified_live"]}
     missing_ids = {r["product_id"] for r in result["genuinely_missing"]}

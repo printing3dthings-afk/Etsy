@@ -34,12 +34,13 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 _ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
-with open(_ENV_PATH) as _f:
-    for _line in _f:
-        _line = _line.strip()
-        if _line and not _line.startswith("#") and "=" in _line:
-            _k, _v = _line.split("=", 1)
-            os.environ.setdefault(_k.strip(), _v.strip())
+if os.path.exists(_ENV_PATH):
+    with open(_ENV_PATH) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
 
 BASE_DIR = Path(__file__).parent.parent
 
