@@ -79,6 +79,7 @@ import seasonal_keywords  # noqa: E402
 import tax_compliance_tools  # noqa: E402
 import etsy_api
 from etsy_api import EtsyAPIClient, EtsyAPIError  # noqa: E402
+import business_tracker  # noqa: E402 — GET /api/business-tracker.xlsx workbook builder
 from resilience import (  # noqa: E402
     classify_tool_exception,
     retry_with_backoff,
@@ -570,7 +571,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e64da3f-v229"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "1d1f4d1-v230"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4863,33 +4864,46 @@ def _listings_sync(state: str = "active") -> dict:
     return result
 
 
+def _get_recent_orders_raw() -> list[dict]:
+    """Raw recent paid Etsy receipts (last 100), cached 120s. Shared fetch
+    point for everything that needs real order data — was previously
+    duplicated independently by _sales_by_listing_sync() (its own
+    "sales_by_listing" cache of the same underlying call) and _search_orders()
+    (its own "orders_recent" cache) -- consolidated 2026-07-18 to one fetch,
+    one cache key, so a new caller (the business-tracker Orders tab) doesn't
+    need a third copy and the two existing ones stop hitting Etsy twice for
+    identical data."""
+    cached = _cache_get("orders_recent", ttl=120)
+    if cached is not None:
+        return cached
+    try:
+        raw = EtsyAPIClient().get_orders(limit=100).get("results", []) or []
+    except Exception as exc:
+        print(f"[orders] recent-receipts fetch failed: {exc}", flush=True)
+        raw = []
+    _cache_set("orders_recent", raw)
+    return raw
+
+
 def _sales_by_listing_sync() -> dict:
     """Map real per-listing sales from paid order receipts → transactions.
 
     Etsy receipts each carry a `transactions` array where every transaction has
     a `listing_id` and `quantity`. Summing these gives true units sold per
     listing — the honest denominator for conversion (favorites are NOT sales).
-    Based on the 100 most recent paid receipts; cached 2 min. Returns
-    {listing_id: units_sold}."""
-    cached = _cache_get("sales_by_listing", ttl=120)
-    if cached is not None:
-        return cached
+    Based on the 100 most recent paid receipts (via _get_recent_orders_raw()'s
+    shared cache). Returns {listing_id: units_sold}."""
     out: dict = {}
-    try:
-        orders_r = EtsyAPIClient().get_orders(limit=100)
-        for receipt in orders_r.get("results", []) or []:
-            for t in receipt.get("transactions", []) or []:
-                lid = t.get("listing_id")
-                if lid is None:
-                    continue
-                try:
-                    qty = int(t.get("quantity", 1) or 1)
-                except (TypeError, ValueError):
-                    qty = 1
-                out[lid] = out.get(lid, 0) + qty
-    except Exception as exc:  # never let a sales lookup break a listing fetch
-        print(f"[sales] receipt mapping failed: {exc}", flush=True)
-    _cache_set("sales_by_listing", out)
+    for receipt in _get_recent_orders_raw():
+        for t in receipt.get("transactions", []) or []:
+            lid = t.get("listing_id")
+            if lid is None:
+                continue
+            try:
+                qty = int(t.get("quantity", 1) or 1)
+            except (TypeError, ValueError):
+                qty = 1
+            out[lid] = out.get(lid, 0) + qty
     return out
 
 
@@ -6827,6 +6841,54 @@ async def get_cogs_status(_token: str = Depends(_auth_session_or_bearer)):
     return result
 
 
+@app.get("/api/business-tracker.xlsx")
+async def get_business_tracker(_token: str = Depends(_auth_session_or_bearer)):
+    """Live, multi-tab Business Tracker workbook — Products (from
+    data/product_catalog.json), COGS & Profit and Orders (live Etsy data,
+    same functions powering the HUD status cards), plus manual-fill
+    inventory/supplier/expense templates. See tools/business_tracker.py for
+    the sheet builders. Generated fresh in memory on every request, never
+    written to disk (the archived one-off predecessor wrote to the
+    gitignored data/backups/, so it never reached the hosted deploy).
+    Best-effort on the live-data sheets: if Etsy is briefly unreachable,
+    those sheets simply come back empty rather than failing the whole
+    download — the same tolerance _sales_by_listing_sync() and
+    _compute_cogs_status() already apply per-lookup."""
+    def _gather_and_build() -> bytes:
+        try:
+            listings = _listings_sync("active").get("listings", [])
+        except Exception as exc:
+            print(f"[business-tracker] listings fetch failed: {exc}", flush=True)
+            listings = []
+        try:
+            orders_raw = _get_recent_orders_raw()
+        except Exception as exc:
+            print(f"[business-tracker] orders fetch failed: {exc}", flush=True)
+            orders_raw = []
+        try:
+            sales = _sales_by_listing_sync()
+        except Exception as exc:
+            print(f"[business-tracker] sales mapping failed: {exc}", flush=True)
+            sales = {}
+        try:
+            catalog = json.loads(Path("data/product_catalog.json").read_text())
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"[business-tracker] product_catalog.json read failed: {exc}", flush=True)
+            catalog = []
+        buf = business_tracker.build_workbook(
+            listings, sales, orders_raw, catalog, _estimate_listing_economics
+        )
+        return buf.getvalue()
+
+    content = await asyncio.to_thread(_gather_and_build)
+    filename = f"OnBrandCraftz_Business_Tracker_{date.today().isoformat()}.xlsx"
+    return Response(
+        content=content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
 # ── Global search (2026-07-17 Wave 3 usability) ─────────────────────────────
 # The header search box's own placeholder claimed "Search listings, orders,
 # tools, knowledge base" but the client-only implementation (frank_hud_
@@ -6862,20 +6924,12 @@ def _search_listings(query: str, limit: int = _SEARCH_RESULTS_PER_CATEGORY) -> l
 
 
 def _search_orders(query: str, limit: int = _SEARCH_RESULTS_PER_CATEGORY) -> list[dict]:
-    """Real recent paid orders (last 100 receipts), server-cached 120s -- the
-    same cache/TTL convention as _sales_by_listing_sync(). There is no
-    dedicated Orders screen in the HUD, so a matched order links straight to
-    its Etsy receipt page (the same URL order_notifier.py already uses)."""
-    cached = _cache_get("orders_recent", ttl=120)
-    if cached is None:
-        try:
-            cached = EtsyAPIClient().get_orders(limit=100).get("results", [])
-        except Exception as exc:
-            print(f"[search] orders failed: {exc}", flush=True)
-            cached = []
-        _cache_set("orders_recent", cached)
+    """Real recent paid orders (last 100 receipts) via the shared
+    _get_recent_orders_raw() cache. There is no dedicated Orders screen in
+    the HUD, so a matched order links straight to its Etsy receipt page (the
+    same URL order_notifier.py already uses)."""
     out = []
-    for r in cached:
+    for r in _get_recent_orders_raw():
         receipt_id = str(r.get("receipt_id", ""))
         buyer = r.get("name", "") or ""
         item_titles = " ".join(t.get("title", "") for t in (r.get("transactions") or []))

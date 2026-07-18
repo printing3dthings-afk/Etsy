@@ -39,3 +39,8 @@ google-genai==2.10.0
 # watch_video tool (tools/video_understanding.py). Lazily imported; pure-python wheel.
 # Ships frequent breaking releases — bump this one deliberately, not opportunistically.
 yt-dlp==2026.7.4
+# openpyxl — builds the live Business Tracker workbook (tools/business_tracker.py,
+# GET /api/business-tracker.xlsx). Previously only used by an unwired one-off script
+# kept out of this file deliberately; now a real dependency since it's wired to a
+# live endpoint.
+openpyxl==3.1.5

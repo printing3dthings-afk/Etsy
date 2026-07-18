@@ -1909,6 +1909,20 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
       </div>
 
+      <!-- 2026-07-18: one Excel workbook, multiple tabs (Products, COGS & Profit,
+           Orders — all live), plus manual-fill inventory/supplier/expense
+           templates. Generated fresh in memory on every download by
+           tools/business_tracker.py via GET /api/business-tracker.xlsx — lives in
+           Settings so it's reachable from both the desktop sidebar and the mobile
+           tab, not a desktop-only surface. -->
+      <div class="hub-section-title" style="margin-top:18px">Reports &amp; Export</div>
+      <div class="hub-card">
+        <div style="font-size:13px;font-weight:600">Business Tracker (.xlsx)</div>
+        <div style="font-size:11px;color:var(--muted);margin:6px 0 10px">One workbook, multiple tabs: Products, COGS &amp; Profit, Orders (live from Etsy), plus Physical Inventory, Consumables &amp; Reorder, Suppliers, Equipment &amp; Assets, and an Expense &amp; Tax Tracker for you to fill in. Generated fresh from live data every time you download it.</div>
+        <button class="act-btn primary" onclick="downloadBusinessTracker()">Download workbook</button>
+        <div id="tracker-download-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+      </div>
+
       <div class="hub-section-title" style="margin-top:18px">Connections</div>
       <div class="hub-card" id="settings-connections-summary"><div class="hub-spinner"></div></div>
       <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
@@ -2306,9 +2320,20 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 // not decoration (2026-07-08 accessibility review).
 const _reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ── Auto-scale the fixed 1440x900 stage to fit any viewport, desktop only — below
-// MOBILE_BREAKPOINT the stage goes fluid via CSS instead (see isMobileMode()). ──
-const STAGE_W = 1440, STAGE_H = 900;
+// ── Auto-size the stage to fit any viewport, desktop only — below
+// MOBILE_BREAKPOINT the stage goes fluid via CSS instead (see isMobileMode()).
+// 2026-07-18: previously a FIXED 1440x900 box that only ever got visually
+// transform-scaled bigger/smaller -- a wide monitor got the identical laptop
+// layout, just enlarged, not more actual content width. Now the stage's real
+// layout width/height tracks the viewport between a floor (the original
+// 1440x900 design size -- below this it scales down exactly as before, never
+// clips) and a ceiling (so an ultrawide monitor doesn't get one absurdly wide
+// content column). .screen/.panel have no hardcoded pixel widths -- they're
+// sized by the grid's `226px 1fr` track (see #stage below), so they already
+// flex to fill however wide the stage actually is; no other screen-level CSS
+// changes needed for this to take effect. ──
+const STAGE_W_MIN = 1440, STAGE_H_MIN = 900;
+const STAGE_W_MAX = 1800, STAGE_H_MAX = 1000;
 const MOBILE_BREAKPOINT = 880;
 const stage = document.getElementById('stage');
 const mobileMQ = window.matchMedia('(max-width:' + MOBILE_BREAKPOINT + 'px)');
@@ -2321,11 +2346,30 @@ function isMobileMode(){ return mobileMQ.matches; }
 // the ratio changed so a real zoom actually enlarges the content instead.
 let _lastDPR = window.devicePixelRatio;
 function fitStage(){
-  if (isMobileMode()){ stage.style.transform = 'none'; return; }
+  // Clear any inline width/height fitStage() itself set during a prior
+  // desktop-mode call -- caught live via playwright_smoke.py: a
+  // desktop-viewport-then-resize-to-mobile flow left a leftover inline
+  // width (e.g. "1440px") that beat the mobile media query's `width:100vw`
+  // (only `transform` there has `!important`), breaking the mobile stage's
+  // real width and, downstream, document.body's scroll math.
+  if (isMobileMode()){ stage.style.transform = 'none'; stage.style.width = ''; stage.style.height = ''; return; }
   const dprChanged = window.devicePixelRatio !== _lastDPR;
   _lastDPR = window.devicePixelRatio;
   if (dprChanged) return;
-  const scale = Math.min(window.innerWidth / STAGE_W, window.innerHeight / STAGE_H);
+  // targetW/targetH are the stage's real layout size, clamped to
+  // [STAGE_*_MIN, STAGE_*_MAX]. When the viewport sits inside that range
+  // (most desktop/laptop screens), targetW/H track it directly and scale
+  // ends up ~1 -- no visual enlarging, just genuinely more grid width for
+  // .screen/.panel content. Below the floor, this reduces to the original
+  // fixed-1440x900-scaled-down behavior. Above the ceiling (ultrawide
+  // monitors), the stage stops growing but still scales up slightly to use
+  // more of the available space, capped by the ceiling so the content
+  // column never gets absurdly wide.
+  const targetW = Math.min(Math.max(window.innerWidth, STAGE_W_MIN), STAGE_W_MAX);
+  const targetH = Math.min(Math.max(window.innerHeight, STAGE_H_MIN), STAGE_H_MAX);
+  stage.style.width = targetW + 'px';
+  stage.style.height = targetH + 'px';
+  const scale = Math.min(window.innerWidth / targetW, window.innerHeight / targetH);
   stage.style.transform = 'scale(' + scale + ')';
 }
 function closeControlCenter(){ document.body.classList.remove('cc-open'); }
@@ -7387,6 +7431,12 @@ function _renderHubFileHtml(f){
 function downloadFullBackup(){
   window.open(BASE+'/api/backup/download-all?token='+encodeURIComponent(TOKEN), '_blank');
   showToast('Building your backup ZIP — this can take a minute for a large one.');
+}
+function downloadBusinessTracker(){
+  window.open(BASE+'/api/business-tracker.xlsx?token='+encodeURIComponent(TOKEN), '_blank');
+  const statusEl = document.getElementById('tracker-download-status');
+  if(statusEl) statusEl.textContent = 'Building your workbook from live data…';
+  showToast('Building your Business Tracker workbook…');
 }
 async function loadFiles() {
   const el = document.getElementById('files-content');
