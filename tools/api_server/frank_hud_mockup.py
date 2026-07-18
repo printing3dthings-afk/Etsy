@@ -435,12 +435,14 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   -webkit-mask-image:radial-gradient(circle closest-side at 50% 50%,#000 88%,rgba(0,0,0,.45) 95%,transparent 100%);
   mask-image:radial-gradient(circle closest-side at 50% 50%,#000 88%,rgba(0,0,0,.45) 95%,transparent 100%);
 }
-.orb-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;
-  pointer-events:none;width:100%}
-.orb-overlay .o1{font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:6px;color:#fce9ee;
-  text-shadow:0 0 18px rgba(247,195,208,.85),0 0 40px rgba(242,160,181,.5)}
-.orb-overlay .o2{font-size:11px;letter-spacing:5px;color:var(--cyan2);margin-top:2px}
-.orb-overlay .o3{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:8px}
+/* 2026-07-18: .o1 ("Frank") and .o2 ("SHOP ASSISTANT") text overlaid on the orb are
+   gone -- the 3D "OnBrandCraftz" wordmark (initOrbGL()) is now the entire centerpiece,
+   replacing the icosahedron + text-overlay combo. .o3's diagnostic build-version line
+   survives as .orb-build-ver, relocated out of the absolute-positioned overlay into
+   normal document flow below the hero stage -- it was never part of the "Frank"
+   branding being replaced, just a debugging aid (hidden by default, see
+   body:not(.show-plumbing) #orb-build-ver above). */
+.orb-build-ver{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:8px;text-align:center}
 .orb-state{margin-top:8px;font-size:10.5px;color:var(--muted);letter-spacing:1px}
 .orb-hint{position:absolute;bottom:8px;font-size:9.5px;color:var(--muted);opacity:.6;letter-spacing:.5px}
 
@@ -461,7 +463,6 @@ canvas#orb-gl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
    now carries real native per-pixel alpha (2026-07-15 native-alpha rewrite), so
    this drop-shadow traces the actual wireframe silhouette directly. */
 #orb-view canvas#orb-gl{filter:drop-shadow(0 0 46px rgba(96,220,255,.5)) drop-shadow(0 0 120px rgba(96,220,255,.22))}
-#orb-view .orb-overlay .o1{font-size:36px}
 #orb-view .orb-hint{position:static;margin-top:14px;opacity:.5}
 #orb-view .orb-state{margin-top:10px}
 
@@ -1287,12 +1288,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     <div class="orb-hero-stage">
       <canvas id="orb" width="640" height="640"></canvas>
       <canvas id="orb-gl" width="640" height="640"></canvas>
-      <div class="orb-overlay">
-        <div class="o1">%%AGENT_SHORT%%</div>
-        <div class="o2">SHOP ASSISTANT</div>
-        <div class="o3" id="orb-build-ver">Build —</div>
-      </div>
     </div>
+    <div class="orb-build-ver" id="orb-build-ver">Build —</div>
     <div class="orb-state" id="orb-state">IDLE — slow ambient rotation</div>
     <div class="orb-hint">click the orb (or the talk pill) to start talking to %%AGENT_SHORT%%</div>
     <div class="orb-input-row">
@@ -3893,6 +3890,19 @@ function _setFontPairing(name) {
   document.documentElement.style.setProperty('--font-display', p.display);
   document.documentElement.style.setProperty('--font-body', p.body);
   _renderFontSwatches();
+  // The 3D "OnBrandCraftz" wordmark (initOrbGL()) matches whichever display face is
+  // active here -- rebuild it in the new typeface. _rebuildWordmarkForPairing is a
+  // function declaration later in this file, so it's always defined by the time this
+  // actually runs (hoisted) -- but on the VERY FIRST call, made by the module-level
+  // IIFE right below at parse time, it runs before the `let orbGLReady = ...` further
+  // down the script has executed, and that identifier is in the temporal dead zone
+  // until then. _rebuildWordmarkForPairing is async, so that ReferenceError surfaces
+  // as a rejected promise, not a synchronous throw a plain try/catch here would catch
+  // -- .catch() is required. Once the orb has actually initialized (real user-driven
+  // pairing changes from the Settings swatch buttons), this always resolves normally.
+  if (typeof _rebuildWordmarkForPairing === 'function') {
+    _rebuildWordmarkForPairing(p.name).catch(function(){});
+  }
 }
 function _renderFontSwatches() {
   const row = document.getElementById('font-swatch-row');
@@ -7987,75 +7997,19 @@ function resetOrbToDefault(){
 // from the CSS drop-shadow filter on canvas#orb-gl, not internal bloom — see the
 // CSS comment there for why UnrealBloomPass was removed outright (2026-07-15). ──
 let orbGLPaused = true, orbGLReady = false, orbGLLoading = false;
-let glMesh = null, glScene = null, glCamera = null, glRenderer = null, glClock = null, glUniforms = null;
+let glMesh = null, glScene = null, glCamera = null, glRenderer = null, glUniforms = null;
 
-const _ORB_NOISE_GLSL = `
-vec3 mod289(vec3 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
-vec4 mod289(vec4 x){ return x - floor(x * (1.0/289.0)) * 289.0; }
-vec4 permute(vec4 x){ return mod289(((x*34.0)+1.0)*x); }
-vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
-float snoise(vec3 v){
-  const vec2 C = vec2(1.0/6.0, 1.0/3.0);
-  const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
-  vec3 i  = floor(v + dot(v, C.yyy));
-  vec3 x0 = v - i + dot(i, C.xxx);
-  vec3 g = step(x0.yzx, x0.xyz);
-  vec3 l = 1.0 - g;
-  vec3 i1 = min(g.xyz, l.zxy);
-  vec3 i2 = max(g.xyz, l.zxy);
-  vec3 x1 = x0 - i1 + C.xxx;
-  vec3 x2 = x0 - i2 + C.yyy;
-  vec3 x3 = x0 - D.yyy;
-  i = mod289(i);
-  vec4 p = permute(permute(permute(
-             i.z + vec4(0.0, i1.z, i2.z, 1.0))
-           + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-           + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-  float n_ = 0.142857142857;
-  vec3 ns = n_ * D.wyz - D.xzx;
-  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-  vec4 x_ = floor(j * ns.z);
-  vec4 y_ = floor(j - 7.0 * x_);
-  vec4 x = x_ * ns.x + ns.yyyy;
-  vec4 y = y_ * ns.x + ns.yyyy;
-  vec4 h = 1.0 - abs(x) - abs(y);
-  vec4 b0 = vec4(x.xy, y.xy);
-  vec4 b1 = vec4(x.zw, y.zw);
-  vec4 s0 = floor(b0)*2.0 + 1.0;
-  vec4 s1 = floor(b1)*2.0 + 1.0;
-  vec4 sh = -step(h, vec4(0.0));
-  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
-  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
-  vec3 p0 = vec3(a0.xy, h.x);
-  vec3 p1 = vec3(a0.zw, h.y);
-  vec3 p2 = vec3(a1.xy, h.z);
-  vec3 p3 = vec3(a1.zw, h.w);
-  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
-  p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-  m = m * m;
-  return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
-}
-`;
-
-const _ORB_VERT = _ORB_NOISE_GLSL + `
-uniform float uTime;
-uniform float uAmp;
-uniform float uFreq;
+// 2026-07-18: the noise-displaced icosahedron ("the orb") is replaced by a
+// rotating 3D "OnBrandCraftz" wordmark (Scott's request). Rigid extruded
+// letterforms can't wobble the way the sphere's noise-displaced surface did,
+// so the simplex-noise vertex shader that drove that displacement is gone --
+// _ORB_VERT is now a plain passthrough. Reactivity to speech moves to color/
+// opacity (kept, see _ORB_FRAG below and orbGLFrame()) and the CSS glow
+// intensity, not geometry displacement. See ops_runbook.md for the full
+// before/after.
+const _ORB_VERT = `
 void main(){
-  // Two noise octaves, not one: a LOW-frequency layer makes a handful of big, graceful
-  // lobes (the "waviness" of the whole silhouette), a higher-frequency layer riding on
-  // top adds the finer surface crinkle -- a single mid-frequency octave (the original
-  // approach) couldn't do both at once, so the ball read as gently fuzzy rather than
-  // genuinely wavy/lumpy like the reference.
-  float nBig = snoise(position * (uFreq * 0.42) + vec3(0.0, 0.0, uTime * 0.7));
-  float nFine = snoise(position * (uFreq * 2.2) + vec3(0.0, 0.0, uTime * 1.4));
-  // uAmp's contribution bumped up (0.32->0.60, 0.10->0.24) so idle vs. actively-speaking
-  // is a clear, distinct ripple rather than a subtle shift on top of the already-large
-  // baseline waviness (Scott: wants "active ripples reactive to what he is saying").
-  float disp = 0.20 + nBig * (0.42 + uAmp * 0.60) + nFine * (0.08 + uAmp * 0.24);
-  vec3 newPos = position + normal * disp;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 `;
 
@@ -8067,24 +8021,75 @@ void main(){
 }
 `;
 
+// ── Wordmark geometry — one pre-generated outline SVG per font pairing
+// (tools/api_server/static/vendor/wordmark/onbrandcraftz-{pairing}.svg, authored
+// offline via fontTools+HarfBuzz, see gen_wordmark_svgs.py), extruded into real 3D
+// letterforms at runtime via SVGLoader + ExtrudeGeometry. Built once per pairing name
+// and cached in _wordmarkGeoCache so switching pairings in Settings (_rebuildWordmark
+// ForPairing()) swaps in an already-built mesh instead of re-fetching/re-parsing. ──
+// Font design-space units (upm 1000-2000, so "OnBrandCraftz" comes out thousands of
+// units wide) are wildly bigger than the rest of this scene's units -- the old
+// icosahedron had radius 1.15, and initOrbGL()'s camera far-clip plane is only 100.
+// Every loaded geometry is uniformly scaled so its own height becomes this fixed
+// constant; camera framing (initOrbGL()/_rebuildWordmarkForPairing()) fits distance to
+// the ALREADY-scaled geometry, so the exact value here doesn't matter for framing, only
+// that it lands back in "a few units," matching the near/far planes and keeping vertex
+// coordinates in a sane float-precision range. Caught in local testing: at raw font
+// units, the dynamically-computed camera distance came out to ~24,000 -- far beyond the
+// far-clip plane -- so the whole mesh was silently clipped away (canvas rendered, zero
+// non-transparent pixels).
+const _WORDMARK_TARGET_HEIGHT = 1.6;
+const _wordmarkGeoCache = {};
+async function _loadWordmarkGroup(THREE, SVGLoader, pairingName){
+  if(_wordmarkGeoCache[pairingName]) return _wordmarkGeoCache[pairingName];
+  const loader = new SVGLoader();
+  const data = await loader.loadAsync('/static/vendor/wordmark/onbrandcraftz-' + pairingName + '.svg');
+  // data-height on the root <svg> (written by gen_wordmark_svgs.py from the real
+  // shaped-glyph bounding box) sizes extrusion depth proportionally to each font's own
+  // cap-height, so a tall serif face and a squat rounded face both get letters that
+  // read as "solid," not paper-thin or absurdly deep. depth is computed in the SAME
+  // raw (pre-downscale) units as the shape coordinates passed to ExtrudeGeometry below
+  // -- the uniform scale applied after extrusion takes depth down proportionally too.
+  const svgHeight = parseFloat(data.xml.getAttribute('data-height')) || 1000;
+  const depth = svgHeight * 0.14;
+  const scale = _WORDMARK_TARGET_HEIGHT / svgHeight;
+  const geometries = [];
+  for(const path of data.paths){
+    const shapes = SVGLoader.createShapes(path);
+    for(const shape of shapes){
+      const geo = new THREE.ExtrudeGeometry(shape, {depth, bevelEnabled:false, curveSegments:8});
+      // SVG space is Y-down, Three.js world space is Y-up -- combine the flip with the
+      // downscale above in one call, baked directly into each geometry's own vertex
+      // data (not a parent Group transform) so the bounding-box + centering math below
+      // operates in one consistent space. Doing the flip on a parent transform instead
+      // and then translating child geometry by the resulting WORLD-space center is a
+      // sign mismatch (world.y = -local.y under that transform, so a world-space
+      // translate offset doesn't cancel correctly) -- caught before shipping by working
+      // through the transform math by hand.
+      geo.scale(scale, -scale, scale);
+      geometries.push(geo);
+    }
+  }
+  const group = new THREE.Group();
+  for(const geo of geometries){ group.add(new THREE.Mesh(geo)); }
+  const box = new THREE.Box3().setFromObject(group);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  for(const geo of geometries){ geo.translate(-center.x, -center.y, -center.z); }
+  group.userData.fitSize = size;
+  _wordmarkGeoCache[pairingName] = group;
+  return group;
+}
+
 async function initOrbGL(){
   if(orbGLReady || orbGLLoading) return;
   orbGLLoading = true;
   try{
     const THREE = await import('/static/vendor/three/build/three.module.js');
+    const {SVGLoader} = await import('/static/vendor/three/examples/jsm/loaders/SVGLoader.js');
 
     glScene = new THREE.Scene();
     glCamera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-    // z was 3.4, which framed the UNDISPLACED radius-1.15 sphere nicely but ignored
-    // that the vertex shader pushes peaks out to ~1.7 (idle) and ~2.15 (speaking).
-    // At z=3.4 the frustum half-height is only 3.4*tan(21deg)=1.305 world units, so
-    // those peaks projected to NDC>1 -- i.e. OFF the canvas entirely -- and got hard-
-    // clipped by the render target before the CSS mask ever applied. That is the real
-    // "outer texture cut off" bug, and why re-tuning the mask 3x (v122/v141/v143) never
-    // fixed it. Pulling the camera back to 6.5 (half-height ~2.49) seats the full wavy
-    // silhouette + speaking ripples inside the frame with margin, so the whole crumpled
-    // edge is visible and floats, matching Scott's reference GIFs.
-    glCamera.position.z = 6.5;
 
     glRenderer = new THREE.WebGLRenderer({canvas: orbGlCanvas, alpha:true, antialias:true});
     // Real transparent clear (2026-07-15, native-alpha rewrite). Two earlier
@@ -8104,11 +8109,7 @@ async function initOrbGL(){
     glRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
     glRenderer.setSize(640, 640, false);
 
-    const geo = new THREE.IcosahedronGeometry(1.15, 16);
     glUniforms = {
-      uTime: {value: 0},
-      uAmp: {value: 0},
-      uFreq: {value: 1.6},
       uColor: {value: new THREE.Color('rgb(242,160,181)')},
       uOpacity: {value: 0.85},
     };
@@ -8119,17 +8120,56 @@ async function initOrbGL(){
       wireframe: true,
       transparent: true,
     });
-    glMesh = new THREE.Mesh(geo, mat);
+
+    const group = await _loadWordmarkGroup(THREE, SVGLoader, _getFontPairing());
+    glMesh = new THREE.Group();
+    for(const child of group.children){ glMesh.add(new THREE.Mesh(child.geometry, mat)); }
+    glMesh.userData.fitSize = group.userData.fitSize;
     glScene.add(glMesh);
 
-    glClock = new THREE.Clock();
+    // Fit-to-view: unlike the sphere's fixed z=6.5 (tuned for a specific noise-displaced
+    // radius), "OnBrandCraftz" is a wide, short bounding box that differs per font
+    // pairing -- so the camera distance is derived from the ACTUAL built geometry's
+    // width/height every time, not a guessed constant. *1.35 leaves ~35% headroom so
+    // the wordmark doesn't touch the canvas's circular mask edge (line 434) while
+    // rotating.
+    const size = glMesh.userData.fitSize;
+    const maxDim = Math.max(size.x, size.y);
+    const fovRad = glCamera.fov * Math.PI / 180;
+    glCamera.position.z = (maxDim / 2) / Math.tan(fovRad / 2) * 1.35;
 
     orbGLReady = true;
     orbGLLoading = false;
     requestAnimationFrame(orbGLFrame);
   }catch(e){
     orbGLLoading = false;
-    console.error('[orb-gl] WebGL noise-sphere failed to initialize — orb will stay blank in sphere mode until this is fixed', e);
+    console.error('[orb-gl] WebGL wordmark failed to initialize — orb will stay blank in sphere mode until this is fixed', e);
+  }
+}
+
+// Called from _setFontPairing() (Settings screen) so switching the active font pairing
+// swaps the wordmark's letterforms to match, without a full scene re-init -- the cache
+// in _loadWordmarkGroup means every pairing after the first visit is instant.
+async function _rebuildWordmarkForPairing(pairingName){
+  if(!orbGLReady || !glScene) return;
+  try{
+    const THREE = await import('/static/vendor/three/build/three.module.js');
+    const {SVGLoader} = await import('/static/vendor/three/examples/jsm/loaders/SVGLoader.js');
+    const mat = glMesh.children[0].material;
+    const group = await _loadWordmarkGroup(THREE, SVGLoader, pairingName);
+    glScene.remove(glMesh);
+    const newMesh = new THREE.Group();
+    for(const child of group.children){ newMesh.add(new THREE.Mesh(child.geometry, mat)); }
+    newMesh.userData.fitSize = group.userData.fitSize;
+    newMesh.rotation.copy(glMesh.rotation);
+    glMesh = newMesh;
+    glScene.add(glMesh);
+    const size = glMesh.userData.fitSize;
+    const maxDim = Math.max(size.x, size.y);
+    const fovRad = glCamera.fov * Math.PI / 180;
+    glCamera.position.z = (maxDim / 2) / Math.tan(fovRad / 2) * 1.35;
+  }catch(e){
+    console.error('[orb-gl] failed to rebuild wordmark for pairing "' + pairingName + '"', e);
   }
 }
 
@@ -8155,30 +8195,43 @@ if (orbGlCanvas) {
     e.preventDefault();
     orbGLReady = false;
     orbGLLoading = false;
-    glRenderer = null; glMesh = null; glScene = null; glCamera = null; glClock = null; glUniforms = null;
+    glRenderer = null; glMesh = null; glScene = null; glCamera = null; glUniforms = null;
     console.warn('[orb-gl] WebGL context lost (tab backgrounded/GPU memory pressure) — will rebuild on restore');
   });
   orbGlCanvas.addEventListener('webglcontextrestored', function(){
-    console.info('[orb-gl] WebGL context restored — rebuilding the noise-sphere');
+    console.info('[orb-gl] WebGL context restored — rebuilding the wordmark');
     initOrbGL();
   });
 }
 
 function orbGLFrame(){
   requestAnimationFrame(orbGLFrame);
-  // Skip the full Three.js render (bloom post-processing included) when the orb isn't
-  // actually on screen: the tab is backgrounded, or the dashboard's Control Center is
-  // open (#orb-view and the 18-screen dashboard are mutually exclusive via 'cc-open' on
-  // body). Previously this ran unconditionally forever (2026-07-08 performance pass).
+  // Skip the full Three.js render when the orb isn't actually on screen: the tab is
+  // backgrounded, or the dashboard's Control Center is open (#orb-view and the
+  // 18-screen dashboard are mutually exclusive via 'cc-open' on body). Previously this
+  // ran unconditionally forever (2026-07-08 performance pass).
   if(orbGLPaused || !orbGLReady || document.hidden || document.body.classList.contains('cc-open')) return;
-  const dt = glClock.getDelta();
   const amp = currentVoiceAmp();
-  glUniforms.uTime.value += dt * (0.12 + amp*0.5);
-  glUniforms.uAmp.value = amp;
   glUniforms.uColor.value.setRGB((58+(122-58)*amp)/255, (214+(232-214)*amp)/255, 1.0);
   glUniforms.uOpacity.value = 0.65 + amp*0.3;
-  glMesh.rotation.y += (_reducedMotion ? 0 : 0.0022) + amp*0.01;
-  glMesh.rotation.x += (_reducedMotion ? 0 : 0.0006) + amp*0.003;
+  // Rotation: slow, constant, Y-axis only. The sphere also tumbled on X and sped up
+  // with amp ("faster while speaking") -- rigid extruded letterforms tumbling on a
+  // second axis would spend half the cycle unreadable, and Scott asked for "rotate
+  // slowly" with speech reactivity moved to "the words light up with a soft glow"
+  // instead, so amp no longer touches rotation at all, only the color/opacity above
+  // and the glow below.
+  glMesh.rotation.y += (_reducedMotion ? 0 : 0.0022);
+  // Glow reactivity: modulate the two stacked drop-shadows (static default set in CSS
+  // on #orb-view canvas#orb-gl) via inline style each frame, off the same real TTS
+  // amplitude driving uColor/uOpacity above. Inline style wins over the CSS rule, so
+  // this only takes effect once rendering actually starts. Values at amp=0 match the
+  // static CSS default exactly (46px/.5 and 120px/.22) so there's no visible jump the
+  // first frame this runs.
+  if(orbGlCanvas){
+    const core = 46 + amp*40, coreA = (0.5 + amp*0.35).toFixed(2);
+    const wide = 120 + amp*60, wideA = (0.22 + amp*0.18).toFixed(2);
+    orbGlCanvas.style.filter = 'drop-shadow(0 0 '+core+'px rgba(96,220,255,'+coreA+')) drop-shadow(0 0 '+wide+'px rgba(96,220,255,'+wideA+'))';
+  }
   // Single native render pass straight to the visible canvas (2026-07-15,
   // native-alpha rewrite) -- no offscreen buffer, no readback, no per-pixel JS
   // manipulation. glRenderer was created with alpha:true and a real transparent

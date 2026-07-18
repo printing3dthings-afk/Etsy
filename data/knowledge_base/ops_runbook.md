@@ -14765,3 +14765,486 @@ All 5 ranked recommendations from the research artifact, implemented in `tools/a
 5. **Star Seller milestone badge** — `renderPhoneToday()` now also fetches `/api/star-seller` (already existed, just never surfaced on Today) and shows a small gold-glow `.pmilestone` badge when `status === 'on_track'` (real orders_90d/revenue_90d/avg_rating), per the research's "rare, genuinely earned moments deserve more personality than constant-frequency UI" finding.
 
 **New/extended tests:** `playwright_smoke.py` — `_skeletonCards()` pure-function output check; Today-tab first-load + resolve-animation test (stubs `authGet` directly rather than mocking network, same seam used for `_recentActivityHtml` below — the app's service worker intercepts every GET via its own internal `fetch()`, invisible to `page.route()`, but does NOT intercept POST (`frank-sw.js`'s fetch handler returns early on non-GET), confirmed by successfully mocking the `/api/queue/{id}/approve` POST for the checkmark test); count-up settles on the exact real value with no float drift; milestone badge renders with real numbers when `on_track`; success toast shows the animated checkmark SVG. One non-reproducible "waiting for scheduled navigations" flake seen in 1/7 local runs with no specific assertion failure attributable to this work — consistent with other environment-level flakiness already logged this session, not chased further.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Durable volume not writable
+5-minute health loop found /tmp/tmpqqre4bhn/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpqqre4bhn/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpf3y5hz1j/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 18868). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-18 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 18870). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Durable volume not writable
+5-minute health loop found /tmp/tmppfn3pke2/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmppfn3pke2/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmp120m2dvs/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 816). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-18 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 818). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — The orb replaced with a rotating 3D "OnBrandCraftz" wireframe wordmark (v224)
+
+**Ask:** Scott: replace the noise-displaced icosahedron ("the orb") on the mobile Ask
+tab / desktop landing view with a slowly-rotating 3D rendering of the shop name,
+wireframe letters, matching whichever font pairing is active in Settings, with the
+"Frank / SHOP ASSISTANT" text overlay dropped in favor of the wordmark itself. Some
+speech-reactivity kept, but as "a soft glow reactive to speech" rather than the
+sphere's turbulence.
+
+**Approach:** the string never changes ("OnBrandCraftz"), so instead of vendoring a
+full FontLoader/TextGeometry pipeline, 5 outline SVGs (one per font pairing:
+Fraunces/Playfair Display/Space Grotesk/Fredoka/Sora) were pre-generated offline via
+fontTools + HarfBuzz (real glyph shaping/kerning, viewBox sized from the actual shaped
+bounding box) and saved under `static/vendor/wordmark/onbrandcraftz-{pairing}.svg`.
+Three.js's `SVGLoader` (newly vendored, matching the existing r160 build) loads the
+matching SVG at runtime and `ExtrudeGeometry` gives each letter real 3D depth;
+`initOrbGL()` swaps `IcosahedronGeometry` for this, `orbGLFrame()` drops the noise
+vertex-displacement shader (rigid letters can't wobble) and keeps only Y-axis rotation,
+constant speed, no amp-driven speed-up. `_ORB_VERT` is now a plain passthrough — the
+old `_ORB_NOISE_GLSL` simplex-noise function is gone, not needed by any current shader.
+
+**Two real bugs caught during verification (both fixed before shipping):**
+
+1. **TDZ `ReferenceError` on every page load.** `_setFontPairing()` (Settings) was
+   wired to call the new async `_rebuildWordmarkForPairing()` so switching pairings
+   rebuilds the wordmark's typeface. But `_setFontPairing()` also runs immediately at
+   module-parse time via its own startup IIFE (`_setFontPairing(_getFontPairing())`),
+   which executes *before* the `let orbGLReady = ...` declaration further down the same
+   script — accessing a `let` binding before its declaration line runs is a temporal
+   dead zone violation. Caught by `tools/playwright_smoke.py`'s console-error check:
+   `pageerror: Cannot access 'orbGLReady' before initialization`, twice. Because
+   `_rebuildWordmarkForPairing` is `async`, the TDZ throw inside its body doesn't
+   propagate as a synchronous exception to the caller (async functions convert even
+   their own synchronous-portion throws into a rejected promise) — a plain
+   `try/catch` around the call site would NOT have caught it. Fix: call
+   `_rebuildWordmarkForPairing(p.name).catch(function(){})` instead of the
+   `typeof === 'function'` guard alone. On the very first (startup) call this
+   harmlessly no-ops (nothing to rebuild yet); every real user-driven pairing change
+   from the Settings swatches runs long after `orbGLReady` is a real, initialized
+   binding, so it always resolves normally there.
+
+2. **Wordmark invisible — geometry built in raw font-design-space units, silently
+   clipped by the camera's far plane.** The authored SVGs' path coordinates are direct
+   font-outline units (upm ~1000–2000, so "OnBrandCraftz" is ~13,700 units wide for the
+   default Fraunces pairing) — `ExtrudeGeometry` inherits those same huge units.
+   `initOrbGL()`'s dynamic camera-fit calculation (distance derived from the actual
+   built geometry's bounding box, replacing the sphere's fixed `z=6.5`) correctly
+   computed a distance to fit that huge box in frame — but the result was `z≈24,142`,
+   while the `PerspectiveCamera`'s far-clip plane (tuned for the old icosahedron's
+   ~1.15-unit radius) was only `100`. The entire mesh sat far beyond the far plane and
+   was silently clipped — the canvas rendered a real WebGL frame, `orbGLReady` was
+   `true`, `glMesh.children.length` was correct (21, matching 13 shaped glyphs with a
+   few multi-part letters), but a raw pixel-alpha sample of the canvas came back 100%
+   transparent. Caught by manually screenshotting `#orb-view` and finding it visually
+   blank, then instrumenting `page.evaluate()` to read `glCamera.position.z` and
+   `glMesh.userData.fitSize` directly — the huge numbers immediately pointed at scale,
+   not a logic bug in the shader/material/mesh-construction code (all of which were
+   otherwise correct). Fix: every loaded geometry is now uniformly scaled (baked into
+   its own vertex data via `geo.scale(scale, -scale, scale)`, combined with the
+   existing SVG-to-Three.js Y-flip in the same call) so the wordmark's own height
+   normalizes to a fixed small constant (`_WORDMARK_TARGET_HEIGHT = 1.6`) regardless of
+   source font size — camera-fit distance is computed from the *already-scaled*
+   geometry, so the absolute target value doesn't matter, only that vertex coordinates
+   land back in "a few units," matching the near/far planes and the rest of the scene's
+   existing unit convention. Post-fix: `camZ≈22.7`, comfortably inside `(0.1, 100)`.
+
+**Verify:** `python -m py_compile`; inline `<script>` extracted from the real
+(business_config-substituted) `_FRANK_HUD_MOCKUP` string and `node --check`'d (a naive
+regex-extract of the raw file source falsely flagged pre-existing, correct
+`\\'`-in-Python-source JS-escaping as a syntax error — had to actually import the
+module and read the runtime string value instead); full `tests/run_all.py` (41/41,
+including the pre-existing `test_frank_font_pairings.py`); `tools/check_hardcoded_paths.py`
+clean; `tools/playwright_smoke.py` green across 5 consecutive runs post-fix (one flake
+caught and fixed mid-session was the TDZ bug above — not reproduced in 2 later manual
+Playwright repros of the same tour-click sequence, consistent with it being the
+now-fixed root cause rather than an unrelated intermittent flake); manual Playwright
+screenshots of `#orb-view` confirmed the wordmark renders correctly, centered, no
+clipping, in all 5 font pairings (Fraunces/Playfair Display/Space Grotesk/Fredoka/Sora)
+at both a 1440×1000 desktop viewport and a 390×844 mobile viewport, with the "Frank /
+SHOP ASSISTANT" overlay text gone and the tiny build-version diagnostic line (`.o3`,
+hidden by default behind the `show-plumbing` dev flag) relocated below the hero stage
+instead of overlaid on top of it. `_BUILD_ID` bumped v223→v224.
+
+**Also fixed in passing, same session, upstream of this feature:**
+`fonts/PlayfairDisplay-Bold.ttf` was discovered corrupted (`file` identified it as an
+HTML document, not a real TTF — `fontTools.ttLib.TTLibError: Not a TrueType or OpenType
+font (bad sfntVersion)` when the SVG-authoring script tried to load it) while sourcing
+raw font files for the 5 wordmark SVGs. Overwritten with a real Playfair Display Bold
+TTF (instantiated wght=700 from Google Fonts' variable-font source). Note:
+`fonts/PlayfairDisplay-Italic.ttf` in the same directory has the identical corruption
+and was NOT fixed — nothing currently uses it, flagging here in case that changes.
+
+**Lesson for next time:** when porting geometry from a real-world unit system (font
+design units, GIS coordinates, CAD units, anything with its own native scale) into a
+Three.js scene that already has an established "small numbers" convention (camera
+near/far, existing meshes, bloom/glow tuning all implicitly assume a few units), always
+explicitly normalize scale at the geometry-construction boundary — don't assume a
+dynamic camera-fit calculation alone will compensate, since it can produce a distance
+that's mathematically correct for framing but numerically outside the render pipeline's
+clip range, failing completely silently (no error, no console warning, a real frame
+renders, just with nothing non-transparent in it).
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Durable volume not writable
+5-minute health loop found /tmp/tmpqgei2v3a/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpqgei2v3a/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmp94n2kc7h/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 6208). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-18 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 6210). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
