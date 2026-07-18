@@ -80,6 +80,30 @@ _FRANK_HUD_MOCKUP = """<!DOCTYPE html>
 @font-face{font-family:'Manrope';font-weight:700;font-style:normal;font-display:swap;
   src:url('/static/vendor/fonts/Manrope-700.woff2') format('woff2')}
 
+/* ── 4 more font-pairing options (2026-07-18, Settings → font picker) — same
+   self-hosted, Latin-subset, ~68KB-per-pairing treatment as the Fraunces/Manrope
+   pair above. Only the weight actually used ships for each face. ──*/
+@font-face{font-family:'Playfair Display';font-weight:700;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/PlayfairDisplay-700.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-weight:400;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Inter-400.woff2') format('woff2')}
+@font-face{font-family:'Inter';font-weight:500;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Inter-500.woff2') format('woff2')}
+@font-face{font-family:'Space Grotesk';font-weight:600;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/SpaceGrotesk-600.woff2') format('woff2')}
+@font-face{font-family:'Fredoka';font-weight:600;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Fredoka-600.woff2') format('woff2')}
+@font-face{font-family:'Nunito';font-weight:400;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Nunito-400.woff2') format('woff2')}
+@font-face{font-family:'Nunito';font-weight:700;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Nunito-700.woff2') format('woff2')}
+@font-face{font-family:'Sora';font-weight:700;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/Sora-700.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-weight:400;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/IBMPlexSans-400.woff2') format('woff2')}
+@font-face{font-family:'IBM Plex Sans';font-weight:500;font-style:normal;font-display:swap;
+  src:url('/static/vendor/fonts/IBMPlexSans-500.woff2') format('woff2')}
+
 :root{
   /* Studio Warm — dark warm-plum surfaces, coral + gold accents (pulls the coral
      from the existing Sakura theme's palette and the gold already used site-wide
@@ -1691,6 +1715,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         <div id="theme-swatch-row" style="display:flex;gap:10px;flex-wrap:wrap"></div>
         <div style="font-size:11px;color:var(--muted);margin-top:10px">
           Saved to this device only — every screen repaints instantly, no reload needed.
+        </div>
+        <div style="font-size:13px;font-weight:600;margin:18px 0 10px">Font pairing</div>
+        <div id="font-swatch-row" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px">
+          Independent of color theme — mix any pairing with any theme. Saved to this
+          device only.
         </div>
       </div>
 
@@ -3701,6 +3731,50 @@ function _renderThemeSwatches() {
 }
 (function(){
   _setTheme(_getTheme());
+})();
+// ── Font pairing (2026-07-18, from the visual-design-research pass) — independent
+// of color theme (a person might want Mermaid Bright colors with Friendly Rounded
+// type), so this sets --font-display/--font-body directly as inline styles on
+// <html> rather than adding a second html.theme-* class dimension, which would
+// need every theme x pairing combination as a compound selector for no benefit.
+// Same localStorage-only persistence pattern as _setTheme() above. ──
+const _FONT_PAIRINGS = [
+  {name:'default',   label:'Studio Warm (current)', display:"'Fraunces',Georgia,serif",
+   body:"'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"},
+  {name:'editorial', label:'Editorial Confidence',  display:"'Playfair Display',Georgia,serif",
+   body:"'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"},
+  {name:'geometric', label:'Geometric Warmth',      display:"'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+   body:"'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"},
+  {name:'rounded',   label:'Friendly Rounded',      display:"'Fredoka',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+   body:"'Nunito',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"},
+  {name:'precision', label:'Technical Precision',   display:"'Sora',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+   body:"'IBM Plex Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif"},
+];
+function _getFontPairing() {
+  try { return localStorage.getItem('frankFontPairing') || 'default'; } catch(e) { return 'default'; }
+}
+function _setFontPairing(name) {
+  try { localStorage.setItem('frankFontPairing', name); } catch(e) {}
+  const p = _FONT_PAIRINGS.find(x => x.name === name) || _FONT_PAIRINGS[0];
+  document.documentElement.style.setProperty('--font-display', p.display);
+  document.documentElement.style.setProperty('--font-body', p.body);
+  _renderFontSwatches();
+}
+function _renderFontSwatches() {
+  const row = document.getElementById('font-swatch-row');
+  if (!row) return;
+  const active = _getFontPairing();
+  row.innerHTML = _FONT_PAIRINGS.map(p =>
+    '<button class="act-btn" style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 14px;'+
+    (p.name === active ? 'border-color:var(--cyan);color:var(--cyan2)' : '')+
+    '" onclick="_setFontPairing(\\''+p.name+'\\')">'+
+    '<span style="font-family:'+p.display+';font-size:15px">'+p.label+(p.name === active ? ' ✓' : '')+'</span>'+
+    '<span style="font-family:'+p.body+';font-size:11px;color:var(--muted)">The quick brown fox jumps</span>'+
+    '</button>'
+  ).join('');
+}
+(function(){
+  _setFontPairing(_getFontPairing());
 })();
 // ── My Account — durable across devices, so this is backed by /api/account
 // (a real DB row) rather than localStorage, unlike the theme preference above. ──

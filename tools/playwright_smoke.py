@@ -271,6 +271,34 @@ async def _run_browser_checks() -> None:
             # Reset to default so later checks in this run aren't affected.
             await page.evaluate("_setTheme('default')")
 
+            # ── 4 new font pairings (2026-07-18) -- independent of color theme,
+            # so verify the font-swatch mount point renders AND that switching
+            # actually changes the real computed --font-display/--font-body,
+            # while a subsequent theme switch leaves the font choice untouched
+            # (proves the two systems really are decoupled, not just declared so). ──
+            font_pairing_state = await page.evaluate("""() => {
+                _setFontPairing('rounded');
+                const csAfterFont = getComputedStyle(document.documentElement);
+                const displayAfterFont = csAfterFont.getPropertyValue('--font-display').trim();
+                _setTheme('mermaid');
+                const csAfterTheme = getComputedStyle(document.documentElement);
+                return {
+                    swatchRowText: (document.getElementById('font-swatch-row') || {}).textContent || '',
+                    displayAfterFont,
+                    displayAfterThemeSwitch: csAfterTheme.getPropertyValue('--font-display').trim(),
+                    themeHasClass: document.documentElement.classList.contains('theme-mermaid'),
+                };
+            }""")
+            check("Friendly Rounded" in font_pairing_state.get("swatchRowText", ""),
+                  f"font swatch row should list 'Friendly Rounded': {font_pairing_state}")
+            check("Fredoka" in font_pairing_state.get("displayAfterFont", ""),
+                  f"_setFontPairing('rounded') should set --font-display to Fredoka: {font_pairing_state}")
+            check(font_pairing_state.get("displayAfterThemeSwitch") == font_pairing_state.get("displayAfterFont"),
+                  f"switching color theme must not reset the chosen font pairing (the two systems should be independent): {font_pairing_state}")
+            check(font_pairing_state.get("themeHasClass"), f"theme switch should still apply normally alongside a custom font pairing: {font_pairing_state}")
+            # Reset both so later checks in this run aren't affected.
+            await page.evaluate("_setFontPairing('default'); _setTheme('default');")
+
             # ── "Test Voice" button + Premium-voice fail-safe (2026-07-16) — Scott:
             # "How do I get Frank to speak out loud?" / "guarantee it will work."
             # Voice was already automatic and working; this doesn't (and can't)

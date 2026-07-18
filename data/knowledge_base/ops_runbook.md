@@ -14471,3 +14471,161 @@ Muted text also had to be checked against `panel2` (the more saturated card-tint
 **New test:** `tests/test_frank_theme_contrast.py` — parses the real shipped `:root{}` and `html.theme-X{}` CSS blocks out of `frank_hud_mockup.py` via regex (not a hand-copied duplicate that could drift), verifies every theme's text/muted pass AA on bg, the 5 light themes also pass on panel2, the 4 new themes' cyan/cyan2/gold/gold2/green/red are all readable as text, and all 4 are actually present in `_UI_THEMES` (reachable from the Settings picker, not just defined in CSS with no way to select them).
 
 `playwright_smoke.py` extended: switches through all 4 new themes via `_setTheme()`, confirms the `theme-X` class lands, `--bg` computes to the right hex, and the swatch row re-renders with an active checkmark.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Durable volume not writable
+5-minute health loop found /tmp/tmp_vtf8p1j/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp_vtf8p1j/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpsb8sun83/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 29817). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-18 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 29819). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-18 — 4 new font pairings added to Frank's Settings screen
+**What (Scott, from the design-research artifact):** "at least 4 examples of different font to use."
+
+**Added:** Editorial Confidence (Playfair Display + Inter), Geometric Warmth (Space
+Grotesk + Manrope, keeps the current body font), Friendly Rounded (Fredoka +
+Nunito), Technical Precision (Sora + IBM Plex Sans) — `_FONT_PAIRINGS` array +
+`_setFontPairing()`/`_getFontPairing()` in `tools/api_server/frank_hud_mockup.py`,
+mirroring the existing `_UI_THEMES`/`_setTheme()` color-theme picker pattern
+exactly (same localStorage-only persistence, same live-repaint-no-reload
+behavior). New picker UI lives in Settings → Appearance, right below the
+existing color-theme swatches.
+
+**Design choice — independent of color theme:** rather than adding a `theme-X`
+CSS class dimension (which would need every theme × pairing combination as a
+compound selector), `_setFontPairing()` sets `--font-display`/`--font-body`
+directly via `document.documentElement.style.setProperty(...)`. A person can
+pick Mermaid Bright colors with Friendly Rounded type, or any other
+combination — verified in `playwright_smoke.py` by switching font pairing then
+switching color theme and confirming the font choice survives.
+
+**Fonts self-hosted** (same pattern as the existing Fraunces/Manrope, `tools/
+api_server/static/vendor/fonts/`, all SIL Open Font License 1.1 from Google
+Fonts, `OFL-NOTICE.txt` updated) — Playfair Display 700, Inter 400/500, Space
+Grotesk 600, Fredoka 600, Nunito 400/700, Sora 700, IBM Plex Sans 400/500.
+
+**New tests:** `tests/test_frank_font_pairings.py` — every `@font-face` src
+resolves to a real file on disk (catches a typo'd filename that would
+silently fall back to a system font with no error), every pairing's
+display/body font has a matching `@font-face` declaration, the picker's
+mount point exists, and font-pairing persists under its own localStorage
+key (`frankFontPairing`, distinct from `frankTheme`). `playwright_smoke.py`
+extended: switches to Friendly Rounded, confirms `--font-display` actually
+becomes Fredoka, then switches color theme and confirms the font choice is
+unchanged.
