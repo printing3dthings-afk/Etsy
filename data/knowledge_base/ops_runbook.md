@@ -14629,3 +14629,139 @@ key (`frankFontPairing`, distinct from `frankTheme`). `playwright_smoke.py`
 extended: switches to Friendly Rounded, confirms `--font-display` actually
 becomes Fredoka, then switches color theme and confirms the font choice is
 unchanged.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Durable volume not writable
+5-minute health loop found /tmp/tmp6hmygmi2/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp6hmygmi2/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmp8u0dx7xv/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 7674). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-18 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 7676). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-18 — 5 animations/graphics implemented from the design-research pass
+**What (Scott, from the design-research artifact):** "See if there are any animations or graphics that we should implement into Frank."
+
+All 5 ranked recommendations from the research artifact, implemented in `tools/api_server/frank_hud_mockup.py`:
+
+1. **Skeleton loaders** — new `_skeletonCards(n, kind)` helper (content-shaped shimmer, `.skel-card`/`.skel-tile`/`.skel-bar` CSS, respects `prefers-reduced-motion`). Wired into the highest-traffic loading states: Today tab tiles+cards (`renderPhoneToday`, first load only — see #3), Products (`loadProducts`), Approvals mobile (`renderPhoneApprovals`) and desktop (`loadActions`).
+2. **Count-up stat tiles** — new `_animateCountUp(el, targetText)` (~260ms ease-out cubic, `requestAnimationFrame`-driven, handles plain integers and `$123.45`-style currency, falls straight to the final value for non-numeric text like `show()`'s `—` placeholder or under `prefers-reduced-motion`). Wired into Today's Orders/Rev/Sales tiles; `.ptile .n` gained `font-variant-numeric:tabular-nums` so digits don't jitter horizontally mid-animation.
+3. **Card-resolve animation** — a Needs-Attention card that drops out between renders (Frank fixed it, or it genuinely cleared) now visibly collapses (`.palert.resolving`, `@keyframes need-resolve`, ~420ms) instead of vanishing on the next re-render. `renderPhoneToday()` now tracks `_phoneNeedsKeys` (a stable per-card key: `l:{listing_id}` or `a:{title}`) across renders, diffs old vs. new, and only shows the skeleton loader on a genuine first load (`el.dataset.loadedOnce`) — a refresh resolves smoothly instead of flashing back to a loading state.
+4. **Success checkmark on approve** — `showToast(message, 'ok', ms)` now draws a real animated checkmark (`.toast-check`, spring pop-in via `cubic-bezier(.34,1.56,.64,1)`) instead of relying on an emoji character. `approveAction()`'s redundant `'✅ '` text prefix removed since the icon now carries that signal.
+5. **Star Seller milestone badge** — `renderPhoneToday()` now also fetches `/api/star-seller` (already existed, just never surfaced on Today) and shows a small gold-glow `.pmilestone` badge when `status === 'on_track'` (real orders_90d/revenue_90d/avg_rating), per the research's "rare, genuinely earned moments deserve more personality than constant-frequency UI" finding.
+
+**New/extended tests:** `playwright_smoke.py` — `_skeletonCards()` pure-function output check; Today-tab first-load + resolve-animation test (stubs `authGet` directly rather than mocking network, same seam used for `_recentActivityHtml` below — the app's service worker intercepts every GET via its own internal `fetch()`, invisible to `page.route()`, but does NOT intercept POST (`frank-sw.js`'s fetch handler returns early on non-GET), confirmed by successfully mocking the `/api/queue/{id}/approve` POST for the checkmark test); count-up settles on the exact real value with no float drift; milestone badge renders with real numbers when `on_track`; success toast shows the animated checkmark SVG. One non-reproducible "waiting for scheduled navigations" flake seen in 1/7 local runs with no specific assertion failure attributable to this work — consistent with other environment-level flakiness already logged this session, not chased further.

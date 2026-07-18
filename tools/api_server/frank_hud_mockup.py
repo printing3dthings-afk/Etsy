@@ -521,7 +521,7 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 
 #toast-stack{position:fixed;top:16px;right:16px;z-index:9000;display:flex;flex-direction:column;
   gap:8px;max-width:340px;pointer-events:none}
-.toast{background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 14px;
+.toast{display:flex;align-items:center;gap:9px;background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 14px;
   font-size:12.5px;color:var(--text);box-shadow:0 10px 28px rgba(0,0,0,.4);pointer-events:auto;
   border-left:3px solid var(--cyan);animation:toast-in .18s ease-out}
 .toast.ok{border-left-color:var(--green)}
@@ -530,6 +530,14 @@ body:not(.cc-open) .hamburger-fixed{display:flex !important;position:fixed;z-ind
 .toast.out{animation:toast-out .18s ease-in forwards}
 @keyframes toast-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toast-out{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-8px)}}
+/* 2026-07-18: a real drawn checkmark on success toasts specifically -- the
+   single most-repeated positive action in the app (approving a fix) gets a
+   touch more personality than the constant-frequency toasts elsewhere,
+   per the "delight scales inversely with frequency" research finding. */
+.toast-check{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;animation:toast-check-pop .4s cubic-bezier(.34,1.56,.64,1) .05s both}
+.toast-check svg{width:11px;height:11px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+@keyframes toast-check-pop{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.toast-check{animation:none}}
 
 .alert-dropdown{position:absolute;top:38px;right:0;width:280px;max-width:calc(100vw - 24px);max-height:320px;overflow-y:auto;
   background:var(--panel3);border:1px solid var(--border);border-radius:var(--r-md);
@@ -760,6 +768,18 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .hub-empty{text-align:center;color:var(--muted);padding:40px 0;font-size:13px}
 .hub-spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:hubspin .7s linear infinite;margin:40px auto}
 @keyframes hubspin{to{transform:rotate(360deg)}}
+
+/* ── Skeleton loaders (2026-07-18 visual-design pass) — content-shaped shimmer
+   placeholders for the highest-traffic screens (Today, Products, Approvals),
+   replacing the plain spinning ring there. The layout is already visible
+   before the data is, so nothing jumps into place when it arrives. Kept as an
+   addition alongside .hub-spinner (not a full replacement) -- lower-traffic
+   screens are left as-is, no reason to touch what isn't broken. ── */
+.skel-card{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:10px}
+.skel-tile{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 10px;text-align:center}
+.skel-bar{display:block;border-radius:5px;background:linear-gradient(90deg,var(--panel3) 25%,var(--border) 37%,var(--panel3) 63%);background-size:400% 100%;animation:skel-shimmer 1.8s ease-in-out infinite}
+@keyframes skel-shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@media (prefers-reduced-motion:reduce){.skel-bar{animation:none;background:var(--panel3)}}
 
 .hub-toggle-row{display:flex;gap:8px;margin-bottom:12px}
 .hub-toggle-btn{flex:1;padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:none;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
@@ -1120,12 +1140,34 @@ body.is-mobile.phone-panel .hdr-bar{display:none !important}
 .pp-empty{text-align:center;color:var(--muted);font-size:13px;padding:34px 10px;line-height:1.5}
 .ptiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
 .ptile{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 8px;text-align:center}
-.ptile .n{font-size:20px;font-weight:800;color:var(--text)}
+.ptile .n{font-size:20px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
 .ptile .l{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+/* 2026-07-18: Star Seller "on track" milestone badge -- a rare, genuinely
+   earned moment (unlike the constant-frequency tiles/cards around it), so
+   it gets a soft gold glow instead of matching their quiet treatment. */
+.pmilestone{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,rgba(228,177,85,.16),rgba(228,177,85,.05));border:1px solid var(--gold);border-radius:var(--r-md);padding:10px 12px;margin-bottom:10px;animation:milestone-in .5s ease-out}
+.pmilestone-glow{font-size:20px;flex-shrink:0;animation:milestone-pulse 2.4s ease-in-out infinite}
+.pmilestone-t{font-size:12.5px;font-weight:700;color:var(--gold)}
+.pmilestone-s{font-size:11px;color:var(--muted);margin-top:1px}
+@keyframes milestone-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes milestone-pulse{0%,100%{filter:drop-shadow(0 0 0 transparent)}50%{filter:drop-shadow(0 0 6px var(--gold))}}
+@media (prefers-reduced-motion:reduce){.pmilestone{animation:none}.pmilestone-glow{animation:none}}
 .palert{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:11px;margin-bottom:8px;font-size:12.5px;color:var(--text);line-height:1.4}
 .palert .pdot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none;background:var(--muted)}
 .palert.warn .pdot{background:var(--amber)}
 .palert.crit .pdot{background:var(--red)}
+/* 2026-07-18: a Needs-Attention card that resolves (Frank fixed it, or the
+   underlying issue genuinely cleared) visibly collapses instead of just
+   vanishing on the next re-render -- turns "the list changed" into "you
+   watched a problem get handled." See renderPhoneToday()'s resolve-detection
+   logic, which adds this class to the specific card(s) that dropped out. */
+.palert.resolving{overflow:hidden;animation:need-resolve .42s ease-out forwards}
+@keyframes need-resolve{
+  0%{opacity:1;max-height:100px;margin-bottom:8px;padding-top:11px;padding-bottom:11px}
+  60%{opacity:0;max-height:100px}
+  100%{opacity:0;max-height:0;margin-bottom:0;padding-top:0;padding-bottom:0;border-width:0}
+}
+@media (prefers-reduced-motion:reduce){.palert.resolving{animation:none;display:none}}
 .palert.good .pdot{background:var(--green)}
 .pmore-grp{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:14px 2px 7px}
 .pmore-item{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;margin-bottom:8px}
@@ -2383,7 +2425,7 @@ function sendQuickChat(){
 // Approvals — only the pending items, compact; reuses approveAction/openRejectModal.
 async function renderPhoneApprovals(){
   const el = document.getElementById('pp-appr-body');
-  el.innerHTML = '<div class="pp-empty">Loading…</div>';
+  el.innerHTML = _skeletonCards(2);
   try {
     const [r, rr] = await Promise.all([
       authGet('/api/queue?status=pending', 15000),
@@ -2418,9 +2460,16 @@ async function renderPhoneApprovals(){
 }
 async function phoneApprove(id){ await approveAction(id); renderPhoneApprovals(); }
 // Today — compact tiles + alerts from the same endpoints the dashboard uses.
+function _needKey(x) {
+  return x.listing_id ? ('l:' + x.listing_id) : ('a:' + (x.title || ''));
+}
 async function renderPhoneToday(){
   const el = document.getElementById('pp-today-body');
-  el.innerHTML = '<div class="pp-empty">Loading…</div>';
+  // Only show the skeleton on a genuinely first load -- a periodic refresh
+  // should never flash back to a loading state, it should resolve smoothly
+  // (see the resolve-detection block below).
+  const isFirstLoad = !el.dataset.loadedOnce;
+  if (isFirstLoad) el.innerHTML = _skeletonCards(0, 'tile') + _skeletonCards(2);
   let m = {}, alerts = [];
   try { const r = await authGet('/api/metrics', 15000); m = await r.json().catch(()=>({})); } catch(e) {}
   try { const r = await authGet('/api/alerts', 15000); const d = await r.json().catch(()=>({}));
@@ -2428,6 +2477,14 @@ async function renderPhoneToday(){
   let acts = [];
   try { const r = await authGet('/api/actions', 15000); const d = await r.json().catch(()=>({}));
         acts = (d.actions||[]).filter(x=>x.severity==='high'||x.severity==='medium'); } catch(e) {}
+  // 2026-07-18: a rare, genuinely earned "delight" moment -- Star Seller
+  // status is exactly the kind of infrequent, high-value milestone the
+  // visual-design research called out as worth a touch more personality
+  // than the constant-frequency UI around it. Fetched here (not a separate
+  // Today-only endpoint) so it degrades to "nothing shown" the same way
+  // everything else on this screen already does on a fetch failure.
+  let starSeller = null;
+  try { const r = await authGet('/api/star-seller', 15000); starSeller = await r.json().catch(()=>null); } catch(e) {}
   // Real /api/metrics shape: orders is an OBJECT ({last_7_days, revenue_7d, ...}),
   // shop.total_sales is the all-time count. (Rendering m.orders directly printed
   // "[object Object]" — caught by Scott on-device.)
@@ -2437,10 +2494,18 @@ async function renderPhoneToday(){
   const rev7 = (mo.revenue_7d != null) ? '$' + Number(mo.revenue_7d).toFixed(2) : '—';
   const totalSales = show(ms.total_sales);
   let html = `<div class="ptiles">
-    <div class="ptile"><div class="n">${escHtml(String(orders7))}</div><div class="l">Orders · 7d</div></div>
-    <div class="ptile"><div class="n">${escHtml(String(rev7))}</div><div class="l">Rev · 7d</div></div>
-    <div class="ptile"><div class="n">${escHtml(String(totalSales))}</div><div class="l">Total sales</div></div>
+    <div class="ptile"><div class="n" data-countup data-target="${escHtml(String(orders7))}">0</div><div class="l">Orders · 7d</div></div>
+    <div class="ptile"><div class="n" data-countup data-target="${escHtml(String(rev7))}">0</div><div class="l">Rev · 7d</div></div>
+    <div class="ptile"><div class="n" data-countup data-target="${escHtml(String(totalSales))}">0</div><div class="l">Total sales</div></div>
   </div>`;
+  if (starSeller && starSeller.status === 'on_track') {
+    const rev90 = '$' + Number(starSeller.revenue_90d || 0).toFixed(0);
+    const rating = starSeller.avg_rating ? starSeller.avg_rating + '★' : '—';
+    html += `<div class="pmilestone"><span class="pmilestone-glow">⭐</span><div>` +
+      `<div class="pmilestone-t">Star Seller — on track</div>` +
+      `<div class="pmilestone-s">${escHtml(String(starSeller.orders_90d||0))} orders · ${escHtml(rev90)} · ${escHtml(rating)} · 90d</div>` +
+      `</div></div>`;
+  }
   const sevOf = s => { s=String(s||'').toLowerCase();
     return (s.includes('crit')||s.includes('high')||s.includes('err')) ? 'crit'
          : (s.includes('warn')||s.includes('med')) ? 'warn' : 'good'; };
@@ -2451,13 +2516,31 @@ async function renderPhoneToday(){
     listing_id: x.listing_id, url: x.url}));
   alerts.forEach(x => { const t = x.title||x.message||x.text||x.msg||(typeof x==='string'?x:'')||'Alert';
     needs.push({sev: sevOf(x.severity||x.level||x.sev), title: String(t), sub: ''}); });
+
+  // 2026-07-18: a card that was showing on the PREVIOUS render but isn't in
+  // this one anymore (Frank fixed it, or it genuinely cleared) gets to
+  // visibly collapse before the new content replaces it, instead of just
+  // vanishing the instant this re-render happens.
+  const newKeys = new Set(needs.map(_needKey));
+  if (!isFirstLoad && _phoneNeedsKeys.size) {
+    const resolvedEls = Array.from(_phoneNeedsKeys)
+      .filter(k => !newKeys.has(k))
+      .map(k => el.querySelector('[data-need-key="' + CSS.escape(k) + '"]'))
+      .filter(Boolean);
+    if (resolvedEls.length) {
+      resolvedEls.forEach(e => e.classList.add('resolving'));
+      await new Promise(r => setTimeout(r, 420));
+    }
+  }
   _phoneNeeds = needs.slice(0,20);
+  _phoneNeedsKeys = newKeys;
+
   if (needs.length){
     html += '<div class="pmore-grp">Needs attention</div>';
     html += _phoneNeeds.map((x,i) => {
       const tap = (x.listing_id || x.url)
         ? ` tappable" role="button" tabindex="0" onclick="phoneNeedsSheet(${i})` : '';
-      return `<div class="palert ${x.sev}${tap}"><span class="pdot"></span><div>${escHtml(x.title)}` +
+      return `<div class="palert ${x.sev}${tap}" data-need-key="${escHtml(_needKey(x))}"><span class="pdot"></span><div>${escHtml(x.title)}` +
         (x.sub ? `<div style="color:var(--muted);margin-top:2px">${escHtml(x.sub)}</div>` : '') +
         `</div>` + ((x.listing_id || x.url) ? '<span class="pchev">›</span>' : '') + `</div>`;
     }).join('');
@@ -2465,9 +2548,12 @@ async function renderPhoneToday(){
     html += '<div class="pp-empty" style="padding:22px 10px">Nothing needs attention right now — you\\'re all caught up.</div>';
   }
   el.innerHTML = html;
+  el.dataset.loadedOnce = '1';
+  el.querySelectorAll('[data-countup]').forEach(node => _animateCountUp(node, node.dataset.target));
 }
 // Action sheet for a tapped Needs-attention card: Frank fixes it, or open on Etsy.
 let _phoneNeeds = [];
+let _phoneNeedsKeys = new Set();  // keys from the last render, for the resolve animation above
 let _phoneSheetItem = null;
 function phoneNeedsSheet(i){
   const it = _phoneNeeds[i];
@@ -2629,12 +2715,60 @@ function authGet(path, ms=15000){
 function escHtml(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
+// Content-shaped shimmer loading placeholder -- see the .skel-* CSS above for
+// why. kind='tile' -> 3 stat-tile placeholders (Today's Orders/Rev/Sales row);
+// default -> n card-shaped rows (title bar + shorter meta bar), used wherever
+// a screen normally renders a list of .pcard/.hub-listing-item rows.
+function _skeletonCards(n, kind) {
+  if (kind === 'tile') {
+    return '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">' +
+      Array.from({length: 3}).map(() =>
+        '<div class="skel-tile"><span class="skel-bar" style="width:50%;height:22px;margin:0 auto 6px"></span><span class="skel-bar" style="width:70%;height:9px;margin:0 auto"></span></div>'
+      ).join('') + '</div>';
+  }
+  return Array.from({length: n || 3}).map(() =>
+    '<div class="skel-card"><span class="skel-bar" style="width:70%;height:13px;margin-bottom:8px"></span><span class="skel-bar" style="width:45%;height:10px"></span></div>'
+  ).join('');
+}
+// Animates a stat tile's number from 0 up to its real value (~260ms, ease-out
+// cubic) instead of just printing it -- makes the number feel reported, not
+// just displayed, and doubles as a "this is live data" cue (2026-07-18).
+// Handles plain integers and "$123.45"-style currency; anything else (e.g.
+// show()'s '—' placeholder for a null metric) is set directly, no animation.
+function _animateCountUp(el, targetText) {
+  const m = String(targetText).match(/^(\$?)(-?[\d,]+(?:\.\d+)?)$/);
+  if (!m || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    el.textContent = targetText;
+    return;
+  }
+  const prefix = m[1];
+  const targetNum = parseFloat(m[2].replace(/,/g, ''));
+  const decimals = (m[2].split('.')[1] || '').length;
+  const dur = 260;
+  const start = performance.now();
+  function frame(now) {
+    const t = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = prefix + (targetNum * eased).toFixed(decimals);
+    if (t < 1) requestAnimationFrame(frame);
+    else el.textContent = targetText;  // exact final text, avoids float drift
+  }
+  requestAnimationFrame(frame);
+}
 function showToast(message, type='info', ms=4500){
   const stack = document.getElementById('toast-stack');
   if (!stack) return;
   const t = document.createElement('div');
   t.className = 'toast ' + (type||'info');
-  t.textContent = message;
+  if (type === 'ok') {
+    // Real drawn checkmark for success -- see .toast-check CSS above.
+    // message stays in a dedicated span set via textContent, same
+    // injection-safety as the plain-text path below.
+    t.innerHTML = '<span class="toast-check"><svg viewBox="0 0 24 24"><polyline points="4,13 9,18 20,6"></polyline></svg></span><span class="toast-msg"></span>';
+    t.querySelector('.toast-msg').textContent = message;
+  } else {
+    t.textContent = message;
+  }
   stack.appendChild(t);
   if (ms) setTimeout(()=>{
     t.classList.add('out');
@@ -5307,10 +5441,11 @@ async function approveAction(id) {
     // 2026-07-18: previously silent on success -- Scott approved a fix and had
     // no confirmation it actually landed on Etsy. Build the same outcome text
     // the "Recently completed" list uses, from the real result the approve
-    // endpoint returns, not just "it didn't error."
+    // endpoint returns, not just "it didn't error." The 'ok' toast type now
+    // draws its own checkmark (see showToast()), so no emoji prefix needed here.
     if (act) {
       const o = _actionOutcomeSummary({type: act.type, payload: act.payload, status: 'executed', result: d.result});
-      showToast('✅ ' + o.text, 'ok', 6000);
+      showToast(o.text, 'ok', 6000);
     }
     loadActions();
   } catch(e) { showToast('Could not apply: ' + (e.message||e), 'err', 6000); }
@@ -5372,7 +5507,7 @@ async function fixDraftStage(listingId, actionId, btn) {
 }
 async function loadActions() {
   const el = document.getElementById('actions-content');
-  el.innerHTML = '<div class="hub-spinner"></div>';
+  el.innerHTML = _skeletonCards(3);
   try {
     const [ar, qr, rr] = await Promise.all([
       authGet('/api/actions', 25000),
@@ -6333,7 +6468,7 @@ function _categoryLabel(cat) { return _CATEGORY_LABELS[cat] || String(cat).repla
 async function loadProducts() {
   const el = document.getElementById('products-content');
   if (!el) return;
-  el.innerHTML = '<div class="hub-spinner"></div>';
+  el.innerHTML = _skeletonCards(4);
   _productCategoryFilter = null;
   try {
     const d = await authGet('/api/products').then(r => r.json());

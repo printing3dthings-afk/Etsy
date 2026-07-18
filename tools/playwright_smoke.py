@@ -707,6 +707,107 @@ async def _run_browser_checks() -> None:
             }""")
             check(hdr_logo_state == "hidden", f"the non-functional logo square must not be visible on mobile, got visibility: {hdr_logo_state}")
 
+            # ── Today tab: skeleton loader on first load, card-resolve animation
+            # on refresh (2026-07-18 visual-design pass). Stubs authGet() directly
+            # rather than mocking the network -- the app's service worker
+            # (frank-sw.js) intercepts every GET via its own internal fetch(req)
+            # call, which page.route() cannot see (confirmed earlier this session
+            # debugging the "Recently completed" test below), so authGet is the
+            # right seam here, same as _products/_listings fixtures elsewhere. ──
+            skeleton_check = await page.evaluate("""() => ({
+                tile: _skeletonCards(0, 'tile'),
+                card: _skeletonCards(2),
+            })""")
+            check("skel-bar" in skeleton_check.get("tile", "") and "skel-tile" in skeleton_check.get("tile", ""),
+                  f"_skeletonCards(0,'tile') should render shimmer tile placeholders: {skeleton_check}")
+            check(skeleton_check.get("card", "").count("skel-card") == 2,
+                  f"_skeletonCards(2) should render exactly 2 card placeholders: {skeleton_check}")
+
+            today_first_load = await page.evaluate("""async () => {
+                let call = 0;
+                window.__origAuthGet = authGet;
+                authGet = async (path) => {
+                    if (path.includes('/api/actions')) {
+                        call++;
+                        const items = call === 1
+                            ? [{listing_id: 501, severity: 'high', title: 'Card A', suggestion: 'fix A'},
+                               {listing_id: 502, severity: 'high', title: 'Card B', suggestion: 'fix B'}]
+                            : [{listing_id: 501, severity: 'high', title: 'Card A', suggestion: 'fix A'}];
+                        return {ok: true, json: async () => ({actions: items})};
+                    }
+                    return {ok: true, json: async () => ({})};
+                };
+                await renderPhoneToday();
+                return {
+                    bodyText: document.getElementById('pp-today-body').textContent,
+                    hasDataKeys: !!document.querySelector('[data-need-key="l:501"]') && !!document.querySelector('[data-need-key="l:502"]'),
+                };
+            }""")
+            check(today_first_load.get("bodyText", "").count("Card A") == 1 and "Card B" in today_first_load.get("bodyText", ""),
+                  f"first Today load should show both cards: {today_first_load}")
+            check(today_first_load.get("hasDataKeys"), f"cards should carry data-need-key for the resolve animation to target: {today_first_load}")
+
+            today_resolve = await page.evaluate("""async () => {
+                await renderPhoneToday();  // 2nd call -- Card B drops out
+                await new Promise(r => setTimeout(r, 500));  // let the .42s resolve animation finish
+                const bodyText = document.getElementById('pp-today-body').textContent;
+                authGet = window.__origAuthGet;  // restore for later checks in this run
+                return {bodyText, cardBGone: !document.querySelector('[data-need-key="l:502"]')};
+            }""")
+            check("Card A" in today_resolve.get("bodyText", ""), f"Card A should still be present after refresh: {today_resolve}")
+            check("Card B" not in today_resolve.get("bodyText", ""), f"resolved Card B should be gone from the final content: {today_resolve}")
+            check(today_resolve.get("cardBGone"), f"resolved card should actually be removed from the DOM after the animation: {today_resolve}")
+
+            # ── Count-up stat tiles + Star Seller milestone badge (2026-07-18).
+            # Stub authGet again (same seam as above) for /api/metrics and
+            # /api/star-seller, then wait past the .26s count-up animation and
+            # check the tile settled on the exact real value (no float drift). ──
+            countup_state = await page.evaluate("""async () => {
+                window.__origAuthGet2 = authGet;
+                authGet = async (path) => {
+                    if (path.includes('/api/metrics')) {
+                        return {ok: true, json: async () => ({orders: {last_7_days: 6, revenue_7d: 123.5}, shop: {total_sales: 42}})};
+                    }
+                    if (path.includes('/api/star-seller')) {
+                        return {ok: true, json: async () => ({status: 'on_track', orders_90d: 12, revenue_90d: 480, avg_rating: 4.9})};
+                    }
+                    if (path.includes('/api/actions') || path.includes('/api/alerts')) {
+                        return {ok: true, json: async () => ({actions: [], alerts: []})};
+                    }
+                    return {ok: true, json: async () => ({})};
+                };
+                await renderPhoneToday();
+                await new Promise(r => setTimeout(r, 400));  // past the .26s count-up
+                const tiles = Array.from(document.querySelectorAll('.ptile .n')).map(n => n.textContent);
+                const bodyText = document.getElementById('pp-today-body').textContent;
+                authGet = window.__origAuthGet2;
+                return {tiles, hasMilestone: !!document.querySelector('.pmilestone'), bodyText};
+            }""")
+            check(countup_state.get("tiles") == ["6", "$123.50", "42"],
+                  f"count-up should settle on the exact real values with no float drift: {countup_state}")
+            check(countup_state.get("hasMilestone"), f"Star Seller on_track should render the .pmilestone badge: {countup_state}")
+            check("Star Seller" in countup_state.get("bodyText", "") and "12 orders" in countup_state.get("bodyText", ""),
+                  f"milestone badge should show real Star Seller numbers: {countup_state}")
+
+            # ── Success checkmark toast on approve (2026-07-18). Unlike GET
+            # requests, POST isn't intercepted by the service worker (frank-sw.js
+            # only wraps GET), so page.route() works normally here. ──
+            async def _mock_approve(route):
+                await route.fulfill(status=200, content_type="application/json",
+                                     body='{"status":"executed","id":999,"result":{"listing_id":42,"title":"New Fixed Title"}}')
+            await page.route("**/api/queue/999/approve", _mock_approve)
+            page.once("dialog", lambda d: d.accept())
+            checkmark_state = await page.evaluate("""async () => {
+                _pendingActions = [{id: 999, type: 'update_title', payload: {listing_id: 42, title: 'New Fixed Title'}}];
+                await approveAction(999);
+                await new Promise(r => setTimeout(r, 100));
+                const stack = document.getElementById('toast-stack');
+                return {hasCheckSvg: !!(stack && stack.querySelector('.toast-check svg')), toastText: stack ? stack.textContent : ''};
+            }""")
+            await page.unroute("**/api/queue/999/approve")
+            check(checkmark_state.get("hasCheckSvg"), f"a successful approve should show the animated .toast-check icon: {checkmark_state}")
+            check("New Fixed Title" in checkmark_state.get("toastText", ""), f"success toast should name what changed: {checkmark_state}")
+
             # ── "Recently completed" activity list (2026-07-18) -- a real bug
             # report: Scott approved a Conversion Doctor fix and had no way to
             # tell if it worked. GET /api/queue?status=all already existed
