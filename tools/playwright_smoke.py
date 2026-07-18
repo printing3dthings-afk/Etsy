@@ -244,6 +244,33 @@ async def _run_browser_checks() -> None:
                   "multi-admin 'Add Admin' form should be REMOVED (solo shop)")
             check("My Account" in settings_html, "Settings screen missing 'My Account' section")
 
+            # ── 4 new bright color themes (2026-07-18, Scott: "brighter colors but
+            # make sure text is readable") -- confirm each is wired all the way
+            # through: listed in the Settings swatch picker, and _setTheme()
+            # actually applies its real CSS custom properties on <html>. ──
+            for theme_name, expect_bg_hex in [
+                ("sunwashed", "#fff8f0"),
+                ("mermaid", "#f0fbfa"),
+                ("clubroom", "#fffdf5"),
+                ("springvivid", "#fbf7ff"),
+            ]:
+                theme_state = await page.evaluate(f"""() => {{
+                    _setTheme('{theme_name}');
+                    const cs = getComputedStyle(document.documentElement);
+                    return {{
+                        hasClass: document.documentElement.classList.contains('theme-{theme_name}'),
+                        bg: cs.getPropertyValue('--bg').trim().toLowerCase(),
+                        swatchRowText: (document.getElementById('theme-swatch-row') || {{}}).textContent || '',
+                    }};
+                }}""")
+                check(theme_state.get("hasClass"), f"_setTheme('{theme_name}') should add the theme-{theme_name} class: {theme_state}")
+                check(theme_state.get("bg") == expect_bg_hex,
+                      f"theme '{theme_name}' should compute --bg={expect_bg_hex} on :root after switching: {theme_state}")
+                check("✓" in theme_state.get("swatchRowText", ""),
+                      f"theme swatch row should re-render showing an active checkmark: {theme_state}")
+            # Reset to default so later checks in this run aren't affected.
+            await page.evaluate("_setTheme('default')")
+
             # ── "Test Voice" button + Premium-voice fail-safe (2026-07-16) — Scott:
             # "How do I get Frank to speak out loud?" / "guarantee it will work."
             # Voice was already automatic and working; this doesn't (and can't)

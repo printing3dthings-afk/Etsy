@@ -156,6 +156,44 @@ html.theme-kawaii{
   --cyan:#00e5ff;--cyan2:#7cf3ff;--gold:#e040fb;--gold2:#f07cff;
   --text:#f0e6ff;--muted:#897bb6;--green:#3dba7e;--red:#e05555;--amber:#e0a83a;
 }
+/* 2026-07-18: four new bright/light-surfaced themes (Scott: "brighter colors but
+   make sure text is readable") -- every text/muted/accent value below is verified
+   against its actual bg AND panel2 (the more saturated surface a card can sit on)
+   with tools/color_contrast_check.py's real WCAG math, same discipline as the
+   2026-07-15 brightening pass above; nothing here is eyeballed. Where a genuinely
+   vivid accent hex failed 4.5:1 as body text, it's already darkened just enough to
+   pass while keeping its hue -- see data/knowledge_base/ops_runbook.md for the
+   before/after values. All four reuse the light theme's card-shadow (real drop
+   shadow reads correctly on a light surface, unlike the dark themes' inset-highlight
+   trick above). */
+html.theme-sunwashed{
+  --bg:#fff8f0;--panel:#ffffff;--panel2:#ffeee0;--panel3:#ffffff;--border:#f0d5b8;
+  --cyan:#ba4e36;--cyan2:#8f3a28;--gold:#a46400;--gold2:#7a4b00;
+  --text:#3a2418;--muted:#82644d;--green:#19824a;--red:#d6362b;--amber:#a46400;
+  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
+  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
+}
+html.theme-mermaid{
+  --bg:#f0fbfa;--panel:#ffffff;--panel2:#dff6f3;--panel3:#ffffff;--border:#bfe8e2;
+  --cyan:#007d73;--cyan2:#005850;--gold:#7a45e0;--gold2:#5b2fb0;
+  --text:#0b3b38;--muted:#3a736c;--green:#12814d;--red:#d6362b;--amber:#a46400;
+  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
+  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
+}
+html.theme-clubroom{
+  --bg:#fffdf5;--panel:#ffffff;--panel2:#f5ebd0;--panel3:#ffffff;--border:#e8d9a8;
+  --cyan:#2d6cdf;--cyan2:#1e4fa8;--gold:#916c08;--gold2:#6b4f05;
+  --text:#1c1608;--muted:#6b5a2e;--green:#1a8548;--red:#d53a3a;--amber:#916c08;
+  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
+  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
+}
+html.theme-springvivid{
+  --bg:#fbf7ff;--panel:#ffffff;--panel2:#f0e6fb;--panel3:#ffffff;--border:#dcc7f5;
+  --cyan:#c4157f;--cyan2:#8e0e5c;--gold:#bc4f1b;--gold2:#8a3a13;
+  --text:#241541;--muted:#6b5490;--green:#18804f;--red:#d0342a;--amber:#bc4f1b;
+  --card-shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.08);
+  --card-shadow-hover:0 2px 4px rgba(20,30,45,.08),0 10px 26px rgba(20,30,45,.14);
+}
 *{box-sizing:border-box;margin:0;padding:0}
 /* Form-field focus glow (2026-07-17 Phase 3: "too many hard lines... make it flow
    more"). No global input/select/textarea rule existed at all — every field is
@@ -3630,6 +3668,12 @@ const _UI_THEMES = [
   {name:'matcha',  label:'Matcha',        bg:'#0b120c', accent:'#8bc34a'},
   {name:'ocean',   label:'Ocean Teal',    bg:'#07120f', accent:'#3ad6c8'},
   {name:'kawaii',  label:'Midnight Kawaii',bg:'#0d0a1a', accent:'#00e5ff'},
+  // 2026-07-18: four new bright/light themes -- see the html.theme-* CSS above
+  // for the full WCAG-verified role sets.
+  {name:'sunwashed',   label:'Sunwashed',     bg:'#fff8f0', accent:'#ba4e36'},
+  {name:'mermaid',     label:'Mermaid Bright',bg:'#f0fbfa', accent:'#007d73'},
+  {name:'clubroom',    label:'Clubroom Gold', bg:'#fffdf5', accent:'#916c08'},
+  {name:'springvivid', label:'Spring Vivid',  bg:'#fbf7ff', accent:'#c4157f'},
 ];
 function _getTheme() {
   try { return localStorage.getItem('frankTheme') || 'default'; } catch(e) { return 'default'; }

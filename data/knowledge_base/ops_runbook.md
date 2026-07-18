@@ -14330,3 +14330,144 @@ Refreshed competitor_research_2026.md (64 chars). Live search terms used: printa
 **Playwright gotcha hit while testing this:** the app registers a service worker (`frank-sw.js`) whose `fetch` handler intercepts every GET via its own internal `fetch(req)` call -- that fetch happens inside the SW's execution context, which `page.route()` does not see by default. A mocked `/api/queue?status=all` route was silently never hit; the real (empty, local-DB) backend response came through instead, with the mock router registered correctly and matching by every other diagnostic. Fix: test the shared render function (`_recentActivityHtml()`) directly with synthetic data instead of mocking the network call, same as the existing `_products`/`_listings` fixture pattern already used elsewhere in `playwright_smoke.py` for exactly this reason.
 
 **Tests:** `tests/test_needs_attention_pending_filter.py` extended (5 new cases: recently-edited card downgraded not hidden, edit outside the cooldown window is untouched, never-edited is untouched, a non-content-fixable category like `draft_unpublished` is never downgraded even with a recent edit timestamp for that listing, and `days_since_listing_edited` round-trips through `note_listing_edited` including a malformed-timestamp fallback to `None`). `playwright_smoke.py` extended with a direct `_recentActivityHtml()` check (empty list renders nothing, a filled list shows the right icons/outcome text for both executed and failed actions).
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (64 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Durable volume not writable
+5-minute health loop found /tmp/tmpk9u0obr6/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpk9u0obr6/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — hub_db_state.json backup is stale
+5-minute health loop found the hub.db snapshot at /tmp/tmpc0u8vdqo/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Background build failed: build_planner:TESTCRASH
+5-minute health loop reaped a failed background build: build_planner:TESTCRASH (pid 23136). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-18 — Background build hung: build_sticker_pack:TESTHUNG
+5-minute health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 23138). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — Escalation — 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID con
+**Symptom:** 5-minute health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-18 — 4 new bright color themes added to Frank's theme picker
+**What (Scott, from the design-research artifact):** "I want at least 4 more color schemes but these I want with brighter colors but make sure text is readable."
+
+**Added:** Sunwashed, Mermaid Bright, Clubroom Gold, Spring Vivid — 4 new light/bright-surfaced themes in `tools/api_server/frank_hud_mockup.py`, same shape as the existing 8 (`html.theme-X{...}` CSS block + `_UI_THEMES` array entry). Every text/muted/accent value verified against `tools/color_contrast_check.py`'s real WCAG math, not eyeballed — where a genuinely vivid accent hex failed the 4.5:1 AA floor as body text, it was darkened just enough to pass while keeping its hue:
+
+| Theme | Trend source | Accent (as-shipped, verified) | Originally-drafted vivid hex |
+|---|---|---|---|
+| Sunwashed | Sunwashed Soft | coral `#ba4e36` (4.71:1) | `#ff6b4a` (2.67:1, failed) |
+| Mermaid Bright | Mermaidcore | teal `#007d73` (4.76:1) | `#00998c` (3.35:1, failed) |
+| Clubroom Gold | Clubroom Contrast | gold `#916c08` (4.74:1) | `#b8890a` (3.11:1, failed) |
+| Spring Vivid | Spring Vivid Brights | fuchsia `#c4157f` (5.28:1) | passed as-is |
+
+Muted text also had to be checked against `panel2` (the more saturated card-tint surface, not just the plain `bg`) — Sunwashed and Mermaid Bright's first-draft muted values passed on `bg` (4.68/4.69:1) but fell just under 4.5:1 on `panel2` (4.35/4.39:1); both darkened slightly (`#82644d`/`#3a736c`) to clear both surfaces.
+
+**New test:** `tests/test_frank_theme_contrast.py` — parses the real shipped `:root{}` and `html.theme-X{}` CSS blocks out of `frank_hud_mockup.py` via regex (not a hand-copied duplicate that could drift), verifies every theme's text/muted pass AA on bg, the 5 light themes also pass on panel2, the 4 new themes' cyan/cyan2/gold/gold2/green/red are all readable as text, and all 4 are actually present in `_UI_THEMES` (reachable from the Settings picker, not just defined in CSS with no way to select them).
+
+`playwright_smoke.py` extended: switches through all 4 new themes via `_setTheme()`, confirms the `theme-X` class lands, `--bg` computes to the right hex, and the swatch row re-renders with an active checkmark.
