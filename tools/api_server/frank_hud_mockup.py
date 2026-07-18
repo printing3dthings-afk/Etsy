@@ -2372,7 +2372,7 @@ function fitStage(){
   const scale = Math.min(window.innerWidth / targetW, window.innerHeight / targetH);
   stage.style.transform = 'scale(' + scale + ')';
 }
-function closeControlCenter(){ document.body.classList.remove('cc-open'); }
+function closeControlCenter(){ document.body.classList.remove('cc-open', 'phone-screen-open'); }
 // openControlCenter() (2026-07-15) — the single place cc-open is ever ADDED.
 // cc-open reveals the full desktop dashboard (.hdr-bar/.sidebar/.screen — see
 // the body:not(.cc-open) / body.cc-open CSS rules above), including the
@@ -2400,16 +2400,40 @@ function syncMobileClass(){
   if (!mobile && (_prevMobile === null || _prevMobile === true)) {
     // First load on desktop, or transitioning mobile→desktop: open dashboard
     openControlCenter();
-  } else if (mobile) {
+  } else if (mobile && !document.body.classList.contains('phone-screen-open')) {
     // 2026-07-15 (Scott: header bar + alert dropdown showing on mobile,
     // dropdown clipped off-screen): this branch used to be a no-op -- if
     // cc-open was ever added while briefly misdetected as desktop (mobile
     // Safari's matchMedia/resize events can fire spuriously during
     // address-bar show/hide), nothing ever cleared it again once mobile was
-    // correctly redetected. Mobile now always wins: is-mobile and cc-open
-    // can never coexist. (This only ever needed to be a removal, not a call
-    // through openControlCenter() -- removal is always safe regardless of
-    // viewport.)
+    // correctly redetected. (This only ever needed to be a removal, not a
+    // call through openControlCenter() -- removal is always safe regardless
+    // of viewport.)
+    //
+    // 2026-07-18 refinement (bug found live-hunting, then a follow-up fix to
+    // THAT fix caught by tools/playwright_smoke.py): this used to run
+    // unconditionally whenever mobile, with no exception -- but
+    // phoneOpenScreen() (opening a screen from the mobile "More" menu or the
+    // Create tab) DELIBERATELY sets cc-open while staying mobile, since
+    // cc-open is what makes .screen visible at all (see the
+    // body:not(.cc-open) rules above). Stripping cc-open unconditionally
+    // meant ANY resize event while viewing a More-opened screen -- e.g. iOS
+    // Safari's address-bar collapse on scroll, a real-world resize trigger,
+    // not a hypothetical -- silently hid the whole screen with nothing left
+    // visible.
+    //
+    // First attempt at a fix gated this on `phone-panel` being present
+    // (phoneOpenScreen() removes it), but that's not a precise enough
+    // signal: playwright_smoke.py's own pre-existing regression test forces
+    // a stray cc-open WITHOUT going through phoneOpenScreen() first, so
+    // phone-panel is absent there too despite this NOT being a legitimate
+    // phoneOpenScreen() state -- the phone-panel-based check wrongly left
+    // the stray cc-open in place, reintroducing the original 2026-07-15 bug.
+    // phone-screen-open is a dedicated marker set ONLY by phoneOpenScreen()
+    // itself (and cleared by phoneTab()/closeControlCenter() on any return
+    // to the normal tab-bar view), so this check is unambiguous: strip
+    // cc-open in every mobile case EXCEPT the one specific state that
+    // deliberately needs it kept.
     document.body.classList.remove('cc-open');
   }
   _prevMobile = mobile;
@@ -2460,6 +2484,10 @@ function phoneTab(which){
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.toggle('on', b.dataset.ptab===which));
   document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
   document.body.classList.add('phone-panel');
+  // Returning to the normal tab-bar view exits whatever phoneOpenScreen()
+  // state was active (if any) -- 'create' immediately re-enters it below via
+  // phoneOpenScreen() itself, which re-adds this marker.
+  document.body.classList.remove('phone-screen-open');
   if (which === 'create'){ phoneOpenScreen('create'); return; }
   if (which === 'appr'){ document.getElementById('pp-appr').classList.add('on'); renderPhoneApprovals(); }
   else if (which === 'today'){ document.getElementById('pp-today').classList.add('on'); renderPhoneToday(); }
@@ -2779,7 +2807,10 @@ function renderPhoneMore(){
 // Opening a screen from More exits the phone panel and shows that (desktop) screen.
 function phoneOpenScreen(name){
   document.body.classList.remove('phone-panel');
-  document.body.classList.add('cc-open');
+  // phone-screen-open (2026-07-18): dedicated marker so syncMobileClass()
+  // can tell this deliberate cc-open apart from a stray/stuck one -- see its
+  // own comment for why phone-panel alone wasn't a precise enough signal.
+  document.body.classList.add('cc-open', 'phone-screen-open');
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
   showScreen(name);
@@ -2863,6 +2894,19 @@ function authGet(path, ms=15000){
 }
 function escHtml(s){
   return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+// Local calendar date as YYYY-MM-DD, for comparing against due_date strings
+// (which are local calendar dates, e.g. "2026-07-18", not UTC timestamps).
+// Bug fixed 2026-07-18: several "is this overdue" checks used
+// `new Date().toISOString().slice(0,10)`, but toISOString() always returns
+// the UTC date, not the browser's local date. For any negative-UTC-offset
+// timezone (all of the US, where this shop operates), local evening hours
+// are already the next UTC day -- a task due "today" got flagged overdue
+// starting at 8pm Eastern / 5pm Pacific, hours before the local day ended.
+function _localDateStr(d){
+  d = d || new Date();
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
 // Content-shaped shimmer loading placeholder -- see the .skel-* CSS above for
 // why. kind='tile' -> 3 stat-tile placeholders (Today's Orders/Rev/Sales row);
@@ -5331,7 +5375,7 @@ function _renderTasks(d, list, offlineNote){
   }
   html += filtered.map(t=>{
     const done = !!t.done;
-    const overdue = !done && t.due_date && t.due_date < new Date().toISOString().slice(0,10);
+    const overdue = !done && t.due_date && t.due_date < _localDateStr();
     const dueTxt = t.due_date ? ' · due '+escHtml(t.due_date)+(overdue?' ⚠':'') : '';
     const catLabel = _TASK_CATEGORY_LABELS[t.category] || '';
     const isQuestion = t.category === 'question';
@@ -5670,7 +5714,7 @@ function renderApproval(a) {
       <div class="hub-listing-meta">${escHtml(meta)}</div>
     </div>
     <div class="act-btns" style="flex-shrink:0" onclick="event.stopPropagation()">
-      <button class="act-btn approve" onclick="approveAction(${a.id}, this)">Approve</button>
+      <button id="approve-btn-${a.id}" class="act-btn approve" onclick="approveAction(${a.id}, this)">Approve</button>
       ${a.type === 'publish_listing' ? `<button class="act-btn secondary" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix</button>` : ''}
       <button class="act-btn reject" onclick="openRejectModal(${a.id})">Reject</button>
     </div>
@@ -5741,6 +5785,21 @@ async function bulkApproveLowRisk(btnEl) {
   if (!confirm(`Approve all ${candidates.length} low-risk items (tag/title updates only) and apply them to your live Etsy listings now?`)) return;
   if (btnEl) { btnEl.disabled = true; btnEl.dataset.origLabel = btnEl.textContent;
     btnEl.innerHTML = '<span class="btn-spin" aria-hidden="true"></span>Approving ' + candidates.length + '…'; }
+  // Bug fixed 2026-07-18: this loop used to only disable the bulk button
+  // itself, leaving each candidate's own individual Approve/Reject buttons
+  // live and clickable for the whole multi-second bulk run. Tapping one
+  // mid-flight fired a second, independent approveAction() for an action
+  // the bulk loop had already (or was about to) approve -- the backend's own
+  // status!='pending' guard (main.py's /api/queue/{id}/approve) blocks a
+  // real double-apply, but it surfaced as a confusing "action already
+  // executing/approved" error toast for something the user did nothing
+  // wrong to trigger. Reuse the same _setApproveLoading() helper each
+  // individual card's own Approve tap already uses, so the whole row (its
+  // Approve/Fix/Reject buttons together) is visibly disabled during the
+  // bulk run too.
+  for (const a of candidates) {
+    _setApproveLoading(document.getElementById('approve-btn-'+a.id), true);
+  }
   let okCount = 0, errCount = 0;
   for (const a of candidates) {
     try {
@@ -6006,8 +6065,8 @@ async function loadCalendar() {
     renderCalendarContent(d);
     const badge = document.getElementById('badge-calendar');
     if (badge) {
-      const today = new Date().toISOString().slice(0,10);
-      const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+      const today = _localDateStr();
+      const tomorrow = _localDateStr(new Date(Date.now()+86400000));
       const soonGcal = (d.google_calendar||[]).filter(e=>{
         const day = (e.when||'').slice(0,10);
         return day===today || day===tomorrow;
@@ -6046,7 +6105,7 @@ function renderCalendarContent(d) {
   const due = d.due_todos || [];
   html += `<div class="section-title">📌 Upcoming Due Dates (${due.length})</div>`;
   html += due.length ? due.map(t => {
-    const overdue = t.due_date < new Date().toISOString().slice(0,10);
+    const overdue = t.due_date < _localDateStr();
     return _calCard(overdue?'high':'low', t.text, 'Due ' + t.due_date);
   }).join('') : '<div class="empty">No to-dos with a due date.</div>';
 

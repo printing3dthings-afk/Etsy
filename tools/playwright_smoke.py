@@ -1099,19 +1099,34 @@ async def _run_browser_checks() -> None:
             else:
                 print("  (orb WebGL never reached orbGLReady in this environment -- skipping context-loss transition checks)")
 
-            # ── cc-open must never coexist with is-mobile (2026-07-15) — Scott's
-            # header bar (with its position:absolute, 1440px-stage-sized
-            # #alert-dropdown) appeared on his phone alongside the mobile tab bar,
-            # with the alert dropdown clipped off-screen unreadable. Root cause:
-            # syncMobileClass() only ever ADDED cc-open on a mobile->desktop
-            # transition and never had a path to remove it again once mobile was
-            # redetected -- if cc-open was ever set while briefly misdetected as
-            # desktop (mobile Safari's matchMedia/resize events can fire
-            # spuriously, e.g. around address-bar show/hide), it stuck forever,
-            # permanently leaking the full desktop dashboard onto a phone
-            # viewport. Fix: mobile now always wins in syncMobileClass() -- force
-            # cc-open on here (simulating the exact stuck state) and confirm the
-            # real function call self-heals it. ──
+            # ── A stray/stuck cc-open must never coexist with is-mobile while in the
+            # NORMAL tab-bar view (2026-07-15) — Scott's header bar (with its
+            # position:absolute, 1440px-stage-sized #alert-dropdown) appeared on his
+            # phone alongside the mobile tab bar, with the alert dropdown clipped
+            # off-screen unreadable. Root cause: syncMobileClass() only ever ADDED
+            # cc-open on a mobile->desktop transition and never had a path to remove
+            # it again once mobile was redetected -- if cc-open was ever set while
+            # briefly misdetected as desktop (mobile Safari's matchMedia/resize
+            # events can fire spuriously, e.g. around address-bar show/hide), it
+            # stuck forever, permanently leaking the full desktop dashboard onto a
+            # phone viewport. Fix: mobile always wins in syncMobileClass() UNLESS a
+            # phoneOpenScreen()-opened screen legitimately needs cc-open kept (see
+            # 2026-07-18's phone-screen-open marker, added after phoneOpenScreen()
+            # deliberately setting cc-open turned out to be a real, separate,
+            # legitimate case -- not the stray/stuck case this test is about).
+            #
+            # 2026-07-18: explicitly return to the tab-bar view first -- the More ->
+            # "Your listings" click earlier in this same test run (the back-to-top
+            # regression above) left phone-screen-open set from a genuine
+            # phoneOpenScreen() call, and nothing after it ever navigated back to
+            # the tab bar. Without this reset, forcing cc-open here doesn't
+            # reproduce the actual stray/stuck scenario at all -- it just re-tests
+            # the legitimate phoneOpenScreen() case from a different angle, which
+            # correctly does NOT get cleared and made this test fail for the wrong
+            # reason (caught live 2026-07-18 while fixing the phoneOpenScreen bug
+            # this comment references). ──
+            await page.evaluate("() => { if (typeof phoneTab === 'function') phoneTab('more'); }")
+            await page.wait_for_timeout(200)
             cc_state = await page.evaluate("""() => {
                 document.body.classList.add('cc-open');
                 const stuck = document.body.classList.contains('cc-open');

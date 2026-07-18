@@ -51,6 +51,21 @@ from pathlib import Path
 
 ENV_PATH = Path(__file__).parent.parent / ".env"
 
+# Load .env into the process environment before reading CLIENT_ID/CLIENT_SECRET
+# below -- bug fixed 2026-07-18 (reproduced live): this script previously read
+# straight from os.getenv() with nothing ever populating it from .env, so it
+# printed "must be set in .env" and refused to start even when the values
+# were genuinely present in .env, for every single run. setdefault() so a
+# real shell-exported env var still wins over the file, same idiom
+# tools/etsy_api.py / tools/google_calendar_api.py already use.
+if ENV_PATH.exists():
+    with open(ENV_PATH) as _f:
+        for _line in _f:
+            _line = _line.strip()
+            if _line and not _line.startswith("#") and "=" in _line:
+                _k, _v = _line.split("=", 1)
+                os.environ.setdefault(_k.strip(), _v.strip())
+
 CLIENT_ID     = os.getenv("GOOGLE_CALENDAR_CLIENT_ID", "")
 CLIENT_SECRET = os.getenv("GOOGLE_CALENDAR_CLIENT_SECRET", "")
 REDIRECT_URI  = "http://localhost:3006/callback"

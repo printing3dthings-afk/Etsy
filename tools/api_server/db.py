@@ -945,16 +945,59 @@ def _decrypt_token(value: str | None) -> str | None:
     return box.decrypt(raw).decode("utf-8")
 
 
+_TOKEN_LINEAGE_MAX = 20  # cap on how many past refresh tokens we remember per rotation chain
+
+
+def parse_token_lineage(raw: str | None) -> list[str]:
+    """Parses the etsy_tokens.parent_refresh_token column's value into a list
+    of every historical refresh token this rotation chain has ever seen.
+
+    Bug fixed 2026-07-18: this column used to store a single token string (the
+    immediate parent only), overwritten on every rotation -- so after 2+
+    reactive rotations without a server restart, the lineage more than one
+    generation back was silently lost. If Railway then re-injected a stale
+    env var from before ANY of those rotations, _reconcile_etsy_tokens()
+    could no longer recognize it as part of this app's own history and would
+    mistake it for a genuine fresh manual re-authorization, leaving a
+    provably dead token in place (the exact 2026-06-17 401 invalid_grant
+    landmine this whole mechanism exists to prevent). Now stores a JSON list
+    instead, capped at the most recent _TOKEN_LINEAGE_MAX entries. Handles a
+    pre-existing plain-string row (single legacy token, not JSON) by treating
+    it as a 1-element list, so old data isn't silently discarded."""
+    if not raw:
+        return []
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, list):
+            return [str(x) for x in parsed if x]
+    except (ValueError, TypeError):
+        pass
+    return [raw]  # legacy plain-string row from before this fix
+
+
 def save_etsy_tokens(access_token: str, refresh_token: str, parent_refresh_token: str | None = None) -> None:
     """Persist the latest known-good Etsy OAuth token pair. Singleton row (id=1).
     Encrypted at rest when TOKEN_ENCRYPTION_KEY is set; plaintext otherwise,
-    exactly as before this was added (see _encrypt_token)."""
+    exactly as before this was added (see _encrypt_token).
+
+    `parent_refresh_token` (a single token string, same call contract as
+    before -- external callers like tools/ci_refresh_etsy_secrets.py and
+    POST /api/etsy-tokens are unchanged) is ACCUMULATED into the growing
+    lineage list (see parse_token_lineage()) rather than overwriting it, so
+    multiple rotations between restarts no longer lose earlier generations."""
     if not access_token or not refresh_token:
         return
     init_db()
     ts = datetime.now(timezone.utc).isoformat()
     conn = _connect()
     try:
+        existing = conn.execute("SELECT parent_refresh_token FROM etsy_tokens WHERE id=1").fetchone()
+        existing_raw = _decrypt_token(existing["parent_refresh_token"]) if existing else None
+        lineage = parse_token_lineage(existing_raw)
+        if parent_refresh_token and parent_refresh_token not in lineage:
+            lineage.append(parent_refresh_token)
+        lineage = lineage[-_TOKEN_LINEAGE_MAX:]
+        lineage_json = json.dumps(lineage) if lineage else None
         conn.execute(
             """INSERT INTO etsy_tokens (id, access_token, refresh_token, parent_refresh_token, updated_at)
                VALUES (1, ?, ?, ?, ?)
@@ -962,7 +1005,7 @@ def save_etsy_tokens(access_token: str, refresh_token: str, parent_refresh_token
                  access_token=excluded.access_token, refresh_token=excluded.refresh_token,
                  parent_refresh_token=excluded.parent_refresh_token, updated_at=excluded.updated_at""",
             (_encrypt_token(access_token), _encrypt_token(refresh_token),
-             _encrypt_token(parent_refresh_token), ts),
+             _encrypt_token(lineage_json), ts),
         )
         conn.commit()
     finally:
@@ -1056,6 +1099,21 @@ def save_google_calendar_synced_event(item_key: str, event_id: str) -> None:
                ON CONFLICT(item_key) DO UPDATE SET event_id=excluded.event_id""",
             (item_key, event_id, ts),
         )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_google_calendar_synced_event(item_key: str) -> None:
+    """Removes the local item_key -> Google event id mapping. Added
+    2026-07-18 alongside GoogleCalendarClient.delete_event() to close the
+    orphaned-events gap: completing/deleting a synced todo now removes both
+    the real Google Calendar event and this row, instead of leaving the
+    mapping (and the event) behind forever."""
+    init_db()
+    conn = _connect()
+    try:
+        conn.execute("DELETE FROM google_calendar_synced_events WHERE item_key=?", (item_key,))
         conn.commit()
     finally:
         conn.close()

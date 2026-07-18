@@ -102,11 +102,20 @@ def test_create_event_all_day_vs_timed_body():
 
     with patch.object(gcal._session, "request", side_effect=fake_request):
         c.create_event("Tax deadline", "2026-07-25", "test")
+        # Google requires an all-day event's end.date to be EXCLUSIVE (the day
+        # after start.date) -- a same-day start/end is an invalid empty range
+        # and gets rejected by the real API (bug fixed 2026-07-18: this used
+        # to set end == start, silently failing every all-day event push).
         check(captured["kwargs"]["json"]["start"] == {"date": "2026-07-25"},
               f"all-day event should use a date field, got: {captured['kwargs']['json']}")
+        check(captured["kwargs"]["json"]["end"] == {"date": "2026-07-26"},
+              f"all-day event's end date must be start+1 day (exclusive), got: {captured['kwargs']['json']}")
+
         c.create_event("Meeting", "2026-07-25T14:00:00-04:00", "test")
         check(captured["kwargs"]["json"]["start"] == {"dateTime": "2026-07-25T14:00:00-04:00"},
               f"timed event should use a dateTime field, got: {captured['kwargs']['json']}")
+        check(captured["kwargs"]["json"]["end"] == {"dateTime": "2026-07-25T15:00:00-04:00"},
+              f"timed event should default to a 1-hour block, not a zero-duration event, got: {captured['kwargs']['json']}")
 
 
 def test_refresh_access_token_updates_state_on_success():

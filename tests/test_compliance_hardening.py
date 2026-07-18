@@ -103,7 +103,11 @@ def test_tokens_encrypted_at_rest_when_key_set():
     t = dbmod.get_etsy_tokens()
     check(t["access_token"] == "acc-secret-2", f"decrypted access_token should round-trip, got: {t}")
     check(t["refresh_token"] == "ref-secret-2", f"decrypted refresh_token should round-trip, got: {t}")
-    check(t["parent_refresh_token"] == "parent-2", f"decrypted parent_refresh_token should round-trip, got: {t}")
+    # 2026-07-18: parent_refresh_token now stores a JSON-encoded lineage list
+    # (see db.parse_token_lineage()'s docstring), not a single plain string --
+    # a fresh row's lineage is just the one parent passed in.
+    check(dbmod.parse_token_lineage(t["parent_refresh_token"]) == ["parent-2"],
+          f"decrypted parent_refresh_token should round-trip as a 1-item lineage, got: {t}")
     os.environ.pop("TOKEN_ENCRYPTION_KEY", None)
 
 

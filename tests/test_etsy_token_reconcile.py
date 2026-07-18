@@ -126,6 +126,30 @@ def test_env_refresh_unrelated_to_stored_lineage_is_left_alone():
           "a fresh manual re-authorization's refresh token must never be overwritten by a stale DB row")
 
 
+def test_env_matches_a_two_generations_back_parent_still_restores():
+    # Bug fixed 2026-07-18: parent_refresh_token used to store only the
+    # IMMEDIATE parent, overwritten on every rotation -- so if the server
+    # reactively rotated A->B->C without a restart in between, the DB row's
+    # "parent" would end up as B only, silently losing A from history. If
+    # Railway then re-injected the ORIGINAL stale env var A (from before any
+    # rotation happened), the old code would misidentify it as a genuine
+    # fresh manual re-authorization and leave the already-invalidated dead
+    # token A in place -- the exact 401 invalid_grant landmine this whole
+    # mechanism exists to prevent. save_etsy_tokens() now accumulates a full
+    # lineage list instead of overwriting a single parent, so this must
+    # correctly recognize A even 2 rotations back and restore C.
+    _reset_db_tokens_table()
+    db.save_etsy_tokens(access_token="access-A", refresh_token="A")          # initial state
+    db.save_etsy_tokens(access_token="access-B", refresh_token="B", parent_refresh_token="A")  # rotation 1: A->B
+    db.save_etsy_tokens(access_token="access-C", refresh_token="C", parent_refresh_token="B")  # rotation 2: B->C
+    _set_env("dead-access-A", "A")  # Railway re-injects the original, now-twice-stale token
+    server._reconcile_etsy_tokens()
+    check(os.environ.get("ETSY_ACCESS_TOKEN") == "access-C",
+          "env matching a 2-generations-back parent should still restore the current access token")
+    check(os.environ.get("ETSY_REFRESH_TOKEN") == "C",
+          "env matching a 2-generations-back parent should still restore the current refresh token")
+
+
 def test_a_broken_db_read_never_crashes_the_caller():
     # _reconcile_etsy_tokens() runs unconditionally at module import time (see
     # main.py) -- if db.get_etsy_tokens() ever raised, that would crash the

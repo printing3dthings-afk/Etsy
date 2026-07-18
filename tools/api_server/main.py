@@ -179,9 +179,13 @@ def _reconcile_etsy_tokens() -> None:
     see ops_runbook.md). _token_sync_loop() below persists each rotation to the /data
     SQLite volume, which survives restarts; this function runs once at boot and prefers
     that row — but only when it's provably a forward rotation of the *current* env
-    token (matched via parent_refresh_token lineage), so a genuine manual
-    re-authorization (tools/etsy_oauth.py + a fresh dashboard update) always wins over
-    a stale DB row left over from before that re-auth.
+    token (matched via the full parent_refresh_token lineage, not just the immediate
+    parent — see db.parse_token_lineage()'s docstring for the 2026-07-18 bug this fixed:
+    2+ reactive rotations without a restart used to lose track of anything more than
+    one generation back, so a stale env var from 2+ rotations ago could be
+    misidentified as a genuine fresh manual re-authorization), so a genuine manual
+    re-authorization (tools/etsy_oauth.py + a fresh dashboard update) still always wins
+    over a stale DB row left over from before that re-auth.
     """
     env_refresh = os.getenv("ETSY_REFRESH_TOKEN", "").strip()
     try:
@@ -191,7 +195,8 @@ def _reconcile_etsy_tokens() -> None:
         return
     if not stored:
         return
-    if env_refresh and env_refresh not in (stored.get("refresh_token"), stored.get("parent_refresh_token")):
+    known_lineage = [stored.get("refresh_token")] + db.parse_token_lineage(stored.get("parent_refresh_token"))
+    if env_refresh and env_refresh not in known_lineage:
         print("[etsy-tokens] env refresh token doesn't match stored lineage — "
               "treating env as a fresh re-authorization, leaving it in place", flush=True)
         return
@@ -201,7 +206,38 @@ def _reconcile_etsy_tokens() -> None:
         print(f"[etsy-tokens] restored rotated token from {db.DB_PATH} (persistent={db.is_persistent()})", flush=True)
 
 
+def _reconcile_google_calendar_tokens() -> None:
+    """Restore Google Calendar tokens from the durable /data DB if the env
+    var copy is stale or missing -- same problem class _reconcile_etsy_tokens()
+    exists for (Railway re-injects a static env var config on every restart,
+    which can be older than what's actually in the persistent DB volume),
+    but simpler: unlike Etsy, Google's refresh token doesn't get invalidated
+    by use, so there's no rotation-lineage check needed here -- the DB row
+    (written by both google_calendar_oauth.py and
+    GoogleCalendarClient.refresh_access_token() on every successful refresh)
+    is always at least as current as the env var, so it can just win
+    outright whenever it's present.
+
+    Bug fixed 2026-07-18: this reconcile step never existed at all, so a
+    Railway restart could silently lose the Google Calendar connection even
+    though the DB had a perfectly good, still-valid refresh token sitting
+    right there -- the exact failure this same-shaped Etsy function exists
+    to prevent, just never mirrored for the newer integration."""
+    try:
+        stored = db.get_google_calendar_tokens()
+    except Exception as exc:
+        print(f"[gcal-tokens] reconcile skipped: {exc}", flush=True)
+        return
+    if not stored or not stored.get("refresh_token"):
+        return
+    if stored.get("access_token"):
+        os.environ["GOOGLE_CALENDAR_ACCESS_TOKEN"] = stored["access_token"]
+    os.environ["GOOGLE_CALENDAR_REFRESH_TOKEN"] = stored["refresh_token"]
+    print(f"[gcal-tokens] restored Google Calendar tokens from {db.DB_PATH} (persistent={db.is_persistent()})", flush=True)
+
+
 _reconcile_etsy_tokens()
+_reconcile_google_calendar_tokens()
 db.ensure_default_sandbox_folder()
 db.seed_correction_plan_todos()
 
@@ -571,7 +607,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "7f7a33d-v231"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "3e64338-v232"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7156,10 +7192,14 @@ def _sync_calendar_to_google() -> str:
     todos = db.list_todos()
     for t in todos:
         due = t.get("due_date")
-        if not due or t.get("done"):
+        # Bug fixed 2026-07-18: this loop was missing the "already past" guard
+        # the seasonal/tax loops below it both have, so connecting Calendar
+        # for the first time backfilled every already-overdue open todo onto
+        # the calendar dated in the past.
+        if not due or t.get("done") or due < today.isoformat():
             continue
         item_key = f"todo:{t['id']}"
-        if db.get_google_calendar_synced_event(item_key):
+        if db.get_google_calendar_synced_event(item_key) is not None:
             continue
         try:
             event = client.create_event(t["text"][:200], due, "Synced from Frank's to-do list.")
@@ -7174,7 +7214,7 @@ def _sync_calendar_to_google() -> str:
         if update_by < today:
             continue  # already past -- don't backfill stale deadlines onto the calendar
         item_key = f"seasonal:{e['season']}:{update_by.isoformat()}"
-        if db.get_google_calendar_synced_event(item_key):
+        if db.get_google_calendar_synced_event(item_key) is not None:
             continue
         try:
             event = client.create_event(
@@ -7192,7 +7232,7 @@ def _sync_calendar_to_google() -> str:
         if d < today:
             continue
         item_key = f"tax:{t['event']}:{d.isoformat()}"
-        if db.get_google_calendar_synced_event(item_key):
+        if db.get_google_calendar_synced_event(item_key) is not None:
             continue
         try:
             event = client.create_event(t["event"], d.isoformat(), "Tax deadline (see CLAUDE.md Business Structure & Tax).")
@@ -7204,6 +7244,48 @@ def _sync_calendar_to_google() -> str:
     return f"synced {synced} new item(s)" if synced else "up to date, nothing new"
 
 
+def _cleanup_synced_calendar_event(item_key: str) -> None:
+    """Removes a todo's synced Google Calendar event (if any) and its local
+    mapping row. Added 2026-07-18 to close a real gap: completing or
+    deleting a todo never touched the calendar event
+    _sync_calendar_to_google() had created for it, so those events were
+    permanently orphaned on Scott's real calendar. Best-effort and silent —
+    called from the todo toggle/delete endpoints, which must always succeed
+    on the todo's own DB row regardless of Calendar's connection state or
+    any transient Google API failure."""
+    event_id = db.get_google_calendar_synced_event(item_key)
+    if event_id is None:
+        return  # never synced, nothing to clean up
+    try:
+        import google_calendar_api as _gcal
+        client = _gcal.GoogleCalendarClient()
+        if client.refresh_token and event_id:
+            client.delete_event(event_id)
+    except Exception as exc:
+        print(f"[gcal-sync] cleanup of {item_key} (event {event_id!r}) failed, "
+              f"removing local mapping anyway: {exc}", flush=True)
+    db.delete_google_calendar_synced_event(item_key)
+
+
+def _get_calendar_task_last_run(name: str) -> date | None:
+    """Persisted "did this sub-task already run today" state for
+    _calendar_tasks_loop, via the same db.settings table
+    _check_star_seller_status()/_check_ads_thresholds() already use for
+    their own cooldowns. Bug fixed 2026-07-18: this was previously a plain
+    in-memory local variable, reset to None on every process restart. A
+    same-day redeploy (this app deploys frequently) would then re-satisfy
+    e.g. "today != last_weekly" and re-run that day's weekly monitors --
+    duplicate email to Scott, duplicate ops_runbook entry, duplicate live
+    Etsy API calls from re-running 7 scripts. Persisting survives a restart,
+    so a same-day redeploy correctly still counts as "already ran today"."""
+    val = db.get_setting(f"calendar_task_last_{name}")
+    return date.fromisoformat(val) if val else None
+
+
+def _set_calendar_task_last_run(name: str, when: date) -> None:
+    db.set_setting(f"calendar_task_last_{name}", when.isoformat())
+
+
 async def _calendar_tasks_loop() -> None:
     """Hourly-tick calendar-gated loop (same shape as _daily_brief_loop) for
     tasks that fire on a specific day/date rather than a fixed interval:
@@ -7212,19 +7294,21 @@ async def _calendar_tasks_loop() -> None:
     compete with those), seasonal keyword dry-run (4 documented dates), a
     daily Etsy Ads threshold check, and a daily scheduled-art check (the
     script's own every-other-day gating decides whether it actually does
-    anything). Each sub-task tracks its own "last ran" date so a missed hour
-    (deploy, restart) doesn't skip that day entirely — it just fires the next
-    time the loop wakes up and the date still matches."""
+    anything). Each sub-task tracks its own "last ran" date, persisted (see
+    _get_calendar_task_last_run()) so a missed hour (deploy, restart)
+    doesn't skip that day entirely — it just fires the next time the loop
+    wakes up and the date still matches — while a same-day restart doesn't
+    cause a double-fire either."""
     db.set_agent_heartbeat("calendar_tasks", "Calendar Tasks", "started", "waiting for next scheduled check")
-    last_weekly: date | None = None
-    last_monthly: date | None = None
-    last_competitor_research: date | None = None
-    last_seasonal: date | None = None
-    last_ads_check: date | None = None
-    last_art_check: date | None = None
-    last_art_authenticity: date | None = None
-    last_star_seller_check: date | None = None
-    last_gcal_sync: date | None = None
+    last_weekly = _get_calendar_task_last_run("weekly")
+    last_monthly = _get_calendar_task_last_run("monthly")
+    last_competitor_research = _get_calendar_task_last_run("competitor_research")
+    last_seasonal = _get_calendar_task_last_run("seasonal")
+    last_ads_check = _get_calendar_task_last_run("ads_check")
+    last_art_check = _get_calendar_task_last_run("art_check")
+    last_art_authenticity = _get_calendar_task_last_run("art_authenticity")
+    last_star_seller_check = _get_calendar_task_last_run("star_seller_check")
+    last_gcal_sync = _get_calendar_task_last_run("gcal_sync")
     while True:
         await asyncio.sleep(3600)
         now = datetime.now(timezone.utc)
@@ -7234,6 +7318,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 await asyncio.to_thread(_run_weekly_monitors)
                 last_weekly = today
+                _set_calendar_task_last_run("weekly", today)
                 ran.append("weekly-monitors")
             except Exception as exc:
                 print(f"[calendar-tasks] weekly monitors error: {exc}", flush=True)
@@ -7241,6 +7326,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 await asyncio.to_thread(_run_monthly_shop_health)
                 last_monthly = today
+                _set_calendar_task_last_run("monthly", today)
                 ran.append("monthly-shop-health")
             except Exception as exc:
                 print(f"[calendar-tasks] monthly shop health error: {exc}", flush=True)
@@ -7248,6 +7334,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 await asyncio.to_thread(_run_art_authenticity_check)
                 last_art_authenticity = today
+                _set_calendar_task_last_run("art_authenticity", today)
                 ran.append("art-authenticity")
             except Exception as exc:
                 print(f"[calendar-tasks] art authenticity check error: {exc}", flush=True)
@@ -7255,6 +7342,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 detail = await asyncio.to_thread(_run_competitor_research_refresh)
                 last_competitor_research = today
+                _set_calendar_task_last_run("competitor_research", today)
                 ran.append(f"competitor-research:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] competitor research refresh error: {exc}", flush=True)
@@ -7262,6 +7350,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 await asyncio.to_thread(_run_seasonal_keyword_check)
                 last_seasonal = today
+                _set_calendar_task_last_run("seasonal", today)
                 ran.append("seasonal-keywords")
             except Exception as exc:
                 print(f"[calendar-tasks] seasonal keyword check error: {exc}", flush=True)
@@ -7269,6 +7358,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 detail = await asyncio.to_thread(_check_ads_thresholds)
                 last_ads_check = today
+                _set_calendar_task_last_run("ads_check", today)
                 ran.append(f"ads-check:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] ads threshold check error: {exc}", flush=True)
@@ -7276,6 +7366,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 detail = await asyncio.to_thread(_check_star_seller_status)
                 last_star_seller_check = today
+                _set_calendar_task_last_run("star_seller_check", today)
                 ran.append(f"star-seller:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] star seller check error: {exc}", flush=True)
@@ -7283,6 +7374,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 detail = await asyncio.to_thread(_run_scheduled_art_check)
                 last_art_check = today
+                _set_calendar_task_last_run("art_check", today)
                 ran.append(f"scheduled-art:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
@@ -7290,6 +7382,7 @@ async def _calendar_tasks_loop() -> None:
             try:
                 detail = await asyncio.to_thread(_sync_calendar_to_google)
                 last_gcal_sync = today
+                _set_calendar_task_last_run("gcal_sync", today)
                 ran.append(f"gcal-sync:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] google calendar sync error: {exc}", flush=True)
@@ -11641,6 +11734,12 @@ async def toggle_todo(todo_id: int, payload: dict, _token: str = Depends(_auth_s
     ok = await asyncio.to_thread(db.set_todo_done, todo_id, done)
     if not ok:
         raise HTTPException(status_code=404, detail="Todo not found")
+    if done:
+        # 2026-07-18: completing a todo that was synced to Google Calendar
+        # must also remove the real calendar event -- see
+        # _cleanup_synced_calendar_event()'s docstring. Never blocks the
+        # toggle itself, which has already succeeded above.
+        await asyncio.to_thread(_cleanup_synced_calendar_event, f"todo:{todo_id}")
     return {"ok": True}
 
 
@@ -11695,6 +11794,9 @@ async def remove_todo(todo_id: int, _token: str = Depends(_auth_session_or_beare
     ok = await asyncio.to_thread(db.delete_todo, todo_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Todo not found")
+    # 2026-07-18: same orphaned-event gap as toggle_todo -- deleting a
+    # synced todo must also remove its real calendar event.
+    await asyncio.to_thread(_cleanup_synced_calendar_event, f"todo:{todo_id}")
     return {"ok": True}
 
 

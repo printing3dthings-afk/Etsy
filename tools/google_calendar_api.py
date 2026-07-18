@@ -152,13 +152,48 @@ class GoogleCalendarClient:
     def create_event(self, summary: str, when: str, description: str = "") -> dict:
         """Creates an event on the primary calendar. `when` is an ISO date
         ('2026-07-25') for an all-day event, or an ISO datetime
-        ('2026-07-25T14:00:00-04:00') for a timed event."""
+        ('2026-07-25T14:00:00-04:00') for a timed event.
+
+        Bug fixed 2026-07-18: this used to set end == start for both cases.
+        Google's API requires an all-day event's end.date to be EXCLUSIVE
+        (the day after start.date) -- a same-day start/end is an invalid,
+        empty range and every all-day create (which is every item this
+        codebase's daily calendar sync pushes: due-dated todos, seasonal and
+        tax deadlines are all plain dates) was silently rejected with a 400.
+        A zero-duration timed event isn't rejected but isn't the intended
+        "time block" behavior either, so that case now defaults to 1 hour."""
         is_all_day = "T" not in when
         body = {"summary": summary, "description": description}
         if is_all_day:
-            body["start"] = {"date": when}
-            body["end"] = {"date": when}
+            start_date = datetime.fromisoformat(when).date()
+            end_date = start_date + timedelta(days=1)
+            body["start"] = {"date": start_date.isoformat()}
+            body["end"] = {"date": end_date.isoformat()}
         else:
-            body["start"] = {"dateTime": when}
-            body["end"] = {"dateTime": when}
+            start_dt = datetime.fromisoformat(when)
+            end_dt = start_dt + timedelta(hours=1)
+            body["start"] = {"dateTime": start_dt.isoformat()}
+            body["end"] = {"dateTime": end_dt.isoformat()}
         return self._request("POST", "/calendars/primary/events", json=body)
+
+    def delete_event(self, event_id: str) -> None:
+        """Deletes an event from the primary calendar. Added 2026-07-18 to
+        close a real gap: nothing in this codebase ever removed a synced
+        event when the source todo was completed or deleted, so calendar
+        events synced by _sync_calendar_to_google() were permanently
+        orphaned. A 404/410 (already gone -- e.g. Scott deleted it by hand
+        on his real calendar) is treated as success, not an error: the goal
+        state ("this event no longer exists") is already true."""
+        self._require_oauth()
+        if not self.access_token:
+            self.refresh_access_token()
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        resp = _session.request("DELETE", f"{BASE_URL}/calendars/primary/events/{event_id}",
+                                 headers=headers, timeout=15)
+        if resp.status_code == 401:
+            self.refresh_access_token()
+            headers["Authorization"] = f"Bearer {self.access_token}"
+            resp = _session.request("DELETE", f"{BASE_URL}/calendars/primary/events/{event_id}",
+                                     headers=headers, timeout=15)
+        if resp.status_code >= 400 and resp.status_code not in (404, 410):
+            raise GoogleCalendarError(resp.status_code, resp.text[:300])
