@@ -211,6 +211,18 @@ If the token expires, run `python tools/etsy_oauth.py` to re-authorize.
 Redirect URI registered: `http://localhost:3003/callback`
 Scopes: shops_r, shops_w, listings_r, listings_w, transactions_r, billing_r, profile_r, email_r, feedback_r, address_r
 
+## Google Calendar OAuth Status
+**Not yet authorized.** `GOOGLE_CALENDAR_CLIENT_ID`/`GOOGLE_CALENDAR_CLIENT_SECRET` need to be set in `.env`
+(from console.cloud.google.com — enable the Calendar API, configure the OAuth consent screen, create a
+Desktop-app OAuth client), then run `python tools/google_calendar_oauth.py` to authorize. Once connected,
+Scott's Google Calendar events appear in Frank's Calendar tab and as same-day/next-day reminders in the
+alert bell, and Frank pushes its own due-dated to-dos + seasonal/tax deadlines onto the calendar too
+(daily sync, dedup'd so nothing re-creates). Frank can also create events conversationally via the
+`create_calendar_event` agent tool. See `tools/google_calendar_oauth.py`'s module docstring for the full
+Google Cloud Console setup steps.
+Redirect URI to register: `http://localhost:3006/callback`
+Scope: `https://www.googleapis.com/auth/calendar` (read + write)
+
 ---
 
 ## Product Catalog

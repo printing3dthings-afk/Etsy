@@ -571,7 +571,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "1d1f4d1-v230"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "7f7a33d-v231"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -3087,6 +3087,31 @@ AGENT_TOOLS = [
         },
     },
     {
+        "name": "create_calendar_event",
+        "description": (
+            f"Create an event on {business_config.OWNER_NAME}'s connected Google Calendar — use this when "
+            f"he asks conversationally to add something to his calendar. Requires Google "
+            "Calendar to already be connected (run tools/google_calendar_oauth.py) — if "
+            "not connected, this returns a clear error explaining that, not a crash. "
+            "Low-risk and immediate, not staged through the Approvals system."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "summary": {"type": "string", "description": "Event title."},
+                "when": {
+                    "type": "string",
+                    "description": (
+                        "ISO date ('2026-07-25') for an all-day event, or ISO datetime "
+                        "('2026-07-25T14:00:00-04:00') for a timed event."
+                    ),
+                },
+                "description": {"type": "string", "description": "Optional event notes."},
+            },
+            "required": ["summary", "when"],
+        },
+    },
+    {
         "name": "local_read_file",
         "description": (
             f"Read a text file on {business_config.OWNER_NAME}'s own computer via the local relay — NOT the "
@@ -3715,6 +3740,23 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 return {"error": "todo_id is required"}
             ok = db.set_todo_done(int(todo_id), True)
             return {"done": ok}
+        if name == "create_calendar_event":
+            summary = ((tool_input or {}).get("summary") or "").strip()
+            when = ((tool_input or {}).get("when") or "").strip()
+            description = ((tool_input or {}).get("description") or "").strip()
+            if not summary or not when:
+                return {"error": "summary and when are required"}
+            try:
+                import google_calendar_api as _gcal
+            except ImportError:
+                return {"error": "Google Calendar integration is not available."}
+            try:
+                event = _gcal.GoogleCalendarClient().create_event(summary, when, description)
+            except _gcal.GoogleCalendarNotConnectedError:
+                return {"error": "Google Calendar is not connected. Run python tools/google_calendar_oauth.py to authorize."}
+            except _gcal.GoogleCalendarError as exc:
+                return {"error": str(exc)}
+            return {"created": True, "event_id": event.get("id"), "html_link": event.get("htmlLink", "")}
         if name == "autofix_listing_tags":
             ti = tool_input or {}
             lid = ti.get("listing_id")
@@ -6321,6 +6363,24 @@ _ADS_STALE_LOG_DAYS = 7
 _ADS_MIN_DAYS_FOR_MONTHLY_VERDICT = 20  # ~30 days of logging before judging monthly ROAS
 
 
+def _email_ops_summary(subject: str, body: str) -> None:
+    """Emails a weekly/monthly ops-summary digest, reusing daily_brief.py's
+    generic SMTP sender (_send_brief) rather than a third independent SMTP
+    implementation (order_notifier.py already has its own). 2026-07-18:
+    closes the gap where the weekly Sunday and monthly 1st-of-month
+    automation already ran, but only ever landed as an in-app todo +
+    ops_runbook entry -- Scott had to open Frank to see the results. Never
+    raises: _send_brief() itself already returns False on failure (e.g. SMTP
+    not configured) rather than throwing, and the import is wrapped too so a
+    missing/broken daily_brief module can't break the caller's own
+    todo/ops_runbook write, which must always happen regardless."""
+    try:
+        import daily_brief as _daily_brief
+        _daily_brief._send_brief(subject, body)
+    except Exception as exc:
+        print(f"[ops-summary-email] send failed: {exc}", flush=True)
+
+
 def _run_weekly_monitors() -> str:
     """Runs the previously-orphaned weekly monitor scripts and posts one
     digest todo + ops_runbook entry. Most were built for exactly this purpose
@@ -6351,6 +6411,10 @@ def _run_weekly_monitors() -> str:
         added_by="frank", category="general",
     )
     _append_ops_runbook_entry("Weekly monitor digest", digest[:4000])
+    _email_ops_summary(
+        f"{business_config.BUSINESS_NAME} Weekly Ops Summary — {date.today().strftime('%a %b %-d')}",
+        digest[:8000],
+    )
     return f"ran {len(_WEEKLY_MONITOR_SCRIPTS)} scripts"
 
 
@@ -6365,6 +6429,10 @@ def _run_monthly_shop_health() -> str:
     out = ((result.stdout or "") + "\n" + (result.stderr or "")).strip()
     db.add_todo("Monthly shop health check ready — see this month's ops_runbook entry.", added_by="frank", category="general")
     _append_ops_runbook_entry("Monthly shop health check", out[:4000])
+    _email_ops_summary(
+        f"{business_config.BUSINESS_NAME} Monthly Shop Health — {date.today().strftime('%b %Y')}",
+        out[:8000],
+    )
     return "ran shop_health_check.py"
 
 
@@ -7064,6 +7132,78 @@ def _run_scheduled_art_check() -> str:
     return "ran (see ops_runbook for output)"
 
 
+def _sync_calendar_to_google() -> str:
+    """Pushes Frank's own due-dated todos and imminent seasonal/tax
+    deadlines onto a connected Google Calendar, so both directions live in
+    one place (2026-07-18, the "read + write" half of the Calendar
+    integration). Reuses the exact same data /api/cadence already computes
+    -- no new data source. Each item gets a stable local key
+    (google_calendar_synced_events table) so repeated daily runs never
+    create a duplicate event; skips silently (no error surfaced, no
+    ops_runbook noise) when Calendar isn't connected, matching every other
+    step in this loop's tolerant-failure pattern."""
+    try:
+        import google_calendar_api as _gcal
+    except ImportError:
+        return "google_calendar_api not available"
+    client = _gcal.GoogleCalendarClient()
+    if not client.refresh_token:
+        return "not connected"
+
+    synced = 0
+    today = date.today()
+
+    todos = db.list_todos()
+    for t in todos:
+        due = t.get("due_date")
+        if not due or t.get("done"):
+            continue
+        item_key = f"todo:{t['id']}"
+        if db.get_google_calendar_synced_event(item_key):
+            continue
+        try:
+            event = client.create_event(t["text"][:200], due, "Synced from Frank's to-do list.")
+            db.save_google_calendar_synced_event(item_key, event.get("id", ""))
+            synced += 1
+        except Exception as exc:
+            print(f"[gcal-sync] todo {t['id']} sync failed: {exc}", flush=True)
+
+    calendar = seasonal_keywords._build_calendar(today.year)
+    for e in calendar:
+        update_by = e["update_by"] or seasonal_keywords._update_by(e["peak"])
+        if update_by < today:
+            continue  # already past -- don't backfill stale deadlines onto the calendar
+        item_key = f"seasonal:{e['season']}:{update_by.isoformat()}"
+        if db.get_google_calendar_synced_event(item_key):
+            continue
+        try:
+            event = client.create_event(
+                f"Update seasonal keywords: {e['season']}", update_by.isoformat(),
+                f"Peak {e['peak'].isoformat()}. Listings: {', '.join(e['listings_to_update'])}.",
+            )
+            db.save_google_calendar_synced_event(item_key, event.get("id", ""))
+            synced += 1
+        except Exception as exc:
+            print(f"[gcal-sync] seasonal {e['season']} sync failed: {exc}", flush=True)
+
+    tax = json.loads(tax_compliance_tools._get_tax_calendar())["tax_deadlines"]
+    for t in tax:
+        d = datetime.strptime(t["date"], "%b %d, %Y").date()
+        if d < today:
+            continue
+        item_key = f"tax:{t['event']}:{d.isoformat()}"
+        if db.get_google_calendar_synced_event(item_key):
+            continue
+        try:
+            event = client.create_event(t["event"], d.isoformat(), "Tax deadline (see CLAUDE.md Business Structure & Tax).")
+            db.save_google_calendar_synced_event(item_key, event.get("id", ""))
+            synced += 1
+        except Exception as exc:
+            print(f"[gcal-sync] tax deadline {t['event']} sync failed: {exc}", flush=True)
+
+    return f"synced {synced} new item(s)" if synced else "up to date, nothing new"
+
+
 async def _calendar_tasks_loop() -> None:
     """Hourly-tick calendar-gated loop (same shape as _daily_brief_loop) for
     tasks that fire on a specific day/date rather than a fixed interval:
@@ -7084,6 +7224,7 @@ async def _calendar_tasks_loop() -> None:
     last_art_check: date | None = None
     last_art_authenticity: date | None = None
     last_star_seller_check: date | None = None
+    last_gcal_sync: date | None = None
     while True:
         await asyncio.sleep(3600)
         now = datetime.now(timezone.utc)
@@ -7145,13 +7286,20 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"scheduled-art:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
+        if today != last_gcal_sync:
+            try:
+                detail = await asyncio.to_thread(_sync_calendar_to_google)
+                last_gcal_sync = today
+                ran.append(f"gcal-sync:{detail}")
+            except Exception as exc:
+                print(f"[calendar-tasks] google calendar sync error: {exc}", flush=True)
         db.set_agent_heartbeat(
             "calendar_tasks", "Calendar Tasks", "ok",
             "; ".join(ran) if ran else (
                 f"no scheduled task due today (last: weekly={last_weekly}, "
                 f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
                 f"art={last_art_check}, art_authenticity={last_art_authenticity}, "
-                f"star_seller={last_star_seller_check})"
+                f"star_seller={last_star_seller_check}, gcal_sync={last_gcal_sync})"
             ),
         )
 
@@ -11054,6 +11202,25 @@ async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
     except Exception as exc:
         print(f"[alerts] budget-cap check failed: {exc}", flush=True)
 
+    # Google Calendar reminders (2026-07-18): events happening today or
+    # tomorrow surface here too, not just the Calendar tab -- this is the
+    # literal "reminder" behavior Scott asked for. _get_upcoming_google_calendar_events()
+    # already degrades to [] when not connected/on any API error, so this
+    # never needs its own try/except.
+    today_str = date.today().isoformat()
+    tomorrow_str = (date.today() + timedelta(days=1)).isoformat()
+    for e in await asyncio.to_thread(_get_upcoming_google_calendar_events, 2):
+        when_date = (e.get("when") or "")[:10]
+        if when_date not in (today_str, tomorrow_str):
+            continue
+        alerts.append({
+            "severity": "info",
+            "source": "google_calendar",
+            "title": e.get("title", "(untitled event)"),
+            "detail": ("Today" if when_date == today_str else "Tomorrow")
+                       + ("" if e.get("all_day") else f" at {(e.get('when') or '')[11:16]}"),
+        })
+
     severity_order = {"critical": 0, "warning": 1, "info": 2}
     alerts.sort(key=lambda a: severity_order.get(a["severity"], 3))
     return {"alerts": alerts, "count": len(alerts)}
@@ -11556,6 +11723,38 @@ _CADENCE_CHECKLISTS = {
 }
 
 
+def _get_upcoming_google_calendar_events(days_ahead: int = 14) -> list[dict]:
+    """Upcoming events from a connected Google Calendar, formatted for the
+    Calendar tab and /api/alerts. Degrades to an empty list both when Scott
+    hasn't connected Calendar yet (GoogleCalendarNotConnectedError) and on
+    any real API failure -- must never break /api/cadence or /api/alerts,
+    same tolerance _sales_by_listing_sync()/_compute_cogs_status() apply to
+    their own Etsy calls."""
+    try:
+        import google_calendar_api as _gcal
+    except ImportError:
+        return []
+    try:
+        raw = _gcal.GoogleCalendarClient().list_upcoming_events(days_ahead=days_ahead)
+    except _gcal.GoogleCalendarNotConnectedError:
+        return []
+    except Exception as exc:
+        print(f"[google-calendar] event fetch failed: {exc}", flush=True)
+        return []
+    out = []
+    for e in raw:
+        start = e.get("start", {})
+        when = start.get("dateTime") or start.get("date") or ""
+        out.append({
+            "id": e.get("id"),
+            "title": e.get("summary") or "(untitled event)",
+            "when": when,
+            "all_day": "date" in start and "dateTime" not in start,
+            "html_link": e.get("htmlLink", ""),
+        })
+    return out
+
+
 @app.get("/api/cadence")
 async def get_cadence(_token: str = Depends(_auth_session_or_bearer)):
     today = date.today()
@@ -11591,11 +11790,14 @@ async def get_cadence(_token: str = Depends(_auth_session_or_bearer)):
         key=lambda t: t["due_date"],
     )
 
+    google_calendar = await asyncio.to_thread(_get_upcoming_google_calendar_events)
+
     return {
         "seasonal": seasonal,
         "tax_deadlines": tax,
         "due_todos": due_todos,
         "checklists": _CADENCE_CHECKLISTS,
+        "google_calendar": google_calendar,
     }
 
 

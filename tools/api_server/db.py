@@ -166,6 +166,17 @@ CREATE TABLE IF NOT EXISTS etsy_tokens (
   parent_refresh_token  TEXT,   -- the refresh_token this one rotated FROM (lineage check)
   updated_at            TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS google_calendar_tokens (
+  id            INTEGER PRIMARY KEY CHECK (id = 1),  -- singleton row, same shape as etsy_tokens
+  access_token  TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  updated_at    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS google_calendar_synced_events (
+  item_key   TEXT PRIMARY KEY,  -- local origin key, e.g. 'todo:42' or 'seasonal:Back to School:2026'
+  event_id   TEXT NOT NULL,     -- the Google Calendar event id this item was synced to
+  created_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS todos (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   text          TEXT NOT NULL,
@@ -974,6 +985,78 @@ def get_etsy_tokens() -> dict | None:
         row["refresh_token"] = _decrypt_token(row.get("refresh_token"))
         row["parent_refresh_token"] = _decrypt_token(row.get("parent_refresh_token"))
         return row
+    finally:
+        conn.close()
+
+
+def save_google_calendar_tokens(access_token: str, refresh_token: str) -> None:
+    """Persist the latest known-good Google Calendar OAuth token pair.
+    Singleton row (id=1), same encrypt-at-rest treatment as save_etsy_tokens()
+    (see _encrypt_token) -- reuses the same generic helper, not a new copy."""
+    if not access_token or not refresh_token:
+        return
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO google_calendar_tokens (id, access_token, refresh_token, updated_at)
+               VALUES (1, ?, ?, ?)
+               ON CONFLICT(id) DO UPDATE SET
+                 access_token=excluded.access_token, refresh_token=excluded.refresh_token,
+                 updated_at=excluded.updated_at""",
+            (_encrypt_token(access_token), _encrypt_token(refresh_token), ts),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_google_calendar_tokens() -> dict | None:
+    """The last persisted Google Calendar token pair, or None if not connected
+    yet. Transparently decrypts an encrypted row, same contract as
+    get_etsy_tokens()."""
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute("SELECT * FROM google_calendar_tokens WHERE id=1").fetchone()
+        if not r:
+            return None
+        row = dict(r)
+        row["access_token"] = _decrypt_token(row.get("access_token"))
+        row["refresh_token"] = _decrypt_token(row.get("refresh_token"))
+        return row
+    finally:
+        conn.close()
+
+
+def get_google_calendar_synced_event(item_key: str) -> str | None:
+    """The Google Calendar event id a local item (e.g. 'todo:42') was already
+    synced to, or None if it hasn't been pushed yet -- prevents the calendar
+    auto-sync loop from creating duplicate events on repeated runs."""
+    init_db()
+    conn = _connect()
+    try:
+        r = conn.execute(
+            "SELECT event_id FROM google_calendar_synced_events WHERE item_key=?", (item_key,)
+        ).fetchone()
+        return r["event_id"] if r else None
+    finally:
+        conn.close()
+
+
+def save_google_calendar_synced_event(item_key: str, event_id: str) -> None:
+    init_db()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO google_calendar_synced_events (item_key, event_id, created_at)
+               VALUES (?, ?, ?)
+               ON CONFLICT(item_key) DO UPDATE SET event_id=excluded.event_id""",
+            (item_key, event_id, ts),
+        )
+        conn.commit()
     finally:
         conn.close()
 

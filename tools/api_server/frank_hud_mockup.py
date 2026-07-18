@@ -1614,10 +1614,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
 
-  <!-- ══════════ CALENDAR — real data: /api/cadence + /api/todos — due dates, ops cadence, seasonal/tax calendar ══════════ -->
+  <!-- ══════════ CALENDAR — real data: /api/cadence + /api/todos — Google Calendar, due dates, ops cadence, seasonal/tax calendar ══════════ -->
   <div class="screen" id="screen-calendar">
     <div class="panel brk" style="height:100%">
-      <div class="panel-title">Calendar <span class="src">/api/cadence + /api/todos — due dates, ops cadence, seasonal keywords</span></div>
+      <div class="panel-title">Calendar <span class="src">/api/cadence + /api/todos — Google Calendar, due dates, ops cadence, seasonal keywords</span></div>
       <div id="calendar-content" style="margin-top:10px;overflow-y:auto;max-height:760px"><div class="hub-spinner"></div></div>
     </div>
   </div>
@@ -6006,8 +6006,14 @@ async function loadCalendar() {
     renderCalendarContent(d);
     const badge = document.getElementById('badge-calendar');
     if (badge) {
+      const today = new Date().toISOString().slice(0,10);
+      const tomorrow = new Date(Date.now()+86400000).toISOString().slice(0,10);
+      const soonGcal = (d.google_calendar||[]).filter(e=>{
+        const day = (e.when||'').slice(0,10);
+        return day===today || day===tomorrow;
+      }).length;
       const urgent = (d.seasonal||[]).concat(d.tax_deadlines||[]).filter(e=>e.urgency==='OVERDUE'||e.urgency==='THIS WEEK').length
-        + (d.due_todos||[]).length;
+        + (d.due_todos||[]).length + soonGcal;
       badge.textContent = urgent;
       badge.style.display = urgent>0 ? '' : 'none';
     }
@@ -6018,10 +6024,24 @@ async function loadCalendar() {
 function _calCard(sev, title, detail) {
   return `<div class="act-card ${sev}"><span class="act-sev ${sev}">${escHtml(sev)}</span><div class="act-title">${escHtml(title)}</div><div class="act-detail">${escHtml(detail)}</div></div>`;
 }
+function _fmtGCalWhen(ev) {
+  if (!ev.when) return '';
+  if (ev.all_day) return ev.when;
+  const dt = new Date(ev.when);
+  return isNaN(dt) ? ev.when : dt.toLocaleString(undefined, {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+}
 function renderCalendarContent(d) {
   const el = document.getElementById('calendar-content');
   if (!el) return;
   let html = '';
+
+  const gcal = d.google_calendar || [];
+  html += `<div class="section-title">📅 Google Calendar (${gcal.length})</div>`;
+  if (!gcal.length) {
+    html += '<div class="empty">No Google Calendar connected yet — connect it in Connections to see your events here.</div>';
+  } else {
+    html += gcal.map(e => _calCard('low', e.title, _fmtGCalWhen(e))).join('');
+  }
 
   const due = d.due_todos || [];
   html += `<div class="section-title">📌 Upcoming Due Dates (${due.length})</div>`;
@@ -7963,6 +7983,15 @@ async function studioPostFacebook() {
 // ── Connections — real data: /api/credentials/status + static Platform Roadmap ──
 const _PLATFORM_ROADMAP = [
   {name:'Etsy',      icon:'🛍️', status:'live',    note:'onbrandcraftz · authorized'},
+  {name:'Google Calendar', icon:'📅', status:'roadmap', note:'Frank-side wiring done (2026-07-18) — only OAuth remains', steps:[
+    'Enable the "Google Calendar API" for a project at console.cloud.google.com',
+    'Configure the OAuth consent screen (External is fine for a single-user shop)',
+    'Credentials > Create Credentials > OAuth client ID — Application type: Desktop app',
+    'Register redirect URI: http://localhost:3006/callback',
+    'Add GOOGLE_CALENDAR_CLIENT_ID / GOOGLE_CALENDAR_CLIENT_SECRET to .env',
+    'Run: python tools/google_calendar_oauth.py — approve access, tokens save automatically',
+    'Already done: your events show up in the Calendar tab and as reminders in the bell dropdown, and Frank can push its own due dates/deadlines onto your calendar too'
+  ]},
   {name:'Pinterest', icon:'📌', status:'roadmap',note:'Frank-side wiring done (2026-07-17) — only OAuth remains', steps:[
     'Create a Pinterest Developer app at developers.pinterest.com',
     'Add PINTEREST_APP_ID and PINTEREST_APP_SECRET to .env',
