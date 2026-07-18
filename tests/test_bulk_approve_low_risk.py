@@ -43,8 +43,8 @@ def test_bulk_approve_types_is_narrow_and_excludes_dangerous_types():
 
 def test_bulk_approve_function_exists_and_uses_confirm():
     source = HUD_PATH.read_text(encoding="utf-8")
-    m = re.search(r"async function bulkApproveLowRisk\(\)\s*\{(.*?)\n\}", source, re.DOTALL)
-    assert m, "could not find async function bulkApproveLowRisk()"
+    m = re.search(r"async function bulkApproveLowRisk\([^)]*\)\s*\{(.*?)\n\}", source, re.DOTALL)
+    assert m, "could not find async function bulkApproveLowRisk(...)"
     body = m.group(1)
     check("confirm(" in body, "bulk-approve must still confirm() once before applying anything (one tap, not zero)")
     check("/api/queue/" in body and "/approve" in body,
@@ -62,7 +62,9 @@ def test_bulk_button_gated_on_count_and_batch_limit():
 
 def test_bulk_approve_referenced_from_render():
     source = HUD_PATH.read_text(encoding="utf-8")
-    check("onclick=\"bulkApproveLowRisk()\"" in source, "the rendered button should wire up to bulkApproveLowRisk()")
+    check("onclick=\"bulkApproveLowRisk(this)\"" in source,
+          "the rendered button should wire up to bulkApproveLowRisk(this) -- the element ref "
+          "is needed for the in-flight loading state added 2026-07-18")
 
 
 def run() -> None:

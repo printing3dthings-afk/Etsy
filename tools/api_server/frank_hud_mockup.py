@@ -873,6 +873,15 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .act-btn.danger:hover,.hub-act-btn.danger:hover{background:rgba(224,104,95,.12)}
 .act-btn.approve{background:var(--green);color:#06140d;border-color:var(--green)}
 .act-btn.reject{color:#e08585;border-color:#5a2d2d}
+/* In-flight state (2026-07-18 motion audit) — approveAction()/bulkApproveLowRisk()
+   await a real Etsy write (up to 50s) before this pass touched the UI at all, so a
+   slow response just looked like a dead button. NOT optimistic completion (that
+   pattern explicitly excludes irreversible/high-stakes writes) — just an honest
+   "this is happening" state, applied via _setApproveLoading()/JS below. */
+.act-btn:disabled,.pp-btn:disabled{opacity:.6;cursor:default}
+.btn-spin{display:inline-block;width:11px;height:11px;border-radius:50%;vertical-align:-1px;margin-right:5px;
+  border:2px solid rgba(6,20,13,.3);border-top-color:currentColor;animation:hubspin .7s linear infinite}
+@media (prefers-reduced-motion: reduce){.btn-spin{animation:none}}
 .metric{background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:14px}
 .metric .value{font-size:24px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
 .metric .sub{font-size:11px;color:var(--muted);margin-top:2px}
@@ -998,9 +1007,23 @@ body.is-mobile #phone-tabbar .ptab{
   transition:color .18s ease,transform .1s ease;
 }
 body.is-mobile #phone-tabbar .ptab:active{transform:scale(.92)}
+body.is-mobile #phone-tabbar .ptab{position:relative;z-index:1}
 body.is-mobile #phone-tabbar .ptab .pti{font-size:19px;line-height:1;display:inline-block;
   transition:transform .22s cubic-bezier(.34,1.56,.64,1)}
 body.is-mobile #phone-tabbar .ptab.on{color:var(--cyan2)}
+/* Sliding pill indicator (2026-07-18 motion audit) — was color-only, so nothing
+   carried the eye to the newly active tab. Positioned/animated in JS (see the
+   ptab-pill IIFE near phoneTab()) via transform, tracking the active tab's icon;
+   color-mix keeps it theme-aware across every color preset, with a flat rgba
+   fallback for engines that don't support color-mix() yet. Sits at z-index 0,
+   behind the icon/label (z-index 1 above), so text stays legible over it. */
+body.is-mobile #phone-tabbar .ptab-pill{
+  position:absolute;top:0;left:0;width:34px;height:34px;border-radius:12px;
+  background:rgba(96,220,255,.16);
+  background:color-mix(in srgb, var(--cyan2) 18%, transparent);
+  opacity:0;pointer-events:none;z-index:0;
+  transition:transform .38s cubic-bezier(.34,1.56,.64,1),opacity .2s ease;
+}
 body.is-mobile #phone-tabbar .ptab.on .pti{transform:scale(1.14)}
 body.is-mobile #phone-tabbar .ptab:focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:var(--r-sm)}
 body.is-mobile #phone-tabbar .ptab .pcnt{
@@ -1213,6 +1236,20 @@ body.product-sheet-open #product-sheet{display:flex}
   border:1px solid var(--border);border-radius:var(--r-md);flex-direction:column;overflow:hidden}
 body.product-review-open #product-review-backdrop{display:block}
 body.product-review-open #product-review-modal{display:flex}
+/* Entrance/exit motion (2026-07-18 motion audit) — was a hard display:none<->flex
+   cut with no transition either direction. Entrance uses `animation` (fires cleanly
+   on display:none->flex, same reasoning as .screen-in above transitions can't
+   interpolate from a missing starting frame). Exit needs a JS-driven third class
+   (.product-review-closing, see productReviewClose()) since transition/animation
+   can't run AFTER display goes to none -- closing keeps display:flex for one more
+   animation duration while playing the reverse motion, then productReviewClose()'s
+   setTimeout removes it once the animation has actually finished. */
+@keyframes prm-in{from{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}to{opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0)}}
+@keyframes prm-backdrop-in{from{opacity:0}to{opacity:1}}
+body.product-review-open #product-review-modal{animation:prm-in .24s cubic-bezier(.22,1,.36,1) both}
+body.product-review-open #product-review-backdrop{animation:prm-backdrop-in .2s ease both}
+body.product-review-closing #product-review-backdrop{display:block;animation:prm-backdrop-in .18s ease reverse both}
+body.product-review-closing #product-review-modal{display:flex;animation:prm-in .18s cubic-bezier(.4,0,1,1) reverse both}
 .prm-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
 .prm-header-title{font-weight:700;font-size:15px;color:var(--text)}
@@ -1257,8 +1294,10 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .mini-wave span{animation:none;height:10px}
   .hub-spinner{animation:none}
   .screen.active{animation:none}
-  .nav-item,body.is-mobile #phone-tabbar .ptab,body.is-mobile #phone-tabbar .ptab .pti{transition:none}
+  .nav-item,body.is-mobile #phone-tabbar .ptab,body.is-mobile #phone-tabbar .ptab .pti,
+  body.is-mobile #phone-tabbar .ptab-pill{transition:none}
   .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
+  #product-review-modal,#product-review-backdrop{animation:none !important}
   .create-choice{transition:none}
   .create-choice:hover,.create-choice:active{transform:none}
   /* .act-btn's press-scale predates this file's reduced-motion pass (pre-existing
@@ -2236,6 +2275,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <!-- ══ Phone Mode bottom tab bar — mobile only (hidden on desktop via CSS) ══ -->
   <nav id="phone-tabbar" aria-label="Phone navigation">
+    <div class="ptab-pill" id="ptab-pill" aria-hidden="true"></div>
     <button class="ptab" data-ptab="ask" onclick="phoneTab('ask')" aria-label="Ask Frank"><span class="pti" aria-hidden="true">◉</span>Ask</button>
     <button class="ptab" data-ptab="appr" onclick="phoneTab('appr')" aria-label="Approvals"><span class="pti" aria-hidden="true">✓</span>Approvals<span class="pcnt" id="ptab-badge">0</span></button>
     <button class="ptab on" data-ptab="today" onclick="phoneTab('today')" aria-label="Today"><span class="pti" aria-hidden="true">▤</span>Today<span class="pcnt" id="ptab-today-badge">0</span></button>
@@ -2342,7 +2382,16 @@ if (isMobileMode()) setTimeout(() => phoneTab('ask'), 0);
 // SAME live data + action fns (approveAction, openRejectModal, /api/metrics,
 // /api/alerts, showScreen) — not the desktop screens (which were too big).
 // Styled via theme vars so the color selector recolors them. ──
+// F4 (2026-07-18 motion audit): a short haptic tick on tab switches and a
+// successful approve. Android Chrome supports navigator.vibrate(); iOS Safari has
+// no Vibration API at all and silently no-ops the call, so this is a free
+// enhancement with no fallback branch to write.
+function _hapticTick(ms){
+  try { if (navigator.vibrate) navigator.vibrate(ms || 10); } catch(e) {}
+}
 function phoneTab(which){
+  const wasActive = document.querySelector('#phone-tabbar .ptab.on');
+  if (!(wasActive && wasActive.dataset.ptab === which)) _hapticTick();
   if (which === 'ask'){ openFrankPopup(); return; }
   // Leaving the orb popup for a native panel (Scott, 2026-07-10: tab bar is now
   // reachable while the popup is open) -- same cleanup closeFrankPopup() does,
@@ -2385,6 +2434,38 @@ function closeFrankPopup(){
   document.body.style.overflow = '';
   phoneTab(_frankPopupPrevTab);
 }
+// Sliding pill indicator (2026-07-18 motion audit) — a MutationObserver instead of
+// a call at every .ptab.on toggle site: phoneTab(), openFrankPopup(), and
+// phoneOpenScreen() all mutate .on independently, and a shared observer keeps the
+// pill in sync with whichever one last ran (present or future call sites) with
+// zero coupling. Tracks the active tab's icon (.pti), not the whole button, so the
+// pill reads as a highlight on the glyph rather than a slab behind the label too.
+(function(){
+  const bar = document.getElementById('phone-tabbar');
+  const pill = document.getElementById('ptab-pill');
+  if (!bar || !pill) return;
+  function movePill(){
+    const active = bar.querySelector('.ptab.on');
+    if (!active){ pill.style.opacity = '0'; return; }
+    const target = active.querySelector('.pti') || active;
+    const tRect = target.getBoundingClientRect(), barRect = bar.getBoundingClientRect();
+    if (tRect.width === 0 && tRect.height === 0){ pill.style.opacity = '0'; return; } // tab bar hidden (desktop)
+    const size = 34;
+    const cx = tRect.left + tRect.width / 2 - barRect.left;
+    const cy = tRect.top + tRect.height / 2 - barRect.top;
+    pill.style.opacity = '1';
+    pill.style.transform = 'translate(' + Math.round(cx - size / 2) + 'px,' + Math.round(cy - size / 2) + 'px)';
+  }
+  let _pillRAF = null;
+  function schedulePillMove(){
+    if (_pillRAF) return;
+    _pillRAF = requestAnimationFrame(() => { _pillRAF = null; movePill(); });
+  }
+  new MutationObserver(schedulePillMove).observe(bar, {attributes: true, attributeFilter: ['class'], subtree: true});
+  window.addEventListener('resize', schedulePillMove);
+  mobileMQ.addEventListener('change', schedulePillMove);
+  schedulePillMove();
+})();
 // Quick-text popup (mobile only) — the top-right hamburger's actual job now: a
 // small popup with just an input + send button, no orb, no transcript. Reuses
 // the generalized sendMsg(sourceId) (same WS pipeline as #chat-input/#orb-chat-input).
@@ -2450,12 +2531,12 @@ async function renderPhoneApprovals(){
     else if (a.type==='update_price') meta += ` · $${escHtml(Number(p.price||0).toFixed(2))}`;
     else if (a.type==='toggle_listing_state') meta += ` · → ${escHtml(p.new_state||'')}`;
     return `<div class="pcard"><div class="pt">${escHtml(a.summary||a.type)}</div><div class="pm">${escHtml(meta)}</div>
-      <div class="pp-acts"><button class="pp-btn ok" onclick="phoneApprove(${a.id})">Approve</button>
+      <div class="pp-acts"><button class="pp-btn ok" onclick="phoneApprove(${a.id}, this)">Approve</button>
       <button class="pp-btn no" onclick="openRejectModal(${a.id})">Reject</button></div>
       <div id="reject-modal-${a.id}" style="display:none"></div></div>`;
   }).join('') + recentHtml;
 }
-async function phoneApprove(id){ await approveAction(id); renderPhoneApprovals(); }
+async function phoneApprove(id, btnEl){ await approveAction(id, btnEl); renderPhoneApprovals(); }
 // Today — compact tiles + alerts from the same endpoints the dashboard uses.
 function _needKey(x) {
   return x.listing_id ? ('l:' + x.listing_id) : ('a:' + (x.title || ''));
@@ -3703,13 +3784,35 @@ function renderTourStep(){
     tip.style.top = top + 'px';
   });
 }
-function endTour(markSeen){
+// F5 (2026-07-18 motion audit): a genuinely finished tour (Next through every
+// step, not Skip) hands off to one real pending item if one exists, instead of
+// closing on a static "you're all set" card -- 2026 onboarding research converges
+// on getting to one real, completed action inside the first session (Duolingo
+// starts the actual lesson immediately rather than explaining the app first).
+// `completed` (not `markSeen`, which both Next-through and Skip set) is what
+// distinguishes the two -- Skip is the user opting out of hand-holding, so it
+// shouldn't then hand-hold them into Approvals. Fetches fresh rather than trusting
+// _pendingActions, which is only populated once the Approvals screen has actually
+// loaded and may still be empty this early. A failed/empty fetch just ends the
+// tour exactly as before -- this is a bonus nudge, never a requirement.
+async function endTour(markSeen, completed){
   const root = document.getElementById('tour-root');
   if (root) root.style.display = 'none';
   if (markSeen) { try { localStorage.setItem('frankWelcomeSeen', '1'); } catch(e) {} }
+  if (!completed) return;
+  try {
+    const r = await authGet('/api/queue?status=pending', 8000);
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!(d.actions || []).length) return;
+    setTimeout(() => {
+      if (isMobileMode()) phoneTab('appr'); else showScreen('actions');
+      showToast('One real item is waiting for your OK — try it now.', 'ok', 6000);
+    }, 350);
+  } catch(e) { /* bonus nudge only -- the tour has already closed either way */ }
 }
 function tourNext(){
-  if (_tourIndex >= _activeTourSteps.length - 1) { endTour(true); return; }
+  if (_tourIndex >= _activeTourSteps.length - 1) { endTour(true, true); return; }
   _tourIndex++;
   renderTourStep();
 }
@@ -3718,7 +3821,7 @@ function tourBack(){
   _tourIndex--;
   renderTourStep();
 }
-function tourSkip(){ endTour(true); }
+function tourSkip(){ endTour(true, false); }
 function startTour(){
   _activeTourSteps = isMobileMode() ? MOBILE_TOUR_STEPS : TOUR_STEPS;
   openControlCenter();
@@ -5473,7 +5576,7 @@ function renderApproval(a) {
       <div class="hub-listing-meta">${escHtml(meta)}</div>
     </div>
     <div class="act-btns" style="flex-shrink:0" onclick="event.stopPropagation()">
-      <button class="act-btn approve" onclick="approveAction(${a.id})">Approve</button>
+      <button class="act-btn approve" onclick="approveAction(${a.id}, this)">Approve</button>
       ${a.type === 'publish_listing' ? `<button class="act-btn secondary" onclick="fixDraftStage(${(p.listing_id||0)},${a.id},this)">🤖 Fix</button>` : ''}
       <button class="act-btn reject" onclick="openRejectModal(${a.id})">Reject</button>
     </div>
@@ -5495,10 +5598,25 @@ const _APPROVE_CONFIRM_MSGS = {
   local_exec: 'Approve and run this command on your computer now?',
   run_script: 'Approve and run this workflow script now?'
 };
-async function approveAction(id) {
+// Walks to the shared button row (.act-btns desktop / .pp-acts mobile) so
+// Reject/Fix can't be tapped mid-approve either, not just the tapped button.
+function _setApproveLoading(btnEl, loading){
+  if (!btnEl) return;
+  const group = btnEl.closest('.act-btns, .pp-acts');
+  (group ? group.querySelectorAll('button') : [btnEl]).forEach(b => { b.disabled = loading; });
+  if (loading) {
+    btnEl.dataset.origLabel = btnEl.textContent;
+    btnEl.innerHTML = '<span class="btn-spin" aria-hidden="true"></span>Approving…';
+  } else if (btnEl.dataset.origLabel) {
+    btnEl.textContent = btnEl.dataset.origLabel;
+    delete btnEl.dataset.origLabel;
+  }
+}
+async function approveAction(id, btnEl) {
   const act = (_pendingActions || []).find(x => x.id === id);
   const msg = (act && _APPROVE_CONFIRM_MSGS[act.type]) || 'Approve and apply this change to your live Etsy listing now?';
   if (!confirm(msg)) return;
+  _setApproveLoading(btnEl, true);
   try {
     const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/approve', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 50000);
     const d = await r.json().catch(()=>({}));
@@ -5512,17 +5630,23 @@ async function approveAction(id) {
       const o = _actionOutcomeSummary({type: act.type, payload: act.payload, status: 'executed', result: d.result});
       showToast(o.text, 'ok', 6000);
     }
-    loadActions();
-  } catch(e) { showToast('Could not apply: ' + (e.message||e), 'err', 6000); }
+    _hapticTick(15);
+    loadActions(); // re-render drops the approved card, so no need to un-loading it here
+  } catch(e) {
+    showToast('Could not apply: ' + (e.message||e), 'err', 6000);
+    _setApproveLoading(btnEl, false);
+  }
 }
 // 2026-07-18 (audit-report fix): one confirm() covers the whole batch -- still
 // the one tap "nothing goes live without your tap" promises, just one tap for
 // several items instead of N. Applies sequentially (not Promise.all) so a
 // failure partway through doesn't leave the Etsy API mid-burst under load.
-async function bulkApproveLowRisk() {
+async function bulkApproveLowRisk(btnEl) {
   const candidates = (_pendingActions || []).filter(a => _BULK_APPROVE_TYPES.includes(a.type));
   if (!candidates.length) return;
   if (!confirm(`Approve all ${candidates.length} low-risk items (tag/title updates only) and apply them to your live Etsy listings now?`)) return;
+  if (btnEl) { btnEl.disabled = true; btnEl.dataset.origLabel = btnEl.textContent;
+    btnEl.innerHTML = '<span class="btn-spin" aria-hidden="true"></span>Approving ' + candidates.length + '…'; }
   let okCount = 0, errCount = 0;
   for (const a of candidates) {
     try {
@@ -5531,7 +5655,7 @@ async function bulkApproveLowRisk() {
     } catch(e) { errCount++; }
   }
   showToast(`Bulk approve: ${okCount} applied${errCount ? `, ${errCount} failed` : ''}`, errCount ? 'err' : 'ok', 6000);
-  loadActions();
+  loadActions(); // re-render replaces this button entirely, so no un-loading needed on success
 }
 function openRejectModal(id) {
   const panel = document.getElementById('reject-modal-'+id);
@@ -5672,7 +5796,7 @@ function renderActionsContent() {
   if (bulkCandidates.length >= 2 && bulkCandidates.length <= _APPROVAL_BATCH_LIMIT) {
     html += `<div class="hub-listing-meta" style="margin-bottom:10px;padding:8px 10px;background:var(--panel2);border-radius:var(--r-sm);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <span>${bulkCandidates.length} low-risk items pending (tag/title updates only)</span>
-      <button class="act-btn primary" onclick="bulkApproveLowRisk()">Approve all ${bulkCandidates.length}</button>
+      <button class="act-btn primary" onclick="bulkApproveLowRisk(this)">Approve all ${bulkCandidates.length}</button>
     </div>`;
   }
   if (pending.length) {
@@ -6755,7 +6879,10 @@ function openProductInfoSheet(p){
 
 // ── Review modal (ready_for_review / draft / listed_draft) ──────────────────────────
 function productReviewClose(){
+  if (!document.body.classList.contains('product-review-open')) return; // already closed/closing
   document.body.classList.remove('product-review-open');
+  document.body.classList.add('product-review-closing');
+  setTimeout(() => document.body.classList.remove('product-review-closing'), _reducedMotion ? 0 : 200);
 }
 async function openProductReviewModal(p){
   document.getElementById('prm-title').textContent = p.title || p.id;
