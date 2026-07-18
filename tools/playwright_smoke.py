@@ -580,6 +580,9 @@ async def _run_browser_checks() -> None:
                      status: 'ready_for_review', price: 12.99, files: [], all_files_present: true},
                     {id: 'DP1031', title: 'Evergreen Planner', listing_id: null, category: 'digital_planner',
                      status: 'ready_for_review', price: 12.99, files: [], all_files_present: true},
+                    {id: 'SVG1001', title: 'SVG Bundle One', listing_id: '4', category: 'svg_bundle',
+                     status: 'active', price: 7.99, files: [{name: 'Bundle.zip', exists: false}],
+                     all_files_present: false, file_audit: 'genuinely_missing'},
                 ];
                 _productCategoryFilter = null;
                 renderProductsContent();
@@ -601,14 +604,29 @@ async def _run_browser_checks() -> None:
                   f"a planner missing both PDF and ZIP should offer both regenerate buttons: {planner_fix_sheet}")
             check("Open in Files" in planner_fix_sheet.get("buttons", ""), f"fix sheet must always offer Open in Files: {planner_fix_sheet}")
 
-            nonplanner_fix_sheet = await page.evaluate("""() => {
+            # wall_art now has a real generator wired (2026-07-18: /api/produce/print-zip) --
+            # its fix sheet should offer a genuine regenerate button, same tier as planners.
+            wallart_fix_sheet = await page.evaluate("""() => {
                 document.body.classList.remove('product-sheet-open');
                 openProductSheet('WA1001');
                 return document.getElementById('product-sheet-buttons').innerHTML;
             }""")
-            check("Regenerate" not in nonplanner_fix_sheet,
-                  f"non-planner categories must not offer a regenerate action (no verified build tool for them): {nonplanner_fix_sheet}")
-            check("Open in Files" in nonplanner_fix_sheet, f"non-planner fix sheet should still offer Open in Files: {nonplanner_fix_sheet}")
+            check("Regenerate print-size ZIP" in wallart_fix_sheet,
+                  f"wall_art missing files should offer the print-zip regenerate action: {wallart_fix_sheet}")
+
+            # Categories with no generator wired this round (2026-07-18 scoping decision:
+            # svg_bundle/paper_pack/sublimation/etc.) must show the HONEST Etsy-audit state
+            # instead of a fake regenerate button -- never a dead end, never a lie.
+            unsupported_fix_sheet = await page.evaluate("""() => {
+                document.body.classList.remove('product-sheet-open');
+                openProductSheet('SVG1001');
+                return document.getElementById('product-sheet-buttons').innerHTML;
+            }""")
+            check("Regenerate" not in unsupported_fix_sheet,
+                  f"categories with no verified build tool must not offer a fake regenerate action: {unsupported_fix_sheet}")
+            check("flagged for review" in unsupported_fix_sheet,
+                  f"a genuinely_missing file_audit verdict should say so plainly, not just stay silent: {unsupported_fix_sheet}")
+            check("Open in Files" in unsupported_fix_sheet, f"unsupported-category fix sheet should still offer Open in Files: {unsupported_fix_sheet}")
 
             # Regenerating a missing-files card removes it from the current view
             # (2026-07-18 -- Scott reported it kept sitting there red for the
@@ -1175,7 +1193,7 @@ async def _run_browser_checks() -> None:
                 const dd = document.getElementById('alert-dropdown');
                 if (!dd) return null;
                 const r = dd.getBoundingClientRect();
-                return {left: r.left, right: r.right, display: getComputedStyle(dd).display};
+                return {left: r.left, right: r.right, top: r.top, display: getComputedStyle(dd).display};
             }""")
             if dropdown_box and dropdown_box.get("display") != "none":
                 vw = await page.evaluate("window.innerWidth")
@@ -1184,6 +1202,48 @@ async def _run_browser_checks() -> None:
                       f"legitimately set on mobile (via phoneOpenScreen): {dropdown_box}, viewport width {vw}")
                 check(dropdown_box["right"] <= vw,
                       f"#alert-dropdown must not render past the right edge of the viewport: {dropdown_box}, viewport width {vw}")
+                hdr_box = await page.evaluate("""() => {
+                    const h = document.querySelector('.hdr-bar');
+                    if (!h) return null;
+                    const r = h.getBoundingClientRect();
+                    return {bottom: r.bottom};
+                }""")
+                if hdr_box:
+                    check(dropdown_box.get("top", 0) >= hdr_box["bottom"] - 1,
+                          f"#alert-dropdown must render BELOW the header, not overlapping its icon row -- "
+                          f"dropdown {dropdown_box}, header bottom {hdr_box['bottom']}")
+            await page.evaluate("toggleAlertDropdown && toggleAlertDropdown()")  # close it again
+
+            # ── Gray block over the header (2026-07-18, reported by Scott on the
+            # Products and Create screens) -- live Playwright repro traced this to a
+            # DIFFERENT bug than the two cc-open leaks above: the orb is the mobile
+            # home tab at load (setTimeout(() => phoneTab('ask'), 0) sets
+            # frank-popup-open on every mobile page load), but phoneOpenScreen()
+            # (every "More" list item, incl. Products) never cleared it, so body
+            # ended up with BOTH frank-popup-open AND cc-open at once.
+            # body.is-mobile.frank-popup-open #orb-view's CSS (2 classes) outranks
+            # body.cc-open #orb-view{display:none} (1 class) by specificity, so the
+            # full-screen orb popup (translucent radial-gradient background)
+            # rendered ON TOP of the header -- confirmed via a real click on the
+            # bell icon timing out because #orb-view's orb-hero-stage was
+            # intercepting pointer events. Simulate the exact precondition
+            # (frank-popup-open already set, as it always is right after mobile
+            # load) then call phoneOpenScreen() the same way a "More" tap does.
+            popup_leak_state = await page.evaluate("""() => {
+                document.body.classList.add('frank-popup-open');
+                phoneOpenScreen('products');
+                const orb = document.getElementById('orb-view');
+                return {
+                    frankPopupOpenAfter: document.body.classList.contains('frank-popup-open'),
+                    orbDisplay: orb ? getComputedStyle(orb).display : null,
+                };
+            }""")
+            check(popup_leak_state.get("frankPopupOpenAfter") is False,
+                  f"phoneOpenScreen() must clear a stuck frank-popup-open (set by the orb-as-home-tab load path) -- "
+                  f"otherwise its higher-specificity CSS re-shows #orb-view over cc-open's hidden state: {popup_leak_state}")
+            check(popup_leak_state.get("orbDisplay") == "none",
+                  f"#orb-view must be display:none once a phoneOpenScreen() screen (e.g. Products) is open -- a visible "
+                  f"#orb-view here is exactly the 'gray block over the header' Scott reported: {popup_leak_state}")
 
             # ── Chat History screen (2026-07-15) — Scott: "I need a option on the
             # list to see the chat box from ask Frank to see his responses."

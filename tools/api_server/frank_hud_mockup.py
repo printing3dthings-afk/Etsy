@@ -1949,7 +1949,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div style="font-size:12px;color:var(--muted);margin:6px 0 14px">What would you like to make? Frank builds it, you review it, then you approve it before anything goes live.</div>
       <div id="create-chooser" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-buildproduct')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center;grid-column:1/-1">
-          <div style="font-size:26px" aria-hidden="true">📦</div><div style="font-weight:700;margin-top:6px">Build whole product</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">One tap: stickers → planner → 10 photos → Quality Check</div></div>
+          <div style="font-size:26px" aria-hidden="true">📦</div><div style="font-weight:700;margin-top:6px">Build whole product</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">One tap, builds the right pipeline for the code you enter — Digital Planners, Wall Art, or Coloring Pages</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-photos')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
           <div style="font-size:26px" aria-hidden="true">🖼️</div><div style="font-weight:600;margin-top:6px">Listing photos</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Photorealistic mockups from your real file</div></div>
         <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-svg')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
@@ -1973,12 +1973,18 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <div class="hub-section-title" id="create-buildproduct" style="margin-top:18px">Build whole product — one tap, end to end</div>
       <div class="hub-card">
         <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
-          The full pipeline in one tap, in the right order: <b>sticker pack → planner PDFs (with the sheets embedded) → all 10 listing photos → Quality Check</b>. Runs in the background (~6–10 min) — each deliverable shows in Files as it finishes, and <b>&lt;code&gt;_product_build.log</b> carries the live log and the final QC verdict. <b>The cover + sticker sheets are the paid AI step.</b> Configured codes: DP1030–DP1034. <b style="color:var(--warn,#d98a00)">⚠ Nothing is published</b> — eyeball the sheets + photos for garbled text, then publishing is your call.
+          Enter any product code — Frank looks it up and runs the right pipeline for its category:
+          <ul style="margin:6px 0 6px 18px;padding:0">
+            <li><b>Digital Planners</b> (DP1030–DP1034): sticker pack → planner PDFs (sheets embedded) → all 10 listing photos → Quality Check. The cover + sticker sheets are the paid AI step — pick the engine below.</li>
+            <li><b>Wall Art</b>: multi-size print ZIP (300dpi, sRGB) → Quality Check. No new AI art — reuses the source file already on this deploy.</li>
+            <li><b>Coloring Pages</b>: theme pages (only uncached ones cost an AI call) → ZIP sets → Quality Check.</li>
+          </ul>
+          Wall Art and Coloring Pages don't include the 10 listing photos in this one-tap flow yet — use the <b>Listing photos</b> card above per-photo once the files look right. Runs in the background — each deliverable shows in Files as it finishes, and <b>&lt;code&gt;_*.log</b> carries the live run log + the final QC verdict. Every other category has no verified build pipeline wired up yet and returns a clear error instead of guessing. <b style="color:var(--warn,#d98a00)">⚠ Nothing is published</b> — review the result, then publishing is your call.
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="bx-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
+          <input id="bx-pid" type="text" placeholder="Product code — planner, wall art, or coloring pages" autocapitalize="characters"
             style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
-          <select id="bx-engine" title="Art engine for cover + sticker sheets"
+          <select id="bx-engine" title="Art engine — only used for the Digital Planner cover/sticker step"
             style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
             <option value="gemini" selected>Gemini art</option>
             <option value="openai">gpt-image-1</option>
@@ -2806,6 +2812,24 @@ function renderPhoneMore(){
 }
 // Opening a screen from More exits the phone panel and shows that (desktop) screen.
 function phoneOpenScreen(name){
+  // 2026-07-18: clear the "Talk to Frank" orb popup first if it's still open --
+  // reproduced live via Playwright: the orb is the mobile home tab at load
+  // (setTimeout(() => phoneTab('ask'), 0) below), which sets frank-popup-open on
+  // EVERY mobile page load. Tapping a "More" list item calls this function
+  // directly (never through phoneTab()), so frank-popup-open was never being
+  // cleared -- body ended up with BOTH frank-popup-open AND cc-open at once.
+  // body.is-mobile.frank-popup-open #orb-view's CSS (2 classes) outranks
+  // body.cc-open #orb-view{display:none} (1 class) by specificity, so the
+  // full-screen orb popup (translucent radial-gradient background) rendered on
+  // TOP of the header on every screen opened this way -- confirmed the exact
+  // "gray block over the header icons" Scott reported on Products and Create,
+  // and Playwright confirmed the orb's stage was even intercepting clicks on the
+  // header buttons underneath it. openFullChat() already did this same cleanup
+  // for its one call path; centralizing it here covers every phoneOpenScreen()
+  // caller (all of "More", Create, etc.) instead of requiring each to remember it.
+  document.body.classList.remove('frank-popup-open');
+  document.documentElement.style.overflow = '';
+  document.body.style.overflow = '';
   document.body.classList.remove('phone-panel');
   // phone-screen-open (2026-07-18): dedicated marker so syncMobileClass()
   // can tell this deliberate cc-open apart from a stray/stuck one -- see its
@@ -6930,9 +6954,11 @@ function renderProductsContent() {
 
   const filtered = _productCategoryFilter === null ? _products : _products.filter(p => p.category === _productCategoryFilter);
   filtered.forEach(p => {
-    const borderColor = p.all_files_present === true ? 'var(--green)' : p.all_files_present === false ? 'var(--red)' : 'var(--muted)';
+    const borderColor = p.files_not_applicable ? 'var(--border)' : p.all_files_present === true ? 'var(--green)' : p.all_files_present === false ? 'var(--red)' : 'var(--muted)';
     let filesLine;
-    if (!p.files || !p.files.length) {
+    if (p.files_not_applicable) {
+      filesLine = p.category === '3d_print_physical' ? '📦 physical product — ships, no digital file' : '📜 license listing — no design file of its own';
+    } else if (!p.files || !p.files.length) {
       filesLine = 'no files listed in catalog';
     } else if (p.all_files_present) {
       filesLine = '✅ all ' + p.files.length + ' file(s) present';
@@ -6959,7 +6985,9 @@ function renderProductsContent() {
 function openProductSheet(productId) {
   const p = _products.find(x => x.id === productId);
   if (!p) return;
-  if (p.all_files_present === false) {
+  if (!p.files_not_applicable && p.all_files_present !== true) {
+    // Covers both "some files missing" (false) and "no files listed in
+    // catalog at all" (null) -- both need a real next step, not a dead end.
     openProductFixSheet(p);
   } else if (p.status === 'ready_for_review' || p.status === 'draft' || p.status === 'listed_draft') {
     openProductReviewModal(p);
@@ -6981,29 +7009,58 @@ function productSheetOpenFiles(productId){
   productSheetClose();
   _productGoToScreen('files');
 }
+// kind -> {label, endpoint, warnExtra}. 'planner'/'stickers' are the original
+// digital-planner-only actions; 'wallart_printzip' and 'coloring' extend the same
+// tap-to-fix flow to Wall Art and Coloring Pages (2026-07-18) -- the other
+// categories without a generator this round get an honest Etsy-verified/flagged
+// state instead of a button here (see openProductFixSheet()).
+const _PRODUCT_REGEN_KINDS = {
+  planner: {
+    label: 'the dated + undated PDF', endpoint: '/api/produce/build-planner',
+    warnExtra: 'This starts a NEW AI generation job (about 2-4 minutes, costs real AI credits) and ' +
+      'produces brand-new cover art -- NOT a recovery of the exact file that was originally ' +
+      'uploaded to Etsy. If this listing is already live, the regenerated art may look different ' +
+      'from what buyers currently see.',
+  },
+  stickers: {
+    label: 'the sticker pack', endpoint: '/api/produce/build-sticker-pack',
+    warnExtra: 'This starts a NEW AI generation job (about 2-4 minutes, costs real AI credits) and ' +
+      'produces brand-new sticker art -- NOT a recovery of the exact file that was originally ' +
+      'uploaded to Etsy. If this listing is already live, the regenerated art may look different ' +
+      'from what buyers currently see.',
+  },
+  wallart_printzip: {
+    label: 'the multi-size print ZIP', endpoint: '/api/produce/print-zip', timeoutMs: 210000,
+    warnExtra: 'This re-packages the print sizes from the existing source art file already on ' +
+      'this deploy -- no new AI art is generated, so this only works if the source JPG is present. ' +
+      'Runs while you wait (can take up to a couple minutes for large art).',
+  },
+  coloring: {
+    label: 'the coloring pack', endpoint: '/api/produce/coloring-pack',
+    warnExtra: 'This starts a background job that regenerates only the theme pages not already ' +
+      'cached on disk (real AI credits for any uncached page) and re-zips the pack. Any freshly ' +
+      'generated pages may look different from what buyers currently see.',
+  },
+};
+
 async function productRegenerateBuild(productId, kind){
-  // kind: 'planner' (dated+undated PDF) or 'stickers' (sticker pack ZIP).
-  // NOT a silent one-tap fix (2026-07-18 design decision) -- this kicks off a real,
-  // paid AI generation job (~2-4 min) that produces NEW cover/sticker art, not a
-  // recovery of the exact bytes already live on Etsy. Say so plainly and require an
-  // explicit confirm before firing.
-  const label = kind === 'planner' ? 'the dated + undated PDF' : 'the sticker pack';
-  const warn = 'Regenerate ' + label + ' for ' + productId + '?\\n\\n' +
-    'This starts a NEW AI generation job (about 2-4 minutes, costs real AI credits) and ' +
-    'produces brand-new cover/sticker art -- NOT a recovery of the exact file that was ' +
-    'originally uploaded to Etsy. If this listing is already live, the regenerated art ' +
-    'may look different from what buyers currently see.\\n\\nContinue?';
+  // NOT a silent one-tap fix (2026-07-18 design decision) -- these start real build
+  // jobs that can produce NEW art, not a recovery of the exact bytes already live on
+  // Etsy. Say so plainly and require an explicit confirm before firing.
+  const meta = _PRODUCT_REGEN_KINDS[kind];
+  if (!meta) return;
+  const warn = 'Regenerate ' + meta.label + ' for ' + productId + '?\\n\\n' + meta.warnExtra + '\\n\\nContinue?';
   if (!confirm(warn)) return;
-  const endpoint = kind === 'planner' ? '/api/produce/build-planner' : '/api/produce/build-sticker-pack';
+  const endpoint = meta.endpoint;
   try {
     const r = await fetchWithTimeout(BASE + endpoint, {
       method: 'POST', headers: {Authorization: 'Bearer '+TOKEN, 'Content-Type': 'application/json'},
       body: JSON.stringify({pid: productId}),
-    }, 20000);
+    }, meta.timeoutMs || 20000);
     const d = await r.json().catch(()=>({}));
     if (!r.ok || d.error) throw new Error(d.error || d.detail || ('HTTP '+r.status));
     productSheetClose();
-    showToast(d.message || ('Started regenerating ' + label + ' for ' + productId + '.'), 'ok', 7000);
+    showToast(d.message || ('Started regenerating ' + meta.label + ' for ' + productId + '.'), 'ok', 7000);
     // 2026-07-18: drop it from the current view now that a fix is in flight --
     // it would otherwise keep sitting there red for the ~2-4 min the job takes,
     // reading as still broken/unaddressed. loadProducts() (next real navigation
@@ -7017,20 +7074,51 @@ async function productRegenerateBuild(productId, kind){
 }
 function openProductFixSheet(p){
   _productSheetItem = p;
-  document.getElementById('product-sheet-title').textContent = (p.title || p.id) + ' — files missing';
   const missing = (p.files||[]).filter(f => !f.exists).map(f => f.name);
-  document.getElementById('product-sheet-sub').textContent = missing.length
-    ? 'Missing on this deploy: ' + missing.join(', ')
-    : 'Some files are missing on this deploy.';
+  const noFilesListed = !p.files || !p.files.length;
+  document.getElementById('product-sheet-title').textContent = (p.title || p.id) + (noFilesListed ? ' — no files listed' : ' — files missing');
+  document.getElementById('product-sheet-sub').textContent = noFilesListed
+    ? 'The catalog has no file paths recorded for this product.'
+    : (missing.length ? 'Missing on this deploy: ' + missing.join(', ') : 'Some files are missing on this deploy.');
+
   const isPlanner = p.category === 'digital_planner';
+  const isWallArt = p.category === 'wall_art' || p.category === 'wall_art_bundle';
+  const isColoring = p.category === 'coloring_pages';
   const needsPdf = missing.some(n => n.toLowerCase().endsWith('.pdf'));
   const needsZip = missing.some(n => n.toLowerCase().endsWith('_sticker_pack.zip'));
+
   let btns = '';
+  let hasRealFix = false;
   if (isPlanner && needsPdf) {
+    hasRealFix = true;
     btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'planner\\')">🤖 Regenerate PDF (dated + undated)</button>';
   }
   if (isPlanner && needsZip) {
+    hasRealFix = true;
     btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'stickers\\')">🤖 Regenerate sticker pack</button>';
+  }
+  if (isWallArt) {
+    hasRealFix = true;
+    btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'wallart_printzip\\')">🤖 Regenerate print-size ZIP</button>';
+  }
+  if (isColoring) {
+    hasRealFix = true;
+    btns += '<button class="psheet-btn primary" onclick="productRegenerateBuild(\\'' + p.id + '\\',\\'coloring\\')">🤖 Regenerate coloring pack</button>';
+  }
+  if (!hasRealFix) {
+    // No generator wired for this category yet (2026-07-18 scoping decision) --
+    // show the REAL state from tools/audit_product_files.py's Etsy check instead
+    // of a fake regenerate button, so this is never a silent dead end.
+    if (p.file_audit === 'verified_live') {
+      btns += '<div style="font-size:12.5px;opacity:0.85;margin-bottom:8px">✅ Verified live on Etsy — this is a missing LOCAL backup only, not a customer-facing problem.</div>';
+    } else if (p.file_audit === 'genuinely_missing') {
+      btns += '<div style="font-size:12.5px;color:var(--red);margin-bottom:8px">⚠️ Not found on Etsy or locally — flagged for review (see the alerts bell).</div>';
+    } else {
+      btns += '<div style="font-size:12.5px;opacity:0.85;margin-bottom:8px">ℹ️ Not yet checked against Etsy — run tools/audit_product_files.py to verify.</div>';
+    }
+  }
+  if (p.listing_id) {
+    btns += '<button class="psheet-btn" onclick="window.open(\\'https://www.etsy.com/listing/' + p.listing_id + '\\',\\'_blank\\')">🏷 View listing on Etsy</button>';
   }
   btns += '<button class="psheet-btn" onclick="productSheetOpenFiles(\\'' + p.id + '\\')">🗂 Open in Files</button>';
   document.getElementById('product-sheet-buttons').innerHTML = btns;

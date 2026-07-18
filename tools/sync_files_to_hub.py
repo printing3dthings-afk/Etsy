@@ -2,12 +2,25 @@
 """Sync local product files up to the hosted dashboard's durable /data volume.
 
 Why this exists: the phone Files area (Hub → Files) reads files off the server, but
-the actual product files (PDFs, sticker ZIPs, SVG packs) live on Scott's machine in
-data/digital_products/ — that directory is gitignored and Railway's filesystem is
-ephemeral, so nothing ever appears there on its own. This tool walks the local
-data/digital_products/ tree and POSTs every file to the server's /api/files/upload
-endpoint, which stores them under the persistent /data/files volume. Once synced they
-survive redeploys and open (incl. straight out of a ZIP, no unzip) from the phone.
+the actual product files (PDFs, sticker ZIPs, SVG packs, print-size ZIPs, coloring
+packs, ...) live on Scott's machine under data/ — that directory is gitignored and
+Railway's filesystem is ephemeral, so nothing ever appears there on its own. This
+tool walks the local data/ tree (not just data/digital_products/ -- see 2026-07-18
+note below) and POSTs every file to the server's /api/files/upload endpoint, which
+stores them under the persistent /data/files volume. Once synced they survive
+redeploys and open (incl. straight out of a ZIP, no unzip) from the phone.
+
+2026-07-18: previously this only walked data/digital_products/ (SRC_LEGACY below),
+which is why the Products screen showed only 5/176 products with "all files
+present" -- most non-planner categories (wall_art, coloring_pages, paper_pack,
+svg_bundle, svg_3dprint_pack, uncategorized) store their product files in sibling
+directories under data/ that this tool never uploaded, so they could never reach
+the volume regardless of whether they existed on Scott's machine. Legacy
+data/digital_products/ files keep their original upload-path convention (relative
+to that directory, e.g. "product_files/DP1026.pdf") for backward compatibility with
+whatever's already on the live volume; every other file under data/ now uploads
+under its path relative to the repo root (e.g. "data/svg_pack/Bundle.zip"), which is
+exactly what _catalog_file_abs_path() in main.py checks for those categories.
 
 One command:
     python tools/sync_files_to_hub.py            # sync everything new/changed
@@ -44,8 +57,22 @@ if _env_path.exists():
                 _k, _v = _line.split("=", 1)
                 os.environ.setdefault(_k.strip(), _v.strip())
 
-SRC_DIR = ROOT / "data" / "digital_products"
+DATA_DIR = ROOT / "data"
+SRC_LEGACY = DATA_DIR / "digital_products"
 MAX_UPLOAD_BYTES = 30 * 1024 * 1024  # mirrors the server cap
+
+# Ops/internal directories under data/ that were never product deliverables --
+# mirrors _CATALOG_INDEX_EXCLUDE_DIRS in main.py. Never synced to the volume:
+# no reason to ship DB backups, financial reports, or draft customer messages
+# to a place the phone Files browser can read.
+EXCLUDE_DIR_NAMES = {
+    "trash", "backups", "hub_db_backups", "knowledge_base", "message_drafts",
+    "reports", "financial", "performance", "printify",
+}
+
+
+def _is_excluded(rel_to_data: Path) -> bool:
+    return any(part in EXCLUDE_DIR_NAMES for part in rel_to_data.parts[:-1])
 
 
 def _human(n: int) -> str:
@@ -107,14 +134,17 @@ def main() -> int:
         )
         return 1
 
-    if not SRC_DIR.is_dir():
-        print(f"ERROR: {SRC_DIR} does not exist — nothing to sync. Run this on the machine "
+    if not DATA_DIR.is_dir():
+        print(f"ERROR: {DATA_DIR} does not exist — nothing to sync. Run this on the machine "
               f"where the product files were generated.", file=sys.stderr)
         return 1
 
-    local_files = [p for p in sorted(SRC_DIR.rglob("*")) if p.is_file()]
+    local_files = [
+        p for p in sorted(DATA_DIR.rglob("*"))
+        if p.is_file() and not _is_excluded(p.relative_to(DATA_DIR))
+    ]
     if not local_files:
-        print(f"No files found under {SRC_DIR}.")
+        print(f"No files found under {DATA_DIR}.")
         return 0
 
     try:
@@ -130,7 +160,10 @@ def main() -> int:
     uploaded = skipped = failed = 0
     total_bytes = 0
     for p in local_files:
-        rel = str(p.relative_to(SRC_DIR)).replace(os.sep, "/")
+        if SRC_LEGACY in p.parents:
+            rel = str(p.relative_to(SRC_LEGACY)).replace(os.sep, "/")
+        else:
+            rel = str(p.relative_to(ROOT)).replace(os.sep, "/")
         size = p.stat().st_size
         # Empty files are git placeholders (.gitkeep) or stubs — nothing to open on a
         # phone, and the server rejects empty bodies. Skip quietly, don't count failed.

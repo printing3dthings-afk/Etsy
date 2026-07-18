@@ -98,11 +98,18 @@ def test_product_with_no_files_listed():
     check(p["files"] == [], "files list should be empty")
 
 
-def test_prefix_stripping_matches_sync_convention():
-    seen_rels = []
+def test_file_exists_fn_receives_the_raw_catalog_path():
+    # 2026-07-18: _build_products_status() no longer strips the
+    # data/digital_products/ prefix itself -- most catalog entries (wall_art,
+    # coloring_pages, paper_pack, svg_bundle, etc) were never rooted under that
+    # prefix at all, so a single strip-and-rejoin convention silently mis-resolved
+    # them. The raw path is now handed straight to file_exists_fn, which is
+    # responsible for its own resolution strategy -- see
+    # server._catalog_file_exists() for the real (three-convention) one.
+    seen_paths = []
 
-    def _fake_exists(rel):
-        seen_rels.append(rel)
+    def _fake_exists(f):
+        seen_paths.append(f)
         return True
 
     catalog = [{
@@ -111,9 +118,8 @@ def test_prefix_stripping_matches_sync_convention():
         "files": ["data/digital_products/product_files/DP1026.pdf"],
     }]
     server._build_products_status(catalog, _fake_exists)
-    check(seen_rels == ["product_files/DP1026.pdf"],
-          f"expected the 'data/digital_products/' prefix stripped to match sync_files_to_hub.py's "
-          f"upload-path convention, got {seen_rels}")
+    check(seen_paths == ["data/digital_products/product_files/DP1026.pdf"],
+          f"expected the raw catalog path passed through unchanged, got {seen_paths}")
 
 
 def test_missing_category_and_status_default_gracefully():

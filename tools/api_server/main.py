@@ -607,7 +607,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "823953e-v233"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "4a72040-v234"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9888,6 +9888,66 @@ async def produce_print_zip(body: dict, _token: str = Depends(_rate_limited_auth
         raise HTTPException(status_code=504, detail="Print-ZIP build timed out — try again.")
 
 
+def _produce_coloring_pack(inp: dict) -> dict:
+    """Kick off a coloring_pages product's ZIP-set rebuild in the BACKGROUND via
+    generate_coloring_pages.py --pack <pack>. Determines which of the two theme
+    packs ('kawaii' vs 'fun_basic') to use from the product's OWN catalog filename
+    convention (e.g. 'coloring_set_05.zip' -> kawaii, 'coloring_fun_basic_set_02.zip'
+    -> fun_basic) so the caller never has to know that mapping. Long-running like
+    the planner/sticker builds above (up to 20 gpt-image-1 calls for anything not
+    already cached on disk -- generate_coloring_page() skips a theme's PNG if it
+    already exists, so rebuilding one missing set doesn't re-pay for the other 19),
+    so it runs detached the same way; the finished ZIPs show up in Files."""
+    pid = str((inp or {}).get("pid", "")).strip().upper()
+    if not pid:
+        return {"error": "pid is required (e.g. 'COLOR_KAWAII_COLORING_PAGES_SET_05')"}
+    try:
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
+    except OSError:
+        catalog = []
+    entry = next((e for e in catalog if e.get("product_id") == pid), None)
+    if entry is None:
+        return {"error": f"{pid} not found in the catalog"}
+    files = entry.get("files") or []
+    if not files:
+        return {"error": f"{pid} has no files listed in the catalog to infer a theme pack from"}
+    pack = "fun_basic" if files[0].startswith("coloring_fun_basic_set_") else "kawaii"
+    script = ROOT / "tools" / "generate_coloring_pages.py"
+    if not script.exists():
+        return {"error": "generate_coloring_pages.py is missing from this deploy."}
+    from pathlib import Path as _P
+    try:
+        base = _P(os.getenv("HUB_FILES_DIR", "").strip()
+                  or ("/data/files" if _P("/data/files").is_dir()
+                      else str(ROOT / "data" / "digital_products")))
+        logdir = base / "product_files"
+        logdir.mkdir(parents=True, exist_ok=True)
+        _logf = open(logdir / f"{pid}_coloring_build.log", "w")  # noqa: SIM115 — handed to Popen
+    except Exception:  # noqa: BLE001
+        _logf = subprocess.DEVNULL
+    proc = subprocess.Popen(
+        [sys.executable, str(script), "--pack", pack],
+        stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
+    )
+    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_coloring_pack:{pid}", datetime.now(timezone.utc))
+    return {
+        "pid": pid,
+        "started": True,
+        "os_pid": proc.pid,
+        "pack": pack,
+        "message": f"Rebuilding the '{pack}' coloring pack in the background (only uncached "
+                   f"pages cost an AI call). When it finishes, the ZIP sets appear in Files "
+                   f"({pid}_coloring_build.log has the run output).",
+    }
+
+
+@app.post("/api/produce/coloring-pack")
+async def produce_coloring_pack(body: dict, _token: str = Depends(_rate_limited_auth)):
+    """Kick off a coloring-pages product's ZIP-set rebuild in the background.
+    Returns immediately; the ZIPs appear in Files when done."""
+    return await asyncio.to_thread(_produce_coloring_pack, body or {})
+
+
 # Approved image engines (mirrors tools/image_gen.py). Gemini ("Nano Banana") is
 # the default for the produce builders: it needs only GEMINI_API_KEY (no OpenAI
 # dependency — and gpt-image-1 shuts down 2026-10-23), and is a fully approved
@@ -10042,34 +10102,81 @@ async def produce_build_sticker_pack(body: dict, _token: str = Depends(_rate_lim
     return await asyncio.to_thread(_produce_build_sticker_pack, body or {})
 
 
-def _produce_build_product(inp: dict) -> dict:
-    """Kick off a FULL product build in the BACKGROUND via tools/build_product.py:
-    stickers → planner → listing photos → Quality Check, in that one correct order
-    (stickers first so the planner embeds real library pages). ~6-10 min total, so
-    it runs detached; the ZIP, PDFs, and photos land in Files as each step finishes.
-    Publishing stays Scott-gated — this only produces + QCs the files.
+def _resolve_build_category(pid: str, explicit: str | None) -> str:
+    """category param if given, else looked up from product_catalog.json by pid,
+    else falls back to 'digital_planner' (the pre-2026-07-18 default, so an
+    unrecognized/uncataloged pid keeps behaving exactly like it always did)."""
+    if explicit:
+        return explicit
+    try:
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
+    except OSError:
+        catalog = []
+    entry = next((e for e in catalog if e.get("product_id") == pid), None)
+    return (entry or {}).get("category") or "digital_planner"
 
-    Same honesty guard as the sticker builder (top rule — NEVER LIE): returns
-    needs_visual_qc:true. The chained QC verifies structure, but AI can garble
-    in-image text, so the sheets + photos must be eyeballed before publish."""
+
+def _produce_build_product(inp: dict) -> dict:
+    """Kick off a FULL product build in the BACKGROUND. Dispatches by category
+    (2026-07-18: generalized from the original digital-planner-only flow, per
+    Scott's ask to have a one-tap build for other listing types too) --
+    resolved from the explicit `category` field if given, else looked up from
+    product_catalog.json by pid:
+
+      digital_planner: stickers → planner PDFs → 10 listing photos → QC
+                        (tools/build_product.py — unchanged from before).
+      wall_art / wall_art_bundle: multi-size print ZIP → QC
+                        (tools/build_wallart_product.py — no lifestyle photos
+                        in this one-tap flow, see its own docstring for why).
+      coloring_pages: coloring pages + ZIP sets → QC
+                        (tools/build_coloring_product.py — same photos caveat).
+
+    Every other category has no verified generator wired yet (2026-07-18
+    scoping decision) and returns a clear error rather than silently doing
+    nothing or guessing. Publishing always stays Scott-gated regardless of
+    category — this only produces + QCs the files.
+
+    Same honesty guard as the sticker builder (top rule — NEVER LIE): planner
+    builds return needs_visual_qc:true (AI can garble in-image text, which no
+    file gate catches) — wall_art/coloring_pages don't generate new AI art in
+    this flow, so that flag doesn't apply to them."""
     pid = str((inp or {}).get("pid", "")).strip().upper()
     if not pid:
-        return {"error": "pid is required (e.g. 'DP1030')"}
-    engine, eng_err = _resolve_art_engine(inp)
-    if eng_err:
-        return {"error": eng_err}
-    # Must be buildable as a planner (the core deliverable). Sticker spec is optional
-    # — build_product logs and continues if a step can't run.
-    try:
-        import generate_planner_v2 as _gpv2
-        configured = set(getattr(_gpv2, "_ALL_V2_PIDS", []) or [])
-    except Exception as exc:  # noqa: BLE001
-        return {"error": f"product builder unavailable: {exc}"}
-    if configured and pid not in configured:
-        return {"error": f"{pid} isn't a configured planner (have {', '.join(sorted(configured))})."}
-    script = ROOT / "tools" / "build_product.py"
+        return {"error": "pid is required (e.g. 'DP1030', 'WA1030', or a coloring-pages product_id)"}
+    category = _resolve_build_category(pid, (inp or {}).get("category"))
+
+    if category in ("wall_art", "wall_art_bundle"):
+        script_name, log_suffix, proc_label = "build_wallart_product.py", "wallart_build", "build_wallart_product"
+        engine = None
+        steps = ["print-size ZIP", "quality check"]
+        needs_visual_qc = False
+    elif category == "coloring_pages":
+        script_name, log_suffix, proc_label = "build_coloring_product.py", "coloring_build", "build_coloring_product"
+        engine = None
+        steps = ["coloring pages", "quality check"]
+        needs_visual_qc = False
+    elif category == "digital_planner":
+        engine, eng_err = _resolve_art_engine(inp)
+        if eng_err:
+            return {"error": eng_err}
+        try:
+            import generate_planner_v2 as _gpv2
+            configured = set(getattr(_gpv2, "_ALL_V2_PIDS", []) or [])
+        except Exception as exc:  # noqa: BLE001
+            return {"error": f"product builder unavailable: {exc}"}
+        if configured and pid not in configured:
+            return {"error": f"{pid} isn't a configured planner (have {', '.join(sorted(configured))})."}
+        script_name, log_suffix, proc_label = "build_product.py", "product_build", "build_product"
+        steps = ["sticker pack", "planner PDFs", "listing photos", "quality check"]
+        needs_visual_qc = True
+    else:
+        return {"error": f"'{category}' has no verified one-tap build pipeline yet (have: "
+                          f"digital_planner, wall_art, coloring_pages). Use the individual "
+                          f"Create-screen tools for this product instead."}
+
+    script = ROOT / "tools" / script_name
     if not script.exists():
-        return {"error": "build_product.py is missing from this deploy."}
+        return {"error": f"{script_name} is missing from this deploy."}
     from pathlib import Path as _P
     try:
         base = _P(os.getenv("HUB_FILES_DIR", "").strip()
@@ -10077,34 +10184,37 @@ def _produce_build_product(inp: dict) -> dict:
                       else str(ROOT / "data" / "digital_products")))
         logdir = base / "product_files"
         logdir.mkdir(parents=True, exist_ok=True)
-        _logf = open(logdir / f"{pid}_product_build.log", "w")  # noqa: SIM115 — handed to Popen
+        _logf = open(logdir / f"{pid}_{log_suffix}.log", "w")  # noqa: SIM115 — handed to Popen
     except Exception:  # noqa: BLE001
         _logf = subprocess.DEVNULL
     proc = subprocess.Popen(
         [sys.executable, str(script), pid],
         stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
-        env=_subprocess_env_with_engine(engine),
+        env=_subprocess_env_with_engine(engine) if engine else None,
     )
-    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"build_product:{pid}", datetime.now(timezone.utc))
-    return {
+    _LONG_RUNNING_PROCS[proc.pid] = (proc, f"{proc_label}:{pid}", datetime.now(timezone.utc))
+    result = {
         "pid": pid,
+        "category": category,
         "started": True,
         "os_pid": proc.pid,
-        "engine": engine,
-        "needs_visual_qc": True,
-        "steps": ["sticker pack", "planner PDFs", "listing photos", "quality check"],
-        "message": f"Building the FULL {pid} product in the background (~6-10 min) with {engine} "
-                   f"art: sticker pack → planner PDFs → 10 listing photos → Quality Check. "
-                   f"Files land in Files as each step finishes ({pid}_product_build.log has the "
-                   f"live run log + the final QC verdict). Nothing is published. Eyeball the "
-                   f"sheets + photos for garbled text before it goes live.",
+        "steps": steps,
+        "needs_visual_qc": needs_visual_qc,
+        "message": f"Building {pid} ({category}) in the background: {' → '.join(steps)}. "
+                   f"Files land in Files as each step finishes "
+                   f"({pid}_{log_suffix}.log has the live run log + the final QC verdict). "
+                   f"Nothing is published.",
     }
+    if engine:
+        result["engine"] = engine
+    return result
 
 
 @app.post("/api/produce/build-product")
 async def produce_build_product(body: dict, _token: str = Depends(_rate_limited_auth)):
-    """Kick off a full product build (stickers → planner → photos → QC) in the
-    background. Returns immediately; deliverables appear in Files as they finish."""
+    """Kick off a full product build (steps vary by category — see
+    _produce_build_product()'s docstring) in the background. Returns
+    immediately; deliverables appear in Files as they finish."""
     return await asyncio.to_thread(_produce_build_product, body or {})
 
 
@@ -10225,15 +10335,27 @@ async def studio_list_videos(_token: str = Depends(_auth_session_or_bearer)):
 
 _PRODUCT_FILES_PREFIX = "data/digital_products/"
 
+# Categories that never carry a customer-downloaded design file in the first
+# place: 3d_print_physical ships a physical object (no digital delivery), and
+# the *_license categories grant a commercial-use license, not a design file
+# of their own. Before 2026-07-18 these were still run through the "must have
+# digital files" check, so every one of them rendered a confusing "no files
+# listed in catalog" badge on the Products screen for a condition that was
+# never actually a problem.
+_NO_FILES_REQUIRED_CATEGORIES = {"3d_print_physical", "svg_bundle_license", "sticker_pack_license"}
+
 
 def _build_products_status(catalog: list[dict], file_exists_fn, overrides: dict | None = None) -> list[dict]:
     """Pure function (no I/O of its own) so this is directly unit-testable:
     given the full product catalog and a file-existence checker, compute
-    per-product/per-file status. `file_exists_fn` takes the same `rel`
-    convention _product_file_exists() and sync_files_to_hub.py already use
-    (e.g. "product_files/DP1026.pdf") -- catalog entries store the fuller
-    "data/digital_products/product_files/DP1026.pdf", so the shared prefix
-    is stripped here rather than teaching the checker a second convention.
+    per-product/per-file status. `file_exists_fn` takes the RAW catalog path
+    exactly as stored in product_catalog.json (e.g.
+    "data/digital_products/product_files/DP1026.pdf",
+    "data/svg_pack/Bundle.zip", or a bare "coloring_set_01.zip") and decides
+    how to resolve it -- see _catalog_file_exists() for why a single
+    prefix-strip convention (the pre-2026-07-18 behavior) isn't enough: most
+    non-planner categories store paths that were never rooted under
+    data/digital_products/ at all.
 
     `overrides` (2026-07-18, Products-tappable-cards feature): dict keyed by
     product_id -> {"etsy_listing_id": ..., "status": ...}, sourced from the
@@ -10248,11 +10370,9 @@ def _build_products_status(catalog: list[dict], file_exists_fn, overrides: dict 
     products = []
     for p in catalog:
         files = p.get("files", []) or []
-        file_status = []
-        for f in files:
-            rel = f[len(_PRODUCT_FILES_PREFIX):] if f.startswith(_PRODUCT_FILES_PREFIX) else f
-            file_status.append({"name": Path(f).name, "exists": file_exists_fn(rel)})
+        file_status = [{"name": Path(f).name, "exists": file_exists_fn(f)} for f in files]
         ov = overrides.get(p.get("product_id"), {})
+        no_files_required = p.get("category") in _NO_FILES_REQUIRED_CATEGORIES
         products.append({
             "id": p.get("product_id"),
             "title": p.get("name", ""),
@@ -10261,7 +10381,11 @@ def _build_products_status(catalog: list[dict], file_exists_fn, overrides: dict 
             "status": ov.get("status") or p.get("status", "active"),
             "price": p.get("price"),
             "files": file_status,
-            "all_files_present": all(fs["exists"] for fs in file_status) if file_status else None,
+            "all_files_present": (
+                None if no_files_required
+                else (all(fs["exists"] for fs in file_status) if file_status else None)
+            ),
+            "files_not_applicable": no_files_required,
         })
     return products
 
@@ -10291,7 +10415,10 @@ async def get_products(_token: str = Depends(_auth_session_or_bearer)):
     except OSError:
         catalog = []
     overrides = await asyncio.to_thread(_product_catalog_overrides)
-    products = _build_products_status(catalog, _product_file_exists, overrides)
+    products = await asyncio.to_thread(_build_products_status, catalog, _catalog_file_exists, overrides)
+    audit_idx = await asyncio.to_thread(_file_audit_index)
+    for p in products:
+        p["file_audit"] = audit_idx.get(p["id"])
     return {"products": products}
 
 
@@ -10323,7 +10450,7 @@ def _gather_product_review(product_id: str) -> dict | None:
         return None
 
     overrides = _product_catalog_overrides()
-    catalog_status = _build_products_status([entry], _product_file_exists, overrides)[0]
+    catalog_status = _build_products_status([entry], _catalog_file_exists, overrides)[0]
 
     listing_json_path = Path("data") / f"{product_id.lower()}_listing.json"
     content = None
@@ -10335,14 +10462,13 @@ def _gather_product_review(product_id: str) -> dict | None:
     photos: list[dict] = []
     deliverables: list[dict] = []
     for f in (entry.get("files") or []):
-        rel = f[len(_PRODUCT_FILES_PREFIX):] if f.startswith(_PRODUCT_FILES_PREFIX) else f
         name = Path(f).name
-        exists = _product_file_exists(rel)
+        exists = _catalog_file_exists(f)
         if "_listing_images/" in f:
-            photos.append({"name": name, "rel": rel, "exists": exists,
-                            "url": _product_file_url(rel) if exists else None})
+            photos.append({"name": name, "rel": f, "exists": exists,
+                            "url": _catalog_file_url(f) if exists else None})
         elif f.lower().endswith(_PRODUCT_DELIVERABLE_SUFFIXES):
-            deliverables.append({"name": name, "rel": rel, "exists": exists})
+            deliverables.append({"name": name, "rel": f, "exists": exists})
     photos.sort(key=lambda p: p["name"])
 
     qc = _qc_check_product({"pid": product_id})
@@ -11314,9 +11440,64 @@ async def get_alerts(_token: str = Depends(_auth_session_or_bearer)):
                        + ("" if e.get("all_day") else f" at {(e.get('when') or '')[11:16]}"),
         })
 
+    # Product file integrity (2026-07-18): tools/audit_product_files.py checks every
+    # "active" catalog product with a missing-files flag directly against Etsy
+    # (get_listing_files()) before anything is treated as urgent -- an active listing
+    # with a real file live on Etsy is just a missing local backup, not a problem.
+    # This surfaces only the confirmed-genuinely-missing bucket (neither Etsy nor local
+    # disk has anything for a live listing) -- the real "customer might be getting
+    # nothing" case per CLAUDE.md's top-priority rule. Degrades to nothing if the audit
+    # has never been run (no report file yet) rather than erroring.
+    for item in await asyncio.to_thread(_product_file_integrity_alerts):
+        alerts.append(item)
+
     severity_order = {"critical": 0, "warning": 1, "info": 2}
     alerts.sort(key=lambda a: severity_order.get(a["severity"], 3))
     return {"alerts": alerts, "count": len(alerts)}
+
+
+def _file_audit_report() -> dict | None:
+    """Last result written by tools/audit_product_files.py, or None if it has
+    never been run. Read-only, tolerant of a missing/corrupt file."""
+    vol = _FILE_ROOTS.get("volume")
+    path = (vol / "file_audit_report.json") if vol else (ROOT / "data" / "file_audit_report.json")
+    try:
+        return json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _file_audit_index() -> dict[str, str]:
+    """product_id -> 'verified_live' | 'genuinely_missing', from the last
+    tools/audit_product_files.py run. Empty (product simply absent from the
+    dict) if it's never been run, or the product hasn't been audited yet --
+    callers must treat that as 'unknown', not as a third verdict."""
+    report = _file_audit_report()
+    if not report:
+        return {}
+    idx: dict[str, str] = {}
+    for item in report.get("verified_live", []):
+        idx[item["product_id"]] = "verified_live"
+    for item in report.get("genuinely_missing", []):
+        idx[item["product_id"]] = "genuinely_missing"
+    return idx
+
+
+def _product_file_integrity_alerts() -> list[dict]:
+    report = _file_audit_report()
+    if not report:
+        return []
+    return [
+        {
+            "severity": "critical",
+            "source": "product_file_integrity",
+            "title": f"{item['product_id']} — no digital file found on Etsy or locally",
+            "detail": f"{item.get('title', '')} (Etsy #{item.get('listing_id', '?')}) — expected "
+                      f"{', '.join(item.get('expected_files', [])) or 'a digital file'}. Run "
+                      f"tools/audit_product_files.py to re-check.",
+        }
+        for item in report.get("genuinely_missing", [])
+    ]
 
 
 # ── API cost tracking (Settings -> API Costs) ────────────────────────────────
@@ -11932,6 +12113,11 @@ _FILE_ROOTS = {
     "products": ROOT / "data" / "digital_products",
     "backups": ROOT / "data" / "backups",
     "hub_db_backups": ROOT / "data" / "hub_db_backups",
+    # Scoped to data/ (not the repo root) so the download route below can
+    # never be pointed at .env or anything else outside data/ — see
+    # _catalog_file_url()/_catalog_file_abs_path(), which are the only
+    # callers that resolve against this root.
+    "data": ROOT / "data",
 }
 
 # On the hosted dashboard (Railway) the repo's data/ dir is ephemeral and gitignored,
@@ -11987,6 +12173,113 @@ def _product_file_url(rel: str) -> str | None:
     if vol and (vol / rel).exists():
         return f"/api/files/download?root=volume&path={quote(rel)}&inline=1"
     return None
+
+
+# ── Catalog file resolution (2026-07-18) ──
+#
+# product_catalog.json's per-product "files" entries use THREE different
+# conventions depending on when/how that product was added, and the original
+# _product_file_exists()/_product_file_url() pair above only understands the
+# first one:
+#   1. Prefixed:      "data/digital_products/product_files/DP1026.pdf"
+#      (digital planners) -- handled by _product_file_exists() already.
+#   2. Explicit path:  "data/svg_pack/FlowerBotanical_Bundle.zip"
+#      (svg_bundle) -- lives outside data/digital_products/ entirely; the old
+#      prefix-strip logic left this untouched and re-joined it under
+#      _FILE_ROOTS["products"] anyway, producing a nonsense double-nested
+#      path that could never resolve.
+#   3. Bare filename:  "coloring_set_01.zip", "DP1063_print_sizes.zip"
+#      (coloring_pages, wall_art, paper_pack, uncategorized,
+#      svg_3dprint_pack -- audited 2026-07-18: ~147 of 176 products' file
+#      references) -- carries no directory information at all, and the real
+#      location varies unpredictably per product (e.g. SS1001's 3D-print ZIP
+#      lives under data/3d_print_signs/america_250/, unrelated to its own
+#      filename). A cached, briefly-TTL'd basename index is the only
+#      reliable way to resolve these without teaching every generator script
+#      a shared directory convention retroactively.
+# The three helpers below (_catalog_file_exists/_abs_path/_url) are what
+# _build_products_status() and _gather_product_review() now call instead of
+# the old prefix-only pair, and they're strict supersets: convention 1 keeps
+# working exactly as before.
+
+_CATALOG_INDEX_EXCLUDE_DIRS = {
+    "trash", "backups", "hub_db_backups", "knowledge_base", "message_drafts",
+    "reports", "financial", "performance", "printify",
+}
+_catalog_filename_index_cache: dict = {"built_at": 0.0, "index": {}}
+_CATALOG_FILENAME_INDEX_TTL_S = 300.0
+
+
+def _build_catalog_filename_index() -> dict[str, Path]:
+    """Map bare basename -> first matching Path found under data/ and the
+    persistent volume (if configured), skipping ops/internal directories
+    that happen to live under data/ too but were never product deliverables
+    (trash vault, DB backups, drafts, financial reports). Synchronous/
+    blocking (an rglob walk) -- callers must run this off the event loop."""
+    index: dict[str, Path] = {}
+    roots = [ROOT / "data"]
+    vol = _FILE_ROOTS.get("volume")
+    if vol:
+        roots.append(vol)
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for p in root.rglob("*"):
+            if not p.is_file():
+                continue
+            if any(part in _CATALOG_INDEX_EXCLUDE_DIRS for part in p.relative_to(root).parts[:-1]):
+                continue
+            index.setdefault(p.name, p)
+    return index
+
+
+def _catalog_filename_index() -> dict[str, Path]:
+    now = time.time()
+    if now - _catalog_filename_index_cache["built_at"] > _CATALOG_FILENAME_INDEX_TTL_S:
+        _catalog_filename_index_cache["index"] = _build_catalog_filename_index()
+        _catalog_filename_index_cache["built_at"] = now
+    return _catalog_filename_index_cache["index"]
+
+
+def _catalog_file_abs_path(f: str) -> Path | None:
+    """Resolve a raw product_catalog.json 'files' entry to a real Path,
+    handling all three conventions documented above. Superset of
+    _product_file_abs_path(): convention-1 paths delegate straight to it."""
+    if f.startswith(_PRODUCT_FILES_PREFIX):
+        return _product_file_abs_path(f[len(_PRODUCT_FILES_PREFIX):])
+    if "/" in f:
+        local = ROOT / f
+        if local.exists():
+            return local
+        vol = _FILE_ROOTS.get("volume")
+        if vol and (vol / f).exists():
+            return vol / f
+        return None
+    return _catalog_filename_index().get(f)
+
+
+def _catalog_file_exists(f: str) -> bool:
+    """Superset of _product_file_exists(): convention-1 (data/digital_products/-
+    prefixed) paths delegate to it directly -- not via _catalog_file_abs_path(),
+    so callers/tests that patch _product_file_exists() (e.g. to fake a file's
+    presence without touching disk) keep working for the legacy convention."""
+    if f.startswith(_PRODUCT_FILES_PREFIX):
+        return _product_file_exists(f[len(_PRODUCT_FILES_PREFIX):])
+    return _catalog_file_abs_path(f) is not None
+
+
+def _catalog_file_url(f: str) -> str | None:
+    """Browser-loadable URL for a catalog file via /api/files/download,
+    covering all three conventions _catalog_file_abs_path() does."""
+    if f.startswith(_PRODUCT_FILES_PREFIX):
+        return _product_file_url(f[len(_PRODUCT_FILES_PREFIX):])
+    abs_path = _catalog_file_abs_path(f)
+    if abs_path is None:
+        return None
+    vol = _FILE_ROOTS.get("volume")
+    if vol and vol in abs_path.parents:
+        return f"/api/files/download?root=volume&path={quote(str(abs_path.relative_to(vol)))}&inline=1"
+    return f"/api/files/download?root=data&path={quote(str(abs_path.relative_to(ROOT / 'data')))}&inline=1"
 
 
 # Durable overlay for product_catalog.json fields that change at runtime
