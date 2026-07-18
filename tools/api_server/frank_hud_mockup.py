@@ -8552,7 +8552,14 @@ async function initOrbGL(){
       vertexShader: _ORB_VERT,
       fragmentShader: _ORB_FRAG,
       uniforms: glUniforms,
-      wireframe: true,
+      // 2026-07-18 (Scott): letters should read as solid-but-transparent glass,
+      // not a wireframe/line mesh -- wireframe was true here, tracing every
+      // triangle edge of the extruded geometry. side:DoubleSide keeps the
+      // letterforms filled-looking as the wordmark rotates all the way around
+      // (the extrusion's back faces would otherwise cull to nothing on the far
+      // half of each rotation under the default FrontSide).
+      wireframe: false,
+      side: THREE.DoubleSide,
       transparent: true,
     });
 
