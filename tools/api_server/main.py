@@ -570,7 +570,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "26e7ac6-v219"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "13d5cd1-v220"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5133,8 +5133,7 @@ def _compute_actions() -> dict:
     # underlying metric (views/sales) hasn't changed yet, so without this the
     # SAME card just kept reappearing here immediately after being "fixed",
     # which read as broken. If the pending action is later rejected, the card
-    # naturally reappears (it's excluded only while genuinely pending); if
-    # approved, the real listing data changes and the rule re-evaluates fresh.
+    # naturally reappears (it's excluded only while genuinely pending).
     try:
         pending_listing_ids = {
             str(a["payload"]["listing_id"])
@@ -5145,6 +5144,39 @@ def _compute_actions() -> dict:
         pending_listing_ids = set()
     if pending_listing_ids:
         cards = [c for c in cards if str(c.get("listing_id") or "") not in pending_listing_ids]
+
+    # 2026-07-18: the pending-only exclusion above was NOT enough on its own --
+    # a real bug report (Scott approved a Conversion Doctor fix for a listing
+    # and the identical card was back the moment the row left "pending"). None
+    # of these four rules can ever be satisfied by a content edit: they read
+    # views/sales/title/tags directly from Etsy, and per CLAUDE.md's Ranking
+    # Recovery Playbook, Etsy takes ~2-3 weeks to re-index an edited listing
+    # before those numbers can move. So instead of re-flagging "still needs
+    # attention" the instant a fix executes, downgrade + reword the card using
+    # the same edit-cooldown timestamp db.note_listing_edited() already writes
+    # (built 2026-07-15 for a different purpose -- warning against compounding
+    # edits -- but it's exactly the "was this recently fixed" signal needed
+    # here too). Keep the card visible rather than hiding it outright: an
+    # invisible card gives zero confirmation a fix was applied, which was the
+    # other half of Scott's report ("I don't know if he actually fixed it").
+    _CONTENT_FIXABLE_CATEGORIES = frozenset(
+        {"title_too_long", "tags_incomplete", "low_conversion", "zero_views"}
+    )
+    for c in cards:
+        if c["category"] not in _CONTENT_FIXABLE_CATEGORIES or not c.get("listing_id"):
+            continue
+        try:
+            days = db.days_since_listing_edited(c["listing_id"])
+        except Exception:
+            days = None
+        if days is not None and days < db._RANKING_RECOVERY_COOLDOWN_DAYS:
+            c["severity"] = "low"
+            c["recently_fixed_days_ago"] = days
+            c["suggestion"] = (
+                f"✅ A fix was applied {days}d ago — Etsy can take up to ~3 weeks "
+                "to re-index and reflect it in views/sales. No further action "
+                "needed yet."
+            )
 
     cards.sort(key=lambda c: (_SEVERITY_RANK.get(c["severity"], 9), -c.get("impact", 0)))
     summary = {

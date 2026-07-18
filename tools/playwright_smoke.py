@@ -652,6 +652,40 @@ async def _run_browser_checks() -> None:
             }""")
             check(hdr_logo_state == "hidden", f"the non-functional logo square must not be visible on mobile, got visibility: {hdr_logo_state}")
 
+            # ── "Recently completed" activity list (2026-07-18) -- a real bug
+            # report: Scott approved a Conversion Doctor fix and had no way to
+            # tell if it worked. GET /api/queue?status=all already existed
+            # server-side but nothing ever rendered anything but pending items.
+            # Test the shared render helper directly with synthetic data rather
+            # than mocking the network call -- the app registers a service worker
+            # (frank-sw.js) whose 'fetch' handler intercepts ALL GETs via its own
+            # internal fetch(req) call, which happens outside the page's execution
+            # context and isn't visible to page.route() (confirmed: a mocked
+            # /api/queue?status=all route was silently never hit; the real
+            # backend response came through instead). _recentActivityHtml() is
+            # where all the actual logic lives (outcome text, icons, escaping) --
+            # the fetch-and-filter glue in renderPhoneApprovals()/loadActions()
+            # is exercised for real every time either screen loads normally. ──
+            recent_html_check = await page.evaluate("""() => {
+                const items = [
+                    {id: 1, type: 'update_title', status: 'executed', decided_at: '2026-07-18T00:00:00+00:00',
+                     payload: {listing_id: 42, title: 'New Fixed Title'}, result: {listing_id: 42}},
+                    {id: 2, type: 'update_tags', status: 'failed', decided_at: '2026-07-18T00:00:00+00:00',
+                     payload: {listing_id: 43, tags: ['a','b']}, result: {error: 'Etsy 429 rate limited'}},
+                ];
+                return {
+                    emptyHtml: _recentActivityHtml([]),
+                    filledHtml: _recentActivityHtml(items),
+                };
+            }""")
+            check(recent_html_check.get("emptyHtml") == "", f"an empty recent-actions list should render nothing: {recent_html_check}")
+            filled = recent_html_check.get("filledHtml", "")
+            check("Recently completed" in filled, f"a non-empty recent-actions list should render a 'Recently completed' section: {filled[:300]}")
+            check("New Fixed Title" in filled, f"an executed update_title action should show its outcome (the new title): {filled[:300]}")
+            check("✅" in filled, f"an executed action should show a success icon: {filled[:300]}")
+            check("Etsy 429 rate limited" in filled, f"a failed action should show the actual error, not just 'failed': {filled[:300]}")
+            check("❌" in filled, f"a failed action should show a failure icon: {filled[:300]}")
+
             await page.evaluate("startTour()")
             await page.wait_for_timeout(400)
             mobile_step1 = await page.evaluate("""() => ({

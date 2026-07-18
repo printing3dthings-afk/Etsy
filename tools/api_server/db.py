@@ -390,6 +390,24 @@ def note_listing_edited(listing_id) -> None:
     set_setting(_listing_last_edited_key(listing_id), datetime.now(timezone.utc).isoformat())
 
 
+def days_since_listing_edited(listing_id) -> int | None:
+    """How many days since `listing_id` was last content-edited, or None if
+    never (or the stored timestamp is malformed). Read by _compute_actions()
+    (main.py) so a Needs-Attention card for a listing Frank already fixed
+    reads as "fix applied, waiting on Etsy" instead of repeating the same
+    ask -- the underlying views/sales metrics can't move until Etsy re-
+    indexes, which per CLAUDE.md's Ranking Recovery Playbook takes ~2-3
+    weeks, same window _RANKING_RECOVERY_COOLDOWN_DAYS already tracks."""
+    last_edited_str = get_setting(_listing_last_edited_key(listing_id))
+    if not last_edited_str:
+        return None
+    try:
+        last_edited = datetime.fromisoformat(last_edited_str)
+    except ValueError:
+        return None
+    return (datetime.now(timezone.utc) - last_edited).days
+
+
 def enqueue_action(action_type: str, summary: str, payload: dict) -> int:
     """Stage a proposed change. Returns the new queue id. Status starts 'pending'."""
     init_db()

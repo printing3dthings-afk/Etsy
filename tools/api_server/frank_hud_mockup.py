@@ -2317,12 +2317,22 @@ async function renderPhoneApprovals(){
   const el = document.getElementById('pp-appr-body');
   el.innerHTML = '<div class="pp-empty">Loading…</div>';
   try {
-    const r = await authGet('/api/queue?status=pending', 15000);
+    const [r, rr] = await Promise.all([
+      authGet('/api/queue?status=pending', 15000),
+      // 2026-07-18: "Recently completed" -- see loadActions() for why.
+      authGet('/api/queue?status=all', 15000).catch(()=>null)
+    ]);
     const d = await r.json().catch(()=>({}));
     if (d && d.actions) _pendingActions = d.actions;
+    _recentActions = [];
+    if (rr && rr.ok) {
+      const rd = await rr.json().catch(()=>({}));
+      _recentActions = (rd.actions || []).filter(a => a.status !== 'pending' && a.status !== 'executing').slice(0, 5);
+    }
   } catch(e) {}
   const list = _pendingActions || [];
-  if (!list.length){ el.innerHTML = '<div class="pp-empty">✅ All clear — nothing needs your approval.</div>'; return; }
+  const recentHtml = _recentActivityHtml(_recentActions);
+  if (!list.length){ el.innerHTML = '<div class="pp-empty">✅ All clear — nothing needs your approval.</div>' + recentHtml; return; }
   el.innerHTML = list.map(a=>{
     const p = a.payload || {};
     let meta = String(a.type||'').replace(/_/g,' ');
@@ -2336,7 +2346,7 @@ async function renderPhoneApprovals(){
       <div class="pp-acts"><button class="pp-btn ok" onclick="phoneApprove(${a.id})">Approve</button>
       <button class="pp-btn no" onclick="openRejectModal(${a.id})">Reject</button></div>
       <div id="reject-modal-${a.id}" style="display:none"></div></div>`;
-  }).join('');
+  }).join('') + recentHtml;
 }
 async function phoneApprove(id){ await approveAction(id); renderPhoneApprovals(); }
 // Today — compact tiles + alerts from the same endpoints the dashboard uses.
@@ -4972,6 +4982,7 @@ async function loadTools(){
 let _actions = [];
 let _pendingActions = [];
 let _actionsSummary = {high:0,medium:0,low:0};
+let _recentActions = [];  // non-pending actions, newest first -- "Recently completed"
 let _actionFilter = null; // 'high' | 'medium' | 'low' | null (= all)
 function setActionBadge(summary, pending) {
   const b = document.getElementById('badge-actions');
@@ -5024,6 +5035,47 @@ function _actAgeStr(a) {
   const hrs = Math.round(mins / 60);
   if (hrs < 24) return hrs + 'h ago';
   return Math.round(hrs / 24) + 'd ago';
+}
+// 2026-07-18: what actually happened to a NON-pending action -- built after a
+// real bug report (Scott approved a Conversion Doctor fix and had no way to
+// tell if it worked). Shared by the approve-success toast and the "Recently
+// completed" list below, so both describe an outcome the same way.
+function _actionOutcomeSummary(a) {
+  const p = a.payload || {};
+  const label = (a.type || '').replace(/_/g, ' ');
+  if (a.status === 'failed') {
+    const err = (a.result && a.result.error) || 'unknown error';
+    return {ok: false, text: 'Could not apply ' + label + ': ' + err};
+  }
+  if (a.status === 'rejected') {
+    const reason = a.result && a.result.reason;
+    return {ok: false, text: label + ' rejected' + (reason ? ' — ' + reason : '')};
+  }
+  let detail = '';
+  if (a.type === 'update_title') detail = '"' + (p.title || '') + '"';
+  else if (a.type === 'update_tags') detail = (p.tags || []).join(', ');
+  else if (a.type === 'update_description') detail = (p.description || '').slice(0, 70) + ((p.description||'').length > 70 ? '…' : '');
+  else if (a.type === 'update_price') detail = '$' + Number(p.price || 0).toFixed(2);
+  else if (a.type === 'toggle_listing_state') detail = '→ ' + (p.new_state || '');
+  else if (a.type === 'publish_listing') detail = (p.preview || {}).title || '';
+  return {ok: true, text: label + ' applied' + (detail ? ': ' + detail : '')};
+}
+// Shared by both the mobile Approvals panel and the desktop Action Center --
+// GET /api/queue?status=all already existed server-side but nothing ever
+// rendered anything but status=pending, so an approved/rejected/failed action
+// just vanished with no trace. Takes already-fetched, already-filtered
+// (non-pending) rows, newest first, capped by the caller.
+function _recentActivityHtml(items) {
+  if (!items || !items.length) return '';
+  const rows = items.map(a => {
+    const o = _actionOutcomeSummary(a);
+    const age = _actAgeStr(a);
+    return `<div style="padding:8px 10px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:flex-start">
+      <span style="flex-shrink:0">${o.ok ? '✅' : '❌'}</span>
+      <span class="hub-listing-meta" style="flex:1">${escHtml(o.text)}${age ? ' <span style="color:var(--muted)">· ' + escHtml(age) + '</span>' : ''}</span>
+    </div>`;
+  }).join('');
+  return `<div class="section-title">Recently completed</div><div class="hub-card" style="padding:0;margin-bottom:14px">${rows}</div>`;
 }
 function _actionPreviewHtml(a) {
   const p = a.payload || {};
@@ -5134,6 +5186,14 @@ async function approveAction(id) {
     const r = await fetchWithTimeout(BASE+'/api/queue/'+id+'/approve', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 50000);
     const d = await r.json().catch(()=>({}));
     if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    // 2026-07-18: previously silent on success -- Scott approved a fix and had
+    // no confirmation it actually landed on Etsy. Build the same outcome text
+    // the "Recently completed" list uses, from the real result the approve
+    // endpoint returns, not just "it didn't error."
+    if (act) {
+      const o = _actionOutcomeSummary({type: act.type, payload: act.payload, status: 'executed', result: d.result});
+      showToast('✅ ' + o.text, 'ok', 6000);
+    }
     loadActions();
   } catch(e) { showToast('Could not apply: ' + (e.message||e), 'err', 6000); }
 }
@@ -5196,14 +5256,23 @@ async function loadActions() {
   const el = document.getElementById('actions-content');
   el.innerHTML = '<div class="hub-spinner"></div>';
   try {
-    const [ar, qr] = await Promise.all([
+    const [ar, qr, rr] = await Promise.all([
       authGet('/api/actions', 25000),
-      authGet('/api/queue?status=pending', 15000).catch(()=>null)
+      authGet('/api/queue?status=pending', 15000).catch(()=>null),
+      // 2026-07-18: "Recently completed" -- status=all already existed
+      // server-side but nothing ever fetched anything past pending, so an
+      // approved/failed/rejected action just vanished with no confirmation.
+      authGet('/api/queue?status=all', 15000).catch(()=>null)
     ]);
     if (!ar.ok) { const e = await ar.json().catch(()=>({})); throw new Error(e.detail||'HTTP '+ar.status); }
     const d = await ar.json();
     let pending = [];
     if (qr && qr.ok) { const qd = await qr.json().catch(()=>({})); pending = qd.actions || []; }
+    _recentActions = [];
+    if (rr && rr.ok) {
+      const rd = await rr.json().catch(()=>({}));
+      _recentActions = (rd.actions || []).filter(a => a.status !== 'pending' && a.status !== 'executing').slice(0, 5);
+    }
     _actions = d.actions || [];
     _pendingActions = pending;
     _actionsSummary = d.summary || {high:0,medium:0,low:0};
@@ -5254,6 +5323,7 @@ function renderActionsContent() {
     html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
     html += pending.map(renderApproval).join('');
   }
+  html += _recentActivityHtml(_recentActions);
   if (!_actions.length && !pending.length) { el.innerHTML = html + '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
   const sevBtn = sev => {
     const active = _actionFilter === sev;
