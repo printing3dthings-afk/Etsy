@@ -7,6 +7,61 @@ grounded answer instead of a guess. Keep entries short — a few lines each.
 
 ---
 
+## Incident Response
+
+*Standing procedure (2026-07-18 compliance hardening) — not a dated log entry,
+kept here rather than dated because it's a reference to follow, not an event
+that happened. This codebase has already had at least one real secret-leak
+incident (see `tools/backup_hub_db.py`'s own comments: "the exact category of
+secret already leaked once via a git-committed file... never again") and one
+real security incident that led to the CSP/HSTS work in
+`tests/test_security_headers.py`. Update this section itself after any real
+incident with what was actually done, same as the rest of this file.*
+
+### If a credential/secret leaks (e.g. committed to git, logged, or exposed)
+
+1. **Rotate it immediately** — for Etsy: re-run `python tools/etsy_oauth.py`
+   (invalidates the old refresh token chain). For `APP_SECRET_TOKEN`,
+   `SMTP_PASSWORD`, `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, etc.: generate a new
+   value at the provider, update `.env` locally AND the Railway service
+   Variables (the two are not connected — see the 2026-06-16 entry below),
+   which triggers an auto-redeploy.
+2. **If it was committed to git:** `git log -p -- <path>` to find every commit
+   that touched it and confirm the exposure window. This repo is **public** —
+   assume anything ever committed, even briefly, may have been scraped. A
+   force-push history rewrite is a last resort (breaks other clones/PRs, needs
+   Scott's explicit sign-off) — rotating the credential itself is almost
+   always sufficient, since the *old* value becomes worthless the moment it's
+   rotated regardless of who has a copy of it.
+3. **Check for downstream exposure:** was this credential used anywhere else
+   (e.g. would rotating the Etsy refresh token also require the RAILWAY volume
+   copy of `etsy_tokens` in `hub.db` to be considered untrustworthy)? Trigger a
+   fresh `save_etsy_tokens()` write so any encrypted-at-rest copy also rotates.
+4. **Log what happened here** (dated entry, this file): what leaked, how, the
+   exposure window, and what was rotated.
+
+### If buyer/customer data exposure is suspected
+
+1. **Check what's actually at risk** against the personal-data inventory in
+   `data/knowledge_base/compliance_notes.md` — buyer names only ever flow
+   through `get_orders`/`get_reviews` (never email/address, verified directly
+   in `main.py`'s tool handlers) and are written to disk only in
+   `data/message_drafts/*.json` and (receipt IDs only, no names) in
+   `data/notified_orders.json`. Confirm the specific artifact and scope before
+   assuming the worst.
+2. **If the exposure is a committed file:** `git log -p` every historical
+   version of the file, same as the credential-leak steps above — this repo is
+   public. (Precedent: `data/hub_db_backups/hub_db_state.json` was checked this
+   way on 2026-07-18 and found clean across all 3 historical versions.)
+3. **If real buyer-identifying data was exposed:** this is a "get Scott
+   directly" situation, not something to resolve autonomously — GDPR's 72-hour
+   breach-notification clock (where applicable) starts running, and whether/how
+   to notify affected buyers is a legal judgment call, not an engineering one.
+4. **Close the gap** that allowed the exposure (add a `.gitignore` rule, add a
+   redaction, tighten an endpoint's auth), then log it here.
+
+---
+
 ### 2026-06-16 — OpenAI marked "Not set" in Hub > Creds despite being in local .env
 **Symptom:** Creds tab showed OpenAI, SMTP, and Pinterest as "Not set" even though
 OPENAI_API_KEY had a real value in the project's `.env` file.
@@ -10165,3 +10220,21 @@ Refreshed competitor_research_2026.md (32 chars). Live search terms used: printa
 **Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
 
 **Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-18 — SOC 2 / HIPAA / GDPR compliance hardening pass
+Scott asked to "make sure" the business is compliant on SOC, HIPAA, and GDPR. Scoped via 3 clarifying questions: HIPAA is precautionary (no health-data feature exists), no external trigger (general due diligence), SOC 2 goal is hardening controls not a certified audit. Research (1 Explore agent + direct verification of its highest-stakes claims myself, not just trusting the summary) found:
+
+- **HIPAA confirmed inapplicable** — no code path anywhere receives/stores a filled-in planner or any customer health data; the Fitness & Wellness Planner is a blank template filled in on the buyer's own device. No engineering work needed.
+- **GDPR: found and fixed a real false claim.** privacy.html / tools/api_server/static/privacy.html said "No personal data belonging to customers or third parties is collected or retained" — false, since get_orders returns a real buyer name and order_notifier.py/etsy_autoresponder.py/review_monitor.py touch buyer names and message text. Rewrote both (kept byte-identical, as before) to accurately disclose what's collected, why, retention, and a deletion-request path.
+- Verified the existing PII-minimization work (_PII_TOOLS/_should_persist_chat_turn, main.py) is complete, not stale: only get_orders and get_reviews touch buyer-adjacent data at all (grepped every registered agent tool), get_reviews correctly excluded (no buyer identifier in its payload), and get_orders' own handler (not just its tool description) verified to genuinely drop email/address before the model ever sees it.
+- Checked the one thing that would have been a real live exposure: data/hub_db_backups/hub_db_state.json is committed to this **public** repo. Pulled all 3 historical versions, scanned every action_queue/activity_log entry (450 combined in the largest) for emails/buyer keywords/order data — zero hits, past or present. No fix needed, but confirmed rather than assumed.
+- Added `_prune_buyer_data_retention()` (main.py, runs daily via _quality_audit_iteration): deletes drafted-reply files older than 90 days, caps the two ID-only dedupe files (notified_orders.json, message_drafts/sent_log.json) to their most recent 2,000 entries.
+- Added `data/notified_orders.json` to .gitignore (was untracked but unprotected).
+- **SOC 2: encrypted etsy_tokens at rest.** Was plaintext in SQLite — the strongest real gap found. Used PyNaCl SecretBox (already a pinned dependency via tools/ci_refresh_etsy_secrets.py, no new package needed) keyed by a new TOKEN_ENCRYPTION_KEY env var; falls back to plaintext (same as before) when unset, and a pre-existing plaintext row decrypts as a transparent pass-through then gets re-saved encrypted on the next hourly OAuth refresh — no manual migration step. Verified all 4 paths (plaintext mode, encrypted mode, legacy-row migration, missing-key-on-encrypted-row hard failure) with a standalone round-trip script before trusting it.
+- Wrote a real "Incident Response" section (top of this file) — this codebase has already had a prior real secret leak (per backup_hub_db.py's own comments) and a prior security incident (test_security_headers.py's docstring), so a concrete rotate/scope/notify procedure was a genuine gap, not theoretical.
+- Wrote data/knowledge_base/compliance_notes.md: the HIPAA conclusion with reasoning, GDPR posture (implemented + explicitly what's NOT resolved — the controller/processor legal question needs a lawyer if it ever matters), and a SOC 2 Trust-Services-Criteria-style controls inventory naming what a real audit would additionally require (a CPA firm, formal policy docs, etc.) so it's clear what's out of scope, not silently missing.
+
+**Lesson for next time (recurring):** running the local test suite polluted this file with ~65 lines of synthetic test-server health-loop noise again (same class of issue logged 2026-07-18 in the motion-audit entry) — caught via `git status`/`git diff` before staging, file reverted and the intentional edit re-applied cleanly. Worth actually fixing (point local test runs at a throwaway ops-runbook path) rather than catching it by hand a third time.
+
+New test: tests/test_compliance_hardening.py. Verified: py_compile, full tests/run_all.py (48/48), tools/check_hardcoded_paths.py, manual diff-read of the rewritten privacy.html against the actual data flows documented above.

@@ -570,7 +570,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "7453dab-v227"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2c26acd-v228"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5657,6 +5657,68 @@ def _select_quality_audit_ids(manifest: dict) -> list[str]:
     return ids[:subset_size]
 
 
+_BUYER_DATA_RETENTION_DAYS = 90  # GDPR-motivated retention window (2026-07-18 compliance pass)
+_ID_STATE_FILE_MAX_KEPT = 2000   # notified_orders.json / message_drafts/sent_log.json have no
+                                  # per-entry timestamp (just a flat receipt/message-id set) --
+                                  # capping to the highest-N ids approximates a recency window
+                                  # without adding timestamp bookkeeping to a stable, simple file.
+
+
+def _prune_buyer_data_retention() -> dict:
+    """GDPR-motivated data-minimization pass (2026-07-18 compliance hardening):
+    buyer-referencing local artifacts (drafted reply text that quotes or
+    references a buyer's message or review, and per-order notification state)
+    have no reason to outlive Etsy's own order/message history, which remains
+    the authoritative record. Deletes dated draft files
+    (data/message_drafts/*.json, e.g. `2026-07-18_drafts.json` from
+    tools/etsy_autoresponder.py, `review_responses_2026-07-18.json` from
+    tools/review_monitor.py) older than _BUYER_DATA_RETENTION_DAYS by file
+    mtime, and caps the two ID-only state files (data/notified_orders.json,
+    data/message_drafts/sent_log.json) to their most recent
+    _ID_STATE_FILE_MAX_KEPT entries, since those carry no per-entry timestamp
+    to prune by age. Never raises -- called from the daily quality-audit loop,
+    and a partial failure here should not break the rest of that loop."""
+    result = {"drafts_deleted": 0, "notified_orders_trimmed": 0, "sent_log_trimmed": 0}
+    cutoff_ts = datetime.now(timezone.utc).timestamp() - (_BUYER_DATA_RETENTION_DAYS * 86400)
+
+    drafts_dir = ROOT / "data" / "message_drafts"
+    if drafts_dir.is_dir():
+        for f in drafts_dir.glob("*.json"):
+            if f.name == "sent_log.json":
+                continue  # an ID list, not a dated draft file -- handled below
+            try:
+                if f.stat().st_mtime < cutoff_ts:
+                    f.unlink()
+                    result["drafts_deleted"] += 1
+            except OSError as exc:
+                print(f"[retention] could not prune {f}: {exc}", flush=True)
+
+    for path, key, id_key in (
+        (ROOT / "data" / "notified_orders.json", "notified_orders_trimmed", "notified"),
+        (drafts_dir / "sent_log.json", "sent_log_trimmed", "sent_ids"),
+    ):
+        try:
+            if not path.is_file():
+                continue
+            data = json.loads(path.read_text())
+            ids = data.get(id_key, [])
+            if len(ids) <= _ID_STATE_FILE_MAX_KEPT:
+                continue
+            try:
+                ids_sorted = sorted(ids, key=lambda x: int(x))
+            except (TypeError, ValueError):
+                ids_sorted = ids  # non-numeric ids -- keep existing order, just truncate
+            kept = ids_sorted[-_ID_STATE_FILE_MAX_KEPT:]
+            path.write_text(json.dumps({id_key: kept}, indent=2))
+            result[key] = len(ids) - len(kept)
+        except (OSError, json.JSONDecodeError) as exc:
+            print(f"[retention] could not prune {path}: {exc}", flush=True)
+
+    if any(result.values()):
+        print(f"[retention] pruned buyer-referencing data: {result}", flush=True)
+    return result
+
+
 async def _quality_audit_iteration() -> dict:
     """One run of the daily quality audit: rotate oversized KB files, run the
     read-only listing integrity check against a rotating ~1/3 subset of the
@@ -5666,6 +5728,11 @@ async def _quality_audit_iteration() -> dict:
     sooner than the normal 24h cadence; returns a result dict on a clean run
     even if the audit itself found failing listings (that's a content-level
     signal surfaced via `on_success_status`, not a loop failure)."""
+    try:
+        await asyncio.to_thread(_prune_buyer_data_retention)
+    except Exception as exc:
+        print(f"[retention] buyer-data retention pass failed: {exc}", flush=True)
+
     for kb_path in (_OPS_RUNBOOK_PATH, _CEO_LEARNINGS_PATH):
         try:
             if await asyncio.to_thread(_summarize_and_rotate_kb_file, kb_path):

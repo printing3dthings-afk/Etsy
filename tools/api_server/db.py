@@ -21,12 +21,20 @@ Tables:
 """
 from __future__ import annotations
 
+import base64
 import json
 import os
 import sqlite3
 import threading
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+
+try:
+    import nacl.secret
+    import nacl.utils
+    _NACL_AVAILABLE = True
+except ImportError:  # pragma: no cover — PyNaCl is already a pinned dependency
+    _NACL_AVAILABLE = False
 
 
 def _resolve_db_path() -> str:
@@ -844,8 +852,80 @@ def prune_rate_limit_log(days: int = 30) -> int:
 # re-authorization (tools/etsy_oauth.py + a fresh dashboard update) still wins.
 
 
+# ── Encryption at rest for etsy_tokens (2026-07-18 compliance hardening) ──────
+# Plaintext access/refresh tokens in SQLite were the strongest real SOC-2-style
+# gap found in a data-handling review: whoever can read hub.db can act as the
+# shop on Etsy. Encrypts transparently when TOKEN_ENCRYPTION_KEY is set (base64
+# 32 raw bytes, see .env.example) using PyNaCl's SecretBox (XSalsa20-Poly1305)
+# — already a pinned dependency (tools/ci_refresh_etsy_secrets.py), no new
+# package needed. Falls back to plaintext, exactly as before this was added,
+# when the key is unset/invalid — never a hard failure, never a lost token.
+# A version-prefixed marker (_TOKEN_ENC_PREFIX) distinguishes an encrypted blob
+# from a legacy/fallback plaintext row, so no migration step is needed: an
+# existing plaintext row just decrypts as a no-op pass-through, and gets
+# re-saved encrypted the next time save_etsy_tokens() runs (the hourly OAuth
+# refresh cycle already calls this — see main.py).
+_TOKEN_ENC_PREFIX = "enc:v1:"
+_token_enc_warned = False
+
+
+def _token_encryption_box():
+    """Loads TOKEN_ENCRYPTION_KEY if set and valid; returns None (after a
+    one-time warning) otherwise. Callers must treat None as "store/return
+    plaintext", never raise for a missing key."""
+    global _token_enc_warned
+    raw = os.getenv("TOKEN_ENCRYPTION_KEY", "").strip()
+    if not raw or not _NACL_AVAILABLE:
+        if not _token_enc_warned:
+            print("[security] TOKEN_ENCRYPTION_KEY not set -- Etsy OAuth tokens will be "
+                  "stored in plaintext. Set it (see .env.example) to encrypt them at rest.",
+                  flush=True)
+            _token_enc_warned = True
+        return None
+    try:
+        key = base64.b64decode(raw)
+        if len(key) != nacl.secret.SecretBox.KEY_SIZE:
+            raise ValueError(f"expected {nacl.secret.SecretBox.KEY_SIZE} raw bytes, got {len(key)}")
+        return nacl.secret.SecretBox(key)
+    except Exception as exc:
+        if not _token_enc_warned:
+            print(f"[security] TOKEN_ENCRYPTION_KEY is set but invalid ({exc}) -- storing "
+                  f"tokens in plaintext until it's fixed.", flush=True)
+            _token_enc_warned = True
+        return None
+
+
+def _encrypt_token(plaintext: str | None) -> str | None:
+    if plaintext is None:
+        return None
+    box = _token_encryption_box()
+    if box is None:
+        return plaintext
+    nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+    encrypted = box.encrypt(plaintext.encode("utf-8"), nonce)
+    return _TOKEN_ENC_PREFIX + base64.b64encode(encrypted).decode("ascii")
+
+
+def _decrypt_token(value: str | None) -> str | None:
+    if value is None or not value.startswith(_TOKEN_ENC_PREFIX):
+        return value  # None, or a legacy/fallback plaintext row -- pass through
+    box = _token_encryption_box()
+    if box is None:
+        # The row IS encrypted but the key to read it isn't available right now
+        # -- a real, surfaced failure, not a silent "return garbage as if it
+        # were a token" or a quiet fallback that would break Etsy auth mysteriously.
+        raise RuntimeError(
+            "a stored Etsy token is encrypted but TOKEN_ENCRYPTION_KEY is not set/valid "
+            "-- cannot decrypt it. Set the same key that was used to encrypt it."
+        )
+    raw = base64.b64decode(value[len(_TOKEN_ENC_PREFIX):])
+    return box.decrypt(raw).decode("utf-8")
+
+
 def save_etsy_tokens(access_token: str, refresh_token: str, parent_refresh_token: str | None = None) -> None:
-    """Persist the latest known-good Etsy OAuth token pair. Singleton row (id=1)."""
+    """Persist the latest known-good Etsy OAuth token pair. Singleton row (id=1).
+    Encrypted at rest when TOKEN_ENCRYPTION_KEY is set; plaintext otherwise,
+    exactly as before this was added (see _encrypt_token)."""
     if not access_token or not refresh_token:
         return
     init_db()
@@ -858,7 +938,8 @@ def save_etsy_tokens(access_token: str, refresh_token: str, parent_refresh_token
                ON CONFLICT(id) DO UPDATE SET
                  access_token=excluded.access_token, refresh_token=excluded.refresh_token,
                  parent_refresh_token=excluded.parent_refresh_token, updated_at=excluded.updated_at""",
-            (access_token, refresh_token, parent_refresh_token, ts),
+            (_encrypt_token(access_token), _encrypt_token(refresh_token),
+             _encrypt_token(parent_refresh_token), ts),
         )
         conn.commit()
     finally:
@@ -866,12 +947,21 @@ def save_etsy_tokens(access_token: str, refresh_token: str, parent_refresh_token
 
 
 def get_etsy_tokens() -> dict | None:
-    """The last persisted Etsy token pair, or None if nothing has been saved yet."""
+    """The last persisted Etsy token pair, or None if nothing has been saved yet.
+    Transparently decrypts an encrypted row (see _decrypt_token) -- callers
+    always get plaintext token strings back, unchanged from before this was
+    added."""
     init_db()
     conn = _connect()
     try:
         r = conn.execute("SELECT * FROM etsy_tokens WHERE id=1").fetchone()
-        return dict(r) if r else None
+        if not r:
+            return None
+        row = dict(r)
+        row["access_token"] = _decrypt_token(row.get("access_token"))
+        row["refresh_token"] = _decrypt_token(row.get("refresh_token"))
+        row["parent_refresh_token"] = _decrypt_token(row.get("parent_refresh_token"))
+        return row
     finally:
         conn.close()
 
