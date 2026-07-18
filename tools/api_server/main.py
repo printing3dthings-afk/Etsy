@@ -570,7 +570,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "958ccb3-v225"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "35b6ea2-v226"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1621,10 +1621,36 @@ def _append_ops_runbook_entry(heading: str, body: str) -> None:
     """Append a short dated entry to the ops runbook. Used by automated background
     jobs (e.g. the daily quality audit) so a real incident gets logged even when
     no one is in a chat to ask Claude Code to write it down. Best-effort — a
-    logging failure must never break the caller."""
+    logging failure must never break the caller.
+
+    Dedup guard (2026-07-18): every health-loop failure path funnels through
+    this one function with zero dedup, which is how an unresolved, unchanged
+    failure firing every 5 minutes turned into 428 byte-identical entries for
+    a single issue (see ops_runbook.md's own 2026-07-18 cleanup entry). Before
+    appending, check whether the LAST heading already in the file is this
+    exact heading logged today (UTC) -- if so, skip the append entirely rather
+    than writing a duplicate. Only the file's tail is read (a few KB) to keep
+    this cheap on a hot path. Genuine day-over-day recurrence still surfaces
+    via _promote_recurring_failures()'s "Known Recurring Issues" summary --
+    this guard only kills same-day, same-heading spam."""
     try:
         stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        entry = f"\n\n## {stamp} — {heading}\n{body}\n"
+        expected_line = f"## {stamp} — {heading}"
+        try:
+            with open(_OPS_RUNBOOK_PATH, "rb") as fh:
+                fh.seek(0, os.SEEK_END)
+                size = fh.tell()
+                fh.seek(max(0, size - 4000))
+                tail = fh.read().decode("utf-8", errors="ignore")
+            last_heading_line = None
+            for line in tail.splitlines():
+                if line.startswith("## ") and " — " in line:
+                    last_heading_line = line
+            if last_heading_line == expected_line:
+                return  # identical heading already logged today -- skip the duplicate
+        except OSError:
+            pass  # file may not exist yet -- fall through and create it
+        entry = f"\n\n{expected_line}\n{body}\n"
         with open(_OPS_RUNBOOK_PATH, "a") as fh:
             fh.write(entry)
     except OSError as exc:
@@ -4743,6 +4769,46 @@ async def get_metrics(_token: str = Depends(_auth_session_or_bearer)):
     return out
 
 
+# ── Reviews-needing-reply radar (2026-07-18, audit-report fix) ─────────────────
+# Etsy's v3 API has no seller-reply field on a review and no review-response
+# endpoint at all (see EtsyAPIClient.get_reviews()'s own docstring, verified
+# 2026-06-17) -- "has Scott replied to this review" cannot come from Etsy
+# directly, so this tracks it locally, same pattern as tools/review_monitor.py's
+# reviews_seen.json (which tracks "have we already notified about this review",
+# a different question). A review has no dedicated review_id in the v3 response,
+# but is 1:1 with the transaction it's attached to, so transaction_id is the
+# stable identifier used here.
+_REVIEWS_REPLIED_PATH = db.resolve_persistent_path(
+    "reviews_replied.json",
+    fallback=ROOT / "data" / "reviews_replied.json",
+)
+
+
+def _load_replied_review_ids() -> set:
+    try:
+        return set(json.loads(_REVIEWS_REPLIED_PATH.read_text()))
+    except (OSError, ValueError):
+        return set()
+
+
+def _mark_review_replied(review_id: str) -> None:
+    ids = _load_replied_review_ids()
+    ids.add(str(review_id))
+    _REVIEWS_REPLIED_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _REVIEWS_REPLIED_PATH.write_text(json.dumps(sorted(ids), indent=2))
+
+
+@app.post("/api/reviews/{review_id}/mark-replied")
+async def mark_review_replied(review_id: str, _token: str = Depends(_auth_session_or_bearer)):
+    """Scott (or a future Quick-Reply-adjacent flow) calls this once he's replied
+    to a review on Etsy directly -- this cannot detect a reply automatically,
+    only record that one happened."""
+    _mark_review_replied(review_id)
+    with _cache_lock:
+        _cache.pop("inbox", None)
+    return {"ok": True, "review_id": review_id}
+
+
 @app.get("/api/inbox")
 async def get_inbox(_token: str = Depends(_auth_session_or_bearer)):
     """Etsy inbox: unread messages + recent reviews. Cached 90s."""
@@ -4759,11 +4825,17 @@ async def get_inbox(_token: str = Depends(_auth_session_or_bearer)):
         except Exception as exc:
             msgs_r = exc
         try:
-            reviews_r = client.get_reviews(limit=3)
+            # 50, not 3 -- "reviews awaiting a reply" needs to look at real
+            # history, not just the newest 3 (which is all the old fetch limit
+            # gave the display). Matches _compute_star_seller_status()'s own
+            # limit=50 review fetch, so this stays consistent across the two
+            # dashboard cards that both read review history.
+            reviews_r = client.get_reviews(limit=50)
         except Exception as exc:
             reviews_r = exc
 
-        out: dict = {"unread_count": 0, "oldest_unread_hours": None, "recent_reviews": []}
+        out: dict = {"unread_count": 0, "oldest_unread_hours": None, "recent_reviews": [],
+                     "reviews_awaiting_reply": 0}
 
         if not isinstance(msgs_r, Exception):
             convs = msgs_r.get("results", [])
@@ -4777,12 +4849,19 @@ async def get_inbox(_token: str = Depends(_auth_session_or_bearer)):
             out["messages_error"] = str(msgs_r)
 
         if not isinstance(reviews_r, Exception):
+            replied_ids = _load_replied_review_ids()
+            all_reviews = []
             for r in reviews_r.get("results", []):
-                out["recent_reviews"].append({
+                review_id = str(r.get("transaction_id") or "")
+                all_reviews.append({
+                    "id": review_id,
                     "rating": r.get("rating", 0),
                     "text": (r.get("review") or "")[:120],
                     "date": r.get("create_timestamp", 0),
+                    "replied": bool(review_id) and review_id in replied_ids,
                 })
+            out["recent_reviews"] = all_reviews[:3]
+            out["reviews_awaiting_reply"] = sum(1 for r in all_reviews if r["id"] and not r["replied"])
         else:
             out["reviews_error"] = str(reviews_r)
 
@@ -5199,6 +5278,76 @@ async def get_actions(_token: str = Depends(_auth_session_or_bearer)):
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Etsy API timeout — try again")
     _cache_set("actions", data)
+    return data
+
+
+# ── Bundle-opportunity nudge (2026-07-18, audit-report fix) ────────────────────
+# Deterministic rule (no LLM, just counting) surfacing categories with many
+# active, individually-listed products and few/no bundle-type listings
+# covering them. Confirmed against real catalog counts, not the planner
+# example the source research used narratively -- planners are already
+# well-bundled (BUNDLE_PLANNERS covers the 4 active DP10xx listings); the
+# real gap is wall_art: 67 active listings against a single 3-piece bundle.
+# Digital-seller growth research names bundling + listing volume as the two
+# real differentiators past a few hundred dollars/month -- this is a
+# proactive nudge, not a problem, so it's surfaced on the Today tab in its
+# own "Opportunities" section, separate from Needs Attention.
+_BUNDLE_OPPORTUNITY_MIN_ACTIVE = 10  # below this, a category isn't worth a bundle push yet
+_BUNDLE_OPPORTUNITY_RATIO = 15  # active-per-bundle ratio above which a category reads "underserved"
+
+
+def _compute_bundle_opportunities() -> list[dict]:
+    """Reads data/product_catalog.json directly (same file GET /api/products
+    reads) rather than round-tripping Etsy -- this is catalog structure, not
+    live listing stats, so no API call is needed. Never raises -- an empty
+    list on any read/parse failure, since this is a nudge, not a required
+    signal."""
+    try:
+        catalog = json.loads((ROOT / "data" / "product_catalog.json").read_text())
+    except (OSError, ValueError):
+        return []
+
+    active_counts: dict[str, int] = {}
+    bundle_counts: dict[str, int] = {}
+    for p in catalog:
+        cat = str(p.get("category", ""))
+        status = p.get("status", "")
+        if cat.endswith("_bundle"):
+            if status == "active":
+                base = cat[: -len("_bundle")]
+                bundle_counts[base] = bundle_counts.get(base, 0) + 1
+        elif status == "active":
+            active_counts[cat] = active_counts.get(cat, 0) + 1
+
+    opportunities = []
+    for cat, active_n in active_counts.items():
+        if active_n < _BUNDLE_OPPORTUNITY_MIN_ACTIVE:
+            continue
+        bundled_n = bundle_counts.get(cat, 0)
+        if bundled_n > 0 and active_n / bundled_n < _BUNDLE_OPPORTUNITY_RATIO:
+            continue  # already has a reasonable number of bundles for its size
+        label = cat.replace("_", " ")
+        opportunities.append({
+            "category": cat,
+            "active_count": active_n,
+            "bundle_count": bundled_n,
+            "title": f"{active_n} {label} listings, only {bundled_n} bundle{'s' if bundled_n != 1 else ''}",
+            "suggestion": f"Bundling is one of the biggest levers top digital sellers use to grow — "
+                          f"worth building a {label} bundle listing.",
+        })
+    opportunities.sort(key=lambda o: -o["active_count"])
+    return opportunities[:2]  # cap surfaced count to avoid Today-tab clutter
+
+
+@app.get("/api/bundle-opportunities")
+async def get_bundle_opportunities(_token: str = Depends(_auth_session_or_bearer)):
+    """Today tab's Opportunities section. Cached 1h — catalog structure changes
+    rarely enough that this doesn't need the shorter TTLs live-Etsy data uses."""
+    cached = _cache_get("bundle_opportunities", ttl=3600)
+    if cached is not None:
+        return cached
+    data = {"opportunities": await asyncio.to_thread(_compute_bundle_opportunities)}
+    _cache_set("bundle_opportunities", data)
     return data
 
 
@@ -7412,6 +7561,12 @@ async def _autofix_tags_core(listing_id: int, listing: dict | None = None, reaso
         tags = [t for t in tags if t and not (t in seen or seen.add(t))]
 
         payload = {"listing_id": listing_id, "tags": tags, "_state_at_staging": listing.get("state")}
+        if reason:
+            # Surfaced in the Approvals screen's detail panel (see _actionPreviewHtml,
+            # 2026-07-18 audit-report fix) so Scott sees WHY Frank staged this, not just
+            # what changed -- this "finding -> fix" text already existed
+            # (_apply_conversion_fixes_core builds it) but was discarded before this fix.
+            payload["reason"] = reason
         candidate = {"type": "update_tags", "payload": payload}
         ok, msg = _validate_staged_action(candidate)
         if not ok:
@@ -7473,6 +7628,8 @@ async def _autofix_title_core(listing_id: int, listing: dict | None = None, reas
         new_title = "".join(getattr(b, "text", "") for b in response.content).strip().strip('"\'')
 
         payload = {"listing_id": listing_id, "title": new_title, "_state_at_staging": listing.get("state")}
+        if reason:
+            payload["reason"] = reason  # see the matching comment in _autofix_tags_core above
         candidate = {"type": "update_title", "payload": payload}
         ok, msg = _validate_staged_action(candidate)
         if not ok:
@@ -7565,6 +7722,10 @@ async def _autofix_description_core(
                 "listing_id": listing_id, "description": new_description,
                 "before_description": description,  # display-only, for the Action Center diff view
                 "_state_at_staging": listing.get("state"),
+                # This path fires on a deterministic rule, not an LLM diagnosis, so it
+                # always has a concrete reason even when the caller passed none.
+                "reason": reason or "CLAUDE.md Gate 6: wall art descriptions must open with an "
+                                     "instant-download/printable disclosure — this listing's didn't.",
             }
             candidate = {"type": "update_description", "payload": payload}
             ok, msg = _validate_staged_action(candidate)
@@ -7632,6 +7793,7 @@ async def _autofix_description_core(
             "listing_id": listing_id, "description": new_description,
             "before_description": description,
             "_state_at_staging": listing.get("state"),
+            "reason": reason,  # always non-empty here -- see the guard above
         }
         candidate = {"type": "update_description", "payload": payload}
         ok, msg = _validate_staged_action(candidate)

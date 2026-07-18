@@ -2482,6 +2482,13 @@ async function renderPhoneToday(){
   // everything else on this screen already does on a fetch failure.
   let starSeller = null;
   try { const r = await authGet('/api/star-seller', 15000); starSeller = await r.json().catch(()=>null); } catch(e) {}
+  // 2026-07-18 (audit-report fix, "bundle-opportunity nudge"): a growth
+  // suggestion, not a problem -- deliberately fetched and rendered separately
+  // from Needs Attention below so it never shares a severity dot/urgency
+  // styling with an actual alert.
+  let bundleOpps = [];
+  try { const r = await authGet('/api/bundle-opportunities', 15000); const d = await r.json().catch(()=>({}));
+        bundleOpps = d.opportunities || []; } catch(e) {}
   // Real /api/metrics shape: orders is an OBJECT ({last_7_days, revenue_7d, ...}),
   // shop.total_sales is the all-time count. (Rendering m.orders directly printed
   // "[object Object]" — caught by Scott on-device.)
@@ -2543,6 +2550,14 @@ async function renderPhoneToday(){
     }).join('');
   } else {
     html += '<div class="pp-empty" style="padding:22px 10px">Nothing needs attention right now — you\\'re all caught up.</div>';
+  }
+  if (bundleOpps.length){
+    html += '<div class="pmore-grp">Opportunities</div>';
+    html += bundleOpps.map(o =>
+      `<div class="palert good"><span class="pdot"></span><div>${escHtml(o.title)}` +
+      (o.suggestion ? `<div style="color:var(--muted);margin-top:2px">${escHtml(o.suggestion)}</div>` : '') +
+      `</div></div>`
+    ).join('');
   }
   el.innerHTML = html;
   el.dataset.loadedOnce = '1';
@@ -4720,11 +4735,28 @@ async function loadInbox(){
     }
     html += '</div></div>';
     const reviews = d.recent_reviews||[];
+    // 2026-07-18 (audit-report fix, "reviews-needing-reply radar"): Etsy has no
+    // seller-reply field on a review at all, so "replied" is tracked locally
+    // (POST /api/reviews/{id}/mark-replied) -- this is a manual log of what
+    // Scott has already handled on Etsy directly, not something Frank can detect.
+    const awaiting = d.reviews_awaiting_reply||0;
+    if(awaiting > 0){
+      html += '<div class="inbox-msg-bar" style="margin-top:6px">';
+      html += '<div class="inbox-unread-badge">'+awaiting+'</div>';
+      html += '<div class="inbox-msg-meta"><strong>'+awaiting+' review'+(awaiting>1?'s':'')+' awaiting a reply</strong><br>'+
+        '<span style="color:var(--muted)">Etsy has no reply-tracking API — mark each one once you\\'ve replied</span></div>';
+      html += '</div>';
+    }
     if(reviews.length){
       html += '<div style="margin-top:6px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Recent Reviews</div>';
       reviews.forEach(rev=>{
         const stars = '★'.repeat(rev.rating)+'☆'.repeat(5-rev.rating);
-        html += '<div class="inbox-review"><div class="inbox-review-stars">'+stars+'</div>';
+        html += '<div class="inbox-review"><div class="inbox-review-stars">'+stars+
+          (rev.id ? (rev.replied
+            ? ' <span style="color:var(--green);font-size:10px">✓ replied</span>'
+            : ' <button class="act-btn secondary" style="font-size:10px;padding:2px 8px" onclick="markReviewReplied(\\''+escHtml(rev.id)+'\\')">Mark replied</button>')
+            : '') +
+          '</div>';
         if(rev.text) html += '<div class="inbox-review-text">'+escHtml(rev.text.slice(0,100))+(rev.text.length>100?'…':'')+'</div>';
         html += '</div>';
       });
@@ -4735,6 +4767,14 @@ async function loadInbox(){
   }catch(e){
     if(el) el.innerHTML='<div style="color:var(--muted);font-size:11px">⚠ '+escHtml(e.message)+'</div>';
   }
+}
+async function markReviewReplied(reviewId){
+  try {
+    const r = await fetchWithTimeout(BASE+'/api/reviews/'+encodeURIComponent(reviewId)+'/mark-replied',
+      {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 15000);
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    loadInbox();
+  } catch(e) { showToast('Could not mark replied: ' + (e.message||e), 'err', 6000); }
 }
 
 function _timeAgo(iso){
@@ -5339,7 +5379,22 @@ function _recentActivityHtml(items) {
   }).join('');
   return `<div class="section-title">Recently completed</div><div class="hub-card" style="padding:0;margin-bottom:14px">${rows}</div>`;
 }
+// 2026-07-18 (audit-report fix, "why Frank suggested this"): the diagnosis pipeline
+// (_apply_conversion_fixes_core, main.py) already computes a real "finding -> fix"
+// reason for every autofix and now threads it into payload.reason -- previously that
+// text was only used to steer the LLM prompt, then discarded before it ever reached
+// this screen, so Scott saw WHAT changed but never WHY. Only update_title/update_tags/
+// update_description ever carry payload.reason; every other action type is a direct
+// request (a photo Scott asked for, a script he ran), not a diagnosis, so no reason
+// block renders for those.
 function _actionPreviewHtml(a) {
+  const p = a.payload || {};
+  const reasonHtml = p.reason
+    ? `<div style="margin-bottom:8px;padding:8px 10px;background:var(--panel2);border-left:3px solid var(--cyan2);border-radius:var(--r-sm);font-size:12.5px"><b>💡 Why:</b> ${escHtml(p.reason)}</div>`
+    : '';
+  return reasonHtml + _actionPreviewBody(a);
+}
+function _actionPreviewBody(a) {
   const p = a.payload || {};
   if (a.type === 'update_title') return 'New title: ' + escHtml(p.title || '');
   if (a.type === 'update_tags') return 'New tags: ' + escHtml((p.tags || []).join(', '));
@@ -5460,6 +5515,24 @@ async function approveAction(id) {
     loadActions();
   } catch(e) { showToast('Could not apply: ' + (e.message||e), 'err', 6000); }
 }
+// 2026-07-18 (audit-report fix): one confirm() covers the whole batch -- still
+// the one tap "nothing goes live without your tap" promises, just one tap for
+// several items instead of N. Applies sequentially (not Promise.all) so a
+// failure partway through doesn't leave the Etsy API mid-burst under load.
+async function bulkApproveLowRisk() {
+  const candidates = (_pendingActions || []).filter(a => _BULK_APPROVE_TYPES.includes(a.type));
+  if (!candidates.length) return;
+  if (!confirm(`Approve all ${candidates.length} low-risk items (tag/title updates only) and apply them to your live Etsy listings now?`)) return;
+  let okCount = 0, errCount = 0;
+  for (const a of candidates) {
+    try {
+      const r = await fetchWithTimeout(BASE+'/api/queue/'+a.id+'/approve', {method:'POST',headers:{Authorization:'Bearer '+TOKEN}}, 50000);
+      if (r.ok) okCount++; else errCount++;
+    } catch(e) { errCount++; }
+  }
+  showToast(`Bulk approve: ${okCount} applied${errCount ? `, ${errCount} failed` : ''}`, errCount ? 'err' : 'ok', 6000);
+  loadActions();
+}
 function openRejectModal(id) {
   const panel = document.getElementById('reject-modal-'+id);
   if (!panel) return;
@@ -5560,6 +5633,16 @@ const _APPROVAL_BATCH_TYPES = ['update_tags','update_title','update_description'
 // Price changes get their own tighter rail -- CLAUDE.md's Hard Stop is "more
 // than 5 listings" for price, not the general 10-item batch limit.
 const _PRICE_BATCH_LIMIT = 5;
+// 2026-07-18 (audit-report fix, Scott's confirmed reframing of "confidence-
+// tiered auto-apply"): NOT a policy change -- every action here already
+// requires the one tap "nothing goes live without your tap" promises. This
+// only batches that one tap across several low-risk items instead of making
+// Scott tap Approve N separate times. Deliberately narrow: only types whose
+// worst case is "the wrong words" (tags/title), never price, publish, or
+// anything CLAUDE.md already hard-gates -- and every candidate already
+// passed _validate_staged_action() at stage time (the server never enqueues
+// an invalid one), so there's no separate "no warnings" check to run here.
+const _BULK_APPROVE_TYPES = ['update_tags', 'update_title'];
 function renderActionsContent() {
   const el = document.getElementById('actions-content');
   if (!el) return;
@@ -5582,24 +5665,61 @@ function renderActionsContent() {
       ⚠️ ${parts.join(', ')} — ${limitNote}. Worth a closer look before approving all at once.
     </div>`;
   }
+  // Only offer the bulk button when it wouldn't itself trip the batch-limit
+  // warning above -- if the count is already big enough to warrant a closer
+  // look, don't offer a shortcut past that closer look.
+  const bulkCandidates = pending.filter(a => _BULK_APPROVE_TYPES.includes(a.type));
+  if (bulkCandidates.length >= 2 && bulkCandidates.length <= _APPROVAL_BATCH_LIMIT) {
+    html += `<div class="hub-listing-meta" style="margin-bottom:10px;padding:8px 10px;background:var(--panel2);border-radius:var(--r-sm);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <span>${bulkCandidates.length} low-risk items pending (tag/title updates only)</span>
+      <button class="act-btn primary" onclick="bulkApproveLowRisk()">Approve all ${bulkCandidates.length}</button>
+    </div>`;
+  }
   if (pending.length) {
     html += `<div class="section-title">⏳ Awaiting your approval (${pending.length})</div>`;
     html += pending.map(renderApproval).join('');
   }
   html += _recentActivityHtml(_recentActions);
   if (!_actions.length && !pending.length) { el.innerHTML = html + '<div class="empty">✅ All clear — no action items right now.</div>'; return; }
+  // 2026-07-18 (audit-report fix): _compute_actions() already tags every card with a
+  // `category` -- infra fetch failures use "data_error", everything else is a real
+  // listing-quality issue. Before this split they shared one card style/section, so
+  // "Etsy token expired" and "this listing needs more tags" looked like the same kind
+  // of decision. System issues aren't a severity-filterable scan result (they're
+  // binary broken/not-broken), so they get their own section above the severity
+  // buckets, and the severity counts below are recomputed from content-only cards so
+  // they don't silently include an infra card's "medium" severity.
+  const systemActions = _actions.filter(a => a.category === 'data_error');
+  const contentActions = _actions.filter(a => a.category !== 'data_error');
+  if (systemActions.length) {
+    html += `<div class="section-title">🔧 System health (${systemActions.length})</div>`;
+    html += systemActions.map(a => {
+      const i = _actions.indexOf(a);
+      return `
+      <div class="act-card ${escHtml(a.severity)}">
+        <div class="act-title">${escHtml(a.title)}</div>
+        <div class="act-detail">${escHtml(a.detail)}</div>
+        <div class="act-sug"><b>💡 Fix:</b> ${escHtml(a.suggestion)}</div>
+        <div class="act-btns">
+          <button class="act-btn primary" onclick="askActionFix(${i})">Ask CEO</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  const contentSummary = {high: 0, medium: 0, low: 0};
+  contentActions.forEach(a => { contentSummary[a.severity] = (contentSummary[a.severity]||0) + 1; });
   const sevBtn = sev => {
     const active = _actionFilter === sev;
     const c = _SEV_COLORS[sev];
     const style = active
       ? `flex:1;text-align:center;padding:10px 6px;cursor:pointer;border-color:${c};background:${c}26`
       : 'flex:1;text-align:center;padding:10px 6px;cursor:pointer';
-    return `<div class="metric" style="${style}" onclick="setActionFilter('${sev}')" role="button" tabindex="0"><div class="value" style="color:${c};font-size:20px">${s[sev]||0}</div><div class="sub">${sev}${active?' ✓':''}</div></div>`;
+    return `<div class="metric" style="${style}" onclick="setActionFilter('${sev}')" role="button" tabindex="0"><div class="value" style="color:${c};font-size:20px">${contentSummary[sev]||0}</div><div class="sub">${sev}${active?' ✓':''}</div></div>`;
   };
   html += `<div class="section-title">Flagged by scan${_actionFilter?` — showing ${_actionFilter} only`:''}</div><div style="display:flex;gap:8px;margin-bottom:14px">`+
     sevBtn('high')+sevBtn('medium')+sevBtn('low')+
     `</div>`;
-  const filtered = _actionFilter ? _actions.filter(a => a.severity === _actionFilter) : _actions;
+  const filtered = _actionFilter ? contentActions.filter(a => a.severity === _actionFilter) : contentActions;
   if (!filtered.length) {
     html += `<div class="empty">No ${escHtml(_actionFilter)} severity items.</div>`;
   } else {
