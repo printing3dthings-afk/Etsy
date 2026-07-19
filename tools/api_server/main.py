@@ -607,7 +607,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "5ef739e-v235"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "377ec01-v236"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -7286,6 +7286,24 @@ def _set_calendar_task_last_run(name: str, when: date) -> None:
     db.set_setting(f"calendar_task_last_{name}", when.isoformat())
 
 
+def _run_etsy_file_inventory_sweep() -> str:
+    """Daily refresh of the Files tab's 'Etsy Listing Files' section
+    (2026-07-19) -- sweeps every active listing's real Etsy file inventory
+    (tools/etsy_file_inventory.py's sweep()) and writes the report the same
+    atomic way its own CLI does, so GET /api/etsy-files always has a report
+    less than a day stale without Scott needing to run the script by hand."""
+    import etsy_file_inventory
+    result = etsy_file_inventory.sweep()
+    result["swept_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    path = etsy_file_inventory._report_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(result, indent=2))
+    tmp.replace(path)
+    total_files = sum(len(l["files"]) for l in result["listings"])
+    return f"{len(result['listings'])} listing(s), {total_files} file(s), {len(result['skipped'])} skipped"
+
+
 async def _calendar_tasks_loop() -> None:
     """Hourly-tick calendar-gated loop (same shape as _daily_brief_loop) for
     tasks that fire on a specific day/date rather than a fixed interval:
@@ -7309,6 +7327,7 @@ async def _calendar_tasks_loop() -> None:
     last_art_authenticity = _get_calendar_task_last_run("art_authenticity")
     last_star_seller_check = _get_calendar_task_last_run("star_seller_check")
     last_gcal_sync = _get_calendar_task_last_run("gcal_sync")
+    last_etsy_file_inventory = _get_calendar_task_last_run("etsy_file_inventory")
     while True:
         await asyncio.sleep(3600)
         now = datetime.now(timezone.utc)
@@ -7386,13 +7405,22 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"gcal-sync:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] google calendar sync error: {exc}", flush=True)
+        if today != last_etsy_file_inventory:
+            try:
+                detail = await asyncio.to_thread(_run_etsy_file_inventory_sweep)
+                last_etsy_file_inventory = today
+                _set_calendar_task_last_run("etsy_file_inventory", today)
+                ran.append(f"etsy-file-inventory:{detail}")
+            except Exception as exc:
+                print(f"[calendar-tasks] etsy file inventory sweep error: {exc}", flush=True)
         db.set_agent_heartbeat(
             "calendar_tasks", "Calendar Tasks", "ok",
             "; ".join(ran) if ran else (
                 f"no scheduled task due today (last: weekly={last_weekly}, "
                 f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
                 f"art={last_art_check}, art_authenticity={last_art_authenticity}, "
-                f"star_seller={last_star_seller_check}, gcal_sync={last_gcal_sync})"
+                f"star_seller={last_star_seller_check}, gcal_sync={last_gcal_sync}, "
+                f"etsy_file_inventory={last_etsy_file_inventory})"
             ),
         )
 
@@ -11498,6 +11526,64 @@ def _product_file_integrity_alerts() -> list[dict]:
         }
         for item in report.get("genuinely_missing", [])
     ]
+
+
+def _etsy_file_inventory_report() -> dict | None:
+    """Last result written by tools/etsy_file_inventory.py, or None if it has
+    never been run. Read-only, tolerant of a missing/corrupt file."""
+    vol = _FILE_ROOTS.get("volume")
+    path = (vol / "etsy_file_inventory_report.json") if vol else (ROOT / "data" / "etsy_file_inventory_report.json")
+    try:
+        return json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _build_etsy_files_response() -> dict:
+    """Cross-reference every Etsy-reported filename against the local file
+    index (_catalog_filename_index(), via _catalog_file_url()) so the Files
+    tab can offer a real download where a same-named local copy happens to
+    exist, and an honest 'view on Etsy' link otherwise -- NEVER claiming a
+    local copy is what's actually live on Etsy right now (Etsy's API has no
+    way to confirm that; it only hands back metadata, not content)."""
+    report = _etsy_file_inventory_report()
+    if not report:
+        return {"listings": [], "swept_at": None, "skipped": []}
+    listings = []
+    for entry in report.get("listings", []):
+        files = []
+        for f in entry.get("files", []):
+            name = f.get("filename") or ""
+            local_url = _catalog_file_url(name) if name else None
+            size = f.get("size_bytes")
+            files.append({
+                "filename": name,
+                "size_bytes": size,
+                "size_human": _human_size(size) if isinstance(size, int) else None,
+                "rank": f.get("rank"),
+                "local_match": local_url is not None,
+                "local_url": local_url,
+            })
+        listings.append({
+            "product_id": entry.get("product_id"),
+            "title": entry.get("title"),
+            "category": entry.get("category"),
+            "listing_id": entry.get("listing_id"),
+            "files": files,
+        })
+    return {"listings": listings, "swept_at": report.get("swept_at"), "skipped": report.get("skipped", [])}
+
+
+@app.get("/api/etsy-files")
+async def get_etsy_files(_token: str = Depends(_auth_session_or_bearer)):
+    """Every file Etsy has on record for each active listing (2026-07-19) --
+    kept fresh by a daily sweep in _calendar_tasks_loop(), see
+    tools/etsy_file_inventory.py. Etsy's API exposes file metadata only, never
+    content, so each entry is cross-checked against local storage:
+    local_match/local_url when a same-named file happens to exist locally
+    (real download), otherwise the caller should link out to the listing on
+    Etsy -- that's the only place the actual bytes can be pulled from."""
+    return await asyncio.to_thread(_build_etsy_files_response)
 
 
 # ── API cost tracking (Settings -> API Costs) ────────────────────────────────

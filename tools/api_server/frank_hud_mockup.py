@@ -1745,6 +1745,14 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
       </div>
       <div id="files-content" class="hub-scroll"><div class="hub-spinner"></div></div>
+
+      <div class="hub-section-title" style="margin-top:18px">Etsy Listing Files (live from Etsy)</div>
+      <div class="hub-card" style="margin-bottom:12px">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">
+          Every file Etsy has on record per active listing — refreshed automatically once a day. Etsy's API only hands back file names and sizes, never the actual bytes, so where a same-named file happens to exist on this deploy you get a real download; otherwise tap through to the listing on Etsy — that's the only place to pull the real file from.
+        </div>
+      </div>
+      <div id="etsy-files-content" class="hub-scroll"><div class="hub-spinner"></div></div>
     </div>
   </div>
 
@@ -3497,7 +3505,7 @@ const _SCREEN_LOADERS = {
   listings: [() => loadListings(_lastListingState)],
   products: [loadProducts],
   brandkit: [renderBrandKit],
-  files: [loadFiles],
+  files: [loadFiles, loadEtsyFiles],
   connections: [loadConnections],
   security: [renderSecurityPosture],
   settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadWhoAmI],
@@ -7553,7 +7561,7 @@ function openFile(url){ window.open(url,'_blank'); }
 // (all the DP1032_* files — PDFs, sticker pack, listing images, sheets) into a single
 // tappable row, so a 1000+ file volume listing isn't one giant flat scroll. The key
 // is the product code embedded in the path (DP1032, SS1001, WA1030, …).
-let _hubZipSeq = 0, _hubGrpSeq = 0;
+let _hubZipSeq = 0, _hubGrpSeq = 0, _etsyFilesGrpSeq = 0;
 function _productKeyFromPath(path){
   const m = String(path||'').match(/([A-Za-z]{2,5}\\d{3,4})/);
   return m ? m[1].toUpperCase() : null;
@@ -7669,6 +7677,71 @@ async function loadFiles() {
   } catch(e) {
     el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load files')+'</div>'+
       '<div style="text-align:center;margin-top:8px"><button onclick="loadFiles()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
+  }
+}
+
+// Etsy Listing Files (2026-07-19) -- every file Etsy has on record per active
+// listing, from /api/etsy-files (kept fresh by a daily sweep, see
+// tools/etsy_file_inventory.py). Etsy's API only returns file metadata, never
+// content, so each row is either a real download (a same-named file happens
+// to exist locally) or a link out to the listing on Etsy -- never presented
+// as if the local copy IS what's live on Etsy.
+async function loadEtsyFiles() {
+  const el = document.getElementById('etsy-files-content');
+  if (!el) return;
+  el.innerHTML = '<div class="hub-spinner"></div>';
+  try {
+    const r = await authGet('/api/etsy-files', 20000);
+    const d = await r.json().catch(()=>({}));
+    if (!r.ok) throw new Error(d.detail||'HTTP '+r.status);
+    const listings = d.listings||[];
+    if (!listings.length) {
+      el.innerHTML = '<div class="hub-empty" style="line-height:1.6">'+
+        (d.swept_at ? 'No active listings found in the last sweep.' :
+          'Not swept yet — this refreshes automatically once a day. Run <code>python tools/etsy_file_inventory.py</code> to fetch it now.') +
+        '</div>';
+      return;
+    }
+    _etsyFilesGrpSeq = 0;
+    let html = '';
+    if (d.swept_at) {
+      html += '<div class="hub-listing-meta" style="margin-bottom:8px">Last checked against Etsy: '+escHtml(d.swept_at)+'</div>';
+    }
+    html += '<div class="hub-card">';
+    listings.forEach(lst => {
+      const gid = 'etsy-grp-'+(_etsyFilesGrpSeq++);
+      html += '<div class="hub-listing-item" onclick="toggleZip(\\''+gid+'\\',this.querySelector(\\'.hub-grp-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
+        '<div class="hub-thumb-ph">🏷</div>'+
+        '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(lst.title||lst.product_id)+'</div>'+
+        '<div class="hub-listing-meta">'+escHtml(lst.product_id)+' · Etsy #'+escHtml(String(lst.listing_id))+' · '+lst.files.length+' file'+(lst.files.length!==1?'s':'')+'</div></div>'+
+        '<div class="hub-grp-caret" style="color:var(--gold);font-size:16px">▸</div>'+
+      '</div>';
+      html += '<div id="'+gid+'" style="display:none;margin:0 0 6px 8px;border-left:2px solid var(--border);padding-left:8px">';
+      if (!lst.files.length) {
+        html += '<div class="hub-listing-meta" style="padding:6px 0">No files attached on Etsy.</div>';
+      }
+      lst.files.forEach(f => {
+        html += '<div class="hub-listing-item">'+
+          '<div class="hub-thumb-ph">📄</div>'+
+          '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(f.filename)+'</div>'+
+          '<div class="hub-listing-meta">'+escHtml(f.size_human||'')+'</div></div>';
+        if (f.local_match) {
+          html += '<a href="'+f.local_url+'&token='+encodeURIComponent(TOKEN)+'" target="_blank" class="act-btn" style="white-space:nowrap;font-size:11.5px;padding:6px 10px" title="A local copy with this exact filename -- not a guarantee it matches what\\'s live on Etsy right now">⬇ Local copy</a>';
+        } else {
+          html += '<a href="https://www.etsy.com/listing/'+encodeURIComponent(String(lst.listing_id))+'" target="_blank" class="act-btn" style="white-space:nowrap;font-size:11.5px;padding:6px 10px">🔗 View on Etsy</a>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+    if ((d.skipped||[]).length) {
+      html += '<div class="hub-listing-meta" style="margin-top:10px">'+d.skipped.length+' listing(s) skipped in the last sweep (no listing id, or an Etsy API error) — re-swept automatically tomorrow.</div>';
+    }
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="hub-empty">'+escHtml(e.name==='AbortError'?'Request timed out':e.message||'Failed to load Etsy files')+'</div>'+
+      '<div style="text-align:center;margin-top:8px"><button onclick="loadEtsyFiles()" style="background:var(--gold);color:#06141f;border:none;border-radius:var(--r-sm);padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer">Retry</button></div>';
   }
 }
 
