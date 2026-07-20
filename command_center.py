@@ -856,7 +856,7 @@ def run_command():
 
 # ── SVG Converter page & API ──────────────────────────────────────────────────
 
-SVG_PAGE_HTML = """<!DOCTYPE html>
+SVG_PAGE_HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
