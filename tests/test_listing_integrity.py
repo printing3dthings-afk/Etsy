@@ -315,6 +315,70 @@ def test_manifest_write_back_skips_last_verified_for_fetch_errors():
           f"{manifest['L1']['last_status']!r}/{manifest['L2']['last_status']!r}")
 
 
+def test_write_manifest_updates_does_not_clobber_a_concurrent_write():
+    # 2026-07-19 fix: previously this script reused the manifest snapshot read
+    # once at the very start of a run (up to ~30 min stale in --full mode) and
+    # wrote it straight back -- a concurrent run's updates to OTHER listings
+    # made in that window would be silently discarded by whichever process's
+    # write landed last. _write_manifest_updates() re-reads fresh from disk
+    # right before merging, so this must not happen anymore.
+    import json
+    import tempfile
+    from pathlib import Path
+    from unittest.mock import patch
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        manifest_path = Path(tmp_dir) / "listing_manifest.json"
+
+        # The stale in-memory snapshot this run started with (before it began
+        # its potentially-long audit run).
+        stale_snapshot = {
+            "L1": {"last_verified": "2020-01-01T00:00:00Z", "last_status": "old"},
+            "L2": {"last_verified": "2020-01-01T00:00:00Z", "last_status": "old"},
+        }
+        # What's ACTUALLY on disk by the time this run finishes -- a concurrent
+        # process already updated L2 while this run's audit was in flight.
+        concurrent_disk_state = {
+            "L1": {"last_verified": "2020-01-01T00:00:00Z", "last_status": "old"},
+            "L2": {"last_verified": "2026-07-19T12:00:00Z", "last_status": "PASS"},
+        }
+        manifest_path.write_text(json.dumps(concurrent_disk_state))
+
+        results = [{"listing_id": "L1", "status": "FAIL", "fetch_error": False}]
+
+        with patch.object(lic, "MANIFEST_PATH", manifest_path):
+            written = lic._write_manifest_updates(results, fallback_manifest=stale_snapshot)
+
+        on_disk = json.loads(manifest_path.read_text())
+        check(on_disk["L1"]["last_status"] == "FAIL",
+              f"this run's own update to L1 must be applied, got: {on_disk['L1']}")
+        check(on_disk["L2"]["last_status"] == "PASS" and on_disk["L2"]["last_verified"] == "2026-07-19T12:00:00Z",
+              f"the concurrent run's update to L2 must survive, NOT be clobbered by the stale "
+              f"in-memory snapshot: {on_disk['L2']}")
+        check(written == on_disk, "the returned merged manifest should match what was written to disk")
+
+
+def test_write_manifest_updates_falls_back_when_reread_fails():
+    import tempfile
+    from pathlib import Path
+    from unittest.mock import patch
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        # A path that doesn't exist -- the re-read will fail (FileNotFoundError,
+        # an OSError subclass), so this must fall back to `fallback_manifest`
+        # rather than losing the run's results entirely.
+        manifest_path = Path(tmp_dir) / "does_not_exist.json"
+        fallback = {"L9": {"last_verified": "2020-01-01T00:00:00Z", "last_status": "old"}}
+        results = [{"listing_id": "L9", "status": "PASS", "fetch_error": False}]
+
+        with patch.object(lic, "MANIFEST_PATH", manifest_path):
+            written = lic._write_manifest_updates(results, fallback_manifest=fallback)
+
+        check(written["L9"]["last_status"] == "PASS",
+              f"a failed re-read must fall back to the in-memory snapshot, not lose the run's results: {written}")
+        check(manifest_path.exists(), "the atomic write must still create the file even after a failed re-read")
+
+
 def test_render_report_flags_fetch_errors_separately_from_real_fails():
     results = [
         lic.audit_listing(_FakeEtsyClient(dict(_GOOD_LISTING, title="X" * 71), _GOOD_FILES, _GOOD_IMAGES),

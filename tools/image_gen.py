@@ -104,6 +104,35 @@ def _post(url: str, body: bytes, headers: dict, retries: int, timeout: int) -> d
     raise ImageGenError(f"image generation failed after {retries} attempts: {last_err}")
 
 
+def _get_bytes(url: str, retries: int, timeout: int) -> bytes:
+    """Same retry/backoff policy as _post(), for a plain GET that needs raw
+    bytes back rather than parsed JSON (e.g. downloading a provider's
+    resulting image from a URL it handed back). Added 2026-07-19 alongside
+    _ideogram_generate_bytes()'s hardening -- previously that function's own
+    image-download step was a bare urlopen() with no retry at all."""
+    last_err: Exception | None = None
+    for attempt in range(retries):
+        try:
+            with urllib.request.urlopen(url, timeout=timeout) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as e:
+            detail = ""
+            try:
+                detail = e.read().decode()[:200]
+            except Exception:
+                pass
+            last_err = ImageGenError(f"HTTP {e.code}: {detail}")
+            if e.code != 429 and 400 <= e.code < 500:
+                raise last_err
+        except Exception as e:  # noqa: BLE001 — network/timeouts are all retryable
+            last_err = e
+        if attempt < retries - 1:
+            wait = 2 ** (attempt + 1)
+            print(f"    image_gen download retry {attempt + 1}/{retries - 1} in {wait}s: {last_err}")
+            time.sleep(wait)
+    raise ImageGenError(f"image download failed after {retries} attempts: {last_err}")
+
+
 # ── Engine selection (migration off gpt-image-1, deprecated 2026-10-23) ─────────
 # Providers sit behind an engine flag, same pattern as tools/ai_video.py. OpenAI
 # (gpt-image-1) stays the DEFAULT until a replacement is proven; flip per deploy
@@ -349,7 +378,13 @@ _IDEOGRAM_ASPECT = {SQUARE: "1x1", PORTRAIT: "2x3", LANDSCAPE: "3x2"}
 def _ideogram_generate_bytes(prompt: str, size: str) -> bytes:
     """Ideogram 3.0 text→image. UNPROVEN (no IDEOGRAM_API_KEY in this env yet) —
     written to the documented v3 REST API; confirm endpoint/fields on first real
-    key, same discipline as the Veo path was before its proof."""
+    key, same discipline as the Veo path was before its proof.
+
+    2026-07-19: previously two bare urlopen() calls with no try/except at all --
+    every other engine in this module (OpenAI via _post(), Gemini via
+    _gemini_call_with_retry()) retries transient failures with backoff; a plain
+    network blip here failed the whole generation outright instead. Now goes
+    through the same _post()/_get_bytes() retry policy as everything else."""
     key = _ideogram_key()
     boundary = "----ideo" + os.urandom(8).hex()
     parts: list[bytes] = []
@@ -363,17 +398,15 @@ def _ideogram_generate_bytes(prompt: str, size: str) -> bytes:
     _field("rendering_speed", "DEFAULT")
     parts.append(f"--{boundary}--".encode())
     body = b"\r\n".join(parts)
-    req = urllib.request.Request(
-        "https://api.ideogram.ai/v1/ideogram-v3/generate", data=body, method="POST",
-        headers={"Api-Key": key,
-                 "Content-Type": f"multipart/form-data; boundary={boundary}"})
-    with urllib.request.urlopen(req, timeout=120) as resp:
-        result = json.loads(resp.read())
+    result = _post(
+        "https://api.ideogram.ai/v1/ideogram-v3/generate", body,
+        headers={"Api-Key": key, "Content-Type": f"multipart/form-data; boundary={boundary}"},
+        retries=3, timeout=120,
+    )
     url = (result.get("data") or [{}])[0].get("url")
     if not url:
         raise ImageGenError(f"Ideogram response had no image url: {str(result)[:200]}")
-    with urllib.request.urlopen(url, timeout=120) as r:
-        return r.read()
+    return _get_bytes(url, retries=3, timeout=120)
 
 
 def _fit_to_size(raw: bytes, size: str, output_format: str) -> bytes:

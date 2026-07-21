@@ -421,6 +421,14 @@ _EXEC_COMMANDS: dict[str, dict] = {
         ),
         "timeout": 60,
         "long_running": False,
+        # 2026-07-19: order_notifier.py's stdout includes real buyer names and
+        # personalized messages regardless of --dry -- this is the same PII class
+        # _PII_TOOLS exists to flag, but _PII_TOOLS only ever matched on the
+        # top-level tool name, which is always "execute_command" for anything
+        # dispatched this way, so these turns were persisted to the durable chat
+        # DB unflagged. _run_agent_turn checks this key when block.name ==
+        # "execute_command" instead of assuming the wrapper tool name alone.
+        "contains_pii": True,
     },
     "send_order_notifications": {
         "script": "tools/order_notifier.py",
@@ -433,6 +441,7 @@ _EXEC_COMMANDS: dict[str, dict] = {
         ),
         "timeout": 60,
         "long_running": False,
+        "contains_pii": True,  # same reasoning as check_new_orders above
     },
     # etsy_autoresponder.py's message-fetching pipeline hits shops/{id}/conversations,
     # which Etsy Open API v3 does NOT expose to third-party apps -- confirmed by a
@@ -456,6 +465,10 @@ _EXEC_COMMANDS: dict[str, dict] = {
         ),
         "timeout": 60,
         "long_running": False,
+        # Currently always a no-op (see limitation above), but flagged now so a
+        # future fix to the underlying API/limitation can't silently ship without
+        # this same PII gap -- see check_new_orders' comment for the full reasoning.
+        "contains_pii": True,
     },
 }
 
@@ -607,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "377ec01-v236"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "ac48b02-v237"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -1673,6 +1686,19 @@ _RELAY_TOOLS = {"local_read_file", "local_list_dir"}
 # _stage_local_action (db.enqueue_action) instead of _dispatch_to_relay, so
 # nothing here ever mutates anything until Scott approves in the Action Center.
 _LOCAL_STAGED_TOOLS = {"local_write_file", "local_delete", "local_exec"}
+
+# 2026-07-21: _execute_agent_tool() dispatches to dozens of branches -- some are
+# subprocess.run() calls bounded by their own _EXEC_COMMANDS timeout (max 400s
+# today), but others call external SDKs/CLIs with NO bound at all (e.g.
+# video_understanding.py's yt-dlp download and Gemini file-upload poll loop have
+# zero timeout of their own). _dispatch_to_relay already can't hang past 15s and
+# _stage_local_action's only blocking call IS _dispatch_to_relay, so both of those
+# paths were already safe -- this is a ceiling for the third path
+# (asyncio.to_thread(_execute_agent_tool, ...)), so a tool with a missing or
+# misbehaving internal timeout can't wedge the whole chat turn (and the shared
+# to_thread executor pool) forever. Sized above the longest known legitimate
+# subprocess timeout (400s) with headroom.
+_TOOL_DISPATCH_TIMEOUT_S = 480.0
 
 
 async def _dispatch_to_relay(name: str, tool_input: dict, timeout: float = 15.0) -> dict:
@@ -4084,8 +4110,12 @@ def _execute_agent_tool(name: str, tool_input: dict) -> dict:
                 ),
             }
         return {"error": f"unknown tool: {name}"}
-    except subprocess.TimeoutExpired:
-        return {"error": f"Command timed out (>{timeout}s)", "category": "transient", "retryable": True}
+    except subprocess.TimeoutExpired as exc:
+        # exc.timeout is the actual configured limit that was exceeded (subprocess.run's
+        # own attribute) -- a bare `timeout` name here was never defined in this scope
+        # and raised NameError instead of this message every time a command genuinely
+        # timed out, masking the real "transient, retryable" signal from the model.
+        return {"error": f"Command timed out (>{exc.timeout}s)", "category": "transient", "retryable": True}
     except Exception as exc:
         category, retryable = classify_tool_exception(exc)
         return {"error": str(exc), "category": category, "retryable": retryable}
@@ -5665,7 +5695,21 @@ async def _run_loop_iteration(
         delay = random.uniform(0, delay)  # full jitter
         detail = on_error_detail(exc) if on_error_detail else str(exc)[:300]
         print(f"[{name}] error (attempt {n}, retrying in {delay:.0f}s): {exc}", flush=True)
-        db.set_agent_heartbeat(name, label, "error", str(detail)[:300])
+        try:
+            db.set_agent_heartbeat(name, label, "error", str(detail)[:300])
+        except Exception as hb_exc:
+            # 2026-07-21: this write used to be unguarded -- every one of the 5
+            # real background loops calls _run_loop_iteration() with nothing
+            # wrapping it (`delay = await _run_loop_iteration(...)`), so a DB
+            # hiccup right here (disk full, locked file, corrupted db) would
+            # propagate out of this except block uncaught, killing the whole
+            # loop's asyncio task permanently -- the ORIGINAL error (the thing
+            # this heartbeat write exists to report) plus every future run of
+            # that loop would then be silently gone until a full process
+            # restart. A broken heartbeat write must degrade to "this one
+            # iteration's status board update didn't happen," never to "this
+            # loop stops running forever."
+            print(f"[{name}] heartbeat write also failed (loop continues): {hb_exc}", flush=True)
         return delay
 
 
@@ -5684,7 +5728,7 @@ async def _take_snapshot() -> str:
 _SNAPSHOT_BASE_INTERVAL = 86_400
 
 
-async def _maybe_prune_after_snapshot(delay: float, base_interval: float) -> None:
+async def _maybe_prune_after_snapshot(delay: float, base_interval: float) -> list[str]:
     """Run the daily trash + rate-limit-log prune only when the snapshot
     iteration that just completed succeeded (delay == base_interval).
     _run_loop_iteration() returns exactly `base_interval` on success or a
@@ -5693,9 +5737,17 @@ async def _maybe_prune_after_snapshot(delay: float, base_interval: float) -> Non
     gate existed, a failing/backing-off snapshot loop (e.g. Etsy down) would
     still run both prune passes on every retry, far more than the intended
     once/day. Tolerant of its own errors either way — a prune failure must
-    never affect the snapshot loop's own success/backoff timing."""
+    never affect the snapshot loop's own success/backoff timing.
+
+    Returns a list of failure description strings (empty if both prunes ran
+    clean or were skipped). 2026-07-21: these failures used to be print()-only
+    — invisible outside server logs, so e.g. the trash vault silently failing
+    to prune for weeks (data/trash/ growing unbounded) would never surface on
+    the dashboard. The caller folds any returned failures into the snapshot
+    loop's own heartbeat detail (as a "warning", not "error" — see caller)."""
     if delay != base_interval:
-        return
+        return []
+    failures: list[str] = []
     try:
         import trash as _trash
         n = await asyncio.to_thread(_trash.prune)
@@ -5703,12 +5755,15 @@ async def _maybe_prune_after_snapshot(delay: float, base_interval: float) -> Non
             print(f"[trash] pruned {n} expired entr{'y' if n == 1 else 'ies'}", flush=True)
     except Exception as exc:
         print(f"[trash] prune error: {exc}", flush=True)
+        failures.append(f"trash prune failed: {exc}")
     try:
         n = await asyncio.to_thread(db.prune_rate_limit_log)
         if n:
             print(f"[rate-limit-log] pruned {n} sample(s) older than 30 days", flush=True)
     except Exception as exc:
         print(f"[rate-limit-log] prune error: {exc}", flush=True)
+        failures.append(f"rate-limit-log prune failed: {exc}")
+    return failures
 
 
 async def _snapshot_loop() -> None:
@@ -5724,7 +5779,17 @@ async def _snapshot_loop() -> None:
         # Daily recycle-bin + rate-limit-log prune piggyback on this already-daily
         # loop so expiry is time-based and durable on the live server — no separate
         # cron needed. Gated to success-only, see _maybe_prune_after_snapshot().
-        await _maybe_prune_after_snapshot(delay, _SNAPSHOT_BASE_INTERVAL)
+        prune_failures = await _maybe_prune_after_snapshot(delay, _SNAPSHOT_BASE_INTERVAL)
+        if prune_failures:
+            # Overwrite the "snapshot" heartbeat _run_loop_iteration just wrote with a
+            # "warning" (not "error" -- the snapshot itself succeeded; only the
+            # piggybacked prune failed, and per the docstring above that must never
+            # affect this loop's own success/backoff timing) so the failure is
+            # visible on the Agents screen instead of only in server stdout.
+            db.set_agent_heartbeat(
+                "snapshot", "Snapshot", "warning",
+                "Daily metric snapshot recorded, but: " + "; ".join(prune_failures),
+            )
         await asyncio.sleep(delay)
 
 
@@ -5758,6 +5823,16 @@ async def _warm_suggestions() -> None:
                     age = None
             if age is None or age > _SUGGESTIONS_TTL:
                 return {"skipped": True}
+        # 2026-07-19: the manual POST /api/suggestions path already checks
+        # `_suggestions_warming` before spawning a compute (so a second visitor
+        # hitting a cold cache doesn't kick off a redundant one), but this
+        # scheduled tick never did -- if the loop's timer fired at the same
+        # moment a dashboard request spawned _run_suggestions_safely(), both
+        # could run _compute_suggestions_inner() concurrently: double the
+        # Anthropic spend for that tick (3 Etsy pulls + a ~25s synthesis call,
+        # twice). Same guard, same reasoning, just applied to the other caller.
+        if _suggestions_warming:
+            return {"skipped": True, "reason": "a compute is already in flight"}
         res = await _compute_suggestions()
         if res.get("error") == "parse_failed":
             # Not cached (see _compute_suggestions) — a TransientToolError so the
@@ -5890,11 +5965,16 @@ def _parse_quality_audit_summary(out: str) -> tuple[int, int, int, int]:
     return passed, warned, failed, fetch_errors
 
 
-def _quality_audit_skip_result(reason: str) -> dict:
+def _quality_audit_skip_result(reason: str, subtask_failures: list[str] | None = None) -> dict:
     """Shared shape for _quality_audit_iteration()'s early-exit skip paths
     (manifest missing / manifest empty) — was a duplicated dict literal at two
-    call sites a few lines apart."""
-    return {"skipped": True, "passed": 0, "warned": 0, "failed": 0, "reason": reason}
+    call sites a few lines apart. subtask_failures carries forward any of the
+    pre-manifest-check subtasks (retention prune, KB rotation, etc.) that
+    already failed before the early exit — see _quality_audit_iteration()."""
+    return {
+        "skipped": True, "passed": 0, "warned": 0, "failed": 0, "reason": reason,
+        "subtask_failures": subtask_failures or [],
+    }
 
 
 _QUALITY_AUDIT_ROTATION_FRACTION = 3  # audit ~1/N of the catalog per run
@@ -5982,11 +6062,22 @@ async def _quality_audit_iteration() -> dict:
     error, unparseable output) so `_run_loop_iteration` backs off and retries
     sooner than the normal 24h cadence; returns a result dict on a clean run
     even if the audit itself found failing listings (that's a content-level
-    signal surfaced via `on_success_status`, not a loop failure)."""
+    signal surfaced via `on_success_status`, not a loop failure).
+
+    2026-07-21: the retention/KB-rotation/recurring-failures/db-record
+    subtasks below used to be print()-only on failure -- invisible outside
+    server logs. A silently-broken buyer-data retention pass in particular is
+    a real compliance concern (CLAUDE.md's retention rule), not just
+    maintenance trivia, so any subtask failure is now collected into
+    `subtask_failures` and returned to the caller, which folds it into the
+    "quality_audit" heartbeat as a warning without affecting the loop's own
+    success/backoff timing (the audit itself still ran fine)."""
+    subtask_failures: list[str] = []
     try:
         await asyncio.to_thread(_prune_buyer_data_retention)
     except Exception as exc:
         print(f"[retention] buyer-data retention pass failed: {exc}", flush=True)
+        subtask_failures.append(f"buyer-data retention prune failed: {exc}")
 
     for kb_path in (_OPS_RUNBOOK_PATH, _CEO_LEARNINGS_PATH):
         try:
@@ -5994,12 +6085,14 @@ async def _quality_audit_iteration() -> dict:
                 print(f"[kb-rotate] condensed older history in {kb_path.name}", flush=True)
         except Exception as exc:
             print(f"[kb-rotate] check failed for {kb_path.name}: {exc}", flush=True)
+            subtask_failures.append(f"KB rotation failed for {kb_path.name}: {exc}")
 
     try:
         if await asyncio.to_thread(_promote_recurring_failures, _OPS_RUNBOOK_PATH):
             print("[ops-runbook] refreshed Known Recurring Issues section", flush=True)
     except Exception as exc:
         print(f"[ops-runbook] recurring-issues check failed: {exc}", flush=True)
+        subtask_failures.append(f"recurring-issues promotion failed: {exc}")
 
     # data/ is excluded from the Docker build context (.dockerignore), so
     # listing_manifest.json won't exist in fresh Railway deployments until
@@ -6008,7 +6101,9 @@ async def _quality_audit_iteration() -> dict:
     manifest_path = ROOT / "data" / "listing_manifest.json"
     if not await asyncio.to_thread(manifest_path.exists):
         print("[quality-audit] skipping — listing_manifest.json not found (run build_manifest.py)", flush=True)
-        return _quality_audit_skip_result("listing_manifest.json not found — run build_manifest.py first")
+        return _quality_audit_skip_result(
+            "listing_manifest.json not found — run build_manifest.py first", subtask_failures
+        )
 
     def _load_manifest_and_select_ids() -> list[str]:
         with open(manifest_path) as f:
@@ -6018,7 +6113,7 @@ async def _quality_audit_iteration() -> dict:
     audit_ids = await asyncio.to_thread(_load_manifest_and_select_ids)
     if not audit_ids:
         print("[quality-audit] skipping — listing_manifest.json is empty", flush=True)
-        return _quality_audit_skip_result("listing_manifest.json has no listings")
+        return _quality_audit_skip_result("listing_manifest.json has no listings", subtask_failures)
     print(f"[quality-audit] auditing rotating subset: {len(audit_ids)} listing(s)", flush=True)
 
     result = await asyncio.to_thread(
@@ -6048,6 +6143,7 @@ async def _quality_audit_iteration() -> dict:
         db.record_quality_audit(passed, warned, failed, summary, audited_count=len(audit_ids))
     except Exception as exc:
         print(f"[quality-audit] db record failed: {exc}", flush=True)
+        subtask_failures.append(f"quality-audit db record failed: {exc}")
     print(f"[quality-audit] PASS:{passed} WARN:{warned} FAIL:{failed} (FETCH_ERR:{fetch_errors})", flush=True)
     if real_failed > 0:
         _append_ops_runbook_entry(
@@ -6065,7 +6161,8 @@ async def _quality_audit_iteration() -> dict:
         print(f"[quality-audit] {fetch_errors} listing(s) could not be fetched from Etsy this "
               f"run (transient — no content failures found, not escalating)", flush=True)
     return {"passed": passed, "warned": warned, "failed": failed,
-            "fetch_errors": fetch_errors, "real_failed": real_failed}
+            "fetch_errors": fetch_errors, "real_failed": real_failed,
+            "subtask_failures": subtask_failures}
 
 
 async def _quality_audit_loop() -> None:
@@ -6081,14 +6178,23 @@ async def _quality_audit_loop() -> None:
     while True:
         delay = await _run_loop_iteration(
             "quality_audit", "Quality Audit", _quality_audit_iteration,
-            on_success_status=lambda r: "warning" if r.get("skipped") else (
-                "error" if r.get("real_failed", r["failed"]) > 0 else "ok"
+            # A subtask failure (retention prune, KB rotation, etc.) never overrides
+            # "error" (a real content FAIL always takes priority) but does bump an
+            # otherwise-clean "ok" run up to "warning" -- see _quality_audit_iteration()'s
+            # docstring for why these were previously invisible outside server logs.
+            on_success_status=lambda r: (
+                "error" if not r.get("skipped") and r.get("real_failed", r["failed"]) > 0
+                else "warning" if r.get("skipped") or r.get("subtask_failures")
+                else "ok"
             ),
             on_success_detail=lambda r: r.get("reason", (
                 f"PASS:{r['passed']} WARN:{r['warned']} FAIL:{r['failed']}"
                 + (f" ({r['fetch_errors']} fetch error(s), not content failures)"
                    if r.get('fetch_errors') else "")
-            )),
+            )) + (
+                f" — subtask issue(s): {'; '.join(r['subtask_failures'])}"
+                if r.get("subtask_failures") else ""
+            ),
             base_interval=86_400,
         )
         await asyncio.sleep(delay)
@@ -6133,7 +6239,7 @@ async def _health_check_iteration() -> dict:
             detail = f"Killed after running {age_s:.0f}s, past the {_LONG_RUNNING_PROC_TIMEOUT_S}s ceiling."
             _append_ops_runbook_entry(
                 f"Background build hung: {cmd_name}",
-                f"5-minute health loop killed a stuck background build: {cmd_name} (pid {pid}). {detail}",
+                f"hourly health loop killed a stuck background build: {cmd_name} (pid {pid}). {detail}",
             )
             await asyncio.to_thread(db.set_agent_heartbeat, heartbeat_name, cmd_name, "error", detail)
         else:
@@ -6146,7 +6252,7 @@ async def _health_check_iteration() -> dict:
                 detail = f"Exited {proc.returncode} after {age_s:.0f}s — see {cmd_name}'s own log for detail."
                 _append_ops_runbook_entry(
                     f"Background build failed: {cmd_name}",
-                    f"5-minute health loop reaped a failed background build: {cmd_name} (pid {pid}). {detail}",
+                    f"hourly health loop reaped a failed background build: {cmd_name} (pid {pid}). {detail}",
                 )
                 await asyncio.to_thread(db.set_agent_heartbeat, heartbeat_name, cmd_name, "error", detail)
             else:
@@ -6171,7 +6277,7 @@ async def _health_check_iteration() -> dict:
     all_ok = etsy_ok and anthropic_ok
     detail = f"Etsy: {etsy_detail} | Anthropic key set: {anthropic_ok}"
     if not all_ok:
-        context = f"5-minute health loop detected a problem: {detail}"
+        context = f"hourly health loop detected a problem: {detail}"
         if etsy_exc is not None:
             # Tier 2/3 -- classify the actual Etsy exception rather than just
             # logging its string. Anthropic-key-missing (no exception, just an
@@ -6224,7 +6330,7 @@ async def _health_check_iteration() -> dict:
             volume_detail = f"error: {str(exc)[:200]}"
             _append_ops_runbook_entry(
                 "Durable volume not writable",
-                f"5-minute health loop found {vol} mounted but not writable: {exc}. "
+                f"hourly health loop found {vol} mounted but not writable: {exc}. "
                 f"Product files and backups may not be landing durably.",
             )
             await asyncio.to_thread(db.set_agent_heartbeat, "health:volume", "Durable volume", "error", volume_detail)
@@ -6242,7 +6348,7 @@ async def _health_check_iteration() -> dict:
             if age_days > 10:
                 _append_ops_runbook_entry(
                     "hub_db_state.json backup is stale",
-                    f"5-minute health loop found the hub.db snapshot at {backup_hub_db.OUT_PATH} "
+                    f"hourly health loop found the hub.db snapshot at {backup_hub_db.OUT_PATH} "
                     f"is {age_days:.1f} days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).",
                 )
                 await asyncio.to_thread(
@@ -6291,9 +6397,18 @@ async def _daily_brief_loop() -> None:
     Does not use _run_loop_iteration because the timing logic is calendar-based
     (once per calendar day) rather than interval-based (every N seconds).
     Failures are logged but never crash the server.
-    """
+
+    2026-07-19: last_sent_date used to be a plain local variable, the exact
+    "in-memory gate lost on restart" bug class _calendar_tasks_loop's
+    _get_calendar_task_last_run()/_set_calendar_task_last_run() were built to
+    fix elsewhere (2026-07-18) -- reintroduced here since this loop predates
+    that fix and was never updated to match. Two redeploys landing inside the
+    same 6:00-6:59 UTC window on the same day could send the brief twice.
+    Reusing those same persistence helpers (the setting-key prefix says
+    "calendar_task" but the functions are generic date persistence, not
+    specific to _calendar_tasks_loop) instead of duplicating the pattern."""
     db.set_agent_heartbeat("daily_brief", "Daily Brief", "started", "waiting for 6 AM UTC")
-    last_sent_date: date | None = None
+    last_sent_date: date | None = _get_calendar_task_last_run("daily_brief")
     while True:
         await asyncio.sleep(3600)
         # Purge expired sessions on every hourly tick
@@ -6314,6 +6429,7 @@ async def _daily_brief_loop() -> None:
                 import daily_brief as _daily_brief
                 result = await asyncio.to_thread(_daily_brief.run_daily_brief)
                 last_sent_date = now.date()
+                _set_calendar_task_last_run("daily_brief", last_sent_date)
                 db.set_agent_heartbeat("daily_brief", "Daily Brief", "ok", result)
                 print(f"[daily_brief] {result}", flush=True)
             except Exception as exc:
@@ -7333,6 +7449,16 @@ async def _calendar_tasks_loop() -> None:
         now = datetime.now(timezone.utc)
         today = now.date()
         ran = []
+        # 2026-07-19: previously only `ran` existed, and the aggregate heartbeat
+        # below always reported "ok" no matter what -- a sub-task's own `last_*`
+        # var and its `ran.append(...)` both live inside the try block, so a
+        # failure left BOTH untouched, and the final heartbeat couldn't tell the
+        # difference between "nothing was due today" and "the one thing that was
+        # due today failed." A real failure the one day it mattered would render
+        # on the dashboard as "ok / no scheduled task due today" -- indistinguishable
+        # from a quiet day. Track failures explicitly so the aggregate heartbeat can
+        # never lie about that.
+        failed = []
         if now.weekday() == 6 and today != last_weekly:  # Sunday
             try:
                 await asyncio.to_thread(_run_weekly_monitors)
@@ -7341,6 +7467,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append("weekly-monitors")
             except Exception as exc:
                 print(f"[calendar-tasks] weekly monitors error: {exc}", flush=True)
+                failed.append(f"weekly-monitors:{exc}")
         if today.day == 1 and today != last_monthly:
             try:
                 await asyncio.to_thread(_run_monthly_shop_health)
@@ -7349,6 +7476,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append("monthly-shop-health")
             except Exception as exc:
                 print(f"[calendar-tasks] monthly shop health error: {exc}", flush=True)
+                failed.append(f"monthly-shop-health:{exc}")
         if today.day == 15 and today != last_art_authenticity:
             try:
                 await asyncio.to_thread(_run_art_authenticity_check)
@@ -7357,6 +7485,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append("art-authenticity")
             except Exception as exc:
                 print(f"[calendar-tasks] art authenticity check error: {exc}", flush=True)
+                failed.append(f"art-authenticity:{exc}")
         if today.day == 8 and today != last_competitor_research:
             try:
                 detail = await asyncio.to_thread(_run_competitor_research_refresh)
@@ -7365,6 +7494,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"competitor-research:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] competitor research refresh error: {exc}", flush=True)
+                failed.append(f"competitor-research:{exc}")
         if (today.month, today.day) in _SEASONAL_TRIGGER_DATES and today != last_seasonal:
             try:
                 await asyncio.to_thread(_run_seasonal_keyword_check)
@@ -7373,6 +7503,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append("seasonal-keywords")
             except Exception as exc:
                 print(f"[calendar-tasks] seasonal keyword check error: {exc}", flush=True)
+                failed.append(f"seasonal-keywords:{exc}")
         if today != last_ads_check:
             try:
                 detail = await asyncio.to_thread(_check_ads_thresholds)
@@ -7381,6 +7512,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"ads-check:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] ads threshold check error: {exc}", flush=True)
+                failed.append(f"ads-check:{exc}")
         if today != last_star_seller_check:
             try:
                 detail = await asyncio.to_thread(_check_star_seller_status)
@@ -7389,6 +7521,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"star-seller:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] star seller check error: {exc}", flush=True)
+                failed.append(f"star-seller:{exc}")
         if today != last_art_check:
             try:
                 detail = await asyncio.to_thread(_run_scheduled_art_check)
@@ -7397,6 +7530,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"scheduled-art:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] scheduled art check error: {exc}", flush=True)
+                failed.append(f"scheduled-art:{exc}")
         if today != last_gcal_sync:
             try:
                 detail = await asyncio.to_thread(_sync_calendar_to_google)
@@ -7405,6 +7539,7 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"gcal-sync:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] google calendar sync error: {exc}", flush=True)
+                failed.append(f"gcal-sync:{exc}")
         if today != last_etsy_file_inventory:
             try:
                 detail = await asyncio.to_thread(_run_etsy_file_inventory_sweep)
@@ -7413,16 +7548,22 @@ async def _calendar_tasks_loop() -> None:
                 ran.append(f"etsy-file-inventory:{detail}")
             except Exception as exc:
                 print(f"[calendar-tasks] etsy file inventory sweep error: {exc}", flush=True)
-        db.set_agent_heartbeat(
-            "calendar_tasks", "Calendar Tasks", "ok",
-            "; ".join(ran) if ran else (
+                failed.append(f"etsy-file-inventory:{exc}")
+        status = "error" if failed else "ok"
+        detail_parts = []
+        if failed:
+            detail_parts.append("FAILED: " + "; ".join(failed))
+        if ran:
+            detail_parts.append("ran: " + "; ".join(ran))
+        if not detail_parts:
+            detail_parts.append(
                 f"no scheduled task due today (last: weekly={last_weekly}, "
                 f"monthly={last_monthly}, seasonal={last_seasonal}, ads={last_ads_check}, "
                 f"art={last_art_check}, art_authenticity={last_art_authenticity}, "
                 f"star_seller={last_star_seller_check}, gcal_sync={last_gcal_sync}, "
                 f"etsy_file_inventory={last_etsy_file_inventory})"
-            ),
-        )
+            )
+        db.set_agent_heartbeat("calendar_tasks", "Calendar Tasks", status, " | ".join(detail_parts))
 
 
 _AGENT_LOOP_LABELS = {
@@ -7484,22 +7625,33 @@ async def run_calendar_tasks_now(request: Request):
     """Manually trigger each calendar-gated task once, ignoring its normal date
     gate (for testing). Requires X-App-Token header. Read-only/notify-only —
     see _run_weekly_monitors/_run_monthly_shop_health/_run_seasonal_keyword_check/
-    _check_ads_thresholds docstrings for exactly what each one does."""
+    _check_ads_thresholds docstrings for exactly what each one does.
+
+    2026-07-19: previously never updated _calendar_tasks_loop's own persisted
+    last-run dates, so triggering this on the actual day a task was genuinely
+    due (e.g. a Sunday) ran the real live task here AND left the loop's gate
+    untouched -- its next hourly tick that same day would run the identical
+    task again: duplicate email, duplicate ops_runbook entry, duplicate live
+    Etsy calls. Persist the same date keys the loop checks, on success only
+    (an error here means the task didn't actually complete, so the loop
+    should still get its normal chance to run it for real)."""
     token = request.headers.get("X-App-Token", "")
     if not token or not secrets.compare_digest(token, APP_TOKEN):
         raise HTTPException(status_code=401, detail="Unauthorized")
     results = {}
-    for name, fn in [
-        ("weekly_monitors", _run_weekly_monitors),
-        ("monthly_shop_health", _run_monthly_shop_health),
-        ("competitor_research", _run_competitor_research_refresh),
-        ("seasonal_keywords", _run_seasonal_keyword_check),
-        ("ads_threshold", _check_ads_thresholds),
-        ("scheduled_art", _run_scheduled_art_check),
-        ("star_seller", _check_star_seller_status),
+    today = date.today()
+    for name, task_key, fn in [
+        ("weekly_monitors", "weekly", _run_weekly_monitors),
+        ("monthly_shop_health", "monthly", _run_monthly_shop_health),
+        ("competitor_research", "competitor_research", _run_competitor_research_refresh),
+        ("seasonal_keywords", "seasonal", _run_seasonal_keyword_check),
+        ("ads_threshold", "ads_check", _check_ads_thresholds),
+        ("scheduled_art", "art_check", _run_scheduled_art_check),
+        ("star_seller", "star_seller_check", _check_star_seller_status),
     ]:
         try:
             results[name] = await asyncio.to_thread(fn)
+            _set_calendar_task_last_run(task_key, today)
         except Exception as exc:
             results[name] = f"ERROR: {exc}"
     return results
@@ -7507,12 +7659,18 @@ async def run_calendar_tasks_now(request: Request):
 
 @app.post("/api/brief/run")
 async def run_brief_now(request: Request):
-    """Manually trigger the daily brief (for testing). Requires X-App-Token header."""
+    """Manually trigger the daily brief (for testing). Requires X-App-Token header.
+
+    2026-07-19: previously never touched last_sent_date, so triggering this on
+    the actual day (any time) didn't stop _daily_brief_loop's own 6 AM check
+    from ALSO sending the brief later that day -- a guaranteed duplicate, not
+    just a possible one. Persists the same date the loop itself checks."""
     token = request.headers.get("X-App-Token", "")
     if not token or not secrets.compare_digest(token, APP_TOKEN):
         raise HTTPException(status_code=401, detail="Unauthorized")
     import daily_brief as _daily_brief
     result = await asyncio.to_thread(_daily_brief.run_daily_brief)
+    _set_calendar_task_last_run("daily_brief", date.today())
     return {"status": result}
 
 
@@ -12836,10 +12994,25 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
     assistant_text_parts: list[str] = []
     pii_tools_used: set[str] = set()
     loop = asyncio.get_running_loop()
-    for _ in range(6):  # safety cap on tool round-trips per turn
+    _MAX_TOOL_ROUND_TRIPS = 6
+    # 2026-07-19: previously `for _ in range(6)` with nothing after it -- if the 6th
+    # round's response was ITSELF tool_use, the tools still got executed and their
+    # results appended as a user-role message (below), but the loop then just ended
+    # with no further LLM call to consume them. history was left ending in user-role,
+    # so the NEXT real user turn appended a SECOND consecutive user-role message on
+    # top -- Anthropic rejects that with a 400 ("roles must alternate"), permanently
+    # wedging that session's chat, the same failure class as the 2026-06-17 incident
+    # (ops_runbook.md) this loop's tool_result-append ordering was already hardened
+    # against, just via a different trigger that incident's fix didn't cover. Fix:
+    # one extra guaranteed round with no `tools` param offered at all, so the model
+    # literally cannot request more tool use and must close out in plain text --
+    # `final.stop_reason` can then never be "tool_use" on that round, so history is
+    # guaranteed to end on an assistant-role turn no matter how the cap is hit.
+    for round_idx in range(_MAX_TOOL_ROUND_TRIPS + 1):
+        allow_tools = round_idx < _MAX_TOOL_ROUND_TRIPS
         queue: asyncio.Queue = asyncio.Queue()
 
-        def _produce() -> None:
+        def _produce(allow_tools: bool = allow_tools) -> None:
             # Doesn't go through _anthropic_create() (that helper wraps a single
             # messages.create() call; this is a stream() context manager iterated
             # chunk-by-chunk) but still gates/records on the same shared breaker so
@@ -12858,7 +13031,7 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                 )
                 return
             try:
-                with ai_client.messages.stream(
+                stream_kwargs = dict(
                     model=business_config.MODEL_PRIMARY,
                     max_tokens=1500,
                     system=[
@@ -12873,9 +13046,11 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                             "cache_control": {"type": "ephemeral"},
                         },
                     ],
-                    tools=_tools_with_cache(),
                     messages=history,
-                ) as stream:
+                )
+                if allow_tools:
+                    stream_kwargs["tools"] = _tools_with_cache()
+                with ai_client.messages.stream(**stream_kwargs) as stream:
                     for chunk in stream.text_stream:
                         loop.call_soon_threadsafe(queue.put_nowait, ("chunk", chunk))
                     final_msg = stream.get_final_message()
@@ -12971,13 +13146,38 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                     pass  # status update is best-effort; never let it block the tool result
                 if block.name in _PII_TOOLS:
                     pii_tools_used.add(block.name)
+                elif block.name == "execute_command":
+                    # 2026-07-19: several _EXEC_COMMANDS entries (check_new_orders,
+                    # send_order_notifications, check_buyer_messages) return real
+                    # buyer PII in their stdout, but the wrapper tool name here is
+                    # always "execute_command" -- checking only `block.name` against
+                    # _PII_TOOLS could never catch these. Check the underlying
+                    # command's own "contains_pii" flag instead.
+                    cmd_name = (block.input or {}).get("command")
+                    if _EXEC_COMMANDS.get(cmd_name, {}).get("contains_pii"):
+                        pii_tools_used.add(cmd_name)
                 try:
                     if block.name in _RELAY_TOOLS:
                         result = await _dispatch_to_relay(block.name, block.input)
                     elif block.name in _LOCAL_STAGED_TOOLS:
                         result = await _stage_local_action(block.name, block.input)
                     else:
-                        result = await asyncio.to_thread(_execute_agent_tool, block.name, block.input)
+                        try:
+                            result = await asyncio.wait_for(
+                                asyncio.to_thread(_execute_agent_tool, block.name, block.input),
+                                timeout=_TOOL_DISPATCH_TIMEOUT_S,
+                            )
+                        except asyncio.TimeoutError:
+                            # The worker thread itself can't be killed (asyncio can't
+                            # cancel a running thread), but the turn is freed instead
+                            # of hanging forever -- same tradeoff _dispatch_to_relay
+                            # already makes for the relay path.
+                            result = {
+                                "error": (
+                                    f"{block.name} did not finish within "
+                                    f"{int(_TOOL_DISPATCH_TIMEOUT_S)}s and was abandoned"
+                                )
+                            }
                 except Exception as exc:
                     result = {"error": str(exc)}
                 tool_results.append(
@@ -12989,7 +13189,9 @@ async def _run_agent_turn(websocket: WebSocket, ai_client, history: list[dict]) 
                 )
         history.append({"role": "user", "content": tool_results})
 
-    # Exhausted the round-trip cap — close out gracefully.
+    # Should be unreachable: the final round_idx (_MAX_TOOL_ROUND_TRIPS) never offers
+    # `tools`, so its stop_reason can never be "tool_use" and the loop above always
+    # returns from inside that round. Kept as a defensive fallback only.
     await websocket.send_text(json.dumps({"type": "done"}))
     return "".join(assistant_text_parts).strip(), frozenset(pii_tools_used)
 

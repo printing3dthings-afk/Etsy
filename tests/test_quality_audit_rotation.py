@@ -138,10 +138,19 @@ def test_parse_quality_audit_summary_raises_on_unparseable_output():
 
 
 def test_quality_audit_skip_result_shape():
+    # 2026-07-21: skip results now carry forward subtask_failures (retention
+    # prune/KB rotation/etc. failures that happened before the manifest-missing
+    # early exit) so they aren't silently dropped -- see
+    # _quality_audit_iteration()'s docstring / the heartbeat-visibility fix.
     r = _quality_audit_skip_result("some reason")
     check("skip result has the expected shape",
-          r == {"skipped": True, "passed": 0, "warned": 0, "failed": 0, "reason": "some reason"},
+          r == {"skipped": True, "passed": 0, "warned": 0, "failed": 0, "reason": "some reason",
+                "subtask_failures": []},
           f"-- got {r}")
+    r2 = _quality_audit_skip_result("some reason", ["a subtask failed"])
+    check("skip result carries forward passed-in subtask_failures",
+          r2["subtask_failures"] == ["a subtask failed"],
+          f"-- got {r2}")
 
 
 def test_prune_runs_only_when_delay_equals_base_interval():

@@ -796,6 +796,70 @@ class EtsyAPIClient:
 
     # ── Listing images ────────────────────────────────────────────────────────
 
+    def _upload_multipart_with_retry(self, url: str, body: bytes, headers: dict, timeout: int,
+                                      retries: int = 3) -> dict:
+        """Shared retry/backoff wrapper for the three raw multipart upload calls
+        (upload_listing_image/video/file below).
+
+        2026-07-21: these three built their own multipart body with urllib.request
+        and called urlopen() exactly ONCE, no retry at all -- unlike every JSON API
+        call in this client (_request_impl, 3-attempt exponential backoff + 429/503
+        retry + capped Retry-After honoring), a single transient network blip or an
+        ordinary Etsy 429/503 during an upload failed the whole operation outright.
+        These uploads put the actual product photos/video/digital file live on a
+        listing -- arguably the highest-value calls in this whole client -- so they
+        deserve at least the same resilience as a routine GET. This mirrors
+        _request_impl's policy (retry network errors and 429/503, fail fast on any
+        other HTTP error) and gates/records through the same circuit-breaker hook,
+        just over urllib instead of the requests-based _session (the multipart body
+        here is hand-built, not JSON, so reusing _request_impl directly isn't a fit)."""
+        cb = _circuit_breaker_hook
+        if cb is not None and not cb.allow_request():
+            raise EtsyAPIError(0, "circuit breaker open for etsy_api -- skipping call until cooldown elapses")
+        retryable_http = {429, 503}
+        base_delays = [2, 4]
+        last_exc: Exception | None = None
+        for attempt in range(retries):
+            if attempt > 0:
+                delay = base_delays[min(attempt - 1, len(base_delays) - 1)]
+                time.sleep(delay * (0.75 + random.random() * 0.5))
+            try:
+                req = urllib.request.Request(url, data=body, headers=headers, method="POST")
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    result = json.loads(resp.read().decode())
+            except urllib.error.HTTPError as e:
+                body_text = e.read().decode()
+                try:
+                    err = json.loads(body_text)
+                    msg = err.get("error", body_text)
+                except Exception:
+                    msg = body_text
+                if e.code in retryable_http:
+                    retry_after = e.headers.get("retry-after") or e.headers.get("Retry-After")
+                    if retry_after:
+                        try:
+                            time.sleep(min(float(retry_after), 5.0) * (0.75 + random.random() * 0.5))
+                        except ValueError:
+                            pass
+                    last_exc = EtsyAPIError(e.code, msg)
+                    continue  # retry with backoff
+                if cb is not None and e.code in _BREAKER_TRIP_STATUSES:
+                    cb.record_failure()
+                raise EtsyAPIError(e.code, msg)
+            except (urllib.error.URLError, OSError) as e:
+                last_exc = e
+                continue  # retry on network errors
+            else:
+                if cb is not None:
+                    cb.record_success()
+                return result
+        # All attempts exhausted
+        if cb is not None and isinstance(last_exc, EtsyAPIError) and last_exc.status in _BREAKER_TRIP_STATUSES:
+            cb.record_failure()
+        if isinstance(last_exc, EtsyAPIError):
+            raise last_exc
+        raise EtsyAPIError(0, f"Network error after retries: {last_exc}")
+
     def upload_listing_image(self, listing_id: int | str, image_path: str, rank: int = 1,
                              alt_text: str | None = None) -> dict:
         """Upload an image file to a listing. rank=1 is the cover photo.
@@ -842,18 +906,7 @@ class EtsyAPIClient:
             "Authorization": f"Bearer {self.access_token}",
             "x-api-key": api_key_header,
         }
-        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                return json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            body_text = e.read().decode()
-            try:
-                err = json.loads(body_text)
-                msg = err.get("error", body_text)
-            except Exception:
-                msg = body_text
-            raise EtsyAPIError(e.code, msg)
+        return self._upload_multipart_with_retry(url, body, headers, timeout=60)
 
     def upload_listing_video(self, listing_id: int | str, video_path: str, rank: int | None = None) -> dict:
         """Upload a marketing video to a listing (Etsy API v3 uploadListingVideo)."""
@@ -884,18 +937,7 @@ class EtsyAPIClient:
             "Authorization": f"Bearer {self.access_token}",
             "x-api-key": api_key_header,
         }
-        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                return json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            body_text = e.read().decode()
-            try:
-                err = json.loads(body_text)
-                msg = err.get("error", body_text)
-            except Exception:
-                msg = body_text
-            raise EtsyAPIError(e.code, msg)
+        return self._upload_multipart_with_retry(url, body, headers, timeout=120)
 
     def get_listing_images(self, listing_id: int | str) -> list[dict]:
         """Get all images for a listing. Returns list of image records with listing_image_id."""
@@ -981,18 +1023,7 @@ class EtsyAPIClient:
             "Authorization": f"Bearer {self.access_token}",
             "x-api-key": api_key_header,
         }
-        req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-        try:
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                return json.loads(resp.read().decode())
-        except urllib.error.HTTPError as e:
-            body_text = e.read().decode()
-            try:
-                err = json.loads(body_text)
-                msg = err.get("error", body_text)
-            except Exception:
-                msg = body_text
-            raise EtsyAPIError(e.code, msg)
+        return self._upload_multipart_with_retry(url, body, headers, timeout=120)
 
     def refresh_access_token(self) -> bool:
         """Exchange ETSY_REFRESH_TOKEN for a new access token and persist it to .env.

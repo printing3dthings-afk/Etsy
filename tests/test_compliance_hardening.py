@@ -197,7 +197,7 @@ def test_prune_wired_into_daily_quality_audit_iteration():
     idx_def = source.index("def _prune_buyer_data_retention")
     idx_iteration = source.index("async def _quality_audit_iteration")
     check(0 < idx_def < idx_iteration, "the retention function should be defined before the loop that calls it")
-    call_site = source[idx_iteration:idx_iteration + 800]
+    call_site = source[idx_iteration:idx_iteration + 1600]
     check("await asyncio.to_thread(_prune_buyer_data_retention)" in call_site,
           "the daily quality-audit loop should call the retention pass via asyncio.to_thread "
           "(it does blocking file I/O), near the top of the iteration")

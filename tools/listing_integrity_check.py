@@ -894,6 +894,40 @@ def _apply_manifest_updates(manifest: dict, results: list[dict]) -> dict:
     return manifest
 
 
+def _write_manifest_updates(results: list[dict], fallback_manifest: dict) -> dict:
+    """Merge this run's verification timestamps into the manifest and write it
+    back atomically.
+
+    2026-07-19: previously reused the `manifest` read once at the very top of
+    main() (up to ~30 minutes stale by the time --full mode gets here) and
+    wrote it back with a plain `open(..., "w")` -- no lock, no temp-file+rename,
+    unlike the atomic pattern used elsewhere in this codebase (e.g.
+    tools/etsy_file_inventory.py's tmp.write_text()+tmp.replace()). This script
+    can genuinely run concurrently with itself: a chat-triggered on-demand run,
+    the daily rotating quality-audit subset, and the monthly --full audit can
+    all overlap. Re-reading the manifest fresh right before merging means a
+    concurrent run's updates for OTHER listings aren't silently discarded by
+    whichever process's write lands last; this run's updates are only ever
+    applied on top of whatever's actually on disk at write time. The atomic
+    temp-file+rename also means a crash mid-write can no longer leave a
+    half-written, corrupt manifest.
+
+    `fallback_manifest` (the in-memory copy from the top of the run) is used
+    only if the fresh re-read itself fails (e.g. the file was mid-write by
+    something else at that exact instant) -- better to fall back to a stale
+    copy than to lose this run's results entirely."""
+    try:
+        with open(MANIFEST_PATH) as f:
+            fresh_manifest = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        fresh_manifest = fallback_manifest
+    fresh_manifest = _apply_manifest_updates(fresh_manifest, results)
+    tmp_path = MANIFEST_PATH.with_suffix(".json.tmp")
+    tmp_path.write_text(json.dumps(fresh_manifest, indent=2, sort_keys=True))
+    tmp_path.replace(MANIFEST_PATH)
+    return fresh_manifest
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -987,10 +1021,8 @@ def main():
         report_path.write_text(report)
         print(f"\nReport saved → {report_path}")
 
-    # Update manifest with verification timestamps
-    manifest = _apply_manifest_updates(manifest, results)
-    with open(MANIFEST_PATH, "w") as f:
-        json.dump(manifest, f, indent=2, sort_keys=True)
+    # Update manifest with verification timestamps.
+    _write_manifest_updates(results, fallback_manifest=manifest)
 
     # Auto-fix titles if requested
     if args.fix_titles and failed_titles:

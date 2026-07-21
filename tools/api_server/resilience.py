@@ -107,7 +107,11 @@ class TerminalToolError(ToolError):
 _RETRYABLE_CATEGORIES = {"transient"}
 
 # Etsy API status codes worth retrying: rate limit + server-side hiccups.
-_RETRYABLE_ETSY_STATUSES = {403, 429, 500, 502, 503}
+# 504 (gateway timeout) added 2026-07-19 -- get_conversion_targets/
+# diagnose_listing_conversion/apply_conversion_fixes raise HTTPException(504, ...)
+# on a plain internal asyncio.TimeoutError, which was being misclassified as
+# terminal/non-retryable when it's really just a timeout worth another try.
+_RETRYABLE_ETSY_STATUSES = {403, 429, 500, 502, 503, 504}
 
 
 def classify_tool_exception(exc: Exception) -> tuple[str, bool]:
