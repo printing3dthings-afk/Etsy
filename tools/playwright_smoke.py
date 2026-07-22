@@ -868,6 +868,44 @@ async def _run_browser_checks() -> None:
             check("WA1030" in wrong_category_error.get("wallArtMsg", ""),
                   f"Wall Art's empty-pid error should use its own category example: {wrong_category_error}")
 
+            # Regression guard: Scott's EXACT reported scenario (2026-07-22
+            # follow-up) -- opening Coloring Pages, typing a genuinely new code
+            # via "+ This is a new one", and tapping Build returned "COLOR01
+            # isn't a configured planner (have DP1026...)". Root cause:
+            # buildProductRun() never sent `category` in its POST body, so the
+            # server fell back to guessing from product_catalog.json and
+            # defaulted to digital_planner for any uncataloged pid. This hits
+            # the REAL backend (no mocking) -- the fix's pre-flight check
+            # returns a clean error with no subprocess spawned, so it's fast
+            # and safe to run for real here.
+            misroute_repro = await page.evaluate("""async () => {
+                createOpenCategory('coloring_pages');
+                _createToggleNewCode(true);
+                document.getElementById('bx-pid').value = 'COLOR01';
+                await buildProductRun();
+                const coloringMsg = document.getElementById('bx-result').innerHTML;
+                createOpenCategory('coloring_pages'); // close
+
+                createOpenCategory('wall_art');
+                _createToggleNewCode(true);
+                document.getElementById('bx-pid').value = 'WA_PLAYWRIGHT_NO_SOURCE_ART';
+                await buildProductRun();
+                const wallArtMsg = document.getElementById('bx-result').innerHTML;
+                createOpenCategory('wall_art'); // close
+
+                return {coloringMsg, wallArtMsg};
+            }""")
+            coloring_lc = misroute_repro.get("coloringMsg", "").lower()
+            check("planner" not in coloring_lc and "dp10" not in coloring_lc,
+                  f"Scott's exact repro: a new Coloring Pages code must never be misrouted through the planner branch: {misroute_repro}")
+            check("catalog" in coloring_lc,
+                  f"Coloring Pages' real error for an uncataloged code should name the actual reason (catalog): {misroute_repro}")
+            wallart_lc = misroute_repro.get("wallArtMsg", "").lower()
+            check("planner" not in wallart_lc and "dp10" not in wallart_lc,
+                  f"a new Wall Art code must never be misrouted through the planner branch: {misroute_repro}")
+            check("source art" in wallart_lc,
+                  f"Wall Art's real error for a code with no source file should name the actual reason (source art): {misroute_repro}")
+
             # Coming-soon tiles: never blank, never a dead click -- must show a
             # specific, honest explanation.
             soon_panel = await page.evaluate("""() => {

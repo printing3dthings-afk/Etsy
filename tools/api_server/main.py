@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "2e3d30e-v241"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2e3d30e-v242"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -10525,11 +10525,43 @@ def _produce_build_product(inp: dict) -> dict:
     category = _resolve_build_category(pid, (inp or {}).get("category"))
 
     if category in ("wall_art", "wall_art_bundle"):
+        # Pre-flight check (2026-07-22, mirroring the digital_planner branch
+        # below): build_wallart_product.py hard-requires a source JPG at
+        # product_files/<PID>.jpg or upscaled/<PID>.jpg to already exist --
+        # without this check a genuinely new pid spawned a doomed subprocess
+        # that failed several minutes later with only a generic exit-code
+        # shown in the polling UI, the real reason buried in the log tail.
+        try:
+            import generate_print_sizes as _gps
+            has_source_art = (
+                (_gps.UPSCALED_DIR / f"{pid}.jpg").exists()
+                or (_gps.PRODUCT_FILES_DIR / f"{pid}.jpg").exists()
+            )
+        except Exception as exc:  # noqa: BLE001
+            return {"error": f"wall-art builder unavailable: {exc}"}
+        if not has_source_art:
+            return {"error": f"No source art found for {pid} — add {pid}.jpg to "
+                              f"product_files/ (or upscaled/) first, then build."}
         script_name, log_suffix, proc_label = "build_wallart_product.py", "wallart_build", "build_wallart_product"
         engine = None
         steps = ["print-size ZIP", "quality check"]
         needs_visual_qc = False
     elif category == "coloring_pages":
+        # Pre-flight check (2026-07-22): build_coloring_product.py's own
+        # _catalog_lookup() hard-requires the pid to already be a
+        # product_catalog.json entry with a non-empty files list (that's how
+        # it infers which theme pack to build) -- reuse that exact function
+        # rather than duplicating its logic, and fail fast with the real
+        # reason instead of spawning a subprocess that exits 2 minutes later.
+        try:
+            import build_coloring_product as _bcp
+            catalog_hit = _bcp._catalog_lookup(pid)
+        except Exception as exc:  # noqa: BLE001
+            return {"error": f"coloring-pages builder unavailable: {exc}"}
+        if catalog_hit is None:
+            return {"error": f"{pid} isn't in the coloring-pages catalog yet (or has no "
+                              f"files listed). Pick an existing set from the list, or add "
+                              f"it to the catalog first."}
         script_name, log_suffix, proc_label = "build_coloring_product.py", "coloring_build", "build_coloring_product"
         engine = None
         steps = ["coloring pages", "quality check"]

@@ -212,6 +212,93 @@ def test_build_kickoff_success_path_registers_in_long_running_procs():
             server._LONG_RUNNING_PROCS.pop(os_pid, None)
 
 
+# ── Category-misroute fix (2026-07-22) ────────────────────────────────────
+# Scott reported live: opening the Coloring Pages panel, typing a new code
+# ("COLOR01"), and tapping "Build these coloring pages" returned "COLOR01
+# isn't a configured planner (have DP1026...)" -- a Digital Planner error on
+# a Coloring Pages build. Root cause: buildProductRun() never sent `category`
+# in its POST body, so _resolve_build_category() fell back to guessing from
+# product_catalog.json, defaulting to "digital_planner" for any uncataloged
+# pid. Fixed by having the frontend send category explicitly, and by adding
+# pre-flight checks to the wall_art/coloring_pages branches (mirroring
+# digital_planner's existing pattern) so a genuinely new/uncataloged pid
+# fails fast with the REAL reason instead of being misrouted or spawning a
+# doomed subprocess.
+
+def test_coloring_pages_uncataloged_pid_fails_fast_with_accurate_error():
+    out = server._produce_build_product({"pid": "COLOR01", "category": "coloring_pages"})
+    check("error" in out, f"an uncataloged coloring_pages pid must error, got {out}")
+    check(not out.get("started"), f"must not start a build for an uncataloged pid, got {out}")
+    msg = out.get("error", "").lower()
+    check("catalog" in msg, f"error must name the real reason (catalog), got {out}")
+    check("planner" not in msg and "dp10" not in msg,
+          f"error must NOT be misrouted through the digital_planner branch, got {out}")
+
+
+def test_coloring_pages_existing_pid_starts_cleanly():
+    # A real catalog entry (confirmed present in data/product_catalog.json) --
+    # the pre-flight check must not become a new false-negative for a pid
+    # that genuinely has everything build_coloring_product.py needs.
+    pid = "COLOR_KAWAII_COLORING_PAGES_SET_05"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server.subprocess, "Popen", side_effect=_fake_popen):
+            out = server._produce_build_product({"pid": pid, "category": "coloring_pages"})
+    check(out.get("started") is True, f"an existing catalog entry must actually start, got {out}")
+    check(out.get("category") == "coloring_pages", f"category must be echoed back, got {out}")
+    server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
+
+
+def test_wall_art_pid_with_no_source_art_fails_fast_with_accurate_error():
+    out = server._produce_build_product({"pid": "WA_NO_SUCH_ART_FILE", "category": "wall_art"})
+    check("error" in out, f"a wall_art pid with no source art must error, got {out}")
+    check(not out.get("started"), f"must not start a build with no source art, got {out}")
+    msg = out.get("error", "").lower()
+    check("source art" in msg, f"error must name the real reason (source art), got {out}")
+    check("planner" not in msg and "dp10" not in msg,
+          f"error must NOT be misrouted through the digital_planner branch, got {out}")
+
+
+def test_wall_art_pid_with_source_art_starts_cleanly():
+    # No real wall_art source JPGs exist in this sandbox (data/digital_products/
+    # is gitignored, ephemeral, machine-local) -- patch generate_print_sizes'
+    # own directory constants to a temp dir holding a fake source file, so
+    # this exercises the real .exists() check, not a mocked shortcut.
+    pid = "WA_TEST_FIXTURE_PID"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        product_files_dir = tmp / "product_files"
+        upscaled_dir = product_files_dir / "upscaled"
+        product_files_dir.mkdir(parents=True, exist_ok=True)
+        upscaled_dir.mkdir(parents=True, exist_ok=True)
+        (product_files_dir / f"{pid}.jpg").write_bytes(b"not a real jpg, just needs to exist")
+        import generate_print_sizes as gps
+        with patch.object(gps, "PRODUCT_FILES_DIR", product_files_dir), \
+             patch.object(gps, "UPSCALED_DIR", upscaled_dir), \
+             patch.object(server, "_product_log_dir", return_value=tmp), \
+             patch.object(server.subprocess, "Popen", side_effect=_fake_popen):
+            out = server._produce_build_product({"pid": pid, "category": "wall_art"})
+    check(out.get("started") is True, f"a pid with real source art must actually start, got {out}")
+    check(out.get("category") == "wall_art", f"category must be echoed back, got {out}")
+    server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
+
+
+def test_explicit_category_prevents_the_original_misroute():
+    # The exact regression from Scott's screenshot, contrasted directly:
+    # omitting `category` (the pre-fix request shape) still falls back to
+    # guessing and misroutes an uncataloged pid into the planner branch --
+    # documenting why the frontend fix (always sending _createOpenCat) is
+    # the real fix, not just the pre-flight checks alone.
+    out_no_category = server._produce_build_product({"pid": "COLOR01"})
+    check("isn't a configured planner" in out_no_category.get("error", ""),
+          f"sanity check: omitting category still guesses digital_planner for an uncataloged pid, got {out_no_category}")
+    out_fixed = server._produce_build_product({"pid": "COLOR01", "category": "coloring_pages"})
+    check("isn't a configured planner" not in out_fixed.get("error", ""),
+          f"with category sent explicitly, must never be misrouted through the planner branch, got {out_fixed}")
+    check("catalog" in out_fixed.get("error", "").lower(),
+          f"with category sent explicitly, must get the accurate coloring_pages-specific error, got {out_fixed}")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:

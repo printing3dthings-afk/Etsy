@@ -4040,9 +4040,16 @@ async function buildProductRun(){
   if(btn) btn.disabled=true;
   if(out) out.innerHTML='<div class="hub-spinner"></div>';
   try{
+    // category is the currently-open real category's key (_createOpenCat) --
+    // without it, the server falls back to guessing the category from
+    // product_catalog.json, which defaults to "digital_planner" for any
+    // genuinely new/uncataloged pid (exactly what "+ new one" is for). That
+    // silently misrouted new Coloring Pages/Wall Art codes into the planner
+    // branch and rejected them with planner-specific wording (Scott reported
+    // this live, 2026-07-22: "COLOR01 isn't a configured planner...").
     const r=await fetchWithTimeout(BASE+'/api/produce/build-product', {
       method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid, engine})
+      body: JSON.stringify({pid, engine, category: _createOpenCat})
     }, 30000);
     const d=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
