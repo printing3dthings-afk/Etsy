@@ -1077,6 +1077,89 @@ async def _run_browser_checks() -> None:
             await page.evaluate("createOpenCategory('sticker_pack'); document.getElementById('create-advanced-toggle').click()")
             await page.unroute("**/api/products", _block_real_products)
 
+            # ── Files screen: listing-attachment grouping (2026-07-22) -- Scott's
+            # screenshot showed "PRODUCT FILES" grouping coloring_pages' internal
+            # per-page theme IDs (CB001, CB002, ...) as if each were its own
+            # single-file product, while the REAL deliverable ZIP customers
+            # receive (coloring_set_01.zip, genuinely attached to a live listing)
+            # fell into a generic leftover bucket. /api/files now annotates each
+            # file with catalog_match; loadFiles() splits the "products" root into
+            # "Attached to a Listing" (grouped by the real product) and "Not
+            # Attached to a Listing" (grouped by type, then by product where
+            # known), and sub-groups "reference_images" by its own category
+            # metadata instead of the filename regex. Mock the exact scenario and
+            # assert the DOM lands it in the right buckets.
+            #
+            # Uses an in-page authGet() monkeypatch, NOT page.route() -- Frank
+            # registers its own service worker (frank-sw.js) scoped to /frank
+            # that re-fetches every GET request from inside the SW's own fetch
+            # handler; that sub-fetch isn't visible to Playwright's page-level
+            # network interception, so a page.route("**/api/files", ...) mock
+            # here silently never fires and the real (large, real-data) scan
+            # runs instead -- confirmed by direct reproduction: even a bare
+            # page.evaluate("fetch('/api/files')") returns a real 200 with real
+            # data while the registered route handler is never invoked.
+            # Patching the shared authGet() function in the page's own JS realm
+            # sidesteps the network layer entirely. ──
+            files_text = await page.evaluate("""() => {
+                const orig = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path !== '/api/files') return orig(path, ms);
+                    const payload = {
+                        groups: [
+                            {root: 'products', label: 'Product Files', files: [
+                                {path: 'coloring_set_01.zip', root: 'products', size: 100,
+                                 size_human: '100 B', modified: '2026-07-22T00:00:00+00:00',
+                                 inline: false, is_zip: true, entries: [],
+                                 catalog_match: {product_id: 'COLOR_KAWAII_COLORING_PAGES_SET_01',
+                                                 category: 'coloring_pages', attached: true}},
+                                {path: 'DP1030_v2.pdf', root: 'products', size: 200,
+                                 size_human: '200 B', modified: '2026-07-22T00:00:00+00:00',
+                                 inline: true, is_zip: false,
+                                 catalog_match: {product_id: 'DP1030', category: 'digital_planner',
+                                                 attached: false}},
+                                {path: 'CB001_coloring.png', root: 'products', size: 50,
+                                 size_human: '50 B', modified: '2026-07-22T00:00:00+00:00',
+                                 inline: true, is_zip: false, catalog_match: null},
+                            ]},
+                            {root: 'reference_images', label: 'Reference Photos', files: [
+                                {path: 'ab12cd34_moodboard.jpg', root: 'reference_images', size: 60,
+                                 size_human: '60 B', modified: '2026-07-22T00:00:00+00:00',
+                                 inline: true, is_zip: false, category: 'wall_art'},
+                            ]},
+                        ],
+                        empty_reason: null,
+                    };
+                    return Promise.resolve({ok: true, status: 200, json: async () => payload});
+                };
+                showScreen('files');
+                return new Promise(resolve => setTimeout(() => {
+                    window.authGet = orig;
+                    const el = document.getElementById('files-content');
+                    // textContent, not innerText -- the collapsed sub-folder rows
+                    // (CSS display:none until tapped) are real DOM content that
+                    // innerText would skip as "invisible", and .hub-section-title's
+                    // text-transform:uppercase would otherwise break exact-string
+                    // assertions below.
+                    resolve(el ? el.textContent : '');
+                }, 300));
+            }""")
+            check("Attached to a Listing" in files_text and "Not Attached to a Listing" in files_text,
+                  f"Product Files must split into both sections: {files_text[:400]}")
+            check("COLOR_KAWAII_COLORING_PAGES_SET_01" in files_text,
+                  f"the real, listing-attached deliverable must appear under its real product folder: {files_text[:400]}")
+            check("Digital Planners" in files_text,
+                  f"an unattached draft product's files must be grouped under its real category label: {files_text[:400]}")
+            check("Coloring Pages" in files_text,
+                  f"the orphan CB001 source image (no catalog match) must fall back to the Coloring Pages type bucket, not its own fake product: {files_text[:400]}")
+            attached_section, _, not_attached_section = files_text.partition("Not Attached to a Listing")
+            check("CB001" not in attached_section,
+                  f"the orphan CB001 source image must never appear in the Attached section: {attached_section[:400]}")
+            check("CB001" in not_attached_section,
+                  f"CB001 should still be browsable as its own sub-folder inside the Coloring Pages type bucket (Scott's 'where would I still see them' ask): {not_attached_section[:400]}")
+            check("Wall Art" in files_text.split("Reference Photos")[-1],
+                  f"Reference Photos must sub-group by the real per-image category metadata: {files_text[:400]}")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the

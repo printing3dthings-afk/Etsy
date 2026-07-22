@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "2e3d30e-v244"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2e3d30e-v245"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -12990,6 +12990,52 @@ def _register_new_product_overlay(product_id: str, category: str, name: str,
     })
 
 
+# File-ownership index for the Files screen (2026-07-22) — lets /api/files
+# group each file under "Attached to a Listing" vs "Not Attached to a
+# Listing" using the REAL product catalog instead of guessing from the
+# filename. Root cause it fixes: the old filename-regex grouping
+# (_productKeyFromPath in frank_hud_mockup.py) mistook coloring_pages'
+# internal per-page theme IDs (CB001, CB002, ... generate_coloring_pages.py)
+# for individual products, while the real deliverable ZIPs customers
+# actually receive (coloring_set_01.zip etc., genuinely attached to live
+# listings) didn't match the regex at all and fell into a generic
+# leftover bucket. Reuses _build_products_status() -- the exact same
+# resolution /api/products already uses -- so the Files and Products
+# screens can never disagree about what's real or attached.
+_FILE_OWNER_INDEX_TTL_S = 300.0
+_file_owner_index_cache: dict = {"built_at": 0.0, "index": {}}
+
+
+def _build_file_owner_index() -> dict[str, dict]:
+    """basename -> {"product_id", "category", "attached"} for every file any
+    catalog product (or is_new_product overlay) lists. `attached` is true
+    only when the product has a real Etsy listing_id (draft/unpublished
+    products resolve to attached=False, same as the Products screen)."""
+    try:
+        catalog = json.loads(Path("data/product_catalog.json").read_text())
+    except OSError:
+        catalog = []
+    overrides = _product_catalog_overrides()
+    rows = _build_products_status(catalog, _catalog_file_exists, overrides)
+    index: dict[str, dict] = {}
+    for row in rows:
+        for fs in row.get("files", []):
+            index.setdefault(fs["name"], {
+                "product_id": row["id"],
+                "category": row.get("category", "uncategorized"),
+                "attached": bool(row.get("listing_id")),
+            })
+    return index
+
+
+def _file_owner_index() -> dict[str, dict]:
+    now = time.time()
+    if now - _file_owner_index_cache["built_at"] > _FILE_OWNER_INDEX_TTL_S:
+        _file_owner_index_cache["index"] = _build_file_owner_index()
+        _file_owner_index_cache["built_at"] = now
+    return _file_owner_index_cache["index"]
+
+
 # Staged listing photos awaiting Scott's approve/reject in the Action Center —
 # durable under the Railway volume when mounted (survives redeploys, same reason
 # "volume" exists above), else a local data/ dir for dev.
@@ -13181,6 +13227,8 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
     # whole single-process app while it scans (2026-07-08 performance pass).
     def _scan() -> dict:
         groups = []
+        owner_index = _file_owner_index()
+        refimg_categories = {m["filename"]: m.get("category") for m in _reference_images_meta()}
         for root_key, root_path in _FILE_ROOTS.items():
             if not root_path.exists():
                 continue
@@ -13188,9 +13236,15 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
             for p in sorted(root_path.rglob("*")):
                 if not p.is_file():
                     continue
+                ext = p.suffix.lower()
+                if ext == ".log":
+                    # Plain-text build-script output -- never a customer-facing
+                    # deliverable or a listing image, so it's excluded entirely
+                    # rather than cluttering a real product's file group
+                    # (Scott, 2026-07-22).
+                    continue
                 stat = p.stat()
                 rel = str(p.relative_to(root_path))
-                ext = p.suffix.lower()
                 entry = {
                     "path": rel,
                     "root": root_key,
@@ -13202,6 +13256,10 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
                 }
                 if ext == ".zip":
                     entry["entries"] = _zip_entries(p)
+                if root_key == "products":
+                    entry["catalog_match"] = owner_index.get(p.name)
+                elif root_key == "reference_images":
+                    entry["category"] = refimg_categories.get(p.name)
                 files.append(entry)
             files.sort(key=lambda f: f["modified"], reverse=True)
             _labels = {

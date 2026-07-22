@@ -7975,6 +7975,70 @@ function _productGroupIcon(key){
   if(/^WA/.test(key)) return '🖼️';   // wall art
   return '📦';
 }
+// (2026-07-22) Files-screen listing-attachment grouping. Root cause fixed:
+// _productKeyFromPath's regex has no idea a catalog even exists, so it
+// mistook coloring_pages' internal per-page theme IDs (CB001, CB002, ...
+// generate_coloring_pages.py) for individual products, while the real
+// deliverable ZIPs (coloring_set_01.zip etc., genuinely attached to live
+// listings) didn't match the regex at all and fell into a generic leftover
+// bucket. /api/files now annotates each "products"-root file with
+// catalog_match ({product_id, category, attached} or null, resolved
+// server-side against the real product catalog) -- these helpers turn that
+// into "Attached to a Listing" (grouped by the real product) vs. "Not
+// Attached to a Listing" (grouped by type, then by product where known).
+const _UNMATCHED_PREFIX_CATEGORY = {DP:'digital_planner', SS:'svg_3dprint_pack', WA:'wall_art', CB:'coloring_pages'};
+function _notAttachedTypeLabel(f){
+  if (f.catalog_match && f.catalog_match.category) return _categoryLabel(f.catalog_match.category);
+  const key = _productKeyFromPath(f.path);
+  const prefix = key ? key.replace(/[0-9].*$/, '') : '';
+  return _categoryLabel(_UNMATCHED_PREFIX_CATEGORY[prefix] || 'uncategorized');
+}
+function _fileProductKey(f){
+  return (f.catalog_match && f.catalog_match.product_id) || _productKeyFromPath(f.path);
+}
+// Renders one flat card of tappable product/type folders (or a flat file
+// list when nothing groups) -- extracted from loadFiles() (2026-07-22) so
+// it's reusable for the default per-root grouping, the "Attached to a
+// Listing" section, and each type-bucket inside "Not Attached to a
+// Listing". wrapCard:false skips the outer card border for a nested call
+// (a type-bucket is already inside its own collapsible container).
+function _renderFileSubgroupsHtml(files, keyFn, opts){
+  if (!files.length) return '';
+  opts = opts || {};
+  const iconFn = opts.iconFn || (key => key==='Other files' ? '📄' : _productGroupIcon(key));
+  const wrapCard = opts.wrapCard !== false;
+  const sub={}, order=[];
+  files.forEach(f => {
+    const k = keyFn(f) || 'Other files';
+    if(!sub[k]){ sub[k]=[]; order.push(k); }
+    sub[k].push(f);
+  });
+  const keys = order.filter(k=>k!=='Other files').sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
+  // No real keys at all (e.g. the Backups group) -> keep it flat, no needless nesting.
+  if (!keys.length) {
+    let h = wrapCard ? '<div class="hub-card">' : '';
+    files.forEach(f => { h += _renderHubFileHtml(f); });
+    h += wrapCard ? '</div>' : '';
+    return h;
+  }
+  const finalOrder = keys.concat(sub['Other files'] ? ['Other files'] : []);
+  let h = wrapCard ? '<div class="hub-card">' : '';
+  finalOrder.forEach(key => {
+    const grp = sub[key];
+    const gid = 'hub-grp-'+(_hubGrpSeq++);
+    h += '<div class="hub-listing-item" onclick="toggleZip(\\''+gid+'\\',this.querySelector(\\'.hub-grp-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
+      '<div class="hub-thumb-ph">'+iconFn(key)+'</div>'+
+      '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(key)+'</div>'+
+      '<div class="hub-listing-meta">'+grp.length+' file'+(grp.length!==1?'s':'')+'</div></div>'+
+      '<div class="hub-grp-caret" style="color:var(--gold);font-size:16px">▸</div>'+
+    '</div>';
+    h += '<div id="'+gid+'" style="display:none;margin:0 0 6px 8px;border-left:2px solid var(--border);padding-left:8px">';
+    grp.forEach(f => { h += _renderHubFileHtml(f); });
+    h += '</div>';
+  });
+  h += wrapCard ? '</div>' : '';
+  return h;
+}
 // Render one file (or an expandable ZIP) as a row — shared by the flat and grouped paths.
 function _renderHubFileHtml(f){
   const when = new Date(f.modified).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
@@ -8039,42 +8103,58 @@ async function loadFiles() {
       if (!g.files.length) return;
       html += '<div class="hub-section-title">'+escHtml(g.label)+' ('+g.files.length+')</div>';
 
-      // Sub-group this group's files by the product/listing code in their path, so
-      // all of one product's files collapse into a single tappable row.
-      const sub={}, order=[];
-      g.files.forEach(f => {
-        const k = _productKeyFromPath(f.path) || 'Other files';
-        if(!sub[k]){ sub[k]=[]; order.push(k); }
-        sub[k].push(f);
-      });
-      const productKeys = order.filter(k=>k!=='Other files')
-        .sort((a,b)=>a.localeCompare(b, undefined, {numeric:true}));
-
-      // No product codes here (e.g. the Backups group) → keep it flat, no needless nesting.
-      if (!productKeys.length) {
-        html += '<div class="hub-card">';
-        g.files.forEach(f => { html += _renderHubFileHtml(f); });
-        html += '</div>';
+      if (g.root === 'reference_images') {
+        // Sub-group by the real per-image category (set at upload time in the
+        // Create screen's reference library) instead of the product-code regex --
+        // these filenames carry no product code at all, so today they'd otherwise
+        // render as one flat unsorted list.
+        html += _renderFileSubgroupsHtml(
+          g.files,
+          f => _REFIMG_CATEGORY_LABELS[f.category || 'general'] || (f.category || 'General'),
+          {iconFn: () => '🖼️'}
+        );
         return;
       }
 
-      const finalOrder = productKeys.concat(sub['Other files'] ? ['Other files'] : []);
-      html += '<div class="hub-card">';
-      finalOrder.forEach(key => {
-        const files = sub[key];
-        const gid = 'hub-grp-'+(_hubGrpSeq++);
-        const icon = key==='Other files' ? '📄' : _productGroupIcon(key);
-        html += '<div class="hub-listing-item" onclick="toggleZip(\\''+gid+'\\',this.querySelector(\\'.hub-grp-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
-          '<div class="hub-thumb-ph">'+icon+'</div>'+
-          '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(key)+'</div>'+
-          '<div class="hub-listing-meta">'+files.length+' file'+(files.length!==1?'s':'')+'</div></div>'+
-          '<div class="hub-grp-caret" style="color:var(--gold);font-size:16px">▸</div>'+
-        '</div>';
-        html += '<div id="'+gid+'" style="display:none;margin:0 0 6px 8px;border-left:2px solid var(--border);padding-left:8px">';
-        files.forEach(f => { html += _renderHubFileHtml(f); });
-        html += '</div>';
-      });
-      html += '</div>';
+      if (g.root === 'products') {
+        const attached = [], notAttached = [];
+        g.files.forEach(f => { (f.catalog_match && f.catalog_match.attached ? attached : notAttached).push(f); });
+
+        if (attached.length) {
+          html += '<div class="hub-section-title" style="padding-left:8px;font-size:12px">Attached to a Listing ('+attached.length+')</div>';
+          html += _renderFileSubgroupsHtml(attached, _fileProductKey);
+        }
+        if (notAttached.length) {
+          html += '<div class="hub-section-title" style="padding-left:8px;font-size:12px">Not Attached to a Listing ('+notAttached.length+')</div>';
+          const typeGroups = {}, typeOrder = [];
+          notAttached.forEach(f => {
+            const t = _notAttachedTypeLabel(f);
+            if (!typeGroups[t]) { typeGroups[t] = []; typeOrder.push(t); }
+            typeGroups[t].push(f);
+          });
+          html += '<div class="hub-card">';
+          typeOrder.sort((a,b)=>a.localeCompare(b)).forEach(t => {
+            const tFiles = typeGroups[t];
+            const tid = 'hub-grp-'+(_hubGrpSeq++);
+            html += '<div class="hub-listing-item" onclick="toggleZip(\\''+tid+'\\',this.querySelector(\\'.hub-grp-caret\\'))" style="cursor:pointer" role="button" tabindex="0">'+
+              '<div class="hub-thumb-ph">📁</div>'+
+              '<div class="hub-listing-info"><div class="hub-listing-title">'+escHtml(t)+'</div>'+
+              '<div class="hub-listing-meta">'+tFiles.length+' file'+(tFiles.length!==1?'s':'')+'</div></div>'+
+              '<div class="hub-grp-caret" style="color:var(--gold);font-size:16px">▸</div>'+
+            '</div>';
+            html += '<div id="'+tid+'" style="display:none;margin:0 0 6px 8px;border-left:2px solid var(--border);padding-left:8px">';
+            html += _renderFileSubgroupsHtml(tFiles, _fileProductKey, {wrapCard: false});
+            html += '</div>';
+          });
+          html += '</div>';
+        }
+        return;
+      }
+
+      // Every other root (Backups, Saved Files, Studio Uploads, Videos, Staged
+      // Photos/Videos, SVG Conversions, Lifestyle Photos) — sub-group by the
+      // product/listing code in the path exactly as before, unchanged.
+      html += _renderFileSubgroupsHtml(g.files, f => _productKeyFromPath(f.path));
     });
     el.innerHTML = html;
   } catch(e) {
