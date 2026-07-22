@@ -8,6 +8,14 @@ ship categories with an existing, verified generator this round rather than
 inventing a new photorealistic-photo pipeline for wall art in the same pass).
 
 Chain:
+  0. (2026-07-22, only when --description is given and no source art exists
+     yet) Generate a brand-new print-ready master JPG via
+     art_creation_tools.generate_wall_art_master() -- see that function's own
+     docstring for why it, not this script, owns the actual generation call.
+     This is what makes the Create screen's "+ new one" flow for Wall Art
+     genuinely work end-to-end instead of dead-ending on "no source art
+     found" (Scott reported that dead end live, 2026-07-22 — "every action
+     on this page has to work").
   1. Multi-size print ZIP (generate_print_sizes.py) — 4x6/8x12/12x18/16x24,
      8x10/16x20, A4/A3, square @300dpi, sRGB. Pure local resize from the
      source JPG (product_files/<PID>.jpg or upscaled/<PID>.jpg), zero API cost.
@@ -24,7 +32,9 @@ category -- CLAUDE.md's top-priority rule applies to internal tooling
 messaging too, not just customer-facing copy.
 
 Usage:  python tools/build_wallart_product.py WA1030
+        python tools/build_wallart_product.py WA1050 --description "a boho sun in terracotta and cream watercolor" --engine gemini
 """
+import argparse
 import sys
 from pathlib import Path
 
@@ -35,19 +45,33 @@ if str(_ROOT) not in sys.path:
 
 
 def main() -> int:
-    if len(sys.argv) < 2 or not sys.argv[1].strip():
-        print("usage: build_wallart_product.py <PID>  (e.g. WA1030)")
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("pid", nargs="?", default="")
+    parser.add_argument("--description", default="")
+    parser.add_argument("--engine", default=None)
+    args, _unknown = parser.parse_known_args()
+
+    if not args.pid.strip():
+        print("usage: build_wallart_product.py <PID>  (e.g. WA1030) [--description '...'] [--engine ...]")
         return 2
-    pid = sys.argv[1].strip().upper()
+    pid = args.pid.strip().upper()
     print(f"[build_wallart_product] FULL BUILD {pid}", flush=True)
 
-    print(f"\n{'='*60}\n[build_wallart_product] step 1/2: print-size ZIP {pid}\n{'='*60}", flush=True)
     zip_ok = False
     try:
         import generate_print_sizes as gps
         up = gps.UPSCALED_DIR / f"{pid}.jpg"
         base = gps.PRODUCT_FILES_DIR / f"{pid}.jpg"
         src = up if up.exists() else base
+
+        if not src.exists() and args.description.strip():
+            print(f"\n{'='*60}\n[build_wallart_product] step 0/2: generating new master art for {pid}\n{'='*60}", flush=True)
+            import art_creation_tools as act
+            act.generate_wall_art_master(pid, args.description.strip(), engine=args.engine)
+            # Re-resolve now that generation just wrote product_files/<PID>.jpg.
+            src = up if up.exists() else base
+
+        print(f"\n{'='*60}\n[build_wallart_product] step 1/2: print-size ZIP {pid}\n{'='*60}", flush=True)
         if not src.exists():
             print(f"[build_wallart_product] ✗ no source art for {pid} — looked for "
                   f"{pid}.jpg in product_files/ and upscaled/.", flush=True)

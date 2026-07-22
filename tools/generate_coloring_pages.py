@@ -384,20 +384,26 @@ PACKS = {
 # Image generation
 # ---------------------------------------------------------------------------
 
-def _gen_image_openai(prompt: str) -> bytes | None:
-    """Call gpt-image-1 (via the shared helper) and return raw PNG bytes, or None on failure."""
+def _gen_image_openai(prompt: str, engine: str | None = None) -> bytes | None:
+    """Call the approved image engine (via the shared helper) and return raw
+    PNG bytes, or None on failure. `engine` defaults to IMAGE_ENGINE/"openai"
+    same as generate_image() itself when not given (2026-07-22: threaded
+    through so generate_dynamic_theme_set() can honor an explicit engine
+    choice from the Create screen's new-theme flow, same as every other
+    category's AI generation call in this app)."""
     try:
         from tools.image_gen import generate_image, SQUARE, ImageGenError
     except ImportError:
         sys.path.insert(0, str(BASE))
         from tools.image_gen import generate_image, SQUARE, ImageGenError
     try:
-        tmp_path = generate_image(prompt, BASE / "_tmp_coloring_gen.png", size=SQUARE, output_format="png")
+        tmp_path = generate_image(prompt, BASE / "_tmp_coloring_gen.png", size=SQUARE,
+                                   output_format="png", engine=engine)
         data = tmp_path.read_bytes()
         tmp_path.unlink(missing_ok=True)
         return data
     except ImageGenError as exc:
-        print(f"  ✗ OpenAI error: {exc}", file=sys.stderr)
+        print(f"  ✗ image engine error: {exc}", file=sys.stderr)
     return None
 
 
@@ -422,7 +428,8 @@ def _enforce_bw(img: Image.Image) -> Image.Image:
 # Per-page generation
 # ---------------------------------------------------------------------------
 
-def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False) -> Path | None:
+def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False,
+                            engine: str | None = None) -> Path | None:
     """Generate one coloring page PNG. Returns path on success, None on failure."""
     dst = output_dir / f"{theme['id']}_coloring.png"
     if dst.exists() and not regen:
@@ -430,7 +437,7 @@ def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False) -
         return dst
 
     print(f"  → {theme['id']}: {theme['title']}")
-    img_bytes = _gen_image_openai(theme["prompt"])
+    img_bytes = _gen_image_openai(theme["prompt"], engine=engine)
     if not img_bytes:
         print(f"  ✗ {theme['id']} generation failed")
         return None
@@ -441,6 +448,35 @@ def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False) -
     kb = dst.stat().st_size // 1024
     print(f"  ✓ {dst.name}  ({kb} KB)")
     return dst
+
+
+# ---------------------------------------------------------------------------
+# Dynamic (Scott-authored) theme sets — 2026-07-22
+# ---------------------------------------------------------------------------
+# Every product before this was a repackaging of the same 2 fixed 20-prompt
+# packs above (PACKS). This is the first real per-product theme generator:
+# one page per typed subject, wrapped in the SAME _STYLE/_STYLE_BOLD prompt
+# DNA every hardcoded theme already uses (via _fun_theme(), unchanged) --
+# no new visual vocabulary invented, so a dynamically-generated set looks
+# and feels consistent with the rest of the shop's coloring-page catalog.
+_DYNAMIC_BORDER = "subtle"  # generic decorative border text _fun_theme() expects
+
+
+def generate_dynamic_theme_set(product_id: str, subjects: list[str],
+                                engine: str | None = None) -> list[Path]:
+    """Generate a brand-new, Scott-typed coloring-page set: one page per
+    subject line (each theme id namespaced by product_id so caching via
+    generate_coloring_page()'s own dst.exists() check can never collide with
+    another product's pages, or with a re-run of the same product). Returns
+    the list of successfully generated page paths (skips/omits any subject
+    whose generation failed rather than raising -- the caller decides
+    whether a partial set is still good enough to package)."""
+    themes = [
+        _fun_theme(f"{product_id}_{i:02d}", subject[:60], subject, _DYNAMIC_BORDER)
+        for i, subject in enumerate(subjects, start=1)
+    ]
+    generated = [generate_coloring_page(t, COLORING_DIR, regen=False, engine=engine) for t in themes]
+    return [p for p in generated if p]
 
 
 # ---------------------------------------------------------------------------

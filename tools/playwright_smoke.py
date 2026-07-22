@@ -715,6 +715,16 @@ async def _run_browser_checks() -> None:
             # upload library. Assert the tile grid, both tile kinds' panels, the
             # product picker, and that every relocated tool is still intact and
             # reachable -- not just visually moved into a black hole. ──
+            #
+            # This whole block manually stubs the global _products array to test
+            # the picker deterministically -- block the REAL /api/products fetch
+            # for its duration so loadProducts() (fired by _SCREEN_LOADERS.create
+            # on every showScreen('create') call, including ones earlier in this
+            # same test run) can never race in and silently overwrite the stub
+            # with the real catalog mid-block. Unrouted once this section ends.
+            async def _block_real_products(route):
+                await route.fulfill(status=200, content_type="application/json", body='{"products": []}')
+            await page.route("**/api/products", _block_real_products)
             await page.evaluate("showScreen('create')")
             await page.wait_for_timeout(300)
             tile_grid = await page.evaluate("""() => {
@@ -824,20 +834,33 @@ async def _run_browser_checks() -> None:
             # engine picker (which the backend never reads for these 2
             # categories) must not render at all -- a dead control is worse than
             # no control.
+            # NOTE (2026-07-22): #bx-engine now legitimately exists in the DOM
+            # (hidden) for wall_art/coloring_pages too, as part of the new
+            # "+ new one" new-art sub-panel (see usesNewArtDescription below) --
+            # mere presence is no longer a valid dead-control signal for those
+            # 2 categories, only VISIBILITY is (a user never sees a hidden
+            # element). Digital Planner's is still checked for straightforward
+            # presence since its outer Advanced disclosure, while collapsed, is
+            # not display:none (just a CSS class toggle), so this distinction
+            # doesn't apply there.
             no_dead_engine = await page.evaluate("""() => {
                 createOpenCategory('wall_art');
-                const wallArtHasEngine = !!document.getElementById('bx-engine');
+                const waEl = document.getElementById('bx-engine');
+                const wallArtEngineVisible = !!waEl && waEl.offsetParent !== null;
                 createOpenCategory('wall_art'); // close
                 createOpenCategory('coloring_pages');
-                const coloringHasEngine = !!document.getElementById('bx-engine');
+                const cEl = document.getElementById('bx-engine');
+                const coloringEngineVisible = !!cEl && cEl.offsetParent !== null;
                 createOpenCategory('coloring_pages'); // close
                 createOpenCategory('digital_planner');
                 const plannerHasEngine = !!document.getElementById('bx-engine');
                 createOpenCategory('digital_planner'); // close
-                return {wallArtHasEngine, coloringHasEngine, plannerHasEngine};
+                return {wallArtEngineVisible, coloringEngineVisible, plannerHasEngine};
             }""")
-            check(no_dead_engine.get("wallArtHasEngine") is False, f"Wall Art must not render the dead art-style engine picker: {no_dead_engine}")
-            check(no_dead_engine.get("coloringHasEngine") is False, f"Coloring Pages must not render the dead art-style engine picker: {no_dead_engine}")
+            check(no_dead_engine.get("wallArtEngineVisible") is False,
+                  f"Wall Art's picker-mode (existing-product rebuild) view must not show a visible art-style engine picker: {no_dead_engine}")
+            check(no_dead_engine.get("coloringEngineVisible") is False,
+                  f"Coloring Pages' picker-mode view must not show a visible art-style engine picker: {no_dead_engine}")
             check(no_dead_engine.get("plannerHasEngine") is True, f"Digital Planner DOES use the engine picker and must still render it: {no_dead_engine}")
 
             # Regression guard: Scott reported live (2026-07-22) that tapping
@@ -906,6 +929,95 @@ async def _run_browser_checks() -> None:
             check("source art" in wallart_lc,
                   f"Wall Art's real error for a code with no source file should name the actual reason (source art): {misroute_repro}")
 
+            # Regression guard (2026-07-22, Scott's follow-up: "every action on
+            # this page has to work ... if this doesn't work we don't have a
+            # business"): Digital Planner is a closed set of 9 hardcoded pids,
+            # all already in the picker -- the "+ new one" link can never
+            # succeed there and must not render at all. Wall Art / Coloring
+            # Pages, by contrast, now have a REAL new-art generation path, so
+            # their "+ new one" panels must show the description + engine
+            # controls.
+            new_code_affordances = await page.evaluate("""() => {
+                createOpenCategory('digital_planner');
+                // Scoped to #create-pid-picker-wrap specifically -- the OTHER
+                // .cd-newcode-link ("< pick from the list instead") lives inside
+                // #create-pid-freetext-wrap, which stays in the DOM (just hidden)
+                // for every category per the plan (buildProductRun()/
+                // _createPidSelectChanged() reference #bx-pid unconditionally) --
+                // that one is unreachable dead markup for Digital Planner, not a
+                // regression, so it must not be what this check matches.
+                const plannerHasLink = !!document.querySelector('#create-pid-picker-wrap .cd-newcode-link');
+                createOpenCategory('digital_planner'); // close
+
+                createOpenCategory('wall_art');
+                _createToggleNewCode(true);
+                const wallArtHasDesc = !!document.getElementById('bx-description');
+                const wallArtHasEngineInNewCode = !!document.getElementById('bx-engine');
+                createOpenCategory('wall_art'); // close
+
+                createOpenCategory('coloring_pages');
+                _createToggleNewCode(true);
+                const coloringHasDesc = !!document.getElementById('bx-description');
+                const coloringDescPlaceholder = (document.getElementById('bx-description')||{}).placeholder || '';
+                createOpenCategory('coloring_pages'); // close
+
+                return {plannerHasLink, wallArtHasDesc, wallArtHasEngineInNewCode, coloringHasDesc, coloringDescPlaceholder};
+            }""")
+            check(new_code_affordances.get("plannerHasLink") is False,
+                  f"Digital Planner must never show the '+ new one' link -- it can never succeed: {new_code_affordances}")
+            check(new_code_affordances.get("wallArtHasDesc") is True,
+                  f"Wall Art's new-code panel must show the art-description field: {new_code_affordances}")
+            check(new_code_affordances.get("wallArtHasEngineInNewCode") is True,
+                  f"Wall Art's new-code panel must show an engine picker (real AI generation happens here now): {new_code_affordances}")
+            check(new_code_affordances.get("coloringHasDesc") is True,
+                  f"Coloring Pages' new-code panel must show the subjects-description field: {new_code_affordances}")
+            check("subject" in new_code_affordances.get("coloringDescPlaceholder", "").lower(),
+                  f"Coloring Pages' description placeholder should explain the one-subject-per-line convention: {new_code_affordances}")
+
+            # Regression guard: switching from "+ new one" back to the picker
+            # must clear a typed description too (not just the pid) -- a
+            # stale description must never silently survive into a rebuild
+            # of an EXISTING product picked afterward.
+            desc_cleared_on_toggle_back = await page.evaluate("""() => {
+                createOpenCategory('wall_art');
+                _createToggleNewCode(true);
+                document.getElementById('bx-description').value = 'a stale leftover description';
+                _createToggleNewCode(false);
+                const val = document.getElementById('bx-description').value;
+                createOpenCategory('wall_art'); // close
+                return {val};
+            }""")
+            check(desc_cleared_on_toggle_back.get("val") == "",
+                  f"switching back to the picker must clear a typed description: {desc_cleared_on_toggle_back}")
+
+            # Real end-to-end: opening Wall Art's "+ new one", typing BOTH a
+            # code and a description, and tapping build must send `description`
+            # in the POST body (mocked network call -- no real AI spend here,
+            # tools/playwright_smoke.py stays a UI-contract check; the real
+            # backend logic is covered by tests/test_produce_qc.py's mocked-
+            # Popen success-path tests).
+            captured_body = {}
+
+            async def _capture_build_request(route):
+                import json as _json
+                captured_body.update(_json.loads(route.request.post_data or "{}"))
+                await route.fulfill(status=200, content_type="application/json",
+                                     body='{"pid": "WA_PW_TEST", "started": true, "os_pid": 424242, '
+                                          '"log_file": "WA_PW_TEST_wallart_build.log", "steps": ["generate art"], '
+                                          '"message": "ok"}')
+            await page.route("**/api/produce/build-product", _capture_build_request)
+            await page.evaluate("""async () => {
+                createOpenCategory('wall_art');
+                _createToggleNewCode(true);
+                document.getElementById('bx-pid').value = 'WA_PW_TEST';
+                document.getElementById('bx-description').value = 'a real description for the request body';
+                await buildProductRun();
+            }""")
+            await page.unroute("**/api/produce/build-product")
+            check(captured_body.get("description") == "a real description for the request body",
+                  f"buildProductRun() must send the typed description in the POST body: {captured_body}")
+            check(captured_body.get("category") == "wall_art", f"got: {captured_body}")
+
             # Coming-soon tiles: never blank, never a dead click -- must show a
             # specific, honest explanation.
             soon_panel = await page.evaluate("""() => {
@@ -963,6 +1075,7 @@ async def _run_browser_checks() -> None:
             # (_createOpenCat is currently 'sticker_pack' from soon_panel above --
             # calling it again toggles that same panel closed).
             await page.evaluate("createOpenCategory('sticker_pack'); document.getElementById('create-advanced-toggle').click()")
+            await page.unroute("**/api/products", _block_real_products)
 
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the

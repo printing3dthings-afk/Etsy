@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "2e3d30e-v242"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2e3d30e-v243"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -10518,11 +10518,28 @@ def _produce_build_product(inp: dict) -> dict:
     Same honesty guard as the sticker builder (top rule — NEVER LIE): planner
     builds return needs_visual_qc:true (AI can garble in-image text, which no
     file gate catches) — wall_art/coloring_pages don't generate new AI art in
-    this flow, so that flag doesn't apply to them."""
+    this flow UNLESS a `description` is supplied for a genuinely new pid with
+    no existing art/catalog entry (2026-07-22, see below), in which case the
+    same honesty flag applies to them too.
+
+    (2026-07-22) A genuinely new wall_art/coloring_pages pid with no existing
+    source art / catalog entry can now actually be BUILT, not just cleanly
+    rejected: pass `description` (free text describing the art, or for
+    coloring_pages one subject per line) and this generates real new art via
+    the same approved-engine pipeline every other AI image call in this app
+    uses, before continuing into the existing build chain. On a clean exit,
+    a background watcher thread durably registers the new product (as a
+    `status: "draft"`, never auto-published) so it shows up in Products for
+    review -- see _register_new_product_overlay()."""
     pid = str((inp or {}).get("pid", "")).strip().upper()
     if not pid:
         return {"error": "pid is required (e.g. 'DP1030', 'WA1030', or a coloring-pages product_id)"}
     category = _resolve_build_category(pid, (inp or {}).get("category"))
+    description = str((inp or {}).get("description", "")).strip()
+    extra_args: list[str] = []
+    reg_name: str | None = None
+    reg_price: float | None = None
+    reg_files: list[str] | None = None
 
     if category in ("wall_art", "wall_art_bundle"):
         # Pre-flight check (2026-07-22, mirroring the digital_planner branch
@@ -10539,13 +10556,22 @@ def _produce_build_product(inp: dict) -> dict:
             )
         except Exception as exc:  # noqa: BLE001
             return {"error": f"wall-art builder unavailable: {exc}"}
-        if not has_source_art:
-            return {"error": f"No source art found for {pid} — add {pid}.jpg to "
-                              f"product_files/ (or upscaled/) first, then build."}
-        script_name, log_suffix, proc_label = "build_wallart_product.py", "wallart_build", "build_wallart_product"
         engine = None
-        steps = ["print-size ZIP", "quality check"]
-        needs_visual_qc = False
+        if not has_source_art:
+            if not description:
+                return {"error": f"No source art found for {pid}. Add {pid}.jpg to "
+                                  f"product_files/ (or upscaled/) yourself, or describe the "
+                                  f"art you want in the 'new one' box and I'll generate it."}
+            engine, eng_err = _resolve_art_engine(inp)
+            if eng_err:
+                return {"error": eng_err}
+            extra_args = ["--description", description, "--engine", engine]
+            reg_name, reg_price = description[:120] or pid, None
+            reg_files = [f"data/digital_products/print_zips/{pid}_print_sizes.zip"]
+        script_name, log_suffix, proc_label = "build_wallart_product.py", "wallart_build", "build_wallart_product"
+        steps = (["generate art", "print-size ZIP", "quality check"] if extra_args
+                  else ["print-size ZIP", "quality check"])
+        needs_visual_qc = bool(extra_args)  # new AI art can garble details -- eyeball it
     elif category == "coloring_pages":
         # Pre-flight check (2026-07-22): build_coloring_product.py's own
         # _catalog_lookup() hard-requires the pid to already be a
@@ -10553,19 +10579,35 @@ def _produce_build_product(inp: dict) -> dict:
         # it infers which theme pack to build) -- reuse that exact function
         # rather than duplicating its logic, and fail fast with the real
         # reason instead of spawning a subprocess that exits 2 minutes later.
+        #
+        # Check the REAL catalog state first, THEN fall back to `description`
+        # -- not the other way around. A stale leftover description (typed
+        # while "+ new one" was open, not cleared when switching back to the
+        # picker) must never hijack a rebuild of an EXISTING product into
+        # generating brand-new pages instead. Same ordering wall_art already
+        # uses above (has_source_art checked before description is read).
         try:
             import build_coloring_product as _bcp
             catalog_hit = _bcp._catalog_lookup(pid)
         except Exception as exc:  # noqa: BLE001
             return {"error": f"coloring-pages builder unavailable: {exc}"}
-        if catalog_hit is None:
-            return {"error": f"{pid} isn't in the coloring-pages catalog yet (or has no "
-                              f"files listed). Pick an existing set from the list, or add "
-                              f"it to the catalog first."}
-        script_name, log_suffix, proc_label = "build_coloring_product.py", "coloring_build", "build_coloring_product"
         engine = None
-        steps = ["coloring pages", "quality check"]
-        needs_visual_qc = False
+        if catalog_hit is None:
+            if not description:
+                return {"error": f"{pid} isn't in the coloring-pages catalog yet (or has no "
+                                  f"files listed). Pick an existing set from the list, or "
+                                  f"describe a new theme in the 'new one' box and I'll build it."}
+            engine, eng_err = _resolve_art_engine(inp)
+            if eng_err:
+                return {"error": eng_err}
+            extra_args = ["--description", description, "--engine", engine]
+            reg_name, reg_price = description.splitlines()[0][:120] or pid, None
+            # PAGES_PER_SET caps subjects at 5 -> always exactly one ZIP, deterministic.
+            reg_files = [f"data/digital_products/coloring_pages/sets/coloring_{pid.lower()}_set_01.zip"]
+        script_name, log_suffix, proc_label = "build_coloring_product.py", "coloring_build", "build_coloring_product"
+        steps = (["coloring pages (new theme)", "quality check"] if extra_args
+                  else ["coloring pages", "quality check"])
+        needs_visual_qc = bool(extra_args)
     elif category == "digital_planner":
         engine, eng_err = _resolve_art_engine(inp)
         if eng_err:
@@ -10594,11 +10636,23 @@ def _produce_build_product(inp: dict) -> dict:
     except Exception:  # noqa: BLE001
         _logf = subprocess.DEVNULL
     proc = subprocess.Popen(
-        [sys.executable, str(script), pid],
+        [sys.executable, str(script), pid] + extra_args,
         stdout=_logf, stderr=subprocess.STDOUT, cwd=str(ROOT),
         env=_subprocess_env_with_engine(engine) if engine else None,
     )
     _LONG_RUNNING_PROCS[proc.pid] = (proc, f"{proc_label}:{pid}", datetime.now(timezone.utc))
+    if category in ("wall_art", "wall_art_bundle", "coloring_pages") and reg_files is not None:
+        # A watcher thread, not inline registration: only a CLEAN exit (0)
+        # means the files this record claims actually exist. Registering
+        # eagerly (before the subprocess even finishes) would let a failed
+        # build register a product whose deliverables don't exist -- exactly
+        # the kind of thing CLAUDE.md's top-priority rule forbids.
+        def _watch_and_register(_proc=proc, _pid=pid, _cat=category, _name=reg_name,
+                                 _price=reg_price, _files=reg_files, _desc=description):
+            rc = _proc.wait()
+            if rc == 0:
+                _register_new_product_overlay(_pid, _cat, _name or _pid, _price, _files, _desc)
+        threading.Thread(target=_watch_and_register, daemon=True).start()
     result = {
         "pid": pid,
         "category": category,
@@ -10814,29 +10868,56 @@ def _build_products_status(catalog: list[dict], file_exists_fn, overrides: dict 
     action's result (a brand-new etsy_listing_id) has to live somewhere that
     survives a Railway redeploy, so it's layered on top of the base catalog
     here instead. Optional and defaults to no overrides so every existing
-    caller/test keeps working unchanged."""
+    caller/test keeps working unchanged.
+
+    (2026-07-22) An override entry can ALSO carry `is_new_product: true` --
+    a full record for a product with no base-catalog entry at all, written
+    by _register_new_product_overlay() once a Create-screen "+ new one"
+    build for wall_art/coloring_pages finishes successfully. Those get
+    synthesized into an extra row below so a freshly-built product actually
+    shows up in Products/reviewable, without ever writing to the
+    git-tracked catalog file."""
     overrides = overrides or {}
-    products = []
-    for p in catalog:
-        files = p.get("files", []) or []
-        file_status = [{"name": Path(f).name, "exists": file_exists_fn(f)} for f in files]
-        ov = overrides.get(p.get("product_id"), {})
-        no_files_required = p.get("category") in _NO_FILES_REQUIRED_CATEGORIES
-        products.append({
-            "id": p.get("product_id"),
-            "title": p.get("name", ""),
-            "listing_id": ov.get("etsy_listing_id") or p.get("etsy_listing_id"),
-            "category": p.get("category", "uncategorized"),
-            "status": ov.get("status") or p.get("status", "active"),
-            "price": p.get("price"),
-            "files": file_status,
-            "all_files_present": (
-                None if no_files_required
-                else (all(fs["exists"] for fs in file_status) if file_status else None)
-            ),
-            "files_not_applicable": no_files_required,
-        })
+    products = [_product_status_row(p, file_exists_fn, overrides) for p in catalog]
+    known_ids = {p.get("product_id") for p in catalog}
+    for pid, ov in overrides.items():
+        if ov.get("is_new_product") and pid not in known_ids:
+            synthetic = {
+                "product_id": pid,
+                "name": ov.get("name", pid),
+                "category": ov.get("category", "uncategorized"),
+                "price": ov.get("price"),
+                "files": ov.get("files", []),
+                "status": ov.get("status", "draft"),
+                "etsy_listing_id": ov.get("etsy_listing_id", ""),
+            }
+            products.append(_product_status_row(synthetic, file_exists_fn, overrides))
     return products
+
+
+def _product_status_row(p: dict, file_exists_fn, overrides: dict) -> dict:
+    """One catalog (or synthesized) entry -> a Products-screen row. Extracted
+    from _build_products_status()'s loop body (2026-07-22) so the same
+    per-entry computation applies identically to real catalog entries and to
+    synthesized is_new_product rows."""
+    files = p.get("files", []) or []
+    file_status = [{"name": Path(f).name, "exists": file_exists_fn(f)} for f in files]
+    ov = overrides.get(p.get("product_id"), {})
+    no_files_required = p.get("category") in _NO_FILES_REQUIRED_CATEGORIES
+    return {
+        "id": p.get("product_id"),
+        "title": p.get("name", ""),
+        "listing_id": ov.get("etsy_listing_id") or p.get("etsy_listing_id"),
+        "category": p.get("category", "uncategorized"),
+        "status": ov.get("status") or p.get("status", "active"),
+        "price": p.get("price"),
+        "files": file_status,
+        "all_files_present": (
+            None if no_files_required
+            else (all(fs["exists"] for fs in file_status) if file_status else None)
+        ),
+        "files_not_applicable": no_files_required,
+    }
 
 
 @app.get("/api/products")
@@ -10879,6 +10960,22 @@ def _find_catalog_product(product_id: str) -> dict | None:
     for entry in catalog:
         if entry.get("product_id") == product_id:
             return entry
+    # (2026-07-22) Fall back to a registered is_new_product overlay entry --
+    # a product built via the Create screen's "+ new one" flow for
+    # wall_art/coloring_pages has no base-catalog entry at all (see
+    # _register_new_product_overlay()). Without this, GET /api/products/{id}
+    # /review and stage-publish would 404 for a real, freshly-built product.
+    ov = _product_catalog_overrides().get(product_id)
+    if ov and ov.get("is_new_product"):
+        return {
+            "product_id": product_id,
+            "name": ov.get("name", product_id),
+            "category": ov.get("category", "uncategorized"),
+            "price": ov.get("price"),
+            "status": ov.get("status", "draft"),
+            "etsy_listing_id": ov.get("etsy_listing_id", ""),
+            "files": ov.get("files", []),
+        }
     return None
 
 
@@ -12790,24 +12887,30 @@ def _catalog_file_url(f: str) -> str | None:
 
 
 # Durable overlay for product_catalog.json fields that change at runtime
-# (etsy_listing_id, status) once a create_listing staged action executes.
-# product_catalog.json itself is git-tracked and this server never writes it
-# on a real deploy -- Railway redeploys from a fresh git checkout, so a raw
-# write there would vanish on next deploy and risk a duplicate Etsy listing
-# on a second publish attempt. Mirrors the exact "git checkout isn't
-# durable, use the volume" reasoning _FILE_ROOTS["volume"] already exists
-# for. No volume configured (local/sandbox) -> falls back to patching
-# data/product_catalog.json directly so local testing still works end-to-end.
+# (etsy_listing_id, status) once a create_listing staged action executes, and
+# (2026-07-22) for registering a WHOLLY NEW product built via the Create
+# screen's "+ new one" flow for wall_art/coloring_pages (see
+# _register_new_product_overlay()). product_catalog.json itself is
+# git-tracked and this server never writes it, in any environment -- a raw
+# write would vanish on the next Railway redeploy (fresh git checkout) and
+# risk a duplicate Etsy listing on a second publish attempt, and locally it
+# would pollute a git-tracked file with test/dev scratch data. Same
+# volume-or-local-data-dir pattern every other durable sidecar in this file
+# uses (e.g. _FILE_ROOTS["reference_images"]) -- previously this constant's
+# local fallback was `None`, which made _write_product_catalog_override()
+# silently patch data/product_catalog.json directly instead (fine for its
+# original patch-an-existing-entry use case, but a silent no-op for
+# registering a pid with no existing entry -- exactly this feature's case).
 _PRODUCT_CATALOG_OVERRIDES_PATH = (
     (_FILE_ROOTS["volume"] / "product_catalog_overrides.json") if "volume" in _FILE_ROOTS
-    else None
+    else (ROOT / "data" / "product_catalog_overrides.json")
 )
 
 
 def _product_catalog_overrides() -> dict:
-    """dict keyed by product_id -> {"etsy_listing_id": ..., "status": ..., "published_at": ...}."""
-    if _PRODUCT_CATALOG_OVERRIDES_PATH is None:
-        return {}
+    """dict keyed by product_id -> {"etsy_listing_id": ..., "status": ..., "published_at": ...}
+    for a patch of an existing catalog entry, or (2026-07-22) the full record
+    for an `is_new_product: true` entry with no base-catalog match at all."""
     try:
         return json.loads(_PRODUCT_CATALOG_OVERRIDES_PATH.read_text())
     except (OSError, json.JSONDecodeError):
@@ -12815,30 +12918,57 @@ def _product_catalog_overrides() -> dict:
 
 
 def _write_product_catalog_override(product_id: str, updates: dict) -> None:
-    """Safe read-modify-write (temp file + atomic replace). Falls back to
-    patching data/product_catalog.json's matching entry in place when no
-    durable volume is configured -- local/dev only; a real deploy always has
-    _PRODUCT_CATALOG_OVERRIDES_PATH set, so this branch never runs there."""
-    if _PRODUCT_CATALOG_OVERRIDES_PATH is not None:
-        overrides = _product_catalog_overrides()
-        overrides.setdefault(product_id, {}).update(updates)
-        _PRODUCT_CATALOG_OVERRIDES_PATH.parent.mkdir(parents=True, exist_ok=True)
-        tmp = _PRODUCT_CATALOG_OVERRIDES_PATH.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(overrides, indent=2))
-        tmp.replace(_PRODUCT_CATALOG_OVERRIDES_PATH)
+    """Safe read-modify-write (temp file + atomic replace) into the durable
+    overrides sidecar -- same file/path in every environment now (2026-07-22;
+    previously local/dev with no volume patched data/product_catalog.json
+    directly instead, which silently no-op'd for a product_id with no
+    existing entry to patch -- see _PRODUCT_CATALOG_OVERRIDES_PATH's own
+    comment)."""
+    overrides = _product_catalog_overrides()
+    overrides.setdefault(product_id, {}).update(updates)
+    _PRODUCT_CATALOG_OVERRIDES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = _PRODUCT_CATALOG_OVERRIDES_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(overrides, indent=2))
+    tmp.replace(_PRODUCT_CATALOG_OVERRIDES_PATH)
+
+
+def _register_new_product_overlay(product_id: str, category: str, name: str,
+                                   price: float | None, files: list[str],
+                                   description: str = "") -> None:
+    """Durably registers a brand-new product built via the Create screen's
+    '+ new one' flow for wall_art/coloring_pages (2026-07-22). Reuses the
+    SAME sidecar _write_product_catalog_override() already writes for
+    create_listing patches -- an is_new_product record is a superset shape,
+    not a new file. Called ONLY after the build subprocess exits 0 (see
+    _produce_build_product()'s watcher thread) so a failed/incomplete build
+    never registers a product whose files don't actually exist.
+
+    Never publishes anything -- status is always "draft", etsy_listing_id
+    always "". Publishing stays exactly as Scott-gated as every other build
+    on this page (existing stage-publish flow, untouched by this function).
+
+    Refuses to ever shadow a real base-catalog entry -- a pid collision with
+    an existing product must never silently get a synthetic overlay welded
+    on top. Also idempotent: calling this twice for the same already-
+    registered pid (e.g. Scott taps "Regenerate" later) is a safe no-op,
+    since _find_catalog_product() returns truthy for an already-registered
+    is_new_product entry too."""
+    if _find_catalog_product(product_id) is not None:
         return
-    path = Path("data/product_catalog.json")
-    try:
-        catalog = json.loads(path.read_text())
-    except (OSError, json.JSONDecodeError):
-        return
-    for entry in catalog:
-        if entry.get("product_id") == product_id:
-            entry.update(updates)
-            break
-    tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(catalog, indent=2))
-    tmp.replace(path)
+    _write_product_catalog_override(product_id, {
+        "is_new_product": True,
+        "product_id": product_id,
+        "name": name,
+        "category": category,
+        "price": price,
+        "status": "draft",
+        "etsy_listing_id": "",
+        "files": files,
+        "description": description,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "source": "create_screen_new_code",
+    })
+
 
 # Staged listing photos awaiting Scott's approve/reject in the Action Center —
 # durable under the Railway volume when mounted (survives redeploys, same reason

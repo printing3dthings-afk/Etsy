@@ -130,6 +130,63 @@ def test_missing_category_and_status_default_gracefully():
     check(p["status"] == "active", f"missing status should default to 'active', got {p['status']}")
 
 
+# ── is_new_product overlay synthesis (2026-07-22) ───────────────────────────
+# A brand-new product built via the Create screen's "+ new one" flow for
+# wall_art/coloring_pages has no base-catalog entry at all -- see
+# _register_new_product_overlay() in main.py. _build_products_status() must
+# synthesize a real row for it from the overlay alone.
+
+def test_new_product_overlay_synthesizes_a_row():
+    catalog = [{"product_id": "DP1026", "name": "x", "category": "digital_planner",
+                "status": "active", "price": 1.0, "files": []}]
+    overrides = {"WA9999": {
+        "is_new_product": True, "product_id": "WA9999", "name": "Boho sun art",
+        "category": "wall_art", "price": None, "status": "draft",
+        "etsy_listing_id": "", "files": ["data/digital_products/print_zips/WA9999_print_sizes.zip"],
+    }}
+    result = server._build_products_status(catalog, lambda rel: True, overrides)
+    check(len(result) == 2, f"expected base entry + 1 synthesized row, got {len(result)}: {result}")
+    synth = next((p for p in result if p["id"] == "WA9999"), None)
+    check(synth is not None, f"WA9999 must appear as a synthesized row, got {result}")
+    check(synth["title"] == "Boho sun art", f"got: {synth}")
+    check(synth["category"] == "wall_art", f"got: {synth}")
+    check(synth["status"] == "draft", f"a freshly-registered product must be status=draft, got: {synth}")
+    check(synth["all_files_present"] is True, f"got: {synth}")
+
+
+def test_new_product_overlay_does_not_duplicate_existing_entry():
+    # A pid present in BOTH the base catalog and the overrides-as-is_new_product
+    # (e.g. a stale/incorrect overlay entry) must never produce two rows.
+    catalog = [{"product_id": "WA1001", "name": "Real one", "category": "wall_art",
+                "status": "active", "price": 5.99, "files": []}]
+    overrides = {"WA1001": {"is_new_product": True, "product_id": "WA1001",
+                             "name": "Should never surface", "category": "wall_art",
+                             "price": None, "status": "draft", "files": []}}
+    result = server._build_products_status(catalog, lambda rel: True, overrides)
+    check(len(result) == 1, f"a pid already in the base catalog must never be duplicated, got {len(result)}: {result}")
+    check(result[0]["title"] == "Real one", f"the real base-catalog entry must win, got: {result[0]}")
+
+
+def test_new_product_overlay_missing_files_reports_correctly():
+    overrides = {"COLOR9999": {
+        "is_new_product": True, "product_id": "COLOR9999", "name": "New theme",
+        "category": "coloring_pages", "price": None, "status": "draft",
+        "files": ["data/digital_products/coloring_pages/sets/coloring_color9999_set_01.zip"],
+    }}
+    result = server._build_products_status([], lambda rel: False, overrides)
+    check(len(result) == 1, f"got {result}")
+    check(result[0]["all_files_present"] is False, f"a missing file must report all_files_present=False, got: {result[0]}")
+
+
+def test_overlay_without_is_new_product_marker_is_not_synthesized():
+    # A plain patch-only overlay entry (etsy_listing_id/status update for an
+    # EXISTING product, the pre-2026-07-22 shape) must never be mistaken for
+    # a new-product record just because its pid isn't in this test's catalog.
+    overrides = {"DP1099": {"etsy_listing_id": "555", "status": "listed_draft"}}
+    result = server._build_products_status([], lambda rel: True, overrides)
+    check(result == [], f"a non-is_new_product overlay entry must not synthesize a row, got {result}")
+
+
 def main() -> int:
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
     ran = 0

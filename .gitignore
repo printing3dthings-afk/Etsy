@@ -49,6 +49,12 @@ data/staged_photos/
 data/reference_images/
 data/reference_images_meta.json
 
+# Durable overlay for product_catalog.json fields patched/registered at
+# runtime (etsy_listing_id/status changes, and brand-new products built via
+# the Create screen's "+ new one" flow) -- runtime content, never the git
+# source of truth (use Railway Volume in prod, same as staged_photos above).
+data/product_catalog_overrides.json
+
 # Drafted review responses (tools/review_monitor.py) and the seen-reviews
 # dedupe state -- can reference real buyer review text. 2026-07-15 security
 # audit: these were the only two data/ paths with buyer-adjacent content and

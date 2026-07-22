@@ -91,24 +91,37 @@ def test_write_and_read_override_round_trips_via_volume_path():
                   f"expected merge not clobber, got: {result2}")
 
 
-def test_no_volume_configured_falls_back_to_patching_catalog_json():
+def test_write_never_touches_the_git_tracked_catalog_file():
+    # 2026-07-22: _PRODUCT_CATALOG_OVERRIDES_PATH no longer has a `None`
+    # local-fallback branch that patched data/product_catalog.json directly
+    # when no durable volume was configured -- that silently no-op'd for a
+    # brand-new product_id with no existing entry to patch, exactly the
+    # new-product-registration case this fix enables (see
+    # _register_new_product_overlay()). Local/dev and production now both
+    # go through the same sidecar-file mechanism (just a different path);
+    # confirm the git-tracked catalog is genuinely never written to.
     with tempfile.TemporaryDirectory() as tmpdir:
         data_dir = Path(tmpdir) / "data"
         data_dir.mkdir()
         catalog_path = data_dir / "product_catalog.json"
-        catalog_path.write_text(json.dumps([
+        original_catalog = [
             {"product_id": "DP1099", "name": "Test", "status": "ready_for_review", "etsy_listing_id": ""},
-        ]))
+        ]
+        catalog_path.write_text(json.dumps(original_catalog))
+        fake_overrides_path = data_dir / "product_catalog_overrides.json"
         orig_cwd = os.getcwd()
         try:
             os.chdir(tmpdir)
-            with patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", None):
+            with patch.object(server, "_PRODUCT_CATALOG_OVERRIDES_PATH", fake_overrides_path):
                 server._write_product_catalog_override("DP1099", {"etsy_listing_id": "777", "status": "listed_draft"})
-            updated = json.loads(catalog_path.read_text())
+                overrides = server._product_catalog_overrides()
+            untouched = json.loads(catalog_path.read_text())
         finally:
             os.chdir(orig_cwd)
-        check(updated[0]["etsy_listing_id"] == "777", f"got: {updated}")
-        check(updated[0]["status"] == "listed_draft", f"got: {updated}")
+        check(overrides.get("DP1099", {}).get("etsy_listing_id") == "777", f"got: {overrides}")
+        check(overrides.get("DP1099", {}).get("status") == "listed_draft", f"got: {overrides}")
+        check(untouched == original_catalog,
+              f"the git-tracked catalog file must never be written to by this function, got: {untouched}")
 
 
 # ── GET /api/products/{id}/review ───────────────────────────────────────────

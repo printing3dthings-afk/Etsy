@@ -3502,26 +3502,41 @@ let _activeScreen = 'cmd';
 // instead of a static "Check Files" dead end (see that function's own docstring).
 const _CREATE_CATEGORIES = {
   digital_planner: {
-    icon: '🗓️', label: 'Digital Planner', real: true, usesEngine: true,
+    // allowNewCode: false -- Digital Planner is a closed, hardcoded set of
+    // exactly 9 pre-designed planners (DP1026-1034, generate_planner_v2.py's
+    // _ALL_V2_PIDS), all of which are already in the picker dropdown above.
+    // The "+ new one" free-text option could NEVER succeed for any other
+    // code -- showing it was itself a false promise (Scott reported this
+    // live, 2026-07-22: "every action on this page has to work"). Removed
+    // here rather than just erroring honestly like Wall Art/Coloring Pages
+    // below, because there's no code path that could ever make it work --
+    // adding a 10th planner requires a developer editing generate_planner_v2.py
+    // and redeploying, not something typeable in this box.
+    icon: '🗓️', label: 'Digital Planner', real: true, usesEngine: true, allowNewCode: false,
     blurb: 'A full planner — dated and undated PDF versions, a cover, clickable menus, boxes you can type into, and a matching kawaii sticker pack.',
     placeholder: 'e.g. DP1030', primaryLabel: 'Build this planner',
   },
   wall_art: {
-    // usesEngine: false -- this one-tap flow (build_wallart_product.py) only
-    // packages the multi-size print ZIP from EXISTING art; it generates no new
-    // AI art, so an art-style choice here would be a dead control (main.py's
-    // _produce_build_product() passes engine=None for this category, and the
-    // subprocess env only carries an engine var when one is set). Found in QA
-    // review, 2026-07-22 -- the selector used to render for every real
-    // category regardless of whether the backend ever reads it.
+    // usesEngine: false governs the OUTER "Advanced > Art style" disclosure,
+    // which belongs to the existing-product REBUILD path only (packaging
+    // print sizes from art that's already on disk -- genuinely generates no
+    // new AI art, so a style picker there stays a dead control). The new-art
+    // generation path (usesNewArtDescription, 2026-07-22) is a separate,
+    // narrower control that only appears inside "+ new one" -- see
+    // _renderCategoryPanelHtml()'s usesNewArtDescription branch below.
     icon: '🖼️', label: 'Wall Art', real: true, usesEngine: false,
+    usesNewArtDescription: true,
+    newArtPlaceholder: 'Describe the wall art you want, e.g. "a boho sun in terracotta and cream watercolor"',
     blurb: 'Every print size a buyer expects, ready to sell — small to large, square, and standard paper sizes, all print-quality.',
     placeholder: 'e.g. WA1030', primaryLabel: 'Build this wall art',
   },
   coloring_pages: {
-    // usesEngine: false -- same reason as wall_art above (build_coloring_product.py
-    // generates no new AI art in this flow either).
+    // usesEngine: false -- same reason as wall_art above (the existing-product
+    // rebuild path repackages already-generated pages, no new art). New-theme
+    // generation (usesNewArtDescription) is the separate new-code path.
     icon: '🎨', label: 'Coloring Pages', real: true, usesEngine: false,
+    usesNewArtDescription: true,
+    newArtPlaceholder: 'One coloring-page subject per line (up to 5), e.g.\\nA sleepy fox curled under an oak tree\\nA hot air balloon drifting over mountains',
     blurb: 'A themed coloring-page set, packaged and ready to sell.',
     placeholder: 'e.g. COLOR1030', primaryLabel: 'Build these coloring pages',
   },
@@ -3592,11 +3607,25 @@ function _renderCategoryPanelHtml(key){
   html += '<div id="create-pid-picker-wrap">';
   html += '<select id="create-pid-select" aria-label="Choose an existing ' + escHtml(cfg.label) + '" onchange="_createPidSelectChanged()" style="width:100%;margin-bottom:6px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">'
     + '<option value="">Choose one you already have…</option></select>';
-  html += '<span class="cd-newcode-link" onclick="_createToggleNewCode(true)">＋ This is a new one — I\\'ll type the code</span>';
+  if (cfg.allowNewCode !== false) {
+    html += '<span class="cd-newcode-link" onclick="_createToggleNewCode(true)">＋ This is a new one — I\\'ll type the code</span>';
+  }
   html += '</div>';
   html += '<div id="create-pid-freetext-wrap" style="display:none;margin-bottom:6px">'
-    + '<input id="bx-pid" type="text" placeholder="' + escHtml(cfg.placeholder) + '" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />'
-    + '<div><span class="cd-newcode-link" onclick="_createToggleNewCode(false)">← pick from the list instead</span></div></div>';
+    + '<input id="bx-pid" type="text" placeholder="' + escHtml(cfg.placeholder) + '" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />';
+  // usesNewArtDescription (2026-07-22): Wall Art / Coloring Pages can now
+  // actually generate genuinely new art/pages for a brand-new code, not just
+  // reject it -- but that needs a description of what to make (a bare code
+  // like "WA1050" carries zero information about the design) plus an engine
+  // choice, since real AI generation happens on this path. Scoped to the
+  // free-text "new code" sub-panel only -- the existing-product rebuild path
+  // above still needs neither.
+  if (cfg.usesNewArtDescription) {
+    html += '<textarea id="bx-description" rows="3" placeholder="' + escHtml(cfg.newArtPlaceholder || '') + '" style="width:100%;box-sizing:border-box;margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:13px;resize:vertical"></textarea>';
+    html += '<label style="font-size:11px;color:var(--muted);display:block;margin:6px 0 4px">Art style</label>';
+    html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
+  }
+  html += '<div style="margin-top:6px"><span class="cd-newcode-link" onclick="_createToggleNewCode(false)">← pick from the list instead</span></div></div>';
 
   // usesEngine: false (wall_art, coloring_pages) -- this category's one-tap
   // build generates no new AI art, so an art-style picker would be a dead
@@ -3660,6 +3689,14 @@ function _createToggleNewCode(showFreeText){
     // onchange would (found in QA review, 2026-07-22: this path previously left
     // #bx-pid holding stale free-typed text after "pick from the list instead").
     _createPidSelectChanged();
+    // Same reasoning for a typed art description (2026-07-22 new-art flow):
+    // switching back to an existing-product pick must never carry a stale
+    // description along -- the backend already guards against this too
+    // (checks real catalog/source-art state before ever reading description),
+    // but clearing it here means the UI never even shows a leftover value
+    // that isn't going to be used.
+    const descEl = document.getElementById('bx-description');
+    if (descEl) descEl.value = '';
   }
 }
 function _createSyncProductPicker(key){
@@ -4026,6 +4063,8 @@ async function buildProductRun(){
   const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
   const engEl=document.getElementById('bx-engine');
   const engine=(engEl&&engEl.value)||'gemini';
+  const descEl=document.getElementById('bx-description');
+  const description=((descEl&&descEl.value)||'').trim();
   if(!pid){
     // buildProductRun() is the ONE main build button shared by every real
     // category (Digital Planner, Wall Art, Coloring Pages) -- the empty-pid
@@ -4049,7 +4088,7 @@ async function buildProductRun(){
     // this live, 2026-07-22: "COLOR01 isn't a configured planner...").
     const r=await fetchWithTimeout(BASE+'/api/produce/build-product', {
       method:'POST', headers:{Authorization:'Bearer '+TOKEN, 'Content-Type':'application/json'},
-      body: JSON.stringify({pid, engine, category: _createOpenCat})
+      body: JSON.stringify({pid, engine, category: _createOpenCat, description})
     }, 30000);
     const d=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));

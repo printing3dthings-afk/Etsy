@@ -1,8 +1,14 @@
 """
-Art Creation Tools — generates digital art (DALL-E 3) and printable planner PDFs.
+Art Creation Tools — generates digital art and printable planner PDFs.
+
+Stale docstring fixed 2026-07-22: image generation is gpt-image-1 (via
+_generate_digital_art()'s own direct call) or, for the newer
+generate_wall_art_master() path, any approved engine (gpt-image-1/gpt-image-2/
+Gemini/Ideogram) routed through tools/image_gen.py's generate_image() — never
+DALL-E 3, despite what this docstring said for a long time.
 
 Requires for full functionality:
-  OPENAI_API_KEY  — DALL-E 3 image generation
+  OPENAI_API_KEY  — gpt-image-1/gpt-image-2 image generation
   Pillow          — image processing (pip install Pillow)
   reportlab       — PDF planner generation (pip install reportlab)
 
@@ -2061,6 +2067,34 @@ def _create_size_comparison(data: dict, store: DataStore) -> str:
         "path":       out,
         "note":       "Size comparison uses the REAL art composited at 3 print sizes.",
     }, indent=2)
+
+
+def generate_wall_art_master(product_id: str, prompt: str, engine: str | None = None,
+                              hand_painted_medium: str | None = None) -> str:
+    """Generate + upscale a print-ready master JPG for product_id, saved to
+    PRODUCT_FILES_DIR/{product_id}.jpg -- the exact path build_wallart_product.py
+    already checks for (see its own docstring). Adapted from
+    _generate_digital_art() below (2026-07-22, Create-screen "+ new one" new-art
+    flow) but decoupled from that function's DataStore/product-record
+    bookkeeping: this is called with a product_id Scott typed himself (no
+    existing "product" record to look up or mint), and routes through
+    tools/image_gen.py's generate_image() (engine-validated against the
+    approved list, same as every other AI image call in this app) instead of
+    _generate_digital_art()'s raw-urllib gpt-image-1-only call.
+
+    Raises ImageGenError (propagated from image_gen.generate_image) or
+    RuntimeError (from _upscale_for_print if Pillow is missing) on failure --
+    the caller (build_wallart_product.py) is expected to let this exit
+    non-zero rather than silently continue with no source art."""
+    from tools.image_gen import generate_image, PORTRAIT
+    _ensure_dirs()
+    final_prompt = enrich_prompt_with_medium(prompt, hand_painted_medium)
+    raw_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}_raw.png")
+    generate_image(final_prompt, raw_path, size=PORTRAIT, quality="high",
+                    output_format="png", engine=engine)
+    file_path = os.path.join(PRODUCT_FILES_DIR, f"{product_id}.jpg")
+    _upscale_for_print(raw_path, file_path, target_px=3000)  # Gate 1: >=3000px short edge
+    return file_path
 
 
 def _generate_digital_art(data: dict, store: DataStore) -> str:

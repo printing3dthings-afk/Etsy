@@ -12,6 +12,7 @@ import sys
 import tempfile
 import traceback
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -244,6 +245,71 @@ def test_build_product_agent_dispatch():
     out = server._execute_agent_tool("build_product", {"pid": "DP9999"})
     check(isinstance(out, dict) and "error" in out,
           f"agent dispatch of build_product should reject an unconfigured code, got {out}")
+
+
+# ── Wall Art / Coloring Pages new-art generation flow (2026-07-22) ─────────
+# Scott: "every action on this page has to work ... if this doesn't work we
+# don't have a business." A genuinely new wall_art/coloring_pages pid with
+# no existing source art/catalog entry can now actually be built by passing
+# `description` -- these test that path's pre-flight validation and
+# successful-kickoff shape (mocked subprocess.Popen, never a real build).
+
+def test_wallart_new_pid_no_source_no_description_rejected_cleanly():
+    out = server._produce_build_product({"pid": "WA_TOTALLY_NEW_TEST_PID", "category": "wall_art"})
+    check("error" in out, f"a new wall_art pid with no description must error, got {out}")
+    check(not out.get("started"), f"must not start, got {out}")
+    check("new one" in out["error"].lower() or "describe" in out["error"].lower(),
+          f"the error should point at the new-art option, got {out}")
+
+
+def test_wallart_new_pid_with_description_starts_generation_steps():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900001
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "WA_TOTALLY_NEW_TEST_PID", "category": "wall_art",
+                "description": "a boho sun in terracotta and cream watercolor",
+            })
+    server._LONG_RUNNING_PROCS.pop(900001, None)
+    check(out.get("started") is True, f"a new pid with a real description must start, got {out}")
+    check("generate art" in out.get("steps", []), f"steps must include the new art-generation step, got {out}")
+    check(out.get("needs_visual_qc") is True, f"AI-generated art needs the visual-QC honesty flag, got {out}")
+    check(out.get("engine") == "gemini", f"default engine should resolve to gemini, got {out}")
+
+
+def test_wallart_description_with_bad_engine_rejected_before_spawning():
+    with patch.object(server.subprocess, "Popen") as mock_popen:
+        out = server._produce_build_product({
+            "pid": "WA_TOTALLY_NEW_TEST_PID", "category": "wall_art",
+            "description": "some art", "engine": "midjourney",
+        })
+    check("error" in out and not out.get("started"), f"a bad engine must error without starting, got {out}")
+    check(not mock_popen.called, "a bad engine must be caught BEFORE any subprocess spawns")
+
+
+def test_coloring_new_pid_no_catalog_no_description_rejected_cleanly():
+    out = server._produce_build_product({"pid": "COLOR_TOTALLY_NEW_TEST_PID", "category": "coloring_pages"})
+    check("error" in out, f"an uncataloged coloring_pages pid with no description must error, got {out}")
+    check(not out.get("started"), f"must not start, got {out}")
+    check("catalog" in out["error"].lower(), f"got {out}")
+
+
+def test_coloring_new_pid_with_description_starts_generation_steps():
+    fake_proc = MagicMock()
+    fake_proc.pid = 900002
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server.subprocess, "Popen", return_value=fake_proc):
+            out = server._produce_build_product({
+                "pid": "COLOR_TOTALLY_NEW_TEST_PID", "category": "coloring_pages",
+                "description": "A sleepy fox under an oak tree\nA hot air balloon over mountains",
+            })
+    server._LONG_RUNNING_PROCS.pop(900002, None)
+    check(out.get("started") is True, f"a new pid with subjects must start, got {out}")
+    check("coloring pages (new theme)" in out.get("steps", []), f"steps must flag the new-theme path, got {out}")
+    check(out.get("needs_visual_qc") is True, f"got {out}")
 
 
 def run():
