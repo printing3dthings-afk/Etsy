@@ -840,6 +840,34 @@ async def _run_browser_checks() -> None:
             check(no_dead_engine.get("coloringHasEngine") is False, f"Coloring Pages must not render the dead art-style engine picker: {no_dead_engine}")
             check(no_dead_engine.get("plannerHasEngine") is True, f"Digital Planner DOES use the engine picker and must still render it: {no_dead_engine}")
 
+            # Regression guard: Scott reported live (2026-07-22) that tapping
+            # "Build these coloring pages" with nothing picked showed "Enter a
+            # planner code first (e.g. DP1030)" -- buildProductRun() is the ONE
+            # shared build button for all 3 real categories, and its empty-pid
+            # message was hardcoded to planner wording regardless of which
+            # category's panel was actually open. Must be category-aware now.
+            wrong_category_error = await page.evaluate("""async () => {
+                createOpenCategory('coloring_pages');
+                document.getElementById('bx-pid').value = '';
+                await buildProductRun();
+                const coloringMsg = document.getElementById('bx-result').innerHTML;
+                createOpenCategory('coloring_pages'); // close
+                createOpenCategory('wall_art');
+                document.getElementById('bx-pid').value = '';
+                await buildProductRun();
+                const wallArtMsg = document.getElementById('bx-result').innerHTML;
+                createOpenCategory('wall_art'); // close
+                return {coloringMsg, wallArtMsg};
+            }""")
+            check("planner" not in wrong_category_error.get("coloringMsg", "").lower() and "DP1030" not in wrong_category_error.get("coloringMsg", ""),
+                  f"Coloring Pages' empty-pid error must not reference planners/DP1030: {wrong_category_error}")
+            check("COLOR1030" in wrong_category_error.get("coloringMsg", ""),
+                  f"Coloring Pages' empty-pid error should use its own category example: {wrong_category_error}")
+            check("planner" not in wrong_category_error.get("wallArtMsg", "").lower() and "DP1030" not in wrong_category_error.get("wallArtMsg", ""),
+                  f"Wall Art's empty-pid error must not reference planners/DP1030: {wrong_category_error}")
+            check("WA1030" in wrong_category_error.get("wallArtMsg", ""),
+                  f"Wall Art's empty-pid error should use its own category example: {wrong_category_error}")
+
             # Coming-soon tiles: never blank, never a dead click -- must show a
             # specific, honest explanation.
             soon_panel = await page.evaluate("""() => {

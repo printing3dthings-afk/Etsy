@@ -4026,7 +4026,17 @@ async function buildProductRun(){
   const pid=((pidEl&&pidEl.value)||'').trim().toUpperCase();
   const engEl=document.getElementById('bx-engine');
   const engine=(engEl&&engEl.value)||'gemini';
-  if(!pid){ if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a planner code first (e.g. DP1030).</div>'; return; }
+  if(!pid){
+    // buildProductRun() is the ONE main build button shared by every real
+    // category (Digital Planner, Wall Art, Coloring Pages) -- the empty-pid
+    // message must not hardcode "planner code"/DP1030 for all of them (Scott
+    // reported this live on Coloring Pages, 2026-07-22). Use the currently
+    // open category's own placeholder/label instead.
+    const cfg = _CREATE_CATEGORIES[_createOpenCat];
+    const example = (cfg && cfg.placeholder) || 'e.g. DP1030';
+    if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">Enter a code first (' + escHtml(example) + ').</div>';
+    return;
+  }
   if(btn) btn.disabled=true;
   if(out) out.innerHTML='<div class="hub-spinner"></div>';
   try{
