@@ -707,6 +707,127 @@ async def _run_browser_checks() -> None:
             # modal otherwise intercepts pointer events for unrelated later clicks).
             await page.evaluate("productReviewClose(); document.body.classList.remove('product-sheet-open')")
 
+            # ── Create-screen redesign (2026-07-22) -- Scott: "There is currently too
+            # much on this page ... needs to be used by someone that does not know
+            # what frank is." Replaced the old always-open tool-card stack with 7
+            # honest category tiles (3 real, 4 coming-soon), a single accordion detail
+            # panel, a collapsed Advanced Tools disclosure, and a new Reference Photos
+            # upload library. Assert the tile grid, both tile kinds' panels, the
+            # product picker, and that every relocated tool is still intact and
+            # reachable -- not just visually moved into a black hole. ──
+            await page.evaluate("showScreen('create')")
+            await page.wait_for_timeout(300)
+            tile_grid = await page.evaluate("""() => {
+                const tiles = [...document.querySelectorAll('#create-chooser .create-choice[data-cat]')];
+                return {
+                    count: tiles.length,
+                    cats: tiles.map(t => t.dataset.cat),
+                    soonCount: tiles.filter(t => t.classList.contains('soon')).length,
+                };
+            }""")
+            check(tile_grid.get("count") == 7, f"Create screen must show exactly 7 category tiles, got: {tile_grid}")
+            check(set(tile_grid.get("cats", [])) == {
+                "digital_planner", "wall_art", "coloring_pages",
+                "sticker_pack", "svg_3dprint_pack", "sublimation", "3d_print_physical",
+            }, f"unexpected tile category set: {tile_grid}")
+            check(tile_grid.get("soonCount") == 4, f"exactly 4 tiles should be 'coming soon', got: {tile_grid}")
+            check("paper_pack" not in tile_grid.get("cats", []), "paper_pack must never appear as a tile (Scott's explicit exclusion)")
+
+            # Stub _products so the real-category panel's picker has something to
+            # show (loadProducts() itself is covered by the loadProducts-early-return
+            # fix verified separately; this just gives the picker fixture data).
+            real_panel = await page.evaluate("""() => {
+                _products = [
+                    {id: 'DP1030', name: 'ADHD Planner', category: 'digital_planner'},
+                    {id: 'DP1031', name: 'Evergreen Planner', category: 'digital_planner'},
+                    {id: 'WA1001', name: 'Wall Art One', category: 'wall_art'},
+                ];
+                createOpenCategory('digital_planner');
+                const panel = document.getElementById('create-detail');
+                const picker = document.getElementById('create-pid-select');
+                return {
+                    tileOpen: document.querySelector('.create-choice[data-cat="digital_planner"]').classList.contains('open'),
+                    panelHtml: panel ? panel.innerHTML : '',
+                    pickerOptionCount: picker ? picker.options.length : 0,
+                    pickerHasDP1030: picker ? [...picker.options].some(o => o.value === 'DP1030') : false,
+                    runBtnPresent: !!document.getElementById('bx-run-btn'),
+                };
+            }""")
+            check(real_panel.get("tileOpen"), f"opening a real category should mark its tile .open: {real_panel}")
+            check("Build this planner" in real_panel.get("panelHtml", ""), f"digital_planner panel should show its plain-language primary label: {real_panel}")
+            check(real_panel.get("pickerOptionCount", 0) >= 3, f"product picker should have the placeholder + 2 DP1030/DP1031 options, got: {real_panel}")
+            check(real_panel.get("pickerHasDP1030"), f"product picker must include DP1030 from the stubbed _products: {real_panel}")
+            check(real_panel.get("runBtnPresent"), f"the build button (#bx-run-btn) must be present in a real category's panel: {real_panel}")
+
+            # Re-opening the SAME category (with _products unchanged) must not
+            # duplicate picker options -- regression guard for the idempotent-sync fix.
+            reopen_same = await page.evaluate("""() => {
+                createOpenCategory('digital_planner'); // closes it (toggle)
+                createOpenCategory('digital_planner'); // reopens fresh
+                const picker = document.getElementById('create-pid-select');
+                return {pickerOptionCount: picker ? picker.options.length : 0};
+            }""")
+            check(reopen_same.get("pickerOptionCount") == real_panel.get("pickerOptionCount"),
+                  f"reopening a category must not duplicate picker options: {reopen_same} vs first open {real_panel}")
+
+            # Coming-soon tiles: never blank, never a dead click -- must show a
+            # specific, honest explanation.
+            soon_panel = await page.evaluate("""() => {
+                createOpenCategory('sticker_pack');
+                const panel = document.getElementById('create-detail');
+                return {
+                    tileOpen: document.querySelector('.create-choice[data-cat="sticker_pack"]').classList.contains('open'),
+                    panelHtml: panel ? panel.innerHTML : '',
+                };
+            }""")
+            check(soon_panel.get("tileOpen"), f"opening a coming-soon category should still mark its tile .open: {soon_panel}")
+            soon_html = soon_panel.get("panelHtml", "")
+            check(len(soon_html.strip()) > 40, f"a coming-soon panel must never render blank: {soon_panel}")
+            check("no automatic builder" in soon_html.lower(), f"coming-soon panel must give a specific, honest reason: {soon_panel}")
+            check("Build this" not in soon_html, f"a coming-soon panel must never show a working-looking build button: {soon_panel}")
+
+            # Advanced Tools disclosure: collapsed by default, and expanding it must
+            # reveal every relocated-but-unchanged tool with its IDs intact.
+            advanced = await page.evaluate("""() => {
+                const body = document.getElementById('create-advanced-body');
+                const collapsedByDefault = body ? body.style.display === 'none' : null;
+                document.getElementById('create-advanced-toggle').click();
+                return {
+                    collapsedByDefault,
+                    expandedNow: body ? body.style.display !== 'none' : null,
+                    svgPresent: !!document.getElementById('create-svg'),
+                    qcPresent: !!document.getElementById('create-qc'),
+                    videoPresent: !!document.getElementById('create-video'),
+                    socialPresent: !!document.getElementById('create-social'),
+                    svgDropzonePresent: !!document.getElementById('svgc-dropzone'),
+                    qcRunBtnPresent: !!document.getElementById('qc-run-btn'),
+                };
+            }""")
+            check(advanced.get("collapsedByDefault"), f"Advanced Tools must be collapsed by default: {advanced}")
+            check(advanced.get("expandedNow"), f"clicking the Advanced Tools toggle must expand it: {advanced}")
+            check(all(advanced.get(k) for k in ("svgPresent", "qcPresent", "videoPresent", "socialPresent")),
+                  f"all 4 relocated tool sections must still be present: {advanced}")
+            check(advanced.get("svgDropzonePresent") and advanced.get("qcRunBtnPresent"),
+                  f"relocated tools' inner controls (dropzone, run button) must survive the move too: {advanced}")
+
+            # Reference Photos library -- upload zone + category picker + grid must
+            # be present in the primary (non-collapsed) view, per the plan.
+            refimg = await page.evaluate("""() => ({
+                categorySelectPresent: !!document.getElementById('refimg-category'),
+                dropzonePresent: !!document.getElementById('refimg-dropzone'),
+                gridPresent: !!document.getElementById('refimg-grid'),
+                categoryOptionCount: (document.getElementById('refimg-category')||{options:[]}).options.length,
+            })""")
+            check(refimg.get("categorySelectPresent") and refimg.get("dropzonePresent") and refimg.get("gridPresent"),
+                  f"Reference Photos section must render its category picker, dropzone, and grid: {refimg}")
+            check(refimg.get("categoryOptionCount", 0) == 8,
+                  f"category picker should offer the 7 real+coming-soon categories plus 'general', got: {refimg}")
+
+            # Leave the panel closed for later checks in this same page session
+            # (_createOpenCat is currently 'sticker_pack' from soon_panel above --
+            # calling it again toggles that same panel closed).
+            await page.evaluate("createOpenCategory('sticker_pack'); document.getElementById('create-advanced-toggle').click()")
+
             # ── Mobile spotlight tour (2026-07-15) -- same #tour-root engine as
             # desktop, spotlighting #phone-tabbar's 5 tabs instead of the
             # sidebar. setViewportSize (not a new context) so this reuses the
@@ -1244,6 +1365,33 @@ async def _run_browser_checks() -> None:
             check(popup_leak_state.get("orbDisplay") == "none",
                   f"#orb-view must be display:none once a phoneOpenScreen() screen (e.g. Products) is open -- a visible "
                   f"#orb-view here is exactly the 'gray block over the header' Scott reported: {popup_leak_state}")
+
+            # ── Create-screen redesign, mobile viewport (2026-07-22) -- the same
+            # tile grid / accordion / coming-soon honesty must hold on the phone
+            # layout the redesign was explicitly built for ("used by someone that
+            # does not know what frank is" implies a phone, not a 1440px desktop).
+            # phoneOpenScreen() is the mobile equivalent of showScreen(). ──
+            mobile_create = await page.evaluate("""() => {
+                phoneOpenScreen('create');
+                const tiles = [...document.querySelectorAll('#create-chooser .create-choice[data-cat]')];
+                return {
+                    active: document.querySelector('.screen.active') ? document.querySelector('.screen.active').id : null,
+                    tileCount: tiles.length,
+                };
+            }""")
+            check(mobile_create.get("active") == "screen-create", f"phoneOpenScreen('create') should land on #screen-create: {mobile_create}")
+            check(mobile_create.get("tileCount") == 7, f"mobile Create screen must show all 7 tiles too: {mobile_create}")
+
+            mobile_soon_tap = await page.evaluate("""() => {
+                document.querySelector('.create-choice[data-cat="sublimation"]').click();
+                const panel = document.getElementById('create-detail');
+                return {html: panel ? panel.innerHTML : ''};
+            }""")
+            check(len(mobile_soon_tap.get("html", "").strip()) > 40,
+                  f"tapping a coming-soon tile on mobile must not render a blank panel: {mobile_soon_tap}")
+            check("no automatic builder" in mobile_soon_tap.get("html", "").lower(),
+                  f"mobile coming-soon panel must give the same honest explanation as desktop: {mobile_soon_tap}")
+            await page.evaluate("document.querySelector('.create-choice[data-cat=\"sublimation\"]').click()")  # close it
 
             # ── Chat History screen (2026-07-15) — Scott: "I need a option on the
             # list to see the chat box from ask Frank to see his responses."

@@ -766,6 +766,19 @@ body:not(.is-mobile) .orb-open-chat{display:none}
   transition:box-shadow .2s ease,transform .15s cubic-bezier(.22,1,.36,1)}
 .create-choice:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
 .create-choice:active{transform:translateY(0) scale(.98)}
+.create-choice.open{outline:2px solid var(--gold);outline-offset:-2px}
+.create-choice.soon{opacity:.72}
+/* ── Create-screen redesign (2026-07-22): the single accordion panel that
+   opens below the tile grid when a category is tapped — one panel exists in
+   the DOM at a time (re-rendered per tap), so this is just a .hub-card with a
+   left accent border to visually tie it back to whichever tile is "open". ── */
+.create-detail{background:var(--panel2);border:1px solid var(--border);border-left:4px solid var(--gold);
+  border-radius:var(--r-md);padding:16px;margin-bottom:16px;box-shadow:var(--card-shadow)}
+.create-detail .cd-advanced-toggle{display:inline-block;font-size:11.5px;color:var(--muted);cursor:pointer;
+  margin:6px 0;text-decoration:underline;text-underline-offset:2px}
+.create-detail .cd-advanced-body{display:none;margin:8px 0 4px;padding:10px;border:1px dashed var(--border);border-radius:var(--r-sm)}
+.create-detail .cd-advanced-body.open{display:block}
+.create-detail .cd-newcode-link{font-size:11.5px;color:var(--cyan2);cursor:pointer;text-decoration:underline;text-underline-offset:2px;display:inline-block;margin-top:4px}
 .hub-empty{text-align:center;color:var(--muted);padding:40px 0;font-size:13px}
 .hub-spinner{display:block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:hubspin .7s linear infinite;margin:40px auto}
 @keyframes hubspin{to{transform:rotate(360deg)}}
@@ -802,6 +815,12 @@ body:not(.is-mobile) .orb-open-chat{display:none}
 .hub-listing-item:active{background:var(--panel3)}
 .hub-thumb{width:52px;height:52px;border-radius:var(--r-sm);object-fit:cover;background:var(--border);flex-shrink:0}
 .hub-thumb-ph{width:52px;height:52px;border-radius:var(--r-sm);background:var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px}
+/* Reference Photos library grid (2026-07-22 Create-screen redesign) */
+.refimg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:10px}
+.refimg-tile{position:relative;border-radius:var(--r-sm);overflow:hidden;background:var(--border);aspect-ratio:1/1}
+.refimg-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.refimg-tile .refimg-cat{position:absolute;left:4px;bottom:4px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:var(--r-pill);background:rgba(6,20,31,.75);color:var(--text)}
+.refimg-tile .refimg-del{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(6,20,31,.75);color:#e0808f;font-size:12px;line-height:20px;text-align:center;cursor:pointer;padding:0}
 .hub-listing-info{flex:1;min-width:0}
 .hub-listing-title{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hub-listing-meta{font-size:11px;color:var(--muted);margin-top:2px}
@@ -1946,258 +1965,45 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
   </div>
 
-  <!-- ══════════ CREATE — the one place to make what goes on a listing. This is the
-       former "Studio" screen, reframed for a first-timer: a plain-language chooser up
-       top scrolls to each tool; every original ID/handler is unchanged so
-       studioGenerate/svgcConvert/lsgGenerate/studioStageToEtsy/studioPostInstagram/
-       Facebook keep working. AI engine is auto-picked by the backend — no model knobs. ══════════ -->
+  <!-- ══════════ CREATE — the one place to make what goes on a listing. Redesigned
+       2026-07-22 for someone who's never used Frank: a category-first chooser (one
+       honest button per kind of listing — 3 that actually build today, 4 shown as
+       "coming soon" rather than hidden or faked) replaces the old single "type any
+       code" flow. Every original tool ID/handler is unchanged (studioGenerate/
+       svgcConvert/lsgGenerate/studioStageToEtsy/studioPostInstagram/Facebook/
+       buildProductRun/buildPlannerRun/stickerPackRun/printZipRun/photoSetRun/
+       qcRunCheck all still exist and still read the same element IDs) — only WHERE
+       those elements live in the DOM and how they're labeled changed. Real
+       categories now render bx-pid/bx-engine/bx-run-btn/bx-result (plus, for
+       Digital Planner and Wall Art, the bp-*/sp-*/ps-*/pz-* secondary "rebuild just
+       one part" fields) dynamically into #create-detail via
+       createOpenCategory()/renderCategoryPanelHtml() further down this file, rather
+       than as always-visible top-level cards. ══════════ -->
   <div class="screen" id="screen-create">
     <div class="panel brk" style="height:100%;overflow-y:auto">
       <div class="panel-title">Create</div>
       <div style="font-size:12px;color:var(--muted);margin:6px 0 14px">What would you like to make? Frank builds it, you review it, then you approve it before anything goes live.</div>
-      <div id="create-chooser" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px">
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-buildproduct')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center;grid-column:1/-1">
-          <div style="font-size:26px" aria-hidden="true">📦</div><div style="font-weight:700;margin-top:6px">Build whole product</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">One tap, builds the right pipeline for the code you enter — Digital Planners, Wall Art, or Coloring Pages</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-photos')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🖼️</div><div style="font-weight:600;margin-top:6px">Listing photos</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Photorealistic mockups from your real file</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-svg')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">✂️</div><div style="font-weight:600;margin-top:6px">SVG file</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Trace a photo into a cut/print vector</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-video')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🎬</div><div style="font-weight:600;margin-top:6px">Product video</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">A short clip from your product photos</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-social')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">📣</div><div style="font-weight:600;margin-top:6px">Social post</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Share a video to Instagram / Facebook</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-qc')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">✅</div><div style="font-weight:600;margin-top:6px">Quality Check</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Verify a product is publish-ready — free, instant</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-photoset')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">📸</div><div style="font-weight:600;margin-top:6px">Photo set (10)</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Build all 10 listing photos from a planner's PDF</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-printzip')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🖨️</div><div style="font-weight:600;margin-top:6px">Print sizes</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Wall-art multi-size print ZIP (300dpi, sRGB)</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-buildplanner')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🗓️</div><div style="font-weight:600;margin-top:6px">Build planner</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Full PDF + cover + nav + stickers (uses AI)</div></div>
-        <div class="create-choice" role="button" tabindex="0" onclick="createGoto('create-stickerpack')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
-          <div style="font-size:26px" aria-hidden="true">🌈</div><div style="font-weight:600;margin-top:6px">Sticker pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">9 themed sheets → transparent ZIP (uses AI)</div></div>
+
+      <div id="create-chooser" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
+        <div class="create-choice" data-cat="digital_planner" role="button" tabindex="0" onclick="createOpenCategory('digital_planner')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🗓️</div><div style="font-weight:700;margin-top:6px">Digital Planner</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">PDF, cover, and matching stickers</div></div>
+        <div class="create-choice" data-cat="wall_art" role="button" tabindex="0" onclick="createOpenCategory('wall_art')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🖼️</div><div style="font-weight:700;margin-top:6px">Wall Art</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">Every print size, ready to sell</div></div>
+        <div class="create-choice" data-cat="coloring_pages" role="button" tabindex="0" onclick="createOpenCategory('coloring_pages')" style="background:linear-gradient(135deg,var(--accent,#7c5cbf),var(--panel2));border:1px solid var(--accent,#7c5cbf);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🎨</div><div style="font-weight:700;margin-top:6px">Coloring Pages</div><div style="font-size:10.5px;color:var(--text);opacity:.85;margin-top:2px">A themed set, packaged and ready</div></div>
+        <div class="create-choice soon" data-cat="sticker_pack" role="button" tabindex="0" onclick="createOpenCategory('sticker_pack')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🌈</div><div style="font-weight:600;margin-top:6px">Sticker Pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
+        <div class="create-choice soon" data-cat="svg_3dprint_pack" role="button" tabindex="0" onclick="createOpenCategory('svg_3dprint_pack')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">✂️</div><div style="font-weight:600;margin-top:6px">SVG / 3D-Print Pack</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
+        <div class="create-choice soon" data-cat="sublimation" role="button" tabindex="0" onclick="createOpenCategory('sublimation')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🧣</div><div style="font-weight:600;margin-top:6px">Sublimation</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
+        <div class="create-choice soon" data-cat="3d_print_physical" role="button" tabindex="0" onclick="createOpenCategory('3d_print_physical')" style="background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;cursor:pointer;text-align:center">
+          <div style="font-size:26px" aria-hidden="true">🏺</div><div style="font-weight:600;margin-top:6px">3D-Print Items</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px">Coming soon</div></div>
       </div>
 
-      <div class="hub-section-title" id="create-buildproduct" style="margin-top:18px">Build whole product — one tap, end to end</div>
-      <div class="hub-card">
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
-          Enter any product code — Frank looks it up and runs the right pipeline for its category:
-          <ul style="margin:6px 0 6px 18px;padding:0">
-            <li><b>Digital Planners</b> (DP1030–DP1034): sticker pack → planner PDFs (sheets embedded) → all 10 listing photos → Quality Check. The cover + sticker sheets are the paid AI step — pick the engine below.</li>
-            <li><b>Wall Art</b>: multi-size print ZIP (300dpi, sRGB) → Quality Check. No new AI art — reuses the source file already on this deploy.</li>
-            <li><b>Coloring Pages</b>: theme pages (only uncached ones cost an AI call) → ZIP sets → Quality Check.</li>
-          </ul>
-          Wall Art and Coloring Pages don't include the 10 listing photos in this one-tap flow yet — use the <b>Listing photos</b> card above per-photo once the files look right. Runs in the background — each deliverable shows in Files as it finishes, and <b>&lt;code&gt;_*.log</b> carries the live run log + the final QC verdict. Every other category has no verified build pipeline wired up yet and returns a clear error instead of guessing. <b style="color:var(--warn,#d98a00)">⚠ Nothing is published</b> — review the result, then publishing is your call.
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="bx-pid" type="text" placeholder="Product code — planner, wall art, or coloring pages" autocapitalize="characters"
-            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
-          <select id="bx-engine" title="Art engine — only used for the Digital Planner cover/sticker step"
-            style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
-            <option value="gemini" selected>Gemini art</option>
-            <option value="openai">gpt-image-1</option>
-            <option value="gpt-image-2">gpt-image-2</option>
-          </select>
-          <button class="act-btn primary" onclick="buildProductRun()" id="bx-run-btn" style="white-space:nowrap">Build everything</button>
-        </div>
-        <div id="bx-result" style="margin-top:12px"></div>
-      </div>
+      <div id="create-detail"></div>
 
-      <div class="hub-section-title" id="create-buildplanner" style="margin-top:18px">Build planner — full PDF from scratch</div>
-      <div class="hub-card">
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
-          Builds the whole planner: dated + undated PDFs, an AI kawaii cover, hyperlinked navigation, a TOC, fillable fields, and embedded sticker sheets. Runs in the background (~2–4 min) — the finished files land in your product folder and show in Files. <b>The cover art is the only paid AI step (~a cent);</b> everything else is free. Configured codes: DP1030–DP1034.
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="bp-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
-            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
-          <select id="bp-engine" title="Art engine for the cover"
-            style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
-            <option value="gemini" selected>Gemini art</option>
-            <option value="openai">gpt-image-1</option>
-            <option value="gpt-image-2">gpt-image-2</option>
-          </select>
-          <button class="act-btn primary" onclick="buildPlannerRun()" id="bp-run-btn" style="white-space:nowrap">Build planner</button>
-        </div>
-        <div id="bp-result" style="margin-top:12px"></div>
-      </div>
-
-      <div class="hub-section-title" id="create-stickerpack" style="margin-top:18px">Sticker pack — themed sheets → transparent ZIP</div>
-      <div class="hub-card">
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
-          Builds the whole kawaii sticker pack: 9 themed sheets in the planner's palette, backgrounds stripped to transparent, every sticker cut into its own PNG, packaged into <b>&lt;code&gt;_sticker_pack.zip</b>. Runs in the background (~2–4 min) — the ZIP lands in your product folder and shows in Files. <b>The sheet art is the paid AI step.</b> Reports a real measured sticker count. Configured codes: DP1030–DP1034. <b style="color:var(--warn,#d98a00)">⚠ Eyeball the sheets for garbled text before the count goes on a live listing</b> — the top rule is never lie to the customer, and no file check catches misspelled in-image words.
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="sp-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
-            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
-          <select id="sp-engine" title="Art engine for the sheets"
-            style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
-            <option value="gemini" selected>Gemini art</option>
-            <option value="openai">gpt-image-1</option>
-            <option value="gpt-image-2">gpt-image-2</option>
-          </select>
-          <button class="act-btn primary" onclick="stickerPackRun()" id="sp-run-btn" style="white-space:nowrap">Build pack</button>
-        </div>
-        <div id="sp-result" style="margin-top:12px"></div>
-      </div>
-
-      <div class="hub-section-title" id="create-printzip" style="margin-top:18px">Print sizes — multi-size ZIP for a wall-art listing</div>
-      <div class="hub-card">
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
-          Builds every print size a buyer expects — 4×6 / 8×12 / 12×18 / 16×24, 8×10 / 16×20, A4 / A3, and square — all 300 DPI, sRGB, under Etsy's 20 MB limit, with a README. Local resize, no cost. Needs the raw art JPG on file (not a room mockup).
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="pz-pid" type="text" placeholder="Wall-art code, e.g. WA1030" autocapitalize="characters"
-            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
-          <button class="act-btn primary" onclick="printZipRun()" id="pz-run-btn" style="white-space:nowrap">Build ZIP</button>
-        </div>
-        <div id="pz-result" style="margin-top:12px"></div>
-      </div>
-
-      <div class="hub-section-title" id="create-photoset" style="margin-top:18px">Listing photo set — 10 photos from a planner's real pages</div>
-      <div class="hub-card">
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
-          Renders the full 10-photo Etsy set straight from the planner's built PDF — real pages in device mockups, no AI stand-ins. Runs on the server (~20–40s); photos land in the product's folder and show up in Files.
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="ps-pid" type="text" placeholder="Planner code, e.g. DP1030" autocapitalize="characters"
-            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
-          <select id="ps-engine" title="Art engine for photo 7 if it must be generated"
-            style="padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">
-            <option value="gemini" selected>Gemini art</option>
-            <option value="openai">gpt-image-1</option>
-            <option value="gpt-image-2">gpt-image-2</option>
-          </select>
-          <button class="act-btn primary" onclick="photoSetRun()" id="ps-run-btn" style="white-space:nowrap">Generate</button>
-        </div>
-        <div id="ps-result" style="margin-top:12px"></div>
-      </div>
-
-      <div class="hub-section-title" id="create-qc" style="margin-top:18px">Quality Check — verify a product is publish-ready</div>
-      <div class="hub-card">
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
-          Runs the same pre-publish gates Frank checks before anything goes live — PDF page counts, sticker-pack transparency &amp; sticker count, ZIP integrity, and print-size folders. Runs entirely on the server, no AI and no cost.
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <input id="qc-pid" type="text" placeholder="Product code, e.g. DP1030" autocapitalize="characters"
-            style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
-          <button class="act-btn primary" onclick="qcRunCheck()" id="qc-run-btn" style="white-space:nowrap">Run Check</button>
-        </div>
-        <div id="qc-result" style="margin-top:12px"></div>
-      </div>
-      <div class="studio-grid" style="flex-wrap:wrap">
-        <div style="flex:1;min-width:320px">
-          <video id="studio-player" controls style="aspect-ratio:16/9"></video>
-          <div id="studio-player-caption" style="margin-top:10px;color:var(--muted);font-size:11px">Select a video from the list to preview it here.</div>
-        </div>
-        <div style="flex:0 0 300px">
-          <div class="panel-title" style="margin-top:0">Your videos</div>
-          <div id="studio-videos-list" class="hub-scroll" style="max-height:420px"><div class="hub-empty">Loading…</div></div>
-        </div>
-      </div>
-
-      <div class="hub-section-title" id="create-video" style="margin-top:18px">Product video</div>
-      <div class="hub-card">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Upload images below, or leave images empty and enter an existing Etsy listing ID to pull its photos automatically.</div>
-        <input type="file" id="studio-file-input" accept="image/*" multiple aria-label="Source images for video" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
-        <div id="studio-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" aria-label="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-          <select id="studio-style" aria-label="Video style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <option value="showcase">Showcase</option>
-            <option value="new-drop">New Drop</option>
-            <option value="feature">Feature</option>
-            <option value="minimal">Minimal</option>
-            <option value="ai-scene">✨ AI Scene (cinematic)</option>
-          </select>
-        </div>
-        <div id="studio-ai-fields" style="display:none;margin-bottom:8px">
-          <textarea id="studio-scene-prompt" rows="3"
-            placeholder="Scene description — auto-filled from title, edit before generating"
-            aria-label="Scene description"
-            style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
-          <select id="studio-aspect-ratio" aria-label="Video aspect ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
-            <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
-          </select>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
-          <input id="studio-title" type="text" placeholder="Title (optional)" aria-label="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-          <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
-        </div>
-        <label for="setting-video-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video engine</label>
-        <select id="setting-video-engine" aria-label="Video engine" onchange="saveEngines()" style="width:100%;margin-bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-          <option value="sora">Sora (default)</option>
-          <option value="veo">Veo (needs Google/Gemini key)</option>
-        </select>
-        <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
-        <div id="studio-generate-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-      </div>
-
-      <div class="hub-section-title" id="create-social" style="margin-top:18px">Post to social</div>
-      <div class="hub-card" style="margin-bottom:6px"><div style="font-size:11px;color:var(--muted)">Make or pick a video above first — then Instagram / Facebook options appear right below.</div></div>
-      <div class="hub-section-title" id="studio-actions-title" style="display:none">Actions — <span id="studio-actions-filename"></span></div>
-      <div class="hub-card" id="studio-actions-card" style="display:none">
-        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after you approve it in Approvals.</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-          <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-        </div>
-        <button class="act-btn primary" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
-        <div id="studio-stage-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-
-        <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Instagram</div>
-        <textarea id="studio-ig-caption" placeholder="Caption" aria-label="Instagram caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
-        <button class="act-btn primary" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
-        <div id="studio-ig-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-
-        <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Facebook</div>
-        <textarea id="studio-fb-caption" placeholder="Description" aria-label="Facebook description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
-        <button class="act-btn primary" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
-        <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
-      </div>
-
-      <div class="hub-section-title" id="create-svg" style="margin-top:18px">SVG file — trace a photo to vector</div>
-      <div class="hub-card">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Drop a reference photo below to trace it into an SVG — a photo you took, a screenshot, something you found on Pinterest.</div>
-
-        <div id="svgc-dropzone" onclick="document.getElementById('svgc-file-input').click()"
-          role="button" tabindex="0" aria-label="Upload reference photo"
-          style="border:2px dashed var(--border);border-radius:var(--r-md);padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:12px;transition:border-color .15s,background .15s">
-          <div style="font-size:22px;margin-bottom:6px" aria-hidden="true">📥</div>
-          Drop a reference photo here, or click to browse
-        </div>
-        <input type="file" id="svgc-file-input" accept="image/*" style="display:none" aria-label="Reference photo file">
-
-        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
-          <select id="svgc-target" aria-label="What's this SVG for?" style="flex:1;min-width:160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <option value="3dprint">3D-Print Sign (SS-series)</option>
-            <option value="wallart">Wall Art</option>
-            <option value="sticker">Sticker Pack Source Art</option>
-            <option value="planner">Planner Cover Art</option>
-            <option value="none">Just give me an SVG</option>
-          </select>
-          <select id="svgc-mode" aria-label="Conversion mode" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-            <option value="silhouette">Silhouette (single shape, cleanest)</option>
-            <option value="bw">Black &amp; White (line art)</option>
-            <option value="color">Full Color</option>
-          </select>
-        </div>
-        <div id="svgc-hint" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
-        <div id="svgc-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
-
-        <div id="svgc-result" style="display:none">
-          <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:10px;text-align:center">
-            <img id="svgc-preview" style="max-width:100%;max-height:280px;background:#fff;border-radius:6px" alt="Converted SVG preview">
-          </div>
-          <div id="svgc-quality" style="font-size:12px;margin-bottom:10px"></div>
-          <a id="svgc-download" class="act-btn primary" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download SVG</a>
-        </div>
-      </div>
-
-      <div class="hub-section-title" id="create-photos" style="margin-top:18px">Listing photo — from your real product file</div>
+      <div class="hub-section-title" id="create-photos" style="margin-top:18px">Make a listing photo — from your real product file</div>
       <div class="hub-card">
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Upload the REAL product file(s) — the actual thing being sold, never a stand-in — and generate a photorealistic lifestyle photo. Self-verified against your file; if a render doesn't actually match it, it retries automatically instead of handing you something wrong.</div>
 
@@ -2224,16 +2030,19 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
         <div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">Each attempt calls the real image-generation API — real cost per click — up to 2 tries if the first doesn't verify against your source file.</div>
 
-        <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image engine</label>
-        <select id="setting-image-engine" aria-label="Image engine" onchange="saveEngines()" style="width:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
-          <option value="openai">OpenAI gpt-image-1 (default · only one with transparent background)</option>
-          <option value="gpt-image-2">OpenAI gpt-image-2 (sharper text)</option>
-          <option value="gemini">Gemini — Nano Banana (best product consistency across photos)</option>
-          <option value="ideogram">Ideogram (best in-image text · generate-only)</option>
-        </select>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:10px">Gemini &amp; Ideogram need their API key set in .env — Frank tells you if a key is missing when you generate. <span id="engines-status"></span></div>
+        <span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Advanced ▸</span>
+        <div class="cd-advanced-body">
+          <label for="setting-image-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Image engine</label>
+          <select id="setting-image-engine" aria-label="Image engine" onchange="saveEngines()" style="width:100%;margin-bottom:6px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+            <option value="openai">Standard (default · only one with transparent background)</option>
+            <option value="gpt-image-2">Alternative — sharper text</option>
+            <option value="gemini">Alternative — best product consistency across photos</option>
+            <option value="ideogram">Alternative — best in-image text</option>
+          </select>
+          <div style="font-size:10px;color:var(--muted)">Some alternatives need an extra API key set up — Frank tells you if one's missing when you generate. <span id="engines-status"></span></div>
+        </div>
 
-        <button class="act-btn primary" style="width:100%" onclick="lsgGenerate()" id="lsg-generate-btn">Generate Lifestyle Photo</button>
+        <button class="act-btn primary" style="width:100%;margin-top:10px" onclick="lsgGenerate()" id="lsg-generate-btn">Generate Lifestyle Photo</button>
         <div id="lsg-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
 
         <div id="lsg-result" style="display:none;margin-top:10px">
@@ -2243,6 +2052,165 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <div id="lsg-outcome" style="font-size:12px;margin-bottom:10px"></div>
           <a id="lsg-download" class="act-btn primary" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download Photo</a>
         </div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">Reference Photos</div>
+      <div class="hub-card">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Save inspiration and style-reference images here — photos you took, screenshots, things you found on Pinterest — organized by what they're for. This is a library only right now; it doesn't feed into anything Frank generates yet.</div>
+
+        <select id="refimg-category" aria-label="What is this photo for?" style="width:100%;margin-bottom:8px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          <option value="digital_planner">Digital Planner</option>
+          <option value="wall_art">Wall Art</option>
+          <option value="coloring_pages">Coloring Pages</option>
+          <option value="sticker_pack">Sticker Pack</option>
+          <option value="svg_3dprint_pack">SVG / 3D-Print Pack</option>
+          <option value="sublimation">Sublimation</option>
+          <option value="3d_print_physical">3D-Print Items</option>
+          <option value="general" selected>General inspiration</option>
+        </select>
+
+        <div id="refimg-dropzone" onclick="document.getElementById('refimg-file-input').click()"
+          role="button" tabindex="0" aria-label="Upload reference photos"
+          style="border:2px dashed var(--border);border-radius:var(--r-md);padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:10px;transition:border-color .15s,background .15s">
+          <div style="font-size:22px;margin-bottom:6px" aria-hidden="true">📥</div>
+          Drop photos here, or click to browse — you can pick more than one
+        </div>
+        <input type="file" id="refimg-file-input" accept="image/*" multiple style="display:none" aria-label="Reference photo files">
+        <div id="refimg-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:6px"></div>
+
+        <div id="refimg-chips" class="hub-chip-row"></div>
+        <div id="refimg-grid" class="refimg-grid"><div class="hub-empty">Loading…</div></div>
+      </div>
+
+      <div class="hub-section-title" style="margin-top:18px">
+        <span id="create-advanced-toggle" role="button" tabindex="0" aria-expanded="false" style="cursor:pointer">Advanced tools <span id="create-advanced-caret">▸</span></span>
+      </div>
+      <div id="create-advanced-body" style="display:none">
+
+        <div class="hub-section-title" id="create-qc" style="margin-top:0">Quality Check — verify a product is publish-ready</div>
+        <div class="hub-card">
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px">
+            Runs the same pre-publish gates Frank checks before anything goes live — PDF page counts, sticker-pack transparency &amp; sticker count, ZIP integrity, and print-size folders. Runs entirely on the server, no AI and no cost.
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <input id="qc-pid" type="text" placeholder="Product code, e.g. DP1030" autocapitalize="characters"
+              style="flex:1;min-width:180px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />
+            <button class="act-btn primary" onclick="qcRunCheck()" id="qc-run-btn" style="white-space:nowrap">Run Check</button>
+          </div>
+          <div id="qc-result" style="margin-top:12px"></div>
+        </div>
+        <div class="studio-grid" style="flex-wrap:wrap">
+          <div style="flex:1;min-width:320px">
+            <video id="studio-player" controls style="aspect-ratio:16/9"></video>
+            <div id="studio-player-caption" style="margin-top:10px;color:var(--muted);font-size:11px">Select a video from the list to preview it here.</div>
+          </div>
+          <div style="flex:0 0 300px">
+            <div class="panel-title" style="margin-top:0">Your videos</div>
+            <div id="studio-videos-list" class="hub-scroll" style="max-height:420px"><div class="hub-empty">Loading…</div></div>
+          </div>
+        </div>
+
+        <div class="hub-section-title" id="create-video" style="margin-top:18px">Product video</div>
+        <div class="hub-card">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Upload images below, or leave images empty and enter an existing Etsy listing ID to pull its photos automatically.</div>
+          <input type="file" id="studio-file-input" accept="image/*" multiple aria-label="Source images for video" style="margin-bottom:8px;width:100%;color:var(--text);font-size:12px">
+          <div id="studio-upload-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <input id="studio-listing-id" type="number" placeholder="Etsy Listing ID (optional)" aria-label="Etsy Listing ID (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+            <select id="studio-style" aria-label="Video style" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+              <option value="showcase">Showcase</option>
+              <option value="new-drop">New Drop</option>
+              <option value="feature">Feature</option>
+              <option value="minimal">Minimal</option>
+              <option value="ai-scene">✨ AI Scene (cinematic)</option>
+            </select>
+          </div>
+          <div id="studio-ai-fields" style="display:none;margin-bottom:8px">
+            <textarea id="studio-scene-prompt" rows="3"
+              placeholder="Scene description — auto-filled from title, edit before generating"
+              aria-label="Scene description"
+              style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;resize:vertical;box-sizing:border-box;margin-bottom:6px"></textarea>
+            <select id="studio-aspect-ratio" aria-label="Video aspect ratio" style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+              <option value="9:16">9:16 Vertical — TikTok / Reels / Stories</option>
+              <option value="16:9">16:9 Horizontal — YouTube / Facebook</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+            <input id="studio-title" type="text" placeholder="Title (optional)" aria-label="Title (optional)" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+            <input id="studio-price" type="text" placeholder="Price (optional)" aria-label="Price (optional)" style="flex:0 0 110px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap"><input type="checkbox" id="studio-digital" checked> Digital</label>
+          </div>
+          <label for="setting-video-engine" style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Video engine</label>
+          <select id="setting-video-engine" aria-label="Video engine" onchange="saveEngines()" style="width:100%;margin-bottom:10px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+            <option value="sora">Standard (default)</option>
+            <option value="veo">Alternative — needs an extra API key set up</option>
+          </select>
+          <button class="act-btn primary" style="width:100%" onclick="studioGenerate()" id="studio-generate-btn">Generate Video</button>
+          <div id="studio-generate-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+        </div>
+
+        <div class="hub-section-title" id="create-social" style="margin-top:18px">Post to social</div>
+        <div class="hub-card" style="margin-bottom:6px"><div style="font-size:11px;color:var(--muted)">Make or pick a video above first — then Instagram / Facebook options appear right below.</div></div>
+        <div class="hub-section-title" id="studio-actions-title" style="display:none">Actions — <span id="studio-actions-filename"></span></div>
+        <div class="hub-card" id="studio-actions-card" style="display:none">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px">Attach to Etsy Listing</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Stages the video for %%OWNER%%'s approval — it is only attached to the listing after you approve it in Approvals.</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <input id="studio-attach-listing-id" type="number" placeholder="Listing ID" aria-label="Listing ID to attach video to" style="flex:1;min-width:120px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+            <input id="studio-attach-rank" type="number" min="1" max="10" placeholder="Rank 1-10 (optional)" aria-label="Photo rank 1-10 (optional)" style="flex:0 0 160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+          </div>
+          <button class="act-btn primary" style="width:100%" onclick="studioStageToEtsy()" id="studio-stage-btn">Stage for Approval</button>
+          <div id="studio-stage-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Instagram</div>
+          <textarea id="studio-ig-caption" placeholder="Caption" aria-label="Instagram caption" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+          <button class="act-btn primary" style="width:100%" onclick="studioPostInstagram()" id="studio-ig-btn">Post to Instagram (Reel)</button>
+          <div id="studio-ig-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin:18px 0 6px">Post to Facebook</div>
+          <textarea id="studio-fb-caption" placeholder="Description" aria-label="Facebook description" style="width:100%;min-height:50px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px;margin-bottom:8px"></textarea>
+          <button class="act-btn primary" style="width:100%" onclick="studioPostFacebook()" id="studio-fb-btn">Post to Facebook</button>
+          <div id="studio-fb-status" style="font-size:11px;color:var(--muted);margin-top:8px"></div>
+        </div>
+
+        <div class="hub-section-title" id="create-svg" style="margin-top:18px">Cutting File (SVG) — trace a photo to vector</div>
+        <div class="hub-card">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">For print-and-cut projects — turns a photo into a shape a cutting machine or multi-color printer can use. Drop a reference photo below to trace it — a photo you took, a screenshot, something you found on Pinterest.</div>
+
+          <div id="svgc-dropzone" onclick="document.getElementById('svgc-file-input').click()"
+            role="button" tabindex="0" aria-label="Upload reference photo"
+            style="border:2px dashed var(--border);border-radius:var(--r-md);padding:28px 14px;text-align:center;cursor:pointer;color:var(--muted);font-size:12px;margin-bottom:12px;transition:border-color .15s,background .15s">
+            <div style="font-size:22px;margin-bottom:6px" aria-hidden="true">📥</div>
+            Drop a reference photo here, or click to browse
+          </div>
+          <input type="file" id="svgc-file-input" accept="image/*" style="display:none" aria-label="Reference photo file">
+
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            <select id="svgc-target" aria-label="What's this for?" style="flex:1;min-width:160px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+              <option value="3dprint">3D-Print Sign (SS-series)</option>
+              <option value="wallart">Wall Art</option>
+              <option value="sticker">Sticker Pack Source Art</option>
+              <option value="planner">Planner Cover Art</option>
+              <option value="none">Just give me a cutting file</option>
+            </select>
+            <select id="svgc-mode" aria-label="Conversion mode" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;color:var(--text);font-size:12px">
+              <option value="silhouette">Silhouette (single shape, cleanest)</option>
+              <option value="bw">Black &amp; White (line art)</option>
+              <option value="color">Full Color</option>
+            </select>
+          </div>
+          <div id="svgc-hint" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+          <div id="svgc-status" style="font-size:11px;color:var(--muted);margin-bottom:10px"></div>
+
+          <div id="svgc-result" style="display:none">
+            <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:10px;text-align:center">
+              <img id="svgc-preview" style="max-width:100%;max-height:280px;background:#fff;border-radius:6px" alt="Converted SVG preview">
+            </div>
+            <div id="svgc-quality" style="font-size:12px;margin-bottom:10px"></div>
+            <a id="svgc-download" class="act-btn primary" style="width:100%;display:block;text-align:center;text-decoration:none;box-sizing:border-box" download>Download File</a>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -3510,7 +3478,10 @@ const _SCREEN_LOADERS = {
   security: [renderSecurityPosture],
   settings: [loadSettingsConnectionsSummary, loadAccountSettings, loadRuntimeSettings, loadWhoAmI],
   studio: [loadStudioVideos],
-  create: [loadStudioVideos, loadCreateEngines],  // guided Create flow (reuses studio backends)
+  // guided Create flow (reuses studio backends) — loadProducts populates the
+  // global _products array the category panels' product pickers read from
+  // (2026-07-22 redesign), loadReferenceImages populates the new library.
+  create: [loadStudioVideos, loadCreateEngines, loadProducts, loadReferenceImages],
 };
 const _GLOBAL_LOADERS = [
   () => Promise.all([loadAgents(), loadDependencyHealth()]).then(updateSystemStatusPill),
@@ -3518,9 +3489,347 @@ const _GLOBAL_LOADERS = [
 ];
 let _activeScreen = 'cmd';
 
-// Create-screen chooser: smooth-scroll to the picked tool section (all four tools
-// live stacked on the Create screen; the chooser is just friendly wayfinding).
-function createGoto(id){ const el = document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }
+// ══════════ Create screen redesign (2026-07-22) ══════════════════════════════════
+// One honest button per kind of listing. Real categories (a working one-tap build
+// pipeline exists) render a product picker + the existing bx-*/bp-*/sp-*/ps-*/pz-*
+// fields into the single #create-detail accordion panel; "coming soon" categories
+// render a short honest explanation instead of a fake/dead button. Only one
+// category's markup ever exists in the DOM at a time, so every reused element ID
+// (bx-pid, bx-engine, bx-run-btn, bx-result, bp-*, sp-*, ps-*, pz-*) is always
+// unique — buildProductRun()/buildPlannerRun()/stickerPackRun()/printZipRun()/
+// photoSetRun() below are completely unchanged except for one addition each: a
+// call to createPollBuildStatus() so a kicked-off build shows real progress
+// instead of a static "Check Files" dead end (see that function's own docstring).
+const _CREATE_CATEGORIES = {
+  digital_planner: {
+    icon: '🗓️', label: 'Digital Planner', real: true,
+    blurb: 'A full planner — dated and undated PDF versions, a cover, clickable menus, boxes you can type into, and a matching kawaii sticker pack.',
+    placeholder: 'e.g. DP1030', primaryLabel: 'Build this planner',
+  },
+  wall_art: {
+    icon: '🖼️', label: 'Wall Art', real: true,
+    blurb: 'Every print size a buyer expects, ready to sell — small to large, square, and standard paper sizes, all print-quality.',
+    placeholder: 'e.g. WA1030', primaryLabel: 'Build this wall art',
+  },
+  coloring_pages: {
+    icon: '🎨', label: 'Coloring Pages', real: true,
+    blurb: 'A themed coloring-page set, packaged and ready to sell.',
+    placeholder: 'e.g. COLOR1030', primaryLabel: 'Build these coloring pages',
+  },
+  sticker_pack: {
+    icon: '🌈', label: 'Sticker Pack', real: false,
+    soon: "There's no automatic builder for standalone Sticker Packs yet — for now these get made by hand. (Sticker sheets that come bundled with a Digital Planner still build automatically as part of that planner.)",
+  },
+  svg_3dprint_pack: {
+    icon: '✂️', label: 'SVG / 3D-Print Pack', real: false,
+    soon: "There's no automatic builder for SVG / 3D-Print Packs yet — for now these get made by hand.",
+    pointer: 'You can still turn a reference photo into a cutting file — see "Cutting File (SVG)" in Advanced Tools below.',
+  },
+  sublimation: {
+    icon: '🧣', label: 'Sublimation', real: false,
+    soon: "There's no automatic builder for Sublimation designs yet — for now these get made by hand.",
+  },
+  '3d_print_physical': {
+    icon: '🏺', label: '3D-Print Items', real: false,
+    soon: "There's no automatic builder for 3D-printed items yet — for now these get made by hand.",
+  },
+};
+let _createOpenCat = null;
+
+function _engineOptionsHtml(){
+  return '<option value="gemini" selected>Standard (recommended)</option>'
+    + '<option value="openai">Alternative — best for transparent backgrounds</option>'
+    + '<option value="gpt-image-2">Alternative — sharper in-image text</option>';
+}
+
+// One "rebuild just this part" row inside a real category's advanced disclosure —
+// reuses the exact IDs/onclick handlers the original always-visible cards used
+// (bp-pid/bp-engine/bp-run-btn/bp-result, etc.), just condensed and relocated.
+function _cdSecondaryRow(o){
+  let html = '<div style="margin-bottom:14px"><div style="font-weight:600;font-size:12.5px;margin-bottom:4px">' + escHtml(o.title) + '</div>';
+  html += '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">' + escHtml(o.desc) + '</div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+  html += '<input id="' + o.pidId + '" type="text" placeholder="' + escHtml(o.placeholder) + '" autocapitalize="characters" style="flex:1;min-width:150px;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px" />';
+  if (o.engineId) html += '<select id="' + o.engineId + '" style="padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
+  html += '<button class="act-btn secondary" onclick="' + o.onclick + '" id="' + o.btnId + '" style="white-space:nowrap">' + escHtml(o.btnLabel) + '</button>';
+  html += '</div><div id="' + o.resultId + '" style="margin-top:8px"></div></div>';
+  return html;
+}
+function _createSecondaryRowsHtml(key){
+  if (key === 'digital_planner') {
+    return _cdSecondaryRow({title:'Just the planner PDF', desc:'Rebuild the dated + undated PDFs on their own.', pidId:'bp-pid', placeholder:'Planner code, e.g. DP1030', engineId:'bp-engine', btnId:'bp-run-btn', btnLabel:'Rebuild PDF', onclick:'buildPlannerRun()', resultId:'bp-result'})
+      + _cdSecondaryRow({title:'Just the sticker pack', desc:'Rebuild the 9 themed sticker sheets on their own.', pidId:'sp-pid', placeholder:'Planner code, e.g. DP1030', engineId:'sp-engine', btnId:'sp-run-btn', btnLabel:'Rebuild stickers', onclick:'stickerPackRun()', resultId:'sp-result'})
+      + _cdSecondaryRow({title:'Just the 10 listing photos', desc:'Re-render the 10 Etsy photos from the already-built PDF.', pidId:'ps-pid', placeholder:'Planner code, e.g. DP1030', engineId:'ps-engine', btnId:'ps-run-btn', btnLabel:'Rebuild photos', onclick:'photoSetRun()', resultId:'ps-result'});
+  }
+  if (key === 'wall_art') {
+    return _cdSecondaryRow({title:'Just the print-size ZIP', desc:'Rebuild the multi-size print files on their own.', pidId:'pz-pid', placeholder:'Wall-art code, e.g. WA1030', engineId:null, btnId:'pz-run-btn', btnLabel:'Rebuild ZIP', onclick:'printZipRun()', resultId:'pz-result'});
+  }
+  return '';
+}
+
+function _renderCategoryPanelHtml(key){
+  const cfg = _CREATE_CATEGORIES[key];
+  if (!cfg) return '';
+  if (!cfg.real) {
+    let html = '<div style="font-size:26px;margin-bottom:6px" aria-hidden="true">' + cfg.icon + '</div>';
+    html += '<div style="font-weight:700;margin-bottom:6px">' + escHtml(cfg.label) + ' — coming soon</div>';
+    html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6">' + escHtml(cfg.soon) + '</div>';
+    if (cfg.pointer) html += '<div style="font-size:12.5px;color:var(--cyan2);margin-top:8px">' + escHtml(cfg.pointer) + '</div>';
+    return html;
+  }
+  let html = '<div style="font-weight:700;margin-bottom:4px">' + cfg.icon + ' ' + escHtml(cfg.label) + '</div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">' + escHtml(cfg.blurb) + '</div>';
+
+  html += '<div id="create-pid-picker-wrap">';
+  html += '<select id="create-pid-select" aria-label="Choose an existing ' + escHtml(cfg.label) + '" onchange="_createPidSelectChanged()" style="width:100%;margin-bottom:6px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px">'
+    + '<option value="">Choose one you already have…</option></select>';
+  html += '<span class="cd-newcode-link" onclick="_createToggleNewCode(true)">＋ This is a new one — I\\'ll type the code</span>';
+  html += '</div>';
+  html += '<div id="create-pid-freetext-wrap" style="display:none;margin-bottom:6px">'
+    + '<input id="bx-pid" type="text" placeholder="' + escHtml(cfg.placeholder) + '" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />'
+    + '<div><span class="cd-newcode-link" onclick="_createToggleNewCode(false)">← pick from the list instead</span></div></div>';
+
+  html += '<span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Advanced ▸</span>';
+  html += '<div class="cd-advanced-body">';
+  html += '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Art style (used for the AI-generated art step only)</label>';
+  html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
+  html += '</div>';
+
+  html += '<div style="margin-top:12px"><button class="act-btn primary" style="width:100%" onclick="buildProductRun()" id="bx-run-btn">' + escHtml(cfg.primaryLabel) + '</button></div>';
+  html += '<div id="bx-result" style="margin-top:12px"></div>';
+
+  const secondary = _createSecondaryRowsHtml(key);
+  if (secondary) {
+    html += '<div style="margin-top:16px"><span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Rebuild just one part ▸</span>';
+    html += '<div class="cd-advanced-body">' + secondary + '</div></div>';
+  }
+  return html;
+}
+
+function createOpenCategory(key){
+  const panel = document.getElementById('create-detail');
+  if (!panel) return;
+  document.querySelectorAll('.create-choice[data-cat]').forEach(t => t.classList.remove('open'));
+  if (_createOpenCat === key) {
+    _createOpenCat = null;
+    panel.innerHTML = '';
+    return;
+  }
+  _createOpenCat = key;
+  const tile = document.querySelector('.create-choice[data-cat="' + key + '"]');
+  if (tile) tile.classList.add('open');
+  panel.className = 'create-detail';
+  panel.innerHTML = _renderCategoryPanelHtml(key);
+  _createSyncProductPicker(key);
+  panel.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function _createPidSelectChanged(){
+  const sel = document.getElementById('create-pid-select');
+  const hidden = document.getElementById('bx-pid');
+  if (sel && hidden) hidden.value = sel.value;
+}
+function _createToggleNewCode(showFreeText){
+  const pickerWrap = document.getElementById('create-pid-picker-wrap');
+  const freeWrap = document.getElementById('create-pid-freetext-wrap');
+  if (!pickerWrap || !freeWrap) return;
+  pickerWrap.style.display = showFreeText ? 'none' : '';
+  freeWrap.style.display = showFreeText ? '' : 'none';
+  const pid = document.getElementById('bx-pid');
+  if (showFreeText && pid) { pid.value = ''; pid.focus(); }
+}
+function _createSyncProductPicker(key){
+  const sel = document.getElementById('create-pid-select');
+  if (!sel) return;
+  // Idempotent: loadProducts() can resolve and call this again (e.g. re-entering
+  // the Create screen with a panel still open) — reset to just the placeholder
+  // option first so re-population never duplicates entries.
+  while (sel.options.length > 1) sel.remove(1);
+  const items = (_products || []).filter(p => p.category === key)
+    .sort((a, b) => String(a.id).localeCompare(String(b.id)));
+  items.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.id + ' — ' + (p.name || '');
+    sel.appendChild(opt);
+  });
+}
+function _createToggleAdvanced(el){
+  const body = el.nextElementSibling;
+  if (!body) return;
+  const open = body.classList.toggle('open');
+  el.textContent = el.textContent.replace(/[▾▸]/, open ? '▾' : '▸');
+}
+(function(){
+  const t = document.getElementById('create-advanced-toggle');
+  if (!t) return;
+  t.addEventListener('click', () => {
+    const body = document.getElementById('create-advanced-body');
+    if (!body) return;
+    const on = body.style.display === 'none';
+    body.style.display = on ? '' : 'none';
+    t.setAttribute('aria-expanded', on ? 'true' : 'false');
+    const caret = document.getElementById('create-advanced-caret');
+    if (caret) caret.textContent = on ? '▾' : '▸';
+  });
+})();
+
+// Live build-status polling (2026-07-22) — closes the biggest usability gap the
+// old Create screen had: tapping a build button used to give a static ack plus a
+// "Check Files" link and NOTHING ELSE, so there was no way to tell whether a
+// build was still running, had crashed, or had actually finished short of
+// manually going to Files and guessing. Polls GET /api/produce/status (which
+// reads the same _LONG_RUNNING_PROCS registry the server's own health-check loop
+// already tracks) every ~4s and renders elapsed time + a live log tail into
+// outEl, ending in a clear success or failure card.
+function createPollBuildStatus(osPid, logFile, outEl){
+  if (!osPid || !outEl) return;
+  const startedAt = Date.now();
+  const timeoutMs = 10 * 60 * 1000;
+  const poll = async () => {
+    if (Date.now() - startedAt > timeoutMs) {
+      outEl.insertAdjacentHTML('beforeend', '<div class="hub-listing-meta" style="margin-top:8px;color:var(--gold)">Still going after 10 minutes — check Files, or try again in a bit.</div>');
+      return;
+    }
+    let d;
+    try {
+      const r = await fetchWithTimeout(BASE + '/api/produce/status?os_pid=' + osPid + '&log_file=' + encodeURIComponent(logFile || ''), {
+        headers: {Authorization: 'Bearer ' + TOKEN}
+      }, 10000);
+      d = await r.json().catch(() => ({}));
+    } catch (e) {
+      setTimeout(poll, 4000);
+      return;
+    }
+    const box = document.getElementById('cd-build-status-box');
+    if (!box) return;  // panel was closed/replaced — stop polling quietly
+    const tail = d.log_tail ? '<pre style="white-space:pre-wrap;font-size:10.5px;color:var(--muted);background:var(--panel);border-radius:var(--r-sm);padding:8px;margin-top:6px;max-height:160px;overflow-y:auto">' + escHtml(d.log_tail) + '</pre>' : '';
+    if (d.known === false) {
+      box.innerHTML = '<div class="hub-listing-meta">Lost track of this build (it\\'s been a while) — check Files for the result.</div>';
+      return;
+    }
+    if (d.running) {
+      const elapsed = Math.round((d.elapsed_s || 0));
+      box.innerHTML = '<div class="hub-spinner" style="margin:6px auto"></div><div class="hub-listing-meta" style="text-align:center">Still building… ' + elapsed + 's so far</div>' + tail;
+      setTimeout(poll, 4000);
+    } else if (d.exit_code === 0) {
+      box.innerHTML = '<div style="font-weight:600;color:var(--green)">✓ Done</div>' + tail
+        + '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">See it in Files →</button></div>';
+      showToast('Finished building', 'ok');
+    } else {
+      box.innerHTML = '<div style="font-weight:600;color:var(--red)">✗ Something went wrong (exit code ' + d.exit_code + ')</div>' + tail;
+    }
+  };
+  outEl.insertAdjacentHTML('beforeend', '<div id="cd-build-status-box" style="margin-top:10px"></div>');
+  setTimeout(poll, 1500);
+}
+
+// ══════════ Reference Photos library (2026-07-22) ════════════════════════════════
+let _refImages = [];
+let _refImgCategoryFilter = null;
+const _REFIMG_CATEGORY_LABELS = {
+  digital_planner: 'Digital Planner', wall_art: 'Wall Art', coloring_pages: 'Coloring Pages',
+  sticker_pack: 'Sticker Pack', svg_3dprint_pack: 'SVG / 3D-Print', sublimation: 'Sublimation',
+  '3d_print_physical': '3D-Print Items', general: 'General',
+};
+async function loadReferenceImages(){
+  const grid = document.getElementById('refimg-grid');
+  if (!grid) return;
+  try {
+    const r = await authGet('/api/reference-images');
+    const d = await r.json();
+    _refImages = d.images || [];
+    renderRefImgGrid();
+  } catch (e) {
+    grid.innerHTML = '<div class="hub-empty">' + escHtml(e.message || 'Failed to load') + '</div>';
+  }
+}
+function setRefImgCategoryFilter(cat){
+  _refImgCategoryFilter = cat;
+  renderRefImgGrid();
+}
+function renderRefImgGrid(){
+  const grid = document.getElementById('refimg-grid');
+  const chipsEl = document.getElementById('refimg-chips');
+  if (!grid) return;
+  if (chipsEl) {
+    const cats = {};
+    _refImages.forEach(im => { cats[im.category] = (cats[im.category] || 0) + 1; });
+    let chipsHtml = '<button class="hub-chip-btn' + (_refImgCategoryFilter === null ? ' active' : '') + '" onclick="setRefImgCategoryFilter(null)">All (' + _refImages.length + ')</button>';
+    Object.keys(cats).sort().forEach(c => {
+      chipsHtml += '<button class="hub-chip-btn' + (_refImgCategoryFilter === c ? ' active' : '') + '" onclick="setRefImgCategoryFilter(\\'' + c + '\\')">' + escHtml(_REFIMG_CATEGORY_LABELS[c] || c) + ' (' + cats[c] + ')</button>';
+    });
+    chipsEl.innerHTML = _refImages.length ? chipsHtml : '';
+  }
+  const filtered = _refImgCategoryFilter === null ? _refImages : _refImages.filter(im => im.category === _refImgCategoryFilter);
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="hub-empty">No reference photos yet — drop one above to start your library.</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(im => {
+    const url = BASE + '/api/files/download?root=reference_images&path=' + encodeURIComponent(im.filename) + '&inline=1&token=' + encodeURIComponent(TOKEN);
+    return '<div class="refimg-tile"><img src="' + url + '" alt="' + escHtml(im.description || im.filename) + '" loading="lazy">'
+      + '<span class="refimg-cat">' + escHtml(_REFIMG_CATEGORY_LABELS[im.category] || im.category) + '</span>'
+      + '<button class="refimg-del" title="Delete" onclick="deleteRefImage(\\'' + im.id + '\\')">×</button></div>';
+  }).join('');
+}
+async function uploadRefImages(fileList){
+  const status = document.getElementById('refimg-upload-status');
+  const catEl = document.getElementById('refimg-category');
+  const category = (catEl && catEl.value) || 'general';
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  let done = 0;
+  for (const f of files) {
+    if (status) status.textContent = 'Uploading ' + (done + 1) + '/' + files.length + '…';
+    try {
+      const r = await fetchWithTimeout(BASE + '/api/reference-images/upload?filename=' + encodeURIComponent(f.name) + '&category=' + encodeURIComponent(category), {
+        method: 'POST', headers: {Authorization: 'Bearer ' + TOKEN}, body: f
+      }, 45000);
+      if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.detail || ('HTTP ' + r.status)); }
+      done++;
+    } catch (e) {
+      if (status) status.textContent = 'Failed on ' + f.name + ': ' + (e.message || 'upload error');
+      showToast('Reference photo upload failed: ' + (e.message || 'error'), 'err');
+      loadReferenceImages();
+      return;
+    }
+  }
+  if (status) status.textContent = done + ' photo' + (done !== 1 ? 's' : '') + ' added.';
+  showToast('Added ' + done + ' reference photo' + (done !== 1 ? 's' : ''), 'ok');
+  loadReferenceImages();
+}
+async function deleteRefImage(id){
+  if (!confirm('Delete this reference photo?')) return;
+  try {
+    const r = await fetchWithTimeout(BASE + '/api/reference-images/' + encodeURIComponent(id), {
+      method: 'DELETE', headers: {Authorization: 'Bearer ' + TOKEN}
+    }, 15000);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    _refImages = _refImages.filter(im => im.id !== id);
+    renderRefImgGrid();
+  } catch (e) {
+    showToast('Delete failed: ' + (e.message || 'error'), 'err');
+  }
+}
+(function(){
+  const zone = document.getElementById('refimg-dropzone');
+  const input = document.getElementById('refimg-file-input');
+  if (!zone || !input) return;
+  input.addEventListener('change', () => { if (input.files && input.files.length) uploadRefImages(input.files); input.value = ''; });
+  ['dragover', 'dragenter'].forEach(evt => zone.addEventListener(evt, e => {
+    e.preventDefault(); e.stopPropagation();
+    zone.style.borderColor = 'var(--cyan)'; zone.style.background = 'rgba(242,160,181,.06)';
+  }));
+  ['dragleave', 'dragend'].forEach(evt => zone.addEventListener(evt, e => {
+    zone.style.borderColor = 'var(--border)'; zone.style.background = '';
+  }));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); e.stopPropagation();
+    zone.style.borderColor = 'var(--border)'; zone.style.background = '';
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) uploadRefImages(files);
+  });
+})();
 
 // One-tap Quality Check — hits POST /api/produce/qc-check (local, no AI cost) and
 // renders the pass/warn/fail rows, the same gates run before publishing anything.
@@ -3637,9 +3946,9 @@ async function buildPlannerRun(){
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
     if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
     out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — build started</div>'+
-      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>'+
-      '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Check Files →</button></div>';
-    showToast('Building '+escHtml(d.pid)+' — check Files in a few minutes', 'ok');
+      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>';
+    createPollBuildStatus(d.os_pid, d.log_file, out);
+    showToast('Building '+escHtml(d.pid)+' — watching progress below', 'ok');
   }catch(e){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
   }finally{ if(btn) btn.disabled=false; }
@@ -3666,9 +3975,9 @@ async function stickerPackRun(){
     if(!r.ok) throw new Error(d.detail||('HTTP '+r.status));
     if(d.error){ out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(d.error)+'</div>'; return; }
     out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — sticker build started</div>'+
-      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>'+
-      '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Check Files →</button></div>';
-    showToast('Building '+escHtml(d.pid)+' stickers — check Files in a few minutes', 'ok');
+      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>';
+    createPollBuildStatus(d.os_pid, d.log_file, out);
+    showToast('Building '+escHtml(d.pid)+' stickers — watching progress below', 'ok');
   }catch(e){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
   }finally{ if(btn) btn.disabled=false; }
@@ -3698,9 +4007,9 @@ async function buildProductRun(){
     (d.steps||[]).forEach((s,i)=>{ steps+='<div class="hub-listing-meta" style="padding:1px 0">'+(i+1)+'. '+escHtml(s)+'</div>'; });
     out.innerHTML='<div style="font-weight:600"><span style="color:var(--gold)">⏳</span> '+escHtml(d.pid)+' — full build started</div>'+
       steps+
-      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>'+
-      '<div style="margin-top:8px"><button class="act-btn" onclick="(typeof phoneOpenScreen===\\'function\\'?phoneOpenScreen:showScreen)(\\'files\\');loadFiles&&loadFiles()">Check Files →</button></div>';
-    showToast('Building all of '+escHtml(d.pid)+' — check Files in a few minutes', 'ok');
+      '<div class="hub-listing-meta" style="margin-top:4px;line-height:1.5">'+escHtml(d.message||'')+'</div>';
+    createPollBuildStatus(d.os_pid, d.log_file, out);
+    showToast('Building all of '+escHtml(d.pid)+' — watching progress below', 'ok');
   }catch(e){
     if(out) out.innerHTML='<div class="hub-listing-meta" style="color:var(--red)">'+escHtml(e.message||'Build failed to start')+'</div>';
   }finally{ if(btn) btn.disabled=false; }
@@ -6925,16 +7234,20 @@ const _CATEGORY_LABELS = {
 function _categoryLabel(cat) { return _CATEGORY_LABELS[cat] || String(cat).replace(/_/g, ' '); }
 
 async function loadProducts() {
+  // Also called from the Create screen's _SCREEN_LOADERS (2026-07-22) so the
+  // category product-picker dropdowns have data to filter — that screen has no
+  // #products-content, so the fetch itself must not be gated on that element
+  // existing; only the Products-screen rendering is.
   const el = document.getElementById('products-content');
-  if (!el) return;
-  el.innerHTML = _skeletonCards(4);
+  if (el) el.innerHTML = _skeletonCards(4);
   _productCategoryFilter = null;
   try {
     const d = await authGet('/api/products').then(r => r.json());
     _products = d.products || [];
-    renderProductsContent();
+    if (el) renderProductsContent();
+    if (_createOpenCat) _createSyncProductPicker(_createOpenCat);
   } catch(e) {
-    el.innerHTML = '<div class="hub-empty">' + escHtml(e.message || 'Failed to load products') + '</div>';
+    if (el) el.innerHTML = '<div class="hub-empty">' + escHtml(e.message || 'Failed to load products') + '</div>';
   }
 }
 function setProductCategoryFilter(key) {

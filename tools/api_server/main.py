@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "7899cc3-v238"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2e3d30e-v239"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9854,6 +9854,107 @@ async def studio_upload_image(request: Request, filename: str, _token: str = Dep
     return {"ok": True, "path": out_path.name, "size": len(body), "size_human": _human_size(len(body))}
 
 
+# ── Reference Photos library (2026-07-22 Create-screen redesign) ──────────────────
+# Scott's own inspiration/style-reference images (photos he took, screenshots,
+# Pinterest finds), organized by product category for browsing. Deliberately
+# scoped to upload + organize + browse + delete only this round — nothing here
+# is wired into any AI generation call. Nothing in image_gen.py/
+# listing_photo_pipeline.py/art_creation_tools.py today distinguishes "use this
+# as style/mood guidance" from "reproduce this exactly" in a prompt, and
+# building that distinction is real follow-on engineering, not a page-redesign
+# task — see ops_runbook.md.
+
+
+@app.post("/api/reference-images/upload")
+async def upload_reference_image(
+    request: Request, filename: str, category: str = "general", description: str = "",
+    _token: str = Depends(_auth_session_or_bearer),
+):
+    """Accept a raw image body for the Reference Photos library. Same raw-body
+    convention and PIL-decode validation as studio_upload_image above (blocks
+    non-images and the SVG-with-<script> XSS vector) — no AI cost, so the
+    plain auth dependency is enough, not the rate-limited one AI-spending
+    routes use."""
+    safe_name = os.path.basename((filename or "").strip())
+    if not safe_name:
+        raise HTTPException(status_code=400, detail="filename query param is required")
+    cat = (category or "general").strip().lower()
+    if cat not in _REFERENCE_IMAGE_CATEGORIES:
+        cat = "general"
+    body = await request.body()
+    if not body:
+        raise HTTPException(status_code=400, detail="empty body")
+    if len(body) > _MAX_UPLOAD_BYTES:
+        raise HTTPException(status_code=413, detail=f"File exceeds {_human_size(_MAX_UPLOAD_BYTES)} limit")
+
+    from PIL import Image
+
+    def _validate_and_store() -> tuple[str, int]:
+        Image.open(io.BytesIO(body)).load()
+        root = _FILE_ROOTS["reference_images"]
+        root.mkdir(parents=True, exist_ok=True)
+        stored_name = f"{uuid.uuid4().hex[:8]}_{safe_name}"
+        (root / stored_name).write_bytes(body)
+        return stored_name, len(body)
+
+    try:
+        stored_name, size = await asyncio.to_thread(_validate_and_store)
+    except Exception:
+        raise HTTPException(status_code=400, detail="not a readable image")
+
+    entry = {
+        "id": uuid.uuid4().hex[:12],
+        "filename": stored_name,
+        "category": cat,
+        "description": (description or "").strip()[:300],
+        "size": size,
+        "size_human": _human_size(size),
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    def _append_meta() -> None:
+        entries = _reference_images_meta()
+        entries.insert(0, entry)
+        _write_reference_images_meta(entries)
+
+    await asyncio.to_thread(_append_meta)
+    return entry
+
+
+@app.get("/api/reference-images")
+async def list_reference_images(category: str = "", _token: str = Depends(_auth_session_or_bearer)):
+    """Browse the Reference Photos library, newest first. `category` filters
+    server-side (the frontend also filters client-side via chips, same
+    pattern as Products/Tasks — this param just saves a round-trip)."""
+    entries = await asyncio.to_thread(_reference_images_meta)
+    cat = category.strip().lower()
+    if cat:
+        entries = [e for e in entries if e.get("category") == cat]
+    return {"images": entries, "categories": sorted(_REFERENCE_IMAGE_CATEGORIES)}
+
+
+@app.delete("/api/reference-images/{ref_id}")
+async def delete_reference_image(ref_id: str, _token: str = Depends(_auth_session_or_bearer)):
+    """Remove a reference image — both the stored file and its metadata entry."""
+    def _remove() -> bool:
+        entries = _reference_images_meta()
+        match = next((e for e in entries if e.get("id") == ref_id), None)
+        if match is None:
+            return False
+        remaining = [e for e in entries if e.get("id") != ref_id]
+        _write_reference_images_meta(remaining)
+        try:
+            (_FILE_ROOTS["reference_images"] / os.path.basename(match["filename"])).unlink(missing_ok=True)
+        except OSError:
+            pass
+        return True
+
+    removed = await asyncio.to_thread(_remove)
+    if not removed:
+        raise HTTPException(status_code=404, detail="reference image not found")
+    return {"ok": True, "id": ref_id}
+
+
 @app.post("/api/studio/convert-svg")
 async def studio_convert_svg(request: Request, mode: str = "color", _token: str = Depends(_auth_session_or_bearer)):
     """Trace a raw reference-photo body into an SVG (Studio "SVG Converter" tool).
@@ -10248,6 +10349,21 @@ def _subprocess_env_with_engine(engine: str | None) -> dict:
     return env
 
 
+def _product_log_dir() -> Path:
+    """Where a background build's log file (and other per-product artifacts)
+    live: the persistent Railway volume's files dir when mounted, else the
+    local data/digital_products dir. Extracted 2026-07-22 from 3 near-identical
+    inline copies in _produce_build_planner/_produce_build_sticker_pack/
+    _produce_build_product so the new GET /api/produce/status endpoint has one
+    place to resolve the same path instead of a 4th copy."""
+    base = Path(os.getenv("HUB_FILES_DIR", "").strip()
+                or ("/data/files" if Path("/data/files").is_dir()
+                    else str(ROOT / "data" / "digital_products")))
+    logdir = base / "product_files"
+    logdir.mkdir(parents=True, exist_ok=True)
+    return logdir
+
+
 def _produce_build_planner(inp: dict) -> dict:
     """Kick off a full planner build in the BACKGROUND (base dated + undated PDFs +
     AI cover → finalized PDFs with nav/fillable fields/embedded stickers) via
@@ -10272,14 +10388,9 @@ def _produce_build_planner(inp: dict) -> dict:
     if not script.exists():
         return {"error": "build_planner.py is missing from this deploy."}
     # Log to the volume so a failed detached build is diagnosable in Files.
-    from pathlib import Path as _P
+    log_file = f"{pid}_build.log"
     try:
-        base = _P(os.getenv("HUB_FILES_DIR", "").strip()
-                  or ("/data/files" if _P("/data/files").is_dir()
-                      else str(ROOT / "data" / "digital_products")))
-        logdir = base / "product_files"
-        logdir.mkdir(parents=True, exist_ok=True)
-        _logf = open(logdir / f"{pid}_build.log", "w")  # noqa: SIM115 — handed to Popen
+        _logf = open(_product_log_dir() / log_file, "w")  # noqa: SIM115 — handed to Popen
     except Exception:  # noqa: BLE001
         _logf = subprocess.DEVNULL
     proc = subprocess.Popen(
@@ -10293,6 +10404,7 @@ def _produce_build_planner(inp: dict) -> dict:
         "started": True,
         "os_pid": proc.pid,
         "engine": engine,
+        "log_file": log_file,
         "message": f"Building {pid} in the background (~2-4 min) with {engine} cover art. "
                    f"When it finishes, {pid}.pdf and {pid}U.pdf appear in Files "
                    f"(and {pid}_build.log has the run output).",
@@ -10338,14 +10450,9 @@ def _produce_build_sticker_pack(inp: dict) -> dict:
     if isinstance(sheets, int) and sheets > 0:
         args += ["--sheets", str(sheets)]
     # Log to the volume so a failed detached build is diagnosable in Files.
-    from pathlib import Path as _P
+    log_file = f"{pid}_stickers_build.log"
     try:
-        base = _P(os.getenv("HUB_FILES_DIR", "").strip()
-                  or ("/data/files" if _P("/data/files").is_dir()
-                      else str(ROOT / "data" / "digital_products")))
-        logdir = base / "product_files"
-        logdir.mkdir(parents=True, exist_ok=True)
-        _logf = open(logdir / f"{pid}_stickers_build.log", "w")  # noqa: SIM115 — handed to Popen
+        _logf = open(_product_log_dir() / log_file, "w")  # noqa: SIM115 — handed to Popen
     except Exception:  # noqa: BLE001
         _logf = subprocess.DEVNULL
     proc = subprocess.Popen(
@@ -10359,6 +10466,7 @@ def _produce_build_sticker_pack(inp: dict) -> dict:
         "os_pid": proc.pid,
         "engine": engine,
         "needs_visual_qc": True,
+        "log_file": log_file,
         "message": f"Building {pid}'s sticker pack in the background (~2-4 min) with {engine} "
                    f"sheet art. When it finishes, {pid}_sticker_pack.zip appears in Files "
                    f"({pid}_stickers_build.log has the run output). "
@@ -10448,14 +10556,9 @@ def _produce_build_product(inp: dict) -> dict:
     script = ROOT / "tools" / script_name
     if not script.exists():
         return {"error": f"{script_name} is missing from this deploy."}
-    from pathlib import Path as _P
+    log_file = f"{pid}_{log_suffix}.log"
     try:
-        base = _P(os.getenv("HUB_FILES_DIR", "").strip()
-                  or ("/data/files" if _P("/data/files").is_dir()
-                      else str(ROOT / "data" / "digital_products")))
-        logdir = base / "product_files"
-        logdir.mkdir(parents=True, exist_ok=True)
-        _logf = open(logdir / f"{pid}_{log_suffix}.log", "w")  # noqa: SIM115 — handed to Popen
+        _logf = open(_product_log_dir() / log_file, "w")  # noqa: SIM115 — handed to Popen
     except Exception:  # noqa: BLE001
         _logf = subprocess.DEVNULL
     proc = subprocess.Popen(
@@ -10471,6 +10574,7 @@ def _produce_build_product(inp: dict) -> dict:
         "os_pid": proc.pid,
         "steps": steps,
         "needs_visual_qc": needs_visual_qc,
+        "log_file": log_file,
         "message": f"Building {pid} ({category}) in the background: {' → '.join(steps)}. "
                    f"Files land in Files as each step finishes "
                    f"({pid}_{log_suffix}.log has the live run log + the final QC verdict). "
@@ -10487,6 +10591,48 @@ async def produce_build_product(body: dict, _token: str = Depends(_rate_limited_
     _produce_build_product()'s docstring) in the background. Returns
     immediately; deliverables appear in Files as they finish."""
     return await asyncio.to_thread(_produce_build_product, body or {})
+
+
+@app.get("/api/produce/status")
+async def produce_status(os_pid: int, log_file: str = "", _token: str = Depends(_auth_session_or_bearer)):
+    """Poll a background build kicked off by build-planner/build-sticker-pack/
+    build-product. Reads _LONG_RUNNING_PROCS (the same registry the hourly
+    health-check loop reaps from) and tails the build's own log file.
+
+    2026-07-22 Create-screen redesign: previously tapping a build button gave a
+    static ack and a "Check Files" link, with nothing telling you whether the
+    build was still running, had crashed, or had actually finished — the single
+    biggest gap for someone new to Frank. This is the endpoint that closes it.
+    No AI/Etsy cost, so the plain auth dependency (not the rate-limited one the
+    kickoff routes use) is enough.
+
+    `known: false` means the process was already reaped (the health-check loop
+    deletes finished entries once it's logged them, normally within an hour) --
+    reported honestly rather than guessed at, per _LONG_RUNNING_PROCS's own
+    "never misreport a fetch/auth problem as content-missing" precedent
+    elsewhere in this codebase."""
+    entry = _LONG_RUNNING_PROCS.get(os_pid)
+    result: dict = {"os_pid": os_pid}
+    if entry is None:
+        result["known"] = False
+    else:
+        proc, label, started_at = entry
+        exit_code = proc.poll()
+        result["known"] = True
+        result["label"] = label
+        result["running"] = exit_code is None
+        result["exit_code"] = exit_code
+        result["elapsed_s"] = (datetime.now(timezone.utc) - started_at).total_seconds()
+    if log_file:
+        safe_name = os.path.basename(log_file)  # sanitize -- no path traversal
+        log_path = await asyncio.to_thread(_product_log_dir)
+        log_path = log_path / safe_name
+        try:
+            text = await asyncio.to_thread(log_path.read_text, encoding="utf-8", errors="replace")
+            result["log_tail"] = "\n".join(text.splitlines()[-40:])
+        except OSError:
+            result["log_tail"] = None
+    return result
 
 
 @app.post("/api/studio/generate")
@@ -12686,6 +12832,49 @@ _FILE_ROOTS["svg_conversions"] = ROOT / "data" / "social" / "svg_conversions"
 # tool's own scratch output before anything is staged for a real listing.
 _FILE_ROOTS["lifestyle_photos"] = ROOT / "data" / "social" / "lifestyle_photos"
 
+# Reference Photos library (2026-07-22 Create-screen redesign) — Scott's own
+# curated inspiration/style-reference images, organized by product category.
+# Durable under the volume (same reasoning as staged_photos above: a real
+# library built up over time, not scratch/regeneratable output) with a local
+# data/ fallback for dev. Registering the key here also makes the library
+# browsable/downloadable from the Files screen for free via the GET /api/files
+# scan below.
+_FILE_ROOTS["reference_images"] = (
+    (_FILE_ROOTS["volume"] / "reference_images") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "reference_images")
+)
+_REFERENCE_IMAGES_META_PATH = (
+    (_FILE_ROOTS["volume"] / "reference_images_meta.json") if "volume" in _FILE_ROOTS
+    else (ROOT / "data" / "reference_images_meta.json")
+)
+# Matches the Create screen's 7 category tiles plus a general catch-all for
+# "just inspiration, not tied to one line" — kept in sync manually with the
+# frontend's tile list (frank_hud_mockup.py).
+_REFERENCE_IMAGE_CATEGORIES = {
+    "digital_planner", "wall_art", "coloring_pages", "sticker_pack",
+    "svg_3dprint_pack", "sublimation", "3d_print_physical", "general",
+}
+
+
+def _reference_images_meta() -> list[dict]:
+    """List of {id, filename, category, description, size, size_human,
+    uploaded_at}, newest first. Tolerant of a missing/corrupt file — an empty
+    library is a valid, common state, never an error."""
+    try:
+        data = json.loads(_REFERENCE_IMAGES_META_PATH.read_text())
+        return data if isinstance(data, list) else []
+    except (OSError, json.JSONDecodeError):
+        return []
+
+
+def _write_reference_images_meta(entries: list[dict]) -> None:
+    """Atomic write (temp file + replace) — same pattern as
+    _write_product_catalog_override, avoids a torn read on a crash mid-write."""
+    _REFERENCE_IMAGES_META_PATH.parent.mkdir(parents=True, exist_ok=True)
+    tmp = _REFERENCE_IMAGES_META_PATH.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(entries, indent=2))
+    tmp.replace(_REFERENCE_IMAGES_META_PATH)
+
 
 def _human_size(n: int) -> str:
     size = float(n)
@@ -12840,6 +13029,7 @@ async def list_files(_token: str = Depends(_auth_session_or_bearer)):
                 "staged_videos": "Staged Videos (pending approval)",
                 "svg_conversions": "SVG Conversions",
                 "lifestyle_photos": "Lifestyle Photos",
+                "reference_images": "Reference Photos",
             }
             groups.append({"root": root_key, "label": _labels.get(root_key, "Product Files"), "files": files})
         # Honest empty-state hint: on Railway these dirs are ephemeral + gitignored, so
