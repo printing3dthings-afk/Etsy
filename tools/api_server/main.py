@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "ac48b02-v237"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "7899cc3-v238"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -6200,6 +6200,69 @@ async def _quality_audit_loop() -> None:
         await asyncio.sleep(delay)
 
 
+async def _file_audit_iteration() -> dict:
+    """One run of tools/audit_product_files.py's live-Etsy-verified file
+    integrity audit -- the check that separates 'this product is missing its
+    local backup copy' (verified_live, not urgent) from 'a customer could buy
+    this and receive nothing' (genuinely_missing, the real compliance risk
+    _product_file_integrity_alerts() escalates).
+
+    2026-07-21 finding: this audit was fully built (the audit() function, the
+    /api/alerts source, and the Products-screen per-card badge all shipped)
+    but NOTHING ever called it automatically -- it only ran if someone
+    manually typed `python tools/audit_product_files.py` from a machine with
+    real Etsy credentials, which in practice never happened in production.
+    data/file_audit_report.json never existed, so _file_audit_report() always
+    returned None, so the critical alert and every Products-screen file_audit
+    badge were silently dead from the day they shipped. This loop is the fix:
+    the exact same audit_product_files.audit() logic, now actually scheduled.
+
+    Imports audit_product_files lazily (not at module top level) -- that
+    module itself does `import main as _main` to reuse this file's own
+    _build_products_status()/_catalog_file_exists()/_product_catalog_overrides()
+    helpers rather than duplicating them, which would be a circular import if
+    done at main.py's top level. By the time this loop actually runs (well
+    after startup), `main` is already fully initialized in sys.modules, so
+    the nested import just reuses the live module -- no reinitialization,
+    no cycle."""
+    import audit_product_files as _fa
+    result = await asyncio.to_thread(_fa.audit)
+    result["audited_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    path = _fa._report_path()
+
+    def _write():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(".json.tmp")
+        tmp.write_text(json.dumps(result, indent=2))
+        tmp.replace(path)
+
+    await asyncio.to_thread(_write)
+    return result
+
+
+async def _file_audit_loop() -> None:
+    """Run the live-Etsy file-integrity audit once a day (sooner on a backoff
+    retry after a failure) so the file_audit_report.json backing
+    _product_file_integrity_alerts() and every Products-screen file_audit
+    badge is never more than a day stale. See _file_audit_iteration()'s
+    docstring for why this loop needed to exist at all."""
+    await asyncio.sleep(180)  # let the app finish booting; behind quality_audit's own 120s
+    while True:
+        delay = await _run_loop_iteration(
+            "file_audit", "File Integrity Audit", _file_audit_iteration,
+            on_success_status=lambda r: "error" if r.get("genuinely_missing") else (
+                "warning" if r.get("skipped") else "ok"
+            ),
+            on_success_detail=lambda r: (
+                f"verified_live:{len(r['verified_live'])} "
+                f"genuinely_missing:{len(r['genuinely_missing'])} "
+                f"skipped:{len(r['skipped'])}"
+            ),
+            base_interval=86_400,
+        )
+        await asyncio.sleep(delay)
+
+
 #   A tracked build stuck running past this is treated as hung and killed.
 #   Every build_planner/build_sticker_pack/build_product run finishes in 2-10
 #   min per their own docstrings; 15 min gives real headroom without letting a
@@ -7574,6 +7637,7 @@ _AGENT_LOOP_LABELS = {
     "health_check": "Health Check",
     "daily_brief": "Daily Brief",
     "calendar_tasks": "Calendar Tasks",
+    "file_audit": "File Integrity Audit",
 }
 
 
@@ -7618,6 +7682,7 @@ async def _startup() -> None:
     asyncio.create_task(_health_check_loop())
     asyncio.create_task(_daily_brief_loop())
     asyncio.create_task(_calendar_tasks_loop())
+    asyncio.create_task(_file_audit_loop())
 
 
 @app.post("/api/calendar-tasks/run")
@@ -7672,6 +7737,26 @@ async def run_brief_now(request: Request):
     result = await asyncio.to_thread(_daily_brief.run_daily_brief)
     _set_calendar_task_last_run("daily_brief", date.today())
     return {"status": result}
+
+
+@app.post("/api/file-audit/run")
+async def run_file_audit_now(request: Request):
+    """Manually trigger the live-Etsy file-integrity audit (for testing, or
+    right after fixing a flagged listing so Scott doesn't have to wait up to
+    24h for the badge to clear). Requires X-App-Token header. See
+    _file_audit_iteration()'s docstring for why this loop exists at all --
+    2026-07-21 finding: the audit logic and its /api/alerts + Products-screen
+    consumers had shipped, but nothing ever actually ran it in production."""
+    token = request.headers.get("X-App-Token", "")
+    if not token or not secrets.compare_digest(token, APP_TOKEN):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    result = await _file_audit_iteration()
+    return {
+        "verified_live": len(result["verified_live"]),
+        "genuinely_missing": len(result["genuinely_missing"]),
+        "skipped": len(result["skipped"]),
+        "audited_at": result["audited_at"],
+    }
 
 
 @app.get("/api/analytics")
