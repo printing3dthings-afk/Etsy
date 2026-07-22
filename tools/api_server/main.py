@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "2e3d30e-v243"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "2e3d30e-v244"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -8732,7 +8732,16 @@ async def request_listing_fix(listing_id: int, body: dict | None = None, _token:
     immediately followed by a one-tap republish -- but if the diagnosis found an
     issue outside title/tags (e.g. photo count), that gets called out in the
     republish action's own summary so Scott doesn't blindly reactivate something
-    still broken, plus a todo is added either way."""
+    still broken, plus a todo is added either way.
+
+    Three cases: mapped-and-clean (diagnosis runs, finds nothing -- title/tags
+    still get a routine refresh, republish is unconditional), mapped-with-issues
+    (diagnosis runs, non-title/tag FAILs surface as unfixable_issues), and
+    unmapped (no data/listing_manifest.json entry -- the diagnosis literally
+    cannot run, so it's fail-closed into its own unfixable_issues entry rather
+    than silently defaulting to "looks fine," matching the same-shaped
+    _unmapped_result() fail-closed handling listing_compliance_sweep.py already
+    applies shop-wide; 2026-07-22, see ops_runbook.md)."""
     instructions = ((body or {}).get("instructions") or "").strip()
     listing = await _fetch_listing_for_autofix(listing_id)
 
@@ -8756,6 +8765,17 @@ async def request_listing_fix(listing_id: int, body: dict | None = None, _token:
             unfixable_issues = [i for i in issues if i["check"] not in _TITLE_TAG_FIXABLE_CHECKS and i["severity"] == "FAIL"]
             if fixable_details:
                 diagnosis = "Quality-gate found: " + "; ".join(fixable_details)
+        else:
+            unfixable_issues = [{
+                "severity": "FAIL",
+                "check": "no_manifest_mapping",
+                "detail": (
+                    "This listing has no entry in data/listing_manifest.json, so "
+                    "Frank could not verify why it was deactivated or whether it's "
+                    "actually compliant. Map it in the manifest, or review it "
+                    "manually, before republishing."
+                ),
+            }]
     except Exception as exc:
         print(f"[request-fix] diagnosis lookup failed for {listing_id}: {exc}", flush=True)
 

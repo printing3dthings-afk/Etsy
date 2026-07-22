@@ -10502,3 +10502,81 @@ Scott's follow-up after the misroute fix above: he tapped the (now-honest) rejec
 Also fixed a real timing bug found while re-running `tools/playwright_smoke.py` after this change: the Create-screen test block manually stubs the global `_products` array to test the product picker deterministically, but `loadProducts()`'s real (unmocked) `/api/products` fetch — fired by `_SCREEN_LOADERS.create` on every `showScreen('create')` call, including earlier ones in the same test run — could resolve mid-block and silently overwrite the stub with the real catalog, intermittently inflating picker option counts in an unrelated assertion. Fixed by blocking the real `/api/products` route for the duration of that specific test block (`page.route`/`page.unroute`), not by weakening the assertion.
 
 Verified: `python3 -m py_compile` on every changed `.py` file, `node --check` on the extracted embedded `<script>` after every `frank_hud_mockup.py` edit, full `tests/run_all.py` (67/67, incl. new `tests/test_product_registration.py` and `tests/test_coloring_dynamic_theme.py`, plus extensions to `tests/test_produce_qc.py` and `tests/test_products_catalog.py`), `tools/playwright_smoke.py` (3 consecutive clean runs after the timing fix), and the real end-to-end spend-once verification above.
+
+---
+
+## 2026-07-22 — Third live review, Listings screen this time: "Ask Frank to Fix" silently skipped its own diagnosis for uncatalogued listings
+
+Scott moved the same standard ("dive into it, every action has to work") from the Create screen to the Listings screen. A deep dive into every interactive element on `#screen-listings` (tabs, category filter chips, listing detail panel, Activate/Deactivate, "🔧 Ask Frank to Fix") found the screen almost entirely solid — tabs/filters/detail panel all hit real, live Etsy data (`_listings_sync`, `_shop_sections_sync`, `_enrich_sales` computing `sales`/`conversion_pct` from real order data), no mocked numbers, Activate/Deactivate already retries the known PATCH-race 403. One real gap was found.
+
+**The bug:** `openFixListingModal()`'s own popup copy tells Scott "Frank will check what's wrong and fix the title/tags automatically if that's the issue." But `request_listing_fix()` (`main.py`) only ran that check (`listing_integrity_check.audit_listing()`) when the listing had an entry in `data/listing_manifest.json` (172 mapped at the time of this fix). Anything unmapped — including whatever lands in the Listings screen's own "Uncategorized" bucket, or any listing that entered Etsy outside this system's onboarding flow — silently skipped the check entirely: `diagnosis` and `unfixable_issues` both stayed empty (indistinguishable from "checked it and it's genuinely fine"), and the handler proceeded to regenerate title/tags and **always** stage a clean, warning-free `publish_listing` (republish) action. If Scott had deactivated that listing deliberately for a reason no automated check covers (bad photo, IP concern, customer complaint), one tap of "Approve" on that unreviewed, warning-free republish action would have put it back live blind — a real instance of the button's own promised behavior ("will check what's wrong") not matching what the code actually did.
+
+`listing_compliance_sweep.py` already solved exactly this class of problem shop-wide, fail-closed: *"A listing with zero manifest mapping is treated as its own FAIL... unmapped/unresolved must block, never silently pass"* (`_unmapped_result()`). That philosophy had just never been applied to the single-listing fix path.
+
+**Fix (Scott's explicit choice among 3 options — still regenerate title/tags as a helpful default, but never silently clean-republish):** in `request_listing_fix()`, the `else` branch (no manifest entry) now synthesizes its own `unfixable_issues` entry (`check: "no_manifest_mapping"`) instead of leaving the list empty. This routes through the exact same machinery every other unfixable issue already uses in this function — no new mechanism built: the republish action's staged summary gets the existing "⚠️ NOT fully fixed, still needs: ..." warning appended, and a `scott_only` todo is added. Title/tags still get staged as a routine best-effort refresh either way (harmless, still gated behind Scott's own approval in the Action Center regardless).
+
+New `tests/test_listing_fix_manifest_gate.py` covers all three paths through `request_listing_fix()` end-to-end (Etsy fetch + Anthropic calls mocked, real temp sqlite DB for the action/todo assertions): unmapped listing now blocks with the warning + todo while still staging tags/title; a mapped listing with only a title/tag-fixable FAIL is unchanged (no warning); a mapped listing with a real non-fixable FAIL (`quantity_claim_mismatch`) is unchanged (still warns) — confirming this change is additive only, not a regression of the already-working mapped path. Verified: full `tests/run_all.py`, `tools/check_hardcoded_paths.py`.
+
+
+## 2026-07-22 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-22 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-22 — Durable volume not writable
+hourly health loop found /tmp/tmpv8g2_n9o/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpv8g2_n9o/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-22 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-22 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpgj6abddz/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-22 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-22 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 14035). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-22 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 14037). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-22 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
