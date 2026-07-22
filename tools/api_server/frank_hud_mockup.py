@@ -714,10 +714,33 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 /* ── Live Chat screen — ported from the live Hub's #chat-wrap at / (main.py), same
    /ws/chat backend, same CHAT_SESSION scheme, restyled to the HUD's cyan/gold theme. ── */
 #chat-msgs{flex:1;overflow-y:auto;min-height:0;padding:2px 2px 10px;display:flex;flex-direction:column;gap:10px}
-.lc-bubble{max-width:78%;padding:10px 14px;border-radius:var(--r-lg);font-size:13px;line-height:1.5;word-break:break-word}
+.lc-bubble{max-width:78%;padding:10px 14px;border-radius:var(--r-lg);font-size:13px;line-height:1.5;word-break:break-word;box-shadow:var(--card-shadow)}
 .lc-bubble.user{align-self:flex-end;background:var(--gold);color:#0D1B2A;border-bottom-right-radius:4px}
-.lc-bubble.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--border);border-bottom-left-radius:4px;white-space:pre-wrap;color:var(--text)}
-.lc-bubble.typing{color:var(--muted);font-style:italic}
+/* 2026-07-22 chat redesign: bot bubbles pick up a cyan accent border -- the chat
+   panel previously used zero cyan anywhere (gold for the user + flat panel-gray
+   for the bot), which was the concrete cause of it reading as flat/generic despite
+   cyan being the app's primary accent everywhere else. */
+.lc-bubble.bot{align-self:flex-start;background:var(--panel2);border:1px solid var(--cyan);border-left-width:3px;border-bottom-left-radius:4px;white-space:pre-wrap;color:var(--text)}
+.lc-bubble.typing{color:var(--muted);font-style:italic;box-shadow:none}
+.lc-bubble .lc-md-list{margin:4px 0;padding-left:18px}
+.lc-bubble .lc-md-list li{margin:2px 0}
+.lc-bubble code{background:rgba(96,220,255,.12);border-radius:4px;padding:1px 5px;font-size:12px;font-family:ui-monospace,Menlo,Consolas,monospace}
+/* Entrance animation for new bubbles (2026-07-22 chat redesign) -- mirrors the
+   existing screen-in pattern above so screen switches and new messages share the
+   same motion language. Applied once at creation time in addBubble(); silenced
+   under reduced motion in the shared block near the bottom of this stylesheet. */
+@keyframes bubble-in{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.lc-bubble.bubble-in{animation:bubble-in .22s cubic-bezier(.22,1,.36,1) both}
+/* "Frank is speaking" indicator inside the chat itself (2026-07-22) -- previously
+   the only speaking cue lived on the orb canvas, which is hidden whenever chat is
+   open, so there was zero in-chat feedback that a spoken reply was playing.
+   Toggled by setSpeaking(), never a separate state to drift out of sync. */
+#chat-speaking-indicator{display:none;align-items:center;gap:6px;padding:4px 2px;font-size:11px;color:var(--cyan);flex-shrink:0}
+#chat-speaking-indicator.on{display:flex}
+#chat-speaking-indicator .csi-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:csi-pulse 1s ease-in-out infinite}
+#chat-speaking-indicator .csi-dot:nth-child(2){animation-delay:.15s}
+#chat-speaking-indicator .csi-dot:nth-child(3){animation-delay:.3s}
+@keyframes csi-pulse{0%,60%,100%{opacity:.3;transform:scale(1)}30%{opacity:1;transform:scale(1.3)}}
 .lc-chips{display:flex;gap:8px;flex-wrap:wrap;padding:8px 2px;flex-shrink:0;border-top:1px solid var(--border)}
 .lc-chip{padding:7px 14px;border-radius:var(--r-pill);border:1px solid var(--border);background:var(--panel2);color:var(--muted);font-size:12px;cursor:pointer;white-space:nowrap}
 .lc-chip:active{border-color:var(--gold);color:var(--gold)}
@@ -726,6 +749,21 @@ video{width:100%;border-radius:var(--r-md);background:#000;display:block}
 #chat-input:focus{border-color:var(--gold)}
 #chat-send{width:40px;height:40px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 #chat-send svg{width:18px;height:18px;stroke:#0D1B2A;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* Voice-mode entry point inside the chat input row (2026-07-22 Ask-tab redesign) --
+   opens the existing #orb-view popup (openFrankPopup()) on demand instead of it
+   being the mandatory Ask-tab landing screen. Mobile only; desktop has no orb
+   popup at all. */
+#chat-voice-btn{width:40px;height:40px;border-radius:50%;background:var(--panel2);border:1px solid var(--border);cursor:pointer;display:none;align-items:center;justify-content:center;flex-shrink:0;color:var(--cyan)}
+#chat-voice-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+body.is-mobile #chat-voice-btn{display:flex}
+#chat-voice-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+/* Mobile-only branded header above the Ask/chat panel -- Scott wants to keep the
+   "OnBrandCraftz" branding now that Ask no longer lands on its own dedicated orb
+   screen (see phoneTab()). Plain styled text, not the animated WebGL wordmark
+   (initOrbGL()) -- duplicating that render loop just for a static header label
+   would be wasted GPU cost for no visual gain here. */
+.mobile-shop-header{display:none}
+body.is-mobile .mobile-shop-header{display:block;text-align:center;padding:8px 2px 2px;font-family:var(--font-display);color:var(--cyan);font-size:15px;font-weight:700;letter-spacing:.5px}
 /* Phone "Ask" tab (#orb-view) has no chat transcript, just the orb -- so Scott can
    still type to %%AGENT_SHORT%% even when voice isn't practical (loud room, no mic
    permission, etc). Same #chat-input/#chat-send visual treatment, own IDs since a
@@ -1074,13 +1112,13 @@ body.is-mobile .main,body.is-mobile .screen{padding-bottom:calc(80px + env(safe-
   cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 #back-to-top-btn.show{display:flex}
 #back-to-top-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
-/* "Talk to Frank" popup (mobile only) — #orb-view is no longer permanent Ask-tab
+/* "Talk to Frank" popup (mobile only) — #orb-view is not permanent Ask-tab
    content, it's a dedicated full-screen popup toggled by body.frank-popup-open,
-   opened by the Ask tab only (see phoneTab()/openFrankPopup() in the script —
-   the top-right hamburger opens a separate, much smaller text-only popup below,
-   2026-07-10 correction). Deliberately decoupled from the desktop body.cc-open
-   control-center toggle so phone popup state never fights desktop control-center
-   state. */
+   opened via a mic/voice button inside the Ask/chat screen since 2026-07-22 (see
+   phoneTab()/openFrankPopup() in the script — the top-right hamburger opens a
+   separate, much smaller text-only popup below, 2026-07-10 correction).
+   Deliberately decoupled from the desktop body.cc-open control-center toggle so
+   phone popup state never fights desktop control-center state. */
 body.is-mobile #orb-view{display:none}
 body.is-mobile.frank-popup-open #orb-view{
   display:flex !important;position:fixed;inset:0;z-index:750;
@@ -1317,6 +1355,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   body.is-mobile #phone-tabbar .ptab-pill{transition:none}
   .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
   #product-review-modal,#product-review-backdrop{animation:none !important}
+  .lc-bubble{animation:none}
+  #chat-speaking-indicator .csi-dot{animation:none;opacity:1}
   .create-choice{transition:none}
   .create-choice:hover,.create-choice:active{transform:none}
   /* .act-btn's press-scale predates this file's reduced-motion pass (pre-existing
@@ -1482,6 +1522,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
       <!-- CENTER: primary interaction -->
       <div class="col-center">
         <div class="panel brk col-chat">
+          <div class="mobile-shop-header">OnBrandCraftz</div>
           <div class="panel-title">Ask %%AGENT_SHORT%% <span class="src">/ws/chat — live, always-on chat</span></div>
           <div id="chat-msgs" aria-live="polite"></div>
           <div class="lc-chips">
@@ -1491,8 +1532,12 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
             <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">Pricing advice</span>
             <span class="lc-chip" onclick="sendChip(this)" role="button" tabindex="0">SEO tips</span>
           </div>
+          <div id="chat-speaking-indicator" aria-live="polite"><span class="csi-dot"></span><span class="csi-dot"></span><span class="csi-dot"></span>%%AGENT_SHORT%% is speaking…</div>
           <div class="lc-input-row">
             <input id="chat-input" type="text" placeholder="Ask %%AGENT_NAME%%…" autocomplete="off" aria-label="Message">
+            <button id="chat-voice-btn" onclick="openFrankPopup()" aria-label="Voice mode">
+              <svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            </button>
             <button id="chat-send" onclick="sendMsg()" aria-label="Send message">
               <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             </button>
@@ -2425,11 +2470,11 @@ window.addEventListener('resize', syncMobileClass);
 mobileMQ.addEventListener('change', syncMobileClass);
 syncMobileClass();
 document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
-// Default phone landing is the orb (the "Ask Frank" full-screen popup) -- Scott
-// wants it to be the first thing he sees when the app opens. phoneTab('ask') ->
-// openFrankPopup() shows #orb-view with the tab bar still reachable, so he can tap
-// Today/Approvals/More to leave. The orb's WebGL render loop is already unpaused by
-// resetOrbToDefault() at load, so it animates immediately.
+// Default phone landing is the Ask/chat screen -- Scott wants it to be the first
+// thing he sees when the app opens. phoneTab('ask') -> phoneOpenScreen('cmd') shows
+// the real chat + stats content with the tab bar still reachable, so he can tap
+// Today/Approvals/More to leave. (2026-07-22: previously landed on a blank orb
+// popup with only an "Open full chat" button -- see phoneTab()'s 'ask' branch.)
 // Deferred via setTimeout(0): the phone panels' renderers touch module-scope `let`
 // state (e.g. _phoneNeeds) declared further down this script, so touching them THIS
 // early hits the temporal dead zone (real bug caught live via Playwright, "Cannot
@@ -2454,7 +2499,13 @@ function _hapticTick(ms){
 function phoneTab(which){
   const wasActive = document.querySelector('#phone-tabbar .ptab.on');
   if (!(wasActive && wasActive.dataset.ptab === which)) _hapticTick();
-  if (which === 'ask'){ openFrankPopup(); return; }
+  // 2026-07-22 (Ask-tab redesign): Ask used to open a blank orb popup with a
+  // single "Open full chat" button as the only way to reach anything real --
+  // confirmed a wasted extra tap via a screen recording Scott sent. Ask now
+  // goes straight to the real chat+stats screen (#screen-cmd), same as
+  // tapping "Open full chat" used to. Voice/orb mode moved to a button
+  // inside that screen instead (openFrankPopup(), still reused as-is).
+  if (which === 'ask'){ phoneOpenScreen('cmd'); return; }
   // Leaving the orb popup for a native panel (Scott, 2026-07-10: tab bar is now
   // reachable while the popup is open) -- same cleanup closeFrankPopup() does,
   // minus its recursive phoneTab() call since we're already switching tabs here.
@@ -2470,18 +2521,26 @@ function phoneTab(which){
   // state was active (if any) -- 'create' immediately re-enters it below via
   // phoneOpenScreen() itself, which re-adds this marker.
   document.body.classList.remove('phone-screen-open');
+  // 2026-07-22: phoneOpenScreen() (now the primary way to reach Ask/chat,
+  // previously only a rare "Open full chat" detour) sets cc-open, but
+  // returning to a tab-bar panel never cleared it -- confirmed live via
+  // Playwright, body kept both cc-open AND phone-panel simultaneously after
+  // Ask -> Today. Harmless by luck today (CSS specificity kept it visually
+  // silent), but not something to leave relying on luck now that this path
+  // runs on every single Ask tap instead of rarely.
+  document.body.classList.remove('cc-open');
   if (which === 'create'){ phoneOpenScreen('create'); return; }
   if (which === 'appr'){ document.getElementById('pp-appr').classList.add('on'); renderPhoneApprovals(); }
   else if (which === 'today'){ document.getElementById('pp-today').classList.add('on'); renderPhoneToday(); }
   else if (which === 'more'){ document.getElementById('pp-more').classList.add('on'); renderPhoneMore(); }
   const pb = document.getElementById('phone-body'); if (pb) pb.scrollTop = 0;
 }
-// "Talk to Frank" full-screen orb+voice popup (mobile only) — opened ONLY by the
-// Ask tab now (2026-07-10: the top-right hamburger was reassigned to the much
-// smaller quick-text popup below, per Scott's correction — he wanted the input
-// FIELD to pop up, not the whole orb screen). Remembers whichever native panel
-// was active underneath so closing returns there instead of always landing back
-// on a fixed tab.
+// "Talk to Frank" full-screen orb+voice popup (mobile only) — since 2026-07-22 this
+// is an on-demand voice-mode overlay opened from a mic button inside the Ask/chat
+// screen (see .lc-input-row), not the Ask tab's landing view anymore (the top-right
+// hamburger opens a separate, much smaller quick-text popup below). Remembers
+// whichever native panel was active underneath so closing returns there instead of
+// always landing back on a fixed tab.
 let _frankPopupPrevTab = 'today';
 function openFrankPopup(){
   const activeBtn = document.querySelector('#phone-tabbar .ptab.on');
@@ -4910,7 +4969,7 @@ async function initWS() {
     if (d.type === 'history') {
       if (!_historyApplied && Array.isArray(d.messages)) {
         const c = document.getElementById('chat-msgs'); c.innerHTML = '';
-        d.messages.forEach(m => addBubble(m.content, m.role === 'user' ? 'user' : 'bot'));
+        d.messages.forEach(m => addBubble(m.content, m.role === 'user' ? 'user' : 'bot', m.role === 'user' ? null : {markdown:true}));
         _historyApplied = true; scrollMsgs();
       }
       return;
@@ -4925,6 +4984,10 @@ async function initWS() {
       bot.textContent += d.content; scrollMsgs();
     } else if (d.type === 'done') {
       const finalText = bot ? bot.textContent.trim() : '';
+      // Render markdown once here, not per-chunk (2026-07-22 chat redesign) -- doing
+      // it on every 'chunk' would mean re-parsing partial/broken markdown syntax
+      // mid-stream (e.g. an unclosed "**") on every keystroke-equivalent update.
+      if (bot && finalText) { bot.innerHTML = _renderMarkdownLite(finalText); }
       _clearStreaming(); scrollMsgs();
       if (finalText) speakText(finalText, _autoSpeakOpts());
     }
@@ -4952,10 +5015,37 @@ async function initWS() {
     }
   };
 }
-function addBubble(text, who) {
+// Minimal, hand-rolled markdown -- not a library, chat replies are short and this
+// is a well-scoped subset (bold, inline code, "- " lists). Escapes HTML entities
+// FIRST, then whitelist-unescapes only the specific tags this function itself
+// inserts -- user/buyer text can never reach here as raw HTML. Only call this for
+// text this app already trusts having rendered as plain text before (bot replies,
+// chat history) -- never for the type:'error' path or user bubbles, which stay
+// plain textContent as a deliberate, simpler XSS boundary.
+function _renderMarkdownLite(text) {
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const lines = esc(text).split('\\n');
+  let html = '', inList = false;
+  for (const line of lines) {
+    const m = /^[-*]\s+(.*)$/.exec(line);
+    if (m) {
+      if (!inList) { html += '<ul class="lc-md-list">'; inList = true; }
+      html += '<li>' + m[1] + '</li>';
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += (html && !html.endsWith('</ul>') ? '<br>' : '') + line;
+    }
+  }
+  if (inList) html += '</ul>';
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/`([^`]+?)`/g, '<code>$1</code>');
+  return html;
+}
+function addBubble(text, who, opts) {
   const el = document.createElement('div');
-  el.className = 'lc-bubble ' + who;
-  el.textContent = text;
+  el.className = 'lc-bubble ' + who + ' bubble-in';
+  if (opts && opts.markdown) { el.innerHTML = _renderMarkdownLite(text); }
+  else { el.textContent = text; }
   document.getElementById('chat-msgs').appendChild(el);
   scrollMsgs();
   return el;
@@ -9670,6 +9760,12 @@ function setSpeaking(on, viaFallback){
   if(talkSub) talkSub.textContent = on
     ? (viaFallback ? '%%AGENT_SHORT%% is speaking… (free voice)' : '%%AGENT_SHORT%% is speaking…')
     : 'tap to speak';
+  // 2026-07-22 chat redesign: this is the single existing call site that sets
+  // speaking state, so toggling the in-chat indicator here means it can never
+  // drift out of sync with the orb's own state (which is hidden whenever chat is
+  // open, so it gave zero in-chat feedback that Frank was actually talking).
+  const csi = document.getElementById('chat-speaking-indicator');
+  if (csi) csi.classList.toggle('on', !!on);
 }
 canvas.addEventListener('click', toggleVoiceCapture);
 if(orbGlCanvas) orbGlCanvas.addEventListener('click', toggleVoiceCapture);

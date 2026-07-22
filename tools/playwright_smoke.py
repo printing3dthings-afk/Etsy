@@ -1750,6 +1750,82 @@ async def _run_browser_checks() -> None:
                 check(conv_screen_state.get("contentPresent") is True,
                       f"the conversations list/transcript container must be present on that screen: {conv_screen_state}")
 
+            # ── Mobile Ask-tab redesign (2026-07-22), Phase 1 -- Scott: tapping "Ask"
+            # used to open a nearly blank orb popup (#orb-view) with only an "Open full
+            # chat" button as the way to reach anything real, confirmed as a wasted
+            # extra tap via a screen recording he sent. Ask now goes straight to the
+            # real chat+stats screen (#screen-cmd); voice/orb mode moved to a button
+            # inside that screen instead. ──
+            await page.evaluate("phoneTab('today')")  # start from a known, non-ask tab
+            await page.wait_for_timeout(200)
+            ask_state = await page.evaluate("""() => {
+                phoneTab('ask');
+                return {
+                    screenCmdActive: document.getElementById('screen-cmd').classList.contains('active'),
+                    orbViewVisible: getComputedStyle(document.getElementById('orb-view')).display !== 'none',
+                    mobileHeaderText: (() => { const el = document.querySelector('.mobile-shop-header'); return el ? el.textContent : null; })(),
+                };
+            }""")
+            check(ask_state.get("screenCmdActive") is True,
+                  f"phoneTab('ask') must land directly on #screen-cmd, not require a second tap through the orb popup: {ask_state}")
+            check(ask_state.get("orbViewVisible") is False,
+                  f"the orb popup must NOT be showing right after tapping Ask -- it's now an opt-in voice control, not the landing view: {ask_state}")
+            check(ask_state.get("mobileHeaderText") == "OnBrandCraftz",
+                  f"the mobile-only shop-name header must render above the chat panel (Scott: keep the branding): {ask_state}")
+
+            # Voice button opens the orb popup on demand; "Open full chat" inside it
+            # returns to the same chat screen (reusing the pre-existing button/handler
+            # rather than a new one -- closeFrankPopup() has no call sites in the app).
+            await page.click("#chat-voice-btn")
+            await page.wait_for_timeout(200)
+            voice_state = await page.evaluate("() => getComputedStyle(document.getElementById('orb-view')).display !== 'none'")
+            check(voice_state is True, "tapping the in-chat mic/voice button must open the orb popup")
+            await page.click(".orb-open-chat")
+            await page.wait_for_timeout(200)
+            back_state = await page.evaluate("""() => ({
+                screenCmdActive: document.getElementById('screen-cmd').classList.contains('active'),
+                orbViewVisible: getComputedStyle(document.getElementById('orb-view')).display !== 'none',
+            })""")
+            check(back_state.get("screenCmdActive") is True and back_state.get("orbViewVisible") is False,
+                  f"'Open full chat' inside the voice popup must return to the chat screen and close the popup: {back_state}")
+
+            # A stray cc-open must never survive a round trip back to a normal tab-bar
+            # panel now that phoneOpenScreen('cmd') is the primary Ask-tab path (this
+            # code path used to be a rare detour, not the default -- see phoneTab()'s
+            # dated comment for the live-Playwright repro that found this).
+            await page.evaluate("phoneTab('today')")
+            await page.wait_for_timeout(200)
+            after_today = await page.evaluate("() => document.body.classList.contains('cc-open')")
+            check(after_today is False,
+                  "returning to a tab-bar panel (Today) after visiting Ask must clear cc-open, not leave it stuck")
+
+            # ── Chat visual redesign (2026-07-22): markdown rendering, XSS boundary,
+            # and the in-chat speaking indicator. ──
+            md_state = await page.evaluate("""() => {
+                const el = addBubble('This is **bold** text', 'bot', {markdown:true});
+                const strong = el.querySelector('strong');
+                return {hasStrong: !!strong, strongText: strong ? strong.textContent : null, hasBubbleIn: el.classList.contains('bubble-in')};
+            }""")
+            check(md_state.get("hasStrong") is True and md_state.get("strongText") == "bold",
+                  f"a bot bubble created with {{markdown:true}} must render **bold** as a real <strong> element: {md_state}")
+            check(md_state.get("hasBubbleIn") is True,
+                  f"every new bubble must get the entrance-animation class: {md_state}")
+
+            # Regression: the type:'error' path (and addBubble() calls with no markdown
+            # opt) must stay plain-text/escaped -- this is a deliberate XSS boundary,
+            # never render tool/buyer-adjacent error text as HTML.
+            err_state = await page.evaluate("""() => {
+                const el = addBubble('\\u26a0\\ufe0f <img src=x onerror=alert(1)>', 'bot');
+                return {hasImg: !!el.querySelector('img'), html: el.innerHTML};
+            }""")
+            check(err_state.get("hasImg") is False,
+                  f"addBubble() without {{markdown:true}} (the type:'error' call shape) must never render raw HTML: {err_state}")
+
+            speak_on = await page.evaluate("() => { setSpeaking(true); return document.getElementById('chat-speaking-indicator').classList.contains('on'); }")
+            speak_off = await page.evaluate("() => { setSpeaking(false); return document.getElementById('chat-speaking-indicator').classList.contains('on'); }")
+            check(speak_on is True, "setSpeaking(true) must turn on #chat-speaking-indicator")
+            check(speak_off is False, "setSpeaking(false) must turn off #chat-speaking-indicator")
+
         finally:
             await browser.close()
 
