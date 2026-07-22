@@ -3502,17 +3502,26 @@ let _activeScreen = 'cmd';
 // instead of a static "Check Files" dead end (see that function's own docstring).
 const _CREATE_CATEGORIES = {
   digital_planner: {
-    icon: '🗓️', label: 'Digital Planner', real: true,
+    icon: '🗓️', label: 'Digital Planner', real: true, usesEngine: true,
     blurb: 'A full planner — dated and undated PDF versions, a cover, clickable menus, boxes you can type into, and a matching kawaii sticker pack.',
     placeholder: 'e.g. DP1030', primaryLabel: 'Build this planner',
   },
   wall_art: {
-    icon: '🖼️', label: 'Wall Art', real: true,
+    // usesEngine: false -- this one-tap flow (build_wallart_product.py) only
+    // packages the multi-size print ZIP from EXISTING art; it generates no new
+    // AI art, so an art-style choice here would be a dead control (main.py's
+    // _produce_build_product() passes engine=None for this category, and the
+    // subprocess env only carries an engine var when one is set). Found in QA
+    // review, 2026-07-22 -- the selector used to render for every real
+    // category regardless of whether the backend ever reads it.
+    icon: '🖼️', label: 'Wall Art', real: true, usesEngine: false,
     blurb: 'Every print size a buyer expects, ready to sell — small to large, square, and standard paper sizes, all print-quality.',
     placeholder: 'e.g. WA1030', primaryLabel: 'Build this wall art',
   },
   coloring_pages: {
-    icon: '🎨', label: 'Coloring Pages', real: true,
+    // usesEngine: false -- same reason as wall_art above (build_coloring_product.py
+    // generates no new AI art in this flow either).
+    icon: '🎨', label: 'Coloring Pages', real: true, usesEngine: false,
     blurb: 'A themed coloring-page set, packaged and ready to sell.',
     placeholder: 'e.g. COLOR1030', primaryLabel: 'Build these coloring pages',
   },
@@ -3589,11 +3598,17 @@ function _renderCategoryPanelHtml(key){
     + '<input id="bx-pid" type="text" placeholder="' + escHtml(cfg.placeholder) + '" autocapitalize="characters" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel2);color:var(--text);font-size:14px" />'
     + '<div><span class="cd-newcode-link" onclick="_createToggleNewCode(false)">← pick from the list instead</span></div></div>';
 
-  html += '<span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Advanced ▸</span>';
-  html += '<div class="cd-advanced-body">';
-  html += '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Art style (used for the AI-generated art step only)</label>';
-  html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
-  html += '</div>';
+  // usesEngine: false (wall_art, coloring_pages) -- this category's one-tap
+  // build generates no new AI art, so an art-style picker would be a dead
+  // control the backend never reads (see _CREATE_CATEGORIES' own comment).
+  // Skip the whole Advanced disclosure rather than show an empty one.
+  if (cfg.usesEngine) {
+    html += '<span class="cd-advanced-toggle" onclick="_createToggleAdvanced(this)">Advanced ▸</span>';
+    html += '<div class="cd-advanced-body">';
+    html += '<label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">Art style (used for the AI-generated art step only)</label>';
+    html += '<select id="bx-engine" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--panel);color:var(--text);font-size:12px">' + _engineOptionsHtml() + '</select>';
+    html += '</div>';
+  }
 
   html += '<div style="margin-top:12px"><button class="act-btn primary" style="width:100%" onclick="buildProductRun()" id="bx-run-btn">' + escHtml(cfg.primaryLabel) + '</button></div>';
   html += '<div id="bx-result" style="margin-top:12px"></div>';
@@ -3635,7 +3650,17 @@ function _createToggleNewCode(showFreeText){
   pickerWrap.style.display = showFreeText ? 'none' : '';
   freeWrap.style.display = showFreeText ? '' : 'none';
   const pid = document.getElementById('bx-pid');
-  if (showFreeText && pid) { pid.value = ''; pid.focus(); }
+  if (showFreeText && pid) {
+    pid.value = '';
+    pid.focus();
+  } else if (!showFreeText) {
+    // Switching back to the picker: a code typed into the free-text field must
+    // not silently survive into the build -- resync the hidden #bx-pid to
+    // whatever the (visible-again) <select> currently shows, same as a real
+    // onchange would (found in QA review, 2026-07-22: this path previously left
+    // #bx-pid holding stale free-typed text after "pick from the list instead").
+    _createPidSelectChanged();
+  }
 }
 function _createSyncProductPicker(key){
   const sel = document.getElementById('create-pid-select');
@@ -3649,7 +3674,7 @@ function _createSyncProductPicker(key){
   items.forEach(p => {
     const opt = document.createElement('option');
     opt.value = p.id;
-    opt.textContent = p.id + ' — ' + (p.name || '');
+    opt.textContent = p.id + ' — ' + (p.title || '');
     sel.appendChild(opt);
   });
 }
@@ -3685,9 +3710,20 @@ function createPollBuildStatus(osPid, logFile, outEl){
   if (!osPid || !outEl) return;
   const startedAt = Date.now();
   const timeoutMs = 10 * 60 * 1000;
+  // A direct element reference, not a getElementById lookup by a fixed id --
+  // the digital_planner panel alone can have up to 4 build buttons live at
+  // once (the main build plus 3 "rebuild just one part" rows), each calling
+  // this function into its OWN outEl. A shared hardcoded id meant whichever
+  // box rendered first "won" every subsequent poll's getElementById lookup,
+  // silently overwriting that box while the others never updated (found in
+  // QA review, 2026-07-22).
+  const box = document.createElement('div');
+  box.style.marginTop = '10px';
+  outEl.appendChild(box);
   const poll = async () => {
+    if (!box.isConnected) return;  // panel was closed/replaced — stop polling quietly
     if (Date.now() - startedAt > timeoutMs) {
-      outEl.insertAdjacentHTML('beforeend', '<div class="hub-listing-meta" style="margin-top:8px;color:var(--gold)">Still going after 10 minutes — check Files, or try again in a bit.</div>');
+      box.innerHTML = '<div class="hub-listing-meta" style="color:var(--gold)">Still going after 10 minutes — check Files, or try again in a bit.</div>';
       return;
     }
     let d;
@@ -3700,8 +3736,7 @@ function createPollBuildStatus(osPid, logFile, outEl){
       setTimeout(poll, 4000);
       return;
     }
-    const box = document.getElementById('cd-build-status-box');
-    if (!box) return;  // panel was closed/replaced — stop polling quietly
+    if (!box.isConnected) return;  // panel closed/replaced while the request was in flight
     const tail = d.log_tail ? '<pre style="white-space:pre-wrap;font-size:10.5px;color:var(--muted);background:var(--panel);border-radius:var(--r-sm);padding:8px;margin-top:6px;max-height:160px;overflow-y:auto">' + escHtml(d.log_tail) + '</pre>' : '';
     if (d.known === false) {
       box.innerHTML = '<div class="hub-listing-meta">Lost track of this build (it\\'s been a while) — check Files for the result.</div>';
@@ -3719,7 +3754,6 @@ function createPollBuildStatus(osPid, logFile, outEl){
       box.innerHTML = '<div style="font-weight:600;color:var(--red)">✗ Something went wrong (exit code ' + d.exit_code + ')</div>' + tail;
     }
   };
-  outEl.insertAdjacentHTML('beforeend', '<div id="cd-build-status-box" style="margin-top:10px"></div>');
   setTimeout(poll, 1500);
 }
 

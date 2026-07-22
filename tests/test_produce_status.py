@@ -16,6 +16,7 @@ import tempfile
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -145,18 +146,70 @@ def test_requires_auth():
     check(r.status_code in (401, 403), f"unauthenticated request must be rejected, got {r.status_code}")
 
 
-def test_build_kickoff_responses_carry_log_file():
-    # The 3 kickoff functions must each surface a "log_file" the frontend can
-    # hand to createPollBuildStatus() -- assert on the unconfigured-code error
-    # path's shape is NOT enough (that path never gets to log_file), so this
-    # checks the field is referenced in each function via a benign call that
-    # still returns before spawning a real build.
+def test_build_kickoff_rejects_unconfigured_codes_cleanly():
+    # The unconfigured-code path must error without ever reaching subprocess.Popen
+    # (i.e. without spawning anything) -- this is a DIFFERENT contract than the
+    # success path below (which must carry log_file); kept as its own test rather
+    # than standing in for the success-path assertion the earlier version of this
+    # test claimed to cover but didn't (caught in QA review, 2026-07-22).
     out = server._produce_build_planner({"pid": "DP9999"})
-    check("error" in out, f"unconfigured planner must still error cleanly, got {out}")
+    check("error" in out and "log_file" not in out, f"unconfigured planner must error cleanly with no log_file, got {out}")
     out = server._produce_build_sticker_pack({"pid": "DP9999"})
-    check("error" in out, f"unconfigured sticker pack must still error cleanly, got {out}")
+    check("error" in out and "log_file" not in out, f"unconfigured sticker pack must error cleanly with no log_file, got {out}")
     out = server._produce_build_product({"pid": "DP9999"})
-    check("error" in out, f"unconfigured product must still error cleanly, got {out}")
+    check("error" in out and "log_file" not in out, f"unconfigured product must error cleanly with no log_file, got {out}")
+
+
+def _fake_popen(*_args, **_kwargs):
+    proc = MagicMock()
+    proc.pid = 800000 + id(proc) % 1000  # distinct-enough fake OS pid per call
+    proc.poll.return_value = None
+    return proc
+
+
+def test_build_kickoff_success_path_carries_log_file():
+    # The real contract createPollBuildStatus() depends on: a SUCCESSFUL kickoff
+    # (a real configured pid, past every validation gate) must return "log_file"
+    # so the frontend has something to hand to GET /api/produce/status. subprocess.
+    # Popen is mocked so this never actually spawns a build; _product_log_dir()
+    # is redirected to a throwaway temp dir so the (still-real) log file open()
+    # call doesn't touch the repo's data/ tree.
+    pid = "DP1030"  # real, configured planner/sticker-pack pid (see generate_planner_v2._ALL_V2_PIDS / build_sticker_pack.SPEC_MODULES)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server.subprocess, "Popen", side_effect=_fake_popen):
+            out = server._produce_build_planner({"pid": pid})
+            check(out.get("started") is True, f"a configured pid must actually start, got {out}")
+            check(out.get("log_file") == f"{pid}_build.log", f"planner build must return its exact log_file name, got {out}")
+            check(out.get("os_pid") is not None, f"planner build must return the spawned os_pid, got {out}")
+            server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
+
+            out = server._produce_build_sticker_pack({"pid": pid})
+            check(out.get("started") is True, f"a configured pid must actually start, got {out}")
+            check(out.get("log_file") == f"{pid}_stickers_build.log", f"sticker-pack build must return its exact log_file name, got {out}")
+            server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
+
+            out = server._produce_build_product({"pid": pid})
+            check(out.get("started") is True, f"a configured pid must actually start, got {out}")
+            check(out.get("log_file") == f"{pid}_product_build.log", f"full product build must return its exact log_file name, got {out}")
+            server._LONG_RUNNING_PROCS.pop(out.get("os_pid"), None)
+
+
+def test_build_kickoff_success_path_registers_in_long_running_procs():
+    # createPollBuildStatus() polls GET /api/produce/status, which reads
+    # _LONG_RUNNING_PROCS by the returned os_pid -- confirm the kickoff actually
+    # registers there (not just that it returns a plausible-looking os_pid).
+    pid = "DP1030"
+    with tempfile.TemporaryDirectory() as tmpdir:
+        with patch.object(server, "_product_log_dir", return_value=Path(tmpdir)), \
+             patch.object(server.subprocess, "Popen", side_effect=_fake_popen):
+            out = server._produce_build_planner({"pid": pid})
+            os_pid = out.get("os_pid")
+            check(os_pid in server._LONG_RUNNING_PROCS, f"the kicked-off build's os_pid must be registered in _LONG_RUNNING_PROCS, got entry: {server._LONG_RUNNING_PROCS.get(os_pid)}")
+            entry = server._LONG_RUNNING_PROCS.get(os_pid)
+            if entry:
+                check(entry[1] == f"build_planner:{pid}", f"the registered label must identify this build, got {entry[1]!r}")
+            server._LONG_RUNNING_PROCS.pop(os_pid, None)
 
 
 def run() -> None:

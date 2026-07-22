@@ -736,20 +736,28 @@ async def _run_browser_checks() -> None:
             # Stub _products so the real-category panel's picker has something to
             # show (loadProducts() itself is covered by the loadProducts-early-return
             # fix verified separately; this just gives the picker fixture data).
+            # Field is "title" -- matches the REAL /api/products response shape
+            # (main.py's _build_products_status(): "title": p.get("name", "")) --
+            # not "name". An earlier version of this fixture used "name" here,
+            # which silently matched a same-named bug in _createSyncProductPicker()
+            # and would have made that bug invisible to this exact test (caught in
+            # QA review, 2026-07-22).
             real_panel = await page.evaluate("""() => {
                 _products = [
-                    {id: 'DP1030', name: 'ADHD Planner', category: 'digital_planner'},
-                    {id: 'DP1031', name: 'Evergreen Planner', category: 'digital_planner'},
-                    {id: 'WA1001', name: 'Wall Art One', category: 'wall_art'},
+                    {id: 'DP1030', title: 'ADHD Planner', category: 'digital_planner'},
+                    {id: 'DP1031', title: 'Evergreen Planner', category: 'digital_planner'},
+                    {id: 'WA1001', title: 'Wall Art One', category: 'wall_art'},
                 ];
                 createOpenCategory('digital_planner');
                 const panel = document.getElementById('create-detail');
                 const picker = document.getElementById('create-pid-select');
+                const dp1030Opt = picker ? [...picker.options].find(o => o.value === 'DP1030') : null;
                 return {
                     tileOpen: document.querySelector('.create-choice[data-cat="digital_planner"]').classList.contains('open'),
                     panelHtml: panel ? panel.innerHTML : '',
                     pickerOptionCount: picker ? picker.options.length : 0,
-                    pickerHasDP1030: picker ? [...picker.options].some(o => o.value === 'DP1030') : false,
+                    pickerHasDP1030: !!dp1030Opt,
+                    dp1030OptionText: dp1030Opt ? dp1030Opt.textContent : null,
                     runBtnPresent: !!document.getElementById('bx-run-btn'),
                 };
             }""")
@@ -757,6 +765,8 @@ async def _run_browser_checks() -> None:
             check("Build this planner" in real_panel.get("panelHtml", ""), f"digital_planner panel should show its plain-language primary label: {real_panel}")
             check(real_panel.get("pickerOptionCount", 0) >= 3, f"product picker should have the placeholder + 2 DP1030/DP1031 options, got: {real_panel}")
             check(real_panel.get("pickerHasDP1030"), f"product picker must include DP1030 from the stubbed _products: {real_panel}")
+            check(real_panel.get("dp1030OptionText") == "DP1030 — ADHD Planner",
+                  f"picker option text must show the product's real title, not blank after the dash: {real_panel}")
             check(real_panel.get("runBtnPresent"), f"the build button (#bx-run-btn) must be present in a real category's panel: {real_panel}")
 
             # Re-opening the SAME category (with _products unchanged) must not
@@ -769,6 +779,66 @@ async def _run_browser_checks() -> None:
             }""")
             check(reopen_same.get("pickerOptionCount") == real_panel.get("pickerOptionCount"),
                   f"reopening a category must not duplicate picker options: {reopen_same} vs first open {real_panel}")
+
+            # Regression guard (QA review, 2026-07-22): typing a free-text code
+            # then switching back to "pick from the list instead" must not leave
+            # that stale code queued in the hidden #bx-pid -- it must resync to
+            # whatever the (visible-again) picker shows.
+            stale_freetext = await page.evaluate("""() => {
+                _createToggleNewCode(true);
+                document.getElementById('bx-pid').value = 'DP9999STALE';
+                _createToggleNewCode(false);
+                return {bxPidValue: document.getElementById('bx-pid').value};
+            }""")
+            check(stale_freetext.get("bxPidValue") != "DP9999STALE",
+                  f"switching back to the picker must clear a stale free-typed code from #bx-pid: {stale_freetext}")
+
+            # Regression guard (QA review, 2026-07-22): createPollBuildStatus()
+            # used a single hardcoded #cd-build-status-box id -- calling it twice
+            # into two DIFFERENT containers (digital_planner's panel legitimately
+            # has up to 4 simultaneous build buttons) used to collide, with the
+            # second call's getElementById silently updating the FIRST box instead
+            # of its own. Call it twice into two distinct elements and confirm
+            # each gets its own independent status box.
+            poll_isolation = await page.evaluate("""() => {
+                const a = document.createElement('div'); a.id = 'pw-poll-test-a';
+                const b = document.createElement('div'); b.id = 'pw-poll-test-b';
+                document.body.appendChild(a); document.body.appendChild(b);
+                createPollBuildStatus(123456, '', a);
+                createPollBuildStatus(654321, '', b);
+                const result = {
+                    aHasOwnBox: a.children.length === 1,
+                    bHasOwnBox: b.children.length === 1,
+                    distinctNodes: a.children[0] !== b.children[0],
+                };
+                a.remove(); b.remove();
+                return result;
+            }""")
+            check(poll_isolation.get("aHasOwnBox") and poll_isolation.get("bHasOwnBox"),
+                  f"each createPollBuildStatus() call must create its own status box in its own outEl: {poll_isolation}")
+            check(poll_isolation.get("distinctNodes"),
+                  f"two concurrent polls must never share the same status box node: {poll_isolation}")
+
+            # Regression guard (QA review, 2026-07-22): wall_art/coloring_pages'
+            # one-tap builds generate no new AI art, so the Advanced "Art style"
+            # engine picker (which the backend never reads for these 2
+            # categories) must not render at all -- a dead control is worse than
+            # no control.
+            no_dead_engine = await page.evaluate("""() => {
+                createOpenCategory('wall_art');
+                const wallArtHasEngine = !!document.getElementById('bx-engine');
+                createOpenCategory('wall_art'); // close
+                createOpenCategory('coloring_pages');
+                const coloringHasEngine = !!document.getElementById('bx-engine');
+                createOpenCategory('coloring_pages'); // close
+                createOpenCategory('digital_planner');
+                const plannerHasEngine = !!document.getElementById('bx-engine');
+                createOpenCategory('digital_planner'); // close
+                return {wallArtHasEngine, coloringHasEngine, plannerHasEngine};
+            }""")
+            check(no_dead_engine.get("wallArtHasEngine") is False, f"Wall Art must not render the dead art-style engine picker: {no_dead_engine}")
+            check(no_dead_engine.get("coloringHasEngine") is False, f"Coloring Pages must not render the dead art-style engine picker: {no_dead_engine}")
+            check(no_dead_engine.get("plannerHasEngine") is True, f"Digital Planner DOES use the engine picker and must still render it: {no_dead_engine}")
 
             # Coming-soon tiles: never blank, never a dead click -- must show a
             # specific, honest explanation.
