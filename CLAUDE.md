@@ -197,6 +197,18 @@ The physical 3D printed products sold in the shop are printed on a **Bambu Lab P
 
 ---
 
+## Development Conventions
+
+Coding/testing/API conventions for this codebase live as focused files
+under `.claude/rules/` (`code-style.md`, `testing.md`, `api-conventions.md`)
+rather than duplicated here — check those before writing new code or
+tests. `.claude/skills/` has vetted third-party Claude Skills (copywriting,
+ad-creative, email-sequences, contract-review, incident-postmortem,
+sop-builder — see `.claude/skills/SOURCES.md` for provenance/licenses) that
+auto-load when relevant. `.mcp.json` connects Context7 (live, version-exact
+library docs) — works with no API key at a lower rate limit; add one free
+at context7.com/dashboard if 429s show up.
+
 ## Credentials (all in `.env` — never hardcode, never commit)
 - `ANTHROPIC_API_KEY` — Claude API
 - `OPENAI_API_KEY` — DALL-E image generation (gpt-image-1)
