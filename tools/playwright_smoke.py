@@ -1826,6 +1826,124 @@ async def _run_browser_checks() -> None:
             check(speak_on is True, "setSpeaking(true) must turn on #chat-speaking-indicator")
             check(speak_off is False, "setSpeaking(false) must turn off #chat-speaking-indicator")
 
+            # ── Shop Performance metric-detail modal (2026-07-22), Phase 2 -- tapping
+            # the Revenue/Orders 30d sparkline cards on #screen-cmd now opens a generic
+            # #metric-detail-modal with a bigger chart + real per-day table. Mocks
+            # authGet() directly (not page.route -- frank-sw.js's own internal fetch()
+            # call is invisible to page-level route interception, confirmed earlier in
+            # this file's Files-screen block). Reuses the mobile viewport already
+            # active from the Ask-tab-redesign block above.
+            #
+            # The Ask-tab-redesign block above deliberately ends on the "Today" tab-bar
+            # panel (its own last check is "returning to Today clears cc-open"), so
+            # #screen-cmd is NOT the active screen here -- #shop-spark-row lives inside
+            # it and inherits display:none from the hidden .screen, which is exactly
+            # what "element is not visible" meant on every click retry (reproduced
+            # live). Explicitly re-navigate to Ask/#screen-cmd first.
+            await page.evaluate("phoneTab('ask')")
+            await page.wait_for_timeout(300)
+            #
+            # The mock is deliberately left installed for this ENTIRE block (restored
+            # only at the very end) rather than restored right after the first
+            # loadShopPerf() call -- this app's own setInterval(loadAll, 30000) polling
+            # loop can fire an unmocked loadShopPerf() mid-block during a long smoke-test
+            # run, re-rendering #shop-spark-row's innerHTML out from under a pending
+            # click and detaching the element Playwright just resolved. Reproduced live:
+            # restoring authGet immediately caused an intermittent "element was detached
+            # from the DOM" failure. Keeping the mock in place makes any such interim
+            # refresh idempotent instead of racy. ──
+            mock_ok = await page.evaluate("""() => {
+                window._origAuthGet = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/analytics') === 0) {
+                        const payload = {
+                            days: 30, snapshot_count: 4,
+                            dates: ['2026-07-19', '2026-07-20', '2026-07-21', '2026-07-22'],
+                            trends: {
+                                revenue_30d: [1200.00, 1215.50, 1230.00, 1250.75],
+                                orders_30d: [40, 41, 42, 44],
+                            },
+                            delta: {revenue_30d: 20.75, orders_30d: 2},
+                            latest: {revenue_30d: 1250.75, orders_30d: 44, active_listings: 80, total_sales: 900},
+                            top_listings: [],
+                        };
+                        return Promise.resolve({ok: true, status: 200, json: async () => payload});
+                    }
+                    if (path.indexOf('/api/metrics') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({orders: {}, shop: {}})});
+                    }
+                    return window._origAuthGet(path, ms);
+                };
+                return loadShopPerf().then(() => true);
+            }""")
+            check(mock_ok is True, "mocked loadShopPerf() must resolve before the tap test proceeds")
+
+            await page.click("#shop-spark-row .shop-spark-card:first-child")
+            await page.wait_for_timeout(300)
+            modal_state = await page.evaluate("""() => ({
+                open: document.body.classList.contains('metric-detail-open'),
+                title: document.getElementById('mdm-title').textContent,
+                bodyText: document.getElementById('mdm-body').textContent,
+            })""")
+            check(modal_state.get("open") is True,
+                  f"tapping the Revenue·30d sparkline card must open the metric detail modal: {modal_state}")
+            check(modal_state.get("title") == "Revenue · 30d",
+                  f"modal title must reflect the tapped metric: {modal_state}")
+            body_text = modal_state.get("bodyText") or ""
+            check("Jul 22" in body_text and "$1250.75" in body_text,
+                  f"per-day table must render the real mocked dates/values, not placeholder text: {body_text[:400]}")
+            check("rolling 30-day" in body_text,
+                  f"the note must describe this as a rolling-30-day trend, never as that single day's isolated revenue (data-meaning caveat): {body_text[:400]}")
+
+            # Close via the header button.
+            await page.click("#metric-detail-modal .mdm-close-btn")
+            await page.wait_for_timeout(300)
+            closed_via_button = await page.evaluate("() => document.body.classList.contains('metric-detail-open')")
+            check(closed_via_button is False, "the close button must remove metric-detail-open")
+
+            # Re-open, then close via backdrop tap. Click near the top-left corner, not
+            # the element's center -- the centered modal panel (z-index 901) sits on top
+            # of the backdrop (900) at the viewport center, so a default center-click
+            # would target the modal, not the backdrop, and never fire onclick.
+            await page.click("#shop-spark-row .shop-spark-card:first-child")
+            await page.wait_for_timeout(300)
+            await page.click("#metric-detail-backdrop", position={"x": 5, "y": 5})
+            await page.wait_for_timeout(300)
+            closed_via_backdrop = await page.evaluate("() => document.body.classList.contains('metric-detail-open')")
+            check(closed_via_backdrop is False, "tapping the backdrop must also close the modal")
+
+            # Empty state: fewer than 2 data points must fall back to _miniSpark's own
+            # "Accumulating daily data" copy, not new bespoke empty-state text. Swaps the
+            # still-installed mock's payload rather than re-mocking, then restores the
+            # real authGet only now, at the very end of this block.
+            empty_text = await page.evaluate("""() => {
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/analytics') === 0) {
+                        const payload = {
+                            days: 30, snapshot_count: 1, dates: ['2026-07-22'],
+                            trends: {revenue_30d: [1250.75], orders_30d: [44]},
+                            delta: {revenue_30d: null, orders_30d: null},
+                            latest: {revenue_30d: 1250.75, orders_30d: 44, active_listings: 80, total_sales: 900},
+                            top_listings: [],
+                        };
+                        return Promise.resolve({ok: true, status: 200, json: async () => payload});
+                    }
+                    if (path.indexOf('/api/metrics') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({orders: {}, shop: {}})});
+                    }
+                    return window._origAuthGet(path, ms);
+                };
+                return loadShopPerf().then(() => {
+                    openMetricDetailModal('orders_30d');
+                    const text = document.getElementById('mdm-body').textContent;
+                    metricDetailClose();
+                    window.authGet = window._origAuthGet;
+                    return text;
+                });
+            }""")
+            check("Accumulating daily data" in empty_text,
+                  f"a single-point series must reuse _miniSpark's own empty-state copy verbatim: {empty_text}")
+
         finally:
             await browser.close()
 

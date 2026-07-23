@@ -652,7 +652,9 @@ body.is-mobile #alert-dropdown{
 
 .shop-spark-row{display:flex;gap:8px;flex:1;min-height:0;overflow-y:auto;flex-wrap:wrap}
 .shop-spark-card{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:var(--r-md);
-  padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-height:0;overflow:hidden}
+  padding:6px 8px;display:flex;flex-direction:column;gap:1px;min-height:0;overflow:hidden;
+  cursor:pointer;transition:transform .12s ease}
+.shop-spark-card:active{transform:scale(.97)}
 .shop-spark-card .ssc-lab{font-size:9px;color:var(--muted);letter-spacing:.4px}
 .shop-spark-card .ssc-valrow{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
 .shop-spark-card .ssc-val{font-size:13px;font-weight:700;color:var(--cyan2)}
@@ -1324,6 +1326,37 @@ body.product-review-closing #product-review-modal{display:flex;animation:prm-in 
 .prm-block-title:first-child{margin-top:0}
 .prm-blocking{color:var(--red);font-size:12px;margin:3px 0}
 
+/* Shop Performance sparkline drill-down (2026-07-22 Phase 2) -- generic "metric detail"
+   modal, cloned from #product-review-modal's entrance/exit pattern. Deliberately has NO
+   .prm-actions-equivalent footer -- this is read-only trend data, no approve/reject action.
+   Kept metric-agnostic (mdm- prefix, no "revenue"/"orders" in any class name) because
+   Phase 3 reuses this exact modal for Star Seller/Ads/COGS -- see METRIC_DETAIL_CONFIG. */
+#metric-detail-backdrop{display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.6)}
+#metric-detail-modal{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+  z-index:901;width:min(560px,92vw);max-height:85vh;background:var(--panel);
+  border:1px solid var(--border);border-radius:var(--r-md);flex-direction:column;overflow:hidden}
+body.metric-detail-open #metric-detail-backdrop{display:block}
+body.metric-detail-open #metric-detail-modal{display:flex}
+@keyframes mdm-in{from{opacity:0;transform:translate(-50%,-50%) scale(.94) translateY(6px)}to{opacity:1;transform:translate(-50%,-50%) scale(1) translateY(0)}}
+@keyframes mdm-backdrop-in{from{opacity:0}to{opacity:1}}
+body.metric-detail-open #metric-detail-modal{animation:mdm-in .24s cubic-bezier(.22,1,.36,1) both}
+body.metric-detail-open #metric-detail-backdrop{animation:mdm-backdrop-in .2s ease both}
+body.metric-detail-closing #metric-detail-backdrop{display:block;animation:mdm-backdrop-in .18s ease reverse both}
+body.metric-detail-closing #metric-detail-modal{display:flex;animation:mdm-in .18s cubic-bezier(.4,0,1,1) reverse both}
+.mdm-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;border-bottom:1px solid var(--border);flex:none}
+.mdm-header-title{font-weight:700;font-size:15px;color:var(--text)}
+.mdm-close-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px}
+.mdm-body{overflow-y:auto;padding:14px 16px;font-size:13px;color:var(--text);line-height:1.5;flex:1}
+.mdm-note{font-size:11.5px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.mdm-chart{height:64px;margin-bottom:14px}
+.mdm-empty{text-align:center;color:var(--muted);padding:24px 0;font-size:12.5px}
+.mdm-table-wrap{max-height:min(50vh,340px);overflow-y:auto;border:1px solid var(--border);border-radius:var(--r-sm)}
+.mdm-table{width:100%;border-collapse:collapse;font-size:12px}
+.mdm-table thead th{position:sticky;top:0;background:var(--panel2);color:var(--muted);
+  font-size:10px;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding:7px 4px;
+  border-bottom:1px solid var(--border);z-index:1}
+
 /* ══ Phone Mode v3 — fit the desktop screens to the phone width (no sideways scroll) ══
    The 19 desktop screens use inline `grid-template-columns:1fr 1fr` blocks that never
    collapse on a phone (Phone|Timezone, Username|Password, Revenue|Orders, button pairs),
@@ -1355,6 +1388,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   body.is-mobile #phone-tabbar .ptab-pill{transition:none}
   .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
   #product-review-modal,#product-review-backdrop{animation:none !important}
+  #metric-detail-modal,#metric-detail-backdrop{animation:none !important}
+  .shop-spark-card:active{transform:none}
   .lc-bubble{animation:none}
   #chat-speaking-indicator .csi-dot{animation:none;opacity:1}
   .create-choice{transition:none}
@@ -2324,6 +2359,20 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
     </div>
     <div class="prm-body" id="prm-body"></div>
     <div class="prm-actions" id="prm-actions"></div>
+  </div>
+
+  <!-- ══ Shop Performance — tap a 30d sparkline card → bigger chart + per-day value table.
+       Generic "metric detail" modal (2026-07-22 Phase 2): today only revenue_30d/orders_30d
+       wire in, but Phase 3 adds star_seller/ads_roas/cogs_margin entries to
+       METRIC_DETAIL_CONFIG and reuses this exact markup/modal unchanged. Read-only — no
+       actions footer (unlike #product-review-modal). ══ -->
+  <div id="metric-detail-backdrop" onclick="metricDetailClose()"></div>
+  <div id="metric-detail-modal" role="dialog" aria-modal="true">
+    <div class="mdm-header">
+      <div class="mdm-header-title" id="mdm-title"></div>
+      <button class="mdm-close-btn" onclick="metricDetailClose()" aria-label="Close">✕</button>
+    </div>
+    <div class="mdm-body" id="mdm-body"></div>
   </div>
 
   <!-- ══ Phone Mode bottom tab bar — mobile only (hidden on desktop via CSS) ══ -->
@@ -5267,8 +5316,8 @@ async function loadCoreErrors(){
 
 // ── Shop Performance — real data from /api/analytics + /api/metrics ──
 var _miniSparkCounter = 0; // monotonic counter for stable, unique SVG gradient IDs
-function _miniSpark(values, color){
-  var h = 16;
+function _miniSpark(values, color, heightPx){
+  var h = heightPx || 16;
   values = (values||[]).filter(function(v){ return v!=null && !isNaN(v); });
   if(values.length < 2) return '<div style="height:'+h+'px;display:flex;align-items:center;font-size:8.5px;color:var(--muted)">📈 Accumulating daily data…</div>';
   var W=140,H=h,mn=Math.min.apply(null,values),mx=Math.max.apply(null,values),range=mx-mn||1,pad=2;
@@ -5292,15 +5341,49 @@ function _miniDelta(val, isMoney){
   var n=isMoney?('$'+Math.abs(val).toFixed(2)):String(Math.round(Math.abs(val)));
   return '<span style="color:'+c+'">'+a+' '+n+'</span>';
 }
+// ── Generic "metric detail" drill-down modal (2026-07-22 Phase 2) — tap a Shop
+// Performance sparkline card to see the bigger chart + per-day table. Config-driven so
+// Phase 3 (Star Seller/Ads/COGS panels) adds entries here with zero changes to
+// openMetricDetailModal/_renderMetricDetail below. ──
+let _lastAnalytics = null; // set by loadShopPerf() on every successful /api/analytics fetch
+function _getLastAnalytics(){
+  if(_lastAnalytics) return _lastAnalytics;
+  var cached = cacheGet('shopPerf');
+  return (cached && cached.data && cached.data.a) || null;
+}
+const METRIC_DETAIL_CONFIG = {
+  revenue_30d: {
+    label: 'Revenue · 30d',
+    note: 'Trend of the rolling 30-day revenue total Etsy reports, tracked day by day. Each point is the total for the 30 days ending on that date -- not that single day revenue in isolation.',
+    color: 'var(--gold)',
+    format: function(v){ return v!=null ? '$'+v.toFixed(2) : '—'; },
+    getData: function(){
+      var a = _getLastAnalytics();
+      if(!a) return null;
+      return {dates: a.dates||[], values: (a.trends||{}).revenue_30d||[]};
+    },
+  },
+  orders_30d: {
+    label: 'Orders · 30d',
+    note: 'Trend of the rolling 30-day order count Etsy reports, tracked day by day. Each point is the count for the 30 days ending on that date -- not that single day order count in isolation.',
+    color: 'var(--cyan2)',
+    format: function(v){ return v!=null ? String(Math.round(v)) : '—'; },
+    getData: function(){
+      var a = _getLastAnalytics();
+      if(!a) return null;
+      return {dates: a.dates||[], values: (a.trends||{}).orders_30d||[]};
+    },
+  },
+};
 function _renderShopPerf(a, m, sparkEl, chipEl, offlineNote){
   const tr = a.trends||{}, lt = a.latest||{}, del = a.delta||{};
   if(sparkEl){
     sparkEl.innerHTML = (offlineNote||'') +
-      '<div class="shop-spark-card"><div class="ssc-lab">Revenue · 30d</div>'+
+      '<div class="shop-spark-card" onclick="openMetricDetailModal(\\'revenue_30d\\')"><div class="ssc-lab">Revenue · 30d</div>'+
         '<div class="ssc-valrow"><div class="ssc-val" id="shop-rev-30d">'+(lt.revenue_30d!=null?'$'+lt.revenue_30d.toFixed(2):'—')+'</div>'+
         '<div class="ssc-delta">'+_miniDelta(del.revenue_30d,true)+'</div></div>'+
         '<div class="ssc-spark">'+_miniSpark(tr.revenue_30d,'var(--gold)')+'</div></div>'+
-      '<div class="shop-spark-card"><div class="ssc-lab">Orders · 30d</div>'+
+      '<div class="shop-spark-card" onclick="openMetricDetailModal(\\'orders_30d\\')"><div class="ssc-lab">Orders · 30d</div>'+
         '<div class="ssc-valrow"><div class="ssc-val" id="shop-ord-30d">'+(lt.orders_30d!=null?lt.orders_30d:'—')+'</div>'+
         '<div class="ssc-delta">'+_miniDelta(del.orders_30d,false)+'</div></div>'+
         '<div class="ssc-spark">'+_miniSpark(tr.orders_30d,'var(--cyan2)')+'</div></div>';
@@ -5341,6 +5424,7 @@ async function loadShopPerf(){
       authGet('/api/metrics'),
     ]);
     const a = await ar.json();
+    _lastAnalytics = a;
     const m = await mr.json();
     cacheSet('shopPerf', {a, m});
     _renderShopPerf(a, m, sparkEl, chipEl, null);
@@ -5352,6 +5436,64 @@ async function loadShopPerf(){
       sparkEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:4px">Shop data offline</div>';
     }
   }
+}
+function metricDetailClose(){
+  if (!document.body.classList.contains('metric-detail-open')) return; // already closed/closing
+  document.body.classList.remove('metric-detail-open');
+  document.body.classList.add('metric-detail-closing');
+  setTimeout(() => document.body.classList.remove('metric-detail-closing'), _reducedMotion ? 0 : 200);
+}
+function openMetricDetailModal(metricKey){
+  const cfg = METRIC_DETAIL_CONFIG[metricKey];
+  if(!cfg) return;
+  document.getElementById('mdm-title').textContent = cfg.label;
+  document.body.classList.add('metric-detail-open');
+  const data = cfg.getData();
+  if(!data){
+    document.getElementById('mdm-body').innerHTML =
+      '<div class="hub-empty">Shop data not loaded yet — try again in a moment.</div>';
+    return;
+  }
+  _renderMetricDetail(cfg, data.dates, data.values);
+}
+function _renderMetricDetail(cfg, dates, values){
+  const body = document.getElementById('mdm-body');
+  if(!body) return;
+  dates = dates || []; values = values || [];
+  const n = Math.min(dates.length, values.length);
+  let html = '<div class="mdm-note">'+escHtml(cfg.note)+'</div>';
+  html += '<div class="mdm-chart">'+_miniSpark(values, cfg.color, 64)+'</div>';
+  if(n < 2){
+    html += '<div class="mdm-empty">📈 Accumulating daily data…</div>';
+    body.innerHTML = html;
+    return;
+  }
+  let rowsHtml = '';
+  for(let i = n - 1; i >= 0; i--){
+    const raw = values[i];
+    const v = (raw!=null && !isNaN(raw)) ? raw : null;
+    const prevRaw = i > 0 ? values[i-1] : null;
+    const prev = (prevRaw!=null && !isNaN(prevRaw)) ? prevRaw : null;
+    const dt = dates[i] ? new Date(dates[i]+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '—';
+    let deltaHtml = '<span style="color:var(--muted)">—</span>';
+    if(v!=null && prev!=null){
+      const d = v - prev;
+      if(d===0){
+        deltaHtml = '<span style="color:var(--muted)">stable</span>';
+      } else {
+        const c = d>0 ? 'var(--green)' : 'var(--red)';
+        const arrow = d>0 ? '↑' : '↓';
+        deltaHtml = '<span style="color:'+c+'">'+arrow+' '+escHtml(cfg.format(Math.abs(d)))+'</span>';
+      }
+    }
+    rowsHtml += '<tr><td style="padding:7px 4px;color:var(--muted);border-bottom:1px solid var(--border)">'+escHtml(dt)+'</td>'+
+      '<td style="padding:7px 4px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--border)">'+(v!=null?escHtml(cfg.format(v)):'—')+'</td>'+
+      '<td style="padding:7px 4px;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid var(--border)">'+deltaHtml+'</td></tr>';
+  }
+  html += '<div class="mdm-table-wrap"><table class="mdm-table">'+
+    '<thead><tr><th>Date</th><th style="text-align:right">'+escHtml(cfg.label)+'</th><th style="text-align:right">vs prior day</th></tr></thead>'+
+    '<tbody>'+rowsHtml+'</tbody></table></div>';
+  body.innerHTML = html;
 }
 
 let _shopExpanded = false;
