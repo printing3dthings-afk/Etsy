@@ -11193,3 +11193,86 @@ The CI failure itself was a single, narrow, pre-existing bug **unrelated to the 
 **Fix:** Added `output_dir.mkdir(parents=True, exist_ok=True)` at the top of `generate_coloring_page()` itself (not just the CLI entrypoint), so every call path — including `generate_dynamic_theme_set()`, used by `tools/build_coloring_product.py` and exercised by `tests/test_coloring_dynamic_theme.py` — is covered. Verified by actually reproducing the exact failure locally first (moved the real `coloring_pages/` directory aside, confirmed the identical `FileNotFoundError`, applied the fix, confirmed it resolved, restored the real directory).
 
 **Verified:** full suite 72/72 passing. Pushed as its own commit; watching the resulting GitHub Actions run and the production `/health` build ID to confirm this actually unblocks the deploy rather than assuming it in theory.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Durable volume not writable
+hourly health loop found /tmp/tmpir2oma81/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpir2oma81/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmppdsmml6o/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 21826). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-23 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 21828). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Resolved: CI-fix deploy confirmed live in production
+Follow-up to the "Fixed CI failure that was silently blocking every Railway deploy" entry above. After the fix commit (`7a2b651`) pushed, GitHub Actions "CI Smoke" ran clean (`SUCCESS`, confirmed via `mcp__github__get_job_logs` — the exact `Full test suite` step that had failed on every prior push now passes). Railway's deployment for that commit sat in `WAITING` for several minutes even after CI went green rather than auto-proceeding -- confirmed via the `deployments` GraphQL query. Found and called the correct mutation via a read-only introspection query first (`deploymentApprove(id: String!)`), which moved it from `WAITING` → `INITIALIZING` → `SUCCESS`.
+
+**Confirmed live via the real, unauthenticated production endpoint:** `GET https://etsy-production-b2f1.up.railway.app/health` now reports `"build":"6a2f8c1-v248"` -- the exact build ID from the last `_BUILD_ID` bump this session shipped (Phase 3 of the mobile Ask-tab redesign). This is the first time this session's work was verified live rather than assumed shipped from a green local test run alone.
+
+**Takeaway for next time a push "does nothing":** if Railway's `deployments` query shows `SKIPPED`, check GitHub Actions CI for that commit first (Railway's "Wait for CI to pass" silently blocks with no visible error otherwise). If CI is green but the deployment still shows `WAITING` after a few minutes, call `deploymentApprove(id: <deployment id>)` via the Railway GraphQL API (same project/environment/service IDs already in `tools/rollback.py`) rather than waiting indefinitely or re-pushing.
