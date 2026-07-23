@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "3d7e91b-v247"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "6a2f8c1-v248"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -5721,6 +5721,25 @@ async def _take_snapshot() -> str:
     metrics = await asyncio.to_thread(_metrics_sync)
     listings = (await asyncio.to_thread(_listings_sync, "active")).get("listings", [])
     d = await asyncio.to_thread(db.record_metric_snapshot, metrics, listings)
+    # 2026-07-22 Phase 3: piggyback Star Seller/Ads/COGS status history capture on
+    # this same daily loop rather than a second scheduler. Built inline (not a
+    # module-level constant) since _compute_ads_status()/_compute_cogs_status() are
+    # defined further down this file -- a module-level tuple referencing them here
+    # would NameError at import time; this list is only evaluated once _take_snapshot()
+    # actually runs, well after the whole module has finished loading. Each panel
+    # gets its own try/except -- _compute_star_seller_status()/_compute_cogs_status()
+    # make real Etsy calls and can fail -- so one panel's failure never breaks the
+    # metric_snapshots write above (already returned as `d`) or the other panels.
+    for panel, compute_fn in (
+        ("star_seller", _compute_star_seller_status),
+        ("ads_roas", _compute_ads_status),
+        ("cogs_margin", _compute_cogs_status),
+    ):
+        try:
+            data = await asyncio.to_thread(compute_fn)
+            await asyncio.to_thread(db.record_status_snapshot, panel, data)
+        except Exception as exc:
+            print(f"[snapshot] {panel} status snapshot failed (non-fatal): {exc}", flush=True)
     print(f"[snapshot] recorded {d}: {len(listings)} listings, persistent={db.is_persistent()}", flush=True)
     return d
 
@@ -7819,6 +7838,54 @@ async def get_analytics(days: int = 30, _token: str = Depends(_auth_session_or_b
         "delta": delta,
         "latest": rows[-1] if rows else {},
         "top_listings": top_listings,
+    }
+
+
+# Panel -> the one representative numeric field pulled out of that panel's
+# _compute_*_status() dict for charting (2026-07-22 Phase 3). These panels don't
+# have a single obvious "the" number like Revenue/Orders do, so this is a
+# deliberate choice per panel: Star Seller's own $300/90d threshold field,
+# ROAS's headline ratio, and COGS's headline margin percentage.
+_STATUS_PANEL_TREND_FIELD = {
+    "star_seller": "revenue_90d",
+    "ads_roas": "month_roas",
+    "cogs_margin": "avg_margin_pct",
+}
+
+
+@app.get("/api/status-history")
+async def get_status_history(panel: str, days: int = 30, _token: str = Depends(_auth_session_or_bearer)):
+    """Daily-snapshot trend for one status panel (star_seller/ads_roas/cogs_margin),
+    mirroring get_analytics()'s shape -- backs the Phase 3 metric-detail drill-down
+    for panels that were previously live-recomputed per-request with no stored
+    history. No caching (same reasoning as get_analytics(): a local SQLite read of
+    rows already written by the daily snapshot loop has no external-call cost to
+    shield against).
+    """
+    field = _STATUS_PANEL_TREND_FIELD.get(panel)
+    if not field:
+        raise HTTPException(
+            status_code=400,
+            detail="panel must be one of: " + ", ".join(_STATUS_PANEL_TREND_FIELD),
+        )
+    days = max(7, min(days, 90))
+    rows = await asyncio.to_thread(db.get_status_history, panel, days)
+
+    dates = [r.get("snapshot_date") for r in rows]
+    trend: list = []
+    latest_raw: dict = {}
+    for r in rows:
+        raw = json.loads(r["raw_json"]) if r.get("raw_json") else {}
+        trend.append(raw.get(field))
+        latest_raw = raw
+
+    return {
+        "panel": panel,
+        "days": days,
+        "snapshot_count": len(rows),
+        "dates": dates,
+        "trend": trend,
+        "latest": latest_raw,
     }
 
 

@@ -1612,21 +1612,21 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
         </div>
 
         <div class="panel brk col-meminsights">
-          <div class="panel-title">Star Seller Status <span class="src">/api/star-seller</span></div>
+          <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openMetricDetailModal('star_seller')" role="button" tabindex="0">Star Seller Status <span class="src">/api/star-seller</span></div>
           <div id="star-seller-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
           </div>
         </div>
 
         <div class="panel brk col-meminsights">
-          <div class="panel-title">Ads &amp; ROAS <span class="src">/api/ads-status</span></div>
+          <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openMetricDetailModal('ads_roas')" role="button" tabindex="0">Ads &amp; ROAS <span class="src">/api/ads-status</span></div>
           <div id="ads-status-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
           </div>
         </div>
 
         <div class="panel brk col-meminsights">
-          <div class="panel-title">COGS &amp; Profit (est.) <span class="src">/api/cogs-status</span></div>
+          <div class="panel-title" style="cursor:pointer;user-select:none" onclick="openMetricDetailModal('cogs_margin')" role="button" tabindex="0">COGS &amp; Profit (est.) <span class="src">/api/cogs-status</span></div>
           <div id="cogs-status-body" style="padding:4px 0">
             <div style="color:var(--muted);font-size:11px">Loading…</div>
           </div>
@@ -5351,6 +5351,17 @@ function _getLastAnalytics(){
   var cached = cacheGet('shopPerf');
   return (cached && cached.data && cached.data.a) || null;
 }
+// Phase 3 (2026-07-22) analog of _lastAnalytics above, keyed by panel since Star
+// Seller/Ads/COGS are three independent /api/status-history?panel=... fetches, each
+// set by its own loader (loadStarSeller/loadAdsStatus/loadCogsStatus below) right
+// alongside their existing live-status fetch.
+let _lastStatusHistory = {};
+function _getLastStatusHistory(panel){
+  var h = _lastStatusHistory[panel];
+  if(h) return h;
+  var cached = cacheGet('statusHistory_' + panel);
+  return (cached && cached.data) || null;
+}
 const METRIC_DETAIL_CONFIG = {
   revenue_30d: {
     label: 'Revenue · 30d',
@@ -5372,6 +5383,44 @@ const METRIC_DETAIL_CONFIG = {
       var a = _getLastAnalytics();
       if(!a) return null;
       return {dates: a.dates||[], values: (a.trends||{}).orders_30d||[]};
+    },
+  },
+  // Phase 3 (2026-07-22): Star Seller / Ads & ROAS / COGS & Profit were previously
+  // live-recomputed per request with no stored history -- now backed by the daily
+  // status_snapshots capture in _take_snapshot() (main.py) and read here via
+  // /api/status-history?panel=.... One representative numeric field per panel
+  // (there's no single obvious "the" number the way Revenue/Orders have one).
+  star_seller: {
+    label: 'Star Seller · Revenue (90d)',
+    note: 'Trend of the trailing 90-day revenue total behind Star Seller eligibility, tracked day by day (the same $300 threshold used for Star Seller status). Not that single day revenue in isolation.',
+    color: 'var(--gold)',
+    format: function(v){ return v!=null ? '$'+v.toFixed(2) : '—'; },
+    getData: function(){
+      var h = _getLastStatusHistory('star_seller');
+      if(!h) return null;
+      return {dates: h.dates||[], values: h.trend||[]};
+    },
+  },
+  ads_roas: {
+    label: 'Ads · ROAS (month)',
+    note: 'Trend of Ads ROAS (revenue divided by spend) for the current month, tracked day by day as the month builds. Only populated once Etsy Ads spend has actually been logged.',
+    color: 'var(--cyan2)',
+    format: function(v){ return v!=null ? v.toFixed(2)+'x' : '—'; },
+    getData: function(){
+      var h = _getLastStatusHistory('ads_roas');
+      if(!h) return null;
+      return {dates: h.dates||[], values: h.trend||[]};
+    },
+  },
+  cogs_margin: {
+    label: 'COGS · Avg Margin (est.)',
+    note: 'Trend of the estimated average profit margin across active listings, tracked day by day. An estimate, not real accounting -- see the COGS & Profit panel for the full disclosure.',
+    color: 'var(--green)',
+    format: function(v){ return v!=null ? v.toFixed(1)+'%' : '—'; },
+    getData: function(){
+      var h = _getLastStatusHistory('cogs_margin');
+      if(!h) return null;
+      return {dates: h.dates||[], values: h.trend||[]};
     },
   },
 };
@@ -5462,12 +5511,16 @@ function _renderMetricDetail(cfg, dates, values){
   dates = dates || []; values = values || [];
   const n = Math.min(dates.length, values.length);
   let html = '<div class="mdm-note">'+escHtml(cfg.note)+'</div>';
-  html += '<div class="mdm-chart">'+_miniSpark(values, cfg.color, 64)+'</div>';
   if(n < 2){
-    html += '<div class="mdm-empty">📈 Accumulating daily data…</div>';
+    // _miniSpark() itself already renders the "Accumulating daily data" fallback
+    // when it gets fewer than 2 points -- no separate .mdm-empty div needed on top
+    // of it (found live via Phase 3's cogs_margin empty state: that copy was
+    // rendering twice, once from each).
+    html += '<div class="mdm-chart">'+_miniSpark(values, cfg.color, 64)+'</div>';
     body.innerHTML = html;
     return;
   }
+  html += '<div class="mdm-chart">'+_miniSpark(values, cfg.color, 64)+'</div>';
   let rowsHtml = '';
   for(let i = n - 1; i >= 0; i--){
     const raw = values[i];
@@ -5509,8 +5562,15 @@ async function loadStarSeller(){
   const el = document.getElementById('star-seller-body');
   if(!el) return;
   try{
-    const r = await authGet('/api/star-seller');
+    // Phase 3 (2026-07-22): fetch this panel's drill-down history alongside its
+    // live status, same Promise.all-two-calls pattern as loadShopPerf() above.
+    const [r, hr] = await Promise.all([
+      authGet('/api/star-seller'),
+      authGet('/api/status-history?panel=star_seller&days=30'),
+    ]);
     const d = await r.json();
+    _lastStatusHistory.star_seller = await hr.json();
+    cacheSet('statusHistory_star_seller', _lastStatusHistory.star_seller);
     const statusLabel = d.status==='on_track' ? 'ON TRACK' : d.status==='at_risk' ? 'AT RISK' : 'BUILDING';
     const statusClass = d.status||'building';
     const ordPct = Math.min(100, ((d.orders_90d||0)/5)*100);
@@ -5566,8 +5626,13 @@ async function loadAdsStatus(){
   const el = document.getElementById('ads-status-body');
   if(!el) return;
   try{
-    const r = await authGet('/api/ads-status');
+    const [r, hr] = await Promise.all([
+      authGet('/api/ads-status'),
+      authGet('/api/status-history?panel=ads_roas&days=30'),
+    ]);
     const d = await r.json();
+    _lastStatusHistory.ads_roas = await hr.json();
+    cacheSet('statusHistory_ads_roas', _lastStatusHistory.ads_roas);
     if (!d.used) {
       el.innerHTML = '<div class="ss-row"><span class="ss-label">Etsy Ads has never been used — a $3-5/day test budget is a growth lever available anytime (CLAUDE.md\\'s Ads Strategy).</span></div>';
       return;
@@ -5594,8 +5659,13 @@ async function loadCogsStatus(){
   const el = document.getElementById('cogs-status-body');
   if(!el) return;
   try{
-    const r = await authGet('/api/cogs-status');
+    const [r, hr] = await Promise.all([
+      authGet('/api/cogs-status'),
+      authGet('/api/status-history?panel=cogs_margin&days=30'),
+    ]);
     const d = await r.json();
+    _lastStatusHistory.cogs_margin = await hr.json();
+    cacheSet('statusHistory_cogs_margin', _lastStatusHistory.cogs_margin);
     if (!d.used) {
       el.innerHTML = '<div class="ss-row"><span class="ss-label">No active listings to estimate yet.</span></div>';
       return;

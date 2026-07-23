@@ -16,6 +16,7 @@ Without it the code still works — it just resets when the container restarts.
 
 Tables:
   metric_snapshots   — one shop-level row per day (revenue, orders, ratings…)
+  status_snapshots   — one row per (day, panel) for Star Seller/Ads/COGS history
   listing_snapshots  — per-listing daily views/favorites/price (for conversion)
   action_queue       — staged actions awaiting Scott's approval (next layer)
 """
@@ -97,6 +98,19 @@ CREATE TABLE IF NOT EXISTS metric_snapshots (
 -- NOTE: currently write-only (populated by record_metric_snapshot; the reader
 -- get_listing_history was removed 2026-07-11 as dead code). Kept because the
 -- write path is cheap and a per-listing history reader may return.
+CREATE TABLE IF NOT EXISTS status_snapshots (
+  snapshot_date TEXT NOT NULL,
+  panel         TEXT NOT NULL,   -- 'star_seller' | 'ads_roas' | 'cogs_margin'
+  ts            TEXT NOT NULL,
+  status        TEXT,            -- the compute fn's own status string (on_track/at_risk/...)
+  raw_json      TEXT,            -- full _compute_*_status() dict -- one generic table for all
+                                  -- three panels rather than three near-duplicate schemas, since
+                                  -- their shapes differ (and can be {"used": False}) and none of
+                                  -- them need dedicated numeric columns the way metric_snapshots
+                                  -- does for charting -- the /api/status-history route picks the
+                                  -- one representative field per panel out of raw_json itself.
+  PRIMARY KEY (snapshot_date, panel)
+);
 CREATE TABLE IF NOT EXISTS listing_snapshots (
   snapshot_date TEXT NOT NULL,
   listing_id    INTEGER NOT NULL,
@@ -392,6 +406,42 @@ def get_metric_history(days: int = 30) -> list:
         rows = conn.execute(
             "SELECT * FROM metric_snapshots ORDER BY snapshot_date DESC LIMIT ?",
             (days,),
+        ).fetchall()
+        return [dict(r) for r in rows][::-1]
+    finally:
+        conn.close()
+
+
+def record_status_snapshot(panel: str, data: dict) -> str:
+    """Upsert today's snapshot for one status panel (star_seller/ads_roas/
+    cogs_margin). Mirrors record_metric_snapshot()'s upsert-by-day shape,
+    keyed additionally by panel. Returns the date string."""
+    init_db()
+    d = date.today().isoformat()
+    ts = datetime.now(timezone.utc).isoformat()
+    conn = _connect()
+    try:
+        conn.execute(
+            """INSERT INTO status_snapshots (snapshot_date, panel, ts, status, raw_json)
+               VALUES (?,?,?,?,?)
+               ON CONFLICT(snapshot_date, panel) DO UPDATE SET
+                 ts=excluded.ts, status=excluded.status, raw_json=excluded.raw_json""",
+            (d, panel, ts, data.get("status"), json.dumps(data)),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    return d
+
+
+def get_status_history(panel: str, days: int = 30) -> list:
+    """Most recent `days` snapshots for one status panel, oldest-first."""
+    init_db()
+    conn = _connect()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM status_snapshots WHERE panel = ? ORDER BY snapshot_date DESC LIMIT ?",
+            (panel, days),
         ).fetchall()
         return [dict(r) for r in rows][::-1]
     finally:

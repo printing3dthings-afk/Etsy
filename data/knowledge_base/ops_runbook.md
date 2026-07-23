@@ -10964,3 +10964,156 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Tests:** new Playwright block in `tools/playwright_smoke.py` (tap→open with real mocked per-day data, rolling-30-day note text, close via button and via backdrop, single-point empty state falls back to `_miniSpark`'s own copy) — 3 consecutive clean runs. `tests/test_frank_hud_js_syntax.py` re-run after the one Python-string-escape-sensitive edit in this phase (the `onclick="openMetricDetailModal(\'...\')"` wiring, written as `\\'` in the Python source per the Phase 1 incident's fix pattern) — passed clean both times. Full suite 71/71 passing.
 
 **Scope:** Frontend only, no backend changes. Phase 3 (Star Seller/Ads/COGS daily snapshots + drill-down, tasks #222-225) is a separate, not-yet-shipped follow-up.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Durable volume not writable
+hourly health loop found /tmp/tmpq51bdkbz/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpq51bdkbz/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpvnre4bq6/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 22690). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-23 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 22692). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Durable volume not writable
+hourly health loop found /tmp/tmpqm7r1tp4/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpqm7r1tp4/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmplcnzx9mk/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 24390). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-23 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 24392). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-22/23 — Mobile Ask-tab redesign, Phase 3 (Star Seller/Ads/COGS drill-down) — final phase shipped
+**What shipped:** Star Seller Status, Ads & ROAS, and COGS & Profit — previously live-recomputed per request with zero stored history — are now backed by a new daily `status_snapshots` table (db.py, one row per `(date, panel)`, upserted). `_take_snapshot()` (main.py) now also calls `_compute_star_seller_status()` / `_compute_ads_status()` / `_compute_cogs_status()` once a day and records each into `status_snapshots`, each wrapped in its own try/except so one panel's failure never breaks the pre-existing `metric_snapshots` write or the other two panels. A new `GET /api/status-history?panel=star_seller|ads_roas|cogs_margin` route (mirrors `get_analytics()`'s shape, no caching — same reasoning as `/api/analytics`, it's a cheap local SQLite read) extracts one representative numeric field per panel for charting (`revenue_90d`, `month_roas`, `avg_margin_pct` respectively — none of these three panels has one obvious "the" number the way Revenue/Orders do). The three panel-title rows on the Home screen are now tappable (reusing the pre-existing `#shop-perf-title` clickable-title convention, not a new CSS class), opening the same generic `#metric-detail-modal` from Phase 2 via three new `METRIC_DETAIL_CONFIG` entries — zero changes needed to the modal itself, exactly as Phase 2 was designed to allow.
+
+This completes all three phases of the mobile Ask-tab redesign Scott asked for: (1) Ask now lands directly on real content instead of a blank orb popup, chat got a full visual redesign; (2) Revenue/Orders sparklines became tappable drill-downs; (3) Star Seller/Ads/COGS are now backed by real history and tappable too — "make them clickable to pop another screen and interactive with numbers," the harder/more-complete option Scott explicitly chose over the cheaper partial one.
+
+**Bugs found + fixed during implementation:**
+1. A module-level tuple referencing `_compute_ads_status`/`_compute_cogs_status` (defined later in main.py than the insertion point) would have raised `NameError` at import time — caught before ever running the server, by building the panel→compute-fn mapping inline inside `_take_snapshot()` instead of as a module-level constant.
+2. `_renderMetricDetail()`'s empty-state (fewer than 2 data points) rendered "📈 Accumulating daily data…" **twice** — once from `_miniSpark()`'s own built-in fallback, once from a separate `.mdm-empty` div Phase 2 added on top of it. This was a latent Phase 2 bug that Phase 2's own test never caught (its assertion was a permissive substring check, not an exact-count check) — only surfaced now because Phase 3's `cogs_margin` panel is the first metric ever exercised with a genuinely empty (0-row) real dataset. Fixed by removing the redundant `.mdm-empty` div; `_miniSpark()`'s own fallback is sufficient on its own.
+
+**Tests:** `tests/test_status_snapshots.py` (new — upsert-by-day, oldest-first + panel-scoped history, the exact failure-isolation scenario a failing Ads compute call must not break `metric_snapshots` or the other two panels, `/api/status-history` shape + 400 validation for an unknown panel). New Playwright block in `tools/playwright_smoke.py` (all three panels open the shared modal with real mocked history, the cogs_margin day-1 zero-snapshot state doesn't crash and — regression guard — renders its empty-state copy exactly once, all three panel-titles are actually wired) — 3 consecutive clean runs. Full suite 72/72 passing.
+
+**Scope:** This closes out the mobile Ask-tab redesign project (Phases 1-3, tasks #217-225).

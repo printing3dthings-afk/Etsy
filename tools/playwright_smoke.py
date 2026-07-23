@@ -1944,6 +1944,117 @@ async def _run_browser_checks() -> None:
             check("Accumulating daily data" in empty_text,
                   f"a single-point series must reuse _miniSpark's own empty-state copy verbatim: {empty_text}")
 
+            # ── Star Seller / Ads & ROAS / COGS & Profit drill-down (2026-07-22),
+            # Phase 3 -- these three panels were previously live-recomputed per
+            # request with no stored history; their panel-title rows are now
+            # tappable (same clickable-title convention as #shop-perf-title),
+            # opening the same generic #metric-detail-modal via three new
+            # METRIC_DETAIL_CONFIG entries backed by a new /api/status-history
+            # endpoint. Mocks authGet() directly and calls each loader directly
+            # rather than waiting on the cmd-screen's own load cycle, mirroring
+            # the Phase 2 loadShopPerf() pattern above. cogs_margin is mocked
+            # with zero snapshot rows -- the guaranteed day-1 state -- to prove
+            # the empty state doesn't crash and (regression) doesn't render its
+            # "Accumulating daily data" fallback twice. ──
+            mock3_ok = await page.evaluate("""() => {
+                window._origAuthGet3 = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/status-history?panel=star_seller') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            panel: 'star_seller', days: 30, snapshot_count: 2,
+                            dates: ['2026-07-21', '2026-07-22'], trend: [330.0, 355.5],
+                            latest: {status: 'on_track', revenue_90d: 355.5},
+                        })});
+                    }
+                    if (path.indexOf('/api/star-seller') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            status: 'on_track', orders_90d: 6, revenue_90d: 355.5,
+                            avg_rating: 4.9, unread_messages: 0,
+                        })});
+                    }
+                    if (path.indexOf('/api/status-history?panel=ads_roas') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            panel: 'ads_roas', days: 30, snapshot_count: 2,
+                            dates: ['2026-07-21', '2026-07-22'], trend: [2.6, 3.4],
+                            latest: {used: true, status: 'ok', month_roas: 3.4},
+                        })});
+                    }
+                    if (path.indexOf('/api/ads-status') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            used: true, status: 'ok', week_spend: 20, week_revenue: 60,
+                            month_roas: 3.4, have_monthly_verdict: true, days_since_log: 1,
+                        })});
+                    }
+                    if (path.indexOf('/api/status-history?panel=cogs_margin') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            panel: 'cogs_margin', days: 30, snapshot_count: 0,
+                            dates: [], trend: [], latest: {},
+                        })});
+                    }
+                    if (path.indexOf('/api/cogs-status') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({used: false})});
+                    }
+                    return window._origAuthGet3(path, ms);
+                };
+                return Promise.all([loadStarSeller(), loadAdsStatus(), loadCogsStatus()]).then(() => {
+                    window.authGet = window._origAuthGet3;
+                    return true;
+                });
+            }""")
+            check(mock3_ok is True, "mocked loadStarSeller/loadAdsStatus/loadCogsStatus must resolve")
+
+            star_state = await page.evaluate("""() => {
+                openMetricDetailModal('star_seller');
+                const s = {
+                    open: document.body.classList.contains('metric-detail-open'),
+                    title: document.getElementById('mdm-title').textContent,
+                    bodyText: document.getElementById('mdm-body').textContent,
+                };
+                metricDetailClose();
+                return s;
+            }""")
+            check(star_state.get("open") is True, f"openMetricDetailModal('star_seller') must open the modal: {star_state}")
+            check("$355.50" in (star_state.get("bodyText") or ""),
+                  f"star_seller modal must render real mocked history: {star_state}")
+
+            ads_state = await page.evaluate("""() => {
+                openMetricDetailModal('ads_roas');
+                const s = {
+                    open: document.body.classList.contains('metric-detail-open'),
+                    bodyText: document.getElementById('mdm-body').textContent,
+                };
+                metricDetailClose();
+                return s;
+            }""")
+            check(ads_state.get("open") is True, f"openMetricDetailModal('ads_roas') must open the modal: {ads_state}")
+            check("3.40x" in (ads_state.get("bodyText") or ""),
+                  f"ads_roas modal must render real mocked history: {ads_state}")
+
+            cogs_state = await page.evaluate("""() => {
+                openMetricDetailModal('cogs_margin');
+                const s = {
+                    open: document.body.classList.contains('metric-detail-open'),
+                    bodyText: document.getElementById('mdm-body').textContent,
+                };
+                metricDetailClose();
+                return s;
+            }""")
+            check(cogs_state.get("open") is True,
+                  f"openMetricDetailModal('cogs_margin') must open (not crash) on the guaranteed day-1 zero-snapshot state: {cogs_state}")
+            occurrences = (cogs_state.get("bodyText") or "").count("Accumulating daily data")
+            check(occurrences == 1,
+                  f"the empty-state copy must render exactly once (regression: _miniSpark's own fallback plus a "
+                  f"redundant .mdm-empty div rendered it twice before the fix): got {occurrences} in {cogs_state}")
+
+            tap_targets = await page.evaluate("""() => ({
+                starSeller: !!document.querySelector('div.panel-title[onclick*="star_seller"]'),
+                adsRoas: !!document.querySelector('div.panel-title[onclick*="ads_roas"]'),
+                cogsMargin: !!document.querySelector('div.panel-title[onclick*="cogs_margin"]'),
+            })""")
+            check(tap_targets.get("starSeller") is True, "Star Seller panel-title must be wired to openMetricDetailModal('star_seller')")
+            check(tap_targets.get("adsRoas") is True, "Ads & ROAS panel-title must be wired to openMetricDetailModal('ads_roas')")
+            check(tap_targets.get("cogsMargin") is True, "COGS & Profit panel-title must be wired to openMetricDetailModal('cogs_margin')")
+
         finally:
             await browser.close()
 
