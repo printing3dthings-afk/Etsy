@@ -2182,6 +2182,35 @@ async def _run_browser_checks() -> None:
             check(back_state.get("screenActive") is True, f"#home-return-btn must call phoneOpenHome(): {back_state}")
             check(back_state.get("returnBtnVisible") is False, f"return-to-Home button should hide again once back on Home: {back_state}")
 
+            # Regression (2026-07-23, reported live by Scott via screenshot): the header's
+            # gear icon (onclick="showScreen('settings')") bypasses phoneOpenScreen() entirely
+            # -- tapping it from Home left phone-home-open stuck, so the shop ticker kept
+            # showing (and the tab bar / return-to-Home button stayed hidden) on top of
+            # Settings. Fixed by moving the phone-home-open cleanup into showScreen() itself,
+            # the one function every navigation path (including this bare onclick) funnels
+            # through. Reproduce the exact reported path: from Home, call showScreen('settings')
+            # directly (not phoneTab/phoneOpenScreen) -- simulates the gear icon tap.
+            gear_from_home_state = await page.evaluate("""() => {
+                phoneOpenHome();
+                showScreen('settings');
+                return {
+                    phoneHomeOpen: document.body.classList.contains('phone-home-open'),
+                    tabbarVisible: getComputedStyle(document.getElementById('phone-tabbar')).display !== 'none',
+                    tickerVisible: getComputedStyle(document.getElementById('shop-ticker')).display !== 'none',
+                    returnBtnVisible: getComputedStyle(document.getElementById('home-return-btn')).display !== 'none',
+                    settingsActive: document.getElementById('screen-settings').classList.contains('active'),
+                };
+            }""")
+            check(gear_from_home_state.get("settingsActive") is True, f"showScreen('settings') should activate #screen-settings: {gear_from_home_state}")
+            check(gear_from_home_state.get("phoneHomeOpen") is False,
+                  f"phone-home-open must clear when leaving Home via a bare showScreen() call (e.g. the header gear icon): {gear_from_home_state}")
+            check(gear_from_home_state.get("tickerVisible") is False,
+                  f"shop ticker must not stay stuck visible on top of Settings: {gear_from_home_state}")
+            check(gear_from_home_state.get("tabbarVisible") is True,
+                  f"tab bar must reappear on Settings reached via the gear icon: {gear_from_home_state}")
+            check(gear_from_home_state.get("returnBtnVisible") is True,
+                  f"return-to-Home button must reappear on Settings reached via the gear icon: {gear_from_home_state}")
+
         finally:
             await browser.close()
 

@@ -11490,3 +11490,77 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Why:** Scott said "Looks good" on the Home screen ship, then immediately asked for "a home button so the user can get back to the Home Screen" -- the button already existed and was wired correctly (confirmed via direct investigation: no bug, no z-index collision, correct render path). It was just deliberately styled to blend into the app chrome rather than call attention to itself, unlike its gold sibling. Asked Scott directly which fix he wanted; he confirmed: make the existing button obvious rather than build something new or relocate it.
 
 **Tests:** `python tests/run_all.py` (73/73, no test changes needed -- the existing Playwright assertion only checks computed `display`, not text content). 3 consecutive clean `tools/playwright_smoke.py` runs.
+
+
+## 2026-07-23 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Durable volume not writable
+hourly health loop found /tmp/tmpgpg6cbm8/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpgpg6cbm8/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp7x3_817a/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 11590). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-23 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 11592). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Fixed: shop ticker stuck visible on top of Settings (phone-home-open never cleared)
+**Symptom:** Scott reported (screenshot) the Settings screen with no Home button, no tab bar, and the shop-stats ticker still scrolling along the bottom underneath it -- a state that should only exist on the Home screen itself.
+
+**Root cause:** The header's gear icon (`onclick="showScreen('settings')"`, and by extension every other `.nav-item`/header icon that calls `showScreen()` directly) bypasses `phoneOpenScreen()` entirely -- it never got the `phone-home-open` cleanup added when the Home screen shipped earlier today. Tapping the gear icon from Home left `body.phone-home-open` stuck, so the ticker (gated by that class) kept rendering and the tab bar / return-to-Home button (gated by `:not(.phone-home-open)`) stayed hidden underneath whatever screen opened.
+
+**Fix:** Moved the `phone-home-open` cleanup from `phoneOpenScreen()` into `showScreen()` itself (`tools/api_server/frank_hud_mockup.py`) -- `showScreen()` is the one function every navigation path funnels through (both `phoneOpenScreen()`'s own call at its end, and every bare `onclick="showScreen(...)"` in the header/sidebar that never touches `phoneOpenScreen()` at all), so fixing it there covers all current and future call sites at once instead of chasing down each one individually.
+
+**Tests:** New Playwright regression in `tools/playwright_smoke.py` reproducing the exact reported path -- from Home, call `showScreen('settings')` directly (simulating the gear-icon tap) and assert `phone-home-open` clears, the ticker hides, and the tab bar / return button reappear. Full suite 73/73, 3 consecutive clean Playwright runs.

@@ -3018,11 +3018,10 @@ function renderPhoneMore(){
 }
 // Opening a screen from More exits the phone panel and shows that (desktop) screen.
 function phoneOpenScreen(name){
-  // 2026-07-23 (Home screen): covers every direct caller of this function (More-menu
-  // items, the tour engine, etc.), not just phoneTab()'s own removal above -- safe even
-  // for phoneOpenScreen('home') itself since phoneOpenHome() re-adds the class right
-  // after this call returns (synchronous, no race).
-  document.body.classList.remove('phone-home-open');
+  // phone-home-open cleanup lives in showScreen() (called at the end of this function)
+  // instead of here -- that's the one choke point every navigation path funnels through,
+  // including bare onclick="showScreen(...)" header/sidebar icons that never call this
+  // function at all (see showScreen()'s own comment for the bug that exposed this).
   // 2026-07-18: clear the "Talk to Frank" orb popup first if it's still open --
   // reproduced live via Playwright: the orb is the mobile home tab at load
   // (setTimeout(() => phoneTab('ask'), 0) below), which sets frank-popup-open on
@@ -4357,6 +4356,15 @@ async function buildProductRun(){
   }finally{ if(btn) btn.disabled=false; }
 }
 function showScreen(name){
+  // 2026-07-23: the header's gear/bell/nav-item icons (e.g. onclick="showScreen('settings')"
+  // at line ~1534) call this directly, bypassing phoneOpenScreen()'s own phone-home-open
+  // cleanup -- reproduced live: tapping the header gear icon from Home left phone-home-open
+  // stuck, so the shop ticker kept showing (and the tab bar / return-to-Home button stayed
+  // hidden) on top of Settings. showScreen() is the one function every navigation path
+  // (phoneOpenScreen, phoneTab's ask/create branches, every bare onclick="showScreen(...)"
+  // in the header/sidebar) funnels through, so fixing it here covers all of them at once
+  // instead of chasing down each individual call site.
+  document.body.classList.remove('phone-home-open');
   document.querySelectorAll('.nav-item').forEach(i=>{i.classList.remove('active'); i.removeAttribute('aria-current');});
   const navItem = document.querySelector('.nav-item[data-screen="'+name+'"]');
   if(navItem){ navItem.classList.add('active'); navItem.setAttribute('aria-current','page'); }
