@@ -1322,8 +1322,34 @@ async def _run_browser_checks() -> None:
             })""")
             check(mobile_step1.get("visible"), f"mobile tour should start when startTour() is called on a narrow viewport: {mobile_step1}")
             check("Welcome" in mobile_step1.get("title", ""), f"mobile tour step 1 should be the welcome intro: {mobile_step1}")
-            check(mobile_step1.get("dotCount") == 8, f"mobile tour should have 8 steps: {mobile_step1}")
+            check(mobile_step1.get("dotCount") == 9, f"mobile tour should have 9 steps (2026-07-23: +1 for the new Home step): {mobile_step1}")
 
+            # 2026-07-23 (Home screen): new step, second in the sequence, using the new
+            # step.popen field to open Home before spotlighting #home-hero -- confirms
+            # renderTourStep()'s new dispatch branch actually fires phoneOpenHome().
+            await page.click("#tour-next-btn")
+            await page.wait_for_timeout(400)
+            mobile_step_home = await page.evaluate("""() => {
+                const el = document.getElementById('home-hero');
+                const rect = el ? el.getBoundingClientRect() : null;
+                const spot = document.getElementById('tour-spot').getBoundingClientRect();
+                return {
+                    title: document.getElementById('tour-step-title').textContent,
+                    screenActive: document.getElementById('screen-home').classList.contains('active'),
+                    tabbarHidden: getComputedStyle(document.getElementById('phone-tabbar')).display === 'none',
+                    targetsHero: !!rect,
+                    spotNearTarget: !!rect && Math.abs(spot.top - rect.top) < 40,
+                };
+            }""")
+            check(mobile_step_home.get("title") == "Home", f"mobile tour step 2 should be Home: {mobile_step_home}")
+            check(mobile_step_home.get("screenActive"), f"Home tour step should call phoneOpenHome() via step.popen: {mobile_step_home}")
+            check(mobile_step_home.get("tabbarHidden"), f"tab bar should be hidden while the Home tour step is showing: {mobile_step_home}")
+            check(mobile_step_home.get("targetsHero"), f"Home tour step should target #home-hero: {mobile_step_home}")
+            check(mobile_step_home.get("spotNearTarget"), f"spotlight should be positioned over the hero tile: {mobile_step_home}")
+
+            # 2026-07-23: the Ask step now navigates for real (step.ptab: 'ask' instead
+            # of null) -- previously it relied on cold-load already landing on Ask, an
+            # assumption Home's arrival broke (#phone-tabbar is hidden while on Home).
             await page.click("#tour-next-btn")
             await page.wait_for_timeout(400)
             mobile_step2 = await page.evaluate("""() => {
@@ -2054,6 +2080,107 @@ async def _run_browser_checks() -> None:
             check(tap_targets.get("starSeller") is True, "Star Seller panel-title must be wired to openMetricDetailModal('star_seller')")
             check(tap_targets.get("adsRoas") is True, "Ads & ROAS panel-title must be wired to openMetricDetailModal('ads_roas')")
             check(tap_targets.get("cogsMargin") is True, "COGS & Profit panel-title must be wired to openMetricDetailModal('cogs_margin')")
+
+            # ── Home screen + shop ticker (2026-07-23) -- Concept D editorial layout
+            # (hero tile for Ask + 2x2 grid for Approvals/Today/Create/More) replaces
+            # cold-load landing directly on Ask; the tab bar is replaced by a live
+            # auto-scrolling ticker while on Home only -- every other screen keeps the
+            # tab bar unchanged. authGet() monkeypatch, not page.route() -- same
+            # service-worker trap as every other mobile fixture in this file. Still on
+            # the 390x844 mobile viewport set earlier in this run. ──
+            # Mock stays installed through phoneOpenHome() itself, not just the initial
+            # loadShopPerf()/loadStarSeller() warm-up -- showScreen('home') fires
+            # _SCREEN_LOADERS.home (== [loadStarSeller]) as a real side effect of
+            # opening the screen, so restoring authGet too early lets that second,
+            # unmocked call race in and stomp the ticker with real (empty/erroring)
+            # data. Same "keep the mock installed for the whole block" fix this file's
+            # own module docstring already calls out for an earlier flake. ──
+            home_state = await page.evaluate("""async () => {
+                window._origAuthGetHome = window.authGet;
+                window.authGet = (path, ms) => {
+                    if (path.indexOf('/api/analytics') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            dates: ['2026-07-22', '2026-07-23'],
+                            trends: {revenue_30d: [1000, 1234.56], orders_30d: [7, 9]},
+                            delta: {}, latest: {revenue_30d: 1234.56, orders_30d: 9},
+                            top_listings: [{listing_id: 1, title: 'Test Listing', views: 42,
+                                num_favorers: 3, sales: 1, price: 9.99, url: '#', conversion_pct: 2.4}],
+                        })});
+                    }
+                    if (path === '/api/metrics') {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            shop: {active_listing_count: 37, active_listing_goal: 60}, orders: {},
+                        })});
+                    }
+                    if (path.indexOf('/api/status-history?panel=star_seller') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            panel: 'star_seller', days: 30, snapshot_count: 0, dates: [], trend: [], latest: {},
+                        })});
+                    }
+                    if (path.indexOf('/api/star-seller') === 0) {
+                        return Promise.resolve({ok: true, status: 200, json: async () => ({
+                            status: 'on_track', orders_90d: 6, revenue_90d: 355.5, avg_rating: 4.8, unread_messages: 0,
+                        })});
+                    }
+                    return window._origAuthGetHome(path, ms);
+                };
+                await Promise.all([loadShopPerf(), loadStarSeller()]);
+                phoneOpenHome();
+                await new Promise(r => setTimeout(r, 350));
+                const result = {
+                    screenActive: document.getElementById('screen-home').classList.contains('active'),
+                    tabbarVisible: getComputedStyle(document.getElementById('phone-tabbar')).display !== 'none',
+                    tickerVisible: getComputedStyle(document.getElementById('shop-ticker')).display !== 'none',
+                    tickerText: document.getElementById('ticker-track').textContent,
+                };
+                window.authGet = window._origAuthGetHome;
+                return result;
+            }""")
+            check(home_state.get("screenActive") is True, f"phoneOpenHome() should activate #screen-home: {home_state}")
+            check(home_state.get("tabbarVisible") is False, f"tab bar must be hidden on Home: {home_state}")
+            check(home_state.get("tickerVisible") is True, f"ticker must be visible on Home: {home_state}")
+            ticker_text = home_state.get("tickerText") or ""
+            check("$1234.56" in ticker_text and "Test Listing" in ticker_text and "4.80" in ticker_text,
+                  f"ticker should render live revenue/top-listing/star-seller data, not placeholders: {ticker_text[:300]}")
+
+            badge_state = await page.evaluate("""() => {
+                setActionBadge({high: 3}, 5);
+                const hab = document.getElementById('home-appr-badge');
+                const htb = document.getElementById('home-today-badge');
+                return {
+                    haText: hab.textContent, haDisplay: getComputedStyle(hab).display,
+                    htText: htb.textContent, htDisplay: getComputedStyle(htb).display,
+                };
+            }""")
+            check(badge_state.get("haText") == "5" and badge_state.get("haDisplay") == "flex",
+                  f"home-appr-badge should mirror the pending-approvals count: {badge_state}")
+            check(badge_state.get("htText") == "3" and badge_state.get("htDisplay") == "flex",
+                  f"home-today-badge should mirror the high-severity today count: {badge_state}")
+
+            # Navigating away restores the normal tab bar, hides the ticker, and
+            # reveals the persistent return-to-Home button.
+            away_state = await page.evaluate("""() => {
+                phoneTab('today');
+                return {
+                    tabbarVisible: getComputedStyle(document.getElementById('phone-tabbar')).display !== 'none',
+                    tickerVisible: getComputedStyle(document.getElementById('shop-ticker')).display !== 'none',
+                    returnBtnVisible: getComputedStyle(document.getElementById('home-return-btn')).display !== 'none',
+                };
+            }""")
+            check(away_state.get("tabbarVisible") is True, f"tab bar must reappear on Today: {away_state}")
+            check(away_state.get("tickerVisible") is False, f"ticker must hide once off Home: {away_state}")
+            check(away_state.get("returnBtnVisible") is True, f"return-to-Home button should show on any non-Home screen: {away_state}")
+
+            back_state = await page.evaluate("""async () => {
+                document.getElementById('home-return-btn').click();
+                await new Promise(r => setTimeout(r, 350));
+                return {
+                    screenActive: document.getElementById('screen-home').classList.contains('active'),
+                    returnBtnVisible: getComputedStyle(document.getElementById('home-return-btn')).display !== 'none',
+                };
+            }""")
+            check(back_state.get("screenActive") is True, f"#home-return-btn must call phoneOpenHome(): {back_state}")
+            check(back_state.get("returnBtnVisible") is False, f"return-to-Home button should hide again once back on Home: {back_state}")
 
         finally:
             await browser.close()

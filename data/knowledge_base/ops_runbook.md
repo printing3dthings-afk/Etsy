@@ -11276,3 +11276,145 @@ Follow-up to the "Fixed CI failure that was silently blocking every Railway depl
 **Confirmed live via the real, unauthenticated production endpoint:** `GET https://etsy-production-b2f1.up.railway.app/health` now reports `"build":"6a2f8c1-v248"` -- the exact build ID from the last `_BUILD_ID` bump this session shipped (Phase 3 of the mobile Ask-tab redesign). This is the first time this session's work was verified live rather than assumed shipped from a green local test run alone.
 
 **Takeaway for next time a push "does nothing":** if Railway's `deployments` query shows `SKIPPED`, check GitHub Actions CI for that commit first (Railway's "Wait for CI to pass" silently blocks with no visible error otherwise). If CI is green but the deployment still shows `WAITING` after a few minutes, call `deploymentApprove(id: <deployment id>)` via the Railway GraphQL API (same project/environment/service IDs already in `tools/rollback.py`) rather than waiting indefinitely or re-pushing.
+
+
+## 2026-07-23 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Durable volume not writable
+hourly health loop found /tmp/tmpt8n98tg2/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpt8n98tg2/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmp27bkg2hg/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 5593). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-23 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 5595). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Durable volume not writable
+hourly health loop found /tmp/tmp3s8_dafa/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp3s8_dafa/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpbrc8wttd/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 10833). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-23 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 10835). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Mobile Home landing screen (Concept D) + live shop-stats ticker shipped
+**What shipped:** Mobile cold-load now lands on a new `#screen-home` (Scott picked "Concept D — Editorial Feature" from 4 mockups) instead of going straight to Ask: a hero tile for Ask plus a 2x2 grid for Approvals/Today/Create/More, reached via a new `phoneOpenHome()` wrapper that reuses `phoneOpenScreen()`'s `.screen`/`cc-open`/`phone-screen-open` machinery (free `screen-in` entrance animation, free desktop-hiding — `#screen-home` is never linked from a desktop `.nav-item` so desktop is untouched). A follow-up ask ("replace the tabs... with a scrolling bar that displays actual numbers from the shop") replaces the bottom tab bar with an auto-scrolling ticker **on Home only** — every other screen keeps the tab bar unchanged, driven by a new `phone-home-open` body class. The ticker shows Revenue·30d, Orders·30d, Top Listing (by views — `top_listings` was already fetched by `/api/analytics` but rendered nowhere until now), Active Listings vs. the existing `_ACTIVE_LISTING_GOAL` catalog-growth constant (newly serialized into `/api/metrics` — the only backend change this shipped), and Star Seller's `avg_rating`. A persistent `⌂` return-to-Home button shows on every other mobile screen. `setActionBadge()` now mirrors the pending-approvals/today-severity counts onto the Home tiles too, so that signal doesn't silently disappear on the screen users see most. The guided tour gained a new first step (via a new `step.popen` field in `renderTourStep()`'s dispatch) that opens Home before spotlighting the hero tile, and the existing Ask step now actually navigates (`ptab: 'ask'` instead of `null`) since it can no longer assume cold-load already left the tab bar visible.
+
+**Bugs found + fixed during implementation:**
+1. `loadStarSeller()` had `if(!el) return;` (where `el` is `#star-seller-body`, which only exists inside `#screen-cmd`) as its very first lines — meaning Star Seller data was never fetched at all while parked anywhere else, including the new Home screen. Fixed by moving the element check to after the fetch/stash, so the new `_lastStarSeller` (feeding the ticker) populates regardless of active screen.
+2. `.screen.active`'s `screen-in` keyframe animation uses `animation-fill-mode: both`, which leaves `transform: translateY(0)` permanently applied even after the animation ends — any non-none `transform` establishes a new CSS containing block for `position:fixed` descendants. The ticker was initially nested inside `#screen-home`; caught before shipping and moved to be a true sibling of `#phone-tabbar` (like `#back-to-top-btn`), so its fixed-to-viewport bottom positioning can't silently break.
+3. A new `home:` entry in `_SCREEN_LOADERS` (so `loadStarSeller()` keeps refreshing while parked on Home, same as it already does on `cmd`) caused a real Playwright test flake: the test restored its `authGet` mock before calling `phoneOpenHome()`, so `showScreen('home')`'s loader-firing raced in a real (unmocked, erroring) `loadStarSeller()` call that stomped the ticker with placeholder data moments after the mocked render. Fixed by keeping the mock installed through the whole `phoneOpenHome()` call, per this file's own established "keep the mock installed for the whole test block" fix from an earlier flake.
+4. `tests/test_motion_flow_audit.py`'s haptic-tick check does a 300-char substring search after `"function phoneTab(which)"` in the raw source — my first attempt at the `phone-home-open` cleanup added a long comment block before the existing `_hapticTick()` call, pushing it past the 300-char window and failing a real, correct test. Fixed by moving the one-line cleanup to right after the existing haptic-tick line instead of before it (functionally equivalent, ordering doesn't matter for a class removal).
+
+**Tests:** new `tests/test_metrics_active_listing_goal.py` (the one-line `/api/metrics` backend change, plus a check that a `shop_r` failure doesn't leave a stray goal field behind). New Playwright block in `tools/playwright_smoke.py`: `phoneOpenHome()` activates `#screen-home` and hides the tab bar in favor of the ticker, the ticker renders real mocked revenue/top-listing/star-seller data (not placeholders), `setActionBadge()` mirrors onto the Home tiles, navigating away restores the tab bar and reveals `#home-return-btn`, and the return button navigates back to Home. The existing mobile tour test was updated for the new step count (8 → 9) and a new Home-step assertion block was inserted (asserting `step.popen` actually fires `phoneOpenHome()` and spotlights `#home-hero`). 3 consecutive clean Playwright runs. Full suite 73/73 passing.
+
+**Scope:** Concept D was chosen from 4 throwaway HTML mockups shown to Scott (built and published as Claude Artifacts, never touching the real app) — the ticker-replaces-tab-bar-on-Home-only behavior was iterated once more on the winning mockup before Scott approved it for real implementation.

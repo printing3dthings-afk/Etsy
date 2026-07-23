@@ -1156,8 +1156,12 @@ body.is-mobile.frank-popup-open .orb-input-row{display:none}
 /* Tab bar stays visible and reachable while the orb popup is open (Scott, 2026-07-10)
    -- previously force-hidden here, which left no way off the orb screen except the
    hamburger's small text popup. Stacked above #orb-view (z-index 750) so it's both
-   visible and tappable; phoneTab() below closes the popup when a non-ask tab is tapped. */
-body.is-mobile.frank-popup-open #phone-tabbar{display:flex;z-index:761}
+   visible and tappable; phoneTab() below closes the popup when a non-ask tab is tapped.
+   :not(.phone-home-open) added 2026-07-23 -- phoneOpenHome()/phoneOpenScreen() both
+   clear frank-popup-open on open so this combination shouldn't normally occur, but
+   without the guard this override would force-show the tab bar over the ticker if it
+   somehow did. */
+body.is-mobile.frank-popup-open:not(.phone-home-open) #phone-tabbar{display:flex;z-index:761}
 .frank-popup-fixed{display:none}
 body.is-mobile .frank-popup-fixed{
   display:flex;position:fixed;z-index:760;
@@ -1211,7 +1215,67 @@ body.is-mobile.phone-panel .main,
 body.is-mobile.phone-panel .hdr-logo,
 body.is-mobile.phone-panel .hdr-bar{display:none !important}
 .pp{display:none}
-.pp.on{display:block}
+/* 2026-07-23: was a flat display:none->block toggle with zero animation, unlike
+   .screen.active's screen-in fade/slide (line 714) -- confirmed via direct codebase
+   research, not assumed. Now that Home routes into Approvals/Today/More via this
+   path while routing into Ask/Create via .screen.active, giving both the same
+   entrance keeps all 5 destinations feeling equally polished from Home. Reuses the
+   existing screen-in keyframe -- no new keyframes. */
+.pp.on{display:block;animation:screen-in .26s cubic-bezier(.22,1,.36,1) both}
+/* ══ Mobile Home landing screen (Editorial Feature / Concept D, 2026-07-23) —
+   a hero tile for Ask + a 2x2 grid for Approvals/Today/Create/More, reached via
+   phoneOpenHome(). #screen-home shares .screen's own display rules (see line 714),
+   this block is just the hero/grid content styling. ══ */
+#screen-home{padding:14px 13px calc(20px + env(safe-area-inset-bottom));padding-top:calc(14px + env(safe-area-inset-top))}
+.home-hero{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--card-shadow);padding:26px 16px;text-align:center;cursor:pointer;
+  margin:10px 2px 12px;transition:transform .12s ease;-webkit-tap-highlight-color:transparent}
+.home-hero:active{transform:scale(.97)}
+.home-hero-ic{font-size:38px;color:var(--cyan);line-height:1}
+.home-hero-title{font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);margin-top:8px}
+.home-hero-sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 2px}
+.home-tile{position:relative;background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:20px 10px;text-align:center;
+  cursor:pointer;transition:transform .1s ease;-webkit-tap-highlight-color:transparent}
+.home-tile:active{transform:scale(.94)}
+.home-tile-ic{font-size:26px;color:var(--cyan2)}
+.home-tile-lab{font-size:12.5px;font-weight:600;color:var(--text);margin-top:6px}
+.home-tile .pcnt{position:absolute;top:8px;right:10px;background:var(--red);color:#fff;
+  font-size:9.5px;font-weight:800;min-width:15px;height:15px;border-radius:var(--r-sm);
+  align-items:center;justify-content:center;padding:0 4px}
+/* Press-glow flash, adapted from the mockup's tile-flash pattern to real theme tokens
+   (color-mix already used successfully elsewhere in this file, e.g. .ptab-pill). */
+@keyframes home-tile-flash{0%{box-shadow:var(--card-shadow)}40%{box-shadow:0 0 0 3px color-mix(in srgb, var(--cyan) 22%, transparent),var(--card-shadow)}100%{box-shadow:var(--card-shadow)}}
+.home-hero:active,.home-tile:active{animation:home-tile-flash .32s ease}
+
+/* Home hides the tab bar in favor of the ticker; every other screen unchanged. */
+body.is-mobile.phone-home-open #phone-tabbar{display:none}
+
+#shop-ticker{display:none}
+body.is-mobile.phone-home-open #shop-ticker{
+  display:flex;position:fixed;left:0;right:0;bottom:0;z-index:700;height:58px;
+  align-items:center;overflow:hidden;background:var(--panel);border-top:1px solid var(--border);
+  padding-bottom:env(safe-area-inset-bottom);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent);
+}
+.ticker-track{display:flex;gap:22px;white-space:nowrap;animation:ticker-scroll 26s linear infinite;padding:0 24px}
+.ticker-track.paused{animation-play-state:paused}
+@keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tick-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);flex-shrink:0}
+.tick-ic{color:var(--cyan2);font-size:13px}
+.tick-lab{color:var(--muted);font-weight:600}
+.tick-val{font-weight:700}
+
+#home-return-btn{display:none;position:fixed;z-index:750;
+  left:calc(14px + env(safe-area-inset-left));
+  bottom:calc(74px + env(safe-area-inset-bottom));
+  width:42px;height:42px;border-radius:50%;align-items:center;justify-content:center;
+  background:var(--panel);color:var(--cyan2);border:1px solid var(--border);font-size:19px;font-weight:700;
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{display:flex}
+#home-return-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .pp-h{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:2px 2px 12px}
 .pcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px;margin-bottom:10px}
 .pcard .pt{font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px;line-height:1.35}
@@ -1383,10 +1447,13 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .status-pill .dot{animation:none}
   .mini-wave span{animation:none;height:10px}
   .hub-spinner{animation:none}
-  .screen.active{animation:none}
+  .screen.active,.pp.on{animation:none}
   .nav-item,body.is-mobile #phone-tabbar .ptab,body.is-mobile #phone-tabbar .ptab .pti,
   body.is-mobile #phone-tabbar .ptab-pill{transition:none}
   .nav-item:active,body.is-mobile #phone-tabbar .ptab:active{transform:none}
+  .ticker-track{animation:none}
+  .home-hero,.home-tile{transition:none}
+  .home-hero:active,.home-tile:active{transform:none;animation:none}
   #product-review-modal,#product-review-backdrop{animation:none !important}
   #metric-detail-modal,#metric-detail-backdrop{animation:none !important}
   .shop-spark-card:active{transform:none}
@@ -1520,6 +1587,35 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
           <button class="tour-nav-btn" id="tour-back-btn" onclick="tourBack()">Back</button>
           <button class="tour-nav-btn primary" id="tour-next-btn" onclick="tourNext()">Next</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ Mobile Home landing screen (Editorial Feature / Concept D,
+       Scott-approved 2026-07-23) -- mobile-only, reached via phoneOpenHome().
+       Never linked from a desktop .nav-item, so it stays plain "screen" (no
+       "active") and is inert on desktop. ══════════ -->
+  <div class="screen" id="screen-home">
+    <div class="mobile-shop-header">OnBrandCraftz</div>
+    <div class="home-hero" id="home-hero" role="button" tabindex="0" onclick="phoneTab('ask')" aria-label="Ask Frank">
+      <div class="home-hero-ic">◉</div>
+      <div class="home-hero-title">Ask</div>
+      <div class="home-hero-sub">Chat with Frank, see your stats</div>
+    </div>
+    <div class="home-grid">
+      <div class="home-tile" role="button" tabindex="0" onclick="phoneTab('appr')" aria-label="Approvals">
+        <div class="home-tile-ic">✓</div><div class="home-tile-lab">Approvals</div>
+        <span class="pcnt" id="home-appr-badge" style="display:none">0</span>
+      </div>
+      <div class="home-tile" role="button" tabindex="0" onclick="phoneTab('today')" aria-label="Today">
+        <div class="home-tile-ic">▤</div><div class="home-tile-lab">Today</div>
+        <span class="pcnt" id="home-today-badge" style="display:none">0</span>
+      </div>
+      <div class="home-tile" role="button" tabindex="0" onclick="phoneTab('create')" aria-label="Create">
+        <div class="home-tile-ic">✚</div><div class="home-tile-lab">Create</div>
+      </div>
+      <div class="home-tile" role="button" tabindex="0" onclick="phoneTab('more')" aria-label="More">
+        <div class="home-tile-ic">⋯</div><div class="home-tile-lab">More</div>
       </div>
     </div>
   </div>
@@ -2387,6 +2483,20 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <button id="back-to-top-btn" onclick="backToTop()" aria-label="Back to top" title="Back to top">⬆</button>
 
+  <!-- Home's shop-numbers ticker (2026-07-23) -- a true sibling of #phone-tabbar,
+       NOT nested inside #screen-home: .screen.active's screen-in animation applies
+       "animation-fill-mode: both", which leaves transform:translateY(0) permanently
+       set on the element even after the animation ends -- any non-none transform
+       establishes a new containing block for position:fixed descendants, which
+       would silently break this ticker's fixed-to-viewport bottom positioning if it
+       lived inside #screen-home. Visibility is driven purely by body.phone-home-open
+       (see CSS), same mechanism #phone-tabbar/#home-return-btn use. -->
+  <div id="shop-ticker"><div class="ticker-track" id="ticker-track"></div></div>
+
+  <!-- Persistent return-to-Home affordance -- visible on every mobile screen except
+       Home itself (see CSS: body.is-mobile:not(.phone-home-open) #home-return-btn). -->
+  <button id="home-return-btn" onclick="phoneOpenHome()" aria-label="Return to Home">⌂</button>
+
 </div></div>
 
 <script>
@@ -2519,19 +2629,20 @@ window.addEventListener('resize', syncMobileClass);
 mobileMQ.addEventListener('change', syncMobileClass);
 syncMobileClass();
 document.getElementById('hamburger-btn').addEventListener('click', toggleControlCenter);
-// Default phone landing is the Ask/chat screen -- Scott wants it to be the first
-// thing he sees when the app opens. phoneTab('ask') -> phoneOpenScreen('cmd') shows
-// the real chat + stats content with the tab bar still reachable, so he can tap
-// Today/Approvals/More to leave. (2026-07-22: previously landed on a blank orb
-// popup with only an "Open full chat" button -- see phoneTab()'s 'ask' branch.)
+// Default phone landing is the Home screen (2026-07-23, Scott-approved Concept D)
+// -- a hero tile for Ask plus a 2x2 grid for Approvals/Today/Create/More, with the
+// tab bar replaced by a live shop-stats ticker on this screen only. Supersedes the
+// 2026-07-22 behavior of landing directly on phoneTab('ask'); Ask remains one tap
+// away via the hero tile, and phoneOpenHome() below reuses phoneOpenScreen()'s
+// machinery so it still gets a real screen-in entrance animation.
 // Deferred via setTimeout(0): the phone panels' renderers touch module-scope `let`
 // state (e.g. _phoneNeeds) declared further down this script, so touching them THIS
 // early hits the temporal dead zone (real bug caught live via Playwright, "Cannot
 // access '_phoneNeeds' before initialization"). Deferring to a fresh macrotask runs
-// only after the whole script has finished evaluating -- openFrankPopup() itself is
-// TDZ-safe (reads DOM + _frankPopupPrevTab, both ready by then), but we keep the
-// defer so the tab bar / underlying panel state is fully wired first.
-if (isMobileMode()) setTimeout(() => phoneTab('ask'), 0);
+// only after the whole script has finished evaluating -- phoneOpenHome() itself is
+// TDZ-safe (reads DOM + module state, both ready by then), but we keep the defer so
+// the tab bar / underlying panel state is fully wired first.
+if (isMobileMode()) setTimeout(() => phoneOpenHome(), 0);
 
 // ── Phone Mode v2: 4-tab shell with dedicated NATIVE panels (mobile only).
 // Approvals/Today/More render their own compact, phone-sized panels wired to the
@@ -2548,6 +2659,8 @@ function _hapticTick(ms){
 function phoneTab(which){
   const wasActive = document.querySelector('#phone-tabbar .ptab.on');
   if (!(wasActive && wasActive.dataset.ptab === which)) _hapticTick();
+  // 2026-07-23: leaving Home for any of the 5 real tabs always exits phone-home-open.
+  document.body.classList.remove('phone-home-open');
   // 2026-07-22 (Ask-tab redesign): Ask used to open a blank orb popup with a
   // single "Open full chat" button as the only way to reach anything real --
   // confirmed a wasted extra tap via a screen recording Scott sent. Ask now
@@ -2896,6 +3009,11 @@ function renderPhoneMore(){
 }
 // Opening a screen from More exits the phone panel and shows that (desktop) screen.
 function phoneOpenScreen(name){
+  // 2026-07-23 (Home screen): covers every direct caller of this function (More-menu
+  // items, the tour engine, etc.), not just phoneTab()'s own removal above -- safe even
+  // for phoneOpenScreen('home') itself since phoneOpenHome() re-adds the class right
+  // after this call returns (synchronous, no race).
+  document.body.classList.remove('phone-home-open');
   // 2026-07-18: clear the "Talk to Frank" orb popup first if it's still open --
   // reproduced live via Playwright: the orb is the mobile home tab at load
   // (setTimeout(() => phoneTab('ask'), 0) below), which sets frank-popup-open on
@@ -2922,6 +3040,19 @@ function phoneOpenScreen(name){
   document.querySelectorAll('#phone-tabbar .ptab').forEach(b=>b.classList.remove('on'));
   document.querySelectorAll('#phone-body .pp').forEach(p=>p.classList.remove('on'));
   showScreen(name);
+}
+// Mobile Home landing screen (Editorial Feature / Concept D, Scott-approved
+// 2026-07-23) -- reuses phoneOpenScreen()'s .screen+cc-open+phone-screen-open
+// machinery (free screen-in entrance animation, free desktop-hiding via cc-open;
+// #screen-home is never linked from any desktop .nav-item so this is harmless
+// there) and layers one additional marker, phone-home-open, that drives the
+// tab-bar<->ticker swap (see CSS). phoneOpenScreen() runs FIRST and strips any
+// stale phone-home-open (see its own top-of-function comment), so adding the
+// class back AFTER this call is required, not just convenient.
+function phoneOpenHome(){
+  phoneOpenScreen('home');
+  document.body.classList.add('phone-home-open');
+  renderTicker(); // paint immediately from whatever's cached; loadShopPerf()/loadStarSeller() refresh it live
 }
 // Jump from the Ask/orb view straight into the full chat transcript (the "cmd"
 // screen that holds the conversation). Closes the "Talk to Frank" popup first so
@@ -3567,6 +3698,10 @@ function transcribeAndSend(blob){
 // go stale.
 const _SCREEN_LOADERS = {
   cmd: [loadCredentialsAndHealth, loadStarSeller, loadAdsStatus, loadCogsStatus, loadInbox, loadMissionTimeline],
+  // Home ticker (2026-07-23) needs Star Seller's avg_rating kept fresh while parked here,
+  // same as it's kept fresh on cmd -- loadShopPerf() itself is already a _GLOBAL_LOADERS
+  // entry below so revenue/orders/top-listing/active-count refresh regardless of screen.
+  home: [loadStarSeller],
   core: [loadCredentialsAndHealth, loadCoreErrors],
   agents: [],  // covered by the global loadAgents() call below
   tasks: [loadTasks],
@@ -4338,7 +4473,10 @@ const MOBILE_TOUR_STEPS = [
   { target: null, ptab: null,
     title: 'Welcome to %%AGENT_SHORT%%',
     body: '<p>%%AGENT_SHORT%% helps you run your shop. This quick tour shows where everything lives — about 20 seconds.</p><p class="tour-note">Tap Next to start, or Skip to jump right in.</p>' },
-  { target: '.ptab[data-ptab="ask"]', ptab: null,
+  { target: '#home-hero', popen: 'home',
+    title: 'Home',
+    body: '<p>This is where %%AGENT_SHORT%% opens — your shop numbers scroll along the bottom, and everything else is one tap away.</p>' },
+  { target: '.ptab[data-ptab="ask"]', ptab: 'ask',
     title: 'Ask',
     body: '<p>Tap here anytime to talk to %%AGENT_SHORT%% — ask a question or give an instruction in plain English.</p>' },
   { target: '#frank-popup-btn', ptab: null,
@@ -4366,7 +4504,13 @@ function _tourTargetEl(step){ return step.target ? document.querySelector(step.t
 function renderTourStep(){
   const step = _activeTourSteps[_tourIndex];
   if (!step) return;
-  if (step.ptab) phoneTab(step.ptab);
+  // popen (2026-07-23, Home screen) checked first -- Home isn't one of the 5 real
+  // .ptab tab-bar buttons nor a screen ever reached via showScreen() from desktop
+  // nav, so it gets its own dedicated field rather than overloading ptab/screen
+  // (which would corrupt the tab-bar/pill state machine or the showScreen() nav-
+  // item contract every other step relies on).
+  if (step.popen) phoneOpenHome();
+  else if (step.ptab) phoneTab(step.ptab);
   else if (step.screen) showScreen(step.screen);
   const spot = document.getElementById('tour-spot');
   const tip = document.getElementById('tour-tooltip');
@@ -5351,6 +5495,59 @@ function _getLastAnalytics(){
   var cached = cacheGet('shopPerf');
   return (cached && cached.data && cached.data.a) || null;
 }
+// Home ticker (2026-07-23) reads /api/metrics the same way -- mirrors _lastAnalytics above.
+let _lastMetrics = null; // set by loadShopPerf() on every successful /api/metrics fetch
+function _getLastMetrics(){
+  if(_lastMetrics) return _lastMetrics;
+  var cached = cacheGet('shopPerf');
+  return (cached && cached.data && cached.data.m) || null;
+}
+// Home ticker also needs the live Star Seller rating -- loadStarSeller() below has no
+// reusable stash today (only _lastStatusHistory.star_seller, which is the trend series,
+// not the current avg_rating), so this mirrors _lastAnalytics/_lastMetrics for that too.
+let _lastStarSeller = null; // set by loadStarSeller() on every successful /api/star-seller fetch
+function _getLastStarSeller(){
+  return _lastStarSeller;
+}
+// Home screen's shop-numbers ticker (2026-07-23, replaces the tab bar only while
+// body.phone-home-open -- Scott: "replace the tabs... with a scrolling bar that
+// displays actual numbers from the shop"). Safe to call before any data has loaded
+// (renders "—" placeholders) and safe to call when #shop-ticker isn't mounted (same
+// defensive null-check convention as every other render* function in this file).
+function renderTicker(){
+  const track = document.getElementById('ticker-track');
+  if (!track) return;
+  const a = _getLastAnalytics() || {};
+  const m = _getLastMetrics() || {};
+  const ss = _getLastStarSeller() || {};
+  const lt = a.latest || {};
+  const top = (a.top_listings && a.top_listings[0]) || null;
+  const shop = m.shop || {};
+  const chips = [
+    {ic:'$', label:'Revenue · 30d', val: lt.revenue_30d!=null ? '$'+lt.revenue_30d.toFixed(2) : '—'},
+    {ic:'▤', label:'Orders · 30d', val: lt.orders_30d!=null ? String(lt.orders_30d) : '—'},
+    {ic:'★', label:'Top Listing', val: top ? (top.title.length>28 ? top.title.slice(0,28)+'…' : top.title)+' · '+top.views+' views' : '—'},
+    {ic:'◆', label:'Active Listings', val: (shop.active_listing_count!=null && shop.active_listing_goal!=null)
+        ? shop.active_listing_count + ' / ' + shop.active_listing_goal + ' goal' : '—'},
+    {ic:'✦', label:'Star Seller', val: ss.avg_rating ? ss.avg_rating.toFixed(2)+'★ avg' : '—'},
+  ];
+  const chipHtml = chips.map(c =>
+    '<div class="tick-chip"><span class="tick-ic">'+c.ic+'</span><span class="tick-lab">'+escHtml(c.label)+'</span><span class="tick-val">'+escHtml(String(c.val))+'</span></div>'
+  ).join('');
+  // Doubled content so the -50% translateX loop (see @keyframes ticker-scroll) is
+  // seamless -- both halves are identical, so the loop point is invisible.
+  track.innerHTML = chipHtml + chipHtml;
+}
+(function(){
+  const track = document.getElementById('ticker-track');
+  if (!track) return;
+  const pause = () => track.classList.add('paused');
+  const resume = () => track.classList.remove('paused');
+  track.addEventListener('pointerdown', pause);
+  track.addEventListener('touchstart', pause, {passive:true});
+  track.addEventListener('pointerup', resume);
+  track.addEventListener('touchend', resume);
+})();
 // Phase 3 (2026-07-22) analog of _lastAnalytics above, keyed by panel since Star
 // Seller/Ads/COGS are three independent /api/status-history?panel=... fetches, each
 // set by its own loader (loadStarSeller/loadAdsStatus/loadCogsStatus below) right
@@ -5475,12 +5672,15 @@ async function loadShopPerf(){
     const a = await ar.json();
     _lastAnalytics = a;
     const m = await mr.json();
+    _lastMetrics = m;
     cacheSet('shopPerf', {a, m});
     _renderShopPerf(a, m, sparkEl, chipEl, null);
+    renderTicker();
   }catch(e){
     const cached = cacheGet('shopPerf');
     if(cached){
       _renderShopPerf(cached.data.a, cached.data.m, sparkEl, chipEl, _offlineNote(cached.ts));
+      renderTicker();
     } else if(sparkEl){
       sparkEl.innerHTML = '<div style="color:var(--red);font-size:11px;padding:4px">Shop data offline</div>';
     }
@@ -5560,7 +5760,6 @@ function toggleShopExpand(){
 
 async function loadStarSeller(){
   const el = document.getElementById('star-seller-body');
-  if(!el) return;
   try{
     // Phase 3 (2026-07-22): fetch this panel's drill-down history alongside its
     // live status, same Promise.all-two-calls pattern as loadShopPerf() above.
@@ -5569,8 +5768,17 @@ async function loadStarSeller(){
       authGet('/api/status-history?panel=star_seller&days=30'),
     ]);
     const d = await r.json();
+    _lastStarSeller = d;
     _lastStatusHistory.star_seller = await hr.json();
     cacheSet('statusHistory_star_seller', _lastStatusHistory.star_seller);
+    renderTicker();
+    // 2026-07-23: the #star-seller-body element only exists inside #screen-cmd, so
+    // this check used to sit at the very top of the function and return before the
+    // fetch even ran -- meaning _lastStarSeller (and the Home ticker's rating tile)
+    // never populated unless the user had visited Ask this session. Moved past the
+    // fetch/stash so the ticker stays fresh regardless of active screen; only the
+    // panel-specific rendering below still needs the real element.
+    if (!el) return;
     const statusLabel = d.status==='on_track' ? 'ON TRACK' : d.status==='at_risk' ? 'AT RISK' : 'BUILDING';
     const statusClass = d.status||'building';
     const ordPct = Math.min(100, ((d.orders_90d||0)/5)*100);
@@ -6278,6 +6486,13 @@ function setActionBadge(summary, pending) {
   const tb = document.getElementById('ptab-today-badge');
   const hc = (summary && summary.high) || 0;
   if (tb) { if (hc > 0) { tb.textContent = hc > 99 ? '99+' : hc; tb.style.display = 'flex'; } else { tb.style.display = 'none'; } }
+  // Home tile mirrors (2026-07-23) -- same two counts, new mount points. #phone-tabbar
+  // (and its badges) is hidden while on Home, so without this a user parked on the
+  // screen they see most at cold load would see zero pending/today signal at all.
+  const hab = document.getElementById('home-appr-badge');
+  if (hab) { if (pc > 0) { hab.textContent = pc > 99 ? '99+' : pc; hab.style.display = 'flex'; } else { hab.style.display = 'none'; } }
+  const htb = document.getElementById('home-today-badge');
+  if (htb) { if (hc > 0) { htb.textContent = hc > 99 ? '99+' : hc; htb.style.display = 'flex'; } else { htb.style.display = 'none'; } }
 }
 function simpleLineDiff(before, after) {
   const b = String(before == null ? '' : before).split('\\n');

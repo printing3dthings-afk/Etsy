@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "6a2f8c1-v248"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b1c4e7a-v249"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -4881,6 +4881,7 @@ def _build_metrics(orders_r, reviews_r, shop_r) -> dict:
         out["shop"] = {
             "name": shop_r.get("shop_name", business_config.BUSINESS_NAME),
             "active_listing_count": active_count,
+            "active_listing_goal": _ACTIVE_LISTING_GOAL,  # Home ticker (2026-07-23)
             "total_sales": shop_r.get("transaction_sold_count", 0),
             "on_vacation": shop_r.get("is_vacation", False),
         }
