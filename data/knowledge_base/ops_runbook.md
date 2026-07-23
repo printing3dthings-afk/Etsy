@@ -11117,3 +11117,79 @@ This completes all three phases of the mobile Ask-tab redesign Scott asked for: 
 **Tests:** `tests/test_status_snapshots.py` (new — upsert-by-day, oldest-first + panel-scoped history, the exact failure-isolation scenario a failing Ads compute call must not break `metric_snapshots` or the other two panels, `/api/status-history` shape + 400 validation for an unknown panel). New Playwright block in `tools/playwright_smoke.py` (all three panels open the shared modal with real mocked history, the cogs_margin day-1 zero-snapshot state doesn't crash and — regression guard — renders its empty-state copy exactly once, all three panel-titles are actually wired) — 3 consecutive clean runs. Full suite 72/72 passing.
 
 **Scope:** This closes out the mobile Ask-tab redesign project (Phases 1-3, tasks #217-225).
+
+
+## 2026-07-23 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Durable volume not writable
+hourly health loop found /tmp/tmp47z_ehak/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp47z_ehak/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpizrb_sez/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 9870). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-23 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 9872). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Fixed CI failure that was silently blocking every Railway deploy
+**Symptom:** Scott asked "Is it live? Nothing looks different" after the mobile Ask-tab redesign shipped. Checked the real production `/health` endpoint (`https://etsy-production-b2f1.up.railway.app/health`) and found it running build `2e3d30e-v242` — several builds behind even where this session started (`v245`), let alone the three just-shipped phases (`v246`→`v248`).
+
+**Root cause:** Railway's `deployments` GraphQL query (same project/environment/service IDs already used by `tools/rollback.py`) showed every recent deployment for this branch's pushes as `SKIPPED`, not failed or crashed. GitHub Actions' "CI Smoke" workflow was failing on every one of those pushes (confirmed via `mcp__github__get_job_logs`) — Railway has "Wait for CI to pass" enabled (per the 2026-07-09 "Manual deploy rollback procedure" entry's recommended hardening), so a red CI run silently blocks the deploy with no error surfaced anywhere Scott would see.
+
+The CI failure itself was a single, narrow, pre-existing bug **unrelated to the Ask-tab redesign** — confirmed present as far back as this session's very first push, so it's been blocking deploys since at least then, not something this session's feature work introduced. `tools/generate_coloring_pages.py`'s `generate_coloring_page()` (the function behind the 2026-07-22 "dynamic Scott-authored theme set" feature) calls `bw.save(dst, ...)` into `data/digital_products/coloring_pages/` without ever creating that directory first. Locally and on the real Railway container that directory already exists (real product files persist there across sessions); in a fresh CI checkout (`data/digital_products/` is gitignored) it doesn't exist yet, so `PIL.Image.save()` raised `FileNotFoundError` on every CI run. The exact same file already does this correctly elsewhere (`COLORING_DIR.mkdir(parents=True, exist_ok=True)` in `main()`'s CLI entrypoint) — the newer function just never got it.
+
+**Fix:** Added `output_dir.mkdir(parents=True, exist_ok=True)` at the top of `generate_coloring_page()` itself (not just the CLI entrypoint), so every call path — including `generate_dynamic_theme_set()`, used by `tools/build_coloring_product.py` and exercised by `tests/test_coloring_dynamic_theme.py` — is covered. Verified by actually reproducing the exact failure locally first (moved the real `coloring_pages/` directory aside, confirmed the identical `FileNotFoundError`, applied the fix, confirmed it resolved, restored the real directory).
+
+**Verified:** full suite 72/72 passing. Pushed as its own commit; watching the resulting GitHub Actions run and the production `/health` build ID to confirm this actually unblocks the deploy rather than assuming it in theory.

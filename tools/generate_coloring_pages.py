@@ -431,6 +431,14 @@ def _enforce_bw(img: Image.Image) -> Image.Image:
 def generate_coloring_page(theme: dict, output_dir: Path, regen: bool = False,
                             engine: str | None = None) -> Path | None:
     """Generate one coloring page PNG. Returns path on success, None on failure."""
+    # generate_dynamic_theme_set() calls this directly without going through main()'s
+    # own COLORING_DIR.mkdir() -- harmless in a real dev/prod checkout where
+    # data/digital_products/ already exists from prior product generation, but a
+    # fresh CI checkout (that whole tree is gitignored) has no such directory yet,
+    # so bw.save() below raised FileNotFoundError and silently failed CI on every
+    # push (confirmed 2026-07-23, blocking every Railway deploy since this function
+    # was added 2026-07-22). exist_ok=True makes this a no-op when it already exists.
+    output_dir.mkdir(parents=True, exist_ok=True)
     dst = output_dir / f"{theme['id']}_coloring.png"
     if dst.exists() and not regen:
         print(f"  ✓ {theme['id']} cached — skipping (--regen to force)")
