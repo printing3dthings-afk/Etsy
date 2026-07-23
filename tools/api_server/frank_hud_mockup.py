@@ -1268,13 +1268,20 @@ body.is-mobile.phone-home-open #shop-ticker{
 .tick-lab{color:var(--muted);font-weight:600}
 .tick-val{font-weight:700}
 
-#home-return-btn{display:none;position:fixed;z-index:750;
+/* 2026-07-23: was a small panel-toned icon-only circle (blended into the app chrome
+   on purpose, unlike the gold #back-to-top-btn above which is styled to be noticed) --
+   Scott shipped the Home screen, said "looks good," then immediately asked for "a home
+   button" without realizing this one already existed. Confirmed no bug (wiring/z-index/
+   render-path all correct) -- the real problem was pure visual prominence. Restyled to
+   directly mirror #back-to-top-btn's gold treatment plus a text label. */
+#home-return-btn{display:none;position:fixed;z-index:750;align-items:center;justify-content:center;gap:6px;
   left:calc(14px + env(safe-area-inset-left));
   bottom:calc(74px + env(safe-area-inset-bottom));
-  width:42px;height:42px;border-radius:50%;align-items:center;justify-content:center;
-  background:var(--panel);color:var(--cyan2);border:1px solid var(--border);font-size:19px;font-weight:700;
-  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+  height:42px;padding:0 16px;border-radius:var(--r-pill);
+  background:var(--gold);color:#0D1B2A;border:none;font-size:14px;font-weight:700;font-family:var(--font-body);
+  cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);transition:transform .1s ease}
 body.is-mobile:not(.phone-home-open):not(.frank-popup-open) #home-return-btn{display:flex}
+#home-return-btn:active{transform:scale(.95)}
 #home-return-btn:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .pp-h{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:2px 2px 12px}
 .pcard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px;margin-bottom:10px}
@@ -1454,6 +1461,8 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
   .ticker-track{animation:none}
   .home-hero,.home-tile{transition:none}
   .home-hero:active,.home-tile:active{transform:none;animation:none}
+  #home-return-btn{transition:none}
+  #home-return-btn:active{transform:none}
   #product-review-modal,#product-review-backdrop{animation:none !important}
   #metric-detail-modal,#metric-detail-backdrop{animation:none !important}
   .shop-spark-card:active{transform:none}
@@ -2495,7 +2504,7 @@ body.is-mobile .screen .hub-thumb,body.is-mobile .screen img{max-width:100%;box-
 
   <!-- Persistent return-to-Home affordance -- visible on every mobile screen except
        Home itself (see CSS: body.is-mobile:not(.phone-home-open) #home-return-btn). -->
-  <button id="home-return-btn" onclick="phoneOpenHome()" aria-label="Return to Home">⌂</button>
+  <button id="home-return-btn" onclick="phoneOpenHome()" aria-label="Return to Home"><span aria-hidden="true">⌂</span> Home</button>
 
 </div></div>
 

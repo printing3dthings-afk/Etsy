@@ -11418,3 +11418,75 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Tests:** new `tests/test_metrics_active_listing_goal.py` (the one-line `/api/metrics` backend change, plus a check that a `shop_r` failure doesn't leave a stray goal field behind). New Playwright block in `tools/playwright_smoke.py`: `phoneOpenHome()` activates `#screen-home` and hides the tab bar in favor of the ticker, the ticker renders real mocked revenue/top-listing/star-seller data (not placeholders), `setActionBadge()` mirrors onto the Home tiles, navigating away restores the tab bar and reveals `#home-return-btn`, and the return button navigates back to Home. The existing mobile tour test was updated for the new step count (8 → 9) and a new Home-step assertion block was inserted (asserting `step.popen` actually fires `phoneOpenHome()` and spotlights `#home-hero`). 3 consecutive clean Playwright runs. Full suite 73/73 passing.
 
 **Scope:** Concept D was chosen from 4 throwaway HTML mockups shown to Scott (built and published as Claude Artifacts, never touching the real app) — the ticker-replaces-tab-bar-on-Home-only behavior was iterated once more on the winning mockup before Scott approved it for real implementation.
+
+
+## 2026-07-23 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Durable volume not writable
+hourly health loop found /tmp/tmpgbn11k9y/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpgbn11k9y/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpau14r16s/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 2977). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-23 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 2979). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-23 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-23 — Made the return-to-Home button actually noticeable
+**What shipped:** `#home-return-btn` (the persistent Home button on every mobile screen except Home itself, shipped earlier today) was restyled from a small panel-toned icon-only circle into a gold pill with a "⌂ Home" label -- directly mirroring `#back-to-top-btn`'s existing prominent treatment (`background:var(--gold);color:#0D1B2A`). No logic changed -- `phoneOpenHome()` and the `body.is-mobile:not(.phone-home-open):not(.frank-popup-open)` visibility rule were already correct.
+
+**Why:** Scott said "Looks good" on the Home screen ship, then immediately asked for "a home button so the user can get back to the Home Screen" -- the button already existed and was wired correctly (confirmed via direct investigation: no bug, no z-index collision, correct render path). It was just deliberately styled to blend into the app chrome rather than call attention to itself, unlike its gold sibling. Asked Scott directly which fix he wanted; he confirmed: make the existing button obvious rather than build something new or relocate it.
+
+**Tests:** `python tests/run_all.py` (73/73, no test changes needed -- the existing Playwright assertion only checks computed `display`, not text content). 3 consecutive clean `tools/playwright_smoke.py` runs.
