@@ -243,11 +243,19 @@ _FAKE_FACTS = {"product_id": "DP9999", "category": "digital_planner", "name": "T
 
 
 def test_generator_retries_on_bad_count_then_succeeds():
-    bad_json = '{"title": "Digital Planner 2026, GoodNotes iPad, Instant Download", ' \
-               '"description": "Pages: 99 total in this planner.", "tags": ["a"]*13}'.replace('["a"]*13', json.dumps(["tag"+str(i) for i in range(13)]))
+    # Descriptions must be >=300 chars (EtsyAPIClient.pre_publish_gate()'s DESC
+    # floor, folded into this loop's acceptance check 2026-07-25) so the ONLY
+    # signal under test here is the page-count mismatch, not an incidental
+    # gate failure from an unrealistically short fixture description.
+    filler = " Filled with fillable fields, hyperlinked tabs, and a kawaii cover design so it's ready to use the moment you download it."
+    bad_json = json.dumps({
+        "title": "Digital Planner 2026, GoodNotes iPad, Instant Download",
+        "description": "Pages: 99 total in this planner." + filler * 3,
+        "tags": [f"tag{i}" for i in range(13)],
+    })
     good_json = json.dumps({
         "title": "Digital Planner 2026 Undated, GoodNotes iPad, Instant Download",
-        "description": "Pages: 12 total in this planner. A full grounded description.",
+        "description": "Pages: 12 total in this planner. A full grounded description." + filler * 3,
         "tags": [f"tag{i}" for i in range(13)],
     })
     responses = [_fake_anthropic_response(bad_json), _fake_anthropic_response(good_json)]
@@ -260,6 +268,73 @@ def test_generator_retries_on_bad_count_then_succeeds():
     check("content" in result, f"should eventually succeed, got {result}")
     check(result.get("attempts") == 2, f"expected exactly 2 attempts (fail then succeed), got {result.get('attempts')}")
     check(mock_write.called, "successful generation must write to the sidecar")
+
+
+def test_generator_retries_when_tag_duplicates_title_phrase_then_succeeds():
+    # Literal regression for the COLOR1002 incident (2026-07-25): the model
+    # generated a valid, grounded description but included "coloring pages"
+    # as a tag while the title was "Halloween Printable Coloring Pages,
+    # Instant Download" -- passed the (old) grounding-only check, got saved,
+    # and only failed when Scott tapped Publish, via EtsyAPIClient.
+    # pre_publish_gate()'s "no tag may duplicate a title phrase" rule. The
+    # generator must now catch this itself and retry within its own budget.
+    long_desc = (
+        "Get spooky this season with our Halloween printable coloring page set, perfect for "
+        "creative minds of all ages looking for festive fun at home. You'll receive 20 fun "
+        "designs in a convenient zip file ready for instant download, perfect for kids and "
+        "adults alike who love a relaxing, festive activity any time of year."
+    )
+    bad_tags = ["coloring pages", "halloween activity", "kids crafts", "spooky theme",
+                "home printing", "adult coloring", "seasonal printable", "festive craft",
+                "pdf coloring", "stress relief art", "halloween coloring", "printable instant",
+                "digital download"]
+    good_tags = [t if t != "coloring pages" else "spooky page set" for t in bad_tags]
+    bad_json = json.dumps({
+        "title": "Halloween Printable Coloring Pages, Instant Download",
+        "description": long_desc,
+        "tags": bad_tags,
+    })
+    good_json = json.dumps({
+        "title": "Halloween Printable Coloring Pages, Instant Download",
+        "description": long_desc,
+        "tags": good_tags,
+    })
+    coloring_entry = {"category": "coloring_pages", "name": "Halloween Set", "files": []}
+    coloring_facts = {"product_id": "COLOR1002", "category": "coloring_pages", "name": "Halloween Set"}
+    responses = [_fake_anthropic_response(bad_json), _fake_anthropic_response(good_json)]
+    with patch.object(server, "ANTHROPIC_KEY", "fake-key"), \
+         patch.object(server, "_find_catalog_product", return_value=coloring_entry), \
+         patch.object(server, "_extract_grounding_facts", return_value=(coloring_facts, [])), \
+         patch.object(server, "_anthropic_create", side_effect=responses), \
+         patch.object(server, "_write_generated_listing_content") as mock_write:
+        result = asyncio.run(server._generate_product_listing_content_core("COLOR1002", max_attempts=3))
+    check("content" in result, f"should eventually succeed once the duplicate tag is fixed, got {result}")
+    check(result.get("attempts") == 2, f"expected exactly 2 attempts (duplicate-tag reject, then fixed), got {result.get('attempts')}")
+    check("coloring pages" not in (result.get("content") or {}).get("tags", []),
+          "the saved content must not contain the duplicate tag that triggered the retry")
+    check(mock_write.called, "the eventually-accepted content must be written to the sidecar")
+
+
+def test_generator_never_saves_content_that_would_fail_publish_gate():
+    # Same bug, but confirm it truly never accepts on any attempt if every
+    # draft keeps the violation -- must give up with an error, not silently
+    # save something that would only fail later at Scott's Publish tap.
+    bad_json = json.dumps({
+        "title": "Halloween Printable Coloring Pages, Instant Download",
+        "description": "Too short to pass the description gate anyway.",
+        "tags": ["coloring pages"] + [f"tag{i}" for i in range(12)],
+    })
+    coloring_entry = {"category": "coloring_pages", "name": "Halloween Set", "files": []}
+    coloring_facts = {"product_id": "COLOR1002", "category": "coloring_pages", "name": "Halloween Set"}
+    with patch.object(server, "ANTHROPIC_KEY", "fake-key"), \
+         patch.object(server, "_find_catalog_product", return_value=coloring_entry), \
+         patch.object(server, "_extract_grounding_facts", return_value=(coloring_facts, [])), \
+         patch.object(server, "_anthropic_create", return_value=_fake_anthropic_response(bad_json)), \
+         patch.object(server, "_write_generated_listing_content") as mock_write:
+        result = asyncio.run(server._generate_product_listing_content_core("COLOR1002", max_attempts=2))
+    check("error" in result, f"should give up with an error, got {result}")
+    check("duplicates a title phrase" in result["error"], f"error should name the specific gate failure, got {result['error']}")
+    check(not mock_write.called, "content that would fail the publish gate must never reach the sidecar")
 
 
 def test_generator_gives_up_after_max_attempts_never_writes():
@@ -481,8 +556,8 @@ def run() -> None:
             print(" -", f)
         sys.exit(1)
     print("LISTING CONTENT GENERATOR TESTS OK — fact extraction, grounding retry/give-up, "
-          "sidecar precedence, the deliverable-suffix regression, taxonomy extension, and "
-          "endpoint gating all verified.")
+          "the COLOR1002 duplicate-tag pre-publish-gate regression, sidecar precedence, "
+          "the deliverable-suffix regression, taxonomy extension, and endpoint gating all verified.")
 
 
 if __name__ == "__main__":

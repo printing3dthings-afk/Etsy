@@ -12430,3 +12430,79 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 - Every sub-step degrades non-fatally instead of raising: a failed per-query research call returns empty learnings/sources, a missing-markers synthesis response falls back to raw learnings, no API key returns a graceful stub — so a total Anthropic outage still returns a normal dict from `_execute_agent_tool`, never a raised exception.
 
 **Verification:** `tests/test_deep_research.py` (new, 16 tests) — query-gen/per-query-research/synthesis unit coverage, the breadth*depth+depth+1 call-count math with hard-cap clamping (both above and below range), volume-aware durable file writes with no-overwrite dedup, AGENT_TOOLS schema registration, and the full dispatch path including a total-outage degrade check. Full suite 78/78 passed. 3x clean Playwright smoke (no frontend surface for this change — chat tool only, matching `get_comparable_listings`/`search_etsy`).
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpeswi0a5k/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpeswi0a5k/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpxpf4dbf4/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 17659). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 17661). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-25 — Fix: listing-content generator could save a listing that would fail Publish (COLOR1002)
+
+**Symptom (Scott, live):** Tapped "Publish to Etsy" on COLOR1002 ("Halloween Printable Coloring Pages") and got `Could not stage publish: pre-publish gate failed: pre-publish gate failed: TAGS: 'coloring pages' duplicates a title phrase — wasted slot.` The listing had already been generated and saved via the "✨ Generate listing content" button, so the failure only surfaced at Publish time, with no obvious next step.
+
+**Root cause:** `_generate_product_listing_content_core()`'s accept/retry loop only checked numeric-grounding claims (`check_description_count_claims` + `_check_generated_content_grounding`) before writing generated content to the durable sidecar. Title/tag structural rules — no tag duplicating a title phrase, exactly 13 tags, tag length, title length, description length, price tier — were only enforced later, at actual `create_listing()` time via `EtsyAPIClient.pre_publish_gate()`. The prompt *told* the model not to duplicate a title phrase in tags, but nothing in code checked it before saving, so a violation (like COLOR1002's auto-generated "coloring pages" tag against the title "...Coloring Pages...") could pass generation and only be caught once Scott tried to publish.
+
+**Fix:** `_generate_product_listing_content_core()` now runs `EtsyAPIClient.pre_publish_gate()` on every draft as part of the same acceptance check as the grounding validators, feeding any failure back into the existing retry-with-feedback loop (same `max_attempts` budget, no new API cost tier). A draft that would fail Publish now gets rejected and retried at generation time instead of silently saving.
+
+**For Scott:** once this build is live, tap "✨ Generate listing content" again on COLOR1002 to regenerate — the new code path will reject any tag that duplicates the title before saving, so the regenerated draft should publish cleanly.
+
+**Verification:** two new regression tests in `tests/test_listing_content_generator.py` reproduce the exact COLOR1002 shape (a tag literally "coloring pages" against a title containing "Coloring Pages") — one confirms it retries and self-corrects, one confirms a draft that never self-corrects gives up with an error and never reaches the sidecar. Also had to fix two pre-existing test fixtures (`test_generator_retries_on_bad_count_then_succeeds`) that used unrealistically short (<300 char) description text — they were incidentally passing only because the description-length gate wasn't wired into this loop yet. Full suite 78/78 passed, 3x clean Playwright.

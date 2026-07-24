@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "e91a4c2-v259"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "b3f2c81-v260"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -13697,11 +13697,22 @@ async def _generate_product_listing_content_core(product_id: str, max_attempts: 
         title = str(parsed["title"]).strip()
         description = str(parsed["description"]).strip()
         tags = [_clean_tag(t) for t in parsed.get("tags", []) if str(t).strip()]
+        content = {"product_id": product_id, "title": title, "description": description,
+                   "tags": tags, "price": _CONTENT_PRICE_BY_CATEGORY[category]}
+        # 2026-07-25: this loop used to accept anything that passed the numeric-
+        # grounding checks, but title/tag structural rules (13 tags, no tag
+        # duplicating a title phrase, title length, etc.) were only enforced
+        # later at actual Etsy publish time via EtsyAPIClient.pre_publish_gate()
+        # -- so a listing could pass generation, get saved, and only fail when
+        # Scott tapped Publish (confirmed on COLOR1002: generated tags included
+        # "coloring pages", duplicating the title's "Coloring Pages"). Folding
+        # the same gate in here means a violation gets fed back for a retry
+        # within the existing max_attempts budget instead of surfacing as a
+        # dead-end at publish time.
         last_problems = (etsy_api.check_description_count_claims(description, facts)
-                          + _check_generated_content_grounding(description, facts))
+                          + _check_generated_content_grounding(description, facts)
+                          + EtsyAPIClient.pre_publish_gate(content))
         if not last_problems:
-            content = {"product_id": product_id, "title": title, "description": description,
-                       "tags": tags, "price": _CONTENT_PRICE_BY_CATEGORY[category]}
             await asyncio.to_thread(_write_generated_listing_content, product_id, content)
             return {"content": content, "attempts": attempt + 1}
         feedback = "; ".join(last_problems)
