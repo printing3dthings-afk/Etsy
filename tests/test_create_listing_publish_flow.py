@@ -16,6 +16,19 @@ Scott approves it in the Action Center. The new listing is always created as
 an Etsy-side DRAFT (client.create_listing() omits `state`) -- activation is a
 separate, already-existing toggle_listing_state action, never automatic here.
 
+2026-07-25: photo_paths/file_paths fixtures below always carry the full
+"data/digital_products/..." prefix -- that's the real, verbatim shape of a
+product_catalog.json "files" entry (see _gather_product_review's `"rel": f`),
+not a bare/pre-stripped relative path. A prior version of this file used
+bare paths, which happened to still pass because it mocked
+_product_file_abs_path() directly -- but the real code was calling
+_product_file_abs_path() on the *unstripped* prefixed string (a genuine bug,
+confirmed on COLOR1003 in production: every real publish attempt failed
+"file not found on disk" even though the file existed), and these bare-path
+fixtures never caught it. Now fixed to go through _catalog_file_abs_path(),
+which correctly strips the prefix before delegating -- so fixtures must use
+the real prefixed shape for the mocks below to actually exercise it.
+
 Run: python tests/test_create_listing_publish_flow.py
 """
 import asyncio
@@ -80,7 +93,7 @@ def test_validate_pre_publish_gate_failure_blocks_staging():
     bad_data = dict(_GOOD_LISTING_DATA)
     bad_data["title"] = "x"  # too short, no "instant download"
     payload = {"product_id": "DPX", "listing_data": bad_data,
-               "photo_paths": [], "file_paths": ["product_files/DPX.pdf"]}
+               "photo_paths": [], "file_paths": ["data/digital_products/product_files/DPX.pdf"]}
     with patch.object(server, "_product_file_abs_path", lambda rel: Path("/tmp/fake")):
         ok, msg = server._validate_staged_action({"type": "create_listing", "payload": payload})
     check(not ok and "pre-publish gate failed" in msg, f"got: {ok}, {msg}")
@@ -88,7 +101,7 @@ def test_validate_pre_publish_gate_failure_blocks_staging():
 
 def test_validate_missing_files_on_disk_blocks_staging():
     payload = {"product_id": "DPX", "listing_data": _GOOD_LISTING_DATA,
-               "photo_paths": [], "file_paths": ["product_files/DPX.pdf"]}
+               "photo_paths": [], "file_paths": ["data/digital_products/product_files/DPX.pdf"]}
     with patch.object(server, "_product_file_abs_path", lambda rel: None):
         ok, msg = server._validate_staged_action({"type": "create_listing", "payload": payload})
     check(not ok and "not found on disk" in msg, f"got: {ok}, {msg}")
@@ -102,7 +115,8 @@ def test_validate_no_deliverable_files_blocks_staging():
 
 def test_validate_happy_path_passes():
     payload = {"product_id": "DPX", "listing_data": _GOOD_LISTING_DATA,
-               "photo_paths": ["a.jpg"], "file_paths": ["product_files/DPX.pdf"]}
+               "photo_paths": ["data/digital_products/product_files/DPX_listing_images/a.jpg"],
+               "file_paths": ["data/digital_products/product_files/DPX.pdf"]}
     with patch.object(server, "_product_file_abs_path", lambda rel: Path("/tmp/fake")):
         ok, msg = server._validate_staged_action({"type": "create_listing", "payload": payload})
     check(ok, f"expected pass, got: {msg}")
@@ -110,7 +124,7 @@ def test_validate_happy_path_passes():
 
 def test_validate_at_approval_refuses_if_already_published():
     payload = {"product_id": "DPX", "listing_data": _GOOD_LISTING_DATA,
-               "photo_paths": [], "file_paths": ["product_files/DPX.pdf"]}
+               "photo_paths": [], "file_paths": ["data/digital_products/product_files/DPX.pdf"]}
     fake_entry = {"product_id": "DPX", "name": "x", "category": "digital_planner",
                   "status": "listed_draft", "etsy_listing_id": "", "files": []}
     with patch.object(server, "_product_file_abs_path", lambda rel: Path("/tmp/fake")), \
@@ -122,7 +136,7 @@ def test_validate_at_approval_refuses_if_already_published():
 
 def test_validate_at_approval_passes_when_not_yet_published():
     payload = {"product_id": "DPX", "listing_data": _GOOD_LISTING_DATA,
-               "photo_paths": [], "file_paths": ["product_files/DPX.pdf"]}
+               "photo_paths": [], "file_paths": ["data/digital_products/product_files/DPX.pdf"]}
     fake_entry = {"product_id": "DPX", "name": "x", "category": "digital_planner",
                   "status": "ready_for_review", "etsy_listing_id": "", "files": []}
     with patch.object(server, "_product_file_abs_path", lambda rel: Path("/tmp/fake")), \
@@ -152,7 +166,9 @@ def _fake_client(create_result=None, image_result=None, file_result=None,
 def test_execute_happy_path_creates_draft_and_writes_override():
     action = {"payload": {
         "product_id": "DPX", "listing_data": _GOOD_LISTING_DATA,
-        "photo_paths": ["photo1.jpg"], "file_paths": ["file1.pdf", "file2.zip"],
+        "photo_paths": ["data/digital_products/product_files/photo1.jpg"],
+        "file_paths": ["data/digital_products/product_files/file1.pdf",
+                        "data/digital_products/product_files/file2.zip"],
     }}
     fake_client = _fake_client()
     captured_override = {}
@@ -199,7 +215,8 @@ def test_execute_creation_failure_raises_and_writes_nothing():
 def test_execute_partial_upload_failure_still_writes_override_and_reports_errors():
     action = {"payload": {
         "product_id": "DPX", "listing_data": _GOOD_LISTING_DATA,
-        "photo_paths": ["photo1.jpg"], "file_paths": ["file1.pdf"],
+        "photo_paths": ["data/digital_products/product_files/photo1.jpg"],
+        "file_paths": ["data/digital_products/product_files/file1.pdf"],
     }}
     fake_client = _fake_client(image_raises=RuntimeError("simulated image upload failure"))
     captured_override = {}
@@ -254,7 +271,7 @@ def _fake_review(**overrides):
                      "tags": _GOOD_LISTING_DATA["tags"], "price": 12.99, "shop_section_id": 58657105},
         "photos": [{"name": "01.jpg", "rel": "product_files/DPX_listing_images/01.jpg", "exists": True, "url": "/x"}],
         "deliverables": [
-            {"name": "DPX.pdf", "rel": "product_files/DPX.pdf", "exists": True},
+            {"name": "DPX.pdf", "rel": "data/digital_products/product_files/DPX.pdf", "exists": True},
             {"name": "DPX_sticker_pack.zip", "rel": "product_files/DPX_sticker_pack.zip", "exists": True},
         ],
         "qc": {"pid": "DPX", "verdict": "pass", "summary": {}, "rows": [], "message": "ok"},
@@ -345,7 +362,7 @@ def test_stage_publish_builds_correct_listing_data():
     check(ld["taxonomy_id"] == 2078, f"got: {ld}")
     check(ld["shop_section_id"] == 58657105, f"got: {ld}")
     check(ld["type"] == "download" and ld["quantity"] == 999, f"got: {ld}")
-    check(captured["payload"]["file_paths"] == ["product_files/DPX.pdf", "product_files/DPX_sticker_pack.zip"],
+    check(captured["payload"]["file_paths"] == ["data/digital_products/product_files/DPX.pdf", "product_files/DPX_sticker_pack.zip"],
           f"got: {captured['payload']}")
 
 

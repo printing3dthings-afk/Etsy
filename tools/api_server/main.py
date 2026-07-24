@@ -620,7 +620,7 @@ _seed_test_user_if_missing()
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
 OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 _SERVER_START = datetime.now(timezone.utc)
-_BUILD_ID = "b3f2c81-v260"  # bump on each deploy to confirm Railway is using latest code
+_BUILD_ID = "c7a91f4-v261"  # bump on each deploy to confirm Railway is using latest code
 
 def _order_revenue(orders: list) -> float:
     """Shared revenue calculator: sum grandtotal across a list of Etsy order dicts."""
@@ -9451,8 +9451,22 @@ def _validate_staged_action(a: dict, *, at_approval: bool = False) -> tuple[bool
         file_paths = p.get("file_paths") or []
         if not file_paths:
             return False, "no deliverable files to attach"
+        # 2026-07-25: photo_paths/file_paths are raw product_catalog.json "files"
+        # strings verbatim (see _gather_product_review()'s `"rel": f`), which
+        # ALWAYS carry the full "data/digital_products/..." prefix in real
+        # catalog data -- confirmed on COLOR1003, but every product's catalog
+        # entry has this shape, so this blocked every real publish attempt.
+        # _product_file_abs_path() expects a path already relative to
+        # _FILE_ROOTS["products"] (prefix stripped) -- joining it with the
+        # still-prefixed rel double-nests the path and can never resolve, even
+        # though the review endpoint (which correctly uses _catalog_file_abs_
+        # path()) just confirmed the exact same file exists. Use the same
+        # three-convention-aware resolver here instead of a second hand-rolled
+        # check (api-conventions.md: "never re-implement a 'does this file
+        # exist' check by hand, it will silently regress one of the three
+        # conventions").
         for rel in list(photo_paths) + list(file_paths):
-            if _product_file_abs_path(rel) is None:
+            if _catalog_file_abs_path(rel) is None:
                 return False, f"file not found on disk: {rel}"
         if at_approval:
             # Re-confirm no listing exists yet -- guards against a race between
@@ -9647,7 +9661,11 @@ def _execute_create_listing_staged_action(a: dict) -> dict:
     upload_errors: list[dict] = []
     photo_results: list[dict] = []
     for rank, rel in enumerate(p.get("photo_paths") or [], start=1):
-        abs_path = _product_file_abs_path(rel)
+        # Same fix as _validate_staged_action's create_listing branch above
+        # (2026-07-25): rel is a raw catalog "files" string, always carrying
+        # the "data/digital_products/" prefix -- _catalog_file_abs_path() is
+        # the resolver that actually understands it.
+        abs_path = _catalog_file_abs_path(rel)
         if abs_path is None:
             upload_errors.append({"file": rel, "error": "file disappeared before upload"})
             continue
@@ -9659,7 +9677,7 @@ def _execute_create_listing_staged_action(a: dict) -> dict:
 
     file_results: list[dict] = []
     for rank, rel in enumerate(p.get("file_paths") or [], start=1):
-        abs_path = _product_file_abs_path(rel)
+        abs_path = _catalog_file_abs_path(rel)  # same fix as the photo loop above
         if abs_path is None:
             upload_errors.append({"file": rel, "error": "file disappeared before upload"})
             continue

@@ -12506,3 +12506,143 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **For Scott:** once this build is live, tap "✨ Generate listing content" again on COLOR1002 to regenerate — the new code path will reject any tag that duplicates the title before saving, so the regenerated draft should publish cleanly.
 
 **Verification:** two new regression tests in `tests/test_listing_content_generator.py` reproduce the exact COLOR1002 shape (a tag literally "coloring pages" against a title containing "Coloring Pages") — one confirms it retries and self-corrects, one confirms a draft that never self-corrects gives up with an error and never reaches the sidecar. Also had to fix two pre-existing test fixtures (`test_generator_retries_on_bad_count_then_succeeds`) that used unrealistically short (<300 char) description text — they were incidentally passing only because the description-length gate wasn't wired into this loop yet. Full suite 78/78 passed, 3x clean Playwright.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpbvg74o8f/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpbvg74o8f/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpimpr5wfg/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 3361). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 3363). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmp5d5h3gkd/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmp5d5h3gkd/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpxovfsdm3/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 5847). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 5849). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+## 2026-07-25 — Fix: Publish always failed "file not found on disk" for every real product (COLOR1003)
+
+**Symptom (Scott, live):** Tapped "Publish to Etsy" on COLOR1003 and got `Could not stage publish: pre-publish gate failed: file not found @ data/digital_products/coloring_pages/sets/coloring_color1003_set_01.zip`, even though the exact same file was shown with a green checkmark and QC PASS in the same review modal moments earlier.
+
+**Root cause:** `_validate_staged_action()`'s `create_listing` branch and `_execute_create_listing_staged_action()`'s photo/file upload loops called `_product_file_abs_path(rel)` directly on `photo_paths`/`file_paths`. Those values are raw `product_catalog.json` "files" strings passed through verbatim from `_gather_product_review()` (`"rel": f`) — and every real catalog entry carries the full `data/digital_products/...` prefix (confirmed against real `product_catalog.json` data: even the simplest digital-planner entries are `data/digital_products/product_files/DP1026.pdf`). `_product_file_abs_path()` expects a path already relative to `_FILE_ROOTS["products"]` (prefix already stripped) — joining it with the still-prefixed `rel` double-nests the path and can never resolve. The review endpoint (`_catalog_file_exists()`/`_catalog_file_abs_path()`, the three-convention-aware resolver added 2026-07-18) correctly found the file — only the publish-time recheck and the actual upload step used the wrong, older resolver. **This affected every product's publish attempt, not just coloring_pages** — the one existing test for this path (`test_stage_product_publish_stages_wall_art_when_fully_fixtured`) mocked `_validate_staged_action` away entirely, and `tests/test_create_listing_publish_flow.py`'s fixtures used bare/pre-stripped paths that happened to match the (buggy) direct-mock convention, so neither ever exercised the real bug.
+
+**Fix:** Swapped all three call sites (`_validate_staged_action`'s create_listing branch, and both upload loops in `_execute_create_listing_staged_action`) from `_product_file_abs_path()` to `_catalog_file_abs_path()` — the existing three-convention-aware resolver already used by the review endpoint. Per `.claude/rules/api-conventions.md`'s explicit rule: never re-implement a "does this file exist" check by hand, always go through the catalog helpers.
+
+**Test fixture correction:** `tests/test_create_listing_publish_flow.py` had to be updated — its fixtures used bare paths like `"product_files/DPX.pdf"` and mocked `_product_file_abs_path` directly, encoding the exact same wrong assumption that caused the bug. Updated every fixture to the real prefixed shape (`"data/digital_products/product_files/DPX.pdf"`) so the mocks actually exercise the code path that runs in production.
+
+**Verification:** 2 new regression tests in `tests/test_listing_content_generator.py` reproduce the exact COLOR1003 shape (a real file on disk under a nested nonstandard path, referenced by its full prefixed catalog string) for both `_validate_staged_action` and `_execute_create_listing_staged_action`. Full suite 78/78 passed, 3x clean Playwright.

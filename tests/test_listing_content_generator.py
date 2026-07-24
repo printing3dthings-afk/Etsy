@@ -510,6 +510,80 @@ def test_stage_product_publish_stages_wall_art_when_fully_fixtured():
     check(result.get("action_id") == 42, f"expected the mocked action_id, got {result}")
 
 
+# ── File-resolution regression (COLOR1003, 2026-07-25) ──────────────────
+# _validate_staged_action's create_listing branch and _execute_create_listing_
+# staged_action's upload loops used to call _product_file_abs_path(rel)
+# directly on photo_paths/file_paths -- but those are raw product_catalog.json
+# "files" strings (see _gather_product_review's `"rel": f`), which in every
+# real catalog entry carry the full "data/digital_products/..." prefix.
+# _product_file_abs_path() expects a path already relative to _FILE_ROOTS
+# ["products"] (prefix stripped), so joining it with the still-prefixed rel
+# double-nested the path and could never resolve -- even though the review
+# endpoint (which correctly uses _catalog_file_abs_path()) had just confirmed
+# the exact same file exists. This blocked EVERY real publish attempt, not
+# just coloring_pages -- the prior test above never caught it because it
+# mocks _validate_staged_action away entirely.
+
+def test_validate_staged_action_resolves_real_prefixed_catalog_path():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        products_root = Path(tmpdir)
+        nested = products_root / "coloring_pages" / "sets"
+        nested.mkdir(parents=True)
+        (nested / "coloring_color1003_set_01.zip").write_bytes(b"fake zip")
+        old_products_root = server._FILE_ROOTS["products"]
+        server._FILE_ROOTS["products"] = products_root
+        try:
+            candidate = {
+                "type": "create_listing",
+                "payload": {
+                    "product_id": "COLOR1003",
+                    "listing_data": {
+                        "title": "Halloween Printable Coloring Pages, Instant Download",
+                        "description": "x" * 320,
+                        "tags": [f"tag{i}" for i in range(13)],
+                        "price": 6.99,
+                    },
+                    "photo_paths": [],
+                    "file_paths": ["data/digital_products/coloring_pages/sets/coloring_color1003_set_01.zip"],
+                },
+            }
+            ok, msg = server._validate_staged_action(candidate)
+        finally:
+            server._FILE_ROOTS["products"] = old_products_root
+    check(ok, f"a real catalog-style prefixed path must resolve and pass, got: {msg}")
+
+
+def test_execute_create_listing_uploads_resolve_real_prefixed_catalog_path():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        products_root = Path(tmpdir)
+        nested = products_root / "coloring_pages" / "sets"
+        nested.mkdir(parents=True)
+        real_file = nested / "coloring_color1003_set_01.zip"
+        real_file.write_bytes(b"fake zip")
+        old_products_root = server._FILE_ROOTS["products"]
+        server._FILE_ROOTS["products"] = products_root
+        try:
+            with patch.object(server, "EtsyAPIClient") as MockClient, \
+                 patch.object(server, "_write_product_catalog_override") as mock_override:
+                instance = MockClient.return_value
+                instance.create_listing.return_value = {"listing_id": 999}
+                instance.upload_listing_file.return_value = {"listing_file_id": 55}
+                action = {"payload": {
+                    "product_id": "COLOR1003",
+                    "listing_data": {"title": "x"},
+                    "photo_paths": [],
+                    "file_paths": ["data/digital_products/coloring_pages/sets/coloring_color1003_set_01.zip"],
+                }}
+                result = server._execute_create_listing_staged_action(action)
+        finally:
+            server._FILE_ROOTS["products"] = old_products_root
+    check("upload_errors" not in result, f"the real file must resolve and upload cleanly, got {result.get('upload_errors')}")
+    check(instance.upload_listing_file.called, "upload_listing_file must actually be invoked once the file resolves")
+    called_path = instance.upload_listing_file.call_args[0][1]
+    check(called_path == str(real_file), f"expected the real resolved path {real_file}, got {called_path}")
+    check(mock_override.called, "a successful create must still write the catalog override")
+
+
 # ── Endpoint gating ────────────────────────────────────────────────────
 
 def test_generate_content_endpoint_rejects_unknown_product():
