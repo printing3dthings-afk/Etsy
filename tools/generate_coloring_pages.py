@@ -39,7 +39,33 @@ from PIL import Image, ImageEnhance
 # Paths
 # ---------------------------------------------------------------------------
 BASE = Path(__file__).parent.parent.resolve()
-COLORING_DIR = BASE / "data" / "digital_products" / "coloring_pages"
+
+
+def _resolve_dp_base() -> Path:
+    """Durable volume (<HUB_FILES_DIR> or /data/files) on the hosted deploy, else
+    the repo data dir locally -- mirrors generate_print_sizes.py/qc_sweep.py/
+    main.py's identical resolution.
+
+    (2026-07-25) COLORING_DIR previously hardcoded BASE/data/digital_products/
+    coloring_pages unconditionally -- the one generator in this codebase that
+    never checked for the persistent volume. On Railway that path is the app's
+    own ephemeral local filesystem, wiped on every redeploy: a coloring-pages
+    product built live on the dashboard would generate its ZIP there, the
+    catalog registration would durably survive (it's volume-backed), but the
+    actual file would vanish on the very next deploy -- confirmed live on
+    COLOR1001 (Scott: "I tried to input it into the Etsy listing generator and
+    it said it did not exist... I also cannot find it in the files tab
+    anymore"). Fixed to resolve the same way every sibling generator already
+    does."""
+    vol = os.getenv("HUB_FILES_DIR", "").strip()
+    if vol and Path(vol).is_dir():
+        return Path(vol)
+    if Path("/data/files").is_dir():
+        return Path("/data/files")
+    return BASE / "data" / "digital_products"
+
+
+COLORING_DIR = _resolve_dp_base() / "coloring_pages"
 SETS_DIR = COLORING_DIR / "sets"
 PAGES_PER_SET = 5
 # NEW_THEME_SET_SIZE (2026-07-24): the dynamic Scott-typed-theme path (see

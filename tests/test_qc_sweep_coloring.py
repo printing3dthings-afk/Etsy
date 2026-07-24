@@ -13,6 +13,13 @@ Covers:
   - sweep()'s dispatch: an old-pack-prefixed ZIP (5 pages) goes to
     check_other_zip() (content gate only, no page_count check at all) while
     a dynamically-named ZIP goes to check_coloring_zip() (hard page-count gate).
+  - (2026-07-25) generate_coloring_pages._resolve_dp_base(): the real fix for
+    the COLOR1001 incident (a live-built product's ZIP silently vanished on
+    the next redeploy because COLORING_DIR hardcoded the ephemeral local
+    path instead of checking the persistent volume like every sibling
+    generator does). Verifies the env-override/volume-mount/local-fallback
+    precedence, and that COLORING_DIR/SETS_DIR stay in lockstep with
+    qc_sweep.py's own scan path.
 
 Run: python tests/test_qc_sweep_coloring.py
 """
@@ -108,6 +115,51 @@ def test_sweep_dispatch_routes_dynamic_pack_to_page_count_gate():
     check(page_rows[0]["severity"] == "PASS", f"got {page_rows}")
 
 
+def test_resolve_dp_base_prefers_hub_files_dir_env_override():
+    # (2026-07-25) Regression for the real COLOR1001 incident: COLORING_DIR
+    # used to hardcode the ephemeral local path unconditionally, unlike every
+    # sibling generator (generate_print_sizes.py, qc_sweep.py, main.py). A
+    # coloring-pages product built live on the dashboard would write its ZIP
+    # there, survive until the next redeploy wiped it, while its catalog
+    # registration (durably volume-backed) lived on -- exactly the "product
+    # exists but no deliverable files found" ghost state Scott reported.
+    with tempfile.TemporaryDirectory() as tmp:
+        with patch.dict("os.environ", {"HUB_FILES_DIR": tmp}):
+            base = gcp._resolve_dp_base()
+    check(base == Path(tmp), f"HUB_FILES_DIR must win when set and it's a real dir, got {base}")
+
+
+def test_resolve_dp_base_falls_back_to_data_files_volume_mount():
+    # Only /data/files "exists" in this simulated environment -- no need to
+    # mock the Path constructor itself, just the one is_dir() check the
+    # function actually makes.
+    def _is_dir_stub(self):
+        return str(self) == "/data/files"
+    with patch.dict("os.environ", {"HUB_FILES_DIR": ""}), \
+         patch.object(Path, "is_dir", _is_dir_stub):
+        base = gcp._resolve_dp_base()
+    check(str(base) == "/data/files", f"must resolve to the Railway volume mount when present, got {base}")
+
+
+def test_resolve_dp_base_uses_local_repo_dir_when_nothing_else_present():
+    with patch.dict("os.environ", {"HUB_FILES_DIR": ""}), \
+         patch.object(Path, "is_dir", lambda self: False):
+        base = gcp._resolve_dp_base()
+    check(base == gcp.BASE / "data" / "digital_products",
+          f"local dev fallback must match the pre-fix hardcoded path exactly, got {base}")
+
+
+def test_coloring_dir_and_sets_dir_derive_from_resolved_base():
+    check(gcp.COLORING_DIR == gcp._resolve_dp_base() / "coloring_pages",
+          f"COLORING_DIR must be derived from _resolve_dp_base(), got {gcp.COLORING_DIR}")
+    check(gcp.SETS_DIR == gcp.COLORING_DIR / "sets", f"got {gcp.SETS_DIR}")
+    # This is the exact directory qc_sweep.sweep() scans for coloring ZIPs
+    # (DP_BASE / "coloring_pages" / "sets") -- must stay in lockstep or a
+    # correctly-written file would still never be found by QC/Files.
+    check(gcp.SETS_DIR == qc_sweep.resolve_dp_base() / "coloring_pages" / "sets",
+          f"must match qc_sweep's own scan path exactly, got {gcp.SETS_DIR}")
+
+
 def run() -> None:
     for fn in [v for k, v in sorted(globals().items()) if k.startswith("test_")]:
         try:
@@ -120,9 +172,10 @@ def run() -> None:
             print(" -", f)
         sys.exit(1)
     print("QC SWEEP COLORING TESTS OK — check_coloring_zip() hard-gates the dynamic "
-          "new-theme ZIP on exact page count, and sweep()'s dispatch correctly routes "
+          "new-theme ZIP on exact page count, sweep()'s dispatch correctly routes "
           "old fixed packs to the generic content-only gate while dynamic packs get "
-          "the exact-count gate.")
+          "the exact-count gate, and generate_coloring_pages' output path is now "
+          "volume-aware (the COLOR1001 fix) and stays in lockstep with qc_sweep's scan path.")
 
 
 if __name__ == "__main__":

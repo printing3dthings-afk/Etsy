@@ -12199,3 +12199,80 @@ hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG 
 **Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
 
 **Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Monthly competitor research refresh
+Refreshed competitor_research_2026.md (32 chars). Live search terms used: printable wall art digital download, digital planner goodnotes, kawaii sticker pack goodnotes.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Durable volume not writable
+hourly health loop found /tmp/tmpr1bx_84f/not_actually_a_dir mounted but not writable: [Errno 17] File exists: '/tmp/tmpr1bx_84f/not_actually_a_dir'. Product files and backups may not be landing durably.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — hub_db_state.json backup is stale
+hourly health loop found the hub.db snapshot at /tmp/tmpew63vgiw/hub_db_state.json is 20.0 days old (expected weekly refresh via _WEEKLY_MONITOR_SCRIPTS).
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-24 — Background build failed: build_planner:TESTCRASH
+hourly health loop reaped a failed background build: build_planner:TESTCRASH (pid 16816). Exited 1 after 5s — see build_planner:TESTCRASH's own log for detail.
+
+
+## 2026-07-24 — Background build hung: build_sticker_pack:TESTHUNG
+hourly health loop killed a stuck background build: build_sticker_pack:TESTHUNG (pid 16818). Killed after running 930s, past the 900s ceiling.
+
+
+## 2026-07-24 — Escalation — hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID confi
+**Symptom:** hourly health loop detected a problem: Etsy: error: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id. | Anthropic key set: False
+
+**What was tried:**
+- read-only diagnostic -- no auto-remediation attempted
+
+**Root-cause hypothesis (unconfirmed):** Unrecognized failure signature: Etsy API 0: No shop ID configured. Add ETSY_SHOP_ID to .env or pass shop_id.
+
+**Suggested next action:** if this recurs, escalate to Scott with this report rather than re-attempting the same fix a third time.
+
+
+## 2026-07-25 — Coloring Pages: fixed a real data-loss bug — dynamically-built products vanished on the next redeploy
+
+**What happened:** Scott reported COLOR1001 (built live via the Create screen's Coloring Pages "+ new one" flow) "did not exist" when typed into the new Etsy Listing tile, and was also missing from the Files tab. Investigation (not a guess — traced the exact write path) found a real, previously-undiscovered bug: `generate_coloring_pages.py`'s `COLORING_DIR = BASE / "data" / "digital_products" / "coloring_pages"` was the **one** generator in this codebase that never checked for the persistent Railway volume before writing — every sibling (`generate_print_sizes.py`, `qc_sweep.py`, `main.py`'s `_FILE_ROOTS`) already resolves `HUB_FILES_DIR`/`/data/files` first.
+
+**Impact:** any coloring-pages product built live on the dashboard (not synced from Scott's own machine via `sync_files_to_hub.py`) wrote its ZIP to the app's own ephemeral local filesystem. The build succeeded, the catalog registration durably survived (it's volume-backed via `_PRODUCT_CATALOG_OVERRIDES_PATH`), but the actual deliverable file was wiped on the very next Railway redeploy — leaving exactly the "ghost product" state Scott hit: the review modal opens fine (catalog entry found), but QC reports `no_files` and the ZIP shows a red ❌. This affects every dynamically-built coloring_pages product from this session's Phase 3/4 work (tasks #212-216) onward, not just COLOR1001 — any of them built before a subsequent deploy would have hit the same fate.
+
+**Fix:** `generate_coloring_pages.py` gained `_resolve_dp_base()`, copied verbatim from `generate_print_sizes.py`'s already-proven version (checks `HUB_FILES_DIR` env override, then `/data/files`, else the local repo path) — `COLORING_DIR`/`SETS_DIR` now derive from it instead of hardcoding the ephemeral path. Confirmed the new `SETS_DIR` lands exactly where `qc_sweep.sweep()` already scans (`DP_BASE / "coloring_pages" / "sets"`), so a correctly-written file will actually be found.
+
+**COLOR1001 itself is unrecoverable** — no backup copy exists anywhere; it needs to be rebuilt (Products tab → tap it → Regenerate, or redo it from Create → Coloring Pages) now that the fix is live.
+
+**Tests:** `python tests/run_all.py` (76/76) — 4 new tests in `tests/test_qc_sweep_coloring.py` (`_resolve_dp_base()`'s env-override/volume-mount/local-fallback precedence, and that `COLORING_DIR`/`SETS_DIR` stay in lockstep with `qc_sweep.py`'s own scan path — this exact "written in the wrong place" bug class is now covered, not just the symptom). 3 consecutive clean `tools/playwright_smoke.py` runs (Python-only change, run to confirm the app still boots/renders cleanly).
